@@ -43,8 +43,28 @@ data class IntonationConfig(
 
     // Audio framing (spec 5.1)
     val sampleRateHz: Int = 44_100,
+    /** Tried in this order after the device's native rate. */
+    val supportedSampleRatesHz: List<Int> = listOf(48_000, 44_100),
+    val windowSizeSamples: Int = 2_048,
     val hopSizeSamples: Int = 512,
+
+    // Pitch detectors (spec 5.1)
+    val yinThreshold: Double = 0.15,
+    /** A dip this close to the deepest one still counts as a candidate; the first such wins. */
+    val octaveDipMargin: Double = 0.05,
+    /** MPM: the first NSDF peak at least this fraction of the highest one wins. */
+    val mpmPeakRatio: Double = 0.9,
 ) {
+    val minFrequencyHz: Double
+        get() = PitchMath.midiToFrequency(
+            lowestMidi - rangeMarginBelowCents / PitchMath.CENTS_PER_SEMITONE, a4Hz,
+        )
+
+    val maxFrequencyHz: Double
+        get() = PitchMath.midiToFrequency(
+            highestMidi + rangeMarginAboveCents / PitchMath.CENTS_PER_SEMITONE, a4Hz,
+        )
+
     /** Silence threshold as linear RMS, full scale = 1.0. */
     val silenceRms: Double
         get() = 10.0.pow(silenceRmsDbfs / DB_PER_AMPLITUDE_DECADE)
