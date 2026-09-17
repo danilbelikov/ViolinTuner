@@ -15,6 +15,8 @@ data class RollSegment(
     val maxCents: Double,
     /** Zone of [meanCents]: the color of the bar. */
     val zone: Zone,
+    /** False when the note wanders by more than the "near" limit around its mean, whatever the mean. */
+    val steady: Boolean,
     /** Deviation over time inside the note, one value per sample. */
     val contour: List<Double>,
     val position: StringFinger,

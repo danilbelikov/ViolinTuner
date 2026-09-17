@@ -1,19 +1,21 @@
 package com.example.violintuner.navigation
 
-import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import com.example.violintuner.R
+import androidx.navigation.navArgument
 import com.example.violintuner.feature.history.HistoryScreen
 import com.example.violintuner.feature.live.LiveRoute
 import com.example.violintuner.feature.onboarding.OnboardingRoute
+import com.example.violintuner.feature.session.SessionRoute
+import com.example.violintuner.feature.session.SessionViewModel
 import com.example.violintuner.feature.settings.SettingsRoute
 
 const val ONBOARDING_ROUTE = "onboarding"
+private const val SESSION_ROUTE = "session"
 
 @Composable
 fun AppNavHost(
@@ -21,12 +23,6 @@ fun AppNavHost(
     startRoute: String,
     modifier: Modifier = Modifier,
 ) {
-    // The session screen arrives with stage 9 (docs/plan-history.md); until then a saved
-    // recording is confirmed with a toast instead of being opened.
-    val context = LocalContext.current
-    val onSessionSaved: (Long) -> Unit = {
-        Toast.makeText(context, R.string.record_saved, Toast.LENGTH_SHORT).show()
-    }
     NavHost(
         navController = navController,
         startDestination = startRoute,
@@ -35,8 +31,15 @@ fun AppNavHost(
         composable(ONBOARDING_ROUTE) {
             OnboardingRoute(onFinished = navController::navigateFromOnboardingToLive)
         }
-        composable(TopLevelDestination.LIVE.route) { LiveRoute(onOpenSession = onSessionSaved) }
+        composable(TopLevelDestination.LIVE.route) { LiveRoute(onOpenSession = navController::navigateToSession) }
         composable(TopLevelDestination.HISTORY.route) { HistoryScreen() }
+        // Above the tabs and without the bottom bar; back returns to where it was opened from.
+        composable(
+            route = "$SESSION_ROUTE/{${SessionViewModel.ARG_SESSION_ID}}",
+            arguments = listOf(navArgument(SessionViewModel.ARG_SESSION_ID) { type = NavType.LongType }),
+        ) {
+            SessionRoute(onClose = navController::popBackStack)
+        }
         composable(TopLevelDestination.SETTINGS.route) {
             SettingsRoute(onOpenOnboarding = navController::navigateToOnboarding)
         }
@@ -54,6 +57,10 @@ fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
         launchSingleTop = true
         restoreState = true
     }
+}
+
+fun NavHostController.navigateToSession(sessionId: Long) {
+    navigate("$SESSION_ROUTE/$sessionId") { launchSingleTop = true }
 }
 
 private fun NavHostController.navigateFromOnboardingToLive() {

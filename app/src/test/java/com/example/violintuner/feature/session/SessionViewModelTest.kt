@@ -96,6 +96,17 @@ class SessionViewModelTest {
     }
 
     @Test
+    fun `a note that swings far around its target is not steady, even with a perfect mean`() = runTest {
+        val samples = List(40) { SessionSample(69, if (it % 2 == 0) 30.0 else -30.0) } + listOf(null) +
+            List(40) { SessionSample(71, if (it % 2 == 0) 6.0 else -6.0) }
+        val analysis = SessionAnalyzer.analyze(samples, config)
+        val id = repository.save(NewSession(0, 4_000, config, samples, analysis.metrics!!, emptyList(), null))
+        val segments = viewModel(id).loaded().content.segments
+        assertEquals(listOf(Zone.IN_TUNE, Zone.IN_TUNE), segments.map { it.zone })
+        assertEquals(listOf(false, true), segments.map { it.steady })
+    }
+
+    @Test
     fun `unknown session is not found`() = runTest {
         assertEquals(SessionState.NotFound, viewModel(99).state.value)
     }

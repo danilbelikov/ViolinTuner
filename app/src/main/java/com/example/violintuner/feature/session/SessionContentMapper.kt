@@ -25,6 +25,7 @@ object SessionContentMapper {
                 minCents = segment.minCents,
                 maxCents = segment.maxCents,
                 zone = ZoneClassifier.classify(segment.meanCents, config),
+                steady = (segment.maxCents - segment.minCents) / 2 <= config.nearCents,
                 contour = SessionAnalyzer.contour(details.samples, segment),
                 position = StringFinger.of(segment.midi),
             )
