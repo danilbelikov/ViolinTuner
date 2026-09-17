@@ -29,7 +29,7 @@ Android-приложение: интонационный тренажёр для
 ## Стек
 - Kotlin, Jetpack Compose + Material 3 (Compose BOM), Gradle Kotlin DSL, version catalog `gradle/libs.versions.toml`
 - Hilt, Coroutines/Flow, Navigation Compose
-- minSdk 26, JDK 17, один модуль `app`
+- minSdk 26, Java 17 (`compileOptions`; Gradle-демон работает на JDK 21), один модуль `app`
 - Room / DataStore — только когда дойдём до истории и настроек, не раньше
 - Никаких сторонних DSP-библиотек: детектор высоты тона свой (YIN и MPM), параметры — в спеке
 
@@ -62,10 +62,12 @@ Android-приложение: интонационный тренажёр для
 - В прод-коде нет `runBlocking`, `GlobalScope`, проглоченных исключений и TODO без пояснения.
 - Если спека не отвечает на вопрос — спроси, а не додумывай поведение.
 
-## Текущее состояние (на 2026-09-17; удалить раздел после шага 1 из spec §8)
-Репозиторий — нетронутый шаблон Android Studio; всё в разделах «Стек» и «Архитектура» — целевое состояние, а не существующий код.
-- Обе команды сейчас красные: `junit = "4.14-SNAPSHOT"` не резолвится ни из одного репозитория; `core-ktx 1.19.0` требует compileSdk 37 при текущем 36.1. Оба исправления — правка версий, то есть требуют согласия.
-- В каталоге версий нет Hilt (+ KSP), Navigation Compose, Coroutines, lifecycle-viewmodel-compose — шаг 1 начинается с согласования этого списка.
-- `compileOptions` — Java 11, Gradle daemon toolchain — 21; заявленный JDK 17 ещё не настроен.
-- `MainActivity` не вызывает `setContent`; `ui/theme` — шаблонная тема с dynamic color и светлой схемой, её заменяет `core/ui` с токенами хэндоффа (только тёмная, без dynamic color). Пакет — `com.example.violintuner`.
-- Git не инициализирован, хотя процесс предполагает коммиты.
+## Состояние реализации
+Порядок шагов — spec §8. Сделан шаг 1: тема и токены (`core/ui/theme`), каркас навигации (`navigation/`, заглушки в `feature/history`, `feature/settings`). `feature/live` — пустой экран-заполнитель без `LiveContract` / `LiveViewModel`; `core/domain` и `core/audio` ещё не существуют. Обновляй этот абзац при закрытии шага.
+
+## Что неочевидно в коде
+- Токены зон и стили ноты не входят в Material-схему: бери их из `ViolinTheme.zoneColors` и `ViolinTheme.liveTypography` (CompositionLocal), стопы фонового градиента — `ZoneGradient.colorStops`. Сырые цвета в `Color.kt` — `internal`, напрямую из UI не использовать.
+- Manrope — один вариативный TTF (`res/font/manrope_variable.ttf`), веса задаются через `FontVariation` (experimental API, opt-in локализован в `Type.kt`). Лицензия — `docs/licenses/Manrope-OFL.txt`.
+- Маршруты навигации — строки из `TopLevelDestination`; type-safe routes потребовали бы плагин kotlinx.serialization, то есть новую зависимость.
+- compileSdk 37 при targetSdk 36 — так задумано: этого требуют `core-ktx` и `lifecycle` из каталога версий, поведение рантайма не меняется.
+- Макеты заглушек (`v1-stubs`) в хэндоффе нарисованы в половинном масштабе (206×446) — размеры оттуда умножай на 2.
