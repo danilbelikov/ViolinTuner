@@ -49,6 +49,7 @@ import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.session.components.NoteSheet
 import com.example.violintuner.feature.session.components.PianoRoll
+import com.example.violintuner.feature.session.components.PlayerBar
 import com.example.violintuner.feature.session.components.ProblemNotes
 import com.example.violintuner.feature.session.components.SessionStatCards
 import java.time.ZoneId
@@ -115,8 +116,16 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
                 content = content,
                 selectedSegment = state.selectedSegment,
                 onSegmentClick = { onIntent(SessionIntent.SegmentClicked(it)) },
+                cursorMs = state.player?.positionMs,
+                followCursor = state.player?.playing == true,
             )
-            // The player (spec 3.10, item 3) comes with the audio, stage 11 of the plan.
+            state.player?.let { player ->
+                PlayerBar(
+                    player = player,
+                    onPlayPause = { onIntent(SessionIntent.PlayPauseClicked) },
+                    onSeek = { onIntent(SessionIntent.SeekRequested(it)) },
+                )
+            }
             SessionStatCards(content)
             ProblemNotes(content.problemNotes)
             Actions(onIntent)

@@ -3,9 +3,13 @@ package com.example.violintuner.feature.session
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.session.SessionRepository
+import com.example.violintuner.feature.session.player.SessionPlayer
+import com.example.violintuner.feature.session.player.SessionPlayerFactory
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.io.File
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -20,6 +24,8 @@ import kotlinx.coroutines.launch
 class SessionViewModel @Inject constructor(
     private val repository: SessionRepository,
     private val defaultConfig: IntonationConfig,
+    private val audioFiles: SessionAudioFiles,
+    private val playerFactory: SessionPlayerFactory,
     savedState: SavedStateHandle,
 ) : ViewModel() {
 
@@ -27,6 +33,8 @@ class SessionViewModel @Inject constructor(
 
     private val mutableState = MutableStateFlow<SessionState>(SessionState.Loading)
     val state: StateFlow<SessionState> = mutableState.asStateFlow()
+
+    private var player: SessionPlayer? = null
 
     private val effectChannel = Channel<SessionEffect>(Channel.BUFFERED)
     val effects: Flow<SessionEffect> = effectChannel.receiveAsFlow()
@@ -38,6 +46,9 @@ class SessionViewModel @Inject constructor(
     fun onIntent(intent: SessionIntent) {
         when (intent) {
             SessionIntent.BackClicked -> effectChannel.trySend(SessionEffect.Close)
+            SessionIntent.PlayPauseClicked -> player?.let { if (it.state.value.playing) it.pause() else it.play() }
+            is SessionIntent.SeekRequested -> player?.seekTo(intent.positionMs)
+            SessionIntent.ScreenStopped -> player?.pause()
             is SessionIntent.SegmentClicked -> updateLoaded {
                 it.copy(selectedSegment = intent.index.takeIf { index -> index in it.content.segments.indices })
             }
@@ -50,6 +61,7 @@ class SessionViewModel @Inject constructor(
                 load() // the repository decides what a blank name means
             }
             SessionIntent.DeleteConfirmed -> viewModelScope.launch {
+                player?.release() // the file is about to go
                 repository.delete(sessionId)
                 effectChannel.send(SessionEffect.Close)
             }
@@ -58,11 +70,32 @@ class SessionViewModel @Inject constructor(
 
     private suspend fun load() {
         val details = repository.details(sessionId)
-        mutableState.value = if (details == null) {
-            SessionState.NotFound
-        } else {
-            SessionState.Loaded(SessionContentMapper.contentOf(details, defaultConfig))
+        mutableState.update { previous ->
+            if (details == null) {
+                SessionState.NotFound
+            } else {
+                // a reload after renaming keeps what is open and what is playing
+                (previous as? SessionState.Loaded ?: SessionState.Loaded(SessionContentMapper.contentOf(details, defaultConfig)))
+                    .copy(content = SessionContentMapper.contentOf(details, defaultConfig), dialog = null)
+            }
         }
+        if (player == null) details?.summary?.audioPath?.let(audioFiles::existing)?.let(::startPlayer)
+    }
+
+    private fun startPlayer(file: File) {
+        val created = playerFactory.create(viewModelScope)
+        player = created
+        created.load(file)
+        viewModelScope.launch {
+            created.state.collect { playerState ->
+                updateLoaded { it.copy(player = playerState.takeIf { state -> state.ready && !state.failed }) }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        player?.release()
+        player = null
     }
 
     private fun updateLoaded(change: (SessionState.Loaded) -> SessionState.Loaded) {

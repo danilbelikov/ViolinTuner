@@ -32,7 +32,7 @@ class AacFileEncoder(private val file: File, private val sampleRateHz: Int) : Pc
             setInteger(MediaFormat.KEY_BIT_RATE, BIT_RATE)
             setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, MAX_INPUT_BYTES)
         }
-        configure(format, null, null, 0)
+        configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
         start()
     }
     private val muxer = MediaMuxer(file.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)

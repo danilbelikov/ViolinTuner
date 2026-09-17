@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -55,6 +56,7 @@ private val TicksHeight = 22.dp
 private val BarCorner = 5.dp
 private val ContourStroke = 1.6.dp
 private val SelectionStroke = 3.dp
+private val CursorWidth = 2.dp
 private const val BAR_ALPHA = 0.9f
 private const val TABULAR_FIGURES = "tnum"
 
@@ -72,6 +74,9 @@ fun PianoRoll(
     selectedSegment: Int?,
     onSegmentClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    /** Playback position; null hides the cursor. While [followCursor] the roll scrolls after it. */
+    cursorMs: Long? = null,
+    followCursor: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val zoneColors = ViolinTheme.zoneColors
@@ -105,6 +110,10 @@ fun PianoRoll(
         }
         val density = LocalDensity.current.density
         var scrollDp by remember(math) { mutableFloatStateOf(0f) }
+        // in an effect, not in composition: this writes the state the composition reads
+        LaunchedEffect(cursorMs, followCursor, math) {
+            if (followCursor && cursorMs != null) math.scrollToFollow(cursorMs, scrollDp)?.let { scrollDp = it }
+        }
         val currentMath by rememberUpdatedState(math)
         val currentBars by rememberUpdatedState(bars)
         val currentOnClick by rememberUpdatedState(onSegmentClick)
@@ -162,6 +171,12 @@ fun PianoRoll(
                         drawLine(colors.surfaceContainerHigh, Offset(0f, y), Offset(size.width, y), 1.dp.toPx())
                         val label = textMeasurer.measure(note.name, labelStyle, softWrap = false, maxLines = 1)
                         drawText(label, topLeft = Offset(0f, y - label.size.height / 2f))
+                    }
+                    if (cursorMs != null) {
+                        val x = gutter + (math.x(cursorMs) - scrollDp).dp.toPx()
+                        if (x >= gutter && x <= size.width) {
+                            drawLine(colors.primary, Offset(x, 0f), Offset(x, size.height), CursorWidth.toPx())
+                        }
                     }
                     clipRect(left = gutter) {
                         content.segments.forEachIndexed { index, segment ->

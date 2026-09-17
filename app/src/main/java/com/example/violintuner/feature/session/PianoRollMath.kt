@@ -39,6 +39,17 @@ class PianoRollMath(
         return BAR_HEIGHT / 2 - clamped / CONTOUR_RANGE_CENTS.toFloat() * CONTOUR_HALF_HEIGHT
     }
 
+    /**
+     * Scroll offset that keeps a playback cursor in view, or null when it already is: the cursor
+     * may wander between [CURSOR_MIN] and [CURSOR_MAX] of the viewport, leaving that band puts
+     * it back at [CURSOR_MIN] so that most of the view shows what comes next.
+     */
+    fun scrollToFollow(cursorMs: Long, scroll: Float): Float? {
+        val position = x(cursorMs) - scroll
+        if (position >= viewportWidth * CURSOR_MIN && position <= viewportWidth * CURSOR_MAX) return null
+        return (x(cursorMs) - viewportWidth * CURSOR_MIN).coerceIn(0f, maxScroll)
+    }
+
     /** Time labels: a round step that keeps them at least [MIN_TICK_SPACING] apart. */
     fun tickTimesMs(): List<Long> {
         val minStepMs = MIN_TICK_SPACING / dpPerMs
@@ -69,6 +80,8 @@ class PianoRollMath(
         const val CONTOUR_HALF_HEIGHT = 8.8f
         const val MIN_TICK_SPACING = 80f
         const val TOUCH_SLOP = 6f
+        const val CURSOR_MIN = 0.2f
+        const val CURSOR_MAX = 0.8f
         private const val MS_PER_SECOND = 1_000f
         private const val TICK_LAST_STEP_MS = 600_000L
         private val TICK_STEPS_S = listOf(1, 2, 5, 10, 15, 30, 60, 120, 300, 600)

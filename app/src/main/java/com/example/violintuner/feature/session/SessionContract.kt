@@ -4,6 +4,7 @@ import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.session.StringFinger
+import com.example.violintuner.feature.session.player.PlayerState
 
 /** A note on the piano roll. Times are from the session start. */
 data class RollSegment(
@@ -60,11 +61,21 @@ sealed interface SessionState {
         /** Index in [SessionContent.segments] of the note whose details are open. */
         val selectedSegment: Int? = null,
         val dialog: SessionDialog? = null,
+        /** Null when the session has no sound, its file is gone or cannot be played. */
+        val player: PlayerState? = null,
     ) : SessionState
 }
 
 sealed interface SessionIntent {
     data object BackClicked : SessionIntent
+
+    data object PlayPauseClicked : SessionIntent
+
+    /** The slider was released at this position. */
+    data class SeekRequested(val positionMs: Long) : SessionIntent
+
+    /** The screen is no longer visible: the sound stops (spec 3.10). */
+    data object ScreenStopped : SessionIntent
 
     data class SegmentClicked(val index: Int) : SessionIntent
 

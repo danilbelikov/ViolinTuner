@@ -1,6 +1,7 @@
 package com.example.violintuner.feature.session
 
 import androidx.lifecycle.SavedStateHandle
+import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
@@ -9,9 +10,14 @@ import com.example.violintuner.core.domain.session.Finger
 import com.example.violintuner.core.domain.session.NewSession
 import com.example.violintuner.core.domain.session.SessionAnalyzer
 import com.example.violintuner.core.domain.session.SessionSample
+import com.example.violintuner.feature.session.player.PlayerState
+import com.example.violintuner.feature.session.player.SessionPlayer
+import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
@@ -37,7 +43,7 @@ class SessionViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     /** F#5 flat by 18, A4 in tune, C#5 flat by 9: the handoff example in miniature. */
-    private suspend fun saveSession(tolerance: Double = 8.0): Long {
+    private suspend fun saveSession(tolerance: Double = 8.0, audio: String? = null): Long {
         val sessionConfig = config.copy(toleranceCents = tolerance)
         val samples = List(20) { SessionSample(78, -18.0) } + listOf(null) +
             List(40) { SessionSample(69, 1.0) } + listOf(null) + List(20) { SessionSample(73, -9.0) }
@@ -46,13 +52,42 @@ class SessionViewModelTest {
             NewSession(
                 startedAtEpochMs = 1_789_000_000_000, durationMs = samples.size * 50L, config = sessionConfig,
                 samples = samples, metrics = analysis.metrics!!,
-                previewZones = SessionAnalyzer.previewZones(analysis.segments, sessionConfig), audioPath = null,
+                previewZones = SessionAnalyzer.previewZones(analysis.segments, sessionConfig), audioPath = audio,
             ),
         )
     }
 
+    private class FakePlayer : SessionPlayer {
+        override val state = MutableStateFlow(PlayerState())
+        var loaded: File? = null
+        var released = 0
+        override fun load(file: File) {
+            loaded = file
+            state.value = PlayerState(ready = true, durationMs = 4_100)
+        }
+
+        override fun play() = state.update { it.copy(playing = true) }
+        override fun pause() = state.update { it.copy(playing = false) }
+        override fun seekTo(positionMs: Long) = state.update { it.copy(positionMs = positionMs) }
+        override fun release() {
+            released++
+        }
+    }
+
+    private class FakeAudioFiles(private val present: Set<String>) : SessionAudioFiles {
+        override fun newFile(): File = error("not used")
+        override fun existing(name: String): File? = File(name).takeIf { name in present }
+        override fun delete(name: String) = Unit
+        override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
+    }
+
+    private val player = FakePlayer()
+    private var audioFiles: SessionAudioFiles = FakeAudioFiles(present = setOf("take.m4a"))
+
     private fun TestScope.viewModel(id: Long): SessionViewModel {
-        val viewModel = SessionViewModel(repository, config, SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)))
+        val viewModel = SessionViewModel(
+            repository, config, audioFiles, { player }, SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)),
+        )
         runCurrent()
         return viewModel
     }
@@ -157,6 +192,77 @@ class SessionViewModelTest {
         val viewModel = viewModel(saveSession())
         viewModel.onIntent(SessionIntent.BackClicked)
         assertEquals(SessionEffect.Close, viewModel.effects.first())
+    }
+
+    // ---- player (spec 3.10, item 3)
+
+    @Test
+    fun `a session without sound has no player`() = runTest {
+        val viewModel = viewModel(saveSession())
+        assertNull(viewModel.loaded().player)
+        assertNull(player.loaded)
+    }
+
+    @Test
+    fun `a session whose file is gone has no player either`() = runTest {
+        audioFiles = FakeAudioFiles(present = emptySet())
+        assertNull(viewModel(saveSession(audio = "take.m4a")).loaded().player)
+    }
+
+    @Test
+    fun `a session with sound loads its file and plays, pauses and seeks`() = runTest {
+        val viewModel = viewModel(saveSession(audio = "take.m4a"))
+        assertEquals("take.m4a", player.loaded?.name)
+        assertEquals(PlayerState(ready = true, durationMs = 4_100), viewModel.loaded().player)
+
+        viewModel.onIntent(SessionIntent.PlayPauseClicked)
+        runCurrent()
+        assertTrue(viewModel.loaded().player!!.playing)
+
+        viewModel.onIntent(SessionIntent.SeekRequested(2_000))
+        runCurrent()
+        assertEquals(2_000, viewModel.loaded().player!!.positionMs)
+
+        viewModel.onIntent(SessionIntent.PlayPauseClicked)
+        runCurrent()
+        assertTrue(!viewModel.loaded().player!!.playing)
+    }
+
+    @Test
+    fun `leaving the screen stops the sound`() = runTest {
+        val viewModel = viewModel(saveSession(audio = "take.m4a"))
+        viewModel.onIntent(SessionIntent.PlayPauseClicked)
+        viewModel.onIntent(SessionIntent.ScreenStopped)
+        runCurrent()
+        assertTrue(!viewModel.loaded().player!!.playing)
+    }
+
+    @Test
+    fun `a player that fails disappears, the screen stays`() = runTest {
+        val viewModel = viewModel(saveSession(audio = "take.m4a"))
+        player.state.value = PlayerState(failed = true)
+        runCurrent()
+        assertNull(viewModel.loaded().player)
+        assertEquals(50, viewModel.loaded().content.scorePercent)
+    }
+
+    @Test
+    fun `renaming keeps the player and what it was doing`() = runTest {
+        val viewModel = viewModel(saveSession(audio = "take.m4a"))
+        viewModel.onIntent(SessionIntent.PlayPauseClicked)
+        viewModel.onIntent(SessionIntent.RenameConfirmed("Этюд"))
+        runCurrent()
+        assertEquals("Этюд", viewModel.loaded().content.title)
+        assertTrue(viewModel.loaded().player!!.playing)
+        assertEquals(0, player.released)
+    }
+
+    @Test
+    fun `deleting releases the player before the file goes`() = runTest {
+        val viewModel = viewModel(saveSession(audio = "take.m4a"))
+        viewModel.onIntent(SessionIntent.DeleteConfirmed)
+        runCurrent()
+        assertEquals(1, player.released)
     }
 
     @Test

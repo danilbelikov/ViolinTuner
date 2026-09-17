@@ -63,6 +63,16 @@ class PianoRollMathTest {
         assertNull(math.hitTest(x = 200f, y = 13f, bars))
     }
 
+    @Test
+    fun `the roll follows the playback cursor only when it leaves the middle band`() {
+        val math = PianoRollMath(durationMs = 600_000, rowCount = 1, viewportWidth = 300f) // 30 dp/s
+        assertNull(math.scrollToFollow(cursorMs = 5_000, scroll = 0f)) // at 150 of 300
+        assertEquals(190f, math.scrollToFollow(cursorMs = 8_333, scroll = 0f)!!, 0.5f) // past 80 %: back to 20 %
+        assertEquals(0f, math.scrollToFollow(cursorMs = 1_000, scroll = 500f)!!, EPS) // sought back to the start
+        assertEquals(math.maxScroll, math.scrollToFollow(cursorMs = 600_000, scroll = 0f)!!, EPS)
+        assertNull(PianoRollMath(5_000, 1, 300f).scrollToFollow(2_500, 0f)) // nothing to scroll
+    }
+
     private companion object {
         const val EPS = 0.001f
     }

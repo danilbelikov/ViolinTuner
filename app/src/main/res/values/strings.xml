@@ -107,6 +107,9 @@
     <string name="session_tip_wandering">В среднем в строе, но нота плавает</string>
     <string name="session_tip_flat">Палец стоит низко — чуть ближе к подставке</string>
     <string name="session_tip_sharp">Палец стоит высоко — чуть ближе к порожку</string>
+    <string name="session_player_play">Слушать запись</string>
+    <string name="session_player_pause">Пауза</string>
+    <string name="session_player_position">Позиция в записи</string>
     <string name="session_roll_description">Лента нот. Нажмите на ноту, чтобы увидеть детали.</string>
 
     <string name="history_count_one">%1$d сессия</string>

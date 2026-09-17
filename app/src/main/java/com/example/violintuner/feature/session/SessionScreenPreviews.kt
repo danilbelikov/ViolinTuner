@@ -13,6 +13,7 @@ import com.example.violintuner.core.domain.session.SessionSample
 import com.example.violintuner.core.domain.session.SessionSummary
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.session.components.NoteSheetContent
+import com.example.violintuner.feature.session.player.PlayerState
 import java.time.ZoneId
 import kotlin.math.sin
 
@@ -58,6 +59,15 @@ private fun SessionScalePreview() = SessionPreview(SessionState.Loaded(contentOf
 @Composable
 private fun SessionLongPreview() = SessionPreview(
     SessionState.Loaded(contentOf(scaleSamples(repeats = 40), title = null), selectedSegment = null),
+)
+
+@Preview(name = "Session · with sound, playing", widthDp = 412, heightDp = 1100)
+@Composable
+private fun SessionPlayingPreview() = SessionPreview(
+    SessionState.Loaded(
+        content = contentOf(scaleSamples(repeats = 2)),
+        player = PlayerState(ready = true, playing = true, positionMs = 5_200, durationMs = 13_500),
+    ),
 )
 
 @Preview(name = "Session · one clean note", widthDp = 412, heightDp = 900)
