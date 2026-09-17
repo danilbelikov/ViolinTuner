@@ -630,6 +630,46 @@ class LiveViewModelTest {
         assertTrue(viewModel.state.value.signal is LiveSignal.Sounding)
     }
 
+    @Test
+    fun `a dead input keeps saying so until real sound is back`() = runTest {
+        // Like the emulator with its host microphone off: exact zeros, the watchdog gives up
+        // after two seconds, the reopened input is dead again, and only the third is alive.
+        val alive = fakeSource(FakeScenario.IN_TUNE)
+        var attempts = 0
+        val source = object : PitchSource {
+            override val requiresMicPermission = false
+            override val audioTap: AudioTap? = null
+            override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
+                if (++attempts <= 2) {
+                    var t = 0L
+                    while (t < 2_000) {
+                        emit(PitchFrame.unpitched(t, clarity = 0.0, rms = 0.0))
+                        delay(10)
+                        t += 10
+                    }
+                    throw MicUnavailableException("input is digitally silent")
+                }
+                emitAll(alive.frames(config))
+            }
+        }
+        val viewModel = viewModel(source)
+        val seen = mutableListOf<LiveSignal>()
+        backgroundScope.launch { viewModel.state.collect { seen += it.signal } }
+
+        advance(2_500) // first attempt: nothing to tell it from a silent room yet, then it fails
+        assertEquals(LiveSignal.MicUnavailable, viewModel.state.value.signal)
+        val firstFailure = seen.size
+
+        advance(6_000) // second attempt is dead as well: no flip back to "play…" in between
+        assertEquals(2, attempts)
+        assertTrue(seen.drop(firstFailure).all { it == LiveSignal.MicUnavailable })
+
+        advance(3_500) // third attempt delivers sound
+        assertEquals(3, attempts)
+        assertTrue(viewModel.state.value.signal is LiveSignal.Sounding)
+        assertTrue(viewModel.state.value.canRecord)
+    }
+
     private class CountingSource(
         private val delegate: PitchSource,
         override val requiresMicPermission: Boolean = false,

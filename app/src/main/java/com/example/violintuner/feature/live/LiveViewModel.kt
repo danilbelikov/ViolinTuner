@@ -73,6 +73,12 @@ class LiveViewModel @Inject constructor(
         var recorder: SessionRecorder? = null
         var audioFile: File? = null
 
+        // After a microphone failure the reopened input is trusted only once it delivers
+        // something: a dead input (emulator bridge off, capture silenced by the system) reads as
+        // exact zeros, and showing "play…" for the two seconds before the watchdog gives up
+        // again would make the screen flip between the two messages forever.
+        var awaitingSignal = false
+
         // Closes the take, if one was asked for, and says whether the file is worth keeping.
         suspend fun closeAudio(keep: Boolean): String? {
             val file = audioFile ?: return null
@@ -126,6 +132,10 @@ class LiveViewModel @Inject constructor(
         return pitchSource.frames(config)
             .onStart { engine.reset() }
             .map { frame ->
+                if (awaitingSignal) {
+                    if (frame.rms == 0.0) return@map PipelineOutput(LiveSignal.MicUnavailable)
+                    awaitingSignal = false
+                }
                 val reading = engine.process(frame, LiveReducer.targetModeOf(target.value))
                 if (recordingRequested.value && recorder == null && mayStartRecorder(frame.tMs)) {
                     recorder = SessionRecorder(config, clock.millis())
@@ -149,6 +159,7 @@ class LiveViewModel @Inject constructor(
             .retryWhen { cause, _ ->
                 // Anything else is a bug and must crash rather than be retried forever.
                 if (cause !is MicUnavailableException) return@retryWhen false
+                awaitingSignal = true
                 emit(PipelineOutput(LiveSignal.MicUnavailable))
                 delay(MIC_RETRY_DELAY_MS)
                 true
