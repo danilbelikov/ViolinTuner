@@ -7,6 +7,7 @@ import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
+import com.example.violintuner.core.domain.session.RecordingBar
 import com.example.violintuner.core.ui.theme.ViolinTheme
 
 // One preview per row of the state table in spec 3.4, mirroring handoff frames 8a–8f
@@ -21,6 +22,7 @@ private fun LivePreview(
     signal: LiveSignal,
     mode: LiveMode = LiveMode.PLAY,
     lockedString: ViolinString? = null,
+    recording: RecordingState? = null,
 ) {
     val config = IntonationConfig()
     ViolinTheme {
@@ -29,6 +31,8 @@ private fun LivePreview(
                 mode = mode,
                 signal = signal,
                 tuning = LiveReducer.tuningStateOf(LiveTarget(mode, lockedString), signal, config),
+                recording = recording,
+                canRecord = LiveReducer.canRecord(LiveTarget(mode, lockedString), signal),
                 scale = ScaleSpec(config),
                 zoneCrossfadeMs = config.zoneCrossfadeMs,
             ),
@@ -134,4 +138,28 @@ private fun SmallPhonePreview() = LivePreview(
 private fun LargeFontPreview() = LivePreview(
     LiveSignal.Sounding(Note(F_SHARP_5), cents = 14.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
     mode = LiveMode.TUNING,
+)
+
+// Recording (spec 3.9): red stop button, strip with timer and mini bar, switcher dimmed.
+
+private val SampleRecording = RecordingState(
+    elapsedMs = 47_000,
+    bars = listOf(
+        RecordingBar(0.20f, Zone.IN_TUNE), RecordingBar(0.08f, Zone.NEAR), RecordingBar(0.15f, Zone.IN_TUNE),
+        RecordingBar(0.05f, Zone.OFF), RecordingBar(0.22f, Zone.IN_TUNE), RecordingBar(0.10f, Zone.NEAR),
+    ),
+)
+
+@Preview(name = "Recording · portrait", widthDp = 412, heightDp = 788)
+@Composable
+private fun RecordingPreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.4),
+    recording = SampleRecording,
+)
+
+@Preview(name = "Recording · landscape", widthDp = 892, heightDp = 412)
+@Composable
+private fun RecordingLandscapePreview() = LivePreview(
+    LiveSignal.Sounding(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    recording = SampleRecording,
 )

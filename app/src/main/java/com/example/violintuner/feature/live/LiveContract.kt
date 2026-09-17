@@ -5,6 +5,7 @@ import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
+import com.example.violintuner.core.domain.session.RecordingBar
 
 enum class LiveMode { PLAY, TUNING }
 
@@ -48,10 +49,21 @@ data class TuningState(
     val stringHz: Map<ViolinString, Int>,
 )
 
+/** The strip above the record button while a session is being recorded (spec 3.9). */
+data class RecordingState(
+    val elapsedMs: Long,
+    /** Notes played so far as shares of the mini bar, in order. */
+    val bars: List<RecordingBar>,
+)
+
 data class LiveState(
     val mode: LiveMode,
     val signal: LiveSignal,
     val tuning: TuningState,
+    /** Null when nothing is being recorded. */
+    val recording: RecordingState?,
+    /** Recording exists only in play mode and only while the microphone delivers. */
+    val canRecord: Boolean,
     val scale: ScaleSpec,
     /** Duration of the zone color cross-fade (spec 3.2). */
     val zoneCrossfadeMs: Int,
@@ -63,6 +75,7 @@ sealed interface LiveIntent {
     /** Tuning mode: pins the string, or returns to auto when it is pinned already. */
     data class StringClicked(val string: ViolinString) : LiveIntent
 
+    /** Starts a recording, or stops the running one. */
     data object RecordClicked : LiveIntent
 
     data object GrantMicClicked : LiveIntent
@@ -72,8 +85,11 @@ sealed interface LiveIntent {
 }
 
 sealed interface LiveEffect {
-    /** Recording is v2; the button only explains that (spec 7). */
-    data object ShowRecordingUnavailable : LiveEffect
+    /** A recording was stopped by the player and saved: show it (spec 3.9). */
+    data class OpenSession(val id: Long) : LiveEffect
+
+    /** A recording was stopped by the player, but there was not a single note in it. */
+    data object ShowNoNotesRecorded : LiveEffect
 
     data object RequestMicPermission : LiveEffect
 }

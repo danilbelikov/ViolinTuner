@@ -51,6 +51,7 @@ import com.example.violintuner.feature.live.components.MicPermissionPrompt
 import com.example.violintuner.feature.live.components.ModeSwitcher
 import com.example.violintuner.feature.live.components.NoteLabel
 import com.example.violintuner.feature.live.components.RecordButton
+import com.example.violintuner.feature.live.components.RecordingStrip
 import com.example.violintuner.feature.live.components.StatusRow
 import com.example.violintuner.feature.live.components.StringRow
 import com.example.violintuner.feature.live.components.ZoneEllipse
@@ -113,18 +114,20 @@ private fun PortraitLayout(
     val noMic = state.signal == LiveSignal.NoMicPermission
     val sounding = state.signal as? LiveSignal.Sounding
     val chromeAlpha = if (noMic) LiveDimens.CHROME_ALPHA_NO_MIC else 1f
+    val recording = state.recording
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         ModeSwitcher(
             mode = state.mode,
             onSelect = { onIntent(LiveIntent.SelectMode(it)) },
+            enabled = recording == null,
             modifier = Modifier
                 .padding(
                     start = LiveDimens.ScreenPadding,
                     end = LiveDimens.ScreenPadding,
                     top = LiveDimens.SwitcherTopPadding,
                 )
-                .alpha(chromeAlpha),
+                .alpha(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha),
         )
         AnimatedVisibility(
             visible = state.mode == LiveMode.TUNING,
@@ -172,11 +175,21 @@ private fun PortraitLayout(
                 bottom = LiveDimens.ScaleBottomPadding,
             ),
         )
+        RecordingStripSlot(
+            recording = recording,
+            modifier = Modifier.padding(
+                start = LiveDimens.ScreenPadding,
+                end = LiveDimens.ScreenPadding,
+                top = LiveDimens.RecordingStripTopPadding,
+            ),
+        )
         RecordButton(
+            recording = recording != null,
+            enabled = state.canRecord || recording != null,
             onClick = { onIntent(LiveIntent.RecordClicked) },
             modifier = Modifier
                 .padding(vertical = LiveDimens.RecordPaddingVertical)
-                .alpha(chromeAlpha),
+                .alpha(if (state.canRecord || recording != null) 1f else LiveDimens.DISABLED_ALPHA),
         )
     }
 }
@@ -192,6 +205,7 @@ private fun LandscapeLayout(
     val noMic = state.signal == LiveSignal.NoMicPermission
     val sounding = state.signal as? LiveSignal.Sounding
     val chromeAlpha = if (noMic) LiveDimens.CHROME_ALPHA_NO_MIC else 1f
+    val recording = state.recording
 
     Row(modifier = Modifier.fillMaxSize()) {
         BoxWithConstraints(
@@ -219,7 +233,8 @@ private fun LandscapeLayout(
             ModeSwitcher(
                 mode = state.mode,
                 onSelect = { onIntent(LiveIntent.SelectMode(it)) },
-                modifier = Modifier.alpha(chromeAlpha),
+                enabled = recording == null,
+                modifier = Modifier.alpha(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha),
             )
             // No hint line here: there is no height for it, the button colors and the lock
             // badge carry the same information.
@@ -251,13 +266,33 @@ private fun LandscapeLayout(
                 }
             }
             Scale(state = state, zoneColor = zoneColor)
+            RecordingStripSlot(recording = recording)
             RecordButton(
+                recording = recording != null,
+                enabled = state.canRecord || recording != null,
                 onClick = { onIntent(LiveIntent.RecordClicked) },
                 modifier = Modifier
                     .padding(top = LiveDimens.LandscapeRecordTopPadding)
-                    .alpha(chromeAlpha),
+                    .alpha(if (state.canRecord || recording != null) 1f else LiveDimens.DISABLED_ALPHA),
             )
         }
+    }
+}
+
+/**
+ * The recording strip unfolds above the record button and folds away again; while it folds it
+ * keeps showing the last numbers, because the state is already back to "not recording".
+ */
+@Composable
+private fun RecordingStripSlot(recording: RecordingState?, modifier: Modifier = Modifier) {
+    var lastShown by remember { mutableStateOf(RecordingState(elapsedMs = 0, bars = emptyList())) }
+    if (recording != null) SideEffect { lastShown = recording }
+    AnimatedVisibility(
+        visible = recording != null,
+        enter = expandVertically(tween(LiveMotion.RECORD_MORPH_MS)) + fadeIn(tween(LiveMotion.RECORD_MORPH_MS)),
+        exit = shrinkVertically(tween(LiveMotion.RECORD_MORPH_MS)) + fadeOut(tween(LiveMotion.RECORD_MORPH_MS)),
+    ) {
+        RecordingStrip(recording = recording ?: lastShown, modifier = modifier)
     }
 }
 

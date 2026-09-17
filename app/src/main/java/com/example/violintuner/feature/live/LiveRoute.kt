@@ -7,6 +7,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -22,6 +23,7 @@ import com.example.violintuner.core.ui.permission.rememberMicPermissionRequester
 /** Entry point of the Live destination: owns the ViewModel, its effects and the mic permission. */
 @Composable
 fun LiveRoute(
+    onOpenSession: (sessionId: Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LiveViewModel = hiltViewModel(),
 ) {
@@ -29,6 +31,7 @@ fun LiveRoute(
     val context = LocalContext.current
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
+    val currentOnOpenSession by rememberUpdatedState(onOpenSession)
 
     val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = true) { granted ->
         viewModel.onIntent(LiveIntent.MicPermissionChanged(granted))
@@ -50,8 +53,9 @@ fun LiveRoute(
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.effects.collect { effect ->
                 when (effect) {
-                    LiveEffect.ShowRecordingUnavailable ->
-                        Toast.makeText(context, R.string.record_unavailable, Toast.LENGTH_SHORT).show()
+                    is LiveEffect.OpenSession -> currentOnOpenSession(effect.id)
+                    LiveEffect.ShowNoNotesRecorded ->
+                        Toast.makeText(context, R.string.record_no_notes, Toast.LENGTH_SHORT).show()
                     LiveEffect.RequestMicPermission -> requestMicPermission()
                 }
             }

@@ -39,6 +39,7 @@ fun ModeSwitcher(
     mode: LiveMode,
     onSelect: (LiveMode) -> Unit,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
 ) {
     val colors = MaterialTheme.colorScheme
     val shape = RoundedCornerShape(LiveDimens.SwitcherCorner)
@@ -66,6 +67,7 @@ fun ModeSwitcher(
             Segment(
                 label = stringResource(R.string.mode_play),
                 selected = mode == LiveMode.PLAY,
+                enabled = enabled,
                 onClick = { onSelect(LiveMode.PLAY) },
             ) { tint ->
                 Box(
@@ -83,6 +85,7 @@ fun ModeSwitcher(
             Segment(
                 label = stringResource(R.string.mode_tuning),
                 selected = mode == LiveMode.TUNING,
+                enabled = enabled,
                 onClick = { onSelect(LiveMode.TUNING) },
             ) { tint ->
                 Box(
@@ -99,6 +102,7 @@ fun ModeSwitcher(
 private fun RowScope.Segment(
     label: String,
     selected: Boolean,
+    enabled: Boolean,
     onClick: () -> Unit,
     icon: @Composable (tint: Color) -> Unit,
 ) {
@@ -107,7 +111,7 @@ private fun RowScope.Segment(
         modifier = Modifier
             .weight(1f)
             .fillMaxHeight()
-            .selectable(selected = selected, role = Role.Tab, onClick = onClick),
+            .selectable(selected = selected, enabled = enabled, role = Role.Tab, onClick = onClick),
         horizontalArrangement = Arrangement.spacedBy(
             LiveDimens.SwitcherIconGap,
             Alignment.CenterHorizontally,

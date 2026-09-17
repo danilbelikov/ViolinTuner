@@ -41,6 +41,11 @@ object LiveReducer {
         else -> target.copy(lockedString = string)
     }
 
+    /** Recording is a play-mode thing and needs a working microphone (spec 3.9). */
+    fun canRecord(target: LiveTarget, signal: LiveSignal): Boolean =
+        target.mode == LiveMode.PLAY &&
+            signal != LiveSignal.NoMicPermission && signal != LiveSignal.MicUnavailable
+
     fun tuningStateOf(target: LiveTarget, signal: LiveSignal, config: IntonationConfig): TuningState {
         val sounding = (signal as? LiveSignal.Sounding)?.takeIf { target.mode == LiveMode.TUNING }
         return TuningState(

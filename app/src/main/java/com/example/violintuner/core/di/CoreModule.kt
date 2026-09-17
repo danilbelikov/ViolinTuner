@@ -5,6 +5,7 @@ import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
+import java.time.Clock
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
@@ -26,6 +27,10 @@ object CoreModule {
     @Provides
     @Singleton
     fun provideIntonationConfig(): IntonationConfig = IntonationConfig()
+
+    /** Wall clock for session start times and "today" in the history; tests pass a fixed one. */
+    @Provides
+    fun provideClock(): Clock = Clock.systemDefaultZone()
 
     @Provides
     @DefaultDispatcher

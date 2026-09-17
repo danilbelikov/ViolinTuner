@@ -10,8 +10,12 @@ import com.example.violintuner.core.domain.PitchFrame
 import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
+import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.core.settings.SettingsConfigSource
+import java.time.Clock
+import java.time.Instant
+import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -33,6 +37,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.test.testTimeSource
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -48,12 +53,21 @@ class LiveViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private val settings = FakeSettingsRepository()
+    private val sessions = FakeSessionRepository()
+    private val startedAt = Instant.parse("2026-09-17T09:00:00Z")
 
-    private fun TestScope.viewModel(source: PitchSource) = LiveViewModel(
+    private fun TestScope.viewModel(source: PitchSource, base: IntonationConfig = IntonationConfig()) = LiveViewModel(
         source,
-        SettingsConfigSource(IntonationConfig(), settings),
+        SettingsConfigSource(base, settings),
+        sessions,
+        Clock.fixed(startedAt, ZoneOffset.UTC),
         StandardTestDispatcher(testScheduler),
     )
+
+    private fun TestScope.advance(millis: Long) {
+        advanceTimeBy(millis)
+        runCurrent()
+    }
 
     private fun TestScope.fakeSource(scenario: FakeScenario) =
         FakePitchSource(scenario, timeSource = testTimeSource)
@@ -199,11 +213,178 @@ class LiveViewModelTest {
         assertEquals(442, viewModel.state.value.tuning.stringHz.getValue(ViolinString.A4))
     }
 
+    // ---- recording (spec 3.9)
+
     @Test
-    fun `record button only explains that recording comes later`() = runTest {
-        val viewModel = viewModel(FakeScenario.SILENCE)
+    fun `record button starts a recording that shows its time and notes`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        observe(viewModel, 500)
+        assertEquals(null, viewModel.state.value.recording)
+        assertTrue(viewModel.state.value.canRecord)
+
         viewModel.onIntent(LiveIntent.RecordClicked)
-        assertEquals(LiveEffect.ShowRecordingUnavailable, viewModel.effects.first())
+        runCurrent()
+        assertEquals(RecordingState(0, emptyList()), viewModel.state.value.recording) // shows at once
+
+        advance(3_000)
+        val recording = viewModel.state.value.recording!!
+        assertTrue("elapsed ${recording.elapsedMs}", recording.elapsedMs in 2_900..3_000)
+        assertEquals(listOf(Zone.IN_TUNE), recording.bars.map { it.zone })
+        assertTrue(sessions.saved.isEmpty())
+    }
+
+    @Test
+    fun `second tap saves the session and opens it`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(3_000)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(100)
+
+        assertEquals(null, viewModel.state.value.recording)
+        val saved = sessions.saved.single()
+        assertEquals(startedAt.toEpochMilli(), saved.startedAtEpochMs)
+        assertTrue("duration ${saved.durationMs}", saved.durationMs in 2_900..3_100)
+        assertEquals(100, saved.metrics.scorePercent)
+        assertEquals(LiveEffect.OpenSession(1), viewModel.effects.first())
+    }
+
+    @Test
+    fun `the session keeps the settings it was recorded with`() = runTest {
+        settings.setA4(442)
+        settings.setTolerance(TolerancePreset.BEGINNER)
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(2_500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(100)
+        assertEquals(442.0, sessions.saved.single().config.a4Hz, 0.0)
+        assertEquals(12.0, sessions.saved.single().config.toleranceCents, 0.0)
+    }
+
+    @Test
+    fun `a take under two seconds is dropped without a word`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(1_500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(100)
+        assertEquals(null, viewModel.state.value.recording)
+        assertTrue(sessions.saved.isEmpty())
+        viewModel.onIntent(LiveIntent.GrantMicClicked) // the next effect is this one: nothing was queued before
+        assertEquals(LiveEffect.RequestMicPermission, viewModel.effects.first())
+    }
+
+    @Test
+    fun `a take without notes is not saved and says so`() = runTest {
+        val viewModel = viewModel(FakeScenario.SILENCE)
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(3_000)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(100)
+        assertTrue(sessions.saved.isEmpty())
+        assertEquals(LiveEffect.ShowNoNotesRecorded, viewModel.effects.first())
+    }
+
+    @Test
+    fun `leaving Live saves the take quietly`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        val observer = observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(3_000)
+
+        observer.cancel()
+        advance(2_500) // the source stops 2 s after the last subscriber left
+        assertEquals(1, sessions.saved.size)
+
+        observe(viewModel, 500) // back on Live: not recording, and no session screen pops up
+        assertEquals(null, viewModel.state.value.recording)
+        viewModel.onIntent(LiveIntent.GrantMicClicked)
+        assertEquals(LiveEffect.RequestMicPermission, viewModel.effects.first())
+    }
+
+    @Test
+    fun `a rotation does not interrupt the take`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        val observer = observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(1_500)
+        observer.cancel()
+        advance(500) // the new activity subscribes well within the stop timeout
+        observe(viewModel, 1_500)
+        assertTrue(viewModel.state.value.recording!!.elapsedMs > 3_000)
+        assertTrue(sessions.saved.isEmpty())
+    }
+
+    @Test
+    fun `a microphone failure ends and saves the take`() = runTest {
+        val working = fakeSource(FakeScenario.IN_TUNE)
+        val breaksAfterFourSeconds = object : PitchSource {
+            override val requiresMicPermission = false
+            override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
+                working.frames(config).collect { frame ->
+                    if (frame.tMs > 4_000) throw MicUnavailableException("unplugged")
+                    emit(frame)
+                }
+            }
+        }
+        val viewModel = viewModel(breaksAfterFourSeconds)
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(4_000)
+        assertEquals(LiveSignal.MicUnavailable, viewModel.state.value.signal)
+        assertEquals(null, viewModel.state.value.recording)
+        assertFalse(viewModel.state.value.canRecord)
+        assertEquals(1, sessions.saved.size)
+    }
+
+    @Test
+    fun `the limit stops and opens the session`() = runTest {
+        val viewModel = viewModel(fakeSource(FakeScenario.IN_TUNE), base = IntonationConfig(maxSessionMs = 5_000))
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(6_000)
+        assertEquals(null, viewModel.state.value.recording)
+        assertTrue(sessions.saved.single().durationMs in 5_000..5_100)
+        assertEquals(LiveEffect.OpenSession(1), viewModel.effects.first())
+    }
+
+    @Test
+    fun `no recording in tuning mode, and no mode switch while recording`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        observe(viewModel, 300)
+        viewModel.onIntent(LiveIntent.SelectMode(LiveMode.TUNING))
+        advance(300)
+        assertFalse(viewModel.state.value.canRecord)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(300)
+        assertEquals(null, viewModel.state.value.recording)
+
+        viewModel.onIntent(LiveIntent.SelectMode(LiveMode.PLAY))
+        advance(300)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(300)
+        viewModel.onIntent(LiveIntent.SelectMode(LiveMode.TUNING))
+        advance(300)
+        assertEquals(LiveMode.PLAY, viewModel.state.value.mode)
+        assertTrue(viewModel.state.value.recording != null)
+    }
+
+    @Test
+    fun `no recording without the microphone permission`() = runTest {
+        val source = CountingSource(fakeSource(FakeScenario.IN_TUNE), requiresMicPermission = true)
+        val viewModel = viewModel(source)
+        observe(viewModel, 100)
+        viewModel.onIntent(LiveIntent.MicPermissionChanged(granted = false))
+        advance(100)
+        assertFalse(viewModel.state.value.canRecord)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(100)
+        assertEquals(null, viewModel.state.value.recording)
     }
 
     @Test

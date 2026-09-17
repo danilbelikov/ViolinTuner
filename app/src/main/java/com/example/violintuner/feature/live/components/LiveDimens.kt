@@ -52,6 +52,14 @@ internal object LiveDimens {
     val RecordButtonSize = 72.dp
     val RecordDotSize = 26.dp
     val RecordPaddingVertical = 12.dp
+    val RecordStopSize = 24.dp
+    val RecordStopCorner = 4.dp
+
+    val RecordingStripTopPadding = 8.dp
+    val RecordingStripGap = 12.dp
+    val RecordingDotSize = 10.dp
+    val RecordingBarHeight = 6.dp
+    val RecordingBarGap = 2.dp
 
     // Landscape (handoff v1-land): ring panel on the left, controls on the right
     const val LANDSCAPE_RING_PANEL_FRACTION = 440f / 892f
@@ -77,6 +85,9 @@ internal object LiveDimens {
     const val SCALE_ALPHA_IDLE = 0.45f
     const val SCALE_ALPHA_NO_MIC = 0.3f
     const val CHROME_ALPHA_NO_MIC = 0.4f
+
+    /** Controls that do nothing right now: record outside play mode, the switcher while recording. */
+    const val DISABLED_ALPHA = 0.4f
     const val HALO_ALPHA_CORE = 0.2f
     const val HALO_ALPHA_FEATHER = 0.1f
 }

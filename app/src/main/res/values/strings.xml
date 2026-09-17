@@ -23,7 +23,11 @@
     <string name="mic_permission_text">Без микрофона тренажёр не слышит скрипку. Звук обрабатывается на телефоне и никуда не отправляется.</string>
     <string name="mic_permission_grant">Разрешить доступ</string>
     <string name="record_button">Запись</string>
-    <string name="record_unavailable">Запись появится позже</string>
+    <string name="record_start">Начать запись</string>
+    <string name="record_stop">Остановить запись</string>
+    <string name="record_no_notes">В записи не нашлось нот</string>
+    <string name="record_saved">Сессия сохранена</string>
+    <string name="recording_elapsed_description">Идёт запись, %1$s</string>
 
     <string name="onboarding_mic_title">Дайте мне услышать скрипку</string>
     <string name="onboarding_mic_text">Тренажёр слушает через микрофон и ничего не отправляет в интернет. Звук обрабатывается на телефоне.</string>

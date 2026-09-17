@@ -1,10 +1,13 @@
 package com.example.violintuner.navigation
 
+import android.widget.Toast
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.example.violintuner.R
 import com.example.violintuner.feature.history.HistoryScreen
 import com.example.violintuner.feature.live.LiveRoute
 import com.example.violintuner.feature.onboarding.OnboardingRoute
@@ -18,6 +21,12 @@ fun AppNavHost(
     startRoute: String,
     modifier: Modifier = Modifier,
 ) {
+    // The session screen arrives with stage 9 (docs/plan-history.md); until then a saved
+    // recording is confirmed with a toast instead of being opened.
+    val context = LocalContext.current
+    val onSessionSaved: (Long) -> Unit = {
+        Toast.makeText(context, R.string.record_saved, Toast.LENGTH_SHORT).show()
+    }
     NavHost(
         navController = navController,
         startDestination = startRoute,
@@ -26,7 +35,7 @@ fun AppNavHost(
         composable(ONBOARDING_ROUTE) {
             OnboardingRoute(onFinished = navController::navigateFromOnboardingToLive)
         }
-        composable(TopLevelDestination.LIVE.route) { LiveRoute() }
+        composable(TopLevelDestination.LIVE.route) { LiveRoute(onOpenSession = onSessionSaved) }
         composable(TopLevelDestination.HISTORY.route) { HistoryScreen() }
         composable(TopLevelDestination.SETTINGS.route) {
             SettingsRoute(onOpenOnboarding = navController::navigateToOnboarding)

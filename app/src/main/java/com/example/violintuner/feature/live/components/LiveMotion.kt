@@ -22,6 +22,13 @@ internal object LiveMotion {
     const val LOCK_POP_PEAK_MS = 100
     const val LOCK_POP_OVERSHOOT = 1.1f
 
+    /** Record button: circle to square, accent to red. */
+    const val RECORD_MORPH_MS = 200
+
+    /** One full breath of the red dot while recording. */
+    const val RECORDING_PULSE_MS = 1_200
+    const val RECORDING_PULSE_MIN_ALPHA = 0.35f
+
     /** Marker spring, settles in about 120 ms. */
     const val MARKER_DAMPING = 0.8f
     const val MARKER_STIFFNESS = 600f

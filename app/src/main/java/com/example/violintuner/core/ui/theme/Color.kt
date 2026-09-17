@@ -22,6 +22,7 @@ internal val AccentGlow = Color(0xFF2A2352)
 internal val ZoneInTune = Color(0xFF47C97E)
 internal val ZoneNear = Color(0xFFE5B03C)
 internal val ZoneOff = Color(0xFFE8565C)
+internal val OnZoneOff = Color(0xFFFFFFFF)
 internal val ZoneNone = Color(0xFF3A3846)
 internal val RingTrack = Color(0x1AFFFFFF)
 
