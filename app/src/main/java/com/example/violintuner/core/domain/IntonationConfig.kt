@@ -53,6 +53,8 @@ data class IntonationConfig(
     val biasNeutralCents: Double = 2.0,
     val sessionPreviewNotes: Int = 8,
     val historyWeeks: Int = 6,
+    /** The "month" filter of the history: this many days back, today included. */
+    val historyMonthDays: Int = 30,
 
     // Cents scale on the Live screen: ±range around the target (handoff `sizes`)
     val scaleRangeCents: Double = 50.0,

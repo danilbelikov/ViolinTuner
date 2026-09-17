@@ -1,6 +1,7 @@
 package com.example.violintuner.core.ui.format
 
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -39,11 +40,26 @@ object Formats {
     /** One decimal with a comma: 7,3. */
     fun oneDecimal(value: Double): String = "%.1f".format(LOCALE, value)
 
+    /**
+     * Russian plural form for [count]: 1 сессия, 2 сессии, 5 сессий, 21 сессия. Done by hand
+     * because `plurals` resources follow the device language, and the interface is Russian on
+     * an English phone too.
+     */
+    fun <T> pluralRu(count: Int, one: T, few: T, many: T): T {
+        val lastTwo = abs(count) % 100
+        val last = lastTwo % 10
+        return when {
+            lastTwo in 11..14 -> many
+            last == 1 -> one
+            last in 2..4 -> few
+            else -> many
+        }
+    }
+
     /** "14 сентября" */
     fun dayAndMonth(epochMs: Long, zone: ZoneId): String =
         DAY_AND_MONTH.format(Instant.ofEpochMilli(epochMs).atZone(zone))
 
-    /** "13 сент." as the locale abbreviates it. */
-    fun dayAndShortMonth(epochMs: Long, zone: ZoneId): String =
-        DAY_AND_SHORT_MONTH.format(Instant.ofEpochMilli(epochMs).atZone(zone))
+    /** "13 сент": the locale's abbreviation without its trailing dot. */
+    fun dayAndShortMonth(date: LocalDate): String = DAY_AND_SHORT_MONTH.format(date).trimEnd('.')
 }
