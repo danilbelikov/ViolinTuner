@@ -11,7 +11,12 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 
 /** Scripted signals for previews, tests and development without a microphone (spec 6). */
-enum class FakeScenario { IN_TUNE, DRIFT_SHARP, DRIFT_FLAT, VIBRATO, SILENCE, NOISE }
+enum class FakeScenario {
+    IN_TUNE, DRIFT_SHARP, DRIFT_FLAT, VIBRATO, SILENCE, NOISE,
+
+    /** Loops through all the scenarios above, a few seconds each; for running without a mic. */
+    DEMO,
+}
 
 class FakePitchSource(
     private val scenario: FakeScenario,
@@ -30,16 +35,21 @@ class FakePitchSource(
     /** Deterministic frame number [index]; usable without coroutines. */
     fun frameAt(index: Long): PitchFrame {
         val tMs = frameTimeMs(index)
-        val seconds = tMs / MS_PER_SECOND
-        return when (scenario) {
-            FakeScenario.IN_TUNE -> played(tMs, IN_TUNE_OFFSET_CENTS)
-            FakeScenario.DRIFT_SHARP -> played(tMs, driftCents(seconds))
-            FakeScenario.DRIFT_FLAT -> played(tMs, -driftCents(seconds))
-            FakeScenario.VIBRATO ->
-                played(tMs, VIBRATO_DEPTH_CENTS * sin(2 * PI * VIBRATO_RATE_HZ * seconds))
-            FakeScenario.SILENCE -> PitchFrame.unpitched(tMs, clarity = 0.0, rms = SILENCE_RMS)
-            FakeScenario.NOISE -> PitchFrame.unpitched(tMs, clarity = NOISE_CLARITY, rms = NOISE_RMS)
-        }
+        if (scenario != FakeScenario.DEMO) return frame(scenario, tMs, tMs / MS_PER_SECOND)
+        val segment = (tMs / DEMO_SEGMENT_MS % DEMO_SEQUENCE.size).toInt()
+        return frame(DEMO_SEQUENCE[segment], tMs, tMs % DEMO_SEGMENT_MS / MS_PER_SECOND)
+    }
+
+    /** [seconds] is the scenario's own clock, so drifts restart in every DEMO segment. */
+    private fun frame(scenario: FakeScenario, tMs: Long, seconds: Double): PitchFrame = when (scenario) {
+        FakeScenario.IN_TUNE -> played(tMs, IN_TUNE_OFFSET_CENTS)
+        FakeScenario.DRIFT_SHARP -> played(tMs, driftCents(seconds))
+        FakeScenario.DRIFT_FLAT -> played(tMs, -driftCents(seconds))
+        FakeScenario.VIBRATO ->
+            played(tMs, VIBRATO_DEPTH_CENTS * sin(2 * PI * VIBRATO_RATE_HZ * seconds))
+        FakeScenario.SILENCE -> PitchFrame.unpitched(tMs, clarity = 0.0, rms = SILENCE_RMS)
+        FakeScenario.NOISE -> PitchFrame.unpitched(tMs, clarity = NOISE_CLARITY, rms = NOISE_RMS)
+        FakeScenario.DEMO -> error("DEMO is a sequence, not a signal")
     }
 
     private fun frameTimeMs(index: Long): Long =
@@ -70,5 +80,14 @@ class FakePitchSource(
         const val SILENCE_RMS = 0.0005
         const val NOISE_CLARITY = 0.3
         const val NOISE_RMS = 0.1
+        const val DEMO_SEGMENT_MS = 4_000L
+        val DEMO_SEQUENCE = listOf(
+            FakeScenario.IN_TUNE,
+            FakeScenario.DRIFT_SHARP,
+            FakeScenario.DRIFT_FLAT,
+            FakeScenario.VIBRATO,
+            FakeScenario.SILENCE,
+            FakeScenario.NOISE,
+        )
     }
 }

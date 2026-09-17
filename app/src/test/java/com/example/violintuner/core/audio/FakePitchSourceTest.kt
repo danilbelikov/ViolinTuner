@@ -93,6 +93,19 @@ class FakePitchSourceTest {
         assertEquals(IntonationReading.TooNoisy, all.last())
     }
 
+    @Test
+    fun `demo loops through every state of the screen`() {
+        val source = FakePitchSource(FakeScenario.DEMO)
+        val engine = IntonationEngine()
+        val oneLoop = 6 * 4_000 * 44_100L / 512 / 1_000
+        val readings = (0L until oneLoop + 100).map { engine.process(source.frameAt(it), TargetMode.Chromatic) }
+        val zones = readings.filterIsInstance<Active>().map { it.zone }.toSet()
+        assertEquals(setOf(Zone.IN_TUNE, Zone.NEAR, Zone.OFF), zones)
+        assertTrue(IntonationReading.Silence in readings)
+        assertTrue(IntonationReading.TooNoisy in readings)
+        assertTrue("second loop starts in tune again", readings.last() is Active)
+    }
+
     private companion object {
         const val FRAMES = 300L
     }
