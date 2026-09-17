@@ -47,6 +47,8 @@ data class IntonationConfig(
     val supportedSampleRatesHz: List<Int> = listOf(48_000, 44_100),
     val windowSizeSamples: Int = 2_048,
     val hopSizeSamples: Int = 512,
+    /** Exact zeros for this long mean the input is cut off, not quiet (spec 3.4). */
+    val digitalSilenceTimeoutMs: Long = 2_000,
 
     // Pitch detectors (spec 5.1)
     val yinThreshold: Double = 0.15,
