@@ -109,7 +109,19 @@
     <string name="session_tip_sharp">Палец стоит высоко — чуть ближе к порожку</string>
     <string name="session_roll_description">Лента нот. Нажмите на ноту, чтобы увидеть детали.</string>
 
-    <string name="coming_soon_title">Скоро</string>
-    <string name="history_coming_soon_text">Записи сессий и динамика появятся в следующей версии</string>
-    <string name="settings_coming_soon_text">Эталон A4, допуск и сглаживание — в следующей версии</string>
+    <string name="history_count_one">%1$d сессия</string>
+    <string name="history_count_few">%1$d сессии</string>
+    <string name="history_count_many">%1$d сессий</string>
+    <string name="history_chart_title">Средний балл за неделю</string>
+    <string name="history_week_delta">%1$s за неделю</string>
+    <string name="history_chart_description">График среднего балла по неделям</string>
+    <string name="history_filter_all">Все</string>
+    <string name="history_filter_this_week">Эта неделя</string>
+    <string name="history_filter_month">Месяц</string>
+    <string name="history_day_today">сегодня</string>
+    <string name="history_day_yesterday">вчера</string>
+    <string name="history_card_meta">%1$s · %2$s · %3$s ц</string>
+    <string name="history_percent_sign">%</string>
+    <string name="history_empty_filter">За этот период сессий нет</string>
+    <string name="history_empty">Здесь появятся ваши сессии. Нажмите кнопку записи на экране Live.</string>
 </resources>

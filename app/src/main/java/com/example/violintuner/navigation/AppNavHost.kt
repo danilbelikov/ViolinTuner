@@ -7,7 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
-import com.example.violintuner.feature.history.HistoryScreen
+import com.example.violintuner.feature.history.HistoryRoute
 import com.example.violintuner.feature.live.LiveRoute
 import com.example.violintuner.feature.onboarding.OnboardingRoute
 import com.example.violintuner.feature.session.SessionRoute
@@ -32,7 +32,9 @@ fun AppNavHost(
             OnboardingRoute(onFinished = navController::navigateFromOnboardingToLive)
         }
         composable(TopLevelDestination.LIVE.route) { LiveRoute(onOpenSession = navController::navigateToSession) }
-        composable(TopLevelDestination.HISTORY.route) { HistoryScreen() }
+        composable(TopLevelDestination.HISTORY.route) {
+            HistoryRoute(onOpenSession = navController::navigateToSession)
+        }
         // Above the tabs and without the bottom bar; back returns to where it was opened from.
         composable(
             route = "$SESSION_ROUTE/{${SessionViewModel.ARG_SESSION_ID}}",
