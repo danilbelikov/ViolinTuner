@@ -25,7 +25,7 @@ import kotlinx.coroutines.flow.stateIn
 @HiltViewModel
 class LiveViewModel @Inject constructor(
     pitchSource: PitchSource,
-    config: IntonationConfig,
+    private val config: IntonationConfig,
     @DefaultDispatcher dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
@@ -42,12 +42,10 @@ class LiveViewModel @Inject constructor(
         .conflate()
         .flowOn(dispatcher)
 
-    val state: StateFlow<LiveState> = combine(mode, signal) { mode, signal ->
-        LiveState(mode = mode, signal = signal, scale = scale)
-    }.stateIn(
+    val state: StateFlow<LiveState> = combine(mode, signal, ::stateOf).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-        initialValue = LiveState(mode = mode.value, signal = LiveSignal.Silence, scale = scale),
+        initialValue = stateOf(mode.value, LiveSignal.Silence),
     )
 
     private val effectChannel = Channel<LiveEffect>(Channel.BUFFERED)
@@ -60,6 +58,13 @@ class LiveViewModel @Inject constructor(
             LiveIntent.GrantMicClicked -> effectChannel.trySend(LiveEffect.RequestMicPermission)
         }
     }
+
+    private fun stateOf(mode: LiveMode, signal: LiveSignal) = LiveState(
+        mode = mode,
+        signal = signal,
+        scale = scale,
+        zoneCrossfadeMs = config.zoneCrossfadeMs,
+    )
 
     private companion object {
         // Long enough to survive a configuration change, short enough that the pitch source

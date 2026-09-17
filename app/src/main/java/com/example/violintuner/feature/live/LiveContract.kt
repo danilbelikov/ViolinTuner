@@ -38,6 +38,8 @@ data class LiveState(
     val mode: LiveMode,
     val signal: LiveSignal,
     val scale: ScaleSpec,
+    /** Duration of the zone color cross-fade (spec 3.2). */
+    val zoneCrossfadeMs: Int,
 )
 
 sealed interface LiveIntent {
