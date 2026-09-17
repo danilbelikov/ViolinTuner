@@ -6,6 +6,7 @@ import com.example.violintuner.core.domain.PitchMath
 import kotlin.math.PI
 import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.time.TimeSource
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -21,14 +22,19 @@ enum class FakeScenario {
 class FakePitchSource(
     private val scenario: FakeScenario,
     private val config: IntonationConfig = IntonationConfig(),
+    /** Paces the flow; tests pass the virtual clock of their scheduler. */
+    private val timeSource: TimeSource = TimeSource.Monotonic,
 ) : PitchSource {
 
+    // Frames are due at absolute times since collection started. Sleeping a fixed period per
+    // frame would let delay() overhead pile up and the script would lag behind the wall clock.
     override val frames: Flow<PitchFrame> = flow {
+        val start = timeSource.markNow()
         var index = 0L
         while (true) {
             emit(frameAt(index))
-            delay(frameTimeMs(index + 1) - frameTimeMs(index))
             index++
+            delay((frameTimeMs(index) - start.elapsedNow().inWholeMilliseconds).coerceAtLeast(0))
         }
     }
 

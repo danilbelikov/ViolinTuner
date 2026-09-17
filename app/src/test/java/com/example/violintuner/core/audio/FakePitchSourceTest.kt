@@ -7,9 +7,12 @@ import com.example.violintuner.core.domain.IntonationReading.Active
 import com.example.violintuner.core.domain.TargetMode
 import com.example.violintuner.core.domain.Zone
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.take
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.currentTime
+import kotlinx.coroutines.test.testTimeSource
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -28,14 +31,25 @@ class FakePitchSourceTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `flow emits frames at the hop rate`() = runTest {
-        val frames = FakePitchSource(FakeScenario.IN_TUNE).frames.take(5).toList()
+        val frames = FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource).frames.take(5).toList()
         assertEquals(listOf(0L, 11L, 23L, 34L, 46L), frames.map { it.tMs })
         assertEquals(46L, currentTime)
     }
 
+    @OptIn(ExperimentalCoroutinesApi::class)
+    @Test
+    fun `flow catches up with the clock when the collector is slow`() = runTest {
+        val frames = FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource).frames
+            .onEach { delay(5) } // slower than nothing, faster than the hop
+            .take(100)
+            .toList()
+        assertEquals(frames.last().tMs, currentTime - 5)
+    }
+
+    @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `flow and frameAt agree`() = runTest {
-        val source = FakePitchSource(FakeScenario.VIBRATO)
+        val source = FakePitchSource(FakeScenario.VIBRATO, timeSource = testTimeSource)
         val fromFlow = source.frames.take(20).toList()
         assertEquals((0L until 20).map(source::frameAt), fromFlow)
     }

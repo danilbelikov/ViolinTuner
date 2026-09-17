@@ -21,6 +21,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.testTimeSource
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -40,7 +41,10 @@ class LiveViewModelTest {
     private fun TestScope.viewModel(source: PitchSource) =
         LiveViewModel(source, IntonationConfig(), StandardTestDispatcher(testScheduler))
 
-    private fun TestScope.viewModel(scenario: FakeScenario) = viewModel(FakePitchSource(scenario))
+    private fun TestScope.fakeSource(scenario: FakeScenario) =
+        FakePitchSource(scenario, timeSource = testTimeSource)
+
+    private fun TestScope.viewModel(scenario: FakeScenario) = viewModel(fakeSource(scenario))
 
     /** Subscribes like the screen does and lets [millis] of signal through. */
     private fun TestScope.observe(viewModel: LiveViewModel, millis: Long): Job {
@@ -111,7 +115,7 @@ class LiveViewModelTest {
 
     @Test
     fun `pitch source runs only while the state is observed`() = runTest {
-        val source = CountingSource(FakePitchSource(FakeScenario.IN_TUNE))
+        val source = CountingSource(fakeSource(FakeScenario.IN_TUNE))
         val viewModel = viewModel(source)
         advanceTimeBy(1_000)
         assertEquals(0, source.starts)
