@@ -5,6 +5,7 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
+import androidx.compose.ui.graphics.Color
 
 // v1 is dark-only (spec 3.6). Dynamic color is off: zone colors are tuned against this palette.
 private val DarkColorScheme = darkColorScheme(
@@ -42,4 +43,7 @@ object ViolinTheme {
 
     val liveTypography: LiveTypography
         @Composable @ReadOnlyComposable get() = LocalLiveTypography.current
+
+    val accentGlow: Color
+        get() = AccentGlow
 }

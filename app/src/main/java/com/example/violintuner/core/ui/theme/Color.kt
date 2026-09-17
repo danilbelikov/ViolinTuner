@@ -16,6 +16,9 @@ internal val OutlineVariant = Color(0xFF3A3846)
 internal val OnSurface = Color(0xFFE6E4EE)
 internal val OnSurfaceVariant = Color(0xFFA39FB5)
 
+/** Center of the soft glow behind onboarding illustrations (handoff 5a-5c). */
+internal val AccentGlow = Color(0xFF2A2352)
+
 internal val ZoneInTune = Color(0xFF47C97E)
 internal val ZoneNear = Color(0xFFE5B03C)
 internal val ZoneOff = Color(0xFFE8565C)

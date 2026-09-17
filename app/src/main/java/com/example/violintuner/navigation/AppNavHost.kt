@@ -2,35 +2,62 @@ package com.example.violintuner.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.violintuner.feature.history.HistoryScreen
 import com.example.violintuner.feature.live.LiveRoute
-import com.example.violintuner.feature.settings.SettingsScreen
+import com.example.violintuner.feature.onboarding.OnboardingRoute
+import com.example.violintuner.feature.settings.SettingsRoute
+
+const val ONBOARDING_ROUTE = "onboarding"
 
 @Composable
 fun AppNavHost(
     navController: NavHostController,
+    startRoute: String,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
         navController = navController,
-        startDestination = TopLevelDestination.START.route,
+        startDestination = startRoute,
         modifier = modifier,
     ) {
+        composable(ONBOARDING_ROUTE) {
+            OnboardingRoute(onFinished = navController::navigateFromOnboardingToLive)
+        }
         composable(TopLevelDestination.LIVE.route) { LiveRoute() }
         composable(TopLevelDestination.HISTORY.route) { HistoryScreen() }
-        composable(TopLevelDestination.SETTINGS.route) { SettingsScreen() }
+        composable(TopLevelDestination.SETTINGS.route) {
+            SettingsRoute(onOpenOnboarding = navController::navigateToOnboarding)
+        }
     }
 }
 
-/** Switches bottom-bar tabs without stacking copies and keeps each tab's state. */
+/**
+ * Switches bottom-bar tabs without stacking copies and keeps each tab's state. Live is the root
+ * of the tabs whatever the graph started with, so the pop target is its route, not the graph's
+ * start destination (that can be the onboarding, which is gone from the stack by then).
+ */
 fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
     navigate(destination.route) {
-        popUpTo(graph.findStartDestination().id) { saveState = true }
+        popUpTo(TopLevelDestination.START.route) { saveState = true }
         launchSingleTop = true
         restoreState = true
+    }
+}
+
+private fun NavHostController.navigateFromOnboardingToLive() {
+    navigate(TopLevelDestination.START.route) {
+        popUpTo(ONBOARDING_ROUTE) { inclusive = true }
+        launchSingleTop = true
+    }
+}
+
+/** "See the onboarding again": nothing of the tabs stays under it. */
+private fun NavHostController.navigateToOnboarding() {
+    navigate(ONBOARDING_ROUTE) {
+        popUpTo(graph.id) { inclusive = true }
+        launchSingleTop = true
     }
 }

@@ -25,6 +25,35 @@
     <string name="record_button">Запись</string>
     <string name="record_unavailable">Запись появится позже</string>
 
+    <string name="onboarding_mic_title">Дайте мне услышать скрипку</string>
+    <string name="onboarding_mic_text">Тренажёр слушает через микрофон и ничего не отправляет в интернет. Звук обрабатывается на телефоне.</string>
+    <string name="onboarding_mic_cta">Разрешить микрофон</string>
+    <string name="onboarding_mic_foot">Поставьте телефон на пюпитр в 50–80 см</string>
+    <string name="onboarding_a4_title">К чему настраиваетесь?</string>
+    <string name="onboarding_a4_text">Дома и в школе обычно 440 Гц. Оркестры часто берут 442. Можно поменять в настройках.</string>
+    <string name="onboarding_a4_cta">Дальше</string>
+    <string name="onboarding_a4_foot">Экран не будет гаснуть во время игры</string>
+    <string name="onboarding_tolerance_title">Насколько строго судить?</string>
+    <string name="onboarding_tolerance_text">Это ширина зелёной зоны. Начните мягче — сузить всегда можно.</string>
+    <string name="onboarding_tolerance_cta">Начать играть</string>
+    <string name="onboarding_tolerance_foot">Меняется в настройках в любой момент</string>
+    <string name="onboarding_step_description">Шаг %1$d из %2$d</string>
+
+    <string name="tolerance_beginner_name">Новичок</string>
+    <string name="tolerance_beginner_text">широкая зелёная зона</string>
+    <string name="tolerance_intermediate_name">Средний</string>
+    <string name="tolerance_intermediate_text">чувствуется вибрато</string>
+    <string name="tolerance_pro_name">Профи</string>
+    <string name="tolerance_pro_text">строго</string>
+    <string name="tolerance_cents">±%1$d ц</string>
+    <string name="a4_option_description">%1$d герц</string>
+
+    <string name="settings_a4_title">Эталон A4</string>
+    <string name="settings_a4_text">Частота ноты ля первой октавы, Гц. От неё считаются все ноты и струны.</string>
+    <string name="settings_tolerance_title">Допуск</string>
+    <string name="settings_tolerance_text">Ширина зелёной зоны: насколько близко к ноте считается «в строе».</string>
+    <string name="settings_restart_onboarding">Пройти онбординг снова</string>
+
     <string name="coming_soon_title">Скоро</string>
     <string name="history_coming_soon_text">Записи сессий и динамика появятся в следующей версии</string>
     <string name="settings_coming_soon_text">Эталон A4, допуск и сглаживание — в следующей версии</string>
