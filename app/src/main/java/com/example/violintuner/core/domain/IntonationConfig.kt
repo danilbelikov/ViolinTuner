@@ -43,6 +43,8 @@ data class IntonationConfig(
     val minSegmentMs: Long = 200,
     val minSessionMs: Long = 2_000,
     val maxSessionMs: Long = 3_600_000,
+    /** The mini bar of the recording strip is full at this duration and scales beyond it. */
+    val recordingBarMinMs: Long = 20_000,
     /** Score and per-string percentages: green from here, amber from the next, red below. */
     val scoreGoodPercent: Int = 75,
     val scoreFairPercent: Int = 55,

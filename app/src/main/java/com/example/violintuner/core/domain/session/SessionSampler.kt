@@ -35,6 +35,10 @@ class SessionSampler(private val config: IntonationConfig) {
         }
     }
 
+    /** Buckets that are complete; grows only, so callers can remember how far they have read. */
+    val closedSamples: List<SessionSample?>
+        get() = samples
+
     /** Samples of every bucket touched so far, the running one included. */
     fun snapshot(): List<SessionSample?> = samples + currentSample()
 
