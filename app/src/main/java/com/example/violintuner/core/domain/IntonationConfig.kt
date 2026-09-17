@@ -38,6 +38,9 @@ data class IntonationConfig(
     // Open-string snapping (spec 3.5, 5.4)
     val stringSnapMarginCents: Double = 350.0,
 
+    // Cents scale on the Live screen: ±range around the target (handoff `sizes`)
+    val scaleRangeCents: Double = 50.0,
+
     // Audio framing (spec 5.1)
     val sampleRateHz: Int = 44_100,
     val hopSizeSamples: Int = 512,
