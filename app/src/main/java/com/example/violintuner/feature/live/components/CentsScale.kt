@@ -1,14 +1,19 @@
 package com.example.violintuner.feature.live.components
 
-import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -17,10 +22,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.unit.Dp
 import com.example.violintuner.core.ui.theme.ViolinTheme
-
-// Handoff `anims`: marker spring settles in about 120 ms.
-private const val MARKER_DAMPING = 0.8f
-private const val MARKER_STIFFNESS = 600f
 
 /**
  * Cents scale (spec 3.1): thin track, green in-tune pill in the middle, zero tick and a white
@@ -36,10 +37,25 @@ fun CentsScale(
 ) {
     val colors = MaterialTheme.colorScheme
     val pillColor = ViolinTheme.zoneColors.inTune
-    val animatedMarker by animateFloatAsState(
-        targetValue = markerFraction ?: CENTER,
-        animationSpec = spring(MARKER_DAMPING, MARKER_STIFFNESS),
-        label = "marker",
+    // After silence the marker shows up where the pitch is instead of travelling from its old
+    // place; while sounding it moves on a spring. It stays put while fading out.
+    val position = remember { Animatable(markerFraction ?: CENTER) }
+    var wasVisible by remember { mutableStateOf(markerFraction != null) }
+    LaunchedEffect(markerFraction) {
+        val target = markerFraction
+        if (target != null) {
+            if (wasVisible) {
+                position.animateTo(target, spring(LiveMotion.MARKER_DAMPING, LiveMotion.MARKER_STIFFNESS))
+            } else {
+                position.snapTo(target)
+            }
+        }
+        wasVisible = target != null
+    }
+    val markerAlpha by animateFloatAsState(
+        targetValue = if (markerFraction != null) 1f else 0f,
+        animationSpec = tween(LiveMotion.CONTENT_FADE_MS),
+        label = "markerAlpha",
     )
     Canvas(
         modifier = modifier
@@ -52,23 +68,24 @@ fun CentsScale(
             colors.outlineVariant, CENTER, LiveDimens.ScaleTickWidth.toPx(), LiveDimens.ScaleTickHeight,
             rounded = false,
         )
-        if (markerFraction != null) {
+        if (markerAlpha > 0f) {
+            val animatedMarker = position.value
             val feather = LiveDimens.HaloFeather
             centeredBar(
-                haloColor.copy(alpha = LiveDimens.HALO_ALPHA_FEATHER), animatedMarker,
+                haloColor.copy(alpha = LiveDimens.HALO_ALPHA_FEATHER * markerAlpha), animatedMarker,
                 (LiveDimens.HaloWidth + feather * 2).toPx(), LiveDimens.HaloHeight + feather * 2,
             )
             centeredBar(
-                haloColor.copy(alpha = LiveDimens.HALO_ALPHA_CORE), animatedMarker,
+                haloColor.copy(alpha = LiveDimens.HALO_ALPHA_CORE * markerAlpha), animatedMarker,
                 LiveDimens.HaloWidth.toPx(), LiveDimens.HaloHeight,
             )
             val outline = LiveDimens.MarkerOutline
             centeredBar(
-                colors.surface, animatedMarker,
+                colors.surface.copy(alpha = markerAlpha), animatedMarker,
                 (LiveDimens.MarkerWidth + outline * 2).toPx(), LiveDimens.MarkerHeight + outline * 2,
             )
             centeredBar(
-                colors.onSurface, animatedMarker,
+                colors.onSurface.copy(alpha = markerAlpha), animatedMarker,
                 LiveDimens.MarkerWidth.toPx(), LiveDimens.MarkerHeight,
             )
         }

@@ -37,6 +37,8 @@ data class LiveTypography(
     val note: TextStyle,
     val octave: TextStyle,
     val status: TextStyle,
+    /** Status word of the landscape layout. */
+    val statusLandscape: TextStyle,
     /** "Играйте…" / "Слишком шумно" inside the ring. */
     val placeholder: TextStyle,
     val promptTitle: TextStyle,
@@ -62,6 +64,11 @@ internal val DefaultLiveTypography = LiveTypography(
         fontFamily = Manrope,
         fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
+    ),
+    statusLandscape = TextStyle(
+        fontFamily = Manrope,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 32.sp,
     ),
     placeholder = TextStyle(
         fontFamily = Manrope,

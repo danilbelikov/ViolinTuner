@@ -26,9 +26,7 @@ internal object LiveDimens {
     val StringLockIconSize = 12.dp
     val StringHintTopPadding = 10.dp
 
-    val RingSize = 300.dp
-    val RingSizeTuning = 280.dp
-    val RingSizeNoMic = 200.dp
+    val RingMargin = 16.dp
     val RingStroke = 6.dp
     val OctaveStartPadding = 4.dp
     val IndicatorSpacing = 24.dp
@@ -54,6 +52,18 @@ internal object LiveDimens {
     val RecordButtonSize = 72.dp
     val RecordDotSize = 26.dp
     val RecordPaddingVertical = 12.dp
+
+    // Landscape (handoff v1-land): ring panel on the left, controls on the right
+    const val LANDSCAPE_RING_PANEL_FRACTION = 440f / 892f
+    val LandscapePaddingStart = 8.dp
+    val LandscapePaddingEnd = 24.dp
+    val LandscapePaddingVertical = 16.dp
+    val LandscapeSpacing = 12.dp
+    val LandscapeRecordTopPadding = 4.dp
+    val LandscapeStatusMinHeight = 40.dp
+
+    /** Height kept free under the ring for the permission prompt in portrait. */
+    val PromptReservedHeight = 230.dp
 
     val MicIconContainerSize = 72.dp
     val MicGlyphWidth = 18.dp

@@ -1,5 +1,12 @@
 package com.example.violintuner.feature.live.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.keyframes
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -32,6 +39,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.ViolinString
@@ -49,11 +57,13 @@ fun StringRow(
     tuning: TuningState,
     onStringClick: (ViolinString) -> Unit,
     modifier: Modifier = Modifier,
+    showHint: Boolean = true,
+    topPadding: Dp = LiveDimens.StringRowTopPadding,
 ) {
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = LiveDimens.StringRowTopPadding),
+            .padding(top = topPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(LiveDimens.StringButtonGap)) {
@@ -67,12 +77,14 @@ fun StringRow(
                 )
             }
         }
-        Text(
-            text = hintOf(tuning),
-            modifier = Modifier.padding(top = LiveDimens.StringHintTopPadding),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium,
-        )
+        if (showHint) {
+            Text(
+                text = hintOf(tuning),
+                modifier = Modifier.padding(top = LiveDimens.StringHintTopPadding),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium,
+            )
+        }
     }
 }
 
@@ -139,12 +151,20 @@ private fun StringButton(
                 ),
             )
         }
-        if (isLocked) {
-            LockBadge(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .offset(x = LiveDimens.StringLockBadgeOffset, y = -LiveDimens.StringLockBadgeOffset),
-            )
+        AnimatedVisibility(
+            visible = isLocked,
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .offset(x = LiveDimens.StringLockBadgeOffset, y = -LiveDimens.StringLockBadgeOffset),
+            enter = scaleIn(
+                keyframes {
+                    durationMillis = LiveMotion.LOCK_POP_MS
+                    LiveMotion.LOCK_POP_OVERSHOOT at LiveMotion.LOCK_POP_PEAK_MS
+                },
+            ) + fadeIn(tween(LiveMotion.LOCK_POP_PEAK_MS)),
+            exit = scaleOut(tween(LiveMotion.LOCK_POP_PEAK_MS)) + fadeOut(tween(LiveMotion.LOCK_POP_PEAK_MS)),
+        ) {
+            LockBadge()
         }
     }
 }
