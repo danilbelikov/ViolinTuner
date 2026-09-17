@@ -1,3 +1,11 @@
 <resources>
     <string name="app_name">ViolinTuner</string>
+
+    <string name="nav_live">Live</string>
+    <string name="nav_history">История</string>
+    <string name="nav_settings">Настройки</string>
+
+    <string name="coming_soon_title">Скоро</string>
+    <string name="history_coming_soon_text">Записи сессий и динамика появятся в следующей версии</string>
+    <string name="settings_coming_soon_text">Эталон A4, допуск и сглаживание — в следующей версии</string>
 </resources>
