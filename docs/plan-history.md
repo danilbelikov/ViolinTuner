@@ -34,7 +34,7 @@ core/domain/session     чистый Kotlin
   WeekBuckets            недели истории (java.time, с понедельника)
   SampleCodec            отсчёты ↔ блоб 3 байта/корзину
 core/data/session        Room
-  SessionEntity, SegmentEntity, SamplesEntity, SessionDao, AppDatabase
+  SessionEntity, SamplesEntity, SessionDao, AppDatabase, SessionMapper
   SessionRepository (интерфейс в domain) / RoomSessionRepository
 core/audio
   AudioTap               куда MicPitchSource отдаёт PCM, пока идёт запись (этап 11)
@@ -58,6 +58,8 @@ feature/history          HistoryContract / ViewModel / Screen / Route, WeeklyCha
 Каждый этап — отдельные коммиты, обе Gradle-команды зелёные, проверка на эмуляторе на сборке `-PfakePitch=true`, обновление `CLAUDE.md`.
 
 ### Этап 7. Домен и хранение
+**Сделан.** Отличия от плана ниже: таблицы сегментов нет — сегменты, «По струнам» и проблемные ноты выводятся из отсчётов при открытии сессии (spec §6); сегментация живёт внутри `SessionAnalyzer`, отдельного `SessionSegmenter` нет; недели — `HistoryWeeks`; у показаний движка появился признак `Active.held` — удержанное на экране показание в запись не идёт; сессия без единой ноты не сохраняется (spec 3.9), поэтому у `NewSession` метрики обязательны.
+
 1. `build: add room`.
 2. `feat(domain): session samples, segments and metrics` — `SessionSampler`, `SessionSegmenter`, `SessionAnalyzer`, `StringFinger`, `SampleCodec`; константы в `IntonationConfig`.
    Тесты: корзины по `tMs` (неполная корзина, пропуск, «нет ноты»); сегменты (смена ноты, провал, отбрасывание < 200 мс); метрики на руками посчитанных примерах (сумма долей = 100, границы допуска и 20 центов, знак смещения); проблемные ноты (порог, порядок, максимум три); струна и палец для всех нот G3…B5 и «в позиции»; кодек туда-обратно, включая край ±327 центов.
