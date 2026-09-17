@@ -30,19 +30,11 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
+import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.live.RecordingState
 
 private const val TABULAR_FIGURES = "tnum"
-private const val MS_PER_SECOND = 1_000L
-private const val SECONDS_PER_MINUTE = 60L
-
-/** "m:ss", minutes not padded: 0:07, 12:40, 60:00. */
-internal fun formatElapsed(elapsedMs: Long): String {
-    val seconds = elapsedMs / MS_PER_SECOND
-    return "%d:%02d".format(seconds / SECONDS_PER_MINUTE, seconds % SECONDS_PER_MINUTE)
-}
-
 /**
  * Strip above the record button while recording (spec 3.9): pulsing red dot, timer and the mini
  * bar of the notes played so far, colored by zone and filling up from the left.
@@ -51,7 +43,7 @@ internal fun formatElapsed(elapsedMs: Long): String {
 fun RecordingStrip(recording: RecordingState, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val zoneColors = ViolinTheme.zoneColors
-    val elapsed = formatElapsed(recording.elapsedMs)
+    val elapsed = Formats.duration(recording.elapsedMs)
     val description = stringResource(R.string.recording_elapsed_description, elapsed)
 
     val pulse by rememberInfiniteTransition(label = "recordingPulse").animateFloat(
