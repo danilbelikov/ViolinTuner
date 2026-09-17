@@ -7,6 +7,10 @@ import com.example.violintuner.core.audio.MicPitchSource
 import com.example.violintuner.core.audio.PitchSource
 import com.example.violintuner.core.audio.dsp.MpmDetector
 import com.example.violintuner.core.audio.dsp.PitchDetectorFactory
+import com.example.violintuner.core.audio.recording.AacFileEncoder
+import com.example.violintuner.core.audio.recording.AppSessionAudioFiles
+import com.example.violintuner.core.audio.recording.PcmEncoderFactory
+import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -23,6 +27,12 @@ object AudioModule {
 
     // MPM over YIN by DetectorComparisonTest: same accuracy on clean tones, slightly smaller
     // error under noise, negligible extra cost.
+    @Provides
+    fun providePcmEncoderFactory(): PcmEncoderFactory = PcmEncoderFactory(::AacFileEncoder)
+
+    @Provides
+    fun provideSessionAudioFiles(impl: AppSessionAudioFiles): SessionAudioFiles = impl
+
     @Provides
     fun providePitchDetectorFactory(): PitchDetectorFactory = PitchDetectorFactory(::MpmDetector)
 }

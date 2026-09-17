@@ -55,7 +55,11 @@ interface SessionRepository {
     /** Blank or null restores the default name. */
     suspend fun rename(id: Long, title: String?)
 
+    /** Removes the session together with its audio file. */
     suspend fun delete(id: Long)
+
+    /** Housekeeping at start: audio files no session points at (a crash in the middle of a take). */
+    suspend fun deleteOrphanAudio()
 }
 
 /** The config a stored session was analysed with: spec values plus what it was recorded with. */

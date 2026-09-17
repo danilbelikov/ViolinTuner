@@ -27,6 +27,11 @@ class FakeSessionRepository : SessionRepository {
 
     override suspend fun delete(id: Long) = sessions.update { list -> list.filterNot { it.id == id } }
 
+    var orphanCleanups = 0
+    override suspend fun deleteOrphanAudio() {
+        orphanCleanups++
+    }
+
     private fun summaryOf(id: Long, session: NewSession) = SessionSummary(
         id = id,
         title = null,

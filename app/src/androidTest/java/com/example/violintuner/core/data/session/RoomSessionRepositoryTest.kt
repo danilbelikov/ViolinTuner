@@ -3,11 +3,14 @@ package com.example.violintuner.core.data.session
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.session.NewSession
 import com.example.violintuner.core.domain.session.SessionAnalyzer
 import com.example.violintuner.core.domain.session.SessionSample
+import java.io.File
+import java.time.Clock
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -23,17 +26,29 @@ import org.junit.runner.RunWith
 class RoomSessionRepositoryTest {
     private lateinit var database: AppDatabase
     private lateinit var repository: RoomSessionRepository
+    private val audioFiles = RecordingAudioFiles()
+
+    private class RecordingAudioFiles : SessionAudioFiles {
+        val deleted = mutableListOf<String>()
+        var orphanCall: Triple<Set<String>, Long, Long>? = null
+        override fun newFile(): File = error("not used")
+        override fun existing(name: String): File? = null
+        override fun delete(name: String) { deleted += name }
+        override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) {
+            orphanCall = Triple(referenced, nowEpochMs, minAgeMs)
+        }
+    }
 
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java).build()
-        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig())
+        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig(), audioFiles, Clock.systemUTC())
     }
 
     @After
     fun tearDown() = database.close()
 
-    private fun newSession(startedAt: Long, tolerance: Double = 8.0, cents: Double = 10.0): NewSession {
+    private fun newSession(startedAt: Long, tolerance: Double = 8.0, cents: Double = 10.0, audio: String? = null): NewSession {
         val config = IntonationConfig(toleranceCents = tolerance)
         val samples = List(20) { SessionSample(69, cents) } + listOf(null) + List(20) { SessionSample(71, -2.0) }
         val analysis = SessionAnalyzer.analyze(samples, config)
@@ -44,7 +59,7 @@ class RoomSessionRepositoryTest {
             samples = samples,
             metrics = analysis.metrics!!,
             previewZones = SessionAnalyzer.previewZones(analysis.segments, config),
-            audioPath = null,
+            audioPath = audio,
         )
     }
 
@@ -88,6 +103,25 @@ class RoomSessionRepositoryTest {
         assertNull(repository.details(id))
         assertNull(database.sessionDao().samples(id))
         assertEquals(0, repository.sessions.first().size)
+    }
+
+    @Test
+    fun deleteRemovesTheAudioFileToo() = runBlocking {
+        val withAudio = repository.save(newSession(startedAt = 1_000, audio = "take-1.m4a"))
+        val silent = repository.save(newSession(startedAt = 2_000))
+        repository.delete(withAudio)
+        repository.delete(silent)
+        assertEquals(listOf("take-1.m4a"), audioFiles.deleted)
+    }
+
+    @Test
+    fun orphanCleanupKeepsFilesOfStoredSessionsAndRecentOnes() = runBlocking {
+        repository.save(newSession(startedAt = 1_000, audio = "kept.m4a"))
+        repository.save(newSession(startedAt = 2_000))
+        repository.deleteOrphanAudio()
+        val (referenced, _, minAge) = audioFiles.orphanCall!!
+        assertEquals(setOf("kept.m4a"), referenced)
+        assertEquals(IntonationConfig().maxSessionMs, minAge)
     }
 
     @Test

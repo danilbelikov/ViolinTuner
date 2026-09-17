@@ -2,6 +2,7 @@ package com.example.violintuner.feature.settings
 
 import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.UserSettings
+import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.navigation.AppStartViewModel
 import com.example.violintuner.navigation.ONBOARDING_ROUTE
@@ -58,7 +59,8 @@ class SettingsViewModelTest {
     @Test
     fun `app starts on the onboarding until it is done, and does not follow later changes`() = runTest {
         val fresh = FakeSettingsRepository()
-        val start = AppStartViewModel(fresh)
+        val sessions = FakeSessionRepository()
+        val start = AppStartViewModel(fresh, sessions)
         assertNull(start.startRoute.value)
         runCurrent()
         assertEquals(ONBOARDING_ROUTE, start.startRoute.value)
@@ -66,8 +68,9 @@ class SettingsViewModelTest {
         runCurrent()
         assertEquals(ONBOARDING_ROUTE, start.startRoute.value)
 
-        val returning = AppStartViewModel(repository)
+        val returning = AppStartViewModel(repository, sessions)
         runCurrent()
         assertEquals(TopLevelDestination.LIVE.route, returning.startRoute.value)
+        assertEquals("orphaned audio is cleaned up on every start", 2, sessions.orphanCleanups)
     }
 }

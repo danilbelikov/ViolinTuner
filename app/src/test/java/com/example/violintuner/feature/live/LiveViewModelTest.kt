@@ -4,6 +4,8 @@ import com.example.violintuner.core.audio.FakePitchSource
 import com.example.violintuner.core.audio.FakeScenario
 import com.example.violintuner.core.audio.MicUnavailableException
 import com.example.violintuner.core.audio.PitchSource
+import com.example.violintuner.core.audio.recording.AudioTap
+import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Direction
 import com.example.violintuner.core.domain.PitchFrame
@@ -13,6 +15,7 @@ import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.core.settings.SettingsConfigSource
+import java.io.File
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
@@ -25,6 +28,7 @@ import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -55,11 +59,52 @@ class LiveViewModelTest {
     private val settings = FakeSettingsRepository()
     private val sessions = FakeSessionRepository()
     private val startedAt = Instant.parse("2026-09-17T09:00:00Z")
+    private val audioFiles = FakeAudioFiles()
+
+    private class FakeAudioFiles : SessionAudioFiles {
+        val created = mutableListOf<File>()
+        private val directory = File(System.getProperty("java.io.tmpdir"), "violin-test-${System.nanoTime()}").apply { mkdirs() }
+        override fun newFile(): File = File(directory, "take-${created.size + 1}.m4a").also {
+            it.writeText("audio")
+            created += it
+        }
+
+        override fun existing(name: String): File? = File(directory, name).takeIf(File::isFile)
+        override fun delete(name: String) { File(directory, name).delete() }
+        override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
+    }
+
+    /** A tap driven by the frames of the source it sits on, like the microphone one. */
+    private class FakeAudioTap(private val failsToStart: Boolean = false, private val completes: Boolean = true) : AudioTap {
+        override var state: AudioTap.State = AudioTap.State.Idle
+        var stops = 0
+        override fun start(file: File) { if (state == AudioTap.State.Idle) state = AudioTap.State.Starting }
+        fun onFrame(tMs: Long) {
+            if (state == AudioTap.State.Starting) state = if (failsToStart) AudioTap.State.Failed else AudioTap.State.Running(tMs)
+        }
+
+        override suspend fun stop(): Boolean {
+            val wasRunning = state is AudioTap.State.Running
+            state = AudioTap.State.Idle
+            stops++
+            return wasRunning && completes
+        }
+    }
+
+    private fun TestScope.sourceWithSound(tap: FakeAudioTap, scenario: FakeScenario = FakeScenario.IN_TUNE): PitchSource {
+        val delegate = fakeSource(scenario)
+        return object : PitchSource {
+            override val requiresMicPermission = false
+            override val audioTap = tap
+            override fun frames(config: IntonationConfig): Flow<PitchFrame> = delegate.frames(config).onEach { tap.onFrame(it.tMs) }
+        }
+    }
 
     private fun TestScope.viewModel(source: PitchSource, base: IntonationConfig = IntonationConfig()) = LiveViewModel(
         source,
         SettingsConfigSource(base, settings),
         sessions,
+        audioFiles,
         Clock.fixed(startedAt, ZoneOffset.UTC),
         StandardTestDispatcher(testScheduler),
     )
@@ -168,6 +213,7 @@ class LiveViewModelTest {
     fun `wider tolerance from the settings turns a near reading into in tune`() = runTest {
         val tenCentsSharp = object : PitchSource {
             override val requiresMicPermission = false
+            override val audioTap: AudioTap? = null
             override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
                 var t = 0L
                 while (true) {
@@ -193,6 +239,7 @@ class LiveViewModelTest {
     fun `reference pitch from the settings moves the target and the string captions`() = runTest {
         val plays442 = object : PitchSource {
             override val requiresMicPermission = false
+            override val audioTap: AudioTap? = null
             override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
                 var t = 0L
                 while (true) {
@@ -325,6 +372,7 @@ class LiveViewModelTest {
         val working = fakeSource(FakeScenario.IN_TUNE)
         val breaksAfterFourSeconds = object : PitchSource {
             override val requiresMicPermission = false
+            override val audioTap: AudioTap? = null
             override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
                 working.frames(config).collect { frame ->
                     if (frame.tMs > 4_000) throw MicUnavailableException("unplugged")
@@ -372,6 +420,92 @@ class LiveViewModelTest {
         advance(300)
         assertEquals(LiveMode.PLAY, viewModel.state.value.mode)
         assertTrue(viewModel.state.value.recording != null)
+    }
+
+    // ---- recording with sound (spec 3.9, stage 11)
+
+    @Test
+    fun `a take with sound is saved with its audio file`() = runTest {
+        val tap = FakeAudioTap()
+        val viewModel = viewModel(sourceWithSound(tap))
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(3_000)
+        assertTrue(tap.state is AudioTap.State.Running)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(100)
+
+        val saved = sessions.saved.single()
+        assertEquals("take-1.m4a", saved.audioPath)
+        assertTrue(audioFiles.created.single().exists())
+        assertEquals(1, tap.stops)
+        assertEquals(AudioTap.State.Idle, tap.state)
+        // the recorder waited for the sound: the session is a few frames shorter than the wish
+        assertTrue("duration ${saved.durationMs}", saved.durationMs in 2_900..3_000)
+    }
+
+    @Test
+    fun `without an encoder the session is saved without sound and the file is removed`() = runTest {
+        val tap = FakeAudioTap(failsToStart = true)
+        val viewModel = viewModel(sourceWithSound(tap))
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(3_000)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(100)
+        assertEquals(null, sessions.saved.single().audioPath)
+        assertFalse(audioFiles.created.single().exists())
+        assertEquals(AudioTap.State.Idle, tap.state)
+    }
+
+    @Test
+    fun `an incomplete audio file is not attached`() = runTest {
+        val tap = FakeAudioTap(completes = false)
+        val viewModel = viewModel(sourceWithSound(tap))
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(3_000)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(100)
+        assertEquals(null, sessions.saved.single().audioPath)
+        assertFalse(audioFiles.created.single().exists())
+    }
+
+    @Test
+    fun `dropped takes leave no audio file behind`() = runTest {
+        val tap = FakeAudioTap()
+        val tooShort = viewModel(sourceWithSound(tap))
+        observe(tooShort, 500)
+        tooShort.onIntent(LiveIntent.RecordClicked)
+        advance(1_000)
+        tooShort.onIntent(LiveIntent.RecordClicked)
+        advance(100)
+
+        val silentTap = FakeAudioTap()
+        val noNotes = viewModel(sourceWithSound(silentTap, FakeScenario.SILENCE))
+        observe(noNotes, 500)
+        noNotes.onIntent(LiveIntent.RecordClicked)
+        advance(3_000)
+        noNotes.onIntent(LiveIntent.RecordClicked)
+        advance(100)
+
+        assertTrue(sessions.saved.isEmpty())
+        assertEquals(2, audioFiles.created.size)
+        assertTrue(audioFiles.created.none { it.exists() })
+        assertEquals(listOf(1, 1), listOf(tap.stops, silentTap.stops))
+    }
+
+    @Test
+    fun `leaving Live closes the audio and keeps it with the session`() = runTest {
+        val tap = FakeAudioTap()
+        val viewModel = viewModel(sourceWithSound(tap))
+        val observer = observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(3_000)
+        observer.cancel()
+        advance(2_500)
+        assertEquals("take-1.m4a", sessions.saved.single().audioPath)
+        assertEquals(AudioTap.State.Idle, tap.state)
     }
 
     @Test
@@ -474,6 +608,7 @@ class LiveViewModelTest {
         var attempts = 0
         val flaky = object : PitchSource {
             override val requiresMicPermission = false
+            override val audioTap: AudioTap? = null
             override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
                 if (++attempts <= 2) throw MicUnavailableException("busy")
                 emitAll(working.frames(config))
@@ -501,6 +636,7 @@ class LiveViewModelTest {
     ) : PitchSource {
         var starts = 0
         var stops = 0
+        override val audioTap: AudioTap? = null
         override fun frames(config: IntonationConfig): Flow<PitchFrame> = delegate.frames(config)
             .onStart { starts++ }
             .onCompletion { stops++ }

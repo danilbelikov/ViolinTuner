@@ -71,7 +71,8 @@ class SessionRecorder(
         return RecordingProgress(sampler.durationMs, cachedBars)
     }
 
-    fun finish(): RecordingResult {
+    /** [audioFileName] is the finished take of the same stream, or null when there is no sound. */
+    fun finish(audioFileName: String? = null): RecordingResult {
         if (sampler.durationMs < config.minSessionMs) return RecordingResult.TooShort
         val samples = sampler.snapshot()
         val analysis = SessionAnalyzer.analyze(samples, config)
@@ -84,7 +85,7 @@ class SessionRecorder(
                 samples = samples,
                 metrics = metrics,
                 previewZones = SessionAnalyzer.previewZones(analysis.segments, config),
-                audioPath = null,
+                audioPath = audioFileName,
             ),
         )
     }

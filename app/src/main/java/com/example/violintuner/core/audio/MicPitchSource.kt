@@ -9,6 +9,9 @@ import android.media.MediaRecorder
 import android.util.Log
 import com.example.violintuner.BuildConfig
 import com.example.violintuner.core.audio.dsp.PitchDetectorFactory
+import com.example.violintuner.core.audio.recording.AudioTap
+import com.example.violintuner.core.audio.recording.HopAudioTap
+import com.example.violintuner.core.audio.recording.PcmEncoderFactory
 import com.example.violintuner.core.di.IoDispatcher
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.PitchFrame
@@ -30,10 +33,14 @@ import kotlinx.coroutines.isActive
 class MicPitchSource @Inject constructor(
     @ApplicationContext private val context: Context,
     private val detectorFactory: PitchDetectorFactory,
+    encoderFactory: PcmEncoderFactory,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : PitchSource {
 
     override val requiresMicPermission: Boolean = true
+
+    private val tap = HopAudioTap(encoderFactory, ioDispatcher)
+    override val audioTap: AudioTap get() = tap
 
     override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
         val (recorder, sampleRateHz) = openRecorder(config)
@@ -46,16 +53,22 @@ class MicPitchSource @Inject constructor(
             val hop = ShortArray(config.hopSizeSamples)
             val watchdog = DigitalSilenceWatchdog(config, sampleRateHz)
             val stats = if (BuildConfig.DEBUG) FrameStats(config, sampleRateHz, recorder.audioSource) else null
+            var samplesRead = 0L
             while (coroutineContext.isActive) {
                 val read = recorder.read(hop, 0, hop.size, AudioRecord.READ_BLOCKING)
                 if (read < 0) throw unavailable("AudioRecord.read failed with code $read")
                 if (watchdog.isDead(hop, read)) throw unavailable("input is digitally silent, reopening")
+                // Same sample clock as FrameAnalyzer: a frame's tMs is the end of its hop, so the
+                // hop that follows a frame starts exactly at that frame's time.
+                tap.onHop(hop, read, hopStartTMs = samplesRead * MS_PER_SECOND / sampleRateHz, sampleRateHz)
+                samplesRead += read
                 analyzer.push(hop, read)?.let { frame ->
                     stats?.add(frame)
                     emit(frame)
                 }
             }
         } finally {
+            tap.onStreamEnded()
             if (recorder.recordingState == AudioRecord.RECORDSTATE_RECORDING) recorder.stop()
             recorder.release()
         }
@@ -155,6 +168,7 @@ class MicPitchSource @Inject constructor(
 
     private companion object {
         const val TAG = "MicPitchSource"
+        const val MS_PER_SECOND = 1_000L
         const val CHANNEL = AudioFormat.CHANNEL_IN_MONO
         const val ENCODING = AudioFormat.ENCODING_PCM_16BIT
         const val BYTES_PER_SAMPLE = 2

@@ -17,6 +17,9 @@ abstract class SessionDao {
     @Query("SELECT * FROM session_samples WHERE sessionId = :id")
     abstract suspend fun samples(id: Long): SamplesEntity?
 
+    @Query("SELECT audioPath FROM sessions WHERE audioPath IS NOT NULL")
+    abstract suspend fun audioPaths(): List<String>
+
     @Query("UPDATE sessions SET title = :title WHERE id = :id")
     abstract suspend fun rename(id: Long, title: String?)
 

@@ -1,5 +1,6 @@
 package com.example.violintuner.core.audio
 
+import com.example.violintuner.core.audio.recording.AudioTap
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.PitchFrame
 import kotlinx.coroutines.flow.Flow
@@ -8,6 +9,9 @@ import kotlinx.coroutines.flow.Flow
 interface PitchSource {
     /** True when [frames] must not be collected before RECORD_AUDIO is granted. */
     val requiresMicPermission: Boolean
+
+    /** The sound behind [frames] for session recordings; null when the source has no sound. */
+    val audioTap: AudioTap?
 
     /**
      * Frames analysed with [config], which may change between collections as the player edits

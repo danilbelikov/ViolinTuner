@@ -1,5 +1,6 @@
 package com.example.violintuner.core.audio
 
+import com.example.violintuner.core.audio.recording.AudioTap
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.PitchFrame
 import com.example.violintuner.core.domain.PitchMath
@@ -27,6 +28,9 @@ class FakePitchSource(
 ) : PitchSource {
 
     override val requiresMicPermission: Boolean = false
+
+    /** A script has no sound: sessions recorded from it are saved without audio. */
+    override val audioTap: AudioTap? = null
 
     // Frames are due at absolute times since collection started. Sleeping a fixed period per
     // frame would let delay() overhead pile up and the script would lag behind the wall clock.
