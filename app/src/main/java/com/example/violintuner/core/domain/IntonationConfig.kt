@@ -38,6 +38,20 @@ data class IntonationConfig(
     // Open-string snapping (spec 3.5, 5.4)
     val stringSnapMarginCents: Double = 350.0,
 
+    // Session recording and analysis (spec 3.9, 5.5)
+    val sessionBucketMs: Long = 50,
+    val minSegmentMs: Long = 200,
+    val minSessionMs: Long = 2_000,
+    val maxSessionMs: Long = 3_600_000,
+    /** Score and per-string percentages: green from here, amber from the next, red below. */
+    val scoreGoodPercent: Int = 75,
+    val scoreFairPercent: Int = 55,
+    val problemNotesMax: Int = 3,
+    /** A mean deviation smaller than this reads as "no bias". */
+    val biasNeutralCents: Double = 2.0,
+    val sessionPreviewNotes: Int = 8,
+    val historyWeeks: Int = 6,
+
     // Cents scale on the Live screen: ±range around the target (handoff `sizes`)
     val scaleRangeCents: Double = 50.0,
 

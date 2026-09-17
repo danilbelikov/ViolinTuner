@@ -24,5 +24,10 @@ sealed interface IntonationReading {
         val direction: Direction?,
         /** Hold ring fill, 0..1. */
         val holdProgress: Double,
+        /**
+         * True when this is the previous reading kept on screen through a pitch gap, not a new
+         * measurement. The screen shows it all the same; session recording skips it.
+         */
+        val held: Boolean = false,
     ) : IntonationReading
 }

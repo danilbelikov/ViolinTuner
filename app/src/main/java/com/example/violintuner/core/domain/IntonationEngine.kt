@@ -85,9 +85,9 @@ class IntonationEngine(private val config: IntonationConfig = IntonationConfig()
     /** No frame for the locked note: keep the last reading; drop the hold once the gap is long. */
     private fun bridgeGap(tMs: Long): IntonationReading {
         val last = lastActive ?: return IntonationReading.Silence
-        if (tMs - lastMatchMs <= config.pitchGapToleranceMs) return last
+        if (tMs - lastMatchMs <= config.pitchGapToleranceMs) return last.copy(held = true)
         holdTimer.reset()
-        return last.copy(holdProgress = 0.0).also { lastActive = it }
+        return last.copy(holdProgress = 0.0).also { lastActive = it }.copy(held = true)
     }
 
     private fun clearTracking() {

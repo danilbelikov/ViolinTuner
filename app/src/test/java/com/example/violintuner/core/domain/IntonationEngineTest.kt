@@ -76,7 +76,7 @@ class IntonationEngineTest {
     @Test
     fun `reading freezes through a pause and turns into silence after 300 ms`() {
         val playing = play(0, 1_000, midi = 69).active() // last pitched frame at 990
-        assertEquals(playing, feed(quiet(1_000)))
+        assertEquals(playing.copy(held = true), feed(quiet(1_000))) // same reading, marked as held
         assertTrue(feed(quiet(1_290)) is Active)
         assertEquals(Silence, feed(quiet(1_300)))
         // a new note has to lock again
