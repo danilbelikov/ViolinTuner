@@ -5,5 +5,12 @@ import kotlinx.coroutines.flow.Flow
 
 /** A stream of pitch estimates. Collecting starts the source, cancelling the collector stops it. */
 interface PitchSource {
+    /** True when [frames] must not be collected before RECORD_AUDIO is granted. */
+    val requiresMicPermission: Boolean
+
+    /** Fails with [MicUnavailableException] when the input cannot be opened or breaks down. */
     val frames: Flow<PitchFrame>
 }
+
+/** The microphone could not be opened or stopped delivering audio; retrying later may help. */
+class MicUnavailableException(message: String) : Exception(message)

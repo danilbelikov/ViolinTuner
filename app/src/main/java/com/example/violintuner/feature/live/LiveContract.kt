@@ -15,6 +15,9 @@ sealed interface LiveSignal {
 
     data object NoMicPermission : LiveSignal
 
+    /** The microphone cannot be opened right now; the view model keeps retrying. */
+    data object MicUnavailable : LiveSignal
+
     /** InTune, Sharp and Flat rows: they differ only in [zone] and [direction]. */
     data class Sounding(
         val note: Note,
@@ -48,6 +51,9 @@ sealed interface LiveIntent {
     data object RecordClicked : LiveIntent
 
     data object GrantMicClicked : LiveIntent
+
+    /** Reported by the route on every resume and after the system dialog. */
+    data class MicPermissionChanged(val granted: Boolean) : LiveIntent
 }
 
 sealed interface LiveEffect {

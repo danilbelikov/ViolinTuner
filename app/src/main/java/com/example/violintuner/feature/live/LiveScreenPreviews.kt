@@ -57,6 +57,10 @@ private fun SilencePreview() = LivePreview(LiveSignal.Silence)
 @Composable
 private fun TooNoisyPreview() = LivePreview(LiveSignal.TooNoisy)
 
+@Preview(name = "MicUnavailable", widthDp = 412, heightDp = 788)
+@Composable
+private fun MicUnavailablePreview() = LivePreview(LiveSignal.MicUnavailable)
+
 @Preview(name = "NoMicPermission", widthDp = 412, heightDp = 788)
 @Composable
 private fun NoMicPermissionPreview() = LivePreview(LiveSignal.NoMicPermission)

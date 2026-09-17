@@ -2,6 +2,7 @@ package com.example.violintuner.feature.live
 
 import com.example.violintuner.core.audio.FakePitchSource
 import com.example.violintuner.core.audio.FakeScenario
+import com.example.violintuner.core.audio.MicUnavailableException
 import com.example.violintuner.core.audio.PitchSource
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.PitchFrame
@@ -10,7 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
@@ -130,7 +133,94 @@ class LiveViewModelTest {
         assertEquals(1, source.stops)
     }
 
-    private class CountingSource(delegate: PitchSource) : PitchSource {
+    @Test
+    fun `source that needs the permission is not touched until it is granted`() = runTest {
+        val source = CountingSource(fakeSource(FakeScenario.IN_TUNE), requiresMicPermission = true)
+        val viewModel = viewModel(source)
+        observe(viewModel, 500)
+        assertEquals(LiveSignal.Silence, viewModel.state.value.signal) // not reported yet: no prompt flash
+        assertEquals(0, source.starts)
+
+        viewModel.onIntent(LiveIntent.MicPermissionChanged(granted = false))
+        advanceTimeBy(500)
+        runCurrent()
+        assertEquals(LiveSignal.NoMicPermission, viewModel.state.value.signal)
+        assertEquals(0, source.starts)
+    }
+
+    @Test
+    fun `granting starts the pipeline and revoking stops it`() = runTest {
+        val source = CountingSource(fakeSource(FakeScenario.IN_TUNE), requiresMicPermission = true)
+        val viewModel = viewModel(source)
+        observe(viewModel, 100)
+
+        viewModel.onIntent(LiveIntent.MicPermissionChanged(granted = true))
+        advanceTimeBy(500)
+        runCurrent()
+        assertEquals(1, source.starts)
+        assertTrue(viewModel.state.value.signal is LiveSignal.Sounding)
+
+        viewModel.onIntent(LiveIntent.MicPermissionChanged(granted = false))
+        advanceTimeBy(100)
+        runCurrent()
+        assertEquals(LiveSignal.NoMicPermission, viewModel.state.value.signal)
+        assertEquals(1, source.stops)
+    }
+
+    @Test
+    fun `repeated permission reports on resume do not restart the source`() = runTest {
+        val source = CountingSource(fakeSource(FakeScenario.IN_TUNE), requiresMicPermission = true)
+        val viewModel = viewModel(source)
+        observe(viewModel, 100)
+        repeat(3) {
+            viewModel.onIntent(LiveIntent.MicPermissionChanged(granted = true))
+            advanceTimeBy(300)
+            runCurrent()
+        }
+        assertEquals(1, source.starts)
+    }
+
+    @Test
+    fun `fake source ignores permission reports`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.MicPermissionChanged(granted = false))
+        advanceTimeBy(200)
+        runCurrent()
+        assertTrue(viewModel.state.value.signal is LiveSignal.Sounding)
+    }
+
+    @Test
+    fun `unavailable microphone is shown and retried until it works`() = runTest {
+        val working = fakeSource(FakeScenario.IN_TUNE)
+        var attempts = 0
+        val flaky = object : PitchSource {
+            override val requiresMicPermission = false
+            override val frames: Flow<PitchFrame> = flow {
+                if (++attempts <= 2) throw MicUnavailableException("busy")
+                emitAll(working.frames)
+            }
+        }
+        val viewModel = viewModel(flaky)
+        observe(viewModel, 100)
+        assertEquals(LiveSignal.MicUnavailable, viewModel.state.value.signal)
+        assertEquals(1, attempts)
+
+        advanceTimeBy(3_000)
+        runCurrent()
+        assertEquals(2, attempts)
+        assertEquals(LiveSignal.MicUnavailable, viewModel.state.value.signal)
+
+        advanceTimeBy(3_500)
+        runCurrent()
+        assertEquals(3, attempts)
+        assertTrue(viewModel.state.value.signal is LiveSignal.Sounding)
+    }
+
+    private class CountingSource(
+        delegate: PitchSource,
+        override val requiresMicPermission: Boolean = false,
+    ) : PitchSource {
         var starts = 0
         var stops = 0
         override val frames: Flow<PitchFrame> = delegate.frames

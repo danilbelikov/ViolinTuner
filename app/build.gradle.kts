@@ -5,6 +5,10 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// `-PfakePitch=true` builds the app on the scripted FakePitchSource(DEMO) instead of the
+// microphone: for emulators and for checking every Live state without an instrument.
+val fakePitch = providers.gradleProperty("fakePitch").map(String::toBoolean).getOrElse(false)
+
 android {
     namespace = "com.example.violintuner"
     compileSdk {
@@ -19,6 +23,7 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("boolean", "FAKE_PITCH_SOURCE", fakePitch.toString())
     }
 
     buildTypes {
@@ -33,6 +38,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
+        buildConfig = true
         compose = true
     }
 }

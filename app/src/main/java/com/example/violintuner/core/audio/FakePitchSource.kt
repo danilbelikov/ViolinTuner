@@ -26,6 +26,8 @@ class FakePitchSource(
     private val timeSource: TimeSource = TimeSource.Monotonic,
 ) : PitchSource {
 
+    override val requiresMicPermission: Boolean = false
+
     // Frames are due at absolute times since collection started. Sleeping a fixed period per
     // frame would let delay() overhead pile up and the script would lag behind the wall clock.
     override val frames: Flow<PitchFrame> = flow {

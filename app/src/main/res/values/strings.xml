@@ -12,6 +12,7 @@
     <string name="status_flat">ниже</string>
     <string name="live_silence">Играйте…</string>
     <string name="live_too_noisy">Слишком шумно</string>
+    <string name="live_mic_unavailable">Микрофон недоступен</string>
     <string name="mic_permission_title">Нужен доступ к микрофону</string>
     <string name="mic_permission_text">Без микрофона тренажёр не слышит скрипку. Звук обрабатывается на телефоне и никуда не отправляется.</string>
     <string name="mic_permission_grant">Разрешить доступ</string>

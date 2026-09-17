@@ -148,6 +148,7 @@ private fun RingContent(signal: LiveSignal) {
         is LiveSignal.Sounding -> NoteLabel(signal.note)
         LiveSignal.Silence -> RingPlaceholder(stringResource(R.string.live_silence))
         LiveSignal.TooNoisy -> RingPlaceholder(stringResource(R.string.live_too_noisy))
+        LiveSignal.MicUnavailable -> RingPlaceholder(stringResource(R.string.live_mic_unavailable))
         LiveSignal.NoMicPermission -> MicGlyph()
     }
 }
