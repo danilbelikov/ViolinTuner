@@ -7,11 +7,13 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.SystemClock
 import android.provider.Settings
+import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -61,6 +63,13 @@ fun LiveRoute(
         if (!granted && answeredWithoutDialog && !rationaleBeforeRequest && !shouldShowRationale()) {
             context.openAppSettings()
         }
+    }
+
+    // The player's hands are busy: the screen must not dim while Live is open (spec 3.6).
+    DisposableEffect(activity) {
+        val window = activity?.window
+        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose { window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
     }
 
     // Also catches a permission revoked or granted in the system settings while we were away.
