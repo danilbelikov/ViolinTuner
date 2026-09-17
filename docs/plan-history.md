@@ -67,6 +67,8 @@ feature/history          HistoryContract / ViewModel / Screen / Route, WeeklyCha
 4. `feat(data): room storage for sessions` — сущности, DAO, `RoomSessionRepository`, Hilt-модуль, схема в `app/schemas`. Тесты DAO на JVM невозможны без Robolectric — покрываем маппинг сущность ↔ домен unit-тестами, сам DAO — инструментальным тестом (`connectedDebugAndroidTest`, запускается на эмуляторе).
 
 ### Этап 8. Запись на Live
+**Сделан.** Отличия от плана ниже: полосу и кнопку нельзя было отделить от состояния записи по сборке, поэтому модель и экран — один коммит; отрезок мини-ленты — «нота в одной зоне», а не «нота» (долгая уплывающая нота иначе одного цвета); тихое сохранение при уходе с Live сделано в `onCompletion` под `NonCancellable`; предел 60 минут считается остановкой играющим (экран сессии открывается); до этапа 9 вместо экрана сессии — тост «Сессия сохранена» (заглушка в `AppNavHost`, её убирает этап 9).
+
 1. `feat(live): session recorder` — `SessionRecorder` (старт, показание, стоп → `RecordedSession?`), правила: < 2 с отбрасывается, предел 60 мин. Тесты на сценариях `FakePitchSource`.
 2. `feat(live): recording in the view model` — `LiveIntent.RecordClicked` начинает и останавливает; `LiveState.recording: RecordingState?` (таймер, мини-лента); блокировки режима; автоостановка при остановке источника, `MicUnavailable`, пределе; `LiveEffect.OpenSession(id)`. Тесты `LiveViewModel`: короткая запись не сохраняется, обычная сохраняется и открывает сессию, уход подписчика сохраняет, в «Настройке» запись не начинается, переключатель во время записи не работает.
 3. `feat(live): recording strip and button states` — полоса записи (портрет и landscape), кнопка-квадрат, пульс точки; превью. Тост «Запись появится позже» удаляется.
