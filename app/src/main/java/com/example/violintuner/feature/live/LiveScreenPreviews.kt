@@ -5,6 +5,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import com.example.violintuner.core.domain.Direction
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Note
+import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.ui.theme.ViolinTheme
 
@@ -16,13 +17,18 @@ private const val D4 = 62
 private const val F_SHARP_5 = 78
 
 @Composable
-private fun LivePreview(signal: LiveSignal, mode: LiveMode = LiveMode.PLAY) {
+private fun LivePreview(
+    signal: LiveSignal,
+    mode: LiveMode = LiveMode.PLAY,
+    lockedString: ViolinString? = null,
+) {
     val config = IntonationConfig()
     ViolinTheme {
         LiveScreen(
             state = LiveState(
                 mode = mode,
                 signal = signal,
+                tuning = LiveReducer.tuningStateOf(LiveTarget(mode, lockedString), signal, config),
                 scale = ScaleSpec(config),
                 zoneCrossfadeMs = config.zoneCrossfadeMs,
             ),
@@ -64,3 +70,24 @@ private fun MicUnavailablePreview() = LivePreview(LiveSignal.MicUnavailable)
 @Preview(name = "NoMicPermission", widthDp = 412, heightDp = 788)
 @Composable
 private fun NoMicPermissionPreview() = LivePreview(LiveSignal.NoMicPermission)
+
+// Tuning mode, handoff frames 9a and 9b.
+
+@Preview(name = "Tuning · auto, nearest string A", widthDp = 412, heightDp = 788)
+@Composable
+private fun TuningAutoPreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 1.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.15),
+    mode = LiveMode.TUNING,
+)
+
+@Preview(name = "Tuning · string D locked", widthDp = 412, heightDp = 788)
+@Composable
+private fun TuningLockedPreview() = LivePreview(
+    LiveSignal.Sounding(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    mode = LiveMode.TUNING,
+    lockedString = ViolinString.D4,
+)
+
+@Preview(name = "Tuning · auto, silence", widthDp = 412, heightDp = 788)
+@Composable
+private fun TuningSilencePreview() = LivePreview(LiveSignal.Silence, mode = LiveMode.TUNING)

@@ -1,7 +1,12 @@
 package com.example.violintuner.feature.live
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,7 +42,11 @@ import com.example.violintuner.feature.live.components.ModeSwitcher
 import com.example.violintuner.feature.live.components.NoteLabel
 import com.example.violintuner.feature.live.components.RecordButton
 import com.example.violintuner.feature.live.components.StatusRow
+import com.example.violintuner.feature.live.components.StringRow
 import com.example.violintuner.feature.live.components.zoneBackground
+
+// Handoff `anims`: the string row unfolds in 200 ms when the mode changes.
+private const val STRING_ROW_EXPAND_MS = 200
 
 /** Portrait Live screen (spec 3.1, handoff variant 8). Stateless. */
 @Composable
@@ -85,6 +94,17 @@ fun LiveScreen(
                     )
                     .alpha(chromeAlpha),
             )
+            AnimatedVisibility(
+                visible = state.mode == LiveMode.TUNING,
+                enter = expandVertically(tween(STRING_ROW_EXPAND_MS)) + fadeIn(tween(STRING_ROW_EXPAND_MS)),
+                exit = shrinkVertically(tween(STRING_ROW_EXPAND_MS)) + fadeOut(tween(STRING_ROW_EXPAND_MS)),
+            ) {
+                StringRow(
+                    tuning = state.tuning,
+                    onStringClick = { onIntent(LiveIntent.StringClicked(it)) },
+                    modifier = Modifier.alpha(chromeAlpha),
+                )
+            }
             Column(
                 modifier = Modifier
                     .weight(1f)
@@ -99,7 +119,11 @@ fun LiveScreen(
                     progress = sounding?.holdProgress?.toFloat() ?: 0f,
                     trackColor = if (sounding != null) zoneColors.ringTrack else zoneColors.none,
                     fillColor = zoneColor,
-                    size = if (noMic) LiveDimens.RingSizeNoMic else LiveDimens.RingSize,
+                    size = when {
+                        noMic -> LiveDimens.RingSizeNoMic
+                        state.mode == LiveMode.TUNING -> LiveDimens.RingSizeTuning
+                        else -> LiveDimens.RingSize
+                    },
                     modifier = Modifier.onGloballyPositioned { ringCenter = it.centerIn(rootPosition) },
                 ) {
                     RingContent(signal)

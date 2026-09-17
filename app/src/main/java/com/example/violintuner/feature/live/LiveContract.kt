@@ -3,6 +3,7 @@ package com.example.violintuner.feature.live
 import com.example.violintuner.core.domain.Direction
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Note
+import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
 
 enum class LiveMode { PLAY, TUNING }
@@ -37,9 +38,20 @@ data class ScaleSpec(
     constructor(config: IntonationConfig) : this(config.scaleRangeCents, config.toleranceCents)
 }
 
+/** String row of the tuning mode (spec 3.5). */
+data class TuningState(
+    /** Pinned by a tap; null means the nearest string is followed automatically. */
+    val lockedString: ViolinString?,
+    /** The current target: the locked string, else the one nearest to the sound, else none. */
+    val targetString: ViolinString?,
+    /** Rounded open-string frequencies for the button captions. */
+    val stringHz: Map<ViolinString, Int>,
+)
+
 data class LiveState(
     val mode: LiveMode,
     val signal: LiveSignal,
+    val tuning: TuningState,
     val scale: ScaleSpec,
     /** Duration of the zone color cross-fade (spec 3.2). */
     val zoneCrossfadeMs: Int,
@@ -47,6 +59,9 @@ data class LiveState(
 
 sealed interface LiveIntent {
     data class SelectMode(val mode: LiveMode) : LiveIntent
+
+    /** Tuning mode: pins the string, or returns to auto when it is pinned already. */
+    data class StringClicked(val string: ViolinString) : LiveIntent
 
     data object RecordClicked : LiveIntent
 

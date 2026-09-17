@@ -15,7 +15,19 @@ internal object LiveDimens {
     val SwitcherTuningIconWidth = 4.dp
     val SwitcherIconGap = 8.dp
 
+    val StringRowTopPadding = 12.dp
+    val StringButtonWidth = 76.dp
+    val StringButtonHeight = 64.dp
+    val StringButtonCorner = 20.dp
+    val StringButtonGap = 12.dp
+    val StringLockBadgeSize = 22.dp
+    val StringLockBadgeOffset = 6.dp
+    val StringLockBadgeOutline = 2.dp
+    val StringLockIconSize = 12.dp
+    val StringHintTopPadding = 10.dp
+
     val RingSize = 300.dp
+    val RingSizeTuning = 280.dp
     val RingSizeNoMic = 200.dp
     val RingStroke = 6.dp
     val OctaveStartPadding = 4.dp

@@ -5,7 +5,9 @@ import com.example.violintuner.core.audio.FakeScenario
 import com.example.violintuner.core.audio.MicUnavailableException
 import com.example.violintuner.core.audio.PitchSource
 import com.example.violintuner.core.domain.IntonationConfig
+import com.example.violintuner.core.domain.Direction
 import com.example.violintuner.core.domain.PitchFrame
+import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -100,6 +102,43 @@ class LiveViewModelTest {
         advanceTimeBy(300)
         runCurrent()
         assertEquals("A4", (viewModel.state.value.signal as LiveSignal.Sounding).note.name)
+    }
+
+    @Test
+    fun `locking a string measures against it and a second tap returns to auto`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE) // plays A4
+        viewModel.onIntent(LiveIntent.SelectMode(LiveMode.TUNING))
+        observe(viewModel, 500)
+        assertEquals(ViolinString.A4, viewModel.state.value.tuning.targetString)
+
+        viewModel.onIntent(LiveIntent.StringClicked(ViolinString.D4))
+        advanceTimeBy(500)
+        runCurrent()
+        val locked = viewModel.state.value
+        assertEquals(ViolinString.D4, locked.tuning.lockedString)
+        val signal = locked.signal as LiveSignal.Sounding
+        assertEquals("D4", signal.note.name)
+        assertEquals(Zone.OFF, signal.zone)
+        assertEquals(Direction.SHARP, signal.direction)
+
+        viewModel.onIntent(LiveIntent.StringClicked(ViolinString.D4))
+        advanceTimeBy(500)
+        runCurrent()
+        assertEquals(null, viewModel.state.value.tuning.lockedString)
+        assertEquals("A4", (viewModel.state.value.signal as LiveSignal.Sounding).note.name)
+    }
+
+    @Test
+    fun `leaving the tuning mode drops the lock`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        observe(viewModel, 100)
+        viewModel.onIntent(LiveIntent.SelectMode(LiveMode.TUNING))
+        viewModel.onIntent(LiveIntent.StringClicked(ViolinString.E5))
+        viewModel.onIntent(LiveIntent.SelectMode(LiveMode.PLAY))
+        viewModel.onIntent(LiveIntent.SelectMode(LiveMode.TUNING))
+        advanceTimeBy(100)
+        runCurrent()
+        assertEquals(null, viewModel.state.value.tuning.lockedString)
     }
 
     @Test

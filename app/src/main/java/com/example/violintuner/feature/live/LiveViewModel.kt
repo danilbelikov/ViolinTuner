@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 
 @HiltViewModel
 class LiveViewModel @Inject constructor(
@@ -35,16 +36,17 @@ class LiveViewModel @Inject constructor(
     @DefaultDispatcher dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
-    private val mode = MutableStateFlow(LiveMode.PLAY)
+    // Mode and lock change together, so they live in one value the engine reads atomically.
+    private val target = MutableStateFlow(LiveTarget())
     private val scale = ScaleSpec(config)
     private val engine = IntonationEngine(config)
 
     // The engine is stateful and single-threaded: every frame goes through this one chain, and
-    // the mode is read per frame instead of being combined in. conflate() drops only finished
+    // the target is read per frame instead of being combined in. conflate() drops only finished
     // readings the UI had no time to show, never frames.
     private val pipeline: Flow<LiveSignal> = pitchSource.frames
         .onStart { engine.reset() }
-        .map { frame -> LiveReducer.signalOf(engine.process(frame, LiveReducer.targetModeOf(mode.value))) }
+        .map { frame -> LiveReducer.signalOf(engine.process(frame, LiveReducer.targetModeOf(target.value))) }
         .retryWhen { cause, _ ->
             // Anything else is a bug and must crash rather than be retried forever.
             if (cause !is MicUnavailableException) return@retryWhen false
@@ -68,10 +70,10 @@ class LiveViewModel @Inject constructor(
         }
     }
 
-    val state: StateFlow<LiveState> = combine(mode, signal, ::stateOf).stateIn(
+    val state: StateFlow<LiveState> = combine(target, signal, ::stateOf).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-        initialValue = stateOf(mode.value, LiveSignal.Silence),
+        initialValue = stateOf(target.value, LiveSignal.Silence),
     )
 
     private val effectChannel = Channel<LiveEffect>(Channel.BUFFERED)
@@ -79,7 +81,8 @@ class LiveViewModel @Inject constructor(
 
     fun onIntent(intent: LiveIntent) {
         when (intent) {
-            is LiveIntent.SelectMode -> mode.value = intent.mode
+            is LiveIntent.SelectMode -> target.update { LiveReducer.selectMode(it, intent.mode) }
+            is LiveIntent.StringClicked -> target.update { LiveReducer.clickString(it, intent.string) }
             LiveIntent.RecordClicked -> effectChannel.trySend(LiveEffect.ShowRecordingUnavailable)
             LiveIntent.GrantMicClicked -> effectChannel.trySend(LiveEffect.RequestMicPermission)
             is LiveIntent.MicPermissionChanged ->
@@ -87,9 +90,10 @@ class LiveViewModel @Inject constructor(
         }
     }
 
-    private fun stateOf(mode: LiveMode, signal: LiveSignal) = LiveState(
-        mode = mode,
+    private fun stateOf(target: LiveTarget, signal: LiveSignal) = LiveState(
+        mode = target.mode,
         signal = signal,
+        tuning = LiveReducer.tuningStateOf(target, signal, config),
         scale = scale,
         zoneCrossfadeMs = config.zoneCrossfadeMs,
     )
