@@ -5,6 +5,19 @@
     <string name="nav_history">История</string>
     <string name="nav_settings">Настройки</string>
 
+    <string name="mode_play">Игра</string>
+    <string name="mode_tuning">Настройка</string>
+    <string name="status_in_tune">в строе</string>
+    <string name="status_sharp">выше</string>
+    <string name="status_flat">ниже</string>
+    <string name="live_silence">Играйте…</string>
+    <string name="live_too_noisy">Слишком шумно</string>
+    <string name="mic_permission_title">Нужен доступ к микрофону</string>
+    <string name="mic_permission_text">Без микрофона тренажёр не слышит скрипку. Звук обрабатывается на телефоне и никуда не отправляется.</string>
+    <string name="mic_permission_grant">Разрешить доступ</string>
+    <string name="record_button">Запись</string>
+    <string name="record_unavailable">Запись появится позже</string>
+
     <string name="coming_soon_title">Скоро</string>
     <string name="history_coming_soon_text">Записи сессий и динамика появятся в следующей версии</string>
     <string name="settings_coming_soon_text">Эталон A4, допуск и сглаживание — в следующей версии</string>

@@ -37,6 +37,10 @@ data class LiveTypography(
     val note: TextStyle,
     val octave: TextStyle,
     val status: TextStyle,
+    /** "Играйте…" / "Слишком шумно" inside the ring. */
+    val placeholder: TextStyle,
+    val promptTitle: TextStyle,
+    val promptBody: TextStyle,
 )
 
 internal val DefaultLiveTypography = LiveTypography(
@@ -58,6 +62,24 @@ internal val DefaultLiveTypography = LiveTypography(
         fontFamily = Manrope,
         fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
+    ),
+    placeholder = TextStyle(
+        fontFamily = Manrope,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 32.sp,
+        lineHeight = 38.sp,
+    ),
+    promptTitle = TextStyle(
+        fontFamily = Manrope,
+        fontWeight = FontWeight.Bold,
+        fontSize = 24.sp,
+        lineHeight = 29.sp,
+    ),
+    promptBody = TextStyle(
+        fontFamily = Manrope,
+        fontWeight = FontWeight.Normal,
+        fontSize = 15.sp,
+        lineHeight = 22.sp,
     ),
 )
 

@@ -3,6 +3,7 @@ package com.example.violintuner.core.ui.theme
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import com.example.violintuner.core.domain.Zone
 
 /**
  * Stops of the radial background gradient for one zone: [start] at 0 %, [mid] at [MID_STOP],
@@ -34,7 +35,24 @@ data class ZoneColors(
     val inTuneGradient: ZoneGradient,
     val nearGradient: ZoneGradient,
     val offGradient: ZoneGradient,
-)
+    /** All stops equal the surface: "no gradient", yet cross-fadable like the others. */
+    val noneGradient: ZoneGradient,
+) {
+    /** [zone] is null when nothing is sounding. */
+    fun colorFor(zone: Zone?): Color = when (zone) {
+        Zone.IN_TUNE -> inTune
+        Zone.NEAR -> near
+        Zone.OFF -> off
+        null -> none
+    }
+
+    fun gradientFor(zone: Zone?): ZoneGradient = when (zone) {
+        Zone.IN_TUNE -> inTuneGradient
+        Zone.NEAR -> nearGradient
+        Zone.OFF -> offGradient
+        null -> noneGradient
+    }
+}
 
 internal val DarkZoneColors = ZoneColors(
     inTune = ZoneInTune,
@@ -45,6 +63,7 @@ internal val DarkZoneColors = ZoneColors(
     inTuneGradient = ZoneGradient(GradientInTuneStart, GradientInTuneMid, Surface),
     nearGradient = ZoneGradient(GradientNearStart, GradientNearMid, Surface),
     offGradient = ZoneGradient(GradientOffStart, GradientOffMid, Surface),
+    noneGradient = ZoneGradient(Surface, Surface, Surface),
 )
 
 internal val LocalZoneColors = staticCompositionLocalOf<ZoneColors> {
