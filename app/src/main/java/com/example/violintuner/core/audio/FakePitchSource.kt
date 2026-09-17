@@ -30,43 +30,46 @@ class FakePitchSource(
 
     // Frames are due at absolute times since collection started. Sleeping a fixed period per
     // frame would let delay() overhead pile up and the script would lag behind the wall clock.
-    override val frames: Flow<PitchFrame> = flow {
+    override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
         val start = timeSource.markNow()
         var index = 0L
         while (true) {
-            emit(frameAt(index))
+            emit(frameAt(index, config))
             index++
-            delay((frameTimeMs(index) - start.elapsedNow().inWholeMilliseconds).coerceAtLeast(0))
+            delay((frameTimeMs(index, config) - start.elapsedNow().inWholeMilliseconds).coerceAtLeast(0))
         }
     }
 
-    /** Deterministic frame number [index]; usable without coroutines. */
-    fun frameAt(index: Long): PitchFrame {
-        val tMs = frameTimeMs(index)
-        if (scenario != FakeScenario.DEMO) return frame(scenario, tMs, tMs / MS_PER_SECOND)
+    /**
+     * Deterministic frame number [index]; usable without coroutines. The script is written
+     * around the A4 of [config], so "in tune" stays in tune for any reference pitch.
+     */
+    fun frameAt(index: Long, config: IntonationConfig = this.config): PitchFrame {
+        val tMs = frameTimeMs(index, config)
+        if (scenario != FakeScenario.DEMO) return frame(scenario, tMs, tMs / MS_PER_SECOND, config)
         val segment = (tMs / DEMO_SEGMENT_MS % DEMO_SEQUENCE.size).toInt()
-        return frame(DEMO_SEQUENCE[segment], tMs, tMs % DEMO_SEGMENT_MS / MS_PER_SECOND)
+        return frame(DEMO_SEQUENCE[segment], tMs, tMs % DEMO_SEGMENT_MS / MS_PER_SECOND, config)
     }
 
     /** [seconds] is the scenario's own clock, so drifts restart in every DEMO segment. */
-    private fun frame(scenario: FakeScenario, tMs: Long, seconds: Double): PitchFrame = when (scenario) {
-        FakeScenario.IN_TUNE -> played(tMs, IN_TUNE_OFFSET_CENTS)
-        FakeScenario.DRIFT_SHARP -> played(tMs, driftCents(seconds))
-        FakeScenario.DRIFT_FLAT -> played(tMs, -driftCents(seconds))
+    private fun frame(scenario: FakeScenario, tMs: Long, seconds: Double, config: IntonationConfig): PitchFrame = when (scenario) {
+        FakeScenario.IN_TUNE -> played(tMs, IN_TUNE_OFFSET_CENTS, config)
+        FakeScenario.DRIFT_SHARP -> played(tMs, driftCents(seconds), config)
+        FakeScenario.DRIFT_FLAT -> played(tMs, -driftCents(seconds), config)
         FakeScenario.VIBRATO ->
-            played(tMs, VIBRATO_DEPTH_CENTS * sin(2 * PI * VIBRATO_RATE_HZ * seconds))
+            played(tMs, VIBRATO_DEPTH_CENTS * sin(2 * PI * VIBRATO_RATE_HZ * seconds), config)
         FakeScenario.SILENCE -> PitchFrame.unpitched(tMs, clarity = 0.0, rms = SILENCE_RMS)
         FakeScenario.NOISE -> PitchFrame.unpitched(tMs, clarity = NOISE_CLARITY, rms = NOISE_RMS)
         FakeScenario.DEMO -> error("DEMO is a sequence, not a signal")
     }
 
-    private fun frameTimeMs(index: Long): Long =
+    private fun frameTimeMs(index: Long, config: IntonationConfig): Long =
         index * config.hopSizeSamples * MS_PER_SECOND.toLong() / config.sampleRateHz
 
     private fun driftCents(seconds: Double): Double =
         (DRIFT_CENTS_PER_SECOND * seconds).coerceAtMost(DRIFT_LIMIT_CENTS)
 
-    private fun played(tMs: Long, offsetCents: Double): PitchFrame = PitchFrame.pitched(
+    private fun played(tMs: Long, offsetCents: Double, config: IntonationConfig): PitchFrame = PitchFrame.pitched(
         tMs = tMs,
         freqHz = config.a4Hz * 2.0.pow(offsetCents / PitchMath.CENTS_PER_OCTAVE),
         clarity = PLAYED_CLARITY,

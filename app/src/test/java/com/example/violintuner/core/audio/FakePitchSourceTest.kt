@@ -1,6 +1,7 @@
 package com.example.violintuner.core.audio
 
 import com.example.violintuner.core.domain.Direction
+import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.IntonationEngine
 import com.example.violintuner.core.domain.IntonationReading
 import com.example.violintuner.core.domain.IntonationReading.Active
@@ -31,7 +32,7 @@ class FakePitchSourceTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `flow emits frames at the hop rate`() = runTest {
-        val frames = FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource).frames.take(5).toList()
+        val frames = FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource).frames(IntonationConfig()).take(5).toList()
         assertEquals(listOf(0L, 11L, 23L, 34L, 46L), frames.map { it.tMs })
         assertEquals(46L, currentTime)
     }
@@ -39,7 +40,7 @@ class FakePitchSourceTest {
     @OptIn(ExperimentalCoroutinesApi::class)
     @Test
     fun `flow catches up with the clock when the collector is slow`() = runTest {
-        val frames = FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource).frames
+        val frames = FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource).frames(IntonationConfig())
             .onEach { delay(5) } // slower than nothing, faster than the hop
             .take(100)
             .toList()
@@ -50,7 +51,7 @@ class FakePitchSourceTest {
     @Test
     fun `flow and frameAt agree`() = runTest {
         val source = FakePitchSource(FakeScenario.VIBRATO, timeSource = testTimeSource)
-        val fromFlow = source.frames.take(20).toList()
+        val fromFlow = source.frames(IntonationConfig()).take(20).toList()
         assertEquals((0L until 20).map(source::frameAt), fromFlow)
     }
 
@@ -118,6 +119,15 @@ class FakePitchSourceTest {
         assertTrue(IntonationReading.Silence in readings)
         assertTrue(IntonationReading.TooNoisy in readings)
         assertTrue("second loop starts in tune again", readings.last() is Active)
+    }
+
+    @Test
+    fun `script follows the reference pitch of the config`() {
+        val at442 = IntonationConfig(a4Hz = 442.0)
+        val frame = FakePitchSource(FakeScenario.IN_TUNE).frameAt(10, at442)
+        assertEquals(69, frame.midi)
+        assertEquals(2.0, frame.cents!!, 1e-6)
+        assertTrue(frame.freqHz!! > 442.0)
     }
 
     private companion object {

@@ -7,6 +7,7 @@ import com.example.violintuner.core.audio.PitchSource
 import com.example.violintuner.core.di.DefaultDispatcher
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.IntonationEngine
+import com.example.violintuner.core.settings.IntonationConfigSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -32,48 +33,51 @@ import kotlinx.coroutines.flow.update
 @HiltViewModel
 class LiveViewModel @Inject constructor(
     private val pitchSource: PitchSource,
-    private val config: IntonationConfig,
-    @DefaultDispatcher dispatcher: CoroutineDispatcher,
+    private val configSource: IntonationConfigSource,
+    @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
 
     // Mode and lock change together, so they live in one value the engine reads atomically.
     private val target = MutableStateFlow(LiveTarget())
-    private val scale = ScaleSpec(config)
-    private val engine = IntonationEngine(config)
 
     // The engine is stateful and single-threaded: every frame goes through this one chain, and
     // the target is read per frame instead of being combined in. conflate() drops only finished
-    // readings the UI had no time to show, never frames.
-    private val pipeline: Flow<LiveSignal> = pitchSource.frames
-        .onStart { engine.reset() }
-        .map { frame -> LiveReducer.signalOf(engine.process(frame, LiveReducer.targetModeOf(target.value))) }
-        .retryWhen { cause, _ ->
-            // Anything else is a bug and must crash rather than be retried forever.
-            if (cause !is MicUnavailableException) return@retryWhen false
-            emit(LiveSignal.MicUnavailable)
-            delay(MIC_RETRY_DELAY_MS)
-            true
-        }
-        .conflate()
-        .flowOn(dispatcher)
+    // readings the UI had no time to show, never frames. A new config (the player changed the
+    // reference pitch or the tolerance) gets a new engine and a new source collection.
+    private fun pipeline(config: IntonationConfig): Flow<LiveSignal> {
+        val engine = IntonationEngine(config)
+        return pitchSource.frames(config)
+            .onStart { engine.reset() }
+            .map { frame -> LiveReducer.signalOf(engine.process(frame, LiveReducer.targetModeOf(target.value))) }
+            .retryWhen { cause, _ ->
+                // Anything else is a bug and must crash rather than be retried forever.
+                if (cause !is MicUnavailableException) return@retryWhen false
+                emit(LiveSignal.MicUnavailable)
+                delay(MIC_RETRY_DELAY_MS)
+                true
+            }
+            .conflate()
+            .flowOn(dispatcher)
+    }
 
     // null = not reported yet: stay silent instead of flashing the permission prompt at users
     // who have already granted it. The source is never collected without the permission.
     private val micPermissionGranted = MutableStateFlow(if (pitchSource.requiresMicPermission) null else true)
 
     @OptIn(ExperimentalCoroutinesApi::class)
-    private val signal: Flow<LiveSignal> = micPermissionGranted.flatMapLatest { granted ->
-        when (granted) {
-            null -> flowOf(LiveSignal.Silence)
-            false -> flowOf(LiveSignal.NoMicPermission)
-            true -> pipeline
+    private val signal: Flow<LiveSignal> =
+        combine(micPermissionGranted, configSource.config, ::Pair).flatMapLatest { (granted, config) ->
+            when (granted) {
+                null -> flowOf(LiveSignal.Silence)
+                false -> flowOf(LiveSignal.NoMicPermission)
+                true -> pipeline(config)
+            }
         }
-    }
 
-    val state: StateFlow<LiveState> = combine(target, signal, ::stateOf).stateIn(
+    val state: StateFlow<LiveState> = combine(target, configSource.config, signal, ::stateOf).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-        initialValue = stateOf(target.value, LiveSignal.Silence),
+        initialValue = stateOf(target.value, configSource.default, LiveSignal.Silence),
     )
 
     private val effectChannel = Channel<LiveEffect>(Channel.BUFFERED)
@@ -90,11 +94,11 @@ class LiveViewModel @Inject constructor(
         }
     }
 
-    private fun stateOf(target: LiveTarget, signal: LiveSignal) = LiveState(
+    private fun stateOf(target: LiveTarget, config: IntonationConfig, signal: LiveSignal) = LiveState(
         mode = target.mode,
         signal = signal,
         tuning = LiveReducer.tuningStateOf(target, signal, config),
-        scale = scale,
+        scale = ScaleSpec(config),
         zoneCrossfadeMs = config.zoneCrossfadeMs,
     )
 

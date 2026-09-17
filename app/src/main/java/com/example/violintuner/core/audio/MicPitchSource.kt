@@ -8,13 +8,12 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
 import com.example.violintuner.BuildConfig
-import com.example.violintuner.core.audio.dsp.PitchDetector
+import com.example.violintuner.core.audio.dsp.PitchDetectorFactory
 import com.example.violintuner.core.di.IoDispatcher
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.PitchFrame
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
-import javax.inject.Provider
 import kotlin.coroutines.coroutineContext
 import kotlin.math.log10
 import kotlinx.coroutines.CoroutineDispatcher
@@ -30,21 +29,20 @@ import kotlinx.coroutines.isActive
  */
 class MicPitchSource @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val config: IntonationConfig,
-    private val detectorProvider: Provider<PitchDetector>,
+    private val detectorFactory: PitchDetectorFactory,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
 ) : PitchSource {
 
     override val requiresMicPermission: Boolean = true
 
-    override val frames: Flow<PitchFrame> = flow {
-        val (recorder, sampleRateHz) = openRecorder()
+    override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
+        val (recorder, sampleRateHz) = openRecorder(config)
         try {
             recorder.startRecording()
             if (recorder.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
                 throw unavailable("AudioRecord did not start, the microphone may be in use")
             }
-            val analyzer = FrameAnalyzer(detectorProvider.get(), config, sampleRateHz)
+            val analyzer = FrameAnalyzer(detectorFactory.create(config), config, sampleRateHz)
             val hop = ShortArray(config.hopSizeSamples)
             val watchdog = DigitalSilenceWatchdog(config, sampleRateHz)
             val stats = if (BuildConfig.DEBUG) FrameStats(config, sampleRateHz, recorder.audioSource) else null
@@ -66,7 +64,7 @@ class MicPitchSource @Inject constructor(
     /** First recorder that initializes, trying the native sample rate before the others. */
     // The permission is checked by the caller: see PitchSource.requiresMicPermission.
     @SuppressLint("MissingPermission")
-    private fun openRecorder(): Pair<AudioRecord, Int> {
+    private fun openRecorder(config: IntonationConfig): Pair<AudioRecord, Int> {
         val audioManager = context.getSystemService(AudioManager::class.java)
         val source = if (audioManager.getProperty(AudioManager.PROPERTY_SUPPORT_AUDIO_SOURCE_UNPROCESSED) == "true") {
             MediaRecorder.AudioSource.UNPROCESSED

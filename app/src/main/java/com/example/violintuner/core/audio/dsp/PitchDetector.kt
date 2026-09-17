@@ -1,5 +1,7 @@
 package com.example.violintuner.core.audio.dsp
 
+import com.example.violintuner.core.domain.IntonationConfig
+
 /** [freqHz] is null when no periodicity was found; [clarity] is 0..1 either way. */
 data class PitchEstimate(val freqHz: Double?, val clarity: Double)
 
@@ -10,4 +12,9 @@ data class PitchEstimate(val freqHz: Double?, val clarity: Double)
 interface PitchDetector {
     /** [window] holds [IntonationConfig.windowSizeSamples] samples scaled to -1..1. */
     fun detect(window: FloatArray, sampleRateHz: Int): PitchEstimate
+}
+
+/** Detectors are stateful and bound to a config: every audio stream creates its own. */
+fun interface PitchDetectorFactory {
+    fun create(config: IntonationConfig): PitchDetector
 }

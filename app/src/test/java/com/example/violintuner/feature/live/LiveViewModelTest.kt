@@ -7,11 +7,15 @@ import com.example.violintuner.core.audio.PitchSource
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Direction
 import com.example.violintuner.core.domain.PitchFrame
+import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
+import com.example.violintuner.core.settings.FakeSettingsRepository
+import com.example.violintuner.core.settings.SettingsConfigSource
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.emitAll
 import kotlinx.coroutines.flow.first
@@ -43,8 +47,13 @@ class LiveViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun TestScope.viewModel(source: PitchSource) =
-        LiveViewModel(source, IntonationConfig(), StandardTestDispatcher(testScheduler))
+    private val settings = FakeSettingsRepository()
+
+    private fun TestScope.viewModel(source: PitchSource) = LiveViewModel(
+        source,
+        SettingsConfigSource(IntonationConfig(), settings),
+        StandardTestDispatcher(testScheduler),
+    )
 
     private fun TestScope.fakeSource(scenario: FakeScenario) =
         FakePitchSource(scenario, timeSource = testTimeSource)
@@ -142,6 +151,55 @@ class LiveViewModelTest {
     }
 
     @Test
+    fun `wider tolerance from the settings turns a near reading into in tune`() = runTest {
+        val tenCentsSharp = object : PitchSource {
+            override val requiresMicPermission = false
+            override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
+                var t = 0L
+                while (true) {
+                    emit(PitchFrame.pitched(t, 440.0 * Math.pow(2.0, 10.0 / 1200), 0.97, 0.2, config.a4Hz))
+                    delay(10)
+                    t += 10
+                }
+            }
+        }
+        val viewModel = viewModel(tenCentsSharp)
+        observe(viewModel, 500)
+        assertEquals(Zone.NEAR, (viewModel.state.value.signal as LiveSignal.Sounding).zone)
+        assertEquals(8.0, viewModel.state.value.scale.toleranceCents, 0.0)
+
+        settings.setTolerance(TolerancePreset.BEGINNER)
+        advanceTimeBy(500)
+        runCurrent()
+        assertEquals(Zone.IN_TUNE, (viewModel.state.value.signal as LiveSignal.Sounding).zone)
+        assertEquals(12.0, viewModel.state.value.scale.toleranceCents, 0.0)
+    }
+
+    @Test
+    fun `reference pitch from the settings moves the target and the string captions`() = runTest {
+        val plays442 = object : PitchSource {
+            override val requiresMicPermission = false
+            override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
+                var t = 0L
+                while (true) {
+                    emit(PitchFrame.pitched(t, 442.0, 0.97, 0.2, config.a4Hz))
+                    delay(10)
+                    t += 10
+                }
+            }
+        }
+        val viewModel = viewModel(plays442)
+        observe(viewModel, 500)
+        assertEquals(7.85, (viewModel.state.value.signal as LiveSignal.Sounding).cents, 0.05)
+
+        settings.setA4(442)
+        advanceTimeBy(500)
+        runCurrent()
+        assertEquals(0.0, (viewModel.state.value.signal as LiveSignal.Sounding).cents, 0.01)
+        assertEquals(442, viewModel.state.value.tuning.stringHz.getValue(ViolinString.A4))
+    }
+
+    @Test
     fun `record button only explains that recording comes later`() = runTest {
         val viewModel = viewModel(FakeScenario.SILENCE)
         viewModel.onIntent(LiveIntent.RecordClicked)
@@ -235,9 +293,9 @@ class LiveViewModelTest {
         var attempts = 0
         val flaky = object : PitchSource {
             override val requiresMicPermission = false
-            override val frames: Flow<PitchFrame> = flow {
+            override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
                 if (++attempts <= 2) throw MicUnavailableException("busy")
-                emitAll(working.frames)
+                emitAll(working.frames(config))
             }
         }
         val viewModel = viewModel(flaky)
@@ -257,12 +315,12 @@ class LiveViewModelTest {
     }
 
     private class CountingSource(
-        delegate: PitchSource,
+        private val delegate: PitchSource,
         override val requiresMicPermission: Boolean = false,
     ) : PitchSource {
         var starts = 0
         var stops = 0
-        override val frames: Flow<PitchFrame> = delegate.frames
+        override fun frames(config: IntonationConfig): Flow<PitchFrame> = delegate.frames(config)
             .onStart { starts++ }
             .onCompletion { stops++ }
     }
