@@ -24,6 +24,7 @@ import com.example.violintuner.core.ui.permission.rememberMicPermissionRequester
 @Composable
 fun LiveRoute(
     onOpenSession: (sessionId: Long) -> Unit,
+    onOpenPractice: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LiveViewModel = hiltViewModel(),
 ) {
@@ -32,6 +33,7 @@ fun LiveRoute(
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnOpenSession by rememberUpdatedState(onOpenSession)
+    val currentOnOpenPractice by rememberUpdatedState(onOpenPractice)
 
     val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = true) { granted ->
         viewModel.onIntent(LiveIntent.MicPermissionChanged(granted))
@@ -57,6 +59,7 @@ fun LiveRoute(
                     LiveEffect.ShowNoNotesRecorded ->
                         Toast.makeText(context, R.string.record_no_notes, Toast.LENGTH_SHORT).show()
                     LiveEffect.RequestMicPermission -> requestMicPermission()
+                    LiveEffect.OpenPractice -> currentOnOpenPractice()
                 }
             }
         }

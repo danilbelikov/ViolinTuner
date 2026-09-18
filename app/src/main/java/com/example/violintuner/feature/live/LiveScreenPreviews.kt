@@ -23,6 +23,7 @@ private fun LivePreview(
     mode: LiveMode = LiveMode.PLAY,
     lockedString: ViolinString? = null,
     recording: RecordingState? = null,
+    practiceMs: Long? = null,
 ) {
     val config = IntonationConfig()
     ViolinTheme {
@@ -35,6 +36,7 @@ private fun LivePreview(
                 canRecord = LiveReducer.canRecord(LiveTarget(mode, lockedString), signal),
                 scale = ScaleSpec(config),
                 zoneCrossfadeMs = config.zoneCrossfadeMs,
+                practiceMs = practiceMs,
             ),
             onIntent = {},
         )
@@ -162,4 +164,38 @@ private fun RecordingPreview() = LivePreview(
 private fun RecordingLandscapePreview() = LivePreview(
     LiveSignal.Sounding(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
     recording = SampleRecording,
+)
+
+// A practice is running, handoff frames 10h1–10h3 and 10h-land.
+
+private const val PRACTICE_MS = 754_000L
+
+@Preview(name = "Practice chip · play", widthDp = 412, heightDp = 788)
+@Composable
+private fun PracticeChipPreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
+    practiceMs = PRACTICE_MS,
+)
+
+@Preview(name = "Practice chip · recording", widthDp = 412, heightDp = 788)
+@Composable
+private fun PracticeChipRecordingPreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
+    recording = RecordingState(elapsedMs = 84_000, bars = listOf(RecordingBar(0.5f, Zone.IN_TUNE), RecordingBar(0.2f, Zone.NEAR))),
+    practiceMs = PRACTICE_MS,
+)
+
+@Preview(name = "Practice chip · tuning", widthDp = 412, heightDp = 788)
+@Composable
+private fun PracticeChipTuningPreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
+    mode = LiveMode.TUNING,
+    practiceMs = PRACTICE_MS,
+)
+
+@Preview(name = "Practice chip · landscape", widthDp = 892, heightDp = 412)
+@Composable
+private fun PracticeChipLandscapePreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
+    practiceMs = PRACTICE_MS,
 )

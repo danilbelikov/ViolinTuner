@@ -32,7 +32,12 @@ fun AppNavHost(
         composable(ONBOARDING_ROUTE) {
             OnboardingRoute(onFinished = navController::navigateFromOnboardingToLive)
         }
-        composable(TopLevelDestination.LIVE.route) { LiveRoute(onOpenSession = navController::navigateToSession) }
+        composable(TopLevelDestination.LIVE.route) {
+            LiveRoute(
+                onOpenSession = navController::navigateToSession,
+                onOpenPractice = { navController.navigateToTopLevel(TopLevelDestination.PRACTICE) },
+            )
+        }
         composable(TopLevelDestination.PRACTICE.route) {
             PracticeRoute(
                 onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },

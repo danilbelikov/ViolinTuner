@@ -39,6 +39,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.ui.theme.ViolinTheme
@@ -49,6 +50,7 @@ import com.example.violintuner.feature.live.components.LiveMotion
 import com.example.violintuner.feature.live.components.MicGlyph
 import com.example.violintuner.feature.live.components.MicPermissionPrompt
 import com.example.violintuner.feature.live.components.ModeSwitcher
+import com.example.violintuner.feature.live.components.PracticeChipSlot
 import com.example.violintuner.feature.live.components.NoteLabel
 import com.example.violintuner.feature.live.components.RecordButton
 import com.example.violintuner.feature.live.components.RecordingStrip
@@ -128,6 +130,11 @@ private fun PortraitLayout(
                     top = LiveDimens.SwitcherTopPadding,
                 )
                 .alpha(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha),
+        )
+        PracticeChipSlot(
+            practiceMs = state.practiceMs,
+            onClick = { onIntent(LiveIntent.PracticeChipClicked) },
+            modifier = Modifier.padding(top = LiveDimens.PracticeChipTopPadding),
         )
         AnimatedVisibility(
             visible = state.mode == LiveMode.TUNING,
@@ -230,6 +237,8 @@ private fun LandscapeLayout(
             verticalArrangement = Arrangement.spacedBy(LiveDimens.LandscapeSpacing),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
+            // The only sign of a running practice here: there is no tab bar in landscape.
+            PracticeChipSlot(practiceMs = state.practiceMs, onClick = { onIntent(LiveIntent.PracticeChipClicked) })
             ModeSwitcher(
                 mode = state.mode,
                 onSelect = { onIntent(LiveIntent.SelectMode(it)) },
@@ -256,12 +265,19 @@ private fun LandscapeLayout(
                 if (noMic) {
                     MicPermissionPrompt(onGrantClick = { onIntent(LiveIntent.GrantMicClicked) })
                 } else {
+                    val statusHeight = maxHeight.coerceIn(LiveDimens.LandscapeStatusMinHeight, LiveDimens.StatusRowHeight)
+                    val wordStyle = ViolinTheme.liveTypography.statusLandscape
                     StatusRow(
                         direction = sounding?.direction,
                         color = zoneColor,
                         visible = sounding != null,
-                        height = maxHeight.coerceIn(LiveDimens.LandscapeStatusMinHeight, LiveDimens.StatusRowHeight),
-                        wordStyle = ViolinTheme.liveTypography.statusLandscape,
+                        height = statusHeight,
+                        // tuning mode plus the practice chip leave little height: a smaller word beats a clipped one
+                        wordStyle = if (statusHeight < LiveDimens.LandscapeStatusCompactHeight) {
+                            wordStyle.copy(fontSize = LiveDimens.LandscapeStatusSmallWordSp.sp)
+                        } else {
+                            wordStyle
+                        },
                     )
                 }
             }

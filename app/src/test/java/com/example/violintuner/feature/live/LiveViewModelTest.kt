@@ -12,6 +12,9 @@ import com.example.violintuner.core.domain.PitchFrame
 import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
+import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
+import com.example.violintuner.core.domain.practice.PracticeConfig
+import com.example.violintuner.core.domain.practice.RunningPractice
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.core.settings.SettingsConfigSource
@@ -60,6 +63,7 @@ class LiveViewModelTest {
     private val sessions = FakeSessionRepository()
     private val startedAt = Instant.parse("2026-09-17T09:00:00Z")
     private val audioFiles = FakeAudioFiles()
+    private val practice = FakeRunningPracticeStore()
 
     private class FakeAudioFiles : SessionAudioFiles {
         val created = mutableListOf<File>()
@@ -105,6 +109,8 @@ class LiveViewModelTest {
         SettingsConfigSource(base, settings),
         sessions,
         audioFiles,
+        practice,
+        PracticeConfig(),
         Clock.fixed(startedAt, ZoneOffset.UTC),
         StandardTestDispatcher(testScheduler),
     )
@@ -680,5 +686,50 @@ class LiveViewModelTest {
         override fun frames(config: IntonationConfig): Flow<PitchFrame> = delegate.frames(config)
             .onStart { starts++ }
             .onCompletion { stops++ }
+    }
+
+    // Practice tracking on Live (spec 3.12, 5.6)
+
+    @Test
+    fun `the chip shows the running practice and leads to the practice tab`() = runTest {
+        val viewModel = viewModel(FakeScenario.SILENCE)
+        val effects = mutableListOf<LiveEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        observe(viewModel, 300)
+        assertEquals(null, viewModel.state.value.practiceMs)
+
+        practice.start(startedAt.toEpochMilli() - 754_000)
+        advance(100)
+        assertEquals(754_000L, viewModel.state.value.practiceMs)
+
+        viewModel.onIntent(LiveIntent.PracticeChipClicked)
+        runCurrent()
+        assertEquals(listOf<LiveEffect>(LiveEffect.OpenPractice), effects)
+
+        practice.clear()
+        advance(100)
+        assertEquals(null, viewModel.state.value.practiceMs)
+    }
+
+    @Test
+    fun `a sounding note marks the practice once per interval`() = runTest {
+        practice.start(startedAt.toEpochMilli() - 60_000)
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        observe(viewModel, 1_500)
+        // the clock is fixed, so every frame is "now": one mark, not one per frame
+        assertEquals(RunningPractice(startedAt.toEpochMilli() - 60_000, startedAt.toEpochMilli()), practice.running.value)
+    }
+
+    @Test
+    fun `silence marks nothing, and nothing is marked without a practice`() = runTest {
+        practice.start(startedAt.toEpochMilli() - 60_000)
+        val silent = viewModel(FakeScenario.SILENCE)
+        observe(silent, 1_500)
+        assertEquals(null, practice.running.value!!.lastSoundEpochMs)
+
+        practice.clear()
+        val sounding = viewModel(FakeScenario.IN_TUNE)
+        observe(sounding, 1_500)
+        assertEquals(null, practice.running.value)
     }
 }

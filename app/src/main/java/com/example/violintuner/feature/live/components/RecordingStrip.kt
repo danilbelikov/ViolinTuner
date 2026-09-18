@@ -66,6 +66,11 @@ fun RecordingStrip(recording: RecordingState, modifier: Modifier = Modifier) {
                 .background(zoneColors.off, CircleShape),
         )
         Text(
+            text = stringResource(R.string.recording_strip_label),
+            color = colors.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+        )
+        Text(
             text = elapsed,
             color = colors.onSurface,
             style = MaterialTheme.typography.titleMedium.copy(

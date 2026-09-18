@@ -9,6 +9,10 @@ import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.di.DefaultDispatcher
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.IntonationEngine
+import com.example.violintuner.core.domain.IntonationReading
+import com.example.violintuner.core.domain.practice.PracticeConfig
+import com.example.violintuner.core.domain.practice.RunningPracticeStore
+import com.example.violintuner.core.domain.practice.elapsedTicker
 import com.example.violintuner.core.domain.session.RecordingProgress
 import com.example.violintuner.core.domain.session.RecordingResult
 import com.example.violintuner.core.domain.session.SessionRecorder
@@ -39,6 +43,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.retryWhen
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @HiltViewModel
@@ -47,9 +52,37 @@ class LiveViewModel @Inject constructor(
     private val configSource: IntonationConfigSource,
     private val sessionRepository: SessionRepository,
     private val audioFiles: SessionAudioFiles,
+    private val runningPractice: RunningPracticeStore,
+    private val practiceConfig: PracticeConfig,
     private val clock: Clock,
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
 ) : ViewModel() {
+
+    // "The violin sounded" for the forgotten-practice rule (spec 5.6): written from the engine
+    // thread at most once a minute, and only while a practice runs. The start of the running
+    // practice is mirrored here because the pipeline must not suspend on the store per frame.
+    @Volatile
+    private var practiceStartedAt: Long? = null
+    private var lastSoundMarkAt: Long? = null
+
+    init {
+        viewModelScope.launch {
+            runningPractice.running.collect { running ->
+                if (running?.startedAtEpochMs != practiceStartedAt) lastSoundMarkAt = null
+                practiceStartedAt = running?.startedAtEpochMs
+            }
+        }
+    }
+
+    private suspend fun markSoundIfDue(reading: IntonationReading) {
+        if (practiceStartedAt == null) return
+        if (reading !is IntonationReading.Active || reading.held) return
+        val now = clock.millis()
+        val last = lastSoundMarkAt
+        if (last != null && now - last < practiceConfig.soundMarkIntervalMs) return
+        lastSoundMarkAt = now
+        runningPractice.markSound(now)
+    }
 
     // Mode and lock change together, so they live in one value the engine reads atomically.
     private val target = MutableStateFlow(LiveTarget())
@@ -137,6 +170,7 @@ class LiveViewModel @Inject constructor(
                     awaitingSignal = false
                 }
                 val reading = engine.process(frame, LiveReducer.targetModeOf(target.value))
+                markSoundIfDue(reading)
                 if (recordingRequested.value && recorder == null && mayStartRecorder(frame.tMs)) {
                     recorder = SessionRecorder(config, clock.millis())
                 }
@@ -183,12 +217,14 @@ class LiveViewModel @Inject constructor(
         }
 
     val state: StateFlow<LiveState> =
-        combine(target, configSource.config, recordingRequested, output) { target, config, requested, output ->
-            stateOf(target, config, requested, output)
+        combine(
+            target, configSource.config, recordingRequested, output, runningPractice.elapsedTicker(clock),
+        ) { target, config, requested, output, practiceMs ->
+            stateOf(target, config, requested, output, practiceMs)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-            initialValue = stateOf(target.value, configSource.default, false, PipelineOutput(LiveSignal.Silence)),
+            initialValue = stateOf(target.value, configSource.default, false, PipelineOutput(LiveSignal.Silence), null),
         )
 
     fun onIntent(intent: LiveIntent) {
@@ -204,6 +240,7 @@ class LiveViewModel @Inject constructor(
             LiveIntent.GrantMicClicked -> effectChannel.trySend(LiveEffect.RequestMicPermission)
             is LiveIntent.MicPermissionChanged ->
                 if (pitchSource.requiresMicPermission) micPermissionGranted.value = intent.granted
+            LiveIntent.PracticeChipClicked -> effectChannel.trySend(LiveEffect.OpenPractice)
         }
     }
 
@@ -212,6 +249,7 @@ class LiveViewModel @Inject constructor(
         config: IntonationConfig,
         recordingRequested: Boolean,
         output: PipelineOutput,
+        practiceMs: Long?,
     ) = LiveState(
         mode = target.mode,
         signal = output.signal,
@@ -225,6 +263,7 @@ class LiveViewModel @Inject constructor(
         canRecord = LiveReducer.canRecord(target, output.signal),
         scale = ScaleSpec(config),
         zoneCrossfadeMs = config.zoneCrossfadeMs,
+        practiceMs = practiceMs,
     )
 
     private companion object {

@@ -67,6 +67,8 @@ data class LiveState(
     val scale: ScaleSpec,
     /** Duration of the zone color cross-fade (spec 3.2). */
     val zoneCrossfadeMs: Int,
+    /** How long the running practice has been going; null when none runs (the chip, spec 3.12). */
+    val practiceMs: Long? = null,
 )
 
 sealed interface LiveIntent {
@@ -82,6 +84,9 @@ sealed interface LiveIntent {
 
     /** Reported by the route on every resume and after the system dialog. */
     data class MicPermissionChanged(val granted: Boolean) : LiveIntent
+
+    /** The «занятие · 12:34» chip leads to the practice tab. */
+    data object PracticeChipClicked : LiveIntent
 }
 
 sealed interface LiveEffect {
@@ -92,4 +97,6 @@ sealed interface LiveEffect {
     data object ShowNoNotesRecorded : LiveEffect
 
     data object RequestMicPermission : LiveEffect
+
+    data object OpenPractice : LiveEffect
 }

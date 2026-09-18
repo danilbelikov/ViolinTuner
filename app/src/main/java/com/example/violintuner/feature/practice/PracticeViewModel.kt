@@ -10,6 +10,7 @@ import com.example.violintuner.core.domain.practice.PracticeRepository
 import com.example.violintuner.core.domain.practice.PracticeStats
 import com.example.violintuner.core.domain.practice.RunningPractice
 import com.example.violintuner.core.domain.practice.RunningPracticeStore
+import com.example.violintuner.core.domain.practice.elapsedTicker
 import com.example.violintuner.core.domain.practice.practiceDateOf
 import com.example.violintuner.core.domain.session.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -17,23 +18,17 @@ import java.time.Clock
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class PracticeViewModel @Inject constructor(
     private val repository: PracticeRepository,
@@ -49,21 +44,7 @@ class PracticeViewModel @Inject constructor(
 
     private val ui = MutableStateFlow(Ui(YearMonth.from(today()), today(), sheet = null))
 
-    /**
-     * The timer follows the wall clock from the stored start, once a second while a practice
-     * runs: nothing accumulates in memory, so a restart of the app or the phone changes nothing.
-     */
-    private val runningMs: Flow<Long?> = runningStore.running.flatMapLatest { running ->
-        if (running == null) flowOf(null) else ticking(running)
-    }
-
-    private fun ticking(running: RunningPractice): Flow<Long> = flow {
-        while (true) {
-            val now = clock.millis()
-            emit(running.elapsedMs(now))
-            delay(MS_PER_SECOND - now % MS_PER_SECOND)
-        }
-    }
+    private val runningMs: Flow<Long?> = runningStore.elapsedTicker(clock)
 
     val state: StateFlow<PracticeState> =
         combine(repository.entries, sessions.sessions, runningMs, ui) { entries, sessions, runningMs, ui ->
@@ -196,6 +177,5 @@ class PracticeViewModel @Inject constructor(
 
     private companion object {
         const val STOP_TIMEOUT_MS = 5_000L
-        const val MS_PER_SECOND = 1_000L
     }
 }

@@ -15,6 +15,14 @@ internal object LiveDimens {
     val SwitcherTuningIconWidth = 4.dp
     val SwitcherIconGap = 8.dp
 
+    /** «занятие · 12:34» under the mode switcher (handoff 10h). */
+    val PracticeChipTopPadding = 10.dp
+    val PracticeChipHeight = 28.dp
+    val PracticeChipPaddingStart = 10.dp
+    val PracticeChipPaddingEnd = 12.dp
+    val PracticeChipDotSize = 6.dp
+    val PracticeChipGap = 6.dp
+
     val StringRowTopPadding = 12.dp
     val StringButtonWidth = 76.dp
     val StringButtonHeight = 64.dp
@@ -66,7 +74,12 @@ internal object LiveDimens {
     val LandscapePaddingStart = 8.dp
     val LandscapePaddingEnd = 24.dp
     val LandscapePaddingVertical = 16.dp
-    val LandscapeSpacing = 12.dp
+    // 8, not the handoff's 12: with the practice chip in the column a tuning-mode landscape
+    // ran out of height for the status word.
+    val LandscapeSpacing = 8.dp
+    /** Below this height the landscape status word drops to [LandscapeStatusSmallWordSp]. */
+    val LandscapeStatusCompactHeight = 48.dp
+    const val LandscapeStatusSmallWordSp = 24
     val LandscapeRecordTopPadding = 4.dp
     val LandscapeStatusMinHeight = 40.dp
 

@@ -32,4 +32,7 @@ internal object LiveMotion {
     /** Marker spring, settles in about 120 ms. */
     const val MARKER_DAMPING = 0.8f
     const val MARKER_STIFFNESS = 600f
+
+    /** The practice chip appears and disappears without drawing the eye (handoff `anims`). */
+    const val PRACTICE_CHIP_FADE_MS = 200
 }
