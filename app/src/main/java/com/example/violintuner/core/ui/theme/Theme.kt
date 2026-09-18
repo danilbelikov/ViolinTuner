@@ -27,6 +27,7 @@ private val DarkColorScheme = darkColorScheme(
 fun ViolinTheme(content: @Composable () -> Unit) {
     CompositionLocalProvider(
         LocalZoneColors provides DarkZoneColors,
+        LocalStatusColors provides DarkStatusColors,
         LocalLiveTypography provides DefaultLiveTypography,
         LocalPracticeColors provides DarkPracticeColors,
         LocalProgressColors provides DarkProgressColors,
@@ -42,6 +43,9 @@ fun ViolinTheme(content: @Composable () -> Unit) {
 object ViolinTheme {
     val zoneColors: ZoneColors
         @Composable @ReadOnlyComposable get() = LocalZoneColors.current
+
+    val statusColors: StatusColors
+        @Composable @ReadOnlyComposable get() = LocalStatusColors.current
 
     val liveTypography: LiveTypography
         @Composable @ReadOnlyComposable get() = LocalLiveTypography.current

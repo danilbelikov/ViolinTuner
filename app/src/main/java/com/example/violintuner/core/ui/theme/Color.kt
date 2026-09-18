@@ -29,7 +29,11 @@ internal val ZoneNear = Color(0xFFE5B03C)
 internal val ZoneOff = Color(0xFFE8565C)
 internal val OnZoneOff = Color(0xFFFFFFFF)
 internal val ZoneNone = Color(0xFF3A3846)
-internal val RingTrack = Color(0x1AFFFFFF)
+
+// Dot of the Live status line (handoff `Live2.dc.html`, `status.*`): "may play" and "may not".
+// Muted on purpose and never the zone colors: green and red on Live already mean in tune and off.
+internal val StatusReady = Color(0xFF7CB99A)
+internal val StatusBlocked = Color(0xFFC4877F)
 
 internal val GradientInTuneStart = Color(0xFF1A4A36)
 internal val GradientInTuneMid = Color(0xFF153A2C)

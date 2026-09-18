@@ -24,8 +24,10 @@ private fun LivePreview(
     lockedString: ViolinString? = null,
     recording: RecordingState? = null,
     practiceMs: Long? = null,
+    reduceMotion: Boolean = false,
 ) {
     val config = IntonationConfig()
+    val target = LiveTarget(mode, lockedString)
     ViolinTheme {
         LiveScreen(
             state = LiveState(
@@ -36,17 +38,40 @@ private fun LivePreview(
                 canRecord = LiveReducer.canRecord(LiveTarget(mode, lockedString), signal),
                 scale = ScaleSpec(config),
                 zoneCrossfadeMs = config.zoneCrossfadeMs,
+                glowTarget = LiveReducer.glowTargetOf(signal, config),
+                glowStep = LiveReducer.glowTargetOf(signal, config, stepped = true),
+                statusLine = LiveReducer.statusLineOf(target, signal),
                 practiceMs = practiceMs,
             ),
             onIntent = {},
+            reduceMotion = reduceMotion,
         )
     }
 }
 
-@Preview(name = "InTune · A4, ring 70 %", widthDp = 412, heightDp = 788)
+@Preview(name = "12a2 InTune · A4, just hit: glow .6", widthDp = 412, heightDp = 788)
+@Composable
+private fun InTuneFreshPreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.0, level = 0.5f),
+)
+
+@Preview(name = "InTune · A4, held 70 %: glow .88", widthDp = 412, heightDp = 788)
 @Composable
 private fun InTunePreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
+    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7, level = 0.6f),
+)
+
+@Preview(name = "12a3 InTune · A4, held 2 s: glow 1", widthDp = 412, heightDp = 788)
+@Composable
+private fun InTuneHeldPreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 1.0, level = 0.8f),
+)
+
+@Preview(name = "12a9 animations removed: the step of the zone, no breath", widthDp = 412, heightDp = 788)
+@Composable
+private fun ReducedMotionPreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7, level = 0.9f),
+    reduceMotion = true,
 )
 
 @Preview(name = "Sharp · F#5, near", widthDp = 412, heightDp = 788)

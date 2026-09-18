@@ -36,6 +36,7 @@ internal object LiveDimens {
 
     val RingMargin = 16.dp
     val RingStroke = 6.dp
+    val WaveStroke = 2.dp
     val OctaveStartPadding = 4.dp
     val IndicatorSpacing = 24.dp
 

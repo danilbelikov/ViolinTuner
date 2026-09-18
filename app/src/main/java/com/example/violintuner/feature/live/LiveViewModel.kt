@@ -268,6 +268,7 @@ class LiveViewModel @Inject constructor(
         scale = ScaleSpec(config),
         zoneCrossfadeMs = config.zoneCrossfadeMs,
         glowTarget = LiveReducer.glowTargetOf(output.signal, config),
+        glowStep = LiveReducer.glowTargetOf(output.signal, config, stepped = true),
         statusLine = LiveReducer.statusLineOf(target, output.signal),
         practiceMs = practiceMs,
     )

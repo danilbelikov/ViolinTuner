@@ -23,6 +23,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -44,14 +45,14 @@ import com.example.violintuner.R
 import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.live.components.CentsScale
-import com.example.violintuner.feature.live.components.HoldRing
+import com.example.violintuner.feature.live.components.GlowRing
 import com.example.violintuner.feature.live.components.LiveDimens
 import com.example.violintuner.feature.live.components.LiveMotion
 import com.example.violintuner.feature.live.components.MicGlyph
 import com.example.violintuner.feature.live.components.MicPermissionPrompt
 import com.example.violintuner.feature.live.components.ModeSwitcher
-import com.example.violintuner.feature.live.components.PracticeChipSlot
 import com.example.violintuner.feature.live.components.NoteLabel
+import com.example.violintuner.feature.live.components.PracticeChipSlot
 import com.example.violintuner.feature.live.components.RecordButton
 import com.example.violintuner.feature.live.components.RecordingStrip
 import com.example.violintuner.feature.live.components.StatusRow
@@ -68,6 +69,8 @@ fun LiveScreen(
     state: LiveState,
     onIntent: (LiveIntent) -> Unit,
     modifier: Modifier = Modifier,
+    /** System animations are switched off: the ring stands still and changes in steps (spec 3.14). */
+    reduceMotion: Boolean = false,
 ) {
     val zoneColors = ViolinTheme.zoneColors
     val sounding = state.signal as? LiveSignal.Sounding
@@ -98,9 +101,9 @@ fun LiveScreen(
                 ),
         ) {
             if (landscape) {
-                LandscapeLayout(state, zoneColor, onIntent, ringModifier)
+                LandscapeLayout(state, zoneColor, onIntent, ringModifier, reduceMotion)
             } else {
-                PortraitLayout(state, zoneColor, onIntent, ringModifier)
+                PortraitLayout(state, zoneColor, onIntent, ringModifier, reduceMotion)
             }
         }
     }
@@ -112,6 +115,7 @@ private fun PortraitLayout(
     zoneColor: Color,
     onIntent: (LiveIntent) -> Unit,
     ringModifier: Modifier,
+    reduceMotion: Boolean,
 ) {
     val noMic = state.signal == LiveSignal.NoMicPermission
     val sounding = state.signal as? LiveSignal.Sounding
@@ -165,7 +169,7 @@ private fun PortraitLayout(
                 verticalArrangement = Arrangement.spacedBy(LiveDimens.IndicatorSpacing),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Ring(state, zoneColor, ringSize, ringModifier)
+                Ring(state, zoneColor, ringSize, ringModifier, reduceMotion)
                 if (noMic) {
                     MicPermissionPrompt(onGrantClick = { onIntent(LiveIntent.GrantMicClicked) })
                 } else {
@@ -208,6 +212,7 @@ private fun LandscapeLayout(
     zoneColor: Color,
     onIntent: (LiveIntent) -> Unit,
     ringModifier: Modifier,
+    reduceMotion: Boolean,
 ) {
     val noMic = state.signal == LiveSignal.NoMicPermission
     val sounding = state.signal as? LiveSignal.Sounding
@@ -222,7 +227,7 @@ private fun LandscapeLayout(
             contentAlignment = Alignment.Center,
         ) {
             val ringSize = ringSizeFor(state, landscape = true, maxWidth, maxHeight, reserved = 0.dp)
-            Ring(state, zoneColor, ringSize, ringModifier)
+            Ring(state, zoneColor, ringSize, ringModifier, reduceMotion)
         }
         Column(
             modifier = Modifier
@@ -328,13 +333,18 @@ private fun ringSizeFor(state: LiveState, landscape: Boolean, maxWidth: Dp, maxH
 }
 
 @Composable
-private fun Ring(state: LiveState, zoneColor: Color, size: Dp, modifier: Modifier) {
-    val zoneColors = ViolinTheme.zoneColors
+private fun Ring(state: LiveState, zoneColor: Color, size: Dp, modifier: Modifier, reduceMotion: Boolean) {
     val sounding = state.signal as? LiveSignal.Sounding
-    HoldRing(
-        progress = sounding?.holdProgress?.toFloat() ?: 0f,
-        trackColor = if (sounding != null) zoneColors.ringTrack else zoneColors.none,
-        fillColor = zoneColor,
+    // Silence has no count of its own; keeping the last one means going silent is not "a new note".
+    var noteSerial by remember { mutableIntStateOf(sounding?.noteSerial ?: 0) }
+    if (sounding != null) noteSerial = sounding.noteSerial
+    GlowRing(
+        glowTarget = if (reduceMotion) state.glowStep else state.glowTarget,
+        level = sounding?.level ?: 0f,
+        zoneColor = zoneColor,
+        noteSerial = noteSerial,
+        holdComplete = sounding != null && sounding.holdProgress >= 1.0,
+        reduceMotion = reduceMotion,
         size = size,
         modifier = modifier,
     ) {

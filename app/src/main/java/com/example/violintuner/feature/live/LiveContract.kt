@@ -88,6 +88,8 @@ data class LiveState(
     val zoneCrossfadeMs: Int,
     /** 0..1, what the glow of the ring moves towards; how fast is the screen's business (spec 5.8). */
     val glowTarget: Float = 0f,
+    /** The same without the growth of the hold: the zone's step, and full only once the hold is complete. */
+    val glowStep: Float = 0f,
     /** Null while a note sounds and without the permission: the line is hidden, its place stays. */
     val statusLine: StatusLine? = null,
     /** How long the running practice has been going; null when none runs (the chip, spec 3.12). */

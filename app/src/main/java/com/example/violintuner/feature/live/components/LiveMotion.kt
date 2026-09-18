@@ -8,8 +8,20 @@ internal object LiveMotion {
     /** Note, placeholder, status and marker appearing or disappearing. */
     const val CONTENT_FADE_MS = 300
 
-    /** Hold ring falling back to empty; growth is not animated, it follows the domain. */
-    const val RING_RESET_MS = 250
+    // The glow of the ring (spec 5.8, handoff `anims`): up faster than down, so that a short
+    // slip out of the zone does not put the ring out.
+    const val GLOW_RISE_MS = 500
+    const val GLOW_FALL_MS = 900
+
+    /** With system animations off the glow changes in steps, cross-faded. */
+    const val GLOW_STEP_MS = 300
+
+    // Waves: rare by rule. At most two alive follows from the numbers: 900 ms of life, 600 apart.
+    const val WAVE_MS = 900
+    const val WAVE_MIN_INTERVAL_MS = 600L
+
+    /** The wave on every new note; the one that rewards a held note stays whatever this says. */
+    const val NEW_NOTE_WAVE = true
 
     /** Arrow / dot pop when the direction changes. */
     const val DIRECTION_POP_MS = 150

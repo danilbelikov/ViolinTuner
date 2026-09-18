@@ -5,6 +5,7 @@ import com.example.violintuner.core.domain.IntonationReading
 import com.example.violintuner.core.domain.TargetMode
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
+import kotlin.math.floor
 import kotlin.math.roundToInt
 
 /** What the user has chosen to measure against; read by the engine on every frame. */
@@ -19,13 +20,14 @@ object LiveReducer {
      * more near, bright in tune and growing to full with the hold. A miss is quieter than a
      * hit on purpose.
      */
-    fun glowTargetOf(signal: LiveSignal, config: IntonationConfig): Float {
+    fun glowTargetOf(signal: LiveSignal, config: IntonationConfig, stepped: Boolean = false): Float {
         val sounding = signal as? LiveSignal.Sounding ?: return 0f
+        val hold = sounding.holdProgress.toFloat().coerceIn(0f, 1f)
         return when (sounding.zone) {
             Zone.OFF -> config.glowOff
             Zone.NEAR -> config.glowNear
-            Zone.IN_TUNE ->
-                config.glowInTune + (1f - config.glowInTune) * sounding.holdProgress.toFloat().coerceIn(0f, 1f)
+            // Stepped is for system animations switched off: no growth, only the two levels.
+            Zone.IN_TUNE -> config.glowInTune + (1f - config.glowInTune) * (if (stepped) floor(hold) else hold)
         }
     }
 

@@ -25,58 +25,7 @@ import androidx.compose.ui.unit.Dp
 import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.ui.theme.ViolinTheme
 
-private const val START_ANGLE_12_OCLOCK = -90f
-private const val FULL_CIRCLE = 360f
 private const val SHARP_SIGN = "#"
-
-/**
- * Hold ring (spec 3.3): a muted outline that fills clockwise from 12 o'clock with [fillColor]
- * as [progress] goes 0..1. [content] is centered inside.
- */
-@Composable
-fun HoldRing(
-    progress: Float,
-    trackColor: Color,
-    fillColor: Color,
-    size: Dp,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
-    // Growth follows the domain frame by frame; only the fall back to empty is animated.
-    val shown = remember { Animatable(progress) }
-    LaunchedEffect(progress) {
-        if (progress < shown.value) shown.animateTo(progress, tween(LiveMotion.RING_RESET_MS)) else shown.snapTo(progress)
-    }
-    Box(modifier = modifier.size(size), contentAlignment = Alignment.Center) {
-        Canvas(modifier = Modifier.fillMaxSize()) {
-            val fill = shown.value
-            val stroke = LiveDimens.RingStroke.toPx()
-            val arcSize = Size(this.size.width - stroke, this.size.height - stroke)
-            val topLeft = Offset(stroke / 2, stroke / 2)
-            drawArc(
-                color = trackColor,
-                startAngle = START_ANGLE_12_OCLOCK,
-                sweepAngle = FULL_CIRCLE,
-                useCenter = false,
-                topLeft = topLeft,
-                size = arcSize,
-                style = Stroke(width = stroke),
-            )
-            if (fill > 0f) {
-                drawArc(
-                    color = fillColor,
-                    startAngle = START_ANGLE_12_OCLOCK,
-                    sweepAngle = FULL_CIRCLE * fill.coerceAtMost(1f),
-                    useCenter = false,
-                    topLeft = topLeft,
-                    size = arcSize,
-                    style = Stroke(width = stroke, cap = StrokeCap.Round),
-                )
-            }
-        }
-        content()
-    }
-}
 
 /**
  * Huge letter with accidental, octave smaller and muted at the baseline (spec 3.1). [scale]

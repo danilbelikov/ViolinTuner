@@ -33,7 +33,6 @@ data class ZoneColors(
     val onOff: Color,
     /** Ring outline in silence and error states. */
     val none: Color,
-    val ringTrack: Color,
     val inTuneGradient: ZoneGradient,
     val nearGradient: ZoneGradient,
     val offGradient: ZoneGradient,
@@ -56,13 +55,22 @@ data class ZoneColors(
     }
 }
 
+/** The dot of the Live status line (spec 3.14). Two shapes go with the two colors; see the component. */
+@Immutable
+data class StatusColors(val ready: Color, val blocked: Color)
+
+internal val DarkStatusColors = StatusColors(ready = StatusReady, blocked = StatusBlocked)
+
+internal val LocalStatusColors = staticCompositionLocalOf<StatusColors> {
+    error("StatusColors not provided: wrap content in ViolinTheme")
+}
+
 internal val DarkZoneColors = ZoneColors(
     inTune = ZoneInTune,
     near = ZoneNear,
     off = ZoneOff,
     onOff = OnZoneOff,
     none = ZoneNone,
-    ringTrack = RingTrack,
     inTuneGradient = ZoneGradient(GradientInTuneStart, GradientInTuneMid, Surface),
     nearGradient = ZoneGradient(GradientNearStart, GradientNearMid, Surface),
     offGradient = ZoneGradient(GradientOffStart, GradientOffMid, Surface),
