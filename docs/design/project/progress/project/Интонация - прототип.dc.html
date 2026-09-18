@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>html{background:#0E0E12}body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}input[type=range]{accent-color:#C4ADFF}</style></helmet>
+<div style="min-height:100vh;display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:center;gap:32px;padding:32px 24px;box-sizing:border-box">
+
+<sc-if value="{{ portrait }}" hint-placeholder-val="{{ true }}">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden;user-select:none">
+
+<sc-if value="{{ isOnboarding }}" hint-placeholder-val="{{ false }}">
+<div style="height:100%;display:flex;flex-direction:column;padding:24px;box-sizing:border-box">
+  <div style="display:flex;gap:6px"><div style="flex:1;height:4px;border-radius:2px;background:{{ ob.p1 }}"></div><div style="flex:1;height:4px;border-radius:2px;background:{{ ob.p2 }}"></div><div style="flex:1;height:4px;border-radius:2px;background:{{ ob.p3 }}"></div></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px">
+    <div style="width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#2A2352 0%,#131318 70%);align-self:center;display:flex;align-items:center;justify-content:center">
+      <sc-if value="{{ ob.isMic }}" hint-placeholder-val="{{ true }}"><div style="width:44px;height:76px;border-radius:22px;background:#C4ADFF"></div></sc-if>
+      <sc-if value="{{ ob.isA4 }}" hint-placeholder-val="{{ false }}"><div style="font-size:88px;font-weight:800;letter-spacing:-4px;line-height:1">A<span style="font-size:32px;color:#A39FB5;letter-spacing:0">4</span></div></sc-if>
+      <sc-if value="{{ ob.isTol }}" hint-placeholder-val="{{ false }}"><div style="position:relative;width:160px;height:24px"><div style="position:absolute;left:0;right:0;top:8px;height:8px;border-radius:4px;background:#292833"></div><div style="position:absolute;left:{{ ob.tolLeft }};width:{{ ob.tolW }};top:6px;height:12px;border-radius:6px;background:#47C97E;transition:all .3s"></div></div></sc-if>
+    </div>
+    <div style="font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-.5px">{{ ob.title }}</div>
+    <div style="font-size:16px;line-height:1.5;color:#A39FB5">{{ ob.text }}</div>
+    <sc-if value="{{ ob.isA4 }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;border:1px solid #3A3846;border-radius:24px;overflow:hidden;height:48px">
+        <sc-for list="{{ a4Options }}" as="o" hint-placeholder-count="4"><div onClick="{{ o.pick }}" style="flex:1;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }};border-left:1px solid #3A3846;cursor:pointer">{{ o.v }}</div></sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{ ob.isTol }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ tolPresets }}" as="p" hint-placeholder-count="3"><div onClick="{{ p.pick }}" style="display:flex;align-items:center;justify-content:space-between;border:2px solid {{ p.border }};background:{{ p.bg }};border-radius:16px;padding:13px 15px;cursor:pointer"><div><div style="font-size:16px;font-weight:600">{{ p.name }}</div><div style="font-size:13px;color:#A39FB5">{{ p.desc }}</div></div><div style="font-size:18px;font-weight:700;font-variant-numeric:tabular-nums">{{ p.label }}</div></div></sc-for>
+      </div>
+    </sc-if>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div onClick="{{ obNext }}" style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;cursor:pointer">{{ ob.cta }}</div>
+    <div style="text-align:center;font-size:13px;color:#A39FB5;display:flex;align-items:center;justify-content:center;gap:8px"><div style="width:18px;height:12px;border-radius:2px;border:2px solid #A39FB5"></div>{{ ob.foot }}</div>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isLive }}" hint-placeholder-val="{{ true }}">
+<div style="position:absolute;left:0;right:0;top:96px;height:520px;background:{{ zoneBg }};transition:background .35s ease"></div>
+<div style="position:relative;display:flex;justify-content:center;padding:12px 24px 0;opacity:{{ dimOpacity }};transition:opacity .3s">
+  <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px;width:100%">
+    <sc-for list="{{ modeOptions }}" as="m" hint-placeholder-count="2"><div onClick="{{ m.pick }}" style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:{{ m.bg }};color:{{ m.fg }};border-left:1px solid #3A3846;cursor:pointer;transition:all .2s"><sc-if value="{{ m.isPlay }}" hint-placeholder-val="{{ true }}"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid {{ m.ic }}"></div></sc-if><sc-if value="{{ m.isTune }}" hint-placeholder-val="{{ false }}"><div style="width:4px;height:14px;border-radius:2px;background:{{ m.ic }}"></div></sc-if>{{ m.v }}</div></sc-for>
+  </div>
+</div>
+<sc-if value="{{ tuningMode }}" hint-placeholder-val="{{ false }}">
+<div style="position:relative;display:flex;justify-content:center;gap:12px;padding:12px 16px 0;opacity:{{ dimOpacity }};transition:opacity .3s">
+  <sc-for list="{{ strings }}" as="st" hint-placeholder-count="4"><div onClick="{{ st.pick }}" style="position:relative;width:76px;height:64px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:{{ st.fg }};background:{{ st.bg }};transition:all .2s;cursor:pointer">{{ st.name }}<span style="font-size:11px;font-weight:500">{{ st.hz }}</span><sc-if value="{{ st.isLocked }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#E6E4EE;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #131318"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#2E1A6E" stroke-width="1.8"><rect x="2" y="5.5" width="8" height="5.5" rx="1.2" fill="#2E1A6E" stroke="none"></rect><path d="M3.8 5.5V4a2.2 2.2 0 0 1 4.4 0v1.5"></path></svg></div></sc-if></div></sc-for>
+</div>
+<div style="position:relative;text-align:center;font-size:14px;color:#A39FB5;margin-top:10px;min-height:18px;opacity:{{ dimOpacity }}">{{ hintText }}</div>
+</sc-if>
+<div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
+  <div style="position:relative;width:300px;height:300px;display:flex;align-items:center;justify-content:center">
+    <svg width="300" height="300" viewBox="0 0 300 300" style="position:absolute;inset:0;transform:rotate(-90deg)"><circle cx="150" cy="150" r="144" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"></circle><circle cx="150" cy="150" r="144" fill="none" stroke="{{ color }}" stroke-width="6" stroke-linecap="round" stroke-dasharray="905" stroke-dashoffset="{{ ringOffset }}" style="transition:stroke-dashoffset .1s linear,stroke .3s"></circle></svg>
+    <sc-if value="{{ silent }}" hint-placeholder-val="{{ false }}"><div style="font-size:32px;font-weight:600;color:#A39FB5">Играйте…</div></sc-if>
+    <sc-if value="{{ sounding }}" hint-placeholder-val="{{ true }}"><div style="font-size:{{ noteSize }};font-weight:700;line-height:1;letter-spacing:-.04em;display:flex;align-items:baseline;white-space:nowrap">{{ noteName }}<span style="font-size:52px;font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">{{ noteOct }}</span></div></sc-if>
+  </div>
+  <sc-if value="{{ sounding }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;align-items:center;gap:12px;color:{{ color }};transition:color .3s;height:64px">
+      <sc-if value="{{ up }}" hint-placeholder-val="{{ false }}"><svg width="64" height="64" viewBox="0 0 56 56"><path d="M28 6 L50 34 H36 V50 H20 V34 H6 Z" fill="{{ color }}"></path></svg></sc-if>
+      <sc-if value="{{ down }}" hint-placeholder-val="{{ false }}"><svg width="64" height="64" viewBox="0 0 56 56"><path d="M28 50 L6 22 H20 V6 H36 V22 H50 Z" fill="{{ color }}"></path></svg></sc-if>
+      <sc-if value="{{ inTune }}" hint-placeholder-val="{{ true }}"><div style="width:24px;height:24px;border-radius:50%;background:{{ color }}"></div></sc-if>
+      <div style="font-size:28px;font-weight:600">{{ word }}</div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ silent }}" hint-placeholder-val="{{ false }}"><div style="font-size:16px;color:#A39FB5;margin-top:12px;text-align:center;max-width:260px;line-height:1.4">Поставьте телефон на пюпитр и сыграйте любую ноту</div></sc-if>
+</div>
+<div style="position:relative;padding:0 24px 8px;opacity:{{ dimOpacity }}">
+  <div style="position:relative;height:36px">
+    <div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:#292833"></div>
+    <div style="position:absolute;left:{{ greenLeft }};width:{{ greenW }};top:12px;height:12px;border-radius:6px;background:#47C97E;transition:all .3s"></div>
+    <div style="position:absolute;left:50%;top:8px;width:2px;height:20px;background:#3A3846;margin-left:-1px"></div>
+    <sc-if value="{{ sounding }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;left:{{ markerLeft }};top:6px;width:{{ haloW }};height:24px;transform:translateX(-50%);border-radius:12px;background:{{ color }};opacity:.28;filter:blur(4px);transition:left .12s cubic-bezier(.2,.9,.3,1.2),width .3s,background .3s"></div>
+      <div style="position:absolute;left:{{ markerLeft }};top:4px;width:6px;height:28px;margin-left:-3px;border-radius:3px;background:#E6E4EE;box-shadow:0 0 0 2px #131318;transition:left .12s cubic-bezier(.2,.9,.3,1.2)"></div>
+    </sc-if>
+  </div>
+</div>
+<sc-if value="{{ recording }}" hint-placeholder-val="{{ false }}">
+<div style="position:relative;display:flex;align-items:center;gap:12px;padding:8px 24px 0">
+  <div style="width:10px;height:10px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div>
+  <div style="font-size:16px;font-weight:600;font-variant-numeric:tabular-nums">{{ timer }}</div>
+  <div style="flex:1;height:6px;border-radius:3px;background:#292833;display:flex;gap:2px;overflow:hidden">
+    <sc-for list="{{ miniBars }}" as="mb" hint-placeholder-count="0"><div style="width:{{ mb.w }};background:{{ mb.c }};flex:none"></div></sc-for>
+  </div>
+</div>
+</sc-if>
+<div style="position:relative;display:flex;align-items:center;justify-content:center;padding:12px 24px 12px">
+  <div onClick="{{ toggleRecord }}" style="width:72px;height:72px;border-radius:50%;background:{{ recBg }};display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s"><div style="width:{{ recInnerSize }};height:{{ recInnerSize }};border-radius:{{ recInnerRadius }};background:{{ recInner }};transition:all .2s"></div></div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isHistory }}" hint-placeholder-val="{{ false }}">
+<div style="padding:16px 16px 0;display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:28px;font-weight:700">История</div><div style="font-size:14px;color:#A39FB5">{{ sessionCountText }}</div></div>
+<div style="flex:1;overflow:auto;padding:16px 16px 16px;display:flex;flex-direction:column;gap:16px">
+  <div style="background:#1E1D25;border-radius:20px;padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13px;color:#A39FB5">Средний балл за неделю</div><div style="font-size:15px;font-weight:700;color:#47C97E;font-variant-numeric:tabular-nums">{{ weekDelta }}</div></div>
+    <svg width="348" height="120" viewBox="0 0 348 120" style="display:block;margin-top:8px;overflow:visible">
+      <line x1="0" y1="110" x2="348" y2="110" stroke="#292833"></line><line x1="0" y1="60" x2="348" y2="60" stroke="#292833" stroke-dasharray="3 4"></line>
+      <polyline points="{{ historyLine }}" fill="none" stroke="#C4ADFF" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></polyline>
+      <sc-for list="{{ historyPts }}" as="p" hint-placeholder-count="6"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="5" fill="#131318" stroke="#C4ADFF" stroke-width="3"></circle><text x="{{ p.x }}" y="{{ p.ty }}" font-size="11" fill="#E6E4EE" text-anchor="middle" font-weight="700" font-family="Manrope">{{ p.v }}</text></sc-for>
+    </svg>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:#A39FB5;margin-top:6px"><span>11 авг</span><span>18</span><span>25</span><span>1 сен</span><span>8</span><span>15</span></div>
+  </div>
+  <div style="display:flex;gap:8px">
+    <sc-for list="{{ filters }}" as="f" hint-placeholder-count="3"><div onClick="{{ f.pick }}" style="height:32px;padding:0 14px;border-radius:8px;border:1px solid {{ f.border }};background:{{ f.bg }};color:{{ f.fg }};display:flex;align-items:center;font-size:13px;font-weight:600;cursor:pointer">{{ f.name }}</div></sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <sc-for list="{{ sessionCards }}" as="ss" hint-placeholder-count="4">
+    <div onClick="{{ ss.open }}" style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:14px 16px;cursor:pointer" style-hover="background:#292833">
+      <div style="width:52px;text-align:center"><div style="font-size:26px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;color:{{ ss.color }}">{{ ss.score }}</div><div style="font-size:11px;color:#A39FB5">%</div></div>
+      <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600">{{ ss.title }}</div><div style="font-size:13px;color:#A39FB5;margin-top:2px">{{ ss.meta }}</div></div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:28px"><sc-for list="{{ ss.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+    </div>
+    </sc-for>
+    <sc-if value="{{ noSessions }}" hint-placeholder-val="{{ false }}"><div style="text-align:center;color:#A39FB5;padding:24px;font-size:14px">За этот период сессий нет</div></sc-if>
+  </div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isSettings }}" hint-placeholder-val="{{ false }}">
+<div style="padding:16px 16px 0;font-size:28px;font-weight:700">Настройки</div>
+<div style="flex:1;overflow:auto;padding:20px 16px 16px;display:flex;flex-direction:column;gap:22px">
+  <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><div style="font-size:16px;font-weight:600">Эталон A4</div><div style="font-size:13px;color:#A39FB5">оркестровый — 442</div></div>
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><sc-for list="{{ a4Options }}" as="o" hint-placeholder-count="4"><div onClick="{{ o.pick }}" style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }};border-left:1px solid #3A3846;cursor:pointer">{{ o.v }}</div></sc-for></div></div>
+  <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><div style="font-size:16px;font-weight:600">Допуск зелёной зоны</div><div style="font-size:20px;font-weight:700;color:#47C97E;font-variant-numeric:tabular-nums">{{ tolLabel }}</div></div>
+    <input type="range" min="3" max="15" step="1" value="{{ tol }}" onChange="{{ setTol }}" style="width:100%;height:44px;margin:0">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5"><span>3 — профи</span><span>8 — средний</span><span>15 — новичок</span></div></div>
+  <div><div style="font-size:16px;font-weight:600;margin-bottom:10px">Сглаживание</div>
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><sc-for list="{{ smoothOptions }}" as="o" hint-placeholder-count="3"><div onClick="{{ o.pick }}" style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }};border-left:1px solid #3A3846;cursor:pointer">{{ o.v }}</div></sc-for></div>
+    <div style="font-size:13px;color:#A39FB5;margin-top:8px;line-height:1.4">Режим «Вибрато» показывает центр колебания и его ширину ореолом — бегунок не дёргается.</div></div>
+  <div><div style="font-size:16px;font-weight:600;margin-bottom:10px">Названия нот</div>
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><sc-for list="{{ nameOptions }}" as="o" hint-placeholder-count="2"><div onClick="{{ o.pick }}" style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }};border-left:1px solid #3A3846;cursor:pointer">{{ o.v }}</div></sc-for></div></div>
+  <div onClick="{{ toggleHints }}" style="display:flex;align-items:center;justify-content:space-between;cursor:pointer"><div><div style="font-size:16px;font-weight:600">Подсказка струны и пальца</div><div style="font-size:13px;color:#A39FB5">в анализе сессии · первая позиция</div></div><div style="width:52px;height:32px;border-radius:16px;background:{{ hintsTrack }};border:2px solid {{ hintsBorder }};position:relative;box-sizing:border-box;transition:all .2s"><div style="position:absolute;left:{{ hintsKnobLeft }};top:2px;width:24px;height:24px;border-radius:50%;background:{{ hintsKnob }};transition:all .2s"></div></div></div>
+  <div><div style="font-size:16px;font-weight:600;margin-bottom:10px">Тема</div>
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><sc-for list="{{ themeOptions }}" as="o" hint-placeholder-count="3"><div onClick="{{ o.pick }}" style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }};border-left:1px solid #3A3846;cursor:pointer">{{ o.v }}</div></sc-for></div>
+    <div style="font-size:13px;color:#A39FB5;margin-top:8px">В прототипе показана тёмная; светлая — в макетах.</div></div>
+  <div onClick="{{ resetOnboarding }}" style="font-size:14px;color:#C4ADFF;font-weight:600;cursor:pointer;padding:8px 0">Показать онбординг снова</div>
+</div>
+</sc-if>
+
+<sc-if value="{{ isAnalysis }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div onClick="{{ backFromAnalysis }}" style="width:48px;height:48px;display:flex;align-items:center;justify-content:center;cursor:pointer"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:20px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ an.title }}</div></div>
+<div style="flex:1;overflow:auto;display:flex;flex-direction:column;gap:16px;padding:8px 16px 16px">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:8px">
+    <div><div style="font-size:64px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-2px">{{ an.score }}<span style="font-size:28px;font-weight:600;color:#A39FB5;letter-spacing:0">%</span></div><div style="font-size:15px;color:#A39FB5;margin-top:6px">{{ an.meta }}</div></div>
+    <div style="text-align:right;padding-bottom:4px"><div style="display:inline-flex;align-items:center;gap:6px;color:{{ an.biasColor }};font-size:15px;font-weight:600">{{ an.biasText }}</div><div style="font-size:13px;color:#A39FB5;margin-top:2px">{{ an.biasHint }}</div></div>
+  </div>
+  <div style="background:#1E1D25;border-radius:20px;padding:12px 12px 8px">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5;margin-bottom:8px"><sc-for list="{{ an.ticks }}" as="tk" hint-placeholder-count="4"><span style="font-variant-numeric:tabular-nums">{{ tk }}</span></sc-for></div>
+    <div style="position:relative;height:{{ an.rollH }};overflow:hidden">
+      <sc-for list="{{ an.rows }}" as="r" hint-placeholder-count="6">
+        <div style="position:absolute;left:0;right:0;top:{{ r.top }};height:1px;background:#292833"></div>
+        <div style="position:absolute;left:0;top:{{ r.labelTop }};font-size:11px;color:#A39FB5;width:30px;white-space:nowrap">{{ r.label }}</div>
+      </sc-for>
+      <sc-for list="{{ an.segs }}" as="g" hint-placeholder-count="6">
+        <div onClick="{{ g.open }}" style="position:absolute;left:{{ g.left }};top:{{ g.top }};width:{{ g.width }};height:20px;border-radius:5px;background:{{ g.color }};opacity:.9;cursor:pointer;box-shadow:{{ g.shadow }}"></div>
+        <svg style="position:absolute;left:{{ g.left }};top:{{ g.top }};pointer-events:none" width="{{ g.w }}" height="20" viewBox="0 0 {{ g.w }} 20"><polyline points="{{ g.contour }}" fill="none" stroke="#131318" stroke-width="1.6" stroke-linejoin="round"></polyline></svg>
+      </sc-for>
+      <div style="position:absolute;left:{{ an.playLeft }};top:-6px;bottom:-4px;width:2px;background:#C4ADFF"></div>
+      <div style="position:absolute;left:{{ an.playLeft }};top:-10px;width:10px;height:10px;margin-left:-4px;border-radius:50%;background:#C4ADFF"></div>
+    </div>
+  </div>
+  <div style="display:flex;align-items:center;gap:14px">
+    <div onClick="{{ togglePlay }}" style="width:48px;height:48px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none">
+      <sc-if value="{{ playing }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:4px"><div style="width:5px;height:18px;border-radius:2px;background:#2E1A6E"></div><div style="width:5px;height:18px;border-radius:2px;background:#2E1A6E"></div></div></sc-if>
+      <sc-if value="{{ notPlaying }}" hint-placeholder-val="{{ true }}"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M5 3 L17 10 L5 17 Z" fill="#2E1A6E"></path></svg></sc-if>
+    </div>
+    <div style="font-size:14px;font-variant-numeric:tabular-nums;color:#A39FB5;width:36px">{{ an.playTime }}</div>
+    <input type="range" min="0" max="1000" value="{{ an.playVal }}" onChange="{{ scrub }}" style="flex:1;margin:0;height:20px">
+    <div style="font-size:14px;font-variant-numeric:tabular-nums;color:#A39FB5;width:36px;text-align:right">{{ an.durText }}</div>
+  </div>
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+    <div style="background:#1E1D25;border-radius:16px;padding:14px"><div style="font-size:12px;color:#A39FB5">Распределение</div><div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin:10px 0 8px"><div style="width:{{ an.pIn }};background:#47C97E"></div><div style="width:{{ an.pNear }};background:#E5B03C"></div><div style="width:{{ an.pFar }};background:#E8565C"></div></div><div style="display:flex;gap:10px;font-size:12px;font-variant-numeric:tabular-nums"><span style="color:#47C97E">{{ an.pIn }}</span><span style="color:#E5B03C">{{ an.pNear }}</span><span style="color:#E8565C">{{ an.pFar }}</span></div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px"><div style="font-size:12px;color:#A39FB5">Средняя ошибка</div><div style="font-size:28px;font-weight:700;font-variant-numeric:tabular-nums;margin-top:6px">{{ an.mae }}<span style="font-size:14px;font-weight:500;color:#A39FB5"> ц</span></div><div style="font-size:12px;color:#A39FB5">{{ an.biasSmall }}</div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px;grid-column:1 / -1"><div style="font-size:12px;color:#A39FB5;margin-bottom:10px">По струнам</div><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center;font-variant-numeric:tabular-nums">
+      <sc-for list="{{ an.perString }}" as="ps" hint-placeholder-count="4"><div><div style="font-size:18px;font-weight:700">{{ ps.name }}</div><div style="font-size:13px;color:{{ ps.color }}">{{ ps.text }}</div></div></sc-for></div></div>
+  </div>
+  <div>
+    <div style="font-size:14px;font-weight:700;margin-bottom:8px">Проблемные ноты</div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <sc-for list="{{ an.problems }}" as="pr" hint-placeholder-count="2"><div style="display:flex;align-items:center;gap:12px;background:#1E1D25;border-radius:14px;padding:10px 14px"><div style="width:10px;height:10px;border-radius:50%;background:{{ pr.color }}"></div><div style="flex:1;font-size:15px;font-weight:600">{{ pr.name }}</div><div style="font-size:15px;font-weight:700;font-variant-numeric:tabular-nums;color:{{ pr.color }}">{{ pr.dev }}</div></div></sc-for>
+      <sc-if value="{{ an.noProblems }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;color:#A39FB5;padding:6px 0">Ни одна нота не уходит стабильно — отличная сессия.</div></sc-if>
+    </div>
+  </div>
+  <div style="display:flex;justify-content:space-around;padding:8px 0 0;border-top:1px solid #292833">
+    <div onClick="{{ renameSession }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#A39FB5;cursor:pointer"><div style="width:22px;height:22px;border-radius:6px;border:2px solid #A39FB5"></div>Переименовать</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#A39FB5;cursor:pointer"><div style="width:22px;height:22px;border-radius:11px 11px 11px 3px;border:2px solid #A39FB5"></div>Комментарий</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#A39FB5;cursor:pointer"><div style="width:22px;height:22px;border-radius:50%;border:2px solid #A39FB5"></div>Поделиться</div>
+    <div onClick="{{ deleteSession }}" style="display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;color:#E8565C;cursor:pointer"><div style="width:22px;height:22px;border-radius:4px;border:2px solid #E8565C"></div>Удалить</div>
+  </div>
+</div>
+<sc-if value="{{ sheetOpen }}" hint-placeholder-val="{{ false }}">
+<div onClick="{{ closeSheet }}" style="position:absolute;inset:0;background:rgba(0,0,0,.4)"></div>
+<div style="position:absolute;left:0;right:0;bottom:0;background:#292833;border-radius:28px 28px 0 0;padding:12px 24px 32px;display:flex;flex-direction:column;gap:18px">
+  <div style="width:32px;height:4px;border-radius:2px;background:#A39FB5;opacity:.5;align-self:center"></div>
+  <div style="display:flex;align-items:flex-end;justify-content:space-between">
+    <div><div style="font-size:13px;color:#A39FB5">цель</div><div style="font-size:56px;font-weight:700;line-height:1;letter-spacing:-2px;white-space:nowrap">{{ sh.note }}<span style="font-size:24px;color:#A39FB5;letter-spacing:0">{{ sh.oct }}</span></div></div>
+    <div style="text-align:right"><div style="font-size:13px;color:#A39FB5">среднее</div><div style="font-size:40px;font-weight:700;line-height:1;color:{{ sh.color }};font-variant-numeric:tabular-nums">{{ sh.mean }}</div></div>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;font-variant-numeric:tabular-nums">
+    <div style="background:#1E1D25;border-radius:14px;padding:12px"><div style="font-size:12px;color:#A39FB5">мин / макс</div><div style="font-size:18px;font-weight:700;margin-top:4px">{{ sh.minmax }}</div></div>
+    <div style="background:#1E1D25;border-radius:14px;padding:12px"><div style="font-size:12px;color:#A39FB5">длительность</div><div style="font-size:18px;font-weight:700;margin-top:4px">{{ sh.dur }}</div></div>
+    <div style="background:#1E1D25;border-radius:14px;padding:12px"><div style="font-size:12px;color:#A39FB5">вибрато</div><div style="font-size:18px;font-weight:700;margin-top:4px">{{ sh.vib }}</div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;font-size:15px"><div style="width:40px;height:40px;border-radius:12px;background:#5B43B8;color:#E9DDFF;display:flex;align-items:center;justify-content:center;font-weight:700">{{ sh.string }}</div><div><div style="font-weight:600">{{ sh.pos }}</div><div style="font-size:13px;color:#A39FB5">{{ sh.tip }}</div></div></div>
+</div>
+</sc-if>
+</sc-if>
+
+<sc-if value="{{ showNav }}" hint-placeholder-val="{{ true }}">
+<div style="height:80px;display:flex;background:#1E1D25;flex:none">
+  <sc-for list="{{ navItems }}" as="n" hint-placeholder-count="3">
+  <div onClick="{{ n.go }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer">
+    <div style="width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background .2s">
+      <sc-if value="{{ n.isLive }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:50%;border:3px solid {{ n.ic }}"></div></sc-if>
+      <sc-if value="{{ n.isHist }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:14px;border-radius:3px;border:3px solid {{ n.ic }}"></div></sc-if>
+      <sc-if value="{{ n.isSet }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:5px;border:3px solid {{ n.ic }};transform:rotate(45deg)"></div></sc-if>
+    </div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+</div>
+</sc-if>
+
+<sc-if value="{{ dialogOpen }}" hint-placeholder-val="{{ false }}">
+<div style="position:absolute;inset:0;background:rgba(19,19,24,.78);display:flex;align-items:center;justify-content:center;padding:32px">
+  <div style="background:#292833;border-radius:28px;padding:28px 24px;width:100%;display:flex;flex-direction:column;gap:12px">
+    <div style="width:44px;height:44px;border-radius:50%;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:12px;height:20px;border-radius:6px;background:#E9DDFF"></div></div>
+    <div style="font-size:24px;font-weight:700;line-height:1.2">{{ dlg.title }}</div>
+    <div style="font-size:15px;line-height:1.45;color:#A39FB5">{{ dlg.text }}</div>
+    <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px"><div onClick="{{ closeDialog }}" style="height:40px;padding:0 16px;display:flex;align-items:center;border-radius:20px;font-size:14px;font-weight:600;color:#C4ADFF;cursor:pointer">Позже</div><div onClick="{{ dialogCta }}" style="height:40px;padding:0 20px;display:flex;align-items:center;border-radius:20px;background:#C4ADFF;color:#2E1A6E;font-size:14px;font-weight:700;cursor:pointer">{{ dlg.cta }}</div></div>
+  </div>
+</div>
+</sc-if>
+
+</div>
+</x-import>
+</sc-if>
+
+<sc-if value="{{ landscape }}" hint-placeholder-val="{{ false }}">
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;box-sizing:border-box;user-select:none">
+  <div style="position:absolute;left:96px;right:120px;top:0;bottom:70px;background:{{ zoneBgL }};transition:background .35s"></div>
+  <div style="position:relative;width:96px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px;opacity:{{ dimOpacity }}">
+    <sc-if value="{{ tuningMode }}" hint-placeholder-val="{{ false }}"><sc-for list="{{ strings }}" as="st" hint-placeholder-count="4"><div onClick="{{ st.pick }}" style="width:56px;height:48px;border-radius:16px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:{{ st.fg }};background:{{ st.bg }};transition:all .2s;cursor:pointer">{{ st.name }}</div></sc-for></sc-if>
+  </div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:40px">
+      <div style="position:relative;width:260px;height:260px;display:flex;align-items:center;justify-content:center">
+        <svg width="260" height="260" viewBox="0 0 260 260" style="position:absolute;inset:0;transform:rotate(-90deg)"><circle cx="130" cy="130" r="124" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"></circle><circle cx="130" cy="130" r="124" fill="none" stroke="{{ color }}" stroke-width="6" stroke-linecap="round" stroke-dasharray="779" stroke-dashoffset="{{ ringOffsetL }}" style="transition:stroke-dashoffset .1s linear,stroke .3s"></circle></svg>
+        <sc-if value="{{ silent }}" hint-placeholder-val="{{ false }}"><div style="font-size:28px;font-weight:600;color:#A39FB5">Играйте…</div></sc-if>
+        <sc-if value="{{ sounding }}" hint-placeholder-val="{{ true }}"><div style="font-size:{{ noteSizeL }};font-weight:700;line-height:1;letter-spacing:-.04em;display:flex;align-items:baseline;white-space:nowrap">{{ noteName }}<span style="font-size:44px;font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">{{ noteOct }}</span></div></sc-if>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-width:220px">
+        <div style="font-size:14px;color:#A39FB5;min-height:18px">{{ hintText }}</div>
+        <sc-if value="{{ sounding }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;gap:10px;color:{{ color }};height:56px;transition:color .3s">
+            <sc-if value="{{ up }}" hint-placeholder-val="{{ false }}"><svg width="56" height="56" viewBox="0 0 56 56"><path d="M28 6 L50 34 H36 V50 H20 V34 H6 Z" fill="{{ color }}"></path></svg></sc-if>
+            <sc-if value="{{ down }}" hint-placeholder-val="{{ false }}"><svg width="56" height="56" viewBox="0 0 56 56"><path d="M28 50 L6 22 H20 V6 H36 V22 H50 Z" fill="{{ color }}"></path></svg></sc-if>
+            <sc-if value="{{ inTune }}" hint-placeholder-val="{{ true }}"><div style="width:22px;height:22px;border-radius:50%;background:{{ color }}"></div></sc-if>
+            <div style="font-size:26px;font-weight:600">{{ word }}</div>
+          </div>
+        </sc-if>
+        <sc-if value="{{ silent }}" hint-placeholder-val="{{ false }}"><div style="font-size:15px;color:#A39FB5;line-height:1.4;max-width:220px">Сыграйте любую ноту — оценка появится сама</div></sc-if>
+      </div>
+    </div>
+    <div style="padding:0 24px 6px;opacity:{{ dimOpacity }}">
+      <div style="position:relative;height:36px">
+        <div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:#292833"></div>
+        <div style="position:absolute;left:{{ greenLeft }};width:{{ greenW }};top:12px;height:12px;border-radius:6px;background:#47C97E"></div>
+        <div style="position:absolute;left:50%;top:8px;width:2px;height:20px;background:#3A3846;margin-left:-1px"></div>
+        <sc-if value="{{ sounding }}" hint-placeholder-val="{{ true }}">
+          <div style="position:absolute;left:{{ markerLeft }};top:6px;width:{{ haloW }};height:24px;transform:translateX(-50%);border-radius:12px;background:{{ color }};opacity:.28;filter:blur(4px);transition:left .12s cubic-bezier(.2,.9,.3,1.2),width .3s,background .3s"></div>
+          <div style="position:absolute;left:{{ markerLeft }};top:4px;width:6px;height:28px;margin-left:-3px;border-radius:3px;background:#E6E4EE;box-shadow:0 0 0 2px #131318;transition:left .12s cubic-bezier(.2,.9,.3,1.2)"></div>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+  <div style="position:relative;width:120px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:16px 0">
+    <div style="display:flex;flex-direction:column;border:1px solid #3A3846;border-radius:20px;overflow:hidden;width:96px"><sc-for list="{{ modeOptions }}" as="m" hint-placeholder-count="2"><div onClick="{{ m.pick }}" style="height:36px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:12px;font-weight:600;background:{{ m.bg }};color:{{ m.fg }};border-top:1px solid #3A3846;cursor:pointer"><sc-if value="{{ m.isPlay }}" hint-placeholder-val="{{ true }}"><div style="width:12px;height:12px;border-radius:50%;border:2px solid {{ m.ic }}"></div></sc-if><sc-if value="{{ m.isTune }}" hint-placeholder-val="{{ false }}"><div style="width:3px;height:12px;border-radius:2px;background:{{ m.ic }}"></div></sc-if>{{ m.v }}</div></sc-for></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div onClick="{{ toggleRecord }}" style="width:72px;height:72px;border-radius:50%;background:{{ recBg }};display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .2s"><div style="width:{{ recInnerSize }};height:{{ recInnerSize }};border-radius:{{ recInnerRadius }};background:{{ recInner }};transition:all .2s"></div></div>
+      <sc-if value="{{ recording }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;font-size:14px;font-weight:600;font-variant-numeric:tabular-nums"><div style="width:8px;height:8px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div>{{ timer }}</div></sc-if>
+    </div>
+    <div style="display:flex;gap:6px"><div style="width:8px;height:8px;border-radius:50%;background:#C4ADFF"></div><div style="width:8px;height:8px;border-radius:50%;background:#3A3846"></div><div style="width:8px;height:8px;border-radius:50%;background:#3A3846"></div></div>
+  </div>
+</div>
+</sc-if>
+
+<div style="width:260px;display:flex;flex-direction:column;gap:18px;font-size:13px;line-height:1.5;color:rgba(230,228,238,.75);padding-top:8px">
+  <div style="font-size:15px;font-weight:700;color:#E6E4EE">Демо-панель</div>
+  <div style="color:#A39FB5">Микрофона в прототипе нет — звук симулируется: фраза из гаммы D-dur с вибрато ±20 ц и «уходящими» нотами.</div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="font-weight:600;color:#E6E4EE">Сигнал</div>
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px">
+      <sc-for list="{{ sigOptions }}" as="o" hint-placeholder-count="3"><div onClick="{{ o.pick }}" style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }};border-left:1px solid #3A3846;cursor:pointer">{{ o.v }}</div></sc-for>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="font-weight:600;color:#E6E4EE">Сдвиг интонации</div>
+    <input type="range" min="-40" max="40" step="1" value="{{ biasVal }}" onChange="{{ setBias }}" style="width:100%;margin:0">
+    <div style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5;font-variant-numeric:tabular-nums"><span>−40 ц</span><span>{{ biasLabel }}</span><span>+40 ц</span></div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="font-weight:600;color:#E6E4EE">Ошибки</div>
+    <div onClick="{{ triggerNoise }}" style="height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer">Слишком шумно</div>
+    <div onClick="{{ triggerMic }}" style="height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;cursor:pointer">Нет доступа к микрофону</div>
+  </div>
+  <div style="color:#A39FB5">Ориентацию (портрет / ландшафт) переключает панель Tweaks. Запись → стоп открывает анализ; тап по сегменту таймлайна — детали ноты.</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;orientation&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;portrait&quot;,&quot;landscape&quot;],&quot;default&quot;:&quot;portrait&quot;,&quot;tsType&quot;:&quot;'portrait' | 'landscape'&quot;,&quot;section&quot;:&quot;Экран&quot;},&quot;fillMode&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;zone&quot;,&quot;full&quot;,&quot;minimal&quot;],&quot;default&quot;:&quot;zone&quot;,&quot;tsType&quot;:&quot;'zone' | 'full' | 'minimal'&quot;,&quot;section&quot;:&quot;Экран&quot;}}">
+class Component extends DCLogic {
+  constructor(p) {
+    super(p);
+    let saved = {};
+    try { saved = JSON.parse(localStorage.getItem('intonation-proto') || '{}'); } catch (e) {}
+    this.G = '#47C97E'; this.Y = '#E5B03C'; this.R = '#E8565C';
+    this.phrase = [['A4', 2, 1.6], ['B4', -3, 1.2], ['C♯5', -9, 1.0], ['D5', 1, 1.8], ['F♯5', -18, 1.2], ['E5', -4, 1.4], ['F♯5', -11, 1.2], ['G5', 2, 1.2], ['A5', -2, 1.6]];
+    this.phraseLen = this.phrase.reduce((a, s) => a + s[2] + .15, 0);
+    this.state = {
+      screen: saved.onboarded ? 'live' : 'onboarding', obStep: 0,
+      a4: saved.a4 ?? 440, tol: saved.tol ?? 5, names: saved.names ?? 'latin', hints: saved.hints ?? true, smooth: saved.smooth ?? 'vibrato', theme: 'dark',
+      signal: 'play', bias: 0, tuningMode: false, targetString: 'A', lockedString: null,
+      t: 0, rawNote: null, smoothed: 0, vib: 0, zone: 'silent', zoneCand: 'silent', zoneCandSince: 0, hold: 0,
+      recording: false, recStart: 0, samples: [],
+      sessions: this.seedSessions(), openSession: null, filter: 'Все', playing: false, playPos: 0, sheetSeg: null, dialog: null, renameCount: 0,
+    };
+  }
+  componentDidMount() { this.timer = setInterval(() => this.tick(), 50); }
+  componentWillUnmount() { clearInterval(this.timer); }
+  persist(patch) { this.setState(patch, () => { const s = this.state; localStorage.setItem('intonation-proto', JSON.stringify({ onboarded: s.screen !== 'onboarding', a4: s.a4, tol: s.tol, names: s.names, hints: s.hints, smooth: s.smooth })); }); }
+  // ---- pitch simulation ----
+  sampleAt(t, bias, seed) {
+    let acc = 0;
+    for (const [note, dev, dur] of this.phrase) {
+      if (t < acc + dur) { const vib = 20 * Math.sin(2 * Math.PI * 5.5 * t + seed); return { note, raw: dev + bias + vib + (Math.random() - .5) * 3, gap: false }; }
+      acc += dur;
+      if (t < acc + .15) return { note: Math.random() > .5 ? note : 'G♯5', raw: (Math.random() - .5) * 80, gap: true };
+      acc += .15;
+    }
+    return null;
+  }
+  zoneOf(c) { const a = Math.abs(c), tol = this.state.tol; return a <= tol ? 'in' : a <= tol * 2 ? 'near' : 'far'; }
+  tick() {
+    const s = this.state; if (s.screen !== 'live') return;
+    if (s.signal === 'silence' || s.dialog) { this.setState({ zone: 'silent', zoneCand: 'silent', rawNote: null, hold: Math.max(0, s.hold - .1), smoothed: 0 }); return; }
+    const t = s.tuningMode ? (s.t + .05) % 36 : (s.t + .05) % this.phraseLen;
+    let smp;
+    if (s.tuningMode) {
+      // simulated player cycles strings G→D→A→E every 9 s; nearest string = played one unless locked
+      const played = ['G', 'D', 'A', 'E'][Math.floor((s.t + .05) / 9) % 4];
+      const target = s.lockedString || played;
+      const idx = { G: 0, D: 1, A: 2, E: 3 };
+      const drift = -22 * Math.exp(-((s.t % 9)) / 3) + 3 * Math.sin(s.t * 3);
+      const rel = (idx[played] - idx[target]) * 700; // fifths apart when locked on another string
+      smp = { note: { G: 'G3', D: 'D4', A: 'A4', E: 'E5' }[played], raw: drift + rel + s.bias * .3 + (Math.random() - .5) * 2, gap: false };
+      if (played !== s.targetString) this.setState({ targetString: played });
+    }
+    else smp = this.sampleAt(t, s.bias, 0) || { note: 'A4', raw: 0, gap: true };
+    const alpha = s.smooth === 'fast' ? .6 : s.smooth === 'vibrato' ? .18 : .1;
+    const smoothed = smp.gap ? smp.raw : s.smoothed + alpha * (smp.raw - s.smoothed);
+    const vib = smp.gap ? 0 : s.vib + .2 * (Math.abs(smp.raw - smoothed) * 2.2 - s.vib);
+    const cand = smp.gap ? 'far' : this.zoneOf(smoothed);
+    let zoneCand = s.zoneCand, since = s.zoneCandSince, zone = s.zone;
+    if (cand !== zoneCand) { zoneCand = cand; since = 0; } else since += .05;
+    if (since >= .1 && zone !== zoneCand) zone = zoneCand;
+    if (zone === 'silent') zone = cand;
+    const hold = zone === 'in' && !smp.gap ? Math.min(1, s.hold + .05 / 3) : Math.max(0, s.hold - .08);
+    const patch = { t, rawNote: smp.note, smoothed, vib, zone, zoneCand, zoneCandSince: since, hold };
+    if (s.recording) patch.samples = s.samples.concat([{ t: s.samples.length * .05, note: smp.gap ? null : smp.note, c: smoothed }]);
+    this.setState(patch);
+  }
+  // ---- sessions ----
+  seedSessions() {
+    const mk = (title, meta, week, bias, spread, seed) => { const samples = []; let rnd = seed; const r = () => (rnd = (rnd * 9301 + 49297) % 233280) / 233280 - .5; for (let t = 0; t < 30; t += .05) { const smp = this.sampleAt(t % this.phraseLen, bias, seed); if (!smp) continue; samples.push({ t, note: smp.gap ? null : smp.note, c: smp.gap ? smp.raw : smp.raw * spread + r() * 6 }); } return this.buildSession(title, meta, samples, week); };
+    return [mk('Гаммы D-dur', 'вчера · 8:15', 6, -4, .8, 3), mk('Этюд Кайзера №3', '13 сен · 21:02', 6, -2, .9, 7), mk('Без названия', '12 сен · 15:30', 5, 9, 1.1, 11), mk('Гаммы G-dur', '10 сен · 9:40', 5, -7, 1.2, 5), mk('Двойные ноты', '3 сен · 18:20', 4, 5, 1.5, 9)];
+  }
+  buildSession(title, meta, samples, week) {
+    const tol = this.state ? this.state.tol : 5;
+    const segs = []; let cur = null;
+    for (const smp of samples) {
+      if (!smp.note) { cur = null; continue; }
+      if (!cur || cur.note !== smp.note) { cur = { note: smp.note, start: smp.t, cs: [] }; segs.push(cur); }
+      cur.cs.push(smp.c); cur.end = smp.t + .05;
+    }
+    const valid = segs.filter(g => g.cs.length >= 4).map(g => { const mean = g.cs.reduce((a, b) => a + b, 0) / g.cs.length; return { ...g, mean, min: Math.min(...g.cs), max: Math.max(...g.cs), dur: g.end - g.start }; });
+    const all = valid.flatMap(g => g.cs);
+    const n = Math.max(1, all.length);
+    const zin = all.filter(c => Math.abs(c) <= tol).length, znear = all.filter(c => Math.abs(c) > tol && Math.abs(c) <= tol * 2).length;
+    return { id: Math.random().toString(36).slice(2), title, meta, week, segs: valid, dur: samples.length * .05, score: Math.round(zin / n * 100), pNear: Math.round(znear / n * 100), mae: all.reduce((a, c) => a + Math.abs(c), 0) / n, bias: all.reduce((a, c) => a + c, 0) / n };
+  }
+  // ---- helpers ----
+  noteParts(n) { if (!n) return { name: '', oct: '' }; const m = n.match(/^([A-G]♯?)(\d)$/); const lat = m[1], oct = m[2]; if (this.state.names === 'latin') return { name: lat, oct }; const syl = { C: 'до', D: 'ре', E: 'ми', F: 'фа', G: 'соль', A: 'ля', B: 'си' }[lat[0]]; return { name: syl + (lat.length > 1 ? '♯' : ''), oct }; }
+  stringFinger(n) { const map = { G3: ['G', 'открытая'], A3: ['G', '1-й палец'], B3: ['G', '2-й палец'], C4: ['G', '3-й палец'], D4: ['D', 'открытая'], E4: ['D', '1-й палец'], 'F♯4': ['D', '2-й палец'], G4: ['D', '3-й палец'], A4: ['A', 'открытая'], B4: ['A', '1-й палец'], 'C♯5': ['A', '2-й палец'], D5: ['A', '3-й палец'], E5: ['E', 'открытая'], 'F♯5': ['E', '1-й палец'], G5: ['E', '2-й палец'], 'G♯5': ['E', '2-й палец'], A5: ['E', '3-й палец'], B5: ['E', '4-й палец'] }; return map[n] || ['A', '']; }
+  strName(s) { return { G: 'Соль', D: 'Ре', A: 'Ля', E: 'Ми' }[s]; }
+  fmtC(c) { const r = Math.round(c); return (r > 0 ? '+' : r < 0 ? '−' : '') + Math.abs(r); }
+  fmtT(sec) { const m = Math.floor(sec / 60), s = Math.floor(sec % 60); return m + ':' + String(s).padStart(2, '0'); }
+  colorOf(z) { return z === 'in' ? this.G : z === 'near' ? this.Y : z === 'far' ? this.R : '#3A3846'; }
+  seg(list, cur, pick, big) { return list.map(v => ({ v: v.label ?? v, pick: () => pick(v.value ?? v), bg: (v.value ?? v) === cur ? '#5B43B8' : 'transparent', fg: (v.value ?? v) === cur ? '#E9DDFF' : '#E6E4EE' })); }
+  // ---- actions ----
+  stopRecording() {
+    const s = this.state; const dur = s.samples.length * .05;
+    if (dur < 2) { this.setState({ recording: false, samples: [] }); return; }
+    const sess = this.buildSession('Сессия ' + (s.sessions.length + 1), 'сегодня · ' + this.fmtT(dur), 6, s.samples);
+    this.setState({ recording: false, samples: [], sessions: [sess, ...s.sessions], openSession: sess.id, screen: 'analysis', playPos: 0, playing: false, sheetSeg: null });
+  }
+  startPlay() { this.setState({ playing: true }); clearInterval(this.playT); this.playT = setInterval(() => { const s = this.state; const sess = s.sessions.find(x => x.id === s.openSession); if (!sess || !s.playing) return; const np = s.playPos + .1; if (np >= sess.dur) { clearInterval(this.playT); this.setState({ playing: false, playPos: 0 }); } else this.setState({ playPos: np }); }, 100); }
+  renderVals() {
+    const s = this.state, G = this.G, Y = this.Y, R = this.R;
+    const P = '#C4ADFF', off = '#292833';
+    const orientation = this.props.orientation ?? 'portrait', fill = this.props.fillMode ?? 'zone';
+    const zone = s.rawNote ? s.zone : 'silent';
+    const color = this.colorOf(zone);
+    const sounding = zone !== 'silent', silent = !sounding;
+    const tints = { in: ['#1A4A36', '#153A2C'], near: ['#4A3A12', '#3A2E12'], far: ['#4A1C22', '#3A181D'] }[zone];
+    const zoneBg = !tints || fill === 'minimal' ? 'transparent' : fill === 'full' ? tints[1] : `radial-gradient(ellipse 70% 60% at 50% 45%,${tints[0]} 0%,${tints[1]} 45%,#131318 100%)`;
+    const zoneBgL = !tints || fill === 'minimal' ? 'transparent' : fill === 'full' ? tints[1] : `radial-gradient(ellipse 60% 70% at 50% 50%,${tints[0]} 0%,${tints[1]} 45%,#131318 100%)`;
+    const np = this.noteParts(s.rawNote);
+    const c = Math.max(-50, Math.min(50, s.smoothed));
+    const [str, finger] = this.stringFinger(s.rawNote);
+    const locked = s.lockedString;
+    const cur = locked || s.targetString;
+    const hz = { G: '196 Гц', D: '294 Гц', A: '440 Гц', E: '659 Гц' };
+    const strings = ['G', 'D', 'A', 'E'].map(n => { const a = n === cur, l = a && !!locked; return { name: n, hz: hz[n], isLocked: l, fg: a ? (l ? '#2E1A6E' : '#E9DDFF') : '#A39FB5', bg: a ? (l ? '#C4ADFF' : '#5B43B8') : '#1E1D25', pick: () => this.setState({ lockedString: locked === n ? null : n, hold: 0 }) }; });
+    const hintText = s.tuningMode ? (locked ? `цель зафиксирована: ${this.strName(locked)} · тап — снять` : `авто · ближайшая: ${this.strName(cur)} · ${hz[cur]}`) : '';
+    const sessions = s.sessions;
+    const filt = s.filter === 'Все' ? sessions : s.filter === 'Эта неделя' ? sessions.filter(x => x.week === 6) : sessions.filter(x => x.week >= 3);
+    const bars = (sess) => sess.segs.slice(0, 8).map(g => { const z = this.zoneOf(g.mean); return { h: (z === 'in' ? 28 : z === 'near' ? 16 : 8) + 'px', c: this.colorOf(z) }; });
+    const sessionCards = filt.map(x => ({ score: x.score, color: x.score >= 75 ? G : x.score >= 55 ? Y : R, title: x.title, meta: `${x.meta} · ${this.fmtC(x.bias)} ц`, bars: bars(x), open: () => this.setState({ openSession: x.id, screen: 'analysis', playPos: 0, playing: false, sheetSeg: null }) }));
+    const scores = [62, 68, 71, 70, 78, Math.round(sessions.filter(x => x.week === 6).reduce((a, x) => a + x.score, 0) / Math.max(1, sessions.filter(x => x.week === 6).length)) || 84];
+    const historyPts = scores.map((v, i) => { const x = 10 + i * 65.6, y = 110 - (v - 50) * 2; return { x, y, ty: y - 12, v }; });
+    // analysis
+    const sess = sessions.find(x => x.id === s.openSession);
+    let an = {}, sh = {};
+    if (sess) {
+      const notes = [...new Set(sess.segs.map(g => g.note))].sort((a, b) => this.pitchIdx(b) - this.pitchIdx(a));
+      const rowH = 27, W = 350;
+      const px = W / Math.max(sess.dur, 1);
+      const rows = notes.map((n, i) => ({ label: this.noteParts(n).name + this.noteParts(n).oct, top: (i * rowH + 13) + 'px', labelTop: (i * rowH + 6) + 'px' }));
+      const segs = sess.segs.map((g, k) => { const w = Math.max(6, Math.round(g.dur * px)); const pts = g.cs.map((cv, i) => `${(i / g.cs.length * w).toFixed(1)},${(10 - Math.max(-40, Math.min(40, cv)) * .22).toFixed(1)}`).join(' '); return { left: (36 + g.start * px) + 'px', top: (notes.indexOf(g.note) * rowH + 3) + 'px', width: w + 'px', w, color: this.colorOf(this.zoneOf(g.mean)), contour: pts, shadow: s.sheetSeg === k ? '0 0 0 3px #C4ADFF' : 'none', open: () => this.setState({ sheetSeg: k }) }; });
+      const pIn = sess.score, pNear = sess.pNear, pFar = Math.max(0, 100 - pIn - pNear);
+      const perString = ['G', 'D', 'A', 'E'].map(n => { const gs = sess.segs.filter(g => this.stringFinger(g.note)[0] === n); if (!gs.length) return { name: n, text: '—', color: '#A39FB5' }; const all = gs.flatMap(g => g.cs); const p = Math.round(all.filter(cv => Math.abs(cv) <= s.tol).length / all.length * 100); return { name: n, text: p + '%', color: p >= 75 ? G : p >= 55 ? Y : R }; });
+      const byNote = {}; sess.segs.forEach(g => { (byNote[g.note] = byNote[g.note] || []).push(g.mean); });
+      const problems = Object.entries(byNote).map(([n, ms]) => ({ n, m: ms.reduce((a, b) => a + b, 0) / ms.length })).filter(x => Math.abs(x.m) > s.tol).sort((a, b) => Math.abs(b.m) - Math.abs(a.m)).slice(0, 3).map(x => { const [st] = this.stringFinger(x.n); const p = this.noteParts(x.n); return { name: `${p.name}${p.oct} на струне ${this.strName(st)}`, dev: this.fmtC(x.m) + ' ц', color: this.colorOf(this.zoneOf(x.m)) }; });
+      const biasAbs = Math.abs(sess.bias);
+      const ticks = [0, 1, 2, 3].map(i => this.fmtT(sess.dur * i / 3));
+      an = { title: sess.title, score: sess.score, meta: `в строе · ${this.fmtT(sess.dur)} · ±${s.tol} ц`, biasText: biasAbs < 2 ? 'без смещения' : `в среднем ${this.fmtC(sess.bias)} ц`, biasColor: biasAbs < 2 ? G : biasAbs <= s.tol * 2 ? Y : R, biasHint: biasAbs < 2 ? 'ровно по центру' : sess.bias < 0 ? 'чуть занижаете — пальцы ближе к подставке' : 'чуть завышаете — пальцы ближе к порожку', ticks, rows, rollH: (notes.length * rowH + 4) + 'px', segs, playLeft: (36 + s.playPos * px) + 'px', playTime: this.fmtT(s.playPos), playVal: Math.round(s.playPos / sess.dur * 1000), durText: this.fmtT(sess.dur), pIn: pIn + '%', pNear: pNear + '%', pFar: pFar + '%', mae: sess.mae.toFixed(1).replace('.', ','), biasSmall: biasAbs < 2 ? 'смещения нет' : `смещение ${this.fmtC(sess.bias)} ц ${sess.bias < 0 ? 'вниз' : 'вверх'}`, perString, problems, noProblems: problems.length === 0 };
+      const g = sess.segs[s.sheetSeg];
+      if (g) { const p = this.noteParts(g.note); const [st, fg] = this.stringFinger(g.note); sh = { note: p.name, oct: p.oct, mean: this.fmtC(g.mean) + ' ц', color: this.colorOf(this.zoneOf(g.mean)), minmax: `${this.fmtC(g.min)} / ${this.fmtC(g.max)}`, dur: g.dur.toFixed(1).replace('.', ',') + ' с', vib: '±' + Math.round((g.max - g.min) / 2) + ' ц', string: st, pos: `струна ${this.strName(st)} · ${fg}`, tip: Math.abs(g.mean) <= s.tol ? 'Стабильно, вибрато ровное' : g.mean < 0 ? 'Палец стоит низко — чуть ближе к подставке' : 'Палец стоит высоко — чуть ближе к порожку' }; }
+    }
+    const obSteps = [
+      { p1: P, p2: off, p3: off, isMic: true, title: 'Дайте мне услышать скрипку', text: 'Тренажёр слушает через микрофон и ничего не отправляет в интернет. Звук обрабатывается на телефоне.', cta: 'Разрешить микрофон', foot: 'Поставьте телефон на пюпитр в 50–80 см' },
+      { p1: P, p2: P, p3: off, isA4: true, title: 'К чему настраиваетесь?', text: 'Дома и в школе обычно 440 Гц. Оркестры часто берут 442. Можно поменять в настройках.', cta: 'Дальше', foot: 'Экран не будет гаснуть во время игры' },
+      { p1: P, p2: P, p3: P, isTol: true, title: 'Насколько строго судить?', text: 'Это ширина зелёной зоны. Начните мягче — сузить всегда можно.', cta: 'Начать играть', foot: 'Меняется в настройках в любой момент', tolLeft: (50 - s.tol * 1.6) + '%', tolW: (s.tol * 3.2) + '%' },
+    ];
+    const dlgs = { noise: { title: 'Слишком шумно', text: 'Фон мешает распознать высоту. Отойдите от источника шума или закройте окно — оценка продолжится сама.', cta: 'Понятно' }, mic: { title: 'Нужен микрофон', text: 'Без микрофона тренажёр не слышит скрипку. Мы не записываем звук в облако — всё остаётся на телефоне.', cta: 'Разрешить' } };
+    const nav = [['live', 'Live'], ['history', 'История'], ['settings', 'Настройки']];
+    const recSec = s.samples.length * .05;
+    const miniBars = (() => { const out = []; let cur = null; for (const smp of s.samples) { if (!smp.note) { cur = null; continue; } const z = this.zoneOf(smp.c); if (!cur || cur.note !== smp.note) { cur = { note: smp.note, n: 0, zs: { in: 0, near: 0, far: 0 } }; out.push(cur); } cur.n++; cur.zs[z]++; } const total = Math.max(recSec, 20) / .05; return out.map(g => { const best = Object.entries(g.zs).sort((a, b) => b[1] - a[1])[0][0]; return { w: (g.n / total * 100) + '%', c: this.colorOf(best) }; }); })();
+    return {
+      portrait: orientation === 'portrait', landscape: orientation === 'landscape',
+      isOnboarding: s.screen === 'onboarding', isLive: s.screen === 'live', isHistory: s.screen === 'history', isSettings: s.screen === 'settings', isAnalysis: s.screen === 'analysis',
+      showNav: ['live', 'history', 'settings'].includes(s.screen),
+      ob: obSteps[s.obStep], obNext: () => s.obStep < 2 ? this.setState({ obStep: s.obStep + 1 }) : this.persist({ screen: 'live' }),
+      a4Options: this.seg([440, 441, 442, 443], s.a4, v => this.persist({ a4: v })),
+      tolPresets: [['Новичок', 'широкая зелёная зона', 12], ['Средний', 'чувствуется вибрато', 8], ['Профи', 'строго', 3]].map(([name, desc, v]) => ({ name, desc, label: `±${v} ц`, border: s.tol === v ? P : '#3A3846', bg: s.tol === v ? '#1E1D25' : 'transparent', pick: () => this.persist({ tol: v }) })),
+      zoneBg, zoneBgL, color, sounding, silent, dimOpacity: sounding ? 1 : .45,
+      strings, hintText, tuningMode: s.tuningMode,
+      noteName: np.name, noteOct: np.oct, noteSize: s.names === 'latin' ? '176px' : (np.name.length > 3 ? '100px' : '128px'), noteSizeL: s.names === 'latin' ? '150px' : (np.name.length > 3 ? '88px' : '110px'),
+      centsText: this.fmtC(c), up: zone !== 'in' && c > 0, down: zone !== 'in' && c < 0, inTune: zone === 'in', word: zone === 'in' ? 'в строе' : c > 0 ? 'выше' : 'ниже',
+      ringOffset: String(Math.round(905 * (1 - s.hold))), ringOffsetL: String(Math.round(779 * (1 - s.hold))),
+      greenLeft: (50 - s.tol) + '%', greenW: (s.tol * 2) + '%', markerLeft: (c + 50) + '%', haloW: Math.max(20, Math.round(s.vib * 3.5 + 12)) + 'px',
+      recording: s.recording, timer: this.fmtT(recSec), miniBars,
+      modeOptions: [['Игра', false], ['Настройка', true]].map(([v, t]) => { const a = s.tuningMode === t; return { v, isPlay: !t, isTune: t, pick: () => a ? null : this.setState({ tuningMode: t, hold: 0, t: 0 }), bg: a ? '#5B43B8' : 'transparent', fg: a ? '#E9DDFF' : '#E6E4EE', ic: a ? '#E9DDFF' : '#A39FB5' }; }),
+      toggleRecord: () => s.recording ? this.stopRecording() : this.setState({ recording: true, samples: [] }),
+      recBg: s.recording ? R : P, recInner: s.recording ? '#FFFFFF' : '#2E1A6E', recInnerSize: s.recording ? '24px' : '26px', recInnerRadius: s.recording ? '4px' : '50%',
+      sessionCountText: `${sessions.length} сессий`, weekDelta: `+${scores[5] - scores[4]} за неделю`, historyPts, historyLine: historyPts.map(p => `${p.x},${p.y}`).join(' '),
+      filters: ['Все', 'Эта неделя', 'Месяц'].map(n => ({ name: n, pick: () => this.setState({ filter: n }), border: s.filter === n ? '#5B43B8' : '#3A3846', bg: s.filter === n ? '#5B43B8' : 'transparent', fg: s.filter === n ? '#E9DDFF' : '#A39FB5' })),
+      sessionCards, noSessions: sessionCards.length === 0,
+      tol: s.tol, tolLabel: `±${s.tol} ц`, setTol: e => this.persist({ tol: +e.target.value }),
+      smoothOptions: this.seg([{ label: 'Быстрое', value: 'fast' }, { label: 'Вибрато', value: 'vibrato' }, { label: 'Плавное', value: 'slow' }], s.smooth, v => this.persist({ smooth: v })),
+      nameOptions: this.seg([{ label: 'A4 · F♯5', value: 'latin' }, { label: 'ля · фа♯', value: 'syl' }], s.names, v => this.persist({ names: v })),
+      toggleHints: () => this.persist({ hints: !s.hints }), hintsTrack: s.hints ? P : 'transparent', hintsBorder: s.hints ? P : '#A39FB5', hintsKnobLeft: s.hints ? '24px' : '2px', hintsKnob: s.hints ? '#2E1A6E' : '#A39FB5',
+      themeOptions: this.seg([{ label: 'Тёмная', value: 'dark' }, { label: 'Светлая', value: 'light' }, { label: 'Системная', value: 'system' }], s.theme, v => this.setState({ theme: v })),
+      resetOnboarding: () => this.persist({ screen: 'onboarding', obStep: 0 }),
+      an, sh, sheetOpen: s.sheetSeg !== null && !!sh.note, closeSheet: () => this.setState({ sheetSeg: null }),
+      backFromAnalysis: () => { clearInterval(this.playT); this.setState({ screen: 'history', playing: false, sheetSeg: null }); },
+      playing: s.playing, notPlaying: !s.playing, togglePlay: () => s.playing ? this.setState({ playing: false }) : this.startPlay(),
+      scrub: e => sess && this.setState({ playPos: +e.target.value / 1000 * sess.dur }),
+      renameSession: () => sess && this.setState({ sessions: sessions.map(x => x.id === sess.id ? { ...x, title: x.title.startsWith('Гаммы') ? x.title : 'Гаммы D-dur' } : x) }),
+      deleteSession: () => sess && this.setState({ sessions: sessions.filter(x => x.id !== sess.id), screen: 'history', openSession: null }),
+      navItems: nav.map(([id, name]) => { const a = s.screen === id; return { name, go: () => this.setState({ screen: id }), pill: a ? '#5B43B8' : 'transparent', ic: a ? '#E9DDFF' : '#A39FB5', fg: a ? '#E6E4EE' : '#A39FB5', fw: a ? 600 : 400, isLive: id === 'live', isHist: id === 'history', isSet: id === 'settings' }; }),
+      dialogOpen: !!s.dialog, dlg: dlgs[s.dialog] || {}, closeDialog: () => this.setState({ dialog: null }), dialogCta: () => this.setState({ dialog: null }),
+      sigOptions: this.seg([{ label: 'Играть', value: 'play' }, { label: 'Тишина', value: 'silence' }], s.signal, v => this.setState({ signal: v, hold: 0 })),
+      biasVal: s.bias, biasLabel: this.fmtC(s.bias) + ' ц', setBias: e => this.setState({ bias: +e.target.value }),
+      triggerNoise: () => this.setState({ dialog: 'noise', screen: 'live' }), triggerMic: () => this.setState({ dialog: 'mic', screen: 'live' }),
+    };
+  }
+  pitchIdx(n) { const m = n.match(/^([A-G])(♯?)(\d)$/); const base = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 }[m[1]]; return +m[3] * 12 + base + (m[2] ? 1 : 0); }
+}
+</script>
+</body>
+</html>

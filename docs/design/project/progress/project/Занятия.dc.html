@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}</style></helmet>
+
+<section class="dv-turn" id="s10">
+<div class="dv-thd"><a class="dv-tid" href="#s10">10</a><span class="dv-tname">«Занятия» · учёт времени · портрет 412×892</span></div>
+<div class="dv-opts">
+<sc-for list="{{ frames }}" as="p" hint-placeholder-count="9">
+<div class="dv-opt" id="{{ p.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ p.id }}">{{ p.id }}</a>{{ p.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:20px;padding:16px 16px 0;margin-top:{{ p.scroll }}">
+    <div style="font-size:28px;font-weight:700;line-height:1.1">Занятия</div>
+    <sc-if value="{{ p.idle }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">Начать занятие</div>
+        <div style="text-align:center;font-size:14px;color:#A39FB5;line-height:1.45;padding:0 12px" class="tn">{{ p.todayLine }}</div>
+      </div>
+    </sc-if>
+    <sc-if value="{{ p.running }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div class="tn" style="font-size:64px;font-weight:700;line-height:1;letter-spacing:-1px">{{ p.timer }}</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#A39FB5"><div style="width:8px;height:8px;border-radius:50%;background:#C4ADFF"></div>Занятие идёт</div>
+        <div style="height:56px;border-radius:28px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#E6E4EE;align-self:stretch;margin-top:6px">Закончить занятие</div>
+      </div>
+    </sc-if>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <sc-for list="{{ p.sums }}" as="k" hint-placeholder-count="3"><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">{{ k.n }}</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;white-space:nowrap">{{ k.v }}</div></div></sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:40px">
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M12.5 4 L6.5 10 L12.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div>
+        <div style="font-size:16px;font-weight:700">Сентябрь 2026</div>
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;opacity:.3"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M7.5 4 L13.5 10 L7.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:11px;color:#A39FB5;text-align:center;font-weight:600"><div>пн</div><div>вт</div><div>ср</div><div>чт</div><div>пт</div><div>сб</div><div>вс</div></div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px">
+        <sc-for list="{{ p.cells }}" as="c" hint-placeholder-count="35">
+        <div style="height:44px;display:flex;align-items:center;justify-content:center;opacity:{{ c.op }}">
+          <div style="position:relative;width:40px;height:40px;border-radius:12px;background:{{ c.bg }};box-shadow:{{ c.shadow }};display:flex;align-items:center;justify-content:center">
+            <div class="tn" style="font-size:15px;font-weight:{{ c.fw }};color:{{ c.fg }};margin-top:{{ c.mt }}">{{ c.n }}</div>
+            <sc-if value="{{ c.dot }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;bottom:6px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:{{ c.fg }}"></div></sc-if>
+          </div>
+        </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;font-size:11px;color:#A39FB5;padding:2px 4px 0">меньше<div style="width:12px;height:12px;border-radius:4px;background:#2A2352"></div><div style="width:12px;height:12px;border-radius:4px;background:#3D2F80"></div><div style="width:12px;height:12px;border-radius:4px;background:#5B43B8"></div><div style="width:12px;height:12px;border-radius:4px;background:#C4ADFF"></div>больше</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;padding-bottom:16px">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+        <div><div style="font-size:14px;color:#A39FB5;display:flex;align-items:center;gap:8px">{{ p.selTitle }}<sc-if value="{{ p.selIsToday }}" hint-placeholder-val="{{ true }}"><span style="font-size:11px;font-weight:700;color:#C4ADFF;border:1px solid #C4ADFF;border-radius:6px;padding:1px 6px">сегодня</span></sc-if></div><div class="tn" style="font-size:32px;font-weight:700;line-height:1.1;margin-top:4px;color:{{ p.selColor }}">{{ p.selBig }}</div></div>
+        <div style="height:40px;padding:0 16px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF;white-space:nowrap">{{ p.selAction }}</div>
+      </div>
+      <sc-if value="{{ p.hasRecords }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:14px;font-weight:700">Записи этого дня</div>
+        <sc-for list="{{ p.records }}" as="ss" hint-placeholder-count="1">
+        <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:14px 16px">
+          <div style="width:52px;text-align:center"><div class="tn" style="font-size:26px;font-weight:800;line-height:1;color:{{ ss.color }}">{{ ss.score }}</div><div style="font-size:11px;color:#A39FB5">%</div></div>
+          <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600">{{ ss.title }}</div><div style="font-size:13px;color:#A39FB5;margin-top:2px">{{ ss.meta }}</div></div>
+          <div style="display:flex;align-items:flex-end;gap:2px;height:28px"><sc-for list="{{ ss.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+        </div>
+        </sc-for>
+      </sc-if>
+    </div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ p.nav }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">
+        <sc-if value="{{ n.isLive }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:50%;border:3px solid {{ n.ic }}"></div></sc-if>
+        <sc-if value="{{ n.isPr }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:4px;border:3px solid {{ n.ic }};border-top-width:6px;box-sizing:border-box"></div></sc-if>
+        <sc-if value="{{ n.isRec }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:14px;border-radius:3px;border:3px solid {{ n.ic }}"></div></sc-if>
+        <sc-if value="{{ n.isSet }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:5px;border:3px solid {{ n.ic }};transform:rotate(45deg)"></div></sc-if>
+        <sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:4px;right:14px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px #1E1D25"></div></sc-if>
+      </div>
+      <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+    </div>
+    </sc-for>
+  </div>
+
+  <sc-if value="{{ p.sheetSummary }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#292833;border-radius:28px 28px 0 0;padding:12px 24px 32px;display:flex;flex-direction:column;gap:20px">
+    <div style="width:32px;height:4px;border-radius:2px;background:#A39FB5;opacity:.5;align-self:center"></div>
+    <div style="font-size:14px;color:#A39FB5">Занятие</div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:56px;height:56px;border-radius:50%;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:24px;color:#E6E4EE">−</div>
+      <div style="text-align:center"><div class="tn" style="font-size:56px;font-weight:700;line-height:1">47 мин</div><div style="font-size:12px;color:#A39FB5;margin-top:6px">шаг 5 мин</div></div>
+      <div style="width:56px;height:56px;border-radius:50%;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:24px;color:#E6E4EE">+</div>
+    </div>
+    <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">Сохранить</div>
+    <div style="height:40px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#C4ADFF">Не сохранять</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ p.sheetEdit }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#292833;border-radius:28px 28px 0 0;padding:12px 24px 32px;display:flex;flex-direction:column;gap:20px">
+    <div style="width:32px;height:4px;border-radius:2px;background:#A39FB5;opacity:.5;align-self:center"></div>
+    <div><div style="font-size:14px;color:#A39FB5">Время за день</div><div style="font-size:20px;font-weight:700;margin-top:2px">16 сентября, среда</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:56px;height:56px;border-radius:50%;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:24px;color:#E6E4EE">−</div>
+      <div class="tn" style="font-size:56px;font-weight:700;line-height:1">50 мин</div>
+      <div style="width:56px;height:56px;border-radius:50%;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:24px;color:#E6E4EE">+</div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center">
+      <div class="tn" style="height:36px;padding:0 14px;border-radius:8px;background:#1E1D25;display:flex;align-items:center;font-size:14px;font-weight:600">+10</div>
+      <div class="tn" style="height:36px;padding:0 14px;border-radius:8px;background:#1E1D25;display:flex;align-items:center;font-size:14px;font-weight:600">+30</div>
+      <div class="tn" style="height:36px;padding:0 14px;border-radius:8px;background:#1E1D25;display:flex;align-items:center;font-size:14px;font-weight:600">+1 ч</div>
+      <div style="height:36px;padding:0 14px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:14px;font-weight:600;color:#A39FB5">0</div>
+    </div>
+    <div style="font-size:12px;color:#A39FB5;line-height:1.4;text-align:center">Это суммарное время за день. Ноль уберёт день из календаря.</div>
+    <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">Сохранить</div>
+    <div style="height:40px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#C4ADFF;margin-top:-8px">Отмена</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ p.dialog }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(19,19,24,.78);display:flex;align-items:center;justify-content:center;padding:32px">
+    <div style="background:#292833;border-radius:28px;padding:28px 24px 20px;width:100%;display:flex;flex-direction:column;gap:12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:#5B43B8;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#E9DDFF" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><path d="M11 6v5l3 2"></path></svg></div>
+      <div style="font-size:24px;font-weight:700;line-height:1.2">Занятие не закончено</div>
+      <div style="font-size:15px;line-height:1.45;color:#A39FB5" class="tn">{{ p.dialogText }}</div>
+      <div style="display:flex;flex-direction:column;gap:4px;margin-top:8px">
+        <div style="height:48px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700" class="tn">{{ p.d1 }}</div>
+        <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#C4ADFF">{{ p.d2 }}</div>
+        <div style="height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#C4ADFF;margin-top:-8px">{{ p.d3 }}</div>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Клетка календаря</b> — три независимых признака: заливка (ступень времени, 4 фиолетовых тона + точка под числом — форма для тех, кто не различает тон), «сегодня» — тонкое кольцо onSurface 1.5 dp, «выбранный» — внешнее кольцо primary 2 dp с зазором 2 dp; когда сегодня = выбранный, кольцо одно (primary), число жирное, а рядом с датой — чип «сегодня». Легенда «меньше — больше» четырьмя квадратами оставлена: без подписей и без чисел, чтобы не читалась оценкой. <b>Выбор времени (10e)</b> — степпер ±5 и три чипа-приращения: «40 минут за вчера» = тап по дню → «Добавить время» → «+30» → «+10». Смена месяца — стрелки; свайп по сетке добавить можно (горизонтальный, порог 60 dp), но он конфликтует с вертикальным скроллом экрана — не обязателен.</p>
+</section>
+
+<section class="dv-turn" id="s10h">
+<div class="dv-thd"><a class="dv-tid" href="#s10h">10h</a><span class="dv-tname">Индикатор идущего занятия на Live</span></div>
+<div class="dv-opts">
+<sc-for list="{{ liveFrames }}" as="l" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ l.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ l.id }}">{{ l.id }}</a>{{ l.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative">
+  <div style="position:absolute;left:0;right:0;top:{{ l.zoneTop }};height:520px;background:radial-gradient(ellipse 70% 60% at 50% 45%,#1A4A36 0%,#153A2C 45%,#131318 100%)"></div>
+  <div style="position:relative;display:flex;justify-content:center;padding:12px 24px 0">
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px;width:100%">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:{{ l.playBg }};color:{{ l.playFg }}"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid {{ l.playIc }}"></div>Игра</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:{{ l.tuneBg }};color:{{ l.tuneFg }};border-left:1px solid #3A3846"><div style="width:4px;height:14px;border-radius:2px;background:{{ l.tuneIc }}"></div>Настройка</div>
+    </div>
+  </div>
+  <div style="position:relative;display:flex;justify-content:center;padding-top:10px">
+    <div style="height:28px;padding:0 12px 0 10px;border-radius:14px;background:#1E1D25;display:flex;align-items:center;gap:8px;font-size:13px;color:#A39FB5"><div style="width:6px;height:6px;border-radius:50%;background:#C4ADFF"></div>занятие · <span class="tn" style="color:#E6E4EE;font-weight:600">12:34</span></div>
+  </div>
+  <sc-if value="{{ l.tuning }}" hint-placeholder-val="{{ false }}">
+  <div style="position:relative;display:flex;justify-content:center;gap:12px;padding:12px 16px 0">
+    <div style="width:76px;height:64px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:#A39FB5;background:#1E1D25">G<span style="font-size:11px;font-weight:500">196 Гц</span></div>
+    <div style="width:76px;height:64px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:#A39FB5;background:#1E1D25">D<span style="font-size:11px;font-weight:500">294 Гц</span></div>
+    <div style="width:76px;height:64px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#E9DDFF;background:#5B43B8">A<span style="font-size:11px;font-weight:500">440 Гц</span></div>
+    <div style="width:76px;height:64px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:600;color:#A39FB5;background:#1E1D25">E<span style="font-size:11px;font-weight:500">659 Гц</span></div>
+  </div>
+  <div style="position:relative;text-align:center;font-size:14px;color:#A39FB5;margin-top:10px">авто · ближайшая: Ля · 440 Гц</div>
+  </sc-if>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
+    <div style="position:relative;width:{{ l.ring }};height:{{ l.ring }};display:flex;align-items:center;justify-content:center">
+      <svg width="300" height="300" viewBox="0 0 300 300" style="position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)"><circle cx="150" cy="150" r="144" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"></circle><circle cx="150" cy="150" r="144" fill="none" stroke="#47C97E" stroke-width="6" stroke-linecap="round" stroke-dasharray="905" stroke-dashoffset="272"></circle></svg>
+      <div style="font-size:{{ l.noteSize }};font-weight:700;line-height:1;letter-spacing:-6px;display:flex;align-items:baseline">A<span style="font-size:52px;font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">4</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;color:#47C97E;height:64px"><div style="width:24px;height:24px;border-radius:50%;background:#47C97E"></div><div style="font-size:28px;font-weight:600">в строе</div></div>
+  </div>
+  <div style="position:relative;padding:0 24px 8px">
+    <div style="position:relative;height:36px">
+      <div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:#292833"></div>
+      <div style="position:absolute;left:45%;width:10%;top:12px;height:12px;border-radius:6px;background:#47C97E"></div>
+      <div style="position:absolute;left:50%;top:8px;width:2px;height:20px;background:#3A3846;margin-left:-1px"></div>
+      <div style="position:absolute;left:52%;top:6px;width:44px;height:24px;transform:translateX(-50%);border-radius:12px;background:#47C97E;opacity:.28;filter:blur(4px)"></div>
+      <div style="position:absolute;left:52%;top:4px;width:6px;height:28px;margin-left:-3px;border-radius:3px;background:#E6E4EE;box-shadow:0 0 0 2px #131318"></div>
+    </div>
+  </div>
+  <sc-if value="{{ l.recording }}" hint-placeholder-val="{{ false }}">
+  <div style="position:relative;display:flex;align-items:center;gap:12px;padding:8px 24px 0">
+    <div style="width:10px;height:10px;border-radius:50%;background:#E8565C"></div>
+    <div style="font-size:16px;font-weight:600" class="tn">запись · 01:24</div>
+    <div style="flex:1;height:6px;border-radius:3px;background:#292833;display:flex;gap:2px;overflow:hidden"><div style="width:9%;background:#47C97E"></div><div style="width:7%;background:#47C97E"></div><div style="width:6%;background:#E5B03C"></div><div style="width:12%;background:#47C97E"></div><div style="width:8%;background:#E8565C"></div><div style="width:10%;background:#47C97E"></div></div>
+  </div>
+  </sc-if>
+  <div style="position:relative;display:flex;align-items:center;justify-content:center;padding:12px 24px 12px">
+    <sc-if value="{{ l.recording }}" hint-placeholder-val="{{ false }}"><div style="width:72px;height:72px;border-radius:50%;background:#E8565C;display:flex;align-items:center;justify-content:center"><div style="width:24px;height:24px;border-radius:4px;background:#FFFFFF"></div></div></sc-if>
+    <sc-if value="{{ l.notRecording }}" hint-placeholder-val="{{ true }}"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div></sc-if>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ l.nav }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">
+        <sc-if value="{{ n.isLive }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:50%;border:3px solid {{ n.ic }}"></div></sc-if>
+        <sc-if value="{{ n.isPr }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:4px;border:3px solid {{ n.ic }};border-top-width:6px;box-sizing:border-box"></div></sc-if>
+        <sc-if value="{{ n.isRec }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:14px;border-radius:3px;border:3px solid {{ n.ic }}"></div></sc-if>
+        <sc-if value="{{ n.isSet }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:5px;border:3px solid {{ n.ic }};transform:rotate(45deg)"></div></sc-if>
+        <sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:4px;right:14px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px #1E1D25"></div></sc-if>
+      </div>
+      <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+
+<div class="dv-opt" id="10h-land"><div class="dv-olabel"><a class="dv-oid" href="#10h-land">10h-land</a>Live ландшафт — индикатор над переключателем в правой колонке</div><div class="dv-card">
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;box-sizing:border-box">
+  <div style="position:absolute;left:0;top:0;bottom:0;width:440px;background:radial-gradient(ellipse 60% 70% at 50% 50%,#1A4A36 0%,#153A2C 45%,#131318 100%)"></div>
+  <div style="position:relative;width:440px;display:flex;align-items:center;justify-content:center">
+    <div style="position:relative;width:320px;height:320px;display:flex;align-items:center;justify-content:center">
+      <svg width="320" height="320" viewBox="0 0 320 320" style="position:absolute;inset:0;transform:rotate(-90deg)"><circle cx="160" cy="160" r="154" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"></circle><circle cx="160" cy="160" r="154" fill="none" stroke="#47C97E" stroke-width="6" stroke-linecap="round" stroke-dasharray="968" stroke-dashoffset="290"></circle></svg>
+      <div style="font-size:176px;font-weight:700;line-height:1;letter-spacing:-6px;display:flex;align-items:baseline">A<span style="font-size:52px;font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">4</span></div>
+    </div>
+  </div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;padding:12px 24px 16px 8px;gap:10px">
+    <div style="display:flex;justify-content:center"><div style="height:28px;padding:0 12px 0 10px;border-radius:14px;background:#1E1D25;display:flex;align-items:center;gap:8px;font-size:13px;color:#A39FB5"><div style="width:6px;height:6px;border-radius:50%;background:#C4ADFF"></div>занятие · <span class="tn" style="color:#E6E4EE;font-weight:600">12:34</span></div></div>
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid #E9DDFF"></div>Игра</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:#E6E4EE;border-left:1px solid #3A3846"><div style="width:4px;height:14px;border-radius:2px;background:#A39FB5"></div>Настройка</div>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:12px;color:#47C97E"><div style="width:24px;height:24px;border-radius:50%;background:#47C97E"></div><div style="font-size:32px;font-weight:600">в строе</div></div>
+    <div style="position:relative;height:36px">
+      <div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:#292833"></div>
+      <div style="position:absolute;left:45%;width:10%;top:12px;height:12px;border-radius:6px;background:#47C97E"></div>
+      <div style="position:absolute;left:50%;top:8px;width:2px;height:20px;background:#3A3846;margin-left:-1px"></div>
+      <div style="position:absolute;left:52%;top:6px;width:44px;height:24px;transform:translateX(-50%);border-radius:12px;background:#47C97E;opacity:.28;filter:blur(4px)"></div>
+      <div style="position:absolute;left:52%;top:4px;width:6px;height:28px;margin-left:-3px;border-radius:3px;background:#E6E4EE;box-shadow:0 0 0 2px #131318"></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div></div>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">Индикатор — чип 28 dp на surfaceContainer прямо под переключателем режима: слово «занятие» 13 sp onSurfaceVariant, время 13 sp onSurface табличными цифрами, точка primary 6 dp без анимации. Он живёт в «шапке» экрана, тогда как запись — внизу над кнопкой: другой край, другой цвет точки (primary vs zone.off), у записи слово «запись». В «Настройке» ряд струн опускается под чип. Тап по чипу — переход на «Занятия». Landscape: чип первым элементом правой колонки, над переключателем.</p>
+</section>
+
+<section class="dv-turn" id="s10ij">
+<div class="dv-thd"><a class="dv-tid" href="#s10ij">10i · 10j</a><span class="dv-tname">Нижняя панель · Landscape «Занятия»</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="10i"><div class="dv-olabel"><a class="dv-oid" href="#10i">10i</a>Панель: 4 вкладки; отметка идущего занятия на значке «Занятия» видна с любой вкладки</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ navBars }}" as="nb" hint-placeholder-count="3">
+<div style="width:412px;height:80px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ nb }}" as="n" hint-placeholder-count="4">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+    <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">
+      <sc-if value="{{ n.isLive }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:50%;border:3px solid {{ n.ic }}"></div></sc-if>
+      <sc-if value="{{ n.isPr }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:4px;border:3px solid {{ n.ic }};border-top-width:6px;box-sizing:border-box"></div></sc-if>
+      <sc-if value="{{ n.isRec }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:14px;border-radius:3px;border:3px solid {{ n.ic }}"></div></sc-if>
+      <sc-if value="{{ n.isSet }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:5px;border:3px solid {{ n.ic }};transform:rotate(45deg)"></div></sc-if>
+      <sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:4px;right:14px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px #1E1D25"></div></sc-if>
+    </div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+</div>
+</sc-for>
+<div style="font-size:11px;color:rgba(230,228,238,.6);max-width:412px;line-height:1.4">Сверху вниз: Live активна · Занятия активна · Записи активна + идёт занятие (точка primary 8 dp с обводкой 2 dp surfaceContainer в правом верхнем углу пилюли).</div>
+</div></div>
+
+<div class="dv-opt" id="10j"><div class="dv-olabel"><a class="dv-oid" href="#10j">10j</a>Landscape 892×412 — занятие идёт: таймер и сводка слева, календарь и день справа</div><div class="dv-card">
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;flex-direction:column;box-sizing:border-box">
+  <div style="flex:1;display:flex;gap:24px;padding:14px 20px 0;min-height:0">
+    <div style="width:280px;display:flex;flex-direction:column;gap:16px">
+      <div style="font-size:24px;font-weight:700;line-height:1.1">Занятия</div>
+      <div style="display:flex;flex-direction:column;align-items:flex-start;gap:6px">
+        <div class="tn" style="font-size:56px;font-weight:700;line-height:1;letter-spacing:-1px">1:02:34</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#A39FB5"><div style="width:8px;height:8px;border-radius:50%;background:#C4ADFF"></div>Занятие идёт</div>
+        <div style="height:48px;padding:0 24px;border-radius:24px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;margin-top:4px">Закончить занятие</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <sc-for list="{{ sumsRun }}" as="k" hint-placeholder-count="3"><div style="background:#1E1D25;border-radius:14px;padding:10px"><div style="font-size:11px;color:#A39FB5">{{ k.n }}</div><div class="tn" style="font-size:15px;font-weight:700;margin-top:3px;white-space:nowrap">{{ k.v }}</div></div></sc-for>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:32px">
+        <div style="width:40px;height:32px;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 20 20"><path d="M12.5 4 L6.5 10 L12.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div>
+        <div style="font-size:15px;font-weight:700">Сентябрь 2026</div>
+        <div style="width:40px;height:32px;display:flex;align-items:center;justify-content:center;opacity:.3"><svg width="18" height="18" viewBox="0 0 20 20"><path d="M7.5 4 L13.5 10 L7.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:10px;color:#A39FB5;text-align:center;font-weight:600"><div>пн</div><div>вт</div><div>ср</div><div>чт</div><div>пт</div><div>сб</div><div>вс</div></div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);row-gap:0">
+        <sc-for list="{{ cellsToday }}" as="c" hint-placeholder-count="35">
+        <div style="height:44px;display:flex;align-items:center;justify-content:center;opacity:{{ c.op }}">
+          <div style="position:relative;width:38px;height:38px;border-radius:11px;background:{{ c.bg }};box-shadow:{{ c.shadow }};display:flex;align-items:center;justify-content:center">
+            <div class="tn" style="font-size:14px;font-weight:{{ c.fw }};color:{{ c.fg }};margin-top:{{ c.mt }}">{{ c.n }}</div>
+            <sc-if value="{{ c.dot }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;bottom:5px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:{{ c.fg }}"></div></sc-if>
+          </div>
+        </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 4px 0">
+        <div style="font-size:13px;color:#A39FB5">17 сентября, четверг · <span class="tn" style="color:#E6E4EE;font-weight:700;font-size:16px">45 мин</span></div>
+        <div style="font-size:13px;font-weight:600;color:#C4ADFF">Изменить время</div>
+      </div>
+    </div>
+  </div>
+  <div style="height:64px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ navLand }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px">
+      <div style="position:relative;width:48px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">
+        <sc-if value="{{ n.isLive }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:50%;border:3px solid {{ n.ic }}"></div></sc-if>
+        <sc-if value="{{ n.isPr }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:4px;border:3px solid {{ n.ic }};border-top-width:6px;box-sizing:border-box"></div></sc-if>
+        <sc-if value="{{ n.isRec }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:14px;border-radius:3px;border:3px solid {{ n.ic }}"></div></sc-if>
+        <sc-if value="{{ n.isSet }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:5px;border:3px solid {{ n.ic }};transform:rotate(45deg)"></div></sc-if>
+        <sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:4px;right:6px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px #1E1D25"></div></sc-if>
+      </div>
+      <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">Landscape: клетка 38 dp в ряду высотой 44 dp, колонка ≈ 70 dp — зона касания ≥ 44 выполнена. Панель 64 dp с горизонтальными пунктами (иконка + подпись в строку).</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · «Занятия» · дополнение к хэндоффу Live</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(520px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Новые токены</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Hex</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="8"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px">Ступени: 1–19 мин → practice.1; 20–44 → practice.2; 45–89 → practice.3; ≥ 90 → practice.4. Ноль — без заливки и точки. Контраст числа: onSurface на practice.1/.2 ≥ 8:1, onPrimaryContainer на practice.3 ≈ 5.5:1, onPrimary на practice.4 ≈ 7:1.</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты</div>
+  <div style="color:#A39FB5">«Начать занятие» / «Закончить занятие» · «Занятие идёт» · «Сегодня: 45 мин» / «Сегодня ещё не занимались» · «Неделя», «Месяц», «Дней подряд» · «Не занимались» · «Изменить время» / «Добавить время» · «Записи этого дня» · лист итога: «Занятие», «шаг 5 мин», «Сохранить», «Не сохранять» · лист времени: «Время за день», чипы «+10 · +30 · +1 ч · 0», «Это суммарное время за день. Ноль уберёт день из календаря.», «Отмена» · диалог: «Занятие не закончено», «Занятие идёт уже 3 ч 12 мин. Скрипка звучала последний раз в 18:42.», «Закончить в 18:42» / «Закончить сейчас» / «Продолжаю заниматься»; без времени звука — «Закончить сейчас» / «Изменить время» / «Продолжаю заниматься» · пусто: «Нажмите „Начать занятие“, когда берёте скрипку, и „Закончить“ — когда откладываете. Здесь появится ваш календарь.» · индикатор Live: «занятие · 12:34» · вкладки: Live · Занятия · Записи · Настройки.</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp / sp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Элемент</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="14"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="8"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const P = '#C4ADFF', PC = '#5B43B8', ON = '#E6E4EE', OV = '#A39FB5', SURF = '#131318', G = '#47C97E', Y = '#E5B03C', R = '#E8565C';
+    const steps = [null, { bg: '#2A2352', fg: ON }, { bg: '#3D2F80', fg: ON }, { bg: PC, fg: '#E9DDFF' }, { bg: P, fg: '#2E1A6E' }];
+    const mins = { 1: 30, 2: 50, 3: 0, 4: 100, 5: 15, 6: 0, 7: 45, 8: 70, 9: 25, 10: 0, 11: 125, 12: 40, 13: 55, 14: 35, 15: 80, 16: 50, 17: 45 };
+    const stepOf = m => m <= 0 ? 0 : m < 20 ? 1 : m < 45 ? 2 : m < 90 ? 3 : 4;
+    const fmt = m => { if (!m) return '—'; const h = Math.floor(m / 60), mm = m % 60; return h ? (mm ? `${h} ч ${mm} мин` : `${h} ч`) : `${mm} мин`; };
+    const wd = ['понедельник', 'вторник', 'среда', 'четверг', 'пятница', 'суббота', 'воскресенье'];
+    const dateStr = d => `${d} сентября, ${wd[d % 7]}`;
+    const cells = (sel, empty) => {
+      const out = [{ n: '', bg: 'transparent', fg: ON, fw: 500, shadow: 'none', op: 1, dot: false, mt: '0' }];
+      for (let d = 1; d <= 30; d++) {
+        const m = empty ? 0 : (mins[d] || 0), st = stepOf(m), fut = d > 17, today = d === 17, isSel = d === sel, s = steps[st];
+        const shadow = isSel ? `0 0 0 2px ${SURF},0 0 0 4px ${P}` : today ? `0 0 0 1.5px ${ON}` : 'none';
+        out.push({ n: String(d), bg: s ? s.bg : 'transparent', fg: s ? s.fg : ON, fw: today || isSel ? 800 : 500, shadow, op: fut ? .4 : 1, dot: st > 0, mt: st > 0 ? '-4px' : '0' });
+      }
+      return out;
+    };
+    const bars = arr => arr.map(z => ({ h: (z === 0 ? 28 : z === 1 ? 16 : 8) + 'px', c: z === 0 ? G : z === 1 ? Y : R }));
+    const recToday = [{ score: 84, color: G, title: 'Гаммы D-dur', meta: 'сегодня · 12:40 · −6 ц', bars: bars([0, 0, 1, 0, 2, 0, 1, 0]) }];
+    const rec15 = [{ score: 79, color: G, title: 'Этюд Кайзера №3', meta: '15 сен · 8:15 · −4 ц', bars: bars([0, 1, 0, 0, 1, 0, 0, 2]) }, { score: 71, color: Y, title: 'Гаммы G-dur', meta: '15 сен · 19:30 · −7 ц', bars: bars([0, 1, 2, 0, 0, 1, 0, 1]) }];
+    const sums = (empty) => [{ n: 'Неделя', v: empty ? '—' : '3 ч 30 мин' }, { n: 'Месяц', v: empty ? '—' : '12 ч 45 мин' }, { n: 'Дней подряд', v: empty ? '—' : '7' }];
+    const NAMES = [['Live', 'isLive'], ['Занятия', 'isPr'], ['Записи', 'isRec'], ['Настройки', 'isSet']];
+    const nav = (active, running) => NAMES.map(([name, k]) => { const a = name === active; return { name, isLive: k === 'isLive', isPr: k === 'isPr', isRec: k === 'isRec', isSet: k === 'isSet', pill: a ? PC : 'transparent', ic: a ? '#E9DDFF' : OV, fg: a ? ON : OV, fw: a ? 600 : 400, mark: running && k === 'isPr' }; });
+    const sel = (d, empty) => { const m = empty ? 0 : (mins[d] || 0); return { selTitle: dateStr(d), selIsToday: d === 17, selBig: m ? fmt(m) : 'Не занимались', selColor: m ? ON : OV, selAction: m ? 'Изменить время' : 'Добавить время' }; };
+    const base = { scroll: '0', idle: true, running: false, timer: '', sheetSummary: false, sheetEdit: false, dialog: false, hasRecords: false, records: [], todayLine: 'Сегодня: 45 мин', sums: sums(false), nav: nav('Занятия', false) };
+    const frames = [
+      { ...base, id: '10a', label: 'Обычное состояние — занятие не идёт, выбран сегодня (запись дня — ниже по скроллу)', cells: cells(17), ...sel(17), hasRecords: true, records: recToday },
+      { ...base, id: '10a2', label: 'То же, прокручено вниз — выбранный день и запись', cells: cells(17), ...sel(17), hasRecords: true, records: recToday, scroll: '-220px' },
+      { ...base, id: '10b', label: 'Идёт занятие — таймер вместо кнопки', idle: false, running: true, timer: '12:34', cells: cells(17), ...sel(17), nav: nav('Занятия', true), hasRecords: true, records: recToday },
+      { ...base, id: '10c1', label: 'Выбран день без занятий — 3 сентября', cells: cells(3), ...sel(3) },
+      { ...base, id: '10c2', label: 'Выбран день с двумя записями — 15 сентября (экран прокручен вниз)', cells: cells(15), ...sel(15), hasRecords: true, records: rec15, scroll: '-300px' },
+      { ...base, id: '10d', label: 'Лист итога после «Закончить занятие» — правка ±5 мин', cells: cells(17), ...sel(17), sheetSummary: true, hasRecords: true, records: recToday },
+      { ...base, id: '10e', label: 'Лист «Изменить время» — степпер ±5 и чипы приращений', cells: cells(16), ...sel(16), sheetEdit: true },
+      { ...base, id: '10f1', label: 'Диалог «забытое занятие» — со временем последнего звука', idle: false, running: true, timer: '3:12:07', cells: cells(17), ...sel(17), nav: nav('Занятия', true), dialog: true, dialogText: 'Занятие идёт уже 3 ч 12 мин. Скрипка звучала последний раз в 18:42.', d1: 'Закончить в 18:42', d2: 'Закончить сейчас', d3: 'Продолжаю заниматься' },
+      { ...base, id: '10f2', label: 'Диалог «забытое занятие» — без времени звука', idle: false, running: true, timer: '3:12:07', cells: cells(17), ...sel(17), nav: nav('Занятия', true), dialog: true, dialogText: 'Занятие идёт уже 3 ч 12 мин.', d1: 'Закончить сейчас', d2: 'Изменить время', d3: 'Продолжаю заниматься' },
+      { ...base, id: '10g', label: 'Пустое состояние — занятий ещё не было', cells: cells(17, true), ...sel(17, true), sums: sums(true), todayLine: 'Нажмите «Начать занятие», когда берёте скрипку, и «Закончить» — когда откладываете. Здесь появится ваш календарь.' },
+    ];
+    const segc = t => ({ playBg: t ? 'transparent' : PC, playFg: t ? ON : '#E9DDFF', playIc: t ? OV : '#E9DDFF', tuneBg: t ? PC : 'transparent', tuneFg: t ? '#E9DDFF' : ON, tuneIc: t ? '#E9DDFF' : OV });
+    const liveFrames = [
+      { id: '10h1', label: 'Занятие идёт — чип под переключателем', tuning: false, recording: false, notRecording: true, zoneTop: '96px', ring: '300px', noteSize: '176px', ...segc(false), nav: nav('Live', true) },
+      { id: '10h2', label: 'Занятие идёт + идёт запись — два таймера: верх/низ, primary/zone.off, «занятие»/«запись»', tuning: false, recording: true, notRecording: false, zoneTop: '96px', ring: '280px', noteSize: '160px', ...segc(false), nav: nav('Live', true) },
+      { id: '10h3', label: 'Занятие идёт в режиме «Настройка» — ряд струн под чипом', tuning: true, recording: false, notRecording: true, zoneTop: '200px', ring: '260px', noteSize: '150px', ...segc(true), nav: nav('Live', true) },
+    ];
+    const navBars = [nav('Live', false), nav('Занятия', false), nav('Записи', true)];
+    const tokens = [
+      { name: 'practice.1', hex: '#2A2352', use: 'день до 20 мин; число onSurface' },
+      { name: 'practice.2', hex: '#3D2F80', use: '20–45 мин; число onSurface' },
+      { name: 'practice.3', hex: '#5B43B8', use: '45–90 мин (= primaryContainer); число onPrimaryContainer' },
+      { name: 'practice.4', hex: '#C4ADFF', use: 'от 90 мин (= primary); число onPrimary' },
+      { name: 'cal.todayRing', hex: '#E6E4EE', use: 'кольцо «сегодня» 1.5 dp (= onSurface)' },
+      { name: 'cal.selectedRing', hex: '#C4ADFF', use: 'кольцо выбранного дня 2 dp с зазором 2 dp surface (= primary)' },
+      { name: 'practice.dot', hex: '#C4ADFF', use: 'точка «занятие идёт» на чипе Live, в подписи таймера и на вкладке' },
+      { name: 'scrim', hex: 'rgba(0,0,0,.45)', use: 'подложка листов; диалог — rgba(19,19,24,.78) как на Live' },
+    ];
+    const sizes = [
+      { name: 'Заголовок экрана', v: '28 sp / 700; поля экрана 16 dp; вертикальные блоки gap 20 dp' },
+      { name: 'Кнопка «Начать занятие»', v: 'ширина − 32, высота 56, r28, primary / onPrimary 16 sp 700; строка «Сегодня…» 14 sp onSurfaceVariant, отступ 10' },
+      { name: 'Таймер', v: '64 sp / 700 / tnum / letter-spacing −1; подпись 14 sp с точкой 8 dp primary; «Закончить» — outlined 56 dp r28, рамка outlineVariant; landscape 56 sp' },
+      { name: 'Сводка', v: '3 карточки surfaceContainer r16, padding 12; метка 12 sp, значение 18 sp 700 tnum, nowrap' },
+      { name: 'Шапка календаря', v: 'высота 40; месяц 16 sp 700; стрелки 40×40, шеврон 20, недоступная — alpha .3' },
+      { name: 'Дни недели', v: '11 sp 600 onSurfaceVariant, 7 колонок' },
+      { name: 'Клетка', v: 'колонка 380/7 ≈ 54 × 44 dp (зона касания); плашка 40 × 40 r12; число 15 sp (500 / 800 для сегодня и выбранного), сдвиг −4 при точке; точка 4 dp снизу 6 dp цветом числа; будущие — alpha .4; row-gap 4' },
+      { name: 'Легенда', v: '4 квадрата 12 dp r4 practice.1–4, подписи 11 sp «меньше / больше», выровнена вправо' },
+      { name: 'Выбранный день', v: 'дата 14 sp onSurfaceVariant + чип «сегодня» 11 sp primary с рамкой 1 dp r6; время 32 sp 700 tnum (или «Не занимались» onSurfaceVariant); действие — outlined 40 dp r20, текст primary 14 sp' },
+      { name: 'Карточка записи', v: 'как в 4c: surfaceContainer r16, padding 14×16; балл 26 sp 800; заголовок «Записи этого дня» 14 sp 700' },
+      { name: 'Листы', v: 'surfaceContainerHigh, r28 сверху, padding 12/24/32, ручка 32×4; степпер: кнопки 56 dp круг outlined, число 56 sp 700 tnum; чипы 36 dp r8 surfaceContainer 14 sp; главная 56 r28 primary; вторичная — текстовая 40 dp primary' },
+      { name: 'Диалог', v: 'surfaceContainerHigh r28, padding 28/24/20, иконка 44 dp primaryContainer; заголовок 24 sp 700; текст 15 sp; главное действие 48 dp r24 primary, два текстовых 44 dp' },
+      { name: 'Индикатор на Live', v: 'чип 28 dp r14 surfaceContainer, padding 0 12 0 10; точка 6 dp primary; «занятие ·» 13 sp onSurfaceVariant, время 13 sp 600 onSurface tnum; отступ от переключателя 10 dp; вся высота шапки +38 dp; landscape — первым в правой колонке' },
+      { name: 'Панель', v: '4 пункта; значок «Занятия» 18×18 r4, штрих 3, верхняя грань 6 (лист календаря); отметка 8 dp primary + обводка 2 surfaceContainer, right 14 / top 4 пилюли; landscape панель 64 dp, пилюля 48×32, подпись справа' },
+      { name: 'Landscape экрана', v: 'левая колонка 280 dp (заголовок, таймер, сводка), правая — календарь: плашка 38 r11, ряд 44, число 14 sp; строка выбранного дня 13/16 sp' },
+    ];
+    const anims = [
+      { name: 'Старт занятия', v: 'кнопка → таймер: ContentTransform fade 200 мс + scale 0.96→1; цифры появляются с 00:00; отметка на вкладке scale-in 150 мс' },
+      { name: 'Тик таймера', v: 'без анимации цифр (tnum держит ширину); секунды меняются мгновенно' },
+      { name: 'Стоп занятия', v: 'таймер → кнопка fade 200 мс; лист итога slide-up 250 мс FastOutSlowIn' },
+      { name: 'Листы', v: 'ModalBottomSheet: вход 250 мс, выход 200 мс; scrim fade синхронно' },
+      { name: 'Выбор дня', v: 'кольцо выбранного: перенос между клетками — новое кольцо scale 0.8→1 100 мс, старое fade 100 мс; блок «выбранный день» — crossfade 150 мс' },
+      { name: 'Заливка дня после сохранения', v: 'цвет плашки animateColorAsState tween 300 мс; точка fade-in 150 мс' },
+      { name: 'Смена месяца', v: 'AnimatedContent slide по X 40 dp + fade, 220 мс; направление по стрелке' },
+      { name: 'Степпер ±5', v: 'число — без анимации; удержание кнопки автоповтор каждые 120 мс после 400 мс' },
+      { name: 'Диалог', v: 'fade 200 мс + scrim .78' },
+      { name: 'Индикатор на Live', v: 'появление/скрытие fade 200 мс; точка статична, без пульса' },
+    ];
+    return { frames, liveFrames, navBars, navLand: nav('Занятия', true), sumsRun: sums(false), cellsToday: cells(17), tokens, sizes, anims };
+  }
+}
+</script>
+</body>
+</html>
