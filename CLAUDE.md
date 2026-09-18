@@ -34,6 +34,7 @@ Android-приложение: интонационный тренажёр для
 `docs/design/project/progress/project/Прогресс.dc.html` (кадры 11a–11g, галерея трофеев `11t`,
 секция `dev`; иллюстрации — массив `TROPHIES` в его JS), спека сверена с ними (0.13), план и
 принятые расхождения — `docs/plan-progress.md`. Главное число шапки — суммарное время занятий.
+Этап 15 (домен и хранение) сделан, экрана ещё нет — см. раздел «Прогресс» ниже.
 Прогресс считается только из времени занятий,
 не из сессий и баллов. «Занятие» (время) и «сессия»
 (запись с анализом) — разные сущности, не смешивать ни в коде, ни в текстах. Комментарии,
@@ -44,7 +45,7 @@ Android-приложение: интонационный тренажёр для
 - Kotlin, Jetpack Compose + Material 3 (Compose BOM), Gradle Kotlin DSL, version catalog `gradle/libs.versions.toml`
 - Hilt, Coroutines/Flow, Navigation Compose
 - minSdk 26, Java 17 (`compileOptions`; Gradle-демон работает на JDK 21), один модуль `app`
-- DataStore Preferences — пользовательские настройки и идущее занятие (`core/settings`); Room — сессии и занятия (`core/data`, база `violin.db` v2)
+- DataStore Preferences — пользовательские настройки и идущее занятие (`core/settings`); Room — сессии, занятия и трофеи (`core/data`, база `violin.db` v3)
 - Никаких сторонних DSP-библиотек: детектор высоты тона свой (YIN и MPM), параметры — в спеке
 
 ## Архитектура
@@ -126,6 +127,16 @@ Android-приложение: интонационный тренажёр для
 - Занятия — таблица `practice_entries` (`date` строкой ISO, индекс), `PracticeDao.replaceDay` — транзакция «удалить день, вставить одну ручную запись» (при нуле — только удалить). Репозиторий держит все строки в памяти — сотни строк в год, SQL-агрегаты незачем.
 - Идущее занятие — `RunningPracticeStore` на том же DataStore, что настройки (`DataStoreRunningPracticeStore`, ключи `practice_started_at`, `practice_last_sound_at`); `markSound` без идущего занятия — no-op, новый `start` стирает старую отметку звука.
 - Инструментальные тесты базы: `-Pandroid.testInstrumentationRunnerArguments.package=com.example.violintuner.core.data` (флаг `--tests` у `connectedDebugAndroidTest` не работает) плюс обязательный `-Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true`.
+
+## Прогресс: уровни, трофеи, профиль
+Этап 15 сделан (домен, форматы, Room v3, профиль в DataStore, хранение аватара, вручение); этапы 16–17 (шапка и листы, лист «Подарок» и анимации) — нет: на экране пока ничего не видно. План и отклонения — `docs/plan-progress.md`.
+- `core/domain/progress` — чистый Kotlin: `ProgressConfig` (пороги уровней и отметки трофеев в часах, spec 5.7; названия — UI-строки, в домене их нет), `Progress` (`totalMs`, `levelOf` → `LevelProgress`, `nextTrophyHours`, `remainingMs`, `isFar` — правило разделителя «Далеко впереди»), `Trophy` / `TrophyRepository`, `TrophyAwarder`, `Profile` / `ProfileRepository` (`Profile.cleanName` — единственное место правил имени: края, 24 символа).
+- Вручает `AppStartViewModel`: коллектор `combine(practice.entries, trophies)` → `TrophyAwarder.award`. Поэтому ловятся все пути изменения записей (лист итога, «Изменить время», диалог забытого занятия) без вызова в каждом. Вручение идемпотентно: `TrophyDao.insertIfAbsent` (`OnConflictStrategy.IGNORE`, ключ — отметка), повтор не меняет ни дату, ни `shown`; правка вниз ничего не отнимает. Идущее занятие в сумму не входит.
+- База v3: таблица `trophies` (`hours` PK, `awardedDate` ISO, `shown`), `MIGRATION_2_3`; `DatabaseMigrationTest` теперь проверяет оба старта — с v1 и с v2 (`createOldFile(version2)`).
+- Профиль — `DataStoreProfileRepository` в том же файле, что настройки: ключи `profile_name`, `profile_avatar_file` (имя файла, не путь).
+- Фото — `AvatarFiles` / `AppAvatarFiles` (`files/profile/avatar-<millis>.jpg`): у каждого импорта новое имя — смена фото видна как смена имени, кеш-ключи не нужны; пишется в `.part` и переименовывается. `AvatarImage.squareOf`: границы → `inSampleSize` → поворот по EXIF платформенным `android.media.ExifInterface` → обрезка по центру → не больше 512 px (маленькое фото не растягивается). `decodeStream` с `inJustDecodeBounds` возвращает null всегда — это не ошибка чтения (на этом уже спотыкались). Зеркальные ориентации EXIF сведены к поворотам намеренно. Всё, что трогает `Bitmap`, проверяется инструментальным `AppAvatarFilesTest`; в unit-тестах — `FakeAvatarFiles`.
+- Форматы (`Formats`): `totalTime` — вниз, от 100 ч только часы; `remainingTime` — вверх (у невзятой отметки не бывает «0 мин»); `hoursMark`, `grouped` — разряды с пяти цифр через неразрывный пробел U+00A0 («1250 ч», «10 000 ч»); `dayAndMonth(LocalDate)`.
+- Инструментальные тесты гонять только на эмуляторе: `ANDROID_SERIAL=emulator-5554 ./gradlew …` — к машине бывает подключён телефон владельца, и без переменной Gradle поставит сборку и на него. `adb` не в PATH: `~/Library/Android/sdk/platform-tools/adb`. AVD `Medium_Phone_API_36` забит под завязку (установка падает «not enough space»), рабочий — `Pixel_7`.
 
 ## Настройки, онбординг, старт приложения
 После шести шагов spec §8 добавлены онбординг и минимальные настройки (spec 3.7, 3.8); проверены на эмуляторе на сборке `-PfakePitch=true`, на телефоне — нет.
