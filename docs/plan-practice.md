@@ -56,6 +56,7 @@ navigation                   вкладка «Занятия», «История
 Каждый этап — отдельные коммиты, обе Gradle-команды зелёные, проверка на эмуляторе на сборке `-PfakePitch=true`, обновление `CLAUDE.md`.
 
 ### Этап 12. Домен и хранение
+**Сделан.** Отличия от плана ниже: `AppDatabase` переехал из `core/data/session` в `core/data` (вместе с папкой схем), `provideDatabase` — в `core/data/di/DatabaseModule`; порог «забытого» и «1 ч после начала» для истёкшего занятия — одна константа `forgottenAfterMs`; в `PracticeStats` добавлены `calendarCells` (сетка месяца с понедельника) и `manualStartOf` (полдень дня для ручной записи), чтобы экрану не считать даты самому. 29 новых unit-тестов, 4 инструментальных (DAO и миграция), lint без новых предупреждений.
 1. `feat(domain): practice config, stats and forgotten-practice rules` — `PracticeConfig`, `PracticeEntry`, `RunningPractice`, `PracticeStats`, `ForgottenPractice`, интерфейсы репозиториев.
    Тесты: суммы по дням (несколько занятий в день, ручные), неделя с понедельника (включая понедельник и воскресенье, границу месяца), месяц; ступени на границах 19/20, 44/45, 89/90 мин; серия (с сегодняшним, без сегодняшнего — с вчерашнего, пропуск обнуляет, пусто); забытое занятие: до 60 мин — идёт, звук старше 60 мин — забыто с временем звука, без звука и старше 60 мин — забыто без времени, старше 12 ч — истекло с концом по звуку или начало + 1 ч.
 2. `feat(data): practice entries in room` — `PracticeEntity`, `PracticeDao`, `RoomPracticeRepository`, `AppDatabase` v2 + `MIGRATION_1_2`, схема `2.json`; Hilt.

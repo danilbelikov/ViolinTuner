@@ -25,11 +25,11 @@ Android-приложение: интонационный тренажёр для
 Экран Live с режимами «Игра» и «Настройка», онбординг из трёх шагов (spec 3.7) и
 минимальные настройки — эталон A4 и допуск (spec 3.8), запись сессий, экран сессии и
 «История» со звуком и плеером (spec 3.9–3.11, 5.5) — сделаны; как это строилось и где
-отошли от плана — `docs/plan-history.md`. Следующая фича — учёт времени занятий (spec 3.12,
-5.6, этапы 12–14): поведение описано, макетов ещё нет — бриф для Claude Design лежит в
-`docs/design/brief-practice.md`. Код не начинать до хэндоффа макетов: после него сверить spec 3.12 с
-кадрами и только потом планировать. «Занятие» (время) и «сессия» (запись с анализом) — разные
-сущности, не смешивать ни в коде, ни в текстах. Комментарии,
+отошли от плана — `docs/plan-history.md`. Идёт учёт времени занятий (spec 3.12, 5.6, этапы
+12–14): макеты — `docs/design/project/practice/project/Занятия.dc.html` (кадры 10a–10j, секция
+`dev`), план и принятые расхождения с макетом — `docs/plan-practice.md`. Этап 12 (домен и
+хранение) сделан, этапы 13–14 (экран, связь с Live) — впереди. «Занятие» (время) и «сессия»
+(запись с анализом) — разные сущности, не смешивать ни в коде, ни в текстах. Комментарии,
 «Поделиться», фоновую запись, прочие настройки, светлую тему не делать, даже если удобно
 «заодно» (spec, раздел 7).
 
@@ -37,14 +37,14 @@ Android-приложение: интонационный тренажёр для
 - Kotlin, Jetpack Compose + Material 3 (Compose BOM), Gradle Kotlin DSL, version catalog `gradle/libs.versions.toml`
 - Hilt, Coroutines/Flow, Navigation Compose
 - minSdk 26, Java 17 (`compileOptions`; Gradle-демон работает на JDK 21), один модуль `app`
-- DataStore Preferences — пользовательские настройки (`core/settings`); Room — сессии (`core/data/session`)
+- DataStore Preferences — пользовательские настройки и идущее занятие (`core/settings`); Room — сессии и занятия (`core/data`, база `violin.db` v2)
 - Никаких сторонних DSP-библиотек: детектор высоты тона свой (YIN и MPM), параметры — в спеке
 
 ## Архитектура
-- Clean + MVI. Пакеты: `feature/live`, `feature/onboarding`, `feature/settings`, `feature/history` (заглушка); общее — `core/audio`, `core/domain`, `core/settings`, `core/ui` (тема, токены, общие компоненты, запрос разрешения на микрофон).
+- Clean + MVI. Пакеты: `feature/live`, `feature/onboarding`, `feature/settings`, `feature/session`, `feature/history`, `feature/practice` (этап 13); общее — `core/audio`, `core/domain`, `core/data`, `core/settings`, `core/ui` (тема, токены, общие компоненты, форматы, запрос разрешения на микрофон).
 - Экран: `LiveContract` (State / Intent / Effect), `LiveViewModel`, `LiveScreen` (stateless: принимает State и `(Intent) -> Unit`), `LiveRoute` (ViewModel + навигация).
 - Доменная логика (центы, зоны, сглаживание, гистерезис, снэп к струнам) — чистый Kotlin без Android-зависимостей в `core/domain`, покрыта unit-тестами.
-- Все числовые константы — в `IntonationConfig` со значениями из спеки. Магических чисел в коде нет. Эталон A4 и допуск — выбор пользователя: готовый конфиг приходит потоком из `IntonationConfigSource`, синглтон `IntonationConfig` в Hilt — только значения по умолчанию.
+- Все числовые константы — в `IntonationConfig` со значениями из спеки; числа учёта занятий — в `PracticeConfig` (spec 5.6). Магических чисел в коде нет. Эталон A4 и допуск — выбор пользователя: готовый конфиг приходит потоком из `IntonationConfigSource`, синглтон `IntonationConfig` в Hilt — только значения по умолчанию.
 - Аудио: интерфейс `PitchSource`; `MicPitchSource` (AudioRecord, фоновый диспетчер) и `FakePitchSource` (превью, тесты, разработка без микрофона). ViewModel не знает про AudioRecord.
 - Кольцо, шкала, фоновый градиент — `Canvas` / `Modifier.drawBehind` в Compose, без View-интеропа.
 
@@ -96,6 +96,15 @@ Android-приложение: интонационный тренажёр для
 - Балл считается по самим отклонениям, без гистерезиса зон; граница «рядом» — `nearCents` (20), а не 2·допуск из прототипа.
 - `core/data/session` — Room (`violin.db`, схема в `app/schemas`, её коммитим). Две таблицы: сводка и блоб отсчётов. Сегменты не хранятся: `RoomSessionRepository.details` выводит их заново с допуском и размером корзины самой сессии (`forSession`). Зоны мини-столбиков хранятся буквами, не ordinal.
 - Unit-тесты покрывают домен и маппер; DAO и репозиторий — инструментальный `RoomSessionRepositoryTest` (в androidTest `runBlocking` допустим: это тестовый код без виртуального времени).
+
+## Занятия: учёт времени
+Этап 12 сделан (домен, Room, DataStore, форматы); экрана и связи с Live ещё нет — план в `docs/plan-practice.md`.
+- `core/domain/practice` — чистый Kotlin: `PracticeConfig` (числа spec 5.6), `PracticeEntry` (дата занятия — `LocalDate` начала, зафиксированная при сохранении; `practiceDateOf`), `RunningPractice` (начало и последний звук; `elapsedMs` не бывает отрицательным), `PracticeStats` (суммы по дням / неделе / месяцу, серия, ступень заливки 0–4, клетки календаря с понедельника, полдень как начало ручной записи), `ForgottenPractice.check` → `PracticeCheck.Running / Forgotten / Expired`. Порог «забытого» и «1 ч после начала» у истёкшего занятия — одна константа `forgottenAfterMs`.
+- Ступень заливки считается по целым минутам вниз: 19:59 — ступень 1, 20:00 — 2; любое ненулевое время — минимум ступень 1. Длительности словами (`Formats.minutesInWords`) округляются до минуты, таймер (`Formats.timer`) — `м:сс`, после часа `ч:мм:сс`.
+- База: `AppDatabase` теперь в `core/data` (папка схем `app/schemas/com.example.violintuner.core.data.AppDatabase`), версия 2, миграции — `DatabaseMigrations.ALL`, подключаются в `core/data/di/DatabaseModule`. Новая версия = миграция + правка `DatabaseMigrationTest`: он сам создаёт файл версии 1 SQL-ем из `1.json`, открывает через Room и читает сессию — Room при этом сверяет схему с сущностями, `room-testing` не нужен.
+- Занятия — таблица `practice_entries` (`date` строкой ISO, индекс), `PracticeDao.replaceDay` — транзакция «удалить день, вставить одну ручную запись» (при нуле — только удалить). Репозиторий держит все строки в памяти — сотни строк в год, SQL-агрегаты незачем.
+- Идущее занятие — `RunningPracticeStore` на том же DataStore, что настройки (`DataStoreRunningPracticeStore`, ключи `practice_started_at`, `practice_last_sound_at`); `markSound` без идущего занятия — no-op, новый `start` стирает старую отметку звука.
+- Инструментальные тесты базы: `-Pandroid.testInstrumentationRunnerArguments.package=com.example.violintuner.core.data` (флаг `--tests` у `connectedDebugAndroidTest` не работает) плюс обязательный `-Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true`.
 
 ## Настройки, онбординг, старт приложения
 После шести шагов spec §8 добавлены онбординг и минимальные настройки (spec 3.7, 3.8); проверены на эмуляторе на сборке `-PfakePitch=true`, на телефоне — нет.
