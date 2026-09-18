@@ -41,7 +41,8 @@ object HistoryReducer {
             HistoryFilter.MONTH -> date.isAfter(today.minusDays(config.historyMonthDays.toLong()))
         }
 
-    private fun cardOf(session: SessionSummary, today: LocalDate, zone: ZoneId, config: IntonationConfig): HistoryCard {
+    /** Also the card of the "Записи этого дня" list on the practice screen. */
+    fun cardOf(session: SessionSummary, today: LocalDate, zone: ZoneId, config: IntonationConfig): HistoryCard {
         val date = dateOf(session, zone)
         return HistoryCard(
             id = session.id,

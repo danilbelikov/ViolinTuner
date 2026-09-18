@@ -1,6 +1,7 @@
 package com.example.violintuner.core.di
 
 import com.example.violintuner.core.domain.IntonationConfig
+import com.example.violintuner.core.domain.practice.PracticeConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,6 +28,10 @@ object CoreModule {
     @Provides
     @Singleton
     fun provideIntonationConfig(): IntonationConfig = IntonationConfig()
+
+    @Provides
+    @Singleton
+    fun providePracticeConfig(): PracticeConfig = PracticeConfig()
 
     /** Wall clock for session start times and "today" in the history; tests pass a fixed one. */
     @Provides
