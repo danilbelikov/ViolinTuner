@@ -27,8 +27,8 @@ Android-приложение: интонационный тренажёр для
 «История» со звуком и плеером (spec 3.9–3.11, 5.5) — сделаны; как это строилось и где
 отошли от плана — `docs/plan-history.md`. Идёт учёт времени занятий (spec 3.12, 5.6, этапы
 12–14): макеты — `docs/design/project/practice/project/Занятия.dc.html` (кадры 10a–10j, секция
-`dev`), план и принятые расхождения с макетом — `docs/plan-practice.md`. Этап 12 (домен и
-хранение) сделан, этапы 13–14 (экран, связь с Live) — впереди. «Занятие» (время) и «сессия»
+`dev`), план и принятые расхождения с макетом — `docs/plan-practice.md`. Этапы 12 (домен и
+хранение) и 13 (экран «Занятия», вкладка) сделаны, этап 14 (связь с Live) — впереди. «Занятие» (время) и «сессия»
 (запись с анализом) — разные сущности, не смешивать ни в коде, ни в текстах. Комментарии,
 «Поделиться», фоновую запись, прочие настройки, светлую тему не делать, даже если удобно
 «заодно» (spec, раздел 7).
@@ -41,7 +41,7 @@ Android-приложение: интонационный тренажёр для
 - Никаких сторонних DSP-библиотек: детектор высоты тона свой (YIN и MPM), параметры — в спеке
 
 ## Архитектура
-- Clean + MVI. Пакеты: `feature/live`, `feature/onboarding`, `feature/settings`, `feature/session`, `feature/history`, `feature/practice` (этап 13); общее — `core/audio`, `core/domain`, `core/data`, `core/settings`, `core/ui` (тема, токены, общие компоненты, форматы, запрос разрешения на микрофон).
+- Clean + MVI. Пакеты: `feature/live`, `feature/onboarding`, `feature/settings`, `feature/session`, `feature/history` (вкладка «Записи»), `feature/practice`; общее — `core/audio`, `core/domain`, `core/data`, `core/settings`, `core/ui` (тема, токены, общие компоненты, форматы, запрос разрешения на микрофон).
 - Экран: `LiveContract` (State / Intent / Effect), `LiveViewModel`, `LiveScreen` (stateless: принимает State и `(Intent) -> Unit`), `LiveRoute` (ViewModel + навигация).
 - Доменная логика (центы, зоны, сглаживание, гистерезис, снэп к струнам) — чистый Kotlin без Android-зависимостей в `core/domain`, покрыта unit-тестами.
 - Все числовые константы — в `IntonationConfig` со значениями из спеки; числа учёта занятий — в `PracticeConfig` (spec 5.6). Магических чисел в коде нет. Эталон A4 и допуск — выбор пользователя: готовый конфиг приходит потоком из `IntonationConfigSource`, синглтон `IntonationConfig` в Hilt — только значения по умолчанию.
@@ -98,7 +98,15 @@ Android-приложение: интонационный тренажёр для
 - Unit-тесты покрывают домен и маппер; DAO и репозиторий — инструментальный `RoomSessionRepositoryTest` (в androidTest `runBlocking` допустим: это тестовый код без виртуального времени).
 
 ## Занятия: учёт времени
-Этап 12 сделан (домен, Room, DataStore, форматы); экрана и связи с Live ещё нет — план в `docs/plan-practice.md`.
+Этапы 12 (домен, Room, DataStore, форматы) и 13 (экран, вкладка) сделаны; связи с Live (этап 14: чип на Live, отметка звука, забытое занятие) ещё нет — план в `docs/plan-practice.md`. Экран проверен на эмуляторе: старт → Live, таймер, стоп → лист итога, сохранение, «Изменить время» с чипами, заливка и точка, landscape, смена месяца.
+- `feature/practice`: `PracticeReducer.stateOf` (чистый: записи + сессии + время таймера + месяц / выбранный день / лист → `PracticeState`), там же правила листов (`summarySheet`, `editSheet`, `step`, `add`, `durationToSave`). Лист итога хранит `actualMs` и `minutes`: пока степпер не трогали, сохраняется точная длительность, после — целые минуты. Занятие короче `minPracticeMs` при стопе стирается с тостом, лист не открывается.
+- Таймер — `runningStore.running.flatMapLatest { ticking }`: раз в секунду читает `Clock` от сохранённого начала; ничего не копится, переустановка и перезапуск таймер не трогают (проверено `adb install -r` посреди занятия). В тестах — свой `TestClock` и помощник `pass(ms)`, который двигает часы и виртуальное время по секунде: скачок часов раньше `advanceTimeBy` даёт ложные показания.
+- Интенты читают не `state.value` (он отстаёт на кадр от источников), а `latestRunning` / `latestTotals`, собранные из хранилищ в `init`; иначе «выбрать день → Изменить время» открывало лист с нулём.
+- `PracticeScreen` stateless; раскладка по форме области (`BoxWithConstraints`), landscape — левая колонка 280 dp + прокручиваемая правая. Числа, которые могут не влезть («1 ч 36 мин» в степпере и карточках сводки), уменьшаются `TextAutoSize.StepBased`, не переносятся. «Не занимались» у дня — 20 sp, а не 32 (в 32 переносилось).
+- Календарь — `PracticeCalendar`: обычная композиция (7 колонок с `weight`), клетка рисует заливку и кольца в `drawBehind`; кольцо выбранного дня выходит за плашку на 4 dp и не клипуется намеренно. Цвета — `ViolinTheme.practiceColors` (`fills` / `onFills` по ступени 1–4), не Material-схема и не цвета зон. Стрелки — `Canvas`-шевроны: библиотеки иконок в проекте нет.
+- Степпер (`Stepper`) держит автоповтор через `detectTapGestures(onPress)` (400 мс, затем 120 мс); `semantics.onClick` даёт ему нажатие для TalkBack.
+- `SessionCard` вынесена в `feature/history/components` и используется «Записями» и блоком «Записи этого дня»; `HistoryReducer.cardOf` — публичный.
+- Вкладки: `TopLevelDestination` — LIVE · PRACTICE · HISTORY («Записи», маршрут `history` не переименован) · SETTINGS. Отметка «занятие идёт» на значке — `AppStartViewModel.practiceRunning` → `AppBottomBar(practiceRunning)`. В landscape панель компактная (`compact = true`, 64 dp, значок и подпись в строку) на всех вкладках, кроме Live.
 - `core/domain/practice` — чистый Kotlin: `PracticeConfig` (числа spec 5.6), `PracticeEntry` (дата занятия — `LocalDate` начала, зафиксированная при сохранении; `practiceDateOf`), `RunningPractice` (начало и последний звук; `elapsedMs` не бывает отрицательным), `PracticeStats` (суммы по дням / неделе / месяцу, серия, ступень заливки 0–4, клетки календаря с понедельника, полдень как начало ручной записи), `ForgottenPractice.check` → `PracticeCheck.Running / Forgotten / Expired`. Порог «забытого» и «1 ч после начала» у истёкшего занятия — одна константа `forgottenAfterMs`.
 - Ступень заливки считается по целым минутам вниз: 19:59 — ступень 1, 20:00 — 2; любое ненулевое время — минимум ступень 1. Длительности словами (`Formats.minutesInWords`) округляются до минуты, таймер (`Formats.timer`) — `м:сс`, после часа `ч:мм:сс`.
 - База: `AppDatabase` теперь в `core/data` (папка схем `app/schemas/com.example.violintuner.core.data.AppDatabase`), версия 2, миграции — `DatabaseMigrations.ALL`, подключаются в `core/data/di/DatabaseModule`. Новая версия = миграция + правка `DatabaseMigrationTest`: он сам создаёт файл версии 1 SQL-ем из `1.json`, открывает через Room и читает сессию — Room при этом сверяет схему с сущностями, `room-testing` не нужен.
