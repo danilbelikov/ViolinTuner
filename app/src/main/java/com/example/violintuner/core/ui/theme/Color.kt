@@ -37,3 +37,24 @@ internal val GradientNearStart = Color(0xFF4A3A12)
 internal val GradientNearMid = Color(0xFF3A2E12)
 internal val GradientOffStart = Color(0xFF4A1C22)
 internal val GradientOffMid = Color(0xFF3A181D)
+
+// Progress (handoff `Прогресс.dc.html`, `tokens`). The level bar stays in the violet family;
+// trophies bring the palette of the instrument: wood, ebony, silver, gold.
+internal val TrophyLocked = Color(0xFF6B6880)
+internal val TrophyWood = Color(0xFF9A5530)
+internal val TrophyWoodLight = Color(0xFFC9814A)
+internal val TrophyEbony = Color(0xFF2C2430)
+internal val TrophyEbonyLight = Color(0xFF5A4E64)
+internal val TrophyEbonyEdge = Color(0xFF7A6E86)
+internal val TrophySilver = Color(0xFFB9B7C4)
+internal val TrophyGold = Color(0xFFD9B65C)
+
+/** Not zone.near: another tone, and only ever inside the rosin trophy. */
+internal val TrophyRosin = Color(0xFFB8672A)
+internal val TrophyRosinLight = Color(0xFFE3975A)
+internal val TrophyRosinGlint = Color(0xFFFFF3E0)
+internal val TrophyHair = Color(0xFFEDE6D3)
+internal val TrophyPaper = Color(0xFFF1EEE6)
+internal val TrophyInk = Color(0xFF8D8A96)
+internal val TrophyCase = Color(0xFF2A2430)
+internal val GiftGlow = Color(0x38C4ADFF)

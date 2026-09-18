@@ -29,6 +29,7 @@ fun ViolinTheme(content: @Composable () -> Unit) {
         LocalZoneColors provides DarkZoneColors,
         LocalLiveTypography provides DefaultLiveTypography,
         LocalPracticeColors provides DarkPracticeColors,
+        LocalProgressColors provides DarkProgressColors,
     ) {
         MaterialTheme(
             colorScheme = DarkColorScheme,
@@ -47,6 +48,9 @@ object ViolinTheme {
 
     val practiceColors: PracticeColors
         @Composable @ReadOnlyComposable get() = LocalPracticeColors.current
+
+    val progressColors: ProgressColors
+        @Composable @ReadOnlyComposable get() = LocalProgressColors.current
 
     val accentGlow: Color
         get() = AccentGlow
