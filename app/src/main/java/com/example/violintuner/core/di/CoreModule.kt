@@ -3,6 +3,7 @@ package com.example.violintuner.core.di
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.progress.ProgressConfig
+import com.example.violintuner.core.domain.repertoire.RepertoireConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -37,6 +38,10 @@ object CoreModule {
     @Provides
     @Singleton
     fun provideProgressConfig(): ProgressConfig = ProgressConfig()
+
+    @Provides
+    @Singleton
+    fun provideRepertoireConfig(): RepertoireConfig = RepertoireConfig()
 
     /** Wall clock for session start times and "today" in the history; tests pass a fixed one. */
     @Provides
