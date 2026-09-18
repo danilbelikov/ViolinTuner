@@ -24,6 +24,8 @@ data class SessionSummary(
     val previewZones: List<Zone>,
     /** Null while the session has no audio (recorded before stage 11 or from a silent source). */
     val audioPath: String?,
+    /** The piece this session is a take of (spec 3.15); null for a session recorded on Live. */
+    val pieceId: Long? = null,
 )
 
 data class SessionDetails(
@@ -41,6 +43,8 @@ data class NewSession(
     val metrics: SessionMetrics,
     val previewZones: List<Zone>,
     val audioPath: String?,
+    /** Set for a take recorded from a piece's screen. */
+    val pieceId: Long? = null,
 )
 
 interface SessionRepository {
