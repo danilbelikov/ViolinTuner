@@ -6,6 +6,8 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.example.violintuner.core.domain.practice.RunningPracticeStore
+import com.example.violintuner.core.domain.progress.ProfileRepository
+import com.example.violintuner.core.settings.DataStoreProfileRepository
 import com.example.violintuner.core.settings.DataStoreRunningPracticeStore
 import com.example.violintuner.core.settings.DataStoreSettingsRepository
 import com.example.violintuner.core.settings.IntonationConfigSource
@@ -33,6 +35,10 @@ abstract class SettingsModule {
     @Binds
     @Singleton
     abstract fun bindRunningPracticeStore(impl: DataStoreRunningPracticeStore): RunningPracticeStore
+
+    @Binds
+    @Singleton
+    abstract fun bindProfileRepository(impl: DataStoreProfileRepository): ProfileRepository
 
     companion object {
         private const val FILE_NAME = "user_settings"

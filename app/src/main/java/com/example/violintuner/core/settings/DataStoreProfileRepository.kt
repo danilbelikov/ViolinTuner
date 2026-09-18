@@ -1,0 +1,38 @@
+package com.example.violintuner.core.settings
+
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
+import com.example.violintuner.core.domain.progress.Profile
+import com.example.violintuner.core.domain.progress.ProfileRepository
+import javax.inject.Inject
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+
+/** Name and avatar file name, in the same preferences file as the settings (spec 6). */
+class DataStoreProfileRepository @Inject constructor(
+    private val dataStore: DataStore<Preferences>,
+) : ProfileRepository {
+    override val profile: Flow<Profile> = dataStore.data
+        .map { preferences ->
+            // Cleaned on reading too: the file is not the only writer one can imagine.
+            Profile(name = Profile.cleanName(preferences[NAME].orEmpty()), avatarFile = preferences[AVATAR_FILE])
+        }
+        .distinctUntilChanged()
+
+    override suspend fun setName(name: String) {
+        val clean = Profile.cleanName(name)
+        dataStore.edit { if (clean.isEmpty()) it.remove(NAME) else it[NAME] = clean }
+    }
+
+    override suspend fun setAvatarFile(fileName: String?) {
+        dataStore.edit { if (fileName == null) it.remove(AVATAR_FILE) else it[AVATAR_FILE] = fileName }
+    }
+
+    private companion object {
+        val NAME = stringPreferencesKey("profile_name")
+        val AVATAR_FILE = stringPreferencesKey("profile_avatar_file")
+    }
+}
