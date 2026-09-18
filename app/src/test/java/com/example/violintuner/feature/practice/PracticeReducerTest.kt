@@ -5,6 +5,8 @@ import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeEntry
+import com.example.violintuner.core.domain.progress.Profile
+import com.example.violintuner.core.domain.progress.ProgressConfig
 import com.example.violintuner.core.domain.session.SessionSummary
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -40,7 +42,10 @@ class PracticeReducerTest {
         runningMs: Long? = null,
         month: YearMonth = YearMonth.of(2026, 9),
         selected: LocalDate = today,
-    ) = PracticeReducer.stateOf(entries, sessions, runningMs, month, selected, sheet = null, today, zone, config, intonation)
+    ) = PracticeReducer.stateOf(
+        entries, sessions, runningMs, month, selected, sheet = null, today, zone, config, intonation,
+        trophies = emptyList(), profile = Profile.EMPTY, avatarPath = null, progressConfig = ProgressConfig(),
+    )
 
     @Test
     fun `calendar cells carry fill level, today, selection and future flags`() {

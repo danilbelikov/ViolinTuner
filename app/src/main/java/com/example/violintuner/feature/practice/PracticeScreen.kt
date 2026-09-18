@@ -34,8 +34,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -49,7 +51,11 @@ import com.example.violintuner.feature.history.components.SessionCard
 import com.example.violintuner.feature.practice.components.CalendarMetrics
 import com.example.violintuner.feature.practice.components.EditTimeSheet
 import com.example.violintuner.feature.practice.components.PracticeCalendar
+import com.example.violintuner.feature.practice.components.ProfileHeader
+import com.example.violintuner.feature.practice.components.ProfileHeaderMetrics
+import com.example.violintuner.feature.practice.components.ProfileSheet
 import com.example.violintuner.feature.practice.components.SummarySheet
+import com.example.violintuner.feature.practice.components.TrophiesSheet
 import java.time.ZoneId
 
 private val ScreenPadding = 16.dp
@@ -76,7 +82,7 @@ private const val MIN_CARD_VALUE_SIZE = 11
 /** Text sizes that differ between the layouts (handoff `sizes`). */
 @Immutable
 private data class Metrics(
-    val titleSize: Int,
+    val header: ProfileHeaderMetrics,
     val timerSize: Int,
     val cardCorner: Dp,
     val cardPadding: Dp,
@@ -90,11 +96,11 @@ private data class Metrics(
 ) {
     companion object {
         val Portrait = Metrics(
-            titleSize = 28, timerSize = 64, cardCorner = CardCorner, cardPadding = 12.dp, cardLabelSize = 12, cardValueSize = 18,
+            header = ProfileHeaderMetrics.Portrait, timerSize = 64, cardCorner = CardCorner, cardPadding = 12.dp, cardLabelSize = 12, cardValueSize = 18,
             dayDateSize = 14, dayTimeSize = 32, dayNoneSize = 20, calendar = CalendarMetrics.Portrait,
         )
         val Landscape = Metrics(
-            titleSize = 24, timerSize = 56, cardCorner = CardCornerLandscape, cardPadding = 10.dp, cardLabelSize = 11, cardValueSize = 15,
+            header = ProfileHeaderMetrics.Landscape, timerSize = 56, cardCorner = CardCornerLandscape, cardPadding = 10.dp, cardLabelSize = 11, cardValueSize = 15,
             dayDateSize = 13, dayTimeSize = 16, dayNoneSize = 15, calendar = CalendarMetrics.Landscape,
         )
     }
@@ -122,6 +128,8 @@ fun PracticeScreen(
     when (val sheet = state.sheet) {
         is PracticeSheet.Summary -> SummarySheet(sheet, state.stepMinutes, onIntent)
         is PracticeSheet.EditTime -> EditTimeSheet(sheet, state.stepMinutes, onIntent)
+        is PracticeSheet.Profile -> ProfileSheet(sheet, state.header, onIntent)
+        PracticeSheet.Trophies -> TrophiesSheet(state.trophies, state.header.totalMs, onIntent)
         null -> Unit
     }
 }
@@ -138,7 +146,7 @@ private fun PortraitLayout(state: PracticeState, onIntent: (PracticeIntent) -> U
                 .padding(ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(BlockGap),
         ) {
-            Title(metrics)
+            Header(state, onIntent, metrics)
             if (!state.loading) {
                 MainAction(state, onIntent, metrics)
                 SummaryCards(state, metrics)
@@ -169,7 +177,7 @@ private fun LandscapeLayout(state: PracticeState, onIntent: (PracticeIntent) -> 
                 .padding(ScreenPadding),
             verticalArrangement = Arrangement.spacedBy(BlockGap),
         ) {
-            Title(metrics)
+            Header(state, onIntent, metrics)
             if (!state.loading) {
                 MainAction(state, onIntent, metrics)
                 SummaryCards(state, metrics)
@@ -199,16 +207,21 @@ private fun LandscapeLayout(state: PracticeState, onIntent: (PracticeIntent) -> 
     }
 }
 
+/**
+ * While the data is being read the header keeps its place but stays unseen: an empty one would
+ * flash "0 мин · Уровень 1" at someone with hundreds of hours.
+ */
 @Composable
-private fun Title(metrics: Metrics) {
-    Text(
-        text = stringResource(R.string.nav_practice),
-        color = MaterialTheme.colorScheme.onSurface,
-        style = MaterialTheme.typography.headlineMedium.copy(fontSize = metrics.titleSize.sp, fontWeight = FontWeight.Bold),
+private fun Header(state: PracticeState, onIntent: (PracticeIntent) -> Unit, metrics: Metrics) {
+    ProfileHeader(
+        header = state.header,
+        metrics = metrics.header,
+        onProfileClick = { if (!state.loading) onIntent(PracticeIntent.ProfileClicked) },
+        onTrophiesClick = { if (!state.loading) onIntent(PracticeIntent.TrophiesClicked) },
+        modifier = if (state.loading) Modifier.alpha(0f).clearAndSetSemantics { } else Modifier,
     )
 }
 
-/** «Начать занятие» with the today line, or the timer with «Закончить занятие» (handoff 10a, 10b). */
 @Composable
 private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit, metrics: Metrics) {
     val colors = MaterialTheme.colorScheme

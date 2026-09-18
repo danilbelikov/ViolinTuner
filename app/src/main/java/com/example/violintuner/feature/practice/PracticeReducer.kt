@@ -5,6 +5,10 @@ import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeEntry
 import com.example.violintuner.core.domain.practice.PracticeStats
+import com.example.violintuner.core.domain.progress.Profile
+import com.example.violintuner.core.domain.progress.Progress
+import com.example.violintuner.core.domain.progress.ProgressConfig
+import com.example.violintuner.core.domain.progress.Trophy
 import com.example.violintuner.core.domain.session.SessionSummary
 import com.example.violintuner.feature.history.HistoryReducer
 import java.time.Instant
@@ -26,8 +30,13 @@ object PracticeReducer {
         zone: ZoneId,
         config: PracticeConfig,
         intonationConfig: IntonationConfig,
+        trophies: List<Trophy>,
+        profile: Profile,
+        avatarPath: String?,
+        progressConfig: ProgressConfig,
     ): PracticeState {
         val totals = PracticeStats.dayTotals(entries)
+        val totalMs = Progress.totalMs(entries)
         val hasHistory = totals.values.any { it > 0 }
         return PracticeState(
             loading = false,
@@ -63,12 +72,14 @@ object PracticeReducer {
                     .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
                     .map { HistoryReducer.cardOf(it, today, zone, intonationConfig) },
             ),
+            header = ProgressReducer.headerOf(totalMs, trophies, profile.name, avatarPath, progressConfig),
+            trophies = ProgressReducer.trophyLines(totalMs, trophies, progressConfig),
             sheet = sheet,
             stepMinutes = config.editStepMinutes,
         )
     }
 
-    fun loading(today: LocalDate, config: PracticeConfig): PracticeState = PracticeState(
+    fun loading(today: LocalDate, config: PracticeConfig, progressConfig: ProgressConfig): PracticeState = PracticeState(
         loading = true,
         hasHistory = false,
         runningMs = null,
@@ -78,6 +89,8 @@ object PracticeReducer {
         canGoForward = false,
         cells = emptyList(),
         selected = SelectedDay(today, isToday = true, totalMs = 0, sessions = emptyList()),
+        header = ProgressReducer.headerOf(0, emptyList(), name = "", avatarPath = null, progressConfig),
+        trophies = emptyList(),
         sheet = null,
         stepMinutes = config.editStepMinutes,
     )

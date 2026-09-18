@@ -179,4 +179,64 @@
     <string name="practice_end_at">Закончить в %1$s</string>
     <string name="practice_end_now">Закончить сейчас</string>
     <string name="practice_continue">Продолжаю заниматься</string>
+
+    <!-- Profile and progress (spec 3.13, 5.7). Level and trophy names follow the order of ProgressConfig. -->
+    <string-array name="progress_level_names">
+        <item>Первый звук</item>
+        <item>Ученик</item>
+        <item>Открытые струны</item>
+        <item>Первая позиция</item>
+        <item>Гаммы</item>
+        <item>Этюды</item>
+        <item>Вибрато</item>
+        <item>Третья позиция</item>
+        <item>Ансамбль</item>
+        <item>Концертмейстер</item>
+        <item>Солист</item>
+        <item>Виртуоз</item>
+        <item>Маэстро</item>
+        <item>Мастер</item>
+        <item>Легенда</item>
+    </string-array>
+    <string-array name="progress_trophy_names">
+        <item>Канифоль</item>
+        <item>Колок</item>
+        <item>Струна</item>
+        <item>Смычок</item>
+        <item>Подбородник</item>
+        <item>Камертон</item>
+        <item>Пюпитр</item>
+        <item>Футляр</item>
+        <item>Скрипка</item>
+        <item>Концерт</item>
+    </string-array>
+    <string name="progress_no_name">За скрипкой</string>
+    <string name="progress_level">Уровень %1$d · %2$s</string>
+    <string name="progress_to_next_level">до %1$d уровня — %2$s</string>
+    <string name="progress_open_profile">Открыть профиль</string>
+    <string name="progress_total_description">Всего за скрипкой: %1$s</string>
+    <string name="progress_open_trophies">Открыть трофеи</string>
+    <string name="progress_trophies_one">%1$d трофей</string>
+    <string name="progress_trophies_few">%1$d трофея</string>
+    <string name="progress_trophies_many">%1$d трофеев</string>
+    <string name="progress_next_trophy">следующий %1$s</string>
+    <string name="progress_trophies_and_next">%1$s · %2$s</string>
+    <string name="progress_more_trophies">+%1$d</string>
+    <string name="profile_title">Профиль</string>
+    <string name="profile_pick_photo">Выбрать фото</string>
+    <string name="profile_remove_photo">Убрать фото</string>
+    <string name="profile_name_label">Имя</string>
+    <string name="profile_name_placeholder">Как вас зовут?</string>
+    <string name="profile_name_counter">%1$d / %2$d</string>
+    <string name="profile_done">Готово</string>
+    <string name="profile_no_name_letter">\?</string>
+    <string name="profile_photo_failed">Не удалось открыть фото</string>
+    <string name="trophies_title">Трофеи</string>
+    <string name="trophies_total">всего за скрипкой — %1$s</string>
+    <string name="trophies_awarded">получен %1$s</string>
+    <string name="trophies_remaining">ещё %1$s</string>
+    <string name="trophies_far">Далеко впереди</string>
+    <string name="trophies_line_given">%1$s, %2$s, получен %3$s</string>
+    <string name="trophies_line_remaining">%1$s, %2$s, ещё %3$s</string>
+    <string name="trophies_line_far">%1$s, %2$s, далеко впереди</string>
 </resources>

@@ -35,6 +35,8 @@ fun PracticeRoute(
                     is PracticeEffect.OpenSession -> currentOnOpenSession(effect.id)
                     PracticeEffect.ShowTooShort ->
                         Toast.makeText(context, R.string.practice_too_short, Toast.LENGTH_SHORT).show()
+                    PracticeEffect.ShowPhotoFailed ->
+                        Toast.makeText(context, R.string.profile_photo_failed, Toast.LENGTH_SHORT).show()
                 }
             }
         }

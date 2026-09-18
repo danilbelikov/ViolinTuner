@@ -1,16 +1,24 @@
 package com.example.violintuner.feature.practice
 
+import androidx.compose.foundation.background
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeEntry
+import com.example.violintuner.core.domain.progress.Profile
+import com.example.violintuner.core.domain.progress.ProgressConfig
+import com.example.violintuner.core.domain.progress.Trophy
 import com.example.violintuner.core.domain.session.SessionSummary
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.practice.components.EditTimeSheetContent
+import com.example.violintuner.feature.practice.components.ProfileSheetContent
 import com.example.violintuner.feature.practice.components.SummarySheetContent
+import com.example.violintuner.feature.practice.components.TrophiesSheetContent
 import java.time.LocalDate
 import java.time.YearMonth
 import java.time.ZoneId
@@ -37,15 +45,25 @@ private object Sample {
         audioPath = null,
     )
 
+    /** Before September: brings the total to the 16 h 40 min of the progress brief. */
+    private val earlier = PracticeEntry(LocalDate.of(2026, 8, 30), startedAtEpochMs = 0, durationMs = 235 * MS_PER_MINUTE, manual = true)
+    val trophies = listOf(
+        Trophy(1, LocalDate.of(2026, 9, 2), shown = true),
+        Trophy(10, LocalDate.of(2026, 9, 13), shown = true),
+    )
+
     fun state(
         runningMs: Long? = null,
         selected: LocalDate = today,
-        entries: List<PracticeEntry> = this.entries,
+        entries: List<PracticeEntry> = this.entries + earlier,
         sheet: PracticeSheet? = null,
+        trophies: List<Trophy> = if (entries.isEmpty()) emptyList() else this.trophies,
+        name: String = "Даня",
     ): PracticeState = PracticeReducer.stateOf(
         entries = entries, sessions = sessions, runningMs = runningMs, month = YearMonth.of(2026, 9),
         selectedDate = selected, sheet = sheet, today = today, zone = zone, config = PracticeConfig(),
-        intonationConfig = IntonationConfig(),
+        intonationConfig = IntonationConfig(), trophies = trophies, profile = Profile(name, avatarFile = null),
+        avatarPath = null, progressConfig = ProgressConfig(),
     )
 }
 
@@ -73,10 +91,53 @@ private fun RecordsDayPreview() {
     ViolinTheme { PracticeScreen(state = Sample.state(selected = LocalDate.of(2026, 9, 15)), onIntent = {}, zone = Sample.zone) }
 }
 
-@Preview(name = "10g empty state", widthDp = 412, heightDp = 892)
+@Preview(name = "10g, 11c empty state", widthDp = 412, heightDp = 892)
 @Composable
 private fun EmptyStatePreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(entries = emptyList()), onIntent = {}, zone = Sample.zone) }
+    ViolinTheme { PracticeScreen(state = Sample.state(entries = emptyList(), name = ""), onIntent = {}, zone = Sample.zone) }
+}
+
+@Preview(name = "11b2 no name, no photo", widthDp = 412, heightDp = 892)
+@Composable
+private fun NoNamePreview() {
+    ViolinTheme { PracticeScreen(state = Sample.state(name = ""), onIntent = {}, zone = Sample.zone) }
+}
+
+@Preview(name = "11a2 many hours", widthDp = 412, heightDp = 892)
+@Composable
+private fun ManyHoursPreview() {
+    val years = PracticeEntry(LocalDate.of(2020, 1, 1), startedAtEpochMs = 0, durationMs = 1250 * 60 * MS_PER_MINUTE, manual = true)
+    val trophies = listOf(1, 10, 50, 100, 250, 500, 1000).map { Trophy(it, LocalDate.of(2026, 9, 2), shown = true) }
+    ViolinTheme { PracticeScreen(state = Sample.state(entries = listOf(years), trophies = trophies), onIntent = {}, zone = Sample.zone) }
+}
+
+@Preview(name = "11a long name, large font: compact trophy row", widthDp = 412, heightDp = 892, fontScale = 1.5f)
+@Composable
+private fun CompactRowPreview() {
+    ViolinTheme { PracticeScreen(state = Sample.state(name = "Константин Сергеевич"), onIntent = {}, zone = Sample.zone) }
+}
+
+@Preview(name = "11d2 profile sheet, no name", widthDp = 412)
+@Composable
+private fun ProfileSheetPreview() {
+    ViolinTheme {
+        ProfileSheetContent(
+            sheet = PracticeSheet.Profile(nameDraft = "", importingPhoto = false),
+            header = Sample.state(name = "").header,
+            onIntent = {},
+            onPickPhoto = {},
+            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        )
+    }
+}
+
+@Preview(name = "11e trophies sheet", widthDp = 412)
+@Composable
+private fun TrophiesSheetPreview() {
+    val state = Sample.state()
+    ViolinTheme {
+        TrophiesSheetContent(state.trophies, state.header.totalMs, modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh))
+    }
 }
 
 @Preview(name = "10j landscape running", widthDp = 892, heightDp = 412)

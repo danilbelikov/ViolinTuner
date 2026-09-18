@@ -126,7 +126,7 @@ internal fun EditTimeSheetContent(sheet: PracticeSheet.EditTime, stepMinutes: In
 }
 
 @Composable
-private fun SheetColumn(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
+internal fun SheetColumn(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -165,7 +165,7 @@ private fun Chip(text: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun PrimaryButton(text: String, onClick: () -> Unit) {
+internal fun PrimaryButton(text: String, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Button(
         onClick = onClick,

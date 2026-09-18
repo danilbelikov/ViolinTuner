@@ -1,13 +1,18 @@
 package com.example.violintuner.feature.practice
 
+import com.example.violintuner.core.data.profile.FakeAvatarFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.practice.FakePracticeRepository
 import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
 import com.example.violintuner.core.domain.practice.PracticeConfig
+import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_HOUR
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeEntry
 import com.example.violintuner.core.domain.practice.PracticeFinisher
 import com.example.violintuner.core.domain.practice.RunningPractice
+import com.example.violintuner.core.domain.progress.FakeProfileRepository
+import com.example.violintuner.core.domain.progress.FakeTrophyRepository
+import com.example.violintuner.core.domain.progress.ProgressConfig
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import java.time.Clock
 import java.time.Instant
@@ -38,6 +43,9 @@ class PracticeViewModelTest {
     private val store = FakeRunningPracticeStore()
     private val sessions = FakeSessionRepository()
     private val config = PracticeConfig()
+    private val trophies = FakeTrophyRepository()
+    private val profiles = FakeProfileRepository()
+    private val avatarFiles = FakeAvatarFiles()
     private val zone: ZoneId = ZoneId.of("Europe/Moscow")
 
     /** A clock the test moves by hand; the ticker's delays run on the test scheduler. */
@@ -58,7 +66,10 @@ class PracticeViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel(): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
-        val viewModel = PracticeViewModel(repository, store, PracticeFinisher(repository, store, clock), sessions, config, IntonationConfig(), clock)
+        val viewModel = PracticeViewModel(
+            repository, store, PracticeFinisher(repository, store, clock), sessions, config, IntonationConfig(), clock,
+            trophies, profiles, avatarFiles, ProgressConfig(),
+        )
         val effects = mutableListOf<PracticeEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -266,5 +277,123 @@ class PracticeViewModelTest {
         viewModel.onIntent(PracticeIntent.SessionClicked(7))
         runCurrent()
         assertEquals(listOf(PracticeEffect.OpenSession(7)), effects)
+    }
+
+    @Test
+    fun `the header follows the entries, the trophies and the profile`() = runTest {
+        val (viewModel, _) = viewModel()
+        assertEquals(1, viewModel.state.value.header.level)
+        assertEquals(listOf(TrophyBadge(1, given = false)), viewModel.state.value.header.trophyRow)
+
+        repository.replaceDay(today, 12 * MS_PER_HOUR, startedAtEpochMs = 0)
+        trophies.award(1, today)
+        trophies.award(10, today)
+        profiles.setName("Даня")
+        runCurrent()
+
+        val header = viewModel.state.value.header
+        assertEquals("Даня", header.name)
+        assertEquals(12 * MS_PER_HOUR, header.totalMs)
+        assertEquals(4, header.level)
+        assertEquals(listOf(TrophyBadge(1, true), TrophyBadge(10, true), TrophyBadge(50, false)), header.trophyRow)
+    }
+
+    @Test
+    fun `the name is stored when the profile sheet closes, cleaned and cut`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.ProfileClicked)
+        runCurrent()
+        assertEquals(PracticeSheet.Profile(nameDraft = "", importingPhoto = false), viewModel.state.value.sheet)
+
+        viewModel.onIntent(PracticeIntent.ProfileNameChanged("  Даня "))
+        runCurrent()
+        assertEquals("  Даня ", (viewModel.state.value.sheet as PracticeSheet.Profile).nameDraft)
+        assertEquals("nothing is stored while typing", "", profiles.profile.value.name)
+
+        viewModel.onIntent(PracticeIntent.ProfileNameChanged("я".repeat(30)))
+        runCurrent()
+        assertEquals(24, (viewModel.state.value.sheet as PracticeSheet.Profile).nameDraft.length)
+
+        viewModel.onIntent(PracticeIntent.ProfileNameChanged(" Даня "))
+        viewModel.onIntent(PracticeIntent.ProfileClosed)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+        assertEquals("Даня", profiles.profile.value.name)
+        assertEquals("Даня", viewModel.state.value.header.name)
+    }
+
+    @Test
+    fun `the profile sheet opens with the stored name and an emptied field removes it`() = runTest {
+        profiles.setName("Даня")
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.ProfileClicked)
+        runCurrent()
+        assertEquals("Даня", (viewModel.state.value.sheet as PracticeSheet.Profile).nameDraft)
+
+        viewModel.onIntent(PracticeIntent.ProfileNameChanged(""))
+        viewModel.onIntent(PracticeIntent.ProfileClosed)
+        runCurrent()
+        assertEquals("", profiles.profile.value.name)
+    }
+
+    @Test
+    fun `a picked photo replaces the old one at once and the old file goes`() = runTest {
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(PracticeIntent.ProfileClicked)
+        viewModel.onIntent(PracticeIntent.ProfilePhotoPicked("content://first"))
+        runCurrent()
+        val first = profiles.profile.value.avatarFile
+        assertEquals(setOf(first), avatarFiles.names)
+        assertEquals(first, viewModel.state.value.header.avatarPath)
+        assertFalse((viewModel.state.value.sheet as PracticeSheet.Profile).importingPhoto)
+
+        viewModel.onIntent(PracticeIntent.ProfilePhotoPicked("content://second"))
+        runCurrent()
+        val second = profiles.profile.value.avatarFile
+        assertTrue(second != null && second != first)
+        assertEquals(setOf(second), avatarFiles.names)
+
+        viewModel.onIntent(PracticeIntent.ProfilePhotoRemoved)
+        runCurrent()
+        assertNull(profiles.profile.value.avatarFile)
+        assertNull(viewModel.state.value.header.avatarPath)
+        assertTrue(avatarFiles.names.isEmpty())
+        assertTrue(effects.isEmpty())
+    }
+
+    @Test
+    fun `a photo that cannot be read says so and keeps the old one`() = runTest {
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(PracticeIntent.ProfileClicked)
+        viewModel.onIntent(PracticeIntent.ProfilePhotoPicked("content://first"))
+        runCurrent()
+        val first = profiles.profile.value.avatarFile
+
+        viewModel.onIntent(PracticeIntent.ProfilePhotoPicked("content://broken"))
+        runCurrent()
+        assertEquals(listOf<PracticeEffect>(PracticeEffect.ShowPhotoFailed), effects)
+        assertEquals(first, profiles.profile.value.avatarFile)
+        assertFalse((viewModel.state.value.sheet as PracticeSheet.Profile).importingPhoto)
+    }
+
+    @Test
+    fun `a photo whose file is gone reads as no photo`() = runTest {
+        profiles.setAvatarFile("avatar-lost.jpg")
+        val (viewModel, _) = viewModel()
+        assertNull(viewModel.state.value.header.avatarPath)
+    }
+
+    @Test
+    fun `one sheet at a time - trophies do not open over another sheet`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.TrophiesClicked)
+        runCurrent()
+        assertEquals(PracticeSheet.Trophies, viewModel.state.value.sheet)
+        viewModel.onIntent(PracticeIntent.ProfileClicked)
+        runCurrent()
+        assertEquals(PracticeSheet.Trophies, viewModel.state.value.sheet)
+        viewModel.onIntent(PracticeIntent.TrophiesClosed)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
     }
 }
