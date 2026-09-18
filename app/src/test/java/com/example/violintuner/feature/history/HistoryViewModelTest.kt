@@ -1,6 +1,7 @@
 package com.example.violintuner.feature.history
 
 import com.example.violintuner.core.domain.IntonationConfig
+import com.example.violintuner.core.domain.repertoire.FakeRepertoireRepository
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.domain.session.NewSession
 import com.example.violintuner.core.domain.session.SessionAnalyzer
@@ -27,6 +28,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class HistoryViewModelTest {
     private val repository = FakeSessionRepository()
+    private val repertoire = FakeRepertoireRepository()
     private val config = IntonationConfig()
     private val now = Instant.parse("2026-09-17T09:00:00Z")
     private val clock = Clock.fixed(now, ZoneId.of("Europe/Moscow"))
@@ -50,7 +52,7 @@ class HistoryViewModelTest {
     }
 
     private fun TestScope.viewModel(): HistoryViewModel {
-        val viewModel = HistoryViewModel(repository, config, clock)
+        val viewModel = HistoryViewModel(repository, repertoire, config, clock)
         backgroundScope.launch { viewModel.state.collect {} }
         return viewModel
     }

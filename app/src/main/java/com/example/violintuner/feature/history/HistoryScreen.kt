@@ -31,15 +31,21 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
+import com.example.violintuner.core.ui.components.SegmentedSwitch
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.history.components.SessionCard
 import com.example.violintuner.feature.history.components.WeeklyChart
+import com.example.violintuner.feature.repertoire.RepertoireIntent
+import com.example.violintuner.feature.repertoire.RepertoireReducer
+import com.example.violintuner.feature.repertoire.RepertoireState
+import com.example.violintuner.feature.repertoire.repertoireItems
 import java.time.ZoneId
 
 private val ScreenPadding = 16.dp
 private val MaxContentWidth = 560.dp
 private val SectionSpacing = 16.dp
+private val SectionSwitchTop = 14.dp
 private val CardSpacing = 8.dp
 private val ChartCorner = 20.dp
 private val ChipHeight = 32.dp
@@ -53,6 +59,8 @@ fun HistoryScreen(
     onIntent: (HistoryIntent) -> Unit,
     modifier: Modifier = Modifier,
     zone: ZoneId = ZoneId.systemDefault(),
+    repertoire: RepertoireState = RepertoireReducer.loading(filter = null),
+    onRepertoireIntent: (RepertoireIntent) -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
     Box(
@@ -68,7 +76,17 @@ fun HistoryScreen(
             contentPadding = PaddingValues(ScreenPadding),
         ) {
             item(key = "header") { Header(state) }
+            item(key = "sections") {
+                val sections = HistorySection.entries
+                SegmentedSwitch(
+                    labels = listOf(stringResource(R.string.history_section_sessions), stringResource(R.string.history_section_repertoire)),
+                    selectedIndex = sections.indexOf(state.section),
+                    onSelect = { onIntent(HistoryIntent.SectionSelected(sections[it])) },
+                    modifier = Modifier.padding(top = SectionSwitchTop),
+                )
+            }
             when {
+                state.section == HistorySection.REPERTOIRE -> repertoireItems(repertoire, onRepertoireIntent)
                 state.loading -> Unit
                 state.totalCount == 0 -> item(key = "empty") { EmptyHistory(Modifier.fillParentMaxHeight(EMPTY_HEIGHT_FRACTION)) }
                 else -> {
@@ -121,7 +139,7 @@ private fun Header(state: HistoryState) {
             color = colors.onSurface,
             style = MaterialTheme.typography.headlineMedium.copy(fontSize = 28.sp, fontWeight = FontWeight.Bold),
         )
-        if (!state.loading && state.totalCount > 0) {
+        if (!state.loading && state.totalCount > 0 && state.section == HistorySection.SESSIONS) {
             val countRes = Formats.pluralRu(
                 state.totalCount, R.string.history_count_one, R.string.history_count_few, R.string.history_count_many,
             )

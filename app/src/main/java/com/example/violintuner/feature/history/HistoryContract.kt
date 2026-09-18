@@ -6,6 +6,9 @@ import java.time.LocalDate
 
 enum class HistoryFilter { ALL, THIS_WEEK, MONTH }
 
+/** The two halves of the «Записи» tab (spec 3.15): what was recorded and what is being learnt. */
+enum class HistorySection { SESSIONS, REPERTOIRE }
+
 /** Day of a session as the card words it. */
 sealed interface DayLabel {
     data object Today : DayLabel
@@ -27,9 +30,12 @@ data class HistoryCard(
     val scoreZone: Zone,
     /** Zones of the first notes: the mini bars on the right. */
     val previewZones: List<Zone>,
+    /** Title of the piece this session is a take of: names it by default and earns it the «дубль» chip. */
+    val pieceTitle: String? = null,
 )
 
 data class HistoryState(
+    val section: HistorySection,
     /** True until the stored sessions have been read once. */
     val loading: Boolean,
     /** All sessions, whatever the filter: "N сессий" and the empty state. */
@@ -47,6 +53,8 @@ sealed interface HistoryIntent {
     data class FilterSelected(val filter: HistoryFilter) : HistoryIntent
 
     data class SessionClicked(val id: Long) : HistoryIntent
+
+    data class SectionSelected(val section: HistorySection) : HistoryIntent
 }
 
 sealed interface HistoryEffect {

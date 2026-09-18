@@ -90,4 +90,15 @@ class HistoryReducerTest {
         val twins = listOf(session(7, "2026-09-17T07:00:00", 50), session(8, "2026-09-17T07:00:00", 60))
         assertEquals(listOf(8L, 7L), state(list = twins).cards.map { it.id })
     }
+
+    @Test
+    fun `a take carries the title of its piece, a free session and a take of a deleted piece do not`() {
+        val take = session(1, "2026-09-16T18:00:00", 80)
+        val sessions = listOf(take.copy(pieceId = 7), take.copy(id = 2), take.copy(id = 3, pieceId = 404))
+        val state = HistoryReducer.stateOf(
+            sessions, HistoryFilter.ALL, today, moscow, config, HistorySection.REPERTOIRE, pieceTitles = mapOf(7L to "Менуэт"),
+        )
+        assertEquals(mapOf(1L to "Менуэт", 2L to null, 3L to null), state.cards.associate { it.id to it.pieceTitle })
+        assertEquals(HistorySection.REPERTOIRE, state.section)
+    }
 }

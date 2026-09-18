@@ -62,3 +62,16 @@ internal val TrophyPaper = Color(0xFFF1EEE6)
 internal val TrophyInk = Color(0xFF8D8A96)
 internal val TrophyCase = Color(0xFF2A2430)
 internal val GiftGlow = Color(0x38C4ADFF)
+
+// Repertoire (handoff `Репертуар.dc.html`, `tokens`). Sheet music is the one bright object of
+// the feature: paper under a photo that is still loading, a film that keeps thumbnails from
+// glaring, and a stand darker than the surface so that the page is all there is to look at.
+internal val Paper = Color(0xFFECE8DF)
+internal val PaperFrame = Color(0x1FFFFFFF)
+internal val StandBackground = Color(0xFF0E0E12)
+internal val StatusRepertoireContainer = Color(0xFF1F3A2C)
+internal val OnStatusRepertoireContainer = Color(0xFF9FE4BE)
+internal val TakeNew = Color(0xFF2A2540)
+
+/** The hex of zone.off, but a token of its own: zone colors stay about intonation only. */
+internal val FormError = Color(0xFFE8565C)

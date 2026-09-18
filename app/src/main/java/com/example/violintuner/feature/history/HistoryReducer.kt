@@ -16,9 +16,13 @@ object HistoryReducer {
         today: LocalDate,
         zone: ZoneId,
         config: IntonationConfig,
+        section: HistorySection = HistorySection.SESSIONS,
+        /** Titles of the pieces by id: a take is named after its piece (spec 3.15). */
+        pieceTitles: Map<Long, String> = emptyMap(),
     ): HistoryState {
         val weeks = HistoryWeeks.weekly(sessions, today, zone, config.historyWeeks)
         return HistoryState(
+            section = section,
             loading = false,
             totalCount = sessions.size,
             weeks = weeks,
@@ -27,12 +31,12 @@ object HistoryReducer {
             cards = sessions
                 .filter { passes(filter, dateOf(it, zone), today, config) }
                 .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
-                .map { cardOf(it, today, zone, config) },
+                .map { cardOf(it, today, zone, config, pieceTitle = it.pieceId?.let(pieceTitles::get)) },
         )
     }
 
-    fun loading(filter: HistoryFilter): HistoryState =
-        HistoryState(loading = true, totalCount = 0, weeks = emptyList(), weekDelta = null, filter = filter, cards = emptyList())
+    fun loading(filter: HistoryFilter, section: HistorySection = HistorySection.SESSIONS): HistoryState =
+        HistoryState(section = section, loading = true, totalCount = 0, weeks = emptyList(), weekDelta = null, filter = filter, cards = emptyList())
 
     private fun passes(filter: HistoryFilter, date: LocalDate, today: LocalDate, config: IntonationConfig): Boolean =
         when (filter) {
@@ -42,7 +46,13 @@ object HistoryReducer {
         }
 
     /** Also the card of the "Записи этого дня" list on the practice screen. */
-    fun cardOf(session: SessionSummary, today: LocalDate, zone: ZoneId, config: IntonationConfig): HistoryCard {
+    fun cardOf(
+        session: SessionSummary,
+        today: LocalDate,
+        zone: ZoneId,
+        config: IntonationConfig,
+        pieceTitle: String? = null,
+    ): HistoryCard {
         val date = dateOf(session, zone)
         return HistoryCard(
             id = session.id,
@@ -62,6 +72,7 @@ object HistoryReducer {
                 else -> Zone.OFF
             },
             previewZones = session.previewZones,
+            pieceTitle = pieceTitle,
         )
     }
 

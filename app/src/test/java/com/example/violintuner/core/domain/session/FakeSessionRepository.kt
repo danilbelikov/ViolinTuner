@@ -47,5 +47,6 @@ class FakeSessionRepository : SessionRepository {
         biasCents = session.metrics.biasCents,
         previewZones = session.previewZones,
         audioPath = session.audioPath,
+        pieceId = session.pieceId,
     )
 }

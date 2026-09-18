@@ -10,14 +10,22 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.violintuner.feature.repertoire.RepertoireEffect
+import com.example.violintuner.feature.repertoire.RepertoireViewModel
 
 @Composable
 fun HistoryRoute(
     onOpenSession: (sessionId: Long) -> Unit,
+    onOpenPiece: (pieceId: Long) -> Unit,
+    onNewPiece: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel = hiltViewModel(),
+    repertoireViewModel: RepertoireViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val repertoire by repertoireViewModel.state.collectAsStateWithLifecycle()
+    val currentOnOpenPiece by rememberUpdatedState(onOpenPiece)
+    val currentOnNewPiece by rememberUpdatedState(onNewPiece)
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnOpenSession by rememberUpdatedState(onOpenSession)
 
@@ -31,5 +39,21 @@ fun HistoryRoute(
         }
     }
 
-    HistoryScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier)
+    LaunchedEffect(repertoireViewModel, lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            repertoireViewModel.effects.collect { effect ->
+                when (effect) {
+                    is RepertoireEffect.OpenPiece -> currentOnOpenPiece(effect.id)
+                    RepertoireEffect.OpenNewPiece -> currentOnNewPiece()
+                }
+            }
+        }
+    }
+    HistoryScreen(
+        state = state,
+        onIntent = viewModel::onIntent,
+        modifier = modifier,
+        repertoire = repertoire,
+        onRepertoireIntent = repertoireViewModel::onIntent,
+    )
 }

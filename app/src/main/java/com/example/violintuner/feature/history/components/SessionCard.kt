@@ -72,14 +72,17 @@ fun SessionCard(card: HistoryCard, zone: ZoneId, onClick: () -> Unit, modifier: 
             )
         }
         Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = card.title
-                    ?: stringResource(R.string.session_default_title, Formats.dayAndMonth(card.startedAtEpochMs, zone)),
-                color = colors.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-            )
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    text = sessionTitle(card.title, card.pieceTitle, card.startedAtEpochMs, zone),
+                    modifier = Modifier.weight(1f, fill = false),
+                    color = colors.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
+                )
+                if (card.pieceTitle != null) TakeChip()
+            }
             Text(
                 text = stringResource(
                     R.string.history_card_meta, day, Formats.duration(card.durationMs), Formats.signedCents(card.biasCents),
@@ -120,3 +123,31 @@ private fun PreviewBars(zones: List<Zone>) {
     }
 }
 
+/**
+ * What a session is called (spec 3.9, 3.15): its own name when it was given one; otherwise a
+ * take is named after its piece — «Менуэт · 18 сентября» — and a free session is «Сессия · …».
+ */
+@Composable
+fun sessionTitle(title: String?, pieceTitle: String?, startedAtEpochMs: Long, zone: ZoneId): String {
+    val date = Formats.dayAndMonth(startedAtEpochMs, zone)
+    return title
+        ?: pieceTitle?.let { stringResource(R.string.session_take_title, it, date) }
+        ?: stringResource(R.string.session_default_title, date)
+}
+
+/** The quiet «дубль» mark of a session that belongs to a piece (handoff 13a1). */
+@Composable
+private fun TakeChip() {
+    val colors = MaterialTheme.colorScheme
+    Text(
+        text = stringResource(R.string.session_take_chip),
+        modifier = Modifier
+            .background(colors.surfaceContainerHigh, RoundedCornerShape(TakeChipCorner))
+            .padding(horizontal = 6.dp, vertical = 1.dp),
+        color = colors.onSurfaceVariant,
+        maxLines = 1,
+        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+    )
+}
+
+private val TakeChipCorner = 6.dp
