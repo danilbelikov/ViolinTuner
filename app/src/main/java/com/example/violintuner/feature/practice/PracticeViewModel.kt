@@ -5,13 +5,12 @@ import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
-import com.example.violintuner.core.domain.practice.PracticeEntry
+import com.example.violintuner.core.domain.practice.PracticeFinisher
 import com.example.violintuner.core.domain.practice.PracticeRepository
 import com.example.violintuner.core.domain.practice.PracticeStats
 import com.example.violintuner.core.domain.practice.RunningPractice
 import com.example.violintuner.core.domain.practice.RunningPracticeStore
 import com.example.violintuner.core.domain.practice.elapsedTicker
-import com.example.violintuner.core.domain.practice.practiceDateOf
 import com.example.violintuner.core.domain.session.SessionRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
@@ -33,6 +32,7 @@ import kotlinx.coroutines.launch
 class PracticeViewModel @Inject constructor(
     private val repository: PracticeRepository,
     private val runningStore: RunningPracticeStore,
+    private val finisher: PracticeFinisher,
     sessions: SessionRepository,
     private val config: PracticeConfig,
     intonationConfig: IntonationConfig,
@@ -124,22 +124,14 @@ class PracticeViewModel @Inject constructor(
     private fun saveSummary() {
         val sheet = ui.value.sheet as? PracticeSheet.Summary ?: return
         viewModelScope.launch {
-            repository.add(
-                PracticeEntry(
-                    date = practiceDateOf(sheet.startedAtEpochMs, clock.zone),
-                    startedAtEpochMs = sheet.startedAtEpochMs,
-                    durationMs = PracticeReducer.durationToSave(sheet),
-                    manual = false,
-                ),
-            )
-            runningStore.clear()
+            finisher.save(sheet.startedAtEpochMs, PracticeReducer.durationToSave(sheet))
             ui.update { it.copy(sheet = null) }
         }
     }
 
     private fun discardSummary() {
         viewModelScope.launch {
-            runningStore.clear()
+            finisher.discard()
             ui.update { it.copy(sheet = null) }
         }
     }

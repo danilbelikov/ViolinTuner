@@ -173,4 +173,10 @@
     <string name="practice_chip_plus_hour">+1 ч</string>
     <string name="practice_chip_zero">0</string>
     <string name="practice_too_short">Слишком коротко</string>
+    <string name="practice_forgotten_title">Занятие не закончено</string>
+    <string name="practice_forgotten_text">Занятие идёт уже %1$s.</string>
+    <string name="practice_forgotten_sound">Скрипка звучала последний раз в %1$s.</string>
+    <string name="practice_end_at">Закончить в %1$s</string>
+    <string name="practice_end_now">Закончить сейчас</string>
+    <string name="practice_continue">Продолжаю заниматься</string>
 </resources>

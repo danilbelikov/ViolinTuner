@@ -2,29 +2,45 @@ package com.example.violintuner.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.violintuner.core.domain.practice.ForgottenPractice
+import com.example.violintuner.core.domain.practice.PracticeCheck
+import com.example.violintuner.core.domain.practice.PracticeConfig
+import com.example.violintuner.core.domain.practice.PracticeFinisher
 import com.example.violintuner.core.domain.practice.RunningPracticeStore
 import com.example.violintuner.core.domain.session.SessionRepository
 import com.example.violintuner.core.settings.SettingsRepository
+import com.example.violintuner.feature.practice.PracticePrompt
+import com.example.violintuner.feature.practice.PracticePromptIntent
+import com.example.violintuner.feature.practice.PracticeReducer
+import com.example.violintuner.feature.practice.PracticeSheet
 import dagger.hilt.android.lifecycle.HiltViewModel
+import java.time.Clock
 import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
  * Decides where the app starts. Only the first stored value counts: a start destination that
  * changed under a live NavHost would rebuild the graph, so later moves between onboarding and
- * the tabs are explicit navigation.
+ * the tabs are explicit navigation. Also owns what concerns every tab: the mark of a running
+ * practice and the forgotten-practice prompt (spec 3.12).
  */
 @HiltViewModel
 class AppStartViewModel @Inject constructor(
     repository: SettingsRepository,
     sessions: SessionRepository,
-    runningPractice: RunningPracticeStore,
+    private val runningPractice: RunningPracticeStore,
+    private val finisher: PracticeFinisher,
+    private val config: PracticeConfig,
+    private val clock: Clock,
 ) : ViewModel() {
     init {
         viewModelScope.launch { sessions.deleteOrphanAudio() }
@@ -40,6 +56,73 @@ class AppStartViewModel @Inject constructor(
     val practiceRunning: StateFlow<Boolean> = runningPractice.running
         .map { it != null }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), initialValue = false)
+
+    private val prompt = MutableStateFlow<PracticePrompt?>(null)
+    val practicePrompt: StateFlow<PracticePrompt?> = prompt.asStateFlow()
+
+    /**
+     * Every time the app comes to the front. A prompt already on screen stays as it is: a
+     * rotation must not turn the summary sheet back into the dialog it came from.
+     */
+    fun onAppOpened() {
+        if (prompt.value != null) return
+        viewModelScope.launch {
+            val running = runningPractice.running.first() ?: return@launch
+            prompt.value = when (val check = ForgottenPractice.check(running, clock.millis(), config)) {
+                PracticeCheck.Running -> null
+                is PracticeCheck.Forgotten -> PracticePrompt.Forgotten(check.elapsedMs, check.lastSoundEpochMs)
+                // Ended by itself; the store still holds it until the sheet is answered, so a
+                // process death in between loses nothing.
+                is PracticeCheck.Expired -> PracticePrompt.Summary(
+                    PracticeReducer.summarySheet(running.startedAtEpochMs, check.endEpochMs - running.startedAtEpochMs, config),
+                )
+            }
+        }
+    }
+
+    fun onPromptIntent(intent: PracticePromptIntent) {
+        when (intent) {
+            // The time on the button, not the store's: Live keeps listening under the dialog and
+            // may move the last-sound mark while the user reads it.
+            PracticePromptIntent.EndAtLastSound -> endForgotten(
+                (prompt.value as? PracticePrompt.Forgotten)?.lastSoundEpochMs ?: clock.millis(),
+            )
+            PracticePromptIntent.EndNow -> endForgotten(clock.millis())
+            PracticePromptIntent.Continue -> viewModelScope.launch {
+                runningPractice.markSound(clock.millis())
+                prompt.value = null
+            }
+            PracticePromptIntent.EditTime -> viewModelScope.launch {
+                val running = runningPractice.running.first() ?: return@launch prompt.update { null }
+                val elapsed = running.elapsedMs(clock.millis()).coerceAtMost(config.maxPracticeMs)
+                prompt.value = PracticePrompt.Summary(PracticeReducer.summarySheet(running.startedAtEpochMs, elapsed, config))
+            }
+            is PracticePromptIntent.SummaryStepped -> prompt.update { current ->
+                (current as? PracticePrompt.Summary)?.let { PracticePrompt.Summary(PracticeReducer.step(it.sheet, intent.steps, config)) }
+                    ?: current
+            }
+            PracticePromptIntent.SummarySaved -> viewModelScope.launch {
+                val sheet = (prompt.value as? PracticePrompt.Summary)?.sheet ?: return@launch
+                finisher.save(sheet.startedAtEpochMs, PracticeReducer.durationToSave(sheet))
+                prompt.value = null
+            }
+            PracticePromptIntent.SummaryDiscarded -> viewModelScope.launch {
+                finisher.discard()
+                prompt.value = null
+            }
+        }
+    }
+
+    private fun endForgotten(endEpochMs: Long) {
+        viewModelScope.launch {
+            val running = runningPractice.running.first()
+            if (running != null) {
+                val duration = (endEpochMs - running.startedAtEpochMs).coerceIn(0L, config.maxPracticeMs)
+                if (duration >= config.minPracticeMs) finisher.save(running.startedAtEpochMs, duration) else finisher.discard()
+            }
+            prompt.value = null
+        }
+    }
 
     private companion object {
         const val STOP_TIMEOUT_MS = 5_000L

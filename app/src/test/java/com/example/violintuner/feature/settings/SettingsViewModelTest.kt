@@ -2,7 +2,12 @@ package com.example.violintuner.feature.settings
 
 import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.UserSettings
+import com.example.violintuner.core.domain.practice.FakePracticeRepository
 import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
+import com.example.violintuner.core.domain.practice.PracticeConfig
+import com.example.violintuner.core.domain.practice.PracticeFinisher
+import java.time.Clock
+import java.time.ZoneOffset
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.navigation.AppStartViewModel
@@ -61,7 +66,7 @@ class SettingsViewModelTest {
     fun `app starts on the onboarding until it is done, and does not follow later changes`() = runTest {
         val fresh = FakeSettingsRepository()
         val sessions = FakeSessionRepository()
-        val start = AppStartViewModel(fresh, sessions, FakeRunningPracticeStore())
+        val start = appStart(fresh, sessions)
         assertNull(start.startRoute.value)
         runCurrent()
         assertEquals(ONBOARDING_ROUTE, start.startRoute.value)
@@ -69,9 +74,15 @@ class SettingsViewModelTest {
         runCurrent()
         assertEquals(ONBOARDING_ROUTE, start.startRoute.value)
 
-        val returning = AppStartViewModel(repository, sessions, FakeRunningPracticeStore())
+        val returning = appStart(repository, sessions)
         runCurrent()
         assertEquals(TopLevelDestination.LIVE.route, returning.startRoute.value)
         assertEquals("orphaned audio is cleaned up on every start", 2, sessions.orphanCleanups)
+    }
+
+    private fun appStart(settings: FakeSettingsRepository, sessions: FakeSessionRepository): AppStartViewModel {
+        val store = FakeRunningPracticeStore()
+        val clock = Clock.systemUTC()
+        return AppStartViewModel(settings, sessions, store, PracticeFinisher(FakePracticeRepository(), store, clock), PracticeConfig(), clock)
     }
 }

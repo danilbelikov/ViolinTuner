@@ -15,11 +15,15 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.ui.theme.ViolinTheme
+import com.example.violintuner.feature.practice.components.PracticePromptHost
 import com.example.violintuner.navigation.AppBottomBar
 import com.example.violintuner.navigation.AppNavHost
 import com.example.violintuner.navigation.AppStartViewModel
@@ -43,6 +47,10 @@ private fun ViolinTunerRoot() {
     val startViewModel = hiltViewModel<AppStartViewModel>()
     val startRoute by startViewModel.startRoute.collectAsStateWithLifecycle()
     val practiceRunning by startViewModel.practiceRunning.collectAsStateWithLifecycle()
+    val practicePrompt by startViewModel.practicePrompt.collectAsStateWithLifecycle()
+
+    // "When the app is opened" (spec 3.12): the first start and every return from the background.
+    LifecycleEventEffect(Lifecycle.Event.ON_START) { startViewModel.onAppOpened() }
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     // null outside the tabs: on the onboarding there is no bottom bar
@@ -79,5 +87,10 @@ private fun ViolinTunerRoot() {
                 modifier = Modifier.padding(innerPadding),
             )
         }
+        PracticePromptHost(
+            prompt = practicePrompt,
+            stepMinutes = PracticeConfig().editStepMinutes,
+            onIntent = startViewModel::onPromptIntent,
+        )
     }
 }

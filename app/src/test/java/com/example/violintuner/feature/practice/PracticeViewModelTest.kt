@@ -6,6 +6,7 @@ import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeEntry
+import com.example.violintuner.core.domain.practice.PracticeFinisher
 import com.example.violintuner.core.domain.practice.RunningPractice
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import java.time.Clock
@@ -57,7 +58,7 @@ class PracticeViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel(): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
-        val viewModel = PracticeViewModel(repository, store, sessions, config, IntonationConfig(), clock)
+        val viewModel = PracticeViewModel(repository, store, PracticeFinisher(repository, store, clock), sessions, config, IntonationConfig(), clock)
         val effects = mutableListOf<PracticeEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
