@@ -34,7 +34,8 @@ Android-приложение: интонационный тренажёр для
 `docs/design/project/progress/project/Прогресс.dc.html` (кадры 11a–11g, галерея трофеев `11t`,
 секция `dev`; иллюстрации — массив `TROPHIES` в его JS), спека сверена с ними (0.13), план и
 принятые расхождения — `docs/plan-progress.md`. Главное число шапки — суммарное время занятий.
-Этап 15 (домен и хранение) сделан, экрана ещё нет — см. раздел «Прогресс» ниже.
+Этапы 15 (домен и хранение) и 16 (шапка, листы «Профиль» и «Трофеи») сделаны; остался 17 —
+лист «Подарок», очередь вручения и анимации. См. раздел «Прогресс» ниже.
 Прогресс считается только из времени занятий,
 не из сессий и баллов. «Занятие» (время) и «сессия»
 (запись с анализом) — разные сущности, не смешивать ни в коде, ни в текстах. Комментарии,
@@ -129,7 +130,14 @@ Android-приложение: интонационный тренажёр для
 - Инструментальные тесты базы: `-Pandroid.testInstrumentationRunnerArguments.package=com.example.violintuner.core.data` (флаг `--tests` у `connectedDebugAndroidTest` не работает) плюс обязательный `-Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true`.
 
 ## Прогресс: уровни, трофеи, профиль
-Этап 15 сделан (домен, форматы, Room v3, профиль в DataStore, хранение аватара, вручение); этапы 16–17 (шапка и листы, лист «Подарок» и анимации) — нет: на экране пока ничего не видно. План и отклонения — `docs/plan-progress.md`.
+Этапы 15–16 сделаны (домен, форматы, Room v3, профиль в DataStore, хранение аватара, вручение; шапка «Занятий», листы «Профиль» и «Трофеи»); этап 17 (лист «Подарок», очередь непоказанных трофеев, анимации) — нет: трофеи вручаются молча и сразу видны в ряду. План и отклонения — `docs/plan-progress.md`. Не проверено: лист «Профиль» над экранной клавиатурой (эмулятор её не показывает).
+- Шапка — часть `PracticeState` (`header: ProfileHeader`, `trophies: List<TrophyLine>`), собирает чистый `ProgressReducer` (`headerOf`, `trophyLines`); путь к фото в состояние кладёт ViewModel (`AvatarFiles.existing` — файла нет → фото нет). Листы — `PracticeSheet.Profile` / `Trophies`; `openSheet` не открывает лист поверх другого.
+- `ProfileHeader` (`feature/practice/components`) меряет текст (`rememberTextMeasurer` в `BoxWithConstraints`): ряд трофеев сжимается до «последний + следующий + „+N“», когда имени и сумме не хватает ширины, подписи под полосой встают в две строки, когда не влезают в одну. Размеры — `ProfileHeaderMetrics.Portrait / Landscape`. Пока `loading`, шапка невидима, но держит место.
+- Трофеи рисуются на `Canvas`: `TrophyArt` — данные (примитивы 64×64 из массива `TROPHIES` макета, материалы — enum, цвета — `ViolinTheme.progressColors.trophy`), `TrophyIcon(hours, locked, size)` — отрисовка; правило неполученного (заливка → `lockedFill`, контур 1.5; кромка у эбена) живёт только там. `TrophyArtTest` сверяет отметки с `ProgressConfig` и границы рисунков.
+- Названия уровней и трофеев — `string-array` в порядке `ProgressConfig`; формы «трофей / трофея / трофеев» — `Formats.pluralRu` по трём строкам.
+- `Avatar`: фото грузится в `produceState` по ключу пути; запасной вид — `AvatarFallback.Letter` (буква; на листе без имени «?») или `Level` (номер уровня). Буква масштабируется от круга, не от системного шрифта.
+- Поле «Имя» держит текст само, ViewModel получает `ProfileNameChanged` и хранит черновик; сохраняет `ProfileClosed` («Готово», свайп, Done на клавиатуре). Не возвращай `value = sheet.nameDraft`: курсор прыгает при быстром вводе.
+- Проверка на эмуляторе: `adb shell input tap` по координатам теряется и попадает не туда (так случайно включалась запись на Live) — находи элемент по тексту через `uiautomator dump` и жди его появления; после `adb install -r` запускай `am force-stop` + `am start`, иначе бывает пустой экран. Фото для пикера: `adb push` в `/sdcard/Pictures` + `MEDIA_SCANNER_SCAN_FILE`.
 - `core/domain/progress` — чистый Kotlin: `ProgressConfig` (пороги уровней и отметки трофеев в часах, spec 5.7; названия — UI-строки, в домене их нет), `Progress` (`totalMs`, `levelOf` → `LevelProgress`, `nextTrophyHours`, `remainingMs`, `isFar` — правило разделителя «Далеко впереди»), `Trophy` / `TrophyRepository`, `TrophyAwarder`, `Profile` / `ProfileRepository` (`Profile.cleanName` — единственное место правил имени: края, 24 символа).
 - Вручает `AppStartViewModel`: коллектор `combine(practice.entries, trophies)` → `TrophyAwarder.award`. Поэтому ловятся все пути изменения записей (лист итога, «Изменить время», диалог забытого занятия) без вызова в каждом. Вручение идемпотентно: `TrophyDao.insertIfAbsent` (`OnConflictStrategy.IGNORE`, ключ — отметка), повтор не меняет ни дату, ни `shown`; правка вниз ничего не отнимает. Идущее занятие в сумму не входит.
 - База v3: таблица `trophies` (`hours` PK, `awardedDate` ISO, `shown`), `MIGRATION_2_3`; `DatabaseMigrationTest` теперь проверяет оба старта — с v1 и с v2 (`createOldFile(version2)`).
