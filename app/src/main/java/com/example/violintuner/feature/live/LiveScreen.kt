@@ -19,7 +19,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
@@ -36,12 +35,8 @@ import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.example.violintuner.R
 import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.live.components.CentsScale
@@ -55,6 +50,7 @@ import com.example.violintuner.feature.live.components.NoteLabel
 import com.example.violintuner.feature.live.components.PracticeChipSlot
 import com.example.violintuner.feature.live.components.RecordButton
 import com.example.violintuner.feature.live.components.RecordingStrip
+import com.example.violintuner.feature.live.components.StatusLineRow
 import com.example.violintuner.feature.live.components.StatusRow
 import com.example.violintuner.feature.live.components.StringRow
 import com.example.violintuner.feature.live.components.ZoneEllipse
@@ -153,6 +149,11 @@ private fun PortraitLayout(
                 modifier = Modifier.alpha(chromeAlpha),
             )
         }
+        StatusLineRow(
+            line = state.statusLine,
+            tuning = state.tuning,
+            modifier = Modifier.padding(top = LiveDimens.StatusLineTopPadding),
+        )
         BoxWithConstraints(
             modifier = Modifier
                 .weight(1f)
@@ -165,19 +166,29 @@ private fun PortraitLayout(
                 LiveDimens.IndicatorSpacing + LiveDimens.StatusRowHeight
             }
             val ringSize = ringSizeFor(state, landscape = false, maxWidth, maxHeight, reserved)
+            // A ring this small means a small screen: the word and the cents shrink with it.
+            val compact = ringSize < LiveDimens.CompactStatusBelowRing
             Column(
-                verticalArrangement = Arrangement.spacedBy(LiveDimens.IndicatorSpacing),
+                verticalArrangement = Arrangement.spacedBy(
+                    if (compact) LiveDimens.IndicatorSpacingCompact else LiveDimens.IndicatorSpacing,
+                ),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Ring(state, zoneColor, ringSize, ringModifier, reduceMotion)
                 if (noMic) {
                     MicPermissionPrompt(onGrantClick = { onIntent(LiveIntent.GrantMicClicked) })
                 } else {
-                    StatusRow(direction = sounding?.direction, color = zoneColor, visible = sounding != null)
+                    StatusRow(
+                        direction = sounding?.direction,
+                        cents = sounding?.displayCents ?: 0,
+                        color = zoneColor,
+                        visible = sounding != null,
+                        compact = compact,
+                    )
                 }
             }
         }
-        Scale(
+        ScaleSlot(
             state = state,
             zoneColor = zoneColor,
             modifier = Modifier.padding(
@@ -250,17 +261,15 @@ private fun LandscapeLayout(
                 enabled = recording == null,
                 modifier = Modifier.alpha(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha),
             )
-            // No hint line here: there is no height for it, the button colors and the lock
-            // badge carry the same information.
             if (state.mode == LiveMode.TUNING) {
                 StringRow(
                     tuning = state.tuning,
                     onStringClick = { onIntent(LiveIntent.StringClicked(it)) },
                     modifier = Modifier.alpha(chromeAlpha),
-                    showHint = false,
                     topPadding = 0.dp,
                 )
             }
+            StatusLineRow(line = state.statusLine, tuning = state.tuning)
             BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
@@ -271,22 +280,18 @@ private fun LandscapeLayout(
                     MicPermissionPrompt(onGrantClick = { onIntent(LiveIntent.GrantMicClicked) })
                 } else {
                     val statusHeight = maxHeight.coerceIn(LiveDimens.LandscapeStatusMinHeight, LiveDimens.StatusRowHeight)
-                    val wordStyle = ViolinTheme.liveTypography.statusLandscape
                     StatusRow(
                         direction = sounding?.direction,
+                        cents = sounding?.displayCents ?: 0,
                         color = zoneColor,
                         visible = sounding != null,
                         height = statusHeight,
-                        // tuning mode plus the practice chip leave little height: a smaller word beats a clipped one
-                        wordStyle = if (statusHeight < LiveDimens.LandscapeStatusCompactHeight) {
-                            wordStyle.copy(fontSize = LiveDimens.LandscapeStatusSmallWordSp.sp)
-                        } else {
-                            wordStyle
-                        },
+                        // tuning mode plus the practice chip leave little height: smaller beats clipped
+                        compact = statusHeight < LiveDimens.LandscapeStatusCompactHeight,
                     )
                 }
             }
-            Scale(state = state, zoneColor = zoneColor)
+            ScaleSlot(state = state, zoneColor = zoneColor)
             RecordingStripSlot(recording = recording)
             RecordButton(
                 recording = recording != null,
@@ -352,6 +357,22 @@ private fun Ring(state: LiveState, zoneColor: Color, size: Dp, modifier: Modifie
     }
 }
 
+/**
+ * The scale with its marker belongs to tuning mode only (spec 3.14): turning a peg is a slow
+ * move made with the eyes on the gauge. In play mode its place is empty until a recording
+ * puts its strip there.
+ */
+@Composable
+private fun ScaleSlot(state: LiveState, zoneColor: Color, modifier: Modifier = Modifier) {
+    AnimatedVisibility(
+        visible = state.mode == LiveMode.TUNING,
+        enter = expandVertically(tween(LiveMotion.STRING_ROW_EXPAND_MS)) + fadeIn(tween(LiveMotion.STRING_ROW_EXPAND_MS)),
+        exit = shrinkVertically(tween(LiveMotion.STRING_ROW_EXPAND_MS)) + fadeOut(tween(LiveMotion.STRING_ROW_EXPAND_MS)),
+    ) {
+        Scale(state, zoneColor, modifier)
+    }
+}
+
 @Composable
 private fun Scale(state: LiveState, zoneColor: Color, modifier: Modifier = Modifier) {
     val sounding = state.signal as? LiveSignal.Sounding
@@ -369,7 +390,7 @@ private fun Scale(state: LiveState, zoneColor: Color, modifier: Modifier = Modif
     )
 }
 
-private enum class RingContentKind { NOTE, SILENCE, TOO_NOISY, MIC_UNAVAILABLE, NO_MIC }
+private enum class RingContentKind { NOTE, EMPTY, NO_MIC }
 
 /**
  * What is inside the ring. Kinds cross-fade; the note itself changes at once, because the note
@@ -383,9 +404,8 @@ private fun RingContent(signal: LiveSignal, noteScale: Float) {
 
     val kind = when (signal) {
         is LiveSignal.Sounding -> RingContentKind.NOTE
-        LiveSignal.Silence -> RingContentKind.SILENCE
-        LiveSignal.TooNoisy -> RingContentKind.TOO_NOISY
-        LiveSignal.MicUnavailable -> RingContentKind.MIC_UNAVAILABLE
+        // The words for these are in the status line above: the ring is empty and calm (spec 3.14).
+        LiveSignal.Silence, LiveSignal.TooNoisy, LiveSignal.MicUnavailable -> RingContentKind.EMPTY
         LiveSignal.NoMicPermission -> RingContentKind.NO_MIC
     }
     // Both layers fill the ring, otherwise Crossfade stacks them from the top-start corner and
@@ -400,24 +420,11 @@ private fun RingContent(signal: LiveSignal, noteScale: Float) {
             when (shown) {
                 // while fading out the signal is already silent: keep showing the last note
                 RingContentKind.NOTE -> (note ?: lastNote)?.let { NoteLabel(it, scale = noteScale) }
-                RingContentKind.SILENCE -> RingPlaceholder(stringResource(R.string.live_silence))
-                RingContentKind.TOO_NOISY -> RingPlaceholder(stringResource(R.string.live_too_noisy))
-                RingContentKind.MIC_UNAVAILABLE -> RingPlaceholder(stringResource(R.string.live_mic_unavailable))
+                RingContentKind.EMPTY -> Unit
                 RingContentKind.NO_MIC -> MicGlyph()
             }
         }
     }
-}
-
-@Composable
-private fun RingPlaceholder(text: String) {
-    Text(
-        text = text,
-        modifier = Modifier.padding(horizontal = LiveDimens.ScreenPadding),
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        textAlign = TextAlign.Center,
-        style = ViolinTheme.liveTypography.placeholder,
-    )
 }
 
 /** Center of this layout in the coordinates of the screen root placed at [rootPosition]. */

@@ -38,12 +38,27 @@ internal object LiveDimens {
     val RingStroke = 6.dp
     val WaveStroke = 2.dp
     val OctaveStartPadding = 4.dp
-    val IndicatorSpacing = 24.dp
+    val IndicatorSpacing = 20.dp
+    val IndicatorSpacingCompact = 10.dp
 
-    val StatusRowHeight = 64.dp
-    val StatusArrowSize = 64.dp
-    val StatusDotSize = 24.dp
-    val StatusGap = 12.dp
+    // Status line above the ring (handoff 12a, 12b)
+    val StatusLineHeight = 28.dp
+    val StatusLineTopPadding = 12.dp
+    val StatusLineDot = 8.dp
+    val StatusLineDotStroke = 2.dp
+    val StatusLineGap = 8.dp
+
+    // Status word with the cents beside it (handoff 12c1)
+    val StatusRowHeight = 48.dp
+    val StatusArrowSize = 40.dp
+    val StatusDotSize = 18.dp
+    val StatusGap = 14.dp
+    val StatusArrowSizeCompact = 32.dp
+    val StatusDotSizeCompact = 16.dp
+    val StatusGapCompact = 12.dp
+
+    /** A portrait ring smaller than this means a small screen: word and cents go compact with it. */
+    val CompactStatusBelowRing = 250.dp
 
     val ScaleHeight = 36.dp
     val ScaleBottomPadding = 8.dp
@@ -71,16 +86,16 @@ internal object LiveDimens {
     val RecordingBarGap = 2.dp
 
     // Landscape (handoff v1-land): ring panel on the left, controls on the right
-    const val LANDSCAPE_RING_PANEL_FRACTION = 440f / 892f
+    // 400, not the 440 of v1: the ring is 260 here and its halo (380) fits the panel.
+    const val LANDSCAPE_RING_PANEL_FRACTION = 400f / 892f
     val LandscapePaddingStart = 8.dp
     val LandscapePaddingEnd = 24.dp
     val LandscapePaddingVertical = 16.dp
     // 8, not the handoff's 12: with the practice chip in the column a tuning-mode landscape
     // ran out of height for the status word.
     val LandscapeSpacing = 8.dp
-    /** Below this height the landscape status word drops to [LandscapeStatusSmallWordSp]. */
+    /** Below this height the landscape status word and cents go compact. */
     val LandscapeStatusCompactHeight = 48.dp
-    const val LandscapeStatusSmallWordSp = 24
     val LandscapeRecordTopPadding = 4.dp
     val LandscapeStatusMinHeight = 40.dp
 

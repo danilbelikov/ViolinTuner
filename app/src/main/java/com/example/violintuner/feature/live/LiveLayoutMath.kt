@@ -4,8 +4,10 @@ package com.example.violintuner.feature.live
 object LiveLayoutMath {
     /** Ring diameters of the handoff: portrait play, portrait tuning, landscape, no-mic state. */
     const val RING_PORTRAIT = 300f
-    const val RING_TUNING = 280f
-    const val RING_LANDSCAPE = 320f
+    const val RING_TUNING = 260f
+
+    /** 260, not the 320 of v1: the halo reaches 1.46 R and has to fit the ring panel. */
+    const val RING_LANDSCAPE = 260f
     const val RING_NO_MIC = 200f
 
     /** The 176 sp note of the handoff is drawn for this ring; smaller rings scale it down. */

@@ -224,3 +224,18 @@ private fun PracticeChipLandscapePreview() = LivePreview(
     LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
     practiceMs = PRACTICE_MS,
 )
+
+@Preview(name = "12e1 Tuning · D locked, silence", widthDp = 412, heightDp = 788)
+@Composable
+private fun TuningLockedSilencePreview() =
+    LivePreview(LiveSignal.Silence, mode = LiveMode.TUNING, lockedString = ViolinString.D4)
+
+@Preview(name = "12e4 Tuning · too noisy", widthDp = 412, heightDp = 788)
+@Composable
+private fun TuningNoisyPreview() = LivePreview(LiveSignal.TooNoisy, mode = LiveMode.TUNING)
+
+@Preview(name = "12g1 small screen 360x640", widthDp = 360, heightDp = 576)
+@Composable
+private fun SmallScreenPreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 1.0, level = 0.6f),
+)

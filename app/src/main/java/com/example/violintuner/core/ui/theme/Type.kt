@@ -37,10 +37,13 @@ data class LiveTypography(
     val note: TextStyle,
     val octave: TextStyle,
     val status: TextStyle,
-    /** Status word of the landscape layout. */
-    val statusLandscape: TextStyle,
-    /** "Играйте…" / "Слишком шумно" inside the ring. */
-    val placeholder: TextStyle,
+    /** Status word where the height is short: low landscape, small screens. */
+    val statusCompact: TextStyle,
+    /** The cents beside the status word: for a direct look, smaller than the note and quieter than the word. */
+    val cents: TextStyle,
+    val centsCompact: TextStyle,
+    /** The small status line above the ring: "Играйте…", "Слишком шумно", the tuning hint. */
+    val statusLine: TextStyle,
     val promptTitle: TextStyle,
     val promptBody: TextStyle,
 )
@@ -65,16 +68,27 @@ internal val DefaultLiveTypography = LiveTypography(
         fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
     ),
-    statusLandscape = TextStyle(
+    statusCompact = TextStyle(
         fontFamily = Manrope,
         fontWeight = FontWeight.SemiBold,
-        fontSize = 32.sp,
+        fontSize = 24.sp,
     ),
-    placeholder = TextStyle(
+    cents = TextStyle(
         fontFamily = Manrope,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 32.sp,
-        lineHeight = 38.sp,
+        fontWeight = FontWeight.Bold,
+        fontSize = 36.sp,
+        fontFeatureSettings = TABULAR_FIGURES,
+    ),
+    centsCompact = TextStyle(
+        fontFamily = Manrope,
+        fontWeight = FontWeight.Bold,
+        fontSize = 30.sp,
+        fontFeatureSettings = TABULAR_FIGURES,
+    ),
+    statusLine = TextStyle(
+        fontFamily = Manrope,
+        fontWeight = FontWeight.Normal,
+        fontSize = 14.sp,
     ),
     promptTitle = TextStyle(
         fontFamily = Manrope,

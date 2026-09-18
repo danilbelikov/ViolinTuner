@@ -49,7 +49,8 @@ private val LetterSize = 22.sp
 private val CaptionSize = 11.sp
 
 /**
- * G · D · A · E buttons of the tuning mode (spec 3.5) with the hint line from the handoff.
+ * G · D · A · E buttons of the tuning mode (spec 3.5). The hint that used to stand under them is
+ * the status line of the screen now (spec 3.14).
  * The target string is highlighted; a tap pins it (lock badge), a second tap returns to auto.
  */
 @Composable
@@ -57,7 +58,6 @@ fun StringRow(
     tuning: TuningState,
     onStringClick: (ViolinString) -> Unit,
     modifier: Modifier = Modifier,
-    showHint: Boolean = true,
     topPadding: Dp = LiveDimens.StringRowTopPadding,
 ) {
     Column(
@@ -77,26 +77,6 @@ fun StringRow(
                 )
             }
         }
-        if (showHint) {
-            Text(
-                text = hintOf(tuning),
-                modifier = Modifier.padding(top = LiveDimens.StringHintTopPadding),
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
-    }
-}
-
-@Composable
-private fun hintOf(tuning: TuningState): String {
-    val target = tuning.targetString ?: return stringResource(R.string.tuning_hint_auto)
-    val letter = target.note.letter.toString()
-    val hz = tuning.stringHz.getValue(target)
-    return if (tuning.lockedString != null) {
-        stringResource(R.string.tuning_hint_locked, letter, hz)
-    } else {
-        stringResource(R.string.tuning_hint_auto_nearest, letter, hz)
     }
 }
 

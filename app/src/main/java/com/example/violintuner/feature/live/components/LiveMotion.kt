@@ -8,6 +8,9 @@ internal object LiveMotion {
     /** Note, placeholder, status and marker appearing or disappearing. */
     const val CONTENT_FADE_MS = 300
 
+    /** The status line changing its words: "Играйте…" to "Слишком шумно". */
+    const val STATUS_LINE_SWAP_MS = 200
+
     // The glow of the ring (spec 5.8, handoff `anims`): up faster than down, so that a short
     // slip out of the zone does not put the ring out.
     const val GLOW_RISE_MS = 500
