@@ -11,10 +11,11 @@ class TopLevelDestinationTest {
     }
 
     @Test
-    fun `bottom bar order is Live, History, Settings`() {
+    fun `bottom bar order is Live, Practice, History, Settings`() {
         assertEquals(
             listOf(
                 TopLevelDestination.LIVE,
+                TopLevelDestination.PRACTICE,
                 TopLevelDestination.HISTORY,
                 TopLevelDestination.SETTINGS,
             ),

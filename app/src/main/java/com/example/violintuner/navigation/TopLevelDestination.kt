@@ -11,6 +11,8 @@ enum class TopLevelDestination(
     @DrawableRes val iconRes: Int,
 ) {
     LIVE("live", R.string.nav_live, R.drawable.ic_nav_live),
+    PRACTICE("practice", R.string.nav_practice, R.drawable.ic_nav_practice),
+    /** «Записи»: the route keeps its old name, only the label changed (spec 4). */
     HISTORY("history", R.string.nav_history, R.drawable.ic_nav_history),
     SETTINGS("settings", R.string.nav_settings, R.drawable.ic_nav_settings);
 

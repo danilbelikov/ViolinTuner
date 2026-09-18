@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import com.example.violintuner.feature.history.HistoryRoute
 import com.example.violintuner.feature.live.LiveRoute
 import com.example.violintuner.feature.onboarding.OnboardingRoute
+import com.example.violintuner.feature.practice.PracticeRoute
 import com.example.violintuner.feature.session.SessionRoute
 import com.example.violintuner.feature.session.SessionViewModel
 import com.example.violintuner.feature.settings.SettingsRoute
@@ -32,6 +33,12 @@ fun AppNavHost(
             OnboardingRoute(onFinished = navController::navigateFromOnboardingToLive)
         }
         composable(TopLevelDestination.LIVE.route) { LiveRoute(onOpenSession = navController::navigateToSession) }
+        composable(TopLevelDestination.PRACTICE.route) {
+            PracticeRoute(
+                onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },
+                onOpenSession = navController::navigateToSession,
+            )
+        }
         composable(TopLevelDestination.HISTORY.route) {
             HistoryRoute(onOpenSession = navController::navigateToSession)
         }

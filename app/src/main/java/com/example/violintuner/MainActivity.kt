@@ -40,7 +40,9 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun ViolinTunerRoot() {
-    val startRoute by hiltViewModel<AppStartViewModel>().startRoute.collectAsStateWithLifecycle()
+    val startViewModel = hiltViewModel<AppStartViewModel>()
+    val startRoute by startViewModel.startRoute.collectAsStateWithLifecycle()
+    val practiceRunning by startViewModel.practiceRunning.collectAsStateWithLifecycle()
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     // null outside the tabs: on the onboarding there is no bottom bar
@@ -49,7 +51,7 @@ private fun ViolinTunerRoot() {
     }
 
     // Landscape Live is the music-stand view of the handoff: no navigation bar, all height goes
-    // to the ring. The stubs keep the bar, otherwise there would be no way back but the gesture.
+    // to the ring. The other tabs keep a compact bar, otherwise there would be no way back but the gesture.
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val bottomBarTab = currentTab?.takeUnless { landscape && it == TopLevelDestination.LIVE }
 
@@ -62,6 +64,8 @@ private fun ViolinTunerRoot() {
                 AppBottomBar(
                     current = bottomBarTab,
                     onSelect = navController::navigateToTopLevel,
+                    practiceRunning = practiceRunning,
+                    compact = landscape,
                 )
             }
         },
