@@ -68,4 +68,48 @@ class FormatsTest {
         assertEquals("18:42", Formats.timeOfDay(epoch("2026-09-17T18:42:10"), moscow))
         assertEquals("08:05", Formats.timeOfDay(epoch("2026-09-17T08:05:00"), moscow))
     }
+
+    @Test
+    fun `the total time rounds down and drops minutes from a hundred hours`() {
+        assertEquals("0 мин", Formats.totalTime(0))
+        assertEquals("0 мин", Formats.totalTime(59_999))
+        assertEquals("59 мин", Formats.totalTime(59 * MINUTE + 59_999))
+        assertEquals("16 ч 40 мин", Formats.totalTime(1000 * MINUTE))
+        assertEquals("2 ч", Formats.totalTime(120 * MINUTE))
+        assertEquals("99 ч 59 мин", Formats.totalTime(100 * HOUR - 1))
+        assertEquals("100 ч", Formats.totalTime(100 * HOUR))
+        assertEquals("1250 ч", Formats.totalTime(1250 * HOUR + 59 * MINUTE))
+        assertEquals("10\u00A0000 ч", Formats.totalTime(10_000 * HOUR))
+    }
+
+    @Test
+    fun `what is left rounds up, so a mark not reached is never zero`() {
+        assertEquals("0 мин", Formats.remainingTime(0))
+        assertEquals("1 мин", Formats.remainingTime(1))
+        assertEquals("8 ч 20 мин", Formats.remainingTime(500 * MINUTE))
+        assertEquals("2 ч", Formats.remainingTime(2 * HOUR))
+        assertEquals("1 ч", Formats.remainingTime(59 * MINUTE + 1))
+        assertEquals("99 ч 59 мин", Formats.remainingTime(100 * HOUR - MINUTE))
+        assertEquals("750 ч", Formats.remainingTime(749 * HOUR + 1))
+        assertEquals("750 ч", Formats.remainingTime(750 * HOUR))
+    }
+
+    @Test
+    fun `marks group their digits from five digits on`() {
+        assertEquals("1 ч", Formats.hoursMark(1))
+        assertEquals("1000 ч", Formats.hoursMark(1000))
+        assertEquals("2500 ч", Formats.hoursMark(2500))
+        assertEquals("10\u00A0000 ч", Formats.hoursMark(10_000))
+        assertEquals("1\u00A0234\u00A0567", Formats.grouped(1_234_567))
+    }
+
+    @Test
+    fun `a trophy date is the day and the month in words`() {
+        assertEquals("13 сентября", Formats.dayAndMonth(LocalDate.of(2026, 9, 13)))
+    }
+
+    private companion object {
+        const val MINUTE = 60_000L
+        const val HOUR = 60 * MINUTE
+    }
 }

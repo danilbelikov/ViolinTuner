@@ -21,6 +21,14 @@ object Formats {
     private const val MINUTES_PER_HOUR = 60L
     private const val MS_PER_MINUTE = MS_PER_SECOND * SECONDS_PER_MINUTE
     private const val MINUS = '−'
+
+    /** From this many hours on, progress times drop the minutes (spec 5.7). */
+    private const val HOURS_ONLY_FROM = 100L
+    private const val MIN_GROUPED_DIGITS = 5
+    private const val GROUP_SIZE = 3
+
+    /** No-break space: a grouped number never wraps in the middle. */
+    private const val GROUP_SEPARATOR = "\u00A0"
     private val DAY_AND_MONTH = DateTimeFormatter.ofPattern("d MMMM", LOCALE)
     private val DAY_AND_SHORT_MONTH = DateTimeFormatter.ofPattern("d MMM", LOCALE)
     private val DAY_WITH_WEEKDAY = DateTimeFormatter.ofPattern("d MMMM, EEEE", LOCALE)
@@ -51,6 +59,40 @@ object Formats {
         val hours = minutes / MINUTES_PER_HOUR
         val rest = minutes % MINUTES_PER_HOUR
         return when {
+            hours == 0L -> "$rest мин"
+            rest == 0L -> "$hours ч"
+            else -> "$hours ч $rest мин"
+        }
+    }
+
+    /**
+     * Total practice time of the progress header (spec 5.7), rounded down: "0 мин", "16 ч 40 мин",
+     * and hours alone from 100 h on: "1250 ч", "10 000 ч".
+     */
+    fun totalTime(ms: Long): String = wordsOf(ms.coerceAtLeast(0) / MS_PER_MINUTE, roundHoursUp = false)
+
+    /**
+     * Time left to a level or a trophy (spec 5.7), rounded up so that a mark not yet reached
+     * never reads "0 мин"; hours alone from 100 h on.
+     */
+    fun remainingTime(ms: Long): String =
+        wordsOf((ms.coerceAtLeast(0) + MS_PER_MINUTE - 1) / MS_PER_MINUTE, roundHoursUp = true)
+
+    /** A mark in hours: "50 ч", "1000 ч", "10 000 ч". */
+    fun hoursMark(hours: Int): String = "${grouped(hours.toLong())} ч"
+
+    /** Digits in groups of three from five digits on, as Russian typography has it: 1250, 10 000. */
+    fun grouped(value: Long): String {
+        val digits = value.toString()
+        if (digits.length < MIN_GROUPED_DIGITS) return digits
+        return digits.reversed().chunked(GROUP_SIZE).joinToString(GROUP_SEPARATOR).reversed()
+    }
+
+    private fun wordsOf(minutes: Long, roundHoursUp: Boolean): String {
+        val hours = minutes / MINUTES_PER_HOUR
+        val rest = minutes % MINUTES_PER_HOUR
+        return when {
+            hours >= HOURS_ONLY_FROM -> "${grouped(if (roundHoursUp && rest > 0) hours + 1 else hours)} ч"
             hours == 0L -> "$rest мин"
             rest == 0L -> "$hours ч"
             else -> "$hours ч $rest мин"
@@ -89,6 +131,9 @@ object Formats {
     /** "14 сентября" */
     fun dayAndMonth(epochMs: Long, zone: ZoneId): String =
         DAY_AND_MONTH.format(Instant.ofEpochMilli(epochMs).atZone(zone))
+
+    /** "13 сентября": the date a trophy was given on. */
+    fun dayAndMonth(date: LocalDate): String = DAY_AND_MONTH.format(date)
 
     /** "13 сент": the locale's abbreviation without its trailing dot. */
     fun dayAndShortMonth(date: LocalDate): String = DAY_AND_SHORT_MONTH.format(date).trimEnd('.')
