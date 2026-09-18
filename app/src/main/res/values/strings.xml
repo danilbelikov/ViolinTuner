@@ -2,7 +2,8 @@
     <string name="app_name">ViolinTuner</string>
 
     <string name="nav_live">Live</string>
-    <string name="nav_history">История</string>
+    <string name="nav_practice">Занятия</string>
+    <string name="nav_history">Записи</string>
     <string name="nav_settings">Настройки</string>
 
     <string name="mode_play">Игра</string>
@@ -127,4 +128,47 @@
     <string name="history_percent_sign">%</string>
     <string name="history_empty_filter">За этот период сессий нет</string>
     <string name="history_empty">Здесь появятся ваши сессии. Нажмите кнопку записи на экране Live.</string>
+
+    <string name="practice_start">Начать занятие</string>
+    <string name="practice_stop">Закончить занятие</string>
+    <string name="practice_running">Занятие идёт</string>
+    <string name="practice_timer_description">Занятие идёт, %1$s</string>
+    <string name="practice_today">Сегодня: %1$s</string>
+    <string name="practice_today_none">Сегодня ещё не занимались</string>
+    <string name="practice_empty">Нажмите „Начать занятие“, когда берёте скрипку, и „Закончить“ — когда откладываете. Здесь появится ваш календарь.</string>
+    <string name="practice_week">Неделя</string>
+    <string name="practice_month">Месяц</string>
+    <string name="practice_streak">Дней подряд</string>
+    <string name="practice_no_value">—</string>
+    <string name="practice_month_back">Предыдущий месяц</string>
+    <string name="practice_month_forward">Следующий месяц</string>
+    <string-array name="practice_weekdays">
+        <item>пн</item>
+        <item>вт</item>
+        <item>ср</item>
+        <item>чт</item>
+        <item>пт</item>
+        <item>сб</item>
+        <item>вс</item>
+    </string-array>
+    <string name="practice_day_description">%1$s, %2$s</string>
+    <string name="practice_legend_less">меньше</string>
+    <string name="practice_legend_more">больше</string>
+    <string name="practice_day_today">сегодня</string>
+    <string name="practice_day_none">Не занимались</string>
+    <string name="practice_edit_time">Изменить время</string>
+    <string name="practice_add_time">Добавить время</string>
+    <string name="practice_day_records">Записи этого дня</string>
+    <string name="practice_summary_title">Занятие</string>
+    <string name="practice_step_hint">шаг %1$d мин</string>
+    <string name="practice_step_down">Минус %1$d минут</string>
+    <string name="practice_step_up">Плюс %1$d минут</string>
+    <string name="practice_save">Сохранить</string>
+    <string name="practice_discard">Не сохранять</string>
+    <string name="practice_edit_title">Время за день</string>
+    <string name="practice_edit_hint">Это суммарное время за день. Ноль уберёт день из календаря.</string>
+    <string name="practice_chip_plus_minutes">+%1$d</string>
+    <string name="practice_chip_plus_hour">+1 ч</string>
+    <string name="practice_chip_zero">0</string>
+    <string name="practice_too_short">Слишком коротко</string>
 </resources>

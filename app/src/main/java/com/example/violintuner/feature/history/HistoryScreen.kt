@@ -2,7 +2,6 @@ package com.example.violintuner.feature.history
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,7 +11,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -30,13 +28,12 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
-import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.theme.ViolinTheme
+import com.example.violintuner.feature.history.components.SessionCard
 import com.example.violintuner.feature.history.components.WeeklyChart
 import java.time.ZoneId
 
@@ -45,12 +42,8 @@ private val MaxContentWidth = 560.dp
 private val SectionSpacing = 16.dp
 private val CardSpacing = 8.dp
 private val ChartCorner = 20.dp
-private val CardCorner = 16.dp
 private val ChipHeight = 32.dp
 private val ChipCorner = 8.dp
-private val ScoreColumnWidth = 52.dp
-private val PreviewBarWidth = 4.dp
-private val PreviewHeight = 28.dp
 private const val TABULAR_FIGURES = "tnum"
 
 /** History of sessions (spec 3.11, handoff 4c). Stateless. */
@@ -205,88 +198,6 @@ private fun Filters(selected: HistoryFilter, onSelect: (HistoryFilter) -> Unit, 
                     style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp),
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun SessionCard(card: HistoryCard, zone: ZoneId, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
-    val zoneColors = ViolinTheme.zoneColors
-    val day = when (val label = card.day) {
-        DayLabel.Today -> stringResource(R.string.history_day_today)
-        DayLabel.Yesterday -> stringResource(R.string.history_day_yesterday)
-        is DayLabel.On -> Formats.dayAndShortMonth(label.date)
-    }
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(CardCorner))
-            .background(colors.surfaceContainer)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.width(ScoreColumnWidth), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = card.scorePercent.toString(),
-                color = zoneColors.colorFor(card.scoreZone),
-                style = MaterialTheme.typography.headlineSmall.copy(
-                    fontSize = 26.sp, lineHeight = 26.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES,
-                ),
-            )
-            Text(
-                text = stringResource(R.string.history_percent_sign),
-                color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-            )
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = card.title
-                    ?: stringResource(R.string.session_default_title, Formats.dayAndMonth(card.startedAtEpochMs, zone)),
-                color = colors.onSurface,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-            )
-            Text(
-                text = stringResource(
-                    R.string.history_card_meta, day, Formats.duration(card.durationMs), Formats.signedCents(card.biasCents),
-                ),
-                modifier = Modifier.padding(top = 2.dp),
-                color = colors.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-            )
-        }
-        PreviewBars(card.previewZones)
-    }
-}
-
-/** Mini bars of the first notes: tall green, medium amber, short red (spec 3.11). */
-@Composable
-private fun PreviewBars(zones: List<Zone>) {
-    val zoneColors = ViolinTheme.zoneColors
-    Row(
-        modifier = Modifier.height(PreviewHeight),
-        horizontalArrangement = Arrangement.spacedBy(2.dp),
-        verticalAlignment = Alignment.Bottom,
-    ) {
-        zones.forEach { zone ->
-            val height = when (zone) {
-                Zone.IN_TUNE -> PreviewHeight
-                Zone.NEAR -> 16.dp
-                Zone.OFF -> 8.dp
-            }
-            Box(
-                Modifier
-                    .width(PreviewBarWidth)
-                    .height(height)
-                    .background(zoneColors.colorFor(zone), RoundedCornerShape(2.dp)),
-            )
         }
     }
 }
