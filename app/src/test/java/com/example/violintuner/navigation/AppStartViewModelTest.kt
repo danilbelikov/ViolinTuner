@@ -1,11 +1,18 @@
 package com.example.violintuner.navigation
 
+import com.example.violintuner.core.data.profile.FakeAvatarFiles
 import com.example.violintuner.core.domain.practice.FakePracticeRepository
 import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_HOUR
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeFinisher
+import com.example.violintuner.core.domain.practice.PracticeStats
+import com.example.violintuner.core.domain.progress.FakeProfileRepository
+import com.example.violintuner.core.domain.progress.FakeTrophyRepository
+import com.example.violintuner.core.domain.progress.ProgressConfig
+import com.example.violintuner.core.domain.progress.Trophy
+import com.example.violintuner.core.domain.progress.TrophyAwarder
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.feature.practice.PracticePrompt
@@ -44,8 +51,13 @@ class AppStartViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
+    private val trophies = FakeTrophyRepository()
+    private val profile = FakeProfileRepository()
+    private val avatarFiles = FakeAvatarFiles()
+
     private fun viewModel() = AppStartViewModel(
         FakeSettingsRepository(), FakeSessionRepository(), store, PracticeFinisher(repository, store, clock), config, clock,
+        repository, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), profile, avatarFiles,
     )
 
     private suspend fun running(elapsedMs: Long, lastSoundAgoMs: Long?) {
@@ -167,5 +179,62 @@ class AppStartViewModelTest {
         runCurrent()
         assertTrue(repository.entries.value.isEmpty())
         assertNull(viewModel.practicePrompt.value)
+    }
+
+    private val today: LocalDate = LocalDate.parse("2026-09-17")
+
+    private suspend fun setDay(date: LocalDate, hours: Int) =
+        repository.replaceDay(date, hours * MS_PER_HOUR, PracticeStats.manualStartOf(date, zone))
+
+    @Test
+    fun `hours already practised before the update bring their trophies at once`() = runTest {
+        setDay(today.minusDays(3), hours = 12)
+        viewModel()
+        runCurrent()
+        assertEquals(listOf(Trophy(1, today, shown = false), Trophy(10, today, shown = false)), trophies.trophies.value)
+    }
+
+    @Test
+    fun `a practice saved from the forgotten prompt gives its trophy`() = runTest {
+        running(elapsedMs = 90 * MS_PER_MINUTE, lastSoundAgoMs = 70 * MS_PER_MINUTE)
+        val viewModel = viewModel()
+        viewModel.onAppOpened()
+        runCurrent()
+        assertTrue(trophies.trophies.value.isEmpty())
+
+        viewModel.onPromptIntent(PracticePromptIntent.EndNow)
+        runCurrent()
+        assertEquals(listOf(1), trophies.trophies.value.map { it.hours })
+    }
+
+    @Test
+    fun `editing a day up gives every mark passed, editing it down takes nothing away`() = runTest {
+        viewModel()
+        runCurrent()
+        setDay(today, hours = 12)
+        setDay(today.minusDays(1), hours = 12)
+        setDay(today.minusDays(2), hours = 12)
+        setDay(today.minusDays(3), hours = 12)
+        setDay(today.minusDays(4), hours = 12)
+        runCurrent()
+        assertEquals(listOf(1, 10, 50), trophies.trophies.value.map { it.hours })
+
+        trophies.markShown(1)
+        setDay(today, hours = 0)
+        setDay(today.minusDays(1), hours = 0)
+        runCurrent()
+        assertEquals(listOf(1, 10, 50), trophies.trophies.value.map { it.hours })
+        assertEquals(listOf(true, false, false), trophies.trophies.value.map { it.shown })
+    }
+
+    @Test
+    fun `photos nobody points at are removed on start, the current one stays`() = runTest {
+        val old = avatarFiles.import("content://old")!!
+        val current = avatarFiles.import("content://current")!!
+        profile.setAvatarFile(current)
+        viewModel()
+        runCurrent()
+        assertNull(avatarFiles.existing(old))
+        assertEquals(setOf(current), avatarFiles.names)
     }
 }

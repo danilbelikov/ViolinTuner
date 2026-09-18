@@ -2,8 +2,8 @@ package com.example.violintuner.core.data.profile
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.net.Uri
 import android.util.Log
+import androidx.core.net.toUri
 import com.example.violintuner.core.di.IoDispatcher
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -22,7 +22,7 @@ class AppAvatarFiles @Inject constructor(
     private val directory = File(context.filesDir, DIRECTORY)
 
     override suspend fun import(sourceUri: String): String? = withContext(io) {
-        val uri = Uri.parse(sourceUri)
+        val uri = sourceUri.toUri()
         try {
             val square = AvatarImage.squareOf { context.contentResolver.openInputStream(uri) } ?: return@withContext null
             directory.mkdirs()

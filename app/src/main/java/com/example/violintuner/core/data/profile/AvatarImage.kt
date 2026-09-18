@@ -1,5 +1,9 @@
+// Covers the import too, which an annotation on the object does not; the reason is in its KDoc.
+@file:SuppressLint("ExifInterface")
+
 package com.example.violintuner.core.data.profile
 
+import android.annotation.SuppressLint
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Matrix
@@ -10,6 +14,10 @@ import java.io.InputStream
  * Turns a picture of any size into the square the avatar is stored as: turned upright by its
  * EXIF orientation, cropped around the centre, scaled down to [AVATAR_SIZE_PX]. The source is
  * opened more than once because a content stream cannot be rewound.
+ *
+ * The platform ExifInterface is enough here: it reads a stream since API 24 (minSdk is 26) and
+ * only the orientation tag of a JPEG is needed. The androidx one lint asks for would be a new
+ * dependency, which this project does not take without the owner's consent.
  */
 internal object AvatarImage {
     const val AVATAR_SIZE_PX = 512

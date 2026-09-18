@@ -2,11 +2,17 @@ package com.example.violintuner.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.violintuner.core.data.profile.AvatarFiles
 import com.example.violintuner.core.domain.practice.ForgottenPractice
 import com.example.violintuner.core.domain.practice.PracticeCheck
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeFinisher
+import com.example.violintuner.core.domain.practice.PracticeRepository
 import com.example.violintuner.core.domain.practice.RunningPracticeStore
+import com.example.violintuner.core.domain.progress.ProfileRepository
+import com.example.violintuner.core.domain.progress.Progress
+import com.example.violintuner.core.domain.progress.TrophyAwarder
+import com.example.violintuner.core.domain.progress.TrophyRepository
 import com.example.violintuner.core.domain.session.SessionRepository
 import com.example.violintuner.core.settings.SettingsRepository
 import com.example.violintuner.feature.practice.PracticePrompt
@@ -20,6 +26,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
@@ -31,7 +38,7 @@ import kotlinx.coroutines.launch
  * Decides where the app starts. Only the first stored value counts: a start destination that
  * changed under a live NavHost would rebuild the graph, so later moves between onboarding and
  * the tabs are explicit navigation. Also owns what concerns every tab: the mark of a running
- * practice and the forgotten-practice prompt (spec 3.12).
+ * practice, the forgotten-practice prompt (spec 3.12) and the giving of trophies (spec 5.7).
  */
 @HiltViewModel
 class AppStartViewModel @Inject constructor(
@@ -41,9 +48,24 @@ class AppStartViewModel @Inject constructor(
     private val finisher: PracticeFinisher,
     private val config: PracticeConfig,
     private val clock: Clock,
+    practice: PracticeRepository,
+    trophies: TrophyRepository,
+    awarder: TrophyAwarder,
+    profile: ProfileRepository,
+    avatarFiles: AvatarFiles,
 ) : ViewModel() {
     init {
         viewModelScope.launch { sessions.deleteOrphanAudio() }
+        viewModelScope.launch { avatarFiles.deleteOrphans(referenced = profile.profile.first().avatarFile) }
+        // Trophies are given here rather than where a practice is saved: the entries change
+        // from the practice screen, its sheets and the forgotten-practice prompt alike, and
+        // this view model lives as long as the app is open. Giving is idempotent, so the
+        // second pass that the new trophies trigger finds nothing to do.
+        viewModelScope.launch {
+            combine(practice.entries, trophies.trophies) { entries, given ->
+                Progress.totalMs(entries) to given.mapTo(mutableSetOf()) { it.hours }
+            }.collect { (totalMs, givenHours) -> awarder.award(totalMs, givenHours) }
+        }
     }
 
     /** Null while the settings are being read: show nothing rather than the wrong screen. */

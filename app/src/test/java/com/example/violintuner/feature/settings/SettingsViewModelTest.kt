@@ -1,18 +1,23 @@
 package com.example.violintuner.feature.settings
 
+import com.example.violintuner.core.data.profile.FakeAvatarFiles
 import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.UserSettings
 import com.example.violintuner.core.domain.practice.FakePracticeRepository
 import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeFinisher
-import java.time.Clock
-import java.time.ZoneOffset
+import com.example.violintuner.core.domain.progress.FakeProfileRepository
+import com.example.violintuner.core.domain.progress.FakeTrophyRepository
+import com.example.violintuner.core.domain.progress.ProgressConfig
+import com.example.violintuner.core.domain.progress.TrophyAwarder
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.navigation.AppStartViewModel
 import com.example.violintuner.navigation.ONBOARDING_ROUTE
 import com.example.violintuner.navigation.TopLevelDestination
+import java.time.Clock
+import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -83,6 +88,11 @@ class SettingsViewModelTest {
     private fun appStart(settings: FakeSettingsRepository, sessions: FakeSessionRepository): AppStartViewModel {
         val store = FakeRunningPracticeStore()
         val clock = Clock.systemUTC()
-        return AppStartViewModel(settings, sessions, store, PracticeFinisher(FakePracticeRepository(), store, clock), PracticeConfig(), clock)
+        val practice = FakePracticeRepository()
+        val trophies = FakeTrophyRepository()
+        return AppStartViewModel(
+            settings, sessions, store, PracticeFinisher(practice, store, clock), PracticeConfig(), clock,
+            practice, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), FakeProfileRepository(), FakeAvatarFiles(),
+        )
     }
 }
