@@ -243,4 +243,57 @@
     <string name="trophies_line_given">%1$s, %2$s, получен %3$s</string>
     <string name="trophies_line_remaining">%1$s, %2$s, ещё %3$s</string>
     <string name="trophies_line_far">%1$s, %2$s, далеко впереди</string>
+
+    <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
+    <string name="history_section_sessions">Сессии</string>
+    <string name="history_section_repertoire">Репертуар</string>
+    <string name="session_take_title">%1$s · %2$s</string>
+    <string name="session_take_chip">дубль</string>
+    <string name="dot_separator">\u0020·\u0020</string>
+    <string name="repertoire_add">Добавить произведение</string>
+    <string name="repertoire_empty">Здесь живут ваши произведения: ноты, заметки и записи. Добавьте первое.</string>
+    <string name="repertoire_empty_filter">Ничего со статусом «%1$s».</string>
+    <string name="repertoire_show_all">Показать все</string>
+    <string name="repertoire_score">%1$d\u00A0%%</string>
+    <string name="piece_status_reading">Разбираю</string>
+    <string name="piece_status_learning">Учу</string>
+    <string name="piece_status_in_repertoire">В репертуаре</string>
+    <string name="piece_tempo_value">♩ = %1$d</string>
+    <string name="takes_one">%1$d дубль</string>
+    <string name="takes_few">%1$d дубля</string>
+    <string name="takes_many">%1$d дублей</string>
+    <string name="piece_edit">Изменить</string>
+    <string name="piece_status_change">Статус: %1$s. Изменить</string>
+    <string name="piece_sheets_none">Ноты</string>
+    <string name="piece_sheets_count">Ноты · %1$d стр.</string>
+    <string name="piece_sheets_add">Добавить фото нот</string>
+    <string name="piece_sheets_add_short">Добавить</string>
+    <string name="piece_sheets_camera">Сфотографировать</string>
+    <string name="piece_sheets_gallery">Из галереи</string>
+    <string name="piece_sheet_page">Страница %1$d</string>
+    <string name="piece_notes_add">Добавить заметку</string>
+    <string name="piece_notes_more">ещё</string>
+    <string name="piece_notes_less">свернуть</string>
+    <string name="piece_form_title_new">Новое произведение</string>
+    <string name="piece_form_title_edit">Произведение</string>
+    <string name="piece_form_close">Закрыть</string>
+    <string name="piece_form_discard_title">Не сохранять?</string>
+    <string name="piece_form_discard_confirm">Не сохранять</string>
+    <string name="piece_field_title">Название</string>
+    <string name="piece_field_composer">Композитор</string>
+    <string name="piece_field_key">Тональность</string>
+    <string name="piece_field_tempo">Темп</string>
+    <string name="piece_field_status">Статус</string>
+    <string name="piece_field_notes">Заметки</string>
+    <string name="piece_title_error">Без названия не сохранить</string>
+    <string name="piece_key_major">мажор</string>
+    <string name="piece_key_minor">минор</string>
+    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="piece_tempo_slower">Медленнее</string>
+    <string name="piece_tempo_faster">Быстрее</string>
+    <string name="piece_tempo_clear">Без темпа</string>
+    <string name="piece_delete">Удалить произведение</string>
+    <string name="piece_delete_title">Удалить «%1$s»?</string>
+    <string name="piece_delete_text">Ноты и заметки удалятся. Записи останутся в «Записях».</string>
+    <string name="piece_delete_confirm">Удалить</string>
 </resources>
