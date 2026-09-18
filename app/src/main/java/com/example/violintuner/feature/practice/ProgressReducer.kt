@@ -11,7 +11,7 @@ object ProgressReducer {
 
     fun headerOf(totalMs: Long, trophies: List<Trophy>, name: String, avatarPath: String?, config: ProgressConfig): ProfileHeader {
         val level = Progress.levelOf(totalMs, config)
-        val given = trophies.map { it.hours }.sorted()
+        val given = trophies.filter { it.shown }.map { it.hours }.sorted()
         val next = Progress.nextTrophyHours(given.toSet(), config)
         return ProfileHeader(
             name = name,
@@ -27,6 +27,12 @@ object ProgressReducer {
             nextTrophyHours = next,
         )
     }
+
+    /** The trophy whose gift sheet is due: the lowest one not seen yet (spec 3.13: one sheet after another, lowest first). */
+    fun giftOf(trophies: List<Trophy>, config: ProgressConfig): Gift? =
+        trophies.filter { !it.shown }.minByOrNull { it.hours }?.let {
+            Gift(hours = it.hours, index = config.trophyHours.indexOf(it.hours), awardedDate = it.awardedDate)
+        }
 
     /** Every mark of the config, lowest first: the date of the given ones, what is left to the others. */
     fun trophyLines(totalMs: Long, trophies: List<Trophy>, config: ProgressConfig): List<TrophyLine> {

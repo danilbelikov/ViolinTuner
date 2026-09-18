@@ -16,6 +16,7 @@ import com.example.violintuner.core.domain.progress.Trophy
 import com.example.violintuner.core.domain.session.SessionSummary
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.practice.components.EditTimeSheetContent
+import com.example.violintuner.feature.practice.components.GiftSheetContent
 import com.example.violintuner.feature.practice.components.ProfileSheetContent
 import com.example.violintuner.feature.practice.components.SummarySheetContent
 import com.example.violintuner.feature.practice.components.TrophiesSheetContent
@@ -127,6 +128,19 @@ private fun ProfileSheetPreview() {
             onIntent = {},
             onPickPhoto = {},
             modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        )
+    }
+}
+
+@Preview(name = "11f gift sheet", widthDp = 412)
+@Composable
+private fun GiftSheetPreview() {
+    ViolinTheme {
+        GiftSheetContent(
+            gift = Gift(hours = 10, index = 1, awardedDate = LocalDate.of(2026, 9, 13)),
+            onAccept = {},
+            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            animated = false,
         )
     }
 }

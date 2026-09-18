@@ -1,5 +1,10 @@
 package com.example.violintuner.feature.practice.components
 
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.snap
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -7,7 +12,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -16,10 +20,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -42,6 +57,8 @@ import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.practice.ProfileHeader
 import com.example.violintuner.feature.practice.TrophyBadge
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 private val AvatarGap = 12.dp
 private val NameGap = 2.dp
@@ -89,8 +106,17 @@ fun ProfileHeader(
     onProfileClick: () -> Unit,
     onTrophiesClick: () -> Unit,
     modifier: Modifier = Modifier,
+    /** False while the header only holds its place (loading): nothing it shows then is a change. */
+    animate: Boolean = true,
 ) {
     val colors = MaterialTheme.colorScheme
+    // Motion is for what changes before the user's eyes. What is already true when the header
+    // appears — the first data after loading included — is shown as it is: someone with four
+    // hundred hours must not watch the bar climb from level one on every visit.
+    var armed by remember { mutableStateOf(false) }
+    val motion = armed
+    LaunchedEffect(animate) { armed = animate }
+
     val name = header.name.ifEmpty { stringResource(R.string.progress_no_name) }
     val total = Formats.totalTime(header.totalMs)
     val nameStyle = MaterialTheme.typography.titleMedium.copy(
@@ -152,52 +178,115 @@ fun ProfileHeader(
                     }
                 }
                 if (metrics.trophiesBeside) {
-                    TrophyRow(header, metrics, compact = compactRow, withWords = false, captionStyle = captionStyle, onClick = onTrophiesClick)
+                    TrophyRow(header, metrics, compact = compactRow, withWords = false, captionStyle = captionStyle, motion = motion, onClick = onTrophiesClick)
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(metrics.captionGap)) {
-                LevelBar(header.levelFraction, description = toNextText ?: levelText)
-                if (captionsInOneLine) {
-                    Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
-                        Text(levelText, color = colors.onSurfaceVariant, style = captionStyle, maxLines = 1)
-                        if (toNextText != null) Text(toNextText, color = colors.onSurfaceVariant, style = captionStyle, maxLines = 1)
-                    }
-                } else {
-                    Text(levelText, color = colors.onSurfaceVariant, style = captionStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    if (toNextText != null) {
-                        Text(toNextText, color = colors.onSurfaceVariant, style = captionStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    }
-                }
-            }
+            LevelBlock(
+                level = header.level,
+                fraction = header.levelFraction,
+                captions = LevelCaptions(levelText, toNextText),
+                oneLine = captionsInOneLine,
+                captionStyle = captionStyle,
+                gap = metrics.captionGap,
+                motion = motion,
+            )
             if (!metrics.trophiesBeside) {
-                TrophyRow(header, metrics, compact = false, withWords = true, captionStyle = captionStyle.copy(fontSize = 12.sp), onClick = onTrophiesClick)
+                TrophyRow(
+                    header, metrics, compact = false, withWords = true, captionStyle = captionStyle.copy(fontSize = 12.sp),
+                    motion = motion, onClick = onTrophiesClick,
+                )
             }
         }
     }
 }
 
-/** No percent and no points: the bar is a quiet line, and the caption under it speaks in time. */
+private data class LevelCaptions(val level: String, val toNext: String?)
+
+/**
+ * The bar and the two captions under it. No percent and no points: the bar is a quiet line and
+ * the captions speak in time. Bar and captions move together: when a level is passed the bar
+ * runs to its end, rests, and only then the new level is named and the bar starts it from nothing.
+ */
 @Composable
-private fun LevelBar(fraction: Float, description: String) {
+private fun LevelBlock(
+    level: Int,
+    fraction: Float,
+    captions: LevelCaptions,
+    oneLine: Boolean,
+    captionStyle: TextStyle,
+    gap: Dp,
+    motion: Boolean,
+) {
     val colors = ViolinTheme.progressColors
-    Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(BarHeight)
-            .clip(RoundedCornerShape(BarCorner))
-            .background(colors.levelTrack)
-            .semantics {
-                contentDescription = description
-                progressBarRangeInfo = ProgressBarRangeInfo(fraction.coerceIn(0f, 1f), 0f..1f)
-            },
-    ) {
+    val target = fraction.coerceIn(0f, 1f)
+    val filled = remember { Animatable(target) }
+    var shownLevel by remember { mutableIntStateOf(level) }
+    var shownCaptions by remember { mutableStateOf(captions) }
+
+    LaunchedEffect(level, target, captions) {
+        when {
+            !motion -> filled.snapTo(target)
+            level > shownLevel -> {
+                filled.animateTo(1f, tween(ProgressMotion.BAR_LEVEL_UP_FILL_MS, easing = FastOutSlowInEasing))
+                delay(ProgressMotion.BAR_LEVEL_UP_PAUSE_MS)
+                filled.snapTo(0f)
+                shownLevel = level
+                shownCaptions = captions
+                filled.animateTo(target, tween(ProgressMotion.BAR_LEVEL_UP_GROW_MS, easing = FastOutSlowInEasing))
+            }
+            else -> {
+                shownCaptions = captions
+                filled.animateTo(target, tween(ProgressMotion.BAR_GROW_MS, easing = FastOutSlowInEasing))
+            }
+        }
+        shownLevel = level
+        shownCaptions = captions
+    }
+
+    Column(verticalArrangement = Arrangement.spacedBy(gap)) {
+        val description = captions.toNext ?: captions.level
         Box(
             modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth(fraction.coerceIn(0f, 1f))
+                .fillMaxWidth()
+                .height(BarHeight)
                 .clip(RoundedCornerShape(BarCorner))
-                .background(Brush.horizontalGradient(listOf(colors.levelFillStart, colors.levelFillEnd))),
+                .background(colors.levelTrack)
+                .drawBehind {
+                    // Read in the draw phase: a growing bar redraws, it does not recompose.
+                    val width = size.width * filled.value
+                    if (width > 0f) {
+                        drawRoundRect(
+                            brush = Brush.horizontalGradient(listOf(colors.levelFillStart, colors.levelFillEnd), endX = width),
+                            size = Size(width, size.height),
+                            cornerRadius = CornerRadius(BarCorner.toPx()),
+                        )
+                    }
+                }
+                .semantics {
+                    contentDescription = description
+                    progressBarRangeInfo = ProgressBarRangeInfo(target, 0f..1f)
+                },
         )
+        Crossfade(
+            targetState = shownCaptions,
+            // Without motion the captions change in place, like the bar: no fade from a level
+            // that was never the user's.
+            animationSpec = if (motion) tween(ProgressMotion.CAPTION_CROSSFADE_MS) else snap(),
+            label = "level captions",
+        ) { shown ->
+            val color = MaterialTheme.colorScheme.onSurfaceVariant
+            if (oneLine) {
+                Row(horizontalArrangement = Arrangement.SpaceBetween, modifier = Modifier.fillMaxWidth()) {
+                    Text(shown.level, color = color, style = captionStyle, maxLines = 1)
+                    if (shown.toNext != null) Text(shown.toNext, color = color, style = captionStyle, maxLines = 1)
+                }
+            } else {
+                Column(verticalArrangement = Arrangement.spacedBy(gap)) {
+                    Text(shown.level, color = color, style = captionStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (shown.toNext != null) Text(shown.toNext, color = color, style = captionStyle, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+        }
     }
 }
 
@@ -208,6 +297,7 @@ private fun TrophyRow(
     compact: Boolean,
     withWords: Boolean,
     captionStyle: TextStyle,
+    motion: Boolean,
     onClick: () -> Unit,
 ) {
     val words = trophyWords(header)
@@ -228,7 +318,7 @@ private fun TrophyRow(
         horizontalArrangement = Arrangement.spacedBy(if (withWords) 8.dp else metrics.trophyGap),
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(metrics.trophyGap)) {
-            badges.forEach { TrophyIcon(it.hours, locked = !it.given, size = metrics.trophyIcon) }
+            badges.forEach { badge -> key(badge.hours) { TrophyBadgeIcon(badge, metrics.trophyIcon, motion) } }
         }
         val caption = when {
             withWords -> words
@@ -236,6 +326,52 @@ private fun TrophyRow(
             else -> null
         }
         if (caption != null) Text(caption, color = MaterialTheme.colorScheme.onSurfaceVariant, style = captionStyle, maxLines = 1)
+    }
+}
+
+/**
+ * One place of the row. When its gift sheet is answered the outline fills in and the trophy
+ * pops into place; the outline of the mark after it fades in a moment later (handoff `anims`).
+ */
+@Composable
+private fun TrophyBadgeIcon(badge: TrophyBadge, size: Dp, motion: Boolean) {
+    val fill = remember { Animatable(if (badge.given) 1f else 0f) }
+    val pop = remember { Animatable(1f) }
+    // A badge that is there when the header appears just is; one that joins later fades in.
+    val entrance = remember { Animatable(if (motion) 0f else 1f) }
+
+    LaunchedEffect(badge.given) {
+        when {
+            !badge.given -> fill.snapTo(0f)
+            fill.value == 1f -> Unit
+            !motion -> fill.snapTo(1f)
+            else -> {
+                launch {
+                    pop.snapTo(ProgressMotion.TROPHY_POP_FROM)
+                    pop.animateTo(1f, tween(ProgressMotion.TROPHY_POP_MS, easing = ProgressMotion.TrophyPop))
+                }
+                fill.animateTo(1f, tween(ProgressMotion.TROPHY_FILL_MS))
+            }
+        }
+    }
+    LaunchedEffect(Unit) {
+        entrance.animateTo(1f, tween(ProgressMotion.NEXT_TROPHY_FADE_MS, delayMillis = ProgressMotion.NEXT_TROPHY_DELAY_MS))
+    }
+
+    Box(modifier = Modifier.graphicsLayer { alpha = entrance.value }) {
+        if (fill.value < 1f) TrophyIcon(badge.hours, locked = true, size = size, modifier = Modifier.graphicsLayer { alpha = 1f - fill.value })
+        if (fill.value > 0f) {
+            TrophyIcon(
+                hours = badge.hours,
+                locked = false,
+                size = size,
+                modifier = Modifier.graphicsLayer {
+                    alpha = fill.value
+                    scaleX = pop.value
+                    scaleY = pop.value
+                },
+            )
+        }
     }
 }
 

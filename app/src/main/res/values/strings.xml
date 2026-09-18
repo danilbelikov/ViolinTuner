@@ -231,6 +231,11 @@
     <string name="profile_done">Готово</string>
     <string name="profile_no_name_letter">\?</string>
     <string name="profile_photo_failed">Не удалось открыть фото</string>
+    <string name="gift_title">Новый трофей</string>
+    <string name="gift_hours_one">%1$s час за скрипкой</string>
+    <string name="gift_hours_few">%1$s часа за скрипкой</string>
+    <string name="gift_hours_many">%1$s часов за скрипкой</string>
+    <string name="gift_thanks">Спасибо</string>
     <string name="trophies_title">Трофеи</string>
     <string name="trophies_total">всего за скрипкой — %1$s</string>
     <string name="trophies_awarded">получен %1$s</string>

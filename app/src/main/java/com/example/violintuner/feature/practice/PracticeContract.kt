@@ -47,11 +47,26 @@ data class ProfileHeader(
     /** 0..1, how far the bar is filled. */
     val levelFraction: Float,
     val toNextLevelMs: Long?,
-    /** The latest given trophies (two at most) and then the next mark, not given. */
+    /**
+     * The latest trophies (two at most) and then the next mark as an outline. A trophy counts
+     * here once its gift sheet has been answered: until then its place is still the outline,
+     * and it turns into the trophy in front of the user's eyes.
+     */
     val trophyRow: List<TrophyBadge>,
     val givenTrophies: Int,
     /** Null when every trophy is taken. */
     val nextTrophyHours: Int?,
+)
+
+/**
+ * A trophy given but not yet seen: the gift sheet (spec 3.13, handoff 11f). Not a
+ * [PracticeSheet]: nobody opens it, it follows from the stored trophies.
+ */
+data class Gift(
+    val hours: Int,
+    /** Position of the mark among the marks of the config, for the name. */
+    val index: Int,
+    val awardedDate: LocalDate,
 )
 
 /** One line of the trophies sheet (handoff 11e). */
@@ -116,6 +131,8 @@ data class PracticeState(
     val selected: SelectedDay,
     val header: ProfileHeader,
     val trophies: List<TrophyLine>,
+    /** The lowest trophy not seen yet; null while another sheet is open — it waits its turn. */
+    val gift: Gift?,
     val sheet: PracticeSheet?,
     /** Whole minutes of one stepper step, from the config: the sheets word their hint with it. */
     val stepMinutes: Int,
@@ -172,6 +189,9 @@ sealed interface PracticeIntent {
     data object TrophiesClicked : PracticeIntent
 
     data object TrophiesClosed : PracticeIntent
+
+    /** «Спасибо» and a swipe down alike: the trophy of [hours] has been seen. */
+    data class GiftAccepted(val hours: Int) : PracticeIntent
 }
 
 sealed interface PracticeEffect {

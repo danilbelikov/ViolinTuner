@@ -43,7 +43,7 @@ class PracticeViewModel @Inject constructor(
     private val config: PracticeConfig,
     intonationConfig: IntonationConfig,
     private val clock: Clock,
-    trophies: TrophyRepository,
+    private val trophies: TrophyRepository,
     private val profiles: ProfileRepository,
     private val avatarFiles: AvatarFiles,
     private val progressConfig: ProgressConfig,
@@ -114,6 +114,8 @@ class PracticeViewModel @Inject constructor(
             PracticeIntent.ProfileClosed -> closeProfile()
             PracticeIntent.TrophiesClicked -> openSheet(PracticeSheet.Trophies)
             PracticeIntent.TrophiesClosed -> ui.update { if (it.sheet == PracticeSheet.Trophies) it.copy(sheet = null) else it }
+            // The next trophy not seen, if any, becomes the gift by itself: the state follows the table.
+            is PracticeIntent.GiftAccepted -> viewModelScope.launch { trophies.markShown(intent.hours) }
         }
     }
 

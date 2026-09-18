@@ -50,6 +50,7 @@ import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.feature.history.components.SessionCard
 import com.example.violintuner.feature.practice.components.CalendarMetrics
 import com.example.violintuner.feature.practice.components.EditTimeSheet
+import com.example.violintuner.feature.practice.components.GiftSheet
 import com.example.violintuner.feature.practice.components.PracticeCalendar
 import com.example.violintuner.feature.practice.components.ProfileHeader
 import com.example.violintuner.feature.practice.components.ProfileHeaderMetrics
@@ -130,7 +131,8 @@ fun PracticeScreen(
         is PracticeSheet.EditTime -> EditTimeSheet(sheet, state.stepMinutes, onIntent)
         is PracticeSheet.Profile -> ProfileSheet(sheet, state.header, onIntent)
         PracticeSheet.Trophies -> TrophiesSheet(state.trophies, state.header.totalMs, onIntent)
-        null -> Unit
+        // The gift waits for the other sheets: the reducer offers it only when none is open.
+        null -> state.gift?.let { GiftSheet(it, onIntent) }
     }
 }
 
@@ -219,6 +221,7 @@ private fun Header(state: PracticeState, onIntent: (PracticeIntent) -> Unit, met
         onProfileClick = { if (!state.loading) onIntent(PracticeIntent.ProfileClicked) },
         onTrophiesClick = { if (!state.loading) onIntent(PracticeIntent.TrophiesClicked) },
         modifier = if (state.loading) Modifier.alpha(0f).clearAndSetSemantics { } else Modifier,
+        animate = !state.loading,
     )
 }
 

@@ -90,4 +90,26 @@ class ProgressReducerTest {
         val last = ProgressReducer.trophyLines(6000 * MS_PER_HOUR, given(1, 10, 50, 100, 250, 500, 1000, 2500, 5000), config)
         assertTrue(last.none { it.isFar })
     }
+
+    @Test
+    fun `a trophy stands in the row only after its gift sheet, until then its place is the outline`() {
+        val trophies = listOf(Trophy(1, day, shown = true), Trophy(10, day, shown = false))
+        val header = header(12 * MS_PER_HOUR, trophies)
+        assertEquals(listOf(TrophyBadge(1, true), TrophyBadge(10, false)), header.trophyRow)
+        assertEquals(1, header.givenTrophies)
+        assertEquals(10, header.nextTrophyHours)
+
+        // The list is about the facts: the trophy is given, with its date, seen or not.
+        val lines = ProgressReducer.trophyLines(12 * MS_PER_HOUR, trophies, config)
+        assertEquals(day, lines.single { it.hours == 10 }.awardedDate)
+        assertTrue(lines.single { it.hours == 50 }.isNext)
+    }
+
+    @Test
+    fun `the gift is the lowest trophy not seen yet`() {
+        assertNull(ProgressReducer.giftOf(emptyList(), config))
+        assertNull(ProgressReducer.giftOf(given(1, 10), config))
+        val pending = listOf(Trophy(1, day, shown = true), Trophy(50, day, shown = false), Trophy(10, day.minusDays(1), shown = false))
+        assertEquals(Gift(hours = 10, index = 1, awardedDate = day.minusDays(1)), ProgressReducer.giftOf(pending, config))
+    }
 }

@@ -74,6 +74,7 @@ object PracticeReducer {
             ),
             header = ProgressReducer.headerOf(totalMs, trophies, profile.name, avatarPath, progressConfig),
             trophies = ProgressReducer.trophyLines(totalMs, trophies, progressConfig),
+            gift = if (sheet == null) ProgressReducer.giftOf(trophies, progressConfig) else null,
             sheet = sheet,
             stepMinutes = config.editStepMinutes,
         )
@@ -91,6 +92,7 @@ object PracticeReducer {
         selected = SelectedDay(today, isToday = true, totalMs = 0, sessions = emptyList()),
         header = ProgressReducer.headerOf(0, emptyList(), name = "", avatarPath = null, progressConfig),
         trophies = emptyList(),
+        gift = null,
         sheet = null,
         stepMinutes = config.editStepMinutes,
     )

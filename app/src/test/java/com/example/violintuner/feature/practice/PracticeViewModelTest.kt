@@ -288,6 +288,9 @@ class PracticeViewModelTest {
         repository.replaceDay(today, 12 * MS_PER_HOUR, startedAtEpochMs = 0)
         trophies.award(1, today)
         trophies.award(10, today)
+        // Seen already: a trophy stands in the row only once its gift sheet is answered.
+        trophies.markShown(1)
+        trophies.markShown(10)
         profiles.setName("Даня")
         runCurrent()
 
@@ -395,5 +398,49 @@ class PracticeViewModelTest {
         viewModel.onIntent(PracticeIntent.TrophiesClosed)
         runCurrent()
         assertNull(viewModel.state.value.sheet)
+    }
+
+    @Test
+    fun `gifts come one after another, lowest first, and each thanks marks its trophy seen`() = runTest {
+        trophies.award(10, today)
+        trophies.award(1, today)
+        val (viewModel, _) = viewModel()
+        assertEquals(1, viewModel.state.value.gift?.hours)
+        assertTrue(viewModel.state.value.header.trophyRow.none { it.given })
+
+        viewModel.onIntent(PracticeIntent.GiftAccepted(1))
+        runCurrent()
+        assertEquals(10, viewModel.state.value.gift?.hours)
+        assertEquals(listOf(TrophyBadge(1, true), TrophyBadge(10, false)), viewModel.state.value.header.trophyRow)
+
+        viewModel.onIntent(PracticeIntent.GiftAccepted(10))
+        runCurrent()
+        assertNull(viewModel.state.value.gift)
+        assertTrue(trophies.trophies.value.all { it.shown })
+        assertEquals(listOf(TrophyBadge(1, true), TrophyBadge(10, true), TrophyBadge(50, false)), viewModel.state.value.header.trophyRow)
+    }
+
+    @Test
+    fun `a gift waits while another sheet is open`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
+        runCurrent()
+        trophies.award(1, today)
+        runCurrent()
+        assertNull("the edit sheet is still open", viewModel.state.value.gift)
+
+        viewModel.onIntent(PracticeIntent.EditTimeCancelled)
+        runCurrent()
+        assertEquals(1, viewModel.state.value.gift?.hours)
+    }
+
+    @Test
+    fun `a gift not answered comes back after the process dies`() = runTest {
+        trophies.award(1, today)
+        val (first, _) = viewModel()
+        assertEquals(1, first.state.value.gift?.hours)
+
+        val (second, _) = viewModel()
+        assertEquals(Gift(hours = 1, index = 0, awardedDate = today), second.state.value.gift)
     }
 }
