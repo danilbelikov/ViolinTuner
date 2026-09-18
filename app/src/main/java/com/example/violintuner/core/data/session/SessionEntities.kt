@@ -6,7 +6,7 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 
 /** Summary row of a session: everything the history list shows, stored computed (spec 6). */
-@Entity(tableName = "sessions", indices = [Index("startedAtEpochMs")])
+@Entity(tableName = "sessions", indices = [Index("startedAtEpochMs"), Index("pieceId")])
 data class SessionEntity(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     val title: String?,
@@ -23,6 +23,8 @@ data class SessionEntity(
     /** One letter per note, see [SessionMapper]. */
     val previewZones: String,
     val audioPath: String?,
+    /** The piece this session is a take of; no foreign key, see `MIGRATION_3_4`. */
+    val pieceId: Long? = null,
 )
 
 /** Samples of a session as a [com.example.violintuner.core.domain.session.SampleCodec] blob. */

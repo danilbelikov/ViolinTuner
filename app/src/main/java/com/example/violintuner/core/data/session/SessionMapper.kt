@@ -24,6 +24,7 @@ internal object SessionMapper {
         biasCents = session.metrics.biasCents,
         previewZones = encodeZones(session.previewZones),
         audioPath = session.audioPath,
+        pieceId = session.pieceId,
     )
 
     fun toSummary(entity: SessionEntity): SessionSummary = SessionSummary(
@@ -41,6 +42,7 @@ internal object SessionMapper {
         biasCents = entity.biasCents,
         previewZones = decodeZones(entity.previewZones),
         audioPath = entity.audioPath,
+        pieceId = entity.pieceId,
     )
 
     fun encodeZones(zones: List<Zone>): String = zones.joinToString(separator = "") {

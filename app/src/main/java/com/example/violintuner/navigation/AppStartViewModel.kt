@@ -13,6 +13,7 @@ import com.example.violintuner.core.domain.progress.ProfileRepository
 import com.example.violintuner.core.domain.progress.Progress
 import com.example.violintuner.core.domain.progress.TrophyAwarder
 import com.example.violintuner.core.domain.progress.TrophyRepository
+import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.session.SessionRepository
 import com.example.violintuner.core.settings.SettingsRepository
 import com.example.violintuner.feature.practice.PracticePrompt
@@ -53,10 +54,12 @@ class AppStartViewModel @Inject constructor(
     awarder: TrophyAwarder,
     profile: ProfileRepository,
     avatarFiles: AvatarFiles,
+    repertoire: RepertoireRepository,
 ) : ViewModel() {
     init {
         viewModelScope.launch { sessions.deleteOrphanAudio() }
         viewModelScope.launch { avatarFiles.deleteOrphans(referenced = profile.profile.first().avatarFile) }
+        viewModelScope.launch { repertoire.deleteOrphanFiles() }
         // Trophies are given here rather than where a practice is saved: the entries change
         // from the practice screen, its sheets and the forgotten-practice prompt alike, and
         // this view model lives as long as the app is open. Giving is idempotent, so the

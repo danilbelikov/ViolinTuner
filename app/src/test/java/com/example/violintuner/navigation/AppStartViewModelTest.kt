@@ -13,6 +13,7 @@ import com.example.violintuner.core.domain.progress.FakeTrophyRepository
 import com.example.violintuner.core.domain.progress.ProgressConfig
 import com.example.violintuner.core.domain.progress.Trophy
 import com.example.violintuner.core.domain.progress.TrophyAwarder
+import com.example.violintuner.core.domain.repertoire.FakeRepertoireRepository
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.feature.practice.PracticePrompt
@@ -54,10 +55,11 @@ class AppStartViewModelTest {
     private val trophies = FakeTrophyRepository()
     private val profile = FakeProfileRepository()
     private val avatarFiles = FakeAvatarFiles()
+    private val repertoire = FakeRepertoireRepository()
 
     private fun viewModel() = AppStartViewModel(
         FakeSettingsRepository(), FakeSessionRepository(), store, PracticeFinisher(repository, store, clock), config, clock,
-        repository, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), profile, avatarFiles,
+        repository, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), profile, avatarFiles, repertoire,
     )
 
     private suspend fun running(elapsedMs: Long, lastSoundAgoMs: Long?) {
@@ -236,5 +238,12 @@ class AppStartViewModelTest {
         runCurrent()
         assertNull(avatarFiles.existing(old))
         assertEquals(setOf(current), avatarFiles.names)
+    }
+
+    @Test
+    fun `sheet photos nobody points at are cleaned up on start`() = runTest {
+        viewModel()
+        runCurrent()
+        assertEquals(1, repertoire.orphanCleanups)
     }
 }

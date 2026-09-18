@@ -15,7 +15,7 @@ import org.junit.runner.RunWith
 
 /**
  * Opens a database file laid out exactly as an old version (statements from
- * `app/schemas/…/1.json` and `2.json`) through Room with the migrations. Room validates the migrated
+ * `app/schemas/…/1.json`, `2.json` and `3.json`) through Room with the migrations. Room validates the migrated
  * schema against the current entities when it opens such a file, so a migration that leaves
  * a table different from what the entities declare fails here, not on the user's phone.
  */
@@ -31,8 +31,11 @@ class DatabaseMigrationTest {
         SQLiteDatabase.deleteDatabase(file)
     }
 
-    /** Version 1 with one session; [version2] adds what version 2 had on top: practice entries with one row. */
-    private fun createOldFile(version2: Boolean) {
+    /**
+     * Version 1 with one session; [version2] adds what version 2 had on top — practice entries
+     * with one row; [version3] adds the trophies of version 3 with one row.
+     */
+    private fun createOldFile(version2: Boolean, version3: Boolean = false) {
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
@@ -65,7 +68,14 @@ class DatabaseMigrationTest {
                         "VALUES (1, '2026-09-13', 1789300000000, 2700000, 0)",
                 )
             }
-            db.execSQL("PRAGMA user_version = ${if (version2) 2 else 1}")
+            if (version3) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `trophies` (`hours` INTEGER NOT NULL, `awardedDate` TEXT NOT NULL, " +
+                        "`shown` INTEGER NOT NULL, PRIMARY KEY(`hours`))",
+                )
+                db.execSQL("INSERT INTO trophies (hours, awardedDate, shown) VALUES (1, '2026-09-18', 1)")
+            }
+            db.execSQL("PRAGMA user_version = ${if (version3) 3 else if (version2) 2 else 1}")
         }
     }
 
@@ -114,5 +124,27 @@ class DatabaseMigrationTest {
             com.example.violintuner.core.data.progress.TrophyEntity(hours = 1, awardedDate = "2026-09-18", shown = false),
         )
         assertEquals(1, db.trophyDao().observeAll().first().single().hours)
+    }
+
+    @Test
+    fun everythingSurvivesTheMigrationToTheRepertoireAndOldSessionsBelongToNoPiece() = runBlocking {
+        createOldFile(version2 = true, version3 = true)
+        val db = openMigrated()
+
+        val session = db.sessionDao().observeAll().first().single()
+        assertEquals("Гаммы", session.title)
+        assertEquals(null, session.pieceId)
+        assertEquals(50L, db.sessionDao().samples(1)!!.bucketMs)
+        assertEquals(2_700_000L, db.practiceDao().observeAll().first().single().durationMs)
+        assertEquals(true, db.trophyDao().observeAll().first().single().shown)
+
+        val pieceId = db.repertoireDao().insertPiece(
+            com.example.violintuner.core.data.repertoire.PieceEntity(
+                title = "Менуэт", composer = "", keyTonic = null, keyAccidental = null, keyMode = null, tempoBpm = null,
+                status = "READING", notes = "", createdAtEpochMs = 1, updatedAtEpochMs = 1,
+            ),
+        )
+        assertEquals(true, db.repertoireDao().appendPage(pieceId, "a.jpg", "a-thumb.jpg", now = 2))
+        assertEquals(1, db.repertoireDao().pagesOf(pieceId).size)
     }
 }

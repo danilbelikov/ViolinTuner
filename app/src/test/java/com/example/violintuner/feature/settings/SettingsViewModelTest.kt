@@ -11,6 +11,7 @@ import com.example.violintuner.core.domain.progress.FakeProfileRepository
 import com.example.violintuner.core.domain.progress.FakeTrophyRepository
 import com.example.violintuner.core.domain.progress.ProgressConfig
 import com.example.violintuner.core.domain.progress.TrophyAwarder
+import com.example.violintuner.core.domain.repertoire.FakeRepertoireRepository
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.navigation.AppStartViewModel
@@ -92,7 +93,7 @@ class SettingsViewModelTest {
         val trophies = FakeTrophyRepository()
         return AppStartViewModel(
             settings, sessions, store, PracticeFinisher(practice, store, clock), PracticeConfig(), clock,
-            practice, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), FakeProfileRepository(), FakeAvatarFiles(),
+            practice, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), FakeProfileRepository(), FakeAvatarFiles(), FakeRepertoireRepository(),
         )
     }
 }
