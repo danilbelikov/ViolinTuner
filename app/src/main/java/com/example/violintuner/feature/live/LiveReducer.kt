@@ -4,6 +4,7 @@ import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.IntonationReading
 import com.example.violintuner.core.domain.TargetMode
 import com.example.violintuner.core.domain.ViolinString
+import com.example.violintuner.core.domain.Zone
 import kotlin.math.roundToInt
 
 /** What the user has chosen to measure against; read by the engine on every frame. */
@@ -13,15 +14,33 @@ data class LiveTarget(
 )
 
 object LiveReducer {
-    fun signalOf(reading: IntonationReading): LiveSignal = when (reading) {
-        IntonationReading.Silence -> LiveSignal.Silence
-        IntonationReading.TooNoisy -> LiveSignal.TooNoisy
-        is IntonationReading.Active -> LiveSignal.Sounding(
-            note = reading.note,
-            cents = reading.cents,
-            zone = reading.zone,
-            direction = reading.direction,
-            holdProgress = reading.holdProgress,
+    /**
+     * How strongly the ring should glow (spec 5.8): nothing without a note, little for a miss,
+     * more near, bright in tune and growing to full with the hold. A miss is quieter than a
+     * hit on purpose.
+     */
+    fun glowTargetOf(signal: LiveSignal, config: IntonationConfig): Float {
+        val sounding = signal as? LiveSignal.Sounding ?: return 0f
+        return when (sounding.zone) {
+            Zone.OFF -> config.glowOff
+            Zone.NEAR -> config.glowNear
+            Zone.IN_TUNE ->
+                config.glowInTune + (1f - config.glowInTune) * sounding.holdProgress.toFloat().coerceIn(0f, 1f)
+        }
+    }
+
+    /** The status line (spec 3.14): hidden while a note sounds; without the permission the prompt speaks instead. */
+    fun statusLineOf(target: LiveTarget, signal: LiveSignal): StatusLine? = when (signal) {
+        is LiveSignal.Sounding, LiveSignal.NoMicPermission -> null
+        LiveSignal.TooNoisy -> StatusLine(StatusDot.BLOCKED, StatusMessage.TOO_NOISY)
+        LiveSignal.MicUnavailable -> StatusLine(StatusDot.BLOCKED, StatusMessage.MIC_UNAVAILABLE)
+        LiveSignal.Silence -> StatusLine(
+            StatusDot.READY,
+            when {
+                target.mode == LiveMode.PLAY -> StatusMessage.PLAY
+                target.lockedString != null -> StatusMessage.TUNE_LOCKED
+                else -> StatusMessage.TUNE_AUTO
+            },
         )
     }
 

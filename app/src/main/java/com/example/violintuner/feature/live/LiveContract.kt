@@ -6,6 +6,7 @@ import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.session.RecordingBar
+import kotlin.math.roundToInt
 
 enum class LiveMode { PLAY, TUNING }
 
@@ -28,8 +29,26 @@ sealed interface LiveSignal {
         /** Null while in tune. */
         val direction: Direction?,
         val holdProgress: Double,
+        /** The cents as digits: whole, within two digits, changing calmly ([LiveReadout], spec 5.8). */
+        val displayCents: Int = cents.roundToInt(),
+        /** Loudness 0..1, smoothed; the halo of the ring breathes with it. */
+        val level: Float = 0f,
+        /** Moves whenever a new note sounds; the ring sends a wave when it does. */
+        val noteSerial: Int = 0,
     ) : LiveSignal
 }
+
+/** The dot of the status line: may one play right now. Two shapes, not only two colors (spec 3.14). */
+enum class StatusDot { READY, BLOCKED }
+
+enum class StatusMessage { PLAY, TOO_NOISY, MIC_UNAVAILABLE, TUNE_AUTO, TUNE_LOCKED }
+
+/**
+ * The small line above the ring, or the hint under the string row in tuning mode — the same
+ * line in two places (spec 3.14). [StatusMessage.TUNE_LOCKED] is worded with the locked string
+ * of [TuningState].
+ */
+data class StatusLine(val dot: StatusDot, val message: StatusMessage)
 
 /** Geometry of the cents scale, taken from [IntonationConfig]. */
 data class ScaleSpec(
@@ -67,6 +86,10 @@ data class LiveState(
     val scale: ScaleSpec,
     /** Duration of the zone color cross-fade (spec 3.2). */
     val zoneCrossfadeMs: Int,
+    /** 0..1, what the glow of the ring moves towards; how fast is the screen's business (spec 5.8). */
+    val glowTarget: Float = 0f,
+    /** Null while a note sounds and without the permission: the line is hidden, its place stays. */
+    val statusLine: StatusLine? = null,
     /** How long the running practice has been going; null when none runs (the chip, spec 3.12). */
     val practiceMs: Long? = null,
 )

@@ -44,6 +44,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.test.testTimeSource
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -731,5 +732,25 @@ class LiveViewModelTest {
         val sounding = viewModel(FakeScenario.IN_TUNE)
         observe(sounding, 1_500)
         assertEquals(null, practice.running.value)
+    }
+
+    @Test
+    fun `the glow target, the level, the calm cents and the status line reach the state`() = runTest {
+        val silent = viewModel(FakeScenario.SILENCE)
+        val silentJob = observe(silent, 500)
+        assertEquals(0f, silent.state.value.glowTarget, 0f)
+        assertEquals(StatusLine(StatusDot.READY, StatusMessage.PLAY), silent.state.value.statusLine)
+        silentJob.cancel()
+
+        val playing = viewModel(FakeScenario.IN_TUNE)
+        val job = observe(playing, 1_500)
+        val state = playing.state.value
+        val signal = state.signal as LiveSignal.Sounding
+        assertNull(state.statusLine)
+        assertTrue("in tune and held for a while: past the base glow", state.glowTarget > 0.6f)
+        assertTrue(signal.level > 0f)
+        assertTrue(signal.noteSerial > 0)
+        assertEquals(signal.cents, signal.displayCents.toDouble(), 1.5)
+        job.cancel()
     }
 }

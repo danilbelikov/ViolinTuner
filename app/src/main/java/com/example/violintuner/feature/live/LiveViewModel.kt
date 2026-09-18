@@ -102,6 +102,7 @@ class LiveViewModel @Inject constructor(
     // reference pitch or the tolerance) gets a new engine and a new source collection.
     private fun pipeline(config: IntonationConfig): Flow<PipelineOutput> {
         val engine = IntonationEngine(config)
+        val readout = LiveReadout(config)
         val tap = pitchSource.audioTap
         var recorder: SessionRecorder? = null
         var audioFile: File? = null
@@ -163,7 +164,10 @@ class LiveViewModel @Inject constructor(
         }
 
         return pitchSource.frames(config)
-            .onStart { engine.reset() }
+            .onStart {
+                engine.reset()
+                readout.reset()
+            }
             .map { frame ->
                 if (awaitingSignal) {
                     if (frame.rms == 0.0) return@map PipelineOutput(LiveSignal.MicUnavailable)
@@ -182,7 +186,7 @@ class LiveViewModel @Inject constructor(
                 } else if (!recordingRequested.value && audioFile != null) {
                     finishRecording(stoppedByPlayer = true) // changed their mind before the first frame
                 }
-                PipelineOutput(LiveReducer.signalOf(reading), recorder?.progress())
+                PipelineOutput(readout.signalOf(frame, reading), recorder?.progress())
             }
             // Runs when the collection is cancelled (Live left, settings changed, permission
             // revoked) and when the source fails, before the retry below: never lose a take.
@@ -263,6 +267,8 @@ class LiveViewModel @Inject constructor(
         canRecord = LiveReducer.canRecord(target, output.signal),
         scale = ScaleSpec(config),
         zoneCrossfadeMs = config.zoneCrossfadeMs,
+        glowTarget = LiveReducer.glowTargetOf(output.signal, config),
+        statusLine = LiveReducer.statusLineOf(target, output.signal),
         practiceMs = practiceMs,
     )
 
