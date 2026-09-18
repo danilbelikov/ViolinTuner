@@ -59,6 +59,24 @@ data class IntonationConfig(
     // Cents scale on the Live screen: ±range around the target (handoff `sizes`)
     val scaleRangeCents: Double = 50.0,
 
+    // Live 2: glow of the ring, loudness and the cents readout (spec 5.8)
+    /** Glow the ring aims at while a note sounds off, near and in tune; silence is zero. */
+    val glowOff: Float = 0.25f,
+    val glowNear: Float = 0.4f,
+    /** In tune the glow starts here and grows to 1 with the hold, over [holdFillMs]. */
+    val glowInTune: Float = 0.6f,
+    /** Loudness runs from [silenceRmsDbfs] (0) to this (1). */
+    val levelCeilingDbfs: Double = -10.0,
+    /** The level follows a louder sound fast and lets go of it slowly: a ring that breathes, not twitches. */
+    val levelAttackMs: Long = 50,
+    val levelReleaseMs: Long = 300,
+    /** The cents shown change at most this often… */
+    val centsReadoutIntervalMs: Long = 200,
+    /** …and only when the pitch has moved at least this far from what is shown. */
+    val centsReadoutDeadbandCents: Double = 1.0,
+    /** Shown range: two digits and a sign is all the room there is (tuning mode goes further). */
+    val centsReadoutMax: Int = 99,
+
     // Audio framing (spec 5.1)
     val sampleRateHz: Int = 44_100,
     /** Tried in this order after the device's native rate. */
