@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}.frag{width:412px;background:#131318;border-radius:16px;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;color:#E6E4EE}.cap{font-size:11px;color:rgba(230,228,238,.5);line-height:1.4}.phone{display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden}.box{border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;flex-direction:column;box-sizing:content-box}
+@keyframes lvl{0%{transform:scaleX(.55)}18%{transform:scaleX(.82)}35%{transform:scaleX(.62)}55%{transform:scaleX(.9)}70%{transform:scaleX(.7)}100%{transform:scaleX(.55)}}
+@keyframes lvlHot{0%{transform:scaleX(.9)}30%{transform:scaleX(1)}50%{transform:scaleX(.96)}75%{transform:scaleX(1)}100%{transform:scaleX(.9)}}
+@keyframes gr{0%{transform:scaleX(.15)}20%{transform:scaleX(.5)}40%{transform:scaleX(.3)}60%{transform:scaleX(.62)}80%{transform:scaleX(.22)}100%{transform:scaleX(.15)}}
+@keyframes clipOn{0%,100%{opacity:1}50%{opacity:.55}}</style></helmet>
+
+<section class="dv-turn" id="s18a">
+<div class="dv-thd"><a class="dv-tid" href="#s18a">18a</a><span class="dv-tname">Экран сессии · плеер, вход «Звук», A/B, «Поделиться» в шапке</span></div>
+<div class="dv-opts">
+<sc-for list="{{ sessionFrames }}" as="s" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div>
+    <div style="flex:1;font-size:17px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Менуэт · 18 сентября</div>
+    <sc-if value="{{ s.hasSound }}" hint-placeholder-val="{{ true }}"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icShare }}</div></sc-if>
+  </div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:16px;padding:8px 16px 0">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between">
+      <div><div class="tn" style="font-size:64px;font-weight:800;line-height:1;letter-spacing:-2px">84<span style="font-size:28px;font-weight:600;color:#A39FB5;letter-spacing:0">%</span></div><div style="font-size:15px;color:#A39FB5;margin-top:6px;display:flex;align-items:center;gap:6px">в строе · 2:05 · {{ icNoteS }}дубль 3</div></div>
+      <div style="text-align:right;padding-bottom:4px"><div style="color:#E5B03C;font-size:15px;font-weight:600">в среднем −6 ц</div><div style="font-size:13px;color:#A39FB5;margin-top:2px">чуть занижаете</div></div>
+    </div>
+    <div style="background:#1E1D25;border-radius:20px;padding:12px 12px 10px">
+      <div class="tn" style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5;margin-bottom:8px"><span>0:00</span><span>0:04</span><span>0:08</span><span>0:12</span></div>
+      <div style="position:relative;height:132px">
+        <sc-for list="{{ rollSegs }}" as="g" hint-placeholder-count="9"><div style="position:absolute;left:{{ g.left }};top:{{ g.top }};width:{{ g.width }};height:18px;border-radius:5px;background:{{ g.color }};opacity:.9"></div></sc-for>
+        <div style="position:absolute;left:38%;top:-6px;bottom:-4px;width:2px;background:#C4ADFF"></div>
+      </div>
+    </div>
+    <sc-if value="{{ s.hasSound }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:48px;height:48px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icPlayOn }}</div>
+        <div class="tn" style="font-size:13px;color:#A39FB5;flex:none">0:47</div>
+        <div style="flex:1;position:relative;height:20px"><div style="position:absolute;left:0;right:0;top:8px;height:4px;border-radius:2px;background:#292833"></div><div style="position:absolute;left:0;width:38%;top:8px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:38%;top:0;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#C4ADFF"></div></div>
+        <div class="tn" style="font-size:13px;color:#A39FB5;flex:none">2:05</div>
+        <sc-if value="{{ s.processed }}" hint-placeholder-val="{{ false }}"><div style="display:flex;height:32px;border:1px solid #3A3846;border-radius:16px;overflow:hidden;flex:none"><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#A39FB5">A</div><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#5B43B8;color:#E9DDFF">B</div></div></sc-if>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 12px 0 14px;border-radius:16px;background:#1E1D25">{{ s.soundIcon }}<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600">Звук</div><div style="font-size:13px;color:#A39FB5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.soundState }}</div></div>{{ icChevRV }}</div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ s.noSound }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 14px;border-radius:16px;background:#1E1D25;color:#A39FB5">{{ icNoSound }}<div style="font-size:14px">Запись без звука — только разбор интонации</div></div>
+    </sc-if>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:#1E1D25;border-radius:16px;padding:14px"><div style="font-size:12px;color:#A39FB5">Распределение</div><div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin:10px 0 8px"><div style="width:84%;background:#47C97E"></div><div style="width:11%;background:#E5B03C"></div><div style="width:5%;background:#E8565C"></div></div><div class="tn" style="display:flex;gap:10px;font-size:12px"><span style="color:#47C97E">84%</span><span style="color:#E5B03C">11%</span><span style="color:#E8565C">5%</span></div></div>
+      <div style="background:#1E1D25;border-radius:16px;padding:14px"><div style="font-size:12px;color:#A39FB5">Средняя ошибка</div><div class="tn" style="font-size:28px;font-weight:700;margin-top:6px">7,3<span style="font-size:14px;font-weight:500;color:#A39FB5"> ц</span></div><div style="font-size:12px;color:#A39FB5">смещение −6 ц вниз</div></div>
+    </div>
+    <div style="display:flex;gap:4px"><div style="height:40px;padding:0 14px 0 10px;border-radius:20px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF">{{ icPencilP }}Переименовать</div><div style="height:40px;padding:0 14px 0 10px;border-radius:20px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#E8565C">{{ icTrashE }}Удалить</div></div>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Вопрос 4 — «Поделиться» в шапке</b>, иконкой 48 dp справа. Три причины. Ряд внизу — про саму запись (имя, существование), и до него нужно доскроллить; отправка — самое частое действие после прослушивания, ей место в зоне, видимой сразу. Ряд из трёх текстовых кнопок с иконками в 380 dp помещается впритык («Переименовать» одна занимает 150), и «Поделиться» встала бы между карандашом и корзиной — рядом с «Удалить» пальцу неспокойно. И на экране «Звук» отправка тоже сверху-справа доступна через главную кнопку внизу; в шапке сессии иконка — тот же глиф, что на той кнопке в листе. <b>Вопрос 3, в плеере:</b> вход «Звук» — строка-карточка под ползунком, подпись второй строкой: «выключен» · «как у всех · Камерный зал» · «свои настройки» · «как у всех · без обработки». Иконка строки — ползунки; когда обработка включена — primary, выключена — onSurfaceVariant: состояние видно и без чтения. <b>A/B</b> — пилюля 68×32 справа от длительности, появляется только с включённой обработкой; B — «обработка», по умолчанию активна: слушают то, что уйдёт получателю. <b>Без звука</b> — нет плеера, нет строки «Звук», нет иконки в шапке; вместо плеера тихая строка-пояснение, чтобы пустота не читалась как поломка.</p>
+</section>
+
+<section class="dv-turn" id="s18b">
+<div class="dv-thd"><a class="dv-tid" href="#s18b">18b–18f</a><span class="dv-tname">Экран «Звук» · шесть состояний, портрет 412 × 892</span></div>
+<div class="dv-opts">
+<sc-for list="{{ soundFrames }}" as="s" hint-placeholder-count="6">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div>
+    <div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">Менуэт · 18 сентября</div><div style="font-size:12px;color:#A39FB5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.sub }}</div></div>
+    <div style="height:40px;padding:0 14px 0 10px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF;opacity:{{ s.resetOp }}">{{ icResetP }}Сбросить</div>
+  </div>
+  <div style="padding:8px 16px 10px;border-bottom:1px solid #292833;flex:none;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:48px;height:48px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ s.playIcon }}</div>
+      <div style="flex:1;min-width:0;height:36px">{{ s.wave }}</div>
+      <sc-if value="{{ s.ab }}" hint-placeholder-val="{{ false }}"><div style="display:flex;height:32px;border:1px solid #3A3846;border-radius:16px;overflow:hidden;flex:none"><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#A39FB5">A</div><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#5B43B8;color:#E9DDFF">B</div></div></sc-if>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;height:20px">
+      <div class="tn" style="width:48px;text-align:center;font-size:12px;color:#A39FB5;flex:none">{{ s.time }}</div>
+      <div style="flex:1;display:flex;align-items:center;gap:8px;min-width:0"><div style="font-size:11px;color:#A39FB5;flex:none">выход</div>{{ s.meter }}<div class="tn" style="font-size:12px;font-weight:600;color:{{ s.lvlFg }};flex:none;width:76px;text-align:right">{{ s.lvlText }}</div></div>
+    </div>
+  </div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:14px;padding:12px 16px 0">
+    <div style="flex:none;display:flex;border:1px solid #3A3846;border-radius:18px;overflow:hidden;height:36px">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:{{ s.scopeAllBg }};color:{{ s.scopeAllFg }}">Как у всех</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:{{ s.scopeOwnBg }};color:{{ s.scopeOwnFg }};border-left:1px solid #3A3846">Свои для этой записи</div>
+    </div>
+    <div style="flex:none;display:flex;gap:8px;overflow:hidden;margin:0 -16px;padding:0 16px">
+      <sc-for list="{{ s.presets }}" as="p" hint-placeholder-count="6"><div style="height:36px;padding:0 12px;border-radius:18px;background:{{ p.bg }};border:1px solid {{ p.border }};color:{{ p.fg }};font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px;white-space:nowrap;flex:none;box-sizing:border-box">{{ p.icon }}{{ p.name }}</div></sc-for>
+    </div>
+    <div style="flex:none;font-size:11px;color:#A39FB5;display:flex;align-items:center;gap:6px;margin-top:-2px">Порядок: Эквалайзер → Компрессор → Зал → Громкость</div>
+    <div style="flex:none;display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ s.blocks }}" as="b" hint-placeholder-count="4">
+      <div style="background:#1E1D25;border-radius:20px;overflow:hidden">
+        <div style="display:flex;align-items:center;gap:12px;height:60px;padding:0 8px 0 16px">
+          <div style="width:44px;height:24px;border-radius:12px;background:{{ b.swBg }};position:relative;flex:none"><div style="position:absolute;top:2px;left:{{ b.swX }};width:20px;height:20px;border-radius:50%;background:{{ b.swFg }}"></div></div>
+          <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px">{{ b.icon }}{{ b.name }}</div><div style="font-size:12px;color:#A39FB5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.sum }}</div></div>
+          <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;transform:rotate({{ b.rot }})">{{ icChevDV }}</div>
+        </div>
+        <sc-if value="{{ b.eqOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:12px">
+          <div style="position:relative;height:168px">{{ eqCanvas }}</div>
+          <div style="display:flex;gap:6px"><sc-for list="{{ eqBands }}" as="bd" hint-placeholder-count="5"><div style="height:32px;padding:0 10px;border-radius:8px;background:{{ bd.bg }};border:1px solid {{ bd.border }};color:{{ bd.fg }};font-size:12px;font-weight:600;display:flex;align-items:center;box-sizing:border-box">{{ bd.name }}</div></sc-for></div>
+          <sc-for list="{{ eqCtrls }}" as="c" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;opacity:{{ c.op }}">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;height:20px"><div style="font-size:14px;font-weight:600">{{ c.label }}<span style="font-size:12px;color:#A39FB5;font-weight:400;margin-left:6px">{{ c.hint }}</span></div><div class="tn" style="font-size:14px;font-weight:700;color:#C4ADFF">{{ c.val }}</div></div>
+            <div style="display:flex;align-items:center;gap:4px;height:48px"><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icMinus }}</div><div style="flex:1;position:relative;height:48px"><div style="position:absolute;left:0;right:0;top:22px;height:4px;border-radius:2px;background:#292833"></div><div style="position:absolute;left:{{ c.fl }};width:{{ c.fw }};top:22px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:{{ c.def }};top:18px;width:2px;height:12px;margin-left:-1px;border-radius:1px;background:#6B6880"></div><div style="position:absolute;left:{{ c.pct }};top:14px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:{{ c.thumb }}"></div></div><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icPlusS }}</div></div>
+          </div>
+          </sc-for>
+        </div>
+        </sc-if>
+        <sc-if value="{{ b.compOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;align-items:center;gap:14px;background:#292833;border-radius:12px;padding:10px 14px">{{ compPic }}<div style="font-size:12px;color:#A39FB5;line-height:1.35;text-wrap:pretty">Тихие места станут громче, громкие — тише. Запись звучит ровнее, ничего не пропадает.</div></div>
+          <div style="display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;height:20px"><div style="font-size:14px;font-weight:600">Сколько</div><div class="tn" style="font-size:14px;font-weight:700;color:#C4ADFF">заметно · 3:1</div></div>
+            <div style="display:flex;align-items:center;gap:4px;height:48px"><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icMinus }}</div><div style="flex:1;position:relative;height:48px"><div style="position:absolute;left:0;right:0;top:22px;height:4px;border-radius:2px;background:#292833"></div><div style="position:absolute;left:0;width:52%;top:22px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:33%;top:18px;width:2px;height:12px;margin-left:-1px;border-radius:1px;background:#6B6880"></div><div style="position:absolute;left:52%;top:14px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#C4ADFF"></div></div><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icPlusS }}</div></div>
+            <div style="display:flex;justify-content:space-between;font-size:11px;color:#A39FB5;padding:0 44px;margin-top:-6px"><span>чуть</span><span>заметно</span><span>сильно</span></div>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;height:32px"><div style="font-size:12px;color:#A39FB5;flex:none">Сейчас сжимает</div>{{ grLive }}<div class="tn" style="font-size:13px;font-weight:700;color:#8FD0C9;flex:none;width:52px;text-align:right">−4 дБ</div></div>
+          <div style="display:flex;align-items:center;gap:8px;height:40px;font-size:14px;font-weight:600;color:#C4ADFF;align-self:flex-start;padding:0 12px 0 4px">Подробно{{ icChevDP }}</div>
+        </div>
+        </sc-if>
+        <sc-if value="{{ b.revOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:12px">
+          <div style="display:flex;gap:8px"><div style="flex:1;height:36px;border-radius:10px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;box-sizing:border-box">Комната</div><div style="flex:1;height:36px;border-radius:10px;background:#5B43B8;color:#E9DDFF;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">Зал</div><div style="flex:1;height:36px;border-radius:10px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;box-sizing:border-box">Собор</div></div>
+          <div style="display:flex;align-items:center;gap:12px;background:#292833;border-radius:12px;padding:10px 14px">{{ decayPic }}<div class="tn" style="font-size:12px;color:#A39FB5;line-height:1.35;flex:none">хвост 1.8 с<br>затихает до тишины</div></div>
+          <sc-for list="{{ revCtrls }}" as="c" hint-placeholder-count="4">
+          <div style="display:flex;flex-direction:column;opacity:{{ c.op }}">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;height:20px"><div style="font-size:14px;font-weight:600">{{ c.label }}<span style="font-size:12px;color:#A39FB5;font-weight:400;margin-left:6px">{{ c.hint }}</span></div><div class="tn" style="font-size:14px;font-weight:700;color:#C4ADFF">{{ c.val }}</div></div>
+            <div style="display:flex;align-items:center;gap:4px;height:48px"><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icMinus }}</div><div style="flex:1;position:relative;height:48px"><div style="position:absolute;left:0;right:0;top:22px;height:4px;border-radius:2px;background:#292833"></div><div style="position:absolute;left:{{ c.fl }};width:{{ c.fw }};top:22px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:{{ c.def }};top:18px;width:2px;height:12px;margin-left:-1px;border-radius:1px;background:#6B6880"></div><div style="position:absolute;left:{{ c.pct }};top:14px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:{{ c.thumb }}"></div></div><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icPlusS }}</div></div>
+          </div>
+          </sc-for>
+        </div>
+        </sc-if>
+        <sc-if value="{{ b.volOpen }}" hint-placeholder-val="{{ false }}">
+        <div style="padding:0 16px 16px;display:flex;flex-direction:column;gap:12px">
+          <sc-for list="{{ b.volCtrls }}" as="c" hint-placeholder-count="1">
+          <div style="display:flex;flex-direction:column">
+            <div style="display:flex;justify-content:space-between;align-items:baseline;height:20px"><div style="font-size:14px;font-weight:600">{{ c.label }}<span style="font-size:12px;color:#A39FB5;font-weight:400;margin-left:6px">{{ c.hint }}</span></div><div class="tn" style="font-size:14px;font-weight:700;color:#C4ADFF">{{ c.val }}</div></div>
+            <div style="display:flex;align-items:center;gap:4px;height:48px"><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icMinus }}</div><div style="flex:1;position:relative;height:48px"><div style="position:absolute;left:0;right:0;top:22px;height:4px;border-radius:2px;background:#292833"></div><div style="position:absolute;left:{{ c.fl }};width:{{ c.fw }};top:22px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:{{ c.def }};top:18px;width:2px;height:12px;margin-left:-1px;border-radius:1px;background:#6B6880"></div><div style="position:absolute;left:{{ c.pct }};top:14px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:{{ c.thumb }}"></div></div><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icPlusS }}</div></div>
+          </div>
+          </sc-for>
+          <div style="display:flex;align-items:flex-start;gap:10px;font-size:12px;color:{{ b.volNoteFg }};line-height:1.4;text-wrap:pretty">{{ b.volNoteIcon }}<div>{{ b.volNote }}</div></div>
+        </div>
+        </sc-if>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="padding:10px 16px 16px;flex:none;background:#131318"><div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">Поделиться</div></div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+
+<div class="dv-opt" id="18e2"><div class="dv-olabel"><a class="dv-oid" href="#18e2">18e2</a>Компрессор · «Подробно» раскрыто — пять параметров под ручкой «Сколько»; трогаешь любой — «Сколько» показывает «своё»</div><div class="dv-card">
+<div class="frag" style="gap:10px">
+  <div style="display:flex;justify-content:space-between;align-items:baseline;height:20px"><div style="font-size:14px;font-weight:600">Сколько</div><div class="tn" style="font-size:14px;font-weight:700;color:#A39FB5">своё</div></div>
+  <div style="display:flex;align-items:center;gap:8px;height:40px;font-size:14px;font-weight:600;color:#C4ADFF;align-self:flex-start;padding:0 12px 0 4px">Подробно{{ icChevUP }}</div>
+  <sc-for list="{{ compDetail }}" as="c" hint-placeholder-count="5">
+  <div style="display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;height:20px"><div style="font-size:14px;font-weight:600">{{ c.label }}<span style="font-size:12px;color:#A39FB5;font-weight:400;margin-left:6px">{{ c.hint }}</span></div><div class="tn" style="font-size:14px;font-weight:700;color:#C4ADFF">{{ c.val }}</div></div>
+    <div style="display:flex;align-items:center;gap:4px;height:48px"><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icMinus }}</div><div style="flex:1;position:relative;height:48px"><div style="position:absolute;left:0;right:0;top:22px;height:4px;border-radius:2px;background:#292833"></div><div style="position:absolute;left:{{ c.fl }};width:{{ c.fw }};top:22px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:{{ c.def }};top:18px;width:2px;height:12px;margin-left:-1px;border-radius:1px;background:#6B6880"></div><div style="position:absolute;left:{{ c.pct }};top:14px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:{{ c.thumb }}"></div></div><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icPlusS }}</div></div>
+  </div>
+  </sc-for>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 6 — «Звук».</b> Одно слово, стоит на кнопке в плеере, в заголовке раздела настроек («Звук записей») и в меню карточки («Звук…»). «Обработка» — слово из монтажной; «Звучание» красиво, но в подписи состояния («Звучание · как у всех») тяжело. Реверберацию назвали <b>«Зал»</b> с подзаголовком «реверберация»: тип-основа внутри — Комната · Зал · Собор, и заголовок блока говорит то же, что и его чипы. У компрессора подзаголовок «выравнивает громкость». <b>Вопрос 3 на экране «Звук»</b>: два места. Переключатель «Как у всех | Свои для этой записи» — первое под плеером, это режим всего экрана; и подпись в шапке дублирует его словами («как у всех · Камерный зал» / «свои настройки»). «Без обработки» — не третье состояние режима, а пресет: «как у всех» с пресетом «Без обработки» и есть выключенный звук. Тронул ручку в режиме «как у всех» — экран сам переключается на «Свои», сегмент подсвечивается, подпись в шапке меняется; никаких диалогов. <b>«Сохранить» нет</b> — вместо него живой «Сбросить» в шапке (гаснет, когда сбрасывать нечего) и подпись «свои настройки · сохраняются сами» первые 3 с после первой правки; потом просто «свои настройки». Пресеты: тронул ручку — выбранный чип гаснет, слева появляется чип «Свои» с точкой primary, а последний чип «Сохранить как пресет» становится доступен (до этого — приглушён). <b>Вопрос 5 — форма волны нужна</b>: она статичная и дешёвая, но показывает, где громкие места — без неё непонятно, слышишь ли ты компрессор или музыку. Пройденная часть — primary, остаток — `wave.rest`; ползунок — сама волна (палец по ней), ручки нет. <b>Индикатор выхода</b> — полоса 4 dp `meter.level` (стальной голубой, не зона), справа квадрат-отметка «ограничитель» 8 dp, гаснет серым; когда ограничитель работает — `meter.limit` (коралл) и слово «ограничитель» вместо числа. Не «перегруз»: в файле его не будет, а пользователю надо понять «прибавил лишнего».</p>
+</section>
+
+<section class="dv-turn" id="s18f">
+<div class="dv-thd"><a class="dv-tid" href="#s18f">18f3 · 18f4</a><span class="dv-tname">Экран «Звук» · landscape 892 × 412 и маленький экран 360 × 640</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="18f3"><div class="dv-olabel"><a class="dv-oid" href="#18f3">18f3</a>Landscape — слева шапка, плеер, пресеты и «Поделиться» (не скроллится); справа режим и блоки (скроллятся)</div><div class="dv-card">
+<div class="box" style="width:892px;height:412px;flex-direction:row">
+  <div style="width:340px;flex:none;display:flex;flex-direction:column;padding:4px 0 12px 4px;border-right:1px solid #292833">
+    <div style="display:flex;align-items:center;gap:4px;height:48px;flex:none"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">Менуэт · 18 сентября</div><div style="font-size:11px;color:#A39FB5">свои настройки</div></div><div style="height:36px;padding:0 12px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF">{{ icResetPS }}Сбросить</div></div>
+    <div style="padding:8px 12px 0 12px;display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:40px;height:40px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icPauseOnS }}</div><div style="flex:1;min-width:0;height:32px">{{ waveLand }}</div><div style="display:flex;height:28px;border:1px solid #3A3846;border-radius:14px;overflow:hidden;flex:none"><div class="tn" style="width:30px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#A39FB5">A</div><div class="tn" style="width:30px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:#5B43B8;color:#E9DDFF">B</div></div></div>
+      <div style="display:flex;align-items:center;gap:10px;height:18px"><div class="tn" style="width:40px;text-align:center;font-size:11px;color:#A39FB5;flex:none">0:41</div><div style="flex:1;display:flex;align-items:center;gap:8px;min-width:0"><div style="font-size:11px;color:#A39FB5;flex:none">выход</div>{{ meterLive2 }}<div class="tn" style="font-size:11px;font-weight:600;color:#A39FB5;flex:none;width:44px;text-align:right">−6 дБ</div></div></div>
+    </div>
+    <div style="padding:14px 12px 0;display:flex;flex-wrap:wrap;gap:6px;flex:1;align-content:flex-start">
+      <sc-for list="{{ presetsLand }}" as="p" hint-placeholder-count="8"><div style="height:32px;padding:0 10px;border-radius:16px;background:{{ p.bg }};border:1px solid {{ p.border }};color:{{ p.fg }};font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;white-space:nowrap;box-sizing:border-box">{{ p.icon }}{{ p.name }}</div></sc-for>
+    </div>
+    <div style="padding:0 12px"><div style="height:48px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">Поделиться</div></div>
+  </div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px;padding:12px 16px 0">
+    <div style="flex:none;display:flex;border:1px solid #3A3846;border-radius:18px;overflow:hidden;height:36px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#A39FB5">Как у всех</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:#5B43B8;color:#E9DDFF;border-left:1px solid #3A3846">Свои для этой записи</div></div>
+    <div style="flex:none;font-size:11px;color:#A39FB5">Порядок: Эквалайзер → Компрессор → Зал → Громкость</div>
+    <div style="flex:none;display:flex;flex-direction:column;gap:6px">
+      <sc-for list="{{ blocksLand }}" as="b" hint-placeholder-count="4">
+      <div style="background:#1E1D25;border-radius:16px;display:flex;align-items:center;gap:12px;height:56px;padding:0 8px 0 14px">
+        <div style="width:44px;height:24px;border-radius:12px;background:{{ b.swBg }};position:relative;flex:none"><div style="position:absolute;top:2px;left:{{ b.swX }};width:20px;height:20px;border-radius:50%;background:{{ b.swFg }}"></div></div>
+        <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px">{{ b.icon }}{{ b.name }}</div><div style="font-size:12px;color:#A39FB5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.sum }}</div></div>
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">{{ icChevDV }}</div>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</div></div>
+
+<div class="dv-opt" id="18f4"><div class="dv-olabel"><a class="dv-oid" href="#18f4">18f4</a>360 × 640 — плеер компактный: кнопка 40, волна 24 dp, A/B 28; занимает 84 dp из 640 (13 %)</div><div class="dv-card">
+<div class="box" style="width:360px;height:640px">
+  <div style="display:flex;align-items:center;gap:4px;padding:2px 4px 0;height:48px;flex:none"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">Менуэт · 18 сентября</div><div style="font-size:11px;color:#A39FB5">свои настройки</div></div><div style="height:36px;padding:0 12px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF">{{ icResetPS }}Сбросить</div></div>
+  <div style="padding:6px 12px 8px;border-bottom:1px solid #292833;flex:none;display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;align-items:center;gap:10px"><div style="width:40px;height:40px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icPlayOnS }}</div><div style="flex:1;min-width:0;height:24px">{{ waveSmall }}</div><div style="display:flex;height:28px;border:1px solid #3A3846;border-radius:14px;overflow:hidden;flex:none"><div class="tn" style="width:30px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#A39FB5">A</div><div class="tn" style="width:30px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:#5B43B8;color:#E9DDFF">B</div></div></div>
+    <div style="display:flex;align-items:center;gap:10px;height:16px"><div class="tn" style="width:40px;text-align:center;font-size:11px;color:#A39FB5;flex:none">0:41</div><div style="flex:1;display:flex;align-items:center;gap:8px;min-width:0"><div style="font-size:11px;color:#A39FB5;flex:none">выход</div>{{ meterIdle2 }}<div class="tn" style="font-size:11px;font-weight:600;color:#A39FB5;flex:none;width:44px;text-align:right">—</div></div></div>
+  </div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px;padding:10px 12px 0">
+    <div style="flex:none;display:flex;border:1px solid #3A3846;border-radius:18px;overflow:hidden;height:34px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#A39FB5">Как у всех</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;background:#5B43B8;color:#E9DDFF;border-left:1px solid #3A3846">Свои для этой записи</div></div>
+    <div style="flex:none;display:flex;gap:6px;overflow:hidden;margin:0 -12px;padding:0 12px"><sc-for list="{{ presetsLand }}" as="p" hint-placeholder-count="8"><div style="height:32px;padding:0 10px;border-radius:16px;background:{{ p.bg }};border:1px solid {{ p.border }};color:{{ p.fg }};font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;white-space:nowrap;flex:none;box-sizing:border-box">{{ p.icon }}{{ p.name }}</div></sc-for></div>
+    <div style="flex:none;display:flex;flex-direction:column;gap:6px">
+      <sc-for list="{{ blocksLand }}" as="b" hint-placeholder-count="4">
+      <div style="background:#1E1D25;border-radius:16px;display:flex;align-items:center;gap:10px;height:56px;padding:0 6px 0 12px">
+        <div style="width:44px;height:24px;border-radius:12px;background:{{ b.swBg }};position:relative;flex:none"><div style="position:absolute;top:2px;left:{{ b.swX }};width:20px;height:20px;border-radius:50%;background:{{ b.swFg }}"></div></div>
+        <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;display:flex;align-items:center;gap:8px">{{ b.icon }}{{ b.name }}</div><div style="font-size:12px;color:#A39FB5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ b.sum }}</div></div>
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">{{ icChevDV }}</div>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="padding:8px 12px 12px;flex:none"><div style="height:48px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">Поделиться</div></div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">В landscape плеер и пресеты — слева, в колонке 340, вместе с «Поделиться»: всё, что нужно, чтобы слушать и сравнивать, стоит на месте, пока правая колонка скроллится по блокам. Раскрытый блок справа получает всю высоту 412 минус режим; эквалайзер с кривой 168 dp и полосой чипов помещается, ползунки уходят ниже — это нормально, кривая и чипы важнее. На 360 × 640 мини-плеер 84 dp; волна 24 dp вместо 36, ниже 20 dp волну не рисуем — остаётся ползунок 4 dp с ручкой.</p>
+</section>
+
+<section class="dv-turn" id="s18g">
+<div class="dv-thd"><a class="dv-tid" href="#s18g">18g</a><span class="dv-tname">Контрол значения · один ползунок на весь экран</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="18g"><div class="dv-olabel"><a class="dv-oid" href="#18g">18g</a>Анатомия и состояния: обычный · на умолчании · перетаскивание (пузырь) · логарифмический (частота) · биполярный (усиление от центра) · выключен</div><div class="dv-card">
+<div class="frag" style="gap:18px">
+  <sc-for list="{{ ctrlStates }}" as="c" hint-placeholder-count="6">
+  <div style="display:flex;flex-direction:column;opacity:{{ c.op }}"><div class="cap" style="margin-bottom:{{ c.pt }}">{{ c.cap }}</div>
+    <div style="display:flex;justify-content:space-between;align-items:baseline;height:20px"><div style="font-size:14px;font-weight:600">{{ c.label }}<span style="font-size:12px;color:#A39FB5;font-weight:400;margin-left:6px">{{ c.hint }}</span></div><div class="tn" style="font-size:14px;font-weight:700;color:{{ c.valFg }}">{{ c.val }}</div></div>
+    <div style="display:flex;align-items:center;gap:4px;height:48px"><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icMinus }}</div><div style="flex:1;position:relative;height:48px"><div style="position:absolute;left:0;right:0;top:22px;height:4px;border-radius:2px;background:#292833"></div><div style="position:absolute;left:{{ c.fl }};width:{{ c.fw }};top:22px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:{{ c.def }};top:18px;width:2px;height:12px;margin-left:-1px;border-radius:1px;background:#6B6880"></div><div style="position:absolute;left:{{ c.pct }};top:14px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:{{ c.thumb }};box-shadow:{{ c.halo }}"></div>
+      <sc-if value="{{ c.bubble }}" hint-placeholder-val="{{ false }}"><div class="tn" style="position:absolute;left:{{ c.pct }};top:-30px;transform:translateX(-50%);background:#292833;color:#E6E4EE;border-radius:10px;padding:6px 12px;font-size:15px;font-weight:700;white-space:nowrap;box-shadow:0 6px 20px rgba(0,0,0,.4)">{{ c.bubbleText }}</div></sc-if>
+      <sc-if value="{{ c.ticks }}" hint-placeholder-val="{{ false }}"><div class="tn" style="position:absolute;left:0;right:0;top:36px;display:flex;justify-content:space-between;font-size:10px;color:#6B6880"><span>20 Гц</span><span style="position:absolute;left:23.3%;transform:translateX(-50%)">100</span><span style="position:absolute;left:56.6%;transform:translateX(-50%)">1 к</span><span style="position:absolute;left:90%;transform:translateX(-50%)">10 к</span></div></sc-if>
+    </div><div style="width:40px;height:40px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;flex:none">{{ icPlusS }}</div></div>
+  </div>
+  </sc-for>
+</div>
+</div></div>
+<div class="dv-opt" id="18g2"><div class="dv-olabel"><a class="dv-oid" href="#18g2">18g2</a>Жесты и доступность — правило одно для всех 20 ползунков экрана</div><div class="dv-card">
+<div class="frag" style="gap:10px;font-size:13px;line-height:1.5;color:#A39FB5">
+  <div><b style="color:#E6E4EE">Зона касания</b> — вся строка 48 dp, не только ручка 20: палец ловит дорожку в любом месте, ручка едет к нему с анимацией 150 мс.</div>
+  <div><b style="color:#E6E4EE">Точно</b> — кнопки − / + 40 dp, один шаг (частота: 1/12 октавы, дБ: 0.5, мс: 1 или 5, соотношение: 0.5, %: 1, с: 0.1). Долгое нажатие — автоповтор 8 шагов/с. Медленное перетаскивание: при скорости &lt; 4 dp/с чувствительность падает вдвое.</div>
+  <div><b style="color:#E6E4EE">Двойной тап</b> по строке — к значению по умолчанию (отметка на дорожке), ручка едет 200 мс.</div>
+  <div><b style="color:#E6E4EE">Логарифмические</b> — все частоты (срез, полки, середины). Центр дорожки у ползунка 20 Гц – 20 кГц — 632 Гц; у среза 40–300 — 110 Гц.</div>
+  <div><b style="color:#E6E4EE">Биполярные</b> — усиления ±12 дБ: заливка от центра к ручке, отметка умолчания = 0 в центре.</div>
+  <div><b style="color:#E6E4EE">Выключен</b> — блок или полоса отключены: строка α .38, ручка outlineVariant, −/+ не реагируют, значение остаётся видно.</div>
+  <div><b style="color:#E6E4EE">TalkBack</b> — роль «ползунок», имя «Частота, срез гула», значение «80 герц», подсказка «двойное касание — сброс»; свайп вверх/вниз = шаг; stateDescription «выключен».</div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Ползунок, не ручка.</b> Круглая ручка на стекле требует кругового жеста, и палец закрывает значение; вертикальный ход у ручки короткий — точность хуже, чем у дорожки на 268 dp. Ползунок к тому же даёт место отметке умолчания и подсказкам частот. Значение — всегда справа в строке заголовка, primary 14/700 tnum, с единицей; при перетаскивании дублируется пузырём над ручкой, потому что палец закрывает дорожку, а строка сверху может быть выше экрана после прокрутки. Один контрол на 20 параметров — глаз перестаёт его замечать и читает только подписи.</p>
+</section>
+
+<section class="dv-turn" id="s18d2">
+<div class="dv-thd"><a class="dv-tid" href="#s18d2">18d2</a><span class="dv-tname">Эквалайзер · как точка живёт под пальцем</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="18d2"><div class="dv-olabel"><a class="dv-oid" href="#18d2">18d2</a>Кривая ×1 (348 dp): покой → касание → перетаскивание. Пузырь над пальцем, точка вырастает до 28, кривая перерисовывается на каждый кадр</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ eqStages }}" as="st" hint-placeholder-count="3">
+<div class="frag" style="gap:8px"><div class="cap">{{ st.cap }}</div><div style="position:relative;height:168px">{{ st.el }}</div></div>
+</sc-for>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 1 — и точки, и ползунки.</b> Точки на кривой — для «схватил и потянул, слушая»; ползунки под ней — для числа и для ширины полосы, которую на кривой не потянешь. Пальцу не мешаем: зона захвата точки — 44 dp вокруг, но точка притягивается только к ближайшей; при касании она вырастает до 28 dp, а над пальцем на 56 dp выше появляется пузырь «частота · усиление» — палец закрывает точку, пузырь виден. Кривая перерисовывается каждый кадр (формулы биквадов честные; ниже в `dev` — какие), и изменение слышно с задержкой ~0.1 с — глаз и ухо сходятся. Срез гула на кривой — квадратная точка на 0 дБ у своей частоты: тянуть можно только по горизонтали, вертикаль игнорируется. Подписи полос человеческие — «Гул», «Низ», «Тело», «Резкость», «Воздух» — а частота и полоса стоят рядом числами; выбранная полоса — залитый чип primaryContainer, то же в подписи у точки.</p>
+</section>
+
+<section class="dv-turn" id="s18h">
+<div class="dv-thd"><a class="dv-tid" href="#s18h">18h</a><span class="dv-tname">Обработка по умолчанию · вход из «Настроек», шапка «Для всех записей», правило «как у всех ↔ свои»</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="18h1"><div class="dv-olabel"><a class="dv-oid" href="#18h1">18h1</a>«Настройки» — новая строка «Звук записей» после микрофона; подпись — текущий пресет</div><div class="dv-card">
+<div class="frag">
+  <div style="display:flex;flex-direction:column"><div style="height:56px;display:flex;align-items:center;gap:16px">{{ icFork }}<div style="flex:1"><div style="font-size:15px;font-weight:600">Эталон A4</div><div class="tn" style="font-size:13px;color:#A39FB5">440 Гц</div></div>{{ icChevRV }}</div><div style="height:56px;display:flex;align-items:center;gap:16px">{{ icTarget }}<div style="flex:1"><div style="font-size:15px;font-weight:600">Допуск</div><div class="tn" style="font-size:13px;color:#A39FB5">± 5 центов</div></div>{{ icChevRV }}</div><div style="height:56px;display:flex;align-items:center;gap:16px">{{ icMic }}<div style="flex:1"><div style="font-size:15px;font-weight:600">Микрофон</div><div style="font-size:13px;color:#A39FB5">разрешение выдано</div></div></div><div style="height:56px;display:flex;align-items:center;gap:16px;background:#1E1D25;margin:0 -16px;padding:0 16px">{{ icSoundV }}<div style="flex:1"><div style="font-size:15px;font-weight:600">Звук записей</div><div style="font-size:13px;color:#A39FB5">Камерный зал · для всех записей</div></div>{{ icChevRV }}</div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="18h2"><div class="dv-olabel"><a class="dv-oid" href="#18h2">18h2</a>Экран «Звук» из настроек — шапка «Звук записей · для всех записей»; вместо режима — строка «Слушать на…» с выбором записи; всё остальное — тот же экран</div><div class="dv-card">
+<div class="frag" style="gap:12px">
+  <div style="display:flex;align-items:center;gap:4px;height:48px;margin:-4px -12px 0"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div><div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:600;line-height:1.2">Звук записей</div><div style="font-size:12px;color:#A39FB5">для всех записей · Камерный зал</div></div><div style="height:40px;padding:0 14px 0 10px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF">{{ icResetP }}Сбросить</div></div>
+  <div style="display:flex;align-items:center;gap:12px"><div style="width:48px;height:48px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icPlayOn }}</div><div style="flex:1;min-width:0;height:36px">{{ waveIdle }}</div><div style="display:flex;height:32px;border:1px solid #3A3846;border-radius:16px;overflow:hidden;flex:none"><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#A39FB5">A</div><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#5B43B8;color:#E9DDFF">B</div></div></div>
+  <div style="display:flex;align-items:center;gap:10px;height:40px;padding:0 4px 0 14px;border-radius:12px;background:#1E1D25"><div style="font-size:13px;color:#A39FB5;flex:none">Слушать на</div><div style="flex:1;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Менуэт · 18 сентября</div><div style="font-size:11px;color:#A39FB5;flex:none">последняя со звуком</div><div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center">{{ icChevDV }}</div></div>
+  <div class="cap">Ниже — пресеты и четыре блока без изменений. Внизу вместо «Поделиться» — ничего: настройка применяется сама ко всем записям «как у всех» (в подписи шапки — сколько их: «для 23 записей»).</div>
+</div>
+</div></div>
+<div class="dv-opt" id="18h3"><div class="dv-olabel"><a class="dv-oid" href="#18h3">18h3</a>Правило на экране «Звук» записи — два положения переключателя и что под ними написано</div><div class="dv-card">
+<div class="frag" style="gap:14px">
+  <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;border:1px solid #3A3846;border-radius:18px;overflow:hidden;height:36px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:#5B43B8;color:#E9DDFF">Как у всех</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#A39FB5;border-left:1px solid #3A3846">Свои для этой записи</div></div><div style="font-size:12px;color:#A39FB5;line-height:1.4;text-wrap:pretty">Камерный зал — из «Настроек → Звук записей». Поменяете там — поменяется и здесь. Тронете любую ручку — запись получит свои настройки.</div></div>
+  <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;border:1px solid #3A3846;border-radius:18px;overflow:hidden;height:36px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;color:#A39FB5">Как у всех</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:#5B43B8;color:#E9DDFF;border-left:1px solid #3A3846">Свои для этой записи</div></div><div style="font-size:12px;color:#A39FB5;line-height:1.4;text-wrap:pretty">Только у этой записи. «Как у всех» вернёт общие настройки — свои забудутся (спросим один раз).</div></div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">Слушать умолчание — на последней записи со звуком, строка «Слушать на» под плеером открывает список записей (лист, как в «Записях», без баллов). Это честный ответ на «на чём слушать»: у владельца всегда есть свежая запись, и она ближе всего к следующей. Экран не притворяется экраном записи — заголовок «Звук записей», подпись «для всех записей», и в подписи блок-пресета «для 23 записей», чтобы было ясно, скольких касается правка. Переход «Свои → Как у всех» — единственное место с подтверждением: свои настройки теряются.</p>
+</section>
+
+<section class="dv-turn" id="s18i">
+<div class="dv-thd"><a class="dv-tid" href="#s18i">18i–18k</a><span class="dv-tname">«Поделиться» · лист выбора, подготовка, ошибка, входы из карточек</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="18i"><div class="dv-olabel"><a class="dv-oid" href="#18i">18i</a>Лист выбора (обработка включена). Выбран обработанный звук — то, что слышно в приложении. Без обработки лист пропускается — сразу системный «Поделиться»</div><div class="dv-card">
+<div style="width:412px;height:520px;border-radius:16px;background:rgba(14,14,18,.6);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden"><div style="background:#1E1D25;border-radius:28px 28px 0 0;padding:8px 16px 24px;display:flex;flex-direction:column;gap:14px">
+  <div style="width:32px;height:4px;border-radius:2px;background:#3A3846;align-self:center"></div>
+  <div style="font-size:20px;font-weight:700;padding:4px 0 0">Поделиться записью</div>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <div style="display:flex;align-items:center;gap:14px;min-height:56px;padding:8px 14px;border-radius:14px;background:#292833;box-shadow:inset 0 0 0 1.5px #C4ADFF"><div style="width:22px;height:22px;border-radius:50%;border:2px solid #C4ADFF;display:flex;align-items:center;justify-content:center;flex:none"><div style="width:11px;height:11px;border-radius:50%;background:#C4ADFF"></div></div><div style="flex:1"><div style="font-size:15px;font-weight:600">Обработанный звук</div><div style="font-size:13px;color:#A39FB5">Камерный зал · как слышно в приложении</div></div></div>
+    <div style="display:flex;align-items:center;gap:14px;min-height:56px;padding:8px 14px;border-radius:14px;background:#292833"><div style="width:22px;height:22px;border-radius:50%;border:2px solid #6B6880;flex:none"></div><div style="flex:1"><div style="font-size:15px;font-weight:600">Оригинал</div><div style="font-size:13px;color:#A39FB5">как записано, без обработки</div></div></div>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;padding:0 4px">{{ icFile }}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Менуэт соль мажор · 18 сентября.m4a</div><div class="tn" style="font-size:12px;color:#A39FB5">2:05 · ≈ 2 МБ · моно</div></div></div>
+  <div style="display:flex;align-items:center;gap:14px;height:44px;padding:0 4px"><div style="width:22px;height:22px;border-radius:6px;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icCheckS }}</div><div style="flex:1;font-size:14px">Добавить текст: <span class="tn" style="color:#A39FB5">«Менуэт · 84 % · 18 сентября»</span></div></div>
+  <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-top:4px">Продолжить</div>
+</div></div>
+</div></div>
+<div class="dv-opt" id="18j"><div class="dv-olabel"><a class="dv-oid" href="#18j">18j</a>Подготовка файла — тот же лист, содержимое сменяется (crossfade 200). Ниже — ошибка: строка внутри листа, два выхода</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+<div style="width:412px;background:#1E1D25;border-radius:28px;padding:8px 16px 24px;display:flex;flex-direction:column;gap:14px">
+  <div style="width:32px;height:4px;border-radius:2px;background:#3A3846;align-self:center"></div>
+  <div style="display:flex;align-items:baseline;justify-content:space-between;padding:4px 0 0"><div style="font-size:20px;font-weight:700">Готовим файл</div><div class="tn" style="font-size:20px;font-weight:700;color:#C4ADFF">42 %</div></div>
+  <div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="width:42%;height:100%;border-radius:3px;background:#C4ADFF"></div></div>
+  <div class="tn" style="font-size:13px;color:#A39FB5">Камерный зал · 2:05 · осталось около 2 с</div>
+  <div style="display:flex;justify-content:flex-end"><div style="height:40px;padding:0 16px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600">{{ icCloseS }}Отмена</div></div>
+</div>
+<div style="width:412px;background:#1E1D25;border-radius:28px;padding:8px 16px 24px;display:flex;flex-direction:column;gap:14px">
+  <div style="width:32px;height:4px;border-radius:2px;background:#3A3846;align-self:center"></div>
+  <div style="font-size:20px;font-weight:700;padding:4px 0 0">Не получилось подготовить файл</div>
+  <div style="font-size:14px;color:#A39FB5;line-height:1.4;text-wrap:pretty">Запись на месте, настройки тоже. Можно попробовать ещё раз или отправить оригинал без обработки.</div>
+  <div style="display:flex;gap:8px"><div style="flex:1;height:48px;border-radius:24px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600">{{ icRepeatS }}Ещё раз</div><div style="flex:1;height:48px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">Отправить оригинал</div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="18k"><div class="dv-olabel"><a class="dv-oid" href="#18k">18k</a>Быстрый вход из карточек — «⋯» (или долгое нажатие) → меню; в «Записях» и в списке дублей на экране произведения</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+<div class="frag" style="gap:8px"><div class="cap">«Записи» · сессии</div>
+  <div style="position:relative">
+    <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:14px 16px;box-shadow:0 0 0 1.5px #3A3846"><div style="width:52px;text-align:center"><div class="tn" style="font-size:26px;font-weight:800;line-height:1;color:#47C97E">84</div><div style="font-size:11px;color:#A39FB5">%</div></div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px">Менуэт{{ icStar }}</div><div style="font-size:13px;color:#A39FB5;margin-top:2px;display:flex;align-items:center;gap:4px">{{ icNoteS }}дубль 3 · 2:05 · −6 ц</div></div><div style="width:40px;height:40px;border-radius:20px;background:#292833;display:flex;align-items:center;justify-content:center">{{ icMoreOn }}</div></div>
+    <div style="position:absolute;right:8px;top:60px;width:232px;background:#292833;border-radius:12px;padding:6px;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:2">
+      <sc-for list="{{ cardMenu }}" as="m" hint-placeholder-count="4"><div style="height:44px;display:flex;align-items:center;gap:16px;padding:0 12px;font-size:15px;color:{{ m.fg }};border-radius:8px">{{ m.icon }}{{ m.name }}</div></sc-for>
+    </div>
+  </div>
+  <div style="height:150px"></div>
+</div>
+<div class="frag" style="gap:8px"><div class="cap">Экран произведения · список дублей (компактная строка 64 dp)</div>
+  <div style="position:relative">
+    <div style="display:flex;align-items:center;gap:12px;height:64px;padding:0 4px 0 12px;border-radius:12px;background:#1E1D25;box-shadow:0 0 0 1.5px #3A3846"><div class="tn" style="width:44px;font-size:22px;font-weight:800;color:#47C97E">84</div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px">Дубль 3{{ icStar }}</div><div class="tn" style="font-size:12px;color:#A39FB5">18 сентября · 2:05 · Камерный зал</div></div><div style="width:40px;height:40px;border-radius:20px;background:#292833;display:flex;align-items:center;justify-content:center">{{ icMoreOn }}</div></div>
+    <div style="position:absolute;right:8px;top:52px;width:232px;background:#292833;border-radius:12px;padding:6px;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.5);z-index:2">
+      <sc-for list="{{ cardMenu }}" as="m" hint-placeholder-count="4"><div style="height:44px;display:flex;align-items:center;gap:16px;padding:0 12px;font-size:15px;color:{{ m.fg }};border-radius:8px">{{ m.icon }}{{ m.name }}</div></sc-for>
+    </div>
+  </div>
+  <div style="height:150px"></div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Лист выбора</b> появляется, только когда есть из чего выбирать: обработка включена. Иначе тап по иконке сразу открывает системный лист с оригиналом — лишний шаг убран. Обработанный вариант выбран по умолчанию и подписан «как слышно в приложении»: это и есть обещание «что слышно — то и уйдёт». Строка файла — имя, длительность, размер, «моно»: получатель не ждёт студии. <b>Подготовка — не мигает:</b> оценка времени известна до старта (длительность × коэффициент); если ≤ 700 мс — лист выбора просто переходит в системный лист без экрана прогресса, при этом кнопка «Продолжить» 700 мс показывает состояние «Готовим…» вместо текста. Если дольше — содержимое листа сменяется на прогресс (crossfade 200) и держится не меньше 1 200 мс даже при быстром завершении. Проценты — от длительности записи, шаг не чаще 10 раз/с; «осталось около N с» — по средней скорости за первые 20 %. Отмена — сразу, файл удаляется. <b>Ошибка</b> — не тост: в листе, с двумя выходами, оригинал предлагается сразу. <b>Карточки:</b> «⋯» на карточке уже был (общий набор); меню — «Поделиться», «Звук…», «Переименовать», «Удалить». В строке дубля подпись показывает пресет, если у дубля свои настройки — так владелец видит, где обработка отличается.</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · новые ICONS, tokens, sizes, anims, формулы</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(560px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Новые ICONS — добавить в общий массив (viewBox 24, stroke 1.8, round, fill none; `F ` — заливка)</div>
+  <div class="dv-tbl" style="grid-template-columns:36px minmax(0,.7fr) minmax(0,1fr) minmax(0,2fr)">
+    <div class="h"></div><div class="h">name</div><div class="h">use</div><div class="h">paths</div>
+    <sc-for list="{{ iconRows }}" as="r" hint-placeholder-count="10"><div style="padding:6px 8px;display:flex;align-items:center">{{ r.el }}</div><div class="mono">{{ r.name }}</div><div style="color:#A39FB5">{{ r.use }}</div><div class="mono" style="color:#A39FB5;font-size:10.5px">{{ r.paths }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Новые токены</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.6fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Значение</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="5"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Формулы и диапазоны</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Что</div><div class="h">Как</div>
+    <sc-for list="{{ formulas }}" as="f" hint-placeholder-count="8"><div style="font-weight:600">{{ f.name }}</div><div style="color:#A39FB5">{{ f.v }}</div></sc-for>
+  </div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Где</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="12"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации и живые индикаторы</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="10"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const P = '#C4ADFF', PC = '#5B43B8', ONPC = '#E9DDFF', ON = '#E6E4EE', OV = '#A39FB5', ONP = '#2E1A6E', ERR = '#E8565C', SC = '#1E1D25', SCH = '#292833', OUTV = '#3A3846', DIM = '#6B6880';
+    const LVL = '#6FA0C4', GR = '#8FD0C9', LIM = '#F07A5A', REST = '#4A4858';
+    const ICONS = [
+      { name: 'share', use: 'шапка сессии · меню карточки', paths: ['M17 3.5a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z', 'M7 9.7a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z', 'M17 15.9a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z', 'M9 10.9l6-3.3M9 13.1l6 3.3'] },
+      { name: 'sound', use: 'строка «Звук» в плеере · «Звук записей» · «Звук…» в меню', paths: ['M6 4v4.5M6 12.5v7.5M12 4v9.5M12 17.5v2.5M18 4v2.5M18 10.5v9.5', 'M4 10.5h4M10 15.5h4M16 8.5h4'] },
+      { name: 'ab', use: 'подпись/иконка сравнения A/B (запас; в пилюле — буквы)', paths: ['M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16z', 'F M12 4a8 8 0 0 1 0 16V4z'] },
+      { name: 'eq', use: 'блок «Эквалайзер»', paths: ['M3 14c2.5 0 3.5-6 6.5-6s3 5 6 5 3-3 5.5-3', 'F M9.5 6.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'F M15.5 11.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'M3 19h18'] },
+      { name: 'compressor', use: 'блок «Компрессор»', paths: ['M4 12h16', 'M12 3v5.5M9.5 6.2 12 8.7l2.5-2.5', 'M12 21v-5.5M9.5 17.8l2.5-2.5 2.5 2.5'] },
+      { name: 'hall', use: 'блок «Зал» (реверберация)', paths: ['F M5 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'M9 9a4.5 4.5 0 0 1 0 6', 'M12.5 6.5a9 9 0 0 1 0 11', 'M16 4a13 13 0 0 1 0 16'] },
+      { name: 'volume', use: 'блок «Громкость»', paths: ['M4 9.5v5h3l4 3.5V6L7 9.5H4z', 'M15 9a4.2 4.2 0 0 1 0 6', 'M17.5 6a8.5 8.5 0 0 1 0 12'] },
+      { name: 'volume-off', use: 'запись без звука', paths: ['M4 9.5v5h3l4 3.5V6L7 9.5H4z', 'M15.5 9.5l4.5 5M20 9.5l-4.5 5'] },
+      { name: 'reset', use: '«Сбросить» в шапке «Звук»', paths: ['M4.5 12a7.5 7.5 0 1 0 2.2-5.3', 'M4 4v4.5h4.5'] },
+      { name: 'preset', use: 'чип «Сохранить как пресет» · свои пресеты', paths: ['M7 4h10v16l-5-3.5L7 20V4z'] },
+      { name: 'minus', use: 'кнопка − у ползунка', paths: ['M5 12h14'] },
+      { name: 'file-audio', use: 'строка файла в листе «Поделиться»', paths: ['M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z', 'M14 3v5h5', 'M11 17.5V12l3 1v3', 'F M9.5 16.5a1.5 1.3 0 1 0 0 2.6 1.5 1.3 0 1 0 0-2.6z'] },
+      { name: 'limiter', use: 'пометка у блока «Громкость» — ограничитель на выходе', paths: ['M3 15h4l2-8 3 12 3-8h7', 'M3 7h18'] },
+    ];
+    const OLD = [
+      { name: 'back', paths: ['M15 5 8 12l7 7'] }, { name: 'close', paths: ['M6 6l12 12M18 6 6 18'] }, { name: 'chevron-down', paths: ['M6 9.5l6 6 6-6'] }, { name: 'chevron-right', paths: ['M9.5 6l6 6-6 6'] },
+      { name: 'more', paths: ['F M5 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'F M12 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'F M19 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z'] },
+      { name: 'pencil', paths: ['M4 20l.9-4.1L15.7 5.1a1.6 1.6 0 0 1 2.3 0l.9.9a1.6 1.6 0 0 1 0 2.3L8.1 19.1 4 20z', 'M14.2 6.6l3.2 3.2'] },
+      { name: 'trash', paths: ['M4 7h16', 'M9 7V4.8a.8.8 0 0 1 .8-.8h4.4a.8.8 0 0 1 .8.8V7', 'M6 7l.9 12.2a1 1 0 0 0 1 .8h8.2a1 1 0 0 0 1-.8L18 7', 'M10 11v5M14 11v5'] },
+      { name: 'plus', paths: ['M12 5v14M5 12h14'] }, { name: 'check', paths: ['M5 12.5 9.5 17 19 7.5'] }, { name: 'play', paths: ['M8 5.5v13L18.5 12 8 5.5z'] }, { name: 'pause', paths: ['M7 5h3v14H7zM14 5h3v14h-3z'] },
+      { name: 'note', paths: ['M10 17.5V5l7 2.5v3.5l-7-2.5', 'F M7.5 15.5a2.5 2 0 1 0 0 4 2.5 2 0 1 0 0-4z'] }, { name: 'star', paths: ['M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z'] },
+      { name: 'fork', paths: ['M9 3v7a3 3 0 0 0 6 0V3', 'M12 13v8M9.5 21h5'] }, { name: 'target', paths: ['M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16z', 'M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8z', 'F M12 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z'] },
+      { name: 'mic', paths: ['M9 6a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V6z', 'M5.5 11.5a6.5 6.5 0 0 0 13 0', 'M12 18v3M9 21h6'] }, { name: 'repeat', paths: ['M4 12a8 8 0 0 1 14.5-4.5', 'M20 4v4h-4', 'M20 12a8 8 0 0 1-14.5 4.5', 'M4 20v-4h4'] },
+    ];
+    const byName = Object.fromEntries([...ICONS, ...OLD].map(i => [i.name, i]));
+    const ico = (name, size = 24, color = ON) => h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none', display: 'block' } },
+      byName[name].paths.map((p, i) => { const f = p.startsWith('F '); return h('path', { key: i, d: f ? p.slice(2) : p, fill: f ? color : 'none', stroke: f ? 'none' : color }); }));
+    const iconRows = ICONS.map(i => ({ name: i.name, use: i.use, el: ico(i.name, 20, ON), paths: i.paths.join('  ·  ') }));
+    // waveform
+    const wave = (played, H, key, hasWave = true) => {
+      const N = 80, bars = []; let s = 7;
+      const rnd = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+      for (let i = 0; i < N; i++) { const env = .35 + .65 * Math.abs(Math.sin(i / 9.5)) * (i > 70 ? .5 : 1); const a = Math.max(.08, env * (.55 + .45 * rnd())); const bh = a * H; bars.push(h('rect', { key: i, x: i * 3, y: (H - bh) / 2, width: 2, height: bh, rx: 1, fill: i / N < played ? P : REST })); }
+      return h('svg', { key, width: '100%', height: H, viewBox: `0 0 ${N * 3 - 1} ${H}`, preserveAspectRatio: 'none', style: { display: 'block' } }, bars.concat(h('rect', { key: 'ph', x: played * (N * 3 - 1) - 1, y: 0, width: 2, height: H, fill: P })));
+    };
+    const meter = (kind, key) => {
+      const anim = kind === 'live' ? 'lvl 2.4s ease-in-out infinite' : kind === 'hot' ? 'lvlHot 1.6s ease-in-out infinite' : 'none';
+      const w = kind === 'idle' ? 0 : kind === 'static' ? .58 : 1;
+      return h('div', { key, style: { flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 4 } }, [
+        h('div', { key: 't', style: { flex: 1, height: 4, borderRadius: 2, background: SCH, overflow: 'hidden' } }, h('div', { style: { height: '100%', width: w * 100 + '%', borderRadius: 2, background: kind === 'hot' ? `linear-gradient(90deg,${LVL} 70%,${LIM})` : LVL, transformOrigin: 'left', animation: anim } })),
+        h('div', { key: 'c', style: { width: 8, height: 8, borderRadius: 2, background: kind === 'hot' ? LIM : SCH, flex: 'none', animation: kind === 'hot' ? 'clipOn 1.6s ease-in-out infinite' : 'none' } })]);
+    };
+    const grLive = h('div', { style: { flex: 1, height: 6, borderRadius: 3, background: SCH, overflow: 'hidden', transform: 'scaleX(-1)' } }, h('div', { style: { height: '100%', width: '100%', borderRadius: 3, background: GR, transformOrigin: 'left', animation: 'gr 2.2s ease-in-out infinite' } }));
+    // sliders
+    const sl = (label, hint, val, pct, def = 50, opt = {}) => { const bi = opt.bi, on = opt.on !== false; return { label, hint, val, pct: pct + '%', def: def + '%', fl: (bi ? Math.min(50, pct) : 0) + '%', fw: (bi ? Math.abs(pct - 50) : pct) + '%', op: on ? 1 : .38, thumb: on ? P : OUTV }; };
+    const lg = (f, lo, hi) => Math.round(Math.log(f / lo) / Math.log(hi / lo) * 100);
+    const eqCtrls = [sl('Частота', 'где резкость', '3.2 кГц', lg(3200, 20, 20000), lg(3000, 20, 20000)), sl('Усиление', '', '−3.5 дБ', 50 - 3.5 / 24 * 100, 50, { bi: true }), sl('Ширина', 'узко ↔ широко', '1.2', 46, 40)];
+    const compDetail = [sl('Порог', 'с какой громкости сжимать', '−18 дБ', 55, 50), sl('Степень', 'насколько', '3:1', 22, 22), sl('Атака', 'как быстро начинает', '12 мс', 25, 25), sl('Восстановление', 'как быстро отпускает', '180 мс', 32, 32), sl('Компенсация', 'вернуть громкость', '+4 дБ', 22, 0)];
+    const revCtrls = [sl('Длина хвоста', 'как долго затихает', '1.8 с', 26, 26), sl('Предзадержка', 'расстояние до стен', '20 мс', 20, 15), sl('Яркость', 'глухо ↔ ярко', '40 %', 40, 50), sl('Доля', 'сухой ↔ мокрый', '25 %', 42, 33)];
+    const volOk = [sl('Выходное усиление', '', '+2 дБ', 58, 50, { bi: true })];
+    const volHot = [sl('Выходное усиление', '', '+9 дБ', 87, 50, { bi: true })];
+    // EQ math (drawing approximation of biquads)
+    const W = 348, H = 168, PADL = 0, x2f = null;
+    const fx = f => Math.log10(f / 20) / 3 * W, dby = db => H / 2 - db / 12 * (H / 2 - 18);
+    const l2 = (f, fc) => Math.log2(f / fc);
+    const resp = (f, b) => {
+      let g = 0;
+      if (b.hp.on) g += -10 * Math.log10(1 + Math.pow(b.hp.f / f, 4));
+      g += b.ls.g * (1 - 1 / (1 + Math.exp(-2 * l2(f, b.ls.f))));
+      for (const m of b.bells) g += m.g / (1 + Math.pow(l2(f, m.f) * m.q * 1.6, 2));
+      g += b.hs.g / (1 + Math.exp(-2 * l2(f, b.hs.f)));
+      return g;
+    };
+    const bandsBase = { hp: { on: true, f: 80 }, ls: { f: 200, g: 2 }, bells: [{ f: 800, g: -1.5, q: 1 }, { f: 3200, g: -3.5, q: 1.2 }], hs: { f: 8000, g: 2 } };
+    const eqDraw = (b, sel, stage) => {
+      const pts = []; for (let i = 0; i <= 120; i++) { const f = 20 * Math.pow(1000, i / 120); pts.push([fx(f), dby(Math.max(-12, Math.min(12, resp(f, b))))]); }
+      const d = pts.map((p, i) => (i ? 'L' : 'M') + p[0].toFixed(1) + ' ' + p[1].toFixed(1)).join('');
+      const area = d + `L${W} ${H / 2}L0 ${H / 2}Z`;
+      const nodes = [{ k: 'hp', x: fx(b.hp.f), y: dby(0), sq: true, name: 'Гул' }, { k: 'ls', x: fx(b.ls.f), y: dby(resp(b.ls.f, b)), name: 'Низ' }, { k: 'b0', x: fx(b.bells[0].f), y: dby(resp(b.bells[0].f, b)), name: 'Тело' }, { k: 'b1', x: fx(b.bells[1].f), y: dby(resp(b.bells[1].f, b)), name: 'Резкость' }, { k: 'hs', x: fx(b.hs.f), y: dby(resp(b.hs.f, b)), name: 'Воздух' }];
+      const grid = [100, 1000, 10000].map(f => h('line', { key: f, x1: fx(f), x2: fx(f), y1: 8, y2: H - 14, stroke: SCH }));
+      const lbl = [[100, '100'], [1000, '1 к'], [10000, '10 к']].map(([f, t]) => h('text', { key: t, x: fx(f), y: H - 2, fontSize: 10, fill: DIM, textAnchor: 'middle', fontFamily: 'Manrope' }, t));
+      const dbl = [[12, '+12'], [0, '0'], [-12, '−12']].map(([v, t]) => h('text', { key: t, x: 2, y: dby(v) + (v === 12 ? 9 : v === 0 ? -4 : -3), fontSize: 10, fill: DIM, fontFamily: 'Manrope' }, t));
+      const selN = nodes.find(n => n.k === sel);
+      const kids = [...grid, h('line', { key: 'z', x1: 0, x2: W, y1: H / 2, y2: H / 2, stroke: OUTV }), h('line', { key: 'top', x1: 0, x2: W, y1: dby(12), y2: dby(12), stroke: SCH, strokeDasharray: '2 4' }), h('line', { key: 'bot', x1: 0, x2: W, y1: dby(-12), y2: dby(-12), stroke: SCH, strokeDasharray: '2 4' }), ...lbl, ...dbl,
+        h('path', { key: 'a', d: area, fill: P, fillOpacity: .12 }), h('path', { key: 'c', d, fill: 'none', stroke: P, strokeWidth: 2.5, strokeLinejoin: 'round' }),
+        ...nodes.map(n => { const isSel = n.k === sel; const r = isSel ? (stage === 'drag' ? 14 : stage === 'touch' ? 12 : 9) : 7; return n.sq ? h('rect', { key: n.k, x: n.x - r + 1, y: n.y - r + 1, width: 2 * r - 2, height: 2 * r - 2, rx: 3, fill: isSel ? P : SC, stroke: P, strokeWidth: 2 }) : h('circle', { key: n.k, cx: n.x, cy: n.y, r, fill: isSel ? P : SC, stroke: P, strokeWidth: 2 }); })];
+      const svg = h('svg', { key: 's', width: W, height: H, viewBox: `0 0 ${W} ${H}`, style: { display: 'block', overflow: 'visible' } }, kids);
+      const out = [svg];
+      if (selN && stage && stage !== 'rest') {
+        out.push(h('div', { key: 'f', style: { position: 'absolute', left: selN.x + 6 - 22, top: selN.y + 10 - 22, width: 44, height: 44, borderRadius: '50%', background: 'rgba(255,255,255,.10)', border: '1px solid rgba(255,255,255,.25)' } }));
+        out.push(h('div', { key: 'b', className: 'tn', style: { position: 'absolute', left: selN.x, top: selN.y - 56 - 34, transform: 'translateX(-50%)', background: SCH, borderRadius: 10, padding: '6px 12px', fontSize: 15, fontWeight: 700, color: ON, whiteSpace: 'nowrap', boxShadow: '0 6px 20px rgba(0,0,0,.4)' } }, [h('span', { key: 1, style: { color: OV, fontWeight: 600, fontSize: 12, marginRight: 8 } }, selN.name), stage === 'drag' ? '3.2 кГц · −3.5 дБ' : '3.0 кГц · −2.0 дБ']));
+      } else if (selN) {
+        out.push(h('div', { key: 'n', style: { position: 'absolute', left: selN.x, top: selN.y - 30, transform: 'translateX(-50%)', fontSize: 11, fontWeight: 600, color: P, whiteSpace: 'nowrap' } }, selN.name));
+      }
+      return h('div', { style: { position: 'relative', width: W, height: H } }, out);
+    };
+    const bandsTouch = JSON.parse(JSON.stringify(bandsBase)); bandsTouch.bells[1] = { f: 3000, g: -2, q: 1.2 };
+    const eqCanvas = eqDraw(bandsBase, 'b1', 'drag');
+    const eqStages = [{ cap: 'Покой — полоса «Резкость» выбрана (чип), точка 18 dp, подпись над ней', el: eqDraw(bandsBase, 'b1', 'rest') }, { cap: 'Касание — точка растёт до 24, пузырь «полоса · частота · усиление» на 56 dp выше пальца', el: eqDraw(bandsTouch, 'b1', 'touch') }, { cap: 'Перетаскивание — точка 28, кривая идёт за пальцем, значение в пузыре и в ползунках ниже обновляется каждый кадр', el: eqDraw(bandsBase, 'b1', 'drag') }];
+    const eqBands = [['Гул', false], ['Низ', false], ['Тело', false], ['Резкость', true], ['Воздух', false]].map(([name, on]) => ({ name, bg: on ? PC : 'transparent', border: on ? PC : OUTV, fg: on ? ONPC : ON }));
+    // pictures
+    const compPic = h('svg', { width: 72, height: 40, viewBox: '0 0 72 40' }, [
+      ...[6, 22, 10, 30, 8, 16].map((v, i) => h('rect', { key: 'a' + i, x: i * 5, y: 20 - v / 2, width: 3, height: v, rx: 1, fill: OV })),
+      h('path', { key: 'ar', d: 'M34 20h8M39 16l3 4-3 4', stroke: OV, strokeWidth: 1.5, fill: 'none', strokeLinecap: 'round' }),
+      ...[12, 20, 14, 22, 13, 18].map((v, i) => h('rect', { key: 'b' + i, x: 46 + i * 5, y: 20 - v / 2, width: 3, height: v, rx: 1, fill: GR }))]);
+    const decayPic = h('svg', { width: 200, height: 40, viewBox: '0 0 200 40' }, Array.from({ length: 34 }, (_, i) => { const v = 36 * Math.exp(-i / 9) * (i % 3 === 1 ? .7 : 1); return h('rect', { key: i, x: i * 6, y: 20 - v / 2, width: 3, height: Math.max(v, 1.5), rx: 1, fill: i === 0 ? P : GR, fillOpacity: i === 0 ? 1 : .35 + .65 * Math.exp(-i / 9) }); }));
+    // switches / blocks
+    const sw = on => on ? { swBg: P, swX: '22px', swFg: ONP } : { swBg: OUTV, swX: '2px', swFg: OV };
+    const blk = (name, icon, on, sum, open, extra = {}) => ({ name, icon: ico(icon, 18, on ? P : OV), sum, rot: open ? '180deg' : '0deg', ...sw(on), eqOpen: false, compOpen: false, revOpen: false, volOpen: false, volCtrls: volOk, volNote: 'На выходе всегда стоит ограничитель — перегруза в файле не будет.', volNoteFg: OV, volNoteIcon: ico('limiter', 16, OV), ...extra });
+    const blocksOff = [blk('Эквалайзер', 'eq', false, 'выключен', false), blk('Компрессор', 'compressor', false, 'выравнивает громкость · выключен', false), blk('Зал', 'hall', false, 'реверберация · выключена', false), blk('Громкость', 'volume', false, '0 дБ · ограничитель на выходе', false)];
+    const blocksOn = (o = {}) => [
+      blk('Эквалайзер', 'eq', true, 'гул срезан · резкость −3.5 дБ · воздух +2', !!o.eq, { eqOpen: !!o.eq }),
+      blk('Компрессор', 'compressor', true, 'выравнивает громкость · заметно · 3:1', !!o.comp, { compOpen: !!o.comp }),
+      blk('Зал', 'hall', true, 'реверберация · Зал · 1.8 с · 25 %', !!o.rev, { revOpen: !!o.rev }),
+      blk('Громкость', 'volume', true, o.hot ? '+9 дБ · ограничитель работает' : '+2 дБ · ограничитель на выходе', !!o.vol, { volOpen: !!o.vol, volCtrls: o.hot ? volHot : volOk, volNote: o.hot ? 'Ограничитель срабатывает — громкие места сжимаются. Уберите громкость или компенсацию компрессора.' : 'На выходе всегда стоит ограничитель — перегруза в файле не будет.', volNoteFg: o.hot ? LIM : OV, volNoteIcon: ico('limiter', 16, o.hot ? LIM : OV) })];
+    const PRESETS = ['Без обработки', 'Естественно', 'Комната', 'Камерный зал', 'Большой зал', 'Тепло', 'Мой 1'];
+    const chip = (name, on) => ({ name, bg: on ? PC : 'transparent', border: on ? PC : OUTV, fg: on ? ONPC : ON, icon: null });
+    const presets = (selName, custom) => { const arr = []; if (custom) arr.push({ name: 'Свои', bg: SCH, border: SCH, fg: ON, icon: h('div', { style: { width: 8, height: 8, borderRadius: 4, background: P } }) }); arr.push(...PRESETS.map(n => chip(n, n === selName && !custom))); arr.push({ name: 'Сохранить как пресет', bg: 'transparent', border: custom ? P : OUTV, fg: custom ? P : DIM, icon: ico('preset', 16, custom ? P : DIM) }); return arr; };
+    const presetsLand = presets('Камерный зал', false);
+    const scope = own => ({ scopeAllBg: own ? 'transparent' : PC, scopeAllFg: own ? OV : ONPC, scopeOwnBg: own ? PC : 'transparent', scopeOwnFg: own ? ONPC : OV });
+    const base = { time: '0:47', playIcon: ico('play', 24, ONP), wave: wave(.38, 36, 'w'), meter: meter('idle', 'm'), lvlFg: OV, lvlText: '—', resetOp: 1, ab: true };
+    const soundFrames = [
+      { ...base, id: '18b', label: 'Первое открытие — всё выключено: режим «Как у всех», пресет «Без обработки», A/B и «Сбросить» неактивны, блоки серые', sub: 'как у всех · без обработки', resetOp: .38, ab: false, ...scope(false), presets: presets('Без обработки', false), blocks: blocksOff },
+      { ...base, id: '18c', label: 'Пресет «Камерный зал» выбран, блоки свёрнуты — в подписях краткие значения; переключатель уже на «Свои»', sub: 'свои настройки · Камерный зал', ...scope(true), presets: presets('Камерный зал', false), blocks: blocksOn() },
+      { ...base, id: '18d', label: 'Эквалайзер раскрыт, полоса «Резкость» выбрана, палец тащит точку — пузырь над пальцем; в ряду пресетов появился чип «Свои», «Сохранить как пресет» стал доступен', sub: 'свои настройки · сохраняются сами', ...scope(true), presets: presets('Камерный зал', true), blocks: blocksOn({ eq: true }) },
+      { ...base, id: '18e', label: 'Компрессор раскрыт во время воспроизведения — индикатор выхода и «Сейчас сжимает» живые; картинка-объяснение; «Подробно» свёрнуто (раскрыто — 18e2)', sub: 'свои настройки', playIcon: ico('pause', 24, ONP), time: '0:41', wave: wave(.33, 36, 'w2'), meter: meter('live', 'm2'), lvlText: '−6 дБ', ...scope(true), presets: presets('Камерный зал', true), blocks: blocksOn({ comp: true }) },
+      { ...base, id: '18f', label: 'Зал раскрыт — тип-основа чипами, картинка затухания, четыре ползунка', sub: 'свои настройки', ...scope(true), presets: presets('Камерный зал', true), blocks: blocksOn({ rev: true }) },
+      { ...base, id: '18f2', label: 'Ограничитель работает: +9 дБ на выходе — отметка у индикатора горит meter.limit, слово вместо числа, подсказка в блоке «Громкость»', sub: 'свои настройки', playIcon: ico('pause', 24, ONP), time: '1:12', wave: wave(.58, 36, 'w3'), meter: meter('hot', 'm3'), lvlFg: LIM, lvlText: 'ограничитель', ...scope(true), presets: presets('Камерный зал', true), blocks: blocksOn({ vol: true, hot: true }) },
+    ];
+    const blocksLand = blocksOn();
+    // 18a
+    const sessionFrames = [
+      { id: '18a1', label: 'Обработка выключена — строка «Звук · выключен», A/B нет, иконка строки onSurfaceVariant', hasSound: true, noSound: false, processed: false, soundIcon: ico('sound', 24, OV), soundState: 'выключен · как у всех' },
+      { id: '18a2', label: 'Обработка включена пресетом — A/B в плеере (B активна), строка «Звук» primary с названием пресета', hasSound: true, noSound: false, processed: true, soundIcon: ico('sound', 24, P), soundState: 'как у всех · Камерный зал' },
+      { id: '18a3', label: 'Запись без звука — ни плеера, ни «Звука», ни «Поделиться» в шапке; тихая строка-пояснение', hasSound: false, noSound: true, processed: false, soundIcon: null, soundState: '' },
+    ];
+    const rollSegs = [[2, 20, 14, '#47C97E'], [24, 16, 60, '#47C97E'], [42, 14, 38, '#E5B03C'], [58, 22, 82, '#47C97E'], [82, 12, 14, '#47C97E'], [10, 10, 108, '#47C97E'], [48, 8, 108, '#E8565C'], [70, 10, 38, '#47C97E'], [90, 8, 60, '#47C97E']].map(([l, w, t, c]) => ({ left: l + '%', width: w + '%', top: t + 'px', color: c }));
+    // 18g
+    const cs = (cap, label, hint, val, pct, def, o = {}) => ({ cap, ...sl(label, hint, val, pct, def, o), valFg: o.on === false ? OV : P, halo: o.drag ? `0 0 0 10px rgba(196,173,255,.18)` : 'none', bubble: !!o.drag, ticks: !!o.ticks, pt: o.drag ? '24px' : '4px', bubbleText: o.bubbleText || val });
+    const ctrlStates = [
+      cs('Обычный — подпись, человеческая подсказка, значение с единицей; отметка умолчания на дорожке', 'Длина хвоста', 'как долго затихает', '1.8 с', 26, 40),
+      cs('На умолчании — ручка стоит на отметке; двойной тап возвращает сюда', 'Доля', 'сухой ↔ мокрый', '20 %', 33, 33),
+      cs('Перетаскивание — ореол 40 dp под ручкой, пузырь со значением над ней (палец закрывает дорожку); подпись строки в этот момент скрыта', 'Порог', '', '', 55, 50, { drag: true, bubbleText: '−18 дБ' }),
+      cs('Логарифмический — частоты; подсказки 100 · 1 к · 10 к под дорожкой (только у частотных)', 'Частота', 'где резкость', '3.2 кГц', lg(3200, 20, 20000), lg(3000, 20, 20000), { ticks: true }),
+      cs('Биполярный — усиление ±12 дБ, заливка от центра', 'Усиление', '', '−3.5 дБ', 35, 50, { bi: true }),
+      cs('Выключен — блок или полоса отключены; значение остаётся видно', 'Предзадержка', 'расстояние до стен', '20 мс', 20, 15, { on: false }),
+    ];
+    const cardMenu = [{ name: 'Поделиться', icon: ico('share', 24, ON), fg: ON }, { name: 'Звук…', icon: ico('sound', 24, ON), fg: ON }, { name: 'Переименовать', icon: ico('pencil', 24, ON), fg: ON }, { name: 'Удалить', icon: ico('trash', 24, ERR), fg: ERR }];
+    const tokens = [
+      { name: 'meter.level', hex: LVL, use: 'индикатор выходного уровня (стальной голубой — не зона)' },
+      { name: 'meter.reduce', hex: GR, use: '«Сейчас сжимает» — полоса и число; «после» в картинке компрессора; хвост затухания' },
+      { name: 'meter.limit', hex: LIM, use: 'ограничитель работает: отметка 8 dp, слово, подсказка в «Громкости». Единственный предупреждающий цвет экрана; ≠ zone.off' },
+      { name: 'wave.rest', hex: REST, use: 'непройденная часть формы волны; пройденная — primary' },
+      { name: 'eq.fill', hex: 'rgba(196,173,255,.12)', use: 'заливка между кривой эквалайзера и 0 дБ (primary α .12)' },
+    ];
+    const sizes = [
+      { name: 'Мини-плеер', v: 'портрет: 48 (кнопка) + волна 36 + строка 20, паддинг 8/10 → 96 dp, прилипает под шапкой 56; A/B пилюля 68×32, сегменты 34; 360×640: кнопка 40, волна 24, A/B 60×28 → 84 dp; landscape — в левой колонке 340' },
+      { name: 'Форма волны', v: 'столбики 2 dp, шаг 3, высота ∝ RMS окна (длительность / число столбиков), мин 8 %; ползунок = волна (drag по всей высоте 36); ниже 20 dp высоты — обычный ползунок 4 dp' },
+      { name: 'Индикатор выхода', v: 'полоса 4 dp, скругление 2, 0 дБFS = правый край; отметка ограничителя 8×8 r2 справа, gap 4; число 12/600 tnum, ширина 76 (влезает «ограничитель»)' },
+      { name: 'Режим', v: 'сегменты «Как у всех | Свои для этой записи» 36 dp, r18, как «Сессии | Репертуар»' },
+      { name: 'Пресеты', v: 'чипы 36 dp r18, 13/600, gap 8, горизонтальный скролл с выездом за поля 16; чип «Свои» — surfaceContainerHigh + точка primary 8; «Сохранить как пресет» — иконка 16 + текст, контур primary когда доступен, иначе α .38' },
+      { name: 'Блок', v: 'карточка surfaceContainer r20; шапка 60: переключатель 44×24 (ручка 20), иконка 18 + заголовок 15/600, подпись 12, шеврон в контейнере 40 (поворот 180° раскрыт); контент паддинг 0 16 16, gap 12' },
+      { name: 'Ползунок', v: 'строка заголовка 20 (14/600 + подсказка 12 onSurfaceVariant; значение 14/700 primary tnum справа) + строка 48: кнопки −/+ 40 контур outlineVariant, дорожка 4 dp, ручка 20, отметка умолчания 2×12; пузырь 15/700 на surfaceContainerHigh r10, 6/12, на 30 dp выше дорожки' },
+      { name: 'Кривая EQ', v: '348×168 Canvas; ось X лог 20 Гц – 20 кГц, сетка 100 / 1 к / 10 к; ось Y ±12 дБ с полями 18; точки 18 (r7 + stroke 2), выбранная 18 → касание 24 → перетаскивание 28; срез — квадрат r3; зона захвата 44; пузырь на 56 dp выше касания' },
+      { name: 'Картинки', v: 'компрессор 72×40 (6 столбиков → 6 столбиков ровнее, стрелка); затухание 200×40 (34 столбика e^(−i/9)); обе — статичные, в плашке surfaceContainerHigh r12, паддинг 10 14' },
+      { name: 'Листы «Поделиться»', v: 'ручка 32×4; заголовок 20/700; варианты — строки 56+ r14 surfaceContainerHigh, выбранный — обводка 1.5 primary внутри, радио 22; файл — иконка 24 + две строки; главная кнопка 56' },
+      { name: 'Меню карточки', v: 'popup surfaceContainerHigh r12, паддинг 6, ширина 232, тень 0 12 40 α .5; пункты 44 с иконкой 24 gap 16; якорь — правый край кнопки «⋯» (40 с подложкой при нажатии)' },
+      { name: 'Строка «Слушать на»', v: 'surfaceContainer r12 h40: подпись 13 + название 14/600 + «последняя со звуком» 11 + шеврон 32' },
+    ];
+    const anims = [
+      { name: 'Индикатор выхода', v: 'RMS 50 мс + пик; рост мгновенный, спад 300 мс (20 дБ/с); кадр 30/с, только пока играет; при паузе спадает до 0 за 300 и число → «—». Отметка ограничителя: загорается на 600 мс при срабатывании, число заменяется словом на то же время' },
+      { name: '«Сейчас сжимает»', v: 'gain reduction из компрессора, полоса растёт справа налево (0 слева, −20 дБ = вся ширина), сглаживание как у выхода; число −N дБ шаг 0.5, обновление 10/с, чтобы не дрожало' },
+      { name: 'A/B', v: 'переключение без щелчка: кроссфейд 60 мс между сухим и обработанным буферами; сегмент едет 150 мс. Long-press на A — «пока держишь» (отпустил — вернулось на B)' },
+      { name: 'Раскрытие блока', v: 'высота 250 мс FastOutSlowIn, шеврон 180° за то же; при раскрытии — прокрутка так, чтобы шапка блока встала под мини-плеер (300)' },
+      { name: 'Точка EQ', v: 'радиус 9 → 12 (касание, 100 мс) → 14 (начало drag, 100); отпускание → 9 за 150; пузырь fade 100 / 150; кривая — каждый кадр без анимации (данные и есть анимация)' },
+      { name: 'Ползунок', v: 'тап по дорожке — ручка едет 150 мс; двойной тап — 200 мс к умолчанию; пузырь появляется на touch-down, уходит через 300 после отпускания; изменение параметра применяется к звуку сразу (≤ 100 мс)' },
+      { name: 'Переключатель блока', v: 'ручка 150 мс; выключение блока — контент не сворачивается, а тускнеет до α .38 за 150 (вернуть просто)' },
+      { name: 'Смена режима «как у всех ↔ свои»', v: 'автопереход при первой правке: сегмент едет 150, подпись шапки crossfade 150, чип «Свои» вырастает слева 200 (пресеты сдвигаются)' },
+      { name: 'Лист подготовки', v: 'порог показа 700 мс расчётного времени; показанный — минимум 1200; содержимое листа сменяется crossfade 200; проценты обновляются ≤ 10/с; завершение → системный лист без промежуточного кадра' },
+      { name: 'Ничего не мигает', v: 'кроме индикаторов уровня (это данные) и отметки ограничителя (600 мс на событие, не цикл); reduce-motion — индикаторы остаются, переходы 0' },
+    ];
+    const formulas = [
+      { name: 'Порядок сигнала', v: 'HPF → low shelf → bell 1 → bell 2 → high shelf → компрессор (peak/RMS, soft knee 6 дБ, look-ahead 0) → реверберация (алгоритмическая, Schroeder/FDN, pre-delay) → выходное усиление → ограничитель (пик −0.3 дБFS, release 50 мс). Тот же граф для прослушивания и экспорта' },
+      { name: 'Кривая EQ на экране', v: 'честная: |H(e^jω)| каждого биквада (RBJ cookbook) по 240 точкам лог-сетки, сумма в дБ, клип ±12 для рисунка (значение показывается без клипа)' },
+      { name: 'Эквалайзер — полосы', v: 'срез гула: HPF 2-го порядка 40–300 Гц, умолчание 80, вкл/выкл; «Низ»: low shelf 60–500 Гц, ±12; «Тело»: bell 200–2 000 Гц, ±12, Q 0.4–4; «Резкость»: bell 1–8 кГц, ±12, Q 0.4–4; «Воздух»: high shelf 3–16 кГц, ±12' },
+      { name: 'Ручка «Сколько»', v: 'k ∈ 0…1 → порог −6 − 24k дБ, степень 1 + 5k, атака 20 − 12k мс, восстановление 250 − 100k мс, компенсация +(6k) дБ; метки: чуть k=.25, заметно k=.5, сильно k=.85. Правка любого параметра в «Подробно» → «Сколько» = «своё» (ручка гаснет, α .38, значение «своё»)' },
+      { name: 'Реверберация', v: 'тип: комната RT60 0.3–1.2, зал 0.8–3, собор 2–6 с (ползунок «Длина хвоста» ограничен диапазоном типа); предзадержка 0–100 мс; яркость — срез хвоста 2–12 кГц (глухо ↔ ярко, показывать %); доля 0–60 %' },
+      { name: 'Выход', v: 'усиление −12…+12 дБ шаг 0.5; ограничитель всегда; событие «ограничитель» = сжатие > 0.5 дБ' },
+      { name: 'Пресеты (стартовые)', v: 'Без обработки: всё выкл · Естественно: срез 80, воздух +1.5, «Сколько» .25, зал выкл, 0 дБ · Комната: + комната 0.6 с, доля 15 % · Камерный зал: срез 80, низ +2, резкость −3.5 @3.2к, «Сколько» .5, зал 1.8 с, доля 25 %, +2 дБ · Большой зал: зал 3.2 с, доля 35 %, предзадержка 30 · Тепло: низ +3, воздух −2, «Сколько» .5, комната 0.8, доля 20 %' },
+      { name: 'Экспорт', v: 'offline render того же графа, m4a AAC 96 кбит/с моно; оценка времени = длительность × k (k измеряется на устройстве, старт 0.02); отмена — прерывание рендера и удаление temp-файла; имя: «{произведение или Сессия} · {дата}.m4a»' },
+    ];
+    return { sessionFrames, rollSegs, soundFrames, eqCanvas, eqBands, eqCtrls, compDetail, revCtrls, compPic, decayPic, grLive, eqStages, ctrlStates, cardMenu, presetsLand, blocksLand,
+      waveLand: wave(.33, 32, 'wl'), waveSmall: wave(.33, 24, 'ws'), waveIdle: wave(0, 36, 'wi'), meterLive2: meter('live', 'ml2'), meterIdle2: meter('idle', 'mi2'),
+      icBack: ico('back', 24, ON), icShare: ico('share', 24, ON), icNoteS: ico('note', 14, OV), icPlayOn: ico('play', 24, ONP), icPlayOnS: ico('play', 22, ONP), icPauseOnS: ico('pause', 22, ONP), icChevRV: ico('chevron-right', 24, OV), icChevDV: ico('chevron-down', 24, OV), icChevDP: ico('chevron-down', 18, P), icChevUP: h('div', { style: { transform: 'rotate(180deg)', display: 'flex' } }, ico('chevron-down', 18, P)),
+      icNoSound: ico('volume-off', 24, OV), icPencilP: ico('pencil', 18, P), icTrashE: ico('trash', 18, ERR), icResetP: ico('reset', 18, P), icResetPS: ico('reset', 16, P), icMinus: ico('minus', 20, ON), icPlusS: ico('plus', 20, ON),
+      icFork: ico('fork', 24, OV), icTarget: ico('target', 24, OV), icMic: ico('mic', 24, OV), icSoundV: ico('sound', 24, OV), icFile: ico('file-audio', 24, OV), icCheckS: ico('check', 16, ONP), icCloseS: ico('close', 18, ON), icRepeatS: ico('repeat', 18, ON), icStar: ico('star', 14, P), icMoreOn: ico('more', 24, ON),
+      iconRows, tokens, sizes, anims, formulas };
+  }
+}
+</script>
+</body>
+</html>
