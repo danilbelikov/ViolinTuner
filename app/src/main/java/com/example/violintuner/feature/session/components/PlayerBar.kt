@@ -1,6 +1,5 @@
 package com.example.violintuner.feature.session.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,11 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -42,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.audio.playback.PlayerState
+import com.example.violintuner.core.ui.components.PlayPauseGlyph
 import com.example.violintuner.core.ui.format.Formats
 
 private val ButtonSize = 48.dp
@@ -85,25 +81,7 @@ fun PlayerBar(
                 ),
             contentAlignment = Alignment.Center,
         ) {
-            Canvas(Modifier.size(GlyphSize)) {
-                val unit = size.width / 20f
-                if (player.playing) {
-                    // two bars 5 x 18, 4 apart
-                    val bar = Size(5 * unit, 18 * unit)
-                    val radius = CornerRadius(2 * unit)
-                    drawRoundRect(colors.onPrimary, Offset(3 * unit, unit), bar, radius)
-                    drawRoundRect(colors.onPrimary, Offset(12 * unit, unit), bar, radius)
-                } else {
-                    // handoff path: M5 3 L17 10 L5 17 Z
-                    val triangle = Path().apply {
-                        moveTo(5 * unit, 3 * unit)
-                        lineTo(17 * unit, 10 * unit)
-                        lineTo(5 * unit, 17 * unit)
-                        close()
-                    }
-                    drawPath(triangle, colors.onPrimary)
-                }
-            }
+            PlayPauseGlyph(playing = player.playing, tint = colors.onPrimary, size = GlyphSize)
         }
         Text(Formats.duration(shownMs), Modifier.widthIn(min = TimeWidth), colors.onSurfaceVariant, style = timeStyle)
         Slider(

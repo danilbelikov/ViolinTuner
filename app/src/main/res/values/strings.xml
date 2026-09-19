@@ -309,6 +309,115 @@
     <string name="takes_empty">Дублей пока нет. Запишите первый — увидите, как меняется произведение.</string>
     <string name="take_best">лучший</string>
     <string name="take_meta">%1$s · %2$s ц</string>
+    <!-- «Звук»: processing of recorded sound (spec 3.17) -->
+    <string name="sound_everyone_title">Звук записей</string>
+    <string name="sound_everyone_subtitle">для всех записей · %1$s</string>
+    <string name="sound_reset">Сбросить</string>
+    <string name="sound_caption_off">без обработки</string>
+    <string name="sound_caption_custom">свои настройки</string>
+    <string name="sound_caption_saved_hint">свои настройки · сохраняются сами</string>
+    <string name="sound_caption_everyone">как у всех · %1$s</string>
+    <string name="sound_caption_own">свои настройки · %1$s</string>
+    <string name="sound_row_off">выключен</string>
+    <string-array name="sound_preset_names">
+        <item>Без обработки</item>
+        <item>Естественно</item>
+        <item>Комната</item>
+        <item>Камерный зал</item>
+        <item>Большой зал</item>
+        <item>Тепло</item>
+    </string-array>
+    <string name="sound_preset_custom">Свои</string>
+    <string name="sound_preset_save">Сохранить как пресет</string>
+    <string name="sound_preset_remove_hint">Удерживайте, чтобы удалить</string>
+    <string name="sound_mode_everyone">Как у всех</string>
+    <string name="sound_mode_own">Свои для этой записи</string>
+    <string name="sound_mode_everyone_text">%1$s — из «Настроек → Звук записей». Поменяете там — поменяется и здесь. Тронете любую ручку — запись получит свои настройки.</string>
+    <string name="sound_mode_own_text">Только у этой записи. «Как у всех» вернёт общие настройки — свои забудутся.</string>
+    <string name="sound_listen_on">Слушать на</string>
+    <string name="sound_listen_latest">последняя со звуком</string>
+    <string name="sound_listen_none">Записей со звуком пока нет: настройки можно задать, послушать — после первой записи.</string>
+    <string name="sound_affected_one">для %1$d записи</string>
+    <string name="sound_affected_many">для %1$d записей</string>
+    <string name="sound_order">Порядок: Эквалайзер → Компрессор → Зал → Громкость</string>
+    <string name="sound_block_eq">Эквалайзер</string>
+    <string name="sound_block_compressor">Компрессор</string>
+    <string name="sound_block_compressor_sub">выравнивает громкость</string>
+    <string name="sound_block_reverb">Зал</string>
+    <string name="sound_block_reverb_sub">реверберация</string>
+    <string name="sound_block_output">Громкость</string>
+    <string name="sound_block_switch">%1$s: включить</string>
+    <string name="sound_block_off">выключено</string>
+    <string name="sound_block_expand">Развернуть</string>
+    <string name="sound_block_collapse">Свернуть</string>
+    <string name="sound_eq_flat">ровно</string>
+    <string-array name="sound_band_names">
+        <item>Гул</item>
+        <item>Низ</item>
+        <item>Тело</item>
+        <item>Резкость</item>
+        <item>Воздух</item>
+    </string-array>
+    <string name="sound_band_low_cut_switch">Срезать гул</string>
+    <string name="sound_eq_curve_description">Кривая эквалайзера. Точки полос можно перетаскивать; те же значения — ползунками ниже.</string>
+    <string name="sound_param_frequency">Частота</string>
+    <string name="sound_param_gain">Усиление</string>
+    <string name="sound_param_width">Ширина</string>
+    <string name="sound_param_width_hint">меньше — шире</string>
+    <string name="sound_param_amount">Сколько</string>
+    <string name="sound_param_amount_own">своё</string>
+    <string name="sound_amount_little">чуть</string>
+    <string name="sound_amount_noticeable">заметно</string>
+    <string name="sound_amount_lot">сильно</string>
+    <string name="sound_param_threshold">Порог</string>
+    <string name="sound_param_threshold_hint">с какой громкости сжимать</string>
+    <string name="sound_param_ratio">Степень</string>
+    <string name="sound_param_attack">Атака</string>
+    <string name="sound_param_attack_hint">как быстро схватывает</string>
+    <string name="sound_param_release">Восстановление</string>
+    <string name="sound_param_release_hint">как быстро отпускает</string>
+    <string name="sound_param_makeup">Компенсация громкости</string>
+    <string name="sound_comp_text">Тихие места станут громче, громкие — тише. Запись звучит ровнее, ничего не пропадает.</string>
+    <string name="sound_comp_now">Сейчас сжимает</string>
+    <string name="sound_comp_details">Подробно</string>
+    <string-array name="sound_space_names">
+        <item>Комната</item>
+        <item>Зал</item>
+        <item>Собор</item>
+    </string-array>
+    <string name="sound_param_decay">Длина хвоста</string>
+    <string name="sound_param_decay_hint">затихает до тишины</string>
+    <string name="sound_param_pre_delay">Предзадержка</string>
+    <string name="sound_param_pre_delay_hint">пауза перед отзвуком</string>
+    <string name="sound_param_brightness">Яркость хвоста</string>
+    <string name="sound_param_brightness_hint">глухо ↔ ярко</string>
+    <string name="sound_param_mix">Доля</string>
+    <string name="sound_param_mix_hint">сухой ↔ с залом</string>
+    <string name="sound_param_output">Усиление на выходе</string>
+    <string name="sound_limiter_note">На выходе всегда стоит ограничитель: перегруза не будет ни в динамике, ни в файле.</string>
+    <string name="sound_limiter_hot">Ограничитель работает: прибавлено больше, чем помещается. Убавьте усиление — звук станет свободнее.</string>
+    <string name="sound_meter_output">выход</string>
+    <string name="sound_meter_limiter">ограничитель</string>
+    <string name="sound_meter_none">—</string>
+    <string name="sound_slider_minus">%1$s: меньше</string>
+    <string name="sound_slider_plus">%1$s: больше</string>
+    <string name="sound_slider_reset_hint">двойное касание — сброс</string>
+    <string name="sound_slider_off">выключен</string>
+    <string name="sound_dialog_everyone_title">Вернуть как у всех?</string>
+    <string name="sound_dialog_everyone_text">Свои настройки этой записи забудутся.</string>
+    <string name="sound_dialog_everyone_confirm">Вернуть</string>
+    <string name="sound_dialog_reset_title">Сбросить звук записей?</string>
+    <string name="sound_dialog_reset_text">Все записи без своих настроек снова зазвучат как записаны.</string>
+    <string name="sound_dialog_preset_title">Новый пресет</string>
+    <string name="sound_dialog_preset_hint">Название</string>
+    <string name="sound_dialog_preset_save">Сохранить</string>
+    <string name="sound_dialog_delete_title">Удалить пресет «%1$s»?</string>
+    <string name="sound_dialog_pick_title">Слушать на</string>
+    <string name="sound_share">Поделиться</string>
+    <string name="sound_session_row">Звук</string>
+    <string name="sound_session_silent">Запись без звука — только разбор интонации</string>
+    <string name="sound_settings_row">Звук записей</string>
+    <string name="sound_settings_row_caption">%1$s · для всех записей</string>
     <string name="sound_ab_original">Оригинал: как записано</string>
     <string name="sound_ab_processed">С обработкой</string>
     <string name="stand_counter">%1$d / %2$d</string>

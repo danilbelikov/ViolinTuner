@@ -9,7 +9,9 @@ import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.session.SessionRepository
+import com.example.violintuner.core.domain.sound.SoundConfig
 import com.example.violintuner.core.domain.sound.SoundRepository
+import com.example.violintuner.feature.sound.SoundReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.File
 import javax.inject.Inject
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -30,6 +33,7 @@ class SessionViewModel @Inject constructor(
     private val playerFactory: SessionPlayerFactory,
     private val repertoire: RepertoireRepository,
     private val sound: SoundRepository,
+    private val soundConfig: SoundConfig,
     savedState: SavedStateHandle,
 ) : ViewModel() {
 
@@ -53,6 +57,7 @@ class SessionViewModel @Inject constructor(
             SessionIntent.PlayPauseClicked -> player?.let { if (it.state.value.playing) it.pause() else it.play() }
             is SessionIntent.SeekRequested -> player?.seekTo(intent.positionMs)
             is SessionIntent.OriginalSelected -> player?.setOriginal(intent.original)
+            SessionIntent.SoundClicked -> effectChannel.trySend(SessionEffect.OpenSound(sessionId))
             SessionIntent.ScreenStopped -> player?.pause()
             is SessionIntent.SegmentClicked -> updateLoaded {
                 it.copy(selectedSegment = intent.index.takeIf { index -> index in it.content.segments.indices })
@@ -94,7 +99,14 @@ class SessionViewModel @Inject constructor(
         created.load(file)
         // The recording plays the way its settings make it sound — its own, or those of all (spec 3.17);
         // change either while it plays, and it is heard at once.
-        viewModelScope.launch { sound.effective(sessionId).collect { created.setSound(it.settings) } }
+        viewModelScope.launch {
+            combine(sound.effective(sessionId), sound.presets) { effective, presets ->
+                effective to SoundRow(SoundReducer.captionOf(effective.settings, presets, soundConfig), effective.own)
+            }.collect { (effective, row) ->
+                created.setSound(effective.settings)
+                updateLoaded { it.copy(sound = row) }
+            }
+        }
         viewModelScope.launch {
             created.state.collect { playerState ->
                 updateLoaded { it.copy(player = playerState.takeIf { state -> state.ready && !state.failed }) }

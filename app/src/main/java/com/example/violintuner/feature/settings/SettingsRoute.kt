@@ -14,18 +14,21 @@ import androidx.lifecycle.repeatOnLifecycle
 @Composable
 fun SettingsRoute(
     onOpenOnboarding: () -> Unit,
+    onOpenSound: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnOpenOnboarding by rememberUpdatedState(onOpenOnboarding)
+    val currentOnOpenSound by rememberUpdatedState(onOpenSound)
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.effects.collect { effect ->
                 when (effect) {
                     SettingsEffect.OpenOnboarding -> currentOnOpenOnboarding()
+                    SettingsEffect.OpenSound -> currentOnOpenSound()
                 }
             }
         }

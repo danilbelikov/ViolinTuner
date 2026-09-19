@@ -52,6 +52,8 @@ import com.example.violintuner.feature.session.components.PianoRoll
 import com.example.violintuner.feature.session.components.PlayerBar
 import com.example.violintuner.feature.session.components.ProblemNotes
 import com.example.violintuner.feature.session.components.SessionStatCards
+import com.example.violintuner.feature.sound.SoundCaption
+import com.example.violintuner.feature.sound.captionName
 import java.time.ZoneId
 import kotlin.math.roundToInt
 
@@ -125,7 +127,10 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
                     onSeek = { onIntent(SessionIntent.SeekRequested(it)) },
                     onOriginal = { onIntent(SessionIntent.OriginalSelected(it)) },
                 )
+                state.sound?.let { SoundEntry(it, processed = player.processed) { onIntent(SessionIntent.SoundClicked) } }
             }
+            // An empty place where a player would be reads as something broken; a quiet line says what it is.
+            if (!content.hasAudio) SilentLine()
             SessionStatCards(content)
             ProblemNotes(content.problemNotes)
             Actions(onIntent)
@@ -314,4 +319,48 @@ private fun DeleteDialog(onIntent: (SessionIntent) -> Unit) {
             TextButton(onClick = { onIntent(SessionIntent.DialogDismissed) }) { Text(stringResource(R.string.dialog_cancel)) }
         },
     )
+}
+
+/** The way to the «Звук» screen, with what the recording sounds like in its second line; its icon is lit while the processing does something. */
+@Composable
+private fun SoundEntry(row: SoundRow, processed: Boolean, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val name = captionName(row.caption)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .background(colors.surfaceContainer)
+            .clickable(role = Role.Button, onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        AppIcon(AppIcons.Sound, contentDescription = null, tint = if (processed) colors.primary else colors.onSurfaceVariant)
+        Column(modifier = Modifier.weight(1f)) {
+            Text(stringResource(R.string.sound_session_row), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
+            Text(
+                text = when {
+                    !row.own -> stringResource(R.string.sound_caption_everyone, name)
+                    !processed -> stringResource(R.string.sound_row_off)
+                    row.caption == SoundCaption.Custom -> name
+                    else -> stringResource(R.string.sound_caption_own, name)
+                },
+                color = colors.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+            )
+        }
+        AppIcon(AppIcons.ChevronRight, contentDescription = null, tint = colors.onSurfaceVariant)
+    }
+}
+
+@Composable
+private fun SilentLine() {
+    val colors = MaterialTheme.colorScheme
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        AppIcon(AppIcons.VolumeOff, contentDescription = null, tint = colors.onSurfaceVariant, size = 18.dp)
+        Text(stringResource(R.string.sound_session_silent), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
+    }
 }

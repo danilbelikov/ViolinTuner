@@ -14,7 +14,12 @@ import com.example.violintuner.core.domain.progress.ProgressConfig
 import com.example.violintuner.core.domain.progress.TrophyAwarder
 import com.example.violintuner.core.domain.repertoire.FakeRepertoireRepository
 import com.example.violintuner.core.domain.session.FakeSessionRepository
+import com.example.violintuner.core.domain.sound.BuiltInPreset
+import com.example.violintuner.core.domain.sound.FakeSoundRepository
+import com.example.violintuner.core.domain.sound.SoundConfig
+import com.example.violintuner.core.domain.sound.SoundPresets
 import com.example.violintuner.core.settings.FakeSettingsRepository
+import com.example.violintuner.feature.sound.SoundCaption
 import com.example.violintuner.navigation.AppStartViewModel
 import com.example.violintuner.navigation.ONBOARDING_ROUTE
 import com.example.violintuner.navigation.TopLevelDestination
@@ -47,10 +52,10 @@ class SettingsViewModelTest {
 
     @Test
     fun `shows and edits the stored settings`() = runTest {
-        val viewModel = SettingsViewModel(repository)
+        val viewModel = SettingsViewModel(repository, FakeSoundRepository(), SoundConfig())
         backgroundScope.launch { viewModel.state.collect {} }
         runCurrent()
-        assertEquals(SettingsState(442, UserSettings.A4_OPTIONS_HZ, TolerancePreset.BEGINNER), viewModel.state.value)
+        assertEquals(SettingsState(442, UserSettings.A4_OPTIONS_HZ, TolerancePreset.BEGINNER, SoundCaption.BuiltIn(BuiltInPreset.OFF)), viewModel.state.value)
 
         viewModel.onIntent(SettingsIntent.A4Selected(440))
         viewModel.onIntent(SettingsIntent.ToleranceSelected(TolerancePreset.PRO))
@@ -61,7 +66,7 @@ class SettingsViewModelTest {
 
     @Test
     fun `restarting the onboarding clears the flag and opens it`() = runTest {
-        val viewModel = SettingsViewModel(repository)
+        val viewModel = SettingsViewModel(repository, FakeSoundRepository(), SoundConfig())
         viewModel.onIntent(SettingsIntent.RestartOnboardingClicked)
         runCurrent()
         assertFalse(repository.settings.value.onboardingDone)
@@ -95,5 +100,24 @@ class SettingsViewModelTest {
             settings, sessions, store, PracticeFinisher(practice, store, clock), PracticeConfig(), clock,
             practice, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), FakeProfileRepository(), FakeAvatarFiles(), FakeRepertoireRepository(), FakeSessionWaveforms(),
         )
+    }
+
+    @Test
+    fun `the row of the recordings' sound names the default and leads to its screen`() = runTest {
+        val sound = FakeSoundRepository()
+        val viewModel = SettingsViewModel(FakeSettingsRepository(), sound, SoundConfig())
+        val effects = mutableListOf<SettingsEffect>()
+        backgroundScope.launch { viewModel.state.collect {} }
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        runCurrent()
+        assertEquals(SoundCaption.BuiltIn(BuiltInPreset.OFF), viewModel.state.value.sound)
+
+        sound.setDefault(SoundPresets.settingsOf(BuiltInPreset.WARM, SoundConfig()))
+        runCurrent()
+        assertEquals(SoundCaption.BuiltIn(BuiltInPreset.WARM), viewModel.state.value.sound)
+
+        viewModel.onIntent(SettingsIntent.SoundClicked)
+        runCurrent()
+        assertEquals(listOf<SettingsEffect>(SettingsEffect.OpenSound), effects)
     }
 }

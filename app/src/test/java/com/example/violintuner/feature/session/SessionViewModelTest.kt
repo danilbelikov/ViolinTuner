@@ -21,12 +21,14 @@ import com.example.violintuner.core.domain.sound.SoundConfig
 import com.example.violintuner.core.domain.sound.SoundPresets
 import com.example.violintuner.core.domain.sound.SoundRules
 import com.example.violintuner.core.domain.sound.SoundSettings
+import com.example.violintuner.feature.sound.SoundCaption
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.resetMain
@@ -107,7 +109,7 @@ class SessionViewModelTest {
 
     private fun TestScope.viewModel(id: Long): SessionViewModel {
         val viewModel = SessionViewModel(
-            repository, config, audioFiles, { player }, repertoire, sound,
+            repository, config, audioFiles, { player }, repertoire, sound, SoundConfig(),
             SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)),
         )
         runCurrent()
@@ -331,6 +333,26 @@ class SessionViewModelTest {
         viewModel.onIntent(SessionIntent.OriginalSelected(original = false))
         runCurrent()
         assertFalse(viewModel.loaded().player!!.original)
+    }
+
+    @Test
+    fun `the row under the player says whose sound it is and which, and leads to the sound screen`() = runTest {
+        sound.setDefault(SoundPresets.settingsOf(BuiltInPreset.CHAMBER_HALL, SoundConfig()))
+        val id = saveSession(audio = "take.m4a")
+        val viewModel = viewModel(id)
+        assertEquals(SoundRow(SoundCaption.BuiltIn(BuiltInPreset.CHAMBER_HALL), own = false), viewModel.loaded().sound)
+
+        val own = SoundPresets.settingsOf(BuiltInPreset.WARM, SoundConfig())
+        sound.setOwn(id, own.copy(output = own.output.copy(enabled = true, gainDb = 1.0)))
+        runCurrent()
+        assertEquals(SoundRow(SoundCaption.Custom, own = true), viewModel.loaded().sound)
+
+        val effects = mutableListOf<SessionEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        viewModel.onIntent(SessionIntent.SoundClicked)
+        runCurrent()
+        assertEquals(listOf<SessionEffect>(SessionEffect.OpenSound(id)), effects)
+        assertNull("a silent session has neither player nor row", viewModel(saveSession()).loaded().sound)
     }
 
     @Test

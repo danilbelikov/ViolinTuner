@@ -165,6 +165,19 @@ object SoundParams {
         return range.clamp(next)
     }
 
+    /**
+     * A value that came from a finger — a dragged slider, a point of the curve — brought onto the
+     * grid its number is shown on: what is heard is then what is written, not «−1,5 дБ» for −1.36.
+     */
+    fun snapped(param: SoundParam, value: Double): Double = when (param.unit) {
+        SoundUnit.HERTZ -> round(value)
+        SoundUnit.DECIBEL -> snap(value, DB_STEP)
+        SoundUnit.MILLISECOND -> round(value)
+        SoundUnit.SECOND -> snap(value, SECOND_STEP)
+        SoundUnit.PERCENT, SoundUnit.AMOUNT -> snap(value, PERCENT_STEP)
+        SoundUnit.RATIO, SoundUnit.WIDTH -> snap(value, WIDTH_STEP)
+    }
+
     /** Where [value] stands on its track, 0…1. */
     fun fractionOf(param: SoundParam, value: Double, range: ParamRange): Float {
         val v = range.clamp(value)

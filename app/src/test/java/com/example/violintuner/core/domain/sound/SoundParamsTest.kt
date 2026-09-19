@@ -73,6 +73,16 @@ class SoundParamsTest {
     }
 
     @Test
+    fun `a value from under a finger lands on the grid it is shown on`() {
+        assertEquals(-1.5, SoundParams.snapped(SoundParam.PRESENCE_GAIN, -1.3585), 0.0)
+        assertEquals(1_946.0, SoundParams.snapped(SoundParam.PRESENCE_HZ, 1_946.22), 0.0)
+        assertEquals(17.0, SoundParams.snapped(SoundParam.COMP_ATTACK, 16.6), 0.0)
+        assertEquals(1.8, SoundParams.snapped(SoundParam.REVERB_DECAY, 1.77), 1e-9)
+        assertEquals(0.23, SoundParams.snapped(SoundParam.REVERB_MIX, 0.2349), 1e-9)
+        assertEquals(3.4, SoundParams.snapped(SoundParam.COMP_RATIO, 3.44), 1e-9)
+    }
+
+    @Test
     fun `steps stop at the ends of the range`() {
         assertEquals(12.0, SoundParams.stepped(SoundParam.OUTPUT_GAIN, 12.0, true, config.outputGainDb), 0.0)
         assertEquals(40.0, SoundParams.stepped(SoundParam.LOW_CUT_HZ, 40.0, false, config.lowCutHz), 0.0)

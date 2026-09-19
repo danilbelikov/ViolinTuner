@@ -22,12 +22,15 @@ import com.example.violintuner.feature.repertoire.stand.StandViewModel
 import com.example.violintuner.feature.session.SessionRoute
 import com.example.violintuner.feature.session.SessionViewModel
 import com.example.violintuner.feature.settings.SettingsRoute
+import com.example.violintuner.feature.sound.SoundRoute
+import com.example.violintuner.feature.sound.SoundViewModel
 
 const val ONBOARDING_ROUTE = "onboarding"
 private const val SESSION_ROUTE = "session"
 private const val PIECE_ROUTE = "piece"
 private const val PIECE_PATTERN = "$PIECE_ROUTE/{${PieceViewModel.ARG_PIECE_ID}}"
 private const val STAND_ROUTE = "stand"
+private const val SOUND_ROUTE = "sound"
 private const val PIECE_FORM_ROUTE = "pieceForm"
 
 @Composable
@@ -68,7 +71,19 @@ fun AppNavHost(
             route = "$SESSION_ROUTE/{${SessionViewModel.ARG_SESSION_ID}}",
             arguments = listOf(navArgument(SessionViewModel.ARG_SESSION_ID) { type = NavType.LongType }),
         ) {
-            SessionRoute(onClose = navController::popBackStack)
+            SessionRoute(onClose = navController::popBackStack, onOpenSound = navController::navigateToSound)
+        }
+        // «Звук» (spec 3.17): of one recording, or — without an id — the default of all of them. Above the tabs.
+        composable(
+            route = "$SOUND_ROUTE?${SoundViewModel.ARG_SESSION_ID}={${SoundViewModel.ARG_SESSION_ID}}",
+            arguments = listOf(
+                navArgument(SoundViewModel.ARG_SESSION_ID) {
+                    type = NavType.LongType
+                    defaultValue = SoundViewModel.EVERYONE
+                },
+            ),
+        ) {
+            SoundRoute(onClose = navController::popBackStack)
         }
         // The repertoire (spec 3.15): a piece, its form and its music stand, all above the tabs.
         composable(
@@ -123,7 +138,7 @@ fun AppNavHost(
             )
         }
         composable(TopLevelDestination.SETTINGS.route) {
-            SettingsRoute(onOpenOnboarding = navController::navigateToOnboarding)
+            SettingsRoute(onOpenOnboarding = navController::navigateToOnboarding, onOpenSound = { navController.navigateToSound(sessionId = null) })
         }
     }
 }
@@ -162,6 +177,11 @@ private fun NavHostController.navigateToOnboarding() {
 
 fun NavHostController.navigateToPiece(pieceId: Long) {
     navigate("$PIECE_ROUTE/$pieceId") { launchSingleTop = true }
+}
+
+/** [sessionId] null opens the sound of all recordings. */
+fun NavHostController.navigateToSound(sessionId: Long?) {
+    navigate("$SOUND_ROUTE?${SoundViewModel.ARG_SESSION_ID}=${sessionId ?: SoundViewModel.EVERYONE}") { launchSingleTop = true }
 }
 
 /** Opens the music stand of a piece at [pageIndex] (from zero). */

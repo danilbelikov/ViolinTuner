@@ -5,6 +5,7 @@ import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.session.StringFinger
+import com.example.violintuner.feature.sound.SoundCaption
 
 /** A note on the piano roll. Times are from the session start. */
 data class RollSegment(
@@ -65,6 +66,8 @@ sealed interface SessionState {
         val dialog: SessionDialog? = null,
         /** Null when the session has no sound, its file is gone or cannot be played. */
         val player: PlayerState? = null,
+        /** What the row «Звук» under the player says; there with the player only. */
+        val sound: SoundRow? = null,
     ) : SessionState
 }
 
@@ -78,6 +81,9 @@ sealed interface SessionIntent {
 
     /** A/B of the player: true — the recording as recorded, false — with its processing. */
     data class OriginalSelected(val original: Boolean) : SessionIntent
+
+    /** The row «Звук» under the player. */
+    data object SoundClicked : SessionIntent
 
     /** The screen is no longer visible: the sound stops (spec 3.10). */
     data object ScreenStopped : SessionIntent
@@ -99,4 +105,9 @@ sealed interface SessionIntent {
 
 sealed interface SessionEffect {
     data object Close : SessionEffect
+
+    data class OpenSound(val sessionId: Long) : SessionEffect
 }
+
+/** How the recording is made to sound, in a line (spec 3.17): whose settings, and which. */
+data class SoundRow(val caption: SoundCaption, val own: Boolean)

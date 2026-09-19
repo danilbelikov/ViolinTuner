@@ -3,14 +3,19 @@ package com.example.violintuner.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.domain.UserSettings
+import com.example.violintuner.core.domain.sound.BuiltInPreset
+import com.example.violintuner.core.domain.sound.SoundConfig
+import com.example.violintuner.core.domain.sound.SoundRepository
 import com.example.violintuner.core.settings.SettingsRepository
+import com.example.violintuner.feature.sound.SoundCaption
+import com.example.violintuner.feature.sound.SoundReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -18,12 +23,16 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
     private val repository: SettingsRepository,
+    sound: SoundRepository,
+    private val soundConfig: SoundConfig,
 ) : ViewModel() {
 
-    val state: StateFlow<SettingsState> = repository.settings.map(::stateOf).stateIn(
+    val state: StateFlow<SettingsState> = combine(repository.settings, sound.default, sound.presets) { settings, default, presets ->
+        stateOf(settings, SoundReducer.captionOf(default, presets, soundConfig))
+    }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-        initialValue = stateOf(UserSettings()),
+        initialValue = stateOf(UserSettings(), SoundCaption.BuiltIn(BuiltInPreset.OFF)),
     )
 
     private val effectChannel = Channel<SettingsEffect>(Channel.BUFFERED)
@@ -39,14 +48,16 @@ class SettingsViewModel @Inject constructor(
                     repository.setOnboardingDone(false)
                     effectChannel.send(SettingsEffect.OpenOnboarding)
                 }
+                SettingsIntent.SoundClicked -> effectChannel.send(SettingsEffect.OpenSound)
             }
         }
     }
 
-    private fun stateOf(settings: UserSettings) = SettingsState(
+    private fun stateOf(settings: UserSettings, sound: SoundCaption) = SettingsState(
         a4Hz = settings.a4Hz,
         a4OptionsHz = UserSettings.A4_OPTIONS_HZ,
         tolerance = settings.tolerance,
+        sound = sound,
     )
 
     private companion object {

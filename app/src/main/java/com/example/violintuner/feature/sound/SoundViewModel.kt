@@ -12,8 +12,8 @@ import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.session.SessionRepository
 import com.example.violintuner.core.domain.session.SessionSummary
 import com.example.violintuner.core.domain.sound.EqBand
-import com.example.violintuner.core.domain.sound.SoundBlock
 import com.example.violintuner.core.domain.sound.SoundConfig
+import com.example.violintuner.core.domain.sound.SoundParam
 import com.example.violintuner.core.domain.sound.SoundParams
 import com.example.violintuner.core.domain.sound.SoundRepository
 import com.example.violintuner.core.domain.sound.SoundRules
@@ -130,7 +130,7 @@ class SoundViewModel @Inject constructor(
             is SoundIntent.LowCutSwitched -> edit { it.copy(eq = it.eq.copy(lowCut = it.eq.lowCut.copy(enabled = intent.on))) }
             is SoundIntent.SpaceSelected -> edit { it.copy(reverb = SoundRules.withSpace(it.reverb, intent.space, config)) }
             SoundIntent.DetailsClicked -> mutableState.update { it.copy(details = !it.details) }
-            is SoundIntent.ParamChanged -> edit { SoundParams.set(intent.param, intent.value, it, config) }
+            is SoundIntent.ParamChanged -> edit { SoundParams.set(intent.param, SoundParams.snapped(intent.param, intent.value), it, config) }
             is SoundIntent.ParamStepped -> edit { settings ->
                 val range = SoundParams.range(intent.param, settings, config)
                 val from = SoundParams.get(intent.param, settings) ?: range.default
@@ -139,7 +139,9 @@ class SoundViewModel @Inject constructor(
             is SoundIntent.ParamReset -> edit { SoundParams.set(intent.param, SoundParams.range(intent.param, it, config).default, it, config) }
             is SoundIntent.BandDragged -> {
                 mutableState.update { it.copy(band = intent.band) }
-                edit { SoundReducer.dragged(it, intent.band, intent.hz, intent.gainDb, config) }
+                edit {
+                    SoundReducer.dragged(it, intent.band, SoundParams.snapped(SoundParam.BODY_HZ, intent.hz), SoundParams.snapped(SoundParam.BODY_GAIN, intent.gainDb), config)
+                }
             }
             SoundIntent.ListenOnClicked -> if (state.value.recordings.size > 1) mutableState.update { it.copy(dialog = SoundDialog.PickRecording) }
             is SoundIntent.RecordingPicked -> {

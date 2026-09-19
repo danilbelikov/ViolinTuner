@@ -1,4 +1,4 @@
-package com.example.violintuner.feature.session
+package com.example.violintuner.feature.sound
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -12,31 +12,32 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 
+/** Entry point of the «Звук» screen — of a recording, or of all of them. */
 @Composable
-fun SessionRoute(
+fun SoundRoute(
     onClose: () -> Unit,
-    onOpenSound: (sessionId: Long) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SessionViewModel = hiltViewModel(),
+    viewModel: SoundViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val meters = viewModel.meters.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnClose by rememberUpdatedState(onClose)
-    val currentOnOpenSound by rememberUpdatedState(onOpenSound)
 
-    // Leaving the screen, the app going to the background: the sound stops (spec 3.10).
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.onIntent(SessionIntent.ScreenStopped) }
+    // Leaving the screen stops the sound and stores what was set (spec 3.17).
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.onIntent(SoundIntent.ScreenStopped) }
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.effects.collect { effect ->
                 when (effect) {
-                    SessionEffect.Close -> currentOnClose()
-                    is SessionEffect.OpenSound -> currentOnOpenSound(effect.sessionId)
+                    SoundEffect.Close -> currentOnClose()
+                    // «Поделиться» arrives with stage 32; the screen does not offer it before that.
+                    is SoundEffect.Share -> Unit
                 }
             }
         }
     }
 
-    SessionScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier)
+    SoundScreen(state = state, meters = meters, onIntent = viewModel::onIntent, modifier = modifier)
 }
