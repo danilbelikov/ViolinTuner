@@ -85,3 +85,10 @@ internal val Destructive = Color(0xFFE8565C)
 // Brighter than the handoff (#E9DDFF at .35): over the light end of the fill that one could not be seen.
 internal val LevelShine = Color(0xCCF7F2FF) // near-white lilac at .8
 internal val TimerRing = Color(0x80C4ADFF) // primary at .5
+
+// The «Звук» screen (handoff sound, `tokens`). Not zone colors on purpose.
+internal val MeterLevel = Color(0xFF6FA0C4)
+internal val MeterReduce = Color(0xFF8FD0C9)
+internal val MeterLimit = Color(0xFFF07A5A)
+internal val WaveRest = Color(0xFF4A4858)
+internal val EqFill = Color(0x1FC4ADFF) // primary at .12

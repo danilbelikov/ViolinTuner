@@ -43,6 +43,19 @@ object AppIcons {
     val Fork: ImageVector by lazy { icon("Fork", IconPaths.FORK) }
     val Target: ImageVector by lazy { icon("Target", IconPaths.TARGET) }
     val Repeat: ImageVector by lazy { icon("Repeat", IconPaths.REPEAT) }
+    val Share: ImageVector by lazy { icon("Share", IconPaths.SHARE) }
+    val Sound: ImageVector by lazy { icon("Sound", IconPaths.SOUND) }
+    val Ab: ImageVector by lazy { icon("Ab", IconPaths.AB) }
+    val Eq: ImageVector by lazy { icon("Eq", IconPaths.EQ) }
+    val Compressor: ImageVector by lazy { icon("Compressor", IconPaths.COMPRESSOR) }
+    val Hall: ImageVector by lazy { icon("Hall", IconPaths.HALL) }
+    val Volume: ImageVector by lazy { icon("Volume", IconPaths.VOLUME) }
+    val VolumeOff: ImageVector by lazy { icon("VolumeOff", IconPaths.VOLUME_OFF) }
+    val Reset: ImageVector by lazy { icon("Reset", IconPaths.RESET) }
+    val Preset: ImageVector by lazy { icon("Preset", IconPaths.PRESET) }
+    val Minus: ImageVector by lazy { icon("Minus", IconPaths.MINUS) }
+    val FileAudio: ImageVector by lazy { icon("FileAudio", IconPaths.FILE_AUDIO) }
+    val Limiter: ImageVector by lazy { icon("Limiter", IconPaths.LIMITER) }
 
     val TabLive: TabIcon by lazy { tab("TabLive", IconPaths.TAB_LIVE) }
     val TabPractice: TabIcon by lazy { tab("TabPractice", IconPaths.TAB_PRACTICE) }
@@ -80,6 +93,19 @@ object AppIcons {
         "Fork" to { Fork },
         "Target" to { Target },
         "Repeat" to { Repeat },
+        "Share" to { Share },
+        "Sound" to { Sound },
+        "Ab" to { Ab },
+        "Eq" to { Eq },
+        "Compressor" to { Compressor },
+        "Hall" to { Hall },
+        "Volume" to { Volume },
+        "VolumeOff" to { VolumeOff },
+        "Reset" to { Reset },
+        "Preset" to { Preset },
+        "Minus" to { Minus },
+        "FileAudio" to { FileAudio },
+        "Limiter" to { Limiter },
     )
 
     val tabs: List<() -> TabIcon> = listOf({ TabLive }, { TabPractice }, { TabRecords }, { TabSettings })

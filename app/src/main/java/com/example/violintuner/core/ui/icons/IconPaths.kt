@@ -2,7 +2,8 @@ package com.example.violintuner.core.ui.icons
 
 /**
  * Path data of the icon set, copied verbatim from the `ICONS` array of the handoff
- * (`docs/design/project/polish`, frame 14a): a 24 × 24 grid, stroke 1.8, round caps and joins.
+ * (`docs/design/project/polish`, frame 14a; `docs/design/project/sound` added its own): a 24 × 24 grid,
+ * stroke 1.8, round caps and joins.
  * A path that starts with [FILLED] is a filled shape without a stroke (dots, a note head).
  * Generated from the handoff — change an icon there, not here.
  */
@@ -95,6 +96,45 @@ internal object IconPaths {
 
     /** Пройти онбординг снова */
     val REPEAT = listOf("M4 12a8 8 0 0 1 14.5-4.5", "M20 4v4h-4", "M20 12a8 8 0 0 1-14.5 4.5", "M4 20v-4h4")
+
+    /** шапка сессии · меню карточки */
+    val SHARE = listOf("M17 3.5a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z", "M7 9.7a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z", "M17 15.9a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z", "M9 10.9l6-3.3M9 13.1l6 3.3")
+
+    /** строка «Звук» в плеере · «Звук записей» · «Звук…» в меню */
+    val SOUND = listOf("M6 4v4.5M6 12.5v7.5M12 4v9.5M12 17.5v2.5M18 4v2.5M18 10.5v9.5", "M4 10.5h4M10 15.5h4M16 8.5h4")
+
+    /** подпись/иконка сравнения A/B (запас; в пилюле — буквы) */
+    val AB = listOf("M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16z", "F M12 4a8 8 0 0 1 0 16V4z")
+
+    /** блок «Эквалайзер» */
+    val EQ = listOf("M3 14c2.5 0 3.5-6 6.5-6s3 5 6 5 3-3 5.5-3", "F M9.5 6.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z", "F M15.5 11.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z", "M3 19h18")
+
+    /** блок «Компрессор» */
+    val COMPRESSOR = listOf("M4 12h16", "M12 3v5.5M9.5 6.2 12 8.7l2.5-2.5", "M12 21v-5.5M9.5 17.8l2.5-2.5 2.5 2.5")
+
+    /** блок «Зал» (реверберация) */
+    val HALL = listOf("F M5 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z", "M9 9a4.5 4.5 0 0 1 0 6", "M12.5 6.5a9 9 0 0 1 0 11", "M16 4a13 13 0 0 1 0 16")
+
+    /** блок «Громкость» */
+    val VOLUME = listOf("M4 9.5v5h3l4 3.5V6L7 9.5H4z", "M15 9a4.2 4.2 0 0 1 0 6", "M17.5 6a8.5 8.5 0 0 1 0 12")
+
+    /** запись без звука */
+    val VOLUME_OFF = listOf("M4 9.5v5h3l4 3.5V6L7 9.5H4z", "M15.5 9.5l4.5 5M20 9.5l-4.5 5")
+
+    /** «Сбросить» в шапке «Звук» */
+    val RESET = listOf("M4.5 12a7.5 7.5 0 1 0 2.2-5.3", "M4 4v4.5h4.5")
+
+    /** чип «Сохранить как пресет» · свои пресеты */
+    val PRESET = listOf("M7 4h10v16l-5-3.5L7 20V4z")
+
+    /** кнопка − у ползунка */
+    val MINUS = listOf("M5 12h14")
+
+    /** строка файла в листе «Поделиться» */
+    val FILE_AUDIO = listOf("M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z", "M14 3v5h5", "M11 17.5V12l3 1v3", "F M9.5 16.5a1.5 1.3 0 1 0 0 2.6 1.5 1.3 0 1 0 0-2.6z")
+
+    /** пометка у блока «Громкость» — ограничитель на выходе */
+    val LIMITER = listOf("M3 15h4l2-8 3 12 3-8h7", "M3 7h18")
 
     /** What a path of a tab icon does when its tab is selected. */
     enum class Selected { AS_IS, FILL, CUT }
