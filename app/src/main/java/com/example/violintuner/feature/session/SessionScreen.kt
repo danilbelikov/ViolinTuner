@@ -1,6 +1,5 @@
 package com.example.violintuner.feature.session
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -32,9 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -46,6 +43,8 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.history.components.sessionTitle
 import com.example.violintuner.feature.session.components.NoteSheet
@@ -158,13 +157,7 @@ private fun TopBar(title: String, onBack: () -> Unit) {
                 .clickable(onClickLabel = stringResource(R.string.session_back), role = Role.Button, onClick = onBack),
             contentAlignment = Alignment.Center,
         ) {
-            // chevron of the handoff: M15 5 L8 12 L15 19 in a 24 dp box
-            Canvas(Modifier.size(24.dp)) {
-                val unit = size.width / 24f
-                val stroke = 2.2f * unit
-                drawLine(colors.onSurface, Offset(15 * unit, 5 * unit), Offset(8 * unit, 12 * unit), stroke, StrokeCap.Round)
-                drawLine(colors.onSurface, Offset(8 * unit, 12 * unit), Offset(15 * unit, 19 * unit), stroke, StrokeCap.Round)
-            }
+            AppIcon(AppIcons.Back, contentDescription = null, tint = colors.onSurface)
         }
         Text(
             text = title,

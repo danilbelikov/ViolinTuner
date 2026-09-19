@@ -5,7 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -46,9 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -62,6 +59,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.repertoire.PieceStatus
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.repertoire.components.SheetThumb
 import com.example.violintuner.feature.repertoire.components.StatusChip
@@ -232,13 +232,7 @@ private fun TopBar(title: String, titleVisible: Boolean, height: Dp, onIntent: (
                 .semantics { contentDescription = back },
             contentAlignment = Alignment.Center,
         ) {
-            val tint = colors.onSurface
-            Canvas(Modifier.size(20.dp)) {
-                val stroke = 2.2.dp.toPx()
-                val tip = Offset(size.width * 0.3f, size.height / 2)
-                drawLine(tint, Offset(size.width * 0.65f, size.height * 0.2f), tip, stroke, StrokeCap.Round)
-                drawLine(tint, tip, Offset(size.width * 0.65f, size.height * 0.8f), stroke, StrokeCap.Round)
-            }
+            AppIcon(AppIcons.Back, contentDescription = null, tint = colors.onSurface)
         }
         // The large title below says it first; this one takes over once that has scrolled away.
         Box(modifier = Modifier.weight(1f)) {
@@ -322,12 +316,7 @@ private fun StatusMenu(status: PieceStatus, open: Boolean, onIntent: (PieceInten
 
 @Composable
 private fun Chevron(tint: Color) {
-    Canvas(Modifier.size(10.dp)) {
-        val stroke = 1.8.dp.toPx()
-        val tip = Offset(size.width / 2, size.height * 0.7f)
-        drawLine(tint, Offset(size.width * 0.15f, size.height * 0.35f), tip, stroke, StrokeCap.Round)
-        drawLine(tint, tip, Offset(size.width * 0.85f, size.height * 0.35f), stroke, StrokeCap.Round)
-    }
+    AppIcon(AppIcons.ChevronDown, contentDescription = null, tint = tint, size = IconSizes.InText)
 }
 
 /**
@@ -440,7 +429,7 @@ private fun AddTile(metrics: Metrics, addPhoto: AddPhotoActions) {
             verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            Text("+", color = colors.primary, style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp))
+            AppIcon(AppIcons.Plus, contentDescription = null, tint = colors.primary)
             Text(stringResource(R.string.piece_sheets_add_short), color = colors.primary, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
         }
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, containerColor = colors.surfaceContainerHigh) {

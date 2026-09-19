@@ -12,7 +12,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -56,9 +55,9 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
@@ -75,6 +74,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.repertoire.piece.TakeProblem
 import com.example.violintuner.feature.repertoire.piece.TakeState
@@ -102,6 +103,7 @@ private val BounceDistance = 8.dp
 private val HintInset = 8.dp
 private const val PILL_ALPHA = 0.9f
 private const val CAPSULE_ALPHA = 0.7f
+private const val ICON_DISC_ALPHA = 0.7f
 private const val TABULAR_FIGURES = "tnum"
 private const val MS_PER_SECOND = 1_000L
 
@@ -373,7 +375,7 @@ private fun Panel(
                     .padding(horizontal = 4.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                PanelIconButton(stringResource(R.string.session_back), { onIntent(StandIntent.BackClicked) }) { tint -> drawBackArrow(tint) }
+                PanelIconButton(AppIcons.Back, stringResource(R.string.session_back)) { onIntent(StandIntent.BackClicked) }
                 Text(
                     text = counter,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -381,7 +383,7 @@ private fun Panel(
                     style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
                     modifier = Modifier.weight(1f),
                 )
-                PanelIconButton(stringResource(R.string.stand_delete_page), { onIntent(StandIntent.DeleteClicked) }) { tint -> drawBin(tint) }
+                PanelIconButton(AppIcons.Trash, stringResource(R.string.stand_delete_page)) { onIntent(StandIntent.DeleteClicked) }
             }
         }
         AnimatedVisibility(
@@ -415,38 +417,17 @@ private fun Panel(
     }
 }
 
+/** A lone icon over the notes: on a dark disc of its own, or a zoomed bright sheet would swallow the outline (handoff `sizes`). */
 @Composable
-private fun PanelIconButton(description: String, onClick: () -> Unit, glyph: androidx.compose.ui.graphics.drawscope.DrawScope.(Color) -> Unit) {
-    val tint = MaterialTheme.colorScheme.onSurface
+private fun PanelIconButton(icon: ImageVector, description: String, onClick: () -> Unit) {
     Box(
         modifier = Modifier
             .size(PanelButton)
             .clip(CircleShape)
-            .clickable(role = Role.Button, onClick = onClick)
-            .semantics { contentDescription = description },
+            .background(MaterialTheme.colorScheme.surface.copy(alpha = ICON_DISC_ALPHA))
+            .clickable(role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { Canvas(Modifier.size(22.dp)) { glyph(tint) } }
-}
-
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBackArrow(tint: Color) {
-    val stroke = 2.2.dp.toPx()
-    val tip = Offset(size.width * 0.3f, size.height / 2)
-    drawLine(tint, Offset(size.width * 0.65f, size.height * 0.2f), tip, stroke, StrokeCap.Round)
-    drawLine(tint, tip, Offset(size.width * 0.65f, size.height * 0.8f), stroke, StrokeCap.Round)
-}
-
-/** The bin of the handoff (22×22): a lid line, a handle, a tapering body. There is no icon library in the project. */
-private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawBin(tint: Color) {
-    val unit = size.width / 22f
-    val stroke = 1.8.dp.toPx()
-    fun line(x1: Float, y1: Float, x2: Float, y2: Float) = drawLine(tint, Offset(x1 * unit, y1 * unit), Offset(x2 * unit, y2 * unit), stroke, StrokeCap.Round)
-    line(4f, 6f, 18f, 6f)
-    line(8f, 6f, 8f, 4f)
-    line(8f, 4f, 14f, 4f)
-    line(14f, 4f, 14f, 6f)
-    line(6f, 6f, 7f, 18f)
-    line(7f, 18f, 15f, 18f)
-    line(15f, 18f, 16f, 6f)
+    ) { AppIcon(icon, contentDescription = description, tint = MaterialTheme.colorScheme.onSurface) }
 }
 
 /** «● Записать дубль» at rest; «dot · timer · stop» while a take runs. Blind like the row on the piece screen: nothing about the notes. */

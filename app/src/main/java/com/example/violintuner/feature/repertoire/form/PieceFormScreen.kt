@@ -2,7 +2,6 @@ package com.example.violintuner.feature.repertoire.form
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,9 +44,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -63,6 +60,8 @@ import com.example.violintuner.core.domain.repertoire.MusicalKey
 import com.example.violintuner.core.domain.repertoire.PieceStatus
 import com.example.violintuner.core.domain.repertoire.Tonic
 import com.example.violintuner.core.ui.components.SegmentedSwitch
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.repertoire.components.TempoStepper
 import com.example.violintuner.feature.repertoire.components.statusLabel
@@ -148,12 +147,7 @@ private fun TopBar(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
                 .semantics { contentDescription = close },
             contentAlignment = Alignment.Center,
         ) {
-            val tint = colors.onSurface
-            Canvas(Modifier.size(16.dp)) {
-                val stroke = 2.2.dp.toPx()
-                drawLine(tint, Offset.Zero, Offset(size.width, size.height), stroke, StrokeCap.Round)
-                drawLine(tint, Offset(size.width, 0f), Offset(0f, size.height), stroke, StrokeCap.Round)
-            }
+            AppIcon(AppIcons.Close, contentDescription = null, tint = colors.onSurface)
         }
         Text(
             text = stringResource(if (state.isNew) R.string.piece_form_title_new else R.string.piece_form_title_edit),

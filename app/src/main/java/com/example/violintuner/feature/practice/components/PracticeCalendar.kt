@@ -10,7 +10,6 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,9 +38,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringArrayResource
@@ -56,6 +52,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.practice.CalendarCell
 import java.time.LocalDate
@@ -77,7 +75,6 @@ data class CalendarMetrics(
 
 private val HeaderHeight = 40.dp
 private val ArrowButtonSize = 40.dp
-private val ChevronSize = 20.dp
 private val RowGap = 4.dp
 private val DotSize = 4.dp
 private val DotBottomInset = 6.dp
@@ -151,27 +148,12 @@ fun PracticeCalendar(
 private fun ArrowButton(forward: Boolean, enabled: Boolean, onClick: () -> Unit, description: String) {
     val color = MaterialTheme.colorScheme.onSurface
     IconButton(onClick = onClick, enabled = enabled, modifier = Modifier.size(ArrowButtonSize)) {
-        Canvas(
-            modifier = Modifier
-                .size(ChevronSize)
-                .alpha(if (enabled) 1f else DISABLED_ARROW_ALPHA)
-                .semantics { contentDescription = description },
-        ) {
-            val w = size.width
-            val h = size.height
-            val path = Path().apply {
-                if (forward) {
-                    moveTo(w * 0.38f, h * 0.22f)
-                    lineTo(w * 0.62f, h * 0.5f)
-                    lineTo(w * 0.38f, h * 0.78f)
-                } else {
-                    moveTo(w * 0.62f, h * 0.22f)
-                    lineTo(w * 0.38f, h * 0.5f)
-                    lineTo(w * 0.62f, h * 0.78f)
-                }
-            }
-            drawPath(path, color, style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round, join = StrokeJoin.Round))
-        }
+        AppIcon(
+            icon = if (forward) AppIcons.ChevronRight else AppIcons.ChevronLeft,
+            contentDescription = description,
+            tint = color,
+            modifier = Modifier.alpha(if (enabled) 1f else DISABLED_ARROW_ALPHA),
+        )
     }
 }
 

@@ -1,6 +1,5 @@
 package com.example.violintuner.feature.practice.components
 
-import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,9 +18,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -30,6 +26,8 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.feature.practice.PracticeIntent
 import com.example.violintuner.feature.practice.PracticePrompt
 import com.example.violintuner.feature.practice.PracticePromptIntent
@@ -40,13 +38,10 @@ private val DialogPaddingTop = 28.dp
 private val DialogPaddingSide = 24.dp
 private val DialogPaddingBottom = 20.dp
 private val IconSize = 44.dp
-private val ClockStroke = 2.dp
+private val ClockGlyphSize = 28.dp
 private val MainButtonHeight = 48.dp
 private val MainButtonCorner = 24.dp
 private val TextButtonHeight = 44.dp
-private const val CLOCK_RADIUS = 0.32f
-private const val CLOCK_HOUR_HAND = 0.16f
-private const val CLOCK_MINUTE_HAND = 0.24f
 
 /** Shows the forgotten-practice dialog or the summary sheet, whichever the app asks (spec 3.12). */
 @Composable
@@ -130,14 +125,7 @@ private fun ClockIcon() {
             .background(colors.primaryContainer, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        val hand = colors.onPrimaryContainer
-        Canvas(modifier = Modifier.size(IconSize)) {
-            val center = Offset(size.width / 2, size.height / 2)
-            val stroke = Stroke(width = ClockStroke.toPx(), cap = StrokeCap.Round)
-            drawCircle(hand, radius = size.minDimension * CLOCK_RADIUS, center = center, style = stroke)
-            drawLine(hand, center, center + Offset(0f, -size.minDimension * CLOCK_MINUTE_HAND), ClockStroke.toPx(), StrokeCap.Round)
-            drawLine(hand, center, center + Offset(size.minDimension * CLOCK_HOUR_HAND, 0f), ClockStroke.toPx(), StrokeCap.Round)
-        }
+        AppIcon(AppIcons.Clock, contentDescription = null, tint = colors.onPrimaryContainer, size = ClockGlyphSize)
     }
 }
 
