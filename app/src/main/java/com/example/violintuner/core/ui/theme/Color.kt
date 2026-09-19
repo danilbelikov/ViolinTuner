@@ -82,5 +82,6 @@ internal val FormError = Color(0xFFE8565C)
 internal val Destructive = Color(0xFFE8565C)
 
 // The living practice screen (handoff polish, `tokens`).
-internal val LevelShine = Color(0x59E9DDFF) // onPrimaryContainer at .35
+// Brighter than the handoff (#E9DDFF at .35): over the light end of the fill that one could not be seen.
+internal val LevelShine = Color(0xCCF7F2FF) // near-white lilac at .8
 internal val TimerRing = Color(0x80C4ADFF) // primary at .5
