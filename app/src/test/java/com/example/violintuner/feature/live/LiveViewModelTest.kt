@@ -6,8 +6,8 @@ import com.example.violintuner.core.audio.MicUnavailableException
 import com.example.violintuner.core.audio.PitchSource
 import com.example.violintuner.core.audio.recording.AudioTap
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
-import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Direction
+import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.PitchFrame
 import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.ViolinString
@@ -16,6 +16,7 @@ import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.RunningPractice
 import com.example.violintuner.core.domain.session.FakeSessionRepository
+import com.example.violintuner.core.recording.TakePipeline
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.core.settings.SettingsConfigSource
 import java.io.File
@@ -44,8 +45,8 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.test.testTimeSource
 import org.junit.After
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -105,16 +106,11 @@ class LiveViewModelTest {
         }
     }
 
-    private fun TestScope.viewModel(source: PitchSource, base: IntonationConfig = IntonationConfig()) = LiveViewModel(
-        source,
-        SettingsConfigSource(base, settings),
-        sessions,
-        audioFiles,
-        practice,
-        PracticeConfig(),
-        Clock.fixed(startedAt, ZoneOffset.UTC),
-        StandardTestDispatcher(testScheduler),
-    )
+    private fun TestScope.viewModel(source: PitchSource, base: IntonationConfig = IntonationConfig()): LiveViewModel {
+        val clock = Clock.fixed(startedAt, ZoneOffset.UTC)
+        val takes = TakePipeline(source, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler))
+        return LiveViewModel(takes, SettingsConfigSource(base, settings), practice, clock)
+    }
 
     private fun TestScope.advance(millis: Long) {
         advanceTimeBy(millis)
