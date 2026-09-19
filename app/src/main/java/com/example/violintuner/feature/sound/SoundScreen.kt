@@ -82,8 +82,6 @@ fun SoundScreen(
     modifier: Modifier = Modifier,
     config: SoundConfig = SoundConfig(),
     zone: ZoneId = ZoneId.systemDefault(),
-    /** «Поделиться» comes with stage 32; until then the screen has no dead button. */
-    shareAvailable: Boolean = false,
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -93,7 +91,7 @@ fun SoundScreen(
         if (state.loading) return@BoxWithConstraints
         val landscape = maxWidth > maxHeight
         val metrics = if (maxHeight < CompactBelow && !landscape) MiniPlayerMetrics.Compact else MiniPlayerMetrics.Regular
-        val share: (@Composable () -> Unit)? = if (shareAvailable && state.mode == SoundMode.RECORDING && state.player != null) {
+        val share: (@Composable () -> Unit)? = if (state.mode == SoundMode.RECORDING && state.player != null) {
             { ShareButton(onIntent) }
         } else {
             null

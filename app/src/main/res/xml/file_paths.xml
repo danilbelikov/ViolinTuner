@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- What the FileProvider may hand out: only the folder the system camera writes sheet shots into. -->
+<!--
+  What the FileProvider may hand out: the folder the system camera writes sheet shots into, and
+  the folder where recordings wait to be shared. Both are in the cache; nothing of `files/` is exposed.
+-->
 <paths>
     <cache-path name="camera" path="camera/" />
+    <cache-path name="share" path="share/" />
 </paths>

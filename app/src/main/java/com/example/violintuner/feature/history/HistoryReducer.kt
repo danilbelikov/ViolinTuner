@@ -73,6 +73,7 @@ object HistoryReducer {
             },
             previewZones = session.previewZones,
             pieceTitle = pieceTitle,
+            hasAudio = session.audioPath != null,
         )
     }
 

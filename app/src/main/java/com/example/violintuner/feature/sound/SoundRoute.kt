@@ -11,6 +11,8 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.violintuner.feature.share.ShareHost
+import com.example.violintuner.feature.share.ShareViewModel
 
 /** Entry point of the «Звук» screen — of a recording, or of all of them. */
 @Composable
@@ -18,6 +20,7 @@ fun SoundRoute(
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SoundViewModel = hiltViewModel(),
+    shareViewModel: ShareViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val meters = viewModel.meters.collectAsStateWithLifecycle()
@@ -32,12 +35,12 @@ fun SoundRoute(
             viewModel.effects.collect { effect ->
                 when (effect) {
                     SoundEffect.Close -> currentOnClose()
-                    // «Поделиться» arrives with stage 32; the screen does not offer it before that.
-                    is SoundEffect.Share -> Unit
+                    is SoundEffect.Share -> shareViewModel.start(effect.sessionId)
                 }
             }
         }
     }
 
     SoundScreen(state = state, meters = meters, onIntent = viewModel::onIntent, modifier = modifier)
+    ShareHost(shareViewModel)
 }

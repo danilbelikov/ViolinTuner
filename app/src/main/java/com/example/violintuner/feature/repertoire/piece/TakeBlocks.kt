@@ -41,6 +41,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
@@ -49,8 +50,12 @@ import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
+import com.example.violintuner.feature.history.components.CardActions
+import com.example.violintuner.feature.history.components.CardMenuButton
 import com.example.violintuner.feature.live.components.RecordButton
 import com.example.violintuner.feature.repertoire.takesLabel
+import com.example.violintuner.feature.sound.SoundCaption
+import com.example.violintuner.feature.sound.captionName
 import java.time.ZoneId
 
 private val CardCorner = 16.dp
@@ -227,7 +232,14 @@ private fun ScoreChart(scores: List<Int>) {
 
 /** The takes of the piece, newest first; the best one is marked, a fresh one glows for a moment (handoff 13c1b, 13d3). */
 @Composable
-fun TakesBlock(takes: List<TakeItem>, zone: ZoneId, onIntent: (PieceIntent) -> Unit, modifier: Modifier = Modifier) {
+fun TakesBlock(
+    takes: List<TakeItem>,
+    zone: ZoneId,
+    onIntent: (PieceIntent) -> Unit,
+    modifier: Modifier = Modifier,
+    sounds: Map<Long, SoundCaption> = emptyMap(),
+    actions: CardActions? = null,
+) {
     val colors = MaterialTheme.colorScheme
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(stringResource(R.string.takes_title), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
@@ -242,13 +254,13 @@ fun TakesBlock(takes: List<TakeItem>, zone: ZoneId, onIntent: (PieceIntent) -> U
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
             )
         } else {
-            takes.forEach { take -> TakeCard(take, zone) { onIntent(PieceIntent.TakeClicked(take.card.id)) } }
+            takes.forEach { take -> TakeCard(take, zone, sounds[take.card.id], actions) { onIntent(PieceIntent.TakeClicked(take.card.id)) } }
         }
     }
 }
 
 @Composable
-private fun TakeCard(take: TakeItem, zone: ZoneId, onClick: () -> Unit) {
+private fun TakeCard(take: TakeItem, zone: ZoneId, sound: SoundCaption?, actions: CardActions?, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val zoneColors = ViolinTheme.zoneColors
     val repertoire = ViolinTheme.repertoireColors
@@ -303,11 +315,14 @@ private fun TakeCard(take: TakeItem, zone: ZoneId, onClick: () -> Unit) {
                     }
                 }
             }
+            val meta = stringResource(R.string.take_meta, Formats.duration(card.durationMs), Formats.signedCents(card.biasCents))
             Text(
-                text = stringResource(R.string.take_meta, Formats.duration(card.durationMs), Formats.signedCents(card.biasCents)),
+                // a take with a sound of its own says which: that is where the processing differs from everyone's
+                text = if (sound != null) meta + stringResource(R.string.dot_separator) + captionName(sound) else meta,
                 modifier = Modifier.padding(top = 2.dp),
                 color = colors.onSurfaceVariant,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
             )
         }
@@ -326,5 +341,6 @@ private fun TakeCard(take: TakeItem, zone: ZoneId, onClick: () -> Unit) {
                 )
             }
         }
+        if (actions != null && card.hasAudio) CardMenuButton(card.id, actions)
     }
 }

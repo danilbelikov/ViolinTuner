@@ -1,6 +1,7 @@
 package com.example.violintuner.feature.settings
 
 import com.example.violintuner.core.audio.playback.FakeSessionWaveforms
+import com.example.violintuner.core.audio.share.FakeShareFiles
 import com.example.violintuner.core.data.profile.FakeAvatarFiles
 import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.UserSettings
@@ -98,7 +99,7 @@ class SettingsViewModelTest {
         val trophies = FakeTrophyRepository()
         return AppStartViewModel(
             settings, sessions, store, PracticeFinisher(practice, store, clock), PracticeConfig(), clock,
-            practice, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), FakeProfileRepository(), FakeAvatarFiles(), FakeRepertoireRepository(), FakeSessionWaveforms(),
+            practice, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), FakeProfileRepository(), FakeAvatarFiles(), FakeRepertoireRepository(), FakeSessionWaveforms(), FakeShareFiles(),
         )
     }
 

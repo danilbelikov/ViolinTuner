@@ -34,6 +34,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -86,7 +88,12 @@ fun SessionScreen(
             .fillMaxSize()
             .background(colors.surface),
     ) {
-        TopBar(title = title, onBack = { onIntent(SessionIntent.BackClicked) })
+        TopBar(
+            title = title,
+            onBack = { onIntent(SessionIntent.BackClicked) },
+            // Sending is what one does most after listening: in sight at once, and well away from «Удалить» (handoff 18a).
+            onShare = if (loaded?.player != null) ({ onIntent(SessionIntent.ShareClicked) }) else null,
+        )
         when (state) {
             SessionState.Loading -> Unit
             SessionState.NotFound -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -147,13 +154,13 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
 }
 
 @Composable
-private fun TopBar(title: String, onBack: () -> Unit) {
+private fun TopBar(title: String, onBack: () -> Unit, onShare: (() -> Unit)?) {
     val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .height(TopBarHeight)
-            .padding(start = 4.dp, end = ContentPadding, top = 4.dp),
+            .padding(start = 4.dp, end = 4.dp, top = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
@@ -167,12 +174,25 @@ private fun TopBar(title: String, onBack: () -> Unit) {
         }
         Text(
             text = title,
-            modifier = Modifier.padding(start = 4.dp),
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 4.dp),
             color = colors.onSurface,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
         )
+        if (onShare != null) {
+            val share = stringResource(R.string.sound_share)
+            Box(
+                modifier = Modifier
+                    .size(BackTarget)
+                    .clip(CircleShape)
+                    .clickable(role = Role.Button, onClick = onShare)
+                    .semantics { contentDescription = share },
+                contentAlignment = Alignment.Center,
+            ) { AppIcon(AppIcons.Share, contentDescription = null, tint = colors.onSurface) }
+        }
     }
 }
 

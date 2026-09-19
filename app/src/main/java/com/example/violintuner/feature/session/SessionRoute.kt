@@ -11,6 +11,8 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.violintuner.feature.share.ShareHost
+import com.example.violintuner.feature.share.ShareViewModel
 
 @Composable
 fun SessionRoute(
@@ -18,6 +20,7 @@ fun SessionRoute(
     onOpenSound: (sessionId: Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SessionViewModel = hiltViewModel(),
+    shareViewModel: ShareViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -33,10 +36,12 @@ fun SessionRoute(
                 when (effect) {
                     SessionEffect.Close -> currentOnClose()
                     is SessionEffect.OpenSound -> currentOnOpenSound(effect.sessionId)
+                    is SessionEffect.Share -> shareViewModel.start(effect.sessionId)
                 }
             }
         }
     }
 
     SessionScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier)
+    ShareHost(shareViewModel)
 }

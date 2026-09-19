@@ -11,8 +11,12 @@ import com.example.violintuner.core.domain.TargetMode
 import com.example.violintuner.core.domain.repertoire.RepertoireConfig
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.session.SessionRepository
+import com.example.violintuner.core.domain.sound.SoundConfig
+import com.example.violintuner.core.domain.sound.SoundRepository
 import com.example.violintuner.core.recording.TakePipeline
 import com.example.violintuner.core.settings.IntonationConfigSource
+import com.example.violintuner.feature.sound.SoundCaption
+import com.example.violintuner.feature.sound.SoundReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.File
 import java.time.Clock
@@ -48,8 +52,19 @@ class PieceViewModel @Inject constructor(
     private val configSource: IntonationConfigSource,
     sessions: SessionRepository,
     private val intonationConfig: IntonationConfig,
+    sound: SoundRepository,
+    soundConfig: SoundConfig,
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
+
+    /**
+     * Takes whose sound is their own, by what it is set to: the row of such a take names it, so
+     * that it is seen where the processing differs from everyone's (spec 3.17). Apart from
+     * [state]: it has nothing to do with the piece.
+     */
+    val takeSounds: StateFlow<Map<Long, SoundCaption>> = combine(sound.own, sound.presets) { own, presets ->
+        own.mapValues { (_, settings) -> SoundReducer.captionOf(settings, presets, soundConfig) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyMap())
 
     /** What only the screen decides: photos on their way in and the open menu. */
     private data class Ui(val importing: Int = 0, val statusMenuOpen: Boolean = false)

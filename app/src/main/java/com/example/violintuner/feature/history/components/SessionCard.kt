@@ -42,7 +42,7 @@ private const val TABULAR_FIGURES = "tnum"
 
 /** Card of one session: the list of «Записи» (spec 3.11, handoff 4c) and the day's records on the practice screen. */
 @Composable
-fun SessionCard(card: HistoryCard, zone: ZoneId, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun SessionCard(card: HistoryCard, zone: ZoneId, onClick: () -> Unit, modifier: Modifier = Modifier, actions: CardActions? = null) {
     val colors = MaterialTheme.colorScheme
     val zoneColors = ViolinTheme.zoneColors
     val day = when (val label = card.day) {
@@ -56,7 +56,7 @@ fun SessionCard(card: HistoryCard, zone: ZoneId, onClick: () -> Unit, modifier: 
             .clip(RoundedCornerShape(CardCorner))
             .background(colors.surfaceContainer)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
+            .padding(start = 16.dp, top = 14.dp, bottom = 14.dp, end = if (actions != null && card.hasAudio) 4.dp else 16.dp),
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -98,6 +98,7 @@ fun SessionCard(card: HistoryCard, zone: ZoneId, onClick: () -> Unit, modifier: 
             )
         }
         PreviewBars(card.previewZones)
+        if (actions != null && card.hasAudio) CardMenuButton(card.id, actions)
     }
 }
 

@@ -98,7 +98,11 @@ class SoundFileRendererTest {
         val source = recording("dry.m4a", seconds = 2)
         val target = File(directory, "hall.m4a")
         val hall = SoundPresets.settingsOf(BuiltInPreset.GRAND_HALL, config)
+        val started = System.nanoTime()
         assertTrue(renderer.render(source, hall, target) { })
+        val took = (System.nanoTime() - started) / 1e9
+        android.util.Log.i("SoundChainSpeed", "render of 5 s with the hall: ${"%.2f".format(took)} s")
+        assertTrue("two seconds of sound and three of tail took $took s", took < 2.5)
 
         val (sourceLength, _) = measure(source, 0.0, 1.0)
         val (length, _) = measure(target, 0.0, 1.0)

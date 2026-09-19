@@ -66,6 +66,7 @@ import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
+import com.example.violintuner.feature.history.components.CardActions
 import com.example.violintuner.feature.repertoire.KeyAndTempo
 import com.example.violintuner.feature.repertoire.components.SheetThumb
 import com.example.violintuner.feature.repertoire.components.StatusChip
@@ -73,6 +74,7 @@ import com.example.violintuner.feature.repertoire.components.THUMB_DIM
 import com.example.violintuner.feature.repertoire.components.THUMB_DIM_FIRST
 import com.example.violintuner.feature.repertoire.components.dashedBorder
 import com.example.violintuner.feature.repertoire.components.statusLabel
+import com.example.violintuner.feature.sound.SoundCaption
 import java.time.ZoneId
 
 private val ScreenPadding = 16.dp
@@ -114,6 +116,8 @@ fun PieceScreen(
     addPhoto: AddPhotoActions,
     modifier: Modifier = Modifier,
     zone: ZoneId = ZoneId.systemDefault(),
+    takeSounds: Map<Long, SoundCaption> = emptyMap(),
+    takeActions: CardActions? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     BoxWithConstraints(
@@ -125,9 +129,9 @@ fun PieceScreen(
         if (header == null) {
             TopBar(title = "", titleVisible = false, height = TopBarHeight, onIntent = onIntent)
         } else if (maxWidth > maxHeight) {
-            LandscapeLayout(state, take, header, onIntent, addPhoto, zone)
+            LandscapeLayout(state, take, header, onIntent, addPhoto, zone, takeSounds, takeActions)
         } else {
-            PortraitLayout(state, take, header, onIntent, addPhoto, zone)
+            PortraitLayout(state, take, header, onIntent, addPhoto, zone, takeSounds, takeActions)
         }
     }
 }
@@ -140,6 +144,8 @@ private fun PortraitLayout(
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
     zone: ZoneId,
+    takeSounds: Map<Long, SoundCaption>,
+    takeActions: CardActions?,
 ) {
     val scroll = rememberScrollState()
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -159,7 +165,7 @@ private fun PortraitLayout(
                 RecordTakeRow(take, onIntent)
                 NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
                 state.progress?.let { TakeProgressCard(it) }
-                TakesBlock(state.takes, zone, onIntent)
+                TakesBlock(state.takes, zone, onIntent, sounds = takeSounds, actions = takeActions)
             }
         }
     }
@@ -174,6 +180,8 @@ private fun LandscapeLayout(
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
     zone: ZoneId,
+    takeSounds: Map<Long, SoundCaption>,
+    takeActions: CardActions?,
 ) {
     Column {
         TopBar(header.title, titleVisible = false, height = TopBarHeightLandscape, onIntent = onIntent)
@@ -201,7 +209,7 @@ private fun LandscapeLayout(
                 SheetsBlock(state, onIntent, addPhoto, Metrics.Landscape)
                 Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(ScreenPadding)) {
                     NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
-                    TakesBlock(state.takes, zone, onIntent)
+                    TakesBlock(state.takes, zone, onIntent, sounds = takeSounds, actions = takeActions)
                 }
             }
         }

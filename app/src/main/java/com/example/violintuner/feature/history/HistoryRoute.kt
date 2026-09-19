@@ -3,6 +3,7 @@ package com.example.violintuner.feature.history
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -10,17 +11,22 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.violintuner.feature.history.components.CardActions
 import com.example.violintuner.feature.repertoire.RepertoireEffect
 import com.example.violintuner.feature.repertoire.RepertoireViewModel
+import com.example.violintuner.feature.share.ShareHost
+import com.example.violintuner.feature.share.ShareViewModel
 
 @Composable
 fun HistoryRoute(
     onOpenSession: (sessionId: Long) -> Unit,
+    onOpenSound: (sessionId: Long) -> Unit,
     onOpenPiece: (pieceId: Long) -> Unit,
     onNewPiece: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel = hiltViewModel(),
     repertoireViewModel: RepertoireViewModel = hiltViewModel(),
+    shareViewModel: ShareViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val repertoire by repertoireViewModel.state.collectAsStateWithLifecycle()
@@ -55,5 +61,7 @@ fun HistoryRoute(
         modifier = modifier,
         repertoire = repertoire,
         onRepertoireIntent = repertoireViewModel::onIntent,
+        cardActions = remember(shareViewModel, onOpenSound) { CardActions(onShare = shareViewModel::start, onSound = onOpenSound) },
     )
+    ShareHost(shareViewModel)
 }

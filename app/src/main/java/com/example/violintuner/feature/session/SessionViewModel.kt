@@ -58,6 +58,10 @@ class SessionViewModel @Inject constructor(
             is SessionIntent.SeekRequested -> player?.seekTo(intent.positionMs)
             is SessionIntent.OriginalSelected -> player?.setOriginal(intent.original)
             SessionIntent.SoundClicked -> effectChannel.trySend(SessionEffect.OpenSound(sessionId))
+            SessionIntent.ShareClicked -> {
+                player?.pause() // the system sheet comes up over a silent screen
+                effectChannel.trySend(SessionEffect.Share(sessionId))
+            }
             SessionIntent.ScreenStopped -> player?.pause()
             is SessionIntent.SegmentClicked -> updateLoaded {
                 it.copy(selectedSegment = intent.index.takeIf { index -> index in it.content.segments.indices })

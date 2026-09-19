@@ -85,6 +85,9 @@ sealed interface SessionIntent {
     /** The row «Звук» under the player. */
     data object SoundClicked : SessionIntent
 
+    /** The icon in the top bar; there for a recording with sound only. */
+    data object ShareClicked : SessionIntent
+
     /** The screen is no longer visible: the sound stops (spec 3.10). */
     data object ScreenStopped : SessionIntent
 
@@ -107,6 +110,8 @@ sealed interface SessionEffect {
     data object Close : SessionEffect
 
     data class OpenSound(val sessionId: Long) : SessionEffect
+
+    data class Share(val sessionId: Long) : SessionEffect
 }
 
 /** How the recording is made to sound, in a line (spec 3.17): whose settings, and which. */

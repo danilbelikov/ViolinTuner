@@ -24,6 +24,9 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.permission.isMicPermissionGranted
 import com.example.violintuner.core.ui.permission.rememberMicPermissionRequester
+import com.example.violintuner.feature.history.components.CardActions
+import com.example.violintuner.feature.share.ShareHost
+import com.example.violintuner.feature.share.ShareViewModel
 import java.io.File
 
 /** Entry point of a piece: owns the view model, its effects and the two system screens that add photos. */
@@ -33,11 +36,14 @@ fun PieceRoute(
     onOpenForm: (pieceId: Long, focusNotes: Boolean) -> Unit,
     onOpenStand: (pieceId: Long, pageIndex: Int) -> Unit,
     onOpenSession: (sessionId: Long) -> Unit,
+    onOpenSound: (sessionId: Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PieceViewModel = hiltViewModel(),
+    shareViewModel: ShareViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val take by viewModel.takeState.collectAsStateWithLifecycle()
+    val takeSounds by viewModel.takeSounds.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -96,7 +102,12 @@ fun PieceRoute(
             onGallery = { gallery.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) },
         )
     }
-    PieceScreen(state = state, take = take, onIntent = viewModel::onIntent, addPhoto = addPhoto, modifier = modifier)
+    PieceScreen(
+        state = state, take = take, onIntent = viewModel::onIntent, addPhoto = addPhoto, modifier = modifier,
+        takeSounds = takeSounds,
+        takeActions = remember(shareViewModel, onOpenSound) { CardActions(onShare = shareViewModel::start, onSound = onOpenSound) },
+    )
+    ShareHost(shareViewModel)
 }
 
 /** Matches `android:authorities` of the FileProvider in the manifest. */

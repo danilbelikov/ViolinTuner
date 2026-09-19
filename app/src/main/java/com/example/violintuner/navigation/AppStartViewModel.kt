@@ -3,6 +3,7 @@ package com.example.violintuner.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.audio.playback.SessionWaveforms
+import com.example.violintuner.core.audio.share.ShareFiles
 import com.example.violintuner.core.data.profile.AvatarFiles
 import com.example.violintuner.core.domain.practice.ForgottenPractice
 import com.example.violintuner.core.domain.practice.PracticeCheck
@@ -56,6 +57,7 @@ class AppStartViewModel @Inject constructor(
     avatarFiles: AvatarFiles,
     repertoire: RepertoireRepository,
     waveforms: SessionWaveforms,
+    shareFiles: ShareFiles,
 ) : ViewModel() {
     init {
         viewModelScope.launch { sessions.deleteOrphanAudio() }
@@ -63,6 +65,8 @@ class AppStartViewModel @Inject constructor(
         viewModelScope.launch { waveforms.deleteOrphans(sessions.sessions.first().mapNotNull { it.audioPath }.toSet()) }
         viewModelScope.launch { avatarFiles.deleteOrphans(referenced = profile.profile.first().avatarFile) }
         viewModelScope.launch { repertoire.deleteOrphanFiles() }
+        // files made to be handed to other apps: a day later nobody is reading them any more
+        viewModelScope.launch { shareFiles.deleteOlderThan(clock.millis(), SHARE_FILES_MAX_AGE_MS) }
         // Trophies are given here rather than where a practice is saved: the entries change
         // from the practice screen, its sheets and the forgotten-practice prompt alike, and
         // this view model lives as long as the app is open. Giving is idempotent, so the
@@ -153,6 +157,7 @@ class AppStartViewModel @Inject constructor(
     }
 
     private companion object {
+        const val SHARE_FILES_MAX_AGE_MS = 24 * 60 * 60_000L
         const val STOP_TIMEOUT_MS = 5_000L
     }
 }

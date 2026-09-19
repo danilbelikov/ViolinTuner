@@ -93,18 +93,24 @@ class PcmDecoder private constructor(
         extractor.release()
     }
 
+    /**
+     * Gives the codec everything it will take right now. One buffer a call, followed by a wait for
+     * output, held decoding down to about the speed of the sound itself: the player ran dry and a
+     * file took as long to render as to play. A codec with a full input never waits for nothing.
+     */
     private fun feed() {
-        if (inputDone) return
-        val index = codec.dequeueInputBuffer(0)
-        if (index < 0) return
-        val buffer = codec.getInputBuffer(index) ?: return
-        val size = extractor.readSampleData(buffer, 0)
-        if (size < 0) {
-            codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-            inputDone = true
-        } else {
-            codec.queueInputBuffer(index, 0, size, extractor.sampleTime, 0)
-            extractor.advance()
+        while (!inputDone) {
+            val index = codec.dequeueInputBuffer(0)
+            if (index < 0) return
+            val buffer = codec.getInputBuffer(index) ?: return
+            val size = extractor.readSampleData(buffer, 0)
+            if (size < 0) {
+                codec.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
+                inputDone = true
+            } else {
+                codec.queueInputBuffer(index, 0, size, extractor.sampleTime, 0)
+                extractor.advance()
+            }
         }
     }
 

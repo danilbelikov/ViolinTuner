@@ -62,6 +62,7 @@ fun AppNavHost(
         composable(TopLevelDestination.HISTORY.route) {
             HistoryRoute(
                 onOpenSession = navController::navigateToSession,
+                onOpenSound = navController::navigateToSound,
                 onOpenPiece = navController::navigateToPiece,
                 onNewPiece = { navController.navigateToPieceForm(pieceId = null) },
             )
@@ -95,6 +96,7 @@ fun AppNavHost(
                 onOpenForm = { pieceId, focusNotes -> navController.navigateToPieceForm(pieceId, focusNotes) },
                 onOpenStand = navController::navigateToStand,
                 onOpenSession = navController::navigateToSession,
+                onOpenSound = navController::navigateToSound,
             )
         }
         composable(

@@ -96,6 +96,24 @@ class PlaybackTest {
     }
 
     @Test
+    fun decodingIsManyTimesFasterThanTheSound() {
+        val decoder = assertNotNullAnd(PcmDecoder.open(encode("speed.m4a", seconds = 8)))
+        val chunk = ShortArray(4_096)
+        val started = System.nanoTime()
+        var total = 0L
+        while (true) {
+            val count = decoder.read(chunk)
+            if (count == PcmDecoder.END) break
+            total += count
+        }
+        decoder.release()
+        val timesRealTime = total.toDouble() / rate / ((System.nanoTime() - started) / 1e9)
+        android.util.Log.i("SoundChainSpeed", "decoder: ${"%.1f".format(timesRealTime)}x real time")
+        // A player needs room to spare, and an hour to be shared must not take an hour.
+        assertTrue("decoding runs at ${"%.1f".format(timesRealTime)}x", timesRealTime > 4.0)
+    }
+
+    @Test
     fun aSeekLandsWhereItWasAskedTo() {
         val decoder = assertNotNullAnd(PcmDecoder.open(encode("seek.m4a", seconds = 4)))
         val chunk = ShortArray(4_096)

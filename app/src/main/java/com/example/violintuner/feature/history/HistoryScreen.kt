@@ -34,6 +34,7 @@ import com.example.violintuner.R
 import com.example.violintuner.core.ui.components.SegmentedSwitch
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.theme.ViolinTheme
+import com.example.violintuner.feature.history.components.CardActions
 import com.example.violintuner.feature.history.components.SessionCard
 import com.example.violintuner.feature.history.components.WeeklyChart
 import com.example.violintuner.feature.repertoire.RepertoireIntent
@@ -61,6 +62,7 @@ fun HistoryScreen(
     zone: ZoneId = ZoneId.systemDefault(),
     repertoire: RepertoireState = RepertoireReducer.loading(filter = null),
     onRepertoireIntent: (RepertoireIntent) -> Unit = {},
+    cardActions: CardActions? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     Box(
@@ -104,6 +106,7 @@ fun HistoryScreen(
                             zone = zone,
                             onClick = { onIntent(HistoryIntent.SessionClicked(card.id)) },
                             modifier = Modifier.padding(top = CardSpacing),
+                            actions = cardActions,
                         )
                     }
                     if (state.cards.isEmpty()) {

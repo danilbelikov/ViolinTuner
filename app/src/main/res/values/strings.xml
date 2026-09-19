@@ -426,7 +426,6 @@
     <string name="share_continue">Продолжить</string>
     <string name="share_busy">Готовим…</string>
     <string name="share_preparing">Готовим файл</string>
-    <string name="share_preparing_details">%1$s · %2$s</string>
     <string name="share_remaining">осталось около %1$d с</string>
     <string name="share_failed_title">Не получилось подготовить файл</string>
     <string name="share_failed_text">Запись на месте, настройки тоже. Можно попробовать ещё раз или отправить оригинал без обработки.</string>

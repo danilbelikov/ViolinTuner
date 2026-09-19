@@ -15,6 +15,10 @@ import com.example.violintuner.core.domain.repertoire.PieceDraft
 import com.example.violintuner.core.domain.repertoire.PieceStatus
 import com.example.violintuner.core.domain.repertoire.RepertoireConfig
 import com.example.violintuner.core.domain.session.FakeSessionRepository
+import com.example.violintuner.core.domain.sound.BuiltInPreset
+import com.example.violintuner.core.domain.sound.FakeSoundRepository
+import com.example.violintuner.core.domain.sound.SoundConfig
+import com.example.violintuner.core.domain.sound.SoundPresets
 import com.example.violintuner.core.recording.TakePipeline
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.core.settings.SettingsConfigSource
@@ -22,6 +26,7 @@ import com.example.violintuner.feature.repertoire.piece.PieceEffect
 import com.example.violintuner.feature.repertoire.piece.PieceIntent
 import com.example.violintuner.feature.repertoire.piece.PieceViewModel
 import com.example.violintuner.feature.repertoire.piece.TakeProblem
+import com.example.violintuner.feature.sound.SoundCaption
 import java.io.File
 import java.time.Clock
 import java.time.Instant
@@ -55,6 +60,7 @@ class PieceViewModelTest {
     private val files = FakeSheetFiles()
     private val clock: Clock = Clock.fixed(Instant.ofEpochMilli(9_000), ZoneOffset.UTC)
     private val sessions = FakeSessionRepository()
+    private val sound = FakeSoundRepository()
     private val practice = FakeRunningPracticeStore()
 
     /** The fake source has no sound to write, so nothing here is ever asked for a file. */
@@ -88,7 +94,7 @@ class PieceViewModelTest {
         val takes = TakePipeline(pitch, sessions, NoAudioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler))
         val viewModel = PieceViewModel(
             saved, repertoire, files, RepertoireConfig(), clock, takes,
-            SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), sessions, IntonationConfig(),
+            SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), sessions, IntonationConfig(), sound, SoundConfig(),
         )
         val effects = mutableListOf<PieceEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
@@ -350,5 +356,16 @@ class PieceViewModelTest {
         viewModel.onIntent(PieceIntent.TakeClicked(42))
         runCurrent()
         assertEquals(listOf<PieceEffect>(PieceEffect.OpenSession(42)), effects)
+    }
+
+    @Test
+    fun `a take with a sound of its own says which, the others say nothing`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        backgroundScope.launch { viewModel.takeSounds.collect {} }
+        sound.setDefault(SoundPresets.settingsOf(BuiltInPreset.CHAMBER_HALL, SoundConfig()))
+        sound.setOwn(7, SoundPresets.settingsOf(BuiltInPreset.WARM, SoundConfig()))
+        runCurrent()
+        assertEquals(mapOf(7L to SoundCaption.BuiltIn(BuiltInPreset.WARM)), viewModel.takeSounds.value)
     }
 }

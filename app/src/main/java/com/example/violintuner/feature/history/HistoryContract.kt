@@ -32,6 +32,8 @@ data class HistoryCard(
     val previewZones: List<Zone>,
     /** Title of the piece this session is a take of: names it by default and earns it the «дубль» chip. */
     val pieceTitle: String? = null,
+    /** Only a recording with sound can be shared or processed: only it gets the «⋯» (spec 3.17). */
+    val hasAudio: Boolean = false,
 )
 
 data class HistoryState(

@@ -149,6 +149,7 @@ class SoundViewModel @Inject constructor(
                 viewModelScope.launch { listenOn(sessions.sessions.first().firstOrNull { it.id == intent.sessionId }) }
             }
             SoundIntent.ShareClicked -> sessionId?.let {
+                player?.pause()
                 flush()
                 effectChannel.trySend(SoundEffect.Share(it))
             }
