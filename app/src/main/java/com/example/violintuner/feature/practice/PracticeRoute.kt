@@ -2,6 +2,7 @@ package com.example.violintuner.feature.practice
 
 import android.widget.Toast
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -13,6 +14,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.violintuner.R
+import com.example.violintuner.core.ui.motion.LocalReduceMotion
+import com.example.violintuner.core.ui.motion.rememberAnimationsRemoved
 
 @Composable
 fun PracticeRoute(
@@ -42,5 +45,8 @@ fun PracticeRoute(
         }
     }
 
-    PracticeScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier)
+    // Decorative motion of this screen (spec 3.16) follows the system setting «убрать анимации».
+    CompositionLocalProvider(LocalReduceMotion provides rememberAnimationsRemoved()) {
+        PracticeScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier)
+    }
 }

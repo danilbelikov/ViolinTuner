@@ -39,6 +39,8 @@ data class ProgressColors(
     val levelTrack: Color,
     val levelFillStart: Color,
     val levelFillEnd: Color,
+    /** Centre of the light that travels along the fill; its edges fade to nothing. */
+    val levelShine: Color,
     val avatarLetterBackground: Color,
     val avatarLetter: Color,
     val avatarLevelBackground: Color,
@@ -53,6 +55,7 @@ internal val DarkProgressColors = ProgressColors(
     levelTrack = SurfaceContainerHigh,
     levelFillStart = PrimaryContainer,
     levelFillEnd = Primary,
+    levelShine = LevelShine,
     avatarLetterBackground = Primary,
     avatarLetter = OnPrimary,
     avatarLevelBackground = SurfaceContainerHigh,

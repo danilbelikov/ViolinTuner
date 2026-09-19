@@ -80,3 +80,7 @@ internal val FormError = Color(0xFFE8565C)
 // Actions that destroy something: the bin and its caption (handoff polish, `icon.error`). The hex of
 // zone.off, but a token of its own: zone colours stay about intonation.
 internal val Destructive = Color(0xFFE8565C)
+
+// The living practice screen (handoff polish, `tokens`).
+internal val LevelShine = Color(0x59E9DDFF) // onPrimaryContainer at .35
+internal val TimerRing = Color(0x80C4ADFF) // primary at .5

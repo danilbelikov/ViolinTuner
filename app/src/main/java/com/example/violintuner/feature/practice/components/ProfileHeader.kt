@@ -35,6 +35,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
@@ -54,6 +55,7 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.motion.LocalReduceMotion
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.practice.ProfileHeader
 import com.example.violintuner.feature.practice.TrophyBadge
@@ -243,6 +245,8 @@ private fun LevelBlock(
         shownCaptions = captions
     }
 
+    val shine = rememberLevelShine(filled, enabled = !LocalReduceMotion.current)
+
     Column(verticalArrangement = Arrangement.spacedBy(gap)) {
         val description = captions.toNext ?: captions.level
         Box(
@@ -260,8 +264,10 @@ private fun LevelBlock(
                             size = Size(width, size.height),
                             cornerRadius = CornerRadius(BarCorner.toPx()),
                         )
+                        shine.draw(this, fillWidth = width, corner = BarCorner.toPx(), color = colors.levelShine)
                     }
                 }
+                .onSizeChanged { shine.barWidthPx = it.width }
                 .semantics {
                     contentDescription = description
                     progressBarRangeInfo = ProgressBarRangeInfo(target, 0f..1f)

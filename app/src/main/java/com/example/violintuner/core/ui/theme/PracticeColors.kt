@@ -13,6 +13,8 @@ import androidx.compose.ui.graphics.Color
 data class PracticeColors(
     val fills: List<Color>,
     val onFills: List<Color>,
+    /** The minute arc around the dot of a running practice. */
+    val timerRing: Color,
 ) {
     /** [level] 1–4; 0 has no fill and is not asked for. */
     fun fillFor(level: Int): Color = fills[level - 1]
@@ -23,6 +25,7 @@ data class PracticeColors(
 internal val DarkPracticeColors = PracticeColors(
     fills = listOf(PracticeFill1, PracticeFill2, PrimaryContainer, Primary),
     onFills = listOf(OnSurface, OnSurface, OnPrimaryContainer, OnPrimary),
+    timerRing = TimerRing,
 )
 
 internal val LocalPracticeColors = staticCompositionLocalOf<PracticeColors> {
