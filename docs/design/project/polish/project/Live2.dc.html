@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}</style></helmet>
+
+<section class="dv-turn" id="s12a">
+<div class="dv-thd"><a class="dv-tid" href="#s12a">12a · 12d · 12e</a><span class="dv-tname">Live 2 · портрет 412×892 · «Игра»: все состояния · запись · «Настройка»</span></div>
+<div class="dv-opts">
+<sc-for list="{{ frames }}" as="s" hint-placeholder-count="8">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="position:absolute;left:0;right:0;top:{{ s.bgTop }};height:560px;background:{{ s.bg }}"></div>
+  <div style="position:relative;display:flex;justify-content:center;padding:12px 24px 0">
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px;width:100%">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:{{ s.playBg }};color:{{ s.playFg }}"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid {{ s.playIc }}"></div>Игра</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:{{ s.tuneBg }};color:{{ s.tuneFg }};border-left:1px solid #3A3846"><div style="width:4px;height:14px;border-radius:2px;background:{{ s.tuneIc }}"></div>Настройка</div>
+    </div>
+  </div>
+  <sc-if value="{{ s.chip }}" hint-placeholder-val="{{ false }}"><div style="position:relative;display:flex;justify-content:center;padding-top:8px"><div style="height:28px;border-radius:14px;background:#1E1D25;display:flex;align-items:center;gap:6px;padding:0 12px 0 10px;font-size:13px;color:#A39FB5"><div style="width:6px;height:6px;border-radius:50%;background:#C4ADFF"></div>занятие · <span class="tn" style="color:#E6E4EE;font-weight:600">12:34</span></div></div></sc-if>
+  <sc-if value="{{ s.tuning }}" hint-placeholder-val="{{ false }}">
+  <div style="position:relative;display:flex;justify-content:center;gap:12px;padding:12px 16px 0">
+    <sc-for list="{{ s.strings }}" as="st" hint-placeholder-count="4">
+    <div style="position:relative;width:76px;height:64px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:{{ st.fw }};color:{{ st.fg }};background:{{ st.bg }};border:1px solid {{ st.border }};box-sizing:border-box">{{ st.name }}<span style="font-size:11px;font-weight:500">{{ st.hz }}</span>
+      <sc-if value="{{ st.locked }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#E6E4EE;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #131318"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#2E1A6E" stroke-width="1.8"><rect x="2" y="5.5" width="8" height="5.5" rx="1.2" fill="#2E1A6E" stroke="none"></rect><path d="M3.8 5.5V4a2.2 2.2 0 0 1 4.4 0v1.5"></path></svg></div></sc-if>
+    </div>
+    </sc-for>
+  </div>
+  </sc-if>
+  <div style="position:relative;height:28px;margin-top:{{ s.statusMt }};display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#A39FB5;opacity:{{ s.statusOp }}">
+    <sc-if value="{{ s.dotReady }}" hint-placeholder-val="{{ true }}"><div style="width:8px;height:8px;border-radius:50%;background:#7CB99A"></div></sc-if>
+    <sc-if value="{{ s.dotBlocked }}" hint-placeholder-val="{{ false }}"><div style="width:8px;height:8px;border-radius:50%;border:2px solid #C4877F;box-sizing:border-box"></div></sc-if>
+    <div>{{ s.statusText }}</div>
+  </div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:{{ s.gap }}">
+    <div style="position:relative;width:{{ s.ringPx }};height:{{ s.ringPx }};display:flex;align-items:center;justify-content:center">
+      <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);line-height:0">{{ s.ring }}</div>
+      <sc-if value="{{ s.sounding }}" hint-placeholder-val="{{ true }}"><div style="position:relative;font-size:{{ s.noteSize }};font-weight:700;line-height:1;letter-spacing:-6px;display:flex;align-items:baseline">{{ s.note }}<span style="font-size:{{ s.octSize }};font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">{{ s.oct }}</span></div></sc-if>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px;justify-content:center;opacity:{{ s.wordOp }}">
+      <div style="display:flex;align-items:center;gap:14px;color:{{ s.color }}">
+        <sc-if value="{{ s.up }}" hint-placeholder-val="{{ false }}"><svg width="40" height="40" viewBox="0 0 56 56"><path d="M28 6 L50 34 H36 V50 H20 V34 H6 Z" fill="{{ s.color }}"></path></svg></sc-if>
+        <sc-if value="{{ s.down }}" hint-placeholder-val="{{ false }}"><svg width="40" height="40" viewBox="0 0 56 56"><path d="M28 50 L6 22 H20 V6 H36 V22 H50 Z" fill="{{ s.color }}"></path></svg></sc-if>
+        <sc-if value="{{ s.inTune }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:50%;background:{{ s.color }}"></div></sc-if>
+        <sc-if value="{{ s.showWord }}" hint-placeholder-val="{{ true }}"><div style="font-size:28px;font-weight:600">{{ s.word }}</div></sc-if>
+        <sc-if value="{{ s.centsInline }}" hint-placeholder-val="{{ true }}"><div class="tn" style="font-size:36px;font-weight:700;color:{{ s.centsColor }};min-width:3.1ch;text-align:left;margin-left:2px">{{ s.cents }}</div></sc-if>
+      </div>
+      <sc-if value="{{ s.centsBelow }}" hint-placeholder-val="{{ false }}"><div class="tn" style="font-size:36px;font-weight:700;color:{{ s.centsColor }};line-height:1.1">{{ s.cents }}<span style="font-size:16px;font-weight:500;margin-left:4px;color:#A39FB5">ц</span></div></sc-if>
+    </div>
+    <sc-if value="{{ s.noPerm }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;max-width:300px;text-align:center;margin-top:-40px">
+        <div style="font-size:24px;font-weight:700;color:#E6E4EE;line-height:1.2">Нужен доступ к микрофону</div>
+        <div style="font-size:15px;line-height:1.45;color:#A39FB5">Без микрофона тренажёр не слышит скрипку. Звук обрабатывается на телефоне и никуда не отправляется.</div>
+        <div style="height:48px;padding:0 24px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;font-size:15px;font-weight:700">Разрешить доступ</div>
+      </div>
+    </sc-if>
+  </div>
+  <sc-if value="{{ s.tuning }}" hint-placeholder-val="{{ false }}">
+  <div style="position:relative;padding:0 24px 8px">
+    <div style="position:relative;height:36px">
+      <div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:#292833"></div>
+      <div style="position:absolute;left:45%;width:10%;top:12px;height:12px;border-radius:6px;background:#47C97E"></div>
+      <div style="position:absolute;left:50%;top:8px;width:2px;height:20px;background:#3A3846;margin-left:-1px"></div>
+      <sc-if value="{{ s.sounding }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;left:{{ s.markerLeft }};top:4px;width:6px;height:28px;margin-left:-3px;border-radius:3px;background:#E6E4EE;box-shadow:0 0 0 2px #131318"></div></sc-if>
+    </div>
+  </div>
+  </sc-if>
+  <sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}">
+  <div style="position:relative;display:flex;align-items:center;gap:12px;padding:8px 24px 0">
+    <div style="width:10px;height:10px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div>
+    <div style="font-size:16px;font-weight:600" class="tn">запись · 01:24</div>
+    <div style="flex:1;height:6px;border-radius:3px;background:#292833;display:flex;gap:2px;overflow:hidden"><div style="width:9%;background:#47C97E"></div><div style="width:7%;background:#47C97E"></div><div style="width:6%;background:#E5B03C"></div><div style="width:12%;background:#47C97E"></div><div style="width:8%;background:#E8565C"></div><div style="width:10%;background:#47C97E"></div></div>
+  </div>
+  </sc-if>
+  <div style="position:relative;display:flex;align-items:center;justify-content:center;padding:12px 24px 12px">
+    <sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}"><div style="width:72px;height:72px;border-radius:50%;background:#E8565C;display:flex;align-items:center;justify-content:center"><div style="width:24px;height:24px;border-radius:4px;background:#FFFFFF"></div></div></sc-if>
+    <sc-if value="{{ s.notRec }}" hint-placeholder-val="{{ true }}"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div></sc-if>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;position:relative">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:50%;border:3px solid #E9DDFF"></div></div><div style="font-size:12px;font-weight:600">Live</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="position:relative;width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:4px;border:3px solid #A39FB5;border-top-width:6px;box-sizing:border-box"></div><sc-if value="{{ s.chip }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:4px;right:14px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px #1E1D25"></div></sc-if></div><div style="font-size:12px;color:#A39FB5">Занятия</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:14px;border-radius:3px;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">Записи</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:5px;border:3px solid #A39FB5;transform:rotate(45deg)"></div></div><div style="font-size:12px;color:#A39FB5">Настройки</div></div>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Свечение (вопрос 1).</b> Кольцо — четыре слоя на Canvas, все от одного числа <span class="mono">glow</span>: (1) контур 6 dp — в тишине outlineVariant, при звуке цвет зоны; (2) широкий мягкий штрих поверх контура — ширина 6 + 10·glow, α .25·glow; (3) внешний ореол — радиальный градиент от R до 1.4 R, α на кромке .32·glow → 0; (4) внутренний ореол — от .6 R до R, α 0 → .18·glow. При glow → 1 сам контур светлеет: цвет зоны смешивается с белым на 45 % — так «держим» читается как «ярче», а не как «другой цвет». Красное кольцо при .25 даёт только контур и лёгкий ореол — промах тише попадания. <b>Дыхание (вопрос 3)</b> — только радиус внешнего ореола ±4 % от <span class="mono">level</span>, толщина контура не меняется (иначе на периферии дрожит линия). В тишине — покой, без дыхания: пустое кольцо и есть сигнал «жду». <b>Строка состояния (вопрос 6)</b> — при звуке уходит целиком за 300 мс: точка одна без текста выглядит потерянной, а слово статуса под кольцом уже говорит «слышу». <b>«Настройка» (вопрос 7)</b> — подсказка и есть строка состояния, точка встаёт перед ней, и в отличие от «Игры» она не скрывается при звуке — это рабочая подсказка («авто» / «цель — D»); шкала остаётся, цифры — в строке статуса рядом со словом, как в «Игре»; перегруза нет, потому что шкала и цифры лежат по разные стороны кнопки записи… нет — шкала сразу под статусом: три строки читаются как один прибор (слово · число · стрелка).</p>
+</section>
+
+<section class="dv-turn" id="s12b">
+<div class="dv-thd"><a class="dv-tid" href="#s12b">12b · 12c</a><span class="dv-tname">Точка состояния — два варианта на трёх фонах · три раскладки слова и цифр</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="12b"><div class="dv-olabel"><a class="dv-oid" href="#12b">12b</a>Точка: (а) цвета зон · (б) свои токены status.ready / status.blocked + форма — на тёмном, зелёном, красном фоне</div><div class="dv-card">
+<div style="display:grid;grid-template-columns:120px repeat(3,180px);gap:8px;align-items:center">
+  <div></div><div style="font-size:11px;color:#A39FB5;text-align:center">тишина</div><div style="font-size:11px;color:#A39FB5;text-align:center">фон «в строе»</div><div style="font-size:11px;color:#A39FB5;text-align:center">фон «мимо»</div>
+  <sc-for list="{{ dotRows }}" as="r" hint-placeholder-count="4">
+    <div style="font-size:12px;color:#E6E4EE;line-height:1.3">{{ r.name }}</div>
+    <sc-for list="{{ r.cells }}" as="c" hint-placeholder-count="3">
+      <div style="height:72px;border-radius:14px;background:{{ c.bg }};display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#A39FB5">
+        <sc-if value="{{ c.solid }}" hint-placeholder-val="{{ true }}"><div style="width:8px;height:8px;border-radius:50%;background:{{ c.col }}"></div></sc-if>
+        <sc-if value="{{ c.ring }}" hint-placeholder-val="{{ false }}"><div style="width:8px;height:8px;border-radius:50%;border:2px solid {{ c.col }};box-sizing:border-box"></div></sc-if>
+        <div>{{ c.text }}</div>
+      </div>
+    </sc-for>
+  </sc-for>
+</div>
+<div style="margin-top:14px;font-size:12px;color:rgba(230,228,238,.6);max-width:680px;line-height:1.5"><b style="color:#E6E4EE">Выбор — (б).</b> <span class="mono">status.ready #7CB99A</span> — зелёный на треть менее насыщенный, чем zone.inTune, сплошная точка 8 dp; <span class="mono">status.blocked #C4877F</span> — тёплый серо-красный, кольцо-контур 8 dp со штрихом 2. На красном фоне зелёная точка (а) читается как «в строе», хотя ноты нет; (б) не спорит ни с одним фоном. От точки записи «нельзя» отличается формой (контур против сплошной), размером (8 против 10) и тем, что не пульсирует — см. <a href="#12d2">12d2</a>.</div>
+</div></div>
+</div>
+<div class="dv-opts" style="margin-top:28px">
+<sc-for list="{{ layouts }}" as="s" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<div style="width:412px;height:300px;border-radius:18px;overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding-bottom:36px;box-sizing:border-box;border:4px solid rgba(116,119,117,.5)">
+  <div style="position:absolute;left:0;right:0;top:-300px;height:560px;background:{{ s.bg }}"></div>
+  <div style="position:absolute;left:50%;top:-176px;transform:translateX(-50%);line-height:0">{{ s.ring }}</div>
+  <div style="position:relative;display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px;justify-content:center">
+    <div style="display:flex;align-items:center;gap:14px;color:{{ s.color }}">
+      <svg width="40" height="40" viewBox="0 0 56 56"><path d="M28 6 L50 34 H36 V50 H20 V34 H6 Z" fill="{{ s.color }}"></path></svg>
+      <sc-if value="{{ s.showWord }}" hint-placeholder-val="{{ true }}"><div style="font-size:28px;font-weight:600">выше</div></sc-if>
+      <sc-if value="{{ s.centsInline }}" hint-placeholder-val="{{ true }}"><div class="tn" style="font-size:{{ s.centsSize }};font-weight:700;color:{{ s.centsColor }};min-width:3.1ch;margin-left:2px">+12</div></sc-if>
+    </div>
+    <sc-if value="{{ s.centsBelow }}" hint-placeholder-val="{{ false }}"><div class="tn" style="font-size:36px;font-weight:700;color:{{ s.centsColor }};line-height:1.1">+12<span style="font-size:16px;font-weight:500;margin-left:4px;color:#A39FB5">ц</span></div></sc-if>
+  </div>
+</div>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Раскладка (вопрос 5) — <a href="#12c1">12c1</a>, одна строка.</b> Слово 28 sp 600 цветом зоны, стрелка 40 dp, цифры 36 sp 700 табличные, onSurfaceVariant (#A39FB5 — 7.4:1 на surface, ≥ 5:1 на всех трёх фонах), без «ц»: единица очевидна из контекста, а серые цифры уже тише слова. Ширина под цифры зарезервирована 3.1 ch (знак + две цифры) — «+3» и «−27» стоят на одном месте, слово не ездит. В строе цифры те же серые: «+3» не зовёт гоняться за нулём. Две строки (<a href="#12c2">12c2</a>) съедают 40 dp и делают число главным; «цифры вместо слова» (<a href="#12c3">12c3</a>) лишает периферийное зрение слова, которое читается с 60 см, — число оттуда не читается.</p>
+</section>
+
+<section class="dv-turn" id="s12f">
+<div class="dv-thd"><a class="dv-tid" href="#s12f">12f · 12g</a><span class="dv-tname">Landscape 892×412 · маленький экран 360×640</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="12f"><div class="dv-olabel"><a class="dv-oid" href="#12f">12f</a>Landscape — кольцо 260 dp слева, ореол до 1.4 R (364 dp) укладывается в панель 400; справа переключатель, строка состояния, статус с цифрами, кнопка</div><div class="dv-card">
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;box-sizing:border-box">
+  <div style="position:absolute;left:0;top:0;bottom:0;width:400px;background:radial-gradient(ellipse 60% 70% at 50% 50%,#1A4A36 0%,#153A2C 45%,#131318 100%)"></div>
+  <div style="position:relative;width:400px;display:flex;align-items:center;justify-content:center">
+    <div style="position:relative;width:260px;height:260px;display:flex;align-items:center;justify-content:center">
+      <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);line-height:0">{{ landRing }}</div>
+      <div style="position:relative;font-size:150px;font-weight:700;line-height:1;letter-spacing:-6px;display:flex;align-items:baseline">A<span style="font-size:44px;font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">4</span></div>
+    </div>
+  </div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;padding:16px 24px 16px 8px;gap:8px">
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid #E9DDFF"></div>Игра</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:#E6E4EE;border-left:1px solid #3A3846"><div style="width:4px;height:14px;border-radius:2px;background:#A39FB5"></div>Настройка</div>
+    </div>
+    <div style="height:28px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#A39FB5;opacity:0"><div style="width:8px;height:8px;border-radius:50%;background:#7CB99A"></div>Играйте…</div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:14px;color:#47C97E"><div style="width:18px;height:18px;border-radius:50%;background:#47C97E"></div><div style="font-size:28px;font-weight:600">в строе</div><div class="tn" style="font-size:36px;font-weight:700;color:#A39FB5;min-width:3.1ch;margin-left:2px">+3</div></div>
+    <div style="display:flex;align-items:center;justify-content:center;padding-top:4px"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div></div>
+  </div>
+</div>
+</div></div>
+<sc-for list="{{ small }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<div style="width:360px;height:640px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;flex-direction:column;box-sizing:border-box">
+  <div style="position:absolute;left:0;right:0;top:56px;height:400px;background:{{ s.bg }}"></div>
+  <div style="position:relative;display:flex;justify-content:center;padding:10px 20px 0">
+    <div style="display:flex;border:1px solid #3A3846;border-radius:18px;overflow:hidden;height:36px;width:100%">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;background:#5B43B8;color:#E9DDFF"><div style="width:12px;height:12px;border-radius:50%;border:2.5px solid #E9DDFF"></div>Игра</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;color:#E6E4EE;border-left:1px solid #3A3846"><div style="width:4px;height:12px;border-radius:2px;background:#A39FB5"></div>Настройка</div>
+    </div>
+  </div>
+  <sc-if value="{{ s.chip }}" hint-placeholder-val="{{ false }}"><div style="position:relative;display:flex;justify-content:center;padding-top:6px"><div style="height:26px;border-radius:13px;background:#1E1D25;display:flex;align-items:center;gap:6px;padding:0 10px 0 8px;font-size:12px;color:#A39FB5"><div style="width:6px;height:6px;border-radius:50%;background:#C4ADFF"></div>занятие · <span class="tn" style="color:#E6E4EE;font-weight:600">12:34</span></div></div></sc-if>
+  <div style="position:relative;height:24px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:#A39FB5;opacity:0"><div style="width:8px;height:8px;border-radius:50%;background:#7CB99A"></div>Играйте…</div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+    <div style="position:relative;width:{{ s.ringPx }};height:{{ s.ringPx }};display:flex;align-items:center;justify-content:center">
+      <div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);line-height:0">{{ s.ring }}</div>
+      <div style="position:relative;font-size:{{ s.noteSize }};font-weight:700;line-height:1;letter-spacing:-4px;display:flex;align-items:baseline">A<span style="font-size:{{ s.octSize }};font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">4</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;color:#47C97E;min-height:40px"><div style="width:16px;height:16px;border-radius:50%;background:#47C97E"></div><div style="font-size:24px;font-weight:600">в строе</div><div class="tn" style="font-size:30px;font-weight:700;color:#A39FB5;min-width:3.1ch">+3</div></div>
+  </div>
+  <sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}"><div style="position:relative;display:flex;align-items:center;gap:10px;padding:4px 20px 0"><div style="width:10px;height:10px;border-radius:50%;background:#E8565C"></div><div style="font-size:14px;font-weight:600" class="tn">запись · 01:24</div><div style="flex:1;height:6px;border-radius:3px;background:#292833;display:flex;gap:2px;overflow:hidden"><div style="width:9%;background:#47C97E"></div><div style="width:7%;background:#47C97E"></div><div style="width:6%;background:#E5B03C"></div><div style="width:12%;background:#47C97E"></div><div style="width:8%;background:#E8565C"></div></div></div></sc-if>
+  <div style="position:relative;display:flex;align-items:center;justify-content:center;padding:8px 20px 8px">
+    <sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}"><div style="width:64px;height:64px;border-radius:50%;background:#E8565C;display:flex;align-items:center;justify-content:center"><div style="width:22px;height:22px;border-radius:4px;background:#FFFFFF"></div></div></sc-if>
+    <sc-if value="{{ s.notRec }}" hint-placeholder-val="{{ true }}"><div style="width:64px;height:64px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:24px;height:24px;border-radius:50%;background:#2E1A6E"></div></div></sc-if>
+  </div>
+  <div style="height:64px;display:flex;background:#1E1D25;position:relative">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><div style="width:56px;height:28px;border-radius:14px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:16px;height:16px;border-radius:50%;border:3px solid #E9DDFF"></div></div><div style="font-size:11px;font-weight:600">Live</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><div style="width:56px;height:28px;display:flex;align-items:center;justify-content:center"><div style="width:16px;height:16px;border-radius:4px;border:3px solid #A39FB5;border-top-width:6px;box-sizing:border-box"></div></div><div style="font-size:11px;color:#A39FB5">Занятия</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><div style="width:56px;height:28px;display:flex;align-items:center;justify-content:center"><div style="width:16px;height:12px;border-radius:3px;border:3px solid #A39FB5"></div></div><div style="font-size:11px;color:#A39FB5">Записи</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><div style="width:56px;height:28px;display:flex;align-items:center;justify-content:center"><div style="width:16px;height:16px;border-radius:5px;border:3px solid #A39FB5;transform:rotate(45deg)"></div></div><div style="font-size:11px;color:#A39FB5">Настройки</div></div>
+  </div>
+</div>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next">Порядок сжатия на маленьком экране: сначала кольцо (300 → 220 → минимум 180 dp, нота — 0.55 диаметра), затем зазоры (20 → 10), затем строка состояния теряет высоту (28 → 24), потом кнопка (72 → 64). Слово и цифры не уменьшаются ниже 24 / 30 sp. Ореол всегда 1.4 R — от кольца 180 это 252 dp, укладывается в ширину 360.</p>
+</section>
+
+<section class="dv-turn" id="s12h">
+<div class="dv-thd"><a class="dv-tid" href="#s12h">12h · 12i</a><span class="dv-tname">Раскадровка движения · идея: отметка отклонения на кольце</span></div>
+<div style="display:flex;flex-direction:column;gap:28px">
+<sc-for list="{{ boards }}" as="b" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ b.id }}" style="align-self:flex-start"><div class="dv-olabel" style="max-width:none"><a class="dv-oid" href="#{{ b.id }}">{{ b.id }}</a>{{ b.label }}</div>
+<div style="display:flex;gap:12px;flex-wrap:wrap">
+  <sc-for list="{{ b.tiles }}" as="t" hint-placeholder-count="6">
+  <div style="width:168px;display:flex;flex-direction:column;gap:6px">
+    <div style="width:168px;height:168px;border-radius:16px;background:{{ t.bg }};display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative"><div style="line-height:0">{{ t.ring }}</div><sc-if value="{{ t.hasNote }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;font-size:60px;font-weight:700;letter-spacing:-2px;color:#E6E4EE">{{ t.note }}</div></sc-if></div>
+    <div class="tn" style="font-size:11px;color:#E6E4EE;font-weight:600">{{ t.t }}</div>
+    <div style="font-size:11px;color:#A39FB5;line-height:1.35">{{ t.cap }}</div>
+  </div>
+  </sc-for>
+</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Волны (вопрос 2) — да, но только две причины и редко.</b> Волна на «новую ноту»: контур 2 dp цветом зоны от R до 1.35 R за 900 мс, α .25 → 0, easing decelerate; не чаще одной в 600 мс, не больше двух живых. Волна на hold = 1 — та же, но α .35 и вместе с ней glow держится на 1: это и есть награда вместо дуги. В быстром пассаже (<a href="#12h3">12h3</a>) волны срабатывают на каждую вторую-третью ноту и глазом читаются как «кольцо чуть дышит», а не как пульс. Если и это мешает — выключаем волну «новая нота», оставляем только награду за выдержку; это один флаг. <b>Лекарство от мелькания (<a href="#12h2">12h2</a>)</b> — асимметричные скорости glow: вверх 500 мс, вниз 900 мс. За 200 мс ухода «рядом» glow опускается с 1 до ~.87 и возвращается — глаз видит одно ровное свечение. Домен обнуляет hold рывком, UI этого не показывает: целевое значение упало, но анимация к нему идёт 900 мс. <b>12i, отметка на кольце</b> — предложена и не рекомендована: при 4 нотах в секунду точка прыгает по дуге между −27 и +12, это и есть новая «мелькающая полоска», только круглая; сглаживание до 300 мс делает её просто запаздывающей. Оставить как опцию для режима «Настройка», где движение медленное — там она может заменить шкалу. Поведение согласуем отдельно.</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · Live 2 · дополнение к хэндоффу Live v1</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(520px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Токены</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Значение</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="12"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Слои кольца · в долях R (радиус контура) · α умножается на glow</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,.9fr) minmax(0,1.8fr)">
+    <div class="h">Слой</div><div class="h">Геометрия и стопы</div>
+    <sc-for list="{{ layers }}" as="l" hint-placeholder-count="6"><div style="font-weight:600">{{ l.name }}</div><div style="color:#A39FB5">{{ l.v }}</div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px">Модель glow: тишина / шум / нет микрофона 0 · мимо .25 · рядом .40 · в строе .60 + .40·hold. UI идёт к цели: вверх tween 500 мс FastOutSlowIn, вниз 900 мс LinearOutSlowIn. Цвет зоны — кроссфейд 150 мс, как фон. Контур в тишине outlineVariant, при glow &gt; 0 — цвет зоны с α .6 + .4·glow.</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp / sp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Элемент</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="12"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="9"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты</div>
+  <div style="color:#A39FB5">Строка состояния: «Играйте…» · «Слишком шумно» · «Микрофон недоступен» · «Настройка»: «авто · сыграйте открытую струну», «цель — D · сыграйте струну». Статус: «в строе» · «выше» · «ниже». Центы: знак всегда, минус U+2212, «0» без знака, целые, обновление ≤ 5 раз/с, гистерезис ±1 ц. Нет разрешения — без изменений.</div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const ON = '#E6E4EE', OV = '#A39FB5', SURF = '#131318', PC = '#5B43B8', OUT = '#3A3846';
+    const Z = { in: '#47C97E', near: '#E5B03C', off: '#E8565C' };
+    const BG = { in: 'radial-gradient(ellipse 70% 60% at 50% 45%,#1A4A36 0%,#153A2C 45%,#131318 100%)', near: 'radial-gradient(ellipse 70% 60% at 50% 45%,#4A3A12 0%,#3A2E10 45%,#131318 100%)', off: 'radial-gradient(ellipse 70% 60% at 50% 45%,#4A1C22 0%,#3A171C 45%,#131318 100%)', none: 'transparent' };
+    const hex2 = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+    const mix = (a, b, t) => { const A = hex2(a), B = hex2(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+    const rgba = (c, a) => { const [r, g, b] = hex2(c); return `rgba(${r},${g},${b},${a.toFixed(3)})`; };
+    let gid = 0;
+    // ring: ringPx = diameter of the stroke circle; svg box = 1.4 × that
+    const ring = (ringPx, zone, glow, o = {}) => {
+      const R = ringPx / 2, box = ringPx * 1.4, c = box / 2, id = 'g' + (gid++);
+      const col = zone ? Z[zone] : OUT, lvl = o.level ?? 0;
+      const haloR = R * 1.4 * (1 + 0.04 * lvl);
+      const stroke = glow > 0 ? rgba(col, 0.6 + 0.4 * glow) : OUT;
+      const core = mix(col, '#FFFFFF', 0.45 * glow);
+      const kids = [
+        h('defs', { key: 'd' },
+          h('radialGradient', { id: id + 'o' }, h('stop', { offset: (R / haloR).toFixed(3), stopColor: col, stopOpacity: 0.32 * glow }), h('stop', { offset: (R / haloR + 0.12).toFixed(3), stopColor: col, stopOpacity: 0.10 * glow }), h('stop', { offset: '1', stopColor: col, stopOpacity: 0 })),
+          h('radialGradient', { id: id + 'i' }, h('stop', { offset: '0.6', stopColor: col, stopOpacity: 0 }), h('stop', { offset: '0.88', stopColor: col, stopOpacity: 0.07 * glow }), h('stop', { offset: '1', stopColor: col, stopOpacity: 0.18 * glow }))),
+        glow > 0 && h('circle', { key: 'o', cx: c, cy: c, r: haloR, fill: `url(#${id}o)` }),
+        glow > 0 && h('circle', { key: 'i', cx: c, cy: c, r: R, fill: `url(#${id}i)` }),
+        glow > 0 && h('circle', { key: 's', cx: c, cy: c, r: R, fill: 'none', stroke: col, strokeWidth: 6 + 10 * glow, opacity: 0.25 * glow }),
+        h('circle', { key: 't', cx: c, cy: c, r: R, fill: 'none', stroke: glow > 0 ? core : stroke, strokeWidth: 6, opacity: glow > 0 ? 0.6 + 0.4 * glow : 1 }),
+        ...(o.waves || []).map((w, i) => h('circle', { key: 'w' + i, cx: c, cy: c, r: R * w.r, fill: 'none', stroke: col, strokeWidth: 2, opacity: w.a })),
+        o.mark != null && h('circle', { key: 'm', cx: c + R * Math.sin(o.mark), cy: c - R * Math.cos(o.mark), r: 7, fill: ON, stroke: SURF, strokeWidth: 2 }),
+        o.mark != null && h('path', { key: 'z', d: `M ${c + R * Math.sin(-0.17)} ${c - R * Math.cos(-0.17)} A ${R} ${R} 0 0 1 ${c + R * Math.sin(0.17)} ${c - R * Math.cos(0.17)}`, fill: 'none', stroke: Z.in, strokeWidth: 10, strokeLinecap: 'round', opacity: 0.9 }),
+      ].filter(Boolean);
+      return h('svg', { width: box, height: box, viewBox: `0 0 ${box} ${box}`, style: { display: 'block' } }, kids);
+    };
+    const seg = t => ({ playBg: t ? 'transparent' : PC, playFg: t ? ON : '#E9DDFF', playIc: t ? OV : '#E9DDFF', tuneBg: t ? PC : 'transparent', tuneFg: t ? '#E9DDFF' : ON, tuneIc: t ? '#E9DDFF' : OV });
+    const strings = (auto, lock) => [['G', '196'], ['D', '293.7'], ['A', '440'], ['E', '659.3']].map(([name, hz]) => { const a = name === auto, l = name === lock; return { name, hz, locked: l, fw: a || l ? 700 : 600, fg: l ? '#2E1A6E' : ON, bg: l ? '#C4ADFF' : a ? PC : '#1E1D25', border: a || l ? 'transparent' : OUT }; });
+    const mk = (id, label, zone, glow, o = {}) => {
+      const sounding = !!zone, dir = o.dir || 'in', tuning = !!o.tuning;
+      const ringPx = o.ringPx || (tuning ? 260 : 300);
+      const noteSize = Math.round(ringPx * 0.58);
+      return {
+        id, label, ...seg(tuning), tuning, chip: !!o.chip, rec: !!o.rec, notRec: !o.rec, noPerm: !!o.noPerm,
+        bg: sounding ? BG[zone] : 'transparent', bgTop: tuning ? '140px' : o.chip ? '96px' : '64px',
+        statusText: o.status ?? (tuning ? (o.lock ? `цель — ${o.lock} · сыграйте струну` : 'авто · сыграйте открытую струну') : 'Играйте…'), statusOp: o.statusOn ?? (sounding && !tuning ? 0 : 1), statusMt: tuning ? '10px' : '12px',
+        dotReady: !o.blocked, dotBlocked: !!o.blocked,
+        ringPx: ringPx + 'px', noteSize: noteSize + 'px', octSize: Math.round(noteSize * 0.3) + 'px', gap: tuning ? '16px' : '20px',
+        ring: ring(ringPx, zone, glow, { level: o.level ?? 0.5, waves: o.waves }),
+        sounding, note: o.note || 'A', oct: o.oct || '4', wordOp: sounding ? 1 : 0,
+        color: sounding ? Z[zone] : 'transparent', up: dir === 'up', down: dir === 'down', inTune: dir === 'in',
+        word: dir === 'up' ? 'выше' : dir === 'down' ? 'ниже' : 'в строе', showWord: true, cents: o.cents || '+3', centsColor: OV, centsInline: true, centsBelow: false,
+        strings: strings(o.auto, o.lock), markerLeft: o.marker || '50%',
+      };
+    };
+    const frames = [
+      mk('12a1', 'Тишина — строка состояния «● Играйте…», кольцо пустое (контур outlineVariant), без дыхания', null, 0),
+      mk('12a2', 'В строе, только что — glow .6: контур цвета зоны, лёгкий ореол, волна «новая нота» на 1.2 R', 'in', 0.6, { cents: '+3', waves: [{ r: 1.2, a: 0.12 }] }),
+      mk('12a3', 'В строе, держим 2 с — glow 1: контур светлеет к белому на 45 %, ореол до 1.4 R. Главный кадр', 'in', 1, { cents: '+2', level: 0.8 }),
+      mk('12a4', 'Выше, рядом — glow .4, янтарь, «↑ выше  +12»', 'near', 0.4, { dir: 'up', cents: '+12', note: 'F♯', oct: '5' }),
+      mk('12a5', 'Ниже, мимо — glow .25: промах намеренно тише попадания', 'off', 0.25, { dir: 'down', cents: '−27', note: 'C♯', oct: '5' }),
+      mk('12a6', 'Слишком шумно — «○ Слишком шумно» (контурная точка status.blocked), кольцо как в тишине', null, 0, { status: 'Слишком шумно', blocked: true }),
+      mk('12a7', 'Микрофон недоступен — та же точка «нельзя»', null, 0, { status: 'Микрофон недоступен', blocked: true }),
+      { ...mk('12a8', 'Нет разрешения — единственное состояние с текстом и кнопкой в центре; строка состояния скрыта', null, 0, { statusOn: 0, noPerm: true }), ring: h('div') },
+      mk('12a9', '«Убрать анимации» — статичный вид: glow ступенями .25 / .4 / .6 / 1 с кроссфейдом 300 мс, без волн и дыхания; здесь ступень «в строе» .6', 'in', 0.6, { cents: '+3', level: 0 }),
+      mk('12d1', 'Запись + в строе — полоса записи над кнопкой на месте бывшей шкалы; кольцо 280', 'in', 0.8, { rec: true, cents: '+1', ringPx: 280, waves: [{ r: 1.3, a: 0.06 }] }),
+      mk('12d2', 'Запись + занятие идёт + слишком шумно — три служебные строки; две «красные» точки: контур 8 без пульса против сплошной 10 с пульсом', null, 0, { rec: true, chip: true, status: 'Слишком шумно', blocked: true, ringPx: 280 }),
+      mk('12e1', '«Настройка», тишина — точка «можно» перед подсказкой; шкала остаётся, бегунок скрыт', null, 0, { tuning: true }),
+      mk('12e2', '«Настройка», звучит A в строе (авто) — цифры рядом со словом, стрелка на шкале', 'in', 0.9, { tuning: true, auto: 'A', cents: '+2', marker: '52%', level: 0.7 }),
+      mk('12e3', '«Настройка», зафиксирована D, звучит ниже — glow .25, цифры «−18»', 'off', 0.25, { tuning: true, lock: 'D', dir: 'down', note: 'D', oct: '4', cents: '−18', marker: '32%' }),
+      mk('12e4', '«Настройка», слишком шумно — точка «нельзя» перед текстом на месте подсказки', null, 0, { tuning: true, status: 'Слишком шумно', blocked: true }),
+    ];
+    const dotRows = [
+      { name: '(а) цвета зон · можно', cells: [SURF, '#1A4A36', '#4A1C22'].map(bg => ({ bg, col: Z.in, solid: true, ring: false, text: 'Играйте…' })) },
+      { name: '(а) цвета зон · нельзя', cells: [SURF, '#1A4A36', '#4A1C22'].map(bg => ({ bg, col: Z.off, solid: true, ring: false, text: 'Слишком шумно' })) },
+      { name: '(б) status.ready · сплошная', cells: [SURF, '#1A4A36', '#4A1C22'].map(bg => ({ bg, col: '#7CB99A', solid: true, ring: false, text: 'Играйте…' })) },
+      { name: '(б) status.blocked · контур', cells: [SURF, '#1A4A36', '#4A1C22'].map(bg => ({ bg, col: '#C4877F', solid: false, ring: true, text: 'Слишком шумно' })) },
+    ];
+    const layouts = [
+      { id: '12c1', label: 'Одна строка «↑ выше  +12» — цифры 36 sp 700 onSurfaceVariant. Рекомендуем', showWord: true, centsInline: true, centsBelow: false, centsSize: '36px' },
+      { id: '12c2', label: 'Две строки — «↑ выше», под ним «+12 ц»', showWord: true, centsInline: false, centsBelow: true, centsSize: '36px' },
+      { id: '12c3', label: 'Цифры вместо слова — «↑ +12», 44 sp', showWord: false, centsInline: true, centsBelow: false, centsSize: '44px' },
+    ].map(l => ({ ...l, bg: BG.near, color: Z.near, centsColor: OV, ring: ring(300, 'near', 0.4) }));
+    const landRing = ring(260, 'in', 1, { level: 0.6 });
+    const small = [
+      { id: '12g1', label: 'Маленький экран 360×640 — в строе: кольцо 220, нота 128, зазоры 10', bg: BG.in, ringPx: '220px', noteSize: '128px', octSize: '38px', ring: ring(220, 'in', 1), chip: false, rec: false, notRec: true },
+      { id: '12g2', label: 'Маленький экран — запись + занятие идёт: кольцо 180 (минимум), нота 104', bg: BG.in, ringPx: '180px', noteSize: '104px', octSize: '32px', ring: ring(180, 'in', 0.8), chip: true, rec: true, notRec: false },
+    ];
+    const tile = (t, cap, zone, glow, o = {}) => ({ t, cap, bg: zone ? (zone === 'in' ? '#17352A' : zone === 'near' ? '#33290F' : '#351619') : '#131318', ring: ring(96, zone, glow, o), hasNote: !!zone, note: o.note || 'A' });
+    const boards = [
+      { id: '12h1', label: 'Тишина → нота в строе → держим 2 с', tiles: [
+        tile('0 мс', 'тишина: контур outlineVariant, glow 0', null, 0),
+        tile('100 мс', 'нота зафиксирована: glow → .6 (500 мс), волна стартует с R, α .25', 'in', 0.2, { waves: [{ r: 1.02, a: 0.25 }] }),
+        tile('500 мс', 'glow .6, волна на 1.2 R, α .1', 'in', 0.6, { waves: [{ r: 1.2, a: 0.1 }] }),
+        tile('1200 мс', 'hold .55 → glow .82; волна погасла', 'in', 0.82),
+        tile('2000 мс', 'hold 1 → glow 1; волна-награда с R, α .35', 'in', 1, { waves: [{ r: 1.03, a: 0.35 }] }),
+        tile('2600 мс', 'glow 1 держится, волна на 1.3 R, α .08; дальше — покой и дыхание ±4 %', 'in', 1, { waves: [{ r: 1.3, a: 0.08 }] }),
+      ] },
+      { id: '12h2', label: 'В строе → уход «рядом» на 200 мс → обратно: свечение не гаснет', tiles: [
+        tile('0 мс', 'в строе, glow 1', 'in', 1),
+        tile('+50 мс', 'зона near: цель glow .4, цвет кроссфейд 150 мс; glow пока .98', 'near', 0.98),
+        tile('+200 мс', 'glow опустился до .87 (спад 900 мс), снова зона in; цель 1', 'in', 0.87),
+        tile('+450 мс', 'glow .95, hold начал считать заново — UI этого не видит', 'in', 0.95),
+        tile('+700 мс', 'glow 1. Волна «новая нота» не срабатывала: нота та же', 'in', 1),
+      ] },
+      { id: '12h3', label: 'Быстрый пассаж, 4 ноты в секунду, зоны разные', tiles: [
+        tile('0 мс', 'A в строе, glow ~.5 (не успевает вырасти)', 'in', 0.5, { waves: [{ r: 1.05, a: 0.22 }] }),
+        tile('250 мс', 'B рядом: цвет за 150 мс, glow .48; волна с прошлой ноты на 1.15 R; новая волна не стартует (< 600 мс)', 'near', 0.48, { note: 'B', waves: [{ r: 1.15, a: 0.12 }] }),
+        tile('500 мс', 'C♯ мимо: glow .4; волна догорает на 1.3 R', 'off', 0.4, { note: 'C', waves: [{ r: 1.3, a: 0.04 }] }),
+        tile('750 мс', 'D в строе: glow .45; разрешена новая волна (прошло 750 мс)', 'in', 0.45, { note: 'D', waves: [{ r: 1.02, a: 0.25 }] }),
+        tile('итог', 'glow живёт в коридоре .4–.55, меняется только цвет; ≤ 1 волна на экране', 'in', 0.5, { note: 'D', waves: [{ r: 1.2, a: 0.1 }] }),
+      ] },
+      { id: '12h4', label: 'Нота → тишина', tiles: [
+        tile('0 мс', 'последняя нота, glow .8', 'in', 0.8),
+        tile('600 мс', 'нет питча 600 мс = тишина: цель glow 0, фон уходит кроссфейдом 300 мс', 'in', 0.75),
+        tile('900 мс', 'glow .45; нота, слово и цифры fade 300 мс', 'in', 0.45),
+        tile('1200 мс', 'glow .2; строка состояния появляется fade 300 мс', 'in', 0.2),
+        tile('1500 мс', 'glow 0: контур → outlineVariant, кольцо в покое', null, 0),
+      ] },
+      { id: '12i', label: 'Идея (не рекомендуем для «Игры»): кольцо как циферблат — зона дугой вверху, отметка 14 dp уходит вправо при «выше»', tiles: [
+        tile('в строе', 'отметка в зоне, +3 ц = 3°', 'in', 0.8, { mark: 0.05 }),
+        tile('выше +12', 'отметка на 12° вправо, вышла из дуги', 'near', 0.4, { mark: 0.21 }),
+        tile('ниже −27', 'отметка на 27° влево', 'off', 0.25, { mark: -0.47 }),
+        tile('пассаж', 'отметка прыгает на 40° четыре раза в секунду — это и есть новое мелькание', 'near', 0.45, { mark: 0.35 }),
+      ] },
+    ];
+    const tokens = [
+      { name: 'ring.idle', hex: '#3A3846', use: 'контур кольца в тишине, шуме, без микрофона (= outlineVariant); ring.track из v1 больше не нужен' },
+      { name: 'ring.core(zone, glow)', hex: '#9FE4BE', use: 'цвет контура при звуке = lerp(zone, #FFFFFF, .45·glow); показан для inTune при glow 1' },
+      { name: 'glow.inTune', hex: '#47C97E', use: 'цвет ореола и волн в зоне «в строе»; α по слоям ниже × glow' },
+      { name: 'glow.near', hex: '#E5B03C', use: 'то же для «рядом»' },
+      { name: 'glow.off', hex: '#E8565C', use: 'то же для «мимо»' },
+      { name: 'status.ready', hex: '#7CB99A', use: 'точка «можно играть» 8 dp сплошная; приглушённый зелёный, не zone.inTune' },
+      { name: 'status.blocked', hex: '#C4877F', use: 'точка «нельзя» — кольцо 8 dp штрих 2; тёплый серо-красный, не zone.off' },
+      { name: 'status.text', hex: '#A39FB5', use: 'строка состояния и подсказка «Настройки» (= onSurfaceVariant)' },
+      { name: 'cents.text', hex: '#A39FB5', use: 'цифры центов во всех зонах (= onSurfaceVariant); слово статуса — цветом зоны, как в v1' },
+      { name: 'rec.dot', hex: '#E8565C', use: 'точка записи 10 dp сплошная, пульс 1.2 с (без изменений)' },
+    ];
+    const layers = [
+      { name: '1 · Контур', v: 'r = R, ширина 6; тишина — ring.idle α 1; звук — ring.core, α .6 + .4·glow' },
+      { name: '2 · Мягкий штрих', v: 'r = R, ширина 6 + 10·glow, цвет зоны, α .25·glow; рисуется под контуром' },
+      { name: '3 · Внешний ореол', v: 'radialGradient центр = центр кольца, радиус 1.4 R·(1 + .04·level); стопы: [R/1.4R = .714] α .32·glow → [.834] α .10·glow → [1] α 0. Внутри R прозрачно (первый стоп начинается на .714)' },
+      { name: '4 · Внутренний ореол', v: 'radialGradient радиус R; стопы: [.60] α 0 → [.88] α .07·glow → [1] α .18·glow' },
+      { name: '5 · Волна', v: 'окружность r = R·k, k: 1 → 1.35 за 900 мс decelerate; ширина 2; α: .25 → 0 («новая нота») или .35 → 0 (hold = 1). ≤ 2 одновременно, интервал ≥ 600 мс' },
+      { name: 'Габарит', v: 'всё в пределах 1.4 R·1.04 ≈ 1.46 R; портрет R 150 → 438 dp; landscape R 130 → 380 dp в панели 400; малый R 90–110' },
+    ];
+    const sizes = [
+      { name: 'Кольцо', v: 'портрет «Игра» Ø 300 (R 150); с полосой записи Ø 280; «Настройка» Ø 260; landscape Ø 260; малый экран Ø 220 → минимум 180. Нота = .58 Ø, октава = .3 ноты' },
+      { name: 'Строка состояния', v: 'высота 28, по центру, margin-top 12 от переключателя (10 от ряда струн); точка 8 + gap 8 + текст 14 sp onSurfaceVariant; при ×1.5 — одна строка, обрезка ellipsis; скрыта при звуке (α 0, место остаётся) — только в «Игре»; в «Настройке» видна всегда. Слой фона зоны в «Настройке» начинается с top 140 (под рядом струн), как в v1' },
+      { name: 'Точки', v: 'ready — Ø 8 сплошная; blocked — Ø 8 контур 2; rec — Ø 10 сплошная с пульсом' },
+      { name: 'Статус', v: 'строка высотой ≥ 48: стрелка 40 dp (было 64) / точка 18, gap 14, слово 28 sp 600 цвет зоны, цифры 36 sp 700 tnum onSurfaceVariant, min-width 3.1 ch, gap 16; зазор кольцо ↔ статус 20 (малый экран 10)' },
+      { name: 'Цифры', v: 'формат «+12» / «−7» / «0»; минус U+2212; при ×1.5 — 54 sp, min-width сохраняется; в «Настройке» диапазон до ±99, ширина та же' },
+      { name: 'Полоса записи', v: 'padding 8 24 0; точка 10, текст 16 sp 600 tnum, лента 6 dp gap 2 — без изменений; шкалы под ней в «Игре» нет' },
+      { name: '«Настройка»', v: 'ряд струн 76×64 gap 12 (без изменений); подсказка = строка состояния 28 dp с точкой; шкала 36 dp над полосой записи/кнопкой; цифры в строке статуса' },
+      { name: 'Landscape', v: 'левая панель 400 (было 440) — кольцо Ø 260, ореол 380 умещается; справа: переключатель 40, строка состояния 28, статус flex, кнопка 72; nav скрыт' },
+      { name: 'Малый экран 360×640', v: 'переключатель 36, чип 26, строка состояния 24, кольцо 220/180, слово 24 sp, цифры 30 sp, кнопка 64, nav 64' },
+    ];
+    const anims = [
+      { name: 'glow ↑', v: 'animateFloatAsState к цели, tween 500 мс FastOutSlowIn' },
+      { name: 'glow ↓', v: 'tween 900 мс LinearOutSlowIn — спад медленнее подъёма; короткий уход из зоны (≤ 300 мс) опускает glow не ниже ~.8' },
+      { name: 'Цвет зоны', v: 'animateColorAsState 150 мс, синхронно с фоном; в контуре, ореолах и волнах один цвет' },
+      { name: 'Дыхание', v: 'радиус внешнего ореола × (1 + .04·level); level уже сглажен доменом, дополнительно EMA 120 мс; толщина контура и нота не меняются' },
+      { name: 'Волна', v: 'k 1 → 1.35, α .25 → 0 (или .35 → 0), 900 мс decelerate; триггеры: «новая нота», hold = 1; троттлинг 600 мс, максимум 2 живых' },
+      { name: 'Строка состояния', v: 'fade out 300 мс при первой зафиксированной ноте; fade in 300 мс при тишине (после 600 мс без питча); смена текста — crossfade 200 мс' },
+      { name: 'Нота, слово, цифры', v: 'появление fade 200 мс вместе с фоном зоны; исчезновение fade 300 мс в тишине; цифры — без анимации значений, ≤ 5 обновлений/с' },
+      { name: 'Точка состояния', v: 'ready ↔ blocked — crossfade 200 мс; никакого пульса' },
+      { name: '«Убрать анимации»', v: 'glow = ступень зоны (0 / .25 / .4 / .6 / 1 при hold = 1) с crossfade 300 мс; волн и дыхания нет; строка состояния и статус — crossfade 300 мс' },
+    ];
+    return { frames, dotRows, layouts, landRing, small, boards, tokens, layers, sizes, anims };
+  }
+}
+</script>
+</body>
+</html>

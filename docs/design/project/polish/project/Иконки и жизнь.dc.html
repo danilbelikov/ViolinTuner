@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}.frag{width:412px;background:#131318;border-radius:16px;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;color:#E6E4EE}.cap{font-size:11px;color:rgba(230,228,238,.5);line-height:1.4}
+@keyframes shine{0%{transform:translateX(-100%)}100%{transform:translateX(var(--to))}}
+@keyframes breath{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.25);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes noteUp{0%{transform:translate(0,0) rotate(-6deg) scale(.8);opacity:0}25%{opacity:.35}100%{transform:translate(var(--dx),-52px) rotate(8deg) scale(1);opacity:0}}
+@keyframes ringPulse{0%{transform:scale(1);opacity:.5}70%{transform:scale(1.22);opacity:0}100%{transform:scale(1.22);opacity:0}}</style></helmet>
+
+<section class="dv-turn" id="s14">
+<div class="dv-thd"><a class="dv-tid" href="#s14">14</a><span class="dv-tname">Иконки · один набор · контур 1.8, сетка 24, круглые концы</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="14a"><div class="dv-olabel"><a class="dv-oid" href="#14a">14a</a>Галерея — 24 dp на surface, ниже крупно 48; подпись — имя в `ICONS` и место</div><div class="dv-card">
+<div style="width:880px;background:#131318;border-radius:16px;padding:20px;display:grid;grid-template-columns:repeat(8,1fr);gap:12px 8px;box-sizing:border-box">
+<sc-for list="{{ gallery }}" as="g" hint-placeholder-count="40">
+<div style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:10px 4px 8px;border-radius:12px;background:#1E1D25">
+  <div style="display:flex;align-items:center;gap:14px;height:48px">{{ g.s24 }}{{ g.s48 }}</div>
+  <div class="mono" style="color:#E6E4EE">{{ g.name }}</div>
+  <div style="font-size:10px;color:#A39FB5;text-align:center;line-height:1.3;text-wrap:pretty">{{ g.use }}</div>
+</div>
+</sc-for>
+</div></div></div>
+
+<div class="dv-opt" id="14b"><div class="dv-olabel"><a class="dv-oid" href="#14b">14b</a>Нижняя панель, портрет — четыре состояния выбора; выбранная вкладка — заливка тела значка; точка «занятие идёт» справа сверху у «Занятий»</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ navBars }}" as="nb" hint-placeholder-count="4">
+<div style="width:412px;height:80px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ nb }}" as="n" hint-placeholder-count="4">
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+    <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}
+      <sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:3px;right:15px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px {{ n.markRing }}"></div></sc-if>
+    </div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+</div>
+</sc-for>
+<div class="cap" style="max-width:412px">Последняя панель: «Записи» активна + идёт занятие — точка primary 8 dp с обводкой 2 dp цвета панели; на активной «Занятиях» обводка — цвет пилюли.</div>
+</div></div>
+
+<div class="dv-opt" id="14c"><div class="dv-olabel"><a class="dv-oid" href="#14c">14c</a>Панель в landscape 64 dp — значок и подпись в строку, пилюля 48×32</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+<sc-for list="{{ navLand }}" as="nb" hint-placeholder-count="2">
+<div style="width:876px;height:64px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ nb }}" as="n" hint-placeholder-count="4">
+  <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px">
+    <div style="position:relative;width:48px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}
+      <sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:3px;right:7px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px {{ n.markRing }}"></div></sc-if>
+    </div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+</div>
+</sc-for>
+</div></div>
+
+<div class="dv-opt" id="14d"><div class="dv-olabel"><a class="dv-oid" href="#14d">14d</a>Кнопки, которые были голым текстом — до → после. Иконка 18 dp слева, зазор 8; в пунктах меню 24 dp, зазор 16</div><div class="dv-card">
+<div style="width:880px;background:#131318;border-radius:16px;padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:10px 28px;box-sizing:border-box">
+<sc-for list="{{ pairs }}" as="pr" hint-placeholder-count="10">
+<div style="display:flex;align-items:center;gap:14px;min-height:48px">
+  <div style="flex:1;display:flex;justify-content:flex-end;opacity:.45"><div style="height:{{ pr.h }};padding:0 {{ pr.px }};border-radius:{{ pr.r }};background:{{ pr.bg }};border:{{ pr.border }};color:{{ pr.fg }};display:flex;align-items:center;font-size:{{ pr.fs }};font-weight:600;white-space:nowrap">{{ pr.label }}</div></div>
+  <div style="width:14px;font-size:12px;color:#A39FB5;flex:none">→</div>
+  <div style="flex:1;display:flex"><div style="height:{{ pr.h }};padding:0 {{ pr.px }} 0 {{ pr.pl }};border-radius:{{ pr.r }};background:{{ pr.bg }};border:{{ pr.border }};color:{{ pr.fg }};display:flex;align-items:center;gap:{{ pr.gap }};font-size:{{ pr.fs }};font-weight:600;white-space:nowrap">{{ pr.icon }}{{ pr.label }}</div></div>
+</div>
+</sc-for>
+</div></div></div>
+</div>
+<p class="dv-next"><b>Ответ на вопрос 1.</b> Контур <b>1.8</b> — при 24 dp на плотности xxhdpi это ровно 5–6 px, читается тонко и дружит с трофеями (у них контур ~1 на 40 dp) и с Manrope 600; 2.0 выглядело бы тяжелее подписи 12 sp. Стрелка «назад» переведена на 1.8 (была 2.2) — единственная правка существующего. Выбранная вкладка — <b>заливка тела</b> (кольцо, корпус секундомера, головка ноты, ручки ползунков), а не утолщение: утолщение при 1.8 → 2.4 почти не заметно на пилюле, заливка — заметна и остаётся тем же контуром, потому что детали (стрелка секундомера, штиль ноты) прорезаны цветом пилюли. <b>Вопрос 2.</b> Иконка слева от текста — в текстовых и контурных кнопках и во всех пунктах меню. У деструктивных — тоже иконка (корзина) + цвет error: голый красный текст без знака воспринимается как ошибка, а не как действие. В <b>залитых</b> primary-кнопках иконки нет («Сохранить», «Готово», «Спасибо») — там короткий главный глагол и заливка уже говорит «главное»; исключение — «Начать занятие» (см. вопрос 3). <b>Вопрос 3.</b> Старт — <b>секундомер</b> (тот же, что на вкладке: «занятие = время»), стоп — <b>флажок</b> «финиш». Ни треугольника, ни квадрата, ни круга: они заняты плеером и записью.</p>
+</section>
+
+<section class="dv-turn" id="s15">
+<div class="dv-thd"><a class="dv-tid" href="#s15">15</a><span class="dv-tname">Экраны с иконками · «после»; «до» — кадры в существующих файлах, ссылки в подписях</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="15a"><div class="dv-olabel"><a class="dv-oid" href="#15a">15a</a>«Занятия» — занятие идёт (до: <a href="Занятия.dc.html#10b">10b</a>). Шапка профиля с бликом полосы, живая точка с минутным кольцом, «Закончить занятие» с флажком, вкладки новые</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:20px;padding:12px 16px 0">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px;min-height:56px">
+        <div style="width:56px;height:56px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#8C7AB0 0%,#4E3F78 55%,#2A2352 100%)"></div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><div style="font-size:16px;font-weight:600;line-height:1.2">Анна</div><div class="tn" style="font-size:24px;font-weight:800;line-height:1.1;letter-spacing:-.01em;color:#C4ADFF">16 ч 40 мин</div></div>
+        <div style="display:flex;align-items:center;gap:4px;flex:none;height:44px">{{ trophyRow }}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">{{ shineMain }}
+        <div class="tn" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:12px;color:#A39FB5;white-space:nowrap"><div>Уровень 4 · Первая позиция</div><div>до 5 уровня — 8 ч 20 мин</div></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div class="tn" style="font-size:64px;font-weight:700;line-height:1;letter-spacing:-1px">12:34</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#A39FB5">{{ liveDot }}Занятие идёт</div>
+      <div style="height:56px;border-radius:28px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:600;color:#E6E4EE;align-self:stretch;margin-top:6px">{{ icFlag }}Закончить занятие</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">Неделя</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">3 ч 30 мин</div></div>
+      <div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">Месяц</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">12 ч 45 мин</div></div>
+      <div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5;display:flex;align-items:center;gap:4px">Дней подряд</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;display:flex;align-items:center;gap:6px">7{{ icFlame }}</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:40px">
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">{{ icChevL }}</div>
+        <div style="font-size:16px;font-weight:700">Сентябрь 2026</div>
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;opacity:.3">{{ icChevR }}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:11px;color:#A39FB5;text-align:center;font-weight:600"><div>пн</div><div>вт</div><div>ср</div><div>чт</div><div>пт</div><div>сб</div><div>вс</div></div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px">
+        <sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
+        <div style="height:44px;display:flex;align-items:center;justify-content:center;opacity:{{ c.op }}">
+          <div style="position:relative;width:40px;height:40px;border-radius:12px;background:{{ c.bg }};box-shadow:{{ c.shadow }};display:flex;align-items:center;justify-content:center">
+            <div class="tn" style="font-size:15px;font-weight:{{ c.fw }};color:{{ c.fg }};margin-top:{{ c.mt }}">{{ c.n }}</div>
+            <sc-if value="{{ c.dot }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;bottom:6px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:{{ c.fg }}"></div></sc-if>
+          </div>
+        </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+      <div><div style="font-size:14px;color:#A39FB5;display:flex;align-items:center;gap:8px">17 сентября, четверг<span style="font-size:11px;font-weight:700;color:#C4ADFF;border:1px solid #C4ADFF;border-radius:6px;padding:1px 6px">сегодня</span></div><div class="tn" style="font-size:32px;font-weight:700;line-height:1.1;margin-top:4px">45 мин</div></div>
+      <div style="height:40px;padding:0 16px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF;white-space:nowrap">{{ icPencilP }}Изменить время</div>
+    </div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ navRun }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}
+        <sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:3px;right:15px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px {{ n.markRing }}"></div></sc-if>
+      </div>
+      <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div></div>
+
+<div class="dv-opt" id="15b"><div class="dv-olabel"><a class="dv-oid" href="#15b">15b</a>Фрагменты остальных экранов — только те места, где иконки добавились или перерисованы</div><div class="dv-card" style="display:grid;grid-template-columns:412px 412px;gap:16px">
+<div class="frag"><div class="cap">«Занятия» · покой (до: <a href="Занятия.dc.html#10a">10a</a>)</div>
+  <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:700">{{ icTimerP }}Начать занятие</div>
+  <div style="display:flex;justify-content:flex-end"><div style="height:40px;padding:0 16px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF">{{ icPlusP }}Добавить время</div></div>
+</div>
+<div class="frag"><div class="cap">Экран сессии · действия внизу (до: <a href="Репертуар.dc.html#13b">13b</a>)</div>
+  <div style="display:flex;align-items:center;gap:16px"><div style="width:56px;height:56px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center">{{ icPlayOn }}</div><div style="flex:1;height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="width:38%;height:100%;background:#C4ADFF"></div></div><div class="tn" style="font-size:13px;color:#A39FB5">0:41 / 1:48</div></div>
+  <div style="display:flex;gap:4px"><div style="height:40px;padding:0 14px 0 10px;border-radius:20px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF">{{ icPencilP }}Переименовать</div><div style="height:40px;padding:0 14px 0 10px;border-radius:20px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#E8565C">{{ icTrashE }}Удалить</div></div>
+</div>
+<div class="frag"><div class="cap">Экран произведения · шапка, плитка «Добавить», меню фото (до: <a href="Репертуар.dc.html#13c">13c</a>, <a href="Репертуар.dc.html#13g">13g</a>)</div>
+  <div style="display:flex;align-items:center;gap:4px;height:48px;margin:-4px -12px 0"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div><div style="flex:1;font-size:17px;font-weight:600">Менуэт</div><div style="height:40px;padding:0 14px 0 10px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF">{{ icPencilP }}Изменить</div></div>
+  <div style="display:flex;align-items:center;gap:10px"><div style="height:32px;padding:0 10px;border-radius:8px;background:#5B43B8;color:#E9DDFF;font-size:13px;font-weight:600;display:flex;align-items:center;gap:4px">Разбираю{{ icChevDS }}</div><div class="tn" style="font-size:14px;color:#A39FB5;display:flex;align-items:center;gap:5px">G-dur · {{ icMetro }} 96</div></div>
+  <div style="display:flex;gap:10px"><div style="width:84px;height:112px;border-radius:8px;background:#292833;display:flex;align-items:center;justify-content:center">{{ icSheet }}</div><div style="width:84px;height:112px;border-radius:8px;border:1.5px dashed #3A3846;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#C4ADFF">{{ icPlusP }}<div style="font-size:11px;font-weight:600">Добавить</div></div>
+    <div style="flex:1;border-radius:12px;background:#292833;padding:6px;display:flex;flex-direction:column"><div style="height:44px;display:flex;align-items:center;gap:16px;padding:0 12px;font-size:15px">{{ icCamera }}Сфотографировать</div><div style="height:44px;display:flex;align-items:center;gap:16px;padding:0 12px;font-size:15px">{{ icGallery }}Из галереи</div></div></div>
+</div>
+<div class="frag"><div class="cap">Форма произведения · шапка и низ (до: <a href="Репертуар.dc.html#13e2">13e2</a>)</div>
+  <div style="display:flex;align-items:center;gap:4px;height:48px;margin:-4px -12px 0"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icClose }}</div><div style="flex:1;font-size:17px;font-weight:600">Произведение</div><div style="height:40px;padding:0 20px;border-radius:20px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;font-size:14px;font-weight:700">Сохранить</div></div>
+  <div style="height:48px;border-radius:24px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:600;color:#E8565C">{{ icTrashE }}Удалить произведение</div>
+</div>
+<div class="frag"><div class="cap">Пюпитр · панель (до: <a href="Репертуар.dc.html#13f1">13f1</a>) — корзина перерисована в общем стиле, «Готово» → галочка</div>
+  <div style="display:flex;align-items:center;justify-content:space-between"><div style="width:48px;height:48px;border-radius:24px;background:rgba(19,19,24,.7);display:flex;align-items:center;justify-content:center">{{ icBack }}</div><div class="tn" style="font-size:14px;font-weight:600">2 / 7</div><div style="display:flex;gap:4px"><div style="width:48px;height:48px;border-radius:24px;background:rgba(19,19,24,.7);display:flex;align-items:center;justify-content:center">{{ icTrash }}</div><div style="width:48px;height:48px;border-radius:24px;background:#C4ADFF;display:flex;align-items:center;justify-content:center">{{ icCheckP }}</div></div></div>
+</div>
+<div class="frag"><div class="cap">Лист «Профиль» (до: <a href="Прогресс.dc.html#11d">11d</a>) и «Трофеи»</div>
+  <div style="display:flex;gap:4px;justify-content:center"><div style="height:40px;padding:0 16px 0 12px;border-radius:20px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF">{{ icGalleryP }}Выбрать фото</div><div style="height:40px;padding:0 16px 0 12px;border-radius:20px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#E8565C">{{ icTrashE }}Убрать фото</div></div>
+  <div style="display:flex;align-items:center;gap:10px"><div style="width:36px;height:36px;border-radius:18px;background:#292833;display:flex;align-items:center;justify-content:center">{{ icTrophy }}</div><div><div style="font-size:20px;font-weight:700;line-height:1.1">Трофеи</div><div style="font-size:13px;color:#A39FB5">2 из 12</div></div></div>
+</div>
+<div class="frag"><div class="cap">«Записи» · сессии (до: <a href="Репертуар.dc.html#13a2">13a2</a>) — чип «дубль», отметка «лучший», «ещё»</div>
+  <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:14px 16px"><div style="width:52px;text-align:center"><div class="tn" style="font-size:26px;font-weight:800;line-height:1;color:#47C97E">84</div><div style="font-size:11px;color:#A39FB5">%</div></div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:6px">Менуэт{{ icStar }}</div><div style="font-size:13px;color:#A39FB5;margin-top:2px;display:flex;align-items:center;gap:4px">{{ icNoteS }}дубль 3 · 12:40 · −6 ц</div></div><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">{{ icMore }}</div></div>
+  <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:700">{{ icPlusOnP }}Добавить произведение</div>
+</div>
+<div class="frag"><div class="cap">«Настройки» — строки с ведущей иконкой 24, зазор 16; «Пройти онбординг снова» — повтор</div>
+  <div style="display:flex;flex-direction:column"><div style="height:56px;display:flex;align-items:center;gap:16px">{{ icFork }}<div style="flex:1"><div style="font-size:15px;font-weight:600">Эталон A4</div><div class="tn" style="font-size:13px;color:#A39FB5">440 Гц</div></div>{{ icChevRV }}</div><div style="height:56px;display:flex;align-items:center;gap:16px">{{ icTarget }}<div style="flex:1"><div style="font-size:15px;font-weight:600">Допуск</div><div class="tn" style="font-size:13px;color:#A39FB5">± 5 центов</div></div>{{ icChevRV }}</div><div style="height:56px;display:flex;align-items:center;gap:16px">{{ icMic }}<div style="flex:1"><div style="font-size:15px;font-weight:600">Микрофон</div><div style="font-size:13px;color:#A39FB5">разрешение выдано</div></div></div><div style="height:48px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF">{{ icRepeatP }}Пройти онбординг снова</div></div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">Иконка в списке действий сессии стоит и у «Переименовать», и у «Удалить», — ряд из двух кнопок с иконками читается как ряд, а не как заголовок + ссылка. Метроном заменяет глиф ♩ в строке «♩ = 96»: символ из шрифта на Manrope не гарантирован (fallback-шрифт даёт другой вес); иконка 14 dp onSurfaceVariant + число. Нота «дубль» 14 dp перед словом, звёздочка «лучший» 14 dp после названия, primary. Иконка «камертон» отдана эталону A4 в настройках, а не вкладке Live — вкладке нужен знак «сейчас звучит», это кольцо с двумя дугами.</p>
+</section>
+
+<section class="dv-turn" id="s16">
+<div class="dv-thd"><a class="dv-tid" href="#s16">16</a><span class="dv-tname">Блик полосы уровня · живой пример и раскадровка</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="16a"><div class="dv-olabel"><a class="dv-oid" href="#16a">16a</a>Живой пример — 62 %, короткая 5 %, полная 100 %, landscape 248 dp. Каждые 4 с блик проходит за 1.2 с</div><div class="dv-card">
+<div class="frag" style="gap:22px;padding:24px 16px">
+  <div><div class="cap" style="margin-bottom:8px">62 % — обычный случай</div>{{ shineMain }}</div>
+  <div><div class="cap" style="margin-bottom:8px">5 % (≈ 19 dp) — блик короче, 12 dp, проходит за 0.5 с; ниже 12 dp заливки блика нет</div>{{ shineShort }}</div>
+  <div><div class="cap" style="margin-bottom:8px">100 % — последний уровень; блик доходит до края и растворяется за скруглением</div>{{ shineFull }}</div>
+  <div><div class="cap" style="margin-bottom:8px">Landscape — полоса 248 dp, тот же блик 56 dp, проход 1.0 с</div><div style="width:248px">{{ shineLand }}</div></div>
+  <div><div class="cap" style="margin-bottom:8px">0 мин — пусто, блика нет</div><div style="height:6px;border-radius:3px;background:#292833"></div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="16b"><div class="dv-olabel"><a class="dv-oid" href="#16b">16b</a>Раскадровка одного прохода (полоса 62 %, увеличено ×2): t = 0 · 0.3 · 0.6 · 0.9 · 1.2 с</div><div class="dv-card">
+<div class="frag" style="gap:16px;padding:24px 16px;width:600px">
+<sc-for list="{{ phases }}" as="ph" hint-placeholder-count="5">
+<div style="display:flex;align-items:center;gap:16px"><div class="mono tn" style="width:52px;color:#A39FB5">{{ ph.t }}</div><div style="flex:1;height:12px;border-radius:6px;background:#292833;overflow:hidden"><div style="position:relative;height:100%;width:62%;border-radius:6px;background:linear-gradient(90deg,#5B43B8,#C4ADFF);overflow:hidden"><div style="position:absolute;top:0;bottom:0;width:112px;left:{{ ph.x }};background:linear-gradient(90deg,rgba(233,221,255,0) 0%,rgba(233,221,255,.55) 50%,rgba(233,221,255,0) 100%)"></div></div></div><div style="width:120px;font-size:11px;color:#A39FB5">{{ ph.note }}</div></div>
+</sc-for>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Ответ на вопрос 4 — одна полоса света</b>, не волна яркости по градиенту. Волна меняла бы цвет всей заливки (fillStart→fillEnd «дышит»), и это читается как изменение состояния — как будто прогресс что-то значит именно сейчас. Одиночный блик — отражение на поверхности: заливка остаётся собой, поверх неё едет свет. <b>Форма:</b> линейный градиент 56 dp по ширине, прозрачный → `level.shine` (onPrimaryContainer #E9DDFF при α .35) в центре → прозрачный; края мягкие сами по себе, blur не нужен; ниже 1 dp по высоте ничем не отличается. Рисуется <b>внутри клипа заливки</b> (clipRect по ширине заливки с r3) — поэтому на 5 % и 100 % ничего не выходит за края. <b>Ритм:</b> период 4 с; проход 1.2 с, кривая FastOutSlowIn (быстро входит, замедляется к концу — как отблеск на плавно двигающейся поверхности); пауза 2.8 с обязательна. Путь: от −56 dp до ширины заливки + 56 dp, то есть блик полностью появляется и полностью уходит. <b>Короткая заливка:</b> ширина блика = clamp(0.6 · заливка, 12, 56) dp, длительность пропорциональна пути, min 0.5 с; заливка &lt; 12 dp или 0 — блика нет. <b>Стыковка:</b> пока идёт рост полосы (600 мс) или переход уровня (1 с) — блик не стартует; следующий — через 1.5 с после конца. Системное «убрать анимации» — блика нет. Отрисовка: один `drawRect` с `Brush.linearGradient` в `Canvas` под `withInfiniteAnimationFrameMillis`; нет перекомпоновки.</p>
+</section>
+
+<section class="dv-turn" id="s17">
+<div class="dv-thd"><a class="dv-tid" href="#s17">17</a><span class="dv-tname">Ещё жизнь · выбор: B «живой таймер» + D «докрутка чисел»; A и C — показаны и отклонены</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="17b"><div class="dv-olabel"><a class="dv-oid" href="#17b">17b</a>B — рекомендуем. Точка «Занятие идёт» дышит 4 с; вокруг неё кольцо 20 dp 1.5 dp делает оборот за минуту — секунды без цифр. Справа — состояние «занятие не идёт»: шапка спокойна, только блик</div><div class="dv-card" style="display:flex;gap:16px">
+<div class="frag" style="align-items:center;gap:8px;padding:24px 16px"><div class="tn" style="font-size:64px;font-weight:700;line-height:1;letter-spacing:-1px">12:34</div><div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#A39FB5">{{ liveDot }}Занятие идёт</div><div style="display:flex;align-items:center;gap:10px;margin-top:12px;transform:scale(2.4);transform-origin:center;height:40px">{{ liveDotBig }}</div><div class="cap" style="margin-top:8px">увеличено ×2.4</div></div>
+<div class="frag" style="gap:10px;padding:16px"><div style="display:flex;align-items:center;gap:12px;min-height:56px"><div style="width:56px;height:56px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#8C7AB0 0%,#4E3F78 55%,#2A2352 100%)"></div><div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:600">Анна</div><div class="tn" style="font-size:24px;font-weight:800;line-height:1.1;color:#C4ADFF">16 ч 40 мин</div></div><div style="display:flex;gap:4px">{{ trophyRow }}</div></div>{{ shineMain2 }}<div class="tn" style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5"><div>Уровень 4 · Первая позиция</div><div>до 5 уровня — 8 ч 20 мин</div></div><div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:700;margin-top:6px">{{ icTimerP }}Начать занятие</div><div class="cap" style="text-align:center">занятие не идёт — движения нет, кроме блика</div></div>
+</div></div>
+
+<div class="dv-opt" id="17a"><div class="dv-olabel"><a class="dv-oid" href="#17a">17a</a>A — ноты от аватара, честная примерка в шапке 412: показано лучшее, что получилось (3 ноты, 12 dp, жизнь 5 с, α ≤ .35). Ниже — landscape 44 dp</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+<div class="frag" style="gap:10px;padding:12px 16px 16px;position:relative"><div style="position:absolute;left:0;right:0;top:0;height:24px;background:rgba(255,255,255,.04);display:flex;align-items:center;justify-content:space-between;padding:0 16px;font-size:10px;color:#A39FB5;border-radius:16px 16px 0 0"><span>9:41</span><span>▮▮▮</span></div>
+<div style="display:flex;align-items:center;gap:12px;min-height:56px;margin-top:20px"><div style="position:relative;width:56px;height:56px;flex:none"><div style="width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8C7AB0 0%,#4E3F78 55%,#2A2352 100%)"></div>{{ notesA }}</div><div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:600">Анна</div><div class="tn" style="font-size:24px;font-weight:800;line-height:1.1;color:#C4ADFF">16 ч 40 мин</div></div><div style="display:flex;gap:4px">{{ trophyRow }}</div></div>{{ shineMain3 }}<div class="tn" style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5"><div>Уровень 4 · Первая позиция</div><div>до 5 уровня — 8 ч 20 мин</div></div></div>
+<div style="width:412px;background:#131318;border-radius:16px;padding:14px 16px;box-sizing:border-box;display:flex;align-items:center;gap:10px"><div style="position:relative;width:44px;height:44px;flex:none"><div style="width:44px;height:44px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8C7AB0 0%,#4E3F78 55%,#2A2352 100%)"></div>{{ notesALand }}</div><div style="flex:1"><div style="font-size:18px;font-weight:600">Анна</div><div class="tn" style="font-size:12px;color:#A39FB5">16 ч 40 мин · уровень 4</div></div><div style="display:flex;gap:2px">{{ trophyRowS }}</div></div>
+</div></div>
+
+<div class="dv-opt" id="17c"><div class="dv-olabel"><a class="dv-oid" href="#17c">17c</a>C — кольцо у клетки «сегодня»; показано, не рекомендуем вместе с B</div><div class="dv-card">
+<div class="frag" style="padding:20px 16px;align-items:center"><div style="display:grid;grid-template-columns:repeat(4,52px);gap:4px">
+<div style="height:44px;display:flex;align-items:center;justify-content:center"><div style="width:40px;height:40px;border-radius:12px;background:#3D2F80;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500" class="tn">15</div></div>
+<div style="height:44px;display:flex;align-items:center;justify-content:center"><div style="width:40px;height:40px;border-radius:12px;background:#5B43B8;color:#E9DDFF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500" class="tn">16</div></div>
+<div style="height:44px;display:flex;align-items:center;justify-content:center"><div style="position:relative;width:40px;height:40px;border-radius:12px;background:#5B43B8;color:#E9DDFF;box-shadow:0 0 0 2px #131318,0 0 0 4px #C4ADFF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:800" class="tn">17{{ todayPulse }}</div></div>
+<div style="height:44px;display:flex;align-items:center;justify-content:center;opacity:.4"><div style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:500" class="tn">18</div></div>
+</div></div>
+</div></div>
+
+<div class="dv-opt" id="17d"><div class="dv-olabel"><a class="dv-oid" href="#17d">17d</a>D — числа сводки докручиваются при изменении (после сохранения занятия). Кадры 0 · 200 · 400 · 600 мс</div><div class="dv-card">
+<div class="frag" style="padding:16px"><div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px">
+<sc-for list="{{ countUp }}" as="cu" hint-placeholder-count="4"><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">Неделя</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;white-space:nowrap;opacity:{{ cu.op }}">{{ cu.v }}</div><div class="mono" style="font-size:10px;color:#A39FB5;margin-top:6px">{{ cu.t }}</div></div></sc-for>
+</div></div>
+</div></div>
+</div>
+<p class="dv-next"><b>Ответ на вопрос 5 — нет, ноты от аватара в реальном кадре не получаются красиво, и вот почему.</b> Аватар стоит в 12 dp под строкой состояния и в 12 dp слева от имени: вверх у нот 12 dp хода до системной строки, вправо — сразу имя и сумма часов (единственный акцент шапки), дальше — ряд трофеев. Единственная свободная траектория — вверх-влево к краю экрана, и это уже не «летят от имени», а «утекают за край». В <a href="#17a">17a</a> видно: даже при α .35 и 12 dp нота либо прячется за строкой состояния, либо ложится на «16 ч 40 мин». В landscape (аватар 44) — теснее. Ноты будут уместны в другом месте — на листе «Подарок» при новом трофее, где есть сцена 240 dp; там их можно вернуть отдельным брифом. <b>Выбор: B + D.</b> B ставит движение ровно туда, куда смотрят во время занятия — к таймеру — и заменяет «мигание» дыханием: точка 8 dp, scale 1 → 1.25 → 1 и α .7 → 1 → .7 за 4 с, синусоида; кольцо 20 dp, штрих 1.5, `level.fillEnd` α .5, стрелка-дуга 90° делает оборот за 60 с — секунды видны периферией, а цифры остаются минутами. Тап по таймеру — ничего (как было). D — не декоративное движение, а переход состояния: 600 мс FastOutSlowIn, число крутится через промежуточные значения с тем же форматом «ч мин», ширина tnum не прыгает; при разнице &lt; 5 мин — без докрутки (crossfade 150). С — отклонено не само по себе, а из-за правила «блик + одно-два движения»: с B и календарной клеткой одновременно пульсируют две вещи в разных концах экрана, и взгляд начинает бегать. Если B не понравится вживую — C годная замена, параметры в `anims`.</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · ICONS, sizes, anims, tokens</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(560px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">ICONS — viewBox 0 0 24 24, stroke 1.8, round cap/join, fill none</div>
+  <div style="color:#A39FB5;margin-bottom:8px">Только `path`. Пути с префиксом <span class="mono">F </span> — заливка цветом иконки без обводки (точки «ещё», головка ноты, кружки ползунков). У вкладок `sel` — что делать в выбранном состоянии: <span class="mono">fill</span> — залить путь цветом иконки, <span class="mono">inv</span> — обводка цветом пилюли (деталь прорезана), без пометки — как есть. Массив целиком — в исходнике этого файла, константа `ICONS`.</div>
+  <div class="dv-tbl" style="grid-template-columns:36px minmax(0,.7fr) minmax(0,1fr) minmax(0,2fr)">
+    <div class="h"></div><div class="h">name</div><div class="h">use</div><div class="h">paths</div>
+    <sc-for list="{{ iconRows }}" as="r" hint-placeholder-count="40"><div style="padding:6px 8px;display:flex;align-items:center">{{ r.el }}</div><div class="mono">{{ r.name }}</div><div style="color:#A39FB5">{{ r.use }}</div><div class="mono" style="color:#A39FB5;font-size:10.5px">{{ r.paths }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Новые токены</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.6fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Значение</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="3"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Где</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="12"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="10"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const P = '#C4ADFF', PC = '#5B43B8', ONPC = '#E9DDFF', ON = '#E6E4EE', OV = '#A39FB5', ONP = '#2E1A6E', ERR = '#E8565C', SURF = '#131318', SC = '#1E1D25';
+    // ICONS: paths are strings; 'F ' prefix = fill (no stroke). Tab icons: objects {d, sel}.
+    const ICONS = [
+      { name: 'back', use: 'назад — все экраны поверх вкладок', paths: ['M15 5 8 12l7 7'] },
+      { name: 'close', use: 'закрыть — форма произведения', paths: ['M6 6l12 12M18 6 6 18'] },
+      { name: 'chevron-down', use: 'чип статуса (14 dp)', paths: ['M6 9.5l6 6 6-6'] },
+      { name: 'chevron-left', use: 'месяц назад', paths: ['M14.5 6 8.5 12l6 6'] },
+      { name: 'chevron-right', use: 'месяц вперёд; строка настроек', paths: ['M9.5 6l6 6-6 6'] },
+      { name: 'more', use: 'ещё — сворачивание заметок, меню записи', paths: ['F M5 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'F M12 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'F M19 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z'] },
+      { name: 'pencil', use: 'Изменить · Переименовать · Изменить время', paths: ['M4 20l.9-4.1L15.7 5.1a1.6 1.6 0 0 1 2.3 0l.9.9a1.6 1.6 0 0 1 0 2.3L8.1 19.1 4 20z', 'M14.2 6.6l3.2 3.2'] },
+      { name: 'trash', use: 'Удалить · Удалить произведение · Убрать фото · пюпитр', paths: ['M4 7h16', 'M9 7V4.8a.8.8 0 0 1 .8-.8h4.4a.8.8 0 0 1 .8.8V7', 'M6 7l.9 12.2a1 1 0 0 0 1 .8h8.2a1 1 0 0 0 1-.8L18 7', 'M10 11v5M14 11v5'] },
+      { name: 'plus', use: 'Добавить произведение · плитка · заметку · время', paths: ['M12 5v14M5 12h14'] },
+      { name: 'check', use: 'Готово (пюпитр) · выбранный пункт меню', paths: ['M5 12.5 9.5 17 19 7.5'] },
+      { name: 'camera', use: 'Сфотографировать', paths: ['M4 9a2 2 0 0 1 2-2h2l1.5-2.2h5L16 7h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V9z', 'M12 9.3a3.2 3.2 0 1 0 0 6.4 3.2 3.2 0 1 0 0-6.4z'] },
+      { name: 'gallery', use: 'Из галереи · Выбрать фото', paths: ['M4 7a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7z', 'M4 16.5 9 11.5l4 4 2.5-2.5 4.5 4.5', 'F M15.5 8.3a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 1 0 0-2.6z'] },
+      { name: 'sheet', use: 'заглушка миниатюры нот · «Добавить фото нот»', paths: ['M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z', 'M14 3v5h5', 'M8 12.5h8M8 15.5h8M8 18.5h5'] },
+      { name: 'mic', use: 'онбординг · нет разрешения · настройки', paths: ['M9 6a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V6z', 'M5.5 11.5a6.5 6.5 0 0 0 13 0', 'M12 18v3M9 21h6'] },
+      { name: 'play', use: 'плеер сессии', paths: ['M8 5.5v13L18.5 12 8 5.5z'] },
+      { name: 'pause', use: 'плеер сессии', paths: ['M7 5h3v14H7zM14 5h3v14h-3z'] },
+      { name: 'lock', use: 'зафиксированная струна («Настройка»)', paths: ['M5 13a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6z', 'M8 11V8a4 4 0 0 1 8 0v3', 'F M12 15a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z'] },
+      { name: 'timer', use: 'Начать занятие', paths: ['M12 6.5a7 7 0 1 0 0 14 7 7 0 1 0 0-14z', 'M12 13.5V10', 'M10 3h4M12 3v3.5'] },
+      { name: 'flag', use: 'Закончить занятие', paths: ['M6 21V4', 'M6 4.5c2.5-1.5 5-1.5 7.5 0s5 1.5 6.5.5v9c-1.5 1-4 1-6.5-.5s-5-1.5-7.5 0'] },
+      { name: 'clock', use: 'диалог «Занятие не закончено»', paths: ['M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16z', 'M12 7.5V12l3 2'] },
+      { name: 'trophy', use: 'заголовок листа «Трофеи»', paths: ['M7 4h10v6a5 5 0 0 1-10 0V4z', 'M7 6H4.5v2a3 3 0 0 0 3 3', 'M17 6h2.5v2a3 3 0 0 1-3 3', 'M12 15v3M9 20.5h6M10 18h4'] },
+      { name: 'flame', use: '«Дней подряд» (14 dp у числа, только при ≥ 3)', paths: ['M12 3.5c-.5 4.5-5.5 6.5-5.5 11.5a5.5 5.5 0 0 0 11 0c0-2.5-1.5-4.5-3-5.5 0 2-1 3-2 3.5-1-1.5-.5-4-.5-9.5z'] },
+      { name: 'note', use: 'чип «дубль» (14 dp)', paths: ['M10 17.5V5l7 2.5v3.5l-7-2.5', 'F M7.5 15.5a2.5 2 0 1 0 0 4 2.5 2 0 1 0 0-4z'] },
+      { name: 'star', use: 'отметка «лучший дубль» (14 dp, primary)', paths: ['M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z'] },
+      { name: 'metronome', use: 'темп «♩ = 96» → значок 14 dp + число', paths: ['M8 21 10 3h4l2 18H8z', 'M8 21h8', 'M12 14l4.5-7', 'F M12 12.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z'] },
+      { name: 'stand', use: 'пюпитр — вход с экрана произведения (не обязателен)', paths: ['M5 5h14l-1.5 8h-11L5 5z', 'M12 13v7M9 21h6', 'M8.5 8.5h7'] },
+      { name: 'fork', use: 'эталон A4 (настройки)', paths: ['M9 3v7a3 3 0 0 0 6 0V3', 'M12 13v8M9.5 21h5'] },
+      { name: 'target', use: 'допуск (настройки)', paths: ['M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16z', 'M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8z', 'F M12 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z'] },
+      { name: 'repeat', use: 'Пройти онбординг снова', paths: ['M4 12a8 8 0 0 1 14.5-4.5', 'M20 4v4h-4', 'M20 12a8 8 0 0 1-14.5 4.5', 'M4 20v-4h4'] },
+      { name: 'tab-live', use: 'вкладка Live', tab: true, paths: [{ d: 'M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8z', sel: 'fill' }, { d: 'M17.7 6.3a8 8 0 0 1 0 11.4' }, { d: 'M6.3 6.3a8 8 0 0 0 0 11.4' }] },
+      { name: 'tab-practice', use: 'вкладка Занятия', tab: true, paths: [{ d: 'M12 6.5a7 7 0 1 0 0 14 7 7 0 1 0 0-14z', sel: 'fill' }, { d: 'M12 13.5V10', sel: 'inv' }, { d: 'M10 3h4M12 3v3.5' }] },
+      { name: 'tab-records', use: 'вкладка Записи', tab: true, paths: [{ d: 'M4 6h8M4 12h6M4 18h5' }, { d: 'M15 17V7.5l5-1.5v3' }, { d: 'F M13 15a2 2 0 1 0 0 4 2 2 0 1 0 0-4z', sel: 'fill' }] },
+      { name: 'tab-settings', use: 'вкладка Настройки', tab: true, paths: [{ d: 'M4 7h9M18.5 7H20M4 17h6M14.5 17H20' }, { d: 'M15.5 4.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z', sel: 'fill' }, { d: 'M10.5 14.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z', sel: 'fill' }] },
+    ];
+    const byName = Object.fromEntries(ICONS.map(i => [i.name, i]));
+    const ico = (name, size = 24, color = ON, opt = {}) => {
+      const ic = byName[name]; const sel = opt.sel, pill = opt.pill || PC;
+      const paths = ic.paths.map((p, i) => {
+        if (typeof p === 'string') { const f = p.startsWith('F '); return h('path', { key: i, d: f ? p.slice(2) : p, fill: f ? color : 'none', stroke: f ? 'none' : color }); }
+        const fill = sel && p.sel === 'fill', inv = sel && p.sel === 'inv';
+        return h('path', { key: i, d: p.d, fill: fill ? color : 'none', stroke: inv ? pill : color });
+      });
+      return h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none', display: 'block' } }, paths);
+    };
+    const gallery = ICONS.map(i => ({ name: i.name, use: i.use, s24: ico(i.name, 24, ON, i.tab ? { sel: false } : {}), s48: ico(i.name, 48, ON, i.tab ? { sel: true, pill: SURF } : {}) }));
+    const iconRows = ICONS.map(i => ({ name: i.name, use: i.use, el: ico(i.name, 20, ON), paths: i.paths.map(p => typeof p === 'string' ? p : (p.sel ? `[${p.sel}] ` : '') + p.d).join('  ·  ') }));
+    const TABS = [['Live', 'tab-live'], ['Занятия', 'tab-practice'], ['Записи', 'tab-records'], ['Настройки', 'tab-settings']];
+    const nav = (active, running) => TABS.map(([name, k]) => { const a = name === active; return { name, icon: ico(k, 24, a ? ONPC : OV, { sel: a, pill: PC }), pill: a ? PC : 'transparent', fg: a ? ON : OV, fw: a ? 600 : 400, mark: running && k === 'tab-practice', markRing: a ? PC : SC }; });
+    const navBars = [nav('Live'), nav('Занятия'), nav('Настройки'), nav('Записи', true)];
+    const navLand = [nav('Занятия', true), nav('Live')];
+    const navRun = nav('Занятия', true);
+    const txt = (label, icon, fg = P) => ({ label, icon: ico(icon, 18, fg), h: '40px', px: '16px', pl: '12px', r: '20px', bg: 'transparent', border: 'none', fg, fs: '14px', gap: '8px' });
+    const outl = (label, icon, fg = ON) => ({ ...txt(label, icon, fg), border: '1px solid #3A3846' });
+    const fill = (label, icon) => ({ label, icon: ico(icon, 20, ONP), h: '48px', px: '22px', pl: '18px', r: '24px', bg: P, border: 'none', fg: ONP, fs: '15px', gap: '8px' });
+    const menu = (label, icon) => ({ label, icon: ico(icon, 24, ON), h: '44px', px: '12px', pl: '12px', r: '8px', bg: '#292833', border: 'none', fg: ON, fs: '15px', gap: '16px' });
+    const pairs = [txt('Изменить', 'pencil'), txt('Переименовать', 'pencil'), txt('Удалить', 'trash', ERR), outl('Удалить произведение', 'trash', ERR), outl('Изменить время', 'pencil', P), outl('Добавить время', 'plus', P), fill('Начать занятие', 'timer'), outl('Закончить занятие', 'flag'), menu('Сфотографировать', 'camera'), menu('Из галереи', 'gallery'), txt('Убрать фото', 'trash', ERR), txt('Пройти онбординг снова', 'repeat'), txt('Добавить заметку', 'plus'), fill('Добавить произведение', 'plus')];
+    // level bar with shine
+    const shine = (pct, width, dur, band, key) => {
+      const track = { height: 6, borderRadius: 3, background: '#292833', overflow: 'hidden', width: width || '100%' };
+      const fillS = { position: 'relative', height: '100%', width: pct + '%', borderRadius: 3, background: 'linear-gradient(90deg,#5B43B8,#C4ADFF)', overflow: 'hidden' };
+      const fillPx = (width || 380) * pct / 100; const to = `${fillPx + band}px`;
+      const beam = { position: 'absolute', top: 0, bottom: 0, left: 0, width: band, background: 'linear-gradient(90deg,rgba(233,221,255,0) 0%,rgba(233,221,255,.35) 50%,rgba(233,221,255,0) 100%)', '--to': to, animation: `shine ${dur}s cubic-bezier(.4,0,.2,1) 0s infinite`, animationDelay: '0s', animationTimingFunction: 'cubic-bezier(.4,0,.2,1)' };
+      // pause: total cycle 4s → use animation-duration 4s with keyframes compressed via steps? simpler: wrap in cycle using two-stage keyframes is not possible; emulate pause with duration 4s and beam speed by the --to trick: use 'shine' for dur, then hold.
+      const wrap = { ...beam, animation: `shine ${dur}s cubic-bezier(.4,0,.2,1) infinite`, animationDelay: '.6s', animationDuration: dur + 's', animationIterationCount: 'infinite' };
+      return h('div', { key, style: track }, h('div', { style: fillS }, h(Pauser, { dur, period: 4, style: wrap })));
+    };
+    const shineMain = shine(62, 380, 1.2, 56, 'm'), shineMain2 = shine(62, 380, 1.2, 56, 'm2'), shineMain3 = shine(62, 380, 1.2, 56, 'm3');
+    const shineShort = shine(5, 380, .5, 12, 's'), shineFull = shine(100, 380, 1.2, 56, 'f'), shineLand = shine(62, 248, 1.0, 56, 'l');
+    const phases = [0, .3, .6, .9, 1.2].map(t => { const e = t / 1.2, p = 1 - Math.pow(1 - e, 2.2); return { t: t.toFixed(1) + ' с', x: Math.round(-112 + p * (0.62 * 568 + 112 + 112)) + 'px', note: t === 0 ? 'блик за левым краем' : t === 1.2 ? 'ушёл за правый край заливки' : e < .5 ? 'быстрая фаза' : 'замедляется' }; });
+    // B: breathing dot + minute ring
+    const dot = (k, scale = 1) => h('div', { key: k, style: { position: 'relative', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' } }, [
+      h('svg', { key: 'r', width: 20, height: 20, viewBox: '0 0 20 20', style: { position: 'absolute', inset: 0, animation: 'spin 60s linear infinite' } }, h('path', { d: 'M10 1.5a8.5 8.5 0 0 1 8.5 8.5', fill: 'none', stroke: P, strokeOpacity: .5, strokeWidth: 1.5, strokeLinecap: 'round' })),
+      h('div', { key: 'd', style: { width: 8, height: 8, borderRadius: '50%', background: P, animation: 'breath 4s ease-in-out infinite' } })]);
+    const liveDot = dot('ld'), liveDotBig = dot('ldb');
+    // A: notes
+    const notes = (k, n, size, dx) => h('div', { key: k, style: { position: 'absolute', left: '60%', top: -4, width: 0, height: 0 } }, Array.from({ length: n }, (_, i) => h('div', { key: i, style: { position: 'absolute', left: (i % 2) * 8, top: 0, '--dx': (dx + i * 6) + 'px', animation: `noteUp 5s ease-out ${i * 1.6}s infinite`, color: P } }, ico('note', size, P))));
+    const notesA = notes('na', 3, 12, 18), notesALand = notes('nl', 3, 10, 12);
+    const todayPulse = h('div', { style: { position: 'absolute', inset: -4, borderRadius: 16, border: `2px solid ${P}`, animation: 'ringPulse 3s ease-out infinite' } });
+    const countUp = [{ v: '3 ч 30 мин', t: '0 мс', op: 1 }, { v: '3 ч 52 мин', t: '200 мс', op: 1 }, { v: '4 ч 09 мин', t: '400 мс', op: 1 }, { v: '4 ч 15 мин', t: '600 мс', op: 1 }];
+    // trophies (from Прогресс, simplified prims)
+    const tr = (size, locked) => h('svg', { width: size, height: size, viewBox: '0 0 64 64' }, locked ? [h('rect', { key: 1, x: 12, y: 20, width: 40, height: 28, rx: 6, fill: 'none', stroke: '#6B6880', strokeWidth: 1.5 }), h('rect', { key: 2, x: 8, y: 44, width: 48, height: 6, rx: 3, fill: 'none', stroke: '#6B6880', strokeWidth: 1.5 })] : [h('rect', { key: 1, x: 8, y: 44, width: 48, height: 6, rx: 3, fill: '#8C7AB0' }), h('rect', { key: 2, x: 12, y: 20, width: 40, height: 28, rx: 6, fill: '#C4ADFF' }), h('rect', { key: 3, x: 18, y: 26, width: 28, height: 6, rx: 3, fill: '#5B43B8' })]);
+    const trophyRow = [tr(32, false), tr(32, false), tr(32, true)].map((e, i) => h('div', { key: i, style: { width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, e));
+    const trophyRowS = [tr(24, false), tr(24, false), tr(24, true)];
+    // calendar cells (as in Занятия)
+    const steps = [null, { bg: '#2A2352', fg: ON }, { bg: '#3D2F80', fg: ON }, { bg: PC, fg: ONPC }, { bg: P, fg: ONP }];
+    const mins = { 1: 30, 2: 50, 4: 100, 5: 15, 7: 45, 8: 70, 9: 25, 11: 125, 12: 40, 13: 55, 14: 35, 15: 80, 16: 50, 17: 45 };
+    const stepOf = m => m <= 0 ? 0 : m < 20 ? 1 : m < 45 ? 2 : m < 90 ? 3 : 4;
+    const cells = [{ n: '', bg: 'transparent', fg: ON, fw: 500, shadow: 'none', op: 1, dot: false, mt: '0' }];
+    for (let d = 1; d <= 30; d++) { const m = mins[d] || 0, st = stepOf(m), fut = d > 17, today = d === 17, s = steps[st]; cells.push({ n: String(d), bg: s ? s.bg : 'transparent', fg: s ? s.fg : ON, fw: today ? 800 : 500, shadow: today ? `0 0 0 2px ${SURF},0 0 0 4px ${P}` : 'none', op: fut ? .4 : 1, dot: st > 0, mt: st > 0 ? '-4px' : '0' }); }
+    const tokens = [
+      { name: 'level.shine', hex: 'rgba(233,221,255,.35)', use: 'центр блика полосы уровня (onPrimaryContainer α .35); края → α 0' },
+      { name: 'timer.ring', hex: 'rgba(196,173,255,.5)', use: 'минутное кольцо у точки «Занятие идёт» (primary α .5)' },
+      { name: 'icon.error', hex: ERR, use: 'иконка + текст деструктивных кнопок (= form.error / zone.off)' },
+    ];
+    const sizes = [
+      { name: 'Иконка, общая', v: 'сетка 24, stroke 1.8, round cap/join, fill none; малые (14 dp: chevron-down в чипе, note, star, metronome, flame) — тот же вектор, stroke визуально ≈ 1.05 — допустимо' },
+      { name: 'Иконка + текст', v: 'текстовая/контурная кнопка 40 dp: иконка 18, gap 8, padding 12 слева / 16 справа; залитая 48–56 dp: иконка 20, gap 8, padding 18/22; пункт меню и строка настроек 44–56 dp: иконка 24, gap 16, padding 12' },
+      { name: 'Иконка-кнопка', v: 'контейнер 48 (back, close, пюпитр) или 40 (more, стрелки месяца); иконка 24 по центру; на пюпитре подложка r24 rgba(19,19,24,.7)' },
+      { name: 'Вкладка', v: 'пилюля 64×32 (landscape 48×32), иконка 24, подпись 12 sp, gap 4; выбранная — primaryContainer + onPrimaryContainer, sel-заливка; обычная — onSurfaceVariant контур' },
+      { name: 'Точка «занятие идёт»', v: '8 dp primary, обводка 2 dp цветом подложки (панель — surfaceContainer, активная пилюля — primaryContainer), позиция: top 3, right 15 (landscape right 7)' },
+      { name: 'Блик полосы', v: 'ширина 56 (короткая заливка: clamp(0.6·fill, 12, 56)); высота = полосе 6; рисуется в клипе заливки r3' },
+      { name: 'Живая точка B', v: 'контейнер 20×20; точка 8; кольцо Ø 20 stroke 1.5, дуга 90°; gap до подписи 8 (как было)' },
+      { name: 'Огонёк у «Дней подряд»', v: '14 dp onSurfaceVariant после числа, gap 6; показывать при ≥ 3 днях подряд' },
+      { name: 'Метроном в строке темпа', v: '14 dp onSurfaceVariant, gap 5 до числа; «G-dur · [метроном] 96»' },
+    ];
+    const anims = [
+      { name: 'Блик полосы', v: 'период 4000 мс; проход 1200 мс FastOutSlowIn от x = −56 до fill + 56 (полный вход и выход); пауза 2800; короткая заливка — длительность = 1200 · путь / (fill₆₂% + 112), min 500; landscape (248 dp) — 1000 мс; fill < 12 dp или 0 — нет. Не стартует во время роста полосы (600) и перехода уровня (1000); первый после — через 1500. reduce-motion — выключен' },
+      { name: 'Блик — отрисовка', v: 'Canvas в Modifier.drawWithContent поверх заливки; clipRect(0,0,fillW,6) → drawRect(x, 0, band, 6, Brush.horizontalGradient(0→shine→0)); x из withInfiniteAnimationFrameMillis; останавливается при !isResumed' },
+      { name: 'B — дыхание точки', v: 'scale 1 → 1.25 → 1 и alpha .7 → 1 → .7 за 4000 мс, синусоида (infiniteRepeatable tween 2000 Reverse, EaseInOutSine); только пока идёт занятие; появление — вместе с таймером (fade 200)' },
+      { name: 'B — минутное кольцо', v: 'дуга 90° stroke 1.5 timer.ring, rotate 0 → 360 за 60 000 мс LinearEasing, фаза = секунды таймера (не свободный цикл — привязана к времени занятия, чтобы после возврата на экран совпадала)' },
+      { name: 'D — докрутка чисел', v: 'после сохранения занятия / правки дня: animateIntAsState минут, 600 мс FastOutSlowIn, форматирование на каждом кадре («3 ч 52 мин»); Δ < 5 мин — crossfade 150 без докрутки; «Дней подряд» — то же, 400 мс' },
+      { name: 'C — кольцо «сегодня» (запас)', v: 'внешнее кольцо 2 dp primary от inset −4 до −8 dp, alpha .5 → 0, 3000 мс EaseOut, повтор; только пока идёт занятие; не включать вместе с B' },
+      { name: 'A — ноты (отклонено)', v: 'если всё же: 3 ноты 12 dp primary, рождение каждые 1600 мс, жизнь 5000, путь ↑ 52 dp → 18–30 dp, alpha 0 → .35 (25 %) → 0, поворот −6° → 8°, scale .8 → 1; landscape 10 dp, ↑ 40' },
+      { name: 'Смена иконки вкладки', v: 'контур ↔ заливка: crossfade 150 мс вместе с появлением пилюли (как было)' },
+      { name: 'Иконки в кнопках', v: 'без собственной анимации; наследуют ripple/alpha кнопки' },
+    ];
+    return { gallery, iconRows, navBars, navLand, navRun, pairs, cells, trophyRow, trophyRowS,
+      shineMain, shineMain2, shineMain3, shineShort, shineFull, shineLand, phases, liveDot, liveDotBig, notesA, notesALand, todayPulse, countUp,
+      icFlag: ico('flag', 20, ON), icFlame: ico('flame', 14, OV), icChevL: ico('chevron-left', 24, ON), icChevR: ico('chevron-right', 24, ON), icChevRV: ico('chevron-right', 24, OV), icChevDS: ico('chevron-down', 14, ONPC),
+      icPencilP: ico('pencil', 18, P), icTimerP: ico('timer', 20, ONP), icPlusP: ico('plus', 18, P), icPlusOnP: ico('plus', 20, ONP), icPlayOn: ico('play', 24, ONP), icTrashE: ico('trash', 18, ERR), icTrash: ico('trash', 24, ON), icCheckP: ico('check', 24, ONP),
+      icBack: ico('back', 24, ON), icClose: ico('close', 24, ON), icMetro: ico('metronome', 14, OV), icSheet: ico('sheet', 28, '#6B6880'), icCamera: ico('camera', 24, ON), icGallery: ico('gallery', 24, ON), icGalleryP: ico('gallery', 18, P), icTrophy: ico('trophy', 20, P),
+      icStar: ico('star', 14, P), icNoteS: ico('note', 14, OV), icMore: ico('more', 24, OV), icFork: ico('fork', 24, OV), icTarget: ico('target', 24, OV), icMic: ico('mic', 24, OV), icRepeatP: ico('repeat', 18, P),
+      tokens, sizes, anims };
+  }
+}
+// Beam that runs `dur` seconds then pauses until `period` — emulates the mandatory gap between passes.
+class Pauser extends React.Component {
+  constructor(p) { super(p); this.state = { on: true, k: 0 }; }
+  componentDidMount() { const { dur, period } = this.props; this.t = setInterval(() => this.setState(s => ({ k: s.k + 1 })), period * 1000); }
+  componentWillUnmount() { clearInterval(this.t); }
+  render() { const { style, dur } = this.props; return React.createElement('div', { key: this.state.k, style: { ...style, animation: `shine ${dur}s cubic-bezier(.4,0,.2,1) 1 forwards` } }); }
+}
+</script>
+</body>
+</html>
