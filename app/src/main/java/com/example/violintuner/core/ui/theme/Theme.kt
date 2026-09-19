@@ -62,4 +62,8 @@ object ViolinTheme {
 
     val accentGlow: Color
         get() = AccentGlow
+
+    /** Bin icons and the captions of actions that delete (spec 3.16). */
+    val destructive: Color
+        get() = Destructive
 }

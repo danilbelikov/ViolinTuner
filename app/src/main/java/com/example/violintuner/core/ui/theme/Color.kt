@@ -76,3 +76,7 @@ internal val TakeNew = Color(0xFF2A2540)
 
 /** The hex of zone.off, but a token of its own: zone colors stay about intonation only. */
 internal val FormError = Color(0xFFE8565C)
+
+// Actions that destroy something: the bin and its caption (handoff polish, `icon.error`). The hex of
+// zone.off, but a token of its own: zone colours stay about intonation.
+internal val Destructive = Color(0xFFE8565C)
