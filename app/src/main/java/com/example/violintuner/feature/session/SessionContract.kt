@@ -68,6 +68,10 @@ sealed interface SessionState {
         val player: PlayerState? = null,
         /** What the row «Звук» under the player says; there with the player only. */
         val sound: SoundRow? = null,
+        /** Null for a recording that is sound only (spec 3.19). */
+        val video: VideoUi? = null,
+        /** The video fills the screen; the rest of the screen waits underneath. */
+        val fullscreen: Boolean = false,
     ) : SessionState
 }
 
@@ -104,6 +108,12 @@ sealed interface SessionIntent {
     data object DeleteConfirmed : SessionIntent
 
     data object DialogDismissed : SessionIntent
+
+    /** «На весь экран» and «свернуть»; the system back in the mode is the latter. */
+    data class FullscreenChanged(val fullscreen: Boolean) : SessionIntent
+
+    /** «Смотреть это место» / «Слушать это место» of the note sheet: a second before the note, and play (spec 5.13). */
+    data class PlaySegmentClicked(val index: Int) : SessionIntent
 }
 
 sealed interface SessionEffect {
@@ -113,6 +123,20 @@ sealed interface SessionEffect {
 
     data class Share(val sessionId: Long) : SessionEffect
 }
+
+/** The picture of a video take, as the screen needs it. */
+data class VideoUi(
+    /** The file is gone: «Видео не найдено — остался разбор». The sound went with it — it was the same file. */
+    val lost: Boolean = false,
+    /** As it is seen; zero until the file has been looked into. */
+    val width: Int = 0,
+    val height: Int = 0,
+    /** A frame is on the surface: the placeholder may go. */
+    val showing: Boolean = false,
+    /** This device cannot decode the picture; the sound and the analysis are there all the same. */
+    val undecodable: Boolean = false,
+    val sizeBytes: Long = 0,
+)
 
 /** How the recording is made to sound, in a line (spec 3.17): whose settings, and which. */
 data class SoundRow(val caption: SoundCaption, val own: Boolean)

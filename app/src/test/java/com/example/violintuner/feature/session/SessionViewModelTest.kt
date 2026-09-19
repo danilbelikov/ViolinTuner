@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import com.example.violintuner.core.audio.fx.SoundMeters
 import com.example.violintuner.core.audio.playback.PlayerState
 import com.example.violintuner.core.audio.playback.SessionPlayer
+import com.example.violintuner.core.audio.playback.VideoPicture
+import com.example.violintuner.core.audio.playback.VideoState
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.ViolinString
@@ -38,6 +40,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -102,6 +105,25 @@ class SessionViewModelTest {
         override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
     }
 
+    private class FakePicture(val file: File) : VideoPicture {
+        override val state = MutableStateFlow(VideoState())
+        val followed = mutableListOf<Pair<Long, Boolean>>()
+        var released = 0
+        var surfaces = 0
+        override fun setSurface(next: android.view.Surface?) {
+            surfaces++
+        }
+
+        override fun follow(positionMs: Long, playing: Boolean) {
+            followed += positionMs to playing
+        }
+
+        override fun release() {
+            released++
+        }
+    }
+
+    private val pictures = mutableListOf<FakePicture>()
     private val player = FakePlayer()
     private val repertoire = FakeRepertoireRepository()
     private val sound = FakeSoundRepository()
@@ -109,7 +131,7 @@ class SessionViewModelTest {
 
     private fun TestScope.viewModel(id: Long): SessionViewModel {
         val viewModel = SessionViewModel(
-            repository, config, audioFiles, { player }, repertoire, sound, SoundConfig(),
+            repository, config, audioFiles, { player }, repertoire, sound, SoundConfig(), { file -> FakePicture(file).also { pictures += it } },
             SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)),
         )
         runCurrent()
@@ -361,5 +383,99 @@ class SessionViewModelTest {
         assertEquals(Zone.NEAR, SessionContentMapper.scoreZone(74, config))
         assertEquals(Zone.NEAR, SessionContentMapper.scoreZone(55, config))
         assertEquals(Zone.OFF, SessionContentMapper.scoreZone(54, config))
+    }
+
+    private suspend fun saveVideoTake(): Long {
+        val id = saveSession(audio = "take.mp4")
+        repository.sessions.update { list -> list.map { if (it.id == id) it.copy(videoPath = "take.mp4") else it } }
+        return id
+    }
+
+    @Test
+    fun `a recording that is sound only has no picture`() = runTest {
+        val viewModel = viewModel(saveSession(audio = "take.m4a"))
+        assertNull(viewModel.loaded().video)
+        assertTrue(pictures.isEmpty())
+    }
+
+    @Test
+    fun `the picture of a video take follows the sound`() = runTest {
+        audioFiles = FakeAudioFiles(present = setOf("take.mp4"))
+        val viewModel = viewModel(saveVideoTake())
+        val picture = pictures.single()
+        assertEquals("take.mp4", picture.file.name)
+        assertEquals(VideoUi(), viewModel.loaded().video)
+
+        picture.state.value = VideoState(width = 1920, height = 1080, showing = true)
+        viewModel.onIntent(SessionIntent.PlayPauseClicked)
+        viewModel.onIntent(SessionIntent.SeekRequested(2_000))
+        runCurrent()
+        assertEquals(VideoUi(width = 1920, height = 1080, showing = true), viewModel.loaded().video)
+        assertEquals(2_000L to true, picture.followed.last())
+
+        viewModel.onIntent(SessionIntent.ScreenStopped)
+        runCurrent()
+        assertEquals(2_000L to false, picture.followed.last())
+    }
+
+    @Test
+    fun `watch this place starts a second before the note and closes its sheet`() = runTest {
+        audioFiles = FakeAudioFiles(present = setOf("take.mp4"))
+        val viewModel = viewModel(saveVideoTake())
+        val second = viewModel.loaded().content.segments[1]
+        viewModel.onIntent(SessionIntent.SegmentClicked(1))
+        viewModel.onIntent(SessionIntent.PlaySegmentClicked(1))
+        runCurrent()
+        assertEquals(second.startMs - 1_000, player.state.value.positionMs)
+        assertTrue(player.state.value.playing)
+        assertNull(viewModel.loaded().selectedSegment)
+
+        // the first note starts at zero: there is no second before it
+        viewModel.onIntent(SessionIntent.PlaySegmentClicked(0))
+        assertEquals(0L, player.state.value.positionMs)
+    }
+
+    @Test
+    fun `a recording without sound has no place to play`() = runTest {
+        val viewModel = viewModel(saveSession(audio = null))
+        viewModel.onIntent(SessionIntent.SegmentClicked(1))
+        viewModel.onIntent(SessionIntent.PlaySegmentClicked(1))
+        assertEquals(1, viewModel.loaded().selectedSegment)
+    }
+
+    @Test
+    fun `a video that is gone leaves the analysis, and nothing to fill the screen with`() = runTest {
+        audioFiles = FakeAudioFiles(present = emptySet())
+        val viewModel = viewModel(saveVideoTake())
+        assertEquals(VideoUi(lost = true), viewModel.loaded().video)
+        assertNull(viewModel.loaded().player)
+        assertTrue(pictures.isEmpty())
+        viewModel.onIntent(SessionIntent.FullscreenChanged(true))
+        assertFalse(viewModel.loaded().fullscreen)
+    }
+
+    @Test
+    fun `a picture this phone cannot decode leaves the sound where it was`() = runTest {
+        audioFiles = FakeAudioFiles(present = setOf("take.mp4"))
+        val viewModel = viewModel(saveVideoTake())
+        pictures.single().state.value = VideoState(failed = true)
+        runCurrent()
+        assertTrue(viewModel.loaded().video!!.undecodable)
+        assertNotNull(viewModel.loaded().player)
+    }
+
+    @Test
+    fun `fullscreen is a state of the screen, and the picture goes before the file does`() = runTest {
+        audioFiles = FakeAudioFiles(present = setOf("take.mp4"))
+        val viewModel = viewModel(saveVideoTake())
+        viewModel.onIntent(SessionIntent.FullscreenChanged(true))
+        assertTrue(viewModel.loaded().fullscreen)
+        viewModel.onIntent(SessionIntent.FullscreenChanged(false))
+        assertFalse(viewModel.loaded().fullscreen)
+
+        viewModel.onIntent(SessionIntent.DeleteConfirmed)
+        runCurrent()
+        assertEquals(1, pictures.single().released)
+        assertEquals(1, player.released)
     }
 }

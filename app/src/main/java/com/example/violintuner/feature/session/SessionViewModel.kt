@@ -1,10 +1,13 @@
 package com.example.violintuner.feature.session
 
+import android.view.Surface
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.audio.playback.SessionPlayer
 import com.example.violintuner.core.audio.playback.SessionPlayerFactory
+import com.example.violintuner.core.audio.playback.VideoPicture
+import com.example.violintuner.core.audio.playback.VideoPictureFactory
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
@@ -34,6 +37,7 @@ class SessionViewModel @Inject constructor(
     private val repertoire: RepertoireRepository,
     private val sound: SoundRepository,
     private val soundConfig: SoundConfig,
+    private val pictureFactory: VideoPictureFactory,
     savedState: SavedStateHandle,
 ) : ViewModel() {
 
@@ -43,6 +47,7 @@ class SessionViewModel @Inject constructor(
     val state: StateFlow<SessionState> = mutableState.asStateFlow()
 
     private var player: SessionPlayer? = null
+    private var picture: VideoPicture? = null
 
     private val effectChannel = Channel<SessionEffect>(Channel.BUFFERED)
     val effects: Flow<SessionEffect> = effectChannel.receiveAsFlow()
@@ -74,7 +79,21 @@ class SessionViewModel @Inject constructor(
                 repository.rename(sessionId, intent.title)
                 load() // the repository decides what a blank name means
             }
+            is SessionIntent.FullscreenChanged -> updateLoaded { it.copy(fullscreen = intent.fullscreen && it.video?.lost == false) }
+            is SessionIntent.PlaySegmentClicked -> {
+                val loaded = state.value as? SessionState.Loaded
+                val segment = loaded?.content?.segments?.getOrNull(intent.index)
+                val current = player
+                if (segment != null && current != null) {
+                    // a second earlier: the way into the note is heard — and seen — too
+                    current.seekTo((segment.startMs - LEAD_IN_MS).coerceAtLeast(0))
+                    current.play()
+                    updateLoaded { it.copy(selectedSegment = null) }
+                }
+            }
             SessionIntent.DeleteConfirmed -> viewModelScope.launch {
+                picture?.release()
+                picture = null
                 player?.release() // the file is about to go
                 repository.delete(sessionId)
                 effectChannel.send(SessionEffect.Close)
@@ -95,6 +114,34 @@ class SessionViewModel @Inject constructor(
             }
         }
         if (player == null) details?.summary?.audioPath?.let(audioFiles::existing)?.let(::startPlayer)
+        if (picture == null) details?.summary?.videoPath?.let(::startPicture)
+    }
+
+    /** The surface the picture is drawn onto; null when it is about to go. Not an intent: a surface is not state. */
+    fun attachSurface(surface: Surface?) {
+        picture?.setSurface(surface)
+    }
+
+    private fun startPicture(name: String) {
+        val file = audioFiles.existing(name)
+        if (file == null) {
+            updateLoaded { it.copy(video = VideoUi(lost = true)) }
+            return
+        }
+        val created = pictureFactory.create(file)
+        picture = created
+        updateLoaded { it.copy(video = VideoUi(sizeBytes = file.length())) }
+        viewModelScope.launch {
+            created.state.collect { picture ->
+                updateLoaded {
+                    it.copy(video = it.video?.copy(width = picture.width, height = picture.height, showing = picture.showing, undecodable = picture.failed))
+                }
+            }
+        }
+        // The picture follows the sound: every word of the player is passed on, the renderer carries the clock on in between.
+        player?.let { sound ->
+            viewModelScope.launch { sound.state.collect { created.follow(it.positionMs, it.playing) } }
+        }
     }
 
     private fun startPlayer(file: File) {
@@ -119,6 +166,8 @@ class SessionViewModel @Inject constructor(
     }
 
     override fun onCleared() {
+        picture?.release()
+        picture = null
         player?.release()
         player = null
     }
@@ -129,5 +178,8 @@ class SessionViewModel @Inject constructor(
 
     companion object {
         const val ARG_SESSION_ID = "sessionId"
+
+        /** «Смотреть это место» starts this much before the note (spec 5.13). */
+        private const val LEAD_IN_MS = 1_000L
     }
 }
