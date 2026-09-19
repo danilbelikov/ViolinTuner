@@ -123,7 +123,8 @@ class AacFileEncoder(private val file: File, private val sampleRateHz: Int) : Pc
     private companion object {
         const val TAG = "AacFileEncoder"
         const val CHANNELS = 1
-        const val BIT_RATE = 64_000
+        /** Mono AAC-LC at about 1 MB a minute. It was 64 kbps until recordings came to be listened to, processed and sent on (spec 5.11). */
+        const val BIT_RATE = 128_000
         const val BYTES_PER_SAMPLE = 2
         const val MAX_INPUT_BYTES = 16_384
 
