@@ -73,6 +73,7 @@ fun AppNavHost(
                 onClose = navController::popBackStack,
                 onOpenForm = { pieceId, focusNotes -> navController.navigateToPieceForm(pieceId, focusNotes) },
                 onOpenStand = { _, _ -> },
+                onOpenSession = navController::navigateToSession,
             )
         }
         composable(

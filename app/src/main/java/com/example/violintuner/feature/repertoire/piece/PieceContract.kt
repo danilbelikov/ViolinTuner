@@ -1,6 +1,7 @@
 package com.example.violintuner.feature.repertoire.piece
 
 import com.example.violintuner.core.domain.repertoire.PieceStatus
+import com.example.violintuner.feature.history.HistoryCard
 
 /** What the top of the piece screen says. Fields the piece does not have are null or empty and are simply not shown. */
 data class PieceHeader(
@@ -20,6 +21,42 @@ data class SheetTile(
     val thumbPath: String?,
 )
 
+/** One take in the list of the piece: the card of «Записи» plus what only matters here. */
+data class TakeItem(
+    val card: HistoryCard,
+    /** The highest score of the piece; of equals, the later one. */
+    val best: Boolean,
+    /** Recorded a moment ago: highlighted until it settles into the list. */
+    val isNew: Boolean,
+)
+
+/** «последний 82 % · лучший 88 % · 6 дублей» and the little chart; there from two takes on. */
+data class TakeProgress(val lastScore: Int, val bestScore: Int, val scores: List<Int>)
+
+/** Why the microphone cannot be listened to right now; shown as a small line by the recording strip. */
+enum class TakeProblem { TOO_NOISY, MIC_UNAVAILABLE }
+
+/**
+ * The recording of a take (spec 3.15). Blind on purpose: no note, no zone, no cents — a dot, a
+ * timer and a neutral row of loudness. Kept apart from [PieceState]: it changes twenty times a
+ * second while a take runs, and the rest of the screen has no business recomposing with it.
+ */
+data class TakeState(
+    val recording: Boolean,
+    /** Whole seconds: the timer shows nothing finer, and equal states stay equal within a second. */
+    val elapsedSeconds: Long,
+    /** Loudness of the last moments, 0..1, newest last. */
+    val levels: List<Float>,
+    val problem: TakeProblem?,
+    /** False = the permission was refused: the row explains and offers to grant it. Null = not known yet. */
+    val micPermission: Boolean?,
+) {
+    companion object {
+        fun idle(micPermission: Boolean?, bars: Int) =
+            TakeState(recording = false, elapsedSeconds = 0, levels = List(bars) { 0f }, problem = null, micPermission = micPermission)
+    }
+}
+
 data class PieceState(
     /** True until the piece has been read once. */
     val loading: Boolean,
@@ -28,6 +65,10 @@ data class PieceState(
     /** Photos being copied in right now: placeholder tiles at the end of the strip. */
     val importing: Int,
     val notes: String,
+    /** Newest first. */
+    val takes: List<TakeItem>,
+    /** Null with fewer than two takes. */
+    val progress: TakeProgress?,
     val statusMenuOpen: Boolean,
     /** After this many lines the notes fold (spec 5.9). */
     val notesCollapsedLines: Int,
@@ -57,6 +98,16 @@ sealed interface PieceIntent {
 
     /** The system camera came back; [saved] is false when the user backed out. */
     data class CameraFinished(val saved: Boolean) : PieceIntent
+
+    /** Starts a take, or stops the running one. */
+    data object RecordClicked : PieceIntent
+
+    data object GrantMicClicked : PieceIntent
+
+    /** Reported by the route on every resume and after the system dialog. */
+    data class MicPermissionChanged(val granted: Boolean) : PieceIntent
+
+    data class TakeClicked(val sessionId: Long) : PieceIntent
 }
 
 sealed interface PieceEffect {
@@ -70,4 +121,14 @@ sealed interface PieceEffect {
     data class LaunchCamera(val filePath: String) : PieceEffect
 
     data object ShowPhotoFailed : PieceEffect
+
+    data object RequestMicPermission : PieceEffect
+
+    /** A take stopped by the player had not a single note in it. */
+    data object ShowNoNotesRecorded : PieceEffect
+
+    data class OpenSession(val sessionId: Long) : PieceEffect
 }
+
+/** What the chain hands the screen for a frame of a blind take: how loud, and what is wrong, if anything. */
+data class BlindShown(val levels: List<Float>, val problem: TakeProblem?)

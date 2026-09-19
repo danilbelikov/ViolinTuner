@@ -70,6 +70,7 @@ import com.example.violintuner.feature.repertoire.components.THUMB_DIM_FIRST
 import com.example.violintuner.feature.repertoire.components.dashedBorder
 import com.example.violintuner.feature.repertoire.components.statusLabel
 import com.example.violintuner.feature.repertoire.keyAndTempo
+import java.time.ZoneId
 
 private val ScreenPadding = 16.dp
 private val MaxContentWidth = 560.dp
@@ -79,6 +80,7 @@ private val TopBarHeightLandscape = 48.dp
 private val TopBarButton = 48.dp
 private val TitleAppearsAfter = 80.dp
 private val LandscapeLeftColumn = 300.dp
+private val LandscapeRecordButton = 64.dp
 private val CardCorner = 16.dp
 private val TileCorner = 8.dp
 private val TileGap = 10.dp
@@ -98,17 +100,17 @@ private class Metrics(val titleSize: Int, val tileWidth: Dp, val tileHeight: Dp)
 class AddPhotoActions(val onCamera: () -> Unit, val onGallery: () -> Unit)
 
 /**
- * One piece of the repertoire (spec 3.15, handoff 13c, 13h). Stateless. [extra] is what later
- * stages hang under the sheets: recording, progress, takes.
+ * One piece of the repertoire (spec 3.15, handoff 13c, 13d, 13h). Stateless. [take] comes apart
+ * from [state] because it changes twenty times a second while a take is recorded.
  */
 @Composable
 fun PieceScreen(
     state: PieceState,
+    take: TakeState,
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
     modifier: Modifier = Modifier,
-    recordBlock: @Composable () -> Unit = {},
-    takesBlock: @Composable () -> Unit = {},
+    zone: ZoneId = ZoneId.systemDefault(),
 ) {
     val colors = MaterialTheme.colorScheme
     BoxWithConstraints(
@@ -120,9 +122,9 @@ fun PieceScreen(
         if (header == null) {
             TopBar(title = "", titleVisible = false, height = TopBarHeight, onIntent = onIntent)
         } else if (maxWidth > maxHeight) {
-            LandscapeLayout(state, header, onIntent, addPhoto, recordBlock, takesBlock)
+            LandscapeLayout(state, take, header, onIntent, addPhoto, zone)
         } else {
-            PortraitLayout(state, header, onIntent, addPhoto, recordBlock, takesBlock)
+            PortraitLayout(state, take, header, onIntent, addPhoto, zone)
         }
     }
 }
@@ -130,11 +132,11 @@ fun PieceScreen(
 @Composable
 private fun PortraitLayout(
     state: PieceState,
+    take: TakeState,
     header: PieceHeader,
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
-    recordBlock: @Composable () -> Unit,
-    takesBlock: @Composable () -> Unit,
+    zone: ZoneId,
 ) {
     val scroll = rememberScrollState()
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -150,9 +152,11 @@ private fun PortraitLayout(
             HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Portrait, Modifier.padding(horizontal = ScreenPadding))
             SheetsBlock(state, onIntent, addPhoto, Metrics.Portrait)
             Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(BlockGap)) {
-                recordBlock()
+                // Recording stands above the notes: the notes are read once before playing, a take is recorded every time.
+                RecordTakeRow(take, onIntent)
                 NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
-                takesBlock()
+                state.progress?.let { TakeProgressCard(it) }
+                TakesBlock(state.takes, zone, onIntent)
             }
         }
     }
@@ -162,11 +166,11 @@ private fun PortraitLayout(
 @Composable
 private fun LandscapeLayout(
     state: PieceState,
+    take: TakeState,
     header: PieceHeader,
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
-    recordBlock: @Composable () -> Unit,
-    takesBlock: @Composable () -> Unit,
+    zone: ZoneId,
 ) {
     Column {
         TopBar(header.title, titleVisible = false, height = TopBarHeightLandscape, onIntent = onIntent)
@@ -180,7 +184,8 @@ private fun LandscapeLayout(
                 verticalArrangement = Arrangement.spacedBy(ScreenPadding),
             ) {
                 HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Landscape)
-                recordBlock()
+                RecordTakeRow(take, onIntent, buttonSize = LandscapeRecordButton)
+                state.progress?.let { TakeProgressCard(it) }
             }
             Column(
                 modifier = Modifier
@@ -193,7 +198,7 @@ private fun LandscapeLayout(
                 SheetsBlock(state, onIntent, addPhoto, Metrics.Landscape)
                 Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(ScreenPadding)) {
                     NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
-                    takesBlock()
+                    TakesBlock(state.takes, zone, onIntent)
                 }
             }
         }

@@ -296,4 +296,16 @@
     <string name="piece_delete_title">Удалить «%1$s»?</string>
     <string name="piece_delete_text">Ноты и заметки удалятся. Записи останутся в «Записях».</string>
     <string name="piece_delete_confirm">Удалить</string>
+    <string name="take_record">Записать дубль</string>
+    <string name="take_record_hint">Экран не подсказывает во время записи — разбор появится после.</string>
+    <string name="take_recording">запись · %1$s</string>
+    <string name="take_level_description">Микрофон слышит</string>
+    <string name="take_no_permission">Чтобы записать дубль, нужен доступ к микрофону.</string>
+    <string name="take_grant_permission">Разрешить доступ</string>
+    <string name="take_progress">последний %1$d\u00A0%% · лучший %2$d\u00A0%%</string>
+    <string name="take_chart_description">Баллы дублей по порядку: %1$s</string>
+    <string name="takes_title">Дубли</string>
+    <string name="takes_empty">Дублей пока нет. Запишите первый — увидите, как меняется произведение.</string>
+    <string name="take_best">лучший</string>
+    <string name="take_meta">%1$s · %2$s ц</string>
 </resources>

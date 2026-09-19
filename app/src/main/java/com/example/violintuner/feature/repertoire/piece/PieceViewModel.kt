@@ -4,18 +4,32 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.data.repertoire.SheetFiles
+import com.example.violintuner.core.domain.IntonationConfig
+import com.example.violintuner.core.domain.IntonationReading
+import com.example.violintuner.core.domain.LoudnessMeter
+import com.example.violintuner.core.domain.TargetMode
 import com.example.violintuner.core.domain.repertoire.RepertoireConfig
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
+import com.example.violintuner.core.domain.session.SessionRepository
+import com.example.violintuner.core.recording.TakePipeline
+import com.example.violintuner.core.settings.IntonationConfigSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.File
 import java.time.Clock
+import java.time.LocalDate
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -30,6 +44,10 @@ class PieceViewModel @Inject constructor(
     private val sheetFiles: SheetFiles,
     private val config: RepertoireConfig,
     private val clock: Clock,
+    private val takes: TakePipeline,
+    private val configSource: IntonationConfigSource,
+    sessions: SessionRepository,
+    private val intonationConfig: IntonationConfig,
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
 
@@ -41,7 +59,12 @@ class PieceViewModel @Inject constructor(
     private val effectChannel = Channel<PieceEffect>(Channel.BUFFERED)
     val effects: Flow<PieceEffect> = effectChannel.receiveAsFlow()
 
-    val state: StateFlow<PieceState> = combine(repertoire.pieces, repertoire.pages, ui) { pieces, pages, ui ->
+    /** The take recorded a moment ago, while it is still highlighted in the list. */
+    private val newTakeId = MutableStateFlow<Long?>(null)
+
+    val state: StateFlow<PieceState> = combine(
+        repertoire.pieces, repertoire.pages, ui, sessions.sessions, newTakeId,
+    ) { pieces, pages, ui, sessions, newTakeId ->
         val piece = pieces.firstOrNull { it.id == pieceId }
         if (piece == null) {
             // Deleted from its form, or an id from nowhere: there is nothing to show. Said once:
@@ -50,9 +73,85 @@ class PieceViewModel @Inject constructor(
             closed = true
             PieceReducer.loading(config)
         } else {
-            PieceReducer.stateOf(piece, pages, ui.importing, ui.statusMenuOpen, config) { sheetFiles.existing(it)?.path }
+            PieceReducer.stateOf(
+                piece, pages, ui.importing, ui.statusMenuOpen, config,
+                takes = PieceReducer.takesOf(pieceId, sessions, newTakeId, LocalDate.now(clock), clock.zone, intonationConfig),
+                progress = PieceReducer.progressOf(pieceId, sessions, config),
+            ) { sheetFiles.existing(it)?.path }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), PieceReducer.loading(config))
+
+    // null = not reported yet. The microphone is asked for only when a take is: this screen does not listen by itself.
+    private val micPermission = MutableStateFlow(if (takes.requiresMicPermission) null else true)
+
+    // True from the tap on "record" until the chain has dealt with the stop. The source is
+    // collected only in between: a piece's screen has no business holding the microphone.
+    private val listening = MutableStateFlow(false)
+
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val takeState: StateFlow<TakeState> = combine(listening, micPermission, configSource.config, ::Triple)
+        .flatMapLatest { (wanted, granted, intonation) ->
+            if (!wanted || granted != true) {
+                flowOf(TakeState.idle(granted, config.levelBars))
+            } else {
+                blindChain(intonation)
+                    .map { output ->
+                        // The stop is the chain's to handle, on its next frame: that is where a take
+                        // without notes is told apart from one the player simply left. Only then
+                        // may the microphone go.
+                        if (!takes.recordingRequested.value && output.recording == null) listening.value = false
+                        PieceReducer.takeStateOf(output.shown, output.recording, takes.recordingRequested.value, granted, config.levelBars)
+                    }
+                    // Cancelled from outside — the screen left for good, the settings changed: the
+                    // take has been saved quietly, and coming back must not reopen the microphone.
+                    .onCompletion { listening.value = false }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(TAKE_STOP_TIMEOUT_MS), TakeState.idle(micPermission.value, config.levelBars))
+
+    /** Blind on purpose (spec 3.15): of all the engine reads, only "too noisy" reaches the screen, beside how loud it is. */
+    private fun blindChain(intonation: IntonationConfig): Flow<TakePipeline.Output<BlindShown>> {
+        val meter = LoudnessMeter(intonation)
+        val history = LevelHistory(config.levelBars, config.levelBarMs)
+        val silent = List(config.levelBars) { 0f }
+        return takes.run(
+            config = intonation,
+            pieceId = pieceId,
+            targetMode = { TargetMode.Chromatic },
+            unavailable = BlindShown(silent, TakeProblem.MIC_UNAVAILABLE),
+            onRestart = {
+                meter.reset()
+                history.reset()
+            },
+        ) { frame, reading ->
+            BlindShown(
+                levels = history.add(frame.tMs, meter.process(frame.tMs, frame.rms)),
+                problem = TakeProblem.TOO_NOISY.takeIf { reading == IntonationReading.TooNoisy },
+            )
+        }
+    }
+
+    init {
+        viewModelScope.launch { takes.watchPractice() }
+        viewModelScope.launch {
+            takes.events.collect { event ->
+                when (event) {
+                    // The player stays with the music: the take shows up in the list, highlighted
+                    // for a moment, and the session screen does not open by itself (spec 3.15).
+                    is TakePipeline.Event.Saved -> highlight(event.sessionId)
+                    TakePipeline.Event.NoNotes -> effectChannel.send(PieceEffect.ShowNoNotesRecorded)
+                }
+            }
+        }
+    }
+
+    private fun highlight(sessionId: Long) {
+        newTakeId.value = sessionId
+        viewModelScope.launch {
+            delay(config.newTakeHighlightMs)
+            newTakeId.update { if (it == sessionId) null else it }
+        }
+    }
 
     // Photos go in one at a time and in the order they were picked: that is the order of the pages.
     private val importLock = Mutex()
@@ -76,6 +175,17 @@ class PieceViewModel @Inject constructor(
                 savedState[KEY_CAMERA_FILE] = file.path
                 effectChannel.trySend(PieceEffect.LaunchCamera(file.path))
             }
+            PieceIntent.RecordClicked -> when {
+                takes.recordingRequested.value -> takes.recordingRequested.value = false
+                micPermission.value != true -> effectChannel.trySend(PieceEffect.RequestMicPermission)
+                else -> {
+                    takes.recordingRequested.value = true
+                    listening.value = true
+                }
+            }
+            PieceIntent.GrantMicClicked -> effectChannel.trySend(PieceEffect.RequestMicPermission)
+            is PieceIntent.MicPermissionChanged -> if (takes.requiresMicPermission) micPermission.value = intent.granted
+            is PieceIntent.TakeClicked -> effectChannel.trySend(PieceEffect.OpenSession(intent.sessionId))
             is PieceIntent.CameraFinished -> {
                 val file = savedState.remove<String>(KEY_CAMERA_FILE)?.let(::File) ?: return
                 if (intent.saved) import(listOf(file.toURI().toString()), temporary = listOf(file)) else file.delete()
@@ -105,5 +215,8 @@ class PieceViewModel @Inject constructor(
         const val ARG_PIECE_ID = "pieceId"
         private const val KEY_CAMERA_FILE = "cameraFile"
         private const val STOP_TIMEOUT_MS = 5_000L
+
+        // Long enough to survive a rotation, short enough that the microphone goes soon after the screen does (as on Live).
+        private const val TAKE_STOP_TIMEOUT_MS = 2_000L
     }
 }

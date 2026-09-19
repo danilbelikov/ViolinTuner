@@ -1,14 +1,27 @@
 package com.example.violintuner.feature.repertoire
 
 import androidx.lifecycle.SavedStateHandle
+import com.example.violintuner.core.audio.FakePitchSource
+import com.example.violintuner.core.audio.FakeScenario
+import com.example.violintuner.core.audio.PitchSource
+import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.data.repertoire.FakeSheetFiles
+import com.example.violintuner.core.domain.IntonationConfig
+import com.example.violintuner.core.domain.PitchFrame
+import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
+import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.repertoire.FakeRepertoireRepository
 import com.example.violintuner.core.domain.repertoire.PieceDraft
 import com.example.violintuner.core.domain.repertoire.PieceStatus
 import com.example.violintuner.core.domain.repertoire.RepertoireConfig
+import com.example.violintuner.core.domain.session.FakeSessionRepository
+import com.example.violintuner.core.recording.TakePipeline
+import com.example.violintuner.core.settings.FakeSettingsRepository
+import com.example.violintuner.core.settings.SettingsConfigSource
 import com.example.violintuner.feature.repertoire.piece.PieceEffect
 import com.example.violintuner.feature.repertoire.piece.PieceIntent
 import com.example.violintuner.feature.repertoire.piece.PieceViewModel
+import com.example.violintuner.feature.repertoire.piece.TakeProblem
 import java.io.File
 import java.time.Clock
 import java.time.Instant
@@ -16,16 +29,22 @@ import java.time.ZoneOffset
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.testTimeSource
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -35,6 +54,27 @@ class PieceViewModelTest {
     private val repertoire = FakeRepertoireRepository()
     private val files = FakeSheetFiles()
     private val clock: Clock = Clock.fixed(Instant.ofEpochMilli(9_000), ZoneOffset.UTC)
+    private val sessions = FakeSessionRepository()
+    private val practice = FakeRunningPracticeStore()
+
+    /** The fake source has no sound to write, so nothing here is ever asked for a file. */
+    private object NoAudioFiles : SessionAudioFiles {
+        override fun newFile(): File = error("the fake source records no sound")
+        override fun existing(name: String): File? = null
+        override fun delete(name: String) = Unit
+        override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
+    }
+
+    /** Counts how often it is listened to: a piece's screen may hold the microphone only while a take runs. */
+    private class CountingSource(private val delegate: PitchSource, override val requiresMicPermission: Boolean = false) : PitchSource {
+        var collections = 0
+        var active = 0
+        override val audioTap = null
+        override fun frames(config: IntonationConfig): Flow<PitchFrame> =
+            delegate.frames(config).onStart { collections++; active++ }.onCompletion { active-- }
+    }
+
+    private var source: CountingSource? = null
 
     @Before
     fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
@@ -44,9 +84,15 @@ class PieceViewModelTest {
 
     private fun TestScope.screen(pieceId: Long, saved: SavedStateHandle = SavedStateHandle(mapOf(PieceViewModel.ARG_PIECE_ID to pieceId))):
         Pair<PieceViewModel, MutableList<PieceEffect>> {
-        val viewModel = PieceViewModel(saved, repertoire, files, RepertoireConfig(), clock)
+        val pitch = source ?: CountingSource(FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource)).also { source = it }
+        val takes = TakePipeline(pitch, sessions, NoAudioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler))
+        val viewModel = PieceViewModel(
+            saved, repertoire, files, RepertoireConfig(), clock, takes,
+            SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), sessions, IntonationConfig(),
+        )
         val effects = mutableListOf<PieceEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
+        backgroundScope.launch { viewModel.takeState.collect {} }
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
         runCurrent()
         return viewModel to effects
@@ -169,5 +215,140 @@ class PieceViewModelTest {
         runCurrent()
         assertEquals(listOf<PieceEffect>(PieceEffect.Close), effects)
         assertTrue(viewModel.state.value.loading)
+    }
+
+    private fun TestScope.advance(millis: Long) {
+        advanceTimeBy(millis)
+        runCurrent()
+    }
+
+    @Test
+    fun `the screen does not listen until a take is asked for, and lets the microphone go after it`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        advance(1_000)
+        assertEquals(0, source!!.collections)
+        assertFalse(viewModel.takeState.value.recording)
+
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        assertEquals(1, source!!.active)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(500)
+        assertEquals(0, source!!.active)
+        assertFalse(viewModel.takeState.value.recording)
+    }
+
+    @Test
+    fun `a take is blind - a timer and a row of loudness, and nothing about the notes`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_500)
+        val take = viewModel.takeState.value
+        assertTrue(take.recording)
+        assertEquals(3L, take.elapsedSeconds)
+        assertEquals(14, take.levels.size)
+        assertTrue("the fake violin is heard", take.levels.last() > 0f)
+        assertNull(take.problem)
+    }
+
+    @Test
+    fun `a stopped take belongs to the piece, tops the list highlighted, and the session screen stays shut`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, effects) = screen(id)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(4_000)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(200)
+
+        assertEquals(id, sessions.saved.single().pieceId)
+        val take = viewModel.state.value.takes.single()
+        assertTrue(take.isNew && take.best)
+        assertTrue("the player stays with the music", effects.isEmpty())
+
+        advance(2_000)
+        assertFalse("the highlight settles", viewModel.state.value.takes.single().isNew)
+    }
+
+    @Test
+    fun `takes stand newest first with the best one marked, and progress needs two of them`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        assertNull(viewModel.state.value.progress)
+        repeat(2) {
+            viewModel.onIntent(PieceIntent.RecordClicked)
+            advance(3_000)
+            viewModel.onIntent(PieceIntent.RecordClicked)
+            advance(500)
+        }
+        val state = viewModel.state.value
+        assertEquals(2, state.takes.size)
+        assertEquals(1, state.takes.count { it.best })
+        assertEquals(2, state.progress!!.scores.size)
+    }
+
+    @Test
+    fun `a take without notes says so and a take under two seconds goes without a word`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        source = CountingSource(FakePitchSource(FakeScenario.SILENCE, timeSource = testTimeSource))
+        val (silent, effects) = screen(id)
+        silent.onIntent(PieceIntent.RecordClicked)
+        advance(4_000)
+        silent.onIntent(PieceIntent.RecordClicked)
+        advance(300)
+        assertEquals(listOf<PieceEffect>(PieceEffect.ShowNoNotesRecorded), effects)
+        assertTrue(sessions.saved.isEmpty())
+
+        source = null
+        val (quick, quickEffects) = screen(id)
+        quick.onIntent(PieceIntent.RecordClicked)
+        advance(800)
+        quick.onIntent(PieceIntent.RecordClicked)
+        advance(300)
+        assertTrue(quickEffects.isEmpty() && sessions.saved.isEmpty())
+        assertFalse(quick.takeState.value.recording)
+    }
+
+    @Test
+    fun `noise shows as a small problem line and does not stop the take`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        source = CountingSource(FakePitchSource(FakeScenario.NOISE, timeSource = testTimeSource))
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        assertEquals(TakeProblem.TOO_NOISY, viewModel.takeState.value.problem)
+        assertTrue(viewModel.takeState.value.recording)
+    }
+
+    @Test
+    fun `without the permission a tap asks for it, and recording starts only once it is there`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        source = CountingSource(FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource), requiresMicPermission = true)
+        val (viewModel, effects) = screen(id)
+        assertNull(viewModel.takeState.value.micPermission)
+
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(500)
+        assertEquals(listOf<PieceEffect>(PieceEffect.RequestMicPermission), effects)
+        assertEquals(0, source!!.collections)
+
+        viewModel.onIntent(PieceIntent.MicPermissionChanged(granted = false))
+        advance(100)
+        assertEquals(false, viewModel.takeState.value.micPermission)
+
+        viewModel.onIntent(PieceIntent.MicPermissionChanged(granted = true))
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(2_500)
+        assertTrue(viewModel.takeState.value.recording)
+    }
+
+    @Test
+    fun `a take opens its session`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, effects) = screen(id)
+        viewModel.onIntent(PieceIntent.TakeClicked(42))
+        runCurrent()
+        assertEquals(listOf<PieceEffect>(PieceEffect.OpenSession(42)), effects)
     }
 }

@@ -18,6 +18,11 @@ data class RepertoireConfig(
     val progressFromTakes: Int = 2,
     /** Notes longer than this many lines fold on the piece screen. */
     val notesCollapsedLines: Int = 6,
+    /** Bars of the level indicator of a blind take, and how long one bar stands for. */
+    val levelBars: Int = 14,
+    val levelBarMs: Long = 50,
+    /** A take that has just been recorded stays highlighted in the list for this long. */
+    val newTakeHighlightMs: Long = 1_900,
     /** The controls of the music stand hide after this long without a touch. */
     val standPanelHideMs: Long = 3_000,
 )
