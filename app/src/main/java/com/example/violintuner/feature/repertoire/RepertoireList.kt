@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
@@ -50,6 +51,9 @@ import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.history.DayLabel
+import com.example.violintuner.feature.history.components.EmptyRecordTile
+import com.example.violintuner.feature.history.components.RecordTile
+import com.example.violintuner.feature.history.components.RecordTileSize
 import com.example.violintuner.feature.repertoire.components.SheetThumb
 import com.example.violintuner.feature.repertoire.components.StatusChip
 import com.example.violintuner.feature.repertoire.components.THUMB_DIM
@@ -66,6 +70,7 @@ private val AddHeight = 48.dp
 private val AddCorner = 24.dp
 private val ChipHeight = 32.dp
 private val ChipCorner = 8.dp
+private val LastTakeWidth = 76.dp
 private const val TABULAR_FIGURES = "tnum"
 private const val EMPTY_HEIGHT_FRACTION = 0.7f
 
@@ -203,27 +208,32 @@ private fun PieceCardRow(card: PieceCard, onClick: () -> Unit, modifier: Modifie
     }
 }
 
-/** Score of the latest take in its zone color with the day and the number of takes; a plain dash without takes. */
+/**
+ * How the piece is going, without a number (spec 3.18, handoff 19c2): the note tile in the zone of
+ * the latest take over the day and the number of takes, a line each; a dashed ring and «нет дублей» without takes.
+ */
 @Composable
 private fun LastTake(card: PieceCard) {
     val colors = MaterialTheme.colorScheme
-    Column(horizontalAlignment = Alignment.End) {
-        Text(
-            text = card.lastScore?.let { stringResource(R.string.repertoire_score, it) } ?: stringResource(R.string.practice_no_value),
-            color = card.lastScoreZone?.let { ViolinTheme.zoneColors.colorFor(it) } ?: colors.onSurfaceVariant,
-            style = MaterialTheme.typography.titleLarge.copy(
-                fontSize = 22.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES,
-            ),
-        )
-        val caption = listOfNotNull(card.lastDay?.let { dayLabel(it) }, takesLabel(card.takes).takeIf { card.takes > 0 })
-        if (caption.isNotEmpty()) {
-            Text(
-                text = caption.joinToString(stringResource(R.string.dot_separator)),
-                color = colors.onSurfaceVariant,
-                maxLines = 1,
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontFeatureSettings = TABULAR_FIGURES),
-            )
+    val zone = card.lastScoreZone
+    Column(
+        modifier = Modifier.width(LastTakeWidth),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        if (zone != null) {
+            RecordTile(zone, take = true, hasAudio = true, size = RecordTileSize.PIECE)
+        } else {
+            EmptyRecordTile(ring = colors.outlineVariant, note = colors.outline)
         }
+        val caption = listOfNotNull(card.lastDay?.let { dayLabel(it) }, takesLabel(card.takes).takeIf { card.takes > 0 })
+        Text(
+            text = if (caption.isEmpty()) stringResource(R.string.repertoire_no_takes) else caption.joinToString("\n"),
+            color = colors.onSurfaceVariant,
+            maxLines = 2,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, lineHeight = 14.sp, fontFeatureSettings = TABULAR_FIGURES),
+        )
     }
 }
 

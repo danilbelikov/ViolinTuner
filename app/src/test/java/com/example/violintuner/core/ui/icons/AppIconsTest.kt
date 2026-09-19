@@ -12,7 +12,7 @@ import org.junit.Test
 class AppIconsTest {
     @Test
     fun `every icon of the handoff builds on the 24 grid`() {
-        assertEquals(42, AppIcons.all.size)
+        assertEquals(44, AppIcons.all.size)
         AppIcons.all.forEach { (name, build) ->
             val icon = build()
             assertEquals(name, 24.dp, icon.defaultWidth)

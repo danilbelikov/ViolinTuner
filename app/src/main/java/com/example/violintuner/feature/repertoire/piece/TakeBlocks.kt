@@ -51,7 +51,7 @@ import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.history.components.CardActions
-import com.example.violintuner.feature.history.components.CardMenuButton
+import com.example.violintuner.feature.history.components.RecordCard
 import com.example.violintuner.feature.live.components.RecordButton
 import com.example.violintuner.feature.repertoire.takesLabel
 import com.example.violintuner.feature.sound.SoundCaption
@@ -66,9 +66,6 @@ private val LevelMinHeight = 4.dp
 private val LevelMaxHeight = 20.dp
 private val ChartWidth = 160.dp
 private val ChartHeight = 44.dp
-private val ScoreColumnWidth = 52.dp
-private val PreviewBarWidth = 4.dp
-private val PreviewHeight = 28.dp
 private const val TABULAR_FIGURES = "tnum"
 private const val REC_PULSE_MS = 1_200
 private const val REC_PULSE_MIN_ALPHA = 0.35f
@@ -77,7 +74,6 @@ private const val DISABLED_ALPHA = 0.4f
 private const val CHART_MIN = 50f
 private const val CHART_MAX = 100f
 private const val CHART_GOOD = 75f
-private const val NEW_TAKE_FADE_MS = 1_500
 
 /**
  * «Записать дубль» (spec 3.15, handoff 13c1, 13d1, 13d2): the record button of Live with words
@@ -261,86 +257,18 @@ fun TakesBlock(
 
 @Composable
 private fun TakeCard(take: TakeItem, zone: ZoneId, sound: SoundCaption?, actions: CardActions?, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    val zoneColors = ViolinTheme.zoneColors
-    val repertoire = ViolinTheme.repertoireColors
     val card = take.card
-    val shape = RoundedCornerShape(CardCorner)
-    val background by animateColorAsState(if (take.isNew) repertoire.takeNew else colors.surfaceContainer, tween(NEW_TAKE_FADE_MS), label = "takeBackground")
-    val ring by animateColorAsState(if (take.isNew) colors.primary else colors.primary.copy(alpha = 0f), tween(NEW_TAKE_FADE_MS), label = "takeRing")
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(shape)
-            .background(background)
-            .border(1.5.dp, ring, shape)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 14.dp),
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.width(ScoreColumnWidth), horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(
-                text = card.scorePercent.toString(),
-                color = zoneColors.colorFor(card.scoreZone),
-                style = MaterialTheme.typography.headlineSmall.copy(fontSize = 26.sp, lineHeight = 26.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES),
-            )
-            Text(stringResource(R.string.history_percent_sign), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
-        }
-        Column(modifier = Modifier.weight(1f)) {
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                // A take is told from the others by its date: they all carry the name of the piece.
-                Text(
-                    text = card.title ?: Formats.dayAndMonth(card.startedAtEpochMs, zone),
-                    modifier = Modifier.weight(1f, fill = false),
-                    color = colors.onSurface,
-                    maxLines = 1,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-                )
-                if (take.best) {
-                    Row(
-                        modifier = Modifier
-                            .border(1.dp, colors.primary, RoundedCornerShape(6.dp))
-                            .padding(start = 4.dp, end = 6.dp, top = 1.dp, bottom = 1.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(3.dp),
-                    ) {
-                        AppIcon(AppIcons.Star, contentDescription = null, tint = colors.primary, size = IconSizes.InText)
-                        Text(
-                            text = stringResource(R.string.take_best),
-                            color = colors.primary,
-                            maxLines = 1,
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                        )
-                    }
-                }
-            }
-            val meta = stringResource(R.string.take_meta, Formats.duration(card.durationMs), Formats.signedCents(card.biasCents))
-            Text(
-                // a take with a sound of its own says which: that is where the processing differs from everyone's
-                text = if (sound != null) meta + stringResource(R.string.dot_separator) + captionName(sound) else meta,
-                modifier = Modifier.padding(top = 2.dp),
-                color = colors.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
-            )
-        }
-        Row(modifier = Modifier.height(PreviewHeight), horizontalArrangement = Arrangement.spacedBy(2.dp), verticalAlignment = Alignment.Bottom) {
-            card.previewZones.forEach { previewZone ->
-                val share = when (previewZone) {
-                    com.example.violintuner.core.domain.Zone.IN_TUNE -> 1f
-                    com.example.violintuner.core.domain.Zone.NEAR -> 0.57f
-                    com.example.violintuner.core.domain.Zone.OFF -> 0.29f
-                }
-                Box(
-                    Modifier
-                        .width(PreviewBarWidth)
-                        .height(PreviewHeight * share)
-                        .background(zoneColors.colorFor(previewZone), RoundedCornerShape(2.dp)),
-                )
-            }
-        }
-        if (actions != null && card.hasAudio) CardMenuButton(card.id, actions)
-    }
+    val meta = stringResource(R.string.take_meta, Formats.duration(card.durationMs), Formats.signedCents(card.biasCents))
+    RecordCard(
+        card = card,
+        // A take is told from the others by its date: they all carry the name of the piece.
+        title = card.title ?: Formats.dayAndMonth(card.startedAtEpochMs, zone),
+        // a take with a sound of its own says which: that is where the processing differs from everyone's
+        meta = if (sound != null) meta + stringResource(R.string.dot_separator) + captionName(sound) else meta,
+        take = true,
+        onClick = onClick,
+        actions = actions,
+        best = take.best,
+        highlighted = take.isNew,
+    )
 }

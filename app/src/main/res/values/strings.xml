@@ -126,7 +126,11 @@
     <string name="history_day_today">сегодня</string>
     <string name="history_day_yesterday">вчера</string>
     <string name="history_card_meta">%1$s · %2$s · %3$s ц</string>
-    <string name="history_percent_sign">%</string>
+    <string name="record_zone_good">хорошо</string>
+    <string name="record_zone_fair">так себе</string>
+    <string name="record_zone_off">мимо</string>
+    <string name="record_tile_take">дубль</string>
+    <string name="record_tile_no_sound">без звука</string>
     <string name="history_empty_filter">За этот период сессий нет</string>
     <string name="history_empty">Здесь появятся ваши сессии. Нажмите кнопку записи на экране Live.</string>
 
@@ -248,13 +252,12 @@
     <string name="history_section_sessions">Сессии</string>
     <string name="history_section_repertoire">Репертуар</string>
     <string name="session_take_title">%1$s · %2$s</string>
-    <string name="session_take_chip">дубль</string>
     <string name="dot_separator">\u0020·\u0020</string>
     <string name="repertoire_add">Добавить произведение</string>
     <string name="repertoire_empty">Здесь живут ваши произведения: ноты, заметки и записи. Добавьте первое.</string>
     <string name="repertoire_empty_filter">Ничего со статусом «%1$s».</string>
     <string name="repertoire_show_all">Показать все</string>
-    <string name="repertoire_score">%1$d\u00A0%%</string>
+    <string name="repertoire_no_takes">нет дублей</string>
     <string name="piece_status_reading">Разбираю</string>
     <string name="piece_status_learning">Учу</string>
     <string name="piece_status_in_repertoire">В репертуаре</string>

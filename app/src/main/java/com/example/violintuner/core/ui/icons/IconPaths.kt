@@ -2,7 +2,8 @@ package com.example.violintuner.core.ui.icons
 
 /**
  * Path data of the icon set, copied verbatim from the `ICONS` array of the handoff
- * (`docs/design/project/polish`, frame 14a; `docs/design/project/sound` added its own): a 24 × 24 grid,
+ * (`docs/design/project/polish`, frame 14a; `docs/design/project/sound` and
+ * `docs/design/project/records` added their own): a 24 × 24 grid,
  * stroke 1.8, round caps and joins.
  * A path that starts with [FILLED] is a filled shape without a stroke (dots, a note head).
  * Generated from the handoff — change an icon there, not here.
@@ -76,11 +77,17 @@ internal object IconPaths {
     /** «Дней подряд» (14 dp у числа, только при ≥ 3) */
     val FLAME = listOf("M12 3.5c-.5 4.5-5.5 6.5-5.5 11.5a5.5 5.5 0 0 0 11 0c0-2.5-1.5-4.5-3-5.5 0 2-1 3-2 3.5-1-1.5-.5-4-.5-9.5z")
 
-    /** чип «дубль» (14 dp) */
-    val NOTE = listOf("M10 17.5V5l7 2.5v3.5l-7-2.5", "F M7.5 15.5a2.5 2 0 1 0 0 4 2.5 2 0 1 0 0-4z")
+    /** плитка записи — свободная сессия (26 dp в круге 44) */
+    val NOTE_ONE = listOf("M12.2 17.5V4.5", "M12.2 4.5c3.6 1.4 5.6 3.9 4.4 7.6", "F M9.2 15.4a3.2 2.5 0 1 0 0 5 3.2 2.5 0 1 0 0-5z")
 
-    /** отметка «лучший дубль» (14 dp, primary) */
-    val STAR = listOf("M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z")
+    /** плитка записи — дубль произведения; карточка произведения (20 dp в круге 36) */
+    val NOTE_PAIR = listOf("M9.6 17.6V5.6M18.6 15.6V3.7", "F M9.6 4.4l9-1.9v2.6l-9 1.9z", "F M6.8 16.5a2.9 2.3 0 1 0 0 4.6 2.9 2.3 0 1 0 0-4.6z", "F M15.8 14.5a2.9 2.3 0 1 0 0 4.6 2.9 2.3 0 1 0 0-4.6z")
+
+    /** «Выбрать» над списком (16 dp, primary) */
+    val SELECT = listOf("M4 6.5h8M4 12h8M4 17.5h6", "M14.5 12.5l2.5 2.5 5-5.5")
+
+    /** отметка «лучший дубль» (12 dp, primary, залитая) */
+    val STAR = listOf("F M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z")
 
     /** темп «♩ = 96» → значок 14 dp + число */
     val METRONOME = listOf("M8 21 10 3h4l2 18H8z", "M8 21h8", "M12 14l4.5-7", "F M12 12.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z")
