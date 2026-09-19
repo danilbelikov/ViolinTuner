@@ -1,0 +1,80 @@
+package com.example.violintuner.core.audio.share
+
+import android.content.Context
+import com.example.violintuner.core.data.sound.SoundMapper
+import com.example.violintuner.core.di.IoDispatcher
+import com.example.violintuner.core.domain.sound.SoundSettings
+import dagger.hilt.android.qualifiers.ApplicationContext
+import java.io.File
+import java.io.IOException
+import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.withContext
+
+/** Names of files as other apps will see them. Pure. */
+object ShareNames {
+    const val EXTENSION = ".m4a"
+    private const val MAX_LENGTH = 80
+    private val FORBIDDEN = Regex("""[\\/:*?"<>|\p{Cntrl}]""")
+    private val SPACES = Regex("""\s+""")
+
+    /** [title] made fit to be a file name anywhere: «Соната № 1: Allegro» → «Соната № 1 Allegro.m4a». */
+    fun fileName(title: String): String {
+        val clean = title.replace(FORBIDDEN, " ").replace(SPACES, " ").trim().trim('.').take(MAX_LENGTH).trim()
+        return (clean.ifEmpty { "recording" }) + EXTENSION
+    }
+}
+
+/**
+ * Where files wait to be handed to other apps: `cache/share/<key>/<name as the receiver sees it>`.
+ * The receiver is shown the name of the file on disk, hence the folder per file. A processed file
+ * is kept under a key of its recording and its settings, so that the same sound is not rendered
+ * twice; everything here is temporary and swept out by age.
+ */
+interface ShareFiles {
+    /** Where the processed file of [audioName] with [settings] lives — or will. */
+    fun processed(audioName: String, settings: SoundSettings, fileName: String): File
+
+    /** A copy of [audio] under [fileName]; null when it cannot be made. */
+    suspend fun original(audio: File, fileName: String): File?
+
+    suspend fun deleteOlderThan(nowEpochMs: Long, maxAgeMs: Long)
+}
+
+class AppShareFiles @Inject constructor(
+    @ApplicationContext context: Context,
+    @IoDispatcher private val io: CoroutineDispatcher,
+) : ShareFiles {
+    private val directory = File(context.cacheDir, DIRECTORY)
+
+    override fun processed(audioName: String, settings: SoundSettings, fileName: String): File {
+        // Columns, not the settings themselves: the hash of an enum differs from run to run, that of its name does not.
+        val key = "${audioName.removeSuffix(ShareNames.EXTENSION)}-${SoundMapper.columnsOf(settings).hashCode().toUInt().toString(HEX)}"
+        return File(File(directory, key), fileName)
+    }
+
+    override suspend fun original(audio: File, fileName: String): File? = withContext(io) {
+        val target = File(File(directory, "${audio.name.removeSuffix(ShareNames.EXTENSION)}-original"), fileName)
+        try {
+            if (!target.isFile || target.length() != audio.length()) {
+                target.parentFile?.mkdirs()
+                audio.copyTo(target, overwrite = true)
+            }
+            target
+        } catch (e: IOException) {
+            target.delete()
+            null
+        }
+    }
+
+    override suspend fun deleteOlderThan(nowEpochMs: Long, maxAgeMs: Long) = withContext(io) {
+        directory.listFiles().orEmpty()
+            .filter { folder -> folder.walkTopDown().all { nowEpochMs - it.lastModified() > maxAgeMs } }
+            .forEach { it.deleteRecursively() }
+    }
+
+    private companion object {
+        const val DIRECTORY = "share"
+        const val HEX = 16
+    }
+}
