@@ -26,6 +26,9 @@ import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.history.DayLabel
 import com.example.violintuner.feature.history.HistoryCard
@@ -139,15 +142,21 @@ fun sessionTitle(title: String?, pieceTitle: String?, startedAtEpochMs: Long, zo
 @Composable
 private fun TakeChip() {
     val colors = MaterialTheme.colorScheme
-    Text(
-        text = stringResource(R.string.session_take_chip),
+    Row(
         modifier = Modifier
             .background(colors.surfaceContainerHigh, RoundedCornerShape(TakeChipCorner))
-            .padding(horizontal = 6.dp, vertical = 1.dp),
-        color = colors.onSurfaceVariant,
-        maxLines = 1,
-        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-    )
+            .padding(start = 4.dp, end = 6.dp, top = 1.dp, bottom = 1.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(2.dp),
+    ) {
+        AppIcon(AppIcons.Note, contentDescription = null, tint = colors.onSurfaceVariant, size = IconSizes.InText)
+        Text(
+            text = stringResource(R.string.session_take_chip),
+            color = colors.onSurfaceVariant,
+            maxLines = 1,
+            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+        )
+    }
 }
 
 private val TakeChipCorner = 6.dp

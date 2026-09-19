@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -33,6 +34,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -46,6 +48,10 @@ import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.progress.Profile
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconLabel
+import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.practice.PracticeIntent
 import com.example.violintuner.feature.practice.PracticeSheet
 import com.example.violintuner.feature.practice.ProfileHeader
@@ -110,9 +116,9 @@ internal fun ProfileSheetContent(
             val letter = initialOf(name.trim()).ifEmpty { stringResource(R.string.profile_no_name_letter) }
             Avatar(path = header.avatarPath, fallback = AvatarFallback.Letter(letter), size = SheetAvatar)
             Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                SheetTextButton(stringResource(R.string.profile_pick_photo), enabled = !sheet.importingPhoto, onClick = onPickPhoto)
+                SheetTextButton(stringResource(R.string.profile_pick_photo), AppIcons.Gallery, enabled = !sheet.importingPhoto, onClick = onPickPhoto)
                 if (header.avatarPath != null) {
-                    SheetTextButton(stringResource(R.string.profile_remove_photo), enabled = !sheet.importingPhoto) {
+                    SheetTextButton(stringResource(R.string.profile_remove_photo), AppIcons.Trash, enabled = !sheet.importingPhoto, destructive = true) {
                         onIntent(PracticeIntent.ProfilePhotoRemoved)
                     }
                 }
@@ -153,9 +159,10 @@ internal fun ProfileSheetContent(
 }
 
 @Composable
-private fun SheetTextButton(text: String, enabled: Boolean, onClick: () -> Unit) {
-    TextButton(onClick = onClick, enabled = enabled, modifier = Modifier.height(TextButtonHeight)) {
-        Text(text, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
+private fun SheetTextButton(text: String, icon: ImageVector, enabled: Boolean, destructive: Boolean = false, onClick: () -> Unit) {
+    val colors = if (destructive) ButtonDefaults.textButtonColors(contentColor = ViolinTheme.destructive) else ButtonDefaults.textButtonColors()
+    TextButton(onClick = onClick, enabled = enabled, colors = colors, modifier = Modifier.height(TextButtonHeight)) {
+        IconLabel(icon, text, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
     }
 }
 
@@ -180,12 +187,18 @@ internal fun TrophiesSheetContent(lines: List<TrophyLine>, totalMs: Long, modifi
     Column(modifier = modifier.verticalScroll(rememberScrollState())) {
         SheetColumn {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text(
-                    text = stringResource(R.string.trophies_title),
-                    color = colors.onSurface,
-                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold),
+                Row(
                     modifier = Modifier.alignByBaseline(),
-                )
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    AppIcon(AppIcons.Trophy, contentDescription = null, tint = colors.primary)
+                    Text(
+                        text = stringResource(R.string.trophies_title),
+                        color = colors.onSurface,
+                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold),
+                    )
+                }
                 Text(
                     text = stringResource(R.string.trophies_total, Formats.totalTime(totalMs)),
                     color = colors.onSurfaceVariant,

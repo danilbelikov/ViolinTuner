@@ -36,6 +36,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -47,6 +48,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconLabel
+import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.feature.history.components.SessionCard
 import com.example.violintuner.feature.practice.components.CalendarMetrics
 import com.example.violintuner.feature.practice.components.EditTimeSheet
@@ -78,6 +83,7 @@ private const val ACTION_SWITCH_MS = 200
 private const val ACTION_SWITCH_SCALE = 0.96f
 private const val DAY_CROSSFADE_MS = 150
 private const val MIN_CARD_LABEL_SIZE = 9
+private const val STREAK_FLAME_FROM = 3
 private const val MIN_CARD_VALUE_SIZE = 11
 
 /** Text sizes that differ between the layouts (handoff `sizes`). */
@@ -278,8 +284,11 @@ private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit,
                     border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(brush = SolidColor(colors.outlineVariant)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.onSurface),
                 ) {
-                    Text(
-                        stringResource(R.string.practice_stop),
+                    // A flag, not a square: the square is the stop of a recording (spec 3.16).
+                    IconLabel(
+                        icon = AppIcons.Flag,
+                        text = stringResource(R.string.practice_stop),
+                        iconSize = IconSizes.InFilledButton,
                         style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
                     )
                 }
@@ -292,8 +301,11 @@ private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit,
                     shape = RoundedCornerShape(ButtonCorner),
                     colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
                 ) {
-                    Text(
-                        stringResource(R.string.practice_start),
+                    // The stopwatch of the tab: a practice is time. The one filled button that carries an icon.
+                    IconLabel(
+                        icon = AppIcons.Timer,
+                        text = stringResource(R.string.practice_start),
+                        iconSize = IconSizes.InFilledButton,
                         style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
                     )
                 }
@@ -333,13 +345,15 @@ private fun SummaryCards(state: PracticeState, metrics: Metrics) {
             label = stringResource(R.string.practice_streak),
             value = if (state.hasHistory) state.summary.streakDays.toString() else none,
             metrics = metrics,
+            // a streak worth a flame starts at three days (spec 5.10)
+            trailingIcon = AppIcons.Flame.takeIf { state.hasHistory && state.summary.streakDays >= STREAK_FLAME_FROM },
             modifier = Modifier.weight(1f),
         )
     }
 }
 
 @Composable
-private fun SummaryCard(label: String, value: String, metrics: Metrics, modifier: Modifier = Modifier) {
+private fun SummaryCard(label: String, value: String, metrics: Metrics, modifier: Modifier = Modifier, trailingIcon: ImageVector? = null) {
     val colors = MaterialTheme.colorScheme
     Column(
         modifier = modifier
@@ -356,16 +370,20 @@ private fun SummaryCard(label: String, value: String, metrics: Metrics, modifier
             autoSize = TextAutoSize.StepBased(minFontSize = MIN_CARD_LABEL_SIZE.sp, maxFontSize = metrics.cardLabelSize.sp, stepSize = 1.sp),
             style = MaterialTheme.typography.labelSmall.copy(fontSize = metrics.cardLabelSize.sp),
         )
-        Text(
-            text = value,
-            color = colors.onSurface,
-            maxLines = 1,
-            softWrap = false,
-            autoSize = TextAutoSize.StepBased(minFontSize = MIN_CARD_VALUE_SIZE.sp, maxFontSize = metrics.cardValueSize.sp, stepSize = 1.sp),
-            style = MaterialTheme.typography.titleMedium.copy(
-                fontSize = metrics.cardValueSize.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES,
-            ),
-        )
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(
+                text = value,
+                color = colors.onSurface,
+                maxLines = 1,
+                softWrap = false,
+                autoSize = TextAutoSize.StepBased(minFontSize = MIN_CARD_VALUE_SIZE.sp, maxFontSize = metrics.cardValueSize.sp, stepSize = 1.sp),
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontSize = metrics.cardValueSize.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES,
+                ),
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            if (trailingIcon != null) AppIcon(trailingIcon, contentDescription = null, tint = colors.onSurfaceVariant, size = IconSizes.InText)
+        }
     }
 }
 
@@ -422,7 +440,8 @@ private fun SelectedDayBlock(selected: SelectedDay, onIntent: (PracticeIntent) -
                     border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(brush = SolidColor(colors.outlineVariant)),
                     colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.primary),
                 ) {
-                    Text(
+                    IconLabel(
+                        icon = if (day.totalMs > 0) AppIcons.Pencil else AppIcons.Plus,
                         text = stringResource(if (day.totalMs > 0) R.string.practice_edit_time else R.string.practice_add_time),
                         style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp),
                     )

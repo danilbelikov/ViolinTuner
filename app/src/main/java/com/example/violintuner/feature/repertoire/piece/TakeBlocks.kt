@@ -45,6 +45,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.live.components.RecordButton
 import com.example.violintuner.feature.repertoire.takesLabel
@@ -283,15 +286,21 @@ private fun TakeCard(take: TakeItem, zone: ZoneId, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
                 )
                 if (take.best) {
-                    Text(
-                        text = stringResource(R.string.take_best),
+                    Row(
                         modifier = Modifier
                             .border(1.dp, colors.primary, RoundedCornerShape(6.dp))
-                            .padding(horizontal = 6.dp, vertical = 1.dp),
-                        color = colors.primary,
-                        maxLines = 1,
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                    )
+                            .padding(start = 4.dp, end = 6.dp, top = 1.dp, bottom = 1.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(3.dp),
+                    ) {
+                        AppIcon(AppIcons.Star, contentDescription = null, tint = colors.primary, size = IconSizes.InText)
+                        Text(
+                            text = stringResource(R.string.take_best),
+                            color = colors.primary,
+                            maxLines = 1,
+                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
+                        )
+                    }
                 }
             }
             Text(

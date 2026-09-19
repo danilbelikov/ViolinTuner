@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -32,6 +33,7 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -62,6 +64,7 @@ import com.example.violintuner.core.domain.repertoire.Tonic
 import com.example.violintuner.core.ui.components.SegmentedSwitch
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.repertoire.components.TempoStepper
 import com.example.violintuner.feature.repertoire.components.statusLabel
@@ -240,7 +243,9 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
             shape = RoundedCornerShape(DeleteHeight / 2),
             border = BorderStroke(1.dp, SolidColor(colors.outlineVariant)),
         ) {
-            Text(stringResource(R.string.piece_delete), color = error, style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
+            CompositionLocalProvider(LocalContentColor provides error) {
+                IconLabel(AppIcons.Trash, stringResource(R.string.piece_delete), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
+            }
         }
     }
 }

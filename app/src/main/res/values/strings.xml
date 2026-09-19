@@ -259,6 +259,7 @@
     <string name="piece_status_learning">Учу</string>
     <string name="piece_status_in_repertoire">В репертуаре</string>
     <string name="piece_tempo_value">♩ = %1$d</string>
+    <string name="piece_tempo_description">темп %1$d</string>
     <string name="takes_one">%1$d дубль</string>
     <string name="takes_few">%1$d дубля</string>
     <string name="takes_many">%1$d дублей</string>

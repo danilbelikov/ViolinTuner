@@ -1,7 +1,6 @@
 package com.example.violintuner.feature.session
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -32,6 +31,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
@@ -244,13 +244,13 @@ private fun Actions(onIntent: (SessionIntent) -> Unit) {
             Action(
                 label = stringResource(R.string.session_action_rename),
                 color = colors.onSurfaceVariant,
-                iconCorner = 6.dp,
+                icon = AppIcons.Pencil,
                 onClick = { onIntent(SessionIntent.RenameClicked) },
             )
             Action(
                 label = stringResource(R.string.session_action_delete),
-                color = ViolinTheme.zoneColors.off,
-                iconCorner = 4.dp,
+                color = ViolinTheme.destructive,
+                icon = AppIcons.Trash,
                 onClick = { onIntent(SessionIntent.DeleteClicked) },
             )
         }
@@ -258,7 +258,7 @@ private fun Actions(onIntent: (SessionIntent) -> Unit) {
 }
 
 @Composable
-private fun Action(label: String, color: Color, iconCorner: androidx.compose.ui.unit.Dp, onClick: () -> Unit) {
+private fun Action(label: String, color: Color, icon: ImageVector, onClick: () -> Unit) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
@@ -267,11 +267,7 @@ private fun Action(label: String, color: Color, iconCorner: androidx.compose.ui.
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Box(
-            Modifier
-                .size(ActionIcon)
-                .border(2.dp, color, RoundedCornerShape(iconCorner)),
-        )
+        AppIcon(icon, contentDescription = null, tint = color, size = ActionIcon)
         Text(label, color = color, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
     }
 }
@@ -310,7 +306,7 @@ private fun DeleteDialog(onIntent: (SessionIntent) -> Unit) {
         text = { Text(stringResource(R.string.session_delete_text)) },
         confirmButton = {
             TextButton(onClick = { onIntent(SessionIntent.DeleteConfirmed) }) {
-                Text(stringResource(R.string.session_delete_confirm), color = ViolinTheme.zoneColors.off)
+                Text(stringResource(R.string.session_delete_confirm), color = ViolinTheme.destructive)
             }
         },
         dismissButton = {

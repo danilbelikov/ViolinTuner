@@ -19,11 +19,13 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,6 +33,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -39,6 +44,10 @@ import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.repertoire.PieceStatus
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconLabel
+import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.history.DayLabel
 import com.example.violintuner.feature.repertoire.components.SheetThumb
@@ -101,11 +110,13 @@ private fun AddButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
         shape = RoundedCornerShape(AddCorner),
         border = androidx.compose.foundation.BorderStroke(1.dp, SolidColor(colors.outlineVariant)),
     ) {
-        Text(
-            text = stringResource(R.string.repertoire_add),
-            color = colors.primary,
-            style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-        )
+        CompositionLocalProvider(LocalContentColor provides colors.primary) {
+            IconLabel(
+                icon = AppIcons.Plus,
+                text = stringResource(R.string.repertoire_add),
+                style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
+            )
+        }
     }
 }
 
@@ -181,15 +192,11 @@ private fun PieceCardRow(card: PieceCard, onClick: () -> Unit, modifier: Modifie
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 StatusChip(card.status)
-                keyAndTempo(card.keyName, card.tempoBpm)?.let {
-                    Text(
-                        text = it,
-                        color = colors.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
-                    )
-                }
+                KeyAndTempo(
+                    keyName = card.keyName,
+                    tempoBpm = card.tempoBpm,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
+                )
             }
         }
         LastTake(card)
@@ -257,11 +264,38 @@ private fun EmptyFilter(filter: PieceStatus, onShowAll: () -> Unit) {
 }
 
 /** "G-dur · ♩ = 96", either half alone, or null when the piece has neither. */
+/**
+ * «G-dur · [metronome] 96» — only what the piece has; nothing at all when it has neither. The
+ * tempo is the metronome of the icon set rather than the glyph ♩: that one comes from a fallback
+ * font in another weight (spec 3.16).
+ */
 @Composable
-fun keyAndTempo(keyName: String?, tempoBpm: Int?): String? {
-    val parts = listOfNotNull(keyName, tempoBpm?.let { stringResource(R.string.piece_tempo_value, it) })
-    return parts.takeIf { it.isNotEmpty() }?.joinToString(stringResource(R.string.dot_separator))
+fun KeyAndTempo(keyName: String?, tempoBpm: Int?, style: TextStyle, modifier: Modifier = Modifier) {
+    if (keyName == null && tempoBpm == null) return
+    val color = MaterialTheme.colorScheme.onSurfaceVariant
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        if (keyName != null) {
+            Text(
+                text = if (tempoBpm != null) keyName + stringResource(R.string.dot_separator) else keyName,
+                color = color, maxLines = 1, overflow = TextOverflow.Ellipsis, style = style,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+        }
+        if (tempoBpm != null) {
+            val description = stringResource(R.string.piece_tempo_description, tempoBpm)
+            Row(
+                modifier = Modifier.clearAndSetSemantics { contentDescription = description },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(TempoIconGap),
+            ) {
+                AppIcon(AppIcons.Metronome, contentDescription = null, tint = color, size = IconSizes.InText)
+                Text(text = tempoBpm.toString(), color = color, maxLines = 1, style = style)
+            }
+        }
+    }
 }
+
+private val TempoIconGap = 5.dp
 
 @Composable
 fun dayLabel(day: DayLabel): String = when (day) {

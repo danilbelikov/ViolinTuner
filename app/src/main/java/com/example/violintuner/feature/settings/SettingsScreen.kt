@@ -4,6 +4,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
@@ -15,6 +16,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -25,6 +27,9 @@ import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.UserSettings
 import com.example.violintuner.core.ui.components.A4Selector
 import com.example.violintuner.core.ui.components.TolerancePresetList
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.theme.ViolinTheme
 
 private val ScreenPaddingHorizontal = 20.dp
@@ -69,6 +74,7 @@ fun SettingsScreen(
                 ),
             )
             Section(
+                icon = AppIcons.Fork,
                 title = stringResource(R.string.settings_a4_title),
                 text = stringResource(R.string.settings_a4_text),
             ) {
@@ -79,6 +85,7 @@ fun SettingsScreen(
                 )
             }
             Section(
+                icon = AppIcons.Target,
                 title = stringResource(R.string.settings_tolerance_title),
                 text = stringResource(R.string.settings_tolerance_text),
             ) {
@@ -88,17 +95,20 @@ fun SettingsScreen(
                 )
             }
             OutlinedButton(onClick = { onIntent(SettingsIntent.RestartOnboardingClicked) }) {
-                Text(stringResource(R.string.settings_restart_onboarding))
+                IconLabel(AppIcons.Repeat, stringResource(R.string.settings_restart_onboarding))
             }
         }
     }
 }
 
 @Composable
-private fun Section(title: String, text: String, content: @Composable () -> Unit) {
+private fun Section(icon: ImageVector, title: String, text: String, content: @Composable () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Column(verticalArrangement = Arrangement.spacedBy(ItemSpacing)) {
-        Text(text = title, color = colors.onSurface, style = MaterialTheme.typography.titleMedium)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            AppIcon(icon, contentDescription = null, tint = colors.onSurfaceVariant)
+            Text(text = title, color = colors.onSurface, style = MaterialTheme.typography.titleMedium)
+        }
         Text(text = text, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         content()
     }

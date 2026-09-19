@@ -31,10 +31,12 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -61,15 +63,16 @@ import com.example.violintuner.R
 import com.example.violintuner.core.domain.repertoire.PieceStatus
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
+import com.example.violintuner.feature.repertoire.KeyAndTempo
 import com.example.violintuner.feature.repertoire.components.SheetThumb
 import com.example.violintuner.feature.repertoire.components.StatusChip
 import com.example.violintuner.feature.repertoire.components.THUMB_DIM
 import com.example.violintuner.feature.repertoire.components.THUMB_DIM_FIRST
 import com.example.violintuner.feature.repertoire.components.dashedBorder
 import com.example.violintuner.feature.repertoire.components.statusLabel
-import com.example.violintuner.feature.repertoire.keyAndTempo
 import java.time.ZoneId
 
 private val ScreenPadding = 16.dp
@@ -248,7 +251,7 @@ private fun TopBar(title: String, titleVisible: Boolean, height: Dp, onIntent: (
         }
         if (title.isNotEmpty()) {
             TextButton(onClick = { onIntent(PieceIntent.EditClicked) }) {
-                Text(stringResource(R.string.piece_edit), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
+                IconLabel(AppIcons.Pencil, stringResource(R.string.piece_edit), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
             }
         }
     }
@@ -276,9 +279,7 @@ private fun HeaderBlock(header: PieceHeader, menuOpen: Boolean, onIntent: (Piece
             verticalAlignment = Alignment.CenterVertically,
         ) {
             StatusMenu(header.status, menuOpen, onIntent)
-            keyAndTempo(header.keyName, header.tempoBpm)?.let {
-                Text(it, color = colors.onSurfaceVariant, maxLines = 1, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES))
-            }
+            KeyAndTempo(header.keyName, header.tempoBpm, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES))
         }
     }
 }
@@ -307,6 +308,11 @@ private fun StatusMenu(status: PieceStatus, open: Boolean, onIntent: (PieceInten
             PieceStatus.entries.forEach { option ->
                 DropdownMenuItem(
                     text = { Text(statusLabel(option), fontWeight = if (option == status) FontWeight.Bold else FontWeight.Normal) },
+                    trailingIcon = if (option == status) {
+                        { AppIcon(AppIcons.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
+                    } else {
+                        null
+                    },
                     onClick = { onIntent(PieceIntent.StatusSelected(option)) },
                 )
             }
@@ -433,8 +439,16 @@ private fun AddTile(metrics: Metrics, addPhoto: AddPhotoActions) {
             Text(stringResource(R.string.piece_sheets_add_short), color = colors.primary, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
         }
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, containerColor = colors.surfaceContainerHigh) {
-            DropdownMenuItem(text = { Text(stringResource(R.string.piece_sheets_camera)) }, onClick = { menuOpen = false; addPhoto.onCamera() })
-            DropdownMenuItem(text = { Text(stringResource(R.string.piece_sheets_gallery)) }, onClick = { menuOpen = false; addPhoto.onGallery() })
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.piece_sheets_camera)) },
+                leadingIcon = { AppIcon(AppIcons.Camera, contentDescription = null) },
+                onClick = { menuOpen = false; addPhoto.onCamera() },
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.piece_sheets_gallery)) },
+                leadingIcon = { AppIcon(AppIcons.Gallery, contentDescription = null) },
+                onClick = { menuOpen = false; addPhoto.onGallery() },
+            )
         }
     }
 }
@@ -453,7 +467,9 @@ private fun NotesBlock(notes: String, collapsedLines: Int, onIntent: (PieceInten
                 .clickable(role = Role.Button) { onIntent(PieceIntent.AddNotesClicked) },
             contentAlignment = Alignment.Center,
         ) {
-            Text(stringResource(R.string.piece_notes_add), color = colors.primary, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
+            CompositionLocalProvider(LocalContentColor provides colors.primary) {
+                IconLabel(AppIcons.Plus, stringResource(R.string.piece_notes_add), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
+            }
         }
         return
     }
