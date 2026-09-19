@@ -1,5 +1,6 @@
 package com.example.violintuner.navigation
 
+import com.example.violintuner.core.audio.playback.FakeSessionWaveforms
 import com.example.violintuner.core.data.profile.FakeAvatarFiles
 import com.example.violintuner.core.domain.practice.FakePracticeRepository
 import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
@@ -59,7 +60,7 @@ class AppStartViewModelTest {
 
     private fun viewModel() = AppStartViewModel(
         FakeSettingsRepository(), FakeSessionRepository(), store, PracticeFinisher(repository, store, clock), config, clock,
-        repository, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), profile, avatarFiles, repertoire,
+        repository, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), profile, avatarFiles, repertoire, FakeSessionWaveforms(),
     )
 
     private suspend fun running(elapsedMs: Long, lastSoundAgoMs: Long?) {

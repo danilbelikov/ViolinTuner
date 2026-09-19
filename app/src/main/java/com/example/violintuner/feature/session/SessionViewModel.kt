@@ -3,12 +3,13 @@ package com.example.violintuner.feature.session
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.violintuner.core.audio.playback.SessionPlayer
+import com.example.violintuner.core.audio.playback.SessionPlayerFactory
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.session.SessionRepository
-import com.example.violintuner.feature.session.player.SessionPlayer
-import com.example.violintuner.feature.session.player.SessionPlayerFactory
+import com.example.violintuner.core.domain.sound.SoundRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.File
 import javax.inject.Inject
@@ -28,6 +29,7 @@ class SessionViewModel @Inject constructor(
     private val audioFiles: SessionAudioFiles,
     private val playerFactory: SessionPlayerFactory,
     private val repertoire: RepertoireRepository,
+    private val sound: SoundRepository,
     savedState: SavedStateHandle,
 ) : ViewModel() {
 
@@ -50,6 +52,7 @@ class SessionViewModel @Inject constructor(
             SessionIntent.BackClicked -> effectChannel.trySend(SessionEffect.Close)
             SessionIntent.PlayPauseClicked -> player?.let { if (it.state.value.playing) it.pause() else it.play() }
             is SessionIntent.SeekRequested -> player?.seekTo(intent.positionMs)
+            is SessionIntent.OriginalSelected -> player?.setOriginal(intent.original)
             SessionIntent.ScreenStopped -> player?.pause()
             is SessionIntent.SegmentClicked -> updateLoaded {
                 it.copy(selectedSegment = intent.index.takeIf { index -> index in it.content.segments.indices })
@@ -89,6 +92,9 @@ class SessionViewModel @Inject constructor(
         val created = playerFactory.create(viewModelScope)
         player = created
         created.load(file)
+        // The recording plays the way its settings make it sound — its own, or those of all (spec 3.17);
+        // change either while it plays, and it is heard at once.
+        viewModelScope.launch { sound.effective(sessionId).collect { created.setSound(it.settings) } }
         viewModelScope.launch {
             created.state.collect { playerState ->
                 updateLoaded { it.copy(player = playerState.takeIf { state -> state.ready && !state.failed }) }

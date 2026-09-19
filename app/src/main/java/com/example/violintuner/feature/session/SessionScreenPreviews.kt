@@ -13,7 +13,7 @@ import com.example.violintuner.core.domain.session.SessionSample
 import com.example.violintuner.core.domain.session.SessionSummary
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.session.components.NoteSheetContent
-import com.example.violintuner.feature.session.player.PlayerState
+import com.example.violintuner.core.audio.playback.PlayerState
 import java.time.ZoneId
 import kotlin.math.sin
 

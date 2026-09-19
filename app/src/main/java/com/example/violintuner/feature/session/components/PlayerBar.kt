@@ -7,9 +7,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -25,17 +29,20 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
+import com.example.violintuner.core.audio.playback.PlayerState
 import com.example.violintuner.core.ui.format.Formats
-import com.example.violintuner.feature.session.player.PlayerState
 
 private val ButtonSize = 48.dp
 private val GlyphSize = 20.dp
@@ -49,6 +56,7 @@ fun PlayerBar(
     onPlayPause: () -> Unit,
     onSeek: (positionMs: Long) -> Unit,
     modifier: Modifier = Modifier,
+    onOriginal: (original: Boolean) -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
     // While the thumb is dragged the slider shows the finger, not the playback position.
@@ -121,5 +129,45 @@ fun PlayerBar(
             textAlign = TextAlign.End,
             style = timeStyle,
         )
+        // Only when there is something to compare: the processing does something to this recording.
+        if (player.processed) AbSwitch(original = player.original, onOriginal = onOriginal)
     }
 }
+
+/**
+ * «A | B» (spec 3.17): A — the recording as recorded, B — with its processing, which is what is
+ * heard by default, for that is what would be sent. Switches while playing, without a click.
+ */
+@Composable
+fun AbSwitch(original: Boolean, onOriginal: (Boolean) -> Unit, modifier: Modifier = Modifier, height: Dp = AbHeight) {
+    val colors = MaterialTheme.colorScheme
+    val labels = listOf(stringResource(R.string.sound_ab_original) to true, stringResource(R.string.sound_ab_processed) to false)
+    Row(
+        modifier = modifier
+            .height(height)
+            .clip(RoundedCornerShape(height / 2))
+            .background(colors.surfaceContainerHigh)
+            .selectableGroup(),
+    ) {
+        labels.forEachIndexed { index, (description, value) ->
+            val selected = original == value
+            Box(
+                modifier = Modifier
+                    .size(width = height + 2.dp, height = height)
+                    .clip(RoundedCornerShape(height / 2))
+                    .background(if (selected) colors.primaryContainer else Color.Transparent)
+                    .selectable(selected = selected, role = Role.RadioButton, onClick = { onOriginal(value) })
+                    .semantics { contentDescription = description },
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = if (index == 0) "A" else "B",
+                    color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
+                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
+                )
+            }
+        }
+    }
+}
+
+private val AbHeight = 32.dp

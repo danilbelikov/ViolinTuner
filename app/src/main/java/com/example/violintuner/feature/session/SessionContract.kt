@@ -1,10 +1,10 @@
 package com.example.violintuner.feature.session
 
+import com.example.violintuner.core.audio.playback.PlayerState
 import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.session.StringFinger
-import com.example.violintuner.feature.session.player.PlayerState
 
 /** A note on the piano roll. Times are from the session start. */
 data class RollSegment(
@@ -75,6 +75,9 @@ sealed interface SessionIntent {
 
     /** The slider was released at this position. */
     data class SeekRequested(val positionMs: Long) : SessionIntent
+
+    /** A/B of the player: true — the recording as recorded, false — with its processing. */
+    data class OriginalSelected(val original: Boolean) : SessionIntent
 
     /** The screen is no longer visible: the sound stops (spec 3.10). */
     data object ScreenStopped : SessionIntent

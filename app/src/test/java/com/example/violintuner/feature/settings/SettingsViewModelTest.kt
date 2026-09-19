@@ -1,5 +1,6 @@
 package com.example.violintuner.feature.settings
 
+import com.example.violintuner.core.audio.playback.FakeSessionWaveforms
 import com.example.violintuner.core.data.profile.FakeAvatarFiles
 import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.UserSettings
@@ -18,7 +19,6 @@ import com.example.violintuner.navigation.AppStartViewModel
 import com.example.violintuner.navigation.ONBOARDING_ROUTE
 import com.example.violintuner.navigation.TopLevelDestination
 import java.time.Clock
-import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -93,7 +93,7 @@ class SettingsViewModelTest {
         val trophies = FakeTrophyRepository()
         return AppStartViewModel(
             settings, sessions, store, PracticeFinisher(practice, store, clock), PracticeConfig(), clock,
-            practice, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), FakeProfileRepository(), FakeAvatarFiles(), FakeRepertoireRepository(),
+            practice, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), FakeProfileRepository(), FakeAvatarFiles(), FakeRepertoireRepository(), FakeSessionWaveforms(),
         )
     }
 }

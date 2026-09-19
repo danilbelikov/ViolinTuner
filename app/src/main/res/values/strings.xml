@@ -309,6 +309,8 @@
     <string name="takes_empty">Дублей пока нет. Запишите первый — увидите, как меняется произведение.</string>
     <string name="take_best">лучший</string>
     <string name="take_meta">%1$s · %2$s ц</string>
+    <string name="sound_ab_original">Оригинал: как записано</string>
+    <string name="sound_ab_processed">С обработкой</string>
     <string name="stand_counter">%1$d / %2$d</string>
     <string name="stand_page_description">Страница %1$d из %2$d</string>
     <string name="stand_delete_page">Удалить страницу</string>

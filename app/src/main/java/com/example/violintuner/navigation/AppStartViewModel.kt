@@ -2,6 +2,7 @@ package com.example.violintuner.navigation
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.violintuner.core.audio.playback.SessionWaveforms
 import com.example.violintuner.core.data.profile.AvatarFiles
 import com.example.violintuner.core.domain.practice.ForgottenPractice
 import com.example.violintuner.core.domain.practice.PracticeCheck
@@ -19,7 +20,6 @@ import com.example.violintuner.core.settings.SettingsRepository
 import com.example.violintuner.feature.practice.PracticePrompt
 import com.example.violintuner.feature.practice.PracticePromptIntent
 import com.example.violintuner.feature.practice.PracticeReducer
-import com.example.violintuner.feature.practice.PracticeSheet
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import javax.inject.Inject
@@ -55,9 +55,12 @@ class AppStartViewModel @Inject constructor(
     profile: ProfileRepository,
     avatarFiles: AvatarFiles,
     repertoire: RepertoireRepository,
+    waveforms: SessionWaveforms,
 ) : ViewModel() {
     init {
         viewModelScope.launch { sessions.deleteOrphanAudio() }
+        // waveforms are reckoned from the sound and kept beside it; those of sessions that are gone go too
+        viewModelScope.launch { waveforms.deleteOrphans(sessions.sessions.first().mapNotNull { it.audioPath }.toSet()) }
         viewModelScope.launch { avatarFiles.deleteOrphans(referenced = profile.profile.first().avatarFile) }
         viewModelScope.launch { repertoire.deleteOrphanFiles() }
         // Trophies are given here rather than where a practice is saved: the entries change

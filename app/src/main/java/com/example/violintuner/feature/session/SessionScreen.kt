@@ -123,6 +123,7 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
                     player = player,
                     onPlayPause = { onIntent(SessionIntent.PlayPauseClicked) },
                     onSeek = { onIntent(SessionIntent.SeekRequested(it)) },
+                    onOriginal = { onIntent(SessionIntent.OriginalSelected(it)) },
                 )
             }
             SessionStatCards(content)

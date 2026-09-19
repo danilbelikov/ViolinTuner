@@ -1,6 +1,9 @@
 package com.example.violintuner.feature.session
 
 import androidx.lifecycle.SavedStateHandle
+import com.example.violintuner.core.audio.fx.SoundMeters
+import com.example.violintuner.core.audio.playback.PlayerState
+import com.example.violintuner.core.audio.playback.SessionPlayer
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.ViolinString
@@ -12,8 +15,12 @@ import com.example.violintuner.core.domain.session.Finger
 import com.example.violintuner.core.domain.session.NewSession
 import com.example.violintuner.core.domain.session.SessionAnalyzer
 import com.example.violintuner.core.domain.session.SessionSample
-import com.example.violintuner.feature.session.player.PlayerState
-import com.example.violintuner.feature.session.player.SessionPlayer
+import com.example.violintuner.core.domain.sound.BuiltInPreset
+import com.example.violintuner.core.domain.sound.FakeSoundRepository
+import com.example.violintuner.core.domain.sound.SoundConfig
+import com.example.violintuner.core.domain.sound.SoundPresets
+import com.example.violintuner.core.domain.sound.SoundRules
+import com.example.violintuner.core.domain.sound.SoundSettings
 import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -28,6 +35,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -62,8 +70,16 @@ class SessionViewModelTest {
 
     private class FakePlayer : SessionPlayer {
         override val state = MutableStateFlow(PlayerState())
+        override val meters = MutableStateFlow<SoundMeters?>(null)
         var loaded: File? = null
         var released = 0
+        val sounds = mutableListOf<SoundSettings>()
+        override fun setSound(settings: SoundSettings) {
+            sounds += settings
+            state.update { it.copy(processed = !SoundRules.isNeutral(settings)) }
+        }
+
+        override fun setOriginal(original: Boolean) = state.update { it.copy(original = original) }
         override fun load(file: File) {
             loaded = file
             state.value = PlayerState(ready = true, durationMs = 4_100)
@@ -86,11 +102,12 @@ class SessionViewModelTest {
 
     private val player = FakePlayer()
     private val repertoire = FakeRepertoireRepository()
+    private val sound = FakeSoundRepository()
     private var audioFiles: SessionAudioFiles = FakeAudioFiles(present = setOf("take.m4a"))
 
     private fun TestScope.viewModel(id: Long): SessionViewModel {
         val viewModel = SessionViewModel(
-            repository, config, audioFiles, { player }, repertoire,
+            repository, config, audioFiles, { player }, repertoire, sound,
             SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)),
         )
         runCurrent()
@@ -279,6 +296,41 @@ class SessionViewModelTest {
         viewModel.onIntent(SessionIntent.DeleteConfirmed)
         runCurrent()
         assertEquals(1, player.released)
+    }
+
+    @Test
+    fun `a recording plays the way its settings make it sound, and follows them while it is open`() = runTest {
+        val hall = SoundPresets.settingsOf(BuiltInPreset.CHAMBER_HALL, SoundConfig())
+        val warm = SoundPresets.settingsOf(BuiltInPreset.WARM, SoundConfig())
+        sound.setDefault(hall)
+        val id = saveSession(audio = "take.m4a")
+        val viewModel = viewModel(id)
+        assertEquals(listOf(hall), player.sounds)
+        assertTrue(viewModel.loaded().player!!.processed)
+
+        sound.setOwn(id, warm)
+        runCurrent()
+        assertEquals(warm, player.sounds.last())
+        sound.clearOwn(id)
+        runCurrent()
+        assertEquals("back to what everyone has", hall, player.sounds.last())
+    }
+
+    @Test
+    fun `with nothing set there is nothing to compare, and A B only changes what is heard`() = runTest {
+        val id = saveSession(audio = "take.m4a")
+        val viewModel = viewModel(id)
+        assertFalse(viewModel.loaded().player!!.processed)
+
+        sound.setOwn(id, SoundPresets.settingsOf(BuiltInPreset.ROOM, SoundConfig()))
+        runCurrent()
+        viewModel.onIntent(SessionIntent.OriginalSelected(original = true))
+        runCurrent()
+        assertTrue(viewModel.loaded().player!!.original)
+        assertEquals("the settings are left alone", 1, sound.own.value.size)
+        viewModel.onIntent(SessionIntent.OriginalSelected(original = false))
+        runCurrent()
+        assertFalse(viewModel.loaded().player!!.original)
     }
 
     @Test

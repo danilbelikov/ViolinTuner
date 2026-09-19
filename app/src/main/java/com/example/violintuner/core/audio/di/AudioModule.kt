@@ -7,6 +7,8 @@ import com.example.violintuner.core.audio.MicPitchSource
 import com.example.violintuner.core.audio.PitchSource
 import com.example.violintuner.core.audio.dsp.MpmDetector
 import com.example.violintuner.core.audio.dsp.PitchDetectorFactory
+import com.example.violintuner.core.audio.playback.AppSessionWaveforms
+import com.example.violintuner.core.audio.playback.SessionWaveforms
 import com.example.violintuner.core.audio.recording.AacFileEncoder
 import com.example.violintuner.core.audio.recording.AppSessionAudioFiles
 import com.example.violintuner.core.audio.recording.PcmEncoderFactory
@@ -32,6 +34,9 @@ object AudioModule {
 
     @Provides
     fun provideSessionAudioFiles(impl: AppSessionAudioFiles): SessionAudioFiles = impl
+
+    @Provides
+    fun provideSessionWaveforms(impl: AppSessionWaveforms): SessionWaveforms = impl
 
     @Provides
     fun providePitchDetectorFactory(): PitchDetectorFactory = PitchDetectorFactory(::MpmDetector)
