@@ -2,6 +2,7 @@ package com.example.violintuner.feature.history
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.session.SessionRepository
@@ -25,6 +26,7 @@ class HistoryViewModel @Inject constructor(
     repertoire: RepertoireRepository,
     private val config: IntonationConfig,
     private val clock: Clock,
+    private val audioFiles: SessionAudioFiles,
 ) : ViewModel() {
 
     private val filter = MutableStateFlow(HistoryFilter.ALL)
@@ -48,7 +50,12 @@ class HistoryViewModel @Inject constructor(
                 pieceTitles = pieces.associate { it.id to it.title },
             )
             visibleIds = shown.cards.map { it.id }
-            shown.copy(selection = SelectionRules.prune(selection, visibleIds))
+            // The dialog that deletes names the weight of what goes (spec 3.19): videos are few, and a length is cheap to ask.
+            val videos = sessions.mapNotNull { session -> session.videoPath?.let { session.id to it } }.toMap()
+            shown.copy(
+                cards = shown.cards.map { card -> videos[card.id]?.let { card.copy(videoBytes = audioFiles.existing(it)?.length() ?: 0) } ?: card },
+                selection = SelectionRules.prune(selection, visibleIds),
+            )
         }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),

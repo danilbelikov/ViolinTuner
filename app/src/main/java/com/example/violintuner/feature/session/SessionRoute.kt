@@ -1,8 +1,12 @@
 package com.example.violintuner.feature.session
 
+import android.view.WindowManager
+import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -11,6 +15,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.violintuner.feature.session.components.VideoSurfaceCallbacks
 import com.example.violintuner.feature.share.ShareHost
 import com.example.violintuner.feature.share.ShareViewModel
 
@@ -42,6 +47,22 @@ fun SessionRoute(
         }
     }
 
-    SessionScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier)
+    // The video over the whole screen is watched, not touched: the screen must not dim under it while it plays (spec 3.19).
+    val loaded = state as? SessionState.Loaded
+    if (loaded?.fullscreen == true && loaded.player?.playing == true) {
+        val activity = LocalActivity.current
+        DisposableEffect(activity) {
+            val window = activity?.window
+            window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+            onDispose { window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+        }
+    }
+
+    SessionScreen(
+        state = state,
+        onIntent = viewModel::onIntent,
+        modifier = modifier,
+        videoSurface = remember(viewModel) { VideoSurfaceCallbacks(viewModel::attachSurface, viewModel::detachSurface) },
+    )
     ShareHost(shareViewModel)
 }

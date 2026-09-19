@@ -207,6 +207,13 @@ class VideoTrackRenderer(
         /** After a seek: frames before this are decoded and thrown away. */
         private var dropBeforeUs = NOTHING
 
+        // A codec flushed before it has put out anything loses the codec-specific data it was configured
+        // with, and a hardware decoder then fails on every frame (the emulator's does; a software one forgives).
+        // So: nothing queued yet — no flush is needed; queued but silent so far — the seek waits for the first output.
+        private var queuedAny = false
+        private var gotOutput = false
+        private var pendingSeekUs = NOTHING
+
         fun loop(serial: Int) {
             seek(targetUs())
             while (true) {
@@ -243,6 +250,14 @@ class VideoTrackRenderer(
             feed()
             val index = codec.dequeueOutputBuffer(info, DEQUEUE_TIMEOUT_US)
             if (index < 0) return
+            gotOutput = true
+            if (pendingSeekUs != NOTHING) {
+                codec.releaseOutputBuffer(index, false)
+                val target = pendingSeekUs
+                pendingSeekUs = NOTHING
+                seek(target)
+                return
+            }
             val ended = info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0
             if (ended) outputDone = true
             // Only the bare end-of-stream marker is no frame. A decoder that draws onto a surface may
@@ -272,10 +287,14 @@ class VideoTrackRenderer(
         }
 
         private fun seek(targetUs: Long) {
+            if (queuedAny && !gotOutput) {
+                pendingSeekUs = targetUs
+                return
+            }
             if (heldIndex >= 0) codec.releaseOutputBuffer(heldIndex, false)
             heldIndex = -1
             extractor.seekTo(targetUs.coerceAtLeast(0), MediaExtractor.SEEK_TO_PREVIOUS_SYNC)
-            codec.flush()
+            if (queuedAny) codec.flush()
             inputDone = false
             outputDone = false
             // the frame that stands at the target is the last one not after it; the one on the surface stays until then
@@ -296,6 +315,7 @@ class VideoTrackRenderer(
                     codec.queueInputBuffer(index, 0, size, extractor.sampleTime, 0)
                     extractor.advance()
                 }
+                queuedAny = true
             }
         }
 

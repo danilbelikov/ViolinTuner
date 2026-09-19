@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
+import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.feature.history.Selection
@@ -134,3 +135,8 @@ fun SelectAction(onClick: () -> Unit, modifier: Modifier = Modifier) {
 }
 
 private val SelectIcon = 16.dp
+
+/** «Звук и разбор удалятся» — and, when videos are among what goes, their weight first (spec 3.19). */
+@Composable
+fun deleteTextOf(videoBytes: Long): String =
+    if (videoBytes > 0) stringResource(R.string.video_delete_text, Formats.fileSize(videoBytes)) else stringResource(R.string.selection_delete_text)

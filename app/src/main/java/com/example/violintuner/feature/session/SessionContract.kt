@@ -136,7 +136,10 @@ data class VideoUi(
     /** This device cannot decode the picture; the sound and the analysis are there all the same. */
     val undecodable: Boolean = false,
     val sizeBytes: Long = 0,
-)
+) {
+    /** There is a picture to show: the frame, the full screen, «Смотреть это место». */
+    val pictured: Boolean get() = !lost && !undecodable
+}
 
 /** How the recording is made to sound, in a line (spec 3.17): whose settings, and which. */
 data class SoundRow(val caption: SoundCaption, val own: Boolean)

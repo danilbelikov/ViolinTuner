@@ -55,6 +55,7 @@ import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.icons.IconLabel
+import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.history.components.sessionTitle
 import com.example.violintuner.feature.sound.components.MiniPlayer
@@ -178,19 +179,25 @@ private fun TopBar(state: SoundState, zone: ZoneId, onIntent: (SoundIntent) -> U
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, fontWeight = FontWeight.SemiBold),
             )
-            Text(
-                text = when {
-                    state.mode == SoundMode.EVERYONE -> stringResource(R.string.sound_everyone_subtitle, presetName)
-                    state.savedHint -> stringResource(R.string.sound_caption_saved_hint)
-                    !state.own -> stringResource(R.string.sound_caption_everyone, presetName)
-                    state.caption == SoundCaption.Custom -> presetName
-                    else -> stringResource(R.string.sound_caption_own, presetName)
-                },
-                color = colors.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-            )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                // Whose sound is being set: that of a video. The screen itself stays without a picture — it is listened to with the ears.
+                if (state.mode == SoundMode.RECORDING && state.recording?.hasVideo == true) {
+                    AppIcon(AppIcons.Video, contentDescription = stringResource(R.string.record_tile_video), tint = colors.onSurfaceVariant, size = IconSizes.InText)
+                }
+                Text(
+                    text = when {
+                        state.mode == SoundMode.EVERYONE -> stringResource(R.string.sound_everyone_subtitle, presetName)
+                        state.savedHint -> stringResource(R.string.sound_caption_saved_hint)
+                        !state.own -> stringResource(R.string.sound_caption_everyone, presetName)
+                        state.caption == SoundCaption.Custom -> presetName
+                        else -> stringResource(R.string.sound_caption_own, presetName)
+                    },
+                    color = colors.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
+                )
+            }
         }
         TextButton(onClick = { onIntent(SoundIntent.ResetClicked) }, enabled = state.canReset, modifier = Modifier.alpha(if (state.canReset) 1f else DISABLED_ALPHA)) {
             IconLabel(AppIcons.Reset, stringResource(R.string.sound_reset), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))

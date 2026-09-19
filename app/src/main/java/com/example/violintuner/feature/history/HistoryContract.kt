@@ -34,6 +34,10 @@ data class HistoryCard(
     val pieceTitle: String? = null,
     /** Only a recording with sound can be shared or processed: only it gets the «⋯» (spec 3.17). */
     val hasAudio: Boolean = false,
+    /** A video take (spec 3.19): a camera badge on the tile. */
+    val hasVideo: Boolean = false,
+    /** Size of the video, for the dialog that deletes it; zero without one or when the file is gone. */
+    val videoBytes: Long = 0,
 )
 
 data class HistoryState(

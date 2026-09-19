@@ -75,6 +75,7 @@ import com.example.violintuner.feature.history.SelectionIntent
 import com.example.violintuner.feature.history.components.CardActions
 import com.example.violintuner.feature.history.components.SelectionBar
 import com.example.violintuner.feature.history.components.SelectionBarHeight
+import com.example.violintuner.feature.history.components.deleteTextOf
 import com.example.violintuner.feature.repertoire.KeyAndTempo
 import com.example.violintuner.feature.repertoire.components.SheetThumb
 import com.example.violintuner.feature.repertoire.components.StatusChip
@@ -277,7 +278,7 @@ private fun Bars(state: PieceState, selectionHeight: Dp, onIntent: (PieceIntent)
         val words = Formats.pluralRu(selection.count, R.string.selection_delete_takes_one, R.string.selection_delete_takes_few, R.string.selection_delete_takes_many)
         DeleteDialog(
             title = stringResource(words, selection.count),
-            text = stringResource(R.string.selection_delete_text),
+            text = deleteTextOf(state.takes.filter { it.card.id in selection.ids }.sumOf { it.card.videoBytes }),
             onConfirm = { onIntent(PieceIntent.Select(SelectionIntent.DeleteConfirmed)) },
             onDismiss = { onIntent(PieceIntent.Select(SelectionIntent.DeleteDismissed)) },
         )

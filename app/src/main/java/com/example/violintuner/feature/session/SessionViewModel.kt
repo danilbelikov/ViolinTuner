@@ -117,9 +117,23 @@ class SessionViewModel @Inject constructor(
         if (picture == null) details?.summary?.videoPath?.let(::startPicture)
     }
 
-    /** The surface the picture is drawn onto; null when it is about to go. Not an intent: a surface is not state. */
-    fun attachSurface(surface: Surface?) {
-        picture?.setSurface(surface)
+    private var surface: Surface? = null
+
+    /** The surface the picture is drawn onto. Not an intent: a surface is not state. */
+    fun attachSurface(next: Surface) {
+        surface = next
+        picture?.setSurface(next)
+    }
+
+    /**
+     * [gone] is about to be destroyed. Going into and out of the full screen swaps one view for
+     * another, and the new surface may well arrive before the old one leaves: only the surface
+     * in use takes the picture with it.
+     */
+    fun detachSurface(gone: Surface) {
+        if (surface !== gone) return
+        surface = null
+        picture?.setSurface(null)
     }
 
     private fun startPicture(name: String) {
@@ -130,6 +144,7 @@ class SessionViewModel @Inject constructor(
         }
         val created = pictureFactory.create(file)
         picture = created
+        surface?.let(created::setSurface) // the view may have been there before the session was read
         updateLoaded { it.copy(video = VideoUi(sizeBytes = file.length())) }
         viewModelScope.launch {
             created.state.collect { picture ->

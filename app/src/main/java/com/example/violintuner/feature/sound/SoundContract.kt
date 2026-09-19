@@ -30,7 +30,14 @@ sealed interface SoundCaption {
 }
 
 /** A recording by what its title is built from; the screen builds the title in its locale. */
-data class RecordingName(val sessionId: Long, val title: String?, val pieceTitle: String?, val startedAtEpochMs: Long)
+data class RecordingName(
+    val sessionId: Long,
+    val title: String?,
+    val pieceTitle: String?,
+    val startedAtEpochMs: Long,
+    /** The sound being set is that of a video take: the header says so (spec 3.19). */
+    val hasVideo: Boolean = false,
+)
 
 sealed interface SoundDialog {
     /** «Свои → Как у всех» and «Сбросить»: the one place that asks, for the recording's own settings are forgotten. */

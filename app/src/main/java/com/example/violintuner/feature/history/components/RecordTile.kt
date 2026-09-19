@@ -1,6 +1,7 @@
 package com.example.violintuner.feature.history.components
 
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -23,17 +24,19 @@ import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.theme.ViolinTheme
 
 /** Sizes of the note tile (handoff 19b, `sizes`): the circle and the note inside it. */
-enum class RecordTileSize(val circle: Dp, val note: Dp) {
+enum class RecordTileSize(val circle: Dp, val note: Dp, val badge: Dp, val badgeIcon: Dp) {
     /** The card of a recording. */
-    CARD(44.dp, 26.dp),
+    CARD(44.dp, 26.dp, badge = 18.dp, badgeIcon = 12.dp),
 
     /** The card of a piece in the repertoire list. */
-    PIECE(36.dp, 20.dp),
+    PIECE(36.dp, 20.dp, badge = 15.dp, badgeIcon = 10.dp),
 }
 
 private const val TILE_FILL_ALPHA = 0.16f
 private val TileRing = 1.5.dp
 private val EmptyDash = 4.dp
+private val BadgeShift = 3.dp
+private val BadgeCutout = 2.dp
 
 /**
  * The note that stands where the score used to (spec 3.18, handoff 19b): a single quaver for a
@@ -42,10 +45,20 @@ private val EmptyDash = 4.dp
  * without sound is a ring without the fill. TalkBack hears the zone in words, never the number.
  */
 @Composable
-fun RecordTile(zone: Zone, take: Boolean, hasAudio: Boolean, modifier: Modifier = Modifier, size: RecordTileSize = RecordTileSize.CARD) {
+fun RecordTile(
+    zone: Zone,
+    take: Boolean,
+    hasAudio: Boolean,
+    modifier: Modifier = Modifier,
+    size: RecordTileSize = RecordTileSize.CARD,
+    /** A video take (spec 3.19, handoff 20c3): a small neutral badge on the edge of the circle — it changes the outline of the tile, the zone stays its colour. */
+    hasVideo: Boolean = false,
+    /** What the badge is cut out of the tile with: the background of the card, which is animated when the card is picked. */
+    cutout: Color = Color.Transparent,
+) {
     val color = ViolinTheme.zoneColors.colorFor(zone)
     val words = listOfNotNull(
-        stringResource(R.string.record_tile_take).takeIf { take },
+        stringResource(R.string.record_tile_take).takeIf { take }?.let { if (hasVideo) it + " " + stringResource(R.string.record_tile_video) else it },
         stringResource(
             when (zone) {
                 Zone.IN_TUNE -> R.string.record_zone_good
@@ -70,6 +83,20 @@ fun RecordTile(zone: Zone, take: Boolean, hasAudio: Boolean, modifier: Modifier 
         contentAlignment = Alignment.Center,
     ) {
         AppIcon(if (take) AppIcons.NotePair else AppIcons.NoteOne, contentDescription = null, tint = color, size = size.note)
+        if (hasVideo) {
+            val badge = ViolinTheme.videoColors.badge
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .offset(x = BadgeShift, y = BadgeShift)
+                    .size(size.badge)
+                    .drawBehind {
+                        drawCircle(cutout, radius = this.size.minDimension / 2 + BadgeCutout.toPx())
+                        drawCircle(badge)
+                    },
+                contentAlignment = Alignment.Center,
+            ) { AppIcon(AppIcons.Video, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, size = size.badgeIcon) }
+        }
     }
 }
 

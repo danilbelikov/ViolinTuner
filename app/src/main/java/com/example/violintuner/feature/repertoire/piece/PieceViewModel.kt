@@ -123,7 +123,13 @@ class PieceViewModel @Inject constructor(
                 progress = PieceReducer.progressOf(pieceId, sessions, config),
             ) { sheetFiles.existing(it)?.path }
             takeIds = shown.takes.map { it.card.id }
-            shown.copy(selection = SelectionRules.prune(ui.selection, takeIds))
+            val videoNames = sessions.mapNotNull { session -> session.videoPath?.let { session.id to it } }.toMap()
+            shown.copy(
+                takes = shown.takes.map { take ->
+                    videoNames[take.card.id]?.let { take.copy(card = take.card.copy(videoBytes = videos.existing(it)?.length() ?: 0)) } ?: take
+                },
+                selection = SelectionRules.prune(ui.selection, takeIds),
+            )
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), PieceReducer.loading(config))
 

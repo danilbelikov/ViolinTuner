@@ -160,7 +160,7 @@ class SoundViewModel @Inject constructor(
     private suspend fun follow() {
         kotlinx.coroutines.flow.combine(sessions.sessions, sound.own, repertoire.pieces) { all, own, pieces -> Triple(all, own.keys, pieces.associate { it.id to it.title }) }
             .collect { (all, own, titles) ->
-                fun nameOf(session: SessionSummary) = RecordingName(session.id, session.title, session.pieceId?.let(titles::get), session.startedAtEpochMs)
+                fun nameOf(session: SessionSummary) = RecordingName(session.id, session.title, session.pieceId?.let(titles::get), session.startedAtEpochMs, hasVideo = session.videoPath != null)
                 val playable = SoundReducer.withSound(all).filter { it.audioPath?.let(audioFiles::existing) != null }
                 val mine = all.firstOrNull { it.id == sessionId }
                 if (mode == SoundMode.RECORDING && mine == null) {

@@ -154,7 +154,8 @@ fun RecordCard(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Crossfade(targetState = selected, animationSpec = tween(TILE_MORPH_MS), label = "recordTile") { mark ->
-            if (mark == null) RecordTile(card.scoreZone, take = take, hasAudio = card.hasAudio) else SelectionMark(mark)
+            // in the selection mode the badge goes with the note; the dialog that deletes says "video" instead
+            if (mark == null) RecordTile(card.scoreZone, take = take, hasAudio = card.hasAudio, hasVideo = card.hasVideo, cutout = background) else SelectionMark(mark)
         }
         Column(modifier = Modifier.weight(1f)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {

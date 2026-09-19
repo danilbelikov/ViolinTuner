@@ -95,3 +95,8 @@ internal val MeterReduce = Color(0xFF8FD0C9)
 internal val MeterLimit = Color(0xFFF07A5A)
 internal val WaveRest = Color(0xFF4A4858)
 internal val EqFill = Color(0x1FC4ADFF) // primary at .12
+
+internal val VideoField = Color(0xFF0E0E12) // = StandBackground
+internal val VideoScrim = Color(0x73000000) // black at .45
+internal val VideoPanel = Color(0xBF000000) // black at .75
+internal val VideoSizeWarn = Color(0xFFE5B03C) // the hex of zone.near; not a zone

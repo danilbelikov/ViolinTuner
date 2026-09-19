@@ -48,6 +48,7 @@ import com.example.violintuner.feature.history.components.SelectionBar
 import com.example.violintuner.feature.history.components.SelectionBarHeight
 import com.example.violintuner.feature.history.components.SessionCard
 import com.example.violintuner.feature.history.components.WeeklyChart
+import com.example.violintuner.feature.history.components.deleteTextOf
 import com.example.violintuner.feature.repertoire.RepertoireIntent
 import com.example.violintuner.feature.repertoire.RepertoireReducer
 import com.example.violintuner.feature.repertoire.RepertoireState
@@ -161,7 +162,7 @@ fun HistoryScreen(
         val words = Formats.pluralRu(selection.count, R.string.selection_delete_records_one, R.string.selection_delete_records_few, R.string.selection_delete_records_many)
         DeleteDialog(
             title = stringResource(words, selection.count),
-            text = stringResource(R.string.selection_delete_text),
+            text = deleteTextOf(state.cards.filter { it.id in selection.ids }.sumOf { it.videoBytes }),
             onConfirm = { onIntent(HistoryIntent.Select(SelectionIntent.DeleteConfirmed)) },
             onDismiss = { onIntent(HistoryIntent.Select(SelectionIntent.DeleteDismissed)) },
         )

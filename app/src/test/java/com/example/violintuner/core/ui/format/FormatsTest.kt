@@ -112,4 +112,13 @@ class FormatsTest {
         const val MINUTE = 60_000L
         const val HOUR = 60 * MINUTE
     }
+
+    @Test
+    fun `a file size is said the way people say it`() {
+        assertEquals("меньше 1 МБ", Formats.fileSize(300_000))
+        assertEquals("1,2 МБ", Formats.fileSize(1_287_395))
+        assertEquals("8,5 МБ", Formats.fileSize((8.5 * 1024 * 1024).toLong()))
+        assertEquals("214 МБ", Formats.fileSize(214L * 1024 * 1024))
+        assertEquals("1,5 ГБ", Formats.fileSize(1536L * 1024 * 1024))
+    }
 }

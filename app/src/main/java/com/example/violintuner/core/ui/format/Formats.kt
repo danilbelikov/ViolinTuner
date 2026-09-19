@@ -100,6 +100,24 @@ object Formats {
     }
 
     /** Whole cents with an explicit sign and a real minus: +6, −18, 0. */
+    /**
+     * The size of a file the way people say it (spec 3.19): «214 МБ», «1,2 ГБ», «8,5 МБ» — a
+     * decimal only below ten, and nothing below a megabyte is worth more than «меньше 1 МБ».
+     */
+    fun fileSize(bytes: Long): String {
+        val mb = bytes / BYTES_PER_MB
+        return when {
+            mb < 1 -> "меньше 1 МБ"
+            mb < DECIMAL_BELOW -> String.format(LOCALE, "%.1f МБ", mb)
+            mb < MB_PER_GB -> String.format(LOCALE, "%.0f МБ", mb)
+            else -> String.format(LOCALE, "%.1f ГБ", mb / MB_PER_GB)
+        }
+    }
+
+    private const val BYTES_PER_MB = 1024.0 * 1024.0
+    private const val MB_PER_GB = 1024.0
+    private const val DECIMAL_BELOW = 10.0
+
     fun signedCents(cents: Double): String {
         val rounded = cents.roundToInt()
         return when {

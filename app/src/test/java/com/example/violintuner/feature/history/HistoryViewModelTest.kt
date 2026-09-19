@@ -33,6 +33,13 @@ class HistoryViewModelTest {
     private val now = Instant.parse("2026-09-17T09:00:00Z")
     private val clock = Clock.fixed(now, ZoneId.of("Europe/Moscow"))
 
+    private object NoFiles : com.example.violintuner.core.audio.recording.SessionAudioFiles {
+        override fun newFile(): java.io.File = error("not used")
+        override fun existing(name: String): java.io.File? = null
+        override fun delete(name: String) = Unit
+        override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
+    }
+
     @Before
     fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
 
@@ -52,7 +59,7 @@ class HistoryViewModelTest {
     }
 
     private fun TestScope.viewModel(): HistoryViewModel {
-        val viewModel = HistoryViewModel(repository, repertoire, config, clock)
+        val viewModel = HistoryViewModel(repository, repertoire, config, clock, NoFiles)
         backgroundScope.launch { viewModel.state.collect {} }
         return viewModel
     }

@@ -6,12 +6,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,6 +29,8 @@ import com.example.violintuner.R
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.session.Finger
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.session.RollSegment
 import kotlin.math.roundToInt
@@ -36,20 +41,27 @@ private val TargetStyle = TextStyle(fontSize = 56.sp, lineHeight = 56.sp, fontWe
 private val MeanStyle = TextStyle(fontSize = 40.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES)
 private val TileValue = TextStyle(fontSize = 18.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES)
 
+/**
+ * The way from a note to its place in the recording (spec 3.19): «Смотреть это место» of a video
+ * take is the one action of the sheet and a filled button; «Слушать это место» of a sound
+ * recording is the same thing, worth less, and outlined. A recording without sound has neither.
+ */
+class NotePlace(val video: Boolean, val onPlay: () -> Unit)
+
 /** Details of one played note (spec 3.10, item 7). */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun NoteSheet(segment: RollSegment, onDismiss: () -> Unit) {
+fun NoteSheet(segment: RollSegment, onDismiss: () -> Unit, place: NotePlace? = null) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
-        NoteSheetContent(segment)
+        NoteSheetContent(segment, place = place)
     }
 }
 
 @Composable
-internal fun NoteSheetContent(segment: RollSegment, modifier: Modifier = Modifier) {
+internal fun NoteSheetContent(segment: RollSegment, modifier: Modifier = Modifier, place: NotePlace? = null) {
     val colors = MaterialTheme.colorScheme
     val meanColor = ViolinTheme.zoneColors.colorFor(segment.zone)
     Column(
@@ -146,6 +158,14 @@ internal fun NoteSheetContent(segment: RollSegment, modifier: Modifier = Modifie
                     color = colors.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
                 )
+            }
+        }
+        if (place != null) {
+            val label = stringResource(if (place.video) R.string.video_watch_place else R.string.video_listen_place)
+            if (place.video) {
+                Button(onClick = place.onPlay, modifier = Modifier.fillMaxWidth().height(52.dp)) { IconLabel(AppIcons.PlayCircle, label, iconSize = 20.dp) }
+            } else {
+                OutlinedButton(onClick = place.onPlay, modifier = Modifier.fillMaxWidth().height(52.dp)) { IconLabel(AppIcons.PlayCircle, label, iconSize = 20.dp) }
             }
         }
     }
