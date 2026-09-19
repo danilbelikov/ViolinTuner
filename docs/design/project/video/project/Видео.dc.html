@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}.frag{width:412px;background:#131318;border-radius:16px;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;color:#E6E4EE}.cap{font-size:11px;color:rgba(230,228,238,.5);line-height:1.4}.phone{height:100%;display:flex;flex-direction:column;background:#131318;color:#E6E4EE;position:relative;overflow:hidden;font-family:Manrope,system-ui,sans-serif}.box{width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;flex-direction:column;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif}.sheet{width:412px;background:#1E1D25;border-radius:28px;padding:8px 16px 24px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box;color:#E6E4EE}.grip{width:32px;height:4px;border-radius:2px;background:#3A3846;align-self:center}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes indet{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+@keyframes fadeGlyph{0%{opacity:0;transform:scale(.8)}20%{opacity:1;transform:scale(1)}70%{opacity:1}100%{opacity:0}}</style></helmet>
+
+<section class="dv-turn" id="s20a">
+<div class="dv-thd"><a class="dv-tid" href="#s20a">20a</a><span class="dv-tname">Вход · видео-действия рядом с кнопкой записи</span></div>
+<div class="dv-opts">
+<sc-for list="{{ entryFrames }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div><div style="flex:1"></div><div style="height:40px;padding:0 14px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Изменить</div></div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:24px;padding:4px 16px 0">
+    <div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:28px;font-weight:700;line-height:1.15">Менуэт соль мажор</div><div style="font-size:16px;color:#A39FB5">И. С. Бах</div><div style="display:flex;align-items:center;gap:10px;margin-top:6px"><div style="height:32px;padding:0 10px;border-radius:8px;background:#5B43B8;color:#E9DDFF;font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px">Учу{{ icChevDS }}</div><div class="tn" style="font-size:14px;color:#A39FB5">G-dur · ♩ = 96</div></div></div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:16px;font-weight:700">Ноты</div><div class="tn" style="font-size:13px;color:#A39FB5">2 стр.</div></div>
+      <div style="display:flex;gap:10px"><div style="width:84px;height:112px;border-radius:8px;background:linear-gradient(160deg,#B8B4C4,#8E8A9E);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)"></div><div style="width:84px;height:112px;border-radius:8px;background:linear-gradient(160deg,#A9A5B6,#7F7B90);box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)"></div><div style="width:84px;height:112px;border-radius:8px;border:1.5px dashed #3A3846;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#C4ADFF"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 3v12M3 9h12" stroke="#C4ADFF" stroke-width="2" stroke-linecap="round"></path></svg><div style="font-size:11px;font-weight:600">Добавить</div></div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px;position:relative">
+      <div style="display:flex;align-items:center;gap:16px">
+        <sc-if value="{{ s.notRec }}" hint-placeholder-val="{{ true }}"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div><div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700">Записать дубль</div><div style="font-size:13px;color:#A39FB5;line-height:1.4;margin-top:3px">Экран не подсказывает во время записи — разбор появится после.</div></div></sc-if>
+        <sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}"><div style="width:72px;height:72px;border-radius:50%;background:#E8565C;display:flex;align-items:center;justify-content:center;flex:none"><div style="width:24px;height:24px;border-radius:4px;background:#FFFFFF"></div></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:center;gap:10px"><div style="width:10px;height:10px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div><div class="tn" style="font-size:16px;font-weight:600">запись · 0:42</div></div><div style="display:flex;align-items:center;gap:3px;height:20px"><sc-for list="{{ level }}" as="l" hint-placeholder-count="14"><div style="width:4px;height:{{ l.h }};border-radius:2px;background:#A39FB5;opacity:{{ l.op }}"></div></sc-for></div></div></sc-if>
+      </div>
+      <div style="display:flex;padding-left:88px;opacity:{{ s.vidOp }}"><div style="height:40px;padding:0 12px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#E6E4EE;box-sizing:border-box;background:{{ s.vidBg }}">{{ icVideo }}Видео-дубль{{ icChevDS }}</div></div>
+      <sc-if value="{{ s.menu }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;left:88px;top:130px;width:248px;border-radius:12px;background:#292833;padding:6px;box-shadow:0 12px 32px rgba(0,0,0,.45);display:flex;flex-direction:column;z-index:3">
+        <div style="height:52px;display:flex;align-items:center;gap:16px;padding:0 12px;border-radius:8px">{{ icVideo }}<div><div style="font-size:15px">Снять видео</div><div style="font-size:12px;color:#A39FB5">откроется камера телефона</div></div></div>
+        <div style="height:52px;display:flex;align-items:center;gap:16px;padding:0 12px;border-radius:8px">{{ icGalleryV }}<div><div style="font-size:15px">Видео из галереи</div><div style="font-size:12px;color:#A39FB5">одно за раз, до 60 минут</div></div></div>
+      </div>
+      </sc-if>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;opacity:{{ s.restOp }}"><div style="font-size:16px;font-weight:700">Заметки</div><div style="background:#1E1D25;border-radius:16px;padding:14px 16px;font-size:15px;line-height:1.5;text-wrap:pretty">Такты 9–12: не спешить на восьмых. Ми-бекар в 14-м такте — низко.</div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:16px;opacity:{{ s.restOp }}"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><div class="tn" style="font-size:13px;color:#A39FB5;white-space:nowrap">последний <span style="color:#E6E4EE;font-weight:700">82 %</span> · лучший <span style="color:#E6E4EE;font-weight:700">88 %</span></div><div class="tn" style="font-size:13px;color:#A39FB5">6 дублей · 2 видео</div></div><svg width="120" height="44" viewBox="0 0 160 44" preserveAspectRatio="none" style="flex:none;overflow:visible"><line x1="0" y1="20" x2="160" y2="20" stroke="#3A3846" stroke-dasharray="3 3"></line><polyline points="{{ progLine }}" fill="none" stroke="#C4ADFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline></svg></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;height:32px;opacity:{{ s.restOp }}"><div style="font-size:16px;font-weight:700">Дубли</div><div style="height:32px;padding:0 10px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF;margin-right:-10px">{{ icSelectP }}Выбрать</div></div>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="20a3"><div class="dv-olabel"><a class="dv-oid" href="#20a3">20a3</a>Для сравнения — две контурные кнопки в ряд под блоком записи: честнее по числу касаний, но ряд шириной с экран спорит с главной кнопкой</div><div class="dv-card">
+<div class="frag" style="gap:12px">
+  <div style="display:flex;align-items:center;gap:16px"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div><div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700">Записать дубль</div><div style="font-size:13px;color:#A39FB5;line-height:1.4;margin-top:3px">Экран не подсказывает во время записи — разбор появится после.</div></div></div>
+  <div style="display:flex;gap:8px"><div style="flex:1;height:44px;border-radius:22px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600">{{ icVideo }}Снять видео</div><div style="flex:1;height:44px;border-radius:22px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600">{{ icGalleryV }}Из галереи</div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="20a4"><div class="dv-olabel"><a class="dv-oid" href="#20a4">20a4</a>Landscape 892 × 412 — левая неподвижная колонка: запись 64, под ней «Видео-дубль» в ту же колонку текста; меню открыто</div><div class="dv-card">
+<div class="box">
+  <div style="display:flex;align-items:center;gap:4px;padding:2px 4px 0;height:48px;flex:none"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div><div style="flex:1"></div><div style="height:40px;padding:0 14px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Изменить</div></div>
+  <div style="flex:1;display:flex;gap:24px;padding:0 20px 0 16px;min-height:0">
+    <div style="width:300px;flex:none;display:flex;flex-direction:column;gap:16px;position:relative">
+      <div style="display:flex;flex-direction:column;gap:4px"><div style="font-size:24px;font-weight:700;line-height:1.15">Менуэт соль мажор</div><div style="font-size:14px;color:#A39FB5">И. С. Бах</div></div>
+      <div style="display:flex;align-items:center;gap:14px"><div style="width:64px;height:64px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none"><div style="width:24px;height:24px;border-radius:50%;background:#2E1A6E"></div></div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700">Записать дубль</div><div style="font-size:12px;color:#A39FB5;line-height:1.4;margin-top:2px">Экран не подсказывает во время записи — разбор появится после.</div></div></div>
+      <div style="display:flex;padding-left:78px"><div style="height:36px;padding:0 10px 0 12px;border-radius:18px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;background:#292833">{{ icVideoS }}Видео-дубль{{ icChevDS }}</div></div>
+      <div style="position:absolute;left:78px;top:172px;width:236px;border-radius:12px;background:#292833;padding:6px;box-shadow:0 12px 32px rgba(0,0,0,.45);display:flex;flex-direction:column;z-index:3">
+        <div style="height:48px;display:flex;align-items:center;gap:14px;padding:0 12px;border-radius:8px">{{ icVideo }}<div><div style="font-size:14px">Снять видео</div><div style="font-size:11px;color:#A39FB5">откроется камера телефона</div></div></div>
+        <div style="height:48px;display:flex;align-items:center;gap:14px;padding:0 12px;border-radius:8px">{{ icGalleryV }}<div><div style="font-size:14px">Видео из галереи</div><div style="font-size:11px;color:#A39FB5">одно за раз, до 60 минут</div></div></div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;overflow:hidden">
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:15px;font-weight:700">Ноты</div><div class="tn" style="font-size:12px;color:#A39FB5">2 стр.</div></div><div style="display:flex;gap:8px"><div style="width:66px;height:88px;border-radius:6px;background:linear-gradient(160deg,#B8B4C4,#8E8A9E)"></div><div style="width:66px;height:88px;border-radius:6px;background:linear-gradient(160deg,#A9A5B6,#7F7B90)"></div></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:15px;font-weight:700">Заметки</div><div style="background:#1E1D25;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.45">Такты 9–12: не спешить на восьмых.</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:15px;font-weight:700">Дубли</div>{{ landTake }}</div>
+    </div>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 1 — одна контурная кнопка «Видео-дубль» с меню.</b> Она стоит под текстом главной кнопки, в той же колонке (отступ 88 = 72 + 16), высотой 40 против 72 у круга и контуром вместо заливки: иерархия читается без слов — большой залитый круг делает, маленькая контурная кнопка «ещё умеет». Две кнопки в ряд (<a href="#20a3">20a3</a>) экономят касание, но ряд во всю ширину под кругом выглядит второй панелью действий и делит внимание. Пункт в «⋯» спрятал бы функцию, за которую пользователь платил бы штативом. Меню — 248 dp, два пункта по 52 с подписью второй строкой: «откроется камера телефона» и «одно за раз, до 60 минут» — предупреждают о двух неочевидностях устройства до того, как оно удивит. Во время звукового дубля (<a href="#20a2">20a2</a>) и в режиме выбора кнопка α .38: два дубля одновременно не пишут. В пюпитре кнопки нет — панель там про ноты на экране, а камера экран забирает.</p>
+</section>
+
+<section class="dv-turn" id="s20b">
+<div class="dv-thd"><a class="dv-tid" href="#s20b">20b</a><span class="dv-tname">Лист разбора · копирование, разбор с проявляющейся лентой и без, отмена, ошибки</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="20b1"><div class="dv-olabel"><a class="dv-oid" href="#20b1">20b1</a>Копируем (только из галереи): без процентов — обычно секунды, полоса неопределённая</div><div class="dv-card">
+<div class="sheet">
+  <div class="grip"></div>
+  <div style="font-size:20px;font-weight:700;padding:4px 0 0">Добавляем видео…</div>
+  <div style="height:6px;border-radius:3px;background:#292833;overflow:hidden;position:relative"><div style="position:absolute;top:0;bottom:0;left:0;width:33%;border-radius:3px;background:#C4ADFF;animation:indet 1.4s cubic-bezier(.4,0,.2,1) infinite"></div></div>
+  <div class="tn" style="font-size:13px;color:#A39FB5">3:12 · 320 МБ · копия в памяти приложения</div>
+  <div style="display:flex;justify-content:flex-end"><div style="height:40px;padding:0 16px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600">{{ icCloseS }}Отмена</div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="20b2"><div class="dv-olabel"><a class="dv-oid" href="#20b2">20b2</a>Разбираем — лента проявляется: миниатюра 64 × 36, «Слушаем запись… 42 %», мини-лента 48 dp — отрезки цветом зоны появляются слева направо, курсор = прогресс; «осталось около 20 с»</div><div class="dv-card">
+<div class="sheet">
+  <div class="grip"></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:4px 0 0">{{ thumbS }}<div style="flex:1;min-width:0;display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:20px;font-weight:700">Слушаем запись…</div><div class="tn" style="font-size:20px;font-weight:700;color:#C4ADFF">42 %</div></div></div>
+  <div style="position:relative;height:48px;border-radius:10px;background:#131318;overflow:hidden">{{ rollEmerge }}<div style="position:absolute;left:42%;top:0;bottom:0;width:2px;background:#C4ADFF"></div></div>
+  <div class="tn" style="font-size:13px;color:#A39FB5">3:12 · осталось около 20 с</div>
+  <div style="display:flex;justify-content:flex-end"><div style="height:40px;padding:0 16px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600">{{ icCloseS }}Отмена</div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="20b3"><div class="dv-olabel"><a class="dv-oid" href="#20b3">20b3</a>То же с простой полосой — запасной вариант, если лента не успевает строиться потоково</div><div class="dv-card">
+<div class="sheet">
+  <div class="grip"></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:4px 0 0">{{ thumbS }}<div style="flex:1;min-width:0;display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:20px;font-weight:700">Слушаем запись…</div><div class="tn" style="font-size:20px;font-weight:700;color:#C4ADFF">42 %</div></div></div>
+  <div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="width:42%;height:100%;border-radius:3px;background:#C4ADFF"></div></div>
+  <div class="tn" style="font-size:13px;color:#A39FB5">3:12 · осталось около 20 с</div>
+  <div style="display:flex;justify-content:flex-end"><div style="height:40px;padding:0 16px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600">{{ icCloseS }}Отмена</div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="20b4"><div class="dv-olabel"><a class="dv-oid" href="#20b4">20b4</a>«Отмена» у снятого только что видео — оно есть только у нас: лист сменяется на выбор (crossfade 200). Из галереи — просто закрывается</div><div class="dv-card">
+<div class="sheet">
+  <div class="grip"></div>
+  <div style="font-size:20px;font-weight:700;padding:4px 0 0">Остановить разбор?</div>
+  <div style="font-size:14px;color:#A39FB5;line-height:1.4;text-wrap:pretty">Видео снято только что и больше нигде не хранится. Можно отправить его куда-нибудь, чтобы не потерять, или удалить.</div>
+  <div style="display:flex;gap:8px"><div style="flex:1;height:48px;border-radius:24px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:#E8565C">{{ icTrashE }}Удалить</div><div style="flex:1;height:48px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:700">{{ icShareD }}Отправить видео</div></div>
+  <div style="height:40px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#C4ADFF">Продолжить разбор</div>
+</div>
+</div></div>
+<div class="dv-opt" id="20b5"><div class="dv-olabel"><a class="dv-oid" href="#20b5">20b5</a>Ошибки — строкой в том же листе, не тостом. Последняя — «нет нот» для снятого видео: два выхода, как при отмене</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+  <sc-for list="{{ errors }}" as="e" hint-placeholder-count="6">
+  <div class="sheet" style="gap:12px">
+    <div class="grip"></div>
+    <div style="display:flex;align-items:flex-start;gap:12px;padding:4px 0 0">{{ icAlert }}<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:700;line-height:1.3">{{ e.title }}</div><sc-if value="{{ e.hasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;color:#A39FB5;line-height:1.4;margin-top:4px;text-wrap:pretty">{{ e.sub }}</div></sc-if></div></div>
+    <sc-if value="{{ e.two }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:8px"><div style="flex:1;height:48px;border-radius:24px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:#E8565C">{{ icTrashE }}Удалить</div><div style="flex:1;height:48px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:700">{{ icShareD }}Отправить видео</div></div></sc-if>
+    <sc-if value="{{ e.one }}" hint-placeholder-val="{{ true }}"><div style="display:flex;justify-content:flex-end"><div style="height:48px;padding:0 24px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;font-size:14px;font-weight:700">Понятно</div></div></sc-if>
+  </div>
+  </sc-for>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 6 — лента проявляется</b> (<a href="#20b2">20b2</a>). Разбор идёт по звуку быстрее реального времени, и у движка на каждом шаге уже есть готовые ноты — показать их не стоит ничего, а ожидание из пустого становится первым взглядом на результат: видно, где зелено, где красно, ещё до карточки. Мини-лента — 48 dp, отрезки 6 dp по семи высотам (как полоса записи на Live), курсор primary = процент; полоса прогресса отдельно не нужна, лента и есть полоса. Если поток нот из движка не отдаётся до конца — <a href="#20b3">20b3</a>, та же геометрия с полосой 6. Миниатюра первого кадра 64 × 36 слева от заголовка подтверждает «это то видео». <b>Копирование</b> — без процентов: у копии файла оценка времени ненадёжна, а обычно это секунды; полоса неопределённая. <b>Отмена</b> для снятого видео ведёт в выбор «Удалить / Отправить видео» (<a href="#20b4">20b4</a>): системный «Поделиться» — единственный способ спасти файл, потому что в галерею мы не пишем; «Продолжить разбор» текстом внизу — дорога назад для случайного касания. <b>Ошибки</b> одним шаблоном: иконка alert 24 в error, заголовок 17/700, пояснение 14, справа «Понятно»; «нет нот» для снятого — те же два выхода. Лист не уходит тапом мимо и свайпом: за ним удаляется файл. <b>Не мигает:</b> оценка длительности разбора = длительность видео / скорость движка (замер первых 20 %); если ≤ 700 мс — листа с прогрессом нет, на кнопке меню 700 мс «Разбираем…»; показанный лист живёт ≥ 1 200 мс.</p>
+</section>
+
+<section class="dv-turn" id="s20c">
+<div class="dv-thd"><a class="dv-tid" href="#s20c">20c</a><span class="dv-tname">Карточка видео-дубля · A, B, C на списке вперемешку; в «Записях»; новый дубль</span></div>
+<div class="dv-opts">
+<sc-for list="{{ cardVariants }}" as="v" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ v.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ v.id }}">{{ v.id }}</a>{{ v.label }}</div><div class="dv-card">
+<div class="frag" style="gap:12px">
+  <div style="display:flex;align-items:center;justify-content:space-between;height:32px"><div style="font-size:16px;font-weight:700">Дубли</div><div style="height:32px;padding:0 10px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF;margin-right:-10px">{{ icSelectP }}Выбрать</div></div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <sc-for list="{{ v.cards }}" as="t" hint-placeholder-count="6">
+    <div style="display:flex;align-items:center;gap:14px;background:{{ t.bg }};border-radius:16px;padding:12px 16px;box-shadow:{{ t.ring }}">
+      {{ t.left }}
+      <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><div class="tn" style="font-size:15px;font-weight:600">{{ t.date }}</div><sc-if value="{{ t.best }}" hint-placeholder-val="{{ false }}"><div style="height:22px;padding:0 8px 0 6px;border-radius:6px;border:1px solid #C4ADFF;color:#C4ADFF;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px">{{ icStarS }}лучший</div></sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px;display:flex;align-items:center;gap:5px;white-space:nowrap;overflow:hidden">{{ t.metaIcon }}{{ t.meta }}</div></div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:28px;flex:none"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+      <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="20c4"><div class="dv-olabel"><a class="dv-oid" href="#20c4">20c4</a>Плитка C крупно ×2 и ×3: бейдж 18 в правом нижнем углу, вырез 2 dp цветом карточки; в режиме выбора бейдж уходит вместе с нотой</div><div class="dv-card">
+<div class="frag" style="gap:16px">
+  <div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap"><sc-for list="{{ tileC }}" as="t" hint-placeholder-count="6"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:{{ t.w }}">{{ t.el }}<div class="cap" style="text-align:center">{{ t.cap }}</div></div></sc-for></div>
+</div>
+</div></div>
+<div class="dv-opt" id="20c5"><div class="dv-olabel"><a class="dv-oid" href="#20c5">20c5</a>«Записи» (сессии) — тот же бейдж на плитке дубля; новый видео-дубль первым с подсветкой; ниже — «Записи этого дня» и диалог удаления с упоминанием видео</div><div class="dv-card">
+<div class="frag" style="gap:12px">
+  <div style="display:flex;align-items:center;justify-content:space-between;height:24px"><div class="tn" style="font-size:13px;color:#A39FB5">24 сессии</div><div style="height:32px;padding:0 10px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF;margin-right:-10px">{{ icSelectP }}Выбрать</div></div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <sc-for list="{{ recCards }}" as="c" hint-placeholder-count="4">
+    <div style="display:flex;align-items:center;gap:14px;background:{{ c.bg }};border-radius:16px;padding:14px 16px;box-shadow:{{ c.ring }}">
+      {{ c.left }}
+      <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.meta }}</div></div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:28px;flex:none"><sc-for list="{{ c.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+      <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div>
+    </div>
+    </sc-for>
+  </div>
+  <div class="cap">Диалог удаления, когда среди выбранных есть видео</div>
+  <div style="background:#292833;border-radius:28px;padding:24px 24px 18px;display:flex;flex-direction:column;gap:14px">
+    <div style="width:44px;height:44px;border-radius:22px;background:rgba(232,86,92,.16);display:flex;align-items:center;justify-content:center">{{ icTrashE }}</div>
+    <div style="font-size:24px;font-weight:700;line-height:1.2">Удалить 2 дубля?</div>
+    <div style="font-size:15px;color:#A39FB5;line-height:1.45;text-wrap:pretty">Видео (214 МБ), звук и разбор удалятся. Это нельзя отменить.</div>
+    <div style="display:flex;justify-content:flex-end;gap:8px"><div style="height:48px;padding:0 16px;border-radius:24px;display:flex;align-items:center;font-size:15px;font-weight:600;color:#C4ADFF">Отмена</div><div style="height:48px;padding:0 22px;border-radius:24px;background:#E8565C;color:#FFFFFF;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700">{{ icTrashW }}Удалить</div></div>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 2 — C, бейдж на плитке</b> (<a href="#20c3">20c3</a>). Он различается с расстояния вытянутой руки — бейдж 18 dp с камерой 12 сидит на краю круга и меняет силуэт плитки, а не строку под датой; цвет зоны остаётся заливкой и остаётся главным. B (<a href="#20c2">20c2</a>) честен, но иконка 14 в серой строке 13 sp сливается с «2:05 · −4 ц» — её видно, только когда читаешь. A (<a href="#20c1">20c1</a>) живее всех, но делает список пёстрым: кадры разной яркости спорят с нотами, и «как получилось?» уступает «что на картинке». Бейдж — surfaceContainerHigh с вырезом 2 dp цветом карточки, камера onSurfaceVariant: нейтральный, не третий цвет. В режиме выбора плитка становится чекбоксом, и бейдж тает вместе с нотой; про видео тогда напоминает диалог удаления — «Видео (214 МБ), звук и разбор удалятся» — сумма размеров по выбранным. Размер в карточке не показываем. TalkBack: «…дубль с видео, 18 сентября…».</p>
+</section>
+
+<section class="dv-turn" id="s20d">
+<div class="dv-thd"><a class="dv-tid" href="#s20d">20d</a><span class="dv-tname">Экран сессии с видео · над итогом, прилипание, состояния, landscape</span></div>
+<div class="dv-opts">
+<sc-for list="{{ sessionFrames }}" as="s" hint-placeholder-count="6">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none;position:relative;z-index:3;background:#131318">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div>
+    <div style="flex:1;font-size:17px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Менуэт · 18 сентября</div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icShare }}</div>
+  </div>
+  <sc-if value="{{ s.sticky }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;align-items:center;gap:12px;padding:0 16px 10px;flex:none;position:relative;z-index:3;background:#131318;box-shadow:0 1px 0 #292833">
+    {{ s.miniVideo }}
+    <div style="flex:1;min-width:0"><div class="tn" style="font-size:22px;font-weight:800;line-height:1;letter-spacing:-.5px">84<span style="font-size:13px;font-weight:600;color:#A39FB5;letter-spacing:0"> %</span></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:4px">0:47 / 2:05 · −6 ц</div></div>
+    <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">{{ icFull }}</div>
+  </div>
+  </sc-if>
+  <div style="flex:1;overflow:hidden;position:relative">
+  <div style="display:flex;flex-direction:column;gap:16px;padding:0 16px;margin-top:{{ s.scroll }}">
+    <sc-if value="{{ s.showVideo }}" hint-placeholder-val="{{ true }}">{{ s.video }}</sc-if>
+    <sc-if value="{{ s.lost }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:14px;min-height:56px;padding:10px 14px;border-radius:16px;background:#1E1D25;color:#A39FB5">{{ icVideoOff }}<div style="flex:1;min-width:0"><div style="font-size:14px;color:#E6E4EE;font-weight:600">Видео не найдено — остался разбор</div><div style="font-size:12px;line-height:1.4;margin-top:2px">Файл удалён из памяти приложения. Звука тоже нет — как у записи без звука.</div></div></div></sc-if>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:{{ s.sumMt }}">
+      <div><div class="tn" style="font-size:64px;font-weight:800;line-height:1;letter-spacing:-2px">84<span style="font-size:28px;font-weight:600;color:#A39FB5;letter-spacing:0">%</span></div><div style="font-size:15px;color:#A39FB5;margin-top:6px;display:flex;align-items:center;gap:6px">в строе · 2:05 · {{ icVideoXS }}дубль 7</div></div>
+      <div style="text-align:right;padding-bottom:4px"><div style="color:#E5B03C;font-size:15px;font-weight:600">в среднем −6 ц</div><div style="font-size:13px;color:#A39FB5;margin-top:2px">чуть занижаете</div></div>
+    </div>
+    <div style="background:#1E1D25;border-radius:20px;padding:12px 12px 10px">
+      <div class="tn" style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5;margin-bottom:8px"><span>0:40</span><span>0:44</span><span>0:48</span><span>0:52</span></div>
+      <div style="position:relative;height:132px">{{ rollMain }}<div style="position:absolute;left:38%;top:-6px;bottom:-4px;width:2px;background:#C4ADFF"></div></div>
+    </div>
+    <sc-if value="{{ s.hasSound }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:48px;height:48px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ s.playBtn }}</div>
+        <div class="tn" style="font-size:13px;color:#A39FB5;flex:none">0:47</div>
+        <div style="flex:1;position:relative;height:20px"><div style="position:absolute;left:0;right:0;top:8px;height:4px;border-radius:2px;background:#292833"></div><div style="position:absolute;left:0;width:38%;top:8px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:38%;top:0;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#C4ADFF"></div></div>
+        <div class="tn" style="font-size:13px;color:#A39FB5;flex:none">2:05</div>
+        <div style="display:flex;height:32px;border:1px solid #3A3846;border-radius:16px;overflow:hidden;flex:none"><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#A39FB5">A</div><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#5B43B8;color:#E9DDFF">B</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 12px 0 14px;border-radius:16px;background:#1E1D25">{{ icSlidersP }}<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600">Звук</div><div style="font-size:13px;color:#A39FB5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">как у всех · Камерный зал</div></div>{{ icChevRV }}</div>
+    </div>
+    </sc-if>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:#1E1D25;border-radius:16px;padding:14px"><div style="font-size:12px;color:#A39FB5">Распределение</div><div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin:10px 0 8px"><div style="width:84%;background:#47C97E"></div><div style="width:11%;background:#E5B03C"></div><div style="width:5%;background:#E8565C"></div></div><div class="tn" style="display:flex;gap:10px;font-size:12px"><span style="color:#47C97E">84%</span><span style="color:#E5B03C">11%</span><span style="color:#E8565C">5%</span></div></div>
+      <div style="background:#1E1D25;border-radius:16px;padding:14px"><div style="font-size:12px;color:#A39FB5">Средняя ошибка</div><div class="tn" style="font-size:28px;font-weight:700;margin-top:6px">7,3<span style="font-size:14px;font-weight:500;color:#A39FB5"> ц</span></div><div style="font-size:12px;color:#A39FB5">смещение −6 ц вниз</div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;height:40px"><div class="tn" style="font-size:13px;color:#A39FB5;display:flex;align-items:center;gap:6px">{{ icVideoXS }}{{ s.sizeText }}</div><div style="display:flex;gap:4px;margin-right:-10px"><div style="height:40px;padding:0 12px 0 10px;border-radius:20px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF">{{ icPencilP }}Переименовать</div><div style="height:40px;padding:0 12px 0 10px;border-radius:20px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#E8565C">{{ icTrashE }}Удалить</div></div></div>
+  </div>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="20d8"><div class="dv-olabel"><a class="dv-oid" href="#20d8">20d8</a>Landscape 892 × 412 — слева видео неподвижно (16:9 по ширине 456), под ним плеер; справа прокручивается итог, лента, метрики</div><div class="dv-card">
+<div class="box">
+  <div style="display:flex;align-items:center;gap:4px;padding:2px 4px 0;height:48px;flex:none"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div><div style="flex:1;font-size:16px;font-weight:600">Менуэт · 18 сентября</div><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center">{{ icShare }}</div></div>
+  <div style="flex:1;display:flex;gap:20px;padding:0 20px 0 16px;min-height:0">
+    <div style="width:456px;flex:none;display:flex;flex-direction:column;gap:12px">
+      {{ videoLand }}
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="width:44px;height:44px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icPauseOn }}</div>
+        <div class="tn" style="font-size:12px;color:#A39FB5;flex:none">0:47</div>
+        <div style="flex:1;position:relative;height:20px"><div style="position:absolute;left:0;right:0;top:8px;height:4px;border-radius:2px;background:#292833"></div><div style="position:absolute;left:0;width:38%;top:8px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:38%;top:0;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#C4ADFF"></div></div>
+        <div class="tn" style="font-size:12px;color:#A39FB5;flex:none">2:05</div>
+        <div style="display:flex;height:30px;border:1px solid #3A3846;border-radius:15px;overflow:hidden;flex:none"><div class="tn" style="width:32px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#A39FB5">A</div><div class="tn" style="width:32px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;background:#5B43B8;color:#E9DDFF">B</div></div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:12px;overflow:hidden">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between"><div><div class="tn" style="font-size:44px;font-weight:800;line-height:1;letter-spacing:-1.5px">84<span style="font-size:20px;font-weight:600;color:#A39FB5;letter-spacing:0">%</span></div><div style="font-size:13px;color:#A39FB5;margin-top:4px;display:flex;align-items:center;gap:6px">в строе · 2:05 · {{ icVideoXS }}дубль 7</div></div><div style="text-align:right"><div style="color:#E5B03C;font-size:13px;font-weight:600">в среднем −6 ц</div><div style="font-size:12px;color:#A39FB5">чуть занижаете</div></div></div>
+      <div style="background:#1E1D25;border-radius:16px;padding:10px 12px 8px"><div style="position:relative;height:96px">{{ rollLand }}<div style="position:absolute;left:38%;top:-4px;bottom:-2px;width:2px;background:#C4ADFF"></div></div></div>
+      <div style="display:flex;align-items:center;gap:12px;height:48px;padding:0 10px 0 12px;border-radius:14px;background:#1E1D25">{{ icSlidersP }}<div style="flex:1;min-width:0;font-size:14px;font-weight:600">Звук <span style="font-weight:400;color:#A39FB5">· как у всех · Камерный зал</span></div>{{ icChevRV }}</div>
+    </div>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 3 — видео над итогом, прилипает.</b> Над итогом (<a href="#20d1">20d1</a>): экран открывают, чтобы посмотреть, и первое, что должно быть под пальцем — картинка; балл ниже, на том же первом экране (видео 214 dp + итог влезают до ленты). Ширина вся, углы 16 как у карточек, вертикальное видео — по высоте 40 % (357 dp) на полях `video.field` (<a href="#20d2">20d2</a>), а не растянутое. На видео две вещи: тап (пауза / продолжить, глиф 56 проступает на 600 мс и тает — <a href="#20d6">20d6</a>) и «на весь экран» 40 dp в правом нижнем углу на скриме; ползунка на видео нет — он один, в плеере. <b>Прилипание</b> (<a href="#20d3">20d3</a> против <a href="#20d4">20d4</a>): при прокрутке к ленте видео не уходит, а сжимается в строку 72 под шапкой — мини-кадр 128 × 72, балл 22 sp и «0:47 / 2:05 · −6 ц», кнопка «на весь экран». Сценарий «смотреть на руки и на ленту» иначе не собрать в портрете; переход — не два состояния, а непрерывная интерполяция от прокрутки (Collapsing), так что мини-кадр — это тот же плеер, который просто стал меньше. Без прилипания (<a href="#20d4">20d4</a>) экран честнее к «одному плееру», но за руками надо ездить пальцем вверх-вниз — этот вариант оставлен как запас, если Collapsing с видео окажется дорогим. <b>Состояния:</b> скелет той же пропорции без спиннера до 300 мс, дальше — спиннер 24 в центре (<a href="#20d5">20d5</a>); «видео не найдено» (<a href="#20d7">20d7</a>) — строка вместо картинки и экран как у записи без звука (ни плеера, ни «Звука», ни «Поделиться»). Конец — первый кадр, ▶ в плеере. <b>Размер</b> — «видео · 1080p · 214 МБ» слева в строке действий, напротив «Удалить»: там он и предупреждение. <b>Landscape</b> (<a href="#20d8">20d8</a>): видео и плеер слева неподвижны (456 = 16:9 при 256), справа скроллится остальное; прилипание в landscape не нужно.</p>
+</section>
+
+<section class="dv-turn" id="s20e">
+<div class="dv-thd"><a class="dv-tid" href="#s20e">20e</a><span class="dv-tname">На весь экран · панель и полоска нот; портрет и landscape, горизонтальное и вертикальное видео</span></div>
+<div class="dv-opts">
+<sc-for list="{{ fullPortrait }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="background:#000000">
+  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">{{ s.video }}</div>
+  <sc-if value="{{ s.panel }}" hint-placeholder-val="{{ true }}">
+  <div style="position:absolute;left:0;right:0;top:0;height:64px;background:linear-gradient(rgba(0,0,0,.7),rgba(0,0,0,0));display:flex;align-items:center;padding:8px 8px 0;gap:4px;z-index:2"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div><div style="flex:1;font-size:15px;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,.5)">Менуэт · 18 сентября</div><div style="display:flex;height:32px;border:1px solid rgba(255,255,255,.3);border-radius:16px;overflow:hidden;flex:none"><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#A39FB5">A</div><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#5B43B8;color:#E9DDFF">B</div></div></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;padding:0 16px 20px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.75) 60%);display:flex;flex-direction:column;gap:14px;z-index:2;padding-top:60px">
+    <sc-if value="{{ s.strip }}" hint-placeholder-val="{{ true }}">{{ stripP }}</sc-if>
+    <div style="display:flex;align-items:center;gap:12px"><div style="width:48px;height:48px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icPauseOn }}</div><div class="tn" style="font-size:13px;color:#E6E4EE;flex:none">0:47</div><div style="flex:1;position:relative;height:20px"><div style="position:absolute;left:0;right:0;top:8px;height:4px;border-radius:2px;background:rgba(255,255,255,.25)"></div><div style="position:absolute;left:0;width:38%;top:8px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:38%;top:0;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#C4ADFF"></div></div><div class="tn" style="font-size:13px;color:#E6E4EE;flex:none">2:05</div><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">{{ icFullExit }}</div></div>
+  </div>
+  </sc-if>
+  <sc-if value="{{ s.stripOnly }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:16px;right:16px;bottom:20px;z-index:2">{{ stripP }}</div></sc-if>
+  <sc-if value="{{ s.glyph }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px 0 0 -32px;border-radius:32px;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:2;animation:fadeGlyph 3s ease-out infinite">{{ icPauseBig }}</div></sc-if>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="20e3"><div class="dv-olabel"><a class="dv-oid" href="#20e3">20e3</a>Landscape, горизонтальное видео на весь экран, панель показана; полоска нот 40 dp над плеером — окно ±4 с, текущая нота подсвечена</div><div class="dv-card">
+<div class="box" style="background:#000000;border-color:rgba(116,119,117,.5)">
+  <div style="position:absolute;inset:0">{{ videoFullL }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:56px;background:linear-gradient(rgba(0,0,0,.7),rgba(0,0,0,0));display:flex;align-items:center;padding:4px 8px 0;gap:4px;z-index:2"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div><div style="flex:1;font-size:15px;font-weight:600">Менуэт · 18 сентября</div><div style="display:flex;height:32px;border:1px solid rgba(255,255,255,.3);border-radius:16px;overflow:hidden;flex:none"><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#A39FB5">A</div><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#5B43B8;color:#E9DDFF">B</div></div></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;padding:48px 24px 14px;background:linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.75) 60%);display:flex;flex-direction:column;gap:10px;z-index:2">
+    {{ stripL }}
+    <div style="display:flex;align-items:center;gap:12px"><div style="width:44px;height:44px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icPauseOn }}</div><div class="tn" style="font-size:13px;flex:none">0:47</div><div style="flex:1;position:relative;height:20px"><div style="position:absolute;left:0;right:0;top:8px;height:4px;border-radius:2px;background:rgba(255,255,255,.25)"></div><div style="position:absolute;left:0;width:38%;top:8px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:38%;top:0;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#C4ADFF"></div></div><div class="tn" style="font-size:13px;flex:none">2:05</div><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">{{ icFullExit }}</div></div>
+  </div>
+</div>
+</div></div>
+<div class="dv-opt" id="20e4"><div class="dv-olabel"><a class="dv-oid" href="#20e4">20e4</a>Landscape, вертикальное видео: поля `video.field`, панель спрятана; полоска разбита на две части по полям — на само видео не ложится, окно ±4 с течёт слева направо через обе</div><div class="dv-card">
+<div class="box" style="background:#0E0E12">
+  <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center">{{ videoFullV }}</div>
+  <div style="position:absolute;left:24px;width:302px;bottom:14px;z-index:2">{{ stripHalfL }}</div>
+  <div style="position:absolute;right:24px;width:302px;bottom:14px;z-index:2">{{ stripHalfR }}</div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 4 — полоска помогает, если это окно, а не вся лента.</b> Целая лента 2:05 в 40 dp — цветной шум. Полоска показывает ±4 с вокруг курсора (как карточка ленты на экране сессии), 7 высот, отрезки 6 dp, фон `video.scrim` (чёрный 45 %), текущая нота — с обводкой onSurface 1.5. В landscape (<a href="#20e3">20e3</a>) она ложится над плеером и вместе с панелью; когда панель прячется (3 с без касаний, как на пюпитре), <b>полоска остаётся</b> — ради неё режим и открыли; она уходит только с видео 16:9 в портрете (<a href="#20e2">20e2</a> — там она бы легла на чёрное поле, что нормально) и никогда не ложится на само изображение выше нижних 56 dp. С вертикальным видео в landscape (<a href="#20e4">20e4</a>) полоска делится на две половины по полям (по 302 dp), а видео остаётся чистым: окно ±4 с идёт слева направо сквозь обе, курсор — на левом краю правой половины. Если по тестам с педагогом полоска отвлекает — она отключается вместе с панелью, а не убирается из режима: это одна строка в настройках плеера. <b>Панель</b> — как на пюпитре: верхний скрим 64 (назад, название, A/B), нижний — ▶ 48, время, ползунок, «свернуть» 40; тап по видео с спрятанной панелью — пауза с глифом (<a href="#20e2">20e2</a>), тап по панели — как обычно. Поворот телефона в режиме разрешён, экран не гаснет пока играет.</p>
+</section>
+
+<section class="dv-turn" id="s20f">
+<div class="dv-thd"><a class="dv-tid" href="#s20f">20f</a><span class="dv-tname">Лист деталей ноты · «Смотреть это место»</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="20f1"><div class="dv-olabel"><a class="dv-oid" href="#20f1">20f1</a>Тап по ноте на ленте: имя, отклонение, длительность, время; у видео-дубля — «Смотреть это место» (перемотка на начало ноты − 1 с и запуск); у звукового — «Слушать это место» тем же местом</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+<div class="sheet">
+  <div class="grip"></div>
+  <div style="display:flex;align-items:center;gap:14px;padding:4px 0 0"><div style="width:48px;height:48px;border-radius:50%;background:rgba(232,86,92,.16);display:flex;align-items:center;justify-content:center;flex:none"><div class="tn" style="font-size:18px;font-weight:800;color:#E8565C">Ми</div></div><div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:700;line-height:1.2">Ми⁵ · мимо</div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">0:47,2 · длится 0,6 с</div></div><div class="tn" style="font-size:24px;font-weight:800;color:#E8565C">−18 <span style="font-size:14px;font-weight:600">ц</span></div></div>
+  <div style="position:relative;height:28px;border-radius:14px;background:#292833"><div style="position:absolute;left:50%;top:0;bottom:0;width:2px;margin-left:-1px;background:#6B6880"></div><div style="position:absolute;left:25%;right:25%;top:12px;height:4px;border-radius:2px;background:rgba(71,201,126,.35)"></div><div style="position:absolute;left:32%;top:5px;width:18px;height:18px;margin-left:-9px;border-radius:50%;background:#E8565C"></div><div class="tn" style="position:absolute;left:10px;top:7px;font-size:11px;color:#A39FB5">−50</div><div class="tn" style="position:absolute;right:10px;top:7px;font-size:11px;color:#A39FB5">+50</div></div>
+  <div style="font-size:14px;color:#A39FB5;line-height:1.4">Низко почти на пятую часть полутона. Такая же ошибка на этой ноте — ещё в 3 местах.</div>
+  <div style="height:52px;border-radius:26px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:700">{{ icPlayCircleD }}Смотреть это место</div>
+</div>
+<div class="sheet" style="opacity:.75">
+  <div class="grip"></div>
+  <div style="display:flex;align-items:center;gap:14px;padding:4px 0 0"><div style="width:48px;height:48px;border-radius:50%;background:rgba(232,86,92,.16);display:flex;align-items:center;justify-content:center;flex:none"><div class="tn" style="font-size:18px;font-weight:800;color:#E8565C">Ми</div></div><div style="flex:1;min-width:0"><div style="font-size:20px;font-weight:700;line-height:1.2">Ми⁵ · мимо</div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">0:47,2 · длится 0,6 с</div></div><div class="tn" style="font-size:24px;font-weight:800;color:#E8565C">−18 <span style="font-size:14px;font-weight:600">ц</span></div></div>
+  <div style="height:52px;border-radius:26px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:10px;font-size:15px;font-weight:600">{{ icPlayCircle }}Слушать это место</div>
+  <div class="cap" style="text-align:center">звуковой дубль — та же кнопка контуром; без звука — кнопки нет</div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">Кнопка одна, залитая, в самом низу листа — единственное действие, и оно главное: лист закрывается, плеер перематывается на начало ноты минус 1 с (чтобы услышать подход) и запускается; если видео было в полноэкранном режиме — остаётся там. Раз кнопка появилась, у звукового дубля она тоже уместна («Слушать это место», контурная — у звука это менее ценно, чем у рук на видео); у записи без звука кнопки нет, лист заканчивается текстом.</p>
+</section>
+
+<section class="dv-turn" id="s20g">
+<div class="dv-thd"><a class="dv-tid" href="#s20g">20g</a><span class="dv-tname">«Поделиться» видео-дублем · три варианта, подготовка, ошибка, без обработки</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="20g1"><div class="dv-olabel"><a class="dv-oid" href="#20g1">20g1</a>Обработка включена — три варианта; размер ≈ 214 МБ выделен: мессенджеры режут файлы</div><div class="dv-card">
+<div style="width:412px;height:640px;border-radius:16px;background:rgba(14,14,18,.6);display:flex;flex-direction:column;justify-content:flex-end;overflow:hidden"><div class="sheet" style="border-radius:28px 28px 0 0">
+  <div class="grip"></div>
+  <div style="font-size:20px;font-weight:700;padding:4px 0 0">Поделиться дублем</div>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <sc-for list="{{ shareOpts3 }}" as="o" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:14px;min-height:56px;padding:8px 14px;border-radius:14px;background:#292833;box-shadow:{{ o.ring }}">{{ o.radio }}<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px">{{ o.name }}<span class="tn" style="font-size:12px;font-weight:600;color:#A39FB5;padding:1px 6px;border-radius:5px;background:#3A3846">{{ o.ext }}</span></div><div style="font-size:13px;color:#A39FB5">{{ o.sub }}</div></div></div></sc-for>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;padding:0 4px">{{ icFile }}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Менуэт соль мажор · 18 сентября.mp4</div><div class="tn" style="font-size:12px;color:#A39FB5">2:05 · 1080p · <span style="color:#E5B03C;font-weight:700">≈ 214 МБ</span> — большой файл, мессенджеры могут сжать или не принять</div></div></div>
+  <div style="display:flex;align-items:center;gap:14px;height:44px;padding:0 4px"><div style="width:22px;height:22px;border-radius:6px;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icCheckS }}</div><div style="flex:1;font-size:14px">Добавить текст: <span class="tn" style="color:#A39FB5">«Менуэт · 84 % · 18 сентября»</span></div></div>
+  <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-top:4px">Продолжить</div>
+</div></div>
+</div></div>
+<div class="dv-opt" id="20g2"><div class="dv-olabel"><a class="dv-oid" href="#20g2">20g2</a>Подготовка видео — тот же лист: обработанный звук пишется в копию файла, картинка не перекодируется; ниже — ошибка с двумя выходами</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+<div class="sheet">
+  <div class="grip"></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:4px 0 0">{{ thumbS }}<div style="flex:1;min-width:0;display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:20px;font-weight:700">Готовим видео</div><div class="tn" style="font-size:20px;font-weight:700;color:#C4ADFF">42 %</div></div></div>
+  <div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="width:42%;height:100%;border-radius:3px;background:#C4ADFF"></div></div>
+  <div class="tn" style="font-size:13px;color:#A39FB5">Камерный зал · 2:05 · ≈ 214 МБ · осталось около 6 с</div>
+  <div style="display:flex;justify-content:flex-end"><div style="height:40px;padding:0 16px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600">{{ icCloseS }}Отмена</div></div>
+</div>
+<div class="sheet">
+  <div class="grip"></div>
+  <div style="font-size:20px;font-weight:700;padding:4px 0 0">Не получилось подготовить видео</div>
+  <div style="font-size:14px;color:#A39FB5;line-height:1.4;text-wrap:pretty">Дубль и настройки на месте. Можно попробовать ещё раз или отправить видео как снято, без обработки звука.</div>
+  <div style="display:flex;gap:8px"><div style="flex:1;height:48px;border-radius:24px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600">{{ icRepeatS }}Ещё раз</div><div style="flex:1;height:48px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">Отправить как снято</div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="20g3"><div class="dv-olabel"><a class="dv-oid" href="#20g3">20g3</a>Обработка выключена — два варианта: «Видео» и «Только звук»; лист не пропускается, как у звукового дубля — выбор всё равно есть</div><div class="dv-card">
+<div class="sheet">
+  <div class="grip"></div>
+  <div style="font-size:20px;font-weight:700;padding:4px 0 0">Поделиться дублем</div>
+  <div style="display:flex;flex-direction:column;gap:6px">
+    <sc-for list="{{ shareOpts2 }}" as="o" hint-placeholder-count="2"><div style="display:flex;align-items:center;gap:14px;min-height:56px;padding:8px 14px;border-radius:14px;background:#292833;box-shadow:{{ o.ring }}">{{ o.radio }}<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;display:flex;align-items:center;gap:8px">{{ o.name }}<span class="tn" style="font-size:12px;font-weight:600;color:#A39FB5;padding:1px 6px;border-radius:5px;background:#3A3846">{{ o.ext }}</span></div><div style="font-size:13px;color:#A39FB5">{{ o.sub }}</div></div></div></sc-for>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;padding:0 4px">{{ icFile }}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Менуэт соль мажор · 18 сентября.mp4</div><div class="tn" style="font-size:12px;color:#A39FB5">2:05 · 1080p · <span style="color:#E5B03C;font-weight:700">≈ 214 МБ</span> — большой файл</div></div></div>
+  <div style="display:flex;align-items:center;gap:14px;height:44px;padding:0 4px"><div style="width:22px;height:22px;border-radius:6px;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icCheckS }}</div><div style="flex:1;font-size:14px">Добавить текст: <span class="tn" style="color:#A39FB5">«Менуэт · 84 % · 18 сентября»</span></div></div>
+  <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-top:4px">Продолжить</div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">Три варианта в порядке от «то, что слышно» к «то, что было»: обработанное видео по умолчанию с подписью «как слышно в приложении», оригинал — «как снято», звук — `.m4a`, как у звукового дубля. Расширение — чипом рядом с названием: получатель и отправитель оба спросят «а что это будет за файл». <b>Размер</b> — в строке файла, `zone.near` жирным и предупреждение словами: мы не сжимаем, а мессенджеры — да; по-честному это лучше сказать до отправки. Для видео как снято подготовка не нужна — сразу системный лист; для «только звук» — как в 18j. Ошибка предлагает «Отправить как снято», а не оригинал звука: у видео-дубля ценность в картинке.</p>
+</section>
+
+<section class="dv-turn" id="s20h">
+<div class="dv-thd"><a class="dv-tid" href="#s20h">20h</a><span class="dv-tname">Экран «Звук» для видео-дубля · пометка в шапке; вариант с окном видео</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="20h1"><div class="dv-olabel"><a class="dv-oid" href="#20h1">20h1</a>Предложение — без картинки: иконка видео 14 в подзаголовке шапки, мини-плеер с формой волны как был</div><div class="dv-card">
+<div class="frag" style="gap:0;padding:0;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div><div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:600;line-height:1.2">Менуэт · 18 сентября</div><div style="font-size:12px;color:#A39FB5;display:flex;align-items:center;gap:5px;min-width:0">{{ icVideoXS }}<span style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0">видео-дубль · как у всех · Камерный зал</span></div></div><div style="height:40px;padding:0 14px 0 10px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF">{{ icResetP }}Сбросить</div></div>
+  <div style="padding:8px 16px 10px;border-bottom:1px solid #292833;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px"><div style="width:48px;height:48px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icPauseOn }}</div><div style="flex:1;min-width:0;height:36px">{{ wave }}</div><div style="display:flex;height:32px;border:1px solid #3A3846;border-radius:16px;overflow:hidden;flex:none"><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#A39FB5">A</div><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#5B43B8;color:#E9DDFF">B</div></div></div>
+    <div style="display:flex;align-items:center;gap:12px;height:20px"><div class="tn" style="width:48px;text-align:center;font-size:12px;color:#A39FB5">0:47</div><div style="flex:1;display:flex;align-items:center;gap:8px"><div style="font-size:11px;color:#A39FB5">выход</div><div style="flex:1;height:4px;border-radius:2px;background:#292833;overflow:hidden"><div style="width:72%;height:100%;background:#47C97E"></div></div><div class="tn" style="font-size:12px;font-weight:600;color:#47C97E;width:76px;text-align:right">−3 дБ</div></div></div>
+  </div>
+  <div style="padding:12px 16px 16px;display:flex;gap:8px"><div style="height:36px;padding:0 12px;border-radius:18px;background:#5B43B8;color:#E9DDFF;font-size:13px;font-weight:600;display:flex;align-items:center">Камерный зал</div><div style="height:36px;padding:0 12px;border-radius:18px;border:1px solid #3A3846;font-size:13px;font-weight:600;display:flex;align-items:center;box-sizing:border-box">Класс</div><div style="height:36px;padding:0 12px;border-radius:18px;border:1px solid #3A3846;font-size:13px;font-weight:600;display:flex;align-items:center;box-sizing:border-box">Без обработки</div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="20h2"><div class="dv-olabel"><a class="dv-oid" href="#20h2">20h2</a>Для сравнения — окно 64 × 36 в мини-плеере вместо части волны: видно смычок, но волна сжимается до 160 dp и теряет смысл</div><div class="dv-card">
+<div class="frag" style="gap:0;padding:0;overflow:hidden">
+  <div style="padding:8px 16px 10px;border-bottom:1px solid #292833;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:12px"><div style="width:48px;height:48px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icPauseOn }}</div>{{ thumbS }}<div style="flex:1;min-width:0;height:36px">{{ waveShort }}</div><div style="display:flex;height:32px;border:1px solid #3A3846;border-radius:16px;overflow:hidden;flex:none"><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#A39FB5">A</div><div class="tn" style="width:34px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;background:#5B43B8;color:#E9DDFF">B</div></div></div>
+  </div>
+  <div style="padding:12px 16px 16px" class="cap">64 × 36 — смычок в таком окне не различим; чтобы «видеть атаку», нужно ≥ 160 dp, а это уже видео-экран, не «Звук»</div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 5 — картинка на «Звуке» не нужна.</b> Экран правит звук, и слушают его ушами; иконка видео 14 в подзаголовке шапки («видео-дубль · как у всех · Камерный зал») говорит, чей звук правится. Окно в мини-плеере (<a href="#20h2">20h2</a>) слишком мало, чтобы связать смычок с атакой, а ради него укорачивается волна — единственная «картинка» этого экрана, которая по делу. Кто хочет проверить обработку глядя на руки — жмёт «Готово» и слушает B на экране сессии с видео.</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · дополнение ICONS, tokens, sizes, anims, тексты</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(560px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Дополнение ICONS (viewBox 24, stroke 1.8, round, fill none; `F ` — заливка)</div>
+  <div class="dv-tbl" style="grid-template-columns:36px minmax(0,.7fr) minmax(0,1fr) minmax(0,2fr)">
+    <div class="h"></div><div class="h">name</div><div class="h">use</div><div class="h">paths</div>
+    <sc-for list="{{ iconRows }}" as="r" hint-placeholder-count="9"><div style="padding:6px 8px;display:flex;align-items:center">{{ r.el }}</div><div class="mono">{{ r.name }}</div><div style="color:#A39FB5">{{ r.use }}</div><div class="mono" style="color:#A39FB5;font-size:10.5px">{{ r.paths }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Новые токены</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.6fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Значение</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="6"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты</div>
+  <div style="color:#A39FB5;display:flex;flex-direction:column;gap:6px"><sc-for list="{{ texts }}" as="x" hint-placeholder-count="6"><div><b style="color:#E6E4EE">{{ x.k }}</b> — {{ x.v }}</div></sc-for></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Где</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="10"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации и правила</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="9"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const P = '#C4ADFF', PC = '#5B43B8', ONPC = '#E9DDFF', ON = '#E6E4EE', OV = '#A39FB5', ONP = '#2E1A6E', ERR = '#E8565C', SURF = '#131318', SC = '#1E1D25', SCH = '#292833', OUTV = '#3A3846', DIM = '#6B6880', FIELD = '#0E0E12', SEL = '#2A2540';
+    const G = '#47C97E', Y = '#E5B03C', R = '#E8565C';
+    const zone = v => v >= 75 ? G : v >= 55 ? Y : R;
+    const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+    const ICONS = [
+      { name: 'video', use: 'кнопка «Видео-дубль», пункт «Снять видео», бейдж плитки (12), строка итога и шапка «Звука» (14)', paths: ['M3.5 7.5A1.5 1.5 0 0 1 5 6h9a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 14 18H5a1.5 1.5 0 0 1-1.5-1.5z', 'M15.5 10.3l4.2-2.5a.5.5 0 0 1 .8.4v7.6a.5.5 0 0 1-.8.4l-4.2-2.5'] },
+      { name: 'video-gallery', use: 'пункт «Видео из галереи»', paths: ['M5.5 4.5h13A1.5 1.5 0 0 1 20 6v12a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18V6a1.5 1.5 0 0 1 1.5-1.5z', 'M4 15.5l4.2-4.2 3 3', 'F M12.6 9l4.4 2.8-4.4 2.8z'] },
+      { name: 'video-off', use: 'строка «Видео не найдено»', paths: ['M3.5 7.5A1.5 1.5 0 0 1 5 6h6.5M14.5 9V7.5', 'M14.5 13v3.5A1.5 1.5 0 0 1 13 18H5a1.5 1.5 0 0 1-1.5-1.5v-6', 'M15.5 10.3l4.2-2.5a.5.5 0 0 1 .8.4v7.6', 'M3.5 3.5l17 17'] },
+      { name: 'fullscreen', use: '«на весь экран» — угол видео, мини-строка', paths: ['M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9', 'M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9', 'M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15', 'M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15'] },
+      { name: 'fullscreen-exit', use: '«свернуть» в панели полноэкранного режима', paths: ['M9 4v3.5A1.5 1.5 0 0 1 7.5 9H4', 'M15 4v3.5A1.5 1.5 0 0 0 16.5 9H20', 'M20 15h-3.5a1.5 1.5 0 0 0-1.5 1.5V20', 'M4 15h3.5A1.5 1.5 0 0 1 9 16.5V20'] },
+      { name: 'play', use: 'плеер (есть в наборе — проверить заливку)', paths: ['F M8 5.5v13a.5.5 0 0 0 .8.4l9.6-6.5a.5.5 0 0 0 0-.8L8.8 5.1a.5.5 0 0 0-.8.4z'] },
+      { name: 'pause', use: 'плеер, глиф на видео (в круге 64 — 32)', paths: ['F M6.5 5.5A.5.5 0 0 1 7 5h3a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-.5.5H7a.5.5 0 0 1-.5-.5z', 'F M13.5 5.5A.5.5 0 0 1 14 5h3a.5.5 0 0 1 .5.5v13a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5z'] },
+      { name: 'play-circle', use: '«Смотреть / Слушать это место» (20)', paths: ['M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18z', 'F M10 8.6v6.8a.4.4 0 0 0 .6.3l5.2-3.4a.4.4 0 0 0 0-.6L10.6 8.3a.4.4 0 0 0-.6.3z'] },
+      { name: 'alert', use: 'строка ошибки в листе разбора (24, error)', paths: ['M12 4.5 20.5 19.5H3.5z', 'M12 10v4.5', 'F M12 16.6a.9.9 0 1 0 0 1.8.9.9 0 1 0 0-1.8z'] },
+    ];
+    const OLD = [
+      { name: 'back', paths: ['M15 5 8 12l7 7'] }, { name: 'close', paths: ['M6 6l12 12M18 6 6 18'] }, { name: 'check', paths: ['M5 12.5 9.5 17 19 7.5'] },
+      { name: 'more', paths: ['F M5 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'F M12 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'F M19 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z'] },
+      { name: 'pencil', paths: ['M4 20l.9-4.1L15.7 5.1a1.6 1.6 0 0 1 2.3 0l.9.9a1.6 1.6 0 0 1 0 2.3L8.1 19.1 4 20z', 'M14.2 6.6l3.2 3.2'] },
+      { name: 'trash', paths: ['M4 7h16', 'M9 7V4.8a.8.8 0 0 1 .8-.8h4.4a.8.8 0 0 1 .8.8V7', 'M6 7l.9 12.2a1 1 0 0 0 1 .8h8.2a1 1 0 0 0 1-.8L18 7', 'M10 11v5M14 11v5'] },
+      { name: 'star', paths: ['F M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z'] },
+      { name: 'chevron-right', paths: ['M9.5 6l6 6-6 6'] }, { name: 'chevron-down', paths: ['M6 9.5l6 6 6-6'] },
+      { name: 'share', paths: ['M12 15V4', 'M8 8l4-4 4 4', 'M5 11v8.5A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5V11'] },
+      { name: 'sliders', paths: ['M4 7h9M18.5 7H20M4 17h6M14.5 17H20', 'M15.5 4.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z', 'M10.5 14.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z'] },
+      { name: 'file', paths: ['M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z', 'M14 3v5h5'] },
+      { name: 'repeat', paths: ['M4 12a8 8 0 0 1 13.7-5.6L20 8.5', 'M20 4v4.5h-4.5', 'M20 12a8 8 0 0 1-13.7 5.6L4 15.5', 'M4 20v-4.5h4.5'] },
+      { name: 'reset', paths: ['M4 12a8 8 0 1 1 2.3 5.7', 'M4 20v-5h5'] },
+      { name: 'select', paths: ['M4 6.5h8M4 12h8M4 17.5h6', 'M14.5 12.5l2.5 2.5 5-5.5'] },
+      { name: 'note-pair', paths: ['M9.6 17.6V5.6M18.6 15.6V3.7', 'F M9.6 4.4l9-1.9v2.6l-9 1.9z', 'F M6.8 16.5a2.9 2.3 0 1 0 0 4.6 2.9 2.3 0 1 0 0-4.6z', 'F M15.8 14.5a2.9 2.3 0 1 0 0 4.6 2.9 2.3 0 1 0 0-4.6z'] },
+      { name: 'note-one', paths: ['M12.2 17.5V4.5', 'M12.2 4.5c3.6 1.4 5.6 3.9 4.4 7.6', 'F M9.2 15.4a3.2 2.5 0 1 0 0 5 3.2 2.5 0 1 0 0-5z'] },
+    ];
+    const byName = Object.fromEntries([...ICONS, ...OLD].map(i => [i.name, i]));
+    const ico = (name, size = 24, color = ON) => {
+      const ic = byName[name];
+      const paths = ic.paths.map((p, i) => { const f = p.startsWith('F '); return h('path', { key: i, d: f ? p.slice(2) : p, fill: f ? color : 'none', stroke: f ? 'none' : color }); });
+      return h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none', display: 'block' } }, paths);
+    };
+    const iconRows = ICONS.map(i => ({ name: i.name, use: i.use, el: ico(i.name, 20, ON), paths: i.paths.join('  ·  ') }));
+    // ---- video frame placeholder
+    const frame = (w, hh, o = {}) => {
+      const kids = [];
+      if (o.skeleton) { kids.push(h('div', { key: 'sk', style: { position: 'absolute', inset: 0, background: SC } })); if (o.spinner) kids.push(h('div', { key: 'sp', style: { position: 'absolute', left: '50%', top: '50%', width: 24, height: 24, margin: '-12px 0 0 -12px', borderRadius: 12, border: `2.5px solid ${hexA(P, .25)}`, borderTopColor: P } })); }
+      else {
+        kids.push(h('div', { key: 'bg', style: { position: 'absolute', inset: 0, background: 'linear-gradient(170deg,#4A4358 0%,#2C2838 55%,#1A1822 100%)' } }));
+        kids.push(h('div', { key: 'fl', style: { position: 'absolute', left: 0, right: 0, bottom: 0, height: '28%', background: 'linear-gradient(rgba(0,0,0,0),rgba(0,0,0,.35))' } }));
+        kids.push(h('div', { key: 'fig', style: { position: 'absolute', left: '50%', bottom: '18%', width: '22%', height: '58%', marginLeft: '-11%', borderRadius: '40% 40% 12% 12%', background: 'rgba(230,228,238,.08)' } }));
+        kids.push(h('div', { key: 'hd', style: { position: 'absolute', left: '50%', top: '10%', width: '11%', aspectRatio: '1', marginLeft: '-5.5%', borderRadius: '50%', background: 'rgba(230,228,238,.1)' } }));
+      }
+      if (o.paused) kids.push(h('div', { key: 'gl', style: { position: 'absolute', left: '50%', top: '50%', width: 64, height: 64, margin: '-32px 0 0 -32px', borderRadius: 32, background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeGlyph 3s ease-out infinite' } }, ico('pause', 32, '#FFFFFF')));
+      if (o.ended) kids.push(h('div', { key: 'en', style: { position: 'absolute', left: '50%', top: '50%', width: 64, height: 64, margin: '-32px 0 0 -32px', borderRadius: 32, background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, ico('play', 32, '#FFFFFF')));
+      if (o.full) kids.push(h('div', { key: 'fs', style: { position: 'absolute', right: 8, bottom: 8, width: 40, height: 40, borderRadius: 20, background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, ico('fullscreen', 22, '#FFFFFF')));
+      if (o.label) kids.push(h('div', { key: 'lb', className: 'tn', style: { position: 'absolute', left: 10, bottom: 10, fontSize: 11, color: 'rgba(230,228,238,.6)' } }, o.label));
+      return h('div', { style: { position: 'relative', width: w, height: hh, borderRadius: o.r ?? 0, overflow: 'hidden', flex: 'none', ...(o.style || {}) } }, kids);
+    };
+    const thumbS = frame(64, 36, { r: 6 });
+    const videoWide = (o = {}) => frame(380, 214, { r: 16, full: true, ...o });
+    const videoTall = (o = {}) => h('div', { style: { position: 'relative', width: 380, height: 357, borderRadius: 16, overflow: 'hidden', background: FIELD, display: 'flex', justifyContent: 'center', flex: 'none' } }, [frame(201, 357, { key: 'f', ...o }), h('div', { key: 'fs', style: { position: 'absolute', right: 8, bottom: 8, width: 40, height: 40, borderRadius: 20, background: 'rgba(0,0,0,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center' } }, ico('fullscreen', 22, '#FFFFFF'))]);
+    // ---- roll segments
+    const NOTES = [[0, 8, 0, 82], [9, 6, 2, 79], [16, 5, 1, 66], [22, 9, 3, 88], [32, 4, 4, 52], [37, 7, 2, 84], [45, 5, 1, 91], [51, 8, 3, 77], [60, 6, 5, 60], [67, 4, 4, 83], [72, 9, 2, 86], [82, 5, 3, 48], [88, 7, 1, 80], [96, 4, 0, 90]];
+    const roll = (rows, rowH, segH, o = {}) => NOTES.filter(n => o.upTo == null || n[0] < o.upTo).map((n, i) => {
+      const cut = o.upTo != null && n[0] + n[1] > o.upTo; const w = cut ? o.upTo - n[0] : n[1];
+      const cur = o.cur != null && n[0] <= o.cur && n[0] + n[1] > o.cur;
+      return h('div', { key: i, style: { position: 'absolute', left: n[0] + '%', width: w + '%', top: (n[2] % rows) * rowH + (rowH - segH) / 2, height: segH, borderRadius: segH / 2, background: zone(n[3]), opacity: cut ? .5 : .9, boxShadow: cur ? `0 0 0 1.5px ${ON}` : 'none' } });
+    });
+    const rollMain = roll(7, 19, 18, { cur: 38 }), rollLand = roll(6, 16, 12, { cur: 38 }), rollEmerge = roll(7, 6.8, 5, { upTo: 42 });
+    const strip = (o = {}) => h('div', { style: { position: 'relative', height: 40, borderRadius: 10, background: 'rgba(0,0,0,.45)', overflow: 'hidden', ...(o.style || {}) } }, [...roll(7, 5.6, 4, { cur: 50 }), h('div', { key: 'c', style: { position: 'absolute', left: '50%', top: 0, bottom: 0, width: 2, marginLeft: -1, background: P } })]);
+    const stripP = strip(), stripL = strip();
+    // half strips: one roll spread over two 302-dp halves (past on the left field, upcoming on the right); cursor at the start of the right half
+    const half = side => h('div', { style: { position: 'relative', height: 40, borderRadius: 10, background: 'rgba(0,0,0,.45)', overflow: 'hidden' } }, [h('div', { key: 'r', style: { position: 'absolute', top: 0, bottom: 0, left: side === 'L' ? 0 : '-100%', width: '200%' } }, roll(7, 5.6, 4, { cur: 50 })), side === 'R' ? h('div', { key: 'c', style: { position: 'absolute', left: 0, top: 0, bottom: 0, width: 2, background: P } }) : null]);
+    const stripHalfL = half('L'), stripHalfR = half('R');
+    // ---- entry
+    const level = Array.from({ length: 14 }, (_, i) => ({ h: (6 + Math.abs(Math.sin(i * 1.7)) * 14) + 'px', op: .5 + (i % 3) * .2 }));
+    const progVals = [55, 61, 69, 88, 78, 82];
+    const progPts = progVals.map((v, i) => ({ x: 6 + i * 29.6, y: 40 - (v - 50) * .8 }));
+    const progLine = progPts.map(p => `${p.x},${p.y}`).join(' ');
+    const entryFrames = [
+      { id: '20a1', label: 'Портрет — под текстом главной кнопки контурная «Видео-дубль ⌄» 40 dp (предложение); меню открыто: «Снять видео» / «Видео из галереи» с подписями', notRec: true, rec: false, vidOp: 1, vidBg: SCH, menu: true, restOp: 1 },
+      { id: '20a2', label: 'Идёт звуковой дубль — «Видео-дубль» приглушена (α .38), как и остальное ниже', notRec: false, rec: true, vidOp: .38, vidBg: 'transparent', menu: false, restOp: .38 },
+    ];
+    // ---- cards
+    const bars = arr => arr.map(z => ({ h: (z === 0 ? 28 : z === 1 ? 16 : 8) + 'px', c: z === 0 ? G : z === 1 ? Y : R }));
+    const circle = (size, style, child) => h('div', { style: { width: size, height: size, borderRadius: size / 2, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', position: 'relative', ...style } }, child);
+    const badge = (k = 1, cardBg = SC) => h('div', { key: 'b', style: { position: 'absolute', right: -3 * k, bottom: -3 * k, width: 18 * k, height: 18 * k, borderRadius: 9 * k, background: SCH, boxShadow: `0 0 0 ${2 * k}px ${cardBg}`, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, ico('video', 12 * k, ON));
+    const tile = (score, o = {}) => {
+      const k = (o.size || 44) / 44, col = zone(score);
+      if (o.sel === false) return circle(44 * k, { border: `${2 * k}px solid ${DIM}` });
+      if (o.sel === true) return circle(44 * k, { background: P }, ico('check', 22 * k, ONP));
+      if (o.variant === 'A' && o.video) return circle(44 * k, { boxShadow: `inset 0 0 0 ${2.5 * k}px ${col}`, overflow: 'hidden' }, [frame(44 * k, 44 * k, { key: 'f' }), h('div', { key: 'p', style: { position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, ico('play', 18 * k, '#FFFFFF'))]);
+      const kids = [h('div', { key: 'n', style: { display: 'flex' } }, ico(o.one ? 'note-one' : 'note-pair', 26 * k, col))];
+      if (o.variant === 'C' && o.video) kids.push(badge(k, o.cardBg));
+      return circle(44 * k, { background: hexA(col, .16) }, kids);
+    };
+    const TAKES = [
+      { score: 84, date: '18 сентября', meta: '2:05 · −4 ц · Камерный зал', bars: [0, 0, 1, 0, 0, 0, 1, 0], video: true, isNew: true },
+      { score: 78, date: '16 сентября', meta: '1:58 · −6 ц', bars: [0, 1, 0, 0, 1, 0, 0, 0], video: false },
+      { score: 88, date: '12 сентября', meta: '2:10 · +2 ц', bars: [0, 0, 0, 0, 1, 0, 0, 0], best: true, video: false },
+      { score: 69, date: '9 сентября', meta: '2:14 · −8 ц', bars: [1, 0, 1, 0, 2, 1, 0, 1], video: true },
+      { score: 61, date: '6 сентября', meta: '2:22 · −9 ц', bars: [1, 1, 0, 2, 1, 0, 1, 1], video: false },
+      { score: 55, date: '3 сентября', meta: '2:30 · −11 ц', bars: [2, 1, 1, 2, 0, 1, 2, 1], video: true },
+    ];
+    const takeRows = variant => TAKES.map(t => { const bg = t.isNew ? SEL : SC; return { date: t.date, meta: t.meta, best: !!t.best, bars: bars(t.bars), bg, ring: t.isNew ? `inset 0 0 0 1.5px ${P}` : 'none', left: tile(t.score, { variant, video: t.video, cardBg: bg }), metaIcon: variant === 'B' && t.video ? ico('video', 14, OV) : null }; });
+    const cardVariants = [
+      { id: '20c1', label: 'A — плитка-кадр: миниатюра первого кадра в круге с кольцом 2.5 цветом зоны и ▶; новый дубль подсвечен', cards: takeRows('A') },
+      { id: '20c2', label: 'B — плитка прежняя, в строке под датой иконка видео 14 перед длительностью', cards: takeRows('B') },
+      { id: '20c3', label: 'C — нота + бейдж камеры 18 на краю круга (предложение)', cards: takeRows('C') },
+    ];
+    const tileC = [
+      { el: tile(84, { variant: 'C', video: true, size: 88 }), cap: 'видео · в строе ×2', w: '92px' },
+      { el: tile(61, { variant: 'C', video: true, size: 88 }), cap: 'видео · рядом ×2', w: '92px' },
+      { el: tile(48, { variant: 'C', video: true, size: 88 }), cap: 'видео · мимо ×2', w: '92px' },
+      { el: tile(84, { variant: 'C', video: false, size: 88 }), cap: 'звук ×2', w: '92px' },
+      { el: tile(84, { variant: 'C', video: true, size: 132 }), cap: '×3', w: '150px' },
+      { el: tile(0, { sel: false, size: 88 }), cap: 'режим выбора — бейдж ушёл', w: '120px' },
+    ];
+    const recCards = [
+      { score: 84, title: 'Менуэт соль мажор', take: true, meta: 'только что · 2:05 · −4 ц', bars: [0, 0, 1, 0, 0, 0, 1, 0], video: true, isNew: true },
+      { score: 71, title: 'Гаммы D-dur', take: false, meta: 'вчера · 8:15 · −6 ц', bars: [0, 1, 0, 1, 0, 2, 0, 1] },
+      { score: 69, title: 'Менуэт соль мажор', take: true, meta: '9 сен · 2:14 · −8 ц', bars: [1, 0, 1, 0, 2, 1, 0, 1], video: true },
+      { score: 58, title: 'Этюд Кайзера №3', take: false, meta: '8 сен · 6:02 · −9 ц', bars: [1, 0, 2, 1, 0, 1, 2, 0] },
+    ].map(c => { const bg = c.isNew ? SEL : SC; return { title: c.title, meta: c.meta, bars: bars(c.bars), bg, ring: c.isNew ? `inset 0 0 0 1.5px ${P}` : 'none', left: tile(c.score, { variant: 'C', video: !!c.video, one: !c.take, cardBg: bg }) }; });
+    const landTake = h('div', { style: { display: 'flex', alignItems: 'center', gap: 12, background: SC, borderRadius: 14, padding: '10px 14px' } }, [tile(84, { variant: 'C', video: true, size: 40, key: 't' }), h('div', { key: 'x', style: { flex: 1, minWidth: 0 } }, [h('div', { key: 1, className: 'tn', style: { fontSize: 14, fontWeight: 600 } }, '18 сентября'), h('div', { key: 2, className: 'tn', style: { fontSize: 12, color: OV } }, '2:05 · −4 ц · Камерный зал')])]);
+    // ---- errors
+    const errors = [
+      { title: 'В видео нет звука', sub: 'Разобрать интонацию не из чего. Дубль не добавлен.', hasSub: true, one: true, two: false },
+      { title: 'Видео длиннее 60 минут — такое не разобрать', hasSub: false, one: true, two: false },
+      { title: 'Не получилось открыть видео', sub: 'Возможно, формат не поддерживается. Дубль не добавлен.', hasSub: true, one: true, two: false },
+      { title: 'Не хватает места: нужно ещё 240 МБ', sub: 'Видео копируется в память приложения целиком, без сжатия.', hasSub: true, one: true, two: false },
+      { title: 'В видео не нашлось нот — дубль не добавлен', sub: 'Исходник остался в галерее.', hasSub: true, one: true, two: false },
+      { title: 'В видео не нашлось нот — дубль не добавлен', sub: 'Видео снято только что и больше нигде не хранится. Отправьте его куда-нибудь или удалите.', hasSub: true, one: false, two: true },
+    ];
+    // ---- session
+    const miniVideo = frame(128, 72, { r: 10 });
+    const sessionFrames = [
+      { id: '20d1', label: 'Горизонтальное видео 16:9 во всю ширину (380 × 214) сразу под шапкой, над итогом; «на весь экран» 40 в углу на скриме; играет, курсор ленты идёт с ним; размер «видео · 1080p · 214 МБ» в строке действий', video: videoWide(), showVideo: true, sticky: false, lost: false, hasSound: true, scroll: '0', sumMt: '0', playBtn: ico('pause', 24, ONP), sizeText: 'видео · 1080p · 214 МБ' },
+      { id: '20d2', label: 'Вертикальное видео — по высоте 40 % (357), поля surfaceContainerLowest по бокам', video: videoTall(), showVideo: true, sticky: false, lost: false, hasSound: true, scroll: '0', sumMt: '0', playBtn: ico('pause', 24, ONP), sizeText: 'видео · 1080p · 214 МБ' },
+      { id: '20d3', label: 'Прокрутка к ленте, прилипание (предложение): видео сжалось в строку 72 под шапкой — мини-кадр 128 × 72, балл, «0:47 / 2:05 · −6 ц», «на весь экран»; лента прямо под ней', video: null, showVideo: false, sticky: true, miniVideo, lost: false, hasSound: true, scroll: '-110px', sumMt: '0', playBtn: ico('pause', 24, ONP), sizeText: 'видео · 1080p · 214 МБ' },
+      { id: '20d4', label: 'Та же прокрутка без прилипания — видео ушло вверх вместе с итогом; за руками нужно возвращаться', video: videoWide(), showVideo: true, sticky: false, lost: false, hasSound: true, scroll: '-320px', sumMt: '0', playBtn: ico('pause', 24, ONP), sizeText: 'видео · 1080p · 214 МБ' },
+      { id: '20d5', label: 'Первый кадр грузится: скелет той же пропорции; спиннер 24 появляется только после 300 мс', video: videoWide({ skeleton: true, spinner: true, full: false }), showVideo: true, sticky: false, lost: false, hasSound: true, scroll: '0', sumMt: '0', playBtn: ico('play', 24, ONP), sizeText: 'видео · 1080p · 214 МБ' },
+      { id: '20d6', label: 'Пауза по тапу на видео — глиф 64 проступает и тает за 600 мс; ▶ в плеере', video: videoWide({ paused: true }), showVideo: true, sticky: false, lost: false, hasSound: true, scroll: '0', sumMt: '0', playBtn: ico('play', 24, ONP), sizeText: 'видео · 1080p · 214 МБ' },
+      { id: '20d7', label: '«Видео не найдено — остался разбор»: строка вместо картинки; экран как у записи без звука — нет плеера, «Звука», «Поделиться»', video: null, showVideo: false, sticky: false, lost: true, hasSound: false, scroll: '0', sumMt: '0', playBtn: null, sizeText: 'видео не найдено' },
+    ];
+    const videoLand = frame(456, 256, { r: 14, full: true });
+    // ---- fullscreen
+    const fullPortrait = [
+      { id: '20e1', label: 'Портрет, горизонтальное видео (16:9 по ширине, 412 × 232) по центру чёрного; панель показана: сверху назад · название · A/B, снизу полоска нот 40, плеер, «свернуть»', video: frame(412, 232), panel: true, strip: true, stripOnly: false, glyph: false },
+      { id: '20e2', label: 'Панель спрятана (3 с без касаний), полоска осталась внизу; тап по видео — пауза с глифом', video: frame(412, 232), panel: false, strip: false, stripOnly: true, glyph: true },
+    ];
+    const videoFullL = frame(876, 396), videoFullV = frame(223, 396);
+    // ---- share
+    const radio = on => h('div', { style: { width: 22, height: 22, borderRadius: 11, border: `2px solid ${on ? P : DIM}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' } }, on ? h('div', { style: { width: 11, height: 11, borderRadius: 6, background: P } }) : null);
+    const shareOpts3 = [
+      { name: 'Видео с обработанным звуком', ext: '.mp4', sub: 'Камерный зал · как слышно в приложении', radio: radio(true), ring: `inset 0 0 0 1.5px ${P}` },
+      { name: 'Видео как снято', ext: '.mp4', sub: 'оригинал файла, звук без обработки', radio: radio(false), ring: 'none' },
+      { name: 'Только звук', ext: '.m4a', sub: 'обработанный · ≈ 2 МБ · моно', radio: radio(false), ring: 'none' },
+    ];
+    const shareOpts2 = [
+      { name: 'Видео', ext: '.mp4', sub: 'как снято', radio: radio(true), ring: `inset 0 0 0 1.5px ${P}` },
+      { name: 'Только звук', ext: '.m4a', sub: '≈ 2 МБ · моно', radio: radio(false), ring: 'none' },
+    ];
+    // ---- sound header
+    const waveEl = n => h('div', { style: { display: 'flex', alignItems: 'center', gap: 2, height: 36 } }, Array.from({ length: n }, (_, i) => h('div', { key: i, style: { width: 3, height: 6 + Math.abs(Math.sin(i * .9) * Math.cos(i * .23)) * 28, borderRadius: 1.5, background: i < n * .38 ? P : OUTV } })));
+    const wave = waveEl(44), waveShort = waveEl(30);
+    // ---- dev
+    const tokens = [
+      { name: 'video.field', hex: FIELD, use: 'поля вокруг вертикального видео на экране сессии и в landscape полноэкранного режима (= surfaceContainerLowest / stand.bg)' },
+      { name: 'video.scrim', hex: 'rgba(0,0,0,.45)', use: 'подложка кнопки «на весь экран» 40, глифа паузы 64, полоски нот в полноэкранном режиме' },
+      { name: 'video.panel', hex: 'rgba(0,0,0,.75)', use: 'градиент панели полноэкранного режима: верх 64 → 0, низ до .75 (на чёрном фоне, не stand.scrim)' },
+      { name: 'video.fullBg', hex: '#000000', use: 'фон полноэкранного режима с горизонтальным видео в портрете; с вертикальным в landscape — video.field' },
+      { name: 'badge.bg', hex: SCH, use: 'бейдж камеры на плитке (18), вырез 2 dp цветом фона карточки (surfaceContainer / card.selected)' },
+      { name: 'size.warn', hex: Y, use: 'размер файла ≥ 100 МБ в листе «Поделиться» (= zone.near, 700)' },
+    ];
+    const sizes = [
+      { name: 'Кнопка «Видео-дубль»', v: '40 dp r20, контур 1 outlineVariant, фон surfaceContainerHigh; video 20 + 14/600 + chevron-down 16; слева отступ 88 (72 + 16) под текст главной кнопки; landscape — 36, отступ 78. Меню 248 (landscape 236), пункты 52 с подписью 12; приглушение α .38 во время записи и в режиме выбора' },
+      { name: 'Лист разбора', v: 'surfaceContainer r28 top, padding 8 16 24, gap 14; grip 32×4; миниатюра 64×36 r6; заголовок 20/700 + процент 20/700 primary; мини-лента 48 r10 фон surface, отрезки 5 dp по 7 рядам, курсор 2 primary; полоса запасная 6; строка 13; «Отмена» outlined 40. Не закрывается тапом мимо / свайпом' },
+      { name: 'Ошибка в листе', v: 'alert 24 error + заголовок 17/700 + пояснение 14 onSurfaceVariant; «Понятно» filled 48 справа; два выхода — «Удалить» outlined error / «Отправить видео» filled, по flex 1' },
+      { name: 'Бейдж на плитке (C)', v: 'круг 18 в правом нижнем углу плитки 44 (смещение −3, −3), фон badge.bg, вырез 2 фоном карточки, video 12 onSurface; на плитке 36 — 15 / 10; в чекбоксе — нет' },
+      { name: 'Видео на экране сессии', v: 'ширина − 32, r16, высота по пропорции, но ≤ 40 % высоты экрана (357 в 892); вертикальное — центр на video.field; «на весь экран» 40 в углу (8, 8) на video.scrim с fullscreen 22 белым; глиф паузы 64 / pause 32; скелет surfaceContainer; спиннер 24 после 300 мс' },
+      { name: 'Прилипшая строка', v: '72 dp под шапкой (0 16 10): мини-кадр 128×72 r10, балл 22/800 + «%» 13, «0:47 / 2:05 · −6 ц» 13, fullscreen 40; линия 1 surfaceContainerHigh; Collapsing по прокрутке (не два состояния)' },
+      { name: 'Строка размера', v: '«видео · 1080p · 214 МБ» 13 onSurfaceVariant с video 14 слева, в одной строке с «Переименовать» / «Удалить» (высота 40); «видео не найдено» — если файла нет' },
+      { name: 'Полноэкранный режим', v: 'фон video.fullBg (портрет) / video.field (landscape вертикальное); панель верх 64 (назад 48, название 15/600, A/B 68×32 с контуром белым .3), низ: полоска 40 r10 (окно ±4 с, 7 рядов × 4 dp, текущая нота обводка 1.5 onSurface, курсор 2 primary по центру) + плеер (▶ 48, время 13, ползунок, fullscreen-exit 40); поля 16 портрет / 24 landscape. Вертикальное видео в landscape: полоска — две половины по полям (по 302 при 892), одна шкала времени сквозь обе, курсор на левом краю правой; на видео не ложится' },
+      { name: 'Лист ноты', v: 'кружок 48 зоны α .16 с именем 18/800 цветом зоны; заголовок 20/700; отклонение 24/800 цветом зоны; шкала ±50 ц 28 r14; «Смотреть это место» filled 52 r26 с play-circle 20; у звукового — outlined «Слушать это место»' },
+      { name: 'Лист «Поделиться»', v: 'варианты 56 r14 с чипом расширения 12/600 на outlineVariant; строка файла: имя 13/600, «2:05 · 1080p · ≈ 214 МБ» — размер size.warn 700 + предупреждение словами при ≥ 100 МБ' },
+      { name: 'Landscape сессии', v: 'левая колонка 456 (видео 456×256 r14 + плеер 44) неподвижна, правая скроллится (итог 44 sp, лента 96, «Звук» 48); прилипания нет' },
+    ];
+    const anims = [
+      { name: 'Меню «Видео-дубль»', v: 'как меню статуса: scale .95 → 1 + fade 150 из точки кнопки; закрытие 100. После выбора — системная камера / выбор файла; кнопка 700 мс в состоянии «Открываем…» если система медлит' },
+      { name: 'Лист разбора — появление', v: 'после возврата из камеры / выбора: лист снизу 250 FastOutSlowIn; если оценка разбора ≤ 700 мс — лист не показывается (на карточке нового дубля сразу подсветка take.new); показанный лист живёт ≥ 1 200 мс; копирование → разбор — crossfade 200' },
+      { name: 'Проявление ленты', v: 'отрезок появляется по мере готовности ноты: width 0 → w за 120 Linear от левого края, α .5 → .9 при закрытии ноты; курсор — процент, шаг ≤ 10 раз/с. Оценка «осталось» — по скорости первых 20 %; до этого только проценты' },
+      { name: 'Готово', v: 'лист уходит вниз 200; новый дубль вставляется первым (expandVertically 250 + fade), фон take.new и кольцо primary → surfaceContainer за 1 500 после 3 с; экран сессии не открывается сам' },
+      { name: 'Отмена / ошибка', v: 'содержимое листа сменяется crossfade 200, высота анимируется (animateContentSize 200); «Удалить» — файл удаляется, лист вниз 200; «Отправить видео» — системный лист поверх, после возврата — снова выбор (файл ещё есть)' },
+      { name: 'Видео — тап', v: 'пауза / продолжить сразу; глиф 64: α 0 → 1 и scale .8 → 1 за 120, держится 300, α → 0 за 180; итого 600. Плеер и курсор ленты синхронны с видео (source of truth — ExoPlayer position)' },
+      { name: 'Прилипание', v: 'Collapsing по offset прокрутки: высота видео 214 → 72 и ширина → 128 линейно на первых 214 dp прокрутки; балл 64 → 22 sp fade-in в строке после 60 %; тени/линия появляются в конце. Без анимаций по времени — только от прокрутки' },
+      { name: 'Полноэкранный режим', v: 'вход — shared element видео 300 FastOutSlowIn на чёрный; панель прячется через 3 с без касаний (fade 300 + сдвиг 12 наружу), показывается тапом по краю / полоске; полоска остаётся; поворот разрешён (sensor); FLAG_KEEP_SCREEN_ON пока играет; выход — обратно к месту в прокрутке' },
+      { name: '«Смотреть это место»', v: 'лист вниз 200; seek на start − 1 000 мс (не ниже 0), play; курсор ленты прыгает без анимации, лента прокручивается к месту 250; в полноэкранном режиме — там же' },
+      { name: 'Подготовка видео («Поделиться»)', v: 'как 18j: оценка = длительность × k (mux без перекодирования картинки, k ≈ .05); ≤ 700 мс — без прогресса; ≥ 1 200 мс минимум показа; «Отмена» удаляет временный файл; «Видео как снято» — без подготовки, сразу системный лист' },
+      { name: '«Убрать анимации»', v: 'глиф паузы — 300 мс без scale; Collapsing остаётся (это прокрутка); лента в листе разбора — отрезки появляются без width-анимации; панель полноэкранного — мгновенно' },
+    ];
+    const texts = [
+      { k: 'Вход', v: '«Видео-дубль» · «Снять видео» / «откроется камера телефона» · «Видео из галереи» / «одно за раз, до 60 минут»' },
+      { k: 'Лист разбора', v: '«Добавляем видео…» · «Слушаем запись…» · «N %» · «осталось около N с» · «Отмена» · «Остановить разбор?» · «Видео снято только что и больше нигде не хранится. Можно отправить его куда-нибудь, чтобы не потерять, или удалить.» · «Удалить» / «Отправить видео» / «Продолжить разбор»' },
+      { k: 'Ошибки', v: '«В видео нет звука» · «Видео длиннее 60 минут — такое не разобрать» · «Не получилось открыть видео» · «В видео не нашлось нот — дубль не добавлен» (+ «Исходник остался в галерее.» / для снятого — два выхода) · «Не хватает места: нужно ещё N МБ» · «Понятно»' },
+      { k: 'Сессия', v: '«видео · 1080p · 214 МБ» · «видео не найдено» · «Видео не найдено — остался разбор» / «Файл удалён из памяти приложения. Звука тоже нет — как у записи без звука.» · «Смотреть это место» / «Слушать это место» · «дубль 7» с иконкой видео' },
+      { k: 'Поделиться', v: '«Поделиться дублем» · «Видео с обработанным звуком» / «Камерный зал · как слышно в приложении» · «Видео как снято» / «оригинал файла, звук без обработки» · «Только звук» / «обработанный · ≈ 2 МБ · моно» · «≈ 214 МБ — большой файл, мессенджеры могут сжать или не принять» · «Готовим видео» · «Не получилось подготовить видео» · «Ещё раз» / «Отправить как снято»' },
+      { k: 'Удаление и TalkBack', v: '«Видео (214 МБ), звук и разбор удалятся. Это нельзя отменить.» — сумма по выбранным · карточка: «Менуэт, дубль с видео, 18 сентября, 2 минуты 5 секунд, хорошо» · видео: «Видео, играет / на паузе, двойное касание — пауза» · кнопка угла: «На весь экран» / «Свернуть»' },
+    ];
+    return { entryFrames, level, progLine, landTake, thumbS, rollEmerge, errors, cardVariants, tileC, recCards, sessionFrames, rollMain, rollLand, videoLand, fullPortrait, stripP, stripL, stripHalfL, stripHalfR, videoFullL, videoFullV, shareOpts3, shareOpts2, wave, waveShort,
+      icBack: ico('back', 24, ON), icShare: ico('share', 24, ON), icShareD: ico('share', 18, ONP), icCloseS: ico('close', 18, ON), icTrashE: ico('trash', 18, ERR), icTrashW: ico('trash', 18, '#FFFFFF'), icMore: ico('more', 24, OV), icSelectP: ico('select', 16, P), icStarS: ico('star', 12, P), icPencilP: ico('pencil', 18, P), icChevDS: ico('chevron-down', 16, OV), icChevRV: ico('chevron-right', 20, OV),
+      icVideo: ico('video', 20, ON), icVideoS: ico('video', 18, ON), icVideoXS: ico('video', 14, OV), icGalleryV: ico('video-gallery', 20, ON), icVideoOff: ico('video-off', 24, OV), icFull: ico('fullscreen', 22, ON), icFullExit: ico('fullscreen-exit', 22, '#FFFFFF'), icPauseOn: ico('pause', 24, ONP), icPauseBig: ico('pause', 32, '#FFFFFF'), icPlayCircleD: ico('play-circle', 20, ONP), icPlayCircle: ico('play-circle', 20, ON), icAlert: ico('alert', 24, ERR), icSlidersP: ico('sliders', 22, P), icFile: ico('file', 22, OV), icCheckS: ico('check', 14, ONP), icRepeatS: ico('repeat', 18, ON), icResetP: ico('reset', 18, P),
+      iconRows, tokens, sizes, anims, texts };
+  }
+}
+</script>
+</body>
+</html>

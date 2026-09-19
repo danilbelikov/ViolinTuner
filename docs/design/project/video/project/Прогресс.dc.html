@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}@keyframes giftIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}@keyframes glowIn{from{opacity:0}to{opacity:1}}</style></helmet>
+
+<section class="dv-turn" id="s11">
+<div class="dv-thd"><a class="dv-tid" href="#s11">11</a><span class="dv-tname">Профиль и прогресс · шапка, уровни, трофеи · портрет 412×892</span></div>
+<div class="dv-opts">
+<sc-for list="{{ frames }}" as="p" hint-placeholder-count="8">
+<div class="dv-opt" id="{{ p.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ p.id }}">{{ p.id }}</a>{{ p.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" keyboard="{{ p.keyboard }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:20px;padding:12px 16px 0">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px;min-height:56px">
+        <sc-if value="{{ p.avPhoto }}" hint-placeholder-val="{{ true }}"><div style="width:56px;height:56px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#8C7AB0 0%,#4E3F78 55%,#2A2352 100%)"></div></sc-if>
+        <sc-if value="{{ p.avLetter }}" hint-placeholder-val="{{ false }}"><div style="width:56px;height:56px;border-radius:50%;flex:none;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700">{{ p.letter }}</div></sc-if>
+        <sc-if value="{{ p.avNone }}" hint-placeholder-val="{{ false }}"><div class="tn" style="width:56px;height:56px;border-radius:50%;flex:none;background:#292833;border:1px solid #3A3846;box-sizing:border-box;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;color:#E6E4EE">{{ p.levelNum }}</div></sc-if>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px">
+          <div style="font-size:16px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.title }}</div>
+          <div class="tn" style="font-size:24px;font-weight:800;line-height:1.1;letter-spacing:-.01em;color:#C4ADFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.total }}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;flex:none;height:44px">
+          <sc-for list="{{ p.row }}" as="r" hint-placeholder-count="3"><div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center">{{ r.el }}</div></sc-for>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:{{ p.pct }};border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:12px;color:#A39FB5;white-space:nowrap" class="tn"><div>{{ p.subtitle }}</div><div>{{ p.toNext }}</div></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">Начать занятие</div>
+      <div style="text-align:center;font-size:14px;color:#A39FB5;line-height:1.45;padding:0 12px" class="tn">{{ p.todayLine }}</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <sc-for list="{{ p.sums }}" as="k" hint-placeholder-count="3"><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">{{ k.n }}</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;white-space:nowrap">{{ k.v }}</div></div></sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:40px">
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M12.5 4 L6.5 10 L12.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div>
+        <div style="font-size:16px;font-weight:700">Сентябрь 2026</div>
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;opacity:.3"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M7.5 4 L13.5 10 L7.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:11px;color:#A39FB5;text-align:center;font-weight:600"><div>пн</div><div>вт</div><div>ср</div><div>чт</div><div>пт</div><div>сб</div><div>вс</div></div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px">
+        <sc-for list="{{ p.cells }}" as="c" hint-placeholder-count="35">
+        <div style="height:44px;display:flex;align-items:center;justify-content:center;opacity:{{ c.op }}">
+          <div style="position:relative;width:40px;height:40px;border-radius:12px;background:{{ c.bg }};box-shadow:{{ c.shadow }};display:flex;align-items:center;justify-content:center">
+            <div class="tn" style="font-size:15px;font-weight:{{ c.fw }};color:{{ c.fg }};margin-top:{{ c.mt }}">{{ c.n }}</div>
+            <sc-if value="{{ c.dot }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;bottom:6px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:{{ c.fg }}"></div></sc-if>
+          </div>
+        </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:6px;font-size:11px;color:#A39FB5;padding:2px 4px 0">меньше<div style="width:12px;height:12px;border-radius:4px;background:#2A2352"></div><div style="width:12px;height:12px;border-radius:4px;background:#3D2F80"></div><div style="width:12px;height:12px;border-radius:4px;background:#5B43B8"></div><div style="width:12px;height:12px;border-radius:4px;background:#C4ADFF"></div>больше</div>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding-bottom:16px">
+      <div><div style="font-size:14px;color:#A39FB5;display:flex;align-items:center;gap:8px">17 сентября, четверг<span style="font-size:11px;font-weight:700;color:#C4ADFF;border:1px solid #C4ADFF;border-radius:6px;padding:1px 6px">сегодня</span></div><div class="tn" style="font-size:32px;font-weight:700;line-height:1.1;margin-top:4px;color:{{ p.selColor }}">{{ p.selBig }}</div></div>
+      <div style="height:40px;padding:0 16px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF;white-space:nowrap">{{ p.selAction }}</div>
+    </div>
+  </div>
+  <sc-if value="{{ p.navShown }}" hint-placeholder-val="{{ true }}">
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ p.nav }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px">
+      <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">
+        <sc-if value="{{ n.isLive }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:50%;border:3px solid {{ n.ic }}"></div></sc-if>
+        <sc-if value="{{ n.isPr }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:4px;border:3px solid {{ n.ic }};border-top-width:6px;box-sizing:border-box"></div></sc-if>
+        <sc-if value="{{ n.isRec }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:14px;border-radius:3px;border:3px solid {{ n.ic }}"></div></sc-if>
+        <sc-if value="{{ n.isSet }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:5px;border:3px solid {{ n.ic }};transform:rotate(45deg)"></div></sc-if>
+      </div>
+      <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+    </div>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ p.sheetProfile }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#292833;border-radius:28px 28px 0 0;padding:12px 24px 24px;display:flex;flex-direction:column;gap:20px">
+    <div style="width:32px;height:4px;border-radius:2px;background:#A39FB5;opacity:.5;align-self:center"></div>
+    <div style="font-size:14px;color:#A39FB5">Профиль</div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:14px">
+      <sc-if value="{{ p.avPhoto }}" hint-placeholder-val="{{ true }}"><div style="width:112px;height:112px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#8C7AB0 0%,#4E3F78 55%,#2A2352 100%)"></div></sc-if>
+      <sc-if value="{{ p.avLetter }}" hint-placeholder-val="{{ false }}"><div style="width:112px;height:112px;border-radius:50%;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:48px;font-weight:700">{{ p.letter }}</div></sc-if>
+      <div style="display:flex;gap:4px">
+        <div style="height:40px;padding:0 16px;border-radius:20px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Выбрать фото</div>
+        <sc-if value="{{ p.avPhoto }}" hint-placeholder-val="{{ true }}"><div style="height:40px;padding:0 16px;border-radius:20px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Убрать фото</div></sc-if>
+      </div>
+    </div>
+    <div style="position:relative;height:56px;border:1px solid #3A3846;border-radius:16px;box-sizing:border-box;display:flex;align-items:center;padding:0 16px">
+      <div style="position:absolute;top:-8px;left:12px;padding:0 4px;background:#292833;font-size:12px;color:#C4ADFF">Имя</div>
+      <div style="flex:1;font-size:16px;color:{{ p.nameColor }}">{{ p.nameField }}</div>
+      <div class="tn" style="font-size:12px;color:#A39FB5">{{ p.nameCount }}</div>
+    </div>
+    <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">Готово</div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ p.sheetTrophies }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#292833;border-radius:28px 28px 0 0;padding:12px 24px 24px;display:flex;flex-direction:column;gap:12px">
+    <div style="width:32px;height:4px;border-radius:2px;background:#A39FB5;opacity:.5;align-self:center"></div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:20px;font-weight:700">Трофеи</div><div class="tn" style="font-size:13px;color:#A39FB5">всего за скрипкой — 16 ч 40 мин</div></div>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ trophyList }}" as="t" hint-placeholder-count="10">
+        <sc-if value="{{ t.divider }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px;padding:10px 0 4px;font-size:11px;font-weight:600;color:#A39FB5;letter-spacing:.04em;text-transform:uppercase">Далеко впереди<div style="flex:1;height:1px;background:#3A3846"></div></div></sc-if>
+        <div style="display:flex;align-items:center;gap:14px;height:56px;opacity:{{ t.op }}">
+          <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex:none">{{ t.el }}</div>
+          <div style="flex:1;min-width:0;display:flex;align-items:baseline;gap:8px"><div style="font-size:15px;font-weight:600;color:{{ t.nameColor }}">{{ t.name }}</div><div class="tn" style="font-size:13px;color:#A39FB5">{{ t.hours }}</div></div>
+          <div class="tn" style="font-size:13px;color:{{ t.statusColor }};white-space:nowrap">{{ t.status }}</div>
+        </div>
+      </sc-for>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ p.sheetGift }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#292833;border-radius:28px 28px 0 0;padding:12px 24px 24px;display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div style="width:32px;height:4px;border-radius:2px;background:#A39FB5;opacity:.5"></div>
+    <div style="font-size:14px;color:#A39FB5;align-self:flex-start">Новый трофей</div>
+    <div style="position:relative;width:240px;height:240px;display:flex;align-items:center;justify-content:center;margin-top:4px">
+      <div style="position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(196,173,255,.22) 0%,rgba(196,173,255,.06) 45%,rgba(196,173,255,0) 70%);animation:glowIn 600ms 200ms ease-out both"></div>
+      <div style="position:relative;animation:giftIn 400ms cubic-bezier(.2,.8,.2,1) both">{{ giftBig }}</div>
+    </div>
+    <div style="font-size:28px;font-weight:700;line-height:1.1">Колок</div>
+    <div class="tn" style="font-size:15px;color:#A39FB5;text-align:center;line-height:1.45">10 часов за скрипкой<br>13 сентября</div>
+    <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;align-self:stretch;margin-top:20px">Спасибо</div>
+  </div>
+  </sc-if>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+
+<div class="dv-opt" id="11g"><div class="dv-olabel"><a class="dv-oid" href="#11g">11g</a>Landscape 892×412 — шапка профиля в левой колонке над кнопкой; ряд трофеев ужат до строки</div><div class="dv-card">
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;flex-direction:column;box-sizing:border-box">
+  <div style="flex:1;display:flex;gap:24px;padding:14px 20px 0;min-height:0">
+    <div style="width:280px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:12px;min-height:44px">
+          <div style="width:44px;height:44px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#8C7AB0 0%,#4E3F78 55%,#2A2352 100%)"></div>
+          <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Даня</div><div class="tn" style="font-size:20px;font-weight:800;line-height:1.1;color:#C4ADFF;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">16 ч 40 мин</div></div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:4px"><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:44%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div><div class="tn" style="display:flex;justify-content:space-between;font-size:11px;color:#A39FB5;white-space:nowrap"><div>Уровень 4 · Первая позиция</div><div>до 5 уровня — 8 ч 20 мин</div></div></div>
+        <div style="display:flex;align-items:center;gap:8px;height:28px"><div style="display:flex;gap:2px">{{ landRow }}</div><div class="tn" style="font-size:12px;color:#A39FB5">2 трофея · следующий 50 ч</div></div>
+      </div>
+      <div style="height:48px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">Начать занятие</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <sc-for list="{{ sumsLand }}" as="k" hint-placeholder-count="3"><div style="background:#1E1D25;border-radius:14px;padding:10px"><div style="font-size:11px;color:#A39FB5">{{ k.n }}</div><div class="tn" style="font-size:15px;font-weight:700;margin-top:3px;white-space:nowrap">{{ k.v }}</div></div></sc-for>
+      </div>
+    </div>
+    <div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:32px">
+        <div style="width:40px;height:32px;display:flex;align-items:center;justify-content:center"><svg width="18" height="18" viewBox="0 0 20 20"><path d="M12.5 4 L6.5 10 L12.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div>
+        <div style="font-size:15px;font-weight:700">Сентябрь 2026</div>
+        <div style="width:40px;height:32px;display:flex;align-items:center;justify-content:center;opacity:.3"><svg width="18" height="18" viewBox="0 0 20 20"><path d="M7.5 4 L13.5 10 L7.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:10px;color:#A39FB5;text-align:center;font-weight:600"><div>пн</div><div>вт</div><div>ср</div><div>чт</div><div>пт</div><div>сб</div><div>вс</div></div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr)">
+        <sc-for list="{{ cellsToday }}" as="c" hint-placeholder-count="35">
+        <div style="height:44px;display:flex;align-items:center;justify-content:center;opacity:{{ c.op }}">
+          <div style="position:relative;width:38px;height:38px;border-radius:11px;background:{{ c.bg }};box-shadow:{{ c.shadow }};display:flex;align-items:center;justify-content:center">
+            <div class="tn" style="font-size:14px;font-weight:{{ c.fw }};color:{{ c.fg }};margin-top:{{ c.mt }}">{{ c.n }}</div>
+            <sc-if value="{{ c.dot }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;bottom:5px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:{{ c.fg }}"></div></sc-if>
+          </div>
+        </div>
+        </sc-for>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:4px 4px 0">
+        <div style="font-size:13px;color:#A39FB5">17 сентября, четверг · <span class="tn" style="color:#E6E4EE;font-weight:700;font-size:16px">45 мин</span></div>
+        <div style="font-size:13px;font-weight:600;color:#C4ADFF">Изменить время</div>
+      </div>
+    </div>
+  </div>
+  <div style="height:64px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ navLand }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:10px">
+      <div style="position:relative;width:48px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">
+        <sc-if value="{{ n.isLive }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:50%;border:3px solid {{ n.ic }}"></div></sc-if>
+        <sc-if value="{{ n.isPr }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:4px;border:3px solid {{ n.ic }};border-top-width:6px;box-sizing:border-box"></div></sc-if>
+        <sc-if value="{{ n.isRec }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:14px;border-radius:3px;border:3px solid {{ n.ic }}"></div></sc-if>
+        <sc-if value="{{ n.isSet }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:18px;border-radius:5px;border:3px solid {{ n.ic }};transform:rotate(45deg)"></div></sc-if>
+      </div>
+      <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Шапка (ответ на вопрос 1)</b> — 96 dp вместо заголовка 31 dp: строка «аватар 56 · имя + сумма часов 24 sp primary · ряд трофеев 3×32» и под ней полоса 6 dp со строкой «Уровень 4 · Первая позиция — до 5 уровня 8 ч 20 мин». Сумма часов — главное число шапки: единственный primary-текст на экране, имя стало подписью к нему. Итого экран вырос на 63 dp, календарь целиком остаётся на первом экране (нижний край легенды ≈ 690 dp из 788 доступных). Отдельный ряд трофеев не нужен: три значка живут справа от имени; при крупном шрифте (×1.5) или имени длиннее ~12 символов ряд ужимается до двух значков + «+1», в landscape — до строки «2 трофея · следующий 50 ч» (11g). Тап по аватару/имени → лист «Профиль», по ряду трофеев → лист «Трофеи». <b>Полоса (вопрос 3)</b> — тонкая, без процентов и очков: трек surfaceContainerHigh, заливка practice.3→primary; подпись говорит временем, как всё в «Занятиях». Уровень — в подписи onSurfaceVariant, не акцентом. Сумма часов — главное число шапки: единственный primary-текст на экране, имя стало подписью к нему. <b>Аватар без имени (вопрос 5)</b> — силуэт не нужен: круг surfaceContainerHigh с номером уровня, вместо имени — подпись «За скрипкой» над суммой. <b>Полученные и неполученные (11e)</b> различаются формой: полученные — цветная заливка «материалом», неполученные — контур outlineVariant без заливки; вдобавок текст статуса. Отметки 2500+ вынесены под разделитель «Далеко впереди» без остатка часов — только сама отметка: горизонт, а не долг. Предложение поведения: остаток часов показывать только для ближайшей неполученной, остальным — «—»; согласуем отдельно. <b>Подарок (вопрос 4)</b> — иллюстрация 160 dp scale .88→1 + fade 400 мс, за ней мягкое свечение primary 22 % проявляется 600 мс с задержкой 200 мс. Никаких частиц и звука; одна кнопка. В ряду шапки новый трофей после «Спасибо» появляется scale 0.6→1 250 мс на месте бывшего контура.</p>
+</section>
+
+<section class="dv-turn" id="s11t">
+<div class="dv-thd"><a class="dv-tid" href="#s11t">11t</a><span class="dv-tname">Десять трофеев · 160 dp и 40 dp · полученный и неполученный</span></div>
+<div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:20px;max-width:1160px">
+<sc-for list="{{ gallery }}" as="g" hint-placeholder-count="10">
+<div style="background:#15151B;border-radius:20px;padding:20px 16px 16px;display:flex;flex-direction:column;align-items:center;gap:12px">
+  <div style="width:160px;height:160px;display:flex;align-items:center;justify-content:center">{{ g.big }}</div>
+  <div style="display:flex;align-items:center;gap:12px;height:40px"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">{{ g.small }}</div><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">{{ g.locked }}</div></div>
+  <div style="text-align:center"><div style="font-size:15px;font-weight:700">{{ g.name }}</div><div class="tn" style="font-size:12px;color:#A39FB5;margin-top:2px">{{ g.hours }}</div></div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Ответ на вопрос 2.</b> Один ряд предметов — от расходника к инструменту: канифоль → колок → струна → смычок → подбородник → камертон → пюпитр → футляр → скрипка → концерт (скрипка со смычком в золотом круге). «Вес» растёт материалом: канифоль и дерево → эбен → серебро и сталь → лак и золото. Всё построено из примитивов (rect, circle, ellipse, path с 2–4 точками) в viewBox 64×64 — переносится в VectorDrawable без упрощения; источник — массив <span class="mono">TROPHIES</span> в логике этого файла. Неполученный вариант — те же примитивы с fill surfaceContainer и stroke <span class="mono">trophy.locked</span> 1.5 — читается как «место под предмет».</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · профиль и прогресс · дополнение к хэндоффу «Занятия»</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(520px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Новые токены</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Hex</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="12"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Уровни и трофеи</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,.5fr) minmax(0,.6fr) minmax(0,1.4fr)">
+    <div class="h">Уровень</div><div class="h">Порог</div><div class="h">Название</div>
+    <sc-for list="{{ levels }}" as="l" hint-placeholder-count="15"><div class="tn">{{ l.n }}</div><div class="tn">{{ l.t }}</div><div>{{ l.name }}</div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px">Прогресс полосы = (всего − порог текущего) / (порог следующего − порог текущего); на 15 уровне полоса полная, подпись «Легенда» без «до…». Трофеи: 1 ч Канифоль · 10 ч Колок · 50 ч Струна · 100 ч Смычок · 250 ч Подбородник · 500 ч Камертон · 1000 ч Пюпитр · 2500 ч Футляр · 5000 ч Скрипка · 10 000 ч Концерт. Вручение — при первом открытии «Занятий» после того, как сумма пересекла порог; если пересечено несколько — по одному листу подряд, от младшего.</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты</div>
+  <div style="color:#A39FB5">«Уровень 4 · Первая позиция» · «до 5 уровня — 8 ч 20 мин» · сумма «16 ч 40 мин» (пусто: «0 мин»; от 100 ч — только часы с разрядным пробелом: «1 250 ч»; минуты округляются вниз) · без имени: «За скрипкой» · компактный ряд: «2 трофея · следующий 50 ч» · без имени: заголовок «Первая позиция», подпись «Уровень 4» · лист «Профиль»: «Выбрать фото», «Убрать фото», поле «Имя», плейсхолдер «Как вас зовут?», счётчик «4 / 24», «Готово» · лист «Трофеи»: «всего за скрипкой — 16 ч 40 мин», «получен 13 сентября», «ещё 33 ч 20 мин», разделитель «Далеко впереди» · лист «Подарок»: «Новый трофей», название, «10 часов за скрипкой», дата, «Спасибо» · пусто: «до 2 уровня — 2 ч».</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp / sp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Элемент</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="12"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="7"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const P = '#C4ADFF', PC = '#5B43B8', ON = '#E6E4EE', OV = '#A39FB5', SURF = '#131318';
+    // trophy palette
+    const WOOD = '#9A5530', WOODL = '#C9814A', EB = '#2C2430', EBL = '#5A4E64', SIL = '#B9B7C4', SILL = '#E6E4EE', GOLD = '#D9B65C', ROS = '#B8672A', ROSL = '#E3975A', HAIR = '#EDE6D3', VEL = '#5B43B8', CASE = '#2A2430', PAPER = '#F1EEE6', INK = '#8D8A96';
+    const LOCK = '#6B6880', LOCKF = '#1E1D25';
+    // primitives: [tag, attrs] in viewBox 64×64
+    const TROPHIES = [
+      { hours: 1, hoursText: '1 ч', name: 'Канифоль', got: '2 сентября', prims: [['rect', { x: 8, y: 44, width: 48, height: 6, rx: 3, fill: EBL }], ['rect', { x: 12, y: 20, width: 40, height: 26, rx: 6, fill: ROS }], ['rect', { x: 12, y: 20, width: 40, height: 10, rx: 5, fill: ROSL }], ['circle', { cx: 20, cy: 26, r: 2.5, fill: '#FFF3E0', opacity: .7 }]] },
+      { hours: 10, hoursText: '10 ч', name: 'Колок', got: '13 сентября', prims: [['rect', { x: 29, y: 22, width: 6, height: 34, rx: 3, fill: EBL }], ['ellipse', { cx: 32, cy: 16, rx: 13, ry: 9, fill: EB }], ['ellipse', { cx: 28, cy: 13, rx: 4, ry: 2, fill: EBL }], ['rect', { x: 27, y: 24, width: 10, height: 3, rx: 1.5, fill: SIL }]] },
+      { hours: 50, hoursText: '50 ч', name: 'Струна', prims: [['circle', { cx: 32, cy: 32, r: 18, fill: 'none', stroke: SIL, 'stroke-width': 5 }], ['circle', { cx: 32, cy: 32, r: 11, fill: 'none', stroke: SIL, 'stroke-width': 2.5 }], ['circle', { cx: 50, cy: 32, r: 5, fill: GOLD }]] },
+      { hours: 100, hoursText: '100 ч', name: 'Смычок', prims: [['path', { d: 'M14 56 L56 14', fill: 'none', stroke: HAIR, 'stroke-width': 1.5 }], ['path', { d: 'M10 54 L54 10', fill: 'none', stroke: WOOD, 'stroke-width': 3.5, 'stroke-linecap': 'round' }], ['polygon', { points: '8,50 16,58 22,52 14,44', fill: EB }], ['polygon', { points: '52,8 58,12 54,14', fill: SILL }]] },
+      { hours: 250, hoursText: '250 ч', name: 'Подбородник', prims: [['rect', { x: 40, y: 38, width: 6, height: 16, rx: 2, fill: SIL }], ['rect', { x: 50, y: 38, width: 6, height: 16, rx: 2, fill: SIL }], ['rect', { x: 38, y: 52, width: 20, height: 4, rx: 2, fill: SIL }], ['ellipse', { cx: 30, cy: 30, rx: 22, ry: 14, fill: EB }], ['ellipse', { cx: 28, cy: 28, rx: 14, ry: 8, fill: EBL }]] },
+      { hours: 500, hoursText: '500 ч', name: 'Камертон', prims: [['rect', { x: 22, y: 8, width: 5, height: 28, rx: 2.5, fill: SIL }], ['rect', { x: 37, y: 8, width: 5, height: 28, rx: 2.5, fill: SIL }], ['rect', { x: 22, y: 32, width: 20, height: 6, rx: 3, fill: SIL }], ['rect', { x: 29.5, y: 36, width: 5, height: 20, rx: 2.5, fill: SIL }], ['circle', { cx: 32, cy: 57, r: 4, fill: SILL }], ['rect', { x: 23.5, y: 10, width: 1.5, height: 22, rx: .75, fill: SILL, opacity: .7 }]] },
+      { hours: 1000, hoursText: '1000 ч', name: 'Пюпитр', prims: [['polygon', { points: '12,14 52,14 48,40 16,40', fill: EBL }], ['rect', { x: 20, y: 18, width: 24, height: 18, rx: 1, fill: PAPER }], ['rect', { x: 24, y: 23, width: 16, height: 1.5, fill: INK }], ['rect', { x: 24, y: 27, width: 16, height: 1.5, fill: INK }], ['rect', { x: 24, y: 31, width: 10, height: 1.5, fill: INK }], ['rect', { x: 30.5, y: 40, width: 3, height: 14, fill: SIL }], ['path', { d: 'M20 58 L32 52 L44 58', fill: 'none', stroke: SIL, 'stroke-width': 3, 'stroke-linecap': 'round' }]] },
+      { hours: 2500, hoursText: '2500 ч', name: 'Футляр', prims: [['rect', { x: 26, y: 14, width: 12, height: 8, rx: 4, fill: 'none', stroke: SIL, 'stroke-width': 2.5 }], ['rect', { x: 8, y: 20, width: 48, height: 28, rx: 10, fill: CASE }], ['rect', { x: 12, y: 24, width: 40, height: 20, rx: 7, fill: VEL }], ['ellipse', { cx: 32, cy: 34, rx: 9, ry: 5, fill: '#3D2F80' }], ['rect', { x: 20, y: 46, width: 6, height: 4, rx: 1, fill: SIL }], ['rect', { x: 38, y: 46, width: 6, height: 4, rx: 1, fill: SIL }]] },
+      { hours: 5000, hoursText: '5000 ч', name: 'Скрипка', prims: [['rect', { x: 30, y: 6, width: 4, height: 28, rx: 1, fill: EB }], ['circle', { cx: 32, cy: 7, r: 3.5, fill: EB }], ['ellipse', { cx: 32, cy: 36, rx: 10, ry: 8, fill: WOOD }], ['ellipse', { cx: 32, cy: 49, rx: 13, ry: 10, fill: WOOD }], ['rect', { x: 25, y: 38, width: 14, height: 10, fill: WOOD }], ['ellipse', { cx: 28, cy: 46, rx: 5, ry: 8, fill: WOODL, opacity: .35 }], ['path', { d: 'M26 44 v6 M38 44 v6', fill: 'none', stroke: EB, 'stroke-width': 1.5, 'stroke-linecap': 'round' }], ['polygon', { points: '30,52 34,52 33,58 31,58', fill: EB }]] },
+      { hours: 10000, hoursText: '10 000 ч', name: 'Концерт', prims: [['circle', { cx: 32, cy: 32, r: 29, fill: 'none', stroke: GOLD, 'stroke-width': 1.5, opacity: .8 }], ['path', { d: 'M12 54 L52 12', fill: 'none', stroke: GOLD, 'stroke-width': 2.5, 'stroke-linecap': 'round' }], ['rect', { x: 30, y: 10, width: 4, height: 26, rx: 1, fill: EB }], ['circle', { cx: 32, cy: 11, r: 3, fill: EB }], ['ellipse', { cx: 32, cy: 37, rx: 9, ry: 7, fill: WOOD }], ['ellipse', { cx: 32, cy: 48, rx: 12, ry: 9, fill: WOOD }], ['rect', { x: 26, y: 39, width: 12, height: 9, fill: WOOD }], ['ellipse', { cx: 29, cy: 46, rx: 4, ry: 7, fill: WOODL, opacity: .35 }], ['path', { d: 'M27 44 v5 M37 44 v5', fill: 'none', stroke: EB, 'stroke-width': 1.5, 'stroke-linecap': 'round' }]] },
+    ];
+    const camel = a => { const o = {}; for (const k in a) o[k.replace(/-(\w)/g, (_, c) => c.toUpperCase())] = a[k]; return o; };
+    const T = (i, size, locked) => h('svg', { key: `${i}-${size}-${locked}`, width: size, height: size, viewBox: '0 0 64 64' },
+      TROPHIES[i].prims.map(([tag, a], j) => {
+        let at = camel(a);
+        if (locked) { const hasFill = at.fill && at.fill !== 'none'; at = { ...at, fill: hasFill ? LOCKF : 'none', stroke: LOCK, strokeWidth: hasFill ? 1.5 : Math.min(at.strokeWidth || 1.5, 2.5) }; delete at.opacity; }
+        else if (at.fill === EB) at = { ...at, stroke: '#7A6E86', strokeWidth: 1 };
+        return h(tag, { key: j, ...at });
+      }));
+    const TOTAL_MIN = 1000; // 16 ч 40 мин
+    const fmt = m => { const hh = Math.floor(m / 60), mm = m % 60; return hh ? (mm ? `${hh} ч ${mm} мин` : `${hh} ч`) : `${mm} мин`; };
+    const steps = [null, { bg: '#2A2352', fg: ON }, { bg: '#3D2F80', fg: ON }, { bg: PC, fg: '#E9DDFF' }, { bg: P, fg: '#2E1A6E' }];
+    const mins = { 1: 30, 2: 50, 4: 100, 5: 15, 7: 45, 8: 70, 9: 25, 11: 125, 12: 40, 13: 55, 14: 35, 15: 80, 16: 50, 17: 45 };
+    const stepOf = m => m <= 0 ? 0 : m < 20 ? 1 : m < 45 ? 2 : m < 90 ? 3 : 4;
+    const cells = (empty) => {
+      const out = [{ n: '', bg: 'transparent', fg: ON, fw: 500, shadow: 'none', op: 1, dot: false, mt: '0' }];
+      for (let d = 1; d <= 30; d++) {
+        const m = empty ? 0 : (mins[d] || 0), st = stepOf(m), today = d === 17, s = steps[st];
+        out.push({ n: String(d), bg: s ? s.bg : 'transparent', fg: s ? s.fg : ON, fw: today ? 800 : 500, shadow: today ? `0 0 0 2px ${SURF},0 0 0 4px ${P}` : 'none', op: d > 17 ? .4 : 1, dot: st > 0, mt: st > 0 ? '-4px' : '0' });
+      }
+      return out;
+    };
+    const NAMES = [['Live', 'isLive'], ['Занятия', 'isPr'], ['Записи', 'isRec'], ['Настройки', 'isSet']];
+    const nav = NAMES.map(([name, k]) => { const a = name === 'Занятия'; return { name, isLive: k === 'isLive', isPr: k === 'isPr', isRec: k === 'isRec', isSet: k === 'isSet', pill: a ? PC : 'transparent', ic: a ? '#E9DDFF' : OV, fg: a ? ON : OV, fw: a ? 600 : 400 }; });
+    const sums = e => [{ n: 'Неделя', v: e ? '—' : '3 ч 30 мин' }, { n: 'Месяц', v: e ? '—' : '12 ч 45 мин' }, { n: 'Дней подряд', v: e ? '—' : '7' }];
+    const row = (got, next) => [...got.map(i => ({ el: T(i, 32, false) })), { el: T(next, 32, true) }];
+    const base = { avPhoto: true, avLetter: false, avNone: false, letter: 'Д', levelNum: '4', title: 'Даня', subtitle: 'Уровень 4 · Первая позиция', row: row([0, 1], 2), pct: '44%', total: '16 ч 40 мин', toNext: 'до 5 уровня — 8 ч 20 мин', todayLine: 'Сегодня: 45 мин', sums: sums(false), cells: cells(false), selBig: '45 мин', selColor: ON, selAction: 'Изменить время', nav, navShown: true, keyboard: false, sheetProfile: false, sheetTrophies: false, sheetGift: false, nameField: 'Даня', nameColor: ON, nameCount: '4 / 24' };
+    const frames = [
+      { ...base, id: '11a', label: 'Шапка профиля вместо заголовка: фото, имя, уровень, полоса до следующего, ряд трофеев (два полученных + следующий контуром)' },
+      { ...base, id: '11a2', label: 'Много часов — от 100 ч минуты не показываем: «1 250 ч», уровень 12', total: '1 250 ч', subtitle: 'Уровень 12 · Виртуоз', toNext: 'до 13 уровня — 750 ч', pct: '25%', row: row([5, 6], 7) },
+      { ...base, id: '11b1', label: 'Имя есть, фото нет — буква на primary', avPhoto: false, avLetter: true },
+      { ...base, id: '11b2', label: 'Ни имени, ни фото — номер уровня в круге, название уровня заголовком (предложение вместо силуэта)', avPhoto: false, avNone: true, title: 'За скрипкой', subtitle: 'Уровень 4 · Первая позиция' },
+      { ...base, id: '11c', label: 'Пустое состояние — уровень 1, полоса пустая, один контурный трофей «1 ч»', avPhoto: false, avNone: true, levelNum: '1', title: 'За скрипкой', subtitle: 'Уровень 1 · Первый звук', row: row([], 0), pct: '0%', total: '0 мин', toNext: 'до 2 уровня — 2 ч', todayLine: 'Нажмите «Начать занятие», когда берёте скрипку, и «Закончить» — когда откладываете. Здесь появится ваш календарь.', sums: sums(true), cells: cells(true), selBig: 'Не занимались', selColor: OV, selAction: 'Добавить время' },
+      { ...base, id: '11d1', label: 'Лист «Профиль» — фото есть: «Выбрать фото» и «Убрать фото», поле «Имя», «Готово»', sheetProfile: true },
+      { ...base, id: '11d2', label: 'Лист «Профиль» с клавиатурой — фото нет, имя пустое: плейсхолдер; лист поднят, «Готово» видна', sheetProfile: true, keyboard: true, navShown: false, avPhoto: false, avLetter: true, letter: '?', nameField: 'Как вас зовут?', nameColor: OV, nameCount: '0 / 24' },
+      { ...base, id: '11e', label: 'Лист «Трофеи» — десять отметок; полученные с датой, ближайшая с остатком, верхние — под разделителем «Далеко впереди»', sheetTrophies: true },
+      { ...base, id: '11f', label: 'Лист «Подарок» — вручение «Колка» за 10 часов; свечение и масштаб, без конфетти', sheetGift: true },
+    ];
+    const trophyList = TROPHIES.map((t, i) => {
+      const got = !!t.got, isNext = i === 2, far = t.hours >= 2500;
+      const remain = t.hours * 60 - TOTAL_MIN;
+      return { el: T(i, 40, !got), name: t.name, hours: t.hoursText, nameColor: got || isNext ? ON : OV, op: far ? .7 : 1, divider: t.hours === 2500,
+        status: got ? `получен ${t.got}` : far ? '' : `ещё ${fmt(remain)}`, statusColor: got ? ON : OV };
+    });
+    const gallery = TROPHIES.map((t, i) => ({ name: t.name, hours: t.hoursText, big: T(i, 160, false), small: T(i, 40, false), locked: T(i, 40, true) }));
+    const levels = [[1, '0', 'Первый звук'], [2, '2 ч', 'Ученик'], [3, '5 ч', 'Открытые струны'], [4, '10 ч', 'Первая позиция'], [5, '25 ч', 'Гаммы'], [6, '50 ч', 'Этюды'], [7, '100 ч', 'Вибрато'], [8, '200 ч', 'Третья позиция'], [9, '350 ч', 'Ансамбль'], [10, '500 ч', 'Концертмейстер'], [11, '750 ч', 'Солист'], [12, '1000 ч', 'Виртуоз'], [13, '2000 ч', 'Маэстро'], [14, '5000 ч', 'Мастер'], [15, '10 000 ч', 'Легенда']].map(([n, t, name]) => ({ n: String(n), t, name }));
+    const tokens = [
+      { name: 'level.track', hex: '#292833', use: 'трек полосы уровня (= surfaceContainerHigh)' },
+      { name: 'level.fillStart', hex: '#5B43B8', use: 'начало заливки полосы (= practice.3)' },
+      { name: 'level.fillEnd', hex: '#C4ADFF', use: 'конец заливки полосы (= primary); градиент по X' },
+      { name: 'avatar.letter', hex: '#C4ADFF', use: 'круг буквы; буква onPrimary #2E1A6E' },
+      { name: 'avatar.level', hex: '#292833', use: 'круг номера уровня без имени; рамка outlineVariant, цифра onSurface' },
+      { name: 'trophy.locked', hex: '#6B6880', use: 'контур неполученного трофея 1.5; заливка surfaceContainer #1E1D25' },
+      { name: 'trophy.wood', hex: '#9A5530', use: 'дерево, лак: смычок, скрипка, концерт; блик trophy.woodLight #C9814A 35 %' },
+      { name: 'trophy.ebony', hex: '#2C2430', use: 'эбен: колок, подбородник, лягушка, гриф; кромка stroke #7A6E86 1 (иначе тонет в surface); полутон trophy.ebonyLight #5A4E64' },
+      { name: 'trophy.silver', hex: '#B9B7C4', use: 'серебро и сталь: струна, камертон, пюпитр, фурнитура; блик #E6E4EE' },
+      { name: 'trophy.gold', hex: '#D9B65C', use: 'латунь и золото: шарик струны, круг и смычок «Концерта»' },
+      { name: 'trophy.rosin', hex: '#B8672A', use: 'канифоль; грань trophy.rosinLight #E3975A. Не путать с zone.near — другой тон и только в трофее' },
+      { name: 'trophy.hair', hex: '#EDE6D3', use: 'волос смычка; бумага пюпитра #F1EEE6, строчки #8D8A96' },
+      { name: 'trophy.velvet', hex: '#5B43B8', use: 'бархат футляра (= primaryContainer); корпус #2A2430' },
+      { name: 'gift.glow', hex: 'rgba(196,173,255,.22)', use: 'радиальное свечение за трофеем на листе «Подарок», 240 dp, к краю → 0' },
+    ];
+    const sizes = [
+      { name: 'Шапка профиля', v: 'высота 94 (56 строка + 10 + 6 полоса + 6 + 16 строка сумм); отступ сверху 12, поля 16; заменяет заголовок «Занятия» 28 sp' },
+      { name: 'Аватар', v: '56 dp круг; фото cover; буква 24 sp 700 onPrimary на primary; без имени — цифра уровня 22 sp 700 onSurface на surfaceContainerHigh, рамка 1 outlineVariant. Зона касания: вся строка 56 → лист «Профиль»' },
+      { name: 'Имя и сумма', v: 'имя 16 sp 600 onSurface, ellipsis; под ним сумма часов 24 sp 800 primary tnum, letter-spacing −.01em, ellipsis; до 100 ч — «ч + мин», от 100 ч — только часы (макс. «10 000 ч» ≈ 100 dp); gap 2. Без имени: вместо имени подпись «За скрипкой»' },
+      { name: 'Ряд трофеев в шапке', v: '3 значка 32 dp, gap 4, высота зоны касания 44 → лист «Трофеи»; состав: все полученные (макс. 2 последних) + следующий контуром. При ×1.5 или имени > 12 симв. — 2 значка + «+N» 12 sp; landscape — значки 24 + строка «2 трофея · следующий 50 ч» 12 sp' },
+      { name: 'Полоса уровня', v: 'высота 6, r3, трек level.track, заливка градиент fillStart→fillEnd по ширине заливки; под ней строка 12 sp onSurfaceVariant tnum: слева «Уровень 4 · Первая позиция», справа «до 5 уровня — 8 ч 20 мин»; gap 6; блок 28 dp' },
+      { name: 'Лист «Профиль»', v: 'surfaceContainerHigh r28, padding 12/24/24, ручка 32×4; аватар 112; текстовые кнопки 40 dp primary 14 sp; поле outlined 56 r16, метка 12 sp primary на фоне листа, текст 16 sp, счётчик 12 sp tnum; «Готово» 56 r28. С клавиатурой лист поднимается над ней (imePadding); высота листа 388' },
+      { name: 'Лист «Трофеи»', v: 'заголовок 20 sp 700 + сумма 13 sp; строка 56 dp: значок 40, название 15 sp 600, часы 13 sp onSurfaceVariant, статус 13 sp справа; неполученные — название onSurfaceVariant, статус onSurfaceVariant; ближайший — название onSurface; ≥ 2500 ч — alpha .7 под разделителем 11 sp caps. Лист скроллится, если не влезает' },
+      { name: 'Лист «Подарок»', v: 'сцена 240×240 (свечение) с иллюстрацией 160; название 28 sp 700; текст 15 sp onSurfaceVariant 2 строки по центру; «Спасибо» 56 r28 primary; отступ до кнопки 20' },
+      { name: 'Иллюстрации', v: 'viewBox 64×64; 32 dp в шапке, 40 в списке и галерее, 160 на «Подарке». Контур неполученного: stroke 1.5 при 64 → ~1 dp на 40 dp' },
+      { name: 'Landscape шапка', v: 'аватар 44, имя 18 sp, подпись 12 sp; полоса 6 + подпись 11 sp; ряд — значки 24 gap 2 + строка 12 sp; кнопка 48 r24; блок 108 dp над кнопкой' },
+    ];
+    const anims = [
+      { name: 'Полоса при росте', v: 'после сохранения занятия: ширина animateFloatAsState tween 600 мс FastOutSlowIn; подпись crossfade 150 мс. При переходе уровня: полоса до 100 % (400 мс) → пауза 200 → обнуление без анимации → рост до новой доли (400 мс); подпись уровня crossfade' },
+      { name: 'Новый трофей в ряду', v: 'после «Спасибо»: контур → цветной crossfade 200 мс + scale 0.6→1 250 мс OvershootInterpolator(1.2); следующий контур появляется fade 200 мс через 100 мс' },
+      { name: 'Лист «Подарок»', v: 'ModalBottomSheet вход 250 мс; иллюстрация scale .88→1 + fade 400 мс cubic(.2,.8,.2,1) от появления листа; свечение fade 600 мс с задержкой 200 мс; без частиц, звука, вибрации' },
+      { name: 'Листы «Профиль», «Трофеи»', v: 'как остальные: вход 250 мс, выход 200 мс; scrim .45' },
+      { name: 'Смена аватара', v: 'фото ↔ буква crossfade 200 мс в шапке и на листе' },
+      { name: 'Рост числа в счётчике имени', v: 'без анимации' },
+    ];
+    const landRow = h('div', { style: { display: 'flex', gap: 2 } }, [T(0, 24, false), T(1, 24, false), T(2, 24, true)]);
+    return { frames, trophyList, giftBig: T(1, 160, false), gallery, landRow, sumsLand: sums(false), cellsToday: cells(false), navLand: nav, levels, tokens, sizes, anims };
+  }
+}
+</script>
+</body>
+</html>
