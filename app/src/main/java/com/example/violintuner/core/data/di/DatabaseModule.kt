@@ -8,6 +8,7 @@ import com.example.violintuner.core.data.practice.PracticeDao
 import com.example.violintuner.core.data.progress.TrophyDao
 import com.example.violintuner.core.data.repertoire.RepertoireDao
 import com.example.violintuner.core.data.session.SessionDao
+import com.example.violintuner.core.data.sound.SoundDao
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -36,4 +37,7 @@ object DatabaseModule {
 
     @Provides
     fun provideRepertoireDao(database: AppDatabase): RepertoireDao = database.repertoireDao()
+
+    @Provides
+    fun provideSoundDao(database: AppDatabase): SoundDao = database.soundDao()
 }

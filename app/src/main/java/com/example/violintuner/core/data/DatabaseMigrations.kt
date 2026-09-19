@@ -52,5 +52,30 @@ object DatabaseMigrations {
         }
     }
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4)
+    /**
+     * Sound processing (spec 3.17): settings per recording — the row with owner 0 is the default for
+     * all of them — and the user's presets. Two new tables; nothing that exists is touched.
+     */
+    val MIGRATION_4_5 = object : Migration(4, 5) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("CREATE TABLE IF NOT EXISTS `sound_settings` (`ownerId` INTEGER NOT NULL, $SOUND_COLUMNS, PRIMARY KEY(`ownerId`))")
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `sound_presets` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                    "`createdAtEpochMs` INTEGER NOT NULL, $SOUND_COLUMNS)",
+            )
+        }
+    }
+
+    /** The columns of `SoundColumns`, as Room declares them: both sound tables embed the same set. */
+    private const val SOUND_COLUMNS =
+        "`eqEnabled` INTEGER NOT NULL, `lowCutEnabled` INTEGER NOT NULL, `lowCutHz` REAL NOT NULL, `lowHz` REAL NOT NULL, " +
+            "`lowGainDb` REAL NOT NULL, `bodyHz` REAL NOT NULL, `bodyGainDb` REAL NOT NULL, `bodyQ` REAL NOT NULL, " +
+            "`presenceHz` REAL NOT NULL, `presenceGainDb` REAL NOT NULL, `presenceQ` REAL NOT NULL, `airHz` REAL NOT NULL, " +
+            "`airGainDb` REAL NOT NULL, `compEnabled` INTEGER NOT NULL, `compThresholdDb` REAL NOT NULL, `compRatio` REAL NOT NULL, " +
+            "`compAttackMs` REAL NOT NULL, `compReleaseMs` REAL NOT NULL, `compMakeupDb` REAL NOT NULL, `compAmount` REAL, " +
+            "`reverbEnabled` INTEGER NOT NULL, `reverbSpace` TEXT NOT NULL, `reverbDecaySec` REAL NOT NULL, " +
+            "`reverbPreDelayMs` REAL NOT NULL, `reverbBrightness` REAL NOT NULL, `reverbMix` REAL NOT NULL, " +
+            "`outputEnabled` INTEGER NOT NULL, `outputGainDb` REAL NOT NULL"
+
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
 }

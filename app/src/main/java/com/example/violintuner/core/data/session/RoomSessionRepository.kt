@@ -1,6 +1,7 @@
 package com.example.violintuner.core.data.session
 
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
+import com.example.violintuner.core.data.sound.SoundDao
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.session.NewSession
 import com.example.violintuner.core.domain.session.SampleCodec
@@ -19,6 +20,7 @@ class RoomSessionRepository @Inject constructor(
     private val defaultConfig: IntonationConfig,
     private val audioFiles: SessionAudioFiles,
     private val clock: Clock,
+    private val soundDao: SoundDao,
 ) : SessionRepository {
 
     override val sessions: Flow<List<SessionSummary>> =
@@ -50,6 +52,8 @@ class RoomSessionRepository @Inject constructor(
     override suspend fun delete(id: Long) {
         val audioPath = dao.session(id)?.audioPath
         dao.delete(id)
+        // Its own sound settings, if it had any: that table has no foreign key (its default row belongs to no session).
+        soundDao.deleteOwn(id)
         audioPath?.let(audioFiles::delete)
     }
 

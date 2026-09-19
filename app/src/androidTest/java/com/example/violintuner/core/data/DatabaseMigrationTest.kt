@@ -15,7 +15,7 @@ import org.junit.runner.RunWith
 
 /**
  * Opens a database file laid out exactly as an old version (statements from
- * `app/schemas/…/1.json`, `2.json` and `3.json`) through Room with the migrations. Room validates the migrated
+ * `app/schemas/…/1.json` … `4.json`) through Room with the migrations. Room validates the migrated
  * schema against the current entities when it opens such a file, so a migration that leaves
  * a table different from what the entities declare fails here, not on the user's phone.
  */
@@ -33,9 +33,10 @@ class DatabaseMigrationTest {
 
     /**
      * Version 1 with one session; [version2] adds what version 2 had on top — practice entries
-     * with one row; [version3] adds the trophies of version 3 with one row.
+     * with one row; [version3] adds the trophies of version 3 with one row; [version4] adds the
+     * repertoire of version 4: a piece with a page, and the session becomes its take.
      */
-    private fun createOldFile(version2: Boolean, version3: Boolean = false) {
+    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false) {
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
@@ -75,7 +76,30 @@ class DatabaseMigrationTest {
                 )
                 db.execSQL("INSERT INTO trophies (hours, awardedDate, shown) VALUES (1, '2026-09-18', 1)")
             }
-            db.execSQL("PRAGMA user_version = ${if (version3) 3 else if (version2) 2 else 1}")
+            if (version4) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `pieces` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, " +
+                        "`composer` TEXT NOT NULL, `keyTonic` TEXT, `keyAccidental` TEXT, `keyMode` TEXT, `tempoBpm` INTEGER, " +
+                        "`status` TEXT NOT NULL, `notes` TEXT NOT NULL, `createdAtEpochMs` INTEGER NOT NULL, " +
+                        "`updatedAtEpochMs` INTEGER NOT NULL)",
+                )
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `sheet_pages` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                        "`pieceId` INTEGER NOT NULL, `position` INTEGER NOT NULL, `fileName` TEXT NOT NULL, " +
+                        "`thumbFileName` TEXT NOT NULL, FOREIGN KEY(`pieceId`) REFERENCES `pieces`(`id`) " +
+                        "ON UPDATE NO ACTION ON DELETE CASCADE )",
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_sheet_pages_pieceId` ON `sheet_pages` (`pieceId`)")
+                db.execSQL("ALTER TABLE `sessions` ADD COLUMN `pieceId` INTEGER")
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_sessions_pieceId` ON `sessions` (`pieceId`)")
+                db.execSQL(
+                    "INSERT INTO pieces (id, title, composer, status, notes, createdAtEpochMs, updatedAtEpochMs) " +
+                        "VALUES (1, 'Менуэт', 'Бах', 'LEARNING', 'смычок', 1, 2)",
+                )
+                db.execSQL("INSERT INTO sheet_pages (id, pieceId, position, fileName, thumbFileName) VALUES (1, 1, 0, 'a.jpg', 'a-thumb.jpg')")
+                db.execSQL("UPDATE sessions SET pieceId = 1 WHERE id = 1")
+            }
+            db.execSQL("PRAGMA user_version = ${if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
         }
     }
 
@@ -146,5 +170,26 @@ class DatabaseMigrationTest {
         )
         assertEquals(true, db.repertoireDao().appendPage(pieceId, "a.jpg", "a-thumb.jpg", now = 2))
         assertEquals(1, db.repertoireDao().pagesOf(pieceId).size)
+    }
+
+    @Test
+    fun everythingSurvivesTheMigrationToSoundSettingsAndNothingIsProcessedYet() = runBlocking {
+        createOldFile(version2 = true, version3 = true, version4 = true)
+        val db = openMigrated()
+
+        val session = db.sessionDao().observeAll().first().single()
+        assertEquals("Гаммы", session.title)
+        assertEquals(1L, session.pieceId)
+        assertEquals(2_700_000L, db.practiceDao().observeAll().first().single().durationMs)
+        assertEquals(true, db.trophyDao().observeAll().first().single().shown)
+        assertEquals("a.jpg", db.repertoireDao().pagesOf(1).single().fileName)
+
+        assertEquals(emptyList<Any>(), db.soundDao().observeSettings().first())
+        assertEquals(emptyList<Any>(), db.soundDao().observePresets().first())
+        val columns = com.example.violintuner.core.data.sound.SoundMapper.columnsOf(
+            com.example.violintuner.core.domain.sound.SoundRules.off(com.example.violintuner.core.domain.sound.SoundConfig()),
+        )
+        db.soundDao().put(com.example.violintuner.core.data.sound.SoundSettingsEntity(ownerId = 1, sound = columns))
+        assertEquals(1L, db.soundDao().observeSettings().first().single().ownerId)
     }
 }

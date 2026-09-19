@@ -3,8 +3,8 @@ package com.example.violintuner.core.data.session
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.violintuner.core.data.AppDatabase
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
+import com.example.violintuner.core.data.AppDatabase
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.session.NewSession
@@ -43,7 +43,7 @@ class RoomSessionRepositoryTest {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java).build()
-        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig(), audioFiles, Clock.systemUTC())
+        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig(), audioFiles, Clock.systemUTC(), database.soundDao())
     }
 
     @After
@@ -104,6 +104,18 @@ class RoomSessionRepositoryTest {
         assertNull(repository.details(id))
         assertNull(database.sessionDao().samples(id))
         assertEquals(0, repository.sessions.first().size)
+    }
+
+    @Test
+    fun deleteTakesTheSessionsOwnSoundSettingsAlongAndLeavesTheDefault() = runBlocking {
+        val id = repository.save(newSession(startedAt = 1_000))
+        val columns = com.example.violintuner.core.data.sound.SoundMapper.columnsOf(
+            com.example.violintuner.core.domain.sound.SoundRules.off(com.example.violintuner.core.domain.sound.SoundConfig()),
+        )
+        database.soundDao().put(com.example.violintuner.core.data.sound.SoundSettingsEntity(ownerId = id, sound = columns))
+        database.soundDao().put(com.example.violintuner.core.data.sound.SoundSettingsEntity(ownerId = 0, sound = columns))
+        repository.delete(id)
+        assertEquals(listOf(0L), database.soundDao().observeSettings().first().map { it.ownerId })
     }
 
     @Test
