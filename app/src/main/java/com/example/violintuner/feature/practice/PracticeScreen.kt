@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
@@ -52,16 +51,20 @@ import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.icons.IconSizes
+import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.history.components.SessionCard
 import com.example.violintuner.feature.practice.components.CalendarMetrics
 import com.example.violintuner.feature.practice.components.EditTimeSheet
 import com.example.violintuner.feature.practice.components.GiftSheet
 import com.example.violintuner.feature.practice.components.PracticeCalendar
+import com.example.violintuner.feature.practice.components.PracticeMotion
 import com.example.violintuner.feature.practice.components.ProfileHeader
 import com.example.violintuner.feature.practice.components.ProfileHeaderMetrics
 import com.example.violintuner.feature.practice.components.ProfileSheet
+import com.example.violintuner.feature.practice.components.RunningDot
 import com.example.violintuner.feature.practice.components.SummarySheet
 import com.example.violintuner.feature.practice.components.TrophiesSheet
+import com.example.violintuner.feature.practice.components.rolledValue
 import java.time.ZoneId
 
 private val ScreenPadding = 16.dp
@@ -71,7 +74,6 @@ private val LandscapeLeftColumn = 280.dp
 private val ButtonHeight = 56.dp
 private val ButtonCorner = 28.dp
 private val TodayLineGap = 10.dp
-private val RunningDot = 8.dp
 private val CardCorner = 16.dp
 private val CardCornerLandscape = 14.dp
 private val ActionHeight = 40.dp
@@ -84,6 +86,10 @@ private const val ACTION_SWITCH_SCALE = 0.96f
 private const val DAY_CROSSFADE_MS = 150
 private const val MIN_CARD_LABEL_SIZE = 9
 private const val STREAK_FLAME_FROM = 3
+private const val MS_PER_MINUTE = 60_000L
+
+/** A streak that grew by a day is simply shown; only a jump of days rolls. */
+private const val STREAK_ROLL_FROM = 2L
 private const val MIN_CARD_VALUE_SIZE = 11
 
 /** Text sizes that differ between the layouts (handoff `sizes`). */
@@ -263,10 +269,10 @@ private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit,
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Box(
-                        Modifier
-                            .size(RunningDot)
-                            .background(colors.primary, CircleShape),
+                    RunningDot(
+                        elapsedMs = state.runningMs ?: 0L,
+                        color = colors.primary,
+                        ringColor = ViolinTheme.practiceColors.timerRing,
                     )
                     Text(
                         text = stringResource(R.string.practice_running),
@@ -328,22 +334,28 @@ private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit,
 @Composable
 private fun SummaryCards(state: PracticeState, metrics: Metrics) {
     val none = stringResource(R.string.practice_no_value)
+    // Another month, or the first numbers after loading, are other numbers — not these ones grown.
+    val scope = state.month to state.loading
+    val rollFrom = PracticeMotion.ROLL_FROM_MINUTES * MS_PER_MINUTE
+    val weekMs = rolledValue(state.summary.weekMs, scope, PracticeMotion.ROLL_MS, rollFrom)
+    val monthMs = rolledValue(state.summary.monthMs, scope, PracticeMotion.ROLL_MS, rollFrom)
+    val streak = rolledValue(state.summary.streakDays.toLong(), scope, PracticeMotion.ROLL_STREAK_MS, rollFrom = STREAK_ROLL_FROM)
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         SummaryCard(
             label = stringResource(R.string.practice_week),
-            value = if (state.hasHistory) Formats.minutesInWords(state.summary.weekMs) else none,
+            value = if (state.hasHistory) Formats.minutesInWords(weekMs) else none,
             metrics = metrics,
             modifier = Modifier.weight(1f),
         )
         SummaryCard(
             label = stringResource(R.string.practice_month),
-            value = if (state.hasHistory) Formats.minutesInWords(state.summary.monthMs) else none,
+            value = if (state.hasHistory) Formats.minutesInWords(monthMs) else none,
             metrics = metrics,
             modifier = Modifier.weight(1f),
         )
         SummaryCard(
             label = stringResource(R.string.practice_streak),
-            value = if (state.hasHistory) state.summary.streakDays.toString() else none,
+            value = if (state.hasHistory) streak.toString() else none,
             metrics = metrics,
             // a streak worth a flame starts at three days (spec 5.10)
             trailingIcon = AppIcons.Flame.takeIf { state.hasHistory && state.summary.streakDays >= STREAK_FLAME_FROM },
