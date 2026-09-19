@@ -1,6 +1,5 @@
 package com.example.violintuner.navigation
 
-import androidx.annotation.DrawableRes
 import androidx.annotation.StringRes
 import com.example.violintuner.R
 
@@ -8,13 +7,12 @@ import com.example.violintuner.R
 enum class TopLevelDestination(
     val route: String,
     @StringRes val labelRes: Int,
-    @DrawableRes val iconRes: Int,
 ) {
-    LIVE("live", R.string.nav_live, R.drawable.ic_nav_live),
-    PRACTICE("practice", R.string.nav_practice, R.drawable.ic_nav_practice),
+    LIVE("live", R.string.nav_live),
+    PRACTICE("practice", R.string.nav_practice),
     /** «Записи»: the route keeps its old name, only the label changed (spec 4). */
-    HISTORY("history", R.string.nav_history, R.drawable.ic_nav_history),
-    SETTINGS("settings", R.string.nav_settings, R.drawable.ic_nav_settings);
+    HISTORY("history", R.string.nav_history),
+    SETTINGS("settings", R.string.nav_settings);
 
     companion object {
         val START = LIVE

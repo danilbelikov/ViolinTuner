@@ -1,6 +1,7 @@
 package com.example.violintuner.navigation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,7 +22,6 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarDefaults
@@ -32,24 +32,28 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.TabIcon
 import com.example.violintuner.core.ui.theme.ViolinTheme
 
 private val IconSize = 24.dp
 private val MarkSize = 8.dp
 private val MarkOutline = 2.dp
-/** Where the mark sits relative to the icon: right 14 / top 4 of the 64×32 pill (handoff 10i). */
-private val MarkOffsetX = 6.dp
+/** Where the mark sits relative to the icon: right 15 / top 3 of the 64×32 pill, right 7 of the compact one (handoff 14b, 14c). */
+private val MarkOffsetX = 5.dp
+private val MarkOffsetY = (-1).dp
 private val CompactBarHeight = 64.dp
 private val CompactPillWidth = 48.dp
 private val CompactPillHeight = 32.dp
 private val CompactPillCorner = 16.dp
 private const val MARK_MS = 150
+private const val ICON_SWAP_MS = 150
 
 /**
  * The tab bar (spec 4). [practiceRunning] puts a mark on the «Занятия» tab; [compact] is the
@@ -86,7 +90,7 @@ private fun TallBar(
             NavigationBarItem(
                 selected = destination == current,
                 onClick = { onSelect(destination) },
-                icon = { TabIcon(destination, marked = practiceRunning && destination == TopLevelDestination.PRACTICE) },
+                icon = { TabGlyph(destination, selected = destination == current, marked = practiceRunning && destination == TopLevelDestination.PRACTICE) },
                 label = { Text(stringResource(destination.labelRes)) },
                 colors = NavigationBarItemDefaults.colors(
                     selectedIconColor = colors.onPrimaryContainer,
@@ -134,10 +138,10 @@ private fun CompactBar(
                         .background(if (selected) colors.primaryContainer else colors.surfaceContainer, RoundedCornerShape(CompactPillCorner)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    TabIcon(
+                    TabGlyph(
                         destination = destination,
+                        selected = selected,
                         marked = practiceRunning && destination == TopLevelDestination.PRACTICE,
-                        tint = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
                     )
                 }
                 Text(
@@ -150,28 +154,43 @@ private fun CompactBar(
     }
 }
 
+private fun TopLevelDestination.tabIcon(): TabIcon = when (this) {
+    TopLevelDestination.LIVE -> AppIcons.TabLive
+    TopLevelDestination.PRACTICE -> AppIcons.TabPractice
+    TopLevelDestination.HISTORY -> AppIcons.TabRecords
+    TopLevelDestination.SETTINGS -> AppIcons.TabSettings
+}
+
+/**
+ * The outline of the tab, or — selected — the same sign with its body filled and the detail
+ * inside it painted in the colour of the pill, which reads as cut out (spec 3.16, handoff 14b).
+ */
 @Composable
-private fun TabIcon(destination: TopLevelDestination, marked: Boolean, tint: androidx.compose.ui.graphics.Color? = null) {
+private fun TabGlyph(destination: TopLevelDestination, selected: Boolean, marked: Boolean) {
     val colors = MaterialTheme.colorScheme
+    val icon = destination.tabIcon()
     Box(modifier = Modifier.size(IconSize)) {
-        if (tint == null) {
-            Icon(painter = painterResource(destination.iconRes), contentDescription = null)
-        } else {
-            Icon(painter = painterResource(destination.iconRes), contentDescription = null, tint = tint)
+        Crossfade(targetState = selected, animationSpec = tween(ICON_SWAP_MS), label = "tabIcon") { filled ->
+            if (filled) {
+                AppIcon(icon.selected, contentDescription = null, tint = colors.onPrimaryContainer)
+                icon.selectedCut?.let { AppIcon(it, contentDescription = null, tint = colors.primaryContainer) }
+            } else {
+                AppIcon(icon.normal, contentDescription = null, tint = colors.onSurfaceVariant)
+            }
         }
-        // "A practice is running", visible from any tab (spec 3.12); the outline keeps it off the icon.
+        // "A practice is running", visible from any tab (spec 3.12); the outline — in the colour of what lies under it — keeps it off the icon.
         AnimatedVisibility(
             visible = marked,
             modifier = Modifier
                 .align(Alignment.TopEnd)
-                .offset(x = MarkOffsetX),
+                .offset(x = MarkOffsetX, y = MarkOffsetY),
             enter = scaleIn(tween(MARK_MS)) + fadeIn(tween(MARK_MS)),
             exit = scaleOut(tween(MARK_MS)) + fadeOut(tween(MARK_MS)),
         ) {
             Box(
                 modifier = Modifier
                     .size(MarkSize + MarkOutline * 2)
-                    .background(colors.surfaceContainer, CircleShape)
+                    .background(if (selected) colors.primaryContainer else colors.surfaceContainer, CircleShape)
                     .padding(MarkOutline)
                     .background(colors.primary, CircleShape),
             )
