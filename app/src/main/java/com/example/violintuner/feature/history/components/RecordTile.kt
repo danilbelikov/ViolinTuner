@@ -2,6 +2,7 @@ package com.example.violintuner.feature.history.components
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -91,5 +92,34 @@ fun EmptyRecordTile(ring: Color, note: Color, modifier: Modifier = Modifier, siz
         contentAlignment = Alignment.Center,
     ) {
         AppIcon(AppIcons.NotePair, contentDescription = null, tint = note, size = size.note)
+    }
+}
+
+private val MarkRing = 2.dp
+private val MarkCheck = 22.dp
+
+/**
+ * What the tile turns into while recordings are being picked (handoff 19b3): a circle of the same
+ * size, so the list does not jump — an empty ring, or filled with a tick. Shape, not only colour.
+ */
+@Composable
+fun SelectionMark(selected: Boolean, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    val fill = colors.primary
+    val ring = colors.outline
+    Box(
+        modifier = modifier
+            .size(RecordTileSize.CARD.circle)
+            .drawBehind {
+                if (selected) {
+                    drawCircle(fill)
+                } else {
+                    val stroke = MarkRing.toPx()
+                    drawCircle(ring, radius = (size.minDimension - stroke) / 2f, style = Stroke(stroke))
+                }
+            },
+        contentAlignment = Alignment.Center,
+    ) {
+        if (selected) AppIcon(AppIcons.Check, contentDescription = null, tint = colors.onPrimary, size = MarkCheck)
     }
 }

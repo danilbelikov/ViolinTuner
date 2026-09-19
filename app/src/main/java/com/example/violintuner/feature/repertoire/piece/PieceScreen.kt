@@ -1,6 +1,7 @@
 package com.example.violintuner.feature.repertoire.piece
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
@@ -61,12 +62,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.repertoire.PieceStatus
+import com.example.violintuner.core.ui.components.DeleteDialog
+import com.example.violintuner.core.ui.components.dimmedWhen
+import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
+import com.example.violintuner.feature.history.SelectionIntent
 import com.example.violintuner.feature.history.components.CardActions
+import com.example.violintuner.feature.history.components.SelectionBar
+import com.example.violintuner.feature.history.components.SelectionBarHeight
 import com.example.violintuner.feature.repertoire.KeyAndTempo
 import com.example.violintuner.feature.repertoire.components.SheetThumb
 import com.example.violintuner.feature.repertoire.components.StatusChip
@@ -148,8 +155,11 @@ private fun PortraitLayout(
     takeActions: CardActions?,
 ) {
     val scroll = rememberScrollState()
+    val selecting = state.selection.active
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        TopBar(header.title, titleVisible = scroll.isPast(TitleAppearsAfter), height = TopBarHeight, onIntent = onIntent)
+        Bars(state, SelectionBarHeight.Portrait, onIntent) {
+            TopBar(header.title, titleVisible = scroll.isPast(TitleAppearsAfter), height = TopBarHeight, onIntent = onIntent)
+        }
         Column(
             modifier = Modifier
                 .widthIn(max = MaxContentWidth)
@@ -158,15 +168,21 @@ private fun PortraitLayout(
                 .padding(bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(BlockGap),
         ) {
-            HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Portrait, Modifier.padding(horizontal = ScreenPadding))
-            SheetsBlock(state, onIntent, addPhoto, Metrics.Portrait)
-            Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(BlockGap)) {
-                // Recording stands above the notes: the notes are read once before playing, a take is recorded every time.
-                RecordTakeRow(take, onIntent)
-                NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
-                state.progress?.let { TakeProgressCard(it) }
-                TakesBlock(state.takes, zone, onIntent, sounds = takeSounds, actions = takeActions)
+            // While takes are being picked everything that is not the list steps aside (spec 3.18, handoff 19f1).
+            Column(modifier = Modifier.dimmedWhen(selecting), verticalArrangement = Arrangement.spacedBy(BlockGap)) {
+                HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Portrait, Modifier.padding(horizontal = ScreenPadding))
+                SheetsBlock(state, onIntent, addPhoto, Metrics.Portrait)
+                Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(BlockGap)) {
+                    // Recording stands above the notes: the notes are read once before playing, a take is recorded every time.
+                    RecordTakeRow(take, onIntent)
+                    NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
+                    state.progress?.let { TakeProgressCard(it) }
+                }
             }
+            TakesBlock(
+                state.takes, zone, onIntent, Modifier.padding(horizontal = ScreenPadding),
+                sounds = takeSounds, actions = takeActions, selection = state.selection, canSelect = !take.recording,
+            )
         }
     }
 }
@@ -183,13 +199,17 @@ private fun LandscapeLayout(
     takeSounds: Map<Long, SoundCaption>,
     takeActions: CardActions?,
 ) {
+    val selecting = state.selection.active
     Column {
-        TopBar(header.title, titleVisible = false, height = TopBarHeightLandscape, onIntent = onIntent)
+        Bars(state, SelectionBarHeight.Landscape, onIntent) {
+            TopBar(header.title, titleVisible = false, height = TopBarHeightLandscape, onIntent = onIntent)
+        }
         Row(modifier = Modifier.fillMaxSize()) {
             Column(
                 modifier = Modifier
                     .width(LandscapeLeftColumn)
                     .fillMaxHeight()
+                    .dimmedWhen(selecting)
                     .verticalScroll(rememberScrollState())
                     .padding(start = ScreenPadding, end = ScreenPadding, bottom = ScreenPadding),
                 verticalArrangement = Arrangement.spacedBy(ScreenPadding),
@@ -206,15 +226,45 @@ private fun LandscapeLayout(
                     .padding(bottom = ScreenPadding),
                 verticalArrangement = Arrangement.spacedBy(ScreenPadding),
             ) {
-                SheetsBlock(state, onIntent, addPhoto, Metrics.Landscape)
-                Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(ScreenPadding)) {
-                    NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
-                    TakesBlock(state.takes, zone, onIntent, sounds = takeSounds, actions = takeActions)
+                Column(modifier = Modifier.dimmedWhen(selecting), verticalArrangement = Arrangement.spacedBy(ScreenPadding)) {
+                    SheetsBlock(state, onIntent, addPhoto, Metrics.Landscape)
+                    Box(Modifier.padding(horizontal = ScreenPadding)) { NotesBlock(state.notes, state.notesCollapsedLines, onIntent) }
                 }
+                TakesBlock(
+                    state.takes, zone, onIntent, Modifier.padding(horizontal = ScreenPadding),
+                    sounds = takeSounds, actions = takeActions, selection = state.selection, canSelect = !take.recording,
+                )
             }
         }
     }
 }
+
+/**
+ * The top of the screen: its own bar, or — while takes are being picked — the selection bar in
+ * its place (spec 3.18). Below them, once, the question before the takes go.
+ */
+@Composable
+private fun Bars(state: PieceState, selectionHeight: Dp, onIntent: (PieceIntent) -> Unit, topBar: @Composable () -> Unit) {
+    val selection = state.selection
+    Crossfade(targetState = selection.active, animationSpec = tween(BAR_FADE_MS), label = "pieceBars") { selecting ->
+        if (selecting) {
+            SelectionBar(selection, state.allSelected, onIntent = { onIntent(PieceIntent.Select(it)) }, height = selectionHeight)
+        } else {
+            topBar()
+        }
+    }
+    if (selection.confirming) {
+        val words = Formats.pluralRu(selection.count, R.string.selection_delete_takes_one, R.string.selection_delete_takes_few, R.string.selection_delete_takes_many)
+        DeleteDialog(
+            title = stringResource(words, selection.count),
+            text = stringResource(R.string.selection_delete_text),
+            onConfirm = { onIntent(PieceIntent.Select(SelectionIntent.DeleteConfirmed)) },
+            onDismiss = { onIntent(PieceIntent.Select(SelectionIntent.DeleteDismissed)) },
+        )
+    }
+}
+
+private const val BAR_FADE_MS = 200
 
 /** Derived: the scroll offset changes on every frame of a fling, "past the title or not" changes twice. */
 @Composable

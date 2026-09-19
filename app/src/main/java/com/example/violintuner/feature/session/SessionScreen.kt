@@ -326,18 +326,11 @@ private fun RenameDialog(currentTitle: String, placeholder: String, onIntent: (S
 
 @Composable
 private fun DeleteDialog(onIntent: (SessionIntent) -> Unit) {
-    AlertDialog(
-        onDismissRequest = { onIntent(SessionIntent.DialogDismissed) },
-        title = { Text(stringResource(R.string.session_delete_title)) },
-        text = { Text(stringResource(R.string.session_delete_text)) },
-        confirmButton = {
-            TextButton(onClick = { onIntent(SessionIntent.DeleteConfirmed) }) {
-                Text(stringResource(R.string.session_delete_confirm), color = ViolinTheme.destructive)
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = { onIntent(SessionIntent.DialogDismissed) }) { Text(stringResource(R.string.dialog_cancel)) }
-        },
+    com.example.violintuner.core.ui.components.DeleteDialog(
+        title = stringResource(R.string.session_delete_title),
+        text = stringResource(R.string.session_delete_text),
+        onConfirm = { onIntent(SessionIntent.DeleteConfirmed) },
+        onDismiss = { onIntent(SessionIntent.DialogDismissed) },
     )
 }
 

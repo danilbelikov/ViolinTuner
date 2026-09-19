@@ -22,6 +22,8 @@ import com.example.violintuner.core.domain.sound.SoundPresets
 import com.example.violintuner.core.recording.TakePipeline
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.core.settings.SettingsConfigSource
+import com.example.violintuner.feature.history.Selection
+import com.example.violintuner.feature.history.SelectionIntent
 import com.example.violintuner.feature.repertoire.piece.PieceEffect
 import com.example.violintuner.feature.repertoire.piece.PieceIntent
 import com.example.violintuner.feature.repertoire.piece.PieceViewModel
@@ -49,6 +51,7 @@ import kotlinx.coroutines.test.testTimeSource
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -356,6 +359,85 @@ class PieceViewModelTest {
         viewModel.onIntent(PieceIntent.TakeClicked(42))
         runCurrent()
         assertEquals(listOf<PieceEffect>(PieceEffect.OpenSession(42)), effects)
+    }
+
+    private fun TestScope.recordTake(viewModel: PieceViewModel) {
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(500)
+    }
+
+    private fun PieceViewModel.select(intent: SelectionIntent) = onIntent(PieceIntent.Select(intent))
+
+    @Test
+    fun `picked takes are deleted together, the piece stays and the best take is found again`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, effects) = screen(id)
+        repeat(3) { recordTake(viewModel) }
+        advance(2_000)
+        val (newest, middle, oldest) = viewModel.state.value.takes.map { it.card.id }
+
+        viewModel.select(SelectionIntent.CardLongPressed(newest))
+        viewModel.onIntent(PieceIntent.TakeClicked(oldest))
+        runCurrent()
+        assertEquals(setOf(newest, oldest), viewModel.state.value.selection.ids)
+        assertTrue("a tap inside the mode opens nothing", effects.isEmpty())
+
+        viewModel.select(SelectionIntent.DeleteClicked)
+        viewModel.select(SelectionIntent.DeleteConfirmed)
+        runCurrent()
+
+        val state = viewModel.state.value
+        assertEquals(listOf(middle), state.takes.map { it.card.id })
+        assertTrue(state.takes.single().best)
+        assertNull("progress needs two takes", state.progress)
+        assertEquals(Selection(), state.selection)
+        assertNotNull(state.header)
+    }
+
+    @Test
+    fun `select all takes every take of this piece and no one else's`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val other = repertoire.add(PieceDraft(title = "Гавот"), nowEpochMs = 2)
+        val (otherScreen, _) = screen(other)
+        recordTake(otherScreen)
+        val (viewModel, _) = screen(id)
+        repeat(2) { recordTake(viewModel) }
+
+        viewModel.select(SelectionIntent.SelectClicked)
+        viewModel.select(SelectionIntent.SelectAllClicked)
+        runCurrent()
+
+        assertEquals(2, viewModel.state.value.selection.count)
+        assertTrue(viewModel.state.value.allSelected)
+        assertEquals(viewModel.state.value.takes.map { it.card.id }.toSet(), viewModel.state.value.selection.ids)
+    }
+
+    @Test
+    fun `picking and recording do not mix`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        recordTake(viewModel)
+        val take = viewModel.state.value.takes.single().card.id
+
+        // no way into the mode while a take runs
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        viewModel.select(SelectionIntent.SelectClicked)
+        viewModel.select(SelectionIntent.CardLongPressed(take))
+        runCurrent()
+        assertFalse(viewModel.state.value.selection.active)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+
+        // and no take while picking
+        viewModel.select(SelectionIntent.SelectClicked)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        assertTrue(viewModel.state.value.selection.active)
+        assertFalse(viewModel.takeState.value.recording)
+        assertEquals(0, source!!.active)
     }
 
     @Test

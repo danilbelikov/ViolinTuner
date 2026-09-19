@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -50,8 +52,11 @@ import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
+import com.example.violintuner.feature.history.Selection
+import com.example.violintuner.feature.history.SelectionIntent
 import com.example.violintuner.feature.history.components.CardActions
 import com.example.violintuner.feature.history.components.RecordCard
+import com.example.violintuner.feature.history.components.SelectAction
 import com.example.violintuner.feature.live.components.RecordButton
 import com.example.violintuner.feature.repertoire.takesLabel
 import com.example.violintuner.feature.sound.SoundCaption
@@ -65,6 +70,7 @@ private val LevelBarGap = 3.dp
 private val LevelMinHeight = 4.dp
 private val LevelMaxHeight = 20.dp
 private val ChartWidth = 160.dp
+private val TakesTitleHeight = 32.dp
 private val ChartHeight = 44.dp
 private const val TABULAR_FIGURES = "tnum"
 private const val REC_PULSE_MS = 1_200
@@ -235,10 +241,32 @@ fun TakesBlock(
     modifier: Modifier = Modifier,
     sounds: Map<Long, SoundCaption> = emptyMap(),
     actions: CardActions? = null,
+    selection: Selection = Selection(),
+    /** No «Выбрать» while a take is being recorded (spec 3.18). */
+    canSelect: Boolean = true,
 ) {
     val colors = MaterialTheme.colorScheme
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(R.string.takes_title), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
+        Row(modifier = Modifier.heightIn(min = TakesTitleHeight), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = stringResource(R.string.takes_title),
+                modifier = Modifier.weight(1f),
+                color = colors.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+            )
+            when {
+                // the number takes the place of the action, so the line does not go empty (handoff 19f1)
+                selection.active -> Text(
+                    text = takes.size.toString(),
+                    color = colors.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
+                )
+                takes.isNotEmpty() && canSelect -> SelectAction(
+                    onClick = { onIntent(PieceIntent.Select(SelectionIntent.SelectClicked)) },
+                    modifier = Modifier.offset(x = 10.dp),
+                )
+            }
+        }
         if (takes.isEmpty()) {
             Text(
                 text = stringResource(R.string.takes_empty),
@@ -250,13 +278,20 @@ fun TakesBlock(
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
             )
         } else {
-            takes.forEach { take -> TakeCard(take, zone, sounds[take.card.id], actions) { onIntent(PieceIntent.TakeClicked(take.card.id)) } }
+            takes.forEach { take ->
+                val id = take.card.id
+                TakeCard(
+                    take, zone, sounds[id], actions,
+                    selected = if (selection.active) id in selection.ids else null,
+                    onLongClick = { onIntent(PieceIntent.Select(SelectionIntent.CardLongPressed(id))) }.takeIf { canSelect },
+                ) { onIntent(PieceIntent.TakeClicked(id)) }
+            }
         }
     }
 }
 
 @Composable
-private fun TakeCard(take: TakeItem, zone: ZoneId, sound: SoundCaption?, actions: CardActions?, onClick: () -> Unit) {
+private fun TakeCard(take: TakeItem, zone: ZoneId, sound: SoundCaption?, actions: CardActions?, selected: Boolean?, onLongClick: (() -> Unit)?, onClick: () -> Unit) {
     val card = take.card
     val meta = stringResource(R.string.take_meta, Formats.duration(card.durationMs), Formats.signedCents(card.biasCents))
     RecordCard(
@@ -270,5 +305,7 @@ private fun TakeCard(take: TakeItem, zone: ZoneId, sound: SoundCaption?, actions
         actions = actions,
         best = take.best,
         highlighted = take.isNew,
+        selected = selected,
+        onLongClick = onLongClick,
     )
 }

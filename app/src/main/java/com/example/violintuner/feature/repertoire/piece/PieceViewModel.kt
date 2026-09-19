@@ -15,6 +15,9 @@ import com.example.violintuner.core.domain.sound.SoundConfig
 import com.example.violintuner.core.domain.sound.SoundRepository
 import com.example.violintuner.core.recording.TakePipeline
 import com.example.violintuner.core.settings.IntonationConfigSource
+import com.example.violintuner.feature.history.Selection
+import com.example.violintuner.feature.history.SelectionIntent
+import com.example.violintuner.feature.history.SelectionRules
 import com.example.violintuner.feature.sound.SoundCaption
 import com.example.violintuner.feature.sound.SoundReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -50,7 +53,7 @@ class PieceViewModel @Inject constructor(
     private val clock: Clock,
     private val takes: TakePipeline,
     private val configSource: IntonationConfigSource,
-    sessions: SessionRepository,
+    private val sessions: SessionRepository,
     private val intonationConfig: IntonationConfig,
     sound: SoundRepository,
     soundConfig: SoundConfig,
@@ -66,8 +69,12 @@ class PieceViewModel @Inject constructor(
         own.mapValues { (_, settings) -> SoundReducer.captionOf(settings, presets, soundConfig) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyMap())
 
-    /** What only the screen decides: photos on their way in and the open menu. */
-    private data class Ui(val importing: Int = 0, val statusMenuOpen: Boolean = false)
+    /** What only the screen decides: photos on their way in, the open menu, the takes being picked. */
+    private data class Ui(val importing: Int = 0, val statusMenuOpen: Boolean = false, val selection: Selection = Selection())
+
+    // The takes the list shows now: only those can be picked. Written where the state is built,
+    // read by the intents — both on the main thread; `state.value` would lag a frame behind.
+    private var takeIds: List<Long> = emptyList()
 
     private val ui = MutableStateFlow(Ui())
     private var closed = false
@@ -88,11 +95,13 @@ class PieceViewModel @Inject constructor(
             closed = true
             PieceReducer.loading(config)
         } else {
-            PieceReducer.stateOf(
+            val shown = PieceReducer.stateOf(
                 piece, pages, ui.importing, ui.statusMenuOpen, config,
                 takes = PieceReducer.takesOf(pieceId, sessions, newTakeId, LocalDate.now(clock), clock.zone, intonationConfig),
                 progress = PieceReducer.progressOf(pieceId, sessions, config),
             ) { sheetFiles.existing(it)?.path }
+            takeIds = shown.takes.map { it.card.id }
+            shown.copy(selection = SelectionRules.prune(ui.selection, takeIds))
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), PieceReducer.loading(config))
 
@@ -191,6 +200,8 @@ class PieceViewModel @Inject constructor(
                 effectChannel.trySend(PieceEffect.LaunchCamera(file.path))
             }
             PieceIntent.RecordClicked -> when {
+                // picking and recording do not mix (spec 3.18): the button is dimmed, this is the belt to those braces
+                ui.value.selection.active -> Unit
                 takes.recordingRequested.value -> takes.recordingRequested.value = false
                 micPermission.value != true -> effectChannel.trySend(PieceEffect.RequestMicPermission)
                 else -> {
@@ -200,12 +211,24 @@ class PieceViewModel @Inject constructor(
             }
             PieceIntent.GrantMicClicked -> effectChannel.trySend(PieceEffect.RequestMicPermission)
             is PieceIntent.MicPermissionChanged -> if (takes.requiresMicPermission) micPermission.value = intent.granted
-            is PieceIntent.TakeClicked -> effectChannel.trySend(PieceEffect.OpenSession(intent.sessionId))
+            is PieceIntent.TakeClicked ->
+                if (ui.value.selection.active) select(SelectionIntent.CardToggled(intent.sessionId)) else effectChannel.trySend(PieceEffect.OpenSession(intent.sessionId))
+            is PieceIntent.Select -> select(intent.intent)
             is PieceIntent.CameraFinished -> {
                 val file = savedState.remove<String>(KEY_CAMERA_FILE)?.let(::File) ?: return
                 if (intent.saved) import(listOf(file.toURI().toString()), temporary = listOf(file)) else file.delete()
             }
         }
+    }
+
+    private fun select(intent: SelectionIntent) {
+        val current = SelectionRules.prune(ui.value.selection, takeIds)
+        // While a take is being recorded — or the chain has not let the microphone go yet — the mode does not open.
+        if (!current.active && (takes.recordingRequested.value || listening.value)) return
+        if (intent == SelectionIntent.DeleteConfirmed && current.ids.isNotEmpty()) {
+            viewModelScope.launch { sessions.delete(current.ids) }
+        }
+        ui.update { it.copy(selection = SelectionRules.reduce(current, intent, takeIds)) }
     }
 
     private fun import(uris: List<String>, temporary: List<File>) {

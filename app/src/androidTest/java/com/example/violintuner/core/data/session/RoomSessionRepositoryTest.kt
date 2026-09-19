@@ -43,7 +43,7 @@ class RoomSessionRepositoryTest {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java).build()
-        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig(), audioFiles, Clock.systemUTC(), database.soundDao())
+        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig(), audioFiles, Clock.systemUTC())
     }
 
     @After
@@ -116,6 +116,29 @@ class RoomSessionRepositoryTest {
         database.soundDao().put(com.example.violintuner.core.data.sound.SoundSettingsEntity(ownerId = 0, sound = columns))
         repository.delete(id)
         assertEquals(listOf(0L), database.soundDao().observeSettings().first().map { it.ownerId })
+    }
+
+    @Test
+    fun deletingSeveralTakesTheirSamplesSoundAndFilesAndLeavesTheOthers() = runBlocking {
+        val first = repository.save(newSession(startedAt = 1_000, audio = "take-1.m4a"))
+        val kept = repository.save(newSession(startedAt = 2_000, audio = "take-2.m4a"))
+        val third = repository.save(newSession(startedAt = 3_000))
+        val columns = com.example.violintuner.core.data.sound.SoundMapper.columnsOf(
+            com.example.violintuner.core.domain.sound.SoundRules.off(com.example.violintuner.core.domain.sound.SoundConfig()),
+        )
+        listOf(first, kept, 0L).forEach { owner ->
+            database.soundDao().put(com.example.violintuner.core.data.sound.SoundSettingsEntity(ownerId = owner, sound = columns))
+        }
+
+        // an id that is gone already is skipped, a repeated one does no harm
+        repository.delete(listOf(first, third, third, 99L))
+
+        assertEquals(listOf(kept), repository.sessions.first().map { it.id })
+        assertNull(database.sessionDao().samples(first))
+        assertNull(database.sessionDao().samples(third))
+        assertNotNull(database.sessionDao().samples(kept))
+        assertEquals(setOf(0L, kept), database.soundDao().observeSettings().first().map { it.ownerId }.toSet())
+        assertEquals(listOf("take-1.m4a"), audioFiles.deleted)
     }
 
     @Test

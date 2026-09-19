@@ -1,15 +1,21 @@
 package com.example.violintuner.feature.history
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
@@ -31,10 +37,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
+import com.example.violintuner.core.ui.components.DeleteDialog
 import com.example.violintuner.core.ui.components.SegmentedSwitch
+import com.example.violintuner.core.ui.components.dimmedWhen
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.history.components.CardActions
+import com.example.violintuner.feature.history.components.SelectAction
+import com.example.violintuner.feature.history.components.SelectionBar
+import com.example.violintuner.feature.history.components.SelectionBarHeight
 import com.example.violintuner.feature.history.components.SessionCard
 import com.example.violintuner.feature.history.components.WeeklyChart
 import com.example.violintuner.feature.repertoire.RepertoireIntent
@@ -65,26 +76,31 @@ fun HistoryScreen(
     cardActions: CardActions? = null,
 ) {
     val colors = MaterialTheme.colorScheme
-    Box(
+    val selection = state.selection
+    val selecting = selection.active
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
             .background(colors.surface),
         contentAlignment = Alignment.TopCenter,
     ) {
+        val barHeight = if (maxWidth > maxHeight) SelectionBarHeight.Landscape else SelectionBarHeight.Portrait
         LazyColumn(
             modifier = Modifier
                 .widthIn(max = MaxContentWidth)
                 .fillMaxSize(),
             contentPadding = PaddingValues(ScreenPadding),
         ) {
-            item(key = "header") { Header(state) }
+            item(key = "header") { Header(Modifier.dimmedWhen(selecting)) }
             item(key = "sections") {
                 val sections = HistorySection.entries
                 SegmentedSwitch(
                     labels = listOf(stringResource(R.string.history_section_sessions), stringResource(R.string.history_section_repertoire)),
                     selectedIndex = sections.indexOf(state.section),
                     onSelect = { onIntent(HistoryIntent.SectionSelected(sections[it])) },
-                    modifier = Modifier.padding(top = SectionSwitchTop),
+                    modifier = Modifier
+                        .padding(top = SectionSwitchTop)
+                        .dimmedWhen(selecting),
                 )
             }
             when {
@@ -92,21 +108,32 @@ fun HistoryScreen(
                 state.loading -> Unit
                 state.totalCount == 0 -> item(key = "empty") { EmptyHistory(Modifier.fillParentMaxHeight(EMPTY_HEIGHT_FRACTION)) }
                 else -> {
-                    item(key = "chart") { ChartCard(state, Modifier.padding(top = SectionSpacing)) }
+                    item(key = "chart") { ChartCard(state, Modifier.padding(top = SectionSpacing).dimmedWhen(selecting)) }
                     item(key = "filters") {
                         Filters(
                             selected = state.filter,
                             onSelect = { onIntent(HistoryIntent.FilterSelected(it)) },
-                            modifier = Modifier.padding(top = SectionSpacing, bottom = SectionSpacing - CardSpacing),
+                            modifier = Modifier
+                                .padding(top = SectionSpacing)
+                                .dimmedWhen(selecting),
                         )
+                    }
+                    if (state.cards.isNotEmpty()) {
+                        item(key = "count") {
+                            CountRow(state.totalCount, selecting, onSelect = { onIntent(HistoryIntent.Select(SelectionIntent.SelectClicked)) })
+                        }
                     }
                     items(state.cards, key = { it.id }) { card ->
                         SessionCard(
                             card = card,
                             zone = zone,
                             onClick = { onIntent(HistoryIntent.SessionClicked(card.id)) },
-                            modifier = Modifier.padding(top = CardSpacing),
+                            modifier = Modifier
+                                .padding(top = CardSpacing)
+                                .animateItem(),
                             actions = cardActions,
+                            selected = if (selecting) card.id in selection.ids else null,
+                            onLongClick = { onIntent(HistoryIntent.Select(SelectionIntent.CardLongPressed(card.id))) },
                         )
                     }
                     if (state.cards.isEmpty()) {
@@ -125,34 +152,58 @@ fun HistoryScreen(
                 }
             }
         }
+        // Over the list, not in it: the title scrolls away with the list, the bin must not (handoff 19e2).
+        AnimatedVisibility(visible = selecting, enter = fadeIn(tween(BAR_FADE_MS)), exit = fadeOut(tween(BAR_FADE_MS))) {
+            SelectionBar(selection, state.allSelected, onIntent = { onIntent(HistoryIntent.Select(it)) }, height = barHeight)
+        }
+    }
+    if (selection.confirming) {
+        val words = Formats.pluralRu(selection.count, R.string.selection_delete_records_one, R.string.selection_delete_records_few, R.string.selection_delete_records_many)
+        DeleteDialog(
+            title = stringResource(words, selection.count),
+            text = stringResource(R.string.selection_delete_text),
+            onConfirm = { onIntent(HistoryIntent.Select(SelectionIntent.DeleteConfirmed)) },
+            onDismiss = { onIntent(HistoryIntent.Select(SelectionIntent.DeleteDismissed)) },
+        )
     }
 }
 
 private const val EMPTY_HEIGHT_FRACTION = 0.8f
+private const val BAR_FADE_MS = 200
+private val CountRowHeight = 32.dp
 
 @Composable
-private fun Header(state: HistoryState) {
-    val colors = MaterialTheme.colorScheme
-    Row(verticalAlignment = Alignment.Bottom) {
+private fun Header(modifier: Modifier = Modifier) {
+    Text(
+        text = stringResource(R.string.nav_history),
+        modifier = modifier,
+        color = MaterialTheme.colorScheme.onSurface,
+        style = MaterialTheme.typography.headlineMedium.copy(fontSize = 28.sp, fontWeight = FontWeight.Bold),
+    )
+}
+
+/**
+ * The line above the list (spec 3.18, handoff 19a2): «23 сессии» — all of them, whatever the
+ * filter — and «Выбрать». While picking, the count stays and the action steps aside.
+ */
+@Composable
+private fun CountRow(total: Int, selecting: Boolean, onSelect: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(top = SectionSpacing - CardSpacing)
+            .height(CountRowHeight),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        val countRes = Formats.pluralRu(total, R.string.history_count_one, R.string.history_count_few, R.string.history_count_many)
         Text(
-            text = stringResource(R.string.nav_history),
-            modifier = Modifier
-                .weight(1f)
-                .alignByBaseline(),
-            color = colors.onSurface,
-            style = MaterialTheme.typography.headlineMedium.copy(fontSize = 28.sp, fontWeight = FontWeight.Bold),
+            text = stringResource(countRes, total),
+            modifier = Modifier.weight(1f),
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
         )
-        if (!state.loading && state.totalCount > 0 && state.section == HistorySection.SESSIONS) {
-            val countRes = Formats.pluralRu(
-                state.totalCount, R.string.history_count_one, R.string.history_count_few, R.string.history_count_many,
-            )
-            Text(
-                text = stringResource(countRes, state.totalCount),
-                modifier = Modifier.alignByBaseline(),
-                color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium,
-            )
-        }
+        // sticks out into the margin by its own padding, so the word lines up with the cards
+        if (!selecting) SelectAction(onSelect, Modifier.offset(x = 10.dp))
     }
 }
 

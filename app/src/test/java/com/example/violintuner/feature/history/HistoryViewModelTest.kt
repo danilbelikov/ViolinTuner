@@ -104,4 +104,107 @@ class HistoryViewModelTest {
         viewModel.onIntent(HistoryIntent.SessionClicked(42))
         assertEquals(HistoryEffect.OpenSession(42), viewModel.effects.first())
     }
+
+    private fun HistoryViewModel.select(intent: SelectionIntent) = onIntent(HistoryIntent.Select(intent))
+
+    @Test
+    fun `a long press opens the selection and taps pick instead of opening`() = runTest {
+        val first = save(daysAgo = 0)
+        val second = save(daysAgo = 1)
+        val viewModel = viewModel()
+        runCurrent()
+
+        viewModel.select(SelectionIntent.CardLongPressed(first))
+        viewModel.onIntent(HistoryIntent.SessionClicked(second))
+        runCurrent()
+
+        assertEquals(Selection(active = true, ids = setOf(first, second)), viewModel.state.value.selection)
+        assertTrue(viewModel.state.value.allSelected)
+        // the tap inside the mode opened nothing: the first session to open is the one tapped after it
+        viewModel.select(SelectionIntent.Closed)
+        viewModel.onIntent(HistoryIntent.SessionClicked(first))
+        assertEquals(HistoryEffect.OpenSession(first), viewModel.effects.first())
+    }
+
+    @Test
+    fun `select all takes only what the filter shows`() = runTest {
+        val recent = save(daysAgo = 0)
+        save(daysAgo = 10)
+        val viewModel = viewModel()
+        viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.THIS_WEEK))
+        runCurrent()
+
+        viewModel.select(SelectionIntent.SelectClicked)
+        viewModel.select(SelectionIntent.SelectAllClicked)
+        runCurrent()
+
+        assertEquals(setOf(recent), viewModel.state.value.selection.ids)
+    }
+
+    @Test
+    fun `the filter and the section stay put while picking`() = runTest {
+        save(daysAgo = 0)
+        val viewModel = viewModel()
+        runCurrent()
+        viewModel.select(SelectionIntent.SelectClicked)
+
+        viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.MONTH))
+        viewModel.onIntent(HistoryIntent.SectionSelected(HistorySection.REPERTOIRE))
+        runCurrent()
+
+        assertEquals(HistoryFilter.ALL, viewModel.state.value.filter)
+        assertEquals(HistorySection.SESSIONS, viewModel.state.value.section)
+    }
+
+    @Test
+    fun `confirming deletes the picked ones and closes the mode`() = runTest {
+        val first = save(daysAgo = 0)
+        val kept = save(daysAgo = 1)
+        val third = save(daysAgo = 2)
+        val viewModel = viewModel()
+        runCurrent()
+
+        viewModel.select(SelectionIntent.CardLongPressed(first))
+        viewModel.onIntent(HistoryIntent.SessionClicked(third))
+        viewModel.select(SelectionIntent.DeleteClicked)
+        runCurrent()
+        assertTrue(viewModel.state.value.selection.confirming)
+
+        viewModel.select(SelectionIntent.DeleteConfirmed)
+        runCurrent()
+
+        assertEquals(listOf(kept), viewModel.state.value.cards.map { it.id })
+        assertEquals(Selection(), viewModel.state.value.selection)
+    }
+
+    @Test
+    fun `dismissing the dialog and closing the mode delete nothing`() = runTest {
+        val id = save(daysAgo = 0)
+        val viewModel = viewModel()
+        runCurrent()
+
+        viewModel.select(SelectionIntent.CardLongPressed(id))
+        viewModel.select(SelectionIntent.DeleteClicked)
+        viewModel.select(SelectionIntent.DeleteDismissed)
+        viewModel.select(SelectionIntent.Closed)
+        runCurrent()
+
+        assertEquals(1, viewModel.state.value.totalCount)
+        assertEquals(Selection(), viewModel.state.value.selection)
+    }
+
+    @Test
+    fun `a picked session deleted elsewhere drops out of the selection`() = runTest {
+        val first = save(daysAgo = 0)
+        val second = save(daysAgo = 1)
+        val viewModel = viewModel()
+        runCurrent()
+        viewModel.select(SelectionIntent.CardLongPressed(first))
+        viewModel.onIntent(HistoryIntent.SessionClicked(second))
+
+        repository.delete(first)
+        runCurrent()
+
+        assertEquals(setOf(second), viewModel.state.value.selection.ids)
+    }
 }

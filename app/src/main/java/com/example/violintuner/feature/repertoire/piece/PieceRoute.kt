@@ -2,6 +2,7 @@ package com.example.violintuner.feature.repertoire.piece
 
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
@@ -24,6 +25,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.permission.isMicPermissionGranted
 import com.example.violintuner.core.ui.permission.rememberMicPermissionRequester
+import com.example.violintuner.feature.history.SelectionIntent
 import com.example.violintuner.feature.history.components.CardActions
 import com.example.violintuner.feature.share.ShareHost
 import com.example.violintuner.feature.share.ShareViewModel
@@ -94,6 +96,12 @@ fun PieceRoute(
                 }
             }
         }
+    }
+
+    // The selection mode does not outlive the screen (spec 3.18); a rotation only rebuilds it and keeps the mode.
+    BackHandler(enabled = state.selection.active) { viewModel.onIntent(PieceIntent.Select(SelectionIntent.Closed)) }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        if (activity?.isChangingConfigurations != true) viewModel.onIntent(PieceIntent.Select(SelectionIntent.Closed))
     }
 
     val addPhoto = remember(viewModel, gallery) {

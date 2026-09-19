@@ -2,6 +2,9 @@ package com.example.violintuner.feature.repertoire.piece
 
 import com.example.violintuner.core.domain.repertoire.PieceStatus
 import com.example.violintuner.feature.history.HistoryCard
+import com.example.violintuner.feature.history.Selection
+import com.example.violintuner.feature.history.SelectionIntent
+import com.example.violintuner.feature.history.SelectionRules
 
 /** What the top of the piece screen says. Fields the piece does not have are null or empty and are simply not shown. */
 data class PieceHeader(
@@ -72,7 +75,11 @@ data class PieceState(
     val statusMenuOpen: Boolean,
     /** After this many lines the notes fold (spec 5.9). */
     val notesCollapsedLines: Int,
-)
+    /** Picking several takes to delete (spec 3.18). */
+    val selection: Selection = Selection(),
+) {
+    val allSelected: Boolean get() = SelectionRules.allSelected(selection, takes.map { it.card.id })
+}
 
 sealed interface PieceIntent {
     data object BackClicked : PieceIntent
@@ -108,6 +115,9 @@ sealed interface PieceIntent {
     data class MicPermissionChanged(val granted: Boolean) : PieceIntent
 
     data class TakeClicked(val sessionId: Long) : PieceIntent
+
+    /** Everything of the selection mode; a plain [TakeClicked] inside it picks the take. */
+    data class Select(val intent: SelectionIntent) : PieceIntent
 }
 
 sealed interface PieceEffect {

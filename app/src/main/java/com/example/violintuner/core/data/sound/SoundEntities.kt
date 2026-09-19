@@ -44,7 +44,7 @@ data class SoundColumns(
 /**
  * Settings of one recording — or, under [DEFAULT_OWNER], the default for all of them. No foreign
  * key: the default row belongs to no session. The row of a deleted session is removed by
- * [SoundDao.deleteOwn] from the session repository.
+ * the session DAO, in the transaction that deletes the session.
  */
 @Entity(tableName = "sound_settings")
 data class SoundSettingsEntity(

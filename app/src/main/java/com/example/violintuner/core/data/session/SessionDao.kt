@@ -23,9 +23,28 @@ abstract class SessionDao {
     @Query("UPDATE sessions SET title = :title WHERE id = :id")
     abstract suspend fun rename(id: Long, title: String?)
 
+    @Query("SELECT audioPath FROM sessions WHERE id IN (:ids) AND audioPath IS NOT NULL")
+    protected abstract suspend fun audioPathsOf(ids: List<Long>): List<String>
+
     /** Samples go with the session through the cascade. */
-    @Query("DELETE FROM sessions WHERE id = :id")
-    abstract suspend fun delete(id: Long)
+    @Query("DELETE FROM sessions WHERE id IN (:ids)")
+    protected abstract suspend fun deleteSessions(ids: List<Long>)
+
+    /** Sound settings of their own: that table has no foreign key (its default row belongs to no session). */
+    @Query("DELETE FROM sound_settings WHERE ownerId IN (:ids)")
+    protected abstract suspend fun deleteOwnSound(ids: List<Long>)
+
+    /**
+     * All the rows of these sessions or none (spec 5.12); answers with the audio files they
+     * pointed at, for the caller to remove afterwards. Chunked: SQLite limits the variables of a query.
+     */
+    @Transaction
+    open suspend fun delete(ids: Collection<Long>): List<String> = ids.distinct().chunked(DELETE_CHUNK).flatMap { chunk ->
+        val paths = audioPathsOf(chunk)
+        deleteSessions(chunk)
+        deleteOwnSound(chunk)
+        paths
+    }
 
     @Insert
     protected abstract suspend fun insertSession(session: SessionEntity): Long
@@ -39,5 +58,9 @@ abstract class SessionDao {
         val id = insertSession(session)
         insertSamples(SamplesEntity(sessionId = id, bucketMs = bucketMs, data = samples))
         return id
+    }
+
+    private companion object {
+        const val DELETE_CHUNK = 500
     }
 }

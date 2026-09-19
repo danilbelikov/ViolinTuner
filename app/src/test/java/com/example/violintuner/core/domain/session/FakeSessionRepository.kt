@@ -25,7 +25,7 @@ class FakeSessionRepository : SessionRepository {
         list.map { if (it.id == id) it.copy(title = title?.trim()?.takeIf(String::isNotEmpty)) else it }
     }
 
-    override suspend fun delete(id: Long) = sessions.update { list -> list.filterNot { it.id == id } }
+    override suspend fun delete(ids: Collection<Long>) = sessions.update { list -> list.filterNot { it.id in ids } }
 
     var orphanCleanups = 0
     override suspend fun deleteOrphanAudio() {

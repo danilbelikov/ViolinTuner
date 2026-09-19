@@ -49,7 +49,11 @@ data class HistoryState(
     val filter: HistoryFilter,
     /** Newest first, after the filter. */
     val cards: List<HistoryCard>,
-)
+    /** Picking several sessions to delete (spec 3.18); only what [cards] shows can be picked. */
+    val selection: Selection = Selection(),
+) {
+    val allSelected: Boolean get() = SelectionRules.allSelected(selection, cards.map { it.id })
+}
 
 sealed interface HistoryIntent {
     data class FilterSelected(val filter: HistoryFilter) : HistoryIntent
@@ -57,6 +61,9 @@ sealed interface HistoryIntent {
     data class SessionClicked(val id: Long) : HistoryIntent
 
     data class SectionSelected(val section: HistorySection) : HistoryIntent
+
+    /** Everything of the selection mode; a plain [SessionClicked] inside it picks the card. */
+    data class Select(val intent: SelectionIntent) : HistoryIntent
 }
 
 sealed interface HistoryEffect {

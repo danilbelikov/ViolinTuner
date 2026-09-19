@@ -60,7 +60,13 @@ interface SessionRepository {
     suspend fun rename(id: Long, title: String?)
 
     /** Removes the session together with its audio file. */
-    suspend fun delete(id: Long)
+    suspend fun delete(id: Long) = delete(listOf(id))
+
+    /**
+     * Removes several sessions at once (spec 3.18): all of their rows or none, then the audio
+     * files. Ids that are not there any more are skipped.
+     */
+    suspend fun delete(ids: Collection<Long>)
 
     /** Housekeeping at start: audio files no session points at (a crash in the middle of a take). */
     suspend fun deleteOrphanAudio()
