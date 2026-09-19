@@ -15,7 +15,7 @@ import org.junit.runner.RunWith
 
 /**
  * Opens a database file laid out exactly as an old version (statements from
- * `app/schemas/…/1.json` … `4.json`) through Room with the migrations. Room validates the migrated
+ * `app/schemas/…/1.json` … `5.json`) through Room with the migrations. Room validates the migrated
  * schema against the current entities when it opens such a file, so a migration that leaves
  * a table different from what the entities declare fails here, not on the user's phone.
  */
@@ -36,7 +36,7 @@ class DatabaseMigrationTest {
      * with one row; [version3] adds the trophies of version 3 with one row; [version4] adds the
      * repertoire of version 4: a piece with a page, and the session becomes its take.
      */
-    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false) {
+    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false) {
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
@@ -99,7 +99,16 @@ class DatabaseMigrationTest {
                 db.execSQL("INSERT INTO sheet_pages (id, pieceId, position, fileName, thumbFileName) VALUES (1, 1, 0, 'a.jpg', 'a-thumb.jpg')")
                 db.execSQL("UPDATE sessions SET pieceId = 1 WHERE id = 1")
             }
-            db.execSQL("PRAGMA user_version = ${if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
+            if (version5) {
+                val columns = DatabaseMigrations.SOUND_COLUMNS
+                db.execSQL("CREATE TABLE IF NOT EXISTS `sound_settings` (`ownerId` INTEGER NOT NULL, $columns, PRIMARY KEY(`ownerId`))")
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `sound_presets` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                        "`createdAtEpochMs` INTEGER NOT NULL, $columns)",
+                )
+                db.execSQL("UPDATE sessions SET audioPath = 'take.m4a' WHERE id = 1")
+            }
+            db.execSQL("PRAGMA user_version = ${if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
         }
     }
 
@@ -191,5 +200,24 @@ class DatabaseMigrationTest {
         )
         db.soundDao().put(com.example.violintuner.core.data.sound.SoundSettingsEntity(ownerId = 1, sound = columns))
         assertEquals(1L, db.soundDao().observeSettings().first().single().ownerId)
+    }
+
+    @Test
+    fun everythingSurvivesTheMigrationToVideoTakesAndOldSessionsHaveNoPicture() = runBlocking {
+        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true)
+        val db = openMigrated()
+
+        val session = db.sessionDao().observeAll().first().single()
+        assertEquals("Гаммы", session.title)
+        assertEquals("take.m4a", session.audioPath)
+        assertEquals(null, session.videoPath)
+        assertEquals(1L, session.pieceId)
+        assertEquals(2_700_000L, db.practiceDao().observeAll().first().single().durationMs)
+        assertEquals(true, db.trophyDao().observeAll().first().single().shown)
+        assertEquals("a.jpg", db.repertoireDao().pagesOf(1).single().fileName)
+        assertEquals(emptyList<Any>(), db.soundDao().observeSettings().first())
+
+        val id = db.sessionDao().insert(session.copy(id = 0, audioPath = "v.mp4", videoPath = "v.mp4"), bucketMs = 50, samples = ByteArray(3))
+        assertEquals("v.mp4", db.sessionDao().session(id)!!.videoPath)
     }
 }

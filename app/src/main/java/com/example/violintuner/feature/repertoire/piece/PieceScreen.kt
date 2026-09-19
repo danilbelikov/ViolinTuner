@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.repertoire.PieceStatus
+import com.example.violintuner.core.recording.video.VideoImport
 import com.example.violintuner.core.ui.components.DeleteDialog
 import com.example.violintuner.core.ui.components.dimmedWhen
 import com.example.violintuner.core.ui.format.Formats
@@ -125,6 +126,8 @@ fun PieceScreen(
     zone: ZoneId = ZoneId.systemDefault(),
     takeSounds: Map<Long, SoundCaption> = emptyMap(),
     takeActions: CardActions? = null,
+    videoImport: VideoImport = VideoImport.Idle,
+    onPickVideo: () -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
     BoxWithConstraints(
@@ -136,11 +139,12 @@ fun PieceScreen(
         if (header == null) {
             TopBar(title = "", titleVisible = false, height = TopBarHeight, onIntent = onIntent)
         } else if (maxWidth > maxHeight) {
-            LandscapeLayout(state, take, header, onIntent, addPhoto, zone, takeSounds, takeActions)
+            LandscapeLayout(state, take, header, onIntent, addPhoto, zone, takeSounds, takeActions, videoImport, onPickVideo)
         } else {
-            PortraitLayout(state, take, header, onIntent, addPhoto, zone, takeSounds, takeActions)
+            PortraitLayout(state, take, header, onIntent, addPhoto, zone, takeSounds, takeActions, videoImport, onPickVideo)
         }
     }
+    VideoImportSheet(videoImport, onIntent)
 }
 
 @Composable
@@ -153,6 +157,8 @@ private fun PortraitLayout(
     zone: ZoneId,
     takeSounds: Map<Long, SoundCaption>,
     takeActions: CardActions?,
+    videoImport: VideoImport,
+    onPickVideo: () -> Unit,
 ) {
     val scroll = rememberScrollState()
     val selecting = state.selection.active
@@ -174,7 +180,7 @@ private fun PortraitLayout(
                 SheetsBlock(state, onIntent, addPhoto, Metrics.Portrait)
                 Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(BlockGap)) {
                     // Recording stands above the notes: the notes are read once before playing, a take is recorded every time.
-                    RecordTakeRow(take, onIntent)
+                    RecordTakeRow(take, onIntent) { VideoEntry(take, videoImport, onIntent, onPickVideo) }
                     NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
                     state.progress?.let { TakeProgressCard(it) }
                 }
@@ -198,6 +204,8 @@ private fun LandscapeLayout(
     zone: ZoneId,
     takeSounds: Map<Long, SoundCaption>,
     takeActions: CardActions?,
+    videoImport: VideoImport,
+    onPickVideo: () -> Unit,
 ) {
     val selecting = state.selection.active
     Column {
@@ -215,7 +223,7 @@ private fun LandscapeLayout(
                 verticalArrangement = Arrangement.spacedBy(ScreenPadding),
             ) {
                 HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Landscape)
-                RecordTakeRow(take, onIntent, buttonSize = LandscapeRecordButton)
+                RecordTakeRow(take, onIntent, buttonSize = LandscapeRecordButton) { VideoEntry(take, videoImport, onIntent, onPickVideo) }
                 state.progress?.let { TakeProgressCard(it) }
             }
             Column(
@@ -237,6 +245,18 @@ private fun LandscapeLayout(
             }
         }
     }
+}
+
+/** «Видео-дубль» under the words of the record button; asleep while a take is recorded or another video is on its way in. */
+@Composable
+private fun VideoEntry(take: TakeState, videoImport: VideoImport, onIntent: (PieceIntent) -> Unit, onPickVideo: () -> Unit) {
+    VideoTakeButton(
+        enabled = !take.recording && videoImport == VideoImport.Idle,
+        // a short analysis shows no sheet — the button says what is going on instead
+        busy = videoImport is VideoImport.Working && !videoImport.visible,
+        onShoot = { onIntent(PieceIntent.VideoShootClicked) },
+        onPick = onPickVideo,
+    )
 }
 
 /**

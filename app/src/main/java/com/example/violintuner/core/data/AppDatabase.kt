@@ -28,7 +28,7 @@ import com.example.violintuner.core.data.sound.SoundSettingsEntity
         SessionEntity::class, SamplesEntity::class, PracticeEntity::class, TrophyEntity::class,
         PieceEntity::class, SheetPageEntity::class, SoundSettingsEntity::class, SoundPresetEntity::class,
     ],
-    version = 5,
+    version = 6,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {

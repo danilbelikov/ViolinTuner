@@ -75,7 +75,10 @@ fun StandRoute(
                     PieceEffect.ShowNoNotesRecorded -> Toast.makeText(context, R.string.record_no_notes, Toast.LENGTH_SHORT).show()
                     PieceEffect.ShowPhotoFailed -> Toast.makeText(context, R.string.profile_photo_failed, Toast.LENGTH_SHORT).show()
                     // Navigation of the piece screen: nothing on the stand asks for it.
-                    PieceEffect.Close, is PieceEffect.OpenForm, is PieceEffect.OpenStand, is PieceEffect.LaunchCamera, is PieceEffect.OpenSession -> Unit
+                    PieceEffect.Close, is PieceEffect.OpenForm, is PieceEffect.OpenStand, is PieceEffect.LaunchCamera, is PieceEffect.OpenSession,
+                    // and there is no video take from the stand: the camera takes the screen the music is on (spec 3.19)
+                    is PieceEffect.LaunchVideoCamera, is PieceEffect.ShareVideo,
+                    -> Unit
                 }
             }
         }

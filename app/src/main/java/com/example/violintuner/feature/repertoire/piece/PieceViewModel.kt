@@ -3,6 +3,7 @@ package com.example.violintuner.feature.repertoire.piece
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.violintuner.core.audio.share.ShareFiles
 import com.example.violintuner.core.data.repertoire.SheetFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.IntonationReading
@@ -14,6 +15,9 @@ import com.example.violintuner.core.domain.session.SessionRepository
 import com.example.violintuner.core.domain.sound.SoundConfig
 import com.example.violintuner.core.domain.sound.SoundRepository
 import com.example.violintuner.core.recording.TakePipeline
+import com.example.violintuner.core.recording.video.VideoFiles
+import com.example.violintuner.core.recording.video.VideoImport
+import com.example.violintuner.core.recording.video.VideoTakeImporter
 import com.example.violintuner.core.settings.IntonationConfigSource
 import com.example.violintuner.feature.history.Selection
 import com.example.violintuner.feature.history.SelectionIntent
@@ -57,6 +61,9 @@ class PieceViewModel @Inject constructor(
     private val intonationConfig: IntonationConfig,
     sound: SoundRepository,
     soundConfig: SoundConfig,
+    private val videos: VideoFiles,
+    private val importer: VideoTakeImporter,
+    private val shareFiles: ShareFiles,
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
 
@@ -80,6 +87,21 @@ class PieceViewModel @Inject constructor(
     private var closed = false
     private val effectChannel = Channel<PieceEffect>(Channel.BUFFERED)
     val effects: Flow<PieceEffect> = effectChannel.receiveAsFlow()
+
+    /**
+     * A video on its way to becoming a take of this piece (spec 3.19). The importer is a singleton
+     * that outlives the screen; what it does for another piece is none of this screen's business.
+     */
+    val videoImport: StateFlow<VideoImport> = importer.state
+        .map { import ->
+            val owner = when (import) {
+                is VideoImport.Working -> import.pieceId
+                is VideoImport.Failed -> import.pieceId
+                VideoImport.Idle -> pieceId
+            }
+            if (owner == pieceId) import else VideoImport.Idle
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), VideoImport.Idle)
 
     /** The take recorded a moment ago, while it is still highlighted in the list. */
     private val newTakeId = MutableStateFlow<Long?>(null)
@@ -157,6 +179,8 @@ class PieceViewModel @Inject constructor(
 
     init {
         viewModelScope.launch { takes.watchPractice() }
+        // A video take lands in the list the way a recorded one does: on top, highlighted, the session screen shut.
+        viewModelScope.launch { importer.saved.collect { if (it.pieceId == pieceId) highlight(it.sessionId) } }
         viewModelScope.launch {
             takes.events.collect { event ->
                 when (event) {
@@ -214,12 +238,36 @@ class PieceViewModel @Inject constructor(
             is PieceIntent.TakeClicked ->
                 if (ui.value.selection.active) select(SelectionIntent.CardToggled(intent.sessionId)) else effectChannel.trySend(PieceEffect.OpenSession(intent.sessionId))
             is PieceIntent.Select -> select(intent.intent)
+            PieceIntent.VideoShootClicked -> if (videoAllowed()) {
+                val file = videos.newCameraFile()
+                // The camera app may push this process out of memory: the path has to outlive it.
+                savedState[KEY_VIDEO_FILE] = file.path
+                effectChannel.trySend(PieceEffect.LaunchVideoCamera(file.path))
+            }
+            is PieceIntent.VideoShotFinished -> {
+                val file = savedState.remove<String>(KEY_VIDEO_FILE)?.let(::File) ?: return
+                if (intent.saved) importer.shot(pieceId, file) else file.delete()
+            }
+            is PieceIntent.VideoPicked -> if (intent.uri != null && videoAllowed()) importer.picked(pieceId, intent.uri)
+            PieceIntent.VideoImportCancelClicked -> importer.cancelClicked()
+            PieceIntent.VideoImportContinueClicked -> importer.continueClicked()
+            PieceIntent.VideoImportDismissed -> importer.dismiss()
+            PieceIntent.VideoImportSendClicked -> importer.sendClicked()?.let { path ->
+                viewModelScope.launch {
+                    // The provider hands out only `cache/share/`: the shot gets a second name there, not a copy.
+                    shareFiles.original(File(path), RESCUE_FILE_NAME)?.let { effectChannel.send(PieceEffect.ShareVideo(it.path)) }
+                }
+            }
             is PieceIntent.CameraFinished -> {
                 val file = savedState.remove<String>(KEY_CAMERA_FILE)?.let(::File) ?: return
                 if (intent.saved) import(listOf(file.toURI().toString()), temporary = listOf(file)) else file.delete()
             }
         }
     }
+
+    // Two takes are not made at once, and takes are not made while others are being picked for deletion.
+    private fun videoAllowed(): Boolean =
+        !takes.recordingRequested.value && !listening.value && !ui.value.selection.active && importer.state.value == VideoImport.Idle
 
     private fun select(intent: SelectionIntent) {
         val current = SelectionRules.prune(ui.value.selection, takeIds)
@@ -252,6 +300,8 @@ class PieceViewModel @Inject constructor(
     companion object {
         const val ARG_PIECE_ID = "pieceId"
         private const val KEY_CAMERA_FILE = "cameraFile"
+        private const val KEY_VIDEO_FILE = "videoFile"
+        private const val RESCUE_FILE_NAME = "video.mp4"
         private const val STOP_TIMEOUT_MS = 5_000L
 
         // Long enough to survive a rotation, short enough that the microphone goes soon after the screen does (as on Live).

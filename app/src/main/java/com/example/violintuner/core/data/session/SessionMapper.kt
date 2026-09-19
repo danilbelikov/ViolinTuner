@@ -25,6 +25,7 @@ internal object SessionMapper {
         previewZones = encodeZones(session.previewZones),
         audioPath = session.audioPath,
         pieceId = session.pieceId,
+        videoPath = session.videoPath,
     )
 
     fun toSummary(entity: SessionEntity): SessionSummary = SessionSummary(
@@ -43,6 +44,7 @@ internal object SessionMapper {
         previewZones = decodeZones(entity.previewZones),
         audioPath = entity.audioPath,
         pieceId = entity.pieceId,
+        videoPath = entity.videoPath,
     )
 
     fun encodeZones(zones: List<Zone>): String = zones.joinToString(separator = "") {

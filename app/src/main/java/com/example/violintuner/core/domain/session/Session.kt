@@ -26,6 +26,8 @@ data class SessionSummary(
     val audioPath: String?,
     /** The piece this session is a take of (spec 3.15); null for a session recorded on Live. */
     val pieceId: Long? = null,
+    /** Set for a video take (spec 3.19): the name of the video file — its sound track is what [audioPath] plays. */
+    val videoPath: String? = null,
 )
 
 data class SessionDetails(
@@ -45,6 +47,8 @@ data class NewSession(
     val audioPath: String?,
     /** Set for a take recorded from a piece's screen. */
     val pieceId: Long? = null,
+    /** Set for a video take (spec 3.19): the name of the video file — its sound track is what [audioPath] plays. */
+    val videoPath: String? = null,
 )
 
 interface SessionRepository {

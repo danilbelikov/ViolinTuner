@@ -6,7 +6,7 @@ import com.example.violintuner.core.audio.share.ShareFiles
 import com.example.violintuner.core.audio.share.SoundFileRenderer
 import com.example.violintuner.core.audio.share.SoundRenderer
 import com.example.violintuner.feature.share.AppShareTexts
-import com.example.violintuner.feature.share.ElapsedClock
+import com.example.violintuner.core.di.ElapsedClock
 import com.example.violintuner.feature.share.ShareTexts
 import dagger.Binds
 import dagger.Module

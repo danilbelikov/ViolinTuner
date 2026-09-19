@@ -5,6 +5,7 @@ import com.example.violintuner.core.audio.FakePitchSource
 import com.example.violintuner.core.audio.FakeScenario
 import com.example.violintuner.core.audio.PitchSource
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
+import com.example.violintuner.core.audio.share.ShareFiles
 import com.example.violintuner.core.data.repertoire.FakeSheetFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.PitchFrame
@@ -19,7 +20,13 @@ import com.example.violintuner.core.domain.sound.BuiltInPreset
 import com.example.violintuner.core.domain.sound.FakeSoundRepository
 import com.example.violintuner.core.domain.sound.SoundConfig
 import com.example.violintuner.core.domain.sound.SoundPresets
+import com.example.violintuner.core.domain.sound.SoundSettings
 import com.example.violintuner.core.recording.TakePipeline
+import com.example.violintuner.core.recording.video.AnalysisSpeed
+import com.example.violintuner.core.recording.video.FakeFileTakeAnalyzer
+import com.example.violintuner.core.recording.video.FakeVideoFiles
+import com.example.violintuner.core.recording.video.VideoImport
+import com.example.violintuner.core.recording.video.VideoTakeImporter
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.core.settings.SettingsConfigSource
 import com.example.violintuner.feature.history.Selection
@@ -91,6 +98,22 @@ class PieceViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
+    private val videoFiles = FakeVideoFiles()
+    private val videoAnalyzer = FakeFileTakeAnalyzer()
+    private var videoImporter: VideoTakeImporter? = null
+
+    // one importer for all the screens of a test, as it is one for the app
+    private fun TestScope.importer() = videoImporter ?: VideoTakeImporter(
+        videoFiles, videoAnalyzer, sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, RepertoireConfig(), IntonationConfig(),
+        clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
+    ).also { videoImporter = it }
+
+    private object NoShareFiles : ShareFiles {
+        override fun processed(audioName: String, settings: SoundSettings, fileName: String) = File("/cache/share/$fileName")
+        override suspend fun original(audio: File, fileName: String): File = File("/cache/share/$fileName")
+        override suspend fun deleteOlderThan(nowEpochMs: Long, maxAgeMs: Long) = Unit
+    }
+
     private fun TestScope.screen(pieceId: Long, saved: SavedStateHandle = SavedStateHandle(mapOf(PieceViewModel.ARG_PIECE_ID to pieceId))):
         Pair<PieceViewModel, MutableList<PieceEffect>> {
         val pitch = source ?: CountingSource(FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource)).also { source = it }
@@ -98,6 +121,7 @@ class PieceViewModelTest {
         val viewModel = PieceViewModel(
             saved, repertoire, files, RepertoireConfig(), clock, takes,
             SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), sessions, IntonationConfig(), sound, SoundConfig(),
+            videoFiles, importer(), NoShareFiles,
         )
         val effects = mutableListOf<PieceEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
@@ -438,6 +462,94 @@ class PieceViewModelTest {
         assertTrue(viewModel.state.value.selection.active)
         assertFalse(viewModel.takeState.value.recording)
         assertEquals(0, source!!.active)
+    }
+
+    @Test
+    fun `a video becomes a take of this piece - on top, highlighted, the session screen shut`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, effects) = screen(id)
+        backgroundScope.launch { viewModel.videoImport.collect {} }
+
+        viewModel.onIntent(PieceIntent.VideoShootClicked)
+        runCurrent()
+        val launch = effects.single() as PieceEffect.LaunchVideoCamera
+        viewModel.onIntent(PieceIntent.VideoShotFinished(saved = true))
+        advance(1_000)
+        assertTrue((viewModel.videoImport.value as VideoImport.Working).visible)
+
+        advance(1_500)
+        assertEquals(VideoImport.Idle, viewModel.videoImport.value)
+        val take = viewModel.state.value.takes.single()
+        assertTrue(take.isNew)
+        assertEquals(1, effects.size)
+        assertTrue(launch.filePath.endsWith(".mp4"))
+    }
+
+    @Test
+    fun `backing out of the camera adds no take`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(PieceIntent.VideoShootClicked)
+        viewModel.onIntent(PieceIntent.VideoShotFinished(saved = false))
+        advance(5_000)
+        assertTrue(viewModel.state.value.takes.isEmpty())
+        assertEquals(0, videoAnalyzer.calls)
+    }
+
+    @Test
+    fun `no video take while a take is recorded, while takes are picked, or while another video is on its way`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, effects) = screen(id)
+        recordTake(viewModel)
+
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        viewModel.onIntent(PieceIntent.VideoShootClicked)
+        viewModel.onIntent(PieceIntent.VideoPicked("content://video/1"))
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+
+        viewModel.select(SelectionIntent.SelectClicked)
+        viewModel.onIntent(PieceIntent.VideoShootClicked)
+        viewModel.select(SelectionIntent.Closed)
+        runCurrent()
+        assertTrue(effects.none { it is PieceEffect.LaunchVideoCamera })
+        assertEquals(0, videoAnalyzer.calls)
+
+        viewModel.onIntent(PieceIntent.VideoPicked("content://video/1"))
+        viewModel.onIntent(PieceIntent.VideoShootClicked)
+        runCurrent()
+        assertTrue("one at a time", effects.none { it is PieceEffect.LaunchVideoCamera })
+    }
+
+    @Test
+    fun `a video on its way to another piece is none of this screen's business`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val other = repertoire.add(PieceDraft(title = "Гавот"), nowEpochMs = 2)
+        val (viewModel, _) = screen(id)
+        val (otherScreen, _) = screen(other)
+        backgroundScope.launch { viewModel.videoImport.collect {} }
+        backgroundScope.launch { otherScreen.videoImport.collect {} }
+
+        otherScreen.onIntent(PieceIntent.VideoPicked("content://video/1"))
+        advance(1_000)
+        assertTrue(otherScreen.videoImport.value is VideoImport.Working)
+        assertEquals(VideoImport.Idle, viewModel.videoImport.value)
+    }
+
+    @Test
+    fun `a shot that did not become a take goes to the system sheet under a second name`() = runTest {
+        videoAnalyzer.outcome = com.example.violintuner.core.recording.FileAnalysisResult.NoNotes
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, effects) = screen(id)
+        viewModel.onIntent(PieceIntent.VideoShootClicked)
+        viewModel.onIntent(PieceIntent.VideoShotFinished(saved = true))
+        advance(5_000)
+        viewModel.onIntent(PieceIntent.VideoImportSendClicked)
+        runCurrent()
+        assertEquals(PieceEffect.ShareVideo("/cache/share/video.mp4"), effects.last())
+        viewModel.onIntent(PieceIntent.VideoImportDismissed)
+        assertEquals(1, videoFiles.discarded.size)
     }
 
     @Test

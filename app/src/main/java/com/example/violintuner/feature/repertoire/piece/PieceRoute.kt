@@ -1,5 +1,9 @@
 package com.example.violintuner.feature.repertoire.piece
 
+import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.Context
+import android.content.Intent
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -46,6 +50,7 @@ fun PieceRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val take by viewModel.takeState.collectAsStateWithLifecycle()
     val takeSounds by viewModel.takeSounds.collectAsStateWithLifecycle()
+    val videoImport by viewModel.videoImport.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -79,6 +84,14 @@ fun PieceRoute(
         viewModel.onIntent(PieceIntent.CameraFinished(saved))
     }
 
+    // A video take (spec 3.19): the system camera and the system picker, no permission for either.
+    val videoCamera = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { saved ->
+        viewModel.onIntent(PieceIntent.VideoShotFinished(saved))
+    }
+    val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        viewModel.onIntent(PieceIntent.VideoPicked(uri?.toString()))
+    }
+
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.effects.collect { effect ->
@@ -93,6 +106,10 @@ fun PieceRoute(
                     PieceEffect.RequestMicPermission -> requestMicPermission()
                     PieceEffect.ShowNoNotesRecorded -> Toast.makeText(context, R.string.record_no_notes, Toast.LENGTH_SHORT).show()
                     is PieceEffect.OpenSession -> currentOnOpenSession(effect.sessionId)
+                    is PieceEffect.LaunchVideoCamera -> videoCamera.launch(
+                        FileProvider.getUriForFile(context, "${context.packageName}$FILES_AUTHORITY_SUFFIX", File(effect.filePath)),
+                    )
+                    is PieceEffect.ShareVideo -> context.shareVideo(File(effect.filePath))
                 }
             }
         }
@@ -114,9 +131,29 @@ fun PieceRoute(
         state = state, take = take, onIntent = viewModel::onIntent, addPhoto = addPhoto, modifier = modifier,
         takeSounds = takeSounds,
         takeActions = remember(shareViewModel, onOpenSound) { CardActions(onShare = shareViewModel::start, onSound = onOpenSound) },
+        videoImport = videoImport,
+        onPickVideo = { videoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) },
     )
     ShareHost(shareViewModel)
 }
 
 /** Matches `android:authorities` of the FileProvider in the manifest. */
 private const val FILES_AUTHORITY_SUFFIX = ".files"
+
+/** A shot that did not become a take goes to the system sheet as it is — the only way to keep it (spec 3.19). */
+private fun Context.shareVideo(file: File) {
+    val uri = FileProvider.getUriForFile(this, "$packageName$FILES_AUTHORITY_SUFFIX", file)
+    val intent = Intent(Intent.ACTION_SEND).apply {
+        type = VIDEO_TYPE
+        putExtra(Intent.EXTRA_STREAM, uri)
+        clipData = ClipData.newRawUri(null, uri)
+        addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    }
+    try {
+        startActivity(Intent.createChooser(intent, getString(R.string.share_chooser)))
+    } catch (_: ActivityNotFoundException) {
+        Toast.makeText(this, R.string.share_no_app, Toast.LENGTH_SHORT).show()
+    }
+}
+
+private const val VIDEO_TYPE = "video/mp4"

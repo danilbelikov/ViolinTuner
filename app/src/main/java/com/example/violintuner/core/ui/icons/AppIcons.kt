@@ -57,6 +57,13 @@ object AppIcons {
     val Minus: ImageVector by lazy { icon("Minus", IconPaths.MINUS) }
     val FileAudio: ImageVector by lazy { icon("FileAudio", IconPaths.FILE_AUDIO) }
     val Limiter: ImageVector by lazy { icon("Limiter", IconPaths.LIMITER) }
+    val Video: ImageVector by lazy { icon("Video", IconPaths.VIDEO) }
+    val VideoGallery: ImageVector by lazy { icon("VideoGallery", IconPaths.VIDEO_GALLERY) }
+    val VideoOff: ImageVector by lazy { icon("VideoOff", IconPaths.VIDEO_OFF) }
+    val Fullscreen: ImageVector by lazy { icon("Fullscreen", IconPaths.FULLSCREEN) }
+    val FullscreenExit: ImageVector by lazy { icon("FullscreenExit", IconPaths.FULLSCREEN_EXIT) }
+    val PlayCircle: ImageVector by lazy { icon("PlayCircle", IconPaths.PLAY_CIRCLE) }
+    val Alert: ImageVector by lazy { icon("Alert", IconPaths.ALERT) }
 
     val TabLive: TabIcon by lazy { tab("TabLive", IconPaths.TAB_LIVE) }
     val TabPractice: TabIcon by lazy { tab("TabPractice", IconPaths.TAB_PRACTICE) }
@@ -108,6 +115,13 @@ object AppIcons {
         "Minus" to { Minus },
         "FileAudio" to { FileAudio },
         "Limiter" to { Limiter },
+        "Video" to { Video },
+        "VideoGallery" to { VideoGallery },
+        "VideoOff" to { VideoOff },
+        "Fullscreen" to { Fullscreen },
+        "FullscreenExit" to { FullscreenExit },
+        "PlayCircle" to { PlayCircle },
+        "Alert" to { Alert },
     )
 
     val tabs: List<() -> TabIcon> = listOf({ TabLive }, { TabPractice }, { TabRecords }, { TabSettings })

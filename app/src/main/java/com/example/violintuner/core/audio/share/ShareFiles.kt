@@ -1,6 +1,9 @@
 package com.example.violintuner.core.audio.share
 
 import android.content.Context
+import android.system.ErrnoException
+import android.system.Os
+import android.util.Log
 import com.example.violintuner.core.data.sound.SoundMapper
 import com.example.violintuner.core.di.IoDispatcher
 import com.example.violintuner.core.domain.sound.SoundSettings
@@ -58,7 +61,15 @@ class AppShareFiles @Inject constructor(
         try {
             if (!target.isFile || target.length() != audio.length()) {
                 target.parentFile?.mkdirs()
-                audio.copyTo(target, overwrite = true)
+                target.delete()
+                // A second name for the same bytes: a video of two hundred megabytes is not copied for the
+                // sake of a pretty name. Cache and files are one volume; where they are not, it is a copy after all.
+                try {
+                    Os.link(audio.path, target.path)
+                } catch (e: ErrnoException) {
+                    Log.i(TAG, "no hard link (${e.message}), copying")
+                    audio.copyTo(target, overwrite = true)
+                }
             }
             target
         } catch (e: IOException) {
@@ -74,6 +85,7 @@ class AppShareFiles @Inject constructor(
     }
 
     private companion object {
+        const val TAG = "ShareFiles"
         const val DIRECTORY = "share"
         const val HEX = 16
     }

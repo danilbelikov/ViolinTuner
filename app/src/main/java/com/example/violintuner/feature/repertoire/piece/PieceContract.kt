@@ -118,6 +118,24 @@ sealed interface PieceIntent {
 
     /** Everything of the selection mode; a plain [TakeClicked] inside it picks the take. */
     data class Select(val intent: SelectionIntent) : PieceIntent
+
+    /** «Снять видео»: the system camera (spec 3.19). */
+    data object VideoShootClicked : PieceIntent
+
+    /** The system camera came back; [saved] is false when the player backed out. */
+    data class VideoShotFinished(val saved: Boolean) : PieceIntent
+
+    /** The system picker returned this video; null when nothing was picked. */
+    data class VideoPicked(val uri: String?) : PieceIntent
+
+    data object VideoImportCancelClicked : PieceIntent
+
+    data object VideoImportContinueClicked : PieceIntent
+
+    data object VideoImportSendClicked : PieceIntent
+
+    /** «Удалить» of a shot that did not become a take, and «Понятно» of any other failure. */
+    data object VideoImportDismissed : PieceIntent
 }
 
 sealed interface PieceEffect {
@@ -138,6 +156,12 @@ sealed interface PieceEffect {
     data object ShowNoNotesRecorded : PieceEffect
 
     data class OpenSession(val sessionId: Long) : PieceEffect
+
+    /** [filePath] is where the video has to be written; the route turns it into a content uri. */
+    data class LaunchVideoCamera(val filePath: String) : PieceEffect
+
+    /** A shot that did not become a take, on its way to the system share sheet; [filePath] is under `cache/share/`. */
+    data class ShareVideo(val filePath: String) : PieceEffect
 }
 
 /** What the chain hands the screen for a frame of a blind take: how loud, and what is wrong, if anything. */

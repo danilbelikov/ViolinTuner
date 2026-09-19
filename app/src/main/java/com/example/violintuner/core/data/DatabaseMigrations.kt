@@ -66,8 +66,18 @@ object DatabaseMigrations {
         }
     }
 
-    /** The columns of `SoundColumns`, as Room declares them: both sound tables embed the same set. */
-    private const val SOUND_COLUMNS =
+    /**
+     * Video takes (spec 3.19): a session may point at a video file. One nullable column — the
+     * sessions of the user are not rebuilt; old ones simply have no picture.
+     */
+    val MIGRATION_5_6 = object : Migration(5, 6) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `sessions` ADD COLUMN `videoPath` TEXT")
+        }
+    }
+
+    /** The columns of `SoundColumns`, as Room declares them: both sound tables embed the same set. Internal for the migration test, which lays out a version 5 file by hand. */
+    internal const val SOUND_COLUMNS =
         "`eqEnabled` INTEGER NOT NULL, `lowCutEnabled` INTEGER NOT NULL, `lowCutHz` REAL NOT NULL, `lowHz` REAL NOT NULL, " +
             "`lowGainDb` REAL NOT NULL, `bodyHz` REAL NOT NULL, `bodyGainDb` REAL NOT NULL, `bodyQ` REAL NOT NULL, " +
             "`presenceHz` REAL NOT NULL, `presenceGainDb` REAL NOT NULL, `presenceQ` REAL NOT NULL, `airHz` REAL NOT NULL, " +
@@ -77,5 +87,5 @@ object DatabaseMigrations {
             "`reverbPreDelayMs` REAL NOT NULL, `reverbBrightness` REAL NOT NULL, `reverbMix` REAL NOT NULL, " +
             "`outputEnabled` INTEGER NOT NULL, `outputGainDb` REAL NOT NULL"
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
 }

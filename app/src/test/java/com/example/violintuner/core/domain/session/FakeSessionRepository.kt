@@ -48,5 +48,6 @@ class FakeSessionRepository : SessionRepository {
         previewZones = session.previewZones,
         audioPath = session.audioPath,
         pieceId = session.pieceId,
+        videoPath = session.videoPath,
     )
 }

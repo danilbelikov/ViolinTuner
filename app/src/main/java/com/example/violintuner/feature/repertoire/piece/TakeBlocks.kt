@@ -87,7 +87,14 @@ private const val CHART_GOOD = 75f
  * dot, a timer and a neutral row of loudness: the screen says "I hear you", never "you hit it".
  */
 @Composable
-fun RecordTakeRow(take: TakeState, onIntent: (PieceIntent) -> Unit, modifier: Modifier = Modifier, buttonSize: androidx.compose.ui.unit.Dp = 72.dp) {
+fun RecordTakeRow(
+    take: TakeState,
+    onIntent: (PieceIntent) -> Unit,
+    modifier: Modifier = Modifier,
+    buttonSize: androidx.compose.ui.unit.Dp = 72.dp,
+    /** Stands under the words, in their column: the quiet second way to a take (spec 3.19). */
+    below: (@Composable () -> Unit)? = null,
+) {
     val colors = MaterialTheme.colorScheme
     val refused = take.micPermission == false
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -113,6 +120,7 @@ fun RecordTakeRow(take: TakeState, onIntent: (PieceIntent) -> Unit, modifier: Mo
                     Text(stringResource(R.string.take_record_hint), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp))
                 }
             }
+            if (below != null) Box(Modifier.padding(top = 6.dp)) { below() }
         }
     }
 }

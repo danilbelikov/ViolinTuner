@@ -25,6 +25,8 @@ data class SessionEntity(
     val audioPath: String?,
     /** The piece this session is a take of; no foreign key, see `MIGRATION_3_4`. */
     val pieceId: Long? = null,
+    /** A video take (v6): the file that holds both the picture and the sound. A name, not a path. */
+    val videoPath: String? = null,
 )
 
 /** Samples of a session as a [com.example.violintuner.core.domain.session.SampleCodec] blob. */

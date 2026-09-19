@@ -3,7 +3,7 @@ package com.example.violintuner.core.ui.icons
 /**
  * Path data of the icon set, copied verbatim from the `ICONS` array of the handoff
  * (`docs/design/project/polish`, frame 14a; `docs/design/project/sound` and
- * `docs/design/project/records` added their own): a 24 × 24 grid,
+ * `docs/design/project/records` and `docs/design/project/video` added their own): a 24 × 24 grid,
  * stroke 1.8, round caps and joins.
  * A path that starts with [FILLED] is a filled shape without a stroke (dots, a note head).
  * Generated from the handoff — change an icon there, not here.
@@ -139,6 +139,27 @@ internal object IconPaths {
 
     /** пометка у блока «Громкость» — ограничитель на выходе */
     val LIMITER = listOf("M3 15h4l2-8 3 12 3-8h7", "M3 7h18")
+
+    /** кнопка «Видео-дубль», пункт «Снять видео», бейдж плитки (12), строка размера и шапка «Звука» (14) */
+    val VIDEO = listOf("M3.5 7.5A1.5 1.5 0 0 1 5 6h9a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 14 18H5a1.5 1.5 0 0 1-1.5-1.5z", "M15.5 10.3l4.2-2.5a.5.5 0 0 1 .8.4v7.6a.5.5 0 0 1-.8.4l-4.2-2.5")
+
+    /** пункт «Видео из галереи» */
+    val VIDEO_GALLERY = listOf("M5.5 4.5h13A1.5 1.5 0 0 1 20 6v12a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 4 18V6a1.5 1.5 0 0 1 1.5-1.5z", "M4 15.5l4.2-4.2 3 3", "F M12.6 9l4.4 2.8-4.4 2.8z")
+
+    /** строка «Видео не найдено» */
+    val VIDEO_OFF = listOf("M3.5 7.5A1.5 1.5 0 0 1 5 6h6.5M14.5 9V7.5", "M14.5 13v3.5A1.5 1.5 0 0 1 13 18H5a1.5 1.5 0 0 1-1.5-1.5v-6", "M15.5 10.3l4.2-2.5a.5.5 0 0 1 .8.4v7.6", "M3.5 3.5l17 17")
+
+    /** «на весь экран» — угол видео, прилипшая строка */
+    val FULLSCREEN = listOf("M4 9V5.5A1.5 1.5 0 0 1 5.5 4H9", "M15 4h3.5A1.5 1.5 0 0 1 20 5.5V9", "M20 15v3.5a1.5 1.5 0 0 1-1.5 1.5H15", "M9 20H5.5A1.5 1.5 0 0 1 4 18.5V15")
+
+    /** «свернуть» в панели полноэкранного режима */
+    val FULLSCREEN_EXIT = listOf("M9 4v3.5A1.5 1.5 0 0 1 7.5 9H4", "M15 4v3.5A1.5 1.5 0 0 0 16.5 9H20", "M20 15h-3.5a1.5 1.5 0 0 0-1.5 1.5V20", "M4 15h3.5A1.5 1.5 0 0 1 9 16.5V20")
+
+    /** «Смотреть / Слушать это место» (20) */
+    val PLAY_CIRCLE = listOf("M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18z", "F M10 8.6v6.8a.4.4 0 0 0 .6.3l5.2-3.4a.4.4 0 0 0 0-.6L10.6 8.3a.4.4 0 0 0-.6.3z")
+
+    /** строка ошибки в листе разбора (24, error) */
+    val ALERT = listOf("M12 4.5 20.5 19.5H3.5z", "M12 10v4.5", "F M12 16.6a.9.9 0 1 0 0 1.8.9.9 0 1 0 0-1.8z")
 
     /** What a path of a tab icon does when its tab is selected. */
     enum class Selected { AS_IS, FILL, CUT }

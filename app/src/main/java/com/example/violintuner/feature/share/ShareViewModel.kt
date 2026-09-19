@@ -7,6 +7,7 @@ import com.example.violintuner.core.audio.share.ShareFiles
 import com.example.violintuner.core.audio.share.ShareNames
 import com.example.violintuner.core.audio.share.SoundFileRenderer
 import com.example.violintuner.core.audio.share.SoundRenderer
+import com.example.violintuner.core.di.ElapsedClock
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.session.SessionRepository
 import com.example.violintuner.core.domain.sound.SoundConfig
@@ -29,11 +30,6 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-
-/** Milliseconds that only go forward; the wall clock may jump. */
-fun interface ElapsedClock {
-    fun nowMs(): Long
-}
 
 /** Titles and the message of a shared recording, in the language of the interface. */
 interface ShareTexts {
