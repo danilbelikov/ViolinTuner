@@ -47,6 +47,7 @@ import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.theme.ViolinTheme
+import com.example.violintuner.feature.history.components.sessionTitle
 import com.example.violintuner.feature.session.components.NoteSheet
 import com.example.violintuner.feature.session.components.PianoRoll
 import com.example.violintuner.feature.session.components.PlayerBar
@@ -77,8 +78,7 @@ fun SessionScreen(
     val loaded = state as? SessionState.Loaded
     val title = when {
         loaded == null -> ""
-        else -> loaded.content.title
-            ?: stringResource(R.string.session_default_title, Formats.dayAndMonth(loaded.content.startedAtEpochMs, zone))
+        else -> sessionTitle(loaded.content.title, loaded.content.pieceTitle, loaded.content.startedAtEpochMs, zone)
     }
     Column(
         modifier = modifier

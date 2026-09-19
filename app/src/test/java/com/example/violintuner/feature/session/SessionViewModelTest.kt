@@ -5,6 +5,8 @@ import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
+import com.example.violintuner.core.domain.repertoire.FakeRepertoireRepository
+import com.example.violintuner.core.domain.repertoire.PieceDraft
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.domain.session.Finger
 import com.example.violintuner.core.domain.session.NewSession
@@ -43,7 +45,7 @@ class SessionViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     /** F#5 flat by 18, A4 in tune, C#5 flat by 9: the handoff example in miniature. */
-    private suspend fun saveSession(tolerance: Double = 8.0, audio: String? = null): Long {
+    private suspend fun saveSession(tolerance: Double = 8.0, audio: String? = null, pieceId: Long? = null): Long {
         val sessionConfig = config.copy(toleranceCents = tolerance)
         val samples = List(20) { SessionSample(78, -18.0) } + listOf(null) +
             List(40) { SessionSample(69, 1.0) } + listOf(null) + List(20) { SessionSample(73, -9.0) }
@@ -53,6 +55,7 @@ class SessionViewModelTest {
                 startedAtEpochMs = 1_789_000_000_000, durationMs = samples.size * 50L, config = sessionConfig,
                 samples = samples, metrics = analysis.metrics!!,
                 previewZones = SessionAnalyzer.previewZones(analysis.segments, sessionConfig), audioPath = audio,
+                pieceId = pieceId,
             ),
         )
     }
@@ -82,11 +85,13 @@ class SessionViewModelTest {
     }
 
     private val player = FakePlayer()
+    private val repertoire = FakeRepertoireRepository()
     private var audioFiles: SessionAudioFiles = FakeAudioFiles(present = setOf("take.m4a"))
 
     private fun TestScope.viewModel(id: Long): SessionViewModel {
         val viewModel = SessionViewModel(
-            repository, config, audioFiles, { player }, SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)),
+            repository, config, audioFiles, { player }, repertoire,
+            SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)),
         )
         runCurrent()
         return viewModel
@@ -112,6 +117,17 @@ class SessionViewModelTest {
         assertNull(content.perString[ViolinString.G3])
         assertEquals(Finger.FIRST, content.segments.first().position.finger)
         assertTrue(!content.hasAudio)
+    }
+
+    @Test
+    fun `a take carries the title of its piece, and loses it with the piece`() = runTest {
+        val pieceId = repertoire.add(PieceDraft(title = "Менуэт соль мажор"), nowEpochMs = 1)
+        val take = saveSession(pieceId = pieceId)
+        assertEquals("Менуэт соль мажор", viewModel(take).loaded().content.pieceTitle)
+        assertNull(viewModel(saveSession()).loaded().content.pieceTitle)
+
+        repertoire.delete(pieceId)
+        assertNull(viewModel(take).loaded().content.pieceTitle)
     }
 
     @Test

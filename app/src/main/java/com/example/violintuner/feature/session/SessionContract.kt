@@ -29,6 +29,8 @@ data class ProblemNoteUi(val note: Note, val string: ViolinString, val meanCents
 data class SessionContent(
     /** Null = default name built from the start date. */
     val title: String?,
+    /** Title of the piece this session is a take of (spec 3.15): part of its default name. */
+    val pieceTitle: String? = null,
     val startedAtEpochMs: Long,
     val durationMs: Long,
     val toleranceCents: Double,

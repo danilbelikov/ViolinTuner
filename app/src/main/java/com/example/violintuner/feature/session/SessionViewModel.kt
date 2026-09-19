@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.IntonationConfig
+import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.session.SessionRepository
 import com.example.violintuner.feature.session.player.SessionPlayer
 import com.example.violintuner.feature.session.player.SessionPlayerFactory
@@ -26,6 +27,7 @@ class SessionViewModel @Inject constructor(
     private val defaultConfig: IntonationConfig,
     private val audioFiles: SessionAudioFiles,
     private val playerFactory: SessionPlayerFactory,
+    private val repertoire: RepertoireRepository,
     savedState: SavedStateHandle,
 ) : ViewModel() {
 
@@ -70,13 +72,14 @@ class SessionViewModel @Inject constructor(
 
     private suspend fun load() {
         val details = repository.details(sessionId)
+        val pieceTitle = details?.summary?.pieceId?.let { repertoire.piece(it) }?.title
         mutableState.update { previous ->
             if (details == null) {
                 SessionState.NotFound
             } else {
                 // a reload after renaming keeps what is open and what is playing
-                (previous as? SessionState.Loaded ?: SessionState.Loaded(SessionContentMapper.contentOf(details, defaultConfig)))
-                    .copy(content = SessionContentMapper.contentOf(details, defaultConfig), dialog = null)
+                val content = SessionContentMapper.contentOf(details, defaultConfig).copy(pieceTitle = pieceTitle)
+                (previous as? SessionState.Loaded ?: SessionState.Loaded(content)).copy(content = content, dialog = null)
             }
         }
         if (player == null) details?.summary?.audioPath?.let(audioFiles::existing)?.let(::startPlayer)
