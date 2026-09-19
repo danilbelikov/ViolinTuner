@@ -25,4 +25,10 @@ data class RepertoireConfig(
     val newTakeHighlightMs: Long = 1_900,
     /** The controls of the music stand hide after this long without a touch. */
     val standPanelHideMs: Long = 3_000,
+    /** A video take (spec 5.13): what its sound track may be sampled at — the rates the detector is tuned for. */
+    val videoSampleRatesHz: Set<Int> = setOf(44_100, 48_000),
+    /** Room that has to stay free after a video has been copied in. */
+    val videoFreeSpaceMarginBytes: Long = 50L * 1024 * 1024,
+    /** A video file without a session is not an orphan until it is this old: it may be the only copy of a shot. */
+    val orphanVideoMinAgeMs: Long = 24 * 60 * 60_000L,
 )

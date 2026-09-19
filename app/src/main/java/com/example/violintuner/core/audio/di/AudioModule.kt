@@ -36,6 +36,9 @@ object AudioModule {
     fun provideSessionAudioFiles(impl: AppSessionAudioFiles): SessionAudioFiles = impl
 
     @Provides
+    fun provideFileTakeAnalyzer(impl: com.example.violintuner.core.recording.DecodingFileTakeAnalyzer): com.example.violintuner.core.recording.FileTakeAnalyzer = impl
+
+    @Provides
     fun provideSessionWaveforms(impl: AppSessionWaveforms): SessionWaveforms = impl
 
     @Provides
