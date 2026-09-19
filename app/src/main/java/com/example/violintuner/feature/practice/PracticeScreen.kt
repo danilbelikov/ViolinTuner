@@ -35,7 +35,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -47,7 +46,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.format.Formats
-import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.icons.IconSizes
@@ -62,6 +60,8 @@ import com.example.violintuner.feature.practice.components.ProfileHeader
 import com.example.violintuner.feature.practice.components.ProfileHeaderMetrics
 import com.example.violintuner.feature.practice.components.ProfileSheet
 import com.example.violintuner.feature.practice.components.RunningDot
+import com.example.violintuner.feature.practice.components.StreakFlame
+import com.example.violintuner.feature.practice.components.StreakFlameSize
 import com.example.violintuner.feature.practice.components.SummarySheet
 import com.example.violintuner.feature.practice.components.TrophiesSheet
 import com.example.violintuner.feature.practice.components.rolledValue
@@ -85,7 +85,6 @@ private const val ACTION_SWITCH_MS = 200
 private const val ACTION_SWITCH_SCALE = 0.96f
 private const val DAY_CROSSFADE_MS = 150
 private const val MIN_CARD_LABEL_SIZE = 9
-private const val STREAK_FLAME_FROM = 3
 private const val MS_PER_MINUTE = 60_000L
 
 /** A streak that grew by a day is simply shown; only a jump of days rolls. */
@@ -106,15 +105,17 @@ private data class Metrics(
     /** «Не занимались» is a phrase, not a figure: smaller than the time. */
     val dayNoneSize: Int,
     val calendar: CalendarMetrics,
+    /** The streak flame at its largest: the landscape cards are small (handoff 19g4). */
+    val flameSize: Dp,
 ) {
     companion object {
         val Portrait = Metrics(
             header = ProfileHeaderMetrics.Portrait, timerSize = 64, cardCorner = CardCorner, cardPadding = 12.dp, cardLabelSize = 12, cardValueSize = 18,
-            dayDateSize = 14, dayTimeSize = 32, dayNoneSize = 20, calendar = CalendarMetrics.Portrait,
+            dayDateSize = 14, dayTimeSize = 32, dayNoneSize = 20, calendar = CalendarMetrics.Portrait, flameSize = StreakFlameSize.Full,
         )
         val Landscape = Metrics(
             header = ProfileHeaderMetrics.Landscape, timerSize = 56, cardCorner = CardCornerLandscape, cardPadding = 10.dp, cardLabelSize = 11, cardValueSize = 15,
-            dayDateSize = 13, dayTimeSize = 16, dayNoneSize = 15, calendar = CalendarMetrics.Landscape,
+            dayDateSize = 13, dayTimeSize = 16, dayNoneSize = 15, calendar = CalendarMetrics.Landscape, flameSize = StreakFlameSize.Small,
         )
     }
 }
@@ -357,15 +358,21 @@ private fun SummaryCards(state: PracticeState, metrics: Metrics) {
             label = stringResource(R.string.practice_streak),
             value = if (state.hasHistory) streak.toString() else none,
             metrics = metrics,
-            // a streak worth a flame starts at three days (spec 5.10)
-            trailingIcon = AppIcons.Flame.takeIf { state.hasHistory && state.summary.streakDays >= STREAK_FLAME_FROM },
             modifier = Modifier.weight(1f),
-        )
+        ) {
+            // The flame follows the streak itself, not the number rolling towards it; while a practice runs it stands still.
+            StreakFlame(
+                streakDays = if (state.hasHistory) state.summary.streakDays else 0,
+                running = state.runningMs != null,
+                scope = scope,
+                maxSize = metrics.flameSize,
+            )
+        }
     }
 }
 
 @Composable
-private fun SummaryCard(label: String, value: String, metrics: Metrics, modifier: Modifier = Modifier, trailingIcon: ImageVector? = null) {
+private fun SummaryCard(label: String, value: String, metrics: Metrics, modifier: Modifier = Modifier, trailing: (@Composable () -> Unit)? = null) {
     val colors = MaterialTheme.colorScheme
     Column(
         modifier = modifier
@@ -394,7 +401,7 @@ private fun SummaryCard(label: String, value: String, metrics: Metrics, modifier
                 ),
                 modifier = Modifier.weight(1f, fill = false),
             )
-            if (trailingIcon != null) AppIcon(trailingIcon, contentDescription = null, tint = colors.onSurfaceVariant, size = IconSizes.InText)
+            trailing?.invoke()
         }
     }
 }

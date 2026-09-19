@@ -15,6 +15,13 @@ data class PracticeColors(
     val onFills: List<Color>,
     /** The minute arc around the dot of a running practice. */
     val timerRing: Color,
+    /**
+     * The streak flame (spec 3.18): an orange between the amber of "near" and the red of "off" —
+     * it falls into neither zone and is used nowhere else; the core, and the brighter core of a long streak.
+     */
+    val flameOuter: Color,
+    val flameCore: Color,
+    val flameHot: Color,
 ) {
     /** [level] 1–4; 0 has no fill and is not asked for. */
     fun fillFor(level: Int): Color = fills[level - 1]
@@ -26,6 +33,9 @@ internal val DarkPracticeColors = PracticeColors(
     fills = listOf(PracticeFill1, PracticeFill2, PrimaryContainer, Primary),
     onFills = listOf(OnSurface, OnSurface, OnPrimaryContainer, OnPrimary),
     timerRing = TimerRing,
+    flameOuter = FlameOuter,
+    flameCore = FlameCore,
+    flameHot = FlameHot,
 )
 
 internal val LocalPracticeColors = staticCompositionLocalOf<PracticeColors> {

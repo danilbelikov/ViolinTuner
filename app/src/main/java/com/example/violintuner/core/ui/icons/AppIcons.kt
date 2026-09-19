@@ -35,7 +35,6 @@ object AppIcons {
     val Flag: ImageVector by lazy { icon("Flag", IconPaths.FLAG) }
     val Clock: ImageVector by lazy { icon("Clock", IconPaths.CLOCK) }
     val Trophy: ImageVector by lazy { icon("Trophy", IconPaths.TROPHY) }
-    val Flame: ImageVector by lazy { icon("Flame", IconPaths.FLAME) }
     val NoteOne: ImageVector by lazy { icon("NoteOne", IconPaths.NOTE_ONE) }
     val NotePair: ImageVector by lazy { icon("NotePair", IconPaths.NOTE_PAIR) }
     val Select: ImageVector by lazy { icon("Select", IconPaths.SELECT) }
@@ -87,7 +86,6 @@ object AppIcons {
         "Flag" to { Flag },
         "Clock" to { Clock },
         "Trophy" to { Trophy },
-        "Flame" to { Flame },
         "NoteOne" to { NoteOne },
         "NotePair" to { NotePair },
         "Select" to { Select },
