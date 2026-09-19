@@ -1,7 +1,9 @@
 package com.example.violintuner.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
@@ -15,6 +17,8 @@ import com.example.violintuner.feature.repertoire.form.PieceFormRoute
 import com.example.violintuner.feature.repertoire.form.PieceFormViewModel
 import com.example.violintuner.feature.repertoire.piece.PieceRoute
 import com.example.violintuner.feature.repertoire.piece.PieceViewModel
+import com.example.violintuner.feature.repertoire.stand.StandRoute
+import com.example.violintuner.feature.repertoire.stand.StandViewModel
 import com.example.violintuner.feature.session.SessionRoute
 import com.example.violintuner.feature.session.SessionViewModel
 import com.example.violintuner.feature.settings.SettingsRoute
@@ -22,6 +26,8 @@ import com.example.violintuner.feature.settings.SettingsRoute
 const val ONBOARDING_ROUTE = "onboarding"
 private const val SESSION_ROUTE = "session"
 private const val PIECE_ROUTE = "piece"
+private const val PIECE_PATTERN = "$PIECE_ROUTE/{${PieceViewModel.ARG_PIECE_ID}}"
+private const val STAND_ROUTE = "stand"
 private const val PIECE_FORM_ROUTE = "pieceForm"
 
 @Composable
@@ -64,17 +70,32 @@ fun AppNavHost(
         ) {
             SessionRoute(onClose = navController::popBackStack)
         }
-        // The repertoire (spec 3.15): a piece, its form and — later — its music stand, all above the tabs.
+        // The repertoire (spec 3.15): a piece, its form and its music stand, all above the tabs.
         composable(
-            route = "$PIECE_ROUTE/{${PieceViewModel.ARG_PIECE_ID}}",
+            route = PIECE_PATTERN,
             arguments = listOf(navArgument(PieceViewModel.ARG_PIECE_ID) { type = NavType.LongType }),
         ) {
             PieceRoute(
                 onClose = navController::popBackStack,
                 onOpenForm = { pieceId, focusNotes -> navController.navigateToPieceForm(pieceId, focusNotes) },
-                onOpenStand = { _, _ -> },
+                onOpenStand = navController::navigateToStand,
                 onOpenSession = navController::navigateToSession,
             )
+        }
+        composable(
+            route = "$STAND_ROUTE/{${StandViewModel.ARG_PIECE_ID}}?${StandViewModel.ARG_PAGE}={${StandViewModel.ARG_PAGE}}",
+            arguments = listOf(
+                navArgument(StandViewModel.ARG_PIECE_ID) { type = NavType.LongType },
+                navArgument(StandViewModel.ARG_PAGE) {
+                    type = NavType.IntType
+                    defaultValue = 0
+                },
+            ),
+        ) { entry ->
+            // The stand only opens from its piece, so that screen lies right under it. Its view model
+            // owns the take: shared, a recording walks between the two screens unbroken.
+            val pieceEntry = remember(entry) { navController.getBackStackEntry(PIECE_PATTERN) }
+            StandRoute(pieceViewModel = hiltViewModel(pieceEntry), onClose = navController::popBackStack)
         }
         composable(
             route = "$PIECE_FORM_ROUTE?${PieceFormViewModel.ARG_PIECE_ID}={${PieceFormViewModel.ARG_PIECE_ID}}" +
@@ -141,6 +162,11 @@ private fun NavHostController.navigateToOnboarding() {
 
 fun NavHostController.navigateToPiece(pieceId: Long) {
     navigate("$PIECE_ROUTE/$pieceId") { launchSingleTop = true }
+}
+
+/** Opens the music stand of a piece at [pageIndex] (from zero). */
+fun NavHostController.navigateToStand(pieceId: Long, pageIndex: Int) {
+    navigate("$STAND_ROUTE/$pieceId?${StandViewModel.ARG_PAGE}=$pageIndex") { launchSingleTop = true }
 }
 
 /** [pieceId] null opens the form of a new piece. */

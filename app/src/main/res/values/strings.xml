@@ -308,4 +308,13 @@
     <string name="takes_empty">Дублей пока нет. Запишите первый — увидите, как меняется произведение.</string>
     <string name="take_best">лучший</string>
     <string name="take_meta">%1$s · %2$s ц</string>
+    <string name="stand_counter">%1$d / %2$d</string>
+    <string name="stand_page_description">Страница %1$d из %2$d</string>
+    <string name="stand_delete_page">Удалить страницу</string>
+    <string name="stand_delete_title">Удалить страницу?</string>
+    <string name="stand_delete_text">Фото этой страницы удалится. Остальные останутся на местах.</string>
+    <string name="stand_hint">Тап по краю листа — следующая страница</string>
+    <string name="stand_previous_page">Предыдущая страница</string>
+    <string name="stand_next_page">Следующая страница</string>
+    <string name="stand_recording_description">Идёт запись дубля, %1$s</string>
 </resources>

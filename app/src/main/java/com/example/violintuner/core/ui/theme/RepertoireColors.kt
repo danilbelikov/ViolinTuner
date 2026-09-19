@@ -14,6 +14,8 @@ data class RepertoireColors(
     /** The film over thumbnails; its strength is the component's business. */
     val thumbDim: Color,
     val standBackground: Color,
+    /** The gradient fields under the controls of the stand: no slabs over the notes. */
+    val standScrim: Color,
     val statusRepertoireContainer: Color,
     val onStatusRepertoireContainer: Color,
     /** A take that has just been recorded, before it settles into the list. */
@@ -27,6 +29,7 @@ internal val DarkRepertoireColors = RepertoireColors(
     paperFrame = PaperFrame,
     thumbDim = Surface,
     standBackground = StandBackground,
+    standScrim = StandScrim,
     statusRepertoireContainer = StatusRepertoireContainer,
     onStatusRepertoireContainer = OnStatusRepertoireContainer,
     takeNew = TakeNew,
