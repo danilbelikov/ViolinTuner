@@ -51,15 +51,21 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.violintuner.R
+import com.example.violintuner.core.audio.share.ShareNames
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.sound.captionName
 import java.io.File
 
 private const val SWAP_MS = 200
 private const val BYTES_PER_KB = 1_024L
 private const val AUDIO_TYPE = "audio/mp4"
+private const val VIDEO_TYPE = "video/mp4"
+private const val LARGE_FILE_BYTES = 100L * 1024 * 1024
+private const val MP4 = ".mp4"
+private const val M4A = ".m4a"
 
 /** Matches `android:authorities` of the FileProvider in the manifest. */
 private const val FILES_AUTHORITY_SUFFIX = ".files"
@@ -105,7 +111,7 @@ fun ShareHost(viewModel: ShareViewModel) {
                 when {
                     kind == ShareSheet.Choose::class && current is ShareSheet.Choose -> Choose(current, viewModel::onIntent)
                     kind == ShareSheet.Preparing::class && current is ShareSheet.Preparing -> Preparing(current, viewModel::onIntent)
-                    kind == ShareSheet.Failed::class && current is ShareSheet.Failed -> Failed(viewModel::onIntent)
+                    kind == ShareSheet.Failed::class && current is ShareSheet.Failed -> Failed(current.info.video, viewModel::onIntent)
                 }
             }
         }
@@ -116,7 +122,7 @@ fun ShareHost(viewModel: ShareViewModel) {
 private fun Context.send(file: File, text: String?) {
     val uri = FileProvider.getUriForFile(this, "$packageName$FILES_AUTHORITY_SUFFIX", file)
     val intent = Intent(Intent.ACTION_SEND).apply {
-        type = AUDIO_TYPE
+        type = if (file.name.endsWith(ShareNames.VIDEO_EXTENSION)) VIDEO_TYPE else AUDIO_TYPE
         putExtra(Intent.EXTRA_STREAM, uri)
         if (text != null) putExtra(Intent.EXTRA_TEXT, text)
         // the chooser reads the grant and the preview from the clip data
@@ -136,27 +142,59 @@ private fun Choose(sheet: ShareSheet.Choose, onIntent: (ShareIntent) -> Unit) {
     val info = sheet.info
     Text(stringResource(R.string.share_title), color = colors.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold))
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Variant(
-            title = stringResource(R.string.share_processed),
-            caption = stringResource(R.string.share_processed_caption, captionName(info.caption)),
-            selected = sheet.variant == ShareVariant.PROCESSED, enabled = !sheet.busy,
-        ) { onIntent(ShareIntent.VariantSelected(ShareVariant.PROCESSED)) }
-        Variant(
-            title = stringResource(R.string.share_original),
-            caption = stringResource(R.string.share_original_caption),
-            selected = sheet.variant == ShareVariant.ORIGINAL, enabled = !sheet.busy,
-        ) { onIntent(ShareIntent.VariantSelected(ShareVariant.ORIGINAL)) }
+        if (info.video) {
+            // From "what is heard" to "what was" (spec 3.19); the chip answers "and what file will that be?" before it is asked.
+            if (info.processed) {
+                Variant(
+                    title = stringResource(R.string.share_video_processed),
+                    caption = stringResource(R.string.share_processed_caption, captionName(info.caption)),
+                    selected = sheet.variant == ShareVariant.PROCESSED, enabled = !sheet.busy, chip = MP4,
+                ) { onIntent(ShareIntent.VariantSelected(ShareVariant.PROCESSED)) }
+            }
+            Variant(
+                title = stringResource(if (info.processed) R.string.share_video_original else R.string.share_video),
+                caption = stringResource(if (info.processed) R.string.share_video_original_caption else R.string.share_video_caption),
+                selected = sheet.variant == ShareVariant.ORIGINAL, enabled = !sheet.busy, chip = MP4,
+            ) { onIntent(ShareIntent.VariantSelected(ShareVariant.ORIGINAL)) }
+            Variant(
+                title = stringResource(R.string.share_sound_only),
+                caption = stringResource(if (info.processed) R.string.share_sound_only_processed else R.string.share_sound_only_caption, sizeText(info.processedBytes)),
+                selected = sheet.variant == ShareVariant.SOUND, enabled = !sheet.busy, chip = M4A,
+            ) { onIntent(ShareIntent.VariantSelected(ShareVariant.SOUND)) }
+        } else {
+            Variant(
+                title = stringResource(R.string.share_processed),
+                caption = stringResource(R.string.share_processed_caption, captionName(info.caption)),
+                selected = sheet.variant == ShareVariant.PROCESSED, enabled = !sheet.busy,
+            ) { onIntent(ShareIntent.VariantSelected(ShareVariant.PROCESSED)) }
+            Variant(
+                title = stringResource(R.string.share_original),
+                caption = stringResource(R.string.share_original_caption),
+                selected = sheet.variant == ShareVariant.ORIGINAL, enabled = !sheet.busy,
+            ) { onIntent(ShareIntent.VariantSelected(ShareVariant.ORIGINAL)) }
+        }
     }
+    val asVideo = info.video && sheet.variant != ShareVariant.SOUND
+    val bytes = info.bytesOf(sheet.variant)
+    val large = bytes >= LARGE_FILE_BYTES
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        AppIcon(AppIcons.FileAudio, contentDescription = null, tint = colors.onSurfaceVariant)
+        AppIcon(if (asVideo) AppIcons.Video else AppIcons.FileAudio, contentDescription = null, tint = colors.onSurfaceVariant)
         Column {
-            Text(info.fileName, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
-            val bytes = if (sheet.variant == ShareVariant.PROCESSED) info.processedBytes else info.originalBytes
+            Text(info.fileNameOf(sheet.variant), color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
+            val details = if (asVideo) {
+                stringResource(R.string.share_video_details, Formats.duration(info.durationMs), info.resolution, Formats.fileSize(bytes))
+            } else {
+                stringResource(R.string.share_file_details, Formats.duration(info.durationMs), sizeText(bytes))
+            }
             Text(
-                text = stringResource(R.string.share_file_details, Formats.duration(info.durationMs), sizeText(bytes)),
-                color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontFeatureSettings = "tnum"),
+                text = details,
+                // a size that messengers squeeze or refuse is said in colour and, below, in words
+                color = if (large) ViolinTheme.videoColors.sizeWarn else colors.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontWeight = if (large) FontWeight.Bold else FontWeight.Normal, fontFeatureSettings = "tnum"),
             )
+            if (large) {
+                Text(stringResource(R.string.share_large_file), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp))
+            }
         }
     }
     Row(
@@ -183,7 +221,7 @@ private fun Choose(sheet: ShareSheet.Choose, onIntent: (ShareIntent) -> Unit) {
 }
 
 @Composable
-private fun Variant(title: String, caption: String, selected: Boolean, enabled: Boolean, onClick: () -> Unit) {
+private fun Variant(title: String, caption: String, selected: Boolean, enabled: Boolean, chip: String? = null, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
@@ -202,9 +240,19 @@ private fun Variant(title: String, caption: String, selected: Boolean, enabled: 
                 .border(2.dp, if (selected) colors.primary else colors.outline, CircleShape),
             contentAlignment = Alignment.Center,
         ) { if (selected) Box(Modifier.size(10.dp).background(colors.primary, CircleShape)) }
-        Column {
+        Column(modifier = Modifier.weight(1f)) {
             Text(title, color = colors.onSurface, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
             Text(caption, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
+        }
+        if (chip != null) {
+            Text(
+                text = chip,
+                modifier = Modifier
+                    .border(1.dp, colors.outlineVariant, RoundedCornerShape(6.dp))
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                color = colors.onSurfaceVariant,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp, fontWeight = FontWeight.SemiBold),
+            )
         }
     }
 }
@@ -234,10 +282,11 @@ private fun Preparing(sheet: ShareSheet.Preparing, onIntent: (ShareIntent) -> Un
 }
 
 @Composable
-private fun Failed(onIntent: (ShareIntent) -> Unit) {
+private fun Failed(video: Boolean, onIntent: (ShareIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
-    Text(stringResource(R.string.share_failed_title), color = colors.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold))
-    Text(stringResource(R.string.share_failed_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
+    // With a video take it is the picture that is worth sending: the way out is «как снято», not the sound alone (spec 3.19).
+    Text(stringResource(if (video) R.string.share_failed_video_title else R.string.share_failed_title), color = colors.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold))
+    Text(stringResource(if (video) R.string.share_failed_video_text else R.string.share_failed_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         OutlinedButton(onClick = { onIntent(ShareIntent.RetryClicked) }, modifier = Modifier.weight(1f).height(48.dp), shape = RoundedCornerShape(24.dp)) { Text(stringResource(R.string.share_retry)) }
         Button(
@@ -245,7 +294,7 @@ private fun Failed(onIntent: (ShareIntent) -> Unit) {
             modifier = Modifier.weight(1f).height(48.dp),
             shape = RoundedCornerShape(24.dp),
             colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
-        ) { Text(stringResource(R.string.share_send_original), maxLines = 1) }
+        ) { Text(stringResource(if (video) R.string.share_send_as_shot else R.string.share_send_original), maxLines = 1) }
     }
 }
 

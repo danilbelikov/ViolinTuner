@@ -70,6 +70,12 @@ class ShareViewModelTest {
                 throw e
             }
         }
+
+        var videoRenders = 0
+        override suspend fun renderVideo(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean {
+            videoRenders++
+            return render(source, settings, target, onProgress).also { renders-- }
+        }
     }
 
     private inner class Files : ShareFiles {
@@ -93,6 +99,7 @@ class ShareViewModelTest {
     }
 
     private val files = Files()
+    private val videoFiles = com.example.violintuner.core.recording.video.FakeVideoFiles()
     private val speed = RenderSpeed()
 
     @Before
@@ -117,7 +124,7 @@ class ShareViewModelTest {
     }
 
     private fun TestScope.share(renderer: SoundRenderer): Pair<ShareViewModel, MutableList<ShareEffect>> {
-        val viewModel = ShareViewModel(sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, { testScheduler.currentTime }, config)
+        val viewModel = ShareViewModel(sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, { testScheduler.currentTime }, config, videoFiles)
         val effects = mutableListOf<ShareEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
         return viewModel to effects
@@ -308,5 +315,91 @@ class ShareViewModelTest {
 
     private companion object {
         const val STEPS = 10
+    }
+
+    private suspend fun videoTake(): Long {
+        val id = recording(pieceId = repertoire.add(com.example.violintuner.core.domain.repertoire.PieceDraft(title = "Менуэт"), nowEpochMs = 1))
+        sessions.sessions.value = sessions.sessions.value.map { if (it.id == id) it.copy(videoPath = it.audioPath) else it }
+        return id
+    }
+
+    @Test
+    fun `a video take offers three files - what is heard with the picture, the video as shot, the sound alone`() = runTest {
+        sound.setDefault(hall)
+        val renderer = Renderer(tookMs = 100)
+        val (viewModel, effects) = share(renderer)
+        viewModel.start(videoTake())
+        runCurrent()
+        val sheet = viewModel.sheet.value as ShareSheet.Choose
+        assertEquals(ShareVariant.PROCESSED, sheet.variant)
+        assertEquals("Менуэт · 18 сентября.mp4", sheet.info.fileNameOf(ShareVariant.PROCESSED))
+        assertEquals("Менуэт · 18 сентября.mp4", sheet.info.fileNameOf(ShareVariant.ORIGINAL))
+        assertEquals("Менуэт · 18 сентября.m4a", sheet.info.fileNameOf(ShareVariant.SOUND))
+        assertEquals(1080, sheet.info.resolution)
+        assertEquals("a processed video weighs what its picture does", audio.length(), sheet.info.bytesOf(ShareVariant.PROCESSED))
+
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(500)
+        runCurrent()
+        assertEquals(1 to 0, renderer.videoRenders to renderer.renders)
+        assertEquals("Менуэт · 18 сентября.mp4", (effects.single() as ShareEffect.Send).file.name)
+    }
+
+    @Test
+    fun `the sound alone of a video take is an m4a like any recording's`() = runTest {
+        sound.setDefault(hall)
+        val renderer = Renderer(tookMs = 100)
+        val (viewModel, effects) = share(renderer)
+        viewModel.start(videoTake())
+        runCurrent()
+        viewModel.onIntent(ShareIntent.VariantSelected(ShareVariant.SOUND))
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(500)
+        runCurrent()
+        assertEquals(0 to 1, renderer.videoRenders to renderer.renders)
+        assertEquals("Менуэт · 18 сентября.m4a", (effects.single() as ShareEffect.Send).file.name)
+    }
+
+    @Test
+    fun `a video take without processing still shows its sheet - the video as it is, or its sound`() = runTest {
+        val renderer = Renderer(tookMs = 100)
+        val (viewModel, effects) = share(renderer)
+        viewModel.start(videoTake())
+        runCurrent()
+        val sheet = viewModel.sheet.value as ShareSheet.Choose
+        assertEquals(ShareVariant.ORIGINAL, sheet.variant)
+        assertTrue(!sheet.info.processed)
+        viewModel.onIntent(ShareIntent.VariantSelected(ShareVariant.PROCESSED))
+        assertEquals("there is no processing to send", ShareVariant.ORIGINAL, (viewModel.sheet.value as ShareSheet.Choose).variant)
+
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        runCurrent()
+        assertEquals(0 to 0, renderer.videoRenders to renderer.renders)
+        assertEquals("Менуэт · 18 сентября.mp4", (effects.single() as ShareEffect.Send).file.name)
+    }
+
+    @Test
+    fun `a sound recording is never offered its sound alone`() = runTest {
+        sound.setDefault(hall)
+        val (viewModel, _) = share(Renderer(tookMs = 100))
+        viewModel.start(recording())
+        runCurrent()
+        viewModel.onIntent(ShareIntent.VariantSelected(ShareVariant.SOUND))
+        assertEquals(ShareVariant.PROCESSED, (viewModel.sheet.value as ShareSheet.Choose).variant)
+    }
+
+    @Test
+    fun `a video that could not be prepared goes as it was shot`() = runTest {
+        sound.setDefault(hall)
+        val (viewModel, effects) = share(Renderer(tookMs = 100, fails = true))
+        viewModel.start(videoTake())
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(2_000)
+        runCurrent()
+        assertTrue(viewModel.sheet.value is ShareSheet.Failed)
+        viewModel.onIntent(ShareIntent.SendOriginalClicked)
+        runCurrent()
+        assertEquals("Менуэт · 18 сентября.mp4", (effects.single() as ShareEffect.Send).file.name)
     }
 }

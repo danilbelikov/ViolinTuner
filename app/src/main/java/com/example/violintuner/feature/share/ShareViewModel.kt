@@ -14,6 +14,7 @@ import com.example.violintuner.core.domain.sound.SoundConfig
 import com.example.violintuner.core.domain.sound.SoundRepository
 import com.example.violintuner.core.domain.sound.SoundRules
 import com.example.violintuner.core.domain.sound.SoundSettings
+import com.example.violintuner.core.recording.video.VideoFiles
 import com.example.violintuner.feature.sound.SoundReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.File
@@ -77,6 +78,7 @@ class ShareViewModel @Inject constructor(
     private val speed: RenderSpeed,
     private val clock: ElapsedClock,
     private val config: SoundConfig,
+    private val videos: VideoFiles,
 ) : ViewModel() {
 
     private val mutableSheet = MutableStateFlow<ShareSheet?>(null)
@@ -106,14 +108,18 @@ class ShareViewModel @Inject constructor(
                 originalBytes = file.length(),
                 caption = SoundReducer.captionOf(effective, sound.presets.first(), config),
                 message = texts.message(session.title, pieceTitle, session.scorePercent, session.startedAtEpochMs),
+                videoFileName = session.videoPath?.let { ShareNames.videoFileName(title) },
+                resolution = session.videoPath?.let { videos.info(file) }?.let { minOf(it.width, it.height) } ?: 0,
+                processed = !SoundRules.isNeutral(effective),
             )
             audio = file
             settings = effective
-            if (SoundRules.isNeutral(effective)) {
+            when {
+                // A video take always has a choice to make — the video or its sound alone (spec 3.19).
+                info.video -> mutableSheet.value = ShareSheet.Choose(info, if (info.processed) ShareVariant.PROCESSED else ShareVariant.ORIGINAL, withText = true, busy = false)
                 // Nothing to choose from: the sheet is skipped (spec 3.17).
-                sendOriginal(info, withText = false)
-            } else {
-                mutableSheet.value = ShareSheet.Choose(info, ShareVariant.PROCESSED, withText = true, busy = false)
+                !info.processed -> sendOriginal(info, withText = false)
+                else -> mutableSheet.value = ShareSheet.Choose(info, ShareVariant.PROCESSED, withText = true, busy = false)
             }
         }
     }
@@ -121,7 +127,16 @@ class ShareViewModel @Inject constructor(
     fun onIntent(intent: ShareIntent) {
         val current = mutableSheet.value
         when (intent) {
-            is ShareIntent.VariantSelected -> mutableSheet.update { (it as? ShareSheet.Choose)?.takeIf { c -> !c.busy }?.copy(variant = intent.variant) ?: it }
+            is ShareIntent.VariantSelected -> mutableSheet.update { sheet ->
+                val choice = (sheet as? ShareSheet.Choose)?.takeIf { !it.busy } ?: return@update sheet
+                // only what the sheet offers: «Только звук» is a video take's, a processed file needs a processing
+                val offered = when (intent.variant) {
+                    ShareVariant.SOUND -> choice.info.video
+                    ShareVariant.PROCESSED -> choice.info.processed
+                    ShareVariant.ORIGINAL -> true
+                }
+                if (offered) choice.copy(variant = intent.variant) else choice
+            }
             is ShareIntent.TextToggled -> mutableSheet.update { (it as? ShareSheet.Choose)?.takeIf { c -> !c.busy }?.copy(withText = intent.withText) ?: it }
             ShareIntent.ContinueClicked -> (current as? ShareSheet.Choose)?.takeIf { !it.busy }?.let { choice ->
                 lastChoice = choice
@@ -150,7 +165,7 @@ class ShareViewModel @Inject constructor(
     private var lastChoice: ShareSheet.Choose? = null
 
     private suspend fun sendOriginal(info: ShareInfo, withText: Boolean) {
-        val copy = audio?.let { files.original(it, info.fileName) }
+        val copy = audio?.let { files.original(it, info.fileNameOf(ShareVariant.ORIGINAL)) }
         if (copy == null) {
             mutableSheet.value = ShareSheet.Failed(info)
         } else {
@@ -163,7 +178,7 @@ class ShareViewModel @Inject constructor(
         val source = audio ?: return
         val current = settings ?: return
         val info = choice.info
-        val target = files.processed(source.name, current, info.fileName)
+        val target = files.processed(source.name, current, info.fileNameOf(choice.variant))
         if (!target.isFile || target.length() == 0L) {
             if (!prepare(choice, source, current, target)) {
                 mutableSheet.value = ShareSheet.Failed(info)
@@ -194,7 +209,10 @@ class ShareViewModel @Inject constructor(
         val part = File(target.parentFile, target.name + PART)
         var lastShown = 0L
         val whole = try {
-            renderer.render(source, settings, part) { fraction ->
+            // the picture of a video take is copied as it is; only the sound is rendered, so the estimate of the sound holds
+            val video = info.video && choice.variant == ShareVariant.PROCESSED
+            val render: suspend (File, SoundSettings, File, (Float) -> Unit) -> Boolean = if (video) renderer::renderVideo else renderer::render
+            render(source, settings, part) { fraction ->
                 // from the rendering thread; a StateFlow takes that, and ten updates a second are plenty
                 val now = clock.nowMs()
                 lastPercent = (fraction * PERCENT).toInt().coerceIn(0, PERCENT)

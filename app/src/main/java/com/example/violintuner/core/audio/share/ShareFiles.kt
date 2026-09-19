@@ -26,6 +26,11 @@ object ShareNames {
         val clean = title.replace(FORBIDDEN, " ").replace(SPACES, " ").trim().trim('.').take(MAX_LENGTH).trim()
         return (clean.ifEmpty { "recording" }) + EXTENSION
     }
+
+    /** The same name for the video of a take (spec 3.19): «Менуэт соль мажор · 18 сентября.mp4». */
+    fun videoFileName(title: String): String = fileName(title).removeSuffix(EXTENSION) + VIDEO_EXTENSION
+
+    const val VIDEO_EXTENSION = ".mp4"
 }
 
 /**

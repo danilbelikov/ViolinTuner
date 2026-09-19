@@ -1,14 +1,22 @@
 package com.example.violintuner.core.audio.share
 
+import android.media.MediaCodec
+import android.media.MediaExtractor
+import android.media.MediaFormat
+import android.media.MediaMuxer
 import android.util.Log
 import com.example.violintuner.core.audio.fx.SoundChain
 import com.example.violintuner.core.audio.playback.PcmDecoder
 import com.example.violintuner.core.di.IoDispatcher
 import com.example.violintuner.core.domain.sound.SoundConfig
+import com.example.violintuner.core.domain.sound.SoundRules
 import com.example.violintuner.core.domain.sound.SoundSettings
 import java.io.File
+import java.io.IOException
+import java.nio.ByteBuffer
 import javax.inject.Inject
 import kotlin.coroutines.cancellation.CancellationException
+import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -21,6 +29,12 @@ interface SoundRenderer {
      * render leaves no file either. [onProgress] gets 0…1, from whatever thread renders.
      */
     suspend fun render(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean
+
+    /**
+     * The same for a video take (spec 3.19): [target] is an `.mp4` with the picture of [source]
+     * copied as it is — not re-encoded, its turn kept — beside the sound rendered through the chain.
+     */
+    suspend fun renderVideo(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean
 }
 
 /**
@@ -42,10 +56,13 @@ class SoundFileRenderer @Inject constructor(
             target.parentFile?.mkdirs()
             writer = OfflineAacWriter(target, decoder.sampleRate, BIT_RATE)
             val chain = SoundChain(decoder.sampleRate, config).apply { set(settings, immediate = true) }
+            // Everything off — the chain is not called at all (its limiter would still delay the sound): the
+            // sound of a video sent as «Только звук» without processing is the sound as recorded.
+            val neutral = SoundRules.isNeutral(settings)
             val pcm = ShortArray(CHUNK)
             val samples = FloatArray(CHUNK)
-            var toDrop = chain.latencySamples
-            val tail = chain.tailSamples(settings) + chain.latencySamples
+            var toDrop = if (neutral) 0 else chain.latencySamples
+            val tail = if (neutral) 0 else chain.tailSamples(settings) + chain.latencySamples
             val total = (decoder.totalSamples + tail).coerceAtLeast(1)
             var done = 0L
             var tailLeft = tail
@@ -61,7 +78,7 @@ class SoundFileRenderer @Inject constructor(
                 } else {
                     for (i in 0 until count) samples[i] = pcm[i] / FULL_SCALE
                 }
-                chain.process(samples, count)
+                if (!neutral) chain.process(samples, count)
                 val from = minOf(toDrop, count)
                 toDrop -= from
                 for (i in from until count) pcm[i - from] = (samples[i] * FULL_SCALE).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
@@ -87,7 +104,90 @@ class SoundFileRenderer @Inject constructor(
         }
     }
 
+    /**
+     * Two passes: the sound into a temporary `.m4a` by [render] — the tested way — and then one
+     * muxer takes the video samples of the source as they are and the new sound beside them.
+     * No picture is decoded, so this takes hardly longer than the sound alone.
+     */
+    override suspend fun renderVideo(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean = withContext(io) {
+        val sound = File(target.parentFile, target.name + SOUND_SUFFIX)
+        var whole = false
+        try {
+            if (!render(source, settings, sound) { onProgress(it * SOUND_SHARE) }) return@withContext false
+            whole = mux(source, sound, target) { onProgress(SOUND_SHARE + it * (1f - SOUND_SHARE)) }
+            whole
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: RuntimeException) {
+            Log.w(TAG, "muxing ${source.name} failed", e)
+            false
+        } catch (e: IOException) {
+            Log.w(TAG, "cannot read ${source.name}", e)
+            false
+        } finally {
+            sound.delete()
+            if (!whole) target.delete()
+        }
+    }
+
+    private suspend fun mux(video: File, sound: File, target: File, onProgress: (Float) -> Unit): Boolean {
+        val picture = MediaExtractor()
+        val audio = MediaExtractor()
+        var muxer: MediaMuxer? = null
+        var started = false
+        try {
+            picture.setDataSource(video.absolutePath)
+            audio.setDataSource(sound.absolutePath)
+            val pictureTrack = (0 until picture.trackCount).firstOrNull { picture.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("video/") == true } ?: return false
+            val pictureFormat = picture.getTrackFormat(pictureTrack)
+            picture.selectTrack(pictureTrack)
+            audio.selectTrack(0)
+            muxer = MediaMuxer(target.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+            // the turn of the camera lives in the container, not in the samples
+            if (pictureFormat.containsKey(MediaFormat.KEY_ROTATION)) muxer.setOrientationHint(pictureFormat.getInteger(MediaFormat.KEY_ROTATION))
+            val toPicture = muxer.addTrack(pictureFormat)
+            val toSound = muxer.addTrack(audio.getTrackFormat(0))
+            muxer.start()
+            started = true
+
+            val maxInput = if (pictureFormat.containsKey(MediaFormat.KEY_MAX_INPUT_SIZE)) pictureFormat.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE) else 0
+            val buffer = ByteBuffer.allocate(maxOf(maxInput, SAMPLE_BUFFER))
+            val info = MediaCodec.BufferInfo()
+            val durationUs = pictureFormat.getLong(MediaFormat.KEY_DURATION).coerceAtLeast(1)
+            // interleaved by time, as a player reads it: whichever track is behind goes next
+            var pictureLeft = true
+            var soundLeft = true
+            while (pictureLeft || soundLeft) {
+                coroutineContext.ensureActive()
+                val fromPicture = pictureLeft && (!soundLeft || picture.sampleTime <= audio.sampleTime)
+                val from = if (fromPicture) picture else audio
+                val size = from.readSampleData(buffer, 0)
+                if (size < 0) {
+                    if (fromPicture) pictureLeft = false else soundLeft = false
+                    continue
+                }
+                info.set(0, size, from.sampleTime, if (from.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0) MediaCodec.BUFFER_FLAG_KEY_FRAME else 0)
+                muxer.writeSampleData(if (fromPicture) toPicture else toSound, buffer, info)
+                if (fromPicture) onProgress((from.sampleTime.toFloat() / durationUs).coerceIn(0f, 1f))
+                from.advance()
+            }
+            muxer.stop()
+            started = false
+            return target.length() > 0
+        } finally {
+            if (started) runCatching { muxer?.stop() }
+            runCatching { muxer?.release() }
+            picture.release()
+            audio.release()
+        }
+    }
+
     companion object {
+        /** The sound is nearly all of the work of a video: no picture is decoded. */
+        private const val SOUND_SHARE = 0.9f
+        private const val SOUND_SUFFIX = ".sound.m4a"
+        private const val SAMPLE_BUFFER = 2 * 1024 * 1024
+
         /** AAC-LC mono for the file that is sent (spec 5.11). */
         const val BIT_RATE = 128_000
         private const val TAG = "SoundFileRenderer"

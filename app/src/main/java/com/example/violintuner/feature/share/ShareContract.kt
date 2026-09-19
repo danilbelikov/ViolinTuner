@@ -3,7 +3,16 @@ package com.example.violintuner.feature.share
 import com.example.violintuner.feature.sound.SoundCaption
 import java.io.File
 
-enum class ShareVariant { PROCESSED, ORIGINAL }
+enum class ShareVariant {
+    /** What is heard in the app: the processed sound — with the picture, when the recording is a video take. */
+    PROCESSED,
+
+    /** The file as it was recorded or shot. */
+    ORIGINAL,
+
+    /** A video take only (spec 3.19): its sound alone, an `.m4a` like any recording's — processed when the processing does something. */
+    SOUND,
+}
 
 /** What the sheet says about the recording to be sent. */
 data class ShareInfo(
@@ -18,7 +27,24 @@ data class ShareInfo(
     val caption: SoundCaption,
     /** «Менуэт · 84 % · 18 сентября» — what goes along when the box is ticked. */
     val message: String,
-)
+    /** Set for a video take: the name of the `.mp4`; [fileName] is then the name of «Только звук». */
+    val videoFileName: String? = null,
+    /** The shorter side of the picture — «1080p»; zero when unknown. */
+    val resolution: Int = 0,
+    /** The processing does something. A video take shows its sheet even when it does not: there is still a choice to make. */
+    val processed: Boolean = true,
+) {
+    val video: Boolean get() = videoFileName != null
+
+    fun fileNameOf(variant: ShareVariant): String = if (video && variant != ShareVariant.SOUND) videoFileName!! else fileName
+
+    /** An estimate for what is rendered, the real size for what is sent as it is. A processed video weighs what its picture does. */
+    fun bytesOf(variant: ShareVariant): Long = when {
+        video && variant == ShareVariant.PROCESSED -> originalBytes
+        variant == ShareVariant.ORIGINAL -> originalBytes
+        else -> processedBytes
+    }
+}
 
 sealed interface ShareSheet {
     val info: ShareInfo
