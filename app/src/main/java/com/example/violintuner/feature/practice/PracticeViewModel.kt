@@ -6,7 +6,13 @@ import com.example.violintuner.core.data.profile.AvatarFiles
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
+import com.example.violintuner.core.domain.journey.JourneyRepository
+import com.example.violintuner.core.domain.journey.NoJourney
+import com.example.violintuner.core.domain.journey.TaktEarning
 import com.example.violintuner.core.domain.practice.PracticeFinisher
+import com.example.violintuner.feature.journey.JourneyMotion
+import com.example.violintuner.feature.journey.JourneyReducer
+import com.example.violintuner.feature.journey.JourneyWindow
 import com.example.violintuner.core.domain.practice.PracticeRepository
 import com.example.violintuner.core.domain.practice.PracticeStats
 import com.example.violintuner.core.domain.practice.RunningPractice
@@ -28,6 +34,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.channelFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -47,7 +56,29 @@ class PracticeViewModel @Inject constructor(
     private val profiles: ProfileRepository,
     private val avatarFiles: AvatarFiles,
     private val progressConfig: ProgressConfig,
+    journey: JourneyRepository = NoJourney,
 ) : ViewModel() {
+
+    /**
+     * The window into the journey (spec 3.23): its own flow, like the take on the piece screen — the
+     * card changes when takts do, the rest of the screen has nothing to do with it. An earning that
+     * arrives while the screen is watched shows as «+340 тактов» for a few seconds; the first value
+     * read is history, not news.
+     */
+    val journeyWindow: StateFlow<JourneyWindow?> = channelFlow {
+        var known: TaktEarning? = null
+        var first = true
+        journey.progress.collectLatest { progress ->
+            val fresh = progress.lastEarning?.takeIf { !first && it != known && it.takts > 0 }
+            known = progress.lastEarning
+            first = false
+            if (fresh != null) {
+                send(JourneyReducer.windowOf(progress, justEarned = fresh.takts))
+                delay(JourneyMotion.EARNED_PILL_MS)
+            }
+            send(JourneyReducer.windowOf(progress))
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     /** What only the screen decides: the month shown, the day picked and the open sheet. */
     private data class Ui(val month: YearMonth, val selectedDate: LocalDate, val sheet: PracticeSheet?)
@@ -105,6 +136,7 @@ class PracticeViewModel @Inject constructor(
             PracticeIntent.EditTimeCleared -> updateEdit { it.copy(minutes = 0) }
             PracticeIntent.EditTimeSaved -> saveEdit()
             PracticeIntent.EditTimeCancelled -> ui.update { it.copy(sheet = null) }
+            PracticeIntent.JourneyClicked -> effectChannel.trySend(PracticeEffect.OpenJourney)
             is PracticeIntent.SessionClicked -> effectChannel.trySend(PracticeEffect.OpenSession(intent.id))
             PracticeIntent.ProfileClicked -> openSheet(PracticeSheet.Profile(latestProfile.name, importingPhoto = false))
             is PracticeIntent.ProfileNameChanged ->

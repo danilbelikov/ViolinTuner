@@ -457,6 +457,176 @@
     <string name="piece_status_learning">Учу</string>
     <string name="piece_status_in_repertoire">В репертуаре</string>
     <string name="piece_status_learned">Выучено</string>
+    <!-- The journey (spec 3.23): arrays follow the order of JourneyRoute.stops -->
+    <string-array name="journey_cities">
+        <item>Дом</item>
+        <item>Кремона</item>
+        <item>Милан</item>
+        <item>Зальцбург</item>
+        <item>Вена</item>
+        <item>Прага</item>
+        <item>Лейпциг</item>
+        <item>Берлин</item>
+        <item>Амстердам</item>
+        <item>Париж</item>
+        <item>Лондон</item>
+        <item>Санкт-Петербург</item>
+        <item>Москва</item>
+        <item>Нью-Йорк</item>
+        <item>Буэнос-Айрес</item>
+        <item>Токио</item>
+        <item>Сидней</item>
+    </string-array>
+    <string-array name="journey_cities_to">
+        <item>Дома</item>
+        <item>Кремоны</item>
+        <item>Милана</item>
+        <item>Зальцбурга</item>
+        <item>Вены</item>
+        <item>Праги</item>
+        <item>Лейпцига</item>
+        <item>Берлина</item>
+        <item>Амстердама</item>
+        <item>Парижа</item>
+        <item>Лондона</item>
+        <item>Санкт-Петербурга</item>
+        <item>Москвы</item>
+        <item>Нью-Йорка</item>
+        <item>Буэнос-Айреса</item>
+        <item>Токио</item>
+        <item>Сиднея</item>
+    </string-array>
+    <string-array name="journey_places">
+        <item>Своя комната, пюпитр у окна</item>
+        <item>Мастерская скрипичного мастера</item>
+        <item>Ла Скала</item>
+        <item>Дом Моцарта и крепость над городом</item>
+        <item>Музикферайн, Золотой зал</item>
+        <item>Рудольфинум</item>
+        <item>Гевандхаус · церковь Св. Фомы</item>
+        <item>Филармония</item>
+        <item>Консертгебау</item>
+        <item>Опера Гарнье</item>
+        <item>Альберт-холл</item>
+        <item>Филармония, Большой зал</item>
+        <item>Большой зал Консерватории</item>
+        <item>Карнеги-холл</item>
+        <item>Театр Колон</item>
+        <item>Сантори-холл</item>
+        <item>Оперный театр</item>
+    </string-array>
+    <string-array name="journey_countries">
+        <item></item>
+        <item>Италия</item>
+        <item>Италия</item>
+        <item>Австрия</item>
+        <item>Австрия</item>
+        <item>Чехия</item>
+        <item>Германия</item>
+        <item>Германия</item>
+        <item>Нидерланды</item>
+        <item>Франция</item>
+        <item>Великобритания</item>
+        <item>Россия</item>
+        <item>Россия</item>
+        <item>США</item>
+        <item>Аргентина</item>
+        <item>Япония</item>
+        <item>Австралия</item>
+    </string-array>
+    <string-array name="journey_facts">
+        <item>Отсюда начинают все. Первая остановка — Кремона, где скрипку придумали.</item>
+        <item>Здесь работали Амати, Страдивари и Гварнери — скрипку в её нынешнем виде придумали в этом городе.</item>
+        <item>Театр открыт в 1778 году; здесь впервые прозвучали оперы Верди и «Мадам Баттерфляй» Пуччини.</item>
+        <item>Здесь родился Моцарт; крепость Хоэнзальцбург стоит над городом с XI века.</item>
+        <item>Каждый год 1 января отсюда на весь мир звучит Новогодний концерт. Зал считают одним из лучших по акустике.</item>
+        <item>Первый концерт Чешской филармонии здесь дирижировал Дворжак.</item>
+        <item>Бах четверть века был кантором церкви Св. Фомы.</item>
+        <item>Зал-«шатёр», где сцена стоит посреди слушателей.</item>
+        <item>Оркестр зала носит титул «королевского».</item>
+        <item></item>
+        <item>Открыт в 1871 году; каждое лето здесь проходят Променад-концерты.</item>
+        <item></item>
+        <item></item>
+        <item>«Как попасть в Карнеги-холл? — Заниматься».</item>
+        <item></item>
+        <item></item>
+        <item>Под «парусами» — несколько залов; силуэт узнают даже те, кто никогда не был в Австралии.</item>
+    </string-array>
+    <string-array name="journey_roads">
+        <item></item>
+        <item>поездом · 6 часов</item>
+        <item>поездом · 1 час</item>
+        <item>поездом · 7 часов</item>
+        <item>поездом · 3 часа</item>
+        <item>поездом · 4 часа</item>
+        <item>поездом · 4 часа</item>
+        <item>поездом · 1 час</item>
+        <item>поездом · 6 часов</item>
+        <item>поездом · 3 часа</item>
+        <item>поездом · 2 часа</item>
+        <item>кораблём · 4 дня</item>
+        <item>поездом · 4 часа</item>
+        <item>самолётом · 10 часов</item>
+        <item>кораблём · 3 недели</item>
+        <item>самолётом · 30 часов</item>
+        <item>самолётом · 9 часов</item>
+    </string-array>
+    <string name="journey_title">Путешествие</string>
+    <string name="journey_map">Карта</string>
+    <string name="journey_passport">Паспорт</string>
+    <string name="journey_back">Назад</string>
+    <string name="journey_stop_of">остановка %1$d из %2$d</string>
+    <string name="journey_stop_home">остановка 0 из %1$d · дом</string>
+    <string name="journey_since">с %1$s</string>
+    <string name="journey_next">до %1$s · %2$s</string>
+    <string name="journey_next_short">до %1$s %2$s</string>
+    <string name="journey_have">%1$s / %2$s</string>
+    <string name="journey_depart">В путь · %1$s</string>
+    <string name="journey_missing">не хватает %1$s</string>
+    <string name="journey_enough">хватает до %1$s — в путь</string>
+    <string name="journey_soon">Дальше дорога ещё рисуется. Такты копятся и ждут новых городов.</string>
+    <string name="journey_soon_short">скоро новые города</string>
+    <string name="journey_passed">Пройдено %1$d из %2$d</string>
+    <string name="journey_all_cards">Все открытки</string>
+    <string name="journey_no_cards">Первая открытка появится в Кремоне</string>
+    <string name="journey_intro_title">Дорога начинается дома</string>
+    <string name="journey_intro_text">У каждого скрипача есть мечта — сыграть в лучших залах мира. Дорога туда длинная, и платят за неё не деньгами, а чистыми нотами.</string>
+    <string name="journey_intro_first">Первая остановка — Кремона, где скрипку придумали. До неё %1$s.</string>
+    <string name="journey_intro_start">Собрать футляр</string>
+    <string name="journey_road">%1$s → %2$s</string>
+    <string name="journey_stamp">Поставить штамп</string>
+    <string name="journey_stamp_page">Паспорт · страница %1$d</string>
+    <string name="journey_stamp_text">Штамп № %1$d. До %2$s — %3$s.</string>
+    <string name="journey_stamp_text_last">Штамп № %1$d. Дальше дорога ещё рисуется.</string>
+    <string name="journey_done">Готово</string>
+    <string name="journey_stop_meta">%1$d из %2$d · с %3$s</string>
+    <string name="journey_stop_where">%1$s · %2$s</string>
+    <string name="journey_mode_evening">вечер</string>
+    <string name="journey_mode_day">день</string>
+    <string name="journey_mode_inside">внутри</string>
+    <string name="journey_mode_outside">снаружи</string>
+    <string name="journey_extras">Дополнения</string>
+    <string name="journey_extra_time">Второе время суток</string>
+    <string name="journey_extra_view">Второй вид</string>
+    <string name="journey_extra_souvenir">Сувенир в паспорт</string>
+    <string name="journey_extra_bought">открыто</string>
+    <string name="journey_extra_buy">Открыть за %1$s</string>
+    <string name="journey_passport_soon">скоро</string>
+    <string name="journey_passport_count">%1$d из %2$d</string>
+    <string name="journey_earned">+%1$s</string>
+    <string name="journey_earned_detail">%1$s + %2$s за время</string>
+    <string name="journey_notes_in_tune_one">%1$d нота в строе</string>
+    <string name="journey_notes_in_tune_few">%1$d ноты в строе</string>
+    <string name="journey_notes_in_tune_many">%1$d нот в строе</string>
+    <string name="takt_one">%1$s такт</string>
+    <string name="takt_few">%1$s такта</string>
+    <string name="takt_many">%1$s тактов</string>
+    <string name="takt_icon">такты</string>
+    <string name="journey_card_description">Путешествие: %1$s</string>
+    <string name="journey_stamp_description">Штамп: %1$s</string>
+    <string name="journey_stamp_locked_description">%1$s — ещё впереди</string>
+    <string name="journey_map_description">Карта маршрута: пройдено %1$d из %2$d</string>
     <string name="section_pieces">Произведения</string>
     <string name="section_scales">Гаммы</string>
     <string name="section_etudes">Этюды</string>

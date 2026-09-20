@@ -168,6 +168,13 @@ object Formats {
     fun recordDayHeader(date: LocalDate, withYear: Boolean): String =
         (if (withYear) DAY_MONTH_YEAR_WEEKDAY else DAY_WITH_WEEKDAY).format(date)
 
+    /** Takts of the journey: digits in groups of three from four digits on — «1 640», «15 000» — the way the handoff writes prices. */
+    fun takts(value: Long): String {
+        val digits = abs(value).toString()
+        val grouped = if (digits.length < 4) digits else digits.reversed().chunked(GROUP_SIZE).joinToString(GROUP_SEPARATOR).reversed()
+        return if (value < 0) "$MINUS$grouped" else grouped
+    }
+
     /** "Сентябрь 2026": the standalone month name, capitalised for a heading. */
     fun monthAndYear(month: YearMonth): String =
         MONTH_AND_YEAR.format(month).replaceFirstChar { it.titlecase(LOCALE) }

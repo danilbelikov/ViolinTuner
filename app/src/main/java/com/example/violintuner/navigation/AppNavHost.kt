@@ -14,6 +14,10 @@ import com.example.violintuner.feature.backup.BackupRoute
 import com.example.violintuner.feature.backup.RestoreRoute
 import com.example.violintuner.feature.backup.RestoreViewModel
 import com.example.violintuner.feature.history.HistoryRoute
+import com.example.violintuner.feature.journey.JourneyRoute
+import com.example.violintuner.feature.journey.JourneyView
+import com.example.violintuner.feature.journey.StopRoute
+import com.example.violintuner.feature.journey.StopViewModel
 import com.example.violintuner.feature.live.LiveRoute
 import com.example.violintuner.feature.onboarding.OnboardingRoute
 import com.example.violintuner.feature.practice.PracticeRoute
@@ -46,6 +50,11 @@ private const val PIECE_FORM_ROUTE = "pieceForm"
 private const val SCALE_FORM_ROUTE = "scaleForm"
 private const val SECTION_ROUTE = "section"
 private const val SECTION_PATTERN = "$SECTION_ROUTE/{${RepertoireViewModel.ARG_SECTION}}"
+private const val JOURNEY_ROUTE = "journey"
+private const val JOURNEY_MAP_ROUTE = "journeyMap"
+private const val JOURNEY_PASSPORT_ROUTE = "journeyPassport"
+private const val JOURNEY_STOP_ROUTE = "journeyStop"
+private const val JOURNEY_STOP_PATTERN = "$JOURNEY_STOP_ROUTE/{${StopViewModel.ARG_STOP_ID}}"
 private const val BACKUP_ROUTE = "backup"
 private const val RESTORE_ROUTE = "restore"
 private const val RESTORE_PATTERN = "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}={${RestoreViewModel.ARG_URI}}"
@@ -74,6 +83,7 @@ fun AppNavHost(
             PracticeRoute(
                 onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },
                 onOpenSession = navController::navigateToSession,
+                onOpenJourney = { navController.navigate(JOURNEY_ROUTE) { launchSingleTop = true } },
             )
         }
         composable(TopLevelDestination.HISTORY.route) {
@@ -203,6 +213,22 @@ fun AppNavHost(
                 onOpenRestore = navController::navigateToRestore,
             )
         }
+        // The journey (spec 3.23): above the tabs, without the bottom bar. The map and the passport are views of the same state.
+        mapOf(JOURNEY_ROUTE to JourneyView.MAIN, JOURNEY_MAP_ROUTE to JourneyView.MAP, JOURNEY_PASSPORT_ROUTE to JourneyView.PASSPORT).forEach { (route, view) ->
+            composable(route) {
+                JourneyRoute(
+                    view = view,
+                    onOpenMap = { navController.navigate(JOURNEY_MAP_ROUTE) { launchSingleTop = true } },
+                    onOpenPassport = { navController.navigate(JOURNEY_PASSPORT_ROUTE) { launchSingleTop = true } },
+                    onOpenStop = { stopId -> navController.navigate("$JOURNEY_STOP_ROUTE/$stopId") { launchSingleTop = true } },
+                    onClose = navController::popBackStack,
+                )
+            }
+        }
+        composable(
+            route = JOURNEY_STOP_PATTERN,
+            arguments = listOf(navArgument(StopViewModel.ARG_STOP_ID) { type = NavType.StringType }),
+        ) { StopRoute(onClose = navController::popBackStack) }
         // A copy of the data and its coming back (spec 3.20): above the tabs, without the bottom bar.
         composable(BACKUP_ROUTE) { BackupRoute(onClose = navController::popBackStack) }
         composable(

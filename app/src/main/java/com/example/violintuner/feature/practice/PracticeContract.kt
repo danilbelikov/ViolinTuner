@@ -139,6 +139,9 @@ data class PracticeState(
 )
 
 sealed interface PracticeIntent {
+    /** The window into the journey (spec 3.23). */
+    data object JourneyClicked : PracticeIntent
+
     data object StartClicked : PracticeIntent
 
     data object StopClicked : PracticeIntent
@@ -199,6 +202,8 @@ sealed interface PracticeEffect {
     data object OpenLive : PracticeEffect
 
     data class OpenSession(val id: Long) : PracticeEffect
+
+    data object OpenJourney : PracticeEffect
 
     data object ShowTooShort : PracticeEffect
 

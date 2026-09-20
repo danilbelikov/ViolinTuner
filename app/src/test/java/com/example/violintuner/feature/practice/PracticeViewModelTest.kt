@@ -14,6 +14,9 @@ import com.example.violintuner.core.domain.progress.FakeProfileRepository
 import com.example.violintuner.core.domain.progress.FakeTrophyRepository
 import com.example.violintuner.core.domain.progress.ProgressConfig
 import com.example.violintuner.core.domain.session.FakeSessionRepository
+import com.example.violintuner.core.domain.journey.FakeJourneyRepository
+import com.example.violintuner.core.domain.journey.TaktEarning
+import com.example.violintuner.feature.journey.JourneyMotion
 import java.time.Clock
 import java.time.Instant
 import java.time.LocalDate
@@ -56,6 +59,7 @@ class PracticeViewModelTest {
     }
 
     // 2026-09-17 18:00 Moscow
+    private val journey = FakeJourneyRepository()
     private val clock = TestClock(Instant.parse("2026-09-17T15:00:00Z").toEpochMilli(), zone)
     private val today = LocalDate.of(2026, 9, 17)
 
@@ -68,7 +72,7 @@ class PracticeViewModelTest {
     private fun TestScope.viewModel(): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
         val viewModel = PracticeViewModel(
             repository, store, PracticeFinisher(repository, store, clock), sessions, config, FakeRepertoireRepository(), clock,
-            trophies, profiles, avatarFiles, ProgressConfig(),
+            trophies, profiles, avatarFiles, ProgressConfig(), journey,
         )
         val effects = mutableListOf<PracticeEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
@@ -442,5 +446,34 @@ class PracticeViewModelTest {
 
         val (second, _) = viewModel()
         assertEquals(Gift(hours = 1, index = 0, awardedDate = today), second.state.value.gift)
+    }
+
+    @Test
+    fun `the journey window shows takts earned on the spot, not those earned before`() = runTest {
+        journey.start(clock.millis())
+        journey.earn(TaktEarning(clock.millis(), 100, 80, 600_000, 100))
+        val (viewModel, effects) = viewModel()
+        backgroundScope.launch { viewModel.journeyWindow.collect {} }
+        runCurrent()
+
+        val before = viewModel.journeyWindow.value!!
+        assertEquals(100L, before.balance)
+        assertEquals(200L, before.missing)
+        assertNull(before.justEarned)
+
+        journey.earn(TaktEarning(clock.millis(), 300, 264, 2_280_000, 340))
+        runCurrent()
+        val fresh = viewModel.journeyWindow.value!!
+        assertEquals(340, fresh.justEarned)
+        assertTrue(fresh.canDepart)
+
+        advanceTimeBy(JourneyMotion.EARNED_PILL_MS + 1)
+        runCurrent()
+        assertNull(viewModel.journeyWindow.value!!.justEarned)
+        assertEquals(440L, viewModel.journeyWindow.value!!.balance)
+
+        viewModel.onIntent(PracticeIntent.JourneyClicked)
+        runCurrent()
+        assertEquals(PracticeEffect.OpenJourney, effects.last())
     }
 }

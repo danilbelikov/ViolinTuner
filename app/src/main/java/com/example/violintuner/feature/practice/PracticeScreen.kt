@@ -127,6 +127,8 @@ fun PracticeScreen(
     onIntent: (PracticeIntent) -> Unit,
     modifier: Modifier = Modifier,
     zone: ZoneId = ZoneId.systemDefault(),
+    // The window into the journey (spec 3.23) comes as a slot: it lives on its own flow, not in PracticeState.
+    journeyCard: @Composable (compact: Boolean) -> Unit = {},
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -134,9 +136,9 @@ fun PracticeScreen(
             .background(MaterialTheme.colorScheme.surface),
     ) {
         if (maxWidth > maxHeight) {
-            LandscapeLayout(state, onIntent, zone)
+            LandscapeLayout(state, onIntent, zone, journeyCard)
         } else {
-            PortraitLayout(state, onIntent, zone)
+            PortraitLayout(state, onIntent, zone, journeyCard)
         }
     }
     when (val sheet = state.sheet) {
@@ -150,7 +152,7 @@ fun PracticeScreen(
 }
 
 @Composable
-private fun PortraitLayout(state: PracticeState, onIntent: (PracticeIntent) -> Unit, zone: ZoneId) {
+private fun PortraitLayout(state: PracticeState, onIntent: (PracticeIntent) -> Unit, zone: ZoneId, journeyCard: @Composable (Boolean) -> Unit) {
     val metrics = Metrics.Portrait
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Column(
@@ -163,6 +165,7 @@ private fun PortraitLayout(state: PracticeState, onIntent: (PracticeIntent) -> U
         ) {
             Header(state, onIntent, metrics)
             if (!state.loading) {
+                journeyCard(false)
                 MainAction(state, onIntent, metrics)
                 SummaryCards(state, metrics)
                 PracticeCalendar(
@@ -181,7 +184,7 @@ private fun PortraitLayout(state: PracticeState, onIntent: (PracticeIntent) -> U
 }
 
 @Composable
-private fun LandscapeLayout(state: PracticeState, onIntent: (PracticeIntent) -> Unit, zone: ZoneId) {
+private fun LandscapeLayout(state: PracticeState, onIntent: (PracticeIntent) -> Unit, zone: ZoneId, journeyCard: @Composable (Boolean) -> Unit) {
     val metrics = Metrics.Landscape
     Row(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -196,6 +199,7 @@ private fun LandscapeLayout(state: PracticeState, onIntent: (PracticeIntent) -> 
             if (!state.loading) {
                 MainAction(state, onIntent, metrics)
                 SummaryCards(state, metrics)
+                journeyCard(true)
             }
         }
         if (!state.loading) {
