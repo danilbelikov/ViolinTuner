@@ -1,5 +1,6 @@
 package com.example.violintuner
 
+import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -11,7 +12,9 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -21,29 +24,48 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.example.violintuner.core.backup.RestoreSwap
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.practice.components.PracticePromptHost
 import com.example.violintuner.navigation.AppBottomBar
 import com.example.violintuner.navigation.AppNavHost
 import com.example.violintuner.navigation.AppStartViewModel
+import com.example.violintuner.navigation.ONBOARDING_ROUTE
 import com.example.violintuner.navigation.TopLevelDestination
+import com.example.violintuner.navigation.navigateToRunningBackup
 import com.example.violintuner.navigation.navigateToTopLevel
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+    // Where the activity was asked to go from outside: the notification of a running copy.
+    private val openBackup = mutableStateOf<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        if (savedInstanceState == null) openBackup.value = intent?.getStringExtra(EXTRA_OPEN_BACKUP)
         setContent {
-            ViolinTheme { ViolinTunerRoot() }
+            ViolinTheme { ViolinTunerRoot(openBackup = openBackup.value, onBackupOpened = { openBackup.value = null }) }
         }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        intent.getStringExtra(EXTRA_OPEN_BACKUP)?.let { openBackup.value = it }
+    }
+
+    companion object {
+        /** The tap on the notification of a copy: open its progress (spec 3.20). */
+        const val EXTRA_OPEN_BACKUP = "openBackup"
+        const val OPEN_SAVING = "saving"
+        const val OPEN_RESTORING = "restoring"
     }
 }
 
 @Composable
-private fun ViolinTunerRoot() {
+private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
     val startViewModel = hiltViewModel<AppStartViewModel>()
     val startRoute by startViewModel.startRoute.collectAsStateWithLifecycle()
     val practiceRunning by startViewModel.practiceRunning.collectAsStateWithLifecycle()
@@ -86,6 +108,18 @@ private fun ViolinTunerRoot() {
                 startRoute = route,
                 modifier = Modifier.padding(innerPadding),
             )
+            // A process that has just put a copy in place opens on «Занятия»: the restored days are seen there at once (spec 3.20).
+            LaunchedEffect(Unit) {
+                if (ViolinTunerApp.consumeStartedAfter() == RestoreSwap.Outcome.RESTORED && route != ONBOARDING_ROUTE) {
+                    navController.navigateToTopLevel(TopLevelDestination.PRACTICE)
+                }
+            }
+            LaunchedEffect(openBackup) {
+                if (openBackup != null) {
+                    navController.navigateToRunningBackup(restoring = openBackup == MainActivity.OPEN_RESTORING)
+                    onBackupOpened()
+                }
+            }
         }
         PracticePromptHost(
             prompt = practicePrompt,

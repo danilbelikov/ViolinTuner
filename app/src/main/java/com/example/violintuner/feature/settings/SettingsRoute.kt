@@ -10,11 +10,14 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.violintuner.feature.backup.DataBlock
 
 @Composable
 fun SettingsRoute(
     onOpenOnboarding: () -> Unit,
     onOpenSound: () -> Unit,
+    onOpenBackup: () -> Unit,
+    onOpenRestore: (uri: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -34,5 +37,7 @@ fun SettingsRoute(
         }
     }
 
-    SettingsScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier)
+    SettingsScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier) {
+        DataBlock(onOpenBackup = onOpenBackup, onOpenRestore = onOpenRestore)
+    }
 }

@@ -53,6 +53,8 @@ fun SettingsScreen(
     state: SettingsState,
     onIntent: (SettingsIntent) -> Unit,
     modifier: Modifier = Modifier,
+    /** The block «Данные» (spec 3.20): it has a view model of its own, the settings know nothing of copies. */
+    dataBlock: @Composable () -> Unit = {},
 ) {
     val colors = MaterialTheme.colorScheme
     Box(
@@ -124,6 +126,7 @@ fun SettingsScreen(
                 }
                 AppIcon(AppIcons.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            dataBlock()
             OutlinedButton(onClick = { onIntent(SettingsIntent.RestartOnboardingClicked) }) {
                 IconLabel(AppIcons.Repeat, stringResource(R.string.settings_restart_onboarding))
             }

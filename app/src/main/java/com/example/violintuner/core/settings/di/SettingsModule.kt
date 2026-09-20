@@ -5,9 +5,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.example.violintuner.core.backup.BackupPrefs
 import com.example.violintuner.core.domain.practice.RunningPracticeStore
 import com.example.violintuner.core.domain.progress.ProfileRepository
 import com.example.violintuner.core.domain.repertoire.StandHintStore
+import com.example.violintuner.core.settings.DataStoreBackupPrefs
 import com.example.violintuner.core.settings.DataStoreProfileRepository
 import com.example.violintuner.core.settings.DataStoreRunningPracticeStore
 import com.example.violintuner.core.settings.DataStoreSettingsRepository
@@ -45,6 +47,10 @@ abstract class SettingsModule {
     @Binds
     @Singleton
     abstract fun bindStandHintStore(impl: DataStoreStandHintStore): StandHintStore
+
+    @Binds
+    @Singleton
+    abstract fun bindBackupPrefs(impl: DataStoreBackupPrefs): BackupPrefs
 
     companion object {
         private const val FILE_NAME = "user_settings"

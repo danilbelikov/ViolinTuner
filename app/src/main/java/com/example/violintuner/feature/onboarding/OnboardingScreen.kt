@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -102,6 +103,7 @@ fun OnboardingScreen(
     state: OnboardingState,
     onIntent: (OnboardingIntent) -> Unit,
     modifier: Modifier = Modifier,
+    onHaveBackup: (() -> Unit)? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val texts = textsOf(state.step)
@@ -174,6 +176,12 @@ fun OnboardingScreen(
                     shape = RoundedCornerShape(OnboardingDimens.CtaCorner),
                 ) {
                     Text(text = stringResource(texts.cta), style = MaterialTheme.typography.labelLarge.merge(CtaStyle))
+                }
+                // Only on the first step: on the next ones the person is choosing settings a copy would overwrite (handoff 21a5).
+                if (onHaveBackup != null && state.step == OnboardingStep.MICROPHONE) {
+                    TextButton(onClick = onHaveBackup, modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp)) {
+                        Text(stringResource(R.string.backup_onboarding_link), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
+                    }
                 }
                 Foot(text = stringResource(texts.foot))
             }

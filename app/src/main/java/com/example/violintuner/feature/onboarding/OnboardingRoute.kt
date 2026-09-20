@@ -1,6 +1,8 @@
 package com.example.violintuner.feature.onboarding
 
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -12,10 +14,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.violintuner.core.ui.permission.rememberMicPermissionRequester
+import com.example.violintuner.feature.backup.BACKUP_FILE_TYPES
 
 @Composable
 fun OnboardingRoute(
     onFinished: () -> Unit,
+    onRestore: (uri: String) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: OnboardingViewModel = hiltViewModel(),
 ) {
@@ -45,5 +49,7 @@ fun OnboardingRoute(
         }
     }
 
-    OnboardingScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier)
+    // On a new phone a copy is the first thing a person with one needs (spec 3.20): the system's «Открыть», then the restore screen.
+    val copy = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { onRestore(it.toString()) } }
+    OnboardingScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier, onHaveBackup = { copy.launch(BACKUP_FILE_TYPES) })
 }

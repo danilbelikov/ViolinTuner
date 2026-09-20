@@ -3,6 +3,13 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
+    <!-- A copy of gigabytes takes minutes (spec 3.20): a foreground service keeps the process alive
+         meanwhile. Normal permissions — the person is asked nothing. POST_NOTIFICATIONS is declared
+         so that the progress can be shown to whoever allows it in the system settings, and is never
+         requested: without it the system shows nothing, and the work goes on all the same. -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
 
     <application
         android:name=".ViolinTunerApp"
@@ -26,6 +33,10 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <service
+            android:name=".core.backup.BackupService"
+            android:exported="false"
+            android:foregroundServiceType="dataSync" />
         <!-- Lends the system camera a file to write a photo of sheet music into (spec 3.15). The app
              itself never opens the camera and declares no CAMERA permission. -->
         <provider

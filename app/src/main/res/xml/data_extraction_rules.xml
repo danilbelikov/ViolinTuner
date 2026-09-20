@@ -1,19 +1,14 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample data extraction rules file; uncomment and customize as necessary.
-   See https://developer.android.com/about/versions/12/backup-restore#xml-changes
-   for details.
--->
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The same as backup_rules.xml, for API 31 and up. A cable transfer between two phones has no such limit and takes everything. -->
 <data-extraction-rules>
     <cloud-backup>
-        <!-- TODO: Use <include> and <exclude> to control what is backed up.
-        <include .../>
-        <exclude .../>
-        -->
+        <exclude domain="file" path="sessions/" />
+        <exclude domain="file" path="repertoire/" />
+        <exclude domain="file" path="waveforms/" />
+        <exclude domain="file" path="restore-staging/" />
     </cloud-backup>
-    <!--
     <device-transfer>
-        <include .../>
-        <exclude .../>
+        <exclude domain="file" path="waveforms/" />
+        <exclude domain="file" path="restore-staging/" />
     </device-transfer>
-    -->
 </data-extraction-rules>

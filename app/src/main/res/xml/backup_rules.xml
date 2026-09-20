@@ -1,13 +1,12 @@
-<?xml version="1.0" encoding="utf-8"?><!--
-   Sample backup rules file; uncomment and customize as necessary.
-   See https://developer.android.com/guide/topics/data/autobackup
-   for details.
-   Note: This file is ignored for devices older than API 31
-   See https://developer.android.com/about/versions/12/backup-restore
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The system's own backup holds 25 MB an app and fails as a whole when there is more: with videos
+  there are gigabytes (spec 5.14). So it takes what is small and matters most — the database and
+  the settings — and leaves the sound, the videos and the sheets to the copy the person makes.
 -->
 <full-backup-content>
-    <!--
-   <include domain="sharedpref" path="."/>
-   <exclude domain="sharedpref" path="device.xml"/>
--->
+    <exclude domain="file" path="sessions/" />
+    <exclude domain="file" path="repertoire/" />
+    <exclude domain="file" path="waveforms/" />
+    <exclude domain="file" path="restore-staging/" />
 </full-backup-content>

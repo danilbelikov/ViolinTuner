@@ -100,3 +100,9 @@ internal val VideoField = Color(0xFF0E0E12) // = StandBackground
 internal val VideoScrim = Color(0x73000000) // black at .45
 internal val VideoPanel = Color(0xBF000000) // black at .75
 internal val VideoSizeWarn = Color(0xFFE5B03C) // the hex of zone.near; not a zone
+
+internal val BackupData = Color(0xFFE9DDFF)
+internal val BackupSheets = Color(0xFFB7ACD9)
+internal val BackupAudio = Color(0xFF8A78C9)
+internal val BackupVideo = Color(0xFF5B43B8)
+internal val BackupOff = Color(0xFF3A3846)

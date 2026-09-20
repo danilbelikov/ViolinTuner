@@ -3,7 +3,8 @@ package com.example.violintuner.core.ui.icons
 /**
  * Path data of the icon set, copied verbatim from the `ICONS` array of the handoff
  * (`docs/design/project/polish`, frame 14a; `docs/design/project/sound` and
- * `docs/design/project/records` and `docs/design/project/video` added their own): a 24 × 24 grid,
+ * `docs/design/project/records`, `docs/design/project/video` and
+ * `docs/design/project/backup` added their own): a 24 × 24 grid,
  * stroke 1.8, round caps and joins.
  * A path that starts with [FILLED] is a filled shape without a stroke (dots, a note head).
  * Generated from the handoff — change an icon there, not here.
@@ -160,6 +161,21 @@ internal object IconPaths {
 
     /** строка ошибки в листе разбора (24, error) */
     val ALERT = listOf("M12 4.5 20.5 19.5H3.5z", "M12 10v4.5", "F M12 16.6a.9.9 0 1 0 0 1.8.9.9 0 1 0 0-1.8z")
+
+    /** строка «Сохранить копию», кнопка «Сохранить в…» (20), «Сначала сохранить текущие данные» (18) */
+    val SAVE_COPY = listOf("M12 3v10", "M8.5 9.5 12 13l3.5-3.5", "M4 14v3.5A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V14", "M4 16h4.2l1.3 2h5l1.3-2H20")
+
+    /** строка «Восстановить из копии», кнопка «Восстановить» (20) */
+    val RESTORE = listOf("M12 20V10", "M8.5 13.5 12 10l3.5 3.5", "M4 14v3.5A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V14", "M7 4h10")
+
+    /** пустое состояние «Пока нечего сохранять» (32) */
+    val ARCHIVE = listOf("M3.5 5.5A1.5 1.5 0 0 1 5 4h14a1.5 1.5 0 0 1 1.5 1.5V8H3.5z", "M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8", "M10 12h4")
+
+    /** паспорт копии — «с какого устройства» (16) */
+    val DEVICE = listOf("M7 3.5h10A1.5 1.5 0 0 1 18.5 5v14a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z", "M10.5 17.5h3")
+
+    /** паспорт копии — «когда сделана» (16) */
+    val CALENDAR = listOf("M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z", "M4 10h16", "M8 4v4M16 4v4")
 
     /** What a path of a tab icon does when its tab is selected. */
     enum class Selected { AS_IS, FILL, CUT }

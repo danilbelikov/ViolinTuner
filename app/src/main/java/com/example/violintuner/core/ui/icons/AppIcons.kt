@@ -64,6 +64,11 @@ object AppIcons {
     val FullscreenExit: ImageVector by lazy { icon("FullscreenExit", IconPaths.FULLSCREEN_EXIT) }
     val PlayCircle: ImageVector by lazy { icon("PlayCircle", IconPaths.PLAY_CIRCLE) }
     val Alert: ImageVector by lazy { icon("Alert", IconPaths.ALERT) }
+    val SaveCopy: ImageVector by lazy { icon("SaveCopy", IconPaths.SAVE_COPY) }
+    val Restore: ImageVector by lazy { icon("Restore", IconPaths.RESTORE) }
+    val Archive: ImageVector by lazy { icon("Archive", IconPaths.ARCHIVE) }
+    val Device: ImageVector by lazy { icon("Device", IconPaths.DEVICE) }
+    val Calendar: ImageVector by lazy { icon("Calendar", IconPaths.CALENDAR) }
 
     val TabLive: TabIcon by lazy { tab("TabLive", IconPaths.TAB_LIVE) }
     val TabPractice: TabIcon by lazy { tab("TabPractice", IconPaths.TAB_PRACTICE) }
@@ -122,6 +127,11 @@ object AppIcons {
         "FullscreenExit" to { FullscreenExit },
         "PlayCircle" to { PlayCircle },
         "Alert" to { Alert },
+        "SaveCopy" to { SaveCopy },
+        "Restore" to { Restore },
+        "Archive" to { Archive },
+        "Device" to { Device },
+        "Calendar" to { Calendar },
     )
 
     val tabs: List<() -> TabIcon> = listOf({ TabLive }, { TabPractice }, { TabRecords }, { TabSettings })

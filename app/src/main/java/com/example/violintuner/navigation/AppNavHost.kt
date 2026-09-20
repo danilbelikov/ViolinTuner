@@ -1,5 +1,6 @@
 package com.example.violintuner.navigation
 
+import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -9,6 +10,9 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.violintuner.feature.backup.BackupRoute
+import com.example.violintuner.feature.backup.RestoreRoute
+import com.example.violintuner.feature.backup.RestoreViewModel
 import com.example.violintuner.feature.history.HistoryRoute
 import com.example.violintuner.feature.live.LiveRoute
 import com.example.violintuner.feature.onboarding.OnboardingRoute
@@ -32,6 +36,9 @@ private const val PIECE_PATTERN = "$PIECE_ROUTE/{${PieceViewModel.ARG_PIECE_ID}}
 private const val STAND_ROUTE = "stand"
 private const val SOUND_ROUTE = "sound"
 private const val PIECE_FORM_ROUTE = "pieceForm"
+private const val BACKUP_ROUTE = "backup"
+private const val RESTORE_ROUTE = "restore"
+private const val RESTORE_PATTERN = "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}={${RestoreViewModel.ARG_URI}}"
 
 @Composable
 fun AppNavHost(
@@ -45,7 +52,7 @@ fun AppNavHost(
         modifier = modifier,
     ) {
         composable(ONBOARDING_ROUTE) {
-            OnboardingRoute(onFinished = navController::navigateFromOnboardingToLive)
+            OnboardingRoute(onFinished = navController::navigateFromOnboardingToLive, onRestore = navController::navigateToRestore)
         }
         composable(TopLevelDestination.LIVE.route) {
             LiveRoute(
@@ -140,7 +147,20 @@ fun AppNavHost(
             )
         }
         composable(TopLevelDestination.SETTINGS.route) {
-            SettingsRoute(onOpenOnboarding = navController::navigateToOnboarding, onOpenSound = { navController.navigateToSound(sessionId = null) })
+            SettingsRoute(
+                onOpenOnboarding = navController::navigateToOnboarding,
+                onOpenSound = { navController.navigateToSound(sessionId = null) },
+                onOpenBackup = navController::navigateToBackup,
+                onOpenRestore = navController::navigateToRestore,
+            )
+        }
+        // A copy of the data and its coming back (spec 3.20): above the tabs, without the bottom bar.
+        composable(BACKUP_ROUTE) { BackupRoute(onClose = navController::popBackStack) }
+        composable(
+            route = RESTORE_PATTERN,
+            arguments = listOf(navArgument(RestoreViewModel.ARG_URI) { type = NavType.StringType; nullable = true; defaultValue = null }),
+        ) {
+            RestoreRoute(onClose = navController::popBackStack, onOpenBackup = navController::navigateToBackup)
         }
     }
 }
@@ -156,6 +176,20 @@ fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
         launchSingleTop = true
         restoreState = true
     }
+}
+
+fun NavHostController.navigateToBackup() {
+    navigate(BACKUP_ROUTE) { launchSingleTop = true }
+}
+
+/** [uri] is the file the system's «Открыть» came back with; blank — a restore that is on its way already is come back to. */
+fun NavHostController.navigateToRestore(uri: String) {
+    navigate(if (uri.isBlank()) RESTORE_ROUTE else "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}=${Uri.encode(uri)}") { launchSingleTop = true }
+}
+
+/** The tap on the notification of a running job. */
+fun NavHostController.navigateToRunningBackup(restoring: Boolean) {
+    if (restoring) navigateToRestore("") else navigateToBackup()
 }
 
 fun NavHostController.navigateToSession(sessionId: Long) {

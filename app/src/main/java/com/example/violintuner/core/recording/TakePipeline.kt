@@ -53,6 +53,7 @@ class TakePipeline @Inject constructor(
     private val practiceConfig: PracticeConfig,
     private val clock: Clock,
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
+    private val watch: RecordingWatch = RecordingWatch(),
 ) {
     /** What one frame came to: what the screen shows, and how the recording stands, if one runs. */
     class Output<T>(val shown: T, val recording: RecordingProgress? = null)
@@ -140,6 +141,7 @@ class TakePipeline @Inject constructor(
         suspend fun finishRecording(stoppedByPlayer: Boolean) {
             val finished = recorder
             recorder = null
+            watch.set(false)
             recordingRequested.value = false
             if (finished == null) {
                 closeAudio(keep = false) // stopped while still waiting for the sound to start
@@ -188,6 +190,7 @@ class TakePipeline @Inject constructor(
                 markSoundIfDue(reading)
                 if (recordingRequested.value && recorder == null && mayStartRecorder(frame.tMs)) {
                     recorder = SessionRecorder(config, clock.millis())
+                    watch.set(true)
                 }
                 val running = recorder
                 if (running != null) {
