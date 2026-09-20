@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}.paper-s{background-color:#ECE8DF;background-image:repeating-linear-gradient(to bottom,transparent 0 6px,#8B877F 6px 7px,transparent 7px 9px,#8B877F 9px 10px,transparent 10px 12px,#8B877F 12px 13px,transparent 13px 15px,#8B877F 15px 16px,transparent 16px 18px,#8B877F 18px 19px,transparent 19px 30px);background-size:100% 30px;background-position:0 8px}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}</style></helmet>
+
+<section class="dv-turn" id="s24a">
+<div class="dv-thd"><a class="dv-tid" href="#s24a">24a</a><span class="dv-tname">Вход в репертуар — A: экран разделов · C: один список с заголовками</span></div>
+<div class="dv-opts">
+<sc-for list="{{ entries }}" as="s" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="padding:16px 16px 0;display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:28px;font-weight:700">Записи</div><div class="tn" style="font-size:14px;color:#A39FB5">выучено 9 из 27</div></div>
+  <div style="padding:14px 16px 0"><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">Сессии</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF;border-left:1px solid #3A3846">Репертуар</div></div></div>
+  <div style="flex:1;overflow:hidden;padding:16px 16px 0;display:flex;flex-direction:column;gap:10px">
+    <sc-if value="{{ s.isA }}" hint-placeholder-val="{{ true }}">
+      <sc-for list="{{ s.sections }}" as="c" hint-placeholder-count="6">
+      <div style="background:#1E1D25;border-radius:16px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><div style="font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</div><div class="tn" style="font-size:13px;color:#A39FB5;white-space:nowrap">{{ c.countText }}</div></div>
+        <div style="height:6px;border-radius:3px;background:#292833;display:flex;overflow:hidden;gap:2px"><sc-for list="{{ c.shares }}" as="sh" hint-placeholder-count="3"><div style="width:{{ sh.w }};background:{{ sh.c }};flex:none"></div></sc-for></div>
+      </div>
+      </sc-for>
+      <div style="height:44px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF"><svg width="16" height="16" viewBox="0 0 18 18"><path d="M9 3v12M3 9h12" stroke="#C4ADFF" stroke-width="2" stroke-linecap="round"></path></svg>Добавить раздел</div>
+    </sc-if>
+    <sc-if value="{{ s.isC }}" hint-placeholder-val="{{ false }}">
+      <div style="height:48px;border-radius:24px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:600;color:#C4ADFF;flex:none"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 3v12M3 9h12" stroke="#C4ADFF" stroke-width="2" stroke-linecap="round"></path></svg>Добавить</div>
+      <sc-for list="{{ s.groups }}" as="g" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:8px;height:40px;margin-top:6px"><svg width="12" height="12" viewBox="0 0 10 10" style="transform:rotate({{ g.rot }})"><path d="M2 3.5 L5 6.5 L8 3.5" fill="none" stroke="#A39FB5" stroke-width="1.6" stroke-linecap="round"></path></svg><div style="font-size:15px;font-weight:700">{{ g.name }}</div><div class="tn" style="font-size:13px;color:#A39FB5">{{ g.countText }}</div></div>
+      <sc-for list="{{ g.items }}" as="p" hint-placeholder-count="2">
+      <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:12px 14px 12px 12px;min-height:80px;box-sizing:border-box">
+        <sc-if value="{{ p.isPaper }}" hint-placeholder-val="{{ true }}"><div class="paper-s" style="width:42px;height:56px;border-radius:5px;flex:none;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)"><div style="position:absolute;inset:0;background:rgba(19,19,24,.18)"></div></div></sc-if>
+        <sc-if value="{{ p.isScale }}" hint-placeholder-val="{{ false }}"><div style="width:42px;height:56px;border-radius:5px;flex:none;background:#292833;display:flex;align-items:center;justify-content:center;overflow:hidden">{{ p.sig }}</div></sc-if>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><div style="font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25">{{ p.title }}</div><div style="font-size:13px;color:#A39FB5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.sub }}</div></div>
+        <div style="height:22px;padding:0 8px;border-radius:6px;background:{{ p.chipBg }};color:{{ p.chipFg }};font-size:11px;font-weight:600;display:flex;align-items:center;flex:none">{{ p.status }}</div>
+      </div>
+      </sc-for>
+      </sc-for>
+    </sc-if>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:50%;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">Live</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:4px;border:3px solid #A39FB5;border-top-width:6px;box-sizing:border-box"></div></div><div style="font-size:12px;color:#A39FB5">Занятия</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:14px;border-radius:3px;border:3px solid #E9DDFF"></div></div><div style="font-size:12px;font-weight:600">Записи</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:5px;border:3px solid #A39FB5;transform:rotate(45deg)"></div></div><div style="font-size:12px;color:#A39FB5">Настройки</div></div>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Вход (вопрос 1) — A, экран разделов.</b> Шесть карточек 72 dp помещаются без прокрутки, у каждого раздела есть место для счёта и полосы; список внутри раздела не меняется. C собран для сравнения (<a href="#24a2">24a2</a>): при 27 элементах экран — 27 карточек и 6 заголовков, а кнопке «Добавить» приходится спрашивать раздел. B отброшен без кадра: два ряда чипов (разделы и статусы) и некуда деть счёт. Выбранный раздел не запоминается — «Репертуар» открывается на экране разделов, «Назад» из списка ведёт сюда; переключатель «Сессии | Репертуар» живёт только здесь. В шапке — общий счёт «выучено 9 из 27» на месте прежнего «5 произведений». Порядок: четыре готовых, затем свои по алфавиту; «Добавить раздел» — текстовая кнопка, не outlined.</p>
+</section>
+
+<section class="dv-turn" id="s24b">
+<div class="dv-thd"><a class="dv-tid" href="#s24b">24b</a><span class="dv-tname">Карточка раздела крупно</span></div>
+<div class="dv-opts">
+<sc-for list="{{ bigCards }}" as="c" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ c.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ c.id }}">{{ c.id }}</a>{{ c.label }}</div><div class="dv-card">
+<div style="width:380px;background:#1E1D25;border-radius:16px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE">
+  <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><div style="font-size:16px;font-weight:600">{{ c.name }}</div><div class="tn" style="font-size:13px;color:{{ c.countColor }}">{{ c.countText }}</div></div>
+  <div style="height:6px;border-radius:3px;background:#292833;display:flex;overflow:hidden;gap:2px"><sc-for list="{{ c.shares }}" as="sh" hint-placeholder-count="3"><div style="width:{{ sh.w }};background:{{ sh.c }};flex:none"></div></sc-for></div>
+  <sc-if value="{{ c.legend }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:14px;font-size:12px;color:#A39FB5;margin-top:2px"><div style="display:flex;align-items:center;gap:6px"><div style="width:8px;height:8px;border-radius:2px;background:#4A3F6E"></div>разбираю 5</div><div style="display:flex;align-items:center;gap:6px"><div style="width:8px;height:8px;border-radius:2px;background:#8B74D9"></div>учу 4</div><div style="display:flex;align-items:center;gap:6px"><div style="width:8px;height:8px;border-radius:2px;background:#C4ADFF"></div>выучено 3</div></div></sc-if>
+</div>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next">Карточка — название, «выучено 4 из 12» и полоса долей 6 dp: слева тёмное «разбираю», в середине «учу», справа светлое «выучено» — по мере выучивания полоса светлеет слева направо. Легенды на карточке нет (в <a href="#24b1">24b1</a> она показана один раз для чтения); порядок долей везде одинаковый, цвет и есть подпись. Пустой раздел — «пока пусто» и пустая дорожка; когда всё выучено, полоса целиком primary и счёт становится onSurface вместо onSurfaceVariant. Обложек последних элементов нет: шесть карточек с обложками — снова список произведений, только хуже.</p>
+</section>
+
+<section class="dv-turn" id="s24c">
+<div class="dv-thd"><a class="dv-tid" href="#s24c">24c</a><span class="dv-tname">Список раздела · пусто · меню и диалоги своего раздела</span></div>
+<div class="dv-opts">
+<sc-for list="{{ lists }}" as="s" hint-placeholder-count="8">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" keyboard="{{ s.keyboard }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none;position:relative;z-index:2"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:1px"><div style="font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.name }}</div><div class="tn" style="font-size:12px;color:#A39FB5">{{ s.countText }}</div></div>
+    <sc-if value="{{ s.own }}" hint-placeholder-val="{{ false }}"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24" fill="#E6E4EE"><circle cx="12" cy="5" r="2"></circle><circle cx="12" cy="12" r="2"></circle><circle cx="12" cy="19" r="2"></circle></svg></div></sc-if>
+    <sc-if value="{{ s.menu }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;right:8px;top:52px;width:220px;border-radius:12px;background:#292833;padding:6px;box-shadow:0 12px 32px rgba(0,0,0,.45);display:flex;flex-direction:column;z-index:3"><div style="height:44px;display:flex;align-items:center;padding:0 12px;font-size:15px;border-radius:8px">Переименовать</div><div style="height:44px;display:flex;align-items:center;padding:0 12px;font-size:15px;border-radius:8px;color:#E8565C">Удалить раздел</div></div></sc-if>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:8px 16px 0;display:flex;flex-direction:column;gap:14px">
+    <div style="height:48px;border-radius:24px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:15px;font-weight:600;color:#C4ADFF;flex:none"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 3v12M3 9h12" stroke="#C4ADFF" stroke-width="2" stroke-linecap="round"></path></svg>{{ s.addText }}</div>
+    <sc-if value="{{ s.hasAny }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;gap:8px"><sc-for list="{{ s.filters }}" as="f" hint-placeholder-count="4"><div style="height:32px;padding:0 12px;border-radius:8px;background:{{ f.bg }};border:1px solid {{ f.border }};color:{{ f.fg }};display:flex;align-items:center;font-size:13px;font-weight:{{ f.fw }};box-sizing:border-box">{{ f.name }}</div></sc-for></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ s.items }}" as="p" hint-placeholder-count="5">
+      <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:12px 14px 12px 12px;min-height:96px;box-sizing:border-box">
+        <sc-if value="{{ p.isPaper }}" hint-placeholder-val="{{ true }}"><div class="paper-s" style="width:54px;height:72px;border-radius:6px;flex:none;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)"><div style="position:absolute;inset:0;background:rgba(19,19,24,.18)"></div></div></sc-if>
+        <sc-if value="{{ p.isScale }}" hint-placeholder-val="{{ false }}"><div style="width:54px;height:72px;border-radius:6px;flex:none;background:#292833;display:flex;align-items:center;justify-content:center;overflow:hidden">{{ p.sig }}</div></sc-if>
+        <sc-if value="{{ p.isStroke }}" hint-placeholder-val="{{ false }}"><div style="width:54px;height:72px;border-radius:6px;flex:none;background:#292833;display:flex;align-items:center;justify-content:center"><svg width="30" height="30" viewBox="0 0 30 30" fill="none" stroke="#6B6880" stroke-width="1.6" stroke-linecap="round"><path d="M5 25 L25 5"></path><path d="M9 26 C13 20 20 12 26 8"></path><path d="M3 22 L8 27"></path></svg></div></sc-if>
+        <sc-if value="{{ p.isNone }}" hint-placeholder-val="{{ false }}"><div style="width:54px;height:72px;border-radius:6px;flex:none;background:#292833;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:22px;border:1.5px solid #6B6880;border-radius:2px"></div></div></sc-if>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+          <div style="font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25">{{ p.title }}</div>
+          <div style="font-size:13px;color:#A39FB5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.sub }}</div>
+          <div style="display:flex;align-items:center;gap:8px;margin-top:3px"><div style="height:22px;padding:0 8px;border-radius:6px;background:{{ p.chipBg }};color:{{ p.chipFg }};font-size:11px;font-weight:600;display:flex;align-items:center;flex:none">{{ p.status }}</div><div class="tn" style="font-size:12px;color:#A39FB5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ p.meta }}</div></div>
+        </div>
+        <div style="flex:none;text-align:right;display:flex;flex-direction:column;align-items:flex-end;gap:2px"><div class="tn" style="font-size:22px;font-weight:800;line-height:1;color:{{ p.scoreColor }}">{{ p.score }}</div><div class="tn" style="font-size:11px;color:#A39FB5">{{ p.lastDate }}</div><div class="tn" style="font-size:11px;color:#A39FB5">{{ p.takesText }}</div></div>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
+    <sc-if value="{{ s.empty }}" hint-placeholder-val="{{ false }}">
+      <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:0 32px 80px"><div style="width:120px;height:40px;opacity:.6">{{ s.emptyArt }}</div><div style="font-size:15px;line-height:1.45;color:#A39FB5;text-wrap:pretty">{{ s.emptyText }}</div></div>
+    </sc-if>
+  </div>
+  <sc-if value="{{ s.dialog }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(19,19,24,.78);display:flex;align-items:{{ s.dialogAlign }};justify-content:center;padding:32px">
+    <div style="background:#292833;border-radius:28px;padding:28px 24px;width:100%;display:flex;flex-direction:column;gap:12px">
+      <div style="font-size:24px;font-weight:700;line-height:1.2;text-wrap:balance">{{ s.dTitle }}</div>
+      <sc-if value="{{ s.dBody }}" hint-placeholder-val="{{ false }}"><div style="font-size:15px;line-height:1.45;color:#A39FB5;text-wrap:pretty">{{ s.dBody }}</div></sc-if>
+      <sc-if value="{{ s.dField }}" hint-placeholder-val="{{ false }}"><div style="position:relative;height:56px;border:1.5px solid #C4ADFF;border-radius:16px;box-sizing:border-box;display:flex;align-items:center;padding:0 16px;margin-top:6px"><div style="position:absolute;top:-8px;left:12px;padding:0 4px;background:#292833;font-size:12px;color:#C4ADFF">Название раздела</div><div style="flex:1;font-size:16px;color:{{ s.dValColor }}">{{ s.dValue }}</div><div class="tn" style="font-size:12px;color:#A39FB5">{{ s.dCount }}</div></div></sc-if>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:8px"><div style="height:40px;padding:0 16px;display:flex;align-items:center;border-radius:20px;color:#C4ADFF;font-size:14px;font-weight:600">Отмена</div><div style="height:40px;padding:0 20px;display:flex;align-items:center;border-radius:20px;background:{{ s.dBtnBg }};color:{{ s.dBtnFg }};font-size:14px;font-weight:700">{{ s.dBtn }}</div></div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Карточка гаммы (вопрос 2)</b> — на месте обложки плитка 54×72 surfaceContainerHigh с ключом и знаками при ключе (тем же движком, sp 4.5): три диеза узнаются с расстояния быстрее, чем крошечный первый такт, и это честнее буквы — букву уже говорит название. Вторая строка — «мажор · 3 октавы» / «минор гармонический · 2 октавы». <b>Штрих</b> — плитка со значком смычка, тот же серый, что у ключа: ряд штрихов выглядит ровным, не «без фото». Этюды — как произведения (у них ноты обычно есть). <b>Статусы (вопрос 3)</b> — оставляем «Разбираю · Учу» везде, третий в «Гаммах / Этюдах / Штрихах» — «Выучено», в «Произведениях» и своих разделах — «В репертуаре». Одна тройка на всё («Выучено» у концерта) сделала бы хуже главному разделу. Шапка списка: название + «выучено 2 из 7» второй строкой 12 sp; у своего раздела «⋯». Удаление своего раздела — красная кнопка, но текст говорит, что элементы переезжают в «Произведения».</p>
+</section>
+
+<section class="dv-turn" id="s24d">
+<div class="dv-thd"><a class="dv-tid" href="#s24d">24d</a><span class="dv-tname">Форма «Добавить гамму» — живой предпросмотр</span></div>
+<div class="dv-opts">
+<sc-for list="{{ scaleForms }}" as="s" hint-placeholder-count="5">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:17px;font-weight:600">{{ s.heading }}</div><div style="height:40px;padding:0 14px;display:flex;align-items:center;font-size:14px;font-weight:700;color:{{ s.saveFg }}">Сохранить</div></div>
+  <div style="flex:1;overflow:hidden"><div style="padding:8px 16px 0;display:flex;flex-direction:column;gap:18px">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:14px;font-weight:600;color:#A39FB5">Тональность</div><div class="tn" style="font-size:16px;font-weight:700;color:{{ s.keyColor }}">{{ s.keyText }}</div></div>
+      <div style="display:flex;gap:6px"><sc-for list="{{ s.tonics }}" as="t" hint-placeholder-count="7"><div style="flex:1;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:{{ t.fw }};background:{{ t.bg }};color:{{ t.fg }};border:1px solid {{ t.border }};box-sizing:border-box;opacity:{{ t.op }}">{{ t.name }}</div></sc-for></div>
+      <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><sc-for list="{{ s.accs }}" as="a" hint-placeholder-count="3"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;background:{{ a.bg }};color:{{ a.fg }};border-left:1px solid #3A3846">{{ a.name }}</div></sc-for></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;font-weight:600;color:#A39FB5">Вид</div><div style="display:flex;flex-wrap:wrap;gap:8px"><sc-for list="{{ s.kinds }}" as="k" hint-placeholder-count="4"><div style="height:36px;padding:0 12px;border-radius:10px;background:{{ k.bg }};border:1px solid {{ k.border }};color:{{ k.fg }};display:flex;align-items:center;font-size:13px;font-weight:{{ k.fw }};box-sizing:border-box">{{ k.name }}</div></sc-for></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px"><div style="font-size:14px;font-weight:600;color:#A39FB5">Октавы</div><div style="width:200px;display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><sc-for list="{{ s.octs }}" as="o" hint-placeholder-count="3"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }};border-left:1px solid #3A3846;opacity:{{ o.op }}">{{ o.name }}</div></sc-for></div></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:20px;font-weight:700;color:{{ s.nameColor }}">{{ s.nameText }}</div><sc-if value="{{ s.hasPreview }}" hint-placeholder-val="{{ false }}"><div class="tn" style="font-size:12px;color:#A39FB5">{{ s.rangeText }}</div></sc-if></div>
+      <sc-if value="{{ s.dup }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;justify-content:space-between;height:44px;padding:0 14px;border-radius:12px;background:#292833;font-size:14px"><span>Такая гамма уже есть</span><span style="color:#C4ADFF;font-weight:600">Открыть</span></div></sc-if>
+      <sc-if value="{{ s.hasPreview }}" hint-placeholder-val="{{ false }}"><div style="background:#1E1D25;border-radius:16px;padding:10px 12px;overflow:hidden">{{ s.svg }}</div></sc-if>
+      <sc-if value="{{ s.noPreview }}" hint-placeholder-val="{{ true }}"><div style="height:120px;border-radius:16px;border:1.5px dashed #3A3846;display:flex;align-items:center;justify-content:center;text-align:center;padding:0 32px;font-size:14px;line-height:1.45;color:#A39FB5;text-wrap:pretty">Выберите тонику — ноты нарисуются здесь</div></sc-if>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div style="font-size:14px;font-weight:600;color:#A39FB5">Темп</div><div style="display:flex;align-items:center;gap:8px"><div style="display:flex;gap:6px"><div class="tn" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">60</div><div class="tn" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">80</div></div><div style="display:flex;align-items:center;height:44px;border:1px solid #3A3846;border-radius:22px;overflow:hidden"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#C4ADFF">−</div><div class="tn" style="min-width:64px;text-align:center;font-size:16px;font-weight:700;color:{{ s.tempoColor }}">{{ s.tempoText }}</div><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#C4ADFF">+</div></div></div></div>
+    <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;font-weight:600;color:#A39FB5">Статус</div><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><sc-for list="{{ s.statuses }}" as="st" hint-placeholder-count="3"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:{{ st.bg }};color:{{ st.fg }};border-left:1px solid #3A3846">{{ st.name }}</div></sc-for></div></div>
+    <div style="position:relative;min-height:96px;border:1px solid #3A3846;border-radius:16px;box-sizing:border-box;padding:16px"><div style="position:absolute;top:-8px;left:12px;padding:0 4px;background:#131318;font-size:12px;color:#A39FB5">Заметки</div><div style="font-size:15px;line-height:1.5;color:#A39FB5">Аппликатура, смены позиций…</div></div>
+  </div></div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next">Три выбора — тоника с знаком, вид четырьмя чипами, октавы сегментами — и под ними название, которое собирается само (20 sp, не поле), и карточка предпросмотра в цвет экрана гаммы. Справа от названия — диапазон «G3 – G6»: он объясняет, почему у F-dur нет третьей октавы. <b>Приглушение</b>: тоника, дающая восемь знаков при выбранном знаке и виде, — α .35; октава, не влезающая в E7, — α .35; тап по приглушённому ничего не делает (без подсказки — рядом виден диапазон). Пока тоника не выбрана — dashed-карточка с текстом. Повтор — плашка «Такая гамма уже есть · Открыть» над предпросмотром, «Сохранить» приглушена (<a href="#24d5">24d5</a>). Быстрые темпы у гаммы — 60 · 80. <b>Вопрос 7:</b> в правке тональность и вид заблокированы (α .5, тап — тост «Это была бы другая гамма — добавьте новую»); октавы, темп, статус и заметки меняются.</p>
+</section>
+
+<section class="dv-turn" id="s24e">
+<div class="dv-thd"><a class="dv-tid" href="#s24e">24e</a><span class="dv-tname">Формы этюда и штриха · поле «Раздел» в правке</span></div>
+<div class="dv-opts">
+<sc-for list="{{ otherForms }}" as="s" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:17px;font-weight:600">{{ s.heading }}</div><div style="height:40px;padding:0 14px;display:flex;align-items:center;font-size:14px;font-weight:700;color:#C4ADFF">Сохранить</div></div>
+  <div style="flex:1;overflow:hidden"><div style="padding:12px 16px 0;display:flex;flex-direction:column;gap:20px">
+    <sc-if value="{{ s.strokeChips }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:-6px"><sc-for list="{{ s.chips }}" as="c" hint-placeholder-count="7"><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid {{ c.border }};background:{{ c.bg }};color:{{ c.fg }};display:flex;align-items:center;font-size:13px;font-weight:{{ c.fw }};box-sizing:border-box">{{ c.name }}</div></sc-for></div></sc-if>
+    <div style="position:relative;height:56px;border:1px solid #3A3846;border-radius:16px;box-sizing:border-box;display:flex;align-items:center;padding:0 16px"><div style="position:absolute;top:-8px;left:12px;padding:0 4px;background:#131318;font-size:12px;color:#A39FB5">Название</div><div style="flex:1;font-size:16px;color:{{ s.nameColor }}">{{ s.name }}</div><div class="tn" style="font-size:12px;color:#A39FB5">{{ s.nameCount }}</div></div>
+    <sc-if value="{{ s.hasAuthor }}" hint-placeholder-val="{{ true }}"><div style="position:relative;height:56px;border:1px solid #3A3846;border-radius:16px;box-sizing:border-box;display:flex;align-items:center;padding:0 16px"><div style="position:absolute;top:-8px;left:12px;padding:0 4px;background:#131318;font-size:12px;color:#A39FB5">{{ s.authorLabel }}</div><div style="flex:1;font-size:16px;color:{{ s.authorColor }}">{{ s.author }}</div></div></sc-if>
+    <sc-if value="{{ s.hasSection }}" hint-placeholder-val="{{ false }}"><div style="position:relative;height:56px;border:1px solid #3A3846;border-radius:16px;box-sizing:border-box;display:flex;align-items:center;padding:0 16px"><div style="position:absolute;top:-8px;left:12px;padding:0 4px;background:#131318;font-size:12px;color:#A39FB5">Раздел</div><div style="flex:1;font-size:16px">{{ s.section }}</div><svg width="12" height="12" viewBox="0 0 10 10"><path d="M2 3.5 L5 6.5 L8 3.5" fill="none" stroke="#A39FB5" stroke-width="1.6" stroke-linecap="round"></path></svg></div>
+      <sc-if value="{{ s.sectionMenu }}" hint-placeholder-val="{{ false }}"><div style="border-radius:12px;background:#292833;padding:6px;display:flex;flex-direction:column;margin-top:-12px;box-shadow:0 12px 32px rgba(0,0,0,.45)"><sc-for list="{{ s.sectionOpts }}" as="o" hint-placeholder-count="5"><div style="height:44px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;font-size:15px;border-radius:8px;background:{{ o.bg }};color:{{ o.fg }};opacity:{{ o.op }};font-weight:{{ o.fw }}">{{ o.name }}<sc-if value="{{ o.on }}" hint-placeholder-val="{{ false }}"><svg width="16" height="16" viewBox="0 0 16 16"><path d="M3 8.5 L6.5 12 L13 4.5" fill="none" stroke="#E9DDFF" stroke-width="2" stroke-linecap="round"></path></svg></sc-if></div></sc-for></div></sc-if>
+    </sc-if>
+    <sc-if value="{{ s.hasKey }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:14px;font-weight:600;color:#A39FB5">Тональность</div><div class="tn" style="font-size:16px;font-weight:700;color:{{ s.keyColor }}">{{ s.keyText }}</div></div>
+      <div style="display:flex;gap:6px"><sc-for list="{{ s.tonics }}" as="t" hint-placeholder-count="7"><div style="flex:1;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:{{ t.fw }};background:{{ t.bg }};color:{{ t.fg }};border:1px solid {{ t.border }};box-sizing:border-box">{{ t.name }}</div></sc-for></div>
+      <div style="display:flex;gap:10px"><div style="flex:1;display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><sc-for list="{{ s.accs }}" as="a" hint-placeholder-count="3"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;background:{{ a.bg }};color:{{ a.fg }};border-left:1px solid #3A3846">{{ a.name }}</div></sc-for></div><div style="flex:1.3;display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><sc-for list="{{ s.modes }}" as="m" hint-placeholder-count="2"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:{{ m.bg }};color:{{ m.fg }};border-left:1px solid #3A3846">{{ m.name }}</div></sc-for></div></div>
+    </div></sc-if>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div style="font-size:14px;font-weight:600;color:#A39FB5">Темп</div><div style="display:flex;align-items:center;gap:8px"><div style="display:flex;gap:6px"><sc-for list="{{ s.tempoChips }}" as="c" hint-placeholder-count="3"><div class="tn" style="height:32px;padding:0 10px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">{{ c }}</div></sc-for></div><div style="display:flex;align-items:center;height:44px;border:1px solid #3A3846;border-radius:22px;overflow:hidden"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#C4ADFF">−</div><div class="tn" style="min-width:64px;text-align:center;font-size:16px;font-weight:700;color:{{ s.tempoColor }}">{{ s.tempoText }}</div><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:20px;color:#C4ADFF">+</div></div></div></div>
+    <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:14px;font-weight:600;color:#A39FB5">Статус</div><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><sc-for list="{{ s.statuses }}" as="st" hint-placeholder-count="3"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:{{ st.bg }};color:{{ st.fg }};border-left:1px solid #3A3846">{{ st.name }}</div></sc-for></div></div>
+    <div style="position:relative;min-height:96px;border:1px solid #3A3846;border-radius:16px;box-sizing:border-box;padding:16px"><div style="position:absolute;top:-8px;left:12px;padding:0 4px;background:#131318;font-size:12px;color:#A39FB5">Заметки</div><div style="font-size:15px;line-height:1.5;color:{{ s.notesColor }};text-wrap:pretty">{{ s.notes }}</div></div>
+  </div></div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next">Этюд — форма произведения с подписью «Автор». Штрих — без автора и тональности; над названием ряд чипов-подсказок 32 dp, тап подставляет слово в поле и подсвечивает чип; при ручном вводе подсветка снимается. Поле «Раздел» в правке — outlined-поле с шевроном, меню тем же списком разделов; «Гаммы» в меню приглушены (α .35) для не-гаммы, у гаммы поля «Раздел» нет вовсе.</p>
+</section>
+
+<section class="dv-turn" id="s24f">
+<div class="dv-thd"><a class="dv-tid" href="#s24f">24f</a><span class="dv-tname">Экран гаммы — нарисованные ноты</span></div>
+<div class="dv-opts">
+<sc-for list="{{ scaleScreens }}" as="s" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1"></div><div style="height:40px;padding:0 14px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Изменить</div></div>
+  <div style="flex:1;overflow:hidden"><div style="display:flex;flex-direction:column;gap:22px;padding:4px 16px 24px">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:28px;font-weight:700;line-height:1.15">{{ s.title }}</div>
+      <div style="font-size:16px;color:#A39FB5">{{ s.sub }}</div>
+      <div style="display:flex;align-items:center;gap:10px;margin-top:6px"><div style="height:32px;padding:0 10px;border-radius:8px;background:{{ s.chipBg }};color:{{ s.chipFg }};font-size:13px;font-weight:600;display:flex;align-items:center;gap:6px">{{ s.status }}<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 3.5 L5 6.5 L8 3.5" fill="none" stroke="{{ s.chipFg }}" stroke-width="1.6" stroke-linecap="round"></path></svg></div><div class="tn" style="font-size:14px;color:#A39FB5">♩ = 60</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:16px;font-weight:700">Ноты</div><div class="tn" style="font-size:13px;color:#A39FB5">{{ s.rangeText }}</div></div>
+      <div style="background:{{ s.cardBg }};border-radius:16px;padding:10px 12px;position:relative;overflow:hidden">{{ s.svg }}
+        <sc-if value="{{ s.collapsed }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:0;right:0;bottom:0;height:72px;background:linear-gradient(rgba(30,29,37,0),{{ s.cardBg }} 70%);display:flex;align-items:flex-end;justify-content:center;padding-bottom:10px"><div style="height:32px;padding:0 14px;border-radius:16px;background:#292833;color:#C4ADFF;font-size:13px;font-weight:600;display:flex;align-items:center">{{ s.moreText }}</div></div></sc-if>
+      </div>
+      <sc-if value="{{ s.hasPhotos }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:10px;overflow:hidden"><div class="paper-s" style="width:84px;height:112px;border-radius:8px;flex:none;position:relative;overflow:hidden;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)"><div style="position:absolute;inset:0;background:rgba(19,19,24,.18)"></div><div class="tn" style="position:absolute;left:6px;bottom:6px;height:18px;min-width:18px;padding:0 5px;border-radius:5px;background:rgba(19,19,24,.75);font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center;box-sizing:border-box">1</div></div><div style="width:84px;height:112px;border-radius:8px;flex:none;border:1.5px dashed #3A3846;box-sizing:border-box;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;color:#C4ADFF"><svg width="18" height="18" viewBox="0 0 18 18"><path d="M9 3v12M3 9h12" stroke="#C4ADFF" stroke-width="2" stroke-linecap="round"></path></svg><div style="font-size:11px;font-weight:600">Добавить</div></div></div></sc-if>
+      <sc-if value="{{ s.noPhotos }}" hint-placeholder-val="{{ true }}"><div style="height:40px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF;padding-left:4px"><svg width="16" height="16" viewBox="0 0 18 18"><path d="M9 3v12M3 9h12" stroke="#C4ADFF" stroke-width="2" stroke-linecap="round"></path></svg>Добавить фото нот</div></sc-if>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div><div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700">Записать дубль</div><div style="font-size:13px;color:#A39FB5;line-height:1.4;margin-top:3px">Экран не подсказывает во время записи — разбор появится после.</div></div></div>
+    <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:16px;font-weight:700">Заметки</div><div style="background:#1E1D25;border-radius:16px;padding:14px 16px;font-size:15px;line-height:1.5;text-wrap:pretty">{{ s.notes }}</div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:16px"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><div class="tn" style="font-size:13px;color:#A39FB5;white-space:nowrap">последний <span style="color:#E6E4EE;font-weight:700">88 %</span> · лучший <span style="color:#E6E4EE;font-weight:700">90 %</span></div><div class="tn" style="font-size:13px;color:#A39FB5">9 дублей</div></div><svg width="120" height="44" viewBox="0 0 160 44" preserveAspectRatio="none" style="flex:none;overflow:visible"><line x1="0" y1="22" x2="160" y2="22" stroke="#3A3846" stroke-dasharray="3 3"></line><polyline points="{{ progLine }}" fill="none" stroke="#C4ADFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline></svg></div>
+  </div></div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="24f4"><div class="dv-olabel"><a class="dv-oid" href="#24f4">24f4</a>Landscape 892×412 — слева шапка, запись, прогресс; справа ноты во всю ширину колонки и остальное</div><div class="dv-card">
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;flex-direction:column;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif">
+  <div style="display:flex;align-items:center;gap:4px;padding:2px 4px 0;height:48px;flex:none"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1"></div><div style="height:40px;padding:0 14px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Изменить</div></div>
+  <div style="flex:1;display:flex;gap:24px;padding:0 20px 0 16px;min-height:0">
+    <div style="width:280px;flex:none;display:flex;flex-direction:column;gap:18px">
+      <div style="display:flex;flex-direction:column;gap:4px"><div style="font-size:24px;font-weight:700;line-height:1.15">G-dur · 3 октавы</div><div style="font-size:14px;color:#A39FB5">мажор</div><div style="display:flex;align-items:center;gap:10px;margin-top:4px"><div style="height:28px;padding:0 10px;border-radius:8px;background:#1F3A2C;color:#9FE4BE;font-size:12px;font-weight:600;display:flex;align-items:center">Выучено</div><div class="tn" style="font-size:13px;color:#A39FB5">♩ = 60</div></div></div>
+      <div style="display:flex;align-items:center;gap:14px"><div style="width:64px;height:64px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none"><div style="width:24px;height:24px;border-radius:50%;background:#2E1A6E"></div></div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700">Записать дубль</div><div style="font-size:12px;color:#A39FB5;line-height:1.4;margin-top:2px">Экран не подсказывает во время записи — разбор появится после.</div></div></div>
+      <div style="background:#1E1D25;border-radius:16px;padding:12px 14px;display:flex;align-items:center;gap:12px"><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><div class="tn" style="font-size:12px;color:#A39FB5;white-space:nowrap">последний <span style="color:#E6E4EE;font-weight:700">88 %</span> · лучший <span style="color:#E6E4EE;font-weight:700">90 %</span></div><div class="tn" style="font-size:12px;color:#A39FB5">9 дублей</div></div><svg width="90" height="40" viewBox="0 0 160 44" preserveAspectRatio="none" style="flex:none;overflow:visible"><line x1="0" y1="22" x2="160" y2="22" stroke="#3A3846" stroke-dasharray="3 3"></line><polyline points="{{ progLine }}" fill="none" stroke="#C4ADFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline></svg></div>
+    </div>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;overflow:hidden">
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:15px;font-weight:700">Ноты</div><div class="tn" style="font-size:12px;color:#A39FB5">G3 – G6</div></div><div style="background:#1E1D25;border-radius:14px;padding:8px 10px;overflow:hidden">{{ landSvg }}</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:15px;font-weight:700">Заметки</div><div style="background:#1E1D25;border-radius:14px;padding:12px 14px;font-size:14px;line-height:1.45;text-wrap:pretty">Третья октава — смена на 2-й палец на струне Ми. Вниз не торопиться.</div></div>
+    </div>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Цвет (вопрос 4)</b> — на экране гаммы тёмная карточка surfaceContainer и светлые ноты (чернила `ink.dark` #DDD9E8, α 1): бумага (<a href="#24f2">24f2</a>) — единственный белый прямоугольник на тёмном экране, он режет и спорит с кнопкой записи. Бумага остаётся пюпитру. <b>Целиком или свёрнуто</b>: sp 7.5 в карточке (356 dp внутри) — гамма в три октавы это три системы, ~290 dp; показываем целиком до трёх систем, дальше — две и таблетка «ещё N систем» (<a href="#24f3">24f3</a>, сворачивание бывает на экранах уже 360 dp). Тап по нотам — пюпитр. Справа от заголовка «Ноты» — диапазон, не «стр.». Под нотами — лента фото, как у произведения, а без фото — текстовая кнопка «Добавить фото нот», не dashed-карточка: у гаммы ноты уже есть. Название гаммы на экране — «G-dur · 3 октавы», под ним «мажор» / «минор гармонический» второй строкой на месте композитора.</p>
+</section>
+
+<section class="dv-turn" id="s24g">
+<div class="dv-thd"><a class="dv-tid" href="#s24g">24g</a><span class="dv-tname">Гамма на пюпитре</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="24g1"><div class="dv-olabel"><a class="dv-oid" href="#24g1">24g1</a>Портрет — G-dur, 3 октавы, sp 10: четыре системы на листе, панель показана, «1 / 2» (дальше фото)</div><div class="dv-card">
+<div style="width:412px;height:892px;border-radius:24px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#0E0E12;color:#E6E4EE;position:relative;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif">
+  <div style="position:absolute;left:24px;right:24px;top:72px;background:#ECE8DF;border-radius:6px;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:14px 0 18px;overflow:hidden">{{ standP }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:64px;background:linear-gradient(rgba(14,14,18,.92),rgba(14,14,18,0));display:flex;align-items:center;padding:8px 8px 0"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div class="tn" style="flex:1;text-align:center;font-size:15px;font-weight:600">1 / 2</div><div style="width:48px"></div></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;height:112px;background:linear-gradient(rgba(14,14,18,0),rgba(14,14,18,.92));display:flex;align-items:flex-end;justify-content:center;padding-bottom:20px"><div style="display:flex;align-items:center;gap:12px;height:56px;padding:0 20px 0 6px;border-radius:28px;background:rgba(41,40,51,.9)"><div style="width:44px;height:44px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:16px;height:16px;border-radius:50%;background:#2E1A6E"></div></div><div style="font-size:14px;font-weight:600">Записать дубль</div></div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="24g2"><div class="dv-olabel"><a class="dv-oid" href="#24g2">24g2</a>Идёт запись, панель спрятана — капсула «● 1:12 · 1 / 2»; лист без плёнки</div><div class="dv-card">
+<div style="width:412px;height:892px;border-radius:24px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#0E0E12;color:#E6E4EE;position:relative;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif">
+  <div style="position:absolute;left:24px;right:24px;top:72px;background:#ECE8DF;border-radius:6px;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:14px 0 18px;overflow:hidden">{{ standP2 }}</div>
+  <div class="tn" style="position:absolute;right:16px;top:16px;display:flex;align-items:center;gap:8px;height:28px;padding:0 10px;border-radius:14px;background:rgba(14,14,18,.7);font-size:12px;font-weight:600;color:#A39FB5"><div style="width:8px;height:8px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div>1:12 · 1 / 2</div>
+</div>
+</div></div>
+<div class="dv-opt" id="24g3"><div class="dv-olabel"><a class="dv-oid" href="#24g3">24g3</a>Увеличение щипком 1.6× — прокрутка листа по обеим осям, масштаб сбрасывается при смене страницы</div><div class="dv-card">
+<div style="width:412px;height:892px;border-radius:24px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#0E0E12;color:#E6E4EE;position:relative;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif">
+  <div style="position:absolute;left:-120px;right:-160px;top:20px;background:#ECE8DF;border-radius:6px;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:22px 0;overflow:hidden">{{ standZoom }}</div>
+  <div style="position:absolute;right:8px;top:160px;width:3px;height:140px;border-radius:2px;background:rgba(230,228,238,.35)"></div>
+</div>
+</div></div>
+<div class="dv-opt" id="24g4"><div class="dv-olabel"><a class="dv-oid" href="#24g4">24g4</a>Landscape 892×412 — a-moll мелодический, 2 октавы, sp 10: две системы по 15 и 14 нот; лист по ширине минус 96 с краёв</div><div class="dv-card">
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#0E0E12;color:#E6E4EE;position:relative;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif">
+  <div style="position:absolute;left:96px;right:96px;top:24px;background:#ECE8DF;border-radius:6px 6px 0 0;box-shadow:0 12px 40px rgba(0,0,0,.5);padding:14px 0 30px;overflow:hidden">{{ standL }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:64px;background:linear-gradient(rgba(14,14,18,.92),rgba(14,14,18,0));display:flex;align-items:center;padding:8px 8px 0"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div class="tn" style="flex:1;text-align:center;font-size:15px;font-weight:600">1 / 1</div><div style="width:48px"></div></div>
+  <div style="position:absolute;right:20px;bottom:16px;display:flex;align-items:center;gap:12px;height:56px;padding:0 20px 0 6px;border-radius:28px;background:rgba(41,40,51,.9)"><div style="width:44px;height:44px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:16px;height:16px;border-radius:50%;background:#2E1A6E"></div></div><div style="font-size:14px;font-weight:600">Записать дубль</div></div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">Первая страница пюпитра — нарисованная гамма на `paper` тёмными чернилами `ink.paper` #2A2724, как фотография; лист по высоте — сколько систем, столько и лист (портрет: 4 системы × 130 = 520 + поля). sp на пюпитре 10 (просили не меньше 10): головка ≈ 12 dp, с 60–80 см читается. Панель, зоны перелистывания, таблетка и капсула записи — из 13f без изменений; у нарисованной страницы нет корзины (удалять нечего). Landscape — лист 700 dp, sp 10, 27 нот в системе: двухоктавная гамма в 29 нот делится на 15 + 14, а не на 27 + 2.</p>
+</section>
+
+<section class="dv-turn" id="s24h" style="width:max-content;min-width:100%;box-sizing:border-box">
+<div class="dv-thd"><a class="dv-tid" href="#s24h">24h</a><span class="dv-tname">Эталоны нотной графики · лист метрик</span></div>
+<div style="display:flex;flex-direction:column;gap:22px">
+<sc-for list="{{ refs }}" as="r" hint-placeholder-count="6">
+<div class="dv-opt" id="{{ r.id }}" style="width:960px"><div class="dv-olabel" style="max-width:none"><a class="dv-oid" href="#{{ r.id }}">{{ r.id }}</a>{{ r.label }}</div><div style="background:#ECE8DF;border-radius:8px;padding:14px 0 18px;overflow:hidden;width:960px;flex:none">{{ r.svg }}</div></div>
+</sc-for>
+<div class="dv-opt" id="24h7" style="width:100%"><div class="dv-olabel"><a class="dv-oid" href="#24h7">24h7</a>Лист метрик — все величины в долях sp (расстояние между линейками)</div>
+<div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,.5fr) minmax(0,1.8fr)">
+  <div class="h">Величина</div><div class="h">sp</div><div class="h">Пояснение</div>
+  <sc-for list="{{ notationSizes }}" as="z" hint-placeholder-count="20"><div style="font-weight:600">{{ z.name }}</div><div class="mono">{{ z.v }}</div><div style="color:#A39FB5">{{ z.note }}</div></sc-for>
+</div></div>
+</div>
+<p class="dv-next"><b>Штили (вопрос 5) — четверти со штилями</b>: штиль вверх у нот ниже средней линейки (позиция &lt; 4), вниз — от средней и выше; звукоряд из головок выглядит как таблица, а со штилями — как строчка из сборника гамм. Вариант без штилей не рисуем отдельно — он равен эталонам минус штили. <b>Перенос</b>: ноты делятся между системами поровну по числу (43 → 15 · 14 · 14), а не «вверх / вниз»: разрыв на вершине оставляет вторую систему короче на одну ноту, а с sp 10 на пюпитре вершина всё равно не влезает в одну систему. Случайные знаки: правило состояния — знак ставится, когда высота ноты отличается от текущего состояния этой ступени в этой октаве (в начале гаммы состояние = знаки при ключе); состояние не сбрасывается на переносе системы — тактов нет, гамма одна фраза. Отсюда ♮ на спуске мелодического минора, даже если спуск начинается с новой системы. Поднятая VII в gis-moll — F𝄪 (<a href="#24h3">24h3</a>). «8va» — ноты от позиции 20 (выше пятой добавочной) рисуются октавой ниже под пунктиром с надписью (<a href="#24h5">24h5</a>).</p>
+</section>
+
+<section class="dv-turn" id="s24i">
+<div class="dv-thd"><a class="dv-tid" href="#s24i">24i</a><span class="dv-tname">Счёт и график выученного — варианты</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="24i1"><div class="dv-olabel"><a class="dv-oid" href="#24i1">24i1</a>Ступенчатая линия за 6 месяцев (накопительно, последнее значение точкой) — не выбрана</div><div class="dv-card">
+<div style="width:380px;background:#1E1D25;border-radius:16px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:8px;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE">
+  <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:16px;font-weight:600">Произведения</div><div class="tn" style="font-size:13px;color:#A39FB5">выучено 3 из 12</div></div>
+  <svg width="348" height="36" viewBox="0 0 348 36" style="display:block;overflow:visible"><polyline points="{{ stepLine }}" fill="none" stroke="#C4ADFF" stroke-width="2" stroke-linejoin="round"></polyline><circle cx="344" cy="{{ stepLastY }}" r="4" fill="#1E1D25" stroke="#C4ADFF" stroke-width="2"></circle></svg>
+</div>
+</div></div>
+<div class="dv-opt" id="24i2"><div class="dv-olabel"><a class="dv-oid" href="#24i2">24i2</a>Полоса долей «разбираю / учу / выучено» — выбрана (= 24b)</div><div class="dv-card">
+<div style="width:380px;background:#1E1D25;border-radius:16px;padding:14px 16px 16px;display:flex;flex-direction:column;gap:10px;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE">
+  <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:16px;font-weight:600">Произведения</div><div class="tn" style="font-size:13px;color:#A39FB5">выучено 3 из 12</div></div>
+  <div style="height:6px;border-radius:3px;background:#292833;display:flex;overflow:hidden;gap:2px"><div style="width:41.6%;background:#4A3F6E"></div><div style="width:33.3%;background:#8B74D9"></div><div style="width:25%;background:#C4ADFF"></div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="24i3"><div class="dv-olabel"><a class="dv-oid" href="#24i3">24i3</a>Пустая история: всё выучено сегодня · ничего не выучено · раздел пуст — линия слева, полоса справа</div><div class="dv-card">
+<div style="width:560px;display:grid;grid-template-columns:1fr 1fr;gap:10px;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE">
+  <sc-for list="{{ emptyCharts }}" as="e" hint-placeholder-count="6">
+  <div style="background:#1E1D25;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:14px;font-weight:600">{{ e.name }}</div><div class="tn" style="font-size:12px;color:#A39FB5">{{ e.countText }}</div></div>
+    <sc-if value="{{ e.isLine }}" hint-placeholder-val="{{ true }}"><svg width="100%" height="28" viewBox="0 0 240 28" preserveAspectRatio="none" style="display:block;overflow:visible"><polyline points="{{ e.pts }}" fill="none" stroke="{{ e.lineColor }}" stroke-width="2" stroke-linejoin="round"></polyline><sc-if value="{{ e.dot }}" hint-placeholder-val="{{ false }}"><circle cx="236" cy="{{ e.lastY }}" r="4" fill="#1E1D25" stroke="#C4ADFF" stroke-width="2"></circle></sc-if></svg></sc-if>
+    <sc-if value="{{ e.isBar }}" hint-placeholder-val="{{ false }}"><div style="height:6px;border-radius:3px;background:#292833;display:flex;overflow:hidden;gap:2px"><sc-for list="{{ e.shares }}" as="sh" hint-placeholder-count="3"><div style="width:{{ sh.w }};background:{{ sh.c }};flex:none"></div></sc-for></div></sc-if>
+  </div>
+  </sc-for>
+</div>
+</div></div>
+<div class="dv-opt" id="24i4"><div class="dv-olabel"><a class="dv-oid" href="#24i4">24i4</a>Экран разделов в landscape 892×412 — две колонки карточек</div><div class="dv-card">
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;flex-direction:column;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif">
+  <div style="padding:14px 20px 0;display:flex;align-items:center;gap:20px"><div style="font-size:24px;font-weight:700">Записи</div><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:36px;width:260px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600">Сессии</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;background:#5B43B8;color:#E9DDFF;border-left:1px solid #3A3846">Репертуар</div></div><div style="flex:1"></div><div class="tn" style="font-size:13px;color:#A39FB5">выучено 9 из 27</div></div>
+  <div style="flex:1;padding:14px 20px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px 10px;align-content:start">
+    <sc-for list="{{ sections }}" as="c" hint-placeholder-count="6">
+    <div style="background:#1E1D25;border-radius:14px;padding:12px 14px 14px;display:flex;flex-direction:column;gap:9px"><div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><div style="font-size:15px;font-weight:600">{{ c.name }}</div><div class="tn" style="font-size:12px;color:#A39FB5">{{ c.countText }}</div></div><div style="height:6px;border-radius:3px;background:#292833;display:flex;overflow:hidden;gap:2px"><sc-for list="{{ c.shares }}" as="sh" hint-placeholder-count="3"><div style="width:{{ sh.w }};background:{{ sh.c }};flex:none"></div></sc-for></div></div>
+    </sc-for>
+    <div style="height:40px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;color:#C4ADFF;padding-left:4px"><svg width="14" height="14" viewBox="0 0 18 18"><path d="M9 3v12M3 9h12" stroke="#C4ADFF" stroke-width="2" stroke-linecap="round"></path></svg>Добавить раздел</div>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>График (вопрос 6) — полоса долей.</b> Ступенчатая линия за полгода у скрипача-любителя — 0 → 1 → 1 → 2 → 3 → 3: почти горизонталь, которая у нового пользователя вовсе лежит на нуле (<a href="#24i3">24i3</a> слева), а «опускаться» ей нельзя по смыслу — сюжет не складывается. Полоса показывает то, что владелец спросил — «количество», причём всех трёх сортов сразу, и честна с первого дня. Цвета — три тона фиолетового `learn.parse / learn.study / learn.done`, никакого зелёного: «выучено» — самый светлый, взгляд идёт слева направо к светлому. Общая строка «выучено 9 из 27» — в шапке «Записей», отдельной карточки итога нет. Праздника при переходе в «Выучено» нет — только чип меняет цвет (crossfade 150 мс) и полоса раздела доезжает при возврате.</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · разделы, гаммы, нотная графика</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(520px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Новые токены</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Значение</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="6"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp / sp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Элемент</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="12"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="6"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты</div>
+  <div style="color:#A39FB5">Разделы: «Произведения · Гаммы · Этюды · Штрихи», «Добавить раздел», «выучено 4 из 12», «пока пусто», «всё выучено»; шапка «Записей» — «выучено 9 из 27». Список: «Добавить произведение / гамму / этюд / штрих», в своём — «Добавить»; пусто: гаммы — «Выберите гамму — приложение нарисует её ноты», этюды — «Этюды живут здесь: ноты, заметки, дубли.», штрихи — «Штрихи, над которыми работаете: деташе, спиккато, мартле…», свой — «В разделе пока ничего нет.». Меню «⋯»: «Переименовать», «Удалить раздел». Диалоги: «Новый раздел» / «Переименовать раздел» — поле «Название раздела» (24), кнопки «Создать» / «Сохранить»; «Удалить „Двойные ноты“?» — «Два элемента переедут в „Произведения“. Записи останутся.» / «Удалить». Статусы: «Разбираю · Учу · Выучено» в Гаммах / Этюдах / Штрихах, «Разбираю · Учу · В репертуаре» в остальных. Гамма: «Новая гамма» / «Гамма», «Тональность», «Вид»: «мажор · минор натуральный · минор гармонический · минор мелодический», «Октавы», имя «G-dur · 3 октавы» / «a-moll гармонический · 2 октавы» / «1 октава», диапазон «G3 – G6», «Выберите тонику — ноты нарисуются здесь», «Такая гамма уже есть · Открыть», тост «Это была бы другая гамма — добавьте новую». Этюд: «Автор». Штрих: чипы «Деташе · Легато · Стаккато · Спиккато · Мартле · Сотийе · Рикошет». Правка: поле «Раздел». Экран гаммы: «Ноты», «Добавить фото нот», «ещё 2 системы».</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Правила</div>
+  <div style="color:#A39FB5">Тональность допустима при |fifths| ≤ 7, где fifths = F(буква) + 7·знак − (минор ? 3 : 0), F: F −1, C 0, G 1, D 2, A 3, E 4, B 5. Нижняя тоника — первая ≥ G3 (MIDI 55); октавы допустимы, пока тоника + 12·окт ≤ E7 (MIDI 100). Немецкие имена: диез «is», бемоль «es» (Es, As), B♭ → «B», B → «H», минор строчной. Уникальность гаммы — по (тоника, знак, вид, октавы). Выученным считается третий статус; дата перехода хранится; возврат в «Учу» убирает из счёта. Доли полосы — текущие статусы элементов раздела. Удаление своего раздела переносит элементы в «Произведения». Сортировка карточек разделов: четыре готовых, затем свои по алфавиту.</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">NOTATION — векторные знаки (единицы sp, y вниз)</div>
+  <div style="color:#A39FB5;margin-bottom:8px">Рисовать `Path` с `translate(x, y) · scale(sp)`; ключ — контурный (stroke .18 sp, круглые концы), остальные — заливка. `box` — [x0, y0, x1, y1] относительно якоря.</div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{ notationList }}" as="n" hint-placeholder-count="6">
+    <div style="background:#15151B;border-radius:12px;padding:10px 12px;display:flex;gap:14px;align-items:flex-start"><div style="width:56px;height:72px;flex:none;background:#ECE8DF;border-radius:6px;display:flex;align-items:center;justify-content:center">{{ n.preview }}</div><div style="min-width:0;flex:1"><div style="display:flex;gap:10px;align-items:baseline"><span class="mono" style="font-weight:700;color:#E6E4EE">{{ n.name }}</span><span class="mono" style="color:#A39FB5">box {{ n.box }}</span></div><div style="font-size:12px;color:#A39FB5;margin:2px 0 6px">{{ n.anchor }}</div><div class="mono" style="color:#A39FB5;font-size:10.5px;line-height:1.45;overflow-wrap:anywhere">{{ n.d }}</div></div></div>
+    </sc-for>
+  </div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const ON = '#E6E4EE', OV = '#A39FB5', PC = '#5B43B8', OPC = '#E9DDFF', OUT = '#3A3846', SC = '#1E1D25', SCH = '#292833', PR = '#C4ADFF';
+    const G = '#47C97E', Y = '#E5B03C', R = '#E8565C';
+    const LP = '#4A3F6E', LS = '#8B74D9', LD = '#C4ADFF';
+    const INK_DARK = '#DDD9E8', INK_PAPER = '#2A2724', PAPER = '#ECE8DF';
+
+    // ---------- theory
+    const LET = ['C', 'D', 'E', 'F', 'G', 'A', 'B'];
+    const LSTEP = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+    const LFIFTH = { F: -1, C: 0, G: 1, D: 2, A: 3, E: 4, B: 5 };
+    const SHARPS = ['F', 'C', 'G', 'D', 'A', 'E', 'B'], FLATS = ['B', 'E', 'A', 'D', 'G', 'C', 'F'];
+    const KS_POS = { 1: { F: 8, C: 5, G: 9, D: 6, A: 3, E: 7, B: 4 }, '-1': { B: 4, E: 7, A: 3, D: 6, G: 2, C: 5, F: 1 } };
+    const fifthsOf = (L, acc, mode) => LFIFTH[L] + 7 * acc - (mode === 'major' ? 0 : 3);
+    const sigMap = f => { const m = {}; LET.forEach(l => m[l] = 0); if (f > 0) SHARPS.slice(0, f).forEach(l => m[l] = 1); if (f < 0) FLATS.slice(0, -f).forEach(l => m[l] = -1); return m; };
+    const germanName = (L, acc, mode) => { let n = L === 'B' ? (acc === 1 ? 'His' : acc === -1 ? 'B' : 'H') : L + (acc === 1 ? 'is' : acc === -1 ? (L === 'E' || L === 'A' ? 's' : 'es') : ''); return mode === 'major' ? n : n.toLowerCase(); };
+    const MODE_RU = { major: 'мажор', nat: 'минор натуральный', harm: 'минор гармонический', mel: 'минор мелодический' };
+    const midiOf = (L, acc, oct) => 12 * (oct + 1) + LSTEP[L] + acc;
+    const lowOct = (L, acc) => { let o = 3; while (midiOf(L, acc, o) < 55) o++; return o; };
+    const octsOk = (L, acc, n) => midiOf(L, acc, lowOct(L, acc)) + 12 * n <= 100;
+    const octWord = n => n === 1 ? '1 октава' : `${n} октавы`;
+    function buildScale(L, acc, mode, octs) {
+      const f = fifthsOf(L, acc, mode); if (Math.abs(f) > 7) return null;
+      const sig = sigMap(f), li = LET.indexOf(L), o0 = lowOct(L, acc);
+      const deg = (d, up) => { const dg = d % 7; const Ln = LET[(li + dg) % 7]; const oct = o0 + Math.floor((li + dg) / 7) + Math.floor(d / 7); let a = sig[Ln]; if (mode === 'harm' && dg === 6) a += 1; if (mode === 'mel' && up && (dg === 5 || dg === 6)) a += 1; return { L: Ln, oct, a, p: oct * 7 + LET.indexOf(Ln) - 30 }; };
+      const notes = []; for (let d = 0; d <= 7 * octs; d++) notes.push(deg(d, true)); for (let d = 7 * octs - 1; d >= 0; d--) notes.push(deg(d, false));
+      const modeSuffix = mode === 'major' ? '-dur' : '-moll' + (mode === 'harm' ? ' гармонический' : mode === 'mel' ? ' мелодический' : '');
+      const octN = n => `${LET[0] === 'C' ? '' : ''}${n}`;
+      const topMidi = midiOf(L, acc, o0) + 12 * octs;
+      const nm = (m) => { const names = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B']; return names[m % 12] + (Math.floor(m / 12) - 1); };
+      return { L, acc, mode, octs, fifths: f, sig, notes, key: germanName(L, acc, mode) + modeSuffix, name: `${germanName(L, acc, mode)}${modeSuffix} · ${octWord(octs)}`, sub: `${MODE_RU[mode]} · ${octWord(octs)}`, range: `${nm(midiOf(L, acc, o0))} – ${nm(topMidi)}`.replace(/♭|♯/g, m => m), n: notes.length };
+    }
+
+    // ---------- glyphs
+    const ellipsePath = (a, b, th) => { const c = Math.cos(th), s = Math.sin(th), k = 0.5523; const T = (x, y) => [(x * c - y * s).toFixed(3), (x * s + y * c).toFixed(3)]; const P = [[a, 0], [a, k * b], [k * a, b], [0, b], [-k * a, b], [-a, k * b], [-a, 0], [-a, -k * b], [-k * a, -b], [0, -b], [k * a, -b], [a, -k * b]].map(([x, y]) => T(x, y)); return `M${P[0]}C${P[1]} ${P[2]} ${P[3]}C${P[4]} ${P[5]} ${P[6]}C${P[7]} ${P[8]} ${P[9]}C${P[10]} ${P[11]} ${P[0]}Z`; };
+    const GL = {
+      'clef-treble': { stroke: .18, box: '[-1.9, -6.4, 2.0, 3.2]', anchor: 'якорь — линейка соль (2-я снизу), x — центр большой петли; ставится на x = pad + 1.6 sp', d: 'M -0.7 2.6 C -0.7 3.15 0.25 3.2 0.35 2.5 C 0.5 1.4 0.25 -3.6 0.12 -5.2 C 0.02 -6.3 -0.75 -6.3 -1.05 -5.1 C -1.3 -4.0 -0.7 -2.9 0.4 -1.9 C 1.5 -1.0 1.85 0.2 1.1 1.0 C 0.35 1.75 -1.15 1.55 -1.35 0.35 C -1.5 -0.6 -0.75 -1.35 0.15 -1.15 C 0.95 -0.95 1.0 0.2 0.15 0.35 C -0.45 0.45 -0.8 -0.05 -0.6 -0.5' },
+      sharp: { box: '[-0.55, -1.15, 0.55, 1.15]', anchor: 'центр по высоте ноты; ставится на x = xNote − 1.35 sp', d: 'M -0.32 -0.95 h 0.1 v 2.1 h -0.1 z M 0.22 -1.15 h 0.1 v 2.1 h -0.1 z M -0.55 -0.12 L 0.55 -0.45 L 0.55 -0.15 L -0.55 0.18 z M -0.55 0.58 L 0.55 0.25 L 0.55 0.55 L -0.55 0.88 z' },
+      flat: { box: '[-0.4, -1.75, 0.55, 0.9]', anchor: 'центр по высоте ноты (стержень уходит на 1.75 sp вверх)', d: 'M -0.4 -1.75 h 0.1 v 2.6 h -0.1 z M -0.3 0.85 C 0.35 0.4 0.6 -0.15 0.35 -0.5 C 0.1 -0.85 -0.3 -0.6 -0.3 -0.3 L -0.3 -0.02 C -0.12 -0.38 0.22 -0.3 0.22 0.0 C 0.22 0.3 -0.02 0.55 -0.3 0.85 z' },
+      natural: { box: '[-0.3, -1.1, 0.3, 1.1]', anchor: 'центр по высоте ноты', d: 'M -0.3 -1.1 h 0.1 v 1.65 h -0.1 z M 0.2 -0.55 h 0.1 v 1.65 h -0.1 z M -0.3 -0.3 L 0.3 -0.55 L 0.3 -0.25 L -0.3 0.0 z M -0.3 0.25 L 0.3 0.0 L 0.3 0.3 L -0.3 0.55 z' },
+      'double-sharp': { box: '[-0.5, -0.5, 0.5, 0.5]', anchor: 'центр по высоте ноты', d: 'M 0 -0.14 L 0.32 -0.5 L 0.5 -0.5 L 0.5 -0.32 L 0.14 0 L 0.5 0.32 L 0.5 0.5 L 0.32 0.5 L 0 0.14 L -0.32 0.5 L -0.5 0.5 L -0.5 0.32 L -0.14 0 L -0.5 -0.32 L -0.5 -0.5 L -0.32 -0.5 z' },
+      notehead: { box: '[-0.66, -0.55, 0.66, 0.55]', anchor: 'центр головки = (x ноты, y позиции); эллипс 0.62 × 0.43 sp, наклон −20°', d: ellipsePath(.62, .43, -20 * Math.PI / 180) },
+    };
+    const glyph = (name, x, y, ink, key) => { const g = GL[name]; return h('path', { key, d: g.d, transform: `translate(${x.toFixed(2)} ${y.toFixed(2)}) scale(1)`, ...(g.stroke ? { fill: 'none', stroke: ink, strokeWidth: g.stroke, strokeLinecap: 'round', strokeLinejoin: 'round' } : { fill: ink }) }); };
+    const ACC_GLYPH = { 1: 'sharp', '-1': 'flat', 0: 'natural', 2: 'double-sharp' };
+
+    // ---------- engraving metrics (sp)
+    const M = { line: .1, stem: .12, ledger: .14, ledgerExt: .32, barThin: .12, barThick: .45, barGap: .35, stemLen: 3.5, pad: .8, clefW: 3.4, clefGap: .7, ksStep: .95, ksGap: 1.6, noteStep: 2.4, accExtra: 1.1, sysTop: 6, sysBottom: 3, sysH: 13, ovaP: 20 };
+    function engrave(sc, { sp, width, ink, maxSystems }) {
+      const k = Math.abs(sc.fifths);
+      const x0 = M.pad + M.clefW + M.clefGap + (k ? k * M.ksStep + M.ksGap : M.ksGap);
+      const W = width / sp, avail = W - x0 - M.pad - 1.4;
+      const need = (n, st) => (st[n.L + n.oct] ?? sc.sig[n.L]) !== n.a;
+      const split = (perLine) => { const lines = []; let cur = [], st = {}, x = 0; sc.notes.forEach(n => { let acc = need(n, st); let w = M.noteStep + (acc ? M.accExtra : 0); if (cur.length && (x + w > avail || (perLine && cur.length >= perLine))) { lines.push(cur); cur = []; x = 0; } st[n.L + n.oct] = n.a; cur.push({ ...n, acc, w }); x += w; }); lines.push(cur); return lines; };
+      let lines = split(0); const total = lines.length; if (total > 1) lines = split(Math.ceil(sc.notes.length / total));
+      const shown = maxSystems && lines.length > maxSystems ? lines.slice(0, maxSystems) : lines;
+      const els = []; let key = 0;
+      shown.forEach((ln, i) => {
+        const top = i * M.sysH, sb = top + M.sysTop + 4; const yOf = p => sb - p / 2;
+        for (let l = 0; l <= 8; l += 2) els.push(h('line', { key: key++, x1: M.pad, x2: W - M.pad, y1: yOf(l), y2: yOf(l), stroke: ink, strokeWidth: M.line }));
+        els.push(glyph('clef-treble', M.pad + 1.6, yOf(2), ink, key++));
+        const order = sc.fifths > 0 ? SHARPS : FLATS; for (let j = 0; j < k; j++) els.push(glyph(sc.fifths > 0 ? 'sharp' : 'flat', M.pad + M.clefW + M.clefGap + .45 + j * M.ksStep, yOf(KS_POS[sc.fifths > 0 ? 1 : -1][order[j]]), ink, key++));
+        let x = x0; let ova = null; const ovas = [];
+        ln.forEach(n => {
+          const xn = x + (n.acc ? M.accExtra : 0) + .62; const isOva = n.p >= M.ovaP; const p = isOva ? n.p - 7 : n.p; const y = yOf(p);
+          if (n.acc) els.push(glyph(ACC_GLYPH[n.a], xn - 1.35, y, ink, key++));
+          for (let pp = -2; pp >= p; pp -= 2) els.push(h('line', { key: key++, x1: xn - .62 - M.ledgerExt, x2: xn + .62 + M.ledgerExt, y1: yOf(pp), y2: yOf(pp), stroke: ink, strokeWidth: M.ledger }));
+          for (let pp = 10; pp <= p; pp += 2) els.push(h('line', { key: key++, x1: xn - .62 - M.ledgerExt, x2: xn + .62 + M.ledgerExt, y1: yOf(pp), y2: yOf(pp), stroke: ink, strokeWidth: M.ledger }));
+          els.push(glyph('notehead', xn, y, ink, key++));
+          const up = p < 4; const sx = up ? xn + .56 : xn - .56; els.push(h('line', { key: key++, x1: sx, x2: sx, y1: y + (up ? -.15 : .15), y2: y + (up ? -M.stemLen : M.stemLen), stroke: ink, strokeWidth: M.stem }));
+          if (isOva) { const yt = up ? y - M.stemLen - .6 : y - .9; if (!ova) { ova = { x1: xn - .7, x2: xn + .7, yTop: yt }; ovas.push(ova); } else { ova.x2 = xn + .7; ova.yTop = Math.min(ova.yTop, yt); } } else ova = null;
+          x += n.w;
+        });
+        const sysTopY = ln.reduce((m, n) => { const p = n.p >= M.ovaP ? n.p - 7 : n.p; return Math.min(m, yOf(p) - (p < 4 ? M.stemLen + .3 : .9)); }, yOf(8));
+        ovas.forEach(o => { const yy = Math.max(Math.min(o.yTop - .6, sysTopY - .5), top + 1.4); els.push(h('text', { key: key++, x: o.x1 - .3, y: yy - .35, fill: ink, fontSize: 1.1, fontFamily: 'Georgia, serif', fontStyle: 'italic' }, '8va')); els.push(h('line', { key: key++, x1: o.x1 + 2.2, x2: o.x2, y1: yy, y2: yy, stroke: ink, strokeWidth: M.line, strokeDasharray: '.5 .4' })); els.push(h('line', { key: key++, x1: o.x2, x2: o.x2, y1: yy, y2: yy + .8, stroke: ink, strokeWidth: M.line })); });
+        if (i === shown.length - 1 && shown.length === lines.length) { const xr = W - M.pad; els.push(h('rect', { key: key++, x: xr - M.barThick, y: yOf(8), width: M.barThick, height: 4, fill: ink })); els.push(h('rect', { key: key++, x: xr - M.barThick - M.barGap - M.barThin, y: yOf(8), width: M.barThin, height: 4, fill: ink })); }
+      });
+      const Hs = shown.length * M.sysH;
+      return { el: h('svg', { width, height: Math.round(Hs * sp), viewBox: `0 0 ${W} ${Hs}`, style: { display: 'block', overflow: 'visible' } }, els), systems: lines.length, shown: shown.length, perLine: lines.map(l => l.length).join(' · ') };
+    }
+    function sigTile(sc, { sp, width, height, ink }) {
+      const k = Math.abs(sc.fifths); const W = width / sp, Hh = height / sp; const sb = Hh / 2 + 2; const yOf = p => sb - p / 2; const els = [];
+      const cw = M.clefW + (k ? .4 + k * M.ksStep : 0); const xs = (W - cw) / 2 - .3;
+      for (let l = 0; l <= 8; l += 2) els.push(h('line', { key: 'l' + l, x1: .3, x2: W - .3, y1: yOf(l), y2: yOf(l), stroke: ink, strokeWidth: .12 }));
+      els.push(glyph('clef-treble', xs + 1.5, yOf(2), ink, 'c'));
+      const order = sc.fifths > 0 ? SHARPS : FLATS; for (let j = 0; j < k; j++) els.push(glyph(sc.fifths > 0 ? 'sharp' : 'flat', xs + M.clefW + .5 + j * M.ksStep, yOf(KS_POS[sc.fifths > 0 ? 1 : -1][order[j]]), ink, 's' + j));
+      return h('svg', { width, height, viewBox: `0 0 ${W} ${Hh}`, style: { display: 'block' } }, els);
+    }
+
+    // ---------- scales
+    const S = {
+      G3: buildScale('G', 0, 'major', 3), D3: buildScale('D', 0, 'major', 3), aMel2: buildScale('A', 0, 'mel', 2), aHarm2: buildScale('A', 0, 'harm', 2), gisHarm2: buildScale('G', 1, 'harm', 2), Es2: buildScale('E', -1, 'major', 2), C1: buildScale('C', 0, 'major', 1), fisHarm2: buildScale('F', 1, 'harm', 2),
+    };
+    const dark = (sc, w, sp, max) => engrave(sc, { sp, width: w, ink: INK_DARK, maxSystems: max });
+    const paper = (sc, w, sp) => engrave(sc, { sp, width: w, ink: INK_PAPER });
+    const tile = (sc, w = 54, hgt = 72, sp = 4.5) => sigTile(sc, { sp, width: w, height: hgt, ink: '#A39FB5' });
+
+    // ---------- shared UI helpers
+    const scoreColor = v => v >= 75 ? G : v >= 55 ? Y : R;
+    const chip = st => ({ chipBg: st === 'Учу' ? PC : (st === 'В репертуаре' || st === 'Выучено') ? '#1F3A2C' : SCH, chipFg: st === 'Учу' ? OPC : (st === 'В репертуаре' || st === 'Выучено') ? '#9FE4BE' : ON });
+    const plural = n => n === 0 ? 'нет дублей' : n % 10 === 1 && n % 100 !== 11 ? `${n} дубль` : [2, 3, 4].includes(n % 10) && ![12, 13, 14].includes(n % 100) ? `${n} дубля` : `${n} дублей`;
+    const filters = (act, third) => ['Все', 'Разбираю', 'Учу', third].map(name => ({ name, bg: name === act ? PC : 'transparent', border: name === act ? PC : OUT, fg: name === act ? OPC : ON, fw: name === act ? 600 : 400 }));
+    const segs = (names, act, dis = []) => names.map(name => ({ name, bg: name === act ? PC : 'transparent', fg: name === act ? OPC : ON, op: dis.includes(name) ? .35 : 1 }));
+    const tonics = (act, dis = []) => LET.map(name => ({ name, bg: name === act ? PC : 'transparent', fg: name === act ? OPC : ON, border: name === act ? PC : OUT, fw: name === act ? 700 : 500, op: dis.includes(name) ? .35 : 1 }));
+    const shares = (a, b, c) => { const t = a + b + c; if (!t) return [{ w: '0%', c: 'transparent' }]; return [[a, LP], [b, LS], [c, LD]].filter(([n]) => n > 0).map(([n, col]) => ({ w: (n / t * 100).toFixed(1) + '%', c: col })); };
+    const item = (p) => ({ ...p, ...chip(p.status), isPaper: p.kind === 'paper', isScale: p.kind === 'scale', isStroke: p.kind === 'stroke', isNone: p.kind === 'none', scoreColor: p.score === '—' ? OV : scoreColor(+p.score), takesText: plural(p.takes ?? 0), sub: p.sub ?? '', meta: p.meta ?? '' });
+
+    // ---------- data
+    const sections = [
+      { name: 'Произведения', a: 5, b: 1, c: 3 }, { name: 'Гаммы', a: 2, b: 3, c: 2 }, { name: 'Этюды', a: 2, b: 2, c: 1 }, { name: 'Штрихи', a: 0, b: 1, c: 3 }, { name: 'Двойные ноты', a: 2, b: 0, c: 0 }, { name: 'Оркестровые партии', a: 0, b: 0, c: 0 },
+    ].map(s => { const t = s.a + s.b + s.c; return { ...s, total: t, countText: t ? `выучено ${s.c} из ${t}` : 'пока пусто', shares: shares(s.a, s.b, s.c) }; });
+    const scaleItem = (sc, status, score, lastDate, takes) => item({ kind: 'scale', title: sc.key, sub: sc.sub, status, score, lastDate, takes, sig: tile(sc), meta: '♩ = 60' });
+    const SCALES = [scaleItem(S.G3, 'Выучено', '90', 'вчера', 9), scaleItem(S.aHarm2, 'Учу', '78', '16 сен', 4), scaleItem(S.D3, 'Выучено', '86', '12 сен', 7), scaleItem(S.aMel2, 'Учу', '71', '10 сен', 3), scaleItem(S.Es2, 'Разбираю', '58', '8 сен', 2), scaleItem(S.gisHarm2, 'Разбираю', '—', '', 0), scaleItem(S.C1, 'Учу', '93', '1 сен', 5)];
+    const ETUDES = [item({ kind: 'paper', title: 'Кайзер № 3', sub: 'Г. Кайзер', status: 'Выучено', score: '84', lastDate: 'вчера', takes: 6, meta: 'G-dur · ♩ = 88' }), item({ kind: 'paper', title: 'Крейцер № 2', sub: 'Р. Крейцер', status: 'Учу', score: '72', lastDate: '15 сен', takes: 4, meta: 'C-dur · ♩ = 72' }), item({ kind: 'paper', title: 'Мазас № 12', sub: 'Ж. Мазас', status: 'Учу', score: '66', lastDate: '11 сен', takes: 2, meta: 'a-moll' }), item({ kind: 'none', title: 'Вольфарт № 20', sub: 'Ф. Вольфарт', status: 'Разбираю', score: '—', lastDate: '', takes: 0, meta: '♩ = 60' }), item({ kind: 'paper', title: 'Донт № 5', sub: 'Я. Донт', status: 'Разбираю', score: '49', lastDate: '4 сен', takes: 1, meta: 'D-dur' })];
+    const STROKES = [item({ kind: 'stroke', title: 'Деташе', status: 'Выучено', score: '91', lastDate: 'вчера', takes: 12, meta: '♩ = 60' }), item({ kind: 'stroke', title: 'Легато', status: 'Выучено', score: '88', lastDate: '17 сен', takes: 8, meta: '♩ = 52' }), item({ kind: 'stroke', title: 'Спиккато', status: 'Учу', score: '63', lastDate: '14 сен', takes: 5, meta: '♩ = 96' }), item({ kind: 'stroke', title: 'Мартле', status: 'Выучено', score: '85', lastDate: '2 сен', takes: 3, meta: '♩ = 72' })];
+    const OWN = [item({ kind: 'paper', title: 'Терции, G-dur', sub: '', status: 'Разбираю', score: '55', lastDate: '13 сен', takes: 2, meta: '♩ = 48' }), item({ kind: 'none', title: 'Октавы, D-dur', sub: '', status: 'Разбираю', score: '—', lastDate: '', takes: 0, meta: '' })];
+    const PIECES_C = [item({ kind: 'paper', title: 'Менуэт соль мажор', sub: 'И. С. Бах', status: 'Учу' }), item({ kind: 'paper', title: 'Концерт ля минор, I часть', sub: 'А. Вивальди', status: 'Разбираю' })];
+
+    const entries = [
+      { id: '24a1', label: 'A — экран разделов: четыре готовых, свой раздел, пустой свой раздел; общий счёт в шапке; «Добавить раздел» текстовой кнопкой', isA: true, isC: false, sections },
+      { id: '24a2', label: 'C — один список с заголовками разделов, «Штрихи» свёрнуты; общая кнопка «Добавить» должна спрашивать раздел — не выбран', isA: false, isC: true, groups: [
+        { name: 'Произведения', countText: 'выучено 3 из 9', rot: '0deg', items: PIECES_C },
+        { name: 'Гаммы', countText: 'выучено 2 из 7', rot: '0deg', items: SCALES.slice(0, 2).map(p => ({ ...p, sig: tile(S[p.title === 'G-dur' ? 'G3' : 'aHarm2'], 42, 56, 3.6) })) },
+        { name: 'Штрихи', countText: 'выучено 3 из 4', rot: '-90deg', items: [] },
+        { name: 'Этюды', countText: 'выучено 1 из 5', rot: '0deg', items: ETUDES.slice(0, 1) },
+      ] },
+    ];
+    const bigCards = [
+      { id: '24b1', label: 'Раздел с историей — «выучено 3 из 12», полоса долей (легенда показана один раз для чтения)', name: 'Произведения', countText: 'выучено 3 из 12', countColor: OV, shares: shares(5, 4, 3), legend: true },
+      { id: '24b2', label: 'Пустой раздел — «пока пусто», пустая дорожка', name: 'Оркестровые партии', countText: 'пока пусто', countColor: OV, shares: [], legend: false },
+      { id: '24b3', label: 'Всё выучено — полоса целиком primary, счёт onSurface', name: 'Штрихи', countText: 'выучено 4 из 4', countColor: ON, shares: shares(0, 0, 4), legend: false },
+    ];
+    const emptyArt = (sc) => sigTile(sc, { sp: 6, width: 120, height: 40, ink: OV });
+    const baseL = { keyboard: false, own: false, menu: false, hasAny: true, empty: false, dialog: false, dialogAlign: 'center' };
+    const lists = [
+      { ...baseL, id: '24c1', label: '«Гаммы» — плитка со знаками при ключе вместо обложки; вторая строка «мажор · 3 октавы»; третий статус — «Выучено»', name: 'Гаммы', countText: 'выучено 2 из 7', addText: 'Добавить гамму', filters: filters('Все', 'Выучено'), items: SCALES },
+      { ...baseL, id: '24c2', label: '«Этюды» — как произведения, автор второй строкой', name: 'Этюды', countText: 'выучено 1 из 5', addText: 'Добавить этюд', filters: filters('Все', 'Выучено'), items: ETUDES },
+      { ...baseL, id: '24c3', label: '«Штрихи» — плитка со смычком; без композитора и тональности', name: 'Штрихи', countText: 'выучено 3 из 4', addText: 'Добавить штрих', filters: filters('Все', 'Выучено'), items: STROKES },
+      { ...baseL, id: '24c4', label: 'Свой раздел «Двойные ноты» — «⋯» в шапке, меню открыто; «Добавить» без слова; третий статус «В репертуаре»', name: 'Двойные ноты', countText: 'выучено 0 из 2', addText: 'Добавить', filters: filters('Все', 'В репертуаре'), items: OWN, own: true, menu: true },
+      { ...baseL, id: '24c5', label: 'Пустые «Гаммы» — пустой стан и текст-приглашение; фильтра нет', name: 'Гаммы', countText: 'пока пусто', addText: 'Добавить гамму', hasAny: false, empty: true, emptyArt: emptyArt(buildScale('C', 0, 'major', 1)), emptyText: 'Выберите гамму — приложение нарисует её ноты' },
+      { ...baseL, id: '24c6', label: 'Диалог «Новый раздел» — поле до 24 символов, клавиатура', name: 'Записи', countText: '', addText: 'Добавить раздел', hasAny: false, keyboard: true, dialog: true, dialogAlign: 'flex-start', dTitle: 'Новый раздел', dBody: '', dField: true, dValue: 'Оркестровые партии|', dValColor: ON, dCount: '18 / 24', dBtn: 'Создать', dBtnBg: PR, dBtnFg: '#2E1A6E' },
+      { ...baseL, id: '24c7', label: 'Диалог «Переименовать раздел»', name: 'Двойные ноты', countText: 'выучено 0 из 2', addText: 'Добавить', filters: filters('Все', 'В репертуаре'), items: OWN, own: true, keyboard: true, dialog: true, dialogAlign: 'flex-start', dTitle: 'Переименовать раздел', dBody: '', dField: true, dValue: 'Двойные ноты', dValColor: ON, dCount: '12 / 24', dBtn: 'Сохранить', dBtnBg: PR, dBtnFg: '#2E1A6E' },
+      { ...baseL, id: '24c8', label: 'Диалог удаления своего раздела — говорит, куда переедут элементы', name: 'Двойные ноты', countText: 'выучено 0 из 2', addText: 'Добавить', filters: filters('Все', 'В репертуаре'), items: OWN, own: true, dialog: true, dTitle: 'Удалить «Двойные ноты»?', dBody: 'Два элемента переедут в «Произведения». Записи останутся.', dField: false, dBtn: 'Удалить', dBtnBg: R, dBtnFg: '#FFFFFF' },
+    ];
+
+    const KINDS = ['мажор', 'минор натуральный', 'минор гармонический', 'минор мелодический'];
+    const kinds = act => KINDS.map(name => ({ name, bg: name === act ? PC : 'transparent', border: name === act ? PC : OUT, fg: name === act ? OPC : ON, fw: name === act ? 600 : 400 }));
+    const ACC_OF = { '♭': -1, '♮': 0, '♯': 1 };
+    const MODE_OF = { 'мажор': 'major', 'минор натуральный': 'nat', 'минор гармонический': 'harm', 'минор мелодический': 'mel' };
+    const disabledTonics = (accName, kindName) => LET.filter(L => Math.abs(fifthsOf(L, ACC_OF[accName], MODE_OF[kindName])) > 7);
+    const disabledOcts = (L, accName) => L ? ['1', '2', '3'].filter(n => !octsOk(L, ACC_OF[accName], +n)) : [];
+    const sform = (id, label, L, accName, kindName, octs, extra = {}) => {
+      const sc = L ? buildScale(L, ACC_OF[accName], MODE_OF[kindName], octs) : null;
+      return { id, label, heading: 'Новая гамма', saveFg: sc ? PR : '#6B6880', keyText: sc ? germanName(L, ACC_OF[accName], MODE_OF[kindName]) : '—', keyColor: sc ? ON : OV, tonics: tonics(L, disabledTonics(accName, kindName)), accs: segs(['♭', '♮', '♯'], accName), kinds: kinds(kindName), octs: segs(['1', '2', '3'], String(octs), disabledOcts(L, accName)), nameText: sc ? sc.name : 'Гамма', nameColor: sc ? ON : OV, rangeText: sc ? sc.range : '', hasPreview: !!sc, noPreview: !sc, svg: sc ? dark(sc, 332, 7).el : null, dup: false, tempoText: '♩ = 60', tempoColor: ON, statuses: segs(['Разбираю', 'Учу', 'Выучено'], 'Разбираю'), ...extra };
+    };
+    const scaleForms = [
+      sform('24d1', 'Пусто — тоника не выбрана: название «Гамма», dashed-карточка вместо нот; «Сохранить» приглушена', null, '♮', 'мажор', 2, { nameText: 'Гамма' }),
+      sform('24d2', 'G-dur · 3 октавы — предпросмотр перерисован, диапазон G3 – G6', 'G', '♮', 'мажор', 3),
+      sform('24d3', 'a-moll мелодический · 2 октавы — диезы на подъёме, бекары на спуске', 'A', '♮', 'минор мелодический', 2),
+      sform('24d4', 'fis-moll гармонический — при «♯» и миноре приглушены E и B (8+ знаков); третья октава приглушена (F♯7 выше E7)', 'F', '♯', 'минор гармонический', 2),
+      sform('24d5', 'Повтор — «Такая гамма уже есть · Открыть», «Сохранить» приглушена', 'G', '♮', 'мажор', 3, { dup: true, saveFg: '#6B6880' }),
+    ];
+
+    const STROKE_CHIPS = ['Деташе', 'Легато', 'Стаккато', 'Спиккато', 'Мартле', 'Сотийе', 'Рикошет'];
+    const otherForms = [
+      { id: '24e1', label: 'Этюд — форма произведения, поле «Автор»', heading: 'Новый этюд', strokeChips: false, name: 'Кайзер № 3', nameColor: ON, nameCount: '10 / 80', hasAuthor: true, authorLabel: 'Автор', author: 'Г. Кайзер', authorColor: ON, hasSection: false, hasKey: true, keyText: 'G-dur', keyColor: ON, tonics: tonics('G'), accs: segs(['♭', '♮', '♯'], '♮'), modes: segs(['мажор', 'минор'], 'мажор'), tempoChips: ['80', '100', '120'], tempoText: '♩ = 88', tempoColor: ON, statuses: segs(['Разбираю', 'Учу', 'Выучено'], 'Разбираю'), notes: 'Пометки педагога, штрихи, аппликатура…', notesColor: OV },
+      { id: '24e2', label: 'Штрих — чипы-подсказки над названием, тап подставил «Спиккато»; автора и тональности нет', heading: 'Новый штрих', strokeChips: true, chips: STROKE_CHIPS.map(name => ({ name, bg: name === 'Спиккато' ? PC : 'transparent', border: name === 'Спиккато' ? PC : OUT, fg: name === 'Спиккато' ? OPC : ON, fw: name === 'Спиккато' ? 600 : 400 })), name: 'Спиккато', nameColor: ON, nameCount: '8 / 80', hasAuthor: false, hasSection: false, hasKey: false, tempoChips: ['60', '80', '100'], tempoText: '♩ = —', tempoColor: OV, statuses: segs(['Разбираю', 'Учу', 'Выучено'], 'Разбираю'), notes: 'Верхняя треть смычка, от струны. Считать четвертями.', notesColor: ON },
+      { id: '24e3', label: 'Правка произведения — поле «Раздел» с меню; «Гаммы» приглушены для не-гаммы', heading: 'Произведение', strokeChips: false, name: 'Этюд № 2', nameColor: ON, nameCount: '8 / 80', hasAuthor: true, authorLabel: 'Композитор', author: 'Ф. Вольфарт', authorColor: ON, hasSection: true, section: 'Произведения', sectionMenu: true, sectionOpts: ['Произведения', 'Гаммы', 'Этюды', 'Штрихи', 'Двойные ноты', 'Оркестровые партии'].map(name => ({ name, on: name === 'Произведения', bg: name === 'Произведения' ? PC : 'transparent', fg: name === 'Произведения' ? OPC : ON, fw: name === 'Произведения' ? 600 : 400, op: name === 'Гаммы' ? .35 : 1 })), hasKey: true, keyText: '—', keyColor: OV, tonics: tonics(null), accs: segs(['♭', '♮', '♯'], '♮'), modes: segs(['мажор', 'минор'], null), tempoChips: ['80', '100', '120'], tempoText: '♩ = —', tempoColor: OV, statuses: segs(['Разбираю', 'Учу', 'В репертуаре'], 'Разбираю'), notes: '', notesColor: ON },
+    ];
+
+    const prog = arr => arr.slice().reverse().map((v, i) => `${4 + i * (152 / (arr.length - 1))},${40 - (v - 50) * .72}`).join(' ');
+    const progLine = prog([88, 90, 84, 79, 81, 72, 66, 61, 55]);
+    const baseS = { title: S.G3.name, sub: MODE_RU.major, status: 'Выучено', ...chip('Выучено'), rangeText: S.G3.range, cardBg: SC, collapsed: false, hasPhotos: false, noPhotos: true, notes: 'Третья октава — смена на 2-й палец на струне Ми. Вниз не торопиться, слушать терцию.' };
+    const g3card = dark(S.G3, 356, 7.5);
+    const scaleScreens = [
+      { ...baseS, id: '24f1', label: `Тёмная карточка, светлые ноты — выбрано. sp 7.5, три системы (${g3card.perLine} нот); без фото — текстовая кнопка`, svg: g3card.el },
+      { ...baseS, id: '24f2', label: 'Бумага и тёмные ноты в карточке — для сравнения: белый прямоугольник на тёмном экране слепит', cardBg: PAPER, svg: paper(S.G3, 356, 7.5).el },
+      { ...baseS, id: '24f3', label: 'Свёрнуто до двух систем + «ещё 1 система» (так на экранах 360 dp, где систем четыре); ниже — фото аппликатуры из сборника', svg: dark(S.G3, 356, 7.5, 2).el, collapsed: true, moreText: 'ещё 1 система', hasPhotos: true, noPhotos: false },
+    ];
+    const landSvg = dark(S.G3, 528, 6.5).el;
+    const standP = paper(S.G3, 348, 10).el, standP2 = paper(S.G3, 348, 10).el;
+    const standZoom = engrave(S.G3, { sp: 16, width: 676, ink: INK_PAPER, maxSystems: 3 }).el;
+    const standL = paper(S.aMel2, 684, 10).el;
+
+    const refs = [
+      { id: '24h1', sc: S.G3, label: 'G-dur · 3 октавы — 43 ноты в двух системах поровну; штили вверх до средней линейки, вниз от неё' },
+      { id: '24h2', sc: S.aMel2, label: 'a-moll мелодический · 2 октавы — F♯ G♯ на подъёме, G♮ F♮ на спуске' },
+      { id: '24h3', sc: S.gisHarm2, label: 'gis-moll гармонический · 2 октавы — пять диезов при ключе, F𝄪 (дубль-диез) у VII ступени' },
+      { id: '24h4', sc: S.Es2, label: 'Es-dur · 2 октавы — три бемоля при ключе' },
+      { id: '24h5', sc: S.D3, label: 'D-dur · 3 октавы — вершина D7 выше пятой добавочной: «8va» над последними нотами подъёма и первыми спуска' },
+      { id: '24h6', sc: S.C1, label: 'C-dur · 1 октава — без знаков, добавочные линейки внизу у C4' },
+    ].map(r => ({ ...r, svg: paper(r.sc, 960, 11).el }));
+
+    const notationSizes = [
+      { name: 'Линейка стана', v: '0.10', note: 'пять линеек, шаг 1 sp; поля системы слева и справа pad 0.8' },
+      { name: 'Штиль', v: '0.12 × 3.5', note: 'вверх при позиции < 4 (ниже средней линейки) от правого края головки; вниз при ≥ 4 от левого; начинается на 0.15 внутри головки' },
+      { name: 'Добавочная линейка', v: '0.14, вынос 0.32', note: 'от −2 вниз и от 10 вверх, каждая вторая позиция до ноты включительно' },
+      { name: 'Тактовая черта в конце', v: 'тонкая 0.12 · зазор 0.35 · толстая 0.45', note: 'только в последней системе, прижата к правому краю стана' },
+      { name: 'Головка', v: '0.62 × 0.43, наклон −20°', note: 'залитый эллипс (path в NOTATION); ширина 1.24 sp' },
+      { name: 'Ключ', v: 'ширина 3.4, x центра петли = pad + 1.6', note: 'от −6.4 до +3.2 sp относительно линейки соль' },
+      { name: 'Знаки при ключе', v: 'шаг 0.95, первый на +0.45 от конца ключа, зазор 0.7 от ключа', note: 'диезы F C G D A E B на позициях 8 5 9 6 3 7 4; бемоли B E A D G C F на 4 7 3 6 2 5 1' },
+      { name: 'До первой ноты', v: '1.6', note: 'от последнего знака (или от ключа, если знаков нет)' },
+      { name: 'Шаг нот', v: '2.4', note: 'между центрами головок, равномерно; перед случайным знаком +1.1' },
+      { name: 'Случайный знак', v: 'центр на xNote − 1.35', note: '♯ ♭ ♮ 𝄪 по правилу состояния ступени внутри системы' },
+      { name: 'Система', v: 'высота 13: верх 6 + стан 4 + низ 3', note: 'запас на 5 добавочных сверху со штилем и 2 снизу' },
+      { name: '8va', v: 'от позиции 20; надпись 1.1 курсив, пунктир 0.5/0.4, крюк 0.8', note: 'ноты рисуются на 7 позиций ниже; линия на 0.6 выше самого высокого штиля группы' },
+      { name: 'Нот в системе', v: '380 dp / sp 7.5 → 17; 412 / 10 → 11–12; 892 / 10 → 27', note: 'без знаков при ключе; каждый знак при ключе −0.4 ноты; деление между системами поровну по числу нот' },
+      { name: 'sp по месту', v: 'карточка 7.5 · пюпитр 10 · плитка списка 4.5 · пустое состояние 6', note: 'эталоны на этом листе — sp 11 при ширине 960' },
+    ];
+    const emptyLine = (name, countText, vals, dot, lineColor = PR) => { const pts = vals.map((v, i) => `${i * 48},${26 - v * 6}`).join(' ') + ` 240,${26 - vals[vals.length - 1] * 6}`; return { name, countText, isLine: true, isBar: false, pts, dot, lastY: 26 - vals[vals.length - 1] * 6, lineColor }; };
+    const emptyBar = (name, countText, a, b, c) => ({ name, countText, isLine: false, isBar: true, shares: shares(a, b, c) });
+    const emptyCharts = [
+      emptyLine('Штрихи', 'выучено 4 из 4', [0, 0, 0, 0, 0, 4], true), emptyBar('Штрихи', 'выучено 4 из 4', 0, 0, 4),
+      emptyLine('Двойные ноты', 'выучено 0 из 2', [0, 0, 0, 0, 0, 0], false, OUT), emptyBar('Двойные ноты', 'выучено 0 из 2', 2, 0, 0),
+      emptyLine('Оркестровые партии', 'пока пусто', [0, 0, 0, 0, 0, 0], false, OUT), emptyBar('Оркестровые партии', 'пока пусто', 0, 0, 0),
+    ];
+    const stepVals = [0, 1, 1, 2, 3, 3]; const stepLine = stepVals.map((v, i) => `${i * 69.6},${32 - v * 9}${i < 5 ? ` ${(i + 1) * 69.6},${32 - v * 9}` : ''}`).join(' ') + ` 344,${32 - 3 * 9}`; const stepLastY = 32 - 27;
+
+    const notationList = Object.entries(GL).map(([name, g]) => ({ name, d: g.d, box: g.box, anchor: g.anchor, preview: h('svg', { width: 56, height: 72, viewBox: name === 'clef-treble' ? '-3 -7.5 6 12' : '-1.5 -2.4 3 4.8', style: { display: 'block' } }, name === 'clef-treble' ? [0, 1, 2, 3, 4].map(i => h('line', { key: i, x1: -3, x2: 3, y1: 2 - i, y2: 2 - i, stroke: '#8B877F', strokeWidth: .06 })) : null, glyph(name, 0, 0, INK_PAPER, 'g')) }));
+
+    const tokens = [
+      { name: 'ink.dark', hex: INK_DARK, use: 'ноты на тёмной карточке surfaceContainer (экран гаммы, предпросмотр формы)' },
+      { name: 'ink.paper', hex: INK_PAPER, use: 'ноты на paper #ECE8DF (пюпитр, эталоны)' },
+      { name: 'ink.tile', hex: OV, use: 'ключ и знаки в плитке списка и в пустом состоянии (= onSurfaceVariant); плитка — surfaceContainerHigh' },
+      { name: 'learn.parse', hex: LP, use: 'доля «разбираю» в полосе раздела' },
+      { name: 'learn.study', hex: LS, use: 'доля «учу»' },
+      { name: 'learn.done', hex: LD, use: 'доля «выучено» (= primary); дорожка полосы — surfaceContainerHigh' },
+    ];
+    const sizes = [
+      { name: 'Карточка раздела', v: 'surfaceContainer r16, padding 14 16 16, gap 10; название 16 sp 600, счёт 13 sp tnum onSurfaceVariant (onSurface, когда всё выучено); полоса 6 dp r3, доли gap 2, дорожка surfaceContainerHigh; landscape — две колонки, r14, padding 12 14 14' },
+      { name: '«Добавить раздел»', v: 'текстовая кнопка 44, primary 14 sp 600, плюс 16; в landscape занимает ячейку сетки' },
+      { name: 'Шапка списка раздела', v: 'TopAppBar 56: назад 48, название 17 sp 600 + счёт 12 sp второй строкой (gap 1); «⋯» 48 только у своего раздела; меню 220 r12, два пункта 44, «Удалить раздел» — error' },
+      { name: 'Плитка гаммы / штриха', v: '54×72 r6 surfaceContainerHigh; гамма — стан sp 4.5, ключ + знаки, ink.tile; штрих — значок смычка 30, stroke 1.6 #6B6880; вторая строка карточки 13 sp' },
+      { name: 'Форма гаммы', v: 'тоники 7 × 44 r12; знак — сегменты 40 r20; вид — 4 чипа 36 r10 в две строки gap 8; октавы — сегменты 40 r20 шириной 200 справа от подписи; название 20 sp 700 + диапазон 12 sp tnum; предпросмотр — карточка r16 padding 10 12, sp 7; приглушение α .35; повтор — плашка 44 r12 surfaceContainerHigh' },
+      { name: 'Чипы штрихов', v: '32 r8 13 sp, wrap gap 8, над полем названия' },
+      { name: 'Поле «Раздел»', v: 'outlined 56 r16 с шевроном 12; меню под полем, пункты 44 r8, недопустимый — α .35' },
+      { name: 'Экран гаммы', v: 'название 28 sp 700 «G-dur · 3 октавы», вид 16 sp onSurfaceVariant; карточка нот r16 padding 10 12 sp 7.5 (356 dp внутри), до 3 систем целиком, дальше 2 + таблетка 32 r16 «ещё N систем» на градиенте 72; диапазон 13 sp справа от «Ноты»; без фото — текстовая кнопка 40; в landscape карточка нот sp 6.5 в правой колонке' },
+      { name: 'Пюпитр с гаммой', v: 'лист по ширине − 48 (портрет) / − 192 (landscape), padding 14 0 18, sp 10, высота = систем × 130 + поля; без корзины в панели; масштаб щипком 1–3×, двойной тап 1 ↔ 2×' },
+      { name: 'Диалоги раздела', v: 'как в проекте: r28 padding 28 24, заголовок 24 sp; поле 56 r16 с рамкой primary 1.5 и счётчиком «18 / 24»; при клавиатуре диалог прижат к верху (padding 32)' },
+      { name: 'Ступенчатая линия (не выбрана)', v: '348×36, stroke 2 primary, точка r4; 6 месяцев по 58 dp' },
+    ];
+    const anims = [
+      { name: 'Предпросмотр гаммы', v: 'без анимации — перерисовка на месте при каждом изменении (Canvas, < 16 мс); высота карточки меняется animateContentSize 200 мс, когда меняется число систем' },
+      { name: 'Открытие раздела', v: 'экран списка въезжает справа 250 мс FastOutSlowIn (стандартный NavHost); назад — обратно; полоса долей на карточке доезжает до новых значений за 400 мс при возврате' },
+      { name: 'Свёрнутые ноты', v: '«ещё N систем» — animateContentSize 250 мс, таблетка и градиент fade 150 мс' },
+      { name: 'Чипы штрихов', v: 'выбор — цвет crossfade 150 мс; ручной ввод снимает подсветку без анимации' },
+      { name: 'Приглушение недопустимых вариантов', v: 'α 1 ↔ .35 за 150 мс при смене знака / вида / тоники' },
+      { name: 'Переход в «Выучено»', v: 'только чип: crossfade 150 мс; праздника нет' },
+    ];
+    return { entries, bigCards, lists, scaleForms, otherForms, scaleScreens, progLine, landSvg, standP, standP2, standZoom, standL, refs, notationSizes, stepLine, stepLastY, emptyCharts, sections, tokens, sizes, anims, notationList };
+  }
+}
+</script>
+</body>
+</html>
