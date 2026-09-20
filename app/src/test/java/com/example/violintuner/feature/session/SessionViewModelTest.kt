@@ -172,6 +172,39 @@ class SessionViewModelTest {
     }
 
     @Test
+    fun `the star marks a take as the best of its piece, says so, and a second tap clears the mark in silence`() = runTest {
+        val pieceId = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val earlier = saveSession(pieceId = pieceId)
+        val take = saveSession(pieceId = pieceId)
+        repertoire.setBestTake(pieceId, earlier)
+        val viewModel = viewModel(take)
+        val effects = mutableListOf<SessionEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        assertEquals(false, viewModel.loaded().content.best)
+
+        viewModel.onIntent(SessionIntent.BestClicked)
+        runCurrent()
+        assertEquals(take, repertoire.piece(pieceId)!!.bestTakeId)
+        assertEquals(true, viewModel.loaded().content.best)
+        assertEquals(listOf<SessionEffect>(SessionEffect.ShowBestMarked(moved = true)), effects)
+
+        viewModel.onIntent(SessionIntent.BestClicked)
+        runCurrent()
+        assertNull(repertoire.piece(pieceId)!!.bestTakeId)
+        assertEquals(false, viewModel.loaded().content.best)
+        assertEquals(1, effects.size)
+    }
+
+    @Test
+    fun `a free recording has no star to tap`() = runTest {
+        val viewModel = viewModel(saveSession())
+        assertNull(viewModel.loaded().content.pieceId)
+        viewModel.onIntent(SessionIntent.BestClicked)
+        runCurrent()
+        assertEquals(false, viewModel.loaded().content.best)
+    }
+
+    @Test
     fun `colors follow the tolerance the session was recorded with`() = runTest {
         val content = viewModel(saveSession(tolerance = 12.0)).loaded().content
         assertEquals(12.0, content.toleranceCents, 0.0)

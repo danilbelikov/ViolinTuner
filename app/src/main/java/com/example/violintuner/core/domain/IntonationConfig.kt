@@ -52,7 +52,10 @@ data class IntonationConfig(
     /** A mean deviation smaller than this reads as "no bias". */
     val biasNeutralCents: Double = 2.0,
     val sessionPreviewNotes: Int = 8,
-    val historyWeeks: Int = 6,
+    /** The chart of «Записи»: recordings per day over this many days, today included (spec 5.15). */
+    val historyChartDays: Int = 14,
+    /** The top of that chart's scale is never below this, so that one recording does not look like a record. */
+    val historyChartMinTop: Int = 4,
     /** The "month" filter of the history: this many days back, today included. */
     val historyMonthDays: Int = 30,
 

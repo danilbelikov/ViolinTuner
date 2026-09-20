@@ -3,7 +3,7 @@ package com.example.violintuner.feature.practice
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.data.profile.AvatarFiles
-import com.example.violintuner.core.domain.IntonationConfig
+import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeFinisher
@@ -41,7 +41,7 @@ class PracticeViewModel @Inject constructor(
     private val finisher: PracticeFinisher,
     sessions: SessionRepository,
     private val config: PracticeConfig,
-    intonationConfig: IntonationConfig,
+    repertoire: RepertoireRepository,
     private val clock: Clock,
     private val trophies: TrophyRepository,
     private val profiles: ProfileRepository,
@@ -60,7 +60,7 @@ class PracticeViewModel @Inject constructor(
     private val progress: Flow<Pair<List<Trophy>, Profile>> = combine(trophies.trophies, profiles.profile, ::Pair)
 
     val state: StateFlow<PracticeState> =
-        combine(repository.entries, sessions.sessions, runningMs, ui, progress) { entries, sessions, runningMs, ui, (trophies, profile) ->
+        combine(repository.entries, combine(sessions.sessions, repertoire.pieces, ::Pair), runningMs, ui, progress) { entries, (sessions, pieces), runningMs, ui, (trophies, profile) ->
             PracticeReducer.stateOf(
                 entries = entries,
                 sessions = sessions,
@@ -71,7 +71,7 @@ class PracticeViewModel @Inject constructor(
                 today = today(),
                 zone = clock.zone,
                 config = config,
-                intonationConfig = intonationConfig,
+                pieces = pieces,
                 trophies = trophies,
                 profile = profile,
                 // A name without its file (cleared storage) is no photo, not a broken one.

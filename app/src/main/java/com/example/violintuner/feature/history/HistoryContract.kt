@@ -1,7 +1,6 @@
 package com.example.violintuner.feature.history
 
-import com.example.violintuner.core.domain.Zone
-import com.example.violintuner.core.domain.session.WeekScore
+import com.example.violintuner.core.domain.session.DayCount
 import java.time.LocalDate
 
 enum class HistoryFilter { ALL, THIS_WEEK, MONTH }
@@ -9,36 +8,31 @@ enum class HistoryFilter { ALL, THIS_WEEK, MONTH }
 /** The two halves of the «Записи» tab (spec 3.15): what was recorded and what is being learnt. */
 enum class HistorySection { SESSIONS, REPERTOIRE }
 
-/** Day of a session as the card words it. */
-sealed interface DayLabel {
-    data object Today : DayLabel
-
-    data object Yesterday : DayLabel
-
-    data class On(val date: LocalDate) : DayLabel
-}
-
 data class HistoryCard(
     val id: Long,
     /** Null = default name built from the date. */
     val title: String?,
     val startedAtEpochMs: Long,
-    val day: DayLabel,
+    /** Local day of the start: the group of the list it stands in (spec 3.21). */
+    val date: LocalDate,
+    /** Not this year: wherever the date is written, it is written with its year. */
+    val otherYear: Boolean = false,
     val durationMs: Long,
-    val biasCents: Double,
-    val scorePercent: Int,
-    val scoreZone: Zone,
-    /** Zones of the first notes: the mini bars on the right. */
-    val previewZones: List<Zone>,
-    /** Title of the piece this session is a take of: names it by default and earns it the «дубль» chip. */
+    /** Title of the piece this recording is a take of: names it by default in «Записи». */
     val pieceTitle: String? = null,
-    /** Only a recording with sound can be shared or processed: only it gets the «⋯» (spec 3.17). */
+    /** The piece this recording is a take of; null for a free recording. */
+    val pieceId: Long? = null,
+    /** Only a recording with sound can be shared or processed (spec 3.17); without it the tile is a ring. */
     val hasAudio: Boolean = false,
-    /** A video take (spec 3.19): a camera badge on the tile. */
+    /** A video take (spec 3.19): the tile shows a camera instead of a note. */
     val hasVideo: Boolean = false,
+    /** The take its player marked as the best of its piece (spec 3.21): a star after the title. */
+    val best: Boolean = false,
     /** Size of the video, for the dialog that deletes it; zero without one or when the file is gone. */
     val videoBytes: Long = 0,
-)
+) {
+    val take: Boolean get() = pieceId != null
+}
 
 data class HistoryState(
     val section: HistorySection,
@@ -46,10 +40,11 @@ data class HistoryState(
     val loading: Boolean,
     /** All sessions, whatever the filter: "N сессий" and the empty state. */
     val totalCount: Int,
-    /** Oldest first, the last is the current week. */
-    val weeks: List<WeekScore>,
-    /** Last week minus the one before; null unless both have sessions. */
-    val weekDelta: Int?,
+    /** Recordings per day, oldest first, the last is today; the filter does not touch it. */
+    val days: List<DayCount>,
+    /** What the tallest bar of the chart stands for. */
+    val chartTop: Int,
+    val today: LocalDate,
     val filter: HistoryFilter,
     /** Newest first, after the filter. */
     val cards: List<HistoryCard>,
@@ -57,12 +52,20 @@ data class HistoryState(
     val selection: Selection = Selection(),
 ) {
     val allSelected: Boolean get() = SelectionRules.allSelected(selection, cards.map { it.id })
+
+    /** [cards] by day, newest day first: every group gets a header with its date (spec 3.21). */
+    val groups: List<DayGroup> get() = cards.groupBy { it.date }.map { (date, cards) -> DayGroup(date, today = date == today, cards = cards) }
 }
+
+data class DayGroup(val date: LocalDate, val today: Boolean, val cards: List<HistoryCard>)
 
 sealed interface HistoryIntent {
     data class FilterSelected(val filter: HistoryFilter) : HistoryIntent
 
     data class SessionClicked(val id: Long) : HistoryIntent
+
+    /** «Отметить лучшим» / «Снять отметку „лучший“» of a take's «⋯» (spec 3.21). */
+    data class BestToggled(val id: Long) : HistoryIntent
 
     data class SectionSelected(val section: HistorySection) : HistoryIntent
 

@@ -23,10 +23,25 @@ class PieceStatsTest {
     }
 
     @Test
-    fun `the best take has the highest score, and of equals the later one`() {
-        assertNull(PieceStats.best(emptyList()))
-        val takes = listOf(take(1, 1_000, 82), take(2, 2_000, 78), take(3, 3_000, 82))
-        assertEquals(3L, PieceStats.best(takes)!!.id)
+    fun `the best take is the one its player marked, never the score`() {
+        val takes = PieceStats.takesOf(1, listOf(take(1, 1_000, 95), take(2, 2_000, 60), take(3, 3_000, 82)))
+        assertNull(PieceStats.bestOf(piece, takes))
+        assertEquals(2L, PieceStats.bestOf(piece.copy(bestTakeId = 2), takes)!!.id)
+    }
+
+    @Test
+    fun `a mark whose take is gone or belongs to another piece reads as no mark`() {
+        val takes = PieceStats.takesOf(1, listOf(take(1, 1_000, 95)))
+        assertNull(PieceStats.bestOf(piece.copy(bestTakeId = 7), takes))
+        assertNull(PieceStats.bestOf(piece.copy(bestTakeId = 5), listOf(take(5, 1_000, 80, pieceId = 2))))
+    }
+
+    @Test
+    fun `the marked take stands first, the rest newest first`() {
+        val takes = PieceStats.takesOf(1, listOf(take(1, 1_000, 95), take(2, 2_000, 60), take(3, 3_000, 82)))
+        assertEquals(listOf(3L, 2L, 1L), PieceStats.listed(piece, takes).map { it.id })
+        assertEquals(listOf(1L, 3L, 2L), PieceStats.listed(piece.copy(bestTakeId = 1), takes).map { it.id })
+        assertEquals(listOf(3L, 2L, 1L), PieceStats.listed(piece.copy(bestTakeId = 9), takes).map { it.id })
     }
 
     @Test
@@ -36,7 +51,7 @@ class PieceStatsTest {
         val progress = PieceStats.progress(takes, config)!!
         assertEquals(listOf(58, 88, 71), progress.scores)
         assertEquals(71, progress.lastScore)
-        assertEquals(88, progress.bestScore)
+        assertEquals(88, progress.maxScore)
     }
 
     @Test

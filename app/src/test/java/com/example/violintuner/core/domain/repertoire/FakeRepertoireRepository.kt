@@ -40,6 +40,10 @@ class FakeRepertoireRepository(private val config: RepertoireConfig = Repertoire
         pieces.update { list -> list.map { if (it.id == id) it.copy(status = status, updatedAtEpochMs = nowEpochMs) else it } }
     }
 
+    override suspend fun setBestTake(id: Long, sessionId: Long?) {
+        pieces.update { list -> list.map { if (it.id == id) it.copy(bestTakeId = sessionId) else it } }
+    }
+
     override suspend fun delete(id: Long) {
         deletedFiles += pages.value.filter { it.pieceId == id }.flatMap { listOf(it.fileName, it.thumbFileName) }
         pages.update { list -> list.filterNot { it.pieceId == id } }

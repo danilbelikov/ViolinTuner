@@ -1,5 +1,8 @@
 package com.example.violintuner.feature.session
 
+import androidx.compose.ui.platform.LocalContext
+import com.example.violintuner.R
+import android.widget.Toast
 import android.view.WindowManager
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
@@ -29,6 +32,7 @@ fun SessionRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
+    val context = LocalContext.current
     val currentOnClose by rememberUpdatedState(onClose)
     val currentOnOpenSound by rememberUpdatedState(onOpenSound)
 
@@ -42,6 +46,9 @@ fun SessionRoute(
                     SessionEffect.Close -> currentOnClose()
                     is SessionEffect.OpenSound -> currentOnOpenSound(effect.sessionId)
                     is SessionEffect.Share -> shareViewModel.start(effect.sessionId)
+                    // A toast, like every short message of the app; the handoff draws a snackbar (docs/plan-records2.md).
+                    is SessionEffect.ShowBestMarked ->
+                        Toast.makeText(context, if (effect.moved) R.string.best_marked_moved else R.string.best_marked, Toast.LENGTH_SHORT).show()
                 }
             }
         }

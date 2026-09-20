@@ -120,7 +120,7 @@ class PieceViewModelTest {
         val takes = TakePipeline(pitch, sessions, NoAudioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler))
         val viewModel = PieceViewModel(
             saved, repertoire, files, RepertoireConfig(), clock, takes,
-            SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), sessions, IntonationConfig(), sound, SoundConfig(),
+            SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), sessions,
             videoFiles, importer(), NoShareFiles,
         )
         val effects = mutableListOf<PieceEffect>()
@@ -297,7 +297,8 @@ class PieceViewModelTest {
 
         assertEquals(id, sessions.saved.single().pieceId)
         val take = viewModel.state.value.takes.single()
-        assertTrue(take.isNew && take.best)
+        assertTrue(take.isNew)
+        assertFalse("nobody marked it: the score marks nothing", take.best)
         assertTrue("the player stays with the music", effects.isEmpty())
 
         advance(2_000)
@@ -305,7 +306,7 @@ class PieceViewModelTest {
     }
 
     @Test
-    fun `takes stand newest first with the best one marked, and progress needs two of them`() = runTest {
+    fun `takes stand newest first with none marked until the player says so, and progress needs two of them`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
         val (viewModel, _) = screen(id)
         assertNull(viewModel.state.value.progress)
@@ -317,8 +318,37 @@ class PieceViewModelTest {
         }
         val state = viewModel.state.value
         assertEquals(2, state.takes.size)
-        assertEquals(1, state.takes.count { it.best })
+        assertEquals(0, state.takes.count { it.best })
         assertEquals(2, state.progress!!.scores.size)
+    }
+
+    @Test
+    fun `the take marked as the best stands first, the mark moves, a second tap clears it`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        repeat(3) { recordTake(viewModel) }
+        advance(2_000)
+        val (newest, middle, oldest) = viewModel.state.value.takes.map { it.card.id }
+
+        viewModel.onIntent(PieceIntent.BestToggled(oldest))
+        runCurrent()
+        assertEquals(listOf(oldest, newest, middle), viewModel.state.value.takes.map { it.card.id })
+        assertEquals(listOf(true, false, false), viewModel.state.value.takes.map { it.best })
+
+        viewModel.onIntent(PieceIntent.BestToggled(middle))
+        runCurrent()
+        assertEquals(listOf(middle, newest, oldest), viewModel.state.value.takes.map { it.card.id })
+        assertEquals(middle, repertoire.piece(id)!!.bestTakeId)
+
+        // a new take goes under the pinned one
+        recordTake(viewModel)
+        assertEquals(middle, viewModel.state.value.takes.first().card.id)
+        assertTrue(viewModel.state.value.takes[1].isNew)
+
+        viewModel.onIntent(PieceIntent.BestToggled(middle))
+        runCurrent()
+        assertNull(repertoire.piece(id)!!.bestTakeId)
+        assertEquals(0, viewModel.state.value.takes.count { it.best })
     }
 
     @Test
@@ -395,13 +425,15 @@ class PieceViewModelTest {
     private fun PieceViewModel.select(intent: SelectionIntent) = onIntent(PieceIntent.Select(intent))
 
     @Test
-    fun `picked takes are deleted together, the piece stays and the best take is found again`() = runTest {
+    fun `picked takes are deleted together, the piece stays, and a deleted best take leaves no mark`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
         val (viewModel, effects) = screen(id)
         repeat(3) { recordTake(viewModel) }
         advance(2_000)
         val (newest, middle, oldest) = viewModel.state.value.takes.map { it.card.id }
 
+        viewModel.onIntent(PieceIntent.BestToggled(oldest))
+        runCurrent()
         viewModel.select(SelectionIntent.CardLongPressed(newest))
         viewModel.onIntent(PieceIntent.TakeClicked(oldest))
         runCurrent()
@@ -414,7 +446,7 @@ class PieceViewModelTest {
 
         val state = viewModel.state.value
         assertEquals(listOf(middle), state.takes.map { it.card.id })
-        assertTrue(state.takes.single().best)
+        assertFalse(state.takes.single().best)
         assertNull("progress needs two takes", state.progress)
         assertEquals(Selection(), state.selection)
         assertNotNull(state.header)
@@ -550,16 +582,5 @@ class PieceViewModelTest {
         assertEquals(PieceEffect.ShareVideo("/cache/share/video.mp4"), effects.last())
         viewModel.onIntent(PieceIntent.VideoImportDismissed)
         assertEquals(1, videoFiles.discarded.size)
-    }
-
-    @Test
-    fun `a take with a sound of its own says which, the others say nothing`() = runTest {
-        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
-        val (viewModel, _) = screen(id)
-        backgroundScope.launch { viewModel.takeSounds.collect {} }
-        sound.setDefault(SoundPresets.settingsOf(BuiltInPreset.CHAMBER_HALL, SoundConfig()))
-        sound.setOwn(7, SoundPresets.settingsOf(BuiltInPreset.WARM, SoundConfig()))
-        runCurrent()
-        assertEquals(mapOf(7L to SoundCaption.BuiltIn(BuiltInPreset.WARM)), viewModel.takeSounds.value)
     }
 }

@@ -50,10 +50,6 @@ import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
-import com.example.violintuner.feature.history.DayLabel
-import com.example.violintuner.feature.history.components.EmptyRecordTile
-import com.example.violintuner.feature.history.components.RecordTile
-import com.example.violintuner.feature.history.components.RecordTileSize
 import com.example.violintuner.feature.repertoire.components.SheetThumb
 import com.example.violintuner.feature.repertoire.components.StatusChip
 import com.example.violintuner.feature.repertoire.components.THUMB_DIM
@@ -70,7 +66,6 @@ private val AddHeight = 48.dp
 private val AddCorner = 24.dp
 private val ChipHeight = 32.dp
 private val ChipCorner = 8.dp
-private val LastTakeWidth = 76.dp
 private const val TABULAR_FIGURES = "tnum"
 private const val EMPTY_HEIGHT_FRACTION = 0.7f
 
@@ -209,33 +204,29 @@ private fun PieceCardRow(card: PieceCard, onClick: () -> Unit, modifier: Modifie
 }
 
 /**
- * How the piece is going, without a number (spec 3.18, handoff 19c2): the note tile in the zone of
- * the latest take over the day and the number of takes, a line each; a dashed ring and «нет дублей» without takes.
+ * When the piece was last played and how often — words only (spec 3.21, handoff 22g2): two lines by
+ * the right edge, «нет дублей» without takes. The card is about the piece, not about how it goes;
+ * a star by the date says one of its takes is marked as the best.
  */
 @Composable
 private fun LastTake(card: PieceCard) {
     val colors = MaterialTheme.colorScheme
-    val zone = card.lastScoreZone
-    Column(
-        modifier = Modifier.width(LastTakeWidth),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp),
-    ) {
-        if (zone != null) {
-            RecordTile(zone, take = true, hasAudio = true, size = RecordTileSize.PIECE)
+    val style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp, fontFeatureSettings = TABULAR_FIGURES)
+    Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(3.dp)) {
+        val date = card.lastDate
+        if (date == null) {
+            Text(stringResource(R.string.repertoire_no_takes), color = colors.onSurfaceVariant, maxLines = 1, style = style)
         } else {
-            EmptyRecordTile(ring = colors.outlineVariant, note = colors.outline)
+            Row(horizontalArrangement = Arrangement.spacedBy(5.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (card.hasBest) AppIcon(AppIcons.Star, contentDescription = stringResource(R.string.take_best), tint = colors.primary, size = BestStar)
+                Text(Formats.recordDate(date, card.lastDateOtherYear), color = colors.onSurfaceVariant, maxLines = 1, style = style)
+            }
+            Text(takesLabel(card.takes), color = colors.onSurfaceVariant, maxLines = 1, style = style)
         }
-        val caption = listOfNotNull(card.lastDay?.let { dayLabel(it) }, takesLabel(card.takes).takeIf { card.takes > 0 })
-        Text(
-            text = if (caption.isEmpty()) stringResource(R.string.repertoire_no_takes) else caption.joinToString("\n"),
-            color = colors.onSurfaceVariant,
-            maxLines = 2,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, lineHeight = 14.sp, fontFeatureSettings = TABULAR_FIGURES),
-        )
     }
 }
+
+private val BestStar = 12.dp
 
 @Composable
 private fun EmptyRepertoire(onAdd: () -> Unit, modifier: Modifier = Modifier) {
@@ -306,13 +297,6 @@ fun KeyAndTempo(keyName: String?, tempoBpm: Int?, style: TextStyle, modifier: Mo
 }
 
 private val TempoIconGap = 5.dp
-
-@Composable
-fun dayLabel(day: DayLabel): String = when (day) {
-    DayLabel.Today -> stringResource(R.string.history_day_today)
-    DayLabel.Yesterday -> stringResource(R.string.history_day_yesterday)
-    is DayLabel.On -> Formats.dayAndShortMonth(day.date)
-}
 
 /** «1 дубль», «2 дубля», «6 дублей». */
 @Composable

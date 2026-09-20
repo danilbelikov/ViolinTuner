@@ -12,8 +12,6 @@ import com.example.violintuner.core.domain.TargetMode
 import com.example.violintuner.core.domain.repertoire.RepertoireConfig
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.session.SessionRepository
-import com.example.violintuner.core.domain.sound.SoundConfig
-import com.example.violintuner.core.domain.sound.SoundRepository
 import com.example.violintuner.core.recording.TakePipeline
 import com.example.violintuner.core.recording.video.VideoFiles
 import com.example.violintuner.core.recording.video.VideoImport
@@ -22,8 +20,6 @@ import com.example.violintuner.core.settings.IntonationConfigSource
 import com.example.violintuner.feature.history.Selection
 import com.example.violintuner.feature.history.SelectionIntent
 import com.example.violintuner.feature.history.SelectionRules
-import com.example.violintuner.feature.sound.SoundCaption
-import com.example.violintuner.feature.sound.SoundReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.File
 import java.time.Clock
@@ -58,23 +54,11 @@ class PieceViewModel @Inject constructor(
     private val takes: TakePipeline,
     private val configSource: IntonationConfigSource,
     private val sessions: SessionRepository,
-    private val intonationConfig: IntonationConfig,
-    sound: SoundRepository,
-    soundConfig: SoundConfig,
     private val videos: VideoFiles,
     private val importer: VideoTakeImporter,
     private val shareFiles: ShareFiles,
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
-
-    /**
-     * Takes whose sound is their own, by what it is set to: the row of such a take names it, so
-     * that it is seen where the processing differs from everyone's (spec 3.17). Apart from
-     * [state]: it has nothing to do with the piece.
-     */
-    val takeSounds: StateFlow<Map<Long, SoundCaption>> = combine(sound.own, sound.presets) { own, presets ->
-        own.mapValues { (_, settings) -> SoundReducer.captionOf(settings, presets, soundConfig) }
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), emptyMap())
 
     /** What only the screen decides: photos on their way in, the open menu, the takes being picked. */
     private data class Ui(val importing: Int = 0, val statusMenuOpen: Boolean = false, val selection: Selection = Selection())
@@ -119,7 +103,7 @@ class PieceViewModel @Inject constructor(
         } else {
             val shown = PieceReducer.stateOf(
                 piece, pages, ui.importing, ui.statusMenuOpen, config,
-                takes = PieceReducer.takesOf(pieceId, sessions, newTakeId, LocalDate.now(clock), clock.zone, intonationConfig),
+                takes = PieceReducer.takesOf(piece, sessions, newTakeId, LocalDate.now(clock), clock.zone),
                 progress = PieceReducer.progressOf(pieceId, sessions, config),
             ) { sheetFiles.existing(it)?.path }
             takeIds = shown.takes.map { it.card.id }
@@ -244,6 +228,7 @@ class PieceViewModel @Inject constructor(
             is PieceIntent.TakeClicked ->
                 if (ui.value.selection.active) select(SelectionIntent.CardToggled(intent.sessionId)) else effectChannel.trySend(PieceEffect.OpenSession(intent.sessionId))
             is PieceIntent.Select -> select(intent.intent)
+            is PieceIntent.BestToggled -> toggleBest(intent.sessionId)
             PieceIntent.VideoShootClicked -> if (videoAllowed()) {
                 val file = videos.newCameraFile()
                 // The camera app may push this process out of memory: the path has to outlive it.
@@ -274,6 +259,12 @@ class PieceViewModel @Inject constructor(
     // Two takes are not made at once, and takes are not made while others are being picked for deletion.
     private fun videoAllowed(): Boolean =
         !takes.recordingRequested.value && !listening.value && !ui.value.selection.active && importer.state.value == VideoImport.Idle
+
+    private fun toggleBest(sessionId: Long) {
+        // Read from what is on screen: the one place that already knows which take carries the mark.
+        val take = state.value.takes.firstOrNull { it.card.id == sessionId } ?: return
+        viewModelScope.launch { repertoire.setBestTake(pieceId, if (take.best) null else sessionId) }
+    }
 
     private fun select(intent: SelectionIntent) {
         val current = SelectionRules.prune(ui.value.selection, takeIds)

@@ -2,6 +2,7 @@ package com.example.violintuner.feature.history
 
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.repertoire.FakeRepertoireRepository
+import com.example.violintuner.core.domain.repertoire.PieceDraft
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.domain.session.NewSession
 import com.example.violintuner.core.domain.session.SessionAnalyzer
@@ -46,14 +47,14 @@ class HistoryViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private suspend fun save(daysAgo: Long, cents: Double = 1.0): Long {
+    private suspend fun save(daysAgo: Long, cents: Double = 1.0, pieceId: Long? = null): Long {
         val samples = List(60) { SessionSample(69, cents) }
         val analysis = SessionAnalyzer.analyze(samples, config)
         return repository.save(
             NewSession(
                 startedAtEpochMs = now.minusSeconds(daysAgo * 86_400).toEpochMilli(), durationMs = 3_000, config = config,
                 samples = samples, metrics = analysis.metrics!!,
-                previewZones = SessionAnalyzer.previewZones(analysis.segments, config), audioPath = null,
+                previewZones = SessionAnalyzer.previewZones(analysis.segments, config), audioPath = null, pieceId = pieceId,
             ),
         )
     }
@@ -73,9 +74,9 @@ class HistoryViewModelTest {
         runCurrent()
         val state = viewModel.state.value
         assertEquals(2, state.totalCount)
-        assertEquals(listOf(DayLabel.Today, DayLabel.On(java.time.LocalDate.of(2026, 9, 7))), state.cards.map { it.day })
-        assertEquals(listOf(100, 0), state.cards.map { it.scorePercent })
-        assertEquals(100, state.weeks.last().averageScore)
+        assertEquals(listOf(java.time.LocalDate.of(2026, 9, 17), java.time.LocalDate.of(2026, 9, 7)), state.cards.map { it.date })
+        assertEquals(1, state.days.last().count)
+        assertEquals(2, state.days.sumOf { it.count })
     }
 
     @Test
@@ -213,5 +214,31 @@ class HistoryViewModelTest {
         runCurrent()
 
         assertEquals(setOf(second), viewModel.state.value.selection.ids)
+    }
+
+    @Test
+    fun `the best mark is set on a take, moves to another and is cleared by a second tap`() = runTest {
+        val pieceId = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 0)
+        val first = save(daysAgo = 1, pieceId = pieceId)
+        val second = save(daysAgo = 0, pieceId = pieceId)
+        val free = save(daysAgo = 2)
+        val viewModel = viewModel()
+        runCurrent()
+        fun best() = viewModel.state.value.cards.filter { it.best }.map { it.id }
+
+        viewModel.onIntent(HistoryIntent.BestToggled(first))
+        runCurrent()
+        assertEquals(listOf(first), best())
+
+        viewModel.onIntent(HistoryIntent.BestToggled(second))
+        runCurrent()
+        assertEquals(listOf(second), best())
+        // the list of «Записи» stays in the order of time: the mark pins a take on the screen of its piece only
+        assertEquals(listOf(second, first, free), viewModel.state.value.cards.map { it.id })
+
+        viewModel.onIntent(HistoryIntent.BestToggled(second))
+        viewModel.onIntent(HistoryIntent.BestToggled(free)) // not a take: nothing to mark
+        runCurrent()
+        assertEquals(emptyList<Long>(), best())
     }
 }

@@ -83,7 +83,6 @@ import com.example.violintuner.feature.repertoire.components.THUMB_DIM
 import com.example.violintuner.feature.repertoire.components.THUMB_DIM_FIRST
 import com.example.violintuner.feature.repertoire.components.dashedBorder
 import com.example.violintuner.feature.repertoire.components.statusLabel
-import com.example.violintuner.feature.sound.SoundCaption
 import java.time.ZoneId
 
 private val ScreenPadding = 16.dp
@@ -125,7 +124,6 @@ fun PieceScreen(
     addPhoto: AddPhotoActions,
     modifier: Modifier = Modifier,
     zone: ZoneId = ZoneId.systemDefault(),
-    takeSounds: Map<Long, SoundCaption> = emptyMap(),
     takeActions: CardActions? = null,
     videoImport: VideoImport = VideoImport.Idle,
     onPickVideo: () -> Unit = {},
@@ -140,9 +138,9 @@ fun PieceScreen(
         if (header == null) {
             TopBar(title = "", titleVisible = false, height = TopBarHeight, onIntent = onIntent)
         } else if (maxWidth > maxHeight) {
-            LandscapeLayout(state, take, header, onIntent, addPhoto, zone, takeSounds, takeActions, videoImport, onPickVideo)
+            LandscapeLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo)
         } else {
-            PortraitLayout(state, take, header, onIntent, addPhoto, zone, takeSounds, takeActions, videoImport, onPickVideo)
+            PortraitLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo)
         }
     }
     VideoImportSheet(videoImport, onIntent)
@@ -156,7 +154,6 @@ private fun PortraitLayout(
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
     zone: ZoneId,
-    takeSounds: Map<Long, SoundCaption>,
     takeActions: CardActions?,
     videoImport: VideoImport,
     onPickVideo: () -> Unit,
@@ -188,7 +185,7 @@ private fun PortraitLayout(
             }
             TakesBlock(
                 state.takes, zone, onIntent, Modifier.padding(horizontal = ScreenPadding),
-                sounds = takeSounds, actions = takeActions, selection = state.selection, canSelect = !take.recording,
+                actions = takeActions, selection = state.selection, canSelect = !take.recording,
             )
         }
     }
@@ -203,7 +200,6 @@ private fun LandscapeLayout(
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
     zone: ZoneId,
-    takeSounds: Map<Long, SoundCaption>,
     takeActions: CardActions?,
     videoImport: VideoImport,
     onPickVideo: () -> Unit,
@@ -241,7 +237,7 @@ private fun LandscapeLayout(
                 }
                 TakesBlock(
                     state.takes, zone, onIntent, Modifier.padding(horizontal = ScreenPadding),
-                    sounds = takeSounds, actions = takeActions, selection = state.selection, canSelect = !take.recording,
+                    actions = takeActions, selection = state.selection, canSelect = !take.recording,
                 )
             }
         }

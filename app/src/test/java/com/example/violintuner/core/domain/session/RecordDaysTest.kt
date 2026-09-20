@@ -4,17 +4,16 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
 import org.junit.Test
 
-class HistoryWeeksTest {
+class RecordDaysTest {
     private val moscow = ZoneId.of("Europe/Moscow")
 
-    private fun session(dateTime: String, score: Int, zone: ZoneId = moscow) = SessionSummary(
+    private fun session(dateTime: String, zone: ZoneId = moscow) = SessionSummary(
         id = 0, title = null,
         startedAtEpochMs = LocalDateTime.parse(dateTime).atZone(zone).toInstant().toEpochMilli(),
         durationMs = 60_000, a4Hz = 440.0, toleranceCents = 8.0, nearCents = 20.0,
-        scorePercent = score, nearPercent = 0, offPercent = 100 - score, maeCents = 0.0, biasCents = 0.0,
+        scorePercent = 80, nearPercent = 0, offPercent = 20, maeCents = 0.0, biasCents = 0.0,
         previewZones = emptyList(), audioPath = null,
     )
 
@@ -22,60 +21,46 @@ class HistoryWeeksTest {
     private val today = LocalDate.of(2026, 9, 17)
 
     @Test
-    fun `six weeks ending with the current one, starting on Mondays`() {
-        val weeks = HistoryWeeks.weekly(emptyList(), today, moscow, weeks = 6)
-        assertEquals(
-            listOf("2026-08-10", "2026-08-17", "2026-08-24", "2026-08-31", "2026-09-07", "2026-09-14"),
-            weeks.map { it.weekStart.toString() },
-        )
-        assertEquals(List(6) { null }, weeks.map { it.averageScore })
+    fun `fourteen days ending with today, empty days included`() {
+        val days = RecordDays.daily(emptyList(), today, moscow, days = 14)
+        assertEquals(14, days.size)
+        assertEquals(LocalDate.of(2026, 9, 4), days.first().date)
+        assertEquals(today, days.last().date)
+        assertEquals(List(14) { 0 }, days.map { it.count })
     }
 
     @Test
-    fun `week score is the rounded mean of its sessions, empty weeks stay empty`() {
+    fun `recordings are counted on the day they started, older ones fall out`() {
         val sessions = listOf(
-            session("2026-09-14T00:00:00", 80), // Monday midnight belongs to the new week
-            session("2026-09-16T19:30:00", 85),
-            session("2026-09-13T23:59:59", 60), // Sunday night: the week before
-            session("2026-08-12T10:00:00", 70),
-            session("2026-07-01T10:00:00", 10), // older than the chart
+            session("2026-09-17T08:00:00"), session("2026-09-17T21:30:00"), session("2026-09-15T10:00:00"),
+            session("2026-09-04T00:00:01"), session("2026-09-03T23:59:00"),
         )
-        val weeks = HistoryWeeks.weekly(sessions, today, moscow, weeks = 6)
-        assertEquals(listOf(70, null, null, null, 60, 83), weeks.map { it.averageScore })
+        val days = RecordDays.daily(sessions, today, moscow, days = 14)
+        assertEquals(2, days.last().count)
+        assertEquals(1, days.first { it.date == LocalDate.of(2026, 9, 15) }.count)
+        assertEquals(1, days.first().count)
+        assertEquals(4, days.sumOf { it.count })
     }
 
     @Test
-    fun `delta compares the last two weeks and needs both`() {
-        fun weeks(vararg scores: Int?) = scores.mapIndexed { i, s -> WeekScore(today.plusWeeks(i.toLong()), s) }
-        assertEquals(6, HistoryWeeks.delta(weeks(70, 78, 84)))
-        assertEquals(-4, HistoryWeeks.delta(weeks(80, 76)))
-        assertNull(HistoryWeeks.delta(weeks(80, null)))
-        assertNull(HistoryWeeks.delta(weeks(null, 80)))
-        assertNull(HistoryWeeks.delta(weeks(80)))
+    fun `the day depends on the zone of the viewer`() {
+        val lateEvening = session("2026-09-16T23:30:00")
+        assertEquals(LocalDate.of(2026, 9, 16), RecordDays.dateOf(lateEvening, moscow))
+        assertEquals(LocalDate.of(2026, 9, 17), RecordDays.dateOf(lateEvening, ZoneId.of("Asia/Tokyo")))
     }
 
     @Test
-    fun `the week of a session depends on the viewer's time zone`() {
-        // Sunday 23:30 in Moscow is already Monday 05:30 in Tokyo-ish (+9): a different week.
-        val lateSunday = session("2026-09-13T23:30:00", 90)
-        val inMoscow = HistoryWeeks.weekly(listOf(lateSunday), today, moscow, 2)
-        val inTokyo = HistoryWeeks.weekly(listOf(lateSunday), today, ZoneId.of("Asia/Tokyo"), 2)
-        assertEquals(listOf(90, null), inMoscow.map { it.averageScore })
-        assertEquals(listOf(null, 90), inTokyo.map { it.averageScore })
+    fun `the scale follows the busiest day but never drops below the floor`() {
+        fun days(vararg counts: Int) = counts.mapIndexed { i, c -> DayCount(today.minusDays(i.toLong()), c) }
+        assertEquals(4, RecordDays.scaleTop(days(0, 1, 2), minTop = 4))
+        assertEquals(12, RecordDays.scaleTop(days(12, 1), minTop = 4))
+        assertEquals(4, RecordDays.scaleTop(emptyList(), minTop = 4))
     }
 
     @Test
-    fun `weeks cross the year boundary`() {
-        val weeks = HistoryWeeks.weekly(emptyList(), LocalDate.of(2027, 1, 2), moscow, weeks = 2)
-        assertEquals(listOf("2026-12-21", "2026-12-28"), weeks.map { it.weekStart.toString() })
-    }
-
-    @Test
-    fun `a daylight saving switch does not move sessions between weeks`() {
-        val berlin = ZoneId.of("Europe/Berlin")
-        // Clocks go back on Sunday 2026-10-25; the evening still belongs to the week of Oct 19.
-        val sundayEvening = session("2026-10-25T22:00:00", 75, berlin)
-        val weeks = HistoryWeeks.weekly(listOf(sundayEvening), LocalDate.of(2026, 10, 27), berlin, 2)
-        assertEquals(listOf(75, null), weeks.map { it.averageScore })
+    fun `weeks start on Monday`() {
+        assertEquals(LocalDate.of(2026, 9, 14), HistoryWeeks.weekStartOf(today))
+        assertEquals(LocalDate.of(2026, 9, 14), HistoryWeeks.weekStartOf(LocalDate.of(2026, 9, 14)))
+        assertEquals(LocalDate.of(2026, 12, 28), HistoryWeeks.weekStartOf(LocalDate.of(2027, 1, 2)))
     }
 }

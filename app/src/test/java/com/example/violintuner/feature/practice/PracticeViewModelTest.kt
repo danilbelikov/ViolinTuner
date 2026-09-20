@@ -1,7 +1,7 @@
 package com.example.violintuner.feature.practice
 
 import com.example.violintuner.core.data.profile.FakeAvatarFiles
-import com.example.violintuner.core.domain.IntonationConfig
+import com.example.violintuner.core.domain.repertoire.FakeRepertoireRepository
 import com.example.violintuner.core.domain.practice.FakePracticeRepository
 import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
 import com.example.violintuner.core.domain.practice.PracticeConfig
@@ -67,7 +67,7 @@ class PracticeViewModelTest {
 
     private fun TestScope.viewModel(): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
         val viewModel = PracticeViewModel(
-            repository, store, PracticeFinisher(repository, store, clock), sessions, config, IntonationConfig(), clock,
+            repository, store, PracticeFinisher(repository, store, clock), sessions, config, FakeRepertoireRepository(), clock,
             trophies, profiles, avatarFiles, ProgressConfig(),
         )
         val effects = mutableListOf<PracticeEffect>()

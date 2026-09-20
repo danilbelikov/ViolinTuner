@@ -43,7 +43,7 @@ class PracticeReducerTest {
         month: YearMonth = YearMonth.of(2026, 9),
         selected: LocalDate = today,
     ) = PracticeReducer.stateOf(
-        entries, sessions, runningMs, month, selected, sheet = null, today, zone, config, intonation,
+        entries, sessions, runningMs, month, selected, sheet = null, today, zone, config,
         trophies = emptyList(), profile = Profile.EMPTY, avatarPath = null, progressConfig = ProgressConfig(),
     )
 

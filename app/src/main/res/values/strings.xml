@@ -59,9 +59,11 @@
     <string name="settings_tolerance_text">Ширина зелёной зоны: насколько близко к ноте считается «в строе».</string>
     <string name="settings_restart_onboarding">Пройти онбординг снова</string>
 
-    <string name="session_default_title">Сессия · %1$s</string>
+    <string name="session_default_title">Запись · %1$s</string>
+    <string name="record_default_title">Запись</string>
+    <string name="session_take_subtitle">дубль · %1$s · %2$s</string>
     <string name="session_back">Назад</string>
-    <string name="session_not_found">Сессия не найдена</string>
+    <string name="session_not_found">Запись не найдена</string>
     <string name="session_percent">%1$d%%</string>
     <string name="session_meta">в строе · %1$s · ±%2$d ц</string>
     <string name="session_bias_mean">в среднем %1$s ц</string>
@@ -80,14 +82,14 @@
     <string name="session_problem_notes">Проблемные ноты</string>
     <string name="session_problem_note">%1$s на струне %2$s</string>
     <string name="session_cents_value">%1$s ц</string>
-    <string name="session_no_problem_notes">Ни одна нота не уходит стабильно — отличная сессия.</string>
+    <string name="session_no_problem_notes">Ни одна нота не уходит стабильно — отличная запись.</string>
     <string name="session_action_rename">Переименовать</string>
     <string name="session_action_delete">Удалить</string>
-    <string name="session_rename_title">Название сессии</string>
+    <string name="session_rename_title">Название записи</string>
     <string name="session_rename_hint">Пустое поле вернёт название по дате</string>
     <string name="session_rename_confirm">Сохранить</string>
-    <string name="session_delete_title">Удалить сессию?</string>
-    <string name="session_delete_text">Сессия и её запись будут удалены без возможности восстановления.</string>
+    <string name="session_delete_title">Удалить запись?</string>
+    <string name="session_delete_text">Звук и разбор будут удалены без возможности восстановления.</string>
     <string name="session_delete_confirm">Удалить</string>
     <string name="dialog_cancel">Отмена</string>
     <string name="session_note_target">цель</string>
@@ -114,18 +116,17 @@
     <string name="session_player_position">Позиция в записи</string>
     <string name="session_roll_description">Лента нот. Нажмите на ноту, чтобы увидеть детали.</string>
 
-    <string name="history_count_one">%1$d сессия</string>
-    <string name="history_count_few">%1$d сессии</string>
-    <string name="history_count_many">%1$d сессий</string>
-    <string name="history_chart_title">Средний балл за неделю</string>
-    <string name="history_week_delta">%1$s за неделю</string>
-    <string name="history_chart_description">График среднего балла по неделям</string>
+    <string name="history_count_one">%1$d запись</string>
+    <string name="history_count_few">%1$d записи</string>
+    <string name="history_count_many">%1$d записей</string>
+    <string name="history_chart_title">Записи за две недели</string>
+    <string name="history_chart_description">Записи по дням за две недели</string>
     <string name="history_filter_all">Все</string>
     <string name="history_filter_this_week">Эта неделя</string>
     <string name="history_filter_month">Месяц</string>
     <string name="history_day_today">сегодня</string>
-    <string name="history_day_yesterday">вчера</string>
-    <string name="history_card_meta">%1$s · %2$s · %3$s ц</string>
+    <string name="record_meta">%1$s · %2$s</string>
+    <string name="history_chart_bar">%1$s, %2$s</string>
     <string name="backup_block_title">Данные</string>
     <string name="backup_row_save">Сохранить копию</string>
     <string name="backup_row_never">ещё не сохраняли</string>
@@ -320,13 +321,13 @@
     <string name="selection_delete_takes_few">Удалить %1$d дубля?</string>
     <string name="selection_delete_takes_many">Удалить %1$d дублей?</string>
     <string name="selection_delete_text">Звук и разбор удалятся. Это нельзя отменить.</string>
-    <string name="record_zone_good">хорошо</string>
-    <string name="record_zone_fair">так себе</string>
-    <string name="record_zone_off">мимо</string>
     <string name="record_tile_take">дубль</string>
+    <string name="record_tile_record">запись</string>
+    <string name="record_tile_sound">звук</string>
+    <string name="record_tile_only_video">видео</string>
     <string name="record_tile_no_sound">без звука</string>
-    <string name="history_empty_filter">За этот период сессий нет</string>
-    <string name="history_empty">Здесь появятся ваши сессии. Нажмите кнопку записи на экране Live.</string>
+    <string name="history_empty_filter">За этот период записей нет</string>
+    <string name="history_empty">Здесь появятся ваши записи. Нажмите кнопку записи на экране Live.</string>
 
     <string name="practice_start">Начать занятие</string>
     <string name="practice_stop">Закончить занятие</string>
@@ -443,7 +444,7 @@
     <string name="trophies_line_far">%1$s, %2$s, далеко впереди</string>
 
     <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
-    <string name="history_section_sessions">Сессии</string>
+    <string name="history_section_sessions">Записи</string>
     <string name="history_section_repertoire">Репертуар</string>
     <string name="session_take_title">%1$s · %2$s</string>
     <string name="dot_separator">\u0020·\u0020</string>
@@ -500,12 +501,11 @@
     <string name="take_level_description">Микрофон слышит</string>
     <string name="take_no_permission">Чтобы записать дубль, нужен доступ к микрофону.</string>
     <string name="take_grant_permission">Разрешить доступ</string>
-    <string name="take_progress">последний %1$d\u00A0%% · лучший %2$d\u00A0%%</string>
+    <string name="take_progress">последний %1$d\u00A0%% · максимум %2$d\u00A0%%</string>
     <string name="take_chart_description">Баллы дублей по порядку: %1$s</string>
     <string name="takes_title">Дубли</string>
     <string name="takes_empty">Дублей пока нет. Запишите первый — увидите, как меняется произведение.</string>
     <string name="take_best">лучший</string>
-    <string name="take_meta">%1$s · %2$s ц</string>
     <!-- «Звук»: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">Звук записей</string>
     <string name="sound_everyone_subtitle">для всех записей · %1$s</string>
@@ -612,7 +612,7 @@
     <string name="sound_dialog_pick_title">Слушать на</string>
     <string name="sound_share">Поделиться</string>
     <string name="share_message">%1$s · %2$d %% · %3$s</string>
-    <string name="share_message_session">Сессия</string>
+    <string name="share_message_session">Запись</string>
     <string name="share_title">Поделиться записью</string>
     <string name="share_processed">Обработанный звук</string>
     <string name="share_processed_caption">%1$s · как слышно в приложении</string>
@@ -648,6 +648,10 @@
     <string name="card_menu">Ещё</string>
     <string name="card_menu_share">Поделиться</string>
     <string name="card_menu_sound">Звук…</string>
+    <string name="best_set">Отметить лучшим</string>
+    <string name="best_clear">Снять отметку «лучший»</string>
+    <string name="best_marked">Отмечен как лучший</string>
+    <string name="best_marked_moved">Отмечен как лучший, прежняя отметка снята</string>
     <string name="sound_session_row">Звук</string>
     <string name="sound_session_silent">Запись без звука — только разбор интонации</string>
     <string name="sound_settings_row">Звук записей</string>

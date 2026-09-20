@@ -33,6 +33,8 @@ object Formats {
     private val DAY_AND_SHORT_MONTH = DateTimeFormatter.ofPattern("d MMM", LOCALE)
     private val DAY_WITH_WEEKDAY = DateTimeFormatter.ofPattern("d MMMM, EEEE", LOCALE)
     private val MONTH_AND_YEAR = DateTimeFormatter.ofPattern("LLLL yyyy", LOCALE)
+    private val DAY_MONTH_YEAR = DateTimeFormatter.ofPattern("d MMMM yyyy", LOCALE)
+    private val DAY_MONTH_YEAR_WEEKDAY = DateTimeFormatter.ofPattern("d MMMM yyyy, EEEE", LOCALE)
     private val TIME_OF_DAY = DateTimeFormatter.ofPattern("HH:mm", LOCALE)
 
     /** "m:ss", minutes not padded: 0:07, 12:40, 60:00. */
@@ -158,6 +160,13 @@ object Formats {
 
     /** "17 сентября, четверг" */
     fun dayWithWeekday(date: LocalDate): String = DAY_WITH_WEEKDAY.format(date)
+
+    /** "20 сентября"; a date of another year says which: "20 сентября 2025" (spec 3.21). */
+    fun recordDate(date: LocalDate, withYear: Boolean): String = (if (withYear) DAY_MONTH_YEAR else DAY_AND_MONTH).format(date)
+
+    /** The header of a day in «Записи»: "20 сентября, воскресенье" / "20 сентября 2025, суббота". */
+    fun recordDayHeader(date: LocalDate, withYear: Boolean): String =
+        (if (withYear) DAY_MONTH_YEAR_WEEKDAY else DAY_WITH_WEEKDAY).format(date)
 
     /** "Сентябрь 2026": the standalone month name, capitalised for a heading. */
     fun monthAndYear(month: YearMonth): String =

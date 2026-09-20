@@ -10,7 +10,6 @@ import com.example.violintuner.core.domain.repertoire.PieceStatus
 import com.example.violintuner.core.domain.repertoire.SheetPage
 import com.example.violintuner.core.domain.repertoire.Tonic
 import com.example.violintuner.core.domain.session.SessionSummary
-import com.example.violintuner.feature.history.DayLabel
 import java.time.LocalDate
 import java.time.ZoneId
 import org.junit.Assert.assertEquals
@@ -48,7 +47,7 @@ class RepertoireReducerTest {
     private val pages = listOf(SheetPage(11, 1, position = 1, "b.jpg", "b-thumb.jpg"), SheetPage(10, 1, position = 0, "a.jpg", "a-thumb.jpg"))
 
     private fun state(filter: PieceStatus? = null) =
-        RepertoireReducer.stateOf(pieces, pages, sessions, filter, today, zone, config) { "/sheets/$it" }
+        RepertoireReducer.stateOf(pieces, pages, sessions, filter, today, zone) { "/sheets/$it" }
 
     @Test
     fun `pieces stand by their last activity - a take, an edit - freshest first`() {
@@ -57,26 +56,33 @@ class RepertoireReducerTest {
     }
 
     @Test
-    fun `a card shows the latest take with its color and day, and the number of takes`() {
+    fun `a card shows the day of the latest take and the number of takes, and nothing about the score`() {
         val minuet = state().cards.first()
-        assertEquals(82, minuet.lastScore)
-        assertEquals(Zone.IN_TUNE, minuet.lastScoreZone)
-        assertEquals(DayLabel.Yesterday, minuet.lastDay)
+        assertEquals(LocalDate.of(2026, 9, 18), minuet.lastDate)
+        assertEquals(false, minuet.lastDateOtherYear)
+        assertEquals(false, minuet.hasBest)
         assertEquals(2, minuet.takes)
         assertEquals("G-dur", minuet.keyName)
         assertEquals(96, minuet.tempoBpm)
 
         val concerto = state().cards.single { it.title == "Концерт" }
-        assertEquals(Zone.OFF, concerto.lastScoreZone)
-        assertEquals(DayLabel.On(LocalDate.of(2026, 9, 14)), concerto.lastDay)
+        assertEquals(LocalDate.of(2026, 9, 14), concerto.lastDate)
     }
 
     @Test
-    fun `a piece without takes has no score and a piece without pages has no thumbnail`() {
+    fun `a piece with a marked take says so, a mark left by a take that is gone does not count`() {
+        fun cards(bestOfMinuet: Long?) = RepertoireReducer.stateOf(
+            pieces.map { if (it.id == 1L) it.copy(bestTakeId = bestOfMinuet) else it }, pages, sessions, null, today, zone,
+        ) { null }.cards
+        assertEquals(listOf("Менуэт"), cards(bestOfMinuet = 1).filter { it.hasBest }.map { it.title })
+        assertTrue(cards(bestOfMinuet = 404).none { it.hasBest })
+        assertTrue("the take of another piece", cards(bestOfMinuet = 3).none { it.hasBest })
+    }
+
+    @Test
+    fun `a piece without takes has no date and a piece without pages has no thumbnail`() {
         val gavotte = state().cards.single { it.title == "Гавот" }
-        assertNull(gavotte.lastScore)
-        assertNull(gavotte.lastScoreZone)
-        assertNull(gavotte.lastDay)
+        assertNull(gavotte.lastDate)
         assertEquals(0, gavotte.takes)
         assertNull(gavotte.thumbPath)
         assertNull(gavotte.keyName)
@@ -97,7 +103,7 @@ class RepertoireReducerTest {
 
     @Test
     fun `an empty repertoire and the loading state have no cards`() {
-        val empty = RepertoireReducer.stateOf(emptyList(), emptyList(), sessions, null, today, zone, config) { null }
+        val empty = RepertoireReducer.stateOf(emptyList(), emptyList(), sessions, null, today, zone) { null }
         assertEquals(0, empty.totalCount)
         assertTrue(empty.cards.isEmpty() && !empty.loading)
         assertTrue(RepertoireReducer.loading(null).loading)

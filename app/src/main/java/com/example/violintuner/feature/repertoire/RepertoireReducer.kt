@@ -1,12 +1,11 @@
 package com.example.violintuner.feature.repertoire
 
-import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.repertoire.Piece
 import com.example.violintuner.core.domain.repertoire.PieceStats
 import com.example.violintuner.core.domain.repertoire.PieceStatus
 import com.example.violintuner.core.domain.repertoire.SheetPage
 import com.example.violintuner.core.domain.session.SessionSummary
-import com.example.violintuner.feature.history.HistoryReducer
+import com.example.violintuner.core.domain.session.RecordDays
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -19,7 +18,6 @@ object RepertoireReducer {
         filter: PieceStatus?,
         today: LocalDate,
         zone: ZoneId,
-        config: IntonationConfig,
         thumbPathOf: (fileName: String) -> String?,
     ): RepertoireState {
         val firstPages = pages.groupBy { it.pieceId }.mapValues { (_, own) -> own.minBy { it.position } }
@@ -31,8 +29,6 @@ object RepertoireReducer {
             )
             .filter { (piece, _) -> filter == null || piece.status == filter }
             .map { (piece, takes) ->
-                // The card of the latest take already knows the color of a score and the word for a day.
-                val last = takes.firstOrNull()?.let { HistoryReducer.cardOf(it, today, zone, config) }
                 PieceCard(
                     id = piece.id,
                     title = piece.title,
@@ -40,10 +36,10 @@ object RepertoireReducer {
                     keyName = piece.key?.germanName,
                     tempoBpm = piece.tempoBpm,
                     status = piece.status,
-                    lastScore = last?.scorePercent,
-                    lastScoreZone = last?.scoreZone,
-                    lastDay = last?.day,
+                    lastDate = takes.firstOrNull()?.let { RecordDays.dateOf(it, zone) },
+                    lastDateOtherYear = takes.firstOrNull()?.let { RecordDays.dateOf(it, zone).year != today.year } ?: false,
                     takes = takes.size,
+                    hasBest = PieceStats.bestOf(piece, takes) != null,
                     thumbPath = firstPages[piece.id]?.let { thumbPathOf(it.thumbFileName) },
                 )
             }

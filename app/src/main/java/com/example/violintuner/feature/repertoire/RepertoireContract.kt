@@ -1,8 +1,7 @@
 package com.example.violintuner.feature.repertoire
 
-import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.repertoire.PieceStatus
-import com.example.violintuner.feature.history.DayLabel
+import java.time.LocalDate
 
 /** One piece in the list (spec 3.15, handoff 13b). Fields a piece does not have are null and simply not shown. */
 data class PieceCard(
@@ -14,11 +13,13 @@ data class PieceCard(
     val keyName: String?,
     val tempoBpm: Int?,
     val status: PieceStatus,
-    /** Score of the latest take with its color and day; null without takes — the card shows a dash. */
-    val lastScore: Int?,
-    val lastScoreZone: Zone?,
-    val lastDay: DayLabel?,
+    /** Day of the latest take; null without takes — the card says «нет дублей» (spec 3.21: no score, no zone here). */
+    val lastDate: LocalDate?,
+    /** Not this year: the date is written with its year. */
+    val lastDateOtherYear: Boolean = false,
     val takes: Int,
+    /** The piece has a take marked as the best: a star by the date. */
+    val hasBest: Boolean = false,
     /** Absolute path of the first page's thumbnail; null without pages. */
     val thumbPath: String?,
 )

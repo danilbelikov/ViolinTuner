@@ -1,10 +1,9 @@
 package com.example.violintuner.feature.history
 
 import com.example.violintuner.core.domain.IntonationConfig
-import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.session.HistoryWeeks
+import com.example.violintuner.core.domain.session.RecordDays
 import com.example.violintuner.core.domain.session.SessionSummary
-import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
@@ -19,24 +18,30 @@ object HistoryReducer {
         section: HistorySection = HistorySection.SESSIONS,
         /** Titles of the pieces by id: a take is named after its piece (spec 3.15). */
         pieceTitles: Map<Long, String> = emptyMap(),
+        /** The takes their players marked as the best of their pieces (spec 3.21). */
+        bestTakeIds: Set<Long> = emptySet(),
     ): HistoryState {
-        val weeks = HistoryWeeks.weekly(sessions, today, zone, config.historyWeeks)
+        val days = RecordDays.daily(sessions, today, zone, config.historyChartDays)
         return HistoryState(
             section = section,
             loading = false,
             totalCount = sessions.size,
-            weeks = weeks,
-            weekDelta = HistoryWeeks.delta(weeks),
+            days = days,
+            chartTop = RecordDays.scaleTop(days, config.historyChartMinTop),
+            today = today,
             filter = filter,
             cards = sessions
-                .filter { passes(filter, dateOf(it, zone), today, config) }
+                .filter { passes(filter, RecordDays.dateOf(it, zone), today, config) }
                 .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
-                .map { cardOf(it, today, zone, config, pieceTitle = it.pieceId?.let(pieceTitles::get)) },
+                .map { cardOf(it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds) },
         )
     }
 
     fun loading(filter: HistoryFilter, section: HistorySection = HistorySection.SESSIONS): HistoryState =
-        HistoryState(section = section, loading = true, totalCount = 0, weeks = emptyList(), weekDelta = null, filter = filter, cards = emptyList())
+        HistoryState(
+            section = section, loading = true, totalCount = 0, days = emptyList(), chartTop = 0, today = LocalDate.MIN,
+            filter = filter, cards = emptyList(),
+        )
 
     private fun passes(filter: HistoryFilter, date: LocalDate, today: LocalDate, config: IntonationConfig): Boolean =
         when (filter) {
@@ -45,39 +50,19 @@ object HistoryReducer {
             HistoryFilter.MONTH -> date.isAfter(today.minusDays(config.historyMonthDays.toLong()))
         }
 
-    /** Also the card of the "Записи этого дня" list on the practice screen. */
-    fun cardOf(
-        session: SessionSummary,
-        today: LocalDate,
-        zone: ZoneId,
-        config: IntonationConfig,
-        pieceTitle: String? = null,
-    ): HistoryCard {
-        val date = dateOf(session, zone)
-        return HistoryCard(
+    /** Also the card of the "Записи этого дня" list on the practice screen and of a take on the screen of its piece. */
+    fun cardOf(session: SessionSummary, today: LocalDate, zone: ZoneId, pieceTitle: String? = null, best: Boolean = false): HistoryCard =
+        HistoryCard(
             id = session.id,
             title = session.title,
             startedAtEpochMs = session.startedAtEpochMs,
-            day = when (date) {
-                today -> DayLabel.Today
-                today.minusDays(1) -> DayLabel.Yesterday
-                else -> DayLabel.On(date)
-            },
+            date = RecordDays.dateOf(session, zone),
+            otherYear = RecordDays.dateOf(session, zone).year != today.year,
             durationMs = session.durationMs,
-            biasCents = session.biasCents,
-            scorePercent = session.scorePercent,
-            scoreZone = when {
-                session.scorePercent >= config.scoreGoodPercent -> Zone.IN_TUNE
-                session.scorePercent >= config.scoreFairPercent -> Zone.NEAR
-                else -> Zone.OFF
-            },
-            previewZones = session.previewZones,
             pieceTitle = pieceTitle,
+            pieceId = session.pieceId,
             hasAudio = session.audioPath != null,
             hasVideo = session.videoPath != null,
+            best = best,
         )
-    }
-
-    private fun dateOf(session: SessionSummary, zone: ZoneId): LocalDate =
-        Instant.ofEpochMilli(session.startedAtEpochMs).atZone(zone).toLocalDate()
 }

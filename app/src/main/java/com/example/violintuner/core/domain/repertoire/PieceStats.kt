@@ -6,19 +6,29 @@ import com.example.violintuner.core.domain.session.SessionSummary
 object PieceStats {
     data class Progress(
         val lastScore: Int,
-        val bestScore: Int,
+        /** The highest score among the takes — a number, not the player's «лучший» mark. */
+        val maxScore: Int,
         /** Scores in the order the takes were recorded: the chart. */
         val scores: List<Int>,
     )
 
-    /** Takes of [pieceId], newest first — the order of the list on the piece screen. */
+    /** Takes of [pieceId], newest first. */
     fun takesOf(pieceId: Long, sessions: List<SessionSummary>): List<SessionSummary> =
         sessions.filter { it.pieceId == pieceId }
             .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
 
-    /** The take with the highest score; of equals, the later one. Null without takes. */
-    fun best(takes: List<SessionSummary>): SessionSummary? =
-        takes.maxWithOrNull(compareBy<SessionSummary> { it.scorePercent }.thenBy { it.startedAtEpochMs }.thenBy { it.id })
+    /**
+     * The take the player marked as the best (spec 3.21), or null: the mark is the player's, never
+     * the score's, and a mark left behind by a deleted or unlinked take reads as no mark at all.
+     */
+    fun bestOf(piece: Piece, takes: List<SessionSummary>): SessionSummary? =
+        piece.bestTakeId?.let { id -> takes.firstOrNull { it.id == id && it.pieceId == piece.id } }
+
+    /** The order of the list on the piece screen: the marked take first, the rest newest first. */
+    fun listed(piece: Piece, takes: List<SessionSummary>): List<SessionSummary> {
+        val best = bestOf(piece, takes) ?: return takes
+        return listOf(best) + takes.filter { it.id != best.id }
+    }
 
     /** Null until there are enough takes to speak of progress. */
     fun progress(takes: List<SessionSummary>, config: RepertoireConfig): Progress? {
@@ -26,7 +36,7 @@ object PieceStats {
         val inOrder = takes.sortedWith(compareBy<SessionSummary> { it.startedAtEpochMs }.thenBy { it.id })
         return Progress(
             lastScore = inOrder.last().scorePercent,
-            bestScore = inOrder.maxOf { it.scorePercent },
+            maxScore = inOrder.maxOf { it.scorePercent },
             scores = inOrder.map { it.scorePercent },
         )
     }

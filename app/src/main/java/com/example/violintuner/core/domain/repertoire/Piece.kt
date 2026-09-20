@@ -18,6 +18,8 @@ data class Piece(
     val createdAtEpochMs: Long,
     /** Edits of the fields and of the sheet pages alike. */
     val updatedAtEpochMs: Long,
+    /** The take its player marked as the best (spec 3.21); may point at a take that is gone — read it through [PieceStats.bestOf]. */
+    val bestTakeId: Long? = null,
 )
 
 /** One photographed page of sheet music. The files are named, not located: the storage knows the folder. */
@@ -79,6 +81,9 @@ interface RepertoireRepository {
     suspend fun update(id: Long, draft: PieceDraft, nowEpochMs: Long)
 
     suspend fun setStatus(id: Long, status: PieceStatus, nowEpochMs: Long)
+
+    /** Marks [sessionId] as the best take of the piece — one at most, so the former mark goes; null clears it. Not an edit: the activity does not move. */
+    suspend fun setBestTake(id: Long, sessionId: Long?)
 
     /** Removes the piece with its pages and their files; its takes stay as plain sessions. */
     suspend fun delete(id: Long)

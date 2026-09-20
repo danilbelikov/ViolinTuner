@@ -24,17 +24,26 @@ import androidx.compose.ui.unit.dp
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
-
-/** What the «⋯» of a recording's card offers (spec 3.17). Only recordings with sound get one. */
-class CardActions(val onShare: (sessionId: Long) -> Unit, val onSound: (sessionId: Long) -> Unit)
+import com.example.violintuner.feature.history.HistoryCard
 
 /**
- * «⋯» on the card of a recording with sound: the quick way to «Поделиться» and «Звук…» without
- * opening the recording. Renaming and deleting stay on the recording's own screen — their
- * dialogs live there.
+ * What the «⋯» of a recording's card offers: sharing and the sound — for recordings with sound
+ * (spec 3.17) — and, for a take, the «лучший» mark (spec 3.21), where [onBest] is given.
+ */
+class CardActions(
+    val onShare: (sessionId: Long) -> Unit,
+    val onSound: (sessionId: Long) -> Unit,
+    val onBest: ((sessionId: Long) -> Unit)? = null,
+)
+
+/**
+ * «⋯» on the card of a recording: the quick way to «Поделиться» and «Звук…» without opening it,
+ * and the mark of the best take first (handoff 22e4). Renaming and deleting stay on the
+ * recording's own screen — their dialogs live there.
  */
 @Composable
-fun CardMenuButton(sessionId: Long, actions: CardActions, modifier: Modifier = Modifier) {
+fun CardMenuButton(card: HistoryCard, actions: CardActions, modifier: Modifier = Modifier) {
+    val sessionId = card.id
     val colors = MaterialTheme.colorScheme
     var open by remember { mutableStateOf(false) }
     val label = stringResource(R.string.card_menu)
@@ -48,6 +57,15 @@ fun CardMenuButton(sessionId: Long, actions: CardActions, modifier: Modifier = M
             contentAlignment = Alignment.Center,
         ) { AppIcon(AppIcons.More, contentDescription = null, tint = colors.onSurfaceVariant) }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }, containerColor = colors.surfaceContainerHigh) {
+            val onBest = actions.onBest
+            if (card.take && onBest != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(if (card.best) R.string.best_clear else R.string.best_set)) },
+                    leadingIcon = { AppIcon(if (card.best) AppIcons.Star else AppIcons.StarOutline, contentDescription = null) },
+                    onClick = { open = false; onBest(sessionId) },
+                )
+            }
+            if (card.hasAudio) {
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.card_menu_share)) },
                 leadingIcon = { AppIcon(AppIcons.Share, contentDescription = null) },
@@ -58,6 +76,7 @@ fun CardMenuButton(sessionId: Long, actions: CardActions, modifier: Modifier = M
                 leadingIcon = { AppIcon(AppIcons.Sound, contentDescription = null) },
                 onClick = { open = false; actions.onSound(sessionId) },
             )
+            }
         }
     }
 }

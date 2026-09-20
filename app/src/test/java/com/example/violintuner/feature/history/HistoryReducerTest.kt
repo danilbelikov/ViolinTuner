@@ -39,18 +39,39 @@ class HistoryReducerTest {
         HistoryReducer.stateOf(list.shuffled(), filter, today, moscow, config)
 
     @Test
-    fun `cards are newest first with day, duration, bias and a colored score`() {
+    fun `cards are newest first with their day and duration, and nothing about the score`() {
         val cards = state().cards
         assertEquals(listOf(6L, 5L, 4L, 3L, 2L, 1L), cards.map { it.id })
-        assertEquals(DayLabel.Today, cards[0].day)
-        assertEquals(DayLabel.Yesterday, cards[1].day)
-        assertEquals(DayLabel.On(LocalDate.of(2026, 9, 13)), cards[2].day)
-        assertEquals(listOf(Zone.OFF, Zone.IN_TUNE, Zone.IN_TUNE, Zone.NEAR), cards.take(4).map { it.scoreZone })
+        assertEquals(today, cards[0].date)
+        assertEquals(LocalDate.of(2026, 9, 13), cards[2].date)
         assertEquals("Гаммы D-dur", cards[1].title)
         assertNull(cards[0].title)
         assertEquals(495_000, cards[0].durationMs)
-        assertEquals(9.0, cards[0].biasCents, 0.0)
-        assertEquals(listOf(Zone.IN_TUNE, Zone.NEAR), cards[0].previewZones)
+        assertFalse(cards[0].otherYear)
+    }
+
+    @Test
+    fun `the list is grouped by day, newest day first, and today is told apart`() {
+        val twoToday = sessions + session(7, "2026-09-17T19:30:00", 70)
+        val groups = state(list = twoToday).groups
+        assertEquals(listOf("2026-09-17", "2026-09-16", "2026-09-13", "2026-08-19", "2026-08-18", "2026-08-12"), groups.map { it.date.toString() })
+        assertEquals(listOf(7L, 6L), groups[0].cards.map { it.id })
+        assertEquals(listOf(true, false), groups.take(2).map { it.today })
+        assertEquals(state(HistoryFilter.THIS_WEEK).cards.map { it.id }, state(HistoryFilter.THIS_WEEK).groups.flatMap { g -> g.cards.map { it.id } })
+    }
+
+    @Test
+    fun `a recording of another year says so`() {
+        val old = state(list = listOf(session(1, "2025-09-20T10:00:00", 60))).cards.single()
+        assertEquals(true, old.otherYear)
+    }
+
+    @Test
+    fun `the best take of a piece is marked, wherever it stands`() {
+        val list = listOf(session(1, "2026-09-16T10:00:00", 60).copy(pieceId = 7), session(2, "2026-09-17T10:00:00", 90).copy(pieceId = 7))
+        val cards = HistoryReducer.stateOf(list, HistoryFilter.ALL, today, moscow, config, bestTakeIds = setOf(1L)).cards
+        assertEquals(listOf(2L to false, 1L to true), cards.map { it.id to it.best })
+        assertEquals(listOf(true, true), cards.map { it.take })
     }
 
     @Test
@@ -67,8 +88,12 @@ class HistoryReducerTest {
     fun `count and chart ignore the filter`() {
         val filtered = state(HistoryFilter.THIS_WEEK)
         assertEquals(6, filtered.totalCount)
-        assertEquals(listOf(62, 69, null, null, 79, 69), filtered.weeks.map { it.averageScore }) // (71+66)/2, (84+54)/2
-        assertEquals(-10, filtered.weekDelta)
+        // fourteen days ending today: 13, 16 and 17 September have one recording each
+        assertEquals(14, filtered.days.size)
+        assertEquals(today, filtered.days.last().date)
+        assertEquals(listOf("2026-09-13", "2026-09-16", "2026-09-17"), filtered.days.filter { it.count == 1 }.map { it.date.toString() })
+        assertEquals(3, filtered.days.sumOf { it.count })
+        assertEquals(config.historyChartMinTop, filtered.chartTop)
         assertEquals(HistoryFilter.THIS_WEEK, filtered.filter)
         assertFalse(filtered.loading)
     }
@@ -77,8 +102,7 @@ class HistoryReducerTest {
     fun `no sessions, and no sessions under the filter, are different states`() {
         val none = state(list = emptyList())
         assertEquals(0, none.totalCount)
-        assertEquals(List(6) { null }, none.weeks.map { it.averageScore })
-        assertNull(none.weekDelta)
+        assertEquals(List(14) { 0 }, none.days.map { it.count })
 
         val oldOnly = state(HistoryFilter.THIS_WEEK, list = sessions.take(2))
         assertEquals(2, oldOnly.totalCount)

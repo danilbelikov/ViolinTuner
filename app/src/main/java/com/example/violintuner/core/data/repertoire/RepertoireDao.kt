@@ -41,6 +41,9 @@ abstract class RepertoireDao {
     @Query("UPDATE pieces SET status = :status, updatedAtEpochMs = :now WHERE id = :id")
     abstract suspend fun setStatus(id: Long, status: String, now: Long)
 
+    @Query("UPDATE pieces SET bestTakeId = :sessionId WHERE id = :id")
+    abstract suspend fun setBestTake(id: Long, sessionId: Long?)
+
     @Query("UPDATE pieces SET updatedAtEpochMs = :now WHERE id = :id")
     protected abstract suspend fun touch(id: Long, now: Long)
 

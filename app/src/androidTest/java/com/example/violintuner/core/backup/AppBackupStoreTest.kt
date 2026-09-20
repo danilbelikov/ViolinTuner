@@ -84,9 +84,11 @@ class AppBackupStoreTest {
         File(files, "sessions").mkdirs()
         File(files, "sessions/one.m4a").writeBytes(sound)
 
+        // whatever the schema is today: the copy carries it, and comes back with it
+        val schema = database.openHelper.readableDatabase.version
         val snapshotFile = snapshot()
         assertFalse(File(snapshotFile.path + "-wal").exists())
-        val manifest = BackupManifest(1, "test", 6, 1_790_000_000_000, "test", BackupPart.entries.toSet(), BackupCounts(sessions = 2), mapOf(BackupPart.DATA to snapshotFile.length(), BackupPart.AUDIO to sound.size.toLong()))
+        val manifest = BackupManifest(1, "test", schema, 1_790_000_000_000, "test", BackupPart.entries.toSet(), BackupCounts(sessions = 2), mapOf(BackupPart.DATA to snapshotFile.length(), BackupPart.AUDIO to sound.size.toLong()))
         val archive = ByteArrayOutputStream()
         BackupWriter.write(
             archive, manifest,
@@ -116,7 +118,7 @@ class AppBackupStoreTest {
         assertArrayEquals(ByteArray(30) { it.toByte() }, database.sessionDao().samples(sessions.first { it.title == "Гаммы" }.id)!!.data)
         assertArrayEquals(sound, File(files, "sessions/one.m4a").readBytes())
         assertFalse("what was made after the copy is gone with the data it belonged to", File(files, "sessions/two.m4a").exists())
-        assertTrue(database.openHelper.readableDatabase.version == 6)
+        assertEquals(schema, database.openHelper.readableDatabase.version)
     }
 
     private suspend fun com.example.violintuner.core.data.session.SessionDao.observeAllOnce() = observeAll().first()

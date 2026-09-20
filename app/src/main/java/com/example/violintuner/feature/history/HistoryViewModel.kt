@@ -23,7 +23,7 @@ import kotlinx.coroutines.launch
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val repository: SessionRepository,
-    repertoire: RepertoireRepository,
+    private val repertoire: RepertoireRepository,
     private val config: IntonationConfig,
     private val clock: Clock,
     private val audioFiles: SessionAudioFiles,
@@ -40,6 +40,7 @@ class HistoryViewModel @Inject constructor(
     // What the list shows now: only that can be picked. Written where the state is built, read by
     // the intents — both on the main thread; `state.value` would lag a frame behind.
     private var visibleIds: List<Long> = emptyList()
+    private var shownCards: List<HistoryCard> = emptyList()
 
     // "Today" is read on every change, so a list left open over midnight is right again as
     // soon as anything changes; the screen is rebuilt on every return to it anyway.
@@ -48,8 +49,10 @@ class HistoryViewModel @Inject constructor(
             val shown = HistoryReducer.stateOf(
                 sessions, filter, LocalDate.now(clock), clock.zone, config, section,
                 pieceTitles = pieces.associate { it.id to it.title },
+                bestTakeIds = pieces.mapNotNull { it.bestTakeId }.toSet(),
             )
             visibleIds = shown.cards.map { it.id }
+            shownCards = shown.cards
             // The dialog that deletes names the weight of what goes (spec 3.19): videos are few, and a length is cheap to ask.
             val videos = sessions.mapNotNull { session -> session.videoPath?.let { session.id to it } }.toMap()
             shown.copy(
@@ -73,6 +76,10 @@ class HistoryViewModel @Inject constructor(
             is HistoryIntent.SessionClicked ->
                 if (selection.value.active) select(SelectionIntent.CardToggled(intent.id)) else effectChannel.trySend(HistoryEffect.OpenSession(intent.id))
             is HistoryIntent.Select -> select(intent.intent)
+            is HistoryIntent.BestToggled -> shownCards.firstOrNull { it.id == intent.id }?.let { card ->
+                val pieceId = card.pieceId ?: return
+                viewModelScope.launch { repertoire.setBestTake(pieceId, if (card.best) null else card.id) }
+            }
         }
     }
 

@@ -22,6 +22,8 @@ data class PieceEntity(
     val notes: String,
     val createdAtEpochMs: Long,
     val updatedAtEpochMs: Long,
+    /** No foreign key: a take that is gone simply leaves a mark nobody matches (spec 5.15). */
+    val bestTakeId: Long? = null,
 )
 
 /** One page of sheet music; goes with its piece through the cascade, its files are the repository's to remove. */

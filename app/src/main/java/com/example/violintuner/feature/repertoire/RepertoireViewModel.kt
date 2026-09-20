@@ -33,7 +33,7 @@ class RepertoireViewModel @Inject constructor(
     val state: StateFlow<RepertoireState> =
         combine(repertoire.pieces, repertoire.pages, sessions.sessions, filter) { pieces, pages, sessions, filter ->
             RepertoireReducer.stateOf(
-                pieces, pages, sessions, filter, LocalDate.now(clock), clock.zone, config,
+                pieces, pages, sessions, filter, LocalDate.now(clock), clock.zone,
                 thumbPathOf = { sheetFiles.existing(it)?.path },
             )
         }.stateIn(

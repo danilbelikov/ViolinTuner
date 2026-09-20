@@ -59,8 +59,6 @@ import com.example.violintuner.feature.history.components.RecordCard
 import com.example.violintuner.feature.history.components.SelectAction
 import com.example.violintuner.feature.live.components.RecordButton
 import com.example.violintuner.feature.repertoire.takesLabel
-import com.example.violintuner.feature.sound.SoundCaption
-import com.example.violintuner.feature.sound.captionName
 import java.time.ZoneId
 
 private val CardCorner = 16.dp
@@ -208,7 +206,7 @@ fun TakeProgressCard(progress: TakeProgress, modifier: Modifier = Modifier) {
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(stringResource(R.string.take_progress, progress.lastScore, progress.bestScore), color = colors.onSurface, style = style)
+        Text(stringResource(R.string.take_progress, progress.lastScore, progress.maxScore), color = colors.onSurface, style = style)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(takesLabel(progress.scores.size), color = colors.onSurfaceVariant, style = style, modifier = Modifier.weight(1f))
             ScoreChart(progress.scores)
@@ -240,14 +238,13 @@ private fun ScoreChart(scores: List<Int>) {
     }
 }
 
-/** The takes of the piece, newest first; the best one is marked, a fresh one glows for a moment (handoff 13c1b, 13d3). */
+/** The takes of the piece: the one marked as the best first, the rest newest first; a fresh one glows for a moment (handoff 22e1). */
 @Composable
 fun TakesBlock(
     takes: List<TakeItem>,
     zone: ZoneId,
     onIntent: (PieceIntent) -> Unit,
     modifier: Modifier = Modifier,
-    sounds: Map<Long, SoundCaption> = emptyMap(),
     actions: CardActions? = null,
     selection: Selection = Selection(),
     /** No «Выбрать» while a take is being recorded (spec 3.18). */
@@ -289,7 +286,7 @@ fun TakesBlock(
             takes.forEach { take ->
                 val id = take.card.id
                 TakeCard(
-                    take, zone, sounds[id], actions,
+                    take, zone, actions,
                     selected = if (selection.active) id in selection.ids else null,
                     onLongClick = { onIntent(PieceIntent.Select(SelectionIntent.CardLongPressed(id))) }.takeIf { canSelect },
                 ) { onIntent(PieceIntent.TakeClicked(id)) }
@@ -298,20 +295,22 @@ fun TakesBlock(
     }
 }
 
+/**
+ * A take under the name of its piece (handoff 22e): six lines of «Менуэт соль мажор» below that
+ * very heading would say nothing, so the card is called by its date and its line gives the time;
+ * a take with a name of its own keeps the name, and the date moves into the line. Once, either way.
+ */
 @Composable
-private fun TakeCard(take: TakeItem, zone: ZoneId, sound: SoundCaption?, actions: CardActions?, selected: Boolean?, onLongClick: (() -> Unit)?, onClick: () -> Unit) {
+private fun TakeCard(take: TakeItem, zone: ZoneId, actions: CardActions?, selected: Boolean?, onLongClick: (() -> Unit)?, onClick: () -> Unit) {
     val card = take.card
-    val meta = stringResource(R.string.take_meta, Formats.duration(card.durationMs), Formats.signedCents(card.biasCents))
+    val date = Formats.recordDate(card.date, card.otherYear)
+    val duration = Formats.duration(card.durationMs)
     RecordCard(
         card = card,
-        // A take is told from the others by its date: they all carry the name of the piece.
-        title = card.title ?: Formats.dayAndMonth(card.startedAtEpochMs, zone),
-        // a take with a sound of its own says which: that is where the processing differs from everyone's
-        meta = if (sound != null) meta + stringResource(R.string.dot_separator) + captionName(sound) else meta,
-        take = true,
+        title = card.title ?: date,
+        meta = stringResource(R.string.record_meta, if (card.title == null) Formats.timeOfDay(card.startedAtEpochMs, zone) else date, duration),
         onClick = onClick,
         actions = actions,
-        best = take.best,
         highlighted = take.isNew,
         selected = selected,
         onLongClick = onLongClick,

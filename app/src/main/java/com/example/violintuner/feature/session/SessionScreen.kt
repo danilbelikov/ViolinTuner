@@ -1,5 +1,9 @@
 package com.example.violintuner.feature.session
 
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -123,8 +127,15 @@ fun SessionScreen(
             .fillMaxSize()
             .background(colors.surface),
     ) {
+        val content = loaded?.content
         TopBar(
             title = title,
+            // «дубль · 18:42 · 2:05»: a take says so under its name (handoff 22f1); a free recording has one line, as before
+            subtitle = content?.takeIf { it.pieceId != null }?.let {
+                stringResource(R.string.session_take_subtitle, Formats.timeOfDay(it.startedAtEpochMs, zone), Formats.duration(it.durationMs))
+            },
+            best = content?.takeIf { it.pieceId != null }?.best,
+            onBest = { onIntent(SessionIntent.BestClicked) },
             onBack = { onIntent(SessionIntent.BackClicked) },
             // Sending is what one does most after listening: in sight at once, and well away from «Удалить» (handoff 18a).
             onShare = if (loaded?.player != null) ({ onIntent(SessionIntent.ShareClicked) }) else null,
@@ -260,8 +271,19 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
     }
 }
 
+private const val BEST_STAR_MS = 150
+private const val BEST_IDLE_SCALE = 0.9f
+
 @Composable
-private fun TopBar(title: String, onBack: () -> Unit, onShare: (() -> Unit)?) {
+private fun TopBar(
+    title: String,
+    onBack: () -> Unit,
+    onShare: (() -> Unit)?,
+    subtitle: String? = null,
+    /** Null for a recording that is not a take: no star. */
+    best: Boolean? = null,
+    onBest: () -> Unit = {},
+) {
     val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
@@ -279,16 +301,51 @@ private fun TopBar(title: String, onBack: () -> Unit, onShare: (() -> Unit)?) {
         ) {
             AppIcon(AppIcons.Back, contentDescription = null, tint = colors.onSurface)
         }
-        Text(
-            text = title,
+        Column(
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 4.dp),
-            color = colors.onSurface,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
-        )
+        ) {
+            Text(
+                text = title,
+                color = colors.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleLarge.copy(fontSize = if (subtitle == null) 20.sp else 17.sp, fontWeight = FontWeight.SemiBold),
+            )
+            if (subtitle != null) {
+                Text(
+                    text = subtitle,
+                    color = colors.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontFeatureSettings = "tnum"),
+                )
+            }
+        }
+        if (best != null) {
+            // The most familiar "favourite" button there is, and its state needs no words (handoff 22f): outline — not the best, filled — the best.
+            val label = stringResource(if (best) R.string.best_clear else R.string.best_set)
+            val scale by animateFloatAsState(if (best) 1f else BEST_IDLE_SCALE, tween(BEST_STAR_MS), label = "bestStar")
+            Box(
+                modifier = Modifier
+                    .size(BackTarget)
+                    .clip(CircleShape)
+                    .toggleable(value = best, role = Role.Switch, onValueChange = { onBest() })
+                    .semantics { contentDescription = label },
+                contentAlignment = Alignment.Center,
+            ) {
+                AppIcon(
+                    icon = if (best) AppIcons.Star else AppIcons.StarOutline,
+                    contentDescription = null,
+                    tint = if (best) colors.primary else colors.onSurface,
+                    modifier = Modifier.graphicsLayer {
+                        scaleX = scale
+                        scaleY = scale
+                    },
+                )
+            }
+        }
         if (onShare != null) {
             val share = stringResource(R.string.sound_share)
             Box(

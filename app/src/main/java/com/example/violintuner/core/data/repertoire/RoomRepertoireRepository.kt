@@ -44,6 +44,8 @@ class RoomRepertoireRepository @Inject constructor(
 
     override suspend fun setStatus(id: Long, status: PieceStatus, nowEpochMs: Long) = dao.setStatus(id, status.name, nowEpochMs)
 
+    override suspend fun setBestTake(id: Long, sessionId: Long?) = dao.setBestTake(id, sessionId)
+
     // Rows first: a file without a page is cleaned up later, a page without its file would
     // show a hole in the music.
     override suspend fun delete(id: Long) {
@@ -94,6 +96,7 @@ internal object RepertoireMapper {
         notes = entity.notes,
         createdAtEpochMs = entity.createdAtEpochMs,
         updatedAtEpochMs = entity.updatedAtEpochMs,
+        bestTakeId = entity.bestTakeId,
     )
 
     fun toPage(entity: SheetPageEntity) = SheetPage(entity.id, entity.pieceId, entity.position, entity.fileName, entity.thumbFileName)

@@ -1,6 +1,5 @@
 package com.example.violintuner.feature.repertoire.piece
 
-import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.repertoire.Piece
 import com.example.violintuner.core.domain.repertoire.PieceStats
 import com.example.violintuner.core.domain.repertoire.RepertoireConfig
@@ -40,22 +39,17 @@ object PieceReducer {
         notesCollapsedLines = config.notesCollapsedLines,
     )
 
-    /** The takes of the piece as cards, newest first, with the best one and the fresh one marked (spec 3.15). */
-    fun takesOf(
-        pieceId: Long,
-        sessions: List<SessionSummary>,
-        newTakeId: Long?,
-        today: LocalDate,
-        zone: ZoneId,
-        config: IntonationConfig,
-    ): List<TakeItem> {
-        val takes = PieceStats.takesOf(pieceId, sessions)
-        val bestId = PieceStats.best(takes)?.id
-        return takes.map { TakeItem(HistoryReducer.cardOf(it, today, zone, config), best = it.id == bestId, isNew = it.id == newTakeId) }
+    /** The takes of the piece as cards: the one marked as the best first, the rest newest first; the fresh one is marked too (spec 3.21). */
+    fun takesOf(piece: Piece, sessions: List<SessionSummary>, newTakeId: Long?, today: LocalDate, zone: ZoneId): List<TakeItem> {
+        val takes = PieceStats.takesOf(piece.id, sessions)
+        val bestId = PieceStats.bestOf(piece, takes)?.id
+        return PieceStats.listed(piece, takes).map {
+            TakeItem(HistoryReducer.cardOf(it, today, zone, best = it.id == bestId), best = it.id == bestId, isNew = it.id == newTakeId)
+        }
     }
 
     fun progressOf(pieceId: Long, sessions: List<SessionSummary>, config: RepertoireConfig): TakeProgress? =
-        PieceStats.progress(PieceStats.takesOf(pieceId, sessions), config)?.let { TakeProgress(it.lastScore, it.bestScore, it.scores) }
+        PieceStats.progress(PieceStats.takesOf(pieceId, sessions), config)?.let { TakeProgress(it.lastScore, it.maxScore, it.scores) }
 
     /** What the recording row shows for one frame of the chain. */
     fun takeStateOf(shown: BlindShown, recording: RecordingProgress?, requested: Boolean, micPermission: Boolean?, bars: Int): TakeState =

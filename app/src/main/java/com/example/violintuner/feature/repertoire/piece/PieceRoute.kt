@@ -49,7 +49,6 @@ fun PieceRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val take by viewModel.takeState.collectAsStateWithLifecycle()
-    val takeSounds by viewModel.takeSounds.collectAsStateWithLifecycle()
     val videoImport by viewModel.videoImport.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = LocalActivity.current
@@ -129,8 +128,7 @@ fun PieceRoute(
     }
     PieceScreen(
         state = state, take = take, onIntent = viewModel::onIntent, addPhoto = addPhoto, modifier = modifier,
-        takeSounds = takeSounds,
-        takeActions = remember(shareViewModel, onOpenSound) { CardActions(onShare = shareViewModel::start, onSound = onOpenSound) },
+        takeActions = remember(shareViewModel, onOpenSound, viewModel) { CardActions(onShare = shareViewModel::start, onSound = onOpenSound, onBest = { viewModel.onIntent(PieceIntent.BestToggled(it)) }) },
         videoImport = videoImport,
         onPickVideo = { videoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) },
     )

@@ -27,14 +27,14 @@ data class SheetTile(
 /** One take in the list of the piece: the card of «Записи» plus what only matters here. */
 data class TakeItem(
     val card: HistoryCard,
-    /** The highest score of the piece; of equals, the later one. */
+    /** Marked by the player as the best take of the piece: it stands first (spec 3.21). */
     val best: Boolean,
     /** Recorded a moment ago: highlighted until it settles into the list. */
     val isNew: Boolean,
 )
 
-/** «последний 82 % · лучший 88 % · 6 дублей» and the little chart; there from two takes on. */
-data class TakeProgress(val lastScore: Int, val bestScore: Int, val scores: List<Int>)
+/** «последний 82 % · максимум 88 % · 6 дублей» and the little chart; there from two takes on. */
+data class TakeProgress(val lastScore: Int, val maxScore: Int, val scores: List<Int>)
 
 /** Why the microphone cannot be listened to right now; shown as a small line by the recording strip. */
 enum class TakeProblem { TOO_NOISY, MIC_UNAVAILABLE }
@@ -68,7 +68,7 @@ data class PieceState(
     /** Photos being copied in right now: placeholder tiles at the end of the strip. */
     val importing: Int,
     val notes: String,
-    /** Newest first. */
+    /** The best one first, the rest newest first. */
     val takes: List<TakeItem>,
     /** Null with fewer than two takes. */
     val progress: TakeProgress?,
@@ -115,6 +115,9 @@ sealed interface PieceIntent {
     data class MicPermissionChanged(val granted: Boolean) : PieceIntent
 
     data class TakeClicked(val sessionId: Long) : PieceIntent
+
+    /** «Отметить лучшим» / «Снять отметку „лучший“» of the take's «⋯»: marks it, or clears the mark it has. */
+    data class BestToggled(val sessionId: Long) : PieceIntent
 
     /** Everything of the selection mode; a plain [TakeClicked] inside it picks the take. */
     data class Select(val intent: SelectionIntent) : PieceIntent

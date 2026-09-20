@@ -63,6 +63,7 @@ class SessionViewModel @Inject constructor(
             is SessionIntent.SeekRequested -> player?.seekTo(intent.positionMs)
             is SessionIntent.OriginalSelected -> player?.setOriginal(intent.original)
             SessionIntent.SoundClicked -> effectChannel.trySend(SessionEffect.OpenSound(sessionId))
+            SessionIntent.BestClicked -> toggleBest()
             SessionIntent.ShareClicked -> {
                 player?.pause() // the system sheet comes up over a silent screen
                 effectChannel.trySend(SessionEffect.Share(sessionId))
@@ -101,15 +102,28 @@ class SessionViewModel @Inject constructor(
         }
     }
 
+    /** Marks this take as the best of its piece, or clears the mark it has; says so only when a mark was set. */
+    private fun toggleBest() {
+        val content = (mutableState.value as? SessionState.Loaded)?.content ?: return
+        val pieceId = content.pieceId ?: return
+        viewModelScope.launch {
+            val former = repertoire.piece(pieceId)?.bestTakeId
+            repertoire.setBestTake(pieceId, if (content.best) null else sessionId)
+            if (!content.best) effectChannel.send(SessionEffect.ShowBestMarked(moved = former != null && former != sessionId))
+            load()
+        }
+    }
+
     private suspend fun load() {
         val details = repository.details(sessionId)
-        val pieceTitle = details?.summary?.pieceId?.let { repertoire.piece(it) }?.title
+        val piece = details?.summary?.pieceId?.let { repertoire.piece(it) }
         mutableState.update { previous ->
             if (details == null) {
                 SessionState.NotFound
             } else {
                 // a reload after renaming keeps what is open and what is playing
-                val content = SessionContentMapper.contentOf(details, defaultConfig).copy(pieceTitle = pieceTitle)
+                val content = SessionContentMapper.contentOf(details, defaultConfig)
+                    .copy(pieceTitle = piece?.title, pieceId = piece?.id, best = piece?.bestTakeId == sessionId)
                 (previous as? SessionState.Loaded ?: SessionState.Loaded(content)).copy(content = content, dialog = null)
             }
         }

@@ -3,6 +3,7 @@ package com.example.violintuner.feature.history
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -15,6 +16,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.violintuner.core.ui.motion.LocalReduceMotion
+import com.example.violintuner.core.ui.motion.rememberAnimationsRemoved
 import com.example.violintuner.feature.history.components.CardActions
 import com.example.violintuner.feature.repertoire.RepertoireEffect
 import com.example.violintuner.feature.repertoire.RepertoireViewModel
@@ -72,13 +75,18 @@ fun HistoryRoute(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    HistoryScreen(
-        state = state,
-        onIntent = viewModel::onIntent,
-        modifier = modifier,
-        repertoire = repertoire,
-        onRepertoireIntent = repertoireViewModel::onIntent,
-        cardActions = remember(shareViewModel, onOpenSound) { CardActions(onShare = shareViewModel::start, onSound = onOpenSound) },
-    )
+    // The bars of the chart rise once; with «убрать анимации» they simply stand (spec 5.15).
+    CompositionLocalProvider(LocalReduceMotion provides rememberAnimationsRemoved()) {
+        HistoryScreen(
+            state = state,
+            onIntent = viewModel::onIntent,
+            modifier = modifier,
+            repertoire = repertoire,
+            onRepertoireIntent = repertoireViewModel::onIntent,
+            cardActions = remember(shareViewModel, onOpenSound, viewModel) {
+                CardActions(onShare = shareViewModel::start, onSound = onOpenSound, onBest = { viewModel.onIntent(HistoryIntent.BestToggled(it)) })
+            },
+        )
+    }
     ShareHost(shareViewModel)
 }

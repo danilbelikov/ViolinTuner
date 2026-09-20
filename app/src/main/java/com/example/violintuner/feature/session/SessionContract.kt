@@ -32,6 +32,10 @@ data class SessionContent(
     val title: String?,
     /** Title of the piece this session is a take of (spec 3.15): part of its default name. */
     val pieceTitle: String? = null,
+    /** A take of a piece that still exists: only it can be marked as the best (spec 3.21). */
+    val pieceId: Long? = null,
+    /** This take carries the «лучший» mark of its piece: the star of the top bar is filled. */
+    val best: Boolean = false,
     val startedAtEpochMs: Long,
     val durationMs: Long,
     val toleranceCents: Double,
@@ -92,6 +96,9 @@ sealed interface SessionIntent {
     /** The icon in the top bar; there for a recording with sound only. */
     data object ShareClicked : SessionIntent
 
+    /** The star of the top bar, there for a take only: marks it as the best of its piece, or clears the mark. */
+    data object BestClicked : SessionIntent
+
     /** The screen is no longer visible: the sound stops (spec 3.10). */
     data object ScreenStopped : SessionIntent
 
@@ -122,6 +129,9 @@ sealed interface SessionEffect {
     data class OpenSound(val sessionId: Long) : SessionEffect
 
     data class Share(val sessionId: Long) : SessionEffect
+
+    /** The take has just been marked as the best; [moved] when the mark was taken from another take. */
+    data class ShowBestMarked(val moved: Boolean) : SessionEffect
 }
 
 /** The picture of a video take, as the screen needs it. */

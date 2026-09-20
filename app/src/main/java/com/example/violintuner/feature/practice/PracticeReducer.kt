@@ -1,6 +1,6 @@
 package com.example.violintuner.feature.practice
 
-import com.example.violintuner.core.domain.IntonationConfig
+import com.example.violintuner.core.domain.repertoire.Piece
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeEntry
@@ -29,7 +29,8 @@ object PracticeReducer {
         today: LocalDate,
         zone: ZoneId,
         config: PracticeConfig,
-        intonationConfig: IntonationConfig,
+        /** Takes among the day's recordings are named after their pieces and carry the «лучший» star (spec 3.21). */
+        pieces: List<Piece> = emptyList(),
         trophies: List<Trophy>,
         profile: Profile,
         avatarPath: String?,
@@ -38,6 +39,8 @@ object PracticeReducer {
         val totals = PracticeStats.dayTotals(entries)
         val totalMs = Progress.totalMs(entries)
         val hasHistory = totals.values.any { it > 0 }
+        val pieceTitles = pieces.associate { it.id to it.title }
+        val bestTakeIds = pieces.mapNotNull { it.bestTakeId }.toSet()
         return PracticeState(
             loading = false,
             hasHistory = hasHistory,
@@ -70,7 +73,7 @@ object PracticeReducer {
                 sessions = sessions
                     .filter { Instant.ofEpochMilli(it.startedAtEpochMs).atZone(zone).toLocalDate() == selectedDate }
                     .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
-                    .map { HistoryReducer.cardOf(it, today, zone, intonationConfig) },
+                    .map { HistoryReducer.cardOf(it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds) },
             ),
             header = ProgressReducer.headerOf(totalMs, trophies, profile.name, avatarPath, progressConfig),
             trophies = ProgressReducer.trophyLines(totalMs, trophies, progressConfig),

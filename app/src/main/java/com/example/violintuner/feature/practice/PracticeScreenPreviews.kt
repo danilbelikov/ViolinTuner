@@ -5,7 +5,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
@@ -63,7 +62,7 @@ private object Sample {
     ): PracticeState = PracticeReducer.stateOf(
         entries = entries, sessions = sessions, runningMs = runningMs, month = YearMonth.of(2026, 9),
         selectedDate = selected, sheet = sheet, today = today, zone = zone, config = PracticeConfig(),
-        intonationConfig = IntonationConfig(), trophies = trophies, profile = Profile(name, avatarFile = null),
+        trophies = trophies, profile = Profile(name, avatarFile = null),
         avatarPath = null, progressConfig = ProgressConfig(),
     )
 }

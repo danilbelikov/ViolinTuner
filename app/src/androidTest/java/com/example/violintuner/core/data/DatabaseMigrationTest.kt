@@ -36,7 +36,7 @@ class DatabaseMigrationTest {
      * with one row; [version3] adds the trophies of version 3 with one row; [version4] adds the
      * repertoire of version 4: a piece with a page, and the session becomes its take.
      */
-    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false) {
+    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false) {
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
@@ -108,7 +108,8 @@ class DatabaseMigrationTest {
                 )
                 db.execSQL("UPDATE sessions SET audioPath = 'take.m4a' WHERE id = 1")
             }
-            db.execSQL("PRAGMA user_version = ${if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
+            if (version6) db.execSQL("ALTER TABLE `sessions` ADD COLUMN `videoPath` TEXT")
+            db.execSQL("PRAGMA user_version = ${if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
         }
     }
 
@@ -219,5 +220,23 @@ class DatabaseMigrationTest {
 
         val id = db.sessionDao().insert(session.copy(id = 0, audioPath = "v.mp4", videoPath = "v.mp4"), bucketMs = 50, samples = ByteArray(3))
         assertEquals("v.mp4", db.sessionDao().session(id)!!.videoPath)
+    }
+
+    @Test
+    fun everythingSurvivesTheMigrationToTheBestTakeAndOldPiecesHaveNone() = runBlocking {
+        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true)
+        val db = openMigrated()
+
+        val piece = db.repertoireDao().piece(1)!!
+        assertEquals("Менуэт", piece.title)
+        assertEquals(null, piece.bestTakeId)
+        assertEquals(1L, db.sessionDao().observeAll().first().single().pieceId)
+        assertEquals(2_700_000L, db.practiceDao().observeAll().first().single().durationMs)
+        assertEquals("a.jpg", db.repertoireDao().pagesOf(1).single().fileName)
+
+        db.repertoireDao().setBestTake(1, 1)
+        assertEquals(1L, db.repertoireDao().piece(1)!!.bestTakeId)
+        db.repertoireDao().setBestTake(1, null)
+        assertEquals(null, db.repertoireDao().piece(1)!!.bestTakeId)
     }
 }

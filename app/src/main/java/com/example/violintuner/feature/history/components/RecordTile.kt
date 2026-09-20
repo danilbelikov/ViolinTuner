@@ -1,129 +1,59 @@
 package com.example.violintuner.feature.history.components
 
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.example.violintuner.R
-import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
-import com.example.violintuner.core.ui.theme.ViolinTheme
 
-/** Sizes of the note tile (handoff 19b, `sizes`): the circle and the note inside it. */
-enum class RecordTileSize(val circle: Dp, val note: Dp, val badge: Dp, val badgeIcon: Dp) {
+/** Sizes of the tile (handoff 22b3, `sizes`): the circle and the sign inside it. */
+enum class RecordTileSize(val circle: Dp, val sign: Dp) {
     /** The card of a recording. */
-    CARD(44.dp, 26.dp, badge = 18.dp, badgeIcon = 12.dp),
+    CARD(40.dp, 22.dp),
 
-    /** The card of a piece in the repertoire list. */
-    PIECE(36.dp, 20.dp, badge = 15.dp, badgeIcon = 10.dp),
+    /** The empty state of «Записи». */
+    EMPTY(56.dp, 30.dp),
 }
 
-private const val TILE_FILL_ALPHA = 0.16f
 private val TileRing = 1.5.dp
-private val EmptyDash = 4.dp
-private val BadgeShift = 3.dp
-private val BadgeCutout = 2.dp
 
 /**
- * The note that stands where the score used to (spec 3.18, handoff 19b): a single quaver for a
- * free session, a beamed pair for a take. The note and the soft fill carry the zone of the score,
- * so the list says "it went well" without lining numbers up into a report card. A recording
- * without sound is a ring without the fill. TalkBack hears the zone in words, never the number.
+ * What stands at the left of every recording (spec 3.21, handoff 22b): one quiet circle of one
+ * colour — it says what is inside, a note for sound and a camera for video, and nothing about how
+ * it went. A recording without sound is the same sign in a ring without the fill: shape, not colour.
+ * The words for TalkBack live on the card, which knows the rest.
  */
 @Composable
-fun RecordTile(
-    zone: Zone,
-    take: Boolean,
-    hasAudio: Boolean,
-    modifier: Modifier = Modifier,
-    size: RecordTileSize = RecordTileSize.CARD,
-    /** A video take (spec 3.19, handoff 20c3): a small neutral badge on the edge of the circle — it changes the outline of the tile, the zone stays its colour. */
-    hasVideo: Boolean = false,
-    /** What the badge is cut out of the tile with: the background of the card, which is animated when the card is picked. */
-    cutout: Color = Color.Transparent,
-) {
-    val color = ViolinTheme.zoneColors.colorFor(zone)
-    val words = listOfNotNull(
-        stringResource(R.string.record_tile_take).takeIf { take }?.let { if (hasVideo) it + " " + stringResource(R.string.record_tile_video) else it },
-        stringResource(
-            when (zone) {
-                Zone.IN_TUNE -> R.string.record_zone_good
-                Zone.NEAR -> R.string.record_zone_fair
-                Zone.OFF -> R.string.record_zone_off
-            },
-        ),
-        stringResource(R.string.record_tile_no_sound).takeIf { !hasAudio },
-    ).joinToString()
+fun RecordTile(hasAudio: Boolean, hasVideo: Boolean, modifier: Modifier = Modifier, size: RecordTileSize = RecordTileSize.CARD) {
+    val colors = MaterialTheme.colorScheme
+    val fill = colors.surfaceContainerHigh
+    val ring = colors.outlineVariant
     Box(
         modifier = modifier
             .size(size.circle)
-            .semantics { contentDescription = words }
             .drawBehind {
                 if (hasAudio) {
-                    drawCircle(color.copy(alpha = TILE_FILL_ALPHA))
+                    drawCircle(fill)
                 } else {
                     val stroke = TileRing.toPx()
-                    drawCircle(color, radius = (this.size.minDimension - stroke) / 2f, style = Stroke(stroke))
+                    drawCircle(ring, radius = (this.size.minDimension - stroke) / 2f, style = Stroke(stroke))
                 }
             },
         contentAlignment = Alignment.Center,
     ) {
-        AppIcon(if (take) AppIcons.NotePair else AppIcons.NoteOne, contentDescription = null, tint = color, size = size.note)
-        if (hasVideo) {
-            val badge = ViolinTheme.videoColors.badge
-            Box(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .offset(x = BadgeShift, y = BadgeShift)
-                    .size(size.badge)
-                    .drawBehind {
-                        drawCircle(cutout, radius = this.size.minDimension / 2 + BadgeCutout.toPx())
-                        drawCircle(badge)
-                    },
-                contentAlignment = Alignment.Center,
-            ) { AppIcon(AppIcons.Video, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface, size = size.badgeIcon) }
-        }
-    }
-}
-
-/** The tile of a piece that has no takes yet (handoff 19c2): a dashed ring — neither a hole nor a grade. */
-@Composable
-fun EmptyRecordTile(ring: Color, note: Color, modifier: Modifier = Modifier, size: RecordTileSize = RecordTileSize.PIECE) {
-    Box(
-        modifier = modifier
-            .size(size.circle)
-            .drawBehind {
-                val stroke = TileRing.toPx()
-                val dash = EmptyDash.toPx()
-                drawCircle(
-                    color = ring,
-                    radius = (this.size.minDimension - stroke) / 2f,
-                    center = Offset(this.size.width / 2f, this.size.height / 2f),
-                    style = Stroke(stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(dash, dash))),
-                )
-            },
-        contentAlignment = Alignment.Center,
-    ) {
-        AppIcon(AppIcons.NotePair, contentDescription = null, tint = note, size = size.note)
+        AppIcon(if (hasVideo) AppIcons.Video else AppIcons.NoteOne, contentDescription = null, tint = colors.onSurfaceVariant, size = size.sign)
     }
 }
 
 private val MarkRing = 2.dp
-private val MarkCheck = 22.dp
+private val MarkCheck = 20.dp
 
 /**
  * What the tile turns into while recordings are being picked (handoff 19b3): a circle of the same
