@@ -39,7 +39,7 @@ import java.io.File
 @Composable
 fun PieceRoute(
     onClose: () -> Unit,
-    onOpenForm: (pieceId: Long, focusNotes: Boolean) -> Unit,
+    onOpenForm: (pieceId: Long, focusNotes: Boolean, scale: Boolean) -> Unit,
     onOpenStand: (pieceId: Long, pageIndex: Int) -> Unit,
     onOpenSession: (sessionId: Long) -> Unit,
     onOpenSound: (sessionId: Long) -> Unit,
@@ -96,7 +96,7 @@ fun PieceRoute(
             viewModel.effects.collect { effect ->
                 when (effect) {
                     PieceEffect.Close -> currentOnClose()
-                    is PieceEffect.OpenForm -> currentOnOpenForm(effect.pieceId, effect.focusNotes)
+                    is PieceEffect.OpenForm -> currentOnOpenForm(effect.pieceId, effect.focusNotes, effect.scale)
                     is PieceEffect.OpenStand -> currentOnOpenStand(effect.pieceId, effect.pageIndex)
                     is PieceEffect.LaunchCamera -> camera.launch(
                         FileProvider.getUriForFile(context, "${context.packageName}$FILES_AUTHORITY_SUFFIX", File(effect.filePath)),

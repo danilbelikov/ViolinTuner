@@ -55,10 +55,11 @@ import com.example.violintuner.feature.history.components.SelectionBar
 import com.example.violintuner.feature.history.components.SelectionBarHeight
 import com.example.violintuner.feature.history.components.SessionCard
 import com.example.violintuner.feature.history.components.deleteTextOf
-import com.example.violintuner.feature.repertoire.RepertoireIntent
-import com.example.violintuner.feature.repertoire.RepertoireReducer
-import com.example.violintuner.feature.repertoire.RepertoireState
-import com.example.violintuner.feature.repertoire.repertoireItems
+import com.example.violintuner.core.domain.repertoire.SectionCount
+import com.example.violintuner.feature.repertoire.sections.SectionNameDialog
+import com.example.violintuner.feature.repertoire.sections.SectionsIntent
+import com.example.violintuner.feature.repertoire.sections.SectionsState
+import com.example.violintuner.feature.repertoire.sections.sectionItems
 import java.time.ZoneId
 
 private val ScreenPadding = 16.dp
@@ -83,8 +84,8 @@ fun HistoryScreen(
     onIntent: (HistoryIntent) -> Unit,
     modifier: Modifier = Modifier,
     zone: ZoneId = ZoneId.systemDefault(),
-    repertoire: RepertoireState = RepertoireReducer.loading(filter = null),
-    onRepertoireIntent: (RepertoireIntent) -> Unit = {},
+    sections: SectionsState = SectionsState(loading = true, cards = emptyList(), total = SectionCount.EMPTY, maxNameLength = 0),
+    onSectionsIntent: (SectionsIntent) -> Unit = {},
     cardActions: CardActions? = null,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -112,7 +113,7 @@ fun HistoryScreen(
         }
         val list: LazyListScope.() -> Unit = {
             when {
-                state.section == HistorySection.REPERTOIRE -> repertoireItems(repertoire, onRepertoireIntent)
+                state.section == HistorySection.REPERTOIRE -> sectionItems(sections, onSectionsIntent)
                 state.loading -> Unit
                 state.totalCount == 0 -> item(key = "empty") { EmptyHistory(Modifier.fillParentMaxHeight(EMPTY_HEIGHT_FRACTION)) }
                 else -> {
@@ -191,6 +192,18 @@ fun HistoryScreen(
         AnimatedVisibility(visible = selecting, enter = fadeIn(tween(BAR_FADE_MS)), exit = fadeOut(tween(BAR_FADE_MS))) {
             SelectionBar(selection, state.allSelected, onIntent = { onIntent(HistoryIntent.Select(it)) }, height = barHeight)
         }
+    }
+    sections.newName?.let { name ->
+        SectionNameDialog(
+            title = stringResource(R.string.section_new_title),
+            confirm = stringResource(R.string.section_create),
+            name = name,
+            maxLength = sections.maxNameLength,
+            canConfirm = sections.canCreate,
+            onNameChange = { onSectionsIntent(SectionsIntent.NameChanged(it)) },
+            onConfirm = { onSectionsIntent(SectionsIntent.CreateConfirmed) },
+            onDismiss = { onSectionsIntent(SectionsIntent.DialogDismissed) },
+        )
     }
     if (selection.confirming) {
         val words = Formats.pluralRu(selection.count, R.string.selection_delete_records_one, R.string.selection_delete_records_few, R.string.selection_delete_records_many)

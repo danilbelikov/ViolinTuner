@@ -1,7 +1,9 @@
 package com.example.violintuner.feature.repertoire.piece
 
 import com.example.violintuner.core.domain.repertoire.Piece
+import com.example.violintuner.core.domain.repertoire.PieceSection
 import com.example.violintuner.core.domain.repertoire.PieceStats
+import com.example.violintuner.core.domain.repertoire.scale.Scales
 import com.example.violintuner.core.domain.repertoire.RepertoireConfig
 import com.example.violintuner.core.domain.repertoire.SheetPage
 import com.example.violintuner.core.domain.session.RecordingProgress
@@ -31,6 +33,8 @@ object PieceReducer {
         progress = progress,
         statusMenuOpen = statusMenuOpen,
         notesCollapsedLines = config.notesCollapsedLines,
+        scale = piece.scale?.let { Scales.build(it, config.scaleLowestMidi, config.scaleHighestMidi) },
+        exercise = piece.groupId == null && piece.section != PieceSection.PIECES,
     )
 
     fun loading(config: RepertoireConfig) = PieceState(

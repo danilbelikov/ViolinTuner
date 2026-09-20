@@ -1,5 +1,14 @@
 package com.example.violintuner.feature.repertoire.piece
 
+import com.example.violintuner.feature.repertoire.components.LocalExerciseWords
+import androidx.compose.animation.animateContentSize
+import com.example.violintuner.feature.repertoire.scale.systemCount
+import com.example.violintuner.feature.repertoire.scale.scaleTitle
+import com.example.violintuner.feature.repertoire.scale.scaleRange
+import com.example.violintuner.feature.repertoire.scale.scaleKindLabel
+import com.example.violintuner.feature.repertoire.scale.ScaleNotation
+import com.example.violintuner.feature.repertoire.scale.NotationSizes
+import com.example.violintuner.core.domain.repertoire.scale.Scale
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
@@ -137,10 +146,16 @@ fun PieceScreen(
         val header = state.header
         if (header == null) {
             TopBar(title = "", titleVisible = false, height = TopBarHeight, onIntent = onIntent)
-        } else if (maxWidth > maxHeight) {
-            LandscapeLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo)
         } else {
-            PortraitLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo)
+            val landscape = maxWidth > maxHeight
+            // «Выучено» for a scale, an étude, a stroke; «В репертуаре» for a piece (spec 3.22)
+            CompositionLocalProvider(LocalExerciseWords provides state.exercise) {
+                if (landscape) {
+                    LandscapeLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo)
+                } else {
+                    PortraitLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo)
+                }
+            }
         }
     }
     VideoImportSheet(videoImport, onIntent)
@@ -174,7 +189,7 @@ private fun PortraitLayout(
         ) {
             // While takes are being picked everything that is not the list steps aside (spec 3.18, handoff 19f1).
             Column(modifier = Modifier.dimmedWhen(selecting), verticalArrangement = Arrangement.spacedBy(BlockGap)) {
-                HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Portrait, Modifier.padding(horizontal = ScreenPadding))
+                HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Portrait, Modifier.padding(horizontal = ScreenPadding), scale = state.scale)
                 SheetsBlock(state, onIntent, addPhoto, Metrics.Portrait)
                 Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(BlockGap)) {
                     // Recording stands above the notes: the notes are read once before playing, a take is recorded every time.
@@ -219,7 +234,7 @@ private fun LandscapeLayout(
                     .padding(start = ScreenPadding, end = ScreenPadding, bottom = ScreenPadding),
                 verticalArrangement = Arrangement.spacedBy(ScreenPadding),
             ) {
-                HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Landscape)
+                HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Landscape, scale = state.scale)
                 RecordTakeRow(take, onIntent, buttonSize = LandscapeRecordButton) { VideoEntry(take, videoImport, onIntent, onPickVideo) }
                 state.progress?.let { TakeProgressCard(it) }
             }
@@ -333,7 +348,15 @@ private fun TopBar(title: String, titleVisible: Boolean, height: Dp, onIntent: (
 }
 
 @Composable
-private fun HeaderBlock(header: PieceHeader, menuOpen: Boolean, onIntent: (PieceIntent) -> Unit, metrics: Metrics, modifier: Modifier = Modifier) {
+private fun HeaderBlock(
+    header: PieceHeader,
+    menuOpen: Boolean,
+    onIntent: (PieceIntent) -> Unit,
+    metrics: Metrics,
+    modifier: Modifier = Modifier,
+    /** A scale says its kind where a piece names its composer; its key is its very title (handoff 24f). */
+    scale: Scale? = null,
+) {
     val colors = MaterialTheme.colorScheme
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
@@ -345,8 +368,9 @@ private fun HeaderBlock(header: PieceHeader, menuOpen: Boolean, onIntent: (Piece
                 fontSize = metrics.titleSize.sp, lineHeight = (metrics.titleSize * 1.15f).sp, fontWeight = FontWeight.Bold,
             ),
         )
-        if (header.composer.isNotEmpty()) {
-            Text(header.composer, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp))
+        val second = scale?.let { scaleKindLabel(it.spec.kind) } ?: header.composer
+        if (second.isNotEmpty()) {
+            Text(second, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp))
         }
         Row(
             modifier = Modifier.padding(top = 6.dp),
@@ -354,7 +378,7 @@ private fun HeaderBlock(header: PieceHeader, menuOpen: Boolean, onIntent: (Piece
             verticalAlignment = Alignment.CenterVertically,
         ) {
             StatusMenu(header.status, menuOpen, onIntent)
-            KeyAndTempo(header.keyName, header.tempoBpm, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES))
+            KeyAndTempo(header.keyName.takeIf { scale == null }, header.tempoBpm, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES))
         }
     }
 }
@@ -408,6 +432,36 @@ private fun Chevron(tint: Color) {
 private fun SheetsBlock(state: PieceState, onIntent: (PieceIntent) -> Unit, addPhoto: AddPhotoActions, metrics: Metrics) {
     val colors = MaterialTheme.colorScheme
     val empty = state.pages.isEmpty() && state.importing == 0
+    val scale = state.scale
+    // The drawn scale is page one of the stand: the photos — a fingering from the book — follow it.
+    val firstPhoto = if (scale != null) 1 else 0
+    if (scale != null) {
+        Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            DrawnScale(scale, metrics) { onIntent(PieceIntent.PageClicked(0)) }
+            if (empty) {
+                // The scale has its notes already: a quiet line, not a dashed card asking for them.
+                Row(modifier = Modifier.padding(horizontal = ScreenPadding - 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        stringResource(R.string.scale_add_photo),
+                        modifier = Modifier.padding(start = 12.dp).weight(1f),
+                        color = colors.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                    )
+                    TextButton(onClick = addPhoto.onCamera) { Text(stringResource(R.string.piece_sheets_camera)) }
+                    TextButton(onClick = addPhoto.onGallery) { Text(stringResource(R.string.piece_sheets_gallery)) }
+                }
+            } else {
+                LazyRow(contentPadding = PaddingValues(horizontal = ScreenPadding), horizontalArrangement = Arrangement.spacedBy(TileGap)) {
+                    itemsIndexed(state.pages, key = { _, tile -> tile.pageId }) { index, tile ->
+                        PageTile(tile, first = false, metrics = metrics) { onIntent(PieceIntent.PageClicked(index + firstPhoto)) }
+                    }
+                    items(state.importing, key = { "importing-$it" }) { ImportingTile(metrics) }
+                    item(key = "add") { AddTile(metrics, addPhoto) }
+                }
+            }
+        }
+        return
+    }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
             text = if (state.pages.isEmpty()) stringResource(R.string.piece_sheets_none) else stringResource(R.string.piece_sheets_count, state.pages.size),
@@ -575,6 +629,57 @@ private fun NotesBlock(notes: String, collapsedLines: Int, onIntent: (PieceInten
                 textAlign = TextAlign.Start,
                 style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp),
             )
+        }
+    }
+}
+
+private const val WHOLE_SYSTEMS = 3
+private const val FOLDED_SYSTEMS = 2
+private const val FOLD_MS = 250
+
+/**
+ * The notes of a scale on its screen (spec 3.22, handoff 24f): light ink on a dark card — paper
+ * here would be the one white rectangle of a dark screen; paper is for the stand. Up to three
+ * systems stand whole, a longer scale shows two and «ещё N систем». A tap opens the stand.
+ */
+@Composable
+private fun DrawnScale(scale: Scale, metrics: Metrics, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val space = if (metrics == Metrics.Landscape) NotationSizes.CardLandscape else NotationSizes.Card
+    Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Row(verticalAlignment = Alignment.Bottom) {
+            Text(
+                stringResource(R.string.scale_notes),
+                modifier = Modifier.weight(1f),
+                color = colors.onSurface,
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+            )
+            Text(scaleRange(scale), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES))
+        }
+        var expanded by rememberSaveable { mutableStateOf(false) }
+        BoxWithConstraints(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(CardCorner))
+                .background(colors.surfaceContainer)
+                .clickable(role = Role.Button, onClickLabel = stringResource(R.string.scale_open_stand), onClick = onClick)
+                .animateContentSize(tween(FOLD_MS)),
+        ) {
+            val inner = maxWidth - 24.dp
+            val systems = systemCount(scale, inner.value, space)
+            val folded = systems > WHOLE_SYSTEMS && !expanded
+            Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                ScaleNotation(
+                    scale, space, ViolinTheme.exerciseColors.inkOnDark,
+                    maxSystems = FOLDED_SYSTEMS.takeIf { folded }, name = scaleTitle(scale.spec),
+                )
+                if (folded) {
+                    val more = systems - FOLDED_SYSTEMS
+                    TextButton(onClick = { expanded = true }) {
+                        Text(stringResource(Formats.pluralRu(more, R.string.scale_more_systems_one, R.string.scale_more_systems_few, R.string.scale_more_systems_many), more))
+                    }
+                }
+            }
         }
     }
 }

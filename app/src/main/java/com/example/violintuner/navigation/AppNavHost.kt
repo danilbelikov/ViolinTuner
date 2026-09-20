@@ -17,7 +17,14 @@ import com.example.violintuner.feature.history.HistoryRoute
 import com.example.violintuner.feature.live.LiveRoute
 import com.example.violintuner.feature.onboarding.OnboardingRoute
 import com.example.violintuner.feature.practice.PracticeRoute
+import com.example.violintuner.core.domain.repertoire.PieceSection
+import com.example.violintuner.core.domain.repertoire.SectionRef
+import com.example.violintuner.feature.repertoire.RepertoireViewModel
+import com.example.violintuner.feature.repertoire.SectionKeys
+import com.example.violintuner.feature.repertoire.SectionRoute
 import com.example.violintuner.feature.repertoire.form.PieceFormRoute
+import com.example.violintuner.feature.repertoire.scale.ScaleFormRoute
+import com.example.violintuner.feature.repertoire.scale.ScaleFormViewModel
 import com.example.violintuner.feature.repertoire.form.PieceFormViewModel
 import com.example.violintuner.feature.repertoire.piece.PieceRoute
 import com.example.violintuner.feature.repertoire.piece.PieceViewModel
@@ -36,6 +43,9 @@ private const val PIECE_PATTERN = "$PIECE_ROUTE/{${PieceViewModel.ARG_PIECE_ID}}
 private const val STAND_ROUTE = "stand"
 private const val SOUND_ROUTE = "sound"
 private const val PIECE_FORM_ROUTE = "pieceForm"
+private const val SCALE_FORM_ROUTE = "scaleForm"
+private const val SECTION_ROUTE = "section"
+private const val SECTION_PATTERN = "$SECTION_ROUTE/{${RepertoireViewModel.ARG_SECTION}}"
 private const val BACKUP_ROUTE = "backup"
 private const val RESTORE_ROUTE = "restore"
 private const val RESTORE_PATTERN = "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}={${RestoreViewModel.ARG_URI}}"
@@ -70,8 +80,7 @@ fun AppNavHost(
             HistoryRoute(
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
-                onOpenPiece = navController::navigateToPiece,
-                onNewPiece = { navController.navigateToPieceForm(pieceId = null) },
+                onOpenSection = navController::navigateToSection,
             )
         }
         // Above the tabs and without the bottom bar; back returns to where it was opened from.
@@ -93,6 +102,20 @@ fun AppNavHost(
         ) {
             SoundRoute(onClose = navController::popBackStack)
         }
+        // A section of the repertoire (spec 3.22): its list, above the tabs; «Гаммы» adds through a form of its own.
+        composable(
+            route = SECTION_PATTERN,
+            arguments = listOf(navArgument(RepertoireViewModel.ARG_SECTION) { type = NavType.StringType }),
+        ) {
+            SectionRoute(
+                onOpenPiece = navController::navigateToPiece,
+                onNew = { section ->
+                    if (section == SectionRef.BuiltIn(PieceSection.SCALES)) navController.navigateToScaleForm(pieceId = null)
+                    else navController.navigateToPieceForm(pieceId = null, section = section)
+                },
+                onClose = navController::popBackStack,
+            )
+        }
         // The repertoire (spec 3.15): a piece, its form and its music stand, all above the tabs.
         composable(
             route = PIECE_PATTERN,
@@ -100,7 +123,9 @@ fun AppNavHost(
         ) {
             PieceRoute(
                 onClose = navController::popBackStack,
-                onOpenForm = { pieceId, focusNotes -> navController.navigateToPieceForm(pieceId, focusNotes) },
+                onOpenForm = { pieceId, focusNotes, scale ->
+                    if (scale) navController.navigateToScaleForm(pieceId) else navController.navigateToPieceForm(pieceId, focusNotes)
+                },
                 onOpenStand = navController::navigateToStand,
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
@@ -123,8 +148,13 @@ fun AppNavHost(
         }
         composable(
             route = "$PIECE_FORM_ROUTE?${PieceFormViewModel.ARG_PIECE_ID}={${PieceFormViewModel.ARG_PIECE_ID}}" +
-                "&${PieceFormViewModel.ARG_FOCUS_NOTES}={${PieceFormViewModel.ARG_FOCUS_NOTES}}",
+                "&${PieceFormViewModel.ARG_FOCUS_NOTES}={${PieceFormViewModel.ARG_FOCUS_NOTES}}" +
+                "&${PieceFormViewModel.ARG_SECTION}={${PieceFormViewModel.ARG_SECTION}}",
             arguments = listOf(
+                navArgument(PieceFormViewModel.ARG_SECTION) {
+                    type = NavType.StringType
+                    defaultValue = PieceSection.PIECES.name
+                },
                 navArgument(PieceFormViewModel.ARG_PIECE_ID) {
                     type = NavType.LongType
                     defaultValue = PieceFormViewModel.NEW_PIECE
@@ -143,7 +173,26 @@ fun AppNavHost(
                     navController.navigateToPiece(pieceId)
                 },
                 // The form of a piece lies on that piece's screen: both go.
-                onCloseDeleted = { navController.popBackStack(TopLevelDestination.HISTORY.route, inclusive = false) },
+                onCloseDeleted = { navController.popUpToSection() },
+            )
+        }
+        composable(
+            route = "$SCALE_FORM_ROUTE?${ScaleFormViewModel.ARG_PIECE_ID}={${ScaleFormViewModel.ARG_PIECE_ID}}",
+            arguments = listOf(
+                navArgument(ScaleFormViewModel.ARG_PIECE_ID) {
+                    type = NavType.LongType
+                    defaultValue = ScaleFormViewModel.NEW_SCALE
+                },
+            ),
+        ) {
+            ScaleFormRoute(
+                onClose = navController::popBackStack,
+                // a new scale, and one that turned out to exist already, take the place of the form
+                onOpenScale = { pieceId ->
+                    navController.popBackStack()
+                    navController.navigateToPiece(pieceId)
+                },
+                onCloseDeleted = { navController.popUpToSection() },
             )
         }
         composable(TopLevelDestination.SETTINGS.route) {
@@ -225,10 +274,25 @@ fun NavHostController.navigateToStand(pieceId: Long, pageIndex: Int) {
     navigate("$STAND_ROUTE/$pieceId?${StandViewModel.ARG_PAGE}=$pageIndex") { launchSingleTop = true }
 }
 
-/** [pieceId] null opens the form of a new piece. */
-fun NavHostController.navigateToPieceForm(pieceId: Long?, focusNotes: Boolean = false) {
+/** [pieceId] null opens the form of a new element of [section]. */
+fun NavHostController.navigateToPieceForm(pieceId: Long?, focusNotes: Boolean = false, section: SectionRef = SectionRef.BuiltIn(PieceSection.PIECES)) {
     val id = pieceId ?: PieceFormViewModel.NEW_PIECE
-    navigate("$PIECE_FORM_ROUTE?${PieceFormViewModel.ARG_PIECE_ID}=$id&${PieceFormViewModel.ARG_FOCUS_NOTES}=$focusNotes") {
-        launchSingleTop = true
-    }
+    navigate(
+        "$PIECE_FORM_ROUTE?${PieceFormViewModel.ARG_PIECE_ID}=$id&${PieceFormViewModel.ARG_FOCUS_NOTES}=$focusNotes" +
+            "&${PieceFormViewModel.ARG_SECTION}=${SectionKeys.keyOf(section)}",
+    ) { launchSingleTop = true }
+}
+
+/** [pieceId] null opens the form of a new scale. */
+fun NavHostController.navigateToScaleForm(pieceId: Long?) {
+    navigate("$SCALE_FORM_ROUTE?${ScaleFormViewModel.ARG_PIECE_ID}=${pieceId ?: ScaleFormViewModel.NEW_SCALE}") { launchSingleTop = true }
+}
+
+fun NavHostController.navigateToSection(section: SectionRef) {
+    navigate("$SECTION_ROUTE/${SectionKeys.keyOf(section)}") { launchSingleTop = true }
+}
+
+/** An element is gone with its form and its screen: back to the list of its section, or to the tab if it was opened from elsewhere. */
+private fun NavHostController.popUpToSection() {
+    if (!popBackStack(SECTION_PATTERN, inclusive = false)) popBackStack(TopLevelDestination.HISTORY.route, inclusive = false)
 }

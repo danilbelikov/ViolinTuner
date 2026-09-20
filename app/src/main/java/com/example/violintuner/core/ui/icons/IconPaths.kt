@@ -84,6 +84,8 @@ internal object IconPaths {
     val SELECT = listOf("M4 6.5h8M4 12h8M4 17.5h6", "M14.5 12.5l2.5 2.5 5-5.5")
 
     /** отметка «лучший дубль» (12 dp, primary, залитая) */
+    /** The tile of a bow stroke (handoff `Упражнения`, 24c): drawn on a grid of 30 there, brought to 24 here. */
+    val BOW = listOf("M4 20L20 4", "M7.2 20.8C10.4 16 16 9.6 20.8 6.4", "M2.4 17.6L6.4 21.6")
     val STAR_OUTLINE = listOf("M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z")
     val STAR = listOf("F M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z")
 

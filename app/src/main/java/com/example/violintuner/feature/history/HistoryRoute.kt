@@ -19,26 +19,25 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.example.violintuner.core.ui.motion.LocalReduceMotion
 import com.example.violintuner.core.ui.motion.rememberAnimationsRemoved
 import com.example.violintuner.feature.history.components.CardActions
-import com.example.violintuner.feature.repertoire.RepertoireEffect
-import com.example.violintuner.feature.repertoire.RepertoireViewModel
 import com.example.violintuner.feature.share.ShareHost
+import com.example.violintuner.core.domain.repertoire.SectionRef
+import com.example.violintuner.feature.repertoire.sections.SectionsEffect
+import com.example.violintuner.feature.repertoire.sections.SectionsViewModel
 import com.example.violintuner.feature.share.ShareViewModel
 
 @Composable
 fun HistoryRoute(
     onOpenSession: (sessionId: Long) -> Unit,
     onOpenSound: (sessionId: Long) -> Unit,
-    onOpenPiece: (pieceId: Long) -> Unit,
-    onNewPiece: () -> Unit,
+    onOpenSection: (SectionRef) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel = hiltViewModel(),
-    repertoireViewModel: RepertoireViewModel = hiltViewModel(),
+    sectionsViewModel: SectionsViewModel = hiltViewModel(),
     shareViewModel: ShareViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val repertoire by repertoireViewModel.state.collectAsStateWithLifecycle()
-    val currentOnOpenPiece by rememberUpdatedState(onOpenPiece)
-    val currentOnNewPiece by rememberUpdatedState(onNewPiece)
+    val sections by sectionsViewModel.state.collectAsStateWithLifecycle()
+    val currentOnOpenSection by rememberUpdatedState(onOpenSection)
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnOpenSession by rememberUpdatedState(onOpenSession)
 
@@ -52,12 +51,11 @@ fun HistoryRoute(
         }
     }
 
-    LaunchedEffect(repertoireViewModel, lifecycleOwner) {
+    LaunchedEffect(sectionsViewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            repertoireViewModel.effects.collect { effect ->
+            sectionsViewModel.effects.collect { effect ->
                 when (effect) {
-                    is RepertoireEffect.OpenPiece -> currentOnOpenPiece(effect.id)
-                    RepertoireEffect.OpenNewPiece -> currentOnNewPiece()
+                    is SectionsEffect.OpenSection -> currentOnOpenSection(effect.ref)
                 }
             }
         }
@@ -81,8 +79,8 @@ fun HistoryRoute(
             state = state,
             onIntent = viewModel::onIntent,
             modifier = modifier,
-            repertoire = repertoire,
-            onRepertoireIntent = repertoireViewModel::onIntent,
+            sections = sections,
+            onSectionsIntent = sectionsViewModel::onIntent,
             cardActions = remember(shareViewModel, onOpenSound, viewModel) {
                 CardActions(onShare = shareViewModel::start, onSound = onOpenSound, onBest = { viewModel.onIntent(HistoryIntent.BestToggled(it)) })
             },

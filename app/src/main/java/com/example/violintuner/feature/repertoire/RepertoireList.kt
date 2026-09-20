@@ -1,5 +1,10 @@
 package com.example.violintuner.feature.repertoire
 
+import com.example.violintuner.feature.repertoire.scale.scaleSubtitle
+import com.example.violintuner.feature.repertoire.scale.KeySignatureTile
+import androidx.compose.foundation.layout.size
+import com.example.violintuner.core.domain.repertoire.SectionRef
+import com.example.violintuner.core.domain.repertoire.PieceSection
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -69,16 +74,16 @@ private val ChipCorner = 8.dp
 private const val TABULAR_FIGURES = "tnum"
 private const val EMPTY_HEIGHT_FRACTION = 0.7f
 
-/** The «Репертуар» section of «Записи» (spec 3.15, handoff 13a2, 13b): items of the screen's one lazy list. */
+/** The elements of one section of the repertoire (spec 3.15, 3.22; handoff 13b, 24c): items of a lazy list. */
 fun LazyListScope.repertoireItems(state: RepertoireState, onIntent: (RepertoireIntent) -> Unit) {
     when {
         state.loading -> Unit
         state.totalCount == 0 -> item(key = "repertoireEmpty") {
-            EmptyRepertoire(onAdd = { onIntent(RepertoireIntent.AddClicked) }, modifier = Modifier.fillParentMaxHeight(EMPTY_HEIGHT_FRACTION))
+            EmptyRepertoire(state.section, onAdd = { onIntent(RepertoireIntent.AddClicked) }, modifier = Modifier.fillParentMaxHeight(EMPTY_HEIGHT_FRACTION))
         }
         else -> {
             item(key = "repertoireAdd") {
-                AddButton(onClick = { onIntent(RepertoireIntent.AddClicked) }, modifier = Modifier.padding(top = SectionSpacing))
+                AddButton(state.section, onClick = { onIntent(RepertoireIntent.AddClicked) }, modifier = Modifier.padding(top = SectionSpacing))
             }
             item(key = "repertoireFilters") {
                 StatusFilters(
@@ -100,7 +105,7 @@ fun LazyListScope.repertoireItems(state: RepertoireState, onIntent: (RepertoireI
 }
 
 @Composable
-private fun AddButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
+private fun AddButton(section: SectionRef, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     OutlinedButton(
         onClick = onClick,
@@ -113,7 +118,7 @@ private fun AddButton(onClick: () -> Unit, modifier: Modifier = Modifier) {
         CompositionLocalProvider(LocalContentColor provides colors.primary) {
             IconLabel(
                 icon = AppIcons.Plus,
-                text = stringResource(R.string.repertoire_add),
+                text = stringResource(addLabelOf(section)),
                 style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
             )
         }
@@ -168,7 +173,13 @@ private fun PieceCardRow(card: PieceCard, onClick: () -> Unit, modifier: Modifie
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        SheetThumb(card.thumbPath, ThumbWidth, ThumbHeight, ThumbCorner, dim = THUMB_DIM)
+        when {
+            // a drawn scale has notes of its own: the clef with its key signature is known from afar, a first bar in miniature is not
+            card.scale != null && card.thumbPath == null -> KeySignatureTile(card.scale, Modifier.size(ThumbWidth, ThumbHeight), ThumbCorner)
+            // a row of strokes looks even, not "without a photo"
+            card.stroke && card.thumbPath == null -> StrokeTile(Modifier.size(ThumbWidth, ThumbHeight), ThumbCorner)
+            else -> SheetThumb(card.thumbPath, ThumbWidth, ThumbHeight, ThumbCorner, dim = THUMB_DIM)
+        }
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
             Text(
                 text = card.title,
@@ -177,9 +188,10 @@ private fun PieceCardRow(card: PieceCard, onClick: () -> Unit, modifier: Modifie
                 overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold),
             )
-            if (card.composer.isNotEmpty()) {
+            val second = card.scale?.let { scaleSubtitle(it) } ?: card.composer
+            if (second.isNotEmpty()) {
                 Text(
-                    text = card.composer,
+                    text = second,
                     color = colors.onSurfaceVariant,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -193,7 +205,8 @@ private fun PieceCardRow(card: PieceCard, onClick: () -> Unit, modifier: Modifie
             ) {
                 StatusChip(card.status)
                 KeyAndTempo(
-                    keyName = card.keyName,
+                    // the key of a scale is its very name
+                    keyName = card.keyName.takeIf { card.scale == null },
                     tempoBpm = card.tempoBpm,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
                 )
@@ -229,20 +242,20 @@ private fun LastTake(card: PieceCard) {
 private val BestStar = 12.dp
 
 @Composable
-private fun EmptyRepertoire(onAdd: () -> Unit, modifier: Modifier = Modifier) {
+private fun EmptyRepertoire(section: SectionRef, onAdd: () -> Unit, modifier: Modifier = Modifier) {
     Column(
         modifier = modifier.fillMaxWidth(),
         verticalArrangement = Arrangement.spacedBy(20.dp, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(R.string.repertoire_empty),
+            text = stringResource(emptyTextOf(section)),
             modifier = Modifier.widthIn(max = 280.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center,
             style = MaterialTheme.typography.bodyLarge,
         )
-        AddButton(onAdd, Modifier.widthIn(max = 280.dp))
+        AddButton(section, onAdd, Modifier.widthIn(max = 280.dp))
     }
 }
 
@@ -303,3 +316,33 @@ private val TempoIconGap = 5.dp
 fun takesLabel(count: Int): String = stringResource(
     Formats.pluralRu(count, R.string.takes_one, R.string.takes_few, R.string.takes_many), count,
 )
+
+private fun addLabelOf(section: SectionRef): Int = when (section) {
+    is SectionRef.Custom -> R.string.section_add_own
+    is SectionRef.BuiltIn -> when (section.section) {
+        PieceSection.PIECES -> R.string.repertoire_add
+        PieceSection.SCALES -> R.string.section_add_scale
+        PieceSection.ETUDES -> R.string.section_add_etude
+        PieceSection.STROKES -> R.string.section_add_stroke
+    }
+}
+
+private fun emptyTextOf(section: SectionRef): Int = when (section) {
+    is SectionRef.Custom -> R.string.section_empty_own
+    is SectionRef.BuiltIn -> when (section.section) {
+        PieceSection.PIECES -> R.string.repertoire_empty
+        PieceSection.SCALES -> R.string.section_empty_scales
+        PieceSection.ETUDES -> R.string.section_empty_etudes
+        PieceSection.STROKES -> R.string.section_empty_strokes
+    }
+}
+
+/** A bow stroke has no cover as a rule: a quiet tile with a bow stands where the photo would (handoff 24c). */
+@Composable
+private fun StrokeTile(modifier: Modifier, corner: androidx.compose.ui.unit.Dp) {
+    val colors = MaterialTheme.colorScheme
+    Box(
+        modifier = modifier.background(colors.surfaceContainerHigh, RoundedCornerShape(corner)),
+        contentAlignment = Alignment.Center,
+    ) { AppIcon(AppIcons.Bow, contentDescription = null, tint = colors.outline, size = 30.dp) }
+}

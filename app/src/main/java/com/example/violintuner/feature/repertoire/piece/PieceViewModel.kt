@@ -197,8 +197,8 @@ class PieceViewModel @Inject constructor(
     fun onIntent(intent: PieceIntent) {
         when (intent) {
             PieceIntent.BackClicked -> effectChannel.trySend(PieceEffect.Close)
-            PieceIntent.EditClicked -> effectChannel.trySend(PieceEffect.OpenForm(pieceId, focusNotes = false))
-            PieceIntent.AddNotesClicked -> effectChannel.trySend(PieceEffect.OpenForm(pieceId, focusNotes = true))
+            PieceIntent.EditClicked -> effectChannel.trySend(PieceEffect.OpenForm(pieceId, focusNotes = false, scale = state.value.scale != null))
+            PieceIntent.AddNotesClicked -> effectChannel.trySend(PieceEffect.OpenForm(pieceId, focusNotes = true, scale = state.value.scale != null))
             PieceIntent.StatusChipClicked -> ui.update { it.copy(statusMenuOpen = true) }
             PieceIntent.StatusMenuDismissed -> ui.update { it.copy(statusMenuOpen = false) }
             is PieceIntent.StatusSelected -> {

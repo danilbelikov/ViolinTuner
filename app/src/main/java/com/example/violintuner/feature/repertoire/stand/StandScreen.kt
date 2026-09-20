@@ -1,5 +1,8 @@
 package com.example.violintuner.feature.repertoire.stand
 
+import com.example.violintuner.feature.repertoire.scale.ScaleNotation
+import com.example.violintuner.feature.repertoire.scale.NotationSizes
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -144,6 +147,8 @@ fun StandScreen(
             counter = stringResource(R.string.stand_counter, pagerState.currentPage + 1, state.pages.size),
             take = take,
             landscape = landscape,
+            // a drawn scale is not a photo: there is nothing to delete (handoff 24g)
+            canDelete = state.pages.getOrNull(pagerState.currentPage)?.drawn != true,
             onIntent = onIntent,
             onRecordClick = onRecordClick,
         )
@@ -305,7 +310,17 @@ private fun Sheet(page: StandPage, description: String, zoom: StandZoom?, landsc
             .aspectRatio(ratio)
             .clip(RoundedCornerShape(SheetCorner))
             .background(paper)
-        if (image != null) {
+        val scale = page.scale
+        if (scale != null) {
+            // As tall as its systems, not as a sheet of paper: dark ink on the paper of the stand, a staff space of 10 dp (handoff 24g1).
+            Box(
+                sheetModifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(SheetCorner))
+                    .background(paper)
+                    .padding(top = 14.dp, bottom = 18.dp),
+            ) { ScaleNotation(scale, NotationSizes.Stand, ViolinTheme.exerciseColors.inkOnPaper, name = description) }
+        } else if (image != null) {
             Image(bitmap = image, contentDescription = description, contentScale = ContentScale.Fit, modifier = shaped)
         } else {
             Box(shaped.semantics { contentDescription = description })
@@ -355,6 +370,7 @@ private fun Panel(
     counter: String,
     take: TakeState,
     landscape: Boolean,
+    canDelete: Boolean,
     onIntent: (StandIntent) -> Unit,
     onRecordClick: () -> Unit,
 ) {
@@ -383,7 +399,11 @@ private fun Panel(
                     style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
                     modifier = Modifier.weight(1f),
                 )
-                PanelIconButton(AppIcons.Trash, stringResource(R.string.stand_delete_page)) { onIntent(StandIntent.DeleteClicked) }
+                if (canDelete) {
+                    PanelIconButton(AppIcons.Trash, stringResource(R.string.stand_delete_page)) { onIntent(StandIntent.DeleteClicked) }
+                } else {
+                    Spacer(Modifier.size(PanelButtonSpace))
+                }
             }
         }
         AnimatedVisibility(
@@ -540,3 +560,5 @@ private fun DeletePageDialog(onIntent: (StandIntent) -> Unit) {
         containerColor = colors.surfaceContainerHigh,
     )
 }
+
+private val PanelButtonSpace = 48.dp

@@ -39,6 +39,9 @@ object NotationMetrics {
     const val OTTAVA_DASH_GAP = 0.4f
     const val OTTAVA_HOOK = 0.8f
 
+    /** A system with an «8va» is taller by this: five ledger lines fill the usual room, the bracket needs its own (not in the handoff — found on the device). */
+    const val OTTAVA_ROOM = 2.5f
+
     /** From this position on a note would need a sixth ledger line: it is written an octave lower under «8va». */
     const val OTTAVA_FROM = 20
     const val OCTAVE_POSITIONS = 7
@@ -72,7 +75,12 @@ data class PlacedNote(
 /** A run of notes under one «8va» bracket: from the left edge of the first head to the right edge of the last. */
 data class OttavaSpan(val fromX: Float, val toX: Float)
 
-data class EngravedSystem(val notes: List<PlacedNote>, val ottavas: List<OttavaSpan>, val last: Boolean)
+data class EngravedSystem(val notes: List<PlacedNote>, val ottavas: List<OttavaSpan>, val last: Boolean) {
+    /** Room above the usual top of the system. */
+    val extraTop: Float get() = if (ottavas.isEmpty()) 0f else NotationMetrics.OTTAVA_ROOM
+
+    val height: Float get() = NotationMetrics.SYSTEM_HEIGHT + extraTop
+}
 
 /** A scale laid out for a given width: every system carries the clef and [signs] again. */
 data class Engraving(
@@ -80,11 +88,17 @@ data class Engraving(
     val signs: List<PlacedSign>,
     val systems: List<EngravedSystem>,
 ) {
-    val heightSp: Float get() = systems.size * NotationMetrics.SYSTEM_HEIGHT
+    val heightSp: Float get() = heightOf(systems.size)
+
+    /** Height of the first [count] systems: what a folded card shows. */
+    fun heightOf(count: Int): Float = systems.take(count).sumOf { it.height.toDouble() }.toFloat()
+
+    /** Where the system with this index begins. */
+    fun top(systemIndex: Int): Float = heightOf(systemIndex)
 
     /** y of a staff position inside the system with this index; grows downwards like the canvas. */
     fun y(systemIndex: Int, position: Int): Float =
-        systemIndex * NotationMetrics.SYSTEM_HEIGHT + NotationMetrics.SYSTEM_TOP + NotationMetrics.STAFF_HEIGHT - position / 2f
+        top(systemIndex) + systems[systemIndex].extraTop + NotationMetrics.SYSTEM_TOP + NotationMetrics.STAFF_HEIGHT - position / 2f
 }
 
 /**
@@ -137,11 +151,14 @@ object ScaleEngraver {
         // First as many as fit, to learn how many systems there are; then evenly by count — 43 notes
         // read better as 15 · 14 · 14 than as 17 · 17 · 9.
         val greedy = split(emptyList())
-        val lines = if (greedy.size > 1) {
-            val count = greedy.size
-            split(List(count) { index -> marked.size / count + if (index < marked.size % count) 1 else 0 })
-        } else {
-            greedy
+        fun even(count: Int) = List(count) { index -> marked.size / count + if (index < marked.size % count) 1 else 0 }
+        // An even share may not fit where accidentals crowd: then one more system, shared evenly again —
+        // never a last system of a single note (found on the device with gis-moll in three octaves).
+        var count = greedy.size
+        var lines = if (count > 1) split(even(count)) else greedy
+        while (lines.size > count && count < marked.size) {
+            count = lines.size
+            lines = split(even(count))
         }
 
         val systems = lines.mapIndexed { index, line ->

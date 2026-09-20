@@ -456,6 +456,79 @@
     <string name="piece_status_reading">Разбираю</string>
     <string name="piece_status_learning">Учу</string>
     <string name="piece_status_in_repertoire">В репертуаре</string>
+    <string name="piece_status_learned">Выучено</string>
+    <string name="section_pieces">Произведения</string>
+    <string name="section_scales">Гаммы</string>
+    <string name="section_etudes">Этюды</string>
+    <string name="section_strokes">Штрихи</string>
+    <string name="section_learned">выучено %1$d из %2$d</string>
+    <string name="section_empty_count">пока пусто</string>
+    <string name="section_bar_description">разбираю %1$d, учу %2$d, выучено %3$d</string>
+    <string name="section_add">Добавить раздел</string>
+    <string name="section_add_scale">Добавить гамму</string>
+    <string name="section_add_etude">Добавить этюд</string>
+    <string name="section_add_stroke">Добавить штрих</string>
+    <string name="section_add_own">Добавить</string>
+    <string name="section_empty_scales">Выберите гамму — приложение нарисует её ноты</string>
+    <string name="section_empty_etudes">Этюды живут здесь: ноты, заметки, дубли.</string>
+    <string name="section_empty_strokes">Штрихи, над которыми работаете: деташе, спиккато, мартле…</string>
+    <string name="section_empty_own">В разделе пока ничего нет.</string>
+    <string name="section_menu">Ещё</string>
+    <string name="section_rename">Переименовать</string>
+    <string name="section_delete">Удалить раздел</string>
+    <string name="section_new_title">Новый раздел</string>
+    <string name="section_rename_title">Переименовать раздел</string>
+    <string name="section_name_label">Название раздела</string>
+    <string name="section_create">Создать</string>
+    <string name="section_save">Сохранить</string>
+    <string name="section_delete_title">Удалить «%1$s»?</string>
+    <string name="section_delete_text_empty">Раздел пуст. Записи останутся.</string>
+    <string name="section_delete_text_one">%1$d элемент переедет в «Произведения». Записи останутся.</string>
+    <string name="section_delete_text_few">%1$d элемента переедут в «Произведения». Записи останутся.</string>
+    <string name="section_delete_text_many">%1$d элементов переедут в «Произведения». Записи останутся.</string>
+    <string name="section_delete_confirm">Удалить</string>
+    <string name="section_back">Назад</string>
+    <string name="form_section">Раздел</string>
+    <string name="form_author">Автор</string>
+    <string name="form_new_etude">Новый этюд</string>
+    <string name="form_new_stroke">Новый штрих</string>
+    <string name="form_new_element">Новый элемент</string>
+    <string-array name="stroke_suggestions">
+        <item>Деташе</item>
+        <item>Легато</item>
+        <item>Стаккато</item>
+        <item>Спиккато</item>
+        <item>Мартле</item>
+        <item>Сотийе</item>
+        <item>Рикошет</item>
+    </string-array>
+    <string name="scale_new">Новая гамма</string>
+    <string name="scale_edit">Гамма</string>
+    <string name="scale_key">Тональность</string>
+    <string name="scale_kind">Вид</string>
+    <string name="scale_octaves">Октавы</string>
+    <string name="scale_kind_major">мажор</string>
+    <string name="scale_kind_natural">минор натуральный</string>
+    <string name="scale_kind_harmonic">минор гармонический</string>
+    <string name="scale_kind_melodic">минор мелодический</string>
+    <string name="scale_suffix_harmonic">гармонический</string>
+    <string name="scale_suffix_melodic">мелодический</string>
+    <string name="scale_octave_one">%1$d октава</string>
+    <string name="scale_octave_few">%1$d октавы</string>
+    <string name="scale_octave_many">%1$d октав</string>
+    <string name="scale_title">%1$s · %2$s</string>
+    <string name="scale_range">%1$s – %2$s</string>
+    <string name="scale_preview_empty">Выберите тонику — ноты нарисуются здесь</string>
+    <string name="scale_exists">Такая гамма уже есть</string>
+    <string name="scale_open">Открыть</string>
+    <string name="scale_locked">Это была бы другая гамма — добавьте новую</string>
+    <string name="scale_notes_description">Ноты гаммы %1$s</string>
+    <string name="scale_more_systems_one">ещё %1$d система</string>
+    <string name="scale_more_systems_few">ещё %1$d системы</string>
+    <string name="scale_more_systems_many">ещё %1$d систем</string>
+    <string name="scale_add_photo">Добавить фото нот</string>
+    <string name="scale_notes">Ноты</string>
+    <string name="scale_open_stand">Открыть на пюпитре</string>
     <string name="piece_tempo_value">♩ = %1$d</string>
     <string name="piece_tempo_description">темп %1$d</string>
     <string name="takes_one">%1$d дубль</string>

@@ -3,7 +3,13 @@ package com.example.violintuner.feature.repertoire.form
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.violintuner.core.domain.repertoire.Piece
 import com.example.violintuner.core.domain.repertoire.PieceDraft
+import com.example.violintuner.core.domain.repertoire.PieceGroup
+import com.example.violintuner.core.domain.repertoire.PieceSection
+import com.example.violintuner.core.domain.repertoire.SectionRef
+import com.example.violintuner.core.domain.repertoire.SectionStats
+import com.example.violintuner.feature.repertoire.SectionKeys
 import com.example.violintuner.core.domain.repertoire.PieceRules
 import com.example.violintuner.core.domain.repertoire.RepertoireConfig
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
@@ -30,17 +36,26 @@ class PieceFormViewModel @Inject constructor(
     private val pieceId: Long? = savedState.get<Long>(ARG_PIECE_ID)?.takeIf { it != NEW_PIECE }
     private val focusNotes: Boolean = savedState.get<Boolean>(ARG_FOCUS_NOTES) ?: false
 
-    private var initial = PieceDraft()
+    private val startSection: SectionRef = SectionKeys.refOf(savedState.get<String>(ARG_SECTION))
+
+    private var initial = draftIn(startSection)
+    private var groups: List<PieceGroup> = emptyList()
     private var titleTouched = false
     private var saving = false
 
-    private val mutableState = MutableStateFlow(stateOf(PieceDraft(), loading = pieceId != null, dialog = null))
+    private val mutableState = MutableStateFlow(stateOf(initial, loading = pieceId != null, dialog = null))
     val state: StateFlow<PieceFormState> = mutableState.asStateFlow()
 
     private val effectChannel = Channel<PieceFormEffect>(Channel.BUFFERED)
     val effects: Flow<PieceFormEffect> = effectChannel.receiveAsFlow()
 
     init {
+        viewModelScope.launch {
+            repertoire.groups.collect { list ->
+                groups = list
+                edit { it }
+            }
+        }
         if (pieceId != null) {
             viewModelScope.launch {
                 val piece = repertoire.piece(pieceId)
@@ -68,6 +83,17 @@ class PieceFormViewModel @Inject constructor(
             is PieceFormIntent.TempoStepped -> edit { it.copy(tempoBpm = PieceRules.stepTempo(it.tempoBpm, intent.by, config)) }
             is PieceFormIntent.TempoPicked -> edit { it.copy(tempoBpm = intent.bpm) }
             is PieceFormIntent.StatusSelected -> edit { it.copy(status = intent.status) }
+            // «Гаммы» is for scales alone
+            is PieceFormIntent.SectionSelected -> if (intent.ref != SectionRef.BuiltIn(PieceSection.SCALES)) {
+                edit { draft ->
+                    when (val ref = intent.ref) {
+                        // a stroke shows neither an author nor a key: what cannot be seen must not be kept
+                        SectionRef.BuiltIn(PieceSection.STROKES) -> draft.copy(section = PieceSection.STROKES, groupId = null, composer = "", key = null)
+                        is SectionRef.BuiltIn -> draft.copy(section = ref.section, groupId = null)
+                        is SectionRef.Custom -> draft.copy(groupId = ref.groupId)
+                    }
+                }
+            }
             PieceFormIntent.SaveClicked -> save()
             PieceFormIntent.CloseClicked -> close()
             PieceFormIntent.DeleteClicked -> if (pieceId != null) showDialog(PieceFormDialog.DELETE)
@@ -118,6 +144,11 @@ class PieceFormViewModel @Inject constructor(
 
     private fun showDialog(dialog: PieceFormDialog?) = mutableState.update { it.copy(dialog = dialog) }
 
+    private fun draftIn(section: SectionRef): PieceDraft = when (section) {
+        is SectionRef.BuiltIn -> PieceDraft(section = section.section)
+        is SectionRef.Custom -> PieceDraft(groupId = section.groupId)
+    }
+
     private inline fun edit(transform: (PieceDraft) -> PieceDraft) {
         mutableState.update { stateOf(transform(it.draft), loading = it.loading, dialog = it.dialog) }
     }
@@ -135,12 +166,15 @@ class PieceFormViewModel @Inject constructor(
             maxComposerLength = config.maxComposerLength,
             maxNotesLength = config.maxNotesLength,
             focusNotes = focusNotes,
+            section = PieceRules.sectionOf(Piece(0, "", "", null, null, draft.status, "", 0, 0, section = draft.section, groupId = draft.groupId), groups),
+            sections = SectionStats.summaries(emptyList(), groups).map { SectionOption(it.ref, it.name, enabled = it.ref != SectionRef.BuiltIn(PieceSection.SCALES)) },
         )
     }
 
     companion object {
         const val ARG_PIECE_ID = "pieceId"
         const val ARG_FOCUS_NOTES = "focusNotes"
+        const val ARG_SECTION = "section"
 
         /** Navigation arguments cannot be null longs: this stands for "no piece yet". */
         const val NEW_PIECE = -1L

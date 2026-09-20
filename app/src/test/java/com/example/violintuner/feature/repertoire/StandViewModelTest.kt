@@ -159,4 +159,30 @@ class StandViewModelTest {
         val (second, _) = stand(id)
         assertFalse(second.state.value.showHint)
     }
+
+    @Test
+    fun `a scale opens with its notes drawn, the photos follow, and the drawn page cannot be deleted`() = runTest {
+        val spec = com.example.violintuner.core.domain.repertoire.scale.ScaleSpec(
+            com.example.violintuner.core.domain.repertoire.Tonic.G, com.example.violintuner.core.domain.repertoire.Accidental.NATURAL,
+            com.example.violintuner.core.domain.repertoire.scale.ScaleKind.MAJOR, 3,
+        )
+        val id = repertoire.add(
+            PieceDraft(title = "G-dur", key = spec.key, section = com.example.violintuner.core.domain.repertoire.PieceSection.SCALES, scale = spec), nowEpochMs = 1,
+        )
+        val (bare, bareEffects) = stand(id)
+        assertEquals(listOf(true), bare.state.value.pages.map { it.drawn })
+        assertTrue("a scale without photos still has something on the stand", bareEffects.isEmpty())
+
+        val stored = checkNotNull(files.import("content://photo/fingering"))
+        repertoire.addPage(id, stored.fileName, stored.thumbFileName, nowEpochMs = 2)
+        val (viewModel, _) = stand(id)
+        assertEquals(listOf(true, false), viewModel.state.value.pages.map { it.drawn })
+        assertEquals(43, viewModel.state.value.pages.first().scale!!.notes.size)
+
+        viewModel.onIntent(StandIntent.DeleteClicked)
+        assertFalse(viewModel.state.value.deleteDialog)
+        viewModel.onIntent(StandIntent.PageSettled(1))
+        viewModel.onIntent(StandIntent.DeleteClicked)
+        assertTrue(viewModel.state.value.deleteDialog)
+    }
 }

@@ -1,5 +1,6 @@
 package com.example.violintuner.feature.repertoire.components
 
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
@@ -26,9 +27,17 @@ fun statusLabel(status: PieceStatus): String = stringResource(
     when (status) {
         PieceStatus.READING -> R.string.piece_status_reading
         PieceStatus.LEARNING -> R.string.piece_status_learning
-        PieceStatus.IN_REPERTOIRE -> R.string.piece_status_in_repertoire
+        // one status in the data, two words for it (spec 3.22): a scale is «выучена», a concerto is «в репертуаре»
+        PieceStatus.IN_REPERTOIRE -> if (LocalExerciseWords.current) R.string.piece_status_learned else R.string.piece_status_in_repertoire
     },
 )
+
+/**
+ * True inside «Гаммы», «Этюды» and «Штрихи»: the third step of the status reads «Выучено» there.
+ * Provided by the screens that know their section — the list, the element, its form; the words
+ * of the status are asked for in a dozen places that have no business knowing about sections.
+ */
+val LocalExerciseWords = staticCompositionLocalOf { false }
 
 /** Container and content color of a status: the word always says it too, the color only helps. */
 @Composable

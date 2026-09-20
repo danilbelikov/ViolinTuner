@@ -1,5 +1,6 @@
 package com.example.violintuner.feature.repertoire.stand
 
+import com.example.violintuner.core.domain.repertoire.scale.Scales
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -55,10 +56,15 @@ class StandViewModel @Inject constructor(
             mutableState.update { it.copy(showHint = unseen) }
         }
         viewModelScope.launch {
-            repertoire.pages.collect { all ->
-                val pages = all.filter { it.pieceId == pieceId }
+            combine(repertoire.pages, repertoire.pieces) { all, pieces ->
+                // A scale opens with its notes drawn by the app; the photos — a fingering from the book — follow.
+                val drawn = pieces.firstOrNull { it.id == pieceId }?.scale
+                    ?.let { Scales.build(it, config.scaleLowestMidi, config.scaleHighestMidi) }
+                    ?.let { StandPage(StandPage.DRAWN_ID, path = null, scale = it) }
+                listOfNotNull(drawn) + all.filter { it.pieceId == pieceId }
                     .sortedBy { it.position }
                     .map { StandPage(it.id, sheetFiles.existing(it.fileName)?.path) }
+            }.collect { pages ->
                 // Nothing left to read from: the last page was removed, or the piece itself.
                 if (pages.isEmpty()) close()
                 mutableState.update { state ->
@@ -83,6 +89,7 @@ class StandViewModel @Inject constructor(
             StandIntent.Touched -> restartHiding()
             is StandIntent.PageSettled -> currentPage = intent.index
             StandIntent.DeleteClicked -> {
+                if (mutableState.value.pages.getOrNull(currentPage)?.drawn == true) return
                 mutableState.update { it.copy(deleteDialog = true) }
                 restartHiding()
             }
@@ -91,7 +98,7 @@ class StandViewModel @Inject constructor(
                 restartHiding()
             }
             StandIntent.DeleteConfirmed -> {
-                val page = mutableState.value.pages.getOrNull(currentPage)
+                val page = mutableState.value.pages.getOrNull(currentPage)?.takeIf { !it.drawn }
                 mutableState.update { it.copy(deleteDialog = false) }
                 restartHiding()
                 if (page != null) viewModelScope.launch { repertoire.deletePage(page.pageId, clock.millis()) }

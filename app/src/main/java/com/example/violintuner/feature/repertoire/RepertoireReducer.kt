@@ -1,6 +1,7 @@
 package com.example.violintuner.feature.repertoire
 
 import com.example.violintuner.core.domain.repertoire.Piece
+import com.example.violintuner.core.domain.repertoire.PieceSection
 import com.example.violintuner.core.domain.repertoire.PieceStats
 import com.example.violintuner.core.domain.repertoire.PieceStatus
 import com.example.violintuner.core.domain.repertoire.SheetPage
@@ -40,6 +41,9 @@ object RepertoireReducer {
                     lastDateOtherYear = takes.firstOrNull()?.let { RecordDays.dateOf(it, zone).year != today.year } ?: false,
                     takes = takes.size,
                     hasBest = PieceStats.bestOf(piece, takes) != null,
+                    scale = piece.scale,
+                    stroke = piece.groupId == null && piece.section == PieceSection.STROKES,
+                    exercise = piece.groupId == null && piece.section != PieceSection.PIECES,
                     thumbPath = firstPages[piece.id]?.let { thumbPathOf(it.thumbFileName) },
                 )
             }

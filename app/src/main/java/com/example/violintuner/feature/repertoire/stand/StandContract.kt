@@ -1,11 +1,22 @@
 package com.example.violintuner.feature.repertoire.stand
 
+import com.example.violintuner.core.domain.repertoire.scale.Scale
+
 /** One sheet on the stand. */
 data class StandPage(
     val pageId: Long,
     /** Null when the file is gone: the stand shows blank paper. */
     val path: String?,
-)
+    /** The first page of a scale (spec 3.22): its notes drawn on the paper by the app. There is no file behind it and nothing to delete. */
+    val scale: Scale? = null,
+) {
+    val drawn: Boolean get() = scale != null
+
+    companion object {
+        /** No row stands behind a drawn page. */
+        const val DRAWN_ID = -1L
+    }
+}
 
 /**
  * The music stand (spec 3.15): the pages of one piece, full screen. The recording of a take is

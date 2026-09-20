@@ -1,6 +1,7 @@
 package com.example.violintuner.feature.repertoire.piece
 
 import com.example.violintuner.core.domain.repertoire.PieceStatus
+import com.example.violintuner.core.domain.repertoire.scale.Scale
 import com.example.violintuner.feature.history.HistoryCard
 import com.example.violintuner.feature.history.Selection
 import com.example.violintuner.feature.history.SelectionIntent
@@ -77,6 +78,10 @@ data class PieceState(
     val notesCollapsedLines: Int,
     /** Picking several takes to delete (spec 3.18). */
     val selection: Selection = Selection(),
+    /** The element is a scale (spec 3.22): its notes are drawn by the app and stand first, above the photos. */
+    val scale: Scale? = null,
+    /** An element of «Гаммы», «Этюды» or «Штрихи»: the third step of its status reads «Выучено». */
+    val exercise: Boolean = false,
 ) {
     val allSelected: Boolean get() = SelectionRules.allSelected(selection, takes.map { it.card.id })
 }
@@ -144,7 +149,8 @@ sealed interface PieceIntent {
 sealed interface PieceEffect {
     data object Close : PieceEffect
 
-    data class OpenForm(val pieceId: Long, val focusNotes: Boolean) : PieceEffect
+    /** [scale] — the element is a scale: it has a form of its own. */
+    data class OpenForm(val pieceId: Long, val focusNotes: Boolean, val scale: Boolean = false) : PieceEffect
 
     data class OpenStand(val pieceId: Long, val pageIndex: Int) : PieceEffect
 

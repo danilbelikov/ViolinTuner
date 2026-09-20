@@ -63,6 +63,18 @@ class ScaleEngraverTest {
     }
 
     @Test
+    fun `no key, kind or width leaves a lonely note on the last system`() {
+        for (tonic in Tonic.entries) for (accidental in Accidental.entries) for (kind in ScaleKind.entries) for (octaves in 1..3) {
+            val built = Scales.build(ScaleSpec(tonic, accidental, kind, octaves), 55, 100) ?: continue
+            for (width in listOf(356f / 7.5f, 388f / 7f, 364f / 10f, 700f / 10f, 328f / 6.5f)) {
+                val sizes = ScaleEngraver.engrave(built, width).systems.map { it.notes.size }
+                assertEquals(built.notes.size, sizes.sum())
+                assertTrue("$tonic $accidental $kind $octaves at $width: $sizes", sizes.max() - sizes.min() <= 2 && sizes.min() >= 2)
+            }
+        }
+    }
+
+    @Test
     fun `stems go up below the middle line and down from it`() {
         val notes = ScaleEngraver.engrave(scale(Tonic.C, Accidental.NATURAL, ScaleKind.MAJOR, 1), widthSp = 200f).systems.single().notes
         assertEquals(listOf(-2, -1, 0, 1, 2, 3, 4, 5), notes.take(8).map { it.position })
@@ -90,6 +102,9 @@ class ScaleEngraverTest {
         assertTrue(notes.filter { it.note.position == 19 }.none { it.ottava })
         val span = engraving.systems.single().ottavas.single()
         assertTrue(span.fromX < top.x && top.x < span.toX)
+        // the bracket gets room of its own above the five ledger lines
+        assertEquals(NotationMetrics.SYSTEM_HEIGHT + NotationMetrics.OTTAVA_ROOM, engraving.heightSp, 0f)
+        assertEquals(NotationMetrics.OTTAVA_ROOM + NotationMetrics.SYSTEM_TOP + NotationMetrics.STAFF_HEIGHT, engraving.y(0, 0), 0f)
     }
 
     @Test
