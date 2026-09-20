@@ -6,6 +6,10 @@ import com.example.violintuner.core.data.practice.PracticeDao
 import com.example.violintuner.core.data.practice.PracticeEntity
 import com.example.violintuner.core.data.progress.TrophyDao
 import com.example.violintuner.core.data.progress.TrophyEntity
+import com.example.violintuner.core.data.journey.ArrivalEntity
+import com.example.violintuner.core.data.journey.EarningEntity
+import com.example.violintuner.core.data.journey.ExtraEntity
+import com.example.violintuner.core.data.journey.JourneyDao
 import com.example.violintuner.core.data.repertoire.PieceEntity
 import com.example.violintuner.core.data.repertoire.PieceGroupEntity
 import com.example.violintuner.core.data.repertoire.RepertoireDao
@@ -28,8 +32,9 @@ import com.example.violintuner.core.data.sound.SoundSettingsEntity
     entities = [
         SessionEntity::class, SamplesEntity::class, PracticeEntity::class, TrophyEntity::class,
         PieceEntity::class, PieceGroupEntity::class, SheetPageEntity::class, SoundSettingsEntity::class, SoundPresetEntity::class,
+        EarningEntity::class, ArrivalEntity::class, ExtraEntity::class,
     ],
-    version = 8,
+    version = 9,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -38,6 +43,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun trophyDao(): TrophyDao
     abstract fun repertoireDao(): RepertoireDao
     abstract fun soundDao(): SoundDao
+    abstract fun journeyDao(): JourneyDao
 
     companion object {
         const val FILE_NAME = "violin.db"

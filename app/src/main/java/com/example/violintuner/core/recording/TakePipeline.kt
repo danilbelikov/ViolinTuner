@@ -1,5 +1,10 @@
 package com.example.violintuner.core.recording
 
+import com.example.violintuner.core.domain.journey.JourneyConfig
+import com.example.violintuner.core.domain.journey.NoPracticeNotes
+import com.example.violintuner.core.domain.journey.NoteCount
+import com.example.violintuner.core.domain.journey.NoteCounter
+import com.example.violintuner.core.domain.journey.PracticeNotesStore
 import com.example.violintuner.core.audio.MicUnavailableException
 import com.example.violintuner.core.audio.PitchSource
 import com.example.violintuner.core.audio.recording.AudioTap
@@ -54,6 +59,8 @@ class TakePipeline @Inject constructor(
     private val clock: Clock,
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
     private val watch: RecordingWatch = RecordingWatch(),
+    private val practiceNotes: PracticeNotesStore = NoPracticeNotes,
+    private val journeyConfig: JourneyConfig = JourneyConfig(),
 ) {
     /** What one frame came to: what the screen shows, and how the recording stands, if one runs. */
     class Output<T>(val shown: T, val recording: RecordingProgress? = null)
@@ -176,6 +183,15 @@ class TakePipeline @Inject constructor(
             }
         }
 
+        // Notes of the running practice, for the journey (spec 5.17): counted here, next to the
+        // engine and on its thread, and written out every few seconds — never per frame.
+        val counter = NoteCounter(journeyConfig)
+        var lastNotesFlushTMs = 0L
+        suspend fun flushNotes(count: NoteCount) {
+            val startedAt = practiceStartedAt
+            if (startedAt != null && count.played > 0) practiceNotes.add(startedAt, count)
+        }
+
         return pitchSource.frames(config)
             .onStart {
                 engine.reset()
@@ -188,6 +204,15 @@ class TakePipeline @Inject constructor(
                 }
                 val reading = engine.process(frame, targetMode())
                 markSoundIfDue(reading)
+                if (practiceStartedAt != null) {
+                    counter.add(frame.tMs, reading)
+                    if (frame.tMs - lastNotesFlushTMs >= journeyConfig.notesFlushMs) {
+                        lastNotesFlushTMs = frame.tMs
+                        flushNotes(counter.take())
+                    }
+                } else {
+                    counter.finish() // no practice, no journey: what sounded outside it is not counted
+                }
                 if (recordingRequested.value && recorder == null && mayStartRecorder(frame.tMs)) {
                     recorder = SessionRecorder(config, clock.millis())
                     watch.set(true)
@@ -205,7 +230,10 @@ class TakePipeline @Inject constructor(
             // Runs when the collection is cancelled (the screen left, settings changed, permission
             // revoked) and when the source fails, before the retry below: never lose a take.
             .onCompletion {
-                withContext(NonCancellable) { finishRecording(stoppedByPlayer = false) }
+                withContext(NonCancellable) {
+                    finishRecording(stoppedByPlayer = false)
+                    flushNotes(counter.finish())
+                }
                 recordingRequested.value = false
             }
             .retryWhen { cause, _ ->

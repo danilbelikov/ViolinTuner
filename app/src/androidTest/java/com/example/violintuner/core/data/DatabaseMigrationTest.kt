@@ -36,7 +36,7 @@ class DatabaseMigrationTest {
      * with one row; [version3] adds the trophies of version 3 with one row; [version4] adds the
      * repertoire of version 4: a piece with a page, and the session becomes its take.
      */
-    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false, version7: Boolean = false) {
+    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false, version7: Boolean = false, version8: Boolean = false) {
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
@@ -113,7 +113,15 @@ class DatabaseMigrationTest {
                 db.execSQL("ALTER TABLE `pieces` ADD COLUMN `bestTakeId` INTEGER")
                 db.execSQL("INSERT INTO pieces (id, title, composer, status, notes, createdAtEpochMs, updatedAtEpochMs) VALUES (2, 'Концерт', '', 'IN_REPERTOIRE', '', 3, 777)")
             }
-            db.execSQL("PRAGMA user_version = ${if (version7) 7 else if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
+            if (version8) {
+                db.execSQL("ALTER TABLE `pieces` ADD COLUMN `section` TEXT NOT NULL DEFAULT 'PIECES'")
+                db.execSQL("ALTER TABLE `pieces` ADD COLUMN `groupId` INTEGER")
+                db.execSQL("ALTER TABLE `pieces` ADD COLUMN `scaleKind` TEXT")
+                db.execSQL("ALTER TABLE `pieces` ADD COLUMN `scaleOctaves` INTEGER")
+                db.execSQL("ALTER TABLE `pieces` ADD COLUMN `learnedAtEpochMs` INTEGER")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `piece_groups` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `createdAtEpochMs` INTEGER NOT NULL)")
+            }
+            db.execSQL("PRAGMA user_version = ${if (version8) 8 else if (version7) 7 else if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
         }
     }
 
@@ -258,5 +266,28 @@ class DatabaseMigrationTest {
         assertEquals(1L, db.sessionDao().observeAll().first().single().pieceId)
         assertEquals("a.jpg", db.repertoireDao().pagesOf(1).single().fileName)
         assertEquals(emptyList<Any>(), db.repertoireDao().observeGroups().first())
+    }
+
+    @Test
+    fun theJourneyStartsEmptyOnTopOfEverythingThatWasThere() = runBlocking {
+        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true, version7 = true, version8 = true)
+        val db = openMigrated()
+
+        assertEquals("Менуэт", db.repertoireDao().piece(1)!!.title)
+        assertEquals(2_700_000L, db.practiceDao().observeAll().first().single().durationMs)
+        assertEquals(emptyList<Any>(), db.journeyDao().observeArrivals().first())
+
+        // the road is paid from what was earned, in one transaction, and no stop is skipped
+        val dao = db.journeyDao()
+        dao.begin("home", 1)
+        assertEquals(false, dao.arrive("cremona", "home", price = 300, now = 2))
+        dao.insertEarning(com.example.violintuner.core.data.journey.EarningEntity(0, 1, 400, 320, 600_000, 340))
+        assertEquals(false, dao.arrive("milan", "cremona", price = 100, now = 2))
+        assertEquals(true, dao.arrive("cremona", "home", price = 300, now = 2))
+        assertEquals(false, dao.arrive("cremona", "home", price = 1, now = 3))
+        assertEquals(false, dao.buyExtra("cremona", "SOUVENIR", price = 150, now = 4))
+        assertEquals(true, dao.buyExtra("cremona", "SOUVENIR", price = 40, now = 4))
+        assertEquals(false, dao.buyExtra("cremona", "SOUVENIR", price = 0, now = 5))
+        assertEquals(listOf("cremona", "home"), dao.observeArrivals().first().map { it.stopId }.sorted())
     }
 }

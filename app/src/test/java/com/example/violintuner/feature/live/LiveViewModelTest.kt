@@ -12,6 +12,9 @@ import com.example.violintuner.core.domain.PitchFrame
 import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
+import com.example.violintuner.core.domain.journey.FakePracticeNotesStore
+import com.example.violintuner.core.domain.journey.JourneyConfig
+import com.example.violintuner.core.domain.journey.NoteCount
 import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.RunningPractice
@@ -66,6 +69,7 @@ class LiveViewModelTest {
     private val startedAt = Instant.parse("2026-09-17T09:00:00Z")
     private val audioFiles = FakeAudioFiles()
     private val practice = FakeRunningPracticeStore()
+    private val practiceNotes = FakePracticeNotesStore()
 
     private class FakeAudioFiles : SessionAudioFiles {
         val created = mutableListOf<File>()
@@ -108,7 +112,10 @@ class LiveViewModelTest {
 
     private fun TestScope.viewModel(source: PitchSource, base: IntonationConfig = IntonationConfig()): LiveViewModel {
         val clock = Clock.fixed(startedAt, ZoneOffset.UTC)
-        val takes = TakePipeline(source, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler))
+        val takes = TakePipeline(
+            source, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
+            practiceNotes = practiceNotes, journeyConfig = JourneyConfig(notesFlushMs = 1_000),
+        )
         return LiveViewModel(takes, SettingsConfigSource(base, settings), practice, clock)
     }
 
@@ -706,6 +713,27 @@ class LiveViewModelTest {
         practice.clear()
         advance(100)
         assertEquals(null, viewModel.state.value.practiceMs)
+    }
+
+    @Test
+    fun `while a practice runs the notes are counted for the journey, and the last one is not lost when the screen leaves`() = runTest {
+        val practiceStart = startedAt.toEpochMilli() - 60_000
+        practice.start(practiceStart)
+        val viewModel = viewModel(FakeScenario.IN_TUNE) // one long A4, in tune
+        val job = observe(viewModel, 3_000)
+        assertEquals("a note that still sounds is not counted yet", NoteCount.ZERO, practiceNotes.count)
+        job.cancel()
+        advance(3_000) // the chain stops two seconds after the last subscriber: the sounding note ends there
+        assertEquals(NoteCount(played = 1, inTune = 1), practiceNotes.countFor(practiceStart))
+    }
+
+    @Test
+    fun `without a practice nothing is counted`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        val job = observe(viewModel, 3_000)
+        job.cancel()
+        advance(3_000)
+        assertEquals(NoteCount.ZERO, practiceNotes.count)
     }
 
     @Test
