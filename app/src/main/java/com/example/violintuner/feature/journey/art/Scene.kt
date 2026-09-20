@@ -16,10 +16,52 @@ data class SceneLayer(
     val strokeWidth: Float,
     val fillNone: Boolean,
     val path: String,
+    /** How the layer moves as a thing — all layers of one tram carry the same; null for a layer that stays. */
+    val anim: SceneAnim? = null,
 ) {
     companion object {
         const val SKY = "SKY"
         const val GLOW = "GLOW"
+    }
+}
+
+/**
+ * The movement of a thing in a scene, written in the layer's last field as `kind:numbers` joined by `+`:
+ * `ride:speed:from:to` — goes sideways at `speed` units a second and wraps, its shift running `from`…`to`
+ * (far enough both ways for the thing to leave the frame); `bob:amplitude:period` — rises and falls;
+ * `bird:left:span` — a bird crossing `span` units from `left`, flapping, fading at both ends;
+ * `blink:period` — a light going on and off; `fall:speed:top:height` — falls through `height` units below `top` and starts again from the top, fading at both ends.
+ */
+data class SceneAnim(
+    val ride: Ride? = null,
+    val bob: Bob? = null,
+    val bird: Way? = null,
+    val blinkPeriod: Float? = null,
+    val fall: Fall? = null,
+) {
+    data class Ride(val speed: Float, val from: Float, val to: Float)
+    data class Bob(val amplitude: Float, val period: Float)
+    data class Way(val left: Float, val span: Float)
+    data class Fall(val speed: Float, val top: Float, val height: Float)
+
+    companion object {
+        fun parse(text: String): SceneAnim? {
+            if (text.isBlank()) return null
+            var anim = SceneAnim()
+            for (part in text.split('+')) {
+                val f = part.split(':')
+                val n = f.drop(1).map { it.toFloat() }
+                anim = when (f[0]) {
+                    "ride" -> anim.copy(ride = Ride(n[0], n[1], n[2]))
+                    "bob" -> anim.copy(bob = Bob(n[0], n[1]))
+                    "bird" -> anim.copy(bird = Way(n[0], n[1]))
+                    "blink" -> anim.copy(blinkPeriod = n[0])
+                    "fall" -> anim.copy(fall = Fall(n[0], n[1], n[2]))
+                    else -> throw IllegalArgumentException("a movement this build does not know: ${f[0]}")
+                }
+            }
+            return anim
+        }
     }
 }
 
@@ -32,7 +74,8 @@ data class Scene(val location: String, val aerial: Boolean, val layers: List<Sce
  */
 object SceneParser {
     fun parse(text: String): Scene {
-        val lines = text.lineSequence().filter { it.isNotBlank() && !it.startsWith("#") }.toList()
+        // a comment is «# …»; a line that starts with «#rrggbb» is a layer filled with a literal colour
+        val lines = text.lineSequence().filter { it.isNotBlank() && !it.startsWith("# ") }.toList()
         val header = lines.first().split(';').associate { part -> part.substringBefore('=') to part.substringAfter('=') }
         return Scene(
             location = header.getValue("loc"),
@@ -56,10 +99,11 @@ object SceneParser {
             strokeWidth = f[8].toFloatOrNull() ?: 0f,
             fillNone = f[9] == "1",
             path = f[10],
+            anim = SceneAnim.parse(f[11]),
         )
     }
 
-    private const val FIELDS = 11
+    private const val FIELDS = 12
 }
 
 /** Evening — the default: lit windows make the volume by themselves, and a warm card sits well on a dark screen; day is an extra (handoff 26b). */

@@ -18,7 +18,7 @@ const EXTRA_LOCPAL = {
 // Prague — the Rudolfinum: a long sandstone front, a bowed middle with tall arched windows,
 // a balustrade with statues; the castle with the spires of St Vitus on its hill far behind.
 const PRAGUE = (eve = true) => {
-  const l = [...SKYL];
+  const l = [...SKYL, ...flock([[250, 40], [262, 48, .8], [236, 52, .9], [60, 66, .7]])];
   l.push(L('far', PG([[0, 190], [0, 150], [40, 138], [120, 128], [200, 132], [260, 146], [300, 160], [300, 190]]), 0), L('far', R(60, 118, 120, 16), 0), L('farLit', R(60, 118, 50, 16), 0), ...[[104, 84, 1], [118, 90, .8], [140, 96, .7]].flatMap(([x, y, s]) => [L('far', R(x - 4 * s, y + 12 * s, 8 * s, 30 * s), 0), L('far', PG([[x - 5 * s, y + 12 * s], [x + 5 * s, y + 12 * s], [x, y - 12 * s]]), 0)]), L('far', R(352, 150, 60, 40), 0), L('farLit', R(380, 138, 32, 52), 0));
   // wings, the right one turned away
   l.push(L('stoneShade', PG([[340, 96], [366, 104], [366, 190], [340, 190]])), L('stone', R(60, 96, 280, 94)), L('stoneLit', R(60, 96, 84, 94)), L('stoneBase', R(60, 160, 280, 30)), L('stoneShade', R(60, 159, 280, 1.5)), L('trim', R(56, 90, 288, 6)));
@@ -35,7 +35,7 @@ const PRAGUE = (eve = true) => {
 // Leipzig — St Thomas: a white hall church under a very steep tiled roof, an octagonal tower
 // with a copper cap at its west end, tall Gothic windows; roofs of the old town behind.
 const LEIPZIG = (eve = true) => {
-  const l = [...SKYL];
+  const l = [...SKYL, ...flock([[230, 30], [246, 38, .8], [218, 42, .9], [330, 24, .7], [342, 30, .6]])];
   l.push(L('far', PG([[0, 190], [0, 158], [18, 144], [36, 158], [36, 150], [58, 134], [80, 150], [80, 190]]), 0), L('far', PG([[318, 190], [318, 152], [340, 136], [362, 152], [362, 146], [388, 130], [412, 146], [412, 190]]), 0), L('farLit', PG([[340, 136], [362, 152], [362, 190], [340, 190]]), 0));
   // the nave: a lit long side, the roof nearly as tall as the wall
   l.push(L('plaster', R(150, 128, 196, 62)), L('stoneBase', R(150, 178, 196, 12)), L('roofTile', PG([[146, 128], [350, 128], [332, 62], [164, 62]])), L('roofTileLit', PG([[146, 128], [240, 128], [240, 62], [164, 62]])), L('roofTileShade', R(146, 126, 204, 2.5)), ...rep(5, i => L('roofTileShade', PG([[178 + i * 34, 96], [186 + i * 34, 96], [182 + i * 34, 88]]))));
@@ -63,6 +63,7 @@ const BERLIN = (eve = true) => {
   // seams of the cladding by rule, the strip windows of the hall
   l.push(...rep(7, i => L('ochreShade', R(70 + i * 9, 108 + i * 2, 1, 42 - i * 2), 1, { op: .5 })), ...rep(8, i => L('ochreShade', R(206 + i * 10, 100 - i * 1.5, 1, 50 + i * 1.5), 1, { op: .5 })), L('glass', PG([[96, 118], [150, 110], [150, 116], [96, 124]])), L('glass', PG([[226, 116], [300, 104], [300, 110], [226, 122]])), ...(eve ? [L('window', PG([[96, 118], [150, 110], [150, 116], [96, 124]]), 1, { op: .8 }), L('window', PG([[226, 116], [300, 104], [300, 110], [226, 122]]), 1, { op: .8 })] : []));
   l.push(L('groundLit', R(0, 190, 412, 14), 2), L('ground', R(0, 204, 412, 56), 2), L('groundShade', R(0, 203, 412, 1.5), 2), L('rgba(20,16,30,.18)', PG([[40, 192], [372, 192], [394, 206], [58, 206]]), 2));
+  l.push(...ride(busAt(150, 201, { body: '#E9C23C', shade: '#C79F22', trim: '#F6E7A8', dark: '#2A2430' }, eve), 22, 150, 226, 300));
   l.push(...tree(24, 236, 1.1, 2), ...tree(394, 234, 1, 2), ...lamp(122, 238, 1, 2, eve), ...lamp(296, 238, 1, 2, eve), ...hero(244, 254, 1, 2));
   return l;
 };
@@ -70,7 +71,7 @@ const BERLIN = (eve = true) => {
 // Amsterdam — the Concertgebouw: red brick and pale stone, a temple front of six columns,
 // the golden lyre on the roof; gabled canal houses far behind, a canal with a boat in front.
 const AMSTERDAM = (eve = true) => {
-  const l = [...SKYL];
+  const l = [...SKYL, ...flock([[90, 40, 1.1], [108, 50, .9], [320, 34], [70, 58, .7]])];
   const gable = (x, w, hh, lit) => [L(lit ? 'farLit' : 'far', R(x, 190 - hh, w, hh), 0), L(lit ? 'farLit' : 'far', PG([[x, 190 - hh], [x + w, 190 - hh], [x + w * .7, 176 - hh], [x + w * .3, 176 - hh]]), 0), L(lit ? 'farLit' : 'far', R(x + w * .38, 170 - hh, w * .24, 8), 0)];
   l.push(...gable(0, 22, 46, false), ...gable(22, 20, 56, true), ...gable(42, 24, 42, false), ...gable(346, 22, 50, false), ...gable(368, 20, 40, true), ...gable(388, 24, 54, false));
   // the body: brick, stone bands, a turned side
@@ -83,7 +84,7 @@ const AMSTERDAM = (eve = true) => {
   l.push(L('gold', R(206.5, 50, 3, 10)), L('gold', `M200 50Q196 38 202 32L204 33Q200 39 203 50Z`), L('gold', `M216 50Q220 38 214 32L212 33Q216 39 213 50Z`), L('gold', R(201, 32, 14, 1.6)), L('gold', R(207.4, 33, 1.2, 17)));
   // quay, canal, reflections, a boat
   l.push(L('quayLit', R(0, 190, 412, 10), 2), L('quay', R(0, 200, 412, 8), 2), L('water', R(0, 208, 412, 30), 2), ...rep(9, i => L('waterLit', R(14 + (i * 97) % 370, 212 + (i * 7) % 24, 18 + (i * 29) % 34, 1.4), 2, { op: .45 })), ...(eve ? rep(5, i => L('rgba(255,217,138,.2)', R(166 + i * 19.6, 210, 6, 16), 2)) : []));
-  l.push(L('boat', PG([[60, 222], [126, 222], [118, 232], [68, 232]]), 2), L('boatLit', R(78, 214, 30, 8), 2), L('window', R(82, 216, 6, 4), 2), L('window', R(92, 216, 6, 4), 2));
+  l.push(...moving(ride([L('boat', PG([[60, 222], [126, 222], [118, 232], [68, 232]]), 2), L('boatLit', R(78, 214, 30, 8), 2), L('window', R(82, 216, 6, 4), 2), L('window', R(92, 216, 6, 4), 2)], 6, 60, 126, 60), 'bob:0.8:3.2'));
   l.push(L('quayLit', R(0, 238, 412, 4), 2), L('ground', R(0, 242, 412, 18), 2), ...tree(30, 204, .8, 2), ...tree(384, 204, .8, 2), ...lamp(132, 204, .7, 2, eve), ...lamp(288, 204, .7, 2, eve), ...hero(250, 257, .9, 2));
   return l;
 };
@@ -93,7 +94,7 @@ const GROUND = (x0, x1) => [L('groundLit', R(0, 190, 412, 14), 2), L('ground', R
 // Paris — the Opéra Garnier: an arcade of seven arches, the loggia of paired columns, the gilded
 // groups on the corners of the attic, the green copper dome and the gable of the stage behind it.
 const PARIS = (eve = true) => {
-  const l = [...SKYL];
+  const l = [...SKYL, ...flock([[70, 36], [84, 44, .8], [330, 30, .9], [346, 40, .7]])];
   const block = (x, w, hh, lit) => [L(lit ? 'farLit' : 'far', R(x, 190 - hh, w, hh), 0), L('far', PG([[x, 190 - hh], [x + w, 190 - hh], [x + w - 5, 180 - hh], [x + 5, 180 - hh]]), 0)];
   l.push(...block(0, 42, 50, false), ...block(372, 40, 56, true));
   l.push(L('stoneShade', PG([[126, 84], [286, 84], [206, 28]])), L('stone', PG([[126, 84], [206, 84], [206, 28]])), L('copper', `M146 84A60 42 0 0 1 266 84Z`), L('copperLit', `M146 84A60 42 0 0 1 206 42L206 84Z`), L('gold', R(201, 32, 10, 10)), L('gold', C(206, 30, 5)), L('gold', R(205.2, 16, 1.6, 12)));
@@ -108,7 +109,7 @@ const PARIS = (eve = true) => {
 // St Petersburg — the Philharmonia: Petersburg yellow and white, eight columns over a rusticated
 // ground floor; the gilded dome of St Isaac's and the needle of the Admiralty far behind.
 const SPB = (eve = true) => {
-  const l = [...SKYL];
+  const l = [...SKYL, ...flock([[300, 40, 1.1], [316, 50, .9], [284, 54, .8], [120, 46, .7]])];
   l.push(L('far', R(0, 160, 50, 30), 0), L('far', R(8, 136, 34, 26), 0), L('gold', `M10 136A15 20 0 0 1 40 136Z`, 0), L('gold', R(23.6, 104, 2.8, 14), 0), L('far', R(374, 160, 38, 30), 0), L('far', R(388, 140, 12, 22), 0), L('gold', PG([[392, 140], [396, 140], [394, 84]]), 0));
   l.push(L('wallShade', PG([[362, 88], [386, 96], [386, 190], [362, 190]])), L('wall', R(50, 88, 312, 102)), L('wallLit', R(50, 88, 96, 102)), L('wallBase', R(50, 156, 312, 34)), ...rep(3, i => L('wallShade', R(50, 164 + i * 8, 312, 1), 1, { op: .5 })), L('trim', R(50, 154, 312, 2.5)));
   l.push(L('roof', PG([[50, 82], [362, 82], [350, 72], [62, 72]])), L('roofLit', PG([[50, 82], [146, 82], [146, 72], [62, 72]])), L('trim', R(46, 82, 320, 6)));
@@ -123,7 +124,7 @@ const SPB = (eve = true) => {
 // Moscow — the Great Hall of the Conservatory: a bowed front between two wings, tall arched
 // windows of the hall; Tchaikovsky sits before it, one hand in the air.
 const MOSCOW = (eve = true) => {
-  const l = [...SKYL];
+  const l = [...SKYL, ...flock([[80, 50], [96, 58, .8], [330, 44, .9]])];
   l.push(L('far', R(0, 150, 36, 40), 0), L('far', PG([[8, 150], [28, 150], [18, 120]]), 0), L('far', R(376, 146, 36, 44), 0), L('farLit', R(376, 146, 12, 44), 0));
   l.push(...[[40, false], [282, true]].flatMap(([x, shade]) => [L(shade ? 'wallShade' : 'wall', R(x, 108, 90, 82)), L('wallBase', R(x, 160, 90, 30)), L('roof', PG([[x - 4, 108], [x + 94, 108], [x + 84, 96], [x + 6, 96]])), L('trim', R(x - 2, 106, 94, 3)), ...rep(4, i => [L('window', R(x + 10 + i * 20, 118, 10, 28)), L('dark', R(x + 10 + i * 20, 166, 10, 16))])]), L('wallShade', PG([[372, 108], [390, 114], [390, 190], [372, 190]])));
   l.push(L('roof', `M130 78A76 24 0 0 1 282 78Z`), L('roofLit', `M130 78A76 24 0 0 1 206 54L206 78Z`), L('wall', R(130, 78, 152, 112)), L('wallLit', R(130, 78, 40, 112)), L('wallShade', R(244, 78, 38, 112)), L('wallBase', R(130, 160, 152, 30)), L('trim', R(126, 74, 160, 6)), L('trim', R(130, 156, 152, 3)));
@@ -139,13 +140,13 @@ const MOSCOW = (eve = true) => {
 const NEWYORK = (eve = true) => {
   const l = [...SKYL];
   const tower = (x, y, w, lit) => [L(lit ? 'farLit' : 'far', R(x, y, w, 190 - y), 0), ...rep(Math.floor((180 - y) / 12), i => rep(Math.floor(w / 9), j => (i * 5 + j * 3) % 4 === 0 ? [] : [L('window', R(x + 3 + j * 9, y + 6 + i * 12, 4, 6), 0, { op: eve ? .7 : .5 })]).flat())];
-  l.push(...tower(0, 56, 44, false), ...tower(46, 104, 22, true), ...tower(372, 84, 40, false), L('far', R(20, 30, 2, 26), 0));
+  l.push(...ride(planeAt(120, 30), 11, 108, 132, 260), ...tower(0, 56, 44, false), ...tower(46, 104, 22, true), ...tower(372, 84, 40, false), L('far', R(20, 30, 2, 26), 0));
   l.push(L('brickShade', PG([[346, 24], [366, 32], [366, 190], [346, 190]])), L('brick', R(262, 24, 84, 166)), L('trim', R(258, 20, 92, 5)), ...rep(10, i => rep(4, j => L((i * 3 + j) % 5 === 0 ? 'dark' : 'window', R(271 + j * 19, 32 + i * 15, 9, 9)))));
   l.push(L('brick', R(60, 74, 212, 116)), L('brickLit', R(60, 74, 72, 116)), L('rgba(20,16,30,.22)', R(272, 74, 5, 116)), L('trim', R(56, 68, 220, 7)), L('trim', R(60, 112, 212, 2.5)), L('trim', R(60, 150, 212, 2.5)));
   l.push(...rep(9, i => L('window', ARCH(70 + i * 22.4, 80, 10, 26))), ...rep(5, i => [L('trim', ARCH(72 + i * 39, 114, 30, 36)), L('window', ARCH(75 + i * 39, 118, 24, 32)), L('dark', ARCH(77 + i * 39, 160, 20, 30))]));
   l.push(L('marquee', R(66, 152, 200, 6)), ...rep(16, i => [...(eve ? [L('rgba(255,196,110,.5)', C(73 + i * 12.4, 159.5, 4), 1, { glow: true })] : []), L('lampGlass', C(73 + i * 12.4, 159.5, 1.4))]));
   l.push(...GROUND(60, 366));
-  l.push(L('rgba(20,16,30,.28)', E(92, 240, 34, 3.4), 2), L('taxi', RR(58, 224, 68, 13, 3), 2), L('taxiShade', R(58, 232, 68, 5), 2), L('taxi', PG([[72, 224], [79, 213], [106, 213], [113, 224]]), 2), L('taxiDark', PG([[76, 223], [81, 215.5], [91, 215.5], [91, 223]]), 2), L('taxiDark', PG([[94, 223], [94, 215.5], [104, 215.5], [109, 223]]), 2), L('taxi', R(88, 209, 9, 4), 2), L('taxiDark', C(72, 238, 5), 2), L('taxiDark', C(112, 238, 5), 2), L('lampGlass', R(122, 227, 4, 3), 2), ...(eve ? [L('GLOW', C(128, 229, 14), 2)] : []));
+  l.push(...ride(taxiAt(58, 219, { body: 'taxi', shade: 'taxiShade', dark: 'taxiDark' }, eve), 42, 58, 126, 420));
   l.push(...lamp(164, 238, 1, 2, eve), ...lamp(316, 238, 1, 2, eve), ...tree(394, 236, .95, 2), ...hero(232, 254, 1, 2));
   return l;
 };
@@ -154,13 +155,13 @@ const NEWYORK = (eve = true) => {
 // a gable on top of the middle; palms on the square.
 const palm = (x, y, s, depth = 2) => { const tx = x + 1.5 * s, ty = y - 52 * s; return [L('rgba(20,16,30,.28)', E(x + 3 * s, y + 1, 12 * s, 3 * s), depth), L('trunk', PG([[x - 2.2 * s, y], [x + 2.2 * s, y], [x + 2.6 * s, ty], [x + .4 * s, ty]]), depth), ...[[-27, -2], [-20, -18], [-7, -26], [9, -26], [21, -17], [28, -1]].map(([ex, ey], i) => L(i % 2 ? 'foliage' : 'foliageShade', `M${tx} ${ty}Q${tx + ex * s * .45} ${ty + ey * s * 1.25 - 5 * s} ${tx + ex * s} ${ty + ey * s + 8 * s}Q${tx + ex * s * .5} ${ty + ey * s * .55 + 1 * s} ${tx} ${ty}Z`, depth)), L('foliageLit', C(tx, ty, 2.6 * s), depth)]; };
 const BUENOSAIRES = (eve = true) => {
-  const l = [...SKYL];
+  const l = [...SKYL, ...flock([[300, 36], [316, 44, .8], [110, 40, .9], [96, 50, .7]])];
   l.push(L('far', R(0, 146, 44, 44), 0), L('farLit', R(0, 146, 14, 44), 0), L('far', R(370, 136, 42, 54), 0), L('far', R(384, 118, 14, 20), 0));
   l.push(L('stoneShade', PG([[362, 78], [386, 86], [386, 190], [362, 190]])), L('stone', R(50, 78, 312, 112)), L('stoneLit', R(50, 78, 96, 112)), L('stoneBase', R(50, 152, 312, 38)), ...rep(4, i => L('stoneShade', R(50, 158 + i * 8, 312, 1), 1, { op: .45 })), L('roof', PG([[60, 72], [352, 72], [338, 58], [74, 58]])), L('roofLit', PG([[60, 72], [146, 72], [146, 58], [74, 58]])), L('trim', R(46, 72, 320, 6)), L('trim', R(50, 100, 312, 2.5)), L('trim', R(50, 149, 312, 3)));
   l.push(...[58, 274].flatMap(x0 => rep(4, i => [L('dark', R(x0 + 2 + i * 21, 84, 8, 10)), L('window', ARCH(x0 + i * 21, 108, 12, 34)), L('dark', ARCH(x0 + i * 21, 160, 12, 30))])));
   l.push(L('rgba(20,16,30,.22)', R(266, 78, 5, 112)), L('stoneLit', R(146, 78, 120, 74)), L('trim', R(142, 72, 128, 6)), L('stone', PG([[146, 72], [266, 72], [206, 46]])), L('stoneShade', PG([[158, 70], [254, 70], [206, 51]])), L('trim', C(206, 62, 4)));
   l.push(...rep(5, i => [L('dark', R(165 + i * 20.4, 84, 8, 10)), L('window', ARCH(162 + i * 20.4, 106, 14, 40)), L('dark', ARCH(161 + i * 20.4, 158, 16, 32))]), ...rep(6, i => [L('trim', R(150 + i * 20.4, 102, 6, 48)), L('stoneShade', R(154.6 + i * 20.4, 102, 1.4, 48), 1, { op: .6 }), L('trim', R(148.5 + i * 20.4, 100, 9, 3))]));
-  l.push(L('trim', R(140, 188, 132, 3)), ...GROUND(50, 386), ...palm(34, 240, 1.15, 2), ...palm(84, 232, .8, 2), ...palm(384, 240, 1.1, 2), ...lamp(128, 238, 1, 2, eve), ...lamp(296, 238, 1, 2, eve), ...hero(238, 254, 1, 2));
+  l.push(L('trim', R(140, 188, 132, 3)), ...GROUND(50, 386), ...ride(taxiAt(180, 219, { body: '#1E1E24', shade: '#121216', top: '#F2C230', sign: '#F2C230', dark: '#2A2430' }, eve), 36, 180, 248, 380), ...palm(34, 240, 1.15, 2), ...palm(84, 232, .8, 2), ...palm(384, 240, 1.1, 2), ...lamp(128, 238, 1, 2, eve), ...lamp(296, 238, 1, 2, eve), ...hero(238, 254, 1, 2));
   return l;
 };
 
@@ -168,12 +169,12 @@ const BUENOSAIRES = (eve = true) => {
 // within; the towers of Ark Hills over it, Tokyo Tower far off, cherries in blossom on the plaza.
 const blossom = (x, y, s, depth = 2) => [L('rgba(20,16,30,.28)', E(x + 4 * s, y + 1, 18 * s, 4 * s), depth), L('trunk', PG([[x - 2.5 * s, y], [x + 2.5 * s, y], [x + 1.5 * s, y - 24 * s], [x - 1.5 * s, y - 24 * s]]), depth), L('trunk', PG([[x, y - 18 * s], [x + 12 * s, y - 32 * s], [x + 10 * s, y - 33 * s], [x - 1 * s, y - 21 * s]]), depth), L('blossomShade', C(x + 9 * s, y - 38 * s, 13 * s), depth), L('blossomShade', C(x - 8 * s, y - 34 * s, 14 * s), depth), L('blossom', C(x, y - 44 * s, 16 * s), depth), L('blossomLit', C(x - 6 * s, y - 50 * s, 7 * s), depth), ...[[-16, -6], [14, -2], [4, 3], [-5, -1]].map(([dx, dy]) => L('blossomLit', E(x + dx * s, y + dy * s, 1.6 * s, .8 * s), depth))];
 const TOKYO = (eve = true) => {
-  const l = [...SKYL];
+  const l = [...SKYL, ...ride(planeAt(230, 26), 10, 218, 242, 300)];
   l.push(...rep(5, i => { const y0 = 44 + i * 29.2, y1 = y0 + 29.2, w = y => 1.6 + (y - 44) * .13; return L(i % 2 ? 'towerWhite' : 'towerRed', PG([[336 - w(y0), y0], [336 + w(y0), y0], [336 + w(y1), y1], [336 - w(y1), y1]]), 0); }), L('towerRed', R(335.2, 14, 1.6, 30), 0), L('towerWhite', R(325, 118, 22, 5), 0), L('towerWhite', R(331, 76, 10, 3.5), 0), L('far', R(372, 130, 40, 60), 0), L('farLit', R(372, 130, 13, 60), 0), L('far', R(0, 150, 40, 40), 0));
   l.push(L('steel', R(60, 30, 66, 160)), L('steelLit', R(60, 30, 22, 160)), ...rep(12, i => L(eve && i % 3 === 1 ? 'window' : 'glass', R(64, 38 + i * 12.4, 58, 5.5))), L('steelShade', R(134, 64, 52, 126)), L('steel', R(134, 64, 16, 126)), ...rep(9, i => L(eve && i % 4 === 2 ? 'window' : 'glass', R(138, 72 + i * 12.4, 44, 5.5))));
   l.push(L('tileShade', PG([[340, 132], [362, 140], [362, 190], [340, 190]])), L('tile', R(110, 130, 230, 60)), L('tileLit', R(110, 130, 72, 60)), L('steel', `M102 132Q225 92 348 132Z`), L('steelLit', `M102 132Q164 112 225 112L225 132Z`), L('steelShade', R(102, 131, 246, 2.5)));
   l.push(L('glass', R(168, 150, 114, 40)), ...(eve ? [L('window', R(170, 152, 110, 38), 1, { op: .85 })] : []), ...rep(10, i => L('steelShade', R(168 + i * 12.55, 150, 1.1, 40))), L('steelShade', R(168, 168, 114, 1.1)), L('steel', R(158, 145, 134, 5)), ...rep(7, i => L('gold', R(213 + i * 3.6, 136 - (3 - Math.abs(i - 3)) * 2.4, 2.2, 5 + (3 - Math.abs(i - 3)) * 2.4))), ...rep(3, i => [L('dark', R(120 + i * 15, 158, 8, 18)), L('dark', R(296 + i * 15, 158, 8, 18))]));
-  l.push(...GROUND(110, 362), ...blossom(30, 238, 1.15, 2), ...blossom(388, 236, 1, 2), ...lamp(132, 238, 1, 2, eve), ...lamp(316, 238, 1, 2, eve), ...hero(244, 254, 1, 2));
+  l.push(...GROUND(110, 362), ...rep(14, i => L('blossomLit', E(14 + (i * 53) % 390, 128 + (i * 37) % 110, 1.9, 1.05), 2, { anim: 'fall:7:122:126' })), ...blossom(30, 238, 1.15, 2), ...blossom(388, 236, 1, 2), ...lamp(132, 238, 1, 2, eve), ...lamp(316, 238, 1, 2, eve), ...hero(244, 254, 1, 2));
   return l;
 };
 
@@ -189,6 +190,23 @@ const EXTRA_SCENES = {
   buenosaires: { fn: BUENOSAIRES, loc: 'buenosaires' },
   tokyo: { fn: TOKYO, loc: 'tokyo' },
 };
+
+
+// ---------------------------------------------------------------------------------------------
+// Things that move (the layer's last field, see SceneAnim in the app). All layers of one thing carry
+// the same `anim`, so they go as one. Where a thing is drawn is where it stands when nothing moves.
+const moving = (layers, anim) => layers.map(l => ({ ...l, anim: l.anim ? `${anim}+${l.anim}` : anim }));
+// goes sideways and wraps: far enough both ways to leave the frame, and further still for a pause
+const ride = (layers, speed, x0, x1, pause = 0) => moving(layers, speed > 0 ? `ride:${speed}:${-(x1 + 24)}:${412 - x0 + 24 + pause}` : `ride:${speed}:${-(x1 + 24 + pause)}:${412 - x0 + 24}`);
+const BIRD = (x, y, s, left, span, depth = 0) => L('bird', `M${x - 5 * s} ${y}Q${x - 2.5 * s} ${y - 3 * s} ${x} ${y}Q${x + 2.5 * s} ${y - 3 * s} ${x + 5 * s} ${y}Q${x + 2.5 * s} ${y - 1.3 * s} ${x} ${y + 1 * s}Q${x - 2.5 * s} ${y - 1.3 * s} ${x - 5 * s} ${y}Z`, depth, { anim: `bird:${left}:${span}` });
+// a few birds over an open sky, behind everything: they cross the whole frame
+const flock = (spots, s = 1.3) => spots.map(([x, y, k]) => BIRD(x, y, (k || 1) * s, -30, 472, 1));
+const tramAt = (x, y, c, eve) => [L('rgba(20,16,30,.28)', E(x + 64, y + 24, 66, 3.6), 2), L('lamp', PG([[x + 56, y - 2], [x + 60, y - 23], [x + 61.4, y - 23], [x + 59, y - 2]]), 2), L(c.body, RR(x, y, 128, 21, 4), 2), L(c.shade, R(x, y + 14, 128, 7), 2), L(c.roof, RR(x + 4, y - 4, 120, 6, 2.5), 2), ...rep(6, i => L(eve ? 'window' : c.dark, R(x + 8 + i * 19.6, y + 5, 14, 8), 2)), L(c.dark, R(x + 60, y + 4, 2, 16), 2), L(c.dark, C(x + 22, y + 22, 3.4), 2), L(c.dark, C(x + 106, y + 22, 3.4), 2), L('lampGlass', C(x + 125, y + 12, 1.8), 2), ...(eve ? [L('GLOW', C(x + 128, y + 12, 12), 2)] : [])];
+const busAt = (x, y, c, eve) => [L('rgba(20,16,30,.28)', E(x + 36, y + 35, 40, 3.2), 2), L(c.body, RR(x, y, 72, 33, 4), 2), L(c.shade, R(x, y + 26, 72, 7), 2), L(c.trim, R(x, y + 15, 72, 2), 2), ...rep(5, i => L(eve ? 'window' : c.dark, R(x + 5 + i * 13.4, y + 4, 10, 8), 2)), ...rep(4, i => L(eve ? 'window' : c.dark, R(x + 5 + i * 13.4, y + 19, 10, 8), 2)), L(c.dark, R(x + 59, y + 19, 9, 14), 2), L(c.dark, C(x + 14, y + 33, 4), 2), L(c.dark, C(x + 56, y + 33, 4), 2), L('lampGlass', R(x + 70, y + 27, 2.5, 3), 2), ...(eve ? [L('GLOW', C(x + 74, y + 28, 11), 2)] : [])];
+const taxiAt = (x, y, c, eve) => [L('rgba(20,16,30,.28)', E(x + 34, y + 16, 34, 3.4), 2), L(c.body, RR(x, y, 68, 13, 3), 2), L(c.shade, R(x, y + 8, 68, 5), 2), L(c.top || c.body, PG([[x + 14, y], [x + 21, y - 11], [x + 48, y - 11], [x + 55, y]]), 2), L(c.dark, PG([[x + 18, y - 1], [x + 23, y - 8.5], [x + 33, y - 8.5], [x + 33, y - 1]]), 2), L(c.dark, PG([[x + 36, y - 1], [x + 36, y - 8.5], [x + 46, y - 8.5], [x + 51, y - 1]]), 2), L(c.sign || c.body, R(x + 30, y - 15, 9, 4), 2), L(c.dark, C(x + 14, y + 14, 5), 2), L(c.dark, C(x + 54, y + 14, 5), 2), L('lampGlass', R(x + 64, y + 3, 4, 3), 2), ...(eve ? [L('GLOW', C(x + 70, y + 5, 14), 2)] : [])];
+const sailboatAt = (x, y, s, depth = 1) => [L('#F2EFE6', PG([[x, y - 2 * s], [x, y - 26 * s], [x + 14 * s, y - 2 * s]]), depth), L('#D9D2C0', PG([[x - 1.5 * s, y - 2 * s], [x - 1.5 * s, y - 20 * s], [x - 10 * s, y - 2 * s]]), depth), L('#5A3A22', PG([[x - 13 * s, y], [x + 16 * s, y], [x + 12 * s, y + 5 * s], [x - 9 * s, y + 5 * s]]), depth)];
+const ferryAt = (x, y, eve, depth = 1) => [L('#2F5A48', PG([[x, y], [x + 64, y], [x + 58, y + 9], [x + 6, y + 9]]), depth), L('#EFE6CF', R(x + 8, y - 9, 46, 9), depth), L('#E2B74E', R(x + 8, y - 11, 46, 2.4), depth), L('#EFE6CF', R(x + 22, y - 16, 18, 6), depth), ...rep(6, i => L(eve ? 'window' : '#3A3040', R(x + 11 + i * 7, y - 7, 4.4, 4), depth)), L('#3A3040', R(x + 30, y - 22, 3, 6), depth)];
+const planeAt = (x, y, dir = 1) => [L('lamp', PG([[x - 11 * dir, y], [x + 8 * dir, y - 1.6], [x + 12 * dir, y], [x + 8 * dir, y + 1.6]]), 0), L('lamp', PG([[x - 1 * dir, y], [x - 6 * dir, y - 7], [x - 3 * dir, y - 7], [x + 4 * dir, y]]), 0), L('lamp', PG([[x - 9 * dir, y], [x - 12 * dir, y - 5], [x - 10 * dir, y - 5], [x - 6 * dir, y]]), 0), L('rgba(255,90,70,1)', C(x - 1 * dir, y + 2, 1.3), 0, { anim: 'blink:1.4' })];
 
 // ---------------------------------------------------------------------------------------------
 // Second views: the halls from inside. Four builders, one grammar — a single vanishing point,
@@ -308,7 +326,7 @@ Object.assign(EXTRA_LOCPAL, {
 // Cremona — Piazza del Comune: the Torrazzo, the tallest brick bell tower of Italy, with its great
 // clock; the marble front of the cathedral — rose window, two loggias, the porch; the baptistery.
 const CREMONA_OUT = (eve = true) => {
-  const l = [...SKYL];
+  const l = [...SKYL, ...flock([[130, 30, 1.1], [146, 22, .9], [120, 44, .8], [160, 40, .8], [300, 50, .7]])];
   l.push(L('far', PG([[0, 190], [0, 160], [20, 148], [40, 160], [40, 190]]), 0), L('far', R(384, 150, 28, 40), 0));
   // the Torrazzo: shaft, clock, the octagon and the spire going out of the frame
   l.push(L('brickShade', R(100, 44, 14, 146)), L('brick', R(68, 44, 34, 146)), L('brickLit', R(68, 44, 12, 146)), L('marble', R(64, 40, 54, 5)), ...rep(9, i => L('marble', R(65 + i * 6, 36, 3.4, 4))), ...rep(3, i => L('brickShade', R(68, 84 + i * 34, 46, 1.4), 1, { op: .6 })));
@@ -329,7 +347,7 @@ const CREMONA_OUT = (eve = true) => {
 // Milan — La Scala from the square: a sober cream front, the carriage porch of three arches with a
 // terrace over it, paired half-columns and a pediment; a yellow tram passes under its wire.
 const MILAN_OUT = (eve = true) => {
-  const l = [...SKYL];
+  const l = [...SKYL, ...flock([[90, 48], [106, 56, .8], [320, 40, .9]])];
   l.push(L('far', R(0, 140, 50, 50), 0), L('farLit', R(0, 140, 16, 50), 0), L('far', R(366, 132, 46, 58), 0), L('far', PG([[380, 132], [398, 132], [389, 108]]), 0));
   l.push(L('stoneShade', PG([[352, 96], [374, 104], [374, 190], [352, 190]])), L('stone', R(60, 96, 292, 94)), L('stoneLit', R(60, 96, 88, 94)), L('stoneBase', R(60, 152, 292, 38)), ...rep(4, i => L('stoneShade', R(60, 158 + i * 8, 292, 1), 1, { op: .45 })), L('roof', PG([[60, 90], [352, 90], [340, 80], [72, 80]])), L('roofLit', PG([[60, 90], [146, 90], [146, 80], [72, 80]])), L('trim', R(56, 90, 300, 6)), L('trim', R(60, 150, 292, 2.5)));
   l.push(...[70, 282].flatMap(x0 => rep(3, i => [L('trim', PG([[x0 - 2 + i * 22, 106], [x0 + 12 + i * 22, 106], [x0 + 5 + i * 22, 101]])), L('window', R(x0 + i * 22, 107, 10, 18)), L('window', R(x0 + i * 22, 132, 10, 13)), L('dark', R(x0 + i * 22, 162, 10, 20))])));
@@ -337,7 +355,7 @@ const MILAN_OUT = (eve = true) => {
   l.push(L('rgba(20,16,30,.2)', PG([[262, 152], [270, 156], [270, 190], [262, 190]])), L('stoneBase', R(150, 152, 112, 38)), L('stoneLit', R(150, 152, 34, 38)), L('trim', R(146, 146, 120, 3)), ...rep(18, i => L('trim', R(148 + i * 6.6, 140, 2, 6))), L('trim', R(146, 138, 120, 2.4)), ...rep(3, i => [L('dark', ARCH(160 + i * 34, 158, 24, 32)), ...(eve ? [L('rgba(255,196,110,.5)', C(172 + i * 34, 170, 12), 1, { glow: true }), L('lampGlass', C(172 + i * 34, 166, 1.8))] : [])]));
   l.push(...GROUND(60, 374), L('lamp', R(0, 196, 412, .8), 2, { op: .6 }));
   // the tram
-  l.push(L('rgba(20,16,30,.28)', E(104, 244, 66, 3.6), 2), L('lamp', PG([[96, 218], [100, 197], [101.4, 197], [99, 218]]), 2), L('tram', RR(40, 220, 128, 21, 4), 2), L('tramShade', R(40, 234, 128, 7), 2), L('tramRoof', RR(44, 216, 120, 6, 2.5), 2), ...rep(6, i => L(eve ? 'window' : 'tramDark', R(48 + i * 19.6, 225, 14, 8), 2)), L('tramDark', R(100, 224, 2, 16), 2), L('tramDark', C(62, 242, 3.4), 2), L('tramDark', C(146, 242, 3.4), 2), L('lampGlass', C(165, 232, 1.8), 2), ...(eve ? [L('GLOW', C(168, 232, 12), 2)] : []));
+  l.push(...ride(tramAt(40, 212, { body: 'tram', shade: 'tramShade', roof: 'tramRoof', dark: 'tramDark' }, eve), 16, 40, 168, 120));
   l.push(...lamp(212, 238, 1, 2, eve), ...lamp(330, 238, 1, 2, eve), ...hero(268, 254, 1, 2));
   return l;
 };
@@ -350,7 +368,18 @@ EXTRA_SCENES.milanOut = { fn: MILAN_OUT, loc: 'milanOut' };
 // carries it across the window and lets it fade at both ends, so nothing has to be clipped.
 BASE.day.bird = '#3A3A4C';
 BASE.eve.bird = '#1B1830';
-const BIRD = (x, y, s) => L('bird', `M${x - 5 * s} ${y}Q${x - 2.5 * s} ${y - 3 * s} ${x} ${y}Q${x + 2.5 * s} ${y - 3 * s} ${x + 5 * s} ${y}Q${x + 2.5 * s} ${y - 1.3 * s} ${x} ${y + 1 * s}Q${x - 2.5 * s} ${y - 1.3 * s} ${x - 5 * s} ${y}Z`);
+const before = (layers, test, extra) => { const at = layers.findIndex(test); if (at < 0) throw new Error('a scene of the handoff has changed: nowhere to put the moving things'); return [...layers.slice(0, at), ...extra, ...layers.slice(at)]; };
+const RED_TRAM = { body: '#C8322B', shade: '#9E2620', roof: '#F2EFE6', dark: '#2A2430' };
+const RED_BUS = { body: '#C8322B', shade: '#9E2620', trim: '#E9B23C', dark: '#2A2430' };
 const EXTRA_INSERTS = {
-  home: layers => { const at = layers.findIndex(l => l.fill === 'chandelier' && l.d.startsWith('M322 62')); if (at < 0) throw new Error('the window of the home scene has changed'); return [...layers.slice(0, at + 1), BIRD(268, 58, 1.05), BIRD(282, 67, 1.3), BIRD(306, 53, .9), BIRD(318, 73, 1.15), BIRD(338, 61, 1), ...layers.slice(at + 1)]; },
+  // behind the glazing bars, in front of the moon
+  home: layers => before(layers, l => l.fill === 'woodDark' && l.d.startsWith('M296 40'), [[268, 58, 1.05], [282, 67, 1.3], [306, 53, .9], [318, 73, 1.15], [338, 61, 1]].map(([x, y, k]) => BIRD(x, y, k, 250, 96, 1))),
+  // Vienna: a red tram of the Ring before the hall; the things of the foreground are the scene's last layers — a tree, two lamps, the traveller
+  vienna: (layers, eve) => { const tail = 5 + 2 * (eve ? 7 : 6) + 8; return [...layers.slice(0, 2), ...flock([[60, 40], [76, 48, .8], [340, 34, .9], [356, 44, .7]]), ...layers.slice(2, layers.length - tail), ...ride(tramAt(120, 212, RED_TRAM, eve), 15, 120, 248, 160), ...layers.slice(layers.length - tail)]; },
+  // London: a red double-decker
+  london: (layers, eve) => { const tail = 10 + 2 * (eve ? 7 : 6) + 8; return [...layers.slice(0, 2), ...flock([[90, 30], [104, 38, .8], [330, 50, .8]]), ...layers.slice(2, layers.length - tail), ...ride(busAt(60, 201, RED_BUS, eve), 20, 60, 136, 260), ...layers.slice(layers.length - tail)]; },
+  // Sydney: a harbour ferry and the gulls
+  sydney: (layers, eve) => before([...layers.slice(0, 2), ...flock([[300, 40, 1.2], [318, 50], [286, 56, .9], [90, 30, .8]]), ...layers.slice(2)], l => l.fill === 'ground', moving(ride(ferryAt(250, 214, eve, 2), 7, 250, 314, 80), 'bob:0.7:3.6')),
+  // Salzburg's lake: a sail
+  austria: layers => before([...layers.slice(0, 2), ...flock([[120, 30], [136, 38, .8], [300, 26, .9]]), ...layers.slice(2)], l => l.fill === 'meadow', moving(ride(sailboatAt(280, 198, .8), 4, 270, 294, 40), 'bob:0.6:4')),
 };

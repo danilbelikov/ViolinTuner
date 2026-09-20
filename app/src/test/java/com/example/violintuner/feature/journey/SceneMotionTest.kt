@@ -1,5 +1,6 @@
 package com.example.violintuner.feature.journey
 
+import com.example.violintuner.feature.journey.art.SceneAnim
 import com.example.violintuner.feature.journey.art.SceneCamera
 import com.example.violintuner.feature.journey.art.SceneGrid
 import com.example.violintuner.feature.journey.art.SceneLayer
@@ -134,25 +135,74 @@ class SceneMotionTest {
         assertEquals(SceneMotion.cloud(1, 0f).y, SceneMotion.cloud(1, 30f).y, 0f)
     }
 
+    private fun moving(anim: String, fill: String = "tram") = layer(fill).copy(anim = SceneAnim.parse(anim))
+
     @Test
-    fun aBirdCrossesTheWindowAndFadesAtItsEnds_itNeverLeavesTheFrame() {
-        val bird = layer(SceneMotion.BIRD)
+    fun aBirdCrossesItsWayAndFadesAtTheEnds_itNeverLeavesIt() {
+        val bird = moving("bird:250:96", "bird")
         assertTrue(SceneMotion.moves(bird, SceneMode.DAY))
         assertTrue(SceneMotion.moves(bird, SceneMode.EVENING))
-        val right = SceneMotion.BIRD_LEFT + SceneMotion.BIRD_SPAN
         for (base in listOf(268f, 306f, 338f)) for (step in 0..600) {
-            val flight = SceneMotion.flight(base, index = 9, seconds = step / 10f)
-            val x = base + flight.dx
-            assertTrue("a bird at $x is outside the window", x in SceneMotion.BIRD_LEFT..right)
-            assertTrue(flight.alpha in 0f..1f)
-            assertTrue(flight.flap in 0.3f..1.01f)
-            assertTrue(kotlin.math.abs(flight.dy) <= SceneMotion.BIRD_BOB + 0.001f)
+            val moved = SceneMotion.moved(bird.anim!!, base, 60f, index = 9, seconds = step / 10f)
+            val x = base + moved.dx
+            assertTrue("a bird at $x is outside the window", x in 250f..346f)
+            assertTrue(moved.alpha in 0f..1f)
+            assertTrue(moved.flap in 0.3f..1.01f)
+            assertTrue(kotlin.math.abs(moved.dy) <= SceneMotion.BIRD_BOB + 0.001f)
             // by the frame it is gone: nothing has to cut it
-            if (x - SceneMotion.BIRD_LEFT < 1f || right - x < 1f) assertTrue(flight.alpha < 0.1f)
+            if (x - 250f < 1f || 346f - x < 1f) assertTrue(moved.alpha < 0.1f)
         }
-        // when nothing has moved yet the bird is where it is drawn
-        assertEquals(0f, SceneMotion.flight(306f, 9, 0f).dx, 0.001f)
-        // and it does fly: to the right
-        assertTrue(SceneMotion.flight(268f, 9, 1f).dx > SceneMotion.flight(268f, 9, 0f).dx)
+        assertEquals(0f, SceneMotion.moved(bird.anim!!, 306f, 60f, 9, 0f).dx, 0.001f)
+        assertTrue(SceneMotion.moved(bird.anim!!, 268f, 60f, 9, 1f).dx > 0f)
+    }
+
+    @Test
+    fun allLayersOfOneTramGoAsOne_itLeavesTheFrameAndComesBackFromTheOtherSide() {
+        val anim = SceneAnim.parse("ride:16:-192:516")!!
+        // where it is drawn is where it stands when nothing moves
+        assertEquals(0f, SceneMotion.moved(anim, 100f, 220f, 3, 0f).dx, 0.001f)
+        for (step in 0..900) {
+            val t = step / 5f
+            val body = SceneMotion.moved(anim, 100f, 220f, index = 3, seconds = t)
+            val wheel = SceneMotion.moved(anim, 60f, 240f, index = 57, seconds = t)
+            assertEquals(body.dx, wheel.dx, 0f)
+            assertTrue(body.dx in -192f..516f)
+            assertEquals(1f, body.alpha, 0f)
+        }
+        // it does wrap: after the whole way it is where it began
+        assertEquals(0f, SceneMotion.moved(anim, 100f, 220f, 3, (516f + 192f) / 16f).dx, 0.01f)
+        // and it goes to the right
+        assertTrue(SceneMotion.moved(anim, 100f, 220f, 3, 2f).dx > 0f)
+    }
+
+    @Test
+    fun aBoatBobsWhileItSails_aLightBlinks_aPetalFallsFromWhereItIsDrawn() {
+        val boat = SceneAnim.parse("ride:6:-150:436+bob:0.8:3.2")!!
+        val heights = (0..64).map { SceneMotion.moved(boat, 90f, 222f, 1, it / 10f).dy }
+        assertTrue(heights.max() > 0.7f && heights.min() < -0.7f)
+        assertTrue(heights.all { it in -0.8f..0.8f })
+
+        val light = SceneAnim.parse("ride:11:-156:564+blink:1.4")!!
+        val seen = (0..140).map { SceneMotion.moved(light, 120f, 32f, 1, it / 100f).alpha }
+        assertTrue(seen.any { it == 0f } && seen.any { it == 1f })
+
+        val petal = SceneAnim.parse("fall:7:122:126")!!
+        assertEquals(0f, SceneMotion.moved(petal, 40f, 180f, 5, 0f).dy, 0.001f)
+        for (step in 0..400) {
+            val moved = SceneMotion.moved(petal, 40f, 180f, 5, step / 4f)
+            assertTrue("a petal at ${180f + moved.dy} is out of its fall", 180f + moved.dy in 122f..248f)
+            assertTrue(moved.alpha in 0f..1f)
+        }
+    }
+
+    @Test
+    fun aMovementIsReadFromTheLayersLastField() {
+        assertEquals(null, SceneAnim.parse(""))
+        assertEquals(SceneAnim(ride = SceneAnim.Ride(16f, -192f, 516f)), SceneAnim.parse("ride:16:-192:516"))
+        assertEquals(SceneAnim(bird = SceneAnim.Way(-30f, 472f)), SceneAnim.parse("bird:-30:472"))
+        assertEquals(SceneAnim(fall = SceneAnim.Fall(7f, 122f, 126f)), SceneAnim.parse("fall:7:122:126"))
+        val both = SceneAnim.parse("ride:6:-150:436+bob:0.8:3.2")!!
+        assertEquals(SceneAnim.Bob(0.8f, 3.2f), both.bob)
+        assertEquals(6f, both.ride!!.speed, 0f)
     }
 }

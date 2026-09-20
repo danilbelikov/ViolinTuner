@@ -3,6 +3,7 @@ package com.example.violintuner.feature.journey
 import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.feature.journey.art.JourneySilhouettes
 import com.example.violintuner.feature.journey.art.Scene
+import com.example.violintuner.feature.journey.art.SceneAnim
 import com.example.violintuner.feature.journey.art.SceneLayer
 import com.example.violintuner.feature.journey.art.SceneMode
 import com.example.violintuner.feature.journey.art.ScenePalette
@@ -21,13 +22,15 @@ class SceneTest {
     fun `a scene reads its header and its layers, absent fields fall back`() {
         val scene = SceneParser.parse(
             "# comment\nloc=vienna;aerial=1\n" +
-                "wall\t1\t\t\t\t\t\t\t\t\tM0 0h10v10Z\n" +
-                "rgba(20,16,30,.28)\t2\t0.5\t3\t4\t2\t1\ttrim\t1.5\t1\tM1 1h2Z\n",
+                "wall\t1\t\t\t\t\t\t\t\t\tM0 0h10v10Z\t\n" +
+                "rgba(20,16,30,.28)\t2\t0.5\t3\t4\t2\t1\ttrim\t1.5\t1\tM1 1h2Z\tride:16:-192:516\n",
         )
+        // a layer filled with a literal colour starts with «#» and is not a comment (a red tram once lost its body to this)
+        assertEquals(1, SceneParser.parse("# comment\nloc=vienna;aerial=1\n#C8322B\t2\t\t\t\t\t\t\t\t\tM0 0h1v1Z\t\n").layers.size)
         assertEquals("vienna", scene.location)
         assertTrue(scene.aerial)
         assertEquals(SceneLayer("wall", 1, 1f, 0f, 0f, 1f, false, null, 0f, false, "M0 0h10v10Z"), scene.layers[0])
-        assertEquals(SceneLayer("rgba(20,16,30,.28)", 2, 0.5f, 3f, 4f, 2f, true, "trim", 1.5f, true, "M1 1h2Z"), scene.layers[1])
+        assertEquals(SceneLayer("rgba(20,16,30,.28)", 2, 0.5f, 3f, 4f, 2f, true, "trim", 1.5f, true, "M1 1h2Z", SceneAnim(ride = SceneAnim.Ride(16f, -192f, 516f))), scene.layers[1])
     }
 
     @Test
