@@ -31,4 +31,9 @@ data class RepertoireConfig(
     val videoFreeSpaceMarginBytes: Long = 50L * 1024 * 1024,
     /** A video file without a session is not an orphan until it is this old: it may be the only copy of a shot. */
     val orphanVideoMinAgeMs: Long = 24 * 60 * 60_000L,
+    /** A section of the player's own (spec 5.16). */
+    val maxGroupNameLength: Int = 24,
+    /** A scale starts at the lowest tonic the violin has and ends on the instrument: G3 … E7 (spec 5.1, 5.16). */
+    val scaleLowestMidi: Int = 55,
+    val scaleHighestMidi: Int = 100,
 )
