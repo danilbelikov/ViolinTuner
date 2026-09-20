@@ -3,6 +3,7 @@ package com.example.violintuner.feature.journey.art
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
@@ -75,7 +76,17 @@ fun rememberScene(sceneKey: String?, mode: SceneMode): PreparedScene? {
  * silhouette against the evening sky: a sketch, and honest about being one.
  */
 @Composable
-fun Postcard(stop: JourneyStop, description: String, modifier: Modifier = Modifier, mode: SceneMode = SceneMode.EVENING, inside: Boolean = false) {
+fun Postcard(
+    stop: JourneyStop,
+    description: String,
+    modifier: Modifier = Modifier,
+    mode: SceneMode = SceneMode.EVENING,
+    inside: Boolean = false,
+    /** Seconds of a living postcard ([rememberSceneSeconds]); null — a still one. Read while drawing. */
+    seconds: State<Float>? = null,
+    /** Zoom, pan x, pan y in pixels — already within [SceneCamera.clamp]; null — the whole card, centred. Read while drawing. */
+    camera: (() -> Triple<Float, Float, Float>)? = null,
+) {
     val view = stop.views.firstOrNull { it.inside == inside } ?: stop.views.firstOrNull()
     val prepared = rememberScene(view?.scene, mode)
     val silhouette = remember(stop.id) { JourneySilhouettes.paths[stop.id].orEmpty().map { PathParser().parsePathString(it).toPath() } }
@@ -86,19 +97,20 @@ fun Postcard(stop: JourneyStop, description: String, modifier: Modifier = Modifi
             .semantics { contentDescription = description },
     ) {
         // xMidYMid slice: the grid covers the box, its centre stays the centre
-        val k = maxOf(size.width / SceneGrid.WIDTH, size.height / SceneGrid.HEIGHT)
-        translate((size.width - SceneGrid.WIDTH * k) / 2, (size.height - SceneGrid.HEIGHT * k) / 2) {
-            scale(k, k, pivot = Offset.Zero) {
-                when {
-                    prepared != null -> drawScene(prepared)
-                    view == null -> drawSketch(silhouette, mode)
-                }
+        val (zoom, panX, panY) = camera?.invoke() ?: Triple(1f, 0f, 0f)
+        val k = SceneCamera.cover(size.width, size.height) * zoom
+        val t = seconds?.value
+        translate((size.width - SceneGrid.WIDTH * k) / 2, (size.height - SceneGrid.HEIGHT * k) / 2 + panY) {
+            when {
+                // the planes are shifted one by one — that is the parallax — in pixels, then scaled
+                prepared != null -> drawScene(prepared, k, panX, t)
+                view == null -> translate(panX, 0f) { scale(k, k, pivot = Offset.Zero) { drawSketch(silhouette, mode) } }
             }
         }
     }
 }
 
-private fun DrawScope.drawScene(prepared: PreparedScene) {
+private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, seconds: Float?) {
     val scene = prepared.scene
     val sky = ScenePalette.token("sky", scene.location, prepared.mode) ?: NIGHT
     val skyLow = ScenePalette.token("skyLow", scene.location, prepared.mode) ?: NIGHT
@@ -112,17 +124,24 @@ private fun DrawScope.drawScene(prepared: PreparedScene) {
             layer.warmGlow -> radial(ScenePalette.WARM_GLOW, bounds)
             else -> ScenePalette.colorOf(layer.fill, layer.depth, scene, prepared.mode)?.let { Color(it) }?.let { androidx.compose.ui.graphics.SolidColor(it) }
         }
+        val alive = seconds != null && SceneMotion.moves(layer, prepared.mode)
+        val alpha = if (alive) layer.opacity * SceneMotion.alpha(layer, index, prepared.mode, seconds!!) else layer.opacity
+        val drift = if (alive) SceneMotion.drift(layer, index, seconds!!) else 0f
         val draw: DrawScope.() -> Unit = {
-            if (!layer.fillNone && brush != null) drawPath(path, brush, alpha = layer.opacity)
+            if (!layer.fillNone && brush != null) drawPath(path, brush, alpha = alpha)
             val stroke = layer.stroke?.let { ScenePalette.colorOf(it, layer.depth, scene, prepared.mode) }
             if (stroke != null && layer.strokeWidth > 0f) {
-                drawPath(path, Color(stroke), alpha = layer.opacity, style = Stroke(layer.strokeWidth, cap = StrokeCap.Round))
+                drawPath(path, Color(stroke), alpha = alpha, style = Stroke(layer.strokeWidth, cap = StrokeCap.Round))
             }
         }
-        if (layer.tx != 0f || layer.ty != 0f || layer.scale != 1f) {
-            translate(layer.tx, layer.ty) { scale(layer.scale, layer.scale, pivot = Offset.Zero) { draw() } }
-        } else {
-            draw()
+        translate(SceneCamera.shift(panX, layer.depth) + drift * k, 0f) {
+            scale(k, k, pivot = Offset.Zero) {
+                if (layer.tx != 0f || layer.ty != 0f || layer.scale != 1f) {
+                    translate(layer.tx, layer.ty) { scale(layer.scale, layer.scale, pivot = Offset.Zero) { draw() } }
+                } else {
+                    draw()
+                }
+            }
         }
     }
 }

@@ -97,6 +97,8 @@ data class StopState(
     val inside: Boolean,
     val dayUnlocked: Boolean,
     val secondViewUnlocked: Boolean,
+    /** The postcard alone on the whole screen: a mode of this screen, as the video is of the recording's. */
+    val fullscreen: Boolean = false,
 )
 
 sealed interface StopIntent {
@@ -107,6 +109,10 @@ sealed interface StopIntent {
     data class InsideSelected(val inside: Boolean) : StopIntent
 
     data class BuyClicked(val extra: JourneyExtra) : StopIntent
+
+    data object PostcardClicked : StopIntent
+
+    data object FullscreenClosed : StopIntent
 }
 
 /** How long the road takes on screen (handoff `anims`). */
@@ -119,6 +125,8 @@ object JourneyMotion {
     const val STAMP_MS = 350
     const val EARNED_PILL_MS = 3_000L
     const val PHASE_FADE_MS = 300
+    const val FULLSCREEN_PANEL_HIDE_MS = 3_000L
+    const val FULLSCREEN_PANEL_FADE_MS = 300
 
     fun roadMs(transport: Transport, reduce: Boolean): Int = when {
         reduce -> ROAD_REDUCED_MS

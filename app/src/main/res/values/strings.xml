@@ -612,6 +612,9 @@
     <string name="journey_extra_souvenir">Сувенир в паспорт</string>
     <string name="journey_extra_bought">открыто</string>
     <string name="journey_extra_buy">Открыть за %1$s</string>
+    <string name="journey_fullscreen">На весь экран</string>
+    <string name="journey_fullscreen_close">Свернуть</string>
+    <string name="journey_fullscreen_hint">Потяните в сторону — осмотреться · щипок — ближе</string>
     <string name="journey_passport_soon">скоро</string>
     <string name="journey_passport_count">%1$d из %2$d</string>
     <string name="journey_earned">+%1$s</string>

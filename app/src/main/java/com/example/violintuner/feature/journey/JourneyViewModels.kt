@@ -136,7 +136,7 @@ class StopViewModel @Inject constructor(
     private val stop = JourneyRoute.stops.firstOrNull { it.id == savedState.get<String>(ARG_STOP_ID) } ?: JourneyRoute.stops.first()
     private val index = JourneyRoute.indexOf(stop.id)
 
-    private data class Shown(val day: Boolean = false, val inside: Boolean? = null)
+    private data class Shown(val day: Boolean = false, val inside: Boolean? = null, val fullscreen: Boolean = false)
 
     private val shown = MutableStateFlow(Shown())
     private var latest = JourneyProgress.EMPTY
@@ -161,6 +161,7 @@ class StopViewModel @Inject constructor(
             inside = if (secondViewUnlocked) shown.inside ?: mainInside else mainInside,
             dayUnlocked = dayUnlocked,
             secondViewUnlocked = secondViewUnlocked,
+            fullscreen = shown.fullscreen,
         )
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
@@ -174,7 +175,10 @@ class StopViewModel @Inject constructor(
 
     fun onIntent(intent: StopIntent) {
         when (intent) {
-            StopIntent.BackClicked -> effectChannel.trySend(Unit)
+            // «назад» from the whole screen folds the postcard back, it does not leave the stop
+            StopIntent.BackClicked -> if (shown.value.fullscreen) shown.value = shown.value.copy(fullscreen = false) else effectChannel.trySend(Unit)
+            StopIntent.PostcardClicked -> shown.value = shown.value.copy(fullscreen = true)
+            StopIntent.FullscreenClosed -> shown.value = shown.value.copy(fullscreen = false)
             is StopIntent.DaySelected -> shown.value = shown.value.copy(day = intent.day)
             is StopIntent.InsideSelected -> shown.value = shown.value.copy(inside = intent.inside)
             is StopIntent.BuyClicked -> buy(intent.extra)

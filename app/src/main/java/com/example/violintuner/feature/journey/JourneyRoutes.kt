@@ -68,5 +68,8 @@ fun StopRoute(onClose: () -> Unit, modifier: Modifier = Modifier, viewModel: Sto
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) { viewModel.closes.collect { currentOnClose() } }
     }
-    StopScreen(state, viewModel::onIntent, modifier)
+    BackHandler(enabled = state.fullscreen) { viewModel.onIntent(StopIntent.FullscreenClosed) }
+    CompositionLocalProvider(LocalReduceMotion provides rememberAnimationsRemoved()) {
+        StopScreen(state, viewModel::onIntent, modifier)
+    }
 }

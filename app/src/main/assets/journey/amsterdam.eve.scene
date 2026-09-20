@@ -95,11 +95,11 @@ waterLit	2	0.45								M129 223h27v1.4h-27Z
 waterLit	2	0.45								M226 230h22v1.4h-22Z
 waterLit	2	0.45								M323 213h51v1.4h-51Z
 waterLit	2	0.45								M50 220h46v1.4h-46Z
-waterLit	2	0.35								M165 210h8v16h-8Z
-waterLit	2	0.35								M184.6 210h8v16h-8Z
-waterLit	2	0.35								M204.2 210h8v16h-8Z
-waterLit	2	0.35								M223.8 210h8v16h-8Z
-waterLit	2	0.35								M243.4 210h8v16h-8Z
+rgba(255,217,138,.2)	2									M166 210h6v16h-6Z
+rgba(255,217,138,.2)	2									M185.6 210h6v16h-6Z
+rgba(255,217,138,.2)	2									M205.2 210h6v16h-6Z
+rgba(255,217,138,.2)	2									M224.8 210h6v16h-6Z
+rgba(255,217,138,.2)	2									M244.4 210h6v16h-6Z
 boat	2									M60 222L126 222L118 232L68 232Z
 boatLit	2									M78 214h30v8h-30Z
 window	2									M82 216h6v4h-6Z

@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.FilledTonalButton
@@ -48,6 +49,7 @@ import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.feature.journey.art.Postcard
 import com.example.violintuner.feature.journey.art.SceneMode
+import com.example.violintuner.feature.journey.art.rememberSceneSeconds
 import java.time.ZoneId
 
 private val MaxContentWidth = 560.dp
@@ -61,6 +63,10 @@ private val StickerInk = Color(0xFF2E1A6E)
 fun StopScreen(state: StopState, onIntent: (StopIntent) -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val city = cityOf(state.index)
+    if (state.fullscreen && !state.loading) {
+        FullscreenPostcard(state, city, onIntent, modifier)
+        return
+    }
     Column(modifier.fillMaxSize().background(colors.surface), horizontalAlignment = Alignment.CenterHorizontally) {
         JourneyTopBar(city, onBack = { onIntent(StopIntent.BackClicked) }) {
             TaktAmount(Formats.takts(state.balance), color = colors.primary, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), icon = 18.dp)
@@ -93,11 +99,18 @@ fun StopScreen(state: StopState, onIntent: (StopIntent) -> Unit, modifier: Modif
 
 @Composable
 private fun StopCard(state: StopState, city: String, height: Dp, onIntent: (StopIntent) -> Unit) {
-    Postcard(
-        state.stop, description = stringResource(R.string.journey_card_description, city),
-        modifier = Modifier.fillMaxWidth().height(height).clip(PostcardShape),
-        mode = if (state.day) SceneMode.DAY else SceneMode.EVENING, inside = state.inside,
-    )
+    // The card lives here — lit windows, lamps, water — and a tap gives it the whole screen
+    Box(Modifier.fillMaxWidth().height(height).clip(PostcardShape).clickable(onClickLabel = stringResource(R.string.journey_fullscreen), role = Role.Button) { onIntent(StopIntent.PostcardClicked) }) {
+        Postcard(
+            state.stop, description = stringResource(R.string.journey_card_description, city),
+            modifier = Modifier.fillMaxSize(),
+            mode = if (state.day) SceneMode.DAY else SceneMode.EVENING, inside = state.inside,
+            seconds = rememberSceneSeconds(),
+        )
+        Box(Modifier.align(Alignment.BottomEnd).padding(10.dp).size(36.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.45f)), contentAlignment = Alignment.Center) {
+            AppIcon(AppIcons.Fullscreen, contentDescription = null, size = 20.dp, tint = Color.White)
+        }
+    }
     // Only what is open is offered: a chip that does nothing would be a locked door in the player's face
     if (state.dayUnlocked || state.secondViewUnlocked) {
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {

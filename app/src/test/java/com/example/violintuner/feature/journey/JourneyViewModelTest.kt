@@ -199,4 +199,27 @@ class JourneyViewModelTest {
         assertFalse(viewModel.state.value.day)
         assertFalse(viewModel.state.value.inside)
     }
+
+    @Test
+    fun backFromTheWholeScreenFoldsThePostcard_backAgainLeavesTheStop() = runTest(dispatcher) {
+        journey.start(clock.millis())
+        val viewModel = StopViewModel(SavedStateHandle(mapOf(StopViewModel.ARG_STOP_ID to "home")), journey, JourneyConfig(), clock)
+        val closes = mutableListOf<Unit>()
+        backgroundScope.launch { viewModel.state.collect {} }
+        backgroundScope.launch { viewModel.closes.collect { closes += it } }
+        runCurrent()
+
+        viewModel.onIntent(StopIntent.PostcardClicked)
+        runCurrent()
+        assertTrue(viewModel.state.value.fullscreen)
+
+        viewModel.onIntent(StopIntent.BackClicked)
+        runCurrent()
+        assertFalse(viewModel.state.value.fullscreen)
+        assertTrue(closes.isEmpty())
+
+        viewModel.onIntent(StopIntent.BackClicked)
+        runCurrent()
+        assertEquals(1, closes.size)
+    }
 }
