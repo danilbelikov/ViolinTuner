@@ -46,5 +46,74 @@ internal object ExtraScenePalettes {
             "steelLit" to 0xFFBCC5CE, "steelShade" to 0xFF6E7781, "towerRed" to 0xFFD8452E, "towerWhite" to 0xFFF2EFE6, "blossom" to 0xFFF2B6C8,
             "blossomLit" to 0xFFFAD3DE, "blossomShade" to 0xFFD48BA4, "gold" to 0xFFE2B74E, "dark" to 0xFF3A3040,
         ),
+        "salzburgInt" to mapOf(
+            "seat" to 0xFF8E2F3F, "seatDark" to 0xFF5A1E2A, "wood" to 0xFFA9713F, "ceil" to 0xFFF3EEE2, "ceilShade" to 0xFFDDD5C2,
+            "back" to 0xFFE8E0CE, "wallL" to 0xFFF0E9D9, "wallR" to 0xFFCFC6B1, "floor" to 0xFF5A1E2A, "rail" to 0xFFE2B74E,
+            "railShade" to 0xFFB08A45, "organCase" to 0xFF7A5B3A, "pipe" to 0xFFE9C98D, "pipeShade" to 0xFFB08A45,
+        ),
+        "pragueInt" to mapOf(
+            "ceil" to 0xFFEFE6D0, "ceilShade" to 0xFFD8CCAE, "back" to 0xFFC9B78F, "wallL" to 0xFFE3D6B6, "wallR" to 0xFFBBAA82,
+            "floor" to 0xFF2F3A55, "rail" to 0xFFE2B74E, "railShade" to 0xFFB08A45, "column" to 0xFFF6F1E4, "columnShade" to 0xFFCFC6B1,
+            "organCase" to 0xFF5E4630, "pipe" to 0xFFD7DCE2, "pipeShade" to 0xFF9AA3AD, "seat" to 0xFF3E5A8A, "seatDark" to 0xFF27395C,
+            "wood" to 0xFFA9713F,
+        ),
+        "leipzigInt" to mapOf(
+            "vault" to 0xFFEDE7DA, "vaultLit" to 0xFFF7F3EA, "vaultShade" to 0xFFCFC7B6, "rib" to 0xFFA8503E, "pier" to 0xFFF2ECDF,
+            "pierShade" to 0xFFBFB6A2, "floor" to 0xFF8A7F72, "aisle" to 0xFFB3A898, "wood" to 0xFF6E4B2E, "woodShade" to 0xFF4E341F,
+        ),
+        "berlinInt" to mapOf(
+            "hallDark" to 0xFF2B2622, "ceil" to 0xFFE9DFC8, "ceilShade" to 0xFFC7BA9C, "ceilLit" to 0xFFF5EDDA, "terrace" to 0xFFC9A15C,
+            "terraceShade" to 0xFFA9834A, "seat" to 0xFF5E4A30, "stage" to 0xFFD9B27A, "stageLit" to 0xFFF0D6A6, "stageShade" to 0xFF8E6E36,
+            "cloud" to 0xFFF7F2E6, "cloudShade" to 0xFFBDB39C, "organCase" to 0xFF8E6E36, "pipe" to 0xFFD7DCE2, "pipeShade" to 0xFF9AA3AD,
+        ),
+        "amsterdamInt" to mapOf(
+            "seat" to 0xFF8E2F3F, "seatDark" to 0xFF5A1E2A, "wood" to 0xFFA9713F, "ceil" to 0xFFF4EFE3, "ceilShade" to 0xFFDED6C3,
+            "back" to 0xFFE6DDC9, "wallL" to 0xFFEFE8D8, "wallR" to 0xFFCCC3AE, "floor" to 0xFF5A1E2A, "rail" to 0xFFF8F4EA,
+            "railShade" to 0xFFCFC6B1, "organCase" to 0xFF6B3F2A, "pipe" to 0xFFE9C98D, "pipeShade" to 0xFFB08A45,
+        ),
+        "parisInt" to mapOf(
+            "hallDark" to 0xFF4A1622, "ceil" to 0xFFE9C98D, "ceilShade" to 0xFFC9A15C, "tier" to 0xFFB8863B, "tierShade" to 0xFF9A6E2C,
+            "rail" to 0xFFE2B74E, "railLit" to 0xFFF3D98C, "box" to 0xFF3A1220, "seat" to 0xFF9B2C3E, "seatDark" to 0xFF5A1E2A,
+            "curtain" to 0xFF7A2030, "wood" to 0xFFA9713F,
+        ),
+        "londonInt" to mapOf(
+            "hallDark" to 0xFF3A1820, "ceil" to 0xFFC9CFD6, "ceilShade" to 0xFF9FA8B2, "tier" to 0xFFD9C7A6, "tierShade" to 0xFFBCA780,
+            "rail" to 0xFFE2B74E, "railLit" to 0xFFF3D98C, "box" to 0xFF4A1E28, "seat" to 0xFFA8323F, "seatDark" to 0xFF5A1E2A,
+            "mushroom" to 0xFFF2EFE6, "mushroomShade" to 0xFF9A9488, "organCase" to 0xFF5E4630, "pipe" to 0xFFD7DCE2, "pipeShade" to 0xFF9AA3AD,
+            "wood" to 0xFFA9713F,
+        ),
+        "spbInt" to mapOf(
+            "seat" to 0xFF8E2F3F, "seatDark" to 0xFF5A1E2A, "wood" to 0xFFA9713F, "ceil" to 0xFFF7F4EC, "ceilShade" to 0xFFE0DBCF,
+            "back" to 0xFFEDE8DC, "wallL" to 0xFFF4F0E6, "wallR" to 0xFFD2CCBE, "floor" to 0xFF5A1E2A, "rail" to 0xFFF8F4EA,
+            "railShade" to 0xFFCFC6B1, "column" to 0xFFFFFFFF, "columnShade" to 0xFFD2CCBE, "organCase" to 0xFF6B4A30, "pipe" to 0xFFD7DCE2,
+            "pipeShade" to 0xFF9AA3AD,
+        ),
+        "moscowInt" to mapOf(
+            "ceil" to 0xFFF3EEE0, "ceilShade" to 0xFFDCD4C0, "back" to 0xFFE4DAC2, "wallL" to 0xFFEFE7D2, "wallR" to 0xFFCBC1A8,
+            "floor" to 0xFF6E5A3E, "rail" to 0xFFF8F4EA, "railShade" to 0xFFCFC6B1, "trim" to 0xFFF8F4EA, "portrait" to 0xFF4E4438,
+            "organCase" to 0xFF5E4630, "pipe" to 0xFFD7DCE2, "pipeShade" to 0xFF9AA3AD, "seat" to 0xFFA98B5A, "seatDark" to 0xFF7A6340,
+            "wood" to 0xFFA9713F,
+        ),
+        "newyorkInt" to mapOf(
+            "hallDark" to 0xFF3A2A24, "ceil" to 0xFFF5F0E4, "ceilShade" to 0xFFDDD5C2, "tier" to 0xFFF3EEE2, "tierShade" to 0xFFDAD2BF,
+            "rail" to 0xFFE2B74E, "railLit" to 0xFFF3D98C, "box" to 0xFF4A2A24, "seat" to 0xFFA8323F, "seatDark" to 0xFF5A1E2A,
+            "wood" to 0xFFA9713F,
+        ),
+        "buenosairesInt" to mapOf(
+            "hallDark" to 0xFF3F1A22, "ceil" to 0xFFE6D6B8, "ceilShade" to 0xFFC6B48F, "tier" to 0xFFE9DDC4, "tierShade" to 0xFFCBBE9F,
+            "rail" to 0xFFE2B74E, "railLit" to 0xFFF3D98C, "box" to 0xFF4A1E2A, "seat" to 0xFFB0485A, "seatDark" to 0xFF6A2636,
+            "curtain" to 0xFF8A2A3A, "wood" to 0xFFA9713F,
+        ),
+        "tokyoInt" to mapOf(
+            "hallDark" to 0xFF2A2018, "ceil" to 0xFFE8D3AE, "ceilShade" to 0xFFC5AC80, "ceilLit" to 0xFFF4E3C2, "terrace" to 0xFFB98A54,
+            "terraceShade" to 0xFF976C3C, "seat" to 0xFF7A2E36, "stage" to 0xFFE2C08A, "stageLit" to 0xFFF5DDB0, "stageShade" to 0xFF8E6A3C,
+            "organCase" to 0xFF8E6A3C, "pipe" to 0xFFE1E5EA, "pipeShade" to 0xFF9AA3AD,
+        ),
+        "sydneyInt" to mapOf(
+            "ceil" to 0xFFEAD9B8, "ceilShade" to 0xFFC9B48A, "back" to 0xFFD9C49A, "wallL" to 0xFFE2CFA6, "wallR" to 0xFFBFA97C,
+            "floor" to 0xFF3A2A36, "rail" to 0xFFF2E6CC, "railShade" to 0xFFC9B48A, "organCase" to 0xFFA98458, "pipe" to 0xFFE1E5EA,
+            "pipeShade" to 0xFF9AA3AD, "petal" to 0xFFC2307E, "petalLit" to 0xFFE66AAE, "seat" to 0xFF8C2A6E, "seatDark" to 0xFF5A1A48,
+            "wood" to 0xFFC99A5E,
+        ),
     )
 }

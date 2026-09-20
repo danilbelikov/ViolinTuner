@@ -104,7 +104,9 @@ class JourneyTest {
         assertEquals(listOf(JourneyExtra.SECOND_TIME, JourneyExtra.SOUVENIR), JourneyRules.offers(stop("home"), progress))
         // a stop that has only its sketch yet: nothing to see by day
         assertEquals(listOf(JourneyExtra.SOUVENIR), JourneyRules.offers(JourneyStop("sketch", 100, Transport.TRAIN, 0f, 0f, available = true), progress))
-        assertEquals(listOf(JourneyExtra.SECOND_TIME, JourneyExtra.SOUVENIR), JourneyRules.offers(stop("salzburg"), progress.copy(arrivals = progress.arrivals + Arrival("salzburg", 4))))
+        // every hall can be seen from inside; home is a room already — it has no second view
+        assertEquals(JourneyExtra.entries.toList(), JourneyRules.offers(stop("salzburg"), progress.copy(arrivals = progress.arrivals + Arrival("salzburg", 4))))
+        assertTrue(JourneyRoute.stops.filter { stop -> stop.views.none { it.inside && it == stop.views.first() } }.all { it.hasSecondView })
         assertEquals(emptyList<JourneyExtra>(), JourneyRules.offers(stop("prague"), progress))
         assertTrue(JourneyRules.canBuy(stop("vienna"), JourneyExtra.SECOND_VIEW, progress, config))
         assertFalse(JourneyRules.canBuy(stop("vienna"), JourneyExtra.SECOND_VIEW, progress.copy(spent = 700), config))

@@ -189,3 +189,111 @@ const EXTRA_SCENES = {
   buenosaires: { fn: BUENOSAIRES, loc: 'buenosaires' },
   tokyo: { fn: TOKYO, loc: 'tokyo' },
 };
+
+// ---------------------------------------------------------------------------------------------
+// Second views: the halls from inside. Four builders, one grammar — a single vanishing point,
+// everything that repeats placed by rule — and each hall its own sign: an organ, columns, portraits,
+// petals, clouds, a painted ceiling. A room has no air and no time of day: `aerial: false`, `eve` unused.
+
+// A shoebox hall seen from the stalls towards the stage (the grammar of the handoff's VIENNA_INT).
+const HALL = (o = {}) => {
+  const l = [];
+  l.push(L('ceil', PG([[0, 0], [412, 0], [262, 78], [150, 78]])), ...(o.ribs ? rep(9, i => { const x = 20 + i * 46.5; return L('ceilShade', PG([[x, 0], [x + 10, 0], [206 + (x + 5 - 206) * .27 + 1.4, 78], [206 + (x + 5 - 206) * .27 - 1.4, 78]])); }) : rep(3, i => L('ceilShade', PG([[40 + i * 100, 6], [130 + i * 100, 6], [244 - (2 - i) * 6, 74], [166 + i * 28, 74]]), 1, { op: .5 }))));
+  l.push(L('back', R(150, 78, 112, 90)), L('wallL', PG([[0, 0], [150, 78], [150, 168], [0, 260]])), L('wallR', PG([[412, 0], [262, 78], [262, 168], [412, 260]])), L('floor', PG([[0, 260], [150, 168], [262, 168], [412, 260]])));
+  // what stands along the side walls, by rule: t 0 near … 1 at the stage
+  const along = (n, fn) => rep(n, k => { const t = (k + .5) / n, x0 = 8 + 134 * t, sc = 1 - .52 * t, top = 78 * (x0 / 150), bottom = 260 - 92 * (x0 / 150); return [false, true].flatMap(right => fn(right ? 412 - x0 : x0, top, bottom, sc, right)); });
+  if (o.windows) l.push(...along(5, (x, top, bottom, sc) => [L('chandelier', ARCH(x - 5 * sc, top + 14 * sc, 10 * sc, 34 * sc), 1, { op: .85 })]));
+  if (o.medallions) l.push(...along(5, (x, top, bottom, sc) => [L('trim', E(x, top + 30 * sc, 7 * sc, 9.5 * sc)), L('portrait', E(x, top + 30 * sc, 5.2 * sc, 7.6 * sc)), L('trim', C(x, top + 27 * sc, 1.8 * sc), 1, { op: .7 })]));
+  l.push(L('rail', PG([[0, 150], [150, 128], [150, 135], [0, 166]])), L('railShade', PG([[412, 150], [262, 128], [262, 135], [412, 166]])), ...(o.gallery ? [L('rail', PG([[0, 56], [150, 103], [150, 108], [0, 72]])), L('railShade', PG([[412, 56], [262, 103], [262, 108], [412, 72]]))] : []));
+  if (o.columns) l.push(...along(6, (x, top, bottom, sc, right) => [L('columnShade', R(x - 4 * sc, top, 8 * sc, bottom - top)), L(right ? 'columnShade' : 'column', R(x - 3 * sc, top, 6 * sc, bottom - top)), L('column', R(x - 3 * sc, top, 2.4 * sc, bottom - top)), L('column', R(x - 5.5 * sc, top, 11 * sc, 4 * sc)), L('column', R(x - 5.5 * sc, bottom - 5 * sc, 11 * sc, 5 * sc))]));
+  // the organ on the back wall
+  if (o.organ) l.push(L('organCase', ARCH(160, 82, 92, 84)), L('organCase', R(156, 150, 100, 18)), ...rep(11, i => { const hh = 58 - Math.abs(i - 5) * (o.organ === 'crown' ? -4 : 5) - (o.organ === 'crown' ? 20 : 0); return [L('pipe', R(165 + i * 7.6, 148 - hh, 5, hh)), L('pipeShade', R(168.4 + i * 7.6, 148 - hh, 1.6, hh)), L('organCase', R(165 + i * 7.6, 140, 5, 2))]; }));
+  if (o.petals) l.push(...rep(7, i => { const x = 128 + i * 26, y = 58 - Math.abs(i - 3) * 5; return [L('pipeShade', R(x - .4, y - 40, .8, 40), 1, { op: .5 }), L('petal', E(x, y, 12, 3.6)), L('petalLit', E(x - 2, y - 1, 7, 1.6))]; }));
+  // chandeliers, by the handoff's rule
+  l.push(...rep(o.chandeliers ?? 4, k => { const n = (o.chandeliers ?? 4) - 1, t = n ? k / n : 0, y = 26 + 50 * t, dx = 112 - 72 * t, r = (o.crystal ? 11 : 8) - 5 * t; return [-1, 1].flatMap(sg => [L('railShade', R(206 + sg * dx - .6, 0, 1.2, y - r)), L('rgba(255,196,110,.5)', C(206 + sg * dx, y, r * 3.2), 1, { glow: true }), L('chandelier', o.crystal ? PG([[206 + sg * dx - r, y - r * .4], [206 + sg * dx + r, y - r * .4], [206 + sg * dx, y + r * 1.3]]) : C(206 + sg * dx, y, r)), L('chandelier', E(206 + sg * dx, y - r * .4, r, r * .45)), L('rgba(255,255,255,.8)', C(206 + sg * dx - r * .3, y - r * .4, r * .3))]); }));
+  // the stage: a piano and a lamp, as in Vienna
+  l.push(L('wood', PG([[150, 168], [262, 168], [262, 176], [150, 176]])), L('hero', PG([[190, 168], [222, 168], [222, 152], [212, 148], [190, 152]])), L('hero', R(196, 168, 2, 6)), L('hero', R(216, 168, 2, 6)), L('lamp', R(233, 140, 1.4, 28)), L('lamp', PG([[228, 142], [240, 142], [238, 132], [230, 132]])));
+  l.push(...rep(8, k => { const t = k / 7, y = 252 - 76 * t, hw = 198 - 84 * t, hh = 9 * (1 - .5 * t), n = Math.round(2 * hw / (16 * (1 - .4 * t))); return [L('seat', R(206 - hw, y - hh, 2 * hw, hh)), L('seatDark', R(206 - hw, y - hh, 2 * hw, hh * .3)), ...rep(n, i => L('seatDark', R(206 - hw + i * (2 * hw / n), y - hh, 1.2, hh))), ...(o.aisle ? [L('floor', PG([[206 - 10 * (1 - .55 * t), y - hh], [206 + 10 * (1 - .55 * t), y - hh], [206 + 10 * (1 - .55 * t), y], [206 - 10 * (1 - .55 * t), y]]))] : [])]; }));
+  return l;
+};
+
+// A horseshoe of tiers seen from the stage (the grammar of the handoff's MILAN).
+const HORSESHOE = (o = {}) => {
+  const tiers = o.tiers ?? 5;
+  const l = [L('hallDark', R(0, 0, 412, 260))];
+  l.push(L('ceil', C(206, 14, 150)), L('ceilShade', C(206, 14, 120)));
+  if (o.painted) l.push(...rep(o.painted.length, i => { const a0 = Math.PI * (i / o.painted.length), a1 = Math.PI * ((i + 1) / o.painted.length); return L(o.painted[i], `M206 14L${206 + 96 * Math.cos(a0)} ${14 + 96 * Math.sin(a0)}A96 96 0 0 1 ${206 + 96 * Math.cos(a1)} ${14 + 96 * Math.sin(a1)}Z`, 1, { op: .85 }); }), L('rail', `M110 14a96 96 0 0 0 192 0`, 1, { stroke: 'rail', sw: 2.4, fillNone: true }), L('ceil', C(206, 14, 34)));
+  else l.push(L('rail', C(206, 14, 92), 1, { op: .5 }));
+  if (o.mushrooms) l.push(...rep(9, i => { const x = 96 + i * 27.5, y = 74 + ((i * 7) % 3) * 9 - Math.abs(i - 4) * 3; return [L('ceilShade', R(x - .4, 0, .8, y), 1, { op: .6 }), L('mushroomShade', E(x, y + 1.6, 13, 4)), L('mushroom', E(x, y, 13, 3.6))]; }));
+  else l.push(L('rgba(255,196,110,.55)', C(206, 40, 64), 1, { glow: true }), L('railLit', R(205, 0, 2, 22)), L('chandelier', E(206, 40, 24, 15)), L('railLit', E(206, 30, 14, 6)), ...rep(9, i => L('chandelier', C(206 + Math.cos(Math.PI * (1 + i / 8)) * 30, 52 + Math.sin(Math.PI * (i / 8)) * 8, 1.8))));
+  rep(tiers, k => { const rx = 280 - (80 / tiers) * k, ry = 250 - (170 / tiers) * k; l.push(L(k % 2 ? 'tierShade' : 'tier', E(206, 330, rx, ry)), L('rail', `M${206 - rx} 330a${rx} ${ry} 0 0 1 ${2 * rx} 0`, 1, { stroke: 'rail', sw: 2.2, fillNone: true })); rep(o.open ? 25 : 11, j => { const th = Math.PI * (1.08 + .84 * j / (o.open ? 24 : 10)), px = 206 + rx * Math.cos(th), py = 330 + ry * Math.sin(th); if (o.open) l.push(...rep(2, m => L('seat', R(px - 5 + m * 5.4, py + 7, 4.2, 7)))); else l.push(L('box', RR(px - 9, py + 4, 18, 20, 3)), L('seat', R(px - 9, py + 18, 18, 6))); if (!o.open) l.push(L('railLit', R(px - 10, py + 24, 20, 1.4))); }); });
+  if (o.organ) l.push(L('organCase', R(176, 96, 60, 40)), ...rep(9, i => [L('pipe', R(180 + i * 6, 100 + Math.abs(i - 4) * 3, 4, 34 - Math.abs(i - 4) * 3)), L('pipeShade', R(182.8 + i * 6, 100 + Math.abs(i - 4) * 3, 1.2, 34 - Math.abs(i - 4) * 3))]));
+  l.push(L('hallDark', E(206, 330, 200, 112)), ...rep(5, k => { const t = k / 4, y = 254 - 30 * t, hw = 196 - 40 * t, hh = 6 - 2 * t, n = Math.round(hw / 6); return [L('seat', R(206 - hw, y - hh, 2 * hw, hh)), ...rep(n, i => L('seatDark', R(206 - hw + i * (2 * hw / n), y - hh, 1, hh)))]; }));
+  l.push(L('wood', R(0, 256, 412, 4), 2));
+  if (o.curtain !== false) l.push(L('curtain', PG([[0, 0], [46, 0], [30, 260], [0, 260]]), 2), L('curtain', PG([[412, 0], [366, 0], [382, 260], [412, 260]]), 2), ...rep(4, i => [L('seatDark', PG([[6 + i * 10, 0], [10 + i * 10, 0], [6 + i * 7, 260], [4 + i * 7, 260]]), 2, { op: .5 }), L('seatDark', PG([[406 - i * 10, 0], [402 - i * 10, 0], [406 - i * 7, 260], [408 - i * 7, 260]]), 2, { op: .5 })]));
+  else l.push(L('tier', PG([[0, 0], [26, 0], [18, 260], [0, 260]]), 2), L('tier', PG([[412, 0], [386, 0], [394, 260], [412, 260]]), 2), L('rail', R(18, 0, 2, 260), 2), L('rail', R(392, 0, 2, 260), 2));
+  return l;
+};
+
+// A «vineyard»: terraces of seats on every side of a stage in the middle, under a tent of a ceiling.
+const VINEYARD = (o = {}) => {
+  const l = [L('hallDark', R(0, 0, 412, 260))];
+  l.push(L('ceil', PG([[0, 0], [412, 0], [300, 66], [120, 66]])), L('ceilShade', PG([[0, 0], [120, 66], [0, 118]])), L('ceilLit', PG([[412, 0], [300, 66], [412, 118]])), L('ceilShade', PG([[120, 66], [300, 66], [330, 96], [90, 96]]), 1, { op: .55 }), ...rep(6, i => L('ceilShade', PG([[40 + i * 66, 0], [44 + i * 66, 0], [206 + (42 + i * 66 - 206) * .45 + 1, 66], [206 + (42 + i * 66 - 206) * .45 - 1, 66]]), 1, { op: .6 })));
+  l.push(...rep(10, i => { const x = 60 + i * 32.4, y = 20 + Math.abs(i - 4.5) * 3; return [L('rgba(255,196,110,.5)', C(x, y, 9), 1, { glow: true }), L('chandelier', C(x, y, 1.8))]; }));
+  if (o.organ === 'centre') l.push(L('organCase', R(168, 70, 76, 52)), ...rep(13, i => { const hh = 44 - Math.abs(i - 6) * 3.6; return [L('pipe', R(172 + i * 5.4, 118 - hh, 3.6, hh)), L('pipeShade', R(174.4 + i * 5.4, 118 - hh, 1.2, hh))]; }));
+  if (o.organ === 'side') l.push(L('organCase', R(292, 78, 58, 44)), ...rep(9, i => { const hh = 22 + i * 2.2; return [L('pipe', R(296 + i * 5.6, 118 - hh, 3.8, hh)), L('pipeShade', R(298.6 + i * 5.6, 118 - hh, 1.2, hh))]; }));
+  // terraces: rings round the stage, cut into blocks that stand at different heights
+  rep(4, q => { const r = 3 - q, rx = 70 + 52 * r, ry = 20 + 25 * r, cy = 184 + 5 * r; rep(8, b => { const a0 = Math.PI * 2 * (b / 8) + .2 * r, a1 = a0 + Math.PI * 2 / 8 - .07, lift = ((b * 5 + r * 3) % 4) * 2.5 - 3; const pt = (a, k) => [206 + rx * k * Math.cos(a), cy + lift + ry * k * Math.sin(a)]; const steps = 5, outer = rep(steps + 1, s => [pt(a0 + (a1 - a0) * s / steps, 1)]), inner = rep(steps + 1, s => [pt(a1 - (a1 - a0) * s / steps, .72)]); l.push(L((b + r) % 2 ? 'terrace' : 'terraceShade', PG([...outer, ...inner]))); rep(4, row => { const k = .76 + row * .065; rep(steps, s => { const [x, y] = pt(a0 + (a1 - a0) * (s + .5) / steps, k); l.push(L('seat', R(x - 2.2, y - 1.1, 4.4, 2.2))); }); }); }); });
+  l.push(L('stageShade', E(206, 188, 66, 21)), L('stage', E(206, 185, 64, 19)), L('stageLit', E(200, 182, 40, 11), 1, { op: .6 }), L('hero', PG([[192, 184], [220, 184], [220, 172], [211, 169], [192, 172]])), L('hero', R(197, 184, 1.8, 5)), L('hero', R(214, 184, 1.8, 5)), ...rep(7, i => L('hero', C(176 + i * 10, 194 - Math.abs(i - 3) * 1.4, 1.6))));
+  if (o.clouds) l.push(...rep(8, i => { const x = 122 + i * 24, y = 96 + ((i * 5) % 3) * 9 - Math.abs(i - 3.5) * 4; return [L('ceilLit', R(x - .3, 40, .6, y - 40), 1, { op: .5 }), L('cloudShade', E(x, y + 1.4, 12, 3.4)), L('cloud', E(x, y, 12, 3))]; }));
+  return l;
+};
+
+// A Gothic nave: a tunnel of pointed arches to one vanishing point, red ribs on white vaults,
+// coloured glass at the end, pews either side of the aisle.
+const NAVE = () => {
+  const V = [206, 124], l = [L('vaultShade', R(0, 0, 412, 260))];
+  const frame = s => { const hw = 214 * s, floorY = V[1] + 150 * s, spring = V[1] - 26 * s, apex = V[1] - 132 * s; return { hw, floorY, d: `M${206 - hw} ${floorY}V${spring}Q${206 - hw} ${apex + 40 * s} 206 ${apex}Q${206 + hw} ${apex + 40 * s} ${206 + hw} ${spring}V${floorY}Z` }; };
+  const scales = rep(7, k => [1.18 * Math.pow(.72, k)]);
+  scales.forEach((s, k) => { const f = frame(s); l.push(L(k % 2 ? 'vault' : 'vaultLit', f.d), L('rib', f.d, 1, { stroke: 'rib', sw: 3.2 * s + .6, fillNone: true })); if (k < 6) { const n = frame(scales[k + 1]); l.push(L('pier', R(206 - f.hw, V[1] - 26 * s, (f.hw - n.hw) * .34, f.floorY - V[1] + 26 * s)), L('pierShade', R(206 + f.hw - (f.hw - n.hw) * .34, V[1] - 26 * s, (f.hw - n.hw) * .34, f.floorY - V[1] + 26 * s))); } });
+  const end = frame(scales[6]);
+  l.push(L('vaultShade', end.d), L('rgba(255,196,110,.55)', C(206, 116, 30), 1, { glow: true }), ...[[-9, '#4C7FD0', '#D9574A'], [0, '#E2B74E', '#4C7FD0'], [9, '#D9574A', '#5FA36A']].flatMap(([dx, a, b]) => [L(a, ARCH(206 + dx - 3.4, 98, 6.8, 34)), L(b, R(206 + dx - 3.4, 112, 6.8, 8)), L('rib', R(206 + dx - .4, 98, .8, 34))]), L('wood', R(196, 136, 20, 8)), L('chandelier', R(204.4, 128, 3.2, 8)));
+  l.push(L('floor', PG([[0, 260], [206 - end.hw, end.floorY], [206 + end.hw, end.floorY], [412, 260]])), L('aisle', PG([[170, 260], [206 - end.hw * .22, end.floorY], [206 + end.hw * .22, end.floorY], [242, 260]])), ...rep(7, k => { const t = k / 6, y = 254 - (254 - end.floorY - 6) * t, sc = 1 - .8 * t, inner = 38 * sc + 3, outer = 176 * sc + 12; return [-1, 1].flatMap(sg => [L('woodShade', PG([[206 + sg * inner, y], [206 + sg * outer, y], [206 + sg * outer, y - 13 * sc], [206 + sg * inner, y - 13 * sc]])), L('wood', PG([[206 + sg * inner, y - 13 * sc], [206 + sg * outer, y - 13 * sc], [206 + sg * outer, y - 16 * sc], [206 + sg * inner, y - 16 * sc]]))]); }));
+  l.push(...rep(3, k => { const t = k / 2, y = 60 + 34 * t, r = 7 - 4 * t; return [L('pierShade', R(205.5, 0, 1, y), 1, { op: .5 }), L('rgba(255,196,110,.5)', C(206, y, r * 3), 1, { glow: true }), L('chandelier', E(206, y, r * 1.5, r * .5)), ...rep(5, i => L('chandelier', C(206 + (i - 2) * r * .7, y - r * .5, r * .22)))]; }));
+  return l;
+};
+
+const RED_HALL = { seat: '#8E2F3F', seatDark: '#5A1E2A', wood: '#A9713F' };
+const INT_LOCPAL = {
+  salzburgInt: { ...RED_HALL, ceil: '#F3EEE2', ceilShade: '#DDD5C2', back: '#E8E0CE', wallL: '#F0E9D9', wallR: '#CFC6B1', floor: '#5A1E2A', rail: '#E2B74E', railShade: '#B08A45', organCase: '#7A5B3A', pipe: '#E9C98D', pipeShade: '#B08A45' },
+  pragueInt: { ceil: '#EFE6D0', ceilShade: '#D8CCAE', back: '#C9B78F', wallL: '#E3D6B6', wallR: '#BBAA82', floor: '#2F3A55', rail: '#E2B74E', railShade: '#B08A45', column: '#F6F1E4', columnShade: '#CFC6B1', organCase: '#5E4630', pipe: '#D7DCE2', pipeShade: '#9AA3AD', seat: '#3E5A8A', seatDark: '#27395C', wood: '#A9713F' },
+  leipzigInt: { vault: '#EDE7DA', vaultLit: '#F7F3EA', vaultShade: '#CFC7B6', rib: '#A8503E', pier: '#F2ECDF', pierShade: '#BFB6A2', floor: '#8A7F72', aisle: '#B3A898', wood: '#6E4B2E', woodShade: '#4E341F' },
+  berlinInt: { hallDark: '#2B2622', ceil: '#E9DFC8', ceilShade: '#C7BA9C', ceilLit: '#F5EDDA', terrace: '#C9A15C', terraceShade: '#A9834A', seat: '#5E4A30', stage: '#D9B27A', stageLit: '#F0D6A6', stageShade: '#8E6E36', cloud: '#F7F2E6', cloudShade: '#BDB39C', organCase: '#8E6E36', pipe: '#D7DCE2', pipeShade: '#9AA3AD' },
+  amsterdamInt: { ...RED_HALL, ceil: '#F4EFE3', ceilShade: '#DED6C3', back: '#E6DDC9', wallL: '#EFE8D8', wallR: '#CCC3AE', floor: '#5A1E2A', rail: '#F8F4EA', railShade: '#CFC6B1', organCase: '#6B3F2A', pipe: '#E9C98D', pipeShade: '#B08A45' },
+  parisInt: { hallDark: '#4A1622', ceil: '#E9C98D', ceilShade: '#C9A15C', tier: '#B8863B', tierShade: '#9A6E2C', rail: '#E2B74E', railLit: '#F3D98C', box: '#3A1220', seat: '#9B2C3E', seatDark: '#5A1E2A', curtain: '#7A2030', wood: '#A9713F' },
+  londonInt: { hallDark: '#3A1820', ceil: '#C9CFD6', ceilShade: '#9FA8B2', tier: '#D9C7A6', tierShade: '#BCA780', rail: '#E2B74E', railLit: '#F3D98C', box: '#4A1E28', seat: '#A8323F', seatDark: '#5A1E2A', mushroom: '#F2EFE6', mushroomShade: '#9A9488', organCase: '#5E4630', pipe: '#D7DCE2', pipeShade: '#9AA3AD', wood: '#A9713F' },
+  spbInt: { ...RED_HALL, ceil: '#F7F4EC', ceilShade: '#E0DBCF', back: '#EDE8DC', wallL: '#F4F0E6', wallR: '#D2CCBE', floor: '#5A1E2A', rail: '#F8F4EA', railShade: '#CFC6B1', column: '#FFFFFF', columnShade: '#D2CCBE', organCase: '#6B4A30', pipe: '#D7DCE2', pipeShade: '#9AA3AD' },
+  moscowInt: { ceil: '#F3EEE0', ceilShade: '#DCD4C0', back: '#E4DAC2', wallL: '#EFE7D2', wallR: '#CBC1A8', floor: '#6E5A3E', rail: '#F8F4EA', railShade: '#CFC6B1', trim: '#F8F4EA', portrait: '#4E4438', organCase: '#5E4630', pipe: '#D7DCE2', pipeShade: '#9AA3AD', seat: '#A98B5A', seatDark: '#7A6340', wood: '#A9713F' },
+  newyorkInt: { hallDark: '#3A2A24', ceil: '#F5F0E4', ceilShade: '#DDD5C2', tier: '#F3EEE2', tierShade: '#DAD2BF', rail: '#E2B74E', railLit: '#F3D98C', box: '#4A2A24', seat: '#A8323F', seatDark: '#5A1E2A', wood: '#A9713F' },
+  buenosairesInt: { hallDark: '#3F1A22', ceil: '#E6D6B8', ceilShade: '#C6B48F', tier: '#E9DDC4', tierShade: '#CBBE9F', rail: '#E2B74E', railLit: '#F3D98C', box: '#4A1E2A', seat: '#B0485A', seatDark: '#6A2636', curtain: '#8A2A3A', wood: '#A9713F' },
+  tokyoInt: { hallDark: '#2A2018', ceil: '#E8D3AE', ceilShade: '#C5AC80', ceilLit: '#F4E3C2', terrace: '#B98A54', terraceShade: '#976C3C', seat: '#7A2E36', stage: '#E2C08A', stageLit: '#F5DDB0', stageShade: '#8E6A3C', organCase: '#8E6A3C', pipe: '#E1E5EA', pipeShade: '#9AA3AD' },
+  sydneyInt: { ceil: '#EAD9B8', ceilShade: '#C9B48A', back: '#D9C49A', wallL: '#E2CFA6', wallR: '#BFA97C', floor: '#3A2A36', rail: '#F2E6CC', railShade: '#C9B48A', organCase: '#A98458', pipe: '#E1E5EA', pipeShade: '#9AA3AD', petal: '#C2307E', petalLit: '#E66AAE', seat: '#8C2A6E', seatDark: '#5A1A48', wood: '#C99A5E' },
+};
+Object.assign(EXTRA_LOCPAL, INT_LOCPAL);
+
+const CHAGALL = ['#D9574A', '#E2B74E', '#5FA36A', '#4C7FD0', '#F2EFE6', '#D9574A', '#4C7FD0'];
+const SOLDI = ['#C9A27A', '#9DB3C9', '#D9B8A0', '#8FA9B8', '#C9A27A', '#B7C4CF'];
+const inside = (key, fn) => { EXTRA_SCENES[key] = { fn, loc: key, aerial: false }; };
+inside('salzburgInt', () => HALL({ organ: true, chandeliers: 3, gallery: true }));          // the Great Hall of the Mozarteum: white and gold, an organ
+inside('pragueInt', () => HALL({ organ: true, columns: true, chandeliers: 2 }));             // the Dvořák Hall: a colonnade round the hall
+inside('leipzigInt', () => NAVE());                                                          // St Thomas: the nave Bach worked in
+inside('berlinInt', () => VINEYARD({ clouds: true, organ: 'side' }));                        // the first vineyard, with its hanging «clouds»
+inside('amsterdamInt', () => HALL({ organ: 'crown', chandeliers: 4, gallery: true, aisle: true })); // the Grote Zaal: the great organ over the stage
+inside('parisInt', () => HORSESHOE({ tiers: 5, painted: CHAGALL }));                         // red and gold under Chagall's ceiling
+inside('londonInt', () => HORSESHOE({ tiers: 4, mushrooms: true, open: true, curtain: false }));  // the round hall from the stage, the acoustic «mushrooms» under the dome
+inside('spbInt', () => HALL({ columns: true, chandeliers: 4, crystal: true, organ: true })); // white columns and eight crystal chandeliers
+inside('moscowInt', () => HALL({ medallions: true, organ: true, chandeliers: 2, windows: false })); // portraits of composers along the walls
+inside('newyorkInt', () => HORSESHOE({ tiers: 4, open: true, curtain: false }));             // white and gold balconies, no curtain: a concert hall
+inside('buenosairesInt', () => HORSESHOE({ tiers: 6, painted: SOLDI }));                     // six tiers and Soldi's painted dome
+inside('tokyoInt', () => VINEYARD({ organ: 'centre' }));                                     // a vineyard of warm wood, the organ in the middle
+inside('sydneyInt', () => HALL({ ribs: true, petals: true, organ: true, chandeliers: 0 }));  // birch ribs, the magenta petals, the grand organ
