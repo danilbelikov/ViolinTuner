@@ -7,6 +7,7 @@ import com.example.violintuner.core.data.practice.PracticeEntity
 import com.example.violintuner.core.data.progress.TrophyDao
 import com.example.violintuner.core.data.progress.TrophyEntity
 import com.example.violintuner.core.data.repertoire.PieceEntity
+import com.example.violintuner.core.data.repertoire.PieceGroupEntity
 import com.example.violintuner.core.data.repertoire.RepertoireDao
 import com.example.violintuner.core.data.repertoire.SheetPageEntity
 import com.example.violintuner.core.data.session.SamplesEntity
@@ -26,9 +27,9 @@ import com.example.violintuner.core.data.sound.SoundSettingsEntity
 @Database(
     entities = [
         SessionEntity::class, SamplesEntity::class, PracticeEntity::class, TrophyEntity::class,
-        PieceEntity::class, SheetPageEntity::class, SoundSettingsEntity::class, SoundPresetEntity::class,
+        PieceEntity::class, PieceGroupEntity::class, SheetPageEntity::class, SoundSettingsEntity::class, SoundPresetEntity::class,
     ],
-    version = 7,
+    version = 8,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {

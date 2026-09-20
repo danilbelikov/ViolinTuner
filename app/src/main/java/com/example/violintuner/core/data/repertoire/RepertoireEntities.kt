@@ -1,5 +1,6 @@
 package com.example.violintuner.core.data.repertoire
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.ForeignKey
 import androidx.room.Index
@@ -24,6 +25,22 @@ data class PieceEntity(
     val updatedAtEpochMs: Long,
     /** No foreign key: a take that is gone simply leaves a mark nobody matches (spec 5.15). */
     val bestTakeId: Long? = null,
+    /** The built-in section, by the name of the enum; the default is what every piece older than sections gets (spec 3.22). */
+    @ColumnInfo(defaultValue = "PIECES") val section: String = "PIECES",
+    /** A section of the player's own; no foreign key — removing the group clears it in the same transaction. */
+    val groupId: Long? = null,
+    /** With [scaleOctaves] and the key columns — the scale; both null for anything that is not one. */
+    val scaleKind: String? = null,
+    val scaleOctaves: Int? = null,
+    val learnedAtEpochMs: Long? = null,
+)
+
+/** A section of the player's own making. The four built-in ones are not rows: their names are words of the interface. */
+@Entity(tableName = "piece_groups")
+data class PieceGroupEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    val createdAtEpochMs: Long,
 )
 
 /** One page of sheet music; goes with its piece through the cascade, its files are the repository's to remove. */

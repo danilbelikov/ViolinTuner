@@ -164,4 +164,46 @@ class RoomRepertoireRepositoryTest {
         repository.deleteOrphanFiles()
         assertEquals(Triple(setOf("a.jpg", "a-thumb.jpg"), 50_000L, config.orphanPhotoMinAgeMs), files.orphanCall)
     }
+
+    @Test
+    fun aScaleKeepsItsKindAndOctavesAndASectionOfOnesOwnGivesItsPiecesBackToTheMainOne() = runBlocking {
+        val spec = com.example.violintuner.core.domain.repertoire.scale.ScaleSpec(
+            Tonic.G, Accidental.SHARP, com.example.violintuner.core.domain.repertoire.scale.ScaleKind.HARMONIC_MINOR, 2,
+        )
+        val scaleId = repository.add(
+            PieceDraft(title = "gis-moll", key = spec.key, section = com.example.violintuner.core.domain.repertoire.PieceSection.SCALES, scale = spec), 1_000,
+        )
+        assertEquals(spec, repository.piece(scaleId)!!.scale)
+
+        val groupId = repository.addGroup("  Двойные ноты ", 2_000)
+        assertEquals("Двойные ноты", repository.groups.first().single().name)
+        val id = repository.add(minuet.copy(groupId = groupId), 3_000)
+        repository.renameGroup(groupId, "Терции")
+        assertEquals("Терции", repository.groups.first().single().name)
+
+        repository.deleteGroup(groupId)
+        assertEquals(emptyList<Any>(), repository.groups.first())
+        val moved = repository.piece(id)!!
+        assertEquals(null, moved.groupId)
+        assertEquals(com.example.violintuner.core.domain.repertoire.PieceSection.PIECES, moved.section)
+    }
+
+    @Test
+    fun theDayAPieceWasLearntIsSetOnceClearedOnTheWayBackAndSetAnew() = runBlocking {
+        val id = repository.add(minuet, 1_000)
+        assertEquals(null, repository.piece(id)!!.learnedAtEpochMs)
+
+        repository.setStatus(id, PieceStatus.IN_REPERTOIRE, 5_000)
+        assertEquals(5_000L, repository.piece(id)!!.learnedAtEpochMs)
+        repository.update(id, minuet.copy(status = PieceStatus.IN_REPERTOIRE, notes = "ещё"), 6_000)
+        assertEquals("an edit of a learnt piece keeps its day", 5_000L, repository.piece(id)!!.learnedAtEpochMs)
+
+        repository.setStatus(id, PieceStatus.LEARNING, 7_000)
+        assertEquals(null, repository.piece(id)!!.learnedAtEpochMs)
+        repository.update(id, minuet.copy(status = PieceStatus.IN_REPERTOIRE), 8_000)
+        assertEquals(8_000L, repository.piece(id)!!.learnedAtEpochMs)
+
+        val bornLearnt = repository.add(minuet.copy(title = "Старое", status = PieceStatus.IN_REPERTOIRE), 9_000)
+        assertEquals(9_000L, repository.piece(bornLearnt)!!.learnedAtEpochMs)
+    }
 }

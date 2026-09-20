@@ -36,7 +36,7 @@ class DatabaseMigrationTest {
      * with one row; [version3] adds the trophies of version 3 with one row; [version4] adds the
      * repertoire of version 4: a piece with a page, and the session becomes its take.
      */
-    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false) {
+    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false, version7: Boolean = false) {
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
@@ -109,7 +109,11 @@ class DatabaseMigrationTest {
                 db.execSQL("UPDATE sessions SET audioPath = 'take.m4a' WHERE id = 1")
             }
             if (version6) db.execSQL("ALTER TABLE `sessions` ADD COLUMN `videoPath` TEXT")
-            db.execSQL("PRAGMA user_version = ${if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
+            if (version7) {
+                db.execSQL("ALTER TABLE `pieces` ADD COLUMN `bestTakeId` INTEGER")
+                db.execSQL("INSERT INTO pieces (id, title, composer, status, notes, createdAtEpochMs, updatedAtEpochMs) VALUES (2, 'Концерт', '', 'IN_REPERTOIRE', '', 3, 777)")
+            }
+            db.execSQL("PRAGMA user_version = ${if (version7) 7 else if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
         }
     }
 
@@ -238,5 +242,21 @@ class DatabaseMigrationTest {
         assertEquals(1L, db.repertoireDao().piece(1)!!.bestTakeId)
         db.repertoireDao().setBestTake(1, null)
         assertEquals(null, db.repertoireDao().piece(1)!!.bestTakeId)
+    }
+
+    @Test
+    fun everyPieceLandsInTheMainSectionAndTheLearntOnesGetTheirDay() = runBlocking {
+        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true, version7 = true)
+        val db = openMigrated()
+
+        val minuet = db.repertoireDao().piece(1)!!
+        assertEquals("PIECES", minuet.section)
+        assertEquals(null, minuet.groupId)
+        assertEquals(null, minuet.scaleKind)
+        assertEquals(null, minuet.learnedAtEpochMs)
+        assertEquals("the day of the last edit stands in for the day it was learnt", 777L, db.repertoireDao().piece(2)!!.learnedAtEpochMs)
+        assertEquals(1L, db.sessionDao().observeAll().first().single().pieceId)
+        assertEquals("a.jpg", db.repertoireDao().pagesOf(1).single().fileName)
+        assertEquals(emptyList<Any>(), db.repertoireDao().observeGroups().first())
     }
 }

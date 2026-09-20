@@ -86,6 +86,26 @@ object DatabaseMigrations {
         }
     }
 
+    /**
+     * Sections of the repertoire, scales and the day a piece was learnt (spec 3.22). Columns are
+     * added, nothing is rebuilt: every piece there is lands in «Произведения», and those already
+     * «В репертуаре» take the day of their last edit as the day they were learnt (spec 5.16).
+     */
+    val MIGRATION_7_8 = object : Migration(7, 8) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("ALTER TABLE `pieces` ADD COLUMN `section` TEXT NOT NULL DEFAULT 'PIECES'")
+            db.execSQL("ALTER TABLE `pieces` ADD COLUMN `groupId` INTEGER")
+            db.execSQL("ALTER TABLE `pieces` ADD COLUMN `scaleKind` TEXT")
+            db.execSQL("ALTER TABLE `pieces` ADD COLUMN `scaleOctaves` INTEGER")
+            db.execSQL("ALTER TABLE `pieces` ADD COLUMN `learnedAtEpochMs` INTEGER")
+            db.execSQL("UPDATE `pieces` SET `learnedAtEpochMs` = `updatedAtEpochMs` WHERE `status` = 'IN_REPERTOIRE'")
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `piece_groups` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, " +
+                    "`createdAtEpochMs` INTEGER NOT NULL)",
+            )
+        }
+    }
+
     /** The columns of `SoundColumns`, as Room declares them: both sound tables embed the same set. Internal for the migration test, which lays out a version 5 file by hand. */
     internal const val SOUND_COLUMNS =
         "`eqEnabled` INTEGER NOT NULL, `lowCutEnabled` INTEGER NOT NULL, `lowCutHz` REAL NOT NULL, `lowHz` REAL NOT NULL, " +
@@ -97,5 +117,5 @@ object DatabaseMigrations {
             "`reverbPreDelayMs` REAL NOT NULL, `reverbBrightness` REAL NOT NULL, `reverbMix` REAL NOT NULL, " +
             "`outputEnabled` INTEGER NOT NULL, `outputGainDb` REAL NOT NULL"
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7)
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8)
 }

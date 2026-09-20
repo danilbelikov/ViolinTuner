@@ -5,6 +5,10 @@ import com.example.violintuner.core.domain.repertoire.KeyMode
 import com.example.violintuner.core.domain.repertoire.MusicalKey
 import com.example.violintuner.core.domain.repertoire.Piece
 import com.example.violintuner.core.domain.repertoire.PieceDraft
+import com.example.violintuner.core.domain.repertoire.PieceGroup
+import com.example.violintuner.core.domain.repertoire.PieceSection
+import com.example.violintuner.core.domain.repertoire.scale.ScaleKind
+import com.example.violintuner.core.domain.repertoire.scale.ScaleSpec
 import com.example.violintuner.core.domain.repertoire.PieceRules
 import com.example.violintuner.core.domain.repertoire.PieceStatus
 import com.example.violintuner.core.domain.repertoire.RepertoireConfig
@@ -24,6 +28,9 @@ class RoomRepertoireRepository @Inject constructor(
 ) : RepertoireRepository {
     override val pieces: Flow<List<Piece>> = dao.observePieces().map { rows -> rows.map(RepertoireMapper::toPiece) }
 
+    override val groups: Flow<List<PieceGroup>> =
+        dao.observeGroups().map { rows -> rows.map { PieceGroup(it.id, it.name, it.createdAtEpochMs) } }
+
     override val pages: Flow<List<SheetPage>> = dao.observePages().map { rows -> rows.map(RepertoireMapper::toPage) }
 
     override suspend fun piece(id: Long): Piece? = dao.piece(id)?.let(RepertoireMapper::toPiece)
@@ -35,14 +42,22 @@ class RoomRepertoireRepository @Inject constructor(
 
     override suspend fun update(id: Long, draft: PieceDraft, nowEpochMs: Long) {
         val clean = requireNotNull(PieceRules.clean(draft, config)) { "a piece needs a title" }
-        dao.updatePiece(
-            id = id, title = clean.title, composer = clean.composer,
-            keyTonic = clean.key?.tonic?.name, keyAccidental = clean.key?.accidental?.name, keyMode = clean.key?.mode?.name,
-            tempoBpm = clean.tempoBpm, status = clean.status.name, notes = clean.notes, now = nowEpochMs,
-        )
+        dao.updatePiece(RepertoireMapper.toEntity(clean, createdAt = nowEpochMs).copy(id = id), LEARNED, nowEpochMs)
     }
 
-    override suspend fun setStatus(id: Long, status: PieceStatus, nowEpochMs: Long) = dao.setStatus(id, status.name, nowEpochMs)
+    override suspend fun setStatus(id: Long, status: PieceStatus, nowEpochMs: Long) = dao.setStatus(id, status.name, LEARNED, nowEpochMs)
+
+    override suspend fun addGroup(name: String, nowEpochMs: Long): Long {
+        val clean = requireNotNull(PieceRules.cleanGroupName(name, config)) { "a section needs a name" }
+        return dao.insertGroup(PieceGroupEntity(name = clean, createdAtEpochMs = nowEpochMs))
+    }
+
+    override suspend fun renameGroup(id: Long, name: String) {
+        val clean = requireNotNull(PieceRules.cleanGroupName(name, config)) { "a section needs a name" }
+        dao.renameGroup(id, clean)
+    }
+
+    override suspend fun deleteGroup(id: Long) = dao.deleteGroup(id, PieceSection.PIECES.name)
 
     override suspend fun setBestTake(id: Long, sessionId: Long?) = dao.setBestTake(id, sessionId)
 
@@ -71,6 +86,8 @@ class RoomRepertoireRepository @Inject constructor(
     )
 }
 
+private val LEARNED = PieceStatus.IN_REPERTOIRE.name
+
 internal object RepertoireMapper {
     fun toEntity(draft: PieceDraft, createdAt: Long) = PieceEntity(
         title = draft.title,
@@ -83,6 +100,12 @@ internal object RepertoireMapper {
         notes = draft.notes,
         createdAtEpochMs = createdAt,
         updatedAtEpochMs = createdAt,
+        section = draft.section.name,
+        groupId = draft.groupId,
+        scaleKind = draft.scale?.kind?.name,
+        scaleOctaves = draft.scale?.octaves,
+        // a piece may be born learnt: an old warhorse added to the list
+        learnedAtEpochMs = createdAt.takeIf { draft.status == PieceStatus.IN_REPERTOIRE },
     )
 
     fun toPiece(entity: PieceEntity) = Piece(
@@ -97,7 +120,18 @@ internal object RepertoireMapper {
         createdAtEpochMs = entity.createdAtEpochMs,
         updatedAtEpochMs = entity.updatedAtEpochMs,
         bestTakeId = entity.bestTakeId,
+        section = PieceSection.entries.firstOrNull { it.name == entity.section } ?: PieceSection.PIECES,
+        groupId = entity.groupId,
+        scale = scaleOf(entity),
+        learnedAtEpochMs = entity.learnedAtEpochMs,
     )
+
+    /** A scale is its key, its kind and its octaves — all of them, or it is not a scale. */
+    private fun scaleOf(entity: PieceEntity): ScaleSpec? {
+        val key = keyOf(entity) ?: return null
+        val kind = ScaleKind.entries.firstOrNull { it.name == entity.scaleKind } ?: return null
+        return ScaleSpec(key.tonic, key.accidental, kind, entity.scaleOctaves ?: return null)
+    }
 
     fun toPage(entity: SheetPageEntity) = SheetPage(entity.id, entity.pieceId, entity.position, entity.fileName, entity.thumbFileName)
 
