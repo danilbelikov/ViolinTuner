@@ -143,7 +143,8 @@ object ScenePalette {
         val base = literal ?: token(fill, scene.location, mode) ?: return null
         // only opaque colours take the air: shadows and glows are already air
         val opaque = base ushr ALPHA_SHIFT == 0xFFL
-        if (!scene.aerial || depth >= 2 || !opaque || (literal != null && fill.startsWith("rgba"))) return base
+        // the flat sky above the frame continues the gradient, whose top is the pure colour: air is not mixed into the sky itself
+        if (!scene.aerial || depth >= 2 || !opaque || fill == "sky" || (literal != null && fill.startsWith("rgba"))) return base
         return mix(base, token("skyLow", scene.location, mode) ?: base, AERIAL[depth])
     }
 

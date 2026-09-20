@@ -30,6 +30,7 @@ class SceneMotionTest {
         val alphas = (0..400).map { SceneMotion.alpha(window, index = 7, SceneMode.EVENING, it / 10f) }
         assertTrue(alphas.all { it in (1f - SceneMotion.WINDOW_DIP - 0.001f)..1.001f })
         assertTrue(alphas.max() - alphas.min() > SceneMotion.WINDOW_DIP * 0.9f)
+        assertTrue(alphas.min() > 0.5f)
         // neighbours do not blink together
         assertTrue((0..40).any { SceneMotion.alpha(window, 7, SceneMode.EVENING, it / 2f) != SceneMotion.alpha(window, 8, SceneMode.EVENING, it / 2f) })
         assertEquals(1f, SceneMotion.alpha(window, 7, SceneMode.DAY, 3f), 0f)
@@ -82,7 +83,54 @@ class SceneMotionTest {
 
     @Test
     fun theZoomStaysWithinItsLimits() {
-        assertEquals(SceneCamera.MAX_ZOOM, SceneCamera.zoom(2f, 3f), 0f)
-        assertEquals(SceneCamera.MIN_ZOOM, SceneCamera.zoom(1.2f, 0.1f), 0f)
+        assertEquals(SceneCamera.MAX_ZOOM, SceneCamera.zoom(2f, 3f, 1080f, 2340f), 0f)
+        // upright the way out ends where the whole card is seen by its width
+        val whole = SceneCamera.wholeZoom(1080f, 2340f)
+        assertEquals((1080f / SceneGrid.WIDTH) / (2340f / SceneGrid.HEIGHT), whole, 0.0001f)
+        assertEquals(whole, SceneCamera.zoom(1.2f, 0.01f, 1080f, 2340f), 0f)
+        // on its side the card already fits: there is no further out than covering
+        assertEquals(1f, SceneCamera.wholeZoom(2340f, 1080f), 0f)
+        assertEquals(1f, SceneCamera.zoom(1.2f, 0.01f, 2340f, 1080f), 0f)
+    }
+
+    @Test
+    fun aDoubleTapWalksRound_coveringCloserWholeCovering() {
+        val w = 1080f
+        val h = 2340f
+        val closer = SceneCamera.nextZoom(1f, w, h)
+        assertEquals(SceneCamera.DOUBLE_TAP_ZOOM, closer, 0f)
+        val whole = SceneCamera.nextZoom(closer, w, h)
+        assertEquals(SceneCamera.wholeZoom(w, h), whole, 0f)
+        assertEquals(1f, SceneCamera.nextZoom(whole, w, h), 0f)
+        // on its side there is no whole to go to: closer and back
+        assertEquals(1f, SceneCamera.nextZoom(2f, h, w), 0f)
+    }
+
+    @Test
+    fun theWholeCardStandsOnTheBottomUnderItsSky_aRoomIsCentred() {
+        val w = 1080f
+        val h = 2340f
+        val whole = SceneCamera.wholeZoom(w, h)
+        val tall = SceneGrid.HEIGHT * SceneCamera.cover(w, h) * whole
+        assertEquals(h - tall, SceneCamera.top(whole, w, h, outdoors = true), 0.01f)
+        assertEquals((h - tall) / 2, SceneCamera.top(whole, w, h, outdoors = false), 0.01f)
+        // covering, both stand the same: nothing jumps on the way through 1×
+        assertEquals(SceneCamera.top(1f, w, h, outdoors = false), SceneCamera.top(1f, w, h, outdoors = true), 0.01f)
+        // and the whole card cannot be dragged anywhere
+        val (x, y) = SceneCamera.clamp(500f, 500f, whole, w, h)
+        assertEquals(0f, x, 0f)
+        assertEquals(0f, y, 0f)
+    }
+
+    @Test
+    fun theSkyIsTheSameSkyEveryTime_starsTwinkleCloudsSail() {
+        assertEquals(SceneMotion.star(5, 0f).x, SceneMotion.star(5, 40f).x, 0f)
+        assertEquals(SceneMotion.star(5, 0f).y, SceneMotion.star(5, 40f).y, 0f)
+        val alphas = (0..100).map { SceneMotion.star(5, it / 10f).alpha }
+        assertTrue(alphas.all { it in 0f..1f })
+        assertTrue(alphas.max() > alphas.min())
+        assertTrue((0 until SceneMotion.STARS).map { SceneMotion.star(it, 0f).x.toInt() }.toSet().size > SceneMotion.STARS / 2)
+        assertTrue(SceneMotion.cloud(1, 3f).x != SceneMotion.cloud(1, 0f).x)
+        assertEquals(SceneMotion.cloud(1, 0f).y, SceneMotion.cloud(1, 30f).y, 0f)
     }
 }

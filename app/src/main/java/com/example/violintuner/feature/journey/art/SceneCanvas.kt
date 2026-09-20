@@ -100,7 +100,8 @@ fun Postcard(
         val (zoom, panX, panY) = camera?.invoke() ?: Triple(1f, 0f, 0f)
         val k = SceneCamera.cover(size.width, size.height) * zoom
         val t = seconds?.value
-        translate((size.width - SceneGrid.WIDTH * k) / 2, (size.height - SceneGrid.HEIGHT * k) / 2 + panY) {
+        val top = SceneCamera.top(zoom, size.width, size.height, outdoors = prepared?.scene?.aerial ?: true)
+        translate((size.width - SceneGrid.WIDTH * k) / 2, top + panY) {
             when {
                 // the planes are shifted one by one — that is the parallax — in pixels, then scaled
                 prepared != null -> drawScene(prepared, k, panX, t)
@@ -134,6 +135,10 @@ private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, 
                 drawPath(path, Color(stroke), alpha = alpha, style = Stroke(layer.strokeWidth, cap = StrokeCap.Round))
             }
         }
+        // the sky's own life goes right over the sky, under everything else
+        if (layer.fill == SceneLayer.SKY && seconds != null && scene.aerial) {
+            translate(SceneCamera.shift(panX, 0), 0f) { scale(k, k, pivot = Offset.Zero) { drawSkyLife(prepared.mode, seconds) } }
+        }
         translate(SceneCamera.shift(panX, layer.depth) + drift * k, 0f) {
             scale(k, k, pivot = Offset.Zero) {
                 if (layer.tx != 0f || layer.ty != 0f || layer.scale != 1f) {
@@ -142,6 +147,24 @@ private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, 
                     draw()
                 }
             }
+        }
+    }
+}
+
+private fun DrawScope.drawSkyLife(mode: SceneMode, seconds: Float) {
+    if (mode == SceneMode.EVENING) {
+        repeat(SceneMotion.STARS) { index ->
+            val star = SceneMotion.star(index, seconds)
+            drawCircle(Color.White, radius = star.radius, center = Offset(star.x, star.y), alpha = star.alpha)
+        }
+    } else {
+        repeat(SceneMotion.CLOUDS) { index ->
+            val cloud = SceneMotion.cloud(index, seconds)
+            val h = cloud.width * 0.22f
+            // three ovals on a flat bottom
+            drawOval(Color.White, topLeft = Offset(cloud.x - cloud.width / 2, cloud.y - h / 2), size = androidx.compose.ui.geometry.Size(cloud.width, h), alpha = 0.75f)
+            drawOval(Color.White, topLeft = Offset(cloud.x - cloud.width * 0.28f, cloud.y - h * 1.15f), size = androidx.compose.ui.geometry.Size(cloud.width * 0.42f, h * 1.5f), alpha = 0.75f)
+            drawOval(Color.White, topLeft = Offset(cloud.x + cloud.width * 0.02f, cloud.y - h * 0.9f), size = androidx.compose.ui.geometry.Size(cloud.width * 0.34f, h * 1.2f), alpha = 0.75f)
         }
     }
 }

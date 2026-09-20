@@ -60,6 +60,7 @@ import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.motion.LocalReduceMotion
 import com.example.violintuner.feature.journey.art.Postcard
+import com.example.violintuner.feature.journey.art.rememberSceneSeconds
 import java.time.ZoneId
 
 private val TopBarHeight = 56.dp
@@ -150,7 +151,7 @@ private fun Place(state: JourneyState, postcardHeight: Dp, onIntent: (JourneyInt
         Modifier.fillMaxWidth().height(postcardHeight).clip(PostcardShape)
             .clickable(onClickLabel = city, role = Role.Button) { onIntent(JourneyIntent.StopClicked(state.current.id)) },
     ) {
-        Postcard(state.current, description = stringResource(R.string.journey_card_description, city), modifier = Modifier.fillMaxSize())
+        Postcard(state.current, description = stringResource(R.string.journey_card_description, city), modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds())
         Text(
             text = if (state.currentIndex == 0) stringResource(R.string.journey_stop_home, state.totalStops) else stringResource(R.string.journey_stop_of, state.currentIndex, state.totalStops),
             modifier = Modifier.align(Alignment.TopStart).padding(12.dp).clip(CircleShape).background(colors.surface.copy(alpha = 0.72f)).padding(horizontal = 10.dp, vertical = 4.dp),
@@ -243,7 +244,7 @@ private fun IntroContent(onIntent: (JourneyIntent) -> Unit) {
             modifier = Modifier.widthIn(max = MaxContentWidth).fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Postcard(JourneyRoute.stops.first(), description = cityOf(0), modifier = Modifier.fillMaxWidth().height(PostcardHeight).clip(PostcardShape))
+            Postcard(JourneyRoute.stops.first(), description = cityOf(0), modifier = Modifier.fillMaxWidth().height(PostcardHeight).clip(PostcardShape), seconds = rememberSceneSeconds())
             Text(stringResource(R.string.journey_intro_title), color = colors.onSurface, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
             Text(stringResource(R.string.journey_intro_text), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge)
             Text(stringResource(R.string.journey_intro_first, taktsInWords(first.price.toLong())), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
@@ -289,7 +290,7 @@ private fun ArrivalContent(arrival: JourneyPhase.Arrival, onIntent: (JourneyInte
     ) {
         val city = cityOf(arrival.index)
         Postcard(
-            arrival.stop, description = stringResource(R.string.journey_card_description, city),
+            arrival.stop, description = stringResource(R.string.journey_card_description, city), seconds = rememberSceneSeconds(),
             modifier = Modifier.widthIn(max = MaxContentWidth).fillMaxWidth().height(PostcardHeight).graphicsLayer { alpha = card.value }.clip(PostcardShape),
         )
         Column(Modifier.widthIn(max = MaxContentWidth).graphicsLayer { alpha = text.value }, horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {

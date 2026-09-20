@@ -29,6 +29,7 @@ import com.example.violintuner.R
 import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.feature.journey.art.Postcard
+import com.example.violintuner.feature.journey.art.rememberSceneSeconds
 
 private val Shape = RoundedCornerShape(20.dp)
 
@@ -44,7 +45,7 @@ fun JourneyWindowCard(window: JourneyWindow, compact: Boolean, onClick: () -> Un
     val city = cityOf(index)
     Column(modifier.fillMaxWidth().clip(Shape).background(colors.surfaceContainer).clickable(onClickLabel = stringResource(R.string.journey_title), role = Role.Button, onClick = onClick)) {
         Box(Modifier.fillMaxWidth().height(if (compact) 96.dp else 160.dp)) {
-            Postcard(window.current, description = stringResource(R.string.journey_card_description, city), modifier = Modifier.fillMaxSize())
+            Postcard(window.current, description = stringResource(R.string.journey_card_description, city), modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds())
             Text(
                 city,
                 modifier = Modifier.align(Alignment.BottomStart).padding(12.dp).clip(CircleShape).background(colors.surface.copy(alpha = 0.72f)).padding(horizontal = 10.dp, vertical = 4.dp),

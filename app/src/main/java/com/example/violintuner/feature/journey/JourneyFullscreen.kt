@@ -64,7 +64,7 @@ import kotlinx.coroutines.launch
 internal fun FullscreenPostcard(state: StopState, city: String, onIntent: (StopIntent) -> Unit, modifier: Modifier = Modifier) {
     val reduce = LocalReduceMotion.current
     val scope = rememberCoroutineScope()
-    var zoom by remember { mutableFloatStateOf(SceneCamera.MIN_ZOOM) }
+    var zoom by remember { mutableFloatStateOf(SceneCamera.COVER_ZOOM) }
     val panX = remember { Animatable(0f) }
     var panY by remember { mutableFloatStateOf(0f) }
     var panel by remember { mutableStateOf(true) }
@@ -88,7 +88,7 @@ internal fun FullscreenPostcard(state: StopState, city: String, onIntent: (StopI
             .background(Color.Black)
             .pointerInput(Unit) {
                 detectTransformGestures { _, drag, change, _ ->
-                    zoom = SceneCamera.zoom(zoom, change)
+                    zoom = SceneCamera.zoom(zoom, change, size.width.toFloat(), size.height.toFloat())
                     val (x, y) = SceneCamera.clamp(panX.value + drag.x, panY + drag.y, zoom, size.width.toFloat(), size.height.toFloat())
                     scope.launch { panX.snapTo(x) }
                     panY = y
@@ -98,7 +98,7 @@ internal fun FullscreenPostcard(state: StopState, city: String, onIntent: (StopI
                 detectTapGestures(
                     onTap = { panel = !panel },
                     onDoubleTap = {
-                        zoom = if (zoom > SceneCamera.MIN_ZOOM) SceneCamera.MIN_ZOOM else SceneCamera.DOUBLE_TAP_ZOOM
+                        zoom = SceneCamera.nextZoom(zoom, size.width.toFloat(), size.height.toFloat())
                         val (x, y) = SceneCamera.clamp(panX.value, panY, zoom, size.width.toFloat(), size.height.toFloat())
                         scope.launch { panX.snapTo(x) }
                         panY = y

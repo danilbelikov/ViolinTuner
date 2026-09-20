@@ -17,11 +17,22 @@ import kotlin.math.sin
  * postcard, not a screensaver. Pure; time comes from outside, in seconds.
  */
 object SceneMotion {
-    const val WINDOW_DIP = 0.14f
-    const val GLOW_DIP = 0.18f
-    const val GLOW_PERIOD_S = 5f
-    const val WATER_DRIFT = 7f
-    const val WATER_PERIOD_S = 9f
+    const val WINDOW_DIP = 0.32f
+    const val GLOW_DIP = 0.4f
+    const val GLOW_PERIOD_S = 3.5f
+    const val WATER_DRIFT = 14f
+    const val WATER_PERIOD_S = 6f
+
+    /** Stars of the evening sky and clouds of the day one: not layers of a scene, drawn by rule behind everything but the sky — outdoors only. */
+    const val STARS = 70
+    const val STAR_DIP = 0.75f
+    const val CLOUDS = 3
+    const val CLOUD_SPEED = 5f
+    private const val SKY_SPAN = 760f
+    private const val STAR_TOP = -420f
+    private const val STAR_BOTTOM = 100f
+    private const val STAR_FADE_FROM = -40f
+    private const val SKY_LEFT = -170f
 
     /** The least time between two frames of a living postcard: thirty a second is plenty for something this slow. */
     const val FRAME_NANOS = 33_000_000L
@@ -44,6 +55,36 @@ object SceneMotion {
     fun drift(layer: SceneLayer, index: Int, seconds: Float): Float =
         if (layer.fill == WATER) WATER_DRIFT * sin(2 * PI.toFloat() * seconds / WATER_PERIOD_S + index * 1.7f) else 0f
 
+    /** A star: where it is on the grid, how large, and how bright at [seconds] — each twinkles at its own pace. */
+    data class Star(val x: Float, val y: Float, val radius: Float, val alpha: Float)
+
+    fun star(index: Int, seconds: Float): Star {
+        val x = SKY_LEFT + hash(index, 1) * SKY_SPAN
+        // far above the frame as well: the whole card seen upright has a tall sky over it
+        val y = STAR_TOP + hash(index, 2) * (STAR_BOTTOM - STAR_TOP)
+        // fainter towards the glow of the horizon
+        val height = 1f - ((y - STAR_FADE_FROM) / (STAR_BOTTOM - STAR_FADE_FROM)).coerceIn(0f, 1f) * 0.7f
+        val twinkle = 1f - STAR_DIP * wave(seconds, period = 1.6f + hash(index, 3) * 2.4f, phase = hash(index, 4) * 4f)
+        return Star(x, y, 0.5f + hash(index, 5) * 0.7f, (height * twinkle).coerceIn(0f, 1f))
+    }
+
+    /** A cloud: its centre and size at [seconds]; it sails to the right and comes back from the left. */
+    data class Cloud(val x: Float, val y: Float, val width: Float)
+
+    fun cloud(index: Int, seconds: Float): Cloud {
+        val width = 70f + hash(index, 6) * 50f
+        val start = hash(index, 7) * SKY_SPAN
+        val speed = CLOUD_SPEED * (0.6f + hash(index, 8) * 0.8f)
+        return Cloud(SKY_LEFT + (start + seconds * speed) % SKY_SPAN, 20f + index * 26f + hash(index, 9) * 10f, width)
+    }
+
+    /** A number in 0…1 that is always the same for the same [index] and [salt]: the sky is the same sky every time. */
+    private fun hash(index: Int, salt: Int): Float {
+        var h = index * 374_761_393 + salt * 668_265_263
+        h = (h xor (h ushr 13)) * 1_274_126_177
+        return ((h xor (h ushr 16)) and 0xFFFF) / 65_535f
+    }
+
     /** 0…1…0, a sine. */
     private fun wave(seconds: Float, period: Float, phase: Float): Float = 0.5f + 0.5f * sin(2 * PI.toFloat() * (seconds + phase) / period)
 }
@@ -54,7 +95,8 @@ object SceneMotion {
  * Pure geometry, with tests.
  */
 object SceneCamera {
-    const val MIN_ZOOM = 1f
+    /** 1 is the zoom at which the picture covers the box. */
+    const val COVER_ZOOM = 1f
     const val MAX_ZOOM = 2.5f
     const val DOUBLE_TAP_ZOOM = 2f
 
@@ -64,7 +106,32 @@ object SceneCamera {
     /** The scale at which the grid covers the box: cropped, never stretched. */
     fun cover(width: Float, height: Float): Float = maxOf(width / SceneGrid.WIDTH, height / SceneGrid.HEIGHT)
 
-    fun zoom(current: Float, change: Float): Float = (current * change).coerceIn(MIN_ZOOM, MAX_ZOOM)
+    /** The zoom at which the whole card is seen by its width: below 1 upright, 1 where the card already fits. */
+    fun wholeZoom(width: Float, height: Float): Float = ((width / SceneGrid.WIDTH) / cover(width, height)).coerceAtMost(COVER_ZOOM)
+
+    fun zoom(current: Float, change: Float, width: Float, height: Float): Float = (current * change).coerceIn(wholeZoom(width, height), MAX_ZOOM)
+
+    /** A double tap walks round: covering → closer → the whole card → covering. */
+    fun nextZoom(current: Float, width: Float, height: Float): Float {
+        val whole = wholeZoom(width, height)
+        return when {
+            current > COVER_ZOOM + EPSILON -> if (whole < COVER_ZOOM - EPSILON) whole else COVER_ZOOM
+            current < COVER_ZOOM - EPSILON -> COVER_ZOOM
+            else -> DOUBLE_TAP_ZOOM
+        }
+    }
+
+    /**
+     * Where the top of the picture stands when it is lower than the box. Outdoors it stands on the
+     * bottom edge and the sky — which the scenes have plenty of — fills the rest; a room has no sky,
+     * so it is centred, like a photograph on a dark table.
+     */
+    fun top(zoom: Float, width: Float, height: Float, outdoors: Boolean): Float {
+        val tall = SceneGrid.HEIGHT * cover(width, height) * zoom
+        return if (tall < height && outdoors) height - tall else (height - tall) / 2
+    }
+
+    private const val EPSILON = 0.01f
 
     /** The pan kept within what the picture has beyond the box: the near plane never shows its edge, and the others lag inside it. */
     fun clamp(panX: Float, panY: Float, zoom: Float, width: Float, height: Float): Pair<Float, Float> {
