@@ -1,0 +1,58 @@
+# generated from the design handoff (docs/design/project/journey): do not edit by hand
+loc=home;aerial=0
+wallHome	1									M0 0h412v200h-412Z
+wallLitHome	1									M0 0h200v200h-200Z
+floorHome	1									M0 200h412v60h-412Z
+floorLine	1									M12 200h2v60h-2Z
+floorLine	1									M60 200h2v60h-2Z
+floorLine	1									M108 200h2v60h-2Z
+floorLine	1									M156 200h2v60h-2Z
+floorLine	1									M204 200h2v60h-2Z
+floorLine	1									M252 200h2v60h-2Z
+floorLine	1									M300 200h2v60h-2Z
+floorLine	1									M348 200h2v60h-2Z
+floorLine	1									M396 200h2v60h-2Z
+floorLine	1									M0 199h412v2h-412Z
+woodDark	1									M236 34h124v114h-124Z
+SKY	1									M242 40h112v102h-112Z
+far	1									M250 100h20v42h-20Z
+far	1									M276 88h28v54h-28Z
+far	1									M312 106h34v36h-34Z
+farLit	1									M320 96h8v10h-8Z
+chandelier	1									M322 62a8 8 0 1 0 16 0a8 8 0 1 0 -16 0Z
+woodDark	1									M296 40h4v102h-4Z
+woodDark	1									M242 90h112v4h-112Z
+curtain	1									M224 28L252 28L246 156L224 156Z
+curtain	1									M372 28L344 28L350 156L372 156Z
+woodDark	1									M40 150h96v6h-96Z
+woodDark	1									M46 156h5v44h-5Z
+woodDark	1									M125 156h5v44h-5Z
+metal	1									M82 118h3v32h-3Z
+metal	1									M68 120L100 120L92 100L76 100Z
+chandelier	1									M81 124a3 3 0 1 0 6 0a3 3 0 1 0 -6 0Z
+metal	1									M203 112h2.4v88h-2.4Z
+metal	1									M186 118L222 118L218 94L190 94Z
+paper	1									M192 96h24v20h-24Z
+rgba(0,0,0,.35)	1									M195 100h18v1h-18Z
+rgba(0,0,0,.35)	1									M195 104h18v1h-18Z
+rgba(0,0,0,.35)	1									M195 108h18v1h-18Z
+rgba(0,0,0,.35)	1									M195 112h18v1h-18Z
+metal	1									M194 200L214 200L204 190Z
+woodDark	1									M142 160h38a2 2 0 0 1 2 2v4a2 2 0 0 1 -2 2h-38a2 2 0 0 1 -2 -2v-4a2 2 0 0 1 2 -2Z
+woodDark	1									M142 168h3v34h-3Z
+woodDark	1									M177 168h3v34h-3Z
+woodDark	1									M142 128h4v34h-4Z
+woodDark	1									M142 128h38v4h-38Z
+caseOut	2									M258 238a42 11 0 1 0 84 0a42 11 0 1 0 -84 0Z
+velvet	2									M264 238a36 8 0 1 0 72 0a36 8 0 1 0 -72 0Z
+varnish	2									M273 238a27 5 0 1 0 54 0a27 5 0 1 0 -54 0Z
+woodDark	2									M299 224h2v8h-2Z
+rug	2	0.8								M76 246a130 14 0 1 0 260 0a130 14 0 1 0 -260 0Z
+rgba(20,16,30,.28)	1									M291.45 213a10.45 2.4699999999999998 0 1 0 20.9 0a10.45 2.4699999999999998 0 1 0 -20.9 0Z
+hero	1									M294.3 212L293.35 190.15L306.65 190.15L305.7 212Z
+hero	1									M295.25 208.2h3.23v3.8h-3.23Z
+hero	1									M301.52 208.2h3.23v3.8h-3.23Z
+heroHair	1									M295.63 185.875a4.369999999999999 4.369999999999999 0 1 0 8.739999999999998 0a4.369999999999999 4.369999999999999 0 1 0 -8.739999999999998 0Z
+hero	1									M296.01 189.2a3.9899999999999998 1.52 0 1 0 7.9799999999999995 0a3.9899999999999998 1.52 0 1 0 -7.9799999999999995 0Z
+heroCase	1									M309.025 195.85h2.375a1.9 1.9 0 0 1 1.9 1.9v13.299999999999997a1.9 1.9 0 0 1 -1.9 1.9h-2.375a1.9 1.9 0 0 1 -1.9 -1.9v-13.299999999999997a1.9 1.9 0 0 1 1.9 -1.9Z
+rgba(255,255,255,.18)	1									M308.55 197.75h1.3299999999999998v11.399999999999999h-1.3299999999999998Z

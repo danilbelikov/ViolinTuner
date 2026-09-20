@@ -1,0 +1,76 @@
+# generated from the design handoff (docs/design/project/journey): do not edit by hand
+loc=vienna;aerial=1
+sky	0									M-600 -1200h1600v1210h-1600Z
+SKY	0									M-600 0h1600v190h-1600Z
+far	0									M0 190L0 150L30 150L30 138L56 138L56 158L86 158L86 190Z
+far	0									M340 148h72v42h-72Z
+far	0									M360 140a16 16 0 1 0 32 0a16 16 0 1 0 -32 0Z
+far	0									M372 118h8v22h-8Z
+farLit	0									M392 136h20v54h-20Z
+wallShade	1									M326 78L352 86L352 190L326 190Z
+wall	1									M86 78h240v112h-240Z
+wallBase	1									M86 150h240v40h-240Z
+wallShade	1									M86 149h240v1.5h-240Z
+trim	1									M80 70h252v8h-252Z
+roof	1									M80 70L332 70L318 52L94 52Z
+roofLit	1									M80 70L206 70L206 52L94 52Z
+trim	1									M88 84h6v66h-6Z
+trim	1									M86 84h10v4h-10Z
+trim	1									M120 84h6v66h-6Z
+trim	1									M118 84h10v4h-10Z
+trim	1									M152 84h6v66h-6Z
+trim	1									M150 84h10v4h-10Z
+trim	1									M184 84h6v66h-6Z
+trim	1									M182 84h10v4h-10Z
+trim	1									M216 84h6v66h-6Z
+trim	1									M214 84h10v4h-10Z
+trim	1									M248 84h6v66h-6Z
+trim	1									M246 84h10v4h-10Z
+trim	1									M280 84h6v66h-6Z
+trim	1									M278 84h10v4h-10Z
+trim	1									M312 84h6v66h-6Z
+trim	1									M310 84h10v4h-10Z
+window	1									M101 146v-43a7 7 0 0 1 14 0v43Z
+window	1									M133 146v-43a7 7 0 0 1 14 0v43Z
+window	1									M165 146v-43a7 7 0 0 1 14 0v43Z
+window	1									M197 146v-43a7 7 0 0 1 14 0v43Z
+window	1									M229 146v-43a7 7 0 0 1 14 0v43Z
+window	1									M261 146v-43a7 7 0 0 1 14 0v43Z
+window	1									M293 146v-43a7 7 0 0 1 14 0v43Z
+dark	1									M101 160h14v22h-14Z
+dark	1									M133 160h14v22h-14Z
+dark	1									M163 190v-25a9 9 0 0 1 18 0v25Z
+dark	1									M195 190v-25a9 9 0 0 1 18 0v25Z
+dark	1									M227 190v-25a9 9 0 0 1 18 0v25Z
+dark	1									M261 160h14v22h-14Z
+dark	1									M293 160h14v22h-14Z
+trim	1									M156 188h108v4h-108Z
+groundLit	2									M0 190h412v14h-412Z
+ground	2									M0 204h412v56h-412Z
+groundShade	2									M0 203h412v1.5h-412Z
+rgba(20,16,30,.18)	2									M86 190L352 190L372 204L100 204Z
+rgba(20,16,30,.28)	2									M13.399999999999999 237a16.8 4.2 0 1 0 33.6 0a16.8 4.2 0 1 0 -33.6 0Z
+trunk	2									M23.375 208.7h5.25v27.3h-5.25Z
+foliageShade	2									M6.050000000000001 194a19.95 19.95 0 1 0 39.9 0a19.95 19.95 0 1 0 -39.9 0Z
+foliage	2									M7.1 189.8a14.700000000000001 14.700000000000001 0 1 0 29.400000000000002 0a14.700000000000001 14.700000000000001 0 1 0 -29.400000000000002 0Z
+foliageLit	2									M10.249999999999996 184.55a6.300000000000001 6.300000000000001 0 1 0 12.600000000000001 0a6.300000000000001 6.300000000000001 0 1 0 -12.600000000000001 0Z
+rgba(20,16,30,.28)	2									M72 239a6 2 0 1 0 12 0a6 2 0 1 0 -12 0Z
+lamp	2									M74.5 202h3v36h-3Z
+lamp	2									M70 200h12v2h-12Z
+lamp	2									M70 190h12v10h-12Z
+lampGlass	2									M72.4 191.5h7.2v7.5h-7.2Z
+lamp	2									M69 190L83 190L76 185Z
+rgba(20,16,30,.28)	2									M338 239a6 2 0 1 0 12 0a6 2 0 1 0 -12 0Z
+lamp	2									M340.5 202h3v36h-3Z
+lamp	2									M336 200h12v2h-12Z
+lamp	2									M336 190h12v10h-12Z
+lampGlass	2									M338.4 191.5h7.2v7.5h-7.2Z
+lamp	2									M335 190L349 190L342 185Z
+rgba(20,16,30,.28)	2									M253 255a11 2.6 0 1 0 22 0a11 2.6 0 1 0 -22 0Z
+hero	2									M256 254L255 231L269 231L268 254Z
+hero	2									M257 250h3.4v4h-3.4Z
+hero	2									M263.6 250h3.4v4h-3.4Z
+heroHair	2									M257.4 226.5a4.6 4.6 0 1 0 9.2 0a4.6 4.6 0 1 0 -9.2 0Z
+hero	2									M257.8 230a4.2 1.6 0 1 0 8.4 0a4.2 1.6 0 1 0 -8.4 0Z
+heroCase	2									M271.5 237h2.5a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-2.5a2 2 0 0 1 -2 -2v-14a2 2 0 0 1 2 -2Z
+rgba(255,255,255,.18)	2									M271 239h1.4v12h-1.4Z
