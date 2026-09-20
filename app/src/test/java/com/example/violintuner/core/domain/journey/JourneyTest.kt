@@ -98,11 +98,11 @@ class JourneyTest {
 
     @Test
     fun `extras belong to stops that were reached - a second view only where one is drawn, a second time only where there is a picture`() {
-        val progress = JourneyProgress(earned = 1_000, spent = 0, arrivals = listOf(Arrival("home", 1), Arrival("vienna", 2), Arrival("leipzig", 3)), extras = emptySet())
+        val progress = JourneyProgress(earned = 1_000, spent = 0, arrivals = listOf(Arrival("home", 1), Arrival("vienna", 2), Arrival("paris", 3)), extras = emptySet())
         fun stop(id: String) = JourneyRoute.stops.first { it.id == id }
         assertEquals(JourneyExtra.entries.toList(), JourneyRules.offers(stop("vienna"), progress))
         assertEquals(listOf(JourneyExtra.SECOND_TIME, JourneyExtra.SOUVENIR), JourneyRules.offers(stop("home"), progress))
-        assertEquals(listOf(JourneyExtra.SOUVENIR), JourneyRules.offers(stop("leipzig"), progress))
+        assertEquals(listOf(JourneyExtra.SOUVENIR), JourneyRules.offers(stop("paris"), progress))
         assertEquals(listOf(JourneyExtra.SECOND_TIME, JourneyExtra.SOUVENIR), JourneyRules.offers(stop("salzburg"), progress.copy(arrivals = progress.arrivals + Arrival("salzburg", 4))))
         assertEquals(emptyList<JourneyExtra>(), JourneyRules.offers(stop("prague"), progress))
         assertTrue(JourneyRules.canBuy(stop("vienna"), JourneyExtra.SECOND_VIEW, progress, config))
