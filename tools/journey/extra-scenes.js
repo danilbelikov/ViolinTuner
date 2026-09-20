@@ -297,3 +297,60 @@ inside('newyorkInt', () => HORSESHOE({ tiers: 4, open: true, curtain: false }));
 inside('buenosairesInt', () => HORSESHOE({ tiers: 6, painted: SOLDI }));                     // six tiers and Soldi's painted dome
 inside('tokyoInt', () => VINEYARD({ organ: 'centre' }));                                     // a vineyard of warm wood, the organ in the middle
 inside('sydneyInt', () => HALL({ ribs: true, petals: true, organ: true, chandeliers: 0 }));  // birch ribs, the magenta petals, the grand organ
+
+// ---------------------------------------------------------------------------------------------
+// Cremona and Milan are rooms in the handoff; these are their second views — from outside.
+Object.assign(EXTRA_LOCPAL, {
+  cremonaOut: { brick: '#B8694A', brickLit: '#CF8262', brickShade: '#8E4C33', marble: '#F0E6D6', marbleLit: '#FBF4E8', marbleShade: '#D0C3AC', rose: '#C98B7A', spire: '#6F8278', spireLit: '#8DA096', gold: '#E2B74E', dark: '#3A3040' },
+  milanOut: { stone: '#E6D8B8', stoneLit: '#F2E7CC', stoneShade: '#BEAF8C', stoneBase: '#CDBE9C', trim: '#F8F2E2', roof: '#7A6A5C', roofLit: '#978676', dark: '#3A3040', tram: '#E9B23C', tramShade: '#C28E22', tramRoof: '#EDE4CF', tramDark: '#2A2430' },
+});
+
+// Cremona — Piazza del Comune: the Torrazzo, the tallest brick bell tower of Italy, with its great
+// clock; the marble front of the cathedral — rose window, two loggias, the porch; the baptistery.
+const CREMONA_OUT = (eve = true) => {
+  const l = [...SKYL];
+  l.push(L('far', PG([[0, 190], [0, 160], [20, 148], [40, 160], [40, 190]]), 0), L('far', R(384, 150, 28, 40), 0));
+  // the Torrazzo: shaft, clock, the octagon and the spire going out of the frame
+  l.push(L('brickShade', R(100, 44, 14, 146)), L('brick', R(68, 44, 34, 146)), L('brickLit', R(68, 44, 12, 146)), L('marble', R(64, 40, 54, 5)), ...rep(9, i => L('marble', R(65 + i * 6, 36, 3.4, 4))), ...rep(3, i => L('brickShade', R(68, 84 + i * 34, 46, 1.4), 1, { op: .6 })));
+  l.push(L('dark', ARCH(78, 58, 6, 16)), L('dark', ARCH(92, 58, 6, 16)), L('marble', C(88, 120, 11)), L('dark', C(88, 120, 8.6)), L('gold', C(88, 120, 8.6), 1, { stroke: 'gold', sw: 1.2, fillNone: true }), L('gold', R(87.5, 113.5, 1, 7)), L('gold', R(88, 119.5, 5, 1)), L('dark', ARCH(84, 160, 9, 30)));
+  l.push(L('brickShade', R(98, 12, 8, 28)), L('brick', R(76, 12, 24, 28)), L('marble', R(74, 10, 34, 3)), L('dark', ARCH(81, 18, 5, 14)), L('dark', ARCH(91, 18, 5, 14)), L('spire', PG([[76, 10], [106, 10], [91, -30]])), L('spireLit', PG([[76, 10], [91, 10], [91, -30]])));
+  // the cathedral
+  l.push(L('marbleShade', PG([[324, 96], [342, 103], [342, 190], [324, 190]])), L('marble', PG([[140, 190], [140, 96], [232, 40], [324, 96], [324, 190]])), L('marbleLit', PG([[140, 190], [140, 96], [232, 40], [232, 190]])), ...rep(5, i => L('rose', R(140, 112 + i * 16, 184, 2), 1, { op: .45 })));
+  l.push(...[[136, 78], [318, 78]].flatMap(([x, y]) => [L('marble', R(x, y, 10, 22)), L('dark', ARCH(x + 3, y + 6, 4, 9)), L('spire', PG([[x - 1, y], [x + 11, y], [x + 5, y - 14]]))]), L('marble', R(229, 28, 6, 14)), L('spire', PG([[227, 28], [237, 28], [232, 16]])));
+  l.push(L('rose', C(232, 84, 16)), L('window', C(232, 84, 12)), ...rep(6, i => { const a = Math.PI * i / 6; return L('marble', PG([[232 - 12 * Math.cos(a) - .5 * Math.sin(a), 84 - 12 * Math.sin(a) + .5 * Math.cos(a)], [232 + 12 * Math.cos(a) - .5 * Math.sin(a), 84 + 12 * Math.sin(a) + .5 * Math.cos(a)], [232 + 12 * Math.cos(a) + .5 * Math.sin(a), 84 + 12 * Math.sin(a) - .5 * Math.cos(a)], [232 - 12 * Math.cos(a) + .5 * Math.sin(a), 84 - 12 * Math.sin(a) - .5 * Math.cos(a)]])); }), L('marble', C(232, 84, 3)));
+  l.push(...rep(9, i => L('dark', ARCH(150 + i * 19.4, 108, 8, 15))), L('marbleShade', R(140, 124, 184, 2)), ...rep(4, i => [L('dark', ARCH(150 + i * 12, 132, 7, 13)), L('dark', ARCH(278 + i * 12, 132, 7, 13))]), L('dark', ARCH(160, 160, 18, 30)), L('dark', ARCH(286, 160, 18, 30)));
+  l.push(L('rgba(20,16,30,.2)', R(258, 132, 5, 58)), L('marbleLit', R(206, 136, 52, 54)), L('marbleShade', PG([[202, 136], [262, 136], [232, 116]])), L('marble', PG([[206, 136], [258, 136], [232, 121]])), L('dark', ARCH(216, 148, 32, 42)), L('marble', R(208, 150, 5, 40)), L('marble', R(251, 150, 5, 40)), L('marbleShade', RR(203, 182, 14, 8, 2)), L('marbleShade', RR(247, 182, 14, 8, 2)));
+  // the baptistery
+  l.push(L('brickShade', R(384, 124, 18, 66)), L('brick', R(350, 124, 36, 66)), L('marble', R(348, 121, 56, 3)), L('spire', PG([[346, 121], [406, 121], [376, 98]])), L('dark', ARCH(362, 142, 10, 22)));
+  l.push(...GROUND(64, 402), ...lamp(36, 238, 1, 2, eve), ...lamp(300, 238, 1, 2, eve), ...hero(188, 254, 1, 2));
+  return l;
+};
+
+// Milan — La Scala from the square: a sober cream front, the carriage porch of three arches with a
+// terrace over it, paired half-columns and a pediment; a yellow tram passes under its wire.
+const MILAN_OUT = (eve = true) => {
+  const l = [...SKYL];
+  l.push(L('far', R(0, 140, 50, 50), 0), L('farLit', R(0, 140, 16, 50), 0), L('far', R(366, 132, 46, 58), 0), L('far', PG([[380, 132], [398, 132], [389, 108]]), 0));
+  l.push(L('stoneShade', PG([[352, 96], [374, 104], [374, 190], [352, 190]])), L('stone', R(60, 96, 292, 94)), L('stoneLit', R(60, 96, 88, 94)), L('stoneBase', R(60, 152, 292, 38)), ...rep(4, i => L('stoneShade', R(60, 158 + i * 8, 292, 1), 1, { op: .45 })), L('roof', PG([[60, 90], [352, 90], [340, 80], [72, 80]])), L('roofLit', PG([[60, 90], [146, 90], [146, 80], [72, 80]])), L('trim', R(56, 90, 300, 6)), L('trim', R(60, 150, 292, 2.5)));
+  l.push(...[70, 282].flatMap(x0 => rep(3, i => [L('trim', PG([[x0 - 2 + i * 22, 106], [x0 + 12 + i * 22, 106], [x0 + 5 + i * 22, 101]])), L('window', R(x0 + i * 22, 107, 10, 18)), L('window', R(x0 + i * 22, 132, 10, 13)), L('dark', R(x0 + i * 22, 162, 10, 20))])));
+  l.push(L('rgba(20,16,30,.22)', R(266, 84, 5, 106)), L('stoneLit', R(146, 84, 120, 106)), L('stone', PG([[142, 84], [270, 84], [206, 58]])), L('stoneShade', PG([[156, 82], [256, 82], [206, 63]])), L('trim', R(142, 82, 128, 4)), ...rep(5, i => [L('window', ARCH(157 + i * 22, 100, 10, 28)), L('window', R(157 + i * 22, 134, 10, 10))]), ...rep(6, i => [L('trim', R(149 + i * 22, 94, 3, 54)), L('trim', R(153.4 + i * 22, 94, 3, 54)), L('stoneShade', R(156.4 + i * 22, 94, 1.2, 54), 1, { op: .6 })]));
+  l.push(L('rgba(20,16,30,.2)', PG([[262, 152], [270, 156], [270, 190], [262, 190]])), L('stoneBase', R(150, 152, 112, 38)), L('stoneLit', R(150, 152, 34, 38)), L('trim', R(146, 146, 120, 3)), ...rep(18, i => L('trim', R(148 + i * 6.6, 140, 2, 6))), L('trim', R(146, 138, 120, 2.4)), ...rep(3, i => [L('dark', ARCH(160 + i * 34, 158, 24, 32)), ...(eve ? [L('rgba(255,196,110,.5)', C(172 + i * 34, 170, 12), 1, { glow: true }), L('lampGlass', C(172 + i * 34, 166, 1.8))] : [])]));
+  l.push(...GROUND(60, 374), L('lamp', R(0, 196, 412, .8), 2, { op: .6 }));
+  // the tram
+  l.push(L('rgba(20,16,30,.28)', E(104, 244, 66, 3.6), 2), L('lamp', PG([[96, 218], [100, 197], [101.4, 197], [99, 218]]), 2), L('tram', RR(40, 220, 128, 21, 4), 2), L('tramShade', R(40, 234, 128, 7), 2), L('tramRoof', RR(44, 216, 120, 6, 2.5), 2), ...rep(6, i => L(eve ? 'window' : 'tramDark', R(48 + i * 19.6, 225, 14, 8), 2)), L('tramDark', R(100, 224, 2, 16), 2), L('tramDark', C(62, 242, 3.4), 2), L('tramDark', C(146, 242, 3.4), 2), L('lampGlass', C(165, 232, 1.8), 2), ...(eve ? [L('GLOW', C(168, 232, 12), 2)] : []));
+  l.push(...lamp(212, 238, 1, 2, eve), ...lamp(330, 238, 1, 2, eve), ...hero(268, 254, 1, 2));
+  return l;
+};
+EXTRA_SCENES.cremonaOut = { fn: CREMONA_OUT, loc: 'cremonaOut' };
+EXTRA_SCENES.milanOut = { fn: MILAN_OUT, loc: 'milanOut' };
+
+// ---------------------------------------------------------------------------------------------
+// Birds in the window of the room at home. The handoff's scene is left as it is: the layers are
+// slipped in behind the glazing bars. A layer filled with the token `bird` flies — SceneMotion
+// carries it across the window and lets it fade at both ends, so nothing has to be clipped.
+BASE.day.bird = '#3A3A4C';
+BASE.eve.bird = '#1B1830';
+const BIRD = (x, y, s) => L('bird', `M${x - 5 * s} ${y}Q${x - 2.5 * s} ${y - 3 * s} ${x} ${y}Q${x + 2.5 * s} ${y - 3 * s} ${x + 5 * s} ${y}Q${x + 2.5 * s} ${y - 1.3 * s} ${x} ${y + 1 * s}Q${x - 2.5 * s} ${y - 1.3 * s} ${x - 5 * s} ${y}Z`);
+const EXTRA_INSERTS = {
+  home: layers => { const at = layers.findIndex(l => l.fill === 'chandelier' && l.d.startsWith('M322 62')); if (at < 0) throw new Error('the window of the home scene has changed'); return [...layers.slice(0, at + 1), BIRD(268, 58, 1.05), BIRD(282, 67, 1.3), BIRD(306, 53, .9), BIRD(318, 73, 1.15), BIRD(338, 61, 1), ...layers.slice(at + 1)]; },
+};

@@ -139,8 +139,13 @@ private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, 
         if (layer.fill == SceneLayer.SKY && seconds != null && scene.aerial) {
             translate(SceneCamera.shift(panX, 0), 0f) { scale(k, k, pivot = Offset.Zero) { drawSkyLife(prepared.mode, seconds) } }
         }
+        val flight = if (alive && layer.fill == SceneMotion.BIRD) SceneMotion.flight(bounds.center.x, index, seconds!!) else null
         translate(SceneCamera.shift(panX, layer.depth) + drift * k, 0f) {
             scale(k, k, pivot = Offset.Zero) {
+                if (flight != null) {
+                    translate(flight.dx, flight.dy) { scale(1f, flight.flap, pivot = bounds.center) { drawPath(path, brush ?: return@scale, alpha = alpha * flight.alpha) } }
+                    return@scale
+                }
                 if (layer.tx != 0f || layer.ty != 0f || layer.scale != 1f) {
                     translate(layer.tx, layer.ty) { scale(layer.scale, layer.scale, pivot = Offset.Zero) { draw() } }
                 } else {

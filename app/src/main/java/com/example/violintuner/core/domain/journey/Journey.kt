@@ -44,8 +44,8 @@ data class JourneyStop(
 object JourneyRoute {
     val stops: List<JourneyStop> = listOf(
         JourneyStop("home", 0, Transport.NONE, 70f, 380f, true, listOf(StopView("home", inside = true))),
-        JourneyStop("cremona", 300, Transport.TRAIN, 150f, 372f, true, listOf(StopView("cremona", inside = true))),
-        JourneyStop("milan", 500, Transport.TRAIN, 132f, 344f, true, listOf(StopView("milan", inside = true))),
+        JourneyStop("cremona", 300, Transport.TRAIN, 150f, 372f, true, listOf(StopView("cremona", inside = true), StopView("cremonaOut", inside = false))),
+        JourneyStop("milan", 500, Transport.TRAIN, 132f, 344f, true, listOf(StopView("milan", inside = true), StopView("milanOut", inside = false))),
         // The handoff's generic alpine postcard (mountains, a lake, an onion-domed church): kept there as a spare, it is Salzburg here.
         JourneyStop("salzburg", 800, Transport.TRAIN, 212f, 318f, true, listOf(StopView("austria", inside = false), StopView("salzburgInt", inside = true))),
         JourneyStop("vienna", 1_200, Transport.TRAIN, 262f, 326f, true, listOf(StopView("vienna", inside = false), StopView("viennaInt", inside = true))),

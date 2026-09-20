@@ -37,11 +37,19 @@ object SceneMotion {
     /** The least time between two frames of a living postcard: thirty a second is plenty for something this slow. */
     const val FRAME_NANOS = 33_000_000L
 
+    /** Birds: layers filled with the token [BIRD] fly across the window of the room at home, in units of the grid. */
+    const val BIRD = "bird"
+    const val BIRD_LEFT = 250f
+    const val BIRD_SPAN = 96f
+    const val BIRD_FADE = 12f
+    const val BIRD_BOB = 3f
+    const val BIRD_FLAP_HZ = 2.6f
+
     private val WINDOWS = setOf("window", "windowLit", "chandelier")
     private const val WATER = "waterLit"
 
     fun moves(layer: SceneLayer, mode: SceneMode): Boolean =
-        layer.fill == WATER || (mode == SceneMode.EVENING && (layer.fill in WINDOWS || layer.fill == SceneLayer.GLOW || layer.warmGlow))
+        layer.fill == WATER || layer.fill == BIRD || (mode == SceneMode.EVENING && (layer.fill in WINDOWS || layer.fill == SceneLayer.GLOW || layer.warmGlow))
 
     /** What the layer's own opacity is multiplied by at [seconds]; 1 for a layer that does not flicker. */
     fun alpha(layer: SceneLayer, index: Int, mode: SceneMode, seconds: Float): Float = when {
@@ -54,6 +62,26 @@ object SceneMotion {
     /** How far, in units of the grid, the layer has drifted sideways at [seconds]. */
     fun drift(layer: SceneLayer, index: Int, seconds: Float): Float =
         if (layer.fill == WATER) WATER_DRIFT * sin(2 * PI.toFloat() * seconds / WATER_PERIOD_S + index * 1.7f) else 0f
+
+    /** Where a bird is at [seconds]: moved by [dx], [dy] from where it is drawn, its wings at [flap] of their spread, seen at [alpha]. */
+    data class Flight(val dx: Float, val dy: Float, val flap: Float, val alpha: Float)
+
+    /**
+     * A bird crosses the window from left to right and comes back from the left, each at its own
+     * speed; near both ends of the way it fades, so it never has to be cut by the window frame.
+     * [baseX] is where the bird is drawn — where it is when nothing moves.
+     */
+    fun flight(baseX: Float, index: Int, seconds: Float): Flight {
+        val speed = 8f + hash(index, 11) * 7f
+        val along = (((baseX - BIRD_LEFT) + seconds * speed) % BIRD_SPAN + BIRD_SPAN) % BIRD_SPAN
+        val edge = minOf(along, BIRD_SPAN - along)
+        return Flight(
+            dx = BIRD_LEFT + along - baseX,
+            dy = BIRD_BOB * sin(2 * PI.toFloat() * seconds / (3f + hash(index, 12) * 2f) + index),
+            flap = 0.35f + 0.65f * wave(seconds, 1f / BIRD_FLAP_HZ, phase = hash(index, 13)),
+            alpha = (edge / BIRD_FADE).coerceIn(0f, 1f),
+        )
+    }
 
     /** A star: where it is on the grid, how large, and how bright at [seconds] — each twinkles at its own pace. */
     data class Star(val x: Float, val y: Float, val radius: Float, val alpha: Float)

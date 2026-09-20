@@ -79,13 +79,13 @@ object ScenePalette {
         "sky" to 0xFF79B0E6, "skyLow" to 0xFFD3E5F5, "far" to 0xFFA9BFD9, "farLit" to 0xFFC5D6E8, "ground" to 0xFF8E8A86, "groundLit" to 0xFFA8A49F,
         "groundShade" to 0xFF6E6A66, "window" to 0xFF5B6E85, "windowLit" to 0xFF7F94AB, "lamp" to 0xFF3B3A45, "lampGlass" to 0xFFE4ECF2, "glow" to 0x00FFC46EL,
         "water" to 0xFF5F9AD0, "waterLit" to 0xFFB0DCF2, "foliage" to 0xFF4E9B57, "foliageLit" to 0xFF82C873, "foliageShade" to 0xFF357A42, "trunk" to 0xFF7A5539,
-        "chandelier" to 0xFFFFE9B0, "hero" to 0xFF2A2430, "heroHair" to 0xFF4A3A32, "heroCase" to 0xFF5B43B8,
+        "chandelier" to 0xFFFFE9B0, "hero" to 0xFF2A2430, "heroHair" to 0xFF4A3A32, "heroCase" to 0xFF5B43B8, "bird" to 0xFF3A3A4C,
     )
     private val evening: Map<String, Long> = mapOf(
         "sky" to 0xFF2A2857, "skyLow" to 0xFFE08A63, "far" to 0xFF4C4676, "farLit" to 0xFF6A5E8C, "ground" to 0xFF3F3A48, "groundLit" to 0xFF57506A,
         "groundShade" to 0xFF2C2834, "window" to 0xFFFFD98A, "windowLit" to 0xFFFFE9B0, "lamp" to 0xFF2A2830, "lampGlass" to 0xFFFFD98A, "glow" to 0x80FFC46EL,
         "water" to 0xFF2F3F7A, "waterLit" to 0xFFE0A070, "foliage" to 0xFF2F6B48, "foliageLit" to 0xFF4F8E5F, "foliageShade" to 0xFF214D34, "trunk" to 0xFF4A3A32,
-        "chandelier" to 0xFFFFE9B0, "hero" to 0xFF1E1A24, "heroHair" to 0xFF3A2C28, "heroCase" to 0xFF5B43B8,
+        "chandelier" to 0xFFFFE9B0, "hero" to 0xFF1E1A24, "heroHair" to 0xFF3A2C28, "heroCase" to 0xFF5B43B8, "bird" to 0xFF1B1830,
     )
     private val locations: Map<String, Map<String, Long>> = mapOf(
         "vienna" to mapOf(

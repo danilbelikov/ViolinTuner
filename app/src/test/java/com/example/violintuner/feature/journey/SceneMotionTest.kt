@@ -133,4 +133,26 @@ class SceneMotionTest {
         assertTrue(SceneMotion.cloud(1, 3f).x != SceneMotion.cloud(1, 0f).x)
         assertEquals(SceneMotion.cloud(1, 0f).y, SceneMotion.cloud(1, 30f).y, 0f)
     }
+
+    @Test
+    fun aBirdCrossesTheWindowAndFadesAtItsEnds_itNeverLeavesTheFrame() {
+        val bird = layer(SceneMotion.BIRD)
+        assertTrue(SceneMotion.moves(bird, SceneMode.DAY))
+        assertTrue(SceneMotion.moves(bird, SceneMode.EVENING))
+        val right = SceneMotion.BIRD_LEFT + SceneMotion.BIRD_SPAN
+        for (base in listOf(268f, 306f, 338f)) for (step in 0..600) {
+            val flight = SceneMotion.flight(base, index = 9, seconds = step / 10f)
+            val x = base + flight.dx
+            assertTrue("a bird at $x is outside the window", x in SceneMotion.BIRD_LEFT..right)
+            assertTrue(flight.alpha in 0f..1f)
+            assertTrue(flight.flap in 0.3f..1.01f)
+            assertTrue(kotlin.math.abs(flight.dy) <= SceneMotion.BIRD_BOB + 0.001f)
+            // by the frame it is gone: nothing has to cut it
+            if (x - SceneMotion.BIRD_LEFT < 1f || right - x < 1f) assertTrue(flight.alpha < 0.1f)
+        }
+        // when nothing has moved yet the bird is where it is drawn
+        assertEquals(0f, SceneMotion.flight(306f, 9, 0f).dx, 0.001f)
+        // and it does fly: to the right
+        assertTrue(SceneMotion.flight(268f, 9, 1f).dx > SceneMotion.flight(268f, 9, 0f).dx)
+    }
 }

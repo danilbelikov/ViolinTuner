@@ -115,5 +115,15 @@ internal object ExtraScenePalettes {
             "pipeShade" to 0xFF9AA3AD, "petal" to 0xFFC2307E, "petalLit" to 0xFFE66AAE, "seat" to 0xFF8C2A6E, "seatDark" to 0xFF5A1A48,
             "wood" to 0xFFC99A5E,
         ),
+        "cremonaOut" to mapOf(
+            "brick" to 0xFFB8694A, "brickLit" to 0xFFCF8262, "brickShade" to 0xFF8E4C33, "marble" to 0xFFF0E6D6, "marbleLit" to 0xFFFBF4E8,
+            "marbleShade" to 0xFFD0C3AC, "rose" to 0xFFC98B7A, "spire" to 0xFF6F8278, "spireLit" to 0xFF8DA096, "gold" to 0xFFE2B74E,
+            "dark" to 0xFF3A3040,
+        ),
+        "milanOut" to mapOf(
+            "stone" to 0xFFE6D8B8, "stoneLit" to 0xFFF2E7CC, "stoneShade" to 0xFFBEAF8C, "stoneBase" to 0xFFCDBE9C, "trim" to 0xFFF8F2E2,
+            "roof" to 0xFF7A6A5C, "roofLit" to 0xFF978676, "dark" to 0xFF3A3040, "tram" to 0xFFE9B23C, "tramShade" to 0xFFC28E22,
+            "tramRoof" to 0xFFEDE4CF, "tramDark" to 0xFF2A2430,
+        ),
     )
 }
