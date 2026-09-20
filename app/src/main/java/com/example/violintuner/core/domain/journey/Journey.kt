@@ -53,14 +53,14 @@ object JourneyRoute {
         JourneyStop("leipzig", 2_000, Transport.TRAIN, 206f, 250f, true, listOf(StopView("leipzig", inside = false))),
         JourneyStop("berlin", 2_500, Transport.TRAIN, 244f, 218f, true, listOf(StopView("berlin", inside = false))),
         JourneyStop("amsterdam", 3_000, Transport.TRAIN, 166f, 214f, true, listOf(StopView("amsterdam", inside = false))),
-        JourneyStop("paris", 4_000, Transport.TRAIN, 118f, 270f, false),
-        JourneyStop("london", 5_000, Transport.TRAIN, 110f, 186f, false, listOf(StopView("london", inside = false))),
-        JourneyStop("spb", 6_000, Transport.SHIP, 340f, 150f, false),
-        JourneyStop("moscow", 7_000, Transport.TRAIN, 388f, 208f, false),
-        JourneyStop("newyork", 9_000, Transport.PLANE, 40f, 480f, false),
-        JourneyStop("buenosaires", 11_000, Transport.SHIP, 86f, 640f, false),
-        JourneyStop("tokyo", 13_000, Transport.PLANE, 392f, 420f, false),
-        JourneyStop("sydney", 15_000, Transport.PLANE, 372f, 650f, false, listOf(StopView("sydney", inside = false))),
+        JourneyStop("paris", 4_000, Transport.TRAIN, 118f, 270f, true, listOf(StopView("paris", inside = false))),
+        JourneyStop("london", 5_000, Transport.TRAIN, 110f, 186f, true, listOf(StopView("london", inside = false))),
+        JourneyStop("spb", 6_000, Transport.SHIP, 340f, 150f, true, listOf(StopView("spb", inside = false))),
+        JourneyStop("moscow", 7_000, Transport.TRAIN, 388f, 208f, true, listOf(StopView("moscow", inside = false))),
+        JourneyStop("newyork", 9_000, Transport.PLANE, 40f, 480f, true, listOf(StopView("newyork", inside = false))),
+        JourneyStop("buenosaires", 11_000, Transport.SHIP, 86f, 640f, true, listOf(StopView("buenosaires", inside = false))),
+        JourneyStop("tokyo", 13_000, Transport.PLANE, 392f, 420f, true, listOf(StopView("tokyo", inside = false))),
+        JourneyStop("sydney", 15_000, Transport.PLANE, 372f, 650f, true, listOf(StopView("sydney", inside = false))),
     )
 
     const val HOME = "home"

@@ -111,23 +111,6 @@ object ScenePalette {
             "wallHome" to 0xFF3E3652, "wallLitHome" to 0xFF4A4262, "floorHome" to 0xFF5A4A40, "floorLine" to 0xFF4A3C34, "curtain" to 0xFF5B43B8, "woodDark" to 0xFF3A2A22,
             "metal" to 0xFF6B6C78, "paper" to 0xFFF1EEE6, "rug" to 0xFF4A3F6E, "velvet" to 0xFF8E2F3F, "varnish" to 0xFFB5672F, "caseOut" to 0xFF2A2430,
         ),
-        // drawn after the handoff (tools/journey/extra-scenes.js, `EXTRA_LOCPAL`)
-        "prague" to mapOf(
-            "stone" to 0xFFD8C39A, "stoneLit" to 0xFFE8D7B2, "stoneShade" to 0xFFB39B72, "stoneBase" to 0xFFC2AC82, "trim" to 0xFFF2ECD8, "roof" to 0xFF5E7A74,
-            "roofLit" to 0xFF7C9A92, "dark" to 0xFF3A3040, "statue" to 0xFF8A8478,
-        ),
-        "leipzig" to mapOf(
-            "plaster" to 0xFFEFE7D6, "plasterShade" to 0xFFD2C7B0, "roofTile" to 0xFF9A4B3A, "roofTileLit" to 0xFFB8614C, "roofTileShade" to 0xFF74372B,
-            "copper" to 0xFF5E8F80, "copperLit" to 0xFF7FAF9F, "dark" to 0xFF3A3040, "stoneBase" to 0xFFB9AE98,
-        ),
-        "berlin" to mapOf(
-            "ochre" to 0xFFD9A441, "ochreLit" to 0xFFECC062, "ochreShade" to 0xFFB07F2C, "ochreDark" to 0xFF8C6420, "glass" to 0xFF6F7F93, "concrete" to 0xFFCFC8BC,
-            "concreteShade" to 0xFFABA498, "dark" to 0xFF3A3040,
-        ),
-        "amsterdam" to mapOf(
-            "brick" to 0xFFA85C44, "brickLit" to 0xFFC0735A, "brickShade" to 0xFF82432F, "stone" to 0xFFEDE3CF, "stoneShade" to 0xFFCFC3AA, "roof" to 0xFF4E5560,
-            "roofLit" to 0xFF6A727E, "gold" to 0xFFE2B74E, "dark" to 0xFF3A3040, "quay" to 0xFF6E5A4E, "quayLit" to 0xFF8A7466, "boat" to 0xFF3E5A4C, "boatLit" to 0xFFC9B48A,
-        ),
         "austria" to mapOf(
             "mount" to 0xFF5F7480, "mountLit" to 0xFF7E93A0, "mountShade" to 0xFF46585F, "snow" to 0xFFF2F5F8, "meadow" to 0xFF6FA85C, "meadowLit" to 0xFF8FC873,
             "plaster" to 0xFFF0E6D2, "roofGreen" to 0xFF4E7B6A, "wood" to 0xFFA9713F, "woodShade" to 0xFF7E5230,
@@ -135,7 +118,7 @@ object ScenePalette {
     )
 
     fun token(name: String, location: String, mode: SceneMode): Long? =
-        locations[location]?.get(name) ?: (if (mode == SceneMode.DAY) day else evening)[name]
+        (locations[location] ?: ExtraScenePalettes.locations[location])?.get(name) ?: (if (mode == SceneMode.DAY) day else evening)[name]
 
     /** The colour a layer is filled with; null for a token this build does not know — such a layer is not drawn rather than drawn wrong. */
     fun colorOf(fill: String, depth: Int, scene: Scene, mode: SceneMode): Long? {

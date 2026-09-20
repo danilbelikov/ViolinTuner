@@ -60,12 +60,12 @@ class JourneyTest {
     }
 
     @Test
-    fun `the route is linear - sixteen stops after home, prices rise, the first batch ends in Amsterdam`() {
+    fun `the route is linear - sixteen stops after home, prices rise, every stop has its postcard and can be reached`() {
         val stops = JourneyRoute.stops
         assertEquals(17, stops.size)
         assertEquals(JourneyRoute.HOME, stops.first().id)
         assertEquals(stops.map { it.price }.sorted(), stops.map { it.price })
-        assertEquals("amsterdam", stops.last { it.available }.id)
+        assertTrue(stops.all { it.available && it.views.isNotEmpty() })
         assertEquals(81_900, stops.sumOf { it.price }) // the handoff says 81 700; its own prices add up to this
         assertEquals(stops.size, stops.map { it.id }.toSet().size)
     }
@@ -98,11 +98,12 @@ class JourneyTest {
 
     @Test
     fun `extras belong to stops that were reached - a second view only where one is drawn, a second time only where there is a picture`() {
-        val progress = JourneyProgress(earned = 1_000, spent = 0, arrivals = listOf(Arrival("home", 1), Arrival("vienna", 2), Arrival("paris", 3)), extras = emptySet())
+        val progress = JourneyProgress(earned = 1_000, spent = 0, arrivals = listOf(Arrival("home", 1), Arrival("vienna", 2), Arrival("sketch", 3)), extras = emptySet())
         fun stop(id: String) = JourneyRoute.stops.first { it.id == id }
         assertEquals(JourneyExtra.entries.toList(), JourneyRules.offers(stop("vienna"), progress))
         assertEquals(listOf(JourneyExtra.SECOND_TIME, JourneyExtra.SOUVENIR), JourneyRules.offers(stop("home"), progress))
-        assertEquals(listOf(JourneyExtra.SOUVENIR), JourneyRules.offers(stop("paris"), progress))
+        // a stop that has only its sketch yet: nothing to see by day
+        assertEquals(listOf(JourneyExtra.SOUVENIR), JourneyRules.offers(JourneyStop("sketch", 100, Transport.TRAIN, 0f, 0f, available = true), progress))
         assertEquals(listOf(JourneyExtra.SECOND_TIME, JourneyExtra.SOUVENIR), JourneyRules.offers(stop("salzburg"), progress.copy(arrivals = progress.arrivals + Arrival("salzburg", 4))))
         assertEquals(emptyList<JourneyExtra>(), JourneyRules.offers(stop("prague"), progress))
         assertTrue(JourneyRules.canBuy(stop("vienna"), JourneyExtra.SECOND_VIEW, progress, config))
