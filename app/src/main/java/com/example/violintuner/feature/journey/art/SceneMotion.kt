@@ -61,7 +61,7 @@ object SceneMotion {
         if (layer.fill == WATER) WATER_DRIFT * sin(2 * PI.toFloat() * seconds / WATER_PERIOD_S + index * 1.7f) else 0f
 
     /** What a moving thing is at [seconds]: shifted by [dx], [dy] from where it is drawn, flattened to [flap] of its height (a bird's wings), seen at [alpha]. */
-    data class Moved(val dx: Float, val dy: Float, val flap: Float, val alpha: Float) {
+    data class Moved(val dx: Float, val dy: Float, val flap: Float, val alpha: Float, val degrees: Float = 0f, val pivotX: Float = 0f, val pivotY: Float = 0f) {
         companion object {
             val STILL = Moved(0f, 0f, 1f, 1f)
         }
@@ -90,7 +90,14 @@ object SceneMotion {
             flap = 0.35f + 0.65f * wave(seconds, 1f / BIRD_FLAP_HZ, phase = hash(index, 13))
             alpha *= (minOf(along, way.span - along) / BIRD_FADE).coerceIn(0f, 1f)
         }
-        anim.blinkPeriod?.let { period -> if ((seconds % period) / period > 0.35f) alpha = 0f }
+        anim.flashPeriod?.let { period -> if ((seconds % period) / period > 0.35f) alpha = 0f }
+        // eyes: shut for a twentieth of the period, each pair in its own time
+        anim.blinkPeriod?.let { period -> val at = ((seconds + (index % 4) * 0.7f) % period) / period; if (at in 0.92f..0.97f) alpha = 0f }
+        anim.flick?.let { alpha *= 1f - 0.45f * wave(seconds + it.delay, it.period, phase = 0f) }
+        anim.rise?.let { val at = (((seconds + it.delay) % it.period) + it.period) % it.period / it.period; dy -= 10f * at; alpha *= 0.7f * (1f - at) }
+        anim.sway?.let { dx += it.amplitude * sin(2 * PI.toFloat() * seconds / it.period) }
+        var degrees = 0f
+        anim.swing?.let { degrees = it.degrees * sin(2 * PI.toFloat() * seconds / it.period) }
         anim.fall?.let { fall ->
             // where it is drawn is where it is when nothing moves: the fall starts from there
             val start = (baseY - fall.top).coerceIn(0f, fall.height)
@@ -100,7 +107,7 @@ object SceneMotion {
             val left = 1f - down / fall.height
             alpha *= (left / FALL_FADE).coerceIn(0f, 1f) * (down / (fall.height * 0.1f)).coerceIn(0f, 1f)
         }
-        return Moved(dx, dy, flap, alpha)
+        return Moved(dx, dy, flap, alpha, degrees, anim.swing?.pivotX ?: 0f, anim.swing?.pivotY ?: 0f)
     }
 
     /** A star: where it is on the grid, how large, and how bright at [seconds] — each twinkles at its own pace. */

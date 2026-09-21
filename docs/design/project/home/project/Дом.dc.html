@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><script src="home-catalog.js"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}.card{border-radius:20px;overflow:hidden;background:#1E1D25;line-height:0}.ph{height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden}.tb{display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none}.tb .ic{width:48px;height:48px;display:flex;align-items:center;justify-content:center}.tb .t{flex:1;font-size:17px;font-weight:600}.bal{height:32px;padding:0 12px 0 8px;margin-right:12px;border-radius:16px;background:#1E1D25;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;font-variant-numeric:tabular-nums}.btnF{height:48px;padding:0 20px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:700;white-space:nowrap;flex:1}.btnO{height:48px;padding:0 20px;border-radius:24px;border:1.5px solid #C4ADFF;color:#C4ADFF;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:700;white-space:nowrap;flex:1}.btnT{height:48px;padding:0 20px;border-radius:24px;background:#292833;color:#A39FB5;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:700;white-space:nowrap;flex:1}.chip{height:32px;padding:0 14px;border-radius:16px;background:#1E1D25;color:#A39FB5;display:flex;align-items:center;font-size:13px;font-weight:600;white-space:nowrap;flex:none}.chipOn{height:32px;padding:0 14px;border-radius:16px;background:#5B43B8;color:#E9DDFF;display:flex;align-items:center;font-size:13px;font-weight:600;white-space:nowrap;flex:none}.tile{width:84px;display:flex;flex-direction:column;align-items:center;gap:4px;text-align:center}.tile .n{font-size:11px;line-height:1.25;font-weight:600;color:#E6E4EE;text-wrap:pretty}.tile .p{font-size:11px;font-weight:700;font-variant-numeric:tabular-nums;display:flex;align-items:center;gap:3px}.tile .f{font-size:10px;color:#A39FB5;line-height:1.2}.shelf{display:flex;justify-content:space-between;padding:0 4px;background:linear-gradient(#8B5E3C,#6E4A34);height:8px;border-radius:2px;box-shadow:0 6px 10px rgba(0,0,0,.35)}.nav{height:80px;display:flex;background:#1E1D25;flex:none}.nav > div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;color:#A39FB5}@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(var(--a))}}@keyframes sway{0%,100%{transform:translateX(0)}50%{transform:translateX(var(--a))}}@keyframes swing{0%,100%{transform:rotate(var(--n))}50%{transform:rotate(var(--a))}}@keyframes blink{0%,90%,100%{opacity:1}94%{opacity:0}}@keyframes rise{0%{transform:translateY(0);opacity:.7}100%{transform:translateY(-10px);opacity:0}}@keyframes flick{0%,100%{opacity:1}50%{opacity:.55}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}</style></helmet>
+
+<section class="dv-turn" id="s27a">
+<div class="dv-thd"><a class="dv-tid" href="#s27a">27a</a><span class="dv-tname">Дом — свой раздел: комната · снаружи · пусто (первый вход)</span></div>
+<div class="dv-opts">
+<sc-for list="{{ homeScreens }}" as="s" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="ph" data-screen-label="{{ s.id }}">
+  <div class="tb"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div class="t">Дом</div><div class="bal">{{ taktS }}1 640</div></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:14px;padding:4px 16px 0;min-height:0">
+    <div style="position:relative;height:260px;border-radius:24px;overflow:hidden;background:#1E1D25;line-height:0;flex:none">{{ s.scene }}
+      <div style="position:absolute;left:12px;bottom:12px;display:flex;gap:4px;padding:3px;border-radius:18px;background:rgba(19,19,24,.62);line-height:1"><div style="height:30px;padding:0 12px;border-radius:15px;display:flex;align-items:center;font-size:12px;font-weight:700;background:{{ s.roomBg }};color:{{ s.roomFg }}">Комната</div><div style="height:30px;padding:0 12px;border-radius:15px;display:flex;align-items:center;font-size:12px;font-weight:700;background:{{ s.outBg }};color:{{ s.outFg }}">Снаружи</div></div>
+      <div style="position:absolute;right:12px;top:12px;height:26px;padding:0 10px;border-radius:13px;background:rgba(19,19,24,.62);font-size:12px;font-weight:600;display:flex;align-items:center;line-height:1" class="tn">{{ s.time }}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:4px;flex:none"><div style="font-size:24px;font-weight:700;line-height:1.15">{{ s.title }}</div><div class="tn" style="font-size:14px;color:#A39FB5;line-height:1.4">{{ s.sub }}</div></div>
+    <div style="display:flex;gap:10px;flex:none"><div class="btnF">Лавка</div><div class="btnO">Обставить</div></div>
+    <sc-if value="{{ s.gift }}" hint-placeholder-val="{{ false }}"><div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:14px;flex:none"><div style="width:56px;height:56px;border-radius:14px;background:#292833;flex:none;display:flex;align-items:center;justify-content:center">{{ giftEl }}</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">Первый подарок ждёт в лавке</div><div style="font-size:13px;color:#A39FB5;line-height:1.4;margin-top:2px">Подставка — скрипка выходит из футляра. Бесплатно.</div></div><div style="font-size:13px;font-weight:700;color:#C4ADFF;white-space:nowrap">Забрать</div></div></sc-if>
+    <sc-if value="{{ s.strip }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:8px;flex:none"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:14px;font-weight:600">Привезено из путешествия</div><div style="font-size:13px;font-weight:600;color:#C4ADFF">Все вещи</div></div><div style="display:flex;gap:8px;overflow:hidden"><sc-for list="{{ fromStrip }}" as="t" hint-placeholder-count="4"><div style="width:88px;flex:none;display:flex;flex-direction:column;gap:4px;align-items:center;background:#1E1D25;border-radius:12px;padding:8px 4px 6px"><div style="line-height:0">{{ t.el }}</div><div style="font-size:10px;color:#A39FB5;line-height:1.2">{{ t.from }}</div></div></sc-for></div></div></sc-if>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:none">
+      <div style="display:flex;align-items:center;gap:12px"><div style="width:72px;height:48px;border-radius:10px;overflow:hidden;background:#292833;line-height:0;flex:none">{{ woodThumb }}</div><div style="flex:1;min-width:0"><div style="font-size:12px;color:#A39FB5">Следующий дом</div><div style="font-size:14px;font-weight:600;line-height:1.3">Маленький деревянный домик</div></div><div class="tn" style="font-size:14px;font-weight:700;color:#A39FB5;white-space:nowrap;display:flex;align-items:center;gap:4px">{{ taktS }}1 640 / 3 000</div></div>
+      <div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:55%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between"><div class="tn" style="font-size:12px;color:#A39FB5">крыльцо, труба для камина, яблоня</div><div style="font-size:13px;font-weight:600;color:#C4ADFF">Все дома</div></div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Экран остановки «Дом» вырастает в раздел.</b> Открытка 260 dp с переключателем «Комната · Снаружи» прямо на ней и часами (вечер/день — по времени телефона, как везде); ниже имя дома и одна строка с числом вещей; две кнопки — «Лавка» (filled) и «Обставить» (outlined); лента «Привезено из путешествия» связывает дом с дорогой; карточка «Следующий дом» — тот же счёт и полоса, что у карточки пути (<a href="#26a1">26a1</a>), поэтому копить на дом и на дорогу выглядит одинаково. Балланс в шапке — общий кошелёк. Пустое состояние (<a href="#27a3">27a3</a>): комната как есть, вместо ленты — подарок: подставка для скрипки, бесплатно — лавка начинается с радости, а не с ценника.</p>
+</section>
+
+<section class="dv-turn" id="s27b">
+<div class="dv-thd"><a class="dv-tid" href="#s27b">27b</a><span class="dv-tname">Лавка — полки мастера и рынок · карточка вещи · не хватает · всё куплено / нет места / откроется в городе</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="27b1"><div class="dv-olabel"><a class="dv-oid" href="#27b1">27b1</a>Лавка — не таблица, а полки: сверху «Лавка мастера» (дерево, инструменты), ниже «Рынок» (скатерть, мебель и свет), вещи стоят на полках как в комнате; «из Вены» — откуда привезено; серые — откроются в следующем городе</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="ph" data-screen-label="27b1">
+  <div class="tb"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div class="t">Лавка</div><div class="bal">{{ taktS }}1 640</div></div>
+  <div style="display:flex;gap:6px;padding:4px 16px 12px;overflow:hidden;flex:none"><div class="chipOn">Инструменты</div><div class="chip">Свет</div><div class="chip">Мебель</div><div class="chip">Комната</div><div class="chip">Растения</div><div class="chip">Мелочи</div><div class="chip">Животные</div></div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:18px;padding:0 16px;min-height:0">
+    <sc-for list="{{ shelves }}" as="sh" hint-placeholder-count="3">
+    <div style="border-radius:20px;padding:14px 12px 12px;display:flex;flex-direction:column;gap:14px;flex:none;background:{{ sh.bg }}">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 4px"><div style="font-size:15px;font-weight:700">{{ sh.title }}</div><div style="font-size:12px;color:{{ sh.subColor }}">{{ sh.sub }}</div></div>
+      <sc-for list="{{ sh.rows }}" as="r" hint-placeholder-count="1">
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;padding:0 2px"><sc-for list="{{ r.tiles }}" as="t" hint-placeholder-count="4"><div class="tile" style="opacity:{{ t.op }}"><div style="line-height:0;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35))">{{ t.el }}</div></div></sc-for></div>
+        <div class="shelf" style="background:{{ sh.plank }}"></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 2px 0"><sc-for list="{{ r.tiles }}" as="t" hint-placeholder-count="4"><div class="tile" style="opacity:{{ t.op }}"><div class="n">{{ t.n }}</div><div class="p" style="color:{{ t.pc }}">{{ t.pEl }}{{ t.p }}</div><div class="f">{{ t.f }}</div></div></sc-for></div>
+      </div>
+      </sc-for>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div>
+<sc-for list="{{ cardScreens }}" as="c" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ c.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ c.id }}">{{ c.id }}</a>{{ c.label }}</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="ph" data-screen-label="{{ c.id }}">
+  <div class="tb" style="opacity:.35"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div class="t">Лавка</div><div class="bal">{{ taktS }}1 640</div></div>
+  <div style="flex:1;opacity:.35;padding:4px 16px;display:flex;flex-direction:column;gap:18px;overflow:hidden"><div style="display:flex;gap:6px"><div class="chipOn">Инструменты</div><div class="chip">Свет</div><div class="chip">Мебель</div><div class="chip">Комната</div></div><div style="height:220px;border-radius:20px;background:#3A2A22"></div><div style="height:220px;border-radius:20px;background:#1E1D25"></div></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#1E1D25;border-radius:28px 28px 0 0;padding:10px 20px 24px;display:flex;flex-direction:column;gap:16px;box-shadow:0 -20px 60px rgba(0,0,0,.5)">
+    <div style="width:32px;height:4px;border-radius:2px;background:#3A3846;align-self:center"></div>
+    <div style="height:220px;border-radius:20px;background:{{ c.bg }};display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ c.el }}<div style="position:absolute;left:12px;top:12px;height:26px;padding:0 10px;border-radius:13px;background:rgba(19,19,24,.62);font-size:12px;font-weight:600;display:flex;align-items:center;line-height:1;color:#E6E4EE">{{ c.tag }}</div></div>
+    <div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:22px;font-weight:700;line-height:1.15">{{ c.name }}</div><div style="font-size:14px;line-height:1.45;color:#A39FB5;text-wrap:pretty">{{ c.desc }}</div><div class="tn" style="font-size:13px;color:#A39FB5">{{ c.place }}</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div class="tn" style="display:flex;align-items:center;gap:6px;font-size:20px;font-weight:800;color:{{ c.priceColor }}">{{ taktM }}{{ c.price }}</div><div class="tn" style="font-size:13px;color:#A39FB5">{{ c.balance }}</div></div>
+    <sc-if value="{{ c.enough }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:10px"><div class="btnO">Примерить</div><div class="btnF">{{ c.buy }}</div></div></sc-if>
+    <sc-if value="{{ c.short }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:10px"><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:{{ c.pct }};border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div><div style="display:flex;gap:10px"><div class="btnO">Примерить</div><div class="btnT">{{ c.buy }}</div></div><div class="tn" style="text-align:center;font-size:13px;color:#A39FB5">{{ c.hint }}</div></div></sc-if>
+  </div>
+</div>
+</x-import>
+</div>
+</sc-for>
+<div class="dv-opt" id="27b4"><div class="dv-olabel"><a class="dv-oid" href="#27b4">27b4</a>Пограничные полки: всё куплено («полка ваша»), вещь без места в этом доме (камин — «нужен дом с трубой»), вещи следующего города — силуэтом, «откроется в Праге»</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="ph" data-screen-label="27b4">
+  <div class="tb"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div class="t">Лавка</div><div class="bal">{{ taktS }}1 640</div></div>
+  <div style="display:flex;gap:6px;padding:4px 16px 12px;overflow:hidden;flex:none"><div class="chip">Инструменты</div><div class="chipOn">Свет</div><div class="chip">Мебель</div><div class="chip">Комната</div><div class="chip">Растения</div></div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:18px;padding:0 16px;min-height:0">
+    <sc-for list="{{ edgeShelves }}" as="sh" hint-placeholder-count="3">
+    <div style="border-radius:20px;padding:14px 12px 12px;display:flex;flex-direction:column;gap:14px;flex:none;background:{{ sh.bg }}">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 4px"><div style="font-size:15px;font-weight:700">{{ sh.title }}</div><div style="font-size:12px;color:{{ sh.subColor }}">{{ sh.sub }}</div></div>
+      <sc-for list="{{ sh.rows }}" as="r" hint-placeholder-count="1">
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;padding:0 2px"><sc-for list="{{ r.tiles }}" as="t" hint-placeholder-count="4"><div class="tile" style="opacity:{{ t.op }}"><div style="line-height:0;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35))">{{ t.el }}</div></div></sc-for></div>
+        <div class="shelf" style="background:{{ sh.plank }}"></div>
+        <div style="display:flex;justify-content:space-between;padding:8px 2px 0"><sc-for list="{{ r.tiles }}" as="t" hint-placeholder-count="4"><div class="tile" style="opacity:{{ t.op }}"><div class="n">{{ t.n }}</div><div class="p" style="color:{{ t.pc }}">{{ t.pEl }}{{ t.p }}</div><div class="f">{{ t.f }}</div></div></sc-for></div>
+      </div>
+      </sc-for>
+      <div style="font-size:13px;line-height:1.45;color:#A39FB5;padding:0 4px;text-wrap:pretty">{{ sh.note }}</div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div>
+</div>
+<p class="dv-next"><b>Лавка как место, а не каталог.</b> Категории — чипы, но внутри — полки: у мастера (тёмное дерево, тёплый свет) стоят скрипки, футляры и пюпитры; на рынке (скатерть в полоску) — лампы, кресла, ковры; питомник — отдельная полка. Вещь на полке нарисована теми же слоями, что и в комнате, — узнаётся сразу, а не по фотографии. Под вещью: имя, цена, откуда привезена. Карточка — лист снизу: вещь крупно на цвете полки, имя, одна строка, где встанет («на стол, слева»), цена и «Примерить · Купить». Не хватает — тональная кнопка «не хватает 560» с полосой, как у дороги (<a href="#26a3">26a3</a>), и подсказка «ещё примерно два занятия». Три пограничных состояния — на одном экране (<a href="#27b4">27b4</a>): полка «ваша», вещь без места в этом доме остаётся видимой и покупаемой (переедет с вами), вещи следующего города — силуэтами, чтобы дорога звала.</p>
+</section>
+
+<section class="dv-turn" id="s27c">
+<div class="dv-thd"><a class="dv-tid" href="#s27c">27c</a><span class="dv-tname">Примерка — вещь-призрак в своей комнате · вечер и день</span></div>
+<div class="dv-opts">
+<sc-for list="{{ tryScreens }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="ph" data-screen-label="{{ s.id }}">
+  <div style="flex:1;position:relative;line-height:0;overflow:hidden;background:#1E1D25">{{ s.scene }}
+    <div style="position:absolute;left:8px;top:8px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:22px;background:rgba(19,19,24,.62)"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M6 6 L18 18 M18 6 L6 18" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div>
+    <div style="position:absolute;right:12px;top:14px;display:flex;gap:4px;padding:3px;border-radius:18px;background:rgba(19,19,24,.62);line-height:1"><div style="height:30px;padding:0 12px;border-radius:15px;display:flex;align-items:center;font-size:12px;font-weight:700;background:{{ s.eveBg }};color:{{ s.eveFg }}">вечер</div><div style="height:30px;padding:0 12px;border-radius:15px;display:flex;align-items:center;font-size:12px;font-weight:700;background:{{ s.dayBg }};color:{{ s.dayFg }}">день</div></div>
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:16px 20px 18px;display:flex;flex-direction:column;gap:14px;line-height:1.3;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.85) 40%)">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><div><div style="font-size:20px;font-weight:700">{{ s.name }}</div><div style="font-size:13px;color:#A39FB5;margin-top:3px">{{ s.place }}</div></div><div class="tn" style="display:flex;align-items:center;gap:5px;font-size:18px;font-weight:800;color:{{ s.priceColor }}">{{ taktM }}{{ s.price }}</div></div>
+      <sc-if value="{{ s.enough }}" hint-placeholder-val="{{ true }}"><div style="display:flex;gap:10px"><div class="btnO">Вернуть как было</div><div class="btnF">{{ s.buy }}</div></div></sc-if>
+      <sc-if value="{{ s.short }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:10px"><div class="btnO">Вернуть как было</div><div class="btnT">{{ s.buy }}</div></div></sc-if>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Примерка — та же комната во весь экран</b> (полный кадр, как у открытки: щипок и параллакс работают), вещь рисуется на своём месте в половину плотности и с пунктирной рамкой, которая дышит (1,6 с). Старая вещь с этого места на время примерки убирается — видно замену, а не наложение. Переключатель «вечер · день» нужен здесь особенно: люстра и камин покупают ради вечера. Кнопки внизу: «Вернуть как было» и «Купить · 900»; не хватает — тональная. Обои и пол примеряются так же, просто без рамки: меняется вся стена.</p>
+</section>
+
+<section class="dv-turn" id="s27d">
+<div class="dv-thd"><a class="dv-tid" href="#s27d">27d</a><span class="dv-tname">Обставить — гардероб по местам, замена одним тапом</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="27d1"><div class="dv-olabel"><a class="dv-oid" href="#27d1">27d1</a>Комната сверху (живая, реагирует на выбор), ниже — список мест: имя места, что стоит, варианты из купленного в ряд; выбранный — рамка primary; «пусто» — вернуть место; у питомца вместо вариантов — позы</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="ph" data-screen-label="27d1">
+  <div class="tb"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div class="t">Обставить</div><div style="height:40px;padding:0 12px;margin-right:4px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Снаружи</div></div>
+  <div style="position:relative;height:200px;margin:4px 16px 0;border-radius:24px;overflow:hidden;background:#1E1D25;line-height:0;flex:none">{{ wardScene }}<div style="position:absolute;left:12px;top:12px;height:26px;padding:0 10px;border-radius:13px;background:rgba(19,19,24,.62);font-size:12px;font-weight:600;display:flex;align-items:center;line-height:1" class="tn">Съёмная комната · 20 мест, 16 занято</div></div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;padding:8px 16px 0;min-height:0">
+    <sc-for list="{{ wardRows }}" as="w" hint-placeholder-count="6">
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+      <div style="width:118px;flex:none;min-width:0"><div style="font-size:12px;color:#A39FB5">{{ w.place }}</div><div style="font-size:14px;font-weight:600;line-height:1.3;margin-top:2px;text-wrap:pretty">{{ w.cur }}</div></div>
+      <div style="flex:1;display:flex;gap:6px;overflow:hidden;justify-content:flex-end"><sc-for list="{{ w.vars }}" as="v" hint-placeholder-count="3"><div style="width:44px;height:44px;border-radius:12px;flex:none;display:flex;align-items:center;justify-content:center;line-height:0;background:#1E1D25;border:{{ v.border }};box-sizing:border-box;font-size:10px;color:#A39FB5;text-align:center;line-height:1.2">{{ v.el }}{{ v.txt }}</div></sc-for></div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div>
+</div>
+<p class="dv-next"><b>Без свободного перетаскивания</b> — и мы за это: вещь знает своё место, комната всегда собрана, а список мест сам объясняет, что где может стоять. Тап по варианту — замена сразу, сверху комната перерисовывается; «пусто» возвращает голое место (стол без лампы — тоже выбор). У питомца варианты — позы: подоконник, ковёр, стул (стул — только если куплено кресло). Внизу списка — места, которых в этом доме нет («Камин — в домах с трубой»), серым: видно, куда переедут купленные вещи. Если перетаскивание всё же понадобится — только внутри одного места между двумя-тремя точками (кошка на левый или правый край подоконника), не по всей комнате.</p>
+</section>
+
+<section class="dv-turn" id="s27e">
+<div class="dv-thd"><a class="dv-tid" href="#s27e">27e</a><span class="dv-tname">Дома — ряд, карточка дома, переезд · домик с яблоней целиком: снаружи, комната, четыре вещи снаружи</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="27e1"><div class="dv-olabel"><a class="dv-oid" href="#27e1">27e1</a>Все дома — ряд как паспорт: где живёте, следующий с полосой накопления, дальние силуэтами с ценой; «жить» можно в любом купленном — переключатель «здесь живу»</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="ph" data-screen-label="27e1">
+  <div class="tb"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div class="t">Дома</div><div class="bal">{{ taktS }}1 640</div></div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:10px;padding:4px 16px 0;min-height:0">
+    <sc-for list="{{ houseRows }}" as="hs" hint-placeholder-count="7">
+    <div style="background:#1E1D25;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;flex:none;opacity:{{ hs.op }}">
+      <div style="display:flex;align-items:center;gap:12px"><div style="width:84px;height:54px;border-radius:10px;overflow:hidden;background:#292833;line-height:0;flex:none;display:flex;align-items:center;justify-content:center">{{ hs.el }}</div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;line-height:1.3">{{ hs.name }}</div><div style="font-size:12px;color:#A39FB5;margin-top:2px">{{ hs.sub }}</div></div><div class="tn" style="font-size:14px;font-weight:700;white-space:nowrap;display:flex;align-items:center;gap:4px;color:{{ hs.pc }}">{{ hs.pEl }}{{ hs.price }}</div></div>
+      <sc-if value="{{ hs.bar }}" hint-placeholder-val="{{ false }}"><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:55%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div></sc-if>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="27e2"><div class="dv-olabel"><a class="dv-oid" href="#27e2">27e2</a>Карточка дома — снаружи днём, «что нового» (камин, крыльцо, сад), что вещи переедут сами, старая комната останется; «Переехать · 3 000»</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="ph" data-screen-label="27e2">
+  <div class="tb"><div class="ic"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div class="t">Дома</div><div class="bal">{{ taktS }}3 120</div></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:14px;padding:4px 16px 0;min-height:0">
+    <div style="position:relative;height:260px;border-radius:24px;overflow:hidden;background:#1E1D25;line-height:0;flex:none">{{ woodOutDay }}<div style="position:absolute;left:12px;top:12px;height:26px;padding:0 10px;border-radius:13px;background:rgba(19,19,24,.62);font-size:12px;font-weight:600;display:flex;align-items:center;line-height:1" class="tn">дом 1 из 6</div><div style="position:absolute;right:12px;bottom:12px;display:flex;gap:4px;padding:3px;border-radius:18px;background:rgba(19,19,24,.62);line-height:1"><div style="height:30px;padding:0 12px;border-radius:15px;display:flex;align-items:center;font-size:12px;font-weight:700;background:#C4ADFF;color:#2E1A6E">Снаружи</div><div style="height:30px;padding:0 12px;border-radius:15px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#E6E4EE">Комната</div></div></div>
+    <div style="display:flex;flex-direction:column;gap:4px;flex:none"><div style="font-size:24px;font-weight:700;line-height:1.15">Маленький деревянный домик</div><div style="font-size:14px;color:#A39FB5">крыльцо, печная труба, яблоня</div><div style="font-size:14px;line-height:1.45;margin-top:4px;text-wrap:pretty">Первый свой дом. Стены бревенчатые — обои не нужны. Труба — значит, будет место для камина.</div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;flex:none"><div style="font-size:14px;font-weight:600">Что нового</div><sc-for list="{{ woodNews }}" as="n" hint-placeholder-count="3"><div style="display:flex;gap:10px;align-items:baseline;font-size:14px;color:#A39FB5"><div style="width:6px;height:6px;border-radius:3px;background:#C4ADFF;flex:none;transform:translateY(-2px)"></div><div>{{ n }}</div></div></sc-for></div>
+    <div style="font-size:13px;line-height:1.45;color:#A39FB5;text-wrap:pretty;flex:none">Все вещи переедут сами и встанут на те же места. Съёмная комната останется — можно вернуться в любой день.</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex:none;margin-top:auto;padding-bottom:16px"><div class="tn" style="font-size:13px;color:#A39FB5">останется 120</div><div class="btnF" style="flex:none;padding:0 24px">{{ taktD }}Переехать · 3 000</div></div>
+  </div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="27e3"><div class="dv-olabel"><a class="dv-oid" href="#27e3">27e3</a>Переезд — маленькое кино по образцу дороги (26f2): дом снаружи вечером проявляется, окно зажигается, счётчик «14 вещей на своих местах»; кошка уже на крыльце</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="ph" data-screen-label="27e3">
+  <div style="flex:1;position:relative;line-height:0;overflow:hidden;background:#1E1D25">{{ moveScene }}
+    <div style="position:absolute;left:0;right:0;bottom:0;padding:20px 24px 28px;display:flex;flex-direction:column;gap:14px;line-height:1.3;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.85) 40%)">
+      <div style="font-size:13px;font-weight:600;color:#C4ADFF" class="tn">Переезд · 2 с</div>
+      <div style="font-size:26px;font-weight:700;line-height:1.15">Маленький деревянный домик</div>
+      <div class="tn" style="font-size:15px;color:#A39FB5">14 вещей на своих местах · кошка уже на крыльце</div>
+      <div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:70%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="27e4"><div class="dv-olabel"><a class="dv-oid" href="#27e4">27e4</a>Домик — комната вечером: те же 20 вещей переехали и встали на те же места; новое место «камин» занято; бревенчатые стены вместо обоев</div><div class="card" style="width:412px">{{ woodRoomEve }}</div></div>
+<div class="dv-opt" id="27e5"><div class="dv-olabel"><a class="dv-oid" href="#27e5">27e5</a>Домик снаружи, день, четыре вещи снаружи: почтовый ящик, велосипед у стены, качели (качаются), флюгер на трубе; дым — `rise`</div><div class="card" style="width:412px">{{ woodOutItems }}</div></div>
+<div class="dv-opt" id="27e6"><div class="dv-olabel"><a class="dv-oid" href="#27e6">27e6</a>Съёмная комната снаружи — вечер: дом в городе, третий этаж, ваше окно — то, где штора вашего цвета (меняется вместе со шторами)</div><div class="card" style="width:412px">{{ rentOutEve }}</div></div>
+</div>
+<p class="dv-next"><b>Дом — крупная покупка, и ряд домов устроен как паспорт:</b> где живёте, следующий с полосой накопления, дальние — силуэтом с ценой (открытки домов дорисуем позже, как и города). Переезд — «кино» в 2 с: дом снаружи вечером, окно зажигается, вещи уже внутри. Старые дома остаются: переключатель «здесь живу» в ряду — можно жить в съёмной комнате, имея шале. Места называются одинаково во всех домах, поэтому вещи переезжают сами; у домов свои сдвиги мест (в домике стол правее — слева печь) и свой список: у домика нет «угла слева» и обоев, зато есть камин и крыльцо. Вещи без места в новом доме ждут в гардеробе — ничего не теряется.</p>
+</section>
+
+<section class="dv-turn" id="s27f">
+<div class="dv-thd"><a class="dv-tid" href="#s27f">27f</a><span class="dv-tname">Комната «до и после» — пустая · 5 · 20 · всё куплено</span></div>
+<div class="dv-opts">
+<sc-for list="{{ growth }}" as="g" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ g.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ g.id }}">{{ g.id }}</a>{{ g.label }}</div><div class="card" style="width:412px">{{ g.el }}</div><div class="tn" style="font-size:11px;color:rgba(230,228,238,.5)">{{ g.stat }}</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Много вещей не превращаются в свалку, потому что мест ограниченное число</b> — в съёмной комнате 22 (плюс стены, пол и шторы), и каждое держит одну вещь. Весь каталог — это не сотня предметов в кадре, а полный гардероб: видно 22, остальные ждут в «Обставить». Комната со всем купленным плотнее пустой примерно в четыре раза по слоям ({{ cntStart }} → {{ cntAll }}), в пределах бюджета 400. Правило плотности: у каждого места одна крупная форма и не больше двух мелких; мелочи (чашка, паспорт, книги) живут только на столе.</p>
+</section>
+
+<section class="dv-turn" id="s27g">
+<div class="dv-thd"><a class="dv-tid" href="#s27g">27g</a><span class="dv-tname">Окно на «Занятиях» — дома · в Токио с малой карточкой «дом» · переключатель</span></div>
+<div class="dv-opts">
+<sc-for list="{{ lessonWins }}" as="w" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ w.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ w.id }}">{{ w.id }}</a>{{ w.label }}</div>
+<div style="width:412px;background:#131318;border-radius:20px;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:10px">
+  <div style="display:flex;gap:8px">
+    <div style="position:relative;flex:1;height:160px;border-radius:20px;overflow:hidden;background:#1E1D25;line-height:0">{{ w.main }}
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 14px;display:flex;align-items:flex-end;justify-content:space-between;line-height:1.3;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.6))"><div><div style="font-size:14px;font-weight:700">{{ w.title }}</div><div class="tn" style="font-size:12px;color:#E6E4EE;opacity:.85">{{ w.sub }}</div></div><div style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:14px;background:rgba(19,19,24,.62)">{{ taktS }}<div class="tn" style="font-size:13px;font-weight:700">1 640</div></div></div>
+      <sc-if value="{{ w.toggle }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;right:10px;top:10px;display:flex;gap:4px;padding:3px;border-radius:16px;background:rgba(19,19,24,.62);line-height:1"><div style="height:26px;padding:0 10px;border-radius:13px;display:flex;align-items:center;font-size:11px;font-weight:700;color:#E6E4EE">Токио</div><div style="height:26px;padding:0 10px;border-radius:13px;display:flex;align-items:center;font-size:11px;font-weight:700;background:#C4ADFF;color:#2E1A6E">Дом</div></div></sc-if>
+    </div>
+    <sc-if value="{{ w.side }}" hint-placeholder-val="{{ false }}"><div style="position:relative;width:96px;height:160px;border-radius:20px;overflow:hidden;background:#1E1D25;line-height:0;flex:none">{{ w.sideEl }}<div style="position:absolute;left:0;right:0;bottom:0;padding:8px 10px;font-size:12px;font-weight:700;line-height:1.2;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.7))">Дом</div></div></sc-if>
+  </div>
+</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Рекомендуем <a href="#27g2">27g2</a> — маленькая вторая карточка «дом».</b> В дороге окно — открытка города (дорога главная, как и было), а дом стоит рядом узкой карточкой 96 dp: видно кошку на подоконнике и свет лампы — достаточно, чтобы помнить, что копишь ещё и на это. Когда человек дома (остановка 0 или «здесь живу»), карточка одна — комната во всю ширину (<a href="#27g1">27g1</a>). Переключатель (<a href="#27g3">27g3</a>) честнее, но требует тапа и прячет одно из двух; оставили как запас. Полоска «до Праги осталось 20» на листе итога не меняется; там же можно добавить вторую строку «до люстры — 40», если человек копит на вещь (отложил в лавке).</p>
+</section>
+
+<section class="dv-turn" id="s27h">
+<div class="dv-thd"><a class="dv-tid" href="#s27h">27h</a><span class="dv-tname">Landscape 892×412 — Дом · Лавка</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="27h1"><div class="dv-olabel"><a class="dv-oid" href="#27h1">27h1</a>Дом — комната слева во всю высоту (кадр шире, видны оба угла), справа имя, кнопки и следующий дом</div>
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;font-family:Manrope,system-ui,sans-serif;box-sizing:border-box">
+  <div style="flex:1;min-width:0;position:relative;line-height:0;border-radius:0 24px 24px 0;overflow:hidden;background:#1E1D25">{{ landRoom }}<div style="position:absolute;left:8px;top:8px;width:44px;height:44px;display:flex;align-items:center;justify-content:center;border-radius:22px;background:rgba(19,19,24,.62)"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="position:absolute;left:12px;bottom:12px;display:flex;gap:4px;padding:3px;border-radius:18px;background:rgba(19,19,24,.62);line-height:1"><div style="height:30px;padding:0 12px;border-radius:15px;display:flex;align-items:center;font-size:12px;font-weight:700;background:#C4ADFF;color:#2E1A6E">Комната</div><div style="height:30px;padding:0 12px;border-radius:15px;display:flex;align-items:center;font-size:12px;font-weight:700;color:#E6E4EE">Снаружи</div></div></div>
+  <div style="width:340px;flex:none;display:flex;flex-direction:column;gap:14px;padding:20px 20px 16px;box-sizing:border-box">
+    <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:17px;font-weight:600">Дом</div><div class="bal" style="margin:0">{{ taktS }}1 640</div></div>
+    <div><div style="font-size:22px;font-weight:700;line-height:1.15">Съёмная комната</div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:4px">с 28 июля · 20 вещей, 6 привезены</div></div>
+    <div style="display:flex;gap:10px"><div class="btnF">Лавка</div><div class="btnO">Обставить</div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:10px;margin-top:auto">
+      <div style="display:flex;align-items:center;gap:10px"><div style="width:64px;height:42px;border-radius:8px;overflow:hidden;background:#292833;line-height:0;flex:none">{{ woodThumb2 }}</div><div style="flex:1;min-width:0"><div style="font-size:11px;color:#A39FB5">Следующий дом</div><div style="font-size:13px;font-weight:600;line-height:1.3">Деревянный домик</div></div><div class="tn" style="font-size:13px;font-weight:700;color:#A39FB5;white-space:nowrap">1 640 / 3 000</div></div>
+      <div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:55%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div>
+    </div>
+  </div>
+</div>
+</div>
+<div class="dv-opt" id="27h2"><div class="dv-olabel"><a class="dv-oid" href="#27h2">27h2</a>Лавка — категории колонкой слева, полки шире (по шесть вещей), карточка вещи открывается справа панелью, а не листом</div>
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;font-family:Manrope,system-ui,sans-serif;box-sizing:border-box">
+  <div style="width:180px;flex:none;display:flex;flex-direction:column;gap:4px;padding:12px 12px;box-sizing:border-box;border-right:1px solid rgba(255,255,255,.06)">
+    <div style="display:flex;align-items:center;gap:6px;height:40px;margin-bottom:6px"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg><div style="font-size:16px;font-weight:600">Лавка</div></div>
+    <sc-for list="{{ landCats }}" as="c" hint-placeholder-count="7"><div style="height:36px;padding:0 12px;border-radius:12px;display:flex;align-items:center;font-size:13px;font-weight:600;background:{{ c.bg }};color:{{ c.fg }}">{{ c.n }}</div></sc-for>
+    <div class="bal" style="margin:auto 0 0;justify-content:center">{{ taktS }}1 640</div>
+  </div>
+  <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:14px;padding:14px 16px;overflow:hidden">
+    <sc-for list="{{ landShelves }}" as="sh" hint-placeholder-count="2">
+    <div style="border-radius:18px;padding:12px 14px 10px;display:flex;flex-direction:column;gap:12px;flex:none;background:{{ sh.bg }}">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:14px;font-weight:700">{{ sh.title }}</div><div style="font-size:12px;color:{{ sh.subColor }}">{{ sh.sub }}</div></div>
+      <sc-for list="{{ sh.rows }}" as="r" hint-placeholder-count="1">
+      <div><div style="display:flex;justify-content:space-between;align-items:flex-end;padding:0 2px"><sc-for list="{{ r.tiles }}" as="t" hint-placeholder-count="6"><div class="tile" style="width:76px;opacity:{{ t.op }}"><div style="line-height:0;filter:drop-shadow(0 6px 6px rgba(0,0,0,.35))">{{ t.el }}</div></div></sc-for></div><div class="shelf" style="background:{{ sh.plank }}"></div><div style="display:flex;justify-content:space-between;padding:6px 2px 0"><sc-for list="{{ r.tiles }}" as="t" hint-placeholder-count="6"><div class="tile" style="width:76px;opacity:{{ t.op }}"><div class="n" style="font-size:10.5px">{{ t.n }}</div><div class="p" style="color:{{ t.pc }}">{{ t.pEl }}{{ t.p }}</div></div></sc-for></div></div>
+      </sc-for>
+    </div>
+    </sc-for>
+  </div>
+  <div style="width:250px;flex:none;background:#1E1D25;display:flex;flex-direction:column;gap:12px;padding:14px 16px;box-sizing:border-box">
+    <div style="height:150px;border-radius:16px;background:#3A2A22;display:flex;align-items:center;justify-content:center;line-height:0">{{ landCardEl }}</div>
+    <div><div style="font-size:17px;font-weight:700;line-height:1.2">Мастеровая</div><div style="font-size:12px;color:#A39FB5;margin-top:3px;line-height:1.4">Одна мастерская, одни руки, полгода работы. Из Кремоны.</div></div>
+    <div class="tn" style="display:flex;align-items:center;gap:5px;font-size:18px;font-weight:800;color:#E6E4EE">{{ taktM }}1 200</div>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:auto"><div class="btnF" style="height:44px">{{ taktD }}Купить · 1 200</div><div class="btnO" style="height:44px">Примерить</div></div>
+  </div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1320px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · Дом: ITEMS, SLOTS, HOUSES, палитра, движения, тексты, экономика, что рисуется плохо</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(560px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">ITEMS — каталог первой версии: {{ itemCount }} вещей на {{ itemSum }} тактов (без домов; дома ещё 99 000)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) 62px 74px minmax(0,1.4fr) 58px 92px 44px">
+    <div class="h">id</div><div class="h">Группа</div><div class="h">Место</div><div class="h">Имя</div><div class="h">Цена</div><div class="h">Откуда</div><div class="h">Слоёв</div>
+    <sc-for list="{{ itemRows }}" as="r" hint-placeholder-count="30"><div class="mono">{{ r.id }}</div><div style="color:#A39FB5">{{ r.g }}</div><div class="mono">{{ r.s }}</div><div style="font-weight:600">{{ r.n }}</div><div class="mono tn">{{ r.p }}</div><div style="color:#A39FB5">{{ r.from }}</div><div class="mono tn">{{ r.nl }}</div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px">Запись: `{ id, group, slot, at?, name, desc, price, from?, z, layers: (x, y, eve) => [...] }` — слои в координатах места (x, y — низ-центр для вещей на полу и столе, центр для вещей на стене); `z` — порядок по глубине среди вещей (вид −2, окно −1, шторы и ковёр 0, стена и стол 1, мебель 2, скрипка и футляр 3, питомец 6 — рисуется после героя). Обои, пол и шторы — `over: { token: '#hex' }` (набор токенов) плюс необязательный `pat: eve => [...]` — слой узора по правилу; они не занимают слот вещи, а переопределяют палитру дома. Питомец — один слот `pet` с полем `at` (где именно: sillL, pet, chairTop, deskM, wallM, floorR) — так рыбка, канарейка и кошка не спорят за место, но питомец в доме один. Полный исходник каталога — `home-catalog.js` рядом с макетом, те же помощники `R, RR, E, C, PG, ARCH, L, rep, hero, lamp, tree, fir`.</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">SLOTS — места (общие для всех домов; у дома — сдвиги `pos` и список, чего нет)</div>
+  <div class="dv-tbl" style="grid-template-columns:82px minmax(0,1fr) 78px minmax(0,1.3fr)">
+    <div class="h">id</div><div class="h">Имя</div><div class="h">x, y</div><div class="h">Где есть · что ставят</div>
+    <sc-for list="{{ slotRows }}" as="r" hint-placeholder-count="24"><div class="mono">{{ r.id }}</div><div style="font-weight:600">{{ r.name }}</div><div class="mono tn">{{ r.xy }}</div><div style="color:#A39FB5">{{ r.info }}</div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px">Комната = основа (`house.room(eve, pat, floorPat)` ≈ 12 слоёв: стены, полосы брёвен, пол, плинтус) + вещи по местам + герой (306, 212). Стена продолжена вверх до −120, чтобы полный экран в портрете (viewBox −10 −80 380 340) не обрывал её. Правый край: футляр (340) и «угол справа» (374) в портрете на весь экран видны частично — это допустимо для угла, но футляр в дальнем доме лучше сдвинуть к 330. Домик: `pos` сдвигает стол на 106, стул на 172, пюпитр на 212 — слева печь (36); нет `floorL`, `wallpaper`; есть `fire`, `oPorch`, `oRoof`.</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">HOUSES</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1.1fr) minmax(0,1fr) 62px minmax(0,1.4fr)">
+    <div class="h">№</div><div class="h">Дом</div><div class="h">Настроение</div><div class="h">Цена</div><div class="h">Новые места · чего нет</div>
+    <sc-for list="{{ houseDev }}" as="r" hint-placeholder-count="7"><div class="mono tn">{{ r.i }}</div><div style="font-weight:600">{{ r.name }}</div><div style="color:#A39FB5">{{ r.mood }}</div><div class="mono tn">{{ r.p }}</div><div style="color:#A39FB5">{{ r.news }}</div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px">`{ id, name, sub, price, room: (eve, pat, floorPat) => layers, outside: (eve, curtainToken) => layers, pos: { slot: [x, y] }, hero: [x, y] }`. Нарисованы полностью 0 и 1; у 2–6 — силуэты `SIL` (сетка 200 × 120) для ряда домов и штампа. Предлагаем чуть поправить цены: 3 000 · 6 000 · 10 000 · 15 000 · 25 000 · 40 000 оставить, но открывать дом 2 только после Праги, дом 3 после Амстердама и т. д. — дома тоже «привозятся» с дороги, как вещи (в), тогда шале не купишь, не дойдя до Альп. Старые дома остаются, «здесь живу» — переключатель в ряду домов.</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Палитра дома — токены вещей (одни для дня и вечера; вечер отличают только `window`, `glow`, `GLOW` и заливка неба)</div>
+  <div style="display:flex;flex-wrap:wrap;gap:6px"><sc-for list="{{ palRows }}" as="t" hint-placeholder-count="40"><div style="display:flex;align-items:center;gap:6px;padding:4px 8px 4px 4px;background:#15151B;border-radius:8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.c }};flex:none"></div><span class="mono" style="font-size:10.5px">{{ t.name }}</span></div></sc-for></div>
+  <div style="color:#A39FB5;margin-top:8px">День в комнате: `wallHome #5A5270 · wallLitHome #6A6282 · floorHome #6E5A4C · floorLine #5A4838 · logWall #8B6244` — светлее вечерних; обои задают вечерний тон, дневной считаем `mix(tone, #FFFFFF, .18)`. Наборы обоев (`over`): охра #5A4636/#6B5443 · синие #2F4A5A/#3A5A6C · зелёные #2E4A3E/#3A5A4B · полоска #4A3A5A + `rep(21)` полос α .06 · дамаск #4A3358 + ромбы α .07 · цветок #4E4058 + точки #E39AB6 α .25 · ноты — головки и штили α .1 · панели — `wood` до y 112. Полы: светлая доска #8E6E52 · дуб #3A2A22 · ёлочка #6E5240 + параллелограммы · плитка #5F5B66 + сетка 36 × 15.</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Движения — строка `anim` у слоя (через `+`)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,.9fr) minmax(0,1.8fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="8"><div style="font-weight:600" class="mono">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp / sp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Элемент</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="10"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Экономика — наше мнение по разделу 6</div>
+  <div style="color:#A39FB5;display:flex;flex-direction:column;gap:8px">
+    <div><b style="color:#E6E4EE">Один кошелёк, вещи открываются городами — (в) поверх (а), как вы и хотели.</b> Второй кошелёк (б) красив по смыслу, но удваивает счётчики на каждом экране и ломает простую фразу «+340 тактов». Города решают ту же задачу мягче: в лавке всегда есть «базовая» полка без пометки (стол, стул, кошка, обои), а лучшее привозится — и человеку хочется в Прагу не только ради штампа. Пометка «из Праги» на полке и в карточке, силуэты будущих вещей — «откроется в Праге».</div>
+    <div><b style="color:#E6E4EE">Цены.</b> Ваши коридоры оставили; сумма каталога {{ itemSum }} + дома 99 000 против дороги 81 700 — выбор настоящий. Самое важное правило — <b style="color:#E6E4EE">цена вещи не выше половины следующего перегона</b>: тогда, купив люстру, человек отодвигает Прагу на два-три занятия, а не на месяц. Дома дороже перегона намеренно — это «параллельная мечта», и полоса накопления на экране «Дом» показывает её честно.</div>
+    <div><b style="color:#E6E4EE">Против застревания.</b> Не запрещать тратить, а показывать: в карточке вещи строка «останется 120 · до Праги ещё 1 480». И один тихий стимул к дороге — лучшие вещи (скрипка 1720, рояль, витраж) привозятся из далёких городов.</div>
+    <div><b style="color:#E6E4EE">Подарки.</b> Первый — подставка (скрипка выходит из футляра) сразу; второй — открытки на стену (появляются сами по мере дороги, 120 — символическая, можно 0); кошка подарком не нужна — за неё приятно копить. В каждом новом городе одна вещь на полке помечена «подарок города» (0) — заходить в лавку после прибытия становится привычкой.</div>
+    <div><b style="color:#E6E4EE">Скрипка — только украшение, но с тихим смыслом.</b> Никаких бонусов к тактам. Смысл: имя инструмента идёт в лист итога занятия («Сыграно на Кремонской, 1720») и в запись в «Записях»; на открытках городов футляр в руке героя остаётся — но на сцене зала (вид «внутри») стоит именно ваша скрипка на подставке. Это связывает дом и дорогу, ничего не считая.</div>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Честно: что в этих рамках выглядит плохо и чем заменить</div>
+  <div style="color:#A39FB5;display:flex;flex-direction:column;gap:6px">
+    <div><b style="color:#E6E4EE">Животные</b> — кошка-«буханка» спящая читается хорошо (эллипс, круг, два треугольника, хвост-дуга), сидящая и идущая — нет: слишком много суставов на 30 единиц сетки. Оставляем позы лежа/спит; собаку — только лёжа; попугая и канарейку — как цветные пятна с одним движением. Отказаться: черепаха на ковре не читается (пятно), лучше на подоконнике рядом с цветами или убрать.</div>
+    <div><b style="color:#E6E4EE">Мягкая мебель</b> — кресло и диван без градиентов выглядят как коробки. Кресло спасли подлокотниками-скруглениями и светлой подушкой; диван (три места) не рисуем в первой версии — в комнате нет места шириной 90, и он спорит со столом. Кресло-качалка — да: дуга и `swing` делают вещь живой.</div>
+    <div><b style="color:#E6E4EE">Пианино</b> хорошо, <b style="color:#E6E4EE">рояль</b> — только в большом доме и только силуэтом крышки (иначе 40 слоёв). <b style="color:#E6E4EE">Люстра</b> при высоте комнаты 200 висит близко к пюпитру — в съёмной комнате она маленькая (24 радиус), в квартире с высоким потолком — полноразмерная. <b style="color:#E6E4EE">Витраж</b> — полупрозрачные цветные стёкла поверх вида работают, но прячут луну; вечером делаем стёкла на α .3.</div>
+    <div><b style="color:#E6E4EE">Мелочи на столе</b> (паспорт, канифоль, камертон) на сетке 412 — 6–12 единиц, в комнате почти не видны; они окупаются в карточке лавки крупно и как «вещи с историей». Канифоль и камертон не вошли; предлагаем объединить в «Коробка с канифолью и камертоном» на 80.</div>
+    <div><b style="color:#E6E4EE">Гирлянда</b> над окном на экране 240 dp — 1,8 dp точки; вечером мерцание спасает, днём — почти невидима; это нормально.</div>
+    <div><b style="color:#E6E4EE">Снег на крыше и сезонная ёлка</b> — за: дата телефона, без таймера, ничего не отнимается: ёлка стоит с 1 декабря по 15 января, если куплена; в остальное время ждёт в гардеробе, место «угол справа» возвращает прежнюю вещь.</div>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты</div>
+  <div style="color:#A39FB5">Экран «Дом»: «Дом», «Комната · Снаружи», «Съёмная комната», «с 28 июля · 20 вещей, 6 привезены из путешествия», «Лавка», «Обставить», «Привезено из путешествия», «Все вещи», «Следующий дом», «Все дома», «Первый подарок ждёт в лавке», «Подставка — скрипка выходит из футляра. Бесплатно.», «Забрать». Лавка: «Лавка» (если владелец предпочитает — «Магазин»), чипы категорий «Инструменты · Свет · Мебель · Комната · Растения · Мелочи · Животные · Снаружи · Дома», полки «Лавка мастера · Кремона», «Рынок · всё для комнаты», «Питомник», «из Вены», «в комнате», «куплено», «подарок», «откроется в Праге», «нужен дом с трубой», «Полка ваша — всё куплено». Карточка: «на стол, слева» (место), «Примерить», «Купить · 900», «не хватает 560», «ещё примерно два занятия», «останется 120 · до Праги ещё 1 480». Примерка: «Вернуть как было». Обставить: «20 мест, 16 занято», «пусто», «в лавке 4», позы «подоконник · ковёр · стул». Дома: «здесь живу», «дом 1 из 6», «Что нового», «Все вещи переедут сами и встанут на те же места. Съёмная комната останется — можно вернуться в любой день.», «Переехать · 3 000», «Переезд», «14 вещей на своих местах · кошка уже на крыльце». Названия и описания вещей — в таблице выше (одна строка, без восклицаний).</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Код — как собирается комната и как выглядит вещь</div>
+  <div class="mono" style="color:#A39FB5;font-size:10.5px;line-height:1.5;background:#15151B;border-radius:12px;padding:12px;overflow-wrap:anywhere;white-space:pre-wrap;max-height:520px;overflow:auto">{{ codeDump }}</div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  state = { K: null };
+  componentDidMount() { const tryLoad = () => { if (window.buildHomeCatalog) { try { this.setState({ K: window.buildHomeCatalog(React) }); } catch (e) { console.error('catalog', e); } } else setTimeout(tryLoad, 60); }; tryLoad(); }
+  renderVals() { try { return this.rv(); } catch (e) { console.error('renderVals: ' + e.message + ' @ ' + String(e.stack).split('\n').slice(0, 3).join(' | ')); return {}; } }
+  rv() {
+    const K = this.state.K; if (!K) return {};
+    const h = React.createElement;
+    const ON = '#E6E4EE', OV = '#A39FB5', PR = '#C4ADFF', PC = '#5B43B8', SC = '#1E1D25', SCH = '#292833';
+    const { R, RR, E, C, PG, L, rep, ITEMS, BYID, SLOTS, SLOT, HOUSES, compose, silSvg, bboxOf } = K;
+    const fmt = n => n.toLocaleString('ru-RU').replace(/\u00a0/g, ' ');
+    let gid = 0;
+    const draw = (layers, mode, o = {}) => {
+      const pal = K.palOf(mode, o.over); const id = 'q' + (gid++); const W = 412, H = 260; const [vbx, vby] = (o.viewBox || '0 0').split(' ').map(Number);
+      const col = t => (t.startsWith('#') || t.startsWith('rgba') || t === 'none') ? t : (pal[t] ?? t);
+      const els = [h('defs', { key: 'd' }, h('linearGradient', { id: id + 's', x1: 0, y1: 0, x2: 0, y2: 1 }, h('stop', { offset: 0, stopColor: pal.sky }), h('stop', { offset: 1, stopColor: pal.skyLow })), h('radialGradient', { id: id + 'g' }, h('stop', { offset: 0, stopColor: pal.glow }), h('stop', { offset: 1, stopColor: 'rgba(255,196,110,0)' })))];
+      layers.forEach((l, i) => {
+        const fill = l.fill === 'SKY' ? `url(#${id}s)` : l.fill === 'GLOW' ? `url(#${id}g)` : col(l.fill);
+        const p = { key: i, d: l.d, fill: l.fillNone ? 'none' : fill, opacity: l.op, stroke: l.stroke ? col(l.stroke) : undefined, strokeWidth: l.sw, strokeLinecap: 'round', strokeDasharray: l.dash };
+        if (l.tx !== undefined) p.transform = `translate(${l.tx} ${l.ty}) scale(${l.sc || 1})`;
+        if (o.anim !== false) {
+          if (l.anim) { const st = {}; l.anim.split('+').forEach(a => { const [k, ...v] = a.split(':'); const n = v.map(Number);
+            if (k === 'bob') { st['--a'] = `${-n[0]}px`; st.animation = `bob ${n[1]}s ease-in-out infinite`; }
+            else if (k === 'sway') { st['--a'] = `${n[0]}px`; st.animation = `sway ${n[1]}s ease-in-out infinite`; }
+            else if (k === 'swing') { st['--a'] = `${n[0]}deg`; st['--n'] = `${-n[0]}deg`; st.transformOrigin = `${n[2] - vbx}px ${n[3] - vby}px`; st.transformBox = 'view-box'; st.animation = `swing ${n[1]}s ease-in-out infinite`; }
+            else if (k === 'blink') st.animation = `blink ${n[0]}s linear ${(i % 4) * .7}s infinite`;
+            else if (k === 'rise') st.animation = `rise ${n[0]}s ease-out ${n[1] || 0}s infinite`;
+            else if (k === 'flick') st.animation = `flick ${n[0]}s ease-in-out ${n[1] || 0}s infinite`; }); p.style = st; }
+          else if (l.fill === 'window' && mode === 'eve') p.style = { animation: `flick ${4 + (i % 3)}s ease-in-out ${(i % 5) * .6}s infinite` };
+        }
+        els.push(h('path', p));
+      });
+      const style = { display: 'block' }; if (o.cssW) style.width = o.cssW; if (o.cssH) style.height = o.cssH;
+      return h('svg', { width: o.w || W, height: o.h || H, viewBox: o.viewBox || `0 0 ${W} ${H}`, preserveAspectRatio: o.par || 'xMidYMid slice', style }, els);
+    };
+    const room = (hid, mode, owned, o = {}) => { const { l, over } = compose(hid, mode, owned, o); return draw(l, mode, { over, ...o }); };
+    const FULL = { viewBox: '-10 -80 380 340', par: 'xMidYMax meet', cssW: '100%', cssH: '100%' };
+    const itemSvg = (it, mode = 'eve', px = 64, o = {}) => {
+      const e = mode === 'eve';
+      if (it.s === 'wallpaper' || it.s === 'floor') { const base = HOUSES.rent.room(e, it.s === 'wallpaper' ? it.pat : null, it.s === 'floor' ? it.pat : null); return draw(base, mode, { over: it.over, w: px, h: px, viewBox: '120 130 120 120', anim: false }); }
+      const l = it.L(0, 0, e); const b = bboxOf(l); const s = Math.max(b[2] - b[0], b[3] - b[1]) + 6; const cx = (b[0] + b[2]) / 2, cy = (b[1] + b[3]) / 2;
+      return draw(l, mode, { over: it.over, w: px, h: px, viewBox: `${cx - s / 2} ${cy - s / 2} ${s} ${s}`, par: 'xMidYMid meet', anim: o.anim ?? false });
+    };
+    // currency glyph
+    function ellipseRot(cx, cy, a, b) { const th = -20 * Math.PI / 180, c = Math.cos(th), s = Math.sin(th), k = .5523; const T = (x, y) => `${(cx + x * c - y * s).toFixed(2)} ${(cy + x * s + y * c).toFixed(2)}`; return `M${T(a, 0)}C${T(a, b * k)} ${T(a * k, b)} ${T(0, b)}C${T(-a * k, b)} ${T(-a, b * k)} ${T(-a, 0)}C${T(-a, -b * k)} ${T(-a * k, -b)} ${T(0, -b)}C${T(a * k, -b)} ${T(a, -b * k)} ${T(a, 0)}Z`; }
+    const takt = (size, color = PR) => h('svg', { width: size, height: size, viewBox: '0 0 24 24', style: { display: 'block', flex: 'none' } }, h('path', { d: 'M15.5 15.5V9.5C15.5 6.5 18 5.5 19.5 4.2', stroke: color, strokeWidth: 2.4, strokeLinecap: 'round', fill: 'none' }), h('path', { d: 'M18 3.2l2.2 1.4-1.4 2.2', stroke: color, strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', fill: 'none' }), h('path', { d: ellipseRot(10.6, 17.4, 5.4, 3.8), fill: color }));
+    const taktS = takt(16), taktM = takt(20, ON), taktD = takt(16, '#2E1A6E');
+    // ---------- sets
+    const START = ['window_simple', 'view_city', 'curtain_plum', 'wp_plum', 'floor_plank', 'desk_simple', 'lamp_table', 'chair_simple', 'stand_fold', 'case_black', 'rug_plum'];
+    const SET5 = [...START, 'vln_student', 'stand_wood', 'cat_ginger', 'vase', 'poster', 'tea'];
+    const SET20 = [...SET5, 'wp_stripe', 'floor_light', 'portrait', 'armchair', 'plaid', 'books', 'metronome', 'ficus', 'notes', 'rug_persian', 'vln_master', 'case_velvet', 'garland', 'wp_green', 'view_mount'];
+    const ALL = ITEMS.filter(it => !it.out).map(it => it.id);
+    const SET60 = [...ALL, 'wp_damask', 'floor_herring', 'window_arched', 'view_sea', 'curtain_velvet', 'desk_oak', 'lamp_brass', 'globe', 'tea', 'rocking', 'plaid', 'stand_candle', 'vln_cremona', 'case_leather', 'rug_persian', 'piano', 'monstera', 'portrait', 'clock', 'chandelier', 'garland', 'cat_grey'];
+    const WOOD20 = [...SET20, 'fireplace', 'rug_stripe'];
+    const WOODOUT = ['mailbox', 'bike', 'swing', 'vane'];
+    const VISITED = ['Кремона', 'Милан', 'Зальцбург', 'Вена'];
+    const GEN = { Кремона: 'из Кремоны', Милан: 'из Милана', Зальцбург: 'из Зальцбурга', Вена: 'из Вены', Прага: 'из Праги', Лейпциг: 'из Лейпцига', Берлин: 'из Берлина', Амстердам: 'из Амстердама', Париж: 'из Парижа', Лондон: 'из Лондона', 'Санкт-Петербург': 'из Петербурга', Москва: 'из Москвы', 'Нью-Йорк': 'из Нью-Йорка', 'Буэнос-Айрес': 'из Буэнос-Айреса', Токио: 'из Токио', Сидней: 'из Сиднея' };
+    const PREP = { Прага: 'в Праге', Лейпциг: 'в Лейпциге', Берлин: 'в Берлине', Амстердам: 'в Амстердаме', Париж: 'в Париже', Лондон: 'в Лондоне', 'Санкт-Петербург': 'в Петербурге', Москва: 'в Москве', 'Нью-Йорк': 'в Нью-Йорке', 'Буэнос-Айрес': 'в Буэнос-Айресе', Токио: 'в Токио', Сидней: 'в Сиднее' };
+    const BAL = 1640;
+    const woodThumb = draw(HOUSES.wood.outside(true), 'eve', { w: 72, h: 48, viewBox: '60 40 300 200' });
+    // ---------- 27a
+    const segOn = { roomBg: PR, roomFg: '#2E1A6E', outBg: 'transparent', outFg: ON };
+    const segOut = { roomBg: 'transparent', roomFg: ON, outBg: PR, outFg: '#2E1A6E' };
+    const homeScreens = [
+      { id: '27a1', label: 'Комната, вечер — 20 вещей: кошка на подоконнике, кресло с пледом, портрет, полосатые обои; переключатель «Комната · Снаружи» на открытке; кнопки «Лавка» и «Обставить»; лента «Привезено»; карточка следующего дома с полосой накопления', scene: room('rent', 'eve', SET20, { w: 380, h: 260 }), ...segOn, time: 'вечер · 21:40', title: 'Съёмная комната', sub: 'с 28 июля · 20 вещей, 6 привезены из путешествия', gift: false, strip: true },
+      { id: '27a2', label: 'Снаружи, вечер — дом в городе; ваше окно — то, где штора вашего цвета; фонарь горит', scene: room('rent', 'eve', SET20, { w: 380, h: 260, outside: true }), ...segOut, time: 'вечер · 21:40', title: 'Съёмная комната', sub: 'третий этаж, окно с сиреневой шторой — ваше', gift: false, strip: true },
+      { id: '27a3', label: 'Пусто — первый вход: комната как есть (скрипка в футляре), подарок вместо ленты, следующий дом на 0 / 3 000', scene: room('rent', 'eve', START, { w: 380, h: 260 }), ...segOn, time: 'вечер · 21:40', title: 'Съёмная комната', sub: 'с 28 июля · пока только самое нужное', gift: true, strip: false },
+    ];
+    const giftEl = itemSvg(BYID.vln_student, 'eve', 44);
+    const fromStrip = SET20.map(id => BYID[id]).filter(it => it.from).map(it => ({ el: itemSvg(it, 'eve', 48), from: GEN[it.from] }));
+    // ---------- 27b shop
+    const tile = (it, owned = SET20, o = {}) => { const isOwn = owned.includes(it.id); const locked = it.from && !VISITED.includes(it.from) && !isOwn; return { el: itemSvg(it, 'eve', o.px || 60), n: it.n, p: o.p ?? (locked ? PREP[it.from] : isOwn ? (o.inRoom === false ? 'куплено' : 'в комнате') : it.p === 0 ? 'подарок' : fmt(it.p)), pEl: (!locked && !isOwn && it.p > 0) ? taktS : null, pc: locked ? OV : isOwn ? OV : it.p === 0 ? '#6FC7C2' : PR, f: locked ? 'откроется' : (it.from ? GEN[it.from] : ''), op: locked ? .4 : 1 }; };
+    const ids = a => a.map(id => BYID[id]);
+    const WOODBG = '#2A1F1A', WOODPLANK = 'linear-gradient(#8B5E3C,#6E4A34)', CLOTHBG = 'repeating-linear-gradient(90deg,#26243A 0 22px,#2E2B44 22px 44px)', CLOTHPLANK = 'linear-gradient(#5B43B8,#3E2E85)';
+    const shelves = [
+      { title: 'Лавка мастера', sub: 'Кремона · скрипки, футляры, пюпитры', subColor: '#D9B27A', bg: WOODBG, plank: WOODPLANK, rows: [{ tiles: ids(['vln_student', 'vln_light', 'vln_master', 'vln_old']).map(it => tile(it)) }, { tiles: ids(['case_black', 'case_velvet', 'stand_wood', 'stand_candle']).map(it => tile(it)) }] },
+      { title: 'Рынок', sub: 'свет и мебель', subColor: OV, bg: CLOTHBG, plank: CLOTHPLANK, rows: [{ tiles: ids(['lamp_brass', 'floorlamp', 'chandelier', 'candles']).map(it => tile(it)) }, { tiles: ids(['armchair', 'rocking', 'clock', 'bookshelf']).map(it => tile(it)) }] },
+      { title: 'Питомник', sub: 'тихие', subColor: OV, bg: SC, plank: 'linear-gradient(#4E7A74,#3A5C57)', rows: [{ tiles: ids(['cat_ginger', 'cat_black', 'dog', 'aquarium']).map(it => tile(it)) }] },
+    ];
+    const edgeShelves = [
+      { title: 'Пюпитры', sub: 'полка ваша', subColor: '#6FC7C2', bg: WOODBG, plank: WOODPLANK, rows: [{ tiles: ids(['stand_fold', 'stand_concert', 'stand_wood', 'stand_candle']).map(it => tile(it, [...SET20, 'stand_concert', 'stand_candle'], { inRoom: false })).map((t, i) => ({ ...t, p: i === 2 ? 'в комнате' : 'куплено' })) }], note: 'Всё куплено — полка не исчезает, а становится «вашей»: отсюда тоже можно поставить вещь в комнату. Новые пюпитры привезут из Праги.' },
+      { title: 'Камин и большие вещи', sub: 'нет места в этом доме', subColor: OV, bg: CLOTHBG, plank: CLOTHPLANK, rows: [{ tiles: [{ ...tile(BYID.fireplace), p: fmt(1200), f: 'нужен дом с трубой', pc: OV, op: .7 }, { ...tile(BYID.piano), p: fmt(5000), f: 'из Вены', pc: PR }, { ...tile(BYID.gramophone), f: 'из Лондона · откроется', p: 'в Лондоне', pEl: null, pc: OV, op: .4 }, { ...tile(BYID.pouf) }] }], note: 'Камин купить можно — он поедет с вами в дом с трубой; в карточке это написано прямо. Граммофон — из Лондона: силуэт, «откроется в Лондоне», цена не показана, чтобы не считать раньше времени.' },
+      { title: 'Из Праги', sub: 'следующая остановка', subColor: OV, bg: SC, plank: 'linear-gradient(#3A3846,#292833)', rows: [{ tiles: ids(['stand_candle', 'clock', 'lamp_brass', 'cello']).map(it => ({ ...tile(it), op: .4, p: 'в Праге', pEl: null, pc: OV, f: 'откроется' })) }], note: 'Полка следующего города — серая, но видна: дорога получает ещё один смысл.' },
+    ];
+    const cardScreens = [
+      { id: '27b2', label: 'Карточка вещи — люстра из Вены: крупно на цвете полки, имя, строка, место («на потолок»), цена 900 при балансе 1 640, «Примерить · Купить»', el: itemSvg(BYID.chandelier, 'eve', 180, { anim: true }), bg: '#26243A', tag: 'из Вены', name: 'Люстра', desc: BYID.chandelier.d, place: 'на потолок · сейчас там пусто', price: '900', priceColor: ON, balance: 'останется 740 · до Праги ещё 860', enough: true, short: false, buy: h(React.Fragment, null, taktD, 'Купить · 900') },
+      { id: '27b3', label: 'Не хватает — старинная скрипка 3 000 при 1 640: тональная кнопка «не хватает 1 360», полоса как у дороги, подсказка «ещё примерно четыре занятия»', el: itemSvg(BYID.vln_old, 'eve', 180), bg: '#3A2A22', tag: 'из Кремоны', name: 'Старинная, тёмного лака', desc: BYID.vln_old.d, place: 'на подставку · вместо мастеровой', price: '3 000', priceColor: OV, balance: 'у вас 1 640', enough: false, short: true, pct: '55%', buy: 'не хватает 1 360', hint: 'ещё примерно четыре занятия · или Прага раньше' },
+    ];
+    // ---------- 27c
+    const tryScreens = [
+      { id: '27c1', label: 'Примерка люстры вечером — полный кадр комнаты, люстра-призрак с дышащей рамкой на потолке; «Вернуть как было · Купить · 900»', scene: room('rent', 'eve', SET20, { ghost: 'chandelier', ...FULL }), eveBg: PR, eveFg: '#2E1A6E', dayBg: 'transparent', dayFg: ON, name: 'Люстра', place: 'потолок · из Вены', price: '900', priceColor: ON, enough: true, short: false, buy: h(React.Fragment, null, taktD, 'Купить · 900') },
+      { id: '27c2', label: 'Примерка кресла-качалки днём — кресло с пледом убрано на время примерки, качалка-призрак на его месте; не хватает — тональная', scene: room('rent', 'day', SET20, { ghost: 'rocking', ...FULL }), eveBg: 'transparent', eveFg: ON, dayBg: PR, dayFg: '#2E1A6E', name: 'Кресло-качалка', place: 'стул · вместо кресла · из Буэнос-Айреса', price: '900', priceColor: OV, enough: false, short: true, buy: 'не хватает 120' },
+    ];
+    // ---------- 27d
+    const wardScene = room('rent', 'eve', SET20, { w: 380, h: 200, viewBox: '0 30 412 230' });
+    const cur = (owned, slot) => { let c = null; owned.map(id => BYID[id]).forEach(it => { if (it && it.s === slot) c = it; }); return c; };
+    const wardRows = ['violin', 'stand', 'wallL', 'chair', 'chairTop', 'pet', 'deskR', 'floorR', 'ceiling', 'wallpaper'].map(slot => {
+      const c = cur(SET20, slot); const owned = SET20.map(id => BYID[id]).filter(it => it.s === slot);
+      const vars = owned.map(it => ({ el: itemSvg(it, 'eve', 36), txt: '', border: it === c ? '2px solid ' + PR : '2px solid transparent' }));
+      if (slot === 'pet') { return { place: 'Питомец · кошка рыжая', cur: 'на подоконнике', vars: [{ el: null, txt: 'подо-конник', border: '2px solid ' + PR }, { el: null, txt: 'ковёр', border: '2px solid transparent' }, { el: null, txt: 'стул', border: '2px solid transparent' }] }; }
+      if (!c) { return { place: SLOT[slot].name, cur: 'пусто', vars: [{ el: null, txt: 'в лавке ' + ITEMS.filter(it => it.s === slot).length, border: '1.5px dashed #3A3846' }] }; }
+      if (slot !== 'wallpaper') vars.push({ el: null, txt: 'пусто', border: '1.5px dashed #3A3846' });
+      return { place: SLOT[slot].name, cur: c.n, vars };
+    });
+    // ---------- 27e
+    const houseRows = Object.values(HOUSES).map((H, i) => ({ el: i < 2 ? draw(H.outside(false), 'day', { w: 84, h: 54, viewBox: '40 20 340 220', anim: false }) : silSvg(H.id, 72, 44, '#6B6880', null, true), name: H.name, sub: i === 0 ? 'здесь живу · с 28 июля' : H.sub, price: i === 0 ? 'ваш' : fmt(H.price), pc: i === 0 ? '#6FC7C2' : i === 1 ? ON : OV, pEl: i === 0 ? null : taktS, bar: i === 1, op: i < 2 ? 1 : .7 }));
+    const woodOutDay = room('wood', 'day', [], { w: 380, h: 260, outside: true });
+    const woodNews = HOUSES.wood.news;
+    const moveScene = room('wood', 'eve', WOOD20, { outside: true, ...FULL });
+    const woodRoomEve = room('wood', 'eve', WOOD20, { w: 412, h: 260 });
+    const woodOutItems = room('wood', 'day', [...WOOD20, ...WOODOUT], { w: 412, h: 260, outside: true });
+    const rentOutEve = room('rent', 'eve', SET20, { w: 412, h: 260, outside: true });
+    // ---------- 27f
+    const cnt = (owned) => compose('rent', 'eve', owned).l.length;
+    const growth = [
+      { id: '27f1', label: 'Пустая съёмная — как есть: стол, лампа, стул, пюпитр, футляр (закрытый, скрипка внутри), ковёр', el: room('rent', 'eve', START, { w: 412, h: 260 }), stat: `${cnt(START)} слоёв · 0 покупок` },
+      { id: '27f2', label: '5 покупок — подставка (подарок), резной пюпитр, кошка, ваза, афиша, чай', el: room('rent', 'eve', SET5, { w: 412, h: 260 }), stat: `${cnt(SET5)} слоёв · 5 покупок` },
+      { id: '27f3', label: '20 покупок — зелёные стены, светлый пол, вид на горы, портрет, кресло с пледом, гирлянда, фикус, персидский ковёр, мастеровая скрипка', el: room('rent', 'eve', SET20, { w: 412, h: 260 }), stat: `${cnt(SET20)} слоёв · 20 покупок` },
+      { id: '27f4', label: `Всё куплено (${ALL.length} вещей) — видно 22: дамаск, паркет ёлочкой, арочное окно с видом на море, люстра, часы, бюро… остальное в гардеробе`, el: room('rent', 'eve', SET60, { w: 412, h: 260 }), stat: `${cnt(SET60)} слоёв · ${ALL.length} покупок` },
+    ];
+    // ---------- 27g
+    const winRoom = (w) => room('rent', 'eve', SET20, { w, h: 160, viewBox: '16 40 380 160' });
+    const cityPh = h('div', { style: { width: '100%', height: 160, background: 'repeating-linear-gradient(135deg,#292833 0 10px,#1E1D25 10px 20px)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', fontFamily: 'ui-monospace,Menlo,monospace', fontSize: 11, color: OV, lineHeight: 1.3, textAlign: 'center', padding: '14px 24px 0', boxSizing: 'border-box' } }, 'открытка Токио — из «Путешествия» (26a)');
+    const lessonWins = [
+      { id: '27g1', label: 'Дома (остановка 0 или «здесь живу») — окно показывает комнату со всем купленным; подпись «Дом · Съёмная комната»', main: winRoom(380), title: 'Дом · Съёмная комната', sub: 'до Праги осталось 860', toggle: false, side: false },
+      { id: '27g2', label: 'В дороге — окно как было (город), рядом узкая карточка «Дом» 96 dp с живой комнатой. Рекомендуем', main: cityPh, title: 'Токио · Сантори-холл', sub: 'до Сиднея 15 000', toggle: false, side: true, sideEl: room('rent', 'eve', SET20, { w: 96, h: 160, viewBox: '230 60 130 220' }) },
+      { id: '27g3', label: 'Переключатель «Токио · Дом» на окне — честно, но прячет одно из двух; запасной вариант', main: winRoom(380), title: 'Дом · Съёмная комната', sub: 'до Сиднея 15 000', toggle: true, side: false },
+    ];
+    // ---------- 27h
+    const landRoom = room('rent', 'eve', SET20, { viewBox: '-40 -50 490 310', par: 'xMidYMax slice', cssW: '100%', cssH: '100%' });
+    const woodThumb2 = draw(HOUSES.wood.outside(true), 'eve', { w: 64, h: 42, viewBox: '60 40 300 200' });
+    const landCats = ['Инструменты', 'Свет', 'Мебель', 'Комната', 'Растения', 'Мелочи', 'Животные', 'Снаружи', 'Дома'].map((n, i) => ({ n, bg: i === 0 ? PC : 'transparent', fg: i === 0 ? '#E9DDFF' : OV }));
+    const landShelves = [
+      { title: 'Лавка мастера', sub: 'Кремона', subColor: '#D9B27A', bg: WOODBG, plank: WOODPLANK, rows: [{ tiles: ids(['vln_student', 'vln_quarter', 'vln_light', 'vln_master', 'vln_old', 'vln_cremona']).map(it => tile(it, SET20, { px: 52 })) }] },
+      { title: 'Футляры и пюпитры', sub: '', subColor: OV, bg: WOODBG, plank: WOODPLANK, rows: [{ tiles: ids(['case_black', 'case_velvet', 'case_leather', 'stand_fold', 'stand_wood', 'stand_candle']).map(it => tile(it, SET20, { px: 52 })) }] },
+    ];
+    const landCardEl = itemSvg(BYID.vln_master, 'eve', 130);
+    // ---------- dev
+    const GN = { instr: 'инструменты', music: 'музыка', room: 'комната', light: 'свет', furn: 'мебель', plant: 'растения', life: 'мелочи', pet: 'животные', out: 'снаружи' };
+    const itemRows = ITEMS.map(it => ({ id: it.id, g: GN[it.g], s: it.s + (it.at ? ' → ' + it.at : ''), n: it.n, p: it.p === 0 ? '0 · подарок' : fmt(it.p), from: it.from || '—', nl: it.L ? String(it.L(0, 0, true).length) : (it.pat ? 'палитра + узор' : 'палитра') }));
+    const itemCount = ITEMS.length; const itemSum = fmt(ITEMS.reduce((a, it) => a + it.p, 0));
+    const slotRows = SLOTS.map(s => ({ id: s.id, name: s.name, xy: s.pal ? '—' : `${s.x}, ${s.y}`, info: (s.rooms ? 'только ' + s.rooms.join(', ') : 'все дома') + (s.out ? ' · снаружи' : '') + ' · ' + ITEMS.filter(it => it.s === s.id || it.at === s.id).map(it => it.n.split(' ')[0].toLowerCase()).filter((v, i, a) => a.indexOf(v) === i).slice(0, 6).join(', ') }));
+    const houseDev = Object.values(HOUSES).map((H, i) => ({ i: String(i), name: H.name, mood: H.mood, p: i === 0 ? '—' : fmt(H.price), news: H.news.length ? H.news.join(' · ') : 'все места съёмной комнаты' }));
+    const palRows = Object.entries(K.HP).map(([name, c]) => ({ name, c }));
+    const anims = [
+      { name: 'bob:амплитуда:период', v: 'translateY туда-обратно, ease-in-out. Кошка дышит — bob:.5:3.2 на теле; собака .6:3; птицы на кормушке .8:1.4' },
+      { name: 'sway:амплитуда:период', v: 'translateX туда-обратно. Рыбка в аквариуме — sway:8:4 (тело и хвост одним значением)' },
+      { name: 'swing:градусы:период:px:py', v: 'новое: rotate ±градусы вокруг точки подвеса (px, py в координатах сцены; transform-box view-box, origin сдвигается на начало viewBox). Маятник часов swing:6:2, метроном 12:1.6, качалка 3:3.4 (все слои кресла с одной строкой), качели 4:3' },
+      { name: 'blink:период', v: 'opacity 1 → 0 на 4 % периода около 92 %. Глаза кошки 5 с, собаки 6, черепахи 7; фаза по индексу слоя, чтобы двое не моргали вместе' },
+      { name: 'rise:период:задержка', v: 'новое: translateY −10 и opacity .7 → 0, ease-out. Пар над чашкой (два эллипса, вторая задержка .9), дым из трубы 3 с' },
+      { name: 'flick:период:задержка', v: 'opacity 1 ↔ .55. Ореолы GLOW ламп 5–5,5 с, свечи и камин .7–1,4 с, гирлянда 1,8–2,8 с по лампочке, рамка примерки 1,6 с' },
+      { name: 'Примерка', v: 'слои вещи op × .5, движения выключены; рамка RR bbox + 5, stroke primary 1,5, пунктир 4/4, flick 1,6' },
+      { name: 'Переезд', v: '2 с: дом снаружи вечером fade 600 мс, окно зажигается (window α 0 → 1 за 400 мс на 1,0 с), полоса 0 → 100 %; затем экран «Дом» с новой комнатой без перехода' },
+      { name: '«Убрать анимации»', v: 'anim: false у draw — все строки anim игнорируются, GLOW остаётся статичным' },
+    ];
+    const sizes = [
+      { name: 'Экран «Дом»', v: 'TopAppBar 56 «Дом» + баланс-таблетка 32 (иконка 16 + 14 sp 700); открытка 260 dp r24; сегмент «Комната · Снаружи» 30 внутри подложки 36 r18 α .62, слева-снизу 12; часы-таблетка 26 справа-сверху; имя 24 sp 700, строка 14 sp onSurfaceVariant; кнопки 48 r24 (filled + outlined, по половине); карточки 16 r16' },
+      { name: 'Лавка', v: 'чипы категорий 32 r16 (выбранный primaryContainer #5B43B8 / #E9DDFF); блок полки r20 padding 14/12; вещь 60 dp на полке, drop-shadow 0 6 6 α .35; доска 8 dp градиент дерева #8B5E3C → #6E4A34 (рынок — primary #5B43B8 → #3E2E85, питомник — #4E7A74 → #3A5C57); под доской имя 11 sp 600 (2 строки), цена 11 sp 700 с иконкой 16, «откуда» 10 sp; серые вещи op .4; фон лавки мастера #2A1F1A, рынка — полоска 22 dp #26243A / #2E2B44' },
+      { name: 'Карточка вещи', v: 'лист снизу r28, ручка 32×4; вещь 180 dp в поле 220 r20 цвета полки; тег «из Вены» 26; имя 22 sp 700; описание 14 sp; место 13 sp; цена 20 sp 800 + иконка 20; кнопки 48: outlined «Примерить» + filled «Купить · 900» / tonal «не хватает 560» с полосой 6 и подсказкой 13 sp' },
+      { name: 'Примерка', v: 'полный кадр (viewBox −10 −80 380 340, meet по низу), закрыть 44 r22 α .62 слева-сверху 8; сегмент «вечер · день» справа-сверху; подложка снизу градиент → α .85 с 40 %; имя 20 sp, место 13 sp, цена 18 sp 800' },
+      { name: 'Обставить', v: 'комната 200 dp r24 (viewBox 0 30 412 230); строка места: имя 12 sp variant + текущее 14 sp 600 в колонке 118; варианты 44 r12 в ряд, выбранный border 2 primary, «пусто» — dashed 1.5 outline; разделители α .06' },
+      { name: 'Дома', v: 'строка 16 r16: превью 84×54 r10 (дома 0–1 — открытка, 2–6 — силуэт outline #6B6880 3), имя 15 sp 600, строка 12 sp, цена 14 sp 700 (ваш — teal #6FC7C2, следующий — onSurface, дальние — variant, op .7); полоса 6 у следующего' },
+      { name: 'Окно на «Занятиях»', v: 'как было 160 r20; вариант 27g2 — 8 dp зазор и карточка «Дом» 96×160 r20 (viewBox 230 60 130 220 — окно и подоконник с кошкой), подпись 12 sp 700' },
+      { name: 'Landscape', v: 'Дом: комната слева во всю высоту (viewBox −40 −50 490 310, slice), панель 340; Лавка: колонка категорий 180, полки по 6 вещей 52 dp, панель вещи 250' },
+      { name: 'Сцена', v: `сетка 412 × 260, комната без воздушной перспективы; основа съёмной ≈ 14 слоёв, вещь 3–16, пустая комната ${cnt(START)}, обставленная на всё ${cnt(SET60)}; домик снаружи ≈ 40 + вещи` },
+    ];
+    const codeDump = `// комната = основа + вещи по местам + герой\ncompose(houseId, mode, ownedIds, { ghost?, outside? }) → { layers, paletteOverride }\n  bySlot[item.slot] = последний купленный/выбранный   // одно место — одна вещь\n  over = ∪ item.over (обои, пол, шторы)             // токены палитры\n  layers = house.room(eve, wallpaperPat, floorPat)\n         + items.sort(z).filter(z < 5).map(it => it.layers(pos(house, it), eve))\n         + ghost: layers × op .5 + RR(bbox + 5) dash 4/4 flick\n         + hero(306, 212)\n         + items.filter(z ≥ 5)                        // питомец перед героем\n\nSLOTS = ${JSON.stringify(SLOTS.filter(s => !s.pal && !s.out).map(s => ({ id: s.id, x: s.x, y: s.y, ...(s.rooms ? { rooms: s.rooms } : {}) })), null, 0).replace(/\},\{/g, '},\n  {')}\n\nHOUSES.wood.pos = ${JSON.stringify(HOUSES.wood.pos)}\n\n// скрипка — одна функция, размер s (.62 в комнате ≈ 30 единиц, 1.35 — виолончель)\nviolin = ${K.violin.toString()}\n\n// вещь: кошка рыжая\n${BYID.cat_ginger.L.toString()}\ncat = (x, y, tok, o) => [ body E(x, y−5, 11, 5) bob:.5:3.2 · head C(x+9, y−9, 4.6) · ears PG×2 · tail q-curve stroke 2.2 · stripes rep(3) α .18 · eyes R×2 'eye' blink:5 ]\n\n// обои — только палитра + узор по правилу\n${JSON.stringify({ id: 'wp_stripe', slot: 'wallpaper', price: 250, over: BYID.wp_stripe.over })}  pat: () => rep(21, i => L('rgba(255,255,255,.06)', R(i*20, 0, 8, 200)))\n\n// камин — только в домах с трубой; вечером GLOW + пламя flick, днём дрова\n${BYID.fireplace.L.toString()}`;
+    return { cntStart: cnt(START), cntAll: cnt(SET60), taktS, taktM, taktD, homeScreens, giftEl, fromStrip, woodThumb, shelves, edgeShelves, cardScreens, tryScreens, wardScene, wardRows, houseRows, woodOutDay, woodNews, moveScene, woodRoomEve, woodOutItems, rentOutEve, growth, lessonWins, landRoom, woodThumb2, landCats, landShelves, landCardEl, itemRows, itemCount, itemSum, slotRows, houseDev, palRows, anims, sizes, codeDump };
+  }
+}
+</script>
+</body>
+</html>

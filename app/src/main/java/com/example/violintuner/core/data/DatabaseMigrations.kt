@@ -124,6 +124,17 @@ object DatabaseMigrations {
         }
     }
 
+    /** The home (spec 3.24): what was bought for it and what stands where. Nothing is seeded: the rented room and what it came with are not rows. */
+    val MIGRATION_9_10 = object : Migration(9, 10) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `home_purchases` (`id` TEXT NOT NULL, `kind` TEXT NOT NULL, `price` INTEGER NOT NULL, " +
+                    "`boughtAtEpochMs` INTEGER NOT NULL, PRIMARY KEY(`id`))",
+            )
+            db.execSQL("CREATE TABLE IF NOT EXISTS `home_choices` (`slot` TEXT NOT NULL, `itemId` TEXT NOT NULL, PRIMARY KEY(`slot`))")
+        }
+    }
+
     /** The columns of `SoundColumns`, as Room declares them: both sound tables embed the same set. Internal for the migration test, which lays out a version 5 file by hand. */
     internal const val SOUND_COLUMNS =
         "`eqEnabled` INTEGER NOT NULL, `lowCutEnabled` INTEGER NOT NULL, `lowCutHz` REAL NOT NULL, `lowHz` REAL NOT NULL, " +
@@ -135,5 +146,5 @@ object DatabaseMigrations {
             "`reverbPreDelayMs` REAL NOT NULL, `reverbBrightness` REAL NOT NULL, `reverbMix` REAL NOT NULL, " +
             "`outputEnabled` INTEGER NOT NULL, `outputGainDb` REAL NOT NULL"
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9)
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
 }

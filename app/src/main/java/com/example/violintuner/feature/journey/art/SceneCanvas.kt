@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.graphics.vector.PathParser
@@ -46,6 +47,46 @@ private object SceneCache {
     @Synchronized
     fun put(key: String, scene: PreparedScene) {
         scenes[key] = scene
+    }
+}
+
+/** Paths by their text: a composed room is put together again at every purchase, its paths are parsed once. */
+private object PathCache {
+    private val paths = HashMap<String, Path>()
+
+    @Synchronized
+    fun get(d: String): Path = paths.getOrPut(d) { PathParser().parsePathString(d).toPath() }
+}
+
+/** A scene made ready to be drawn: for scenes that are composed rather than read whole — a home (spec 3.24). */
+fun prepare(scene: Scene, mode: SceneMode): PreparedScene {
+    val paths = scene.layers.map { PathCache.get(it.path) }
+    return PreparedScene(scene, mode, paths, paths.map { it.getBounds() })
+}
+
+/**
+ * Draws a prepared scene the way a postcard is drawn — covering the box, alive with [seconds],
+ * seen through [camera] — and lets [overlay] draw over it in the units of the grid (the frame
+ * round a thing that is being tried on).
+ */
+@Composable
+fun ScenePicture(
+    prepared: PreparedScene?,
+    description: String,
+    modifier: Modifier = Modifier,
+    seconds: State<Float>? = null,
+    camera: (() -> Triple<Float, Float, Float>)? = null,
+    overlay: (DrawScope.(seconds: Float?) -> Unit)? = null,
+) {
+    Canvas(modifier.clipToBounds().background(Color(NIGHT)).semantics { contentDescription = description }) {
+        if (prepared == null) return@Canvas
+        val (zoom, panX, panY) = camera?.invoke() ?: Triple(1f, 0f, 0f)
+        val k = SceneCamera.cover(size.width, size.height) * zoom
+        val t = seconds?.value
+        translate((size.width - SceneGrid.WIDTH * k) / 2, SceneCamera.top(zoom, size.width, size.height, outdoors = prepared.scene.aerial) + panY) {
+            drawScene(prepared, k, panX, t)
+            if (overlay != null) translate(panX, 0f) { scale(k, k, pivot = Offset.Zero) { overlay(t) } }
+        }
     }
 }
 
@@ -147,7 +188,13 @@ private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, 
                     val own: DrawScope.() -> Unit = {
                         if (!layer.fillNone && brush != null) drawPath(path, brush, alpha = alpha * moved.alpha)
                     }
-                    translate(moved.dx, moved.dy) { if (moved.flap != 1f) scale(1f, moved.flap, pivot = bounds.center) { own() } else own() }
+                    translate(moved.dx, moved.dy) {
+                        when {
+                            moved.flap != 1f -> scale(1f, moved.flap, pivot = bounds.center) { own() }
+                            moved.degrees != 0f -> rotate(moved.degrees, pivot = Offset(moved.pivotX, moved.pivotY)) { own() }
+                            else -> own()
+                        }
+                    }
                     return@scale
                 }
                 if (layer.tx != 0f || layer.ty != 0f || layer.scale != 1f) {

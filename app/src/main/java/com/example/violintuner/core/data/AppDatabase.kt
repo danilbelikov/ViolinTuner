@@ -9,6 +9,8 @@ import com.example.violintuner.core.data.progress.TrophyEntity
 import com.example.violintuner.core.data.journey.ArrivalEntity
 import com.example.violintuner.core.data.journey.EarningEntity
 import com.example.violintuner.core.data.journey.ExtraEntity
+import com.example.violintuner.core.data.journey.HomeChoiceEntity
+import com.example.violintuner.core.data.journey.HomePurchaseEntity
 import com.example.violintuner.core.data.journey.JourneyDao
 import com.example.violintuner.core.data.repertoire.PieceEntity
 import com.example.violintuner.core.data.repertoire.PieceGroupEntity
@@ -33,8 +35,10 @@ import com.example.violintuner.core.data.sound.SoundSettingsEntity
         SessionEntity::class, SamplesEntity::class, PracticeEntity::class, TrophyEntity::class,
         PieceEntity::class, PieceGroupEntity::class, SheetPageEntity::class, SoundSettingsEntity::class, SoundPresetEntity::class,
         EarningEntity::class, ArrivalEntity::class, ExtraEntity::class,
+        HomePurchaseEntity::class,
+        HomeChoiceEntity::class,
     ],
-    version = 9,
+    version = 10,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {

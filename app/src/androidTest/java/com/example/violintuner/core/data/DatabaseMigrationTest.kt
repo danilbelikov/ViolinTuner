@@ -36,7 +36,7 @@ class DatabaseMigrationTest {
      * with one row; [version3] adds the trophies of version 3 with one row; [version4] adds the
      * repertoire of version 4: a piece with a page, and the session becomes its take.
      */
-    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false, version7: Boolean = false, version8: Boolean = false) {
+    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false, version7: Boolean = false, version8: Boolean = false, version9: Boolean = false) {
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
@@ -121,7 +121,14 @@ class DatabaseMigrationTest {
                 db.execSQL("ALTER TABLE `pieces` ADD COLUMN `learnedAtEpochMs` INTEGER")
                 db.execSQL("CREATE TABLE IF NOT EXISTS `piece_groups` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `createdAtEpochMs` INTEGER NOT NULL)")
             }
-            db.execSQL("PRAGMA user_version = ${if (version8) 8 else if (version7) 7 else if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
+            if (version9) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `journey_earnings` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `atEpochMs` INTEGER NOT NULL, `notesPlayed` INTEGER NOT NULL, `notesInTune` INTEGER NOT NULL, `durationMs` INTEGER NOT NULL, `takts` INTEGER NOT NULL)")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `journey_arrivals` (`stopId` TEXT NOT NULL, `arrivedAtEpochMs` INTEGER NOT NULL, `price` INTEGER NOT NULL, PRIMARY KEY(`stopId`))")
+                db.execSQL("CREATE TABLE IF NOT EXISTS `journey_extras` (`stopId` TEXT NOT NULL, `extra` TEXT NOT NULL, `price` INTEGER NOT NULL, `boughtAtEpochMs` INTEGER NOT NULL, PRIMARY KEY(`stopId`, `extra`))")
+                db.execSQL("INSERT INTO journey_earnings (atEpochMs, notesPlayed, notesInTune, durationMs, takts) VALUES (1, 900, 800, 3600000, 1000)")
+                db.execSQL("INSERT INTO journey_arrivals (stopId, arrivedAtEpochMs, price) VALUES ('home', 1, 0), ('cremona', 2, 300)")
+            }
+            db.execSQL("PRAGMA user_version = ${if (version9) 9 else if (version8) 8 else if (version7) 7 else if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
         }
     }
 
@@ -289,5 +296,27 @@ class DatabaseMigrationTest {
         assertEquals(true, dao.buyExtra("cremona", "SOUVENIR", price = 40, now = 4))
         assertEquals(false, dao.buyExtra("cremona", "SOUVENIR", price = 0, now = 5))
         assertEquals(listOf("cremona", "home"), dao.observeArrivals().first().map { it.stopId }.sorted())
+    }
+
+    @Test
+    fun theHomeStartsEmpty_andSharesOnePurseWithTheRoad() = runBlocking {
+        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true, version7 = true, version8 = true, version9 = true)
+        val db = openMigrated()
+        val dao = db.journeyDao()
+
+        assertEquals(listOf("cremona", "home"), dao.observeArrivals().first().map { it.stopId }.sorted())
+        assertEquals(emptyList<Any>(), dao.observeHomePurchases().first())
+        assertEquals(emptyList<Any>(), dao.observeHomeChoices().first())
+
+        // 1000 earned, 300 gone on the road: 700 left for both the road and the home
+        assertEquals(false, dao.buyForHome("piano", "ITEM", price = 5_000, slot = "floorL", now = 3))
+        assertEquals(true, dao.buyForHome("cat_ginger", "ITEM", price = 600, slot = "pet", now = 3))
+        assertEquals(false, dao.buyForHome("cat_ginger", "ITEM", price = 0, slot = "pet", now = 4))
+        assertEquals(mapOf("pet" to "cat_ginger"), dao.observeHomeChoices().first().associate { it.slot to it.itemId })
+        // what the cat cost is not there for the road any more
+        assertEquals(false, dao.arrive("milan", "cremona", price = 500, now = 5))
+        assertEquals(true, dao.buyForHome("tea", "ITEM", price = 60, slot = "deskR", now = 6))
+        dao.putHomeChoice(com.example.violintuner.core.data.journey.HomeChoiceEntity("deskR", ""))
+        assertEquals("", dao.observeHomeChoices().first().first { it.slot == "deskR" }.itemId)
     }
 }

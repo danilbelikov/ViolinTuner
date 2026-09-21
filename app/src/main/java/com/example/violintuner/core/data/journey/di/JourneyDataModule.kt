@@ -2,7 +2,9 @@ package com.example.violintuner.core.data.journey.di
 
 import com.example.violintuner.core.data.AppDatabase
 import com.example.violintuner.core.data.journey.JourneyDao
+import com.example.violintuner.core.data.journey.RoomHomeRepository
 import com.example.violintuner.core.data.journey.RoomJourneyRepository
+import com.example.violintuner.core.domain.home.HomeRepository
 import com.example.violintuner.core.domain.journey.JourneyConfig
 import com.example.violintuner.core.domain.journey.JourneyRepository
 import com.example.violintuner.core.domain.journey.PracticeNotesStore
@@ -20,6 +22,10 @@ abstract class JourneyDataModule {
     @Binds
     @Singleton
     abstract fun bindJourneyRepository(impl: RoomJourneyRepository): JourneyRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindHomeRepository(impl: RoomHomeRepository): HomeRepository
 
     @Binds
     @Singleton

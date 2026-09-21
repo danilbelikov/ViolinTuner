@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}.frag{width:412px;background:#131318;border-radius:16px;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;color:#E6E4EE}.cap{font-size:11px;color:rgba(230,228,238,.5);line-height:1.4}.phone{display:flex;flex-direction:column;background:#131318;color:#E6E4EE;position:relative;overflow:hidden}.box{background:#131318;border-radius:20px;overflow:hidden;display:flex;flex-direction:column;color:#E6E4EE;position:relative}</style></helmet>
+
+<section class="dv-turn" id="s22a">
+<div class="dv-thd"><a class="dv-tid" href="#s22a">22a</a><span class="dv-tname">«Записи» · до и после — тихая плитка, «запись», вставки с датой, график количества</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="22a1"><div class="dv-olabel"><a class="dv-oid" href="#22a1">22a1</a>До (19a4) — заголовок + «Сессии | Репертуар», график среднего балла, нота цветом зоны, дата дважды, мини-столбики</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <div style="padding:16px 16px 0;display:flex;align-items:baseline;height:40px;flex:none"><div style="font-size:28px;font-weight:700;line-height:1">Записи</div></div>
+  <div style="padding:14px 16px 0"><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF">Сессии</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;border-left:1px solid #3A3846">Репертуар</div></div></div>
+  <div style="flex:1;overflow:hidden;padding:16px 16px 0;display:flex;flex-direction:column;gap:14px">
+    <div style="background:#1E1D25;border-radius:20px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13px;color:#A39FB5">Средний балл за неделю</div><div style="font-size:15px;font-weight:700;color:#47C97E">+6 за неделю</div></div>
+      <svg width="348" height="100" viewBox="0 0 348 100" style="display:block;margin-top:8px;overflow:visible"><line x1="0" y1="92" x2="348" y2="92" stroke="#292833"></line><polyline points="{{ weekLine }}" fill="none" stroke="#C4ADFF" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></polyline><sc-for list="{{ weekPts }}" as="p" hint-placeholder-count="6"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="5" fill="#131318" stroke="#C4ADFF" stroke-width="3"></circle></sc-for></svg>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#A39FB5;margin-top:6px"><span>11 авг</span><span>18</span><span>25</span><span>1 сен</span><span>8</span><span>15</span></div>
+    </div>
+    <div style="display:flex;gap:8px"><div style="height:32px;padding:0 12px;border-radius:8px;background:#5B43B8;color:#E9DDFF;display:flex;align-items:center;font-size:13px;font-weight:600">Все</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Эта неделя</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Месяц</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:-4px 0 -6px"><div class="tn" style="font-size:13px;color:#A39FB5">23 сессии</div><div style="height:32px;padding:0 10px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF;margin-right:-10px">{{ icSelectP }}Выбрать</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ oldCards }}" as="c" hint-placeholder-count="6">
+      <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:14px 16px">
+        {{ c.left }}
+        <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.meta }}</div></div>
+        <div style="display:flex;align-items:flex-end;gap:2px;height:28px;flex:none"><sc-for list="{{ c.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+        <sc-if value="{{ c.more }}" hint-placeholder-val="{{ false }}"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div></sc-if>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ navRec }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}</div><div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div></div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div></div>
+<sc-for list="{{ recFrames }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <div style="padding:12px 16px 0;height:52px;flex:none;box-sizing:border-box"><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF">Записи</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;border-left:1px solid #3A3846">Репертуар</div></div></div>
+  <div style="flex:1;overflow:hidden;padding:16px 16px 0;display:flex;flex-direction:column;gap:14px">
+    <div style="background:#1E1D25;border-radius:20px;padding:16px 16px 14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13px;color:#A39FB5">Записи за две недели</div><div class="tn" style="font-size:15px;font-weight:700">{{ g14.total }}</div></div>
+      <div style="display:grid;grid-template-columns:repeat(14,17px);gap:8px;align-items:end;height:80px;margin-top:10px;padding-bottom:1px;border-bottom:1px solid #292833">
+        <sc-for list="{{ g14.bars }}" as="b" hint-placeholder-count="14"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="tn" style="font-size:11px;font-weight:600;color:#A39FB5;height:14px;line-height:14px">{{ b.num }}</div><div style="width:17px;height:{{ b.h }};border-radius:{{ b.r }};background:{{ b.bg }}"></div></div></sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(14,17px);gap:8px;margin-top:6px"><sc-for list="{{ g14.bars }}" as="b" hint-placeholder-count="14"><div class="tn" style="font-size:11px;color:{{ b.lc }};white-space:nowrap;text-align:{{ b.la }};justify-self:{{ b.lj }};height:14px;width:max-content">{{ b.lbl }}</div></sc-for></div>
+    </div>
+    <div style="display:flex;gap:8px"><div style="height:32px;padding:0 12px;border-radius:8px;background:#5B43B8;color:#E9DDFF;display:flex;align-items:center;font-size:13px;font-weight:600">Все</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Эта неделя</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Месяц</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:-4px 0 -10px"><div class="tn" style="font-size:13px;color:#A39FB5">23 записи</div><div style="height:32px;padding:0 10px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF;margin-right:-10px">{{ icSelectP }}Выбрать</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ s.groups }}" as="g" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 4px 0;font-size:13px;font-weight:600;color:#A39FB5;height:22px;box-sizing:content-box">{{ g.date }}<sc-if value="{{ g.today }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;color:#C4ADFF;border:1px solid #C4ADFF;border-radius:6px;padding:1px 6px;line-height:1.3">сегодня</span></sc-if></div>
+      <sc-for list="{{ g.cards }}" as="c" hint-placeholder-count="2">
+      <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:12px 16px">
+        {{ c.left }}
+        <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><sc-if value="{{ c.best }}" hint-placeholder-val="{{ false }}">{{ icStar14 }}</sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ c.meta }}</div></div>
+        <sc-if value="{{ c.more }}" hint-placeholder-val="{{ false }}"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div></sc-if>
+      </div>
+      </sc-for>
+      </sc-for>
+    </div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ navRec }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}</div><div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div></div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Вопрос 1 — нейтральная плитка</b> (<a href="#22a2">22a2</a>): знак `onSurfaceVariant` на `surfaceContainerHigh`. Акцентная (<a href="#22a3">22a3</a>) на восьми карточках выстраивается в фиолетовый столбец — самое громкое на экране, и спорит с «Выбрать», чипом «Все» и переключателем, где фиолетовый значит «нажми». Нейтральная плитка на карточке почти сливается с фоном — это и нужно: она держит место и говорит «звук / видео», не больше. <b>Знак звука — одиночная восьмая `note-one`</b> (уже в наборе): микрофон — про запись как действие (он на кнопке Live и в онбординге), волна — про плеер; нота — про то, что внутри. Пара нот и бейдж камеры уходят. <b>Плитка 40, карточка 64</b> (было 72): без столбиков высота задаёт текст — 15 + 13 sp в две строки и padding 12. Длинное название («Разбор второй части…») теперь идёт до «⋯». <b>Вопрос 6 — крупный заголовок убран:</b> переключатель «Записи | Репертуар» встаёт в его зону (12 dp от статус-бара, 52 всего) и сам работает заголовком — как две вкладки. Первый сегмент — просто «Записи»: «Все записи» рядом с чипом «Все» под ним звучало бы дважды. <b>Вопрос 3 — вставки + время:</b> «18:42 · 8:15» короче полной даты в каждой строке и не повторяет то, что уже стоит над группой; три «Записи» подряд в одном дне различаются временем, и этого хватает — номер «Запись 3» появился бы только для того, чтобы отличать одинаковые названия, а время делает это само и ещё говорит, когда. <b>Вопрос 4 — вставки под любым фильтром</b>, не прилипают.</p>
+</section>
+
+<section class="dv-turn" id="s22b">
+<div class="dv-thd"><a class="dv-tid" href="#s22b">22b</a><span class="dv-tname">Карточка крупно · звук, видео, без звука, лучший, режим выбора; два цвета плитки</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="22b1"><div class="dv-olabel"><a class="dv-oid" href="#22b1">22b1</a>Нейтральная плитка (выбрана): звук · видео · без звука (контур, «⋯» нет) · дубль с отметкой «лучший» · в режиме выбора — не выбрана и выбрана</div><div class="dv-card">
+<div class="frag" style="gap:8px">
+  <sc-for list="{{ cardsN }}" as="c" hint-placeholder-count="6">
+  <div style="display:flex;align-items:center;gap:14px;background:{{ c.bg }};border-radius:16px;padding:12px 16px;box-shadow:{{ c.ring }}">
+    {{ c.left }}
+    <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><sc-if value="{{ c.best }}" hint-placeholder-val="{{ false }}">{{ icStar14 }}</sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ c.meta }}</div></div>
+    <sc-if value="{{ c.more }}" hint-placeholder-val="{{ false }}"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div></sc-if>
+  </div>
+  </sc-for>
+</div>
+</div></div>
+<div class="dv-opt" id="22b2"><div class="dv-olabel"><a class="dv-oid" href="#22b2">22b2</a>Акцентная плитка — те же карточки, primary на primaryContainer 35 %. Для сравнения</div><div class="dv-card">
+<div class="frag" style="gap:8px">
+  <sc-for list="{{ cardsA }}" as="c" hint-placeholder-count="6">
+  <div style="display:flex;align-items:center;gap:14px;background:{{ c.bg }};border-radius:16px;padding:12px 16px;box-shadow:{{ c.ring }}">
+    {{ c.left }}
+    <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><sc-if value="{{ c.best }}" hint-placeholder-val="{{ false }}">{{ icStar14 }}</sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ c.meta }}</div></div>
+    <sc-if value="{{ c.more }}" hint-placeholder-val="{{ false }}"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div></sc-if>
+  </div>
+  </sc-for>
+</div>
+</div></div>
+<div class="dv-opt" id="22b3"><div class="dv-olabel"><a class="dv-oid" href="#22b3">22b3</a>Плитка 40 ×1 и ×2: звук · видео · без звука · чекбокс пустой · выбран. Знак 22 dp внутри</div><div class="dv-card">
+<div class="frag" style="gap:20px">
+  <div style="display:flex;gap:14px;flex-wrap:wrap"><sc-for list="{{ tileStates }}" as="t" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:66px">{{ t.el }}<div class="cap" style="text-align:center">{{ t.cap }}</div></div></sc-for></div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center"><sc-for list="{{ tileBig }}" as="t" hint-placeholder-count="5">{{ t.el }}</sc-for></div>
+  <div class="cap">Переход плитка → чекбокс — как в 19b3: круг остаётся кругом, фон surfaceContainerHigh гаснет до прозрачного, знак тает 120 мс, контур 2 dp появляется. Круг 40 вместо 44 — чекбокс тоже 40.</div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 2 — контур остаётся.</b> Запись без звука отличается формой, не цветом: кольцо 1.5 `outlineVariant` без заливки и знак `note-one` тем же `onSurfaceVariant`. Разница тихая, но её видно до открытия — там, где у соседей «⋯», у этой карточки пусто, и контурная плитка объясняет почему. <b>Отметка «лучший» — звезда 14 `primary` после названия</b>, без чипа и без слова: слово «лучший» жило в чипе, когда чип был единственным указателем среди цветных плиток; теперь список тихий, и одна фиолетовая звезда на экране видна сразу (<a href="#22b1">22b1</a>, четвёртая карточка). В списке дублей произведения к ней добавляется положение — первая. Звезда не на плитке: плитка в режиме выбора превращается в чекбокс, и отметка бы исчезала.</p>
+</section>
+
+<section class="dv-turn" id="s22c">
+<div class="dv-thd"><a class="dv-tid" href="#s22c">22c</a><span class="dv-tname">Заголовок дня и график крупно</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="22c1"><div class="dv-olabel"><a class="dv-oid" href="#22c1">22c1</a>Заголовок дня 13/600 onSurfaceVariant, отступ 8 сверху и 8 до карточки: обычный · сегодня (чип как на «Занятиях») · прошлый год</div><div class="dv-card">
+<div class="frag" style="gap:8px">
+  <sc-for list="{{ dayHeads }}" as="g" hint-placeholder-count="3">
+  <div style="display:flex;align-items:center;gap:8px;padding:8px 4px 0;font-size:13px;font-weight:600;color:#A39FB5;height:22px">{{ g.date }}<sc-if value="{{ g.today }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;color:#C4ADFF;border:1px solid #C4ADFF;border-radius:6px;padding:1px 6px;line-height:1.3">сегодня</span></sc-if></div>
+  <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:12px 16px">{{ g.card.left }}<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ g.card.title }}</div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ g.card.meta }}</div></div><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div></div>
+  </sc-for>
+</div>
+</div></div>
+<sc-for list="{{ graphs }}" as="gr" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ gr.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ gr.id }}">{{ gr.id }}</a>{{ gr.label }}</div><div class="dv-card">
+<div class="frag" style="gap:0;padding:0;background:transparent"><div style="background:#1E1D25;border-radius:20px;padding:16px 16px 14px">
+  <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13px;color:#A39FB5">Записи за две недели</div><div class="tn" style="font-size:15px;font-weight:700">{{ gr.g.total }}</div></div>
+  <div style="display:grid;grid-template-columns:repeat(14,17px);gap:8px;align-items:end;height:80px;margin-top:10px;padding-bottom:1px;border-bottom:1px solid #292833">
+    <sc-for list="{{ gr.g.bars }}" as="b" hint-placeholder-count="14"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="tn" style="font-size:11px;font-weight:600;color:#A39FB5;height:14px;line-height:14px">{{ b.num }}</div><div style="width:17px;height:{{ b.h }};border-radius:{{ b.r }};background:{{ b.bg }}"></div></div></sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(14,17px);gap:8px;margin-top:6px"><sc-for list="{{ gr.g.bars }}" as="b" hint-placeholder-count="14"><div class="tn" style="font-size:11px;color:{{ b.lc }};white-space:nowrap;text-align:{{ b.la }};justify-self:{{ b.lj }};height:14px;width:max-content">{{ b.lbl }}</div></sc-for></div>
+</div></div>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Вопрос 5 — 14 дней.</b> Семь — слишком коротко, чтобы увидеть привычку; тридцать на 348 dp — столбики по 4 dp, как мини-столбики, которые мы только что убрали. Четырнадцать — столбик 17, зазор 8, ровно две недели, и понедельники встают на первое и восьмое место. <b>Числа — только над самым высоким днём</b> (при равенстве — над каждым): значения 0–6, глаз считает высоту сам; число нужно как масштаб, одно. <b>Пустой день</b> — отметка 2 dp `outlineVariant` на базовой линии: ось не рвётся, но столбика нет. Сегодня — `primary`, остальные — `primaryContainer`; не цвета зон и не ступени календаря «Занятий» (там фиолетовый — время, здесь — количество, но тон один, и это честно: это тот же «сколько занимался»). Подписи под осью — понедельники «7 сен», «14 сен» (в другом месяце — с его именем) и «сегодня» под последним столбиком цветом `primary`; между ними — пусто. <b>Ось растягивается</b> по максимуму: день с 12 записями (<a href="#22c5">22c5</a>) не уходит за карточку, остальные сжимаются. Тапа по столбику нет — согласны, график обзорный. Появление столбиков — см. anims.</p>
+</section>
+
+<section class="dv-turn" id="s22d">
+<div class="dv-thd"><a class="dv-tid" href="#s22d">22d</a><span class="dv-tname">Режим выбора на «Записях» · заголовки дней остаются</span></div>
+<div class="dv-opts">
+<sc-for list="{{ selFrames }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none;background:#131318;box-shadow:0 1px 0 #292833;position:relative;z-index:2">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icClose }}</div>
+    <div class="tn" style="flex:1;font-size:17px;font-weight:600">Выбрано: {{ s.selCount }}</div>
+    <div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF;white-space:nowrap">Выбрать все</div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icTrash }}</div>
+  </div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:14px;padding:0 16px;margin-top:{{ s.scroll }}">
+    <div style="background:#1E1D25;border-radius:20px;padding:16px 16px 14px;opacity:.38;margin-top:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13px;color:#A39FB5">Записи за две недели</div><div class="tn" style="font-size:15px;font-weight:700">{{ g14.total }}</div></div>
+      <div style="display:grid;grid-template-columns:repeat(14,17px);gap:8px;align-items:end;height:80px;margin-top:10px;padding-bottom:1px;border-bottom:1px solid #292833"><sc-for list="{{ g14.bars }}" as="b" hint-placeholder-count="14"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="tn" style="font-size:11px;font-weight:600;color:#A39FB5;height:14px;line-height:14px">{{ b.num }}</div><div style="width:17px;height:{{ b.h }};border-radius:{{ b.r }};background:{{ b.bg }}"></div></div></sc-for></div>
+      <div style="display:grid;grid-template-columns:repeat(14,17px);gap:8px;margin-top:6px"><sc-for list="{{ g14.bars }}" as="b" hint-placeholder-count="14"><div class="tn" style="font-size:11px;color:{{ b.lc }};white-space:nowrap;text-align:{{ b.la }};justify-self:{{ b.lj }};height:14px;width:max-content">{{ b.lbl }}</div></sc-for></div>
+    </div>
+    <div style="display:flex;gap:8px;opacity:.38"><div style="height:32px;padding:0 12px;border-radius:8px;background:#5B43B8;color:#E9DDFF;display:flex;align-items:center;font-size:13px;font-weight:600">Все</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Эта неделя</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Месяц</div></div>
+    <div style="display:flex;align-items:center;height:24px;margin:-4px 0 -10px"><div class="tn" style="font-size:13px;color:#A39FB5">23 записи</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ s.groups }}" as="g" hint-placeholder-count="3">
+      <div style="display:flex;align-items:center;gap:8px;padding:8px 4px 0;font-size:13px;font-weight:600;color:#A39FB5;height:22px">{{ g.date }}<sc-if value="{{ g.today }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;color:#C4ADFF;border:1px solid #C4ADFF;border-radius:6px;padding:1px 6px;line-height:1.3">сегодня</span></sc-if></div>
+      <sc-for list="{{ g.cards }}" as="c" hint-placeholder-count="2">
+      <div style="display:flex;align-items:center;gap:14px;background:{{ c.bg }};border-radius:16px;padding:12px 16px;box-shadow:{{ c.ring }}">
+        {{ c.left }}
+        <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><sc-if value="{{ c.best }}" hint-placeholder-val="{{ false }}">{{ icStar14 }}</sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ c.meta }}</div></div>
+      </div>
+      </sc-for>
+      </sc-for>
+    </div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ navRec }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}</div><div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div></div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next">Заголовки дней в режиме выбора остаются на месте, не приглушаются (они — часть списка, а не управление) и не нажимаются: долгое нажатие на заголовок ничего не делает, «выбрать весь день» — соблазн, но третий способ выбора при «Выбрать все» и тапах — лишний. Панель выбора прилипает, заголовки — нет (<a href="#22d2">22d2</a>: список прокручен, заголовок «19 сентября» уехал под панель вместе с карточками). Звезда «лучший» видна и у выбранной карточки — удаляют и лучший дубль тоже, и лучше видеть, что именно выбрано.</p>
+</section>
+
+<section class="dv-turn" id="s22e">
+<div class="dv-thd"><a class="dv-tid" href="#s22e">22e</a><span class="dv-tname">Экран произведения · закреплённый лучший, новый дубль под ним, меню «⋯», без лучшего</span></div>
+<div class="dv-opts">
+<sc-for list="{{ pieceFrames }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none;background:#131318;box-shadow:0 1px 0 #292833;position:relative;z-index:2">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div>
+    <div style="flex:1;font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Менуэт соль мажор</div>
+    <div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF;white-space:nowrap">Изменить</div>
+  </div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:24px;padding:0 16px;margin-top:-236px">
+    <div style="display:flex;flex-direction:column;gap:10px"><div style="font-size:16px;font-weight:700">Заметки</div><div style="background:#1E1D25;border-radius:16px;padding:14px 16px;font-size:15px;line-height:1.5">Такты 9–12: не спешить на восьмых. Ми-бекар в 14-м такте — низко. Смычок ближе к подставке в forte.</div></div>
+    <div style="display:flex;align-items:center;gap:16px"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div><div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700">Записать дубль</div><div style="font-size:13px;color:#A39FB5;line-height:1.4;margin-top:3px">Экран не подсказывает во время записи — разбор появится после.</div></div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:16px">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><div class="tn" style="font-size:13px;color:#A39FB5;white-space:nowrap">последний <span style="color:#E6E4EE;font-weight:700">82 %</span> · максимум <span style="color:#E6E4EE;font-weight:700">88 %</span></div><div class="tn" style="font-size:13px;color:#A39FB5">6 дублей</div></div>
+      <svg width="120" height="44" viewBox="0 0 160 44" preserveAspectRatio="none" style="flex:none;overflow:visible"><line x1="0" y1="20" x2="160" y2="20" stroke="#3A3846" stroke-dasharray="3 3"></line><polyline points="{{ progLine }}" fill="none" stroke="#C4ADFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline><sc-for list="{{ progPts }}" as="p" hint-placeholder-count="6"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="3.5" fill="#1E1D25" stroke="#C4ADFF" stroke-width="2"></circle></sc-for></svg>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding-bottom:16px;position:relative">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:32px"><div style="font-size:16px;font-weight:700">Дубли</div><div style="height:32px;padding:0 10px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF;margin-right:-10px">{{ icSelectP }}Выбрать</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ s.takes }}" as="t" hint-placeholder-count="6">
+        <div style="display:flex;align-items:center;gap:14px;background:{{ t.bg }};border-radius:16px;padding:12px 16px;box-shadow:{{ t.ring }}">
+          {{ t.left }}
+          <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px;min-width:0"><div class="tn" style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ t.title }}</div><sc-if value="{{ t.best }}" hint-placeholder-val="{{ false }}">{{ icStar14 }}</sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ t.meta }}</div></div>
+          <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div>
+        </div>
+        </sc-for>
+      </div>
+      <sc-if value="{{ s.menu }}" hint-placeholder-val="{{ false }}">
+      <div style="position:absolute;right:0;top:{{ s.menuTop }};width:236px;background:#292833;border-radius:12px;padding:8px 0;box-shadow:0 8px 24px rgba(0,0,0,.45);z-index:3">
+        <sc-for list="{{ s.menuItems }}" as="m" hint-placeholder-count="3"><div style="height:48px;display:flex;align-items:center;gap:14px;padding:0 16px;font-size:15px;color:#E6E4EE">{{ m.icon }}{{ m.text }}</div></sc-for>
+      </div>
+      </sc-if>
+    </div>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="22e4"><div class="dv-olabel"><a class="dv-oid" href="#22e4">22e4</a>Меню «⋯» крупно: у дубля со звуком (3 пункта), у лучшего (снять), у дубля без звука (1 пункт); в «Записях» у свободной записи — как раньше</div><div class="dv-card">
+<div class="frag" style="flex-direction:row;flex-wrap:wrap;gap:12px;align-items:flex-start">
+  <sc-for list="{{ menus }}" as="mn" hint-placeholder-count="4"><div style="display:flex;flex-direction:column;gap:6px;width:184px"><div class="cap">{{ mn.cap }}</div><div style="background:#292833;border-radius:12px;padding:8px 0;box-shadow:0 8px 24px rgba(0,0,0,.45)"><sc-for list="{{ mn.items }}" as="m" hint-placeholder-count="3"><div style="height:48px;display:flex;align-items:center;gap:12px;padding:0 14px;font-size:14px;color:#E6E4EE;white-space:nowrap">{{ m.icon }}{{ m.text }}</div></sc-for></div></div></sc-for>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>В списке дублей название карточки — дата</b>, а не имя произведения: шесть строк «Менуэт соль мажор» под заголовком «Менуэт соль мажор» — то же «масло масляное», что и с «Записями». Правило «дата один раз» соблюдается: дата в названии («18 сентября», прошлый год — «20 сентября 2025»), в строке — время и длительность «18:42 · 2:05». Переименованный дубль показывает своё имя, дата уходит в строку: «18 сентября · 2:05». В общем списке «Записей» дубль по-прежнему называется произведением — там дата стоит над группой. <b>Вопрос 7 — вид отметки:</b> звезда 14 после даты + <b>первая позиция</b>; разделителя между закреплённым и остальными нет — при одном лучшем он делил бы список 1 : 5 линией ради одной карточки, а звезда уже видна. <b>Новый дубль вторым</b> (<a href="#22e1">22e1</a>) не теряется: подсветка `card.selected` + кольцо primary работает на любом месте, а закреплённый над ним — единственная карточка со звездой; две «особые» карточки подряд читаются как «лучший, и вот новый». <b>Меню «⋯»:</b> «Отметить лучшим» / «Снять отметку „лучший“» первым пунктом — со звездой контурной / залитой; ниже «Поделиться», «Звук…». У дубля без звука — один пункт (<a href="#22e4">22e4</a>). <b>Строка прогресса — «максимум 88 %»:</b> «рекорд» звучит как спорт, «наибольший» длинно; «максимум» точно описывает число и не спорит со звездой. Без лучшего (<a href="#22e3">22e3</a>) — обычный список по времени, ничего не подсвечено.</p>
+</section>
+
+<section class="dv-turn" id="s22f">
+<div class="dv-thd"><a class="dv-tid" href="#s22f">22f</a><span class="dv-tname">Экран записи у дубля · второй вход для отметки — звезда в шапке</span></div>
+<div class="dv-opts">
+<sc-for list="{{ recScreens }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <div style="display:flex;align-items:center;gap:0;padding:4px 4px 0;height:56px;flex:none">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div>
+    <div style="flex:1;min-width:0;padding:0 4px"><div style="font-size:17px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2">Менуэт соль мажор · 18 сентября</div><div class="tn" style="font-size:12px;color:#A39FB5;line-height:1.2;margin-top:1px">дубль · 18:42 · 2:05</div></div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ s.star }}</div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icShare }}</div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:20px 16px 0;display:flex;flex-direction:column;gap:20px">
+    <div style="display:flex;align-items:flex-end;gap:16px"><div class="tn" style="font-size:64px;font-weight:800;line-height:1;letter-spacing:-1px;color:#47C97E">82<span style="font-size:24px;font-weight:600;color:#A39FB5;letter-spacing:0"> %</span></div><div style="flex:1;font-size:15px;color:#A39FB5;line-height:1.4;padding-bottom:6px;text-wrap:pretty">Ни одна нота не уходит стабильно — отличная запись</div></div>
+    <div style="height:56px;border-radius:12px;background:#1E1D25;display:flex;align-items:flex-end;gap:2px;padding:8px 10px;box-sizing:border-box"><sc-for list="{{ strip }}" as="b" hint-placeholder-count="40"><div style="flex:1;height:{{ b.h }};border-radius:1.5px;background:{{ b.c }}"></div></sc-for></div>
+    <div style="display:flex;align-items:center;gap:12px">
+      <div style="width:48px;height:48px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none">{{ icPlay }}</div>
+      <div class="tn" style="font-size:13px;color:#A39FB5;flex:none">0:47</div>
+      <div style="flex:1;position:relative;height:20px"><div style="position:absolute;left:0;right:0;top:8px;height:4px;border-radius:2px;background:#292833"></div><div style="position:absolute;left:0;width:38%;top:8px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:38%;top:0;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#C4ADFF"></div></div>
+      <div class="tn" style="font-size:13px;color:#A39FB5;flex:none">2:05</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px;height:56px;padding:0 12px 0 14px;border-radius:16px;background:#1E1D25">{{ icSlidersP }}<div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600">Звук</div><div style="font-size:13px;color:#A39FB5">как у всех · Камерный зал</div></div>{{ icChevR }}</div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:#1E1D25;border-radius:16px;padding:14px"><div style="font-size:12px;color:#A39FB5">Распределение</div><div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin:10px 0 8px"><div style="width:84%;background:#47C97E"></div><div style="width:11%;background:#E5B03C"></div><div style="width:5%;background:#E8565C"></div></div><div class="tn" style="display:flex;gap:10px;font-size:12px"><span style="color:#47C97E">84%</span><span style="color:#E5B03C">11%</span><span style="color:#E8565C">5%</span></div></div>
+      <div style="background:#1E1D25;border-radius:16px;padding:14px"><div style="font-size:12px;color:#A39FB5">Средняя ошибка</div><div class="tn" style="font-size:28px;font-weight:700;margin-top:6px">7,3<span style="font-size:14px;font-weight:500;color:#A39FB5"> ц</span></div><div style="font-size:12px;color:#A39FB5">смещение −6 ц вниз</div></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;gap:4px;height:40px;margin-right:-10px"><div style="height:40px;padding:0 12px 0 10px;border-radius:20px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF">{{ icPencilP }}Переименовать</div><div style="height:40px;padding:0 12px 0 10px;border-radius:20px;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#E8565C">{{ icTrashE }}Удалить</div></div>
+  </div>
+  <sc-if value="{{ s.toast }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;left:16px;right:16px;bottom:24px;height:48px;border-radius:12px;background:#E6E4EE;color:#131318;display:flex;align-items:center;padding:0 16px;font-size:14px;font-weight:600;box-shadow:0 6px 20px rgba(0,0,0,.4)">Отмечен как лучший</div>
+  </sc-if>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Второй вход — да, и это звезда в шапке</b>, а не третий пункт в строке действий: «Отметить лучшим · Переименовать · Удалить» на 380 dp не помещаются в одну строку 14 sp, а звезда — самая узнаваемая «избранное»-кнопка, и её состояние видно без слов: контур `onSurface` — не лучший, залитая `primary` — лучший. Шапка у дубля: назад · название с датой и второй строкой «дубль · 18:42 · 2:05» · звезда 48 · поделиться 48. У свободной записи звезды нет. Тап — звезда заливается (scale .8 → 1, 150 мс), снизу снек «Отмечен как лучший» на 2 с (<a href="#22f2">22f2</a>); если лучший был другой — «Отмечен как лучший, прежняя отметка снята». Снятие — контур обратно, без снека. Возврат на экран произведения — карточка уже стоит первой (перестановка происходит на экране списка, см. anims). Балл, лента и карточки анализа — без изменений, кроме слова «запись» в подписи.</p>
+</section>
+
+<section class="dv-turn" id="s22g">
+<div class="dv-thd"><a class="dv-tid" href="#s22g">22g</a><span class="dv-tname">Остальные места · «Записи этого дня», карточка произведения</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="22g1"><div class="dv-olabel"><a class="dv-oid" href="#22g1">22g1</a>«Занятия» → «Записи этого дня»: та же карточка, «18:42 · 8:15», без «⋯» и выбора</div><div class="dv-card">
+<div class="frag" style="gap:12px">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+    <div><div style="font-size:14px;color:#A39FB5;display:flex;align-items:center;gap:8px">17 сентября, четверг</div><div class="tn" style="font-size:32px;font-weight:700;line-height:1.1;margin-top:4px">1 ч 20 мин</div></div>
+    <div style="height:40px;padding:0 16px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF;white-space:nowrap">{{ icPencilP }}Изменить время</div>
+  </div>
+  <div style="font-size:14px;font-weight:700">Записи этого дня</div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <sc-for list="{{ dayCards }}" as="c" hint-placeholder-count="3">
+    <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:12px 16px">
+      {{ c.left }}
+      <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><sc-if value="{{ c.best }}" hint-placeholder-val="{{ false }}">{{ icStar14 }}</sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ c.meta }}</div></div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</div></div>
+<div class="dv-opt" id="22g2"><div class="dv-olabel"><a class="dv-oid" href="#22g2">22g2</a>Карточка произведения в репертуаре — справа только текст в две строки: «20 сентября» / «6 дублей»; без дублей — «нет дублей»; с лучшим — звезда у даты</div><div class="dv-card">
+<div class="frag" style="gap:8px">
+  <sc-for list="{{ pieceCards }}" as="p" hint-placeholder-count="3">
+  <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:12px 14px 12px 12px;min-height:96px;box-sizing:border-box">
+    <div style="width:54px;height:72px;border-radius:6px;flex:none;background:{{ p.thumbBg }};display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)"><sc-if value="{{ p.noPages }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:22px;border:1.5px solid #6B6880;border-radius:2px"></div></sc-if></div>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+      <div style="font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25">{{ p.title }}</div>
+      <div style="font-size:13px;color:#A39FB5">{{ p.composer }}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:3px"><div style="height:22px;padding:0 8px;border-radius:6px;background:{{ p.chipBg }};color:{{ p.chipFg }};font-size:11px;font-weight:600;display:flex;align-items:center;flex:none">{{ p.chip }}</div><div class="tn" style="font-size:12px;color:#A39FB5">{{ p.keyTempo }}</div></div>
+    </div>
+    <div class="tn" style="flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:3px;font-size:12px;color:#A39FB5;text-align:right;line-height:1.3;white-space:nowrap"><div style="display:flex;align-items:center;gap:5px">{{ p.l1 }}<sc-if value="{{ p.best }}" hint-placeholder-val="{{ false }}">{{ icStar12 }}</sc-if></div><div>{{ p.l2 }}</div></div>
+  </div>
+  </sc-for>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 8 — только текст.</b> Плитку 36 держал цвет зоны: без него нейтральный кружок справа — украшение, а пунктирное кольцо «нет дублей» — украшение отсутствия. Правая колонка карточки произведения — две строки 12 sp `onSurfaceVariant` по правому краю: дата последнего дубля и число дублей; без дублей — одна строка «нет дублей». Колонки у пяти карточек теперь одинаковы по форме — и это правильно: карточка произведения про произведение (обложка, название, «Учу»), а не про то, как оно идёт. Если у произведения есть отмеченный лучший — звезда 12 у даты; она единственное, что отличает колонки, и отличает по делу. <b>Пресет звука в строке карточки</b> («свои настройки · Камерный зал», 18k) — убираем, согласны: строка — «время · длительность», и всё; где обработка другая, видно на экране записи в строке «Звук».</p>
+</section>
+
+<section class="dv-turn" id="s22h">
+<div class="dv-thd"><a class="dv-tid" href="#s22h">22h</a><span class="dv-tname">Landscape 892 × 412 · «Записи» и экран произведения</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="22h1"><div class="dv-olabel"><a class="dv-oid" href="#22h1">22h1</a>«Записи»: переключатель 320 по центру шапки; ниже — две колонки: график (360) слева, фильтры + список справа. Нижняя панель вкладок</div><div class="dv-card">
+<div class="box" style="width:892px;height:412px">
+  <div style="display:flex;align-items:center;justify-content:center;height:52px;flex:none;padding-top:8px;box-sizing:border-box"><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:36px;width:320px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF">Записи</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;border-left:1px solid #3A3846">Репертуар</div></div></div>
+  <div style="flex:1;overflow:hidden;padding:8px 16px 0;display:grid;grid-template-columns:360px minmax(0,1fr);gap:16px;align-items:start">
+    <div style="background:#1E1D25;border-radius:20px;padding:16px 16px 14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13px;color:#A39FB5">Записи за две недели</div><div class="tn" style="font-size:15px;font-weight:700">{{ g14.total }}</div></div>
+      <div style="display:grid;grid-template-columns:repeat(14,16px);gap:8px;align-items:end;height:80px;margin-top:10px;padding-bottom:1px;border-bottom:1px solid #292833"><sc-for list="{{ g14.bars }}" as="b" hint-placeholder-count="14"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="tn" style="font-size:11px;font-weight:600;color:#A39FB5;height:14px;line-height:14px">{{ b.num }}</div><div style="width:16px;height:{{ b.h }};border-radius:{{ b.r }};background:{{ b.bg }}"></div></div></sc-for></div>
+      <div style="display:grid;grid-template-columns:repeat(14,16px);gap:8px;margin-top:6px"><sc-for list="{{ g14.bars }}" as="b" hint-placeholder-count="14"><div class="tn" style="font-size:11px;color:{{ b.lc }};white-space:nowrap;text-align:{{ b.la }};justify-self:{{ b.lj }};height:14px;width:max-content">{{ b.lbl }}</div></sc-for></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;min-width:0">
+      <div style="display:flex;align-items:center;justify-content:space-between"><div style="display:flex;gap:8px"><div style="height:32px;padding:0 12px;border-radius:8px;background:#5B43B8;color:#E9DDFF;display:flex;align-items:center;font-size:13px;font-weight:600">Все</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Эта неделя</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Месяц</div></div><div style="display:flex;align-items:center;gap:12px"><div class="tn" style="font-size:13px;color:#A39FB5">23 записи</div><div style="height:32px;padding:0 10px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF;margin-right:-10px">{{ icSelectP }}Выбрать</div></div></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ landGroups }}" as="g" hint-placeholder-count="2">
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 4px 0;font-size:13px;font-weight:600;color:#A39FB5;height:22px">{{ g.date }}<sc-if value="{{ g.today }}" hint-placeholder-val="{{ false }}"><span style="font-size:11px;font-weight:700;color:#C4ADFF;border:1px solid #C4ADFF;border-radius:6px;padding:1px 6px;line-height:1.3">сегодня</span></sc-if></div>
+        <sc-for list="{{ g.cards }}" as="c" hint-placeholder-count="2">
+        <div style="display:flex;align-items:center;gap:12px;background:#1E1D25;border-radius:16px;padding:10px 14px">
+          {{ c.left }}
+          <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><sc-if value="{{ c.best }}" hint-placeholder-val="{{ false }}">{{ icStar14 }}</sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ c.meta }}</div></div>
+          <sc-if value="{{ c.more }}" hint-placeholder-val="{{ false }}"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div></sc-if>
+        </div>
+        </sc-for>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+  <div style="height:64px;display:flex;background:#1E1D25;flex:none;justify-content:center">
+    <sc-for list="{{ navRec }}" as="n" hint-placeholder-count="4">
+    <div style="width:160px;display:flex;align-items:center;justify-content:center;gap:8px"><div style="width:56px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}</div><div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div></div>
+    </sc-for>
+  </div>
+</div>
+</div></div>
+<div class="dv-opt" id="22h2"><div class="dv-olabel"><a class="dv-oid" href="#22h2">22h2</a>Экран произведения: слева заметки, запись, прогресс (360); справа «Дубли» с закреплённым лучшим и новым</div><div class="dv-card">
+<div class="box" style="width:892px;height:412px">
+  <div style="display:flex;align-items:center;gap:4px;padding:2px 8px 0;height:52px;flex:none;box-shadow:0 1px 0 #292833">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div>
+    <div style="flex:1;font-size:17px;font-weight:600">Менуэт соль мажор</div>
+    <div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Изменить</div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:12px 16px 0;display:grid;grid-template-columns:360px minmax(0,1fr);gap:16px;align-items:start">
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:center;gap:14px"><div style="width:56px;height:56px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none"><div style="width:20px;height:20px;border-radius:50%;background:#2E1A6E"></div></div><div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700">Записать дубль</div><div style="font-size:13px;color:#A39FB5;line-height:1.4;margin-top:2px">Разбор появится после записи.</div></div></div>
+      <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:16px">
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><div class="tn" style="font-size:13px;color:#A39FB5;white-space:nowrap">последний <span style="color:#E6E4EE;font-weight:700">82 %</span> · максимум <span style="color:#E6E4EE;font-weight:700">88 %</span></div><div class="tn" style="font-size:13px;color:#A39FB5">6 дублей</div></div>
+        <svg width="100" height="44" viewBox="0 0 160 44" preserveAspectRatio="none" style="flex:none;overflow:visible"><line x1="0" y1="20" x2="160" y2="20" stroke="#3A3846" stroke-dasharray="3 3"></line><polyline points="{{ progLine }}" fill="none" stroke="#C4ADFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline></svg>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:700">Заметки</div><div style="background:#1E1D25;border-radius:16px;padding:12px 14px;font-size:14px;line-height:1.45">Такты 9–12: не спешить на восьмых. Ми-бекар в 14-м такте — низко.</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;min-width:0">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:28px"><div style="font-size:16px;font-weight:700">Дубли</div><div style="height:32px;padding:0 10px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF;margin-right:-10px">{{ icSelectP }}Выбрать</div></div>
+      <sc-for list="{{ takesLand }}" as="t" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;gap:12px;background:{{ t.bg }};border-radius:16px;padding:10px 14px;box-shadow:{{ t.ring }}">
+        {{ t.left }}
+        <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:6px"><div class="tn" style="font-size:15px;font-weight:600">{{ t.title }}</div><sc-if value="{{ t.best }}" hint-placeholder-val="{{ false }}">{{ icStar14 }}</sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ t.meta }}</div></div>
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">В landscape график перестаёт быть «карточкой над списком» и становится левой колонкой 360 — список получает всю высоту, а не 412 − 190. Столбики сжаты до 16 при том же зазоре (14 × 16 + 13 × 8 = 328 в 328 внутренних). Переключатель — 320 dp по центру шапки, как компактный заголовок. На экране произведения — то же разделение: слева всё, что про произведение, справа дубли; блок «Записать дубль» подвинут наверх, чтобы главное действие не пряталось под заметками.</p>
+</section>
+
+<section class="dv-turn" id="s22i">
+<div class="dv-thd"><a class="dv-tid" href="#s22i">22i</a><span class="dv-tname">Пустые состояния</span></div>
+<div class="dv-opts">
+<sc-for list="{{ emptyFrames }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <div style="padding:12px 16px 0;height:52px;flex:none;box-sizing:border-box"><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF">Записи</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;border-left:1px solid #3A3846">Репертуар</div></div></div>
+  <div style="flex:1;overflow:hidden;padding:16px 16px 0;display:flex;flex-direction:column;gap:14px">
+    <sc-if value="{{ s.graph }}" hint-placeholder-val="{{ false }}">
+    <div style="background:#1E1D25;border-radius:20px;padding:16px 16px 14px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13px;color:#A39FB5">Записи за две недели</div><div class="tn" style="font-size:15px;font-weight:700">{{ g14.total }}</div></div>
+      <div style="display:grid;grid-template-columns:repeat(14,17px);gap:8px;align-items:end;height:80px;margin-top:10px;padding-bottom:1px;border-bottom:1px solid #292833"><sc-for list="{{ g14.bars }}" as="b" hint-placeholder-count="14"><div style="display:flex;flex-direction:column;align-items:center;gap:4px"><div class="tn" style="font-size:11px;font-weight:600;color:#A39FB5;height:14px;line-height:14px">{{ b.num }}</div><div style="width:17px;height:{{ b.h }};border-radius:{{ b.r }};background:{{ b.bg }}"></div></div></sc-for></div>
+      <div style="display:grid;grid-template-columns:repeat(14,17px);gap:8px;margin-top:6px"><sc-for list="{{ g14.bars }}" as="b" hint-placeholder-count="14"><div class="tn" style="font-size:11px;color:{{ b.lc }};white-space:nowrap;text-align:{{ b.la }};justify-self:{{ b.lj }};height:14px;width:max-content">{{ b.lbl }}</div></sc-for></div>
+    </div>
+    <div style="display:flex;gap:8px"><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Все</div><div style="height:32px;padding:0 12px;border-radius:8px;background:#5B43B8;color:#E9DDFF;display:flex;align-items:center;font-size:13px;font-weight:600">Эта неделя</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Месяц</div></div>
+    <div style="display:flex;align-items:center;height:24px;margin:-4px 0 -6px"><div class="tn" style="font-size:13px;color:#A39FB5">0 записей</div></div>
+    <div style="padding:40px 24px;text-align:center;font-size:15px;color:#A39FB5;line-height:1.45;text-wrap:pretty">За этот период записей нет</div>
+    </sc-if>
+    <sc-if value="{{ s.none }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;padding:0 32px 120px;text-align:center">{{ tileEmpty }}<div style="font-size:15px;color:#A39FB5;line-height:1.5;text-wrap:pretty">Здесь появятся ваши записи. Нажмите кнопку записи на экране Live.</div></div>
+    </sc-if>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ navRec }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}</div><div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div></div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next">Записей нет совсем — без графика, переключатель остаётся (репертуар может быть заполнен раньше первой записи), в центре — плитка 56 контурная с нотой и текст как сейчас. Пусто под фильтром — график на месте (он от фильтра не зависит), счётчик «0 записей», строка «За этот период записей нет» 15 `onSurfaceVariant` по центру; «Выбрать» скрыта — выбирать нечего.</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · дополнение ICONS, tokens, sizes, anims, тексты</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(560px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Дополнение ICONS (viewBox 24, stroke 1.8, round, fill none; `F ` — заливка). `note-pair` больше не используется в списках — оставить для карточки произведения не нужно, удалить</div>
+  <div class="dv-tbl" style="grid-template-columns:36px minmax(0,.7fr) minmax(0,1fr) minmax(0,2fr)">
+    <div class="h"></div><div class="h">name</div><div class="h">use</div><div class="h">paths</div>
+    <sc-for list="{{ iconRows }}" as="r" hint-placeholder-count="3"><div style="padding:6px 8px;display:flex;align-items:center">{{ r.el }}</div><div class="mono">{{ r.name }}</div><div style="color:#A39FB5">{{ r.use }}</div><div class="mono" style="color:#A39FB5;font-size:10.5px">{{ r.paths }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Токены (tile.bg и tile.neutral из 19 — удалить)</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.6fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Значение</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="8"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты</div>
+  <div style="color:#A39FB5;display:flex;flex-direction:column;gap:6px">
+    <div>Переключатель «Записи | Репертуар» (крупный заголовок «Записи» удалён) · счётчик «N записей» (1 запись, 2–4 записи, 5+ записей) · пусто под фильтром «За этот период записей нет» · пусто совсем «Здесь появятся ваши записи. Нажмите кнопку записи на экране Live.»</div>
+    <div>Название по умолчанию: свободная — «Запись»; дубль в «Записях» и на «Занятиях» — название произведения; дубль в списке дублей — дата «18 сентября» (прошлый год — «18 сентября 2025»); экран записи и файл — «Запись · 20 сентября» / «Менуэт соль мажор · 18 сентября». Строка: под заголовком дня — «18:42 · 8:15»; без даты рядом — «18 сентября · 2:05». Без «сегодня / вчера / 13 сен».</div>
+    <div>Заголовок дня «20 сентября, воскресенье» (прошлый год — «20 сентября 2025, суббота»), чип «сегодня». График: «Записи за две недели» · «N записей» · подписи «7 сен», «14 сен», «сегодня».</div>
+    <div>Меню «⋯»: «Отметить лучшим» / «Снять отметку „лучший“» · «Поделиться» · «Звук…». Снек: «Отмечен как лучший» / «Отмечен как лучший, прежняя отметка снята». Строка прогресса: «последний 82 % · максимум 88 % · 6 дублей». Экран записи: «Ни одна нота не уходит стабильно — отличная запись».</div>
+    <div>TalkBack карточки: «Менуэт соль мажор, дубль, лучший, 18:42, 2 минуты 5 секунд, звук» / «…, видео» / «…, без звука». Звезда в шапке: «Отметить лучшим» / «Снять отметку лучший», состояние «выбрано». Столбик графика: «14 сентября, 3 записи».</div>
+  </div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Где</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="10"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="6"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const P = '#C4ADFF', PC = '#5B43B8', ONPC = '#E9DDFF', ON = '#E6E4EE', OV = '#A39FB5', ONP = '#2E1A6E', ERR = '#E8565C', SC = '#1E1D25', SCH = '#292833', OUTV = '#3A3846', DIM = '#6B6880', SEL = '#2A2540';
+    const G = '#47C97E', Y = '#E5B03C', R = '#E8565C';
+    const zone = v => v >= 75 ? G : v >= 55 ? Y : R;
+    const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+    const ICONS = [
+      { name: 'star-outline', use: 'шапка экрана записи у дубля — «не лучший» (24, onSurface); пункт меню «Отметить лучшим» (20)', paths: ['M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z'] },
+      { name: 'star', use: 'уже в наборе (filled): отметка «лучший» у названия (14, primary), у даты в карточке произведения (12), шапка записи «лучший» (24, primary), пункт «Снять отметку» (20)', paths: ['F M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z'] },
+      { name: 'note-one', use: 'уже в наборе: плитка записи со звуком и без звука (22 в круге 40); пустое состояние (30 в круге 56)', paths: ['M12.2 17.5V4.5', 'M12.2 4.5c3.6 1.4 5.6 3.9 4.4 7.6', 'F M9.2 15.4a3.2 2.5 0 1 0 0 5 3.2 2.5 0 1 0 0-5z'] },
+      { name: 'video', use: 'уже в наборе (Видео): плитка видео-дубля (22 в круге 40) — вместо ноты с бейджем', paths: ['M3.5 7.5A1.5 1.5 0 0 1 5 6h9a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 14 18H5a1.5 1.5 0 0 1-1.5-1.5z', 'M15.5 10.3l4.2-2.5a.5.5 0 0 1 .8.4v7.6a.5.5 0 0 1-.8.4l-4.2-2.5'] },
+    ];
+    const OLD = [
+      { name: 'back', paths: ['M15 5 8 12l7 7'] }, { name: 'close', paths: ['M6 6l12 12M18 6 6 18'] }, { name: 'check', paths: ['M5 12.5 9.5 17 19 7.5'] },
+      { name: 'more', paths: ['F M5 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'F M12 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'F M19 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z'] },
+      { name: 'pencil', paths: ['M4 20l.9-4.1L15.7 5.1a1.6 1.6 0 0 1 2.3 0l.9.9a1.6 1.6 0 0 1 0 2.3L8.1 19.1 4 20z', 'M14.2 6.6l3.2 3.2'] },
+      { name: 'trash', paths: ['M4 7h16', 'M9 7V4.8a.8.8 0 0 1 .8-.8h4.4a.8.8 0 0 1 .8.8V7', 'M6 7l.9 12.2a1 1 0 0 0 1 .8h8.2a1 1 0 0 0 1-.8L18 7', 'M10 11v5M14 11v5'] },
+      { name: 'note-pair', paths: ['M9.6 17.6V5.6M18.6 15.6V3.7', 'F M9.6 4.4l9-1.9v2.6l-9 1.9z', 'F M6.8 16.5a2.9 2.3 0 1 0 0 4.6 2.9 2.3 0 1 0 0-4.6z', 'F M15.8 14.5a2.9 2.3 0 1 0 0 4.6 2.9 2.3 0 1 0 0-4.6z'] },
+      { name: 'select', paths: ['M4 6.5h8M4 12h8M4 17.5h6', 'M14.5 12.5l2.5 2.5 5-5.5'] },
+      { name: 'share', paths: ['M17 3.5a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z', 'M7 9.7a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z', 'M17 15.9a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z', 'M9 11l6-3M9 13l6 3'] },
+      { name: 'sound', paths: ['M6 4v4.5M6 12.5v7.5M12 4v9.5M12 17.5v2.5M18 4v2.5M18 10.5V20', 'M4 10.5h4M10 15.5h4M16 8.5h4'] },
+      { name: 'sliders', paths: ['M4 7h9M18.5 7H20M4 17h6M14.5 17H20', 'M15.5 4.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z', 'M10.5 14.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z'] },
+      { name: 'play', paths: ['F M8 5.5v13L18.5 12 8 5.5z'] },
+      { name: 'chevron-right', paths: ['M9.5 6l6 6-6 6'] },
+      { name: 'tab-live', tab: true, paths: [{ d: 'M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8z', sel: 'fill' }, { d: 'M17.7 6.3a8 8 0 0 1 0 11.4' }, { d: 'M6.3 6.3a8 8 0 0 0 0 11.4' }] },
+      { name: 'tab-practice', tab: true, paths: [{ d: 'M12 6.5a7 7 0 1 0 0 14 7 7 0 1 0 0-14z', sel: 'fill' }, { d: 'M12 13.5V10', sel: 'inv' }, { d: 'M10 3h4M12 3v3.5' }] },
+      { name: 'tab-records', tab: true, paths: [{ d: 'M4 6h8M4 12h6M4 18h5' }, { d: 'M15 17V7.5l5-1.5v3' }, { d: 'F M13 15a2 2 0 1 0 0 4 2 2 0 1 0 0-4z', sel: 'fill' }] },
+      { name: 'tab-settings', tab: true, paths: [{ d: 'M4 7h9M18.5 7H20M4 17h6M14.5 17H20' }, { d: 'M15.5 4.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z', sel: 'fill' }, { d: 'M10.5 14.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z', sel: 'fill' }] },
+    ];
+    const byName = Object.fromEntries([...ICONS, ...OLD].map(i => [i.name, i]));
+    const ico = (name, size = 24, color = ON, opt = {}) => {
+      const ic = byName[name]; const sel = opt.sel, pill = opt.pill || PC;
+      const paths = ic.paths.map((p, i) => {
+        if (typeof p === 'string') { const f = p.startsWith('F '); return h('path', { key: i, d: f ? p.slice(2) : p, fill: f ? color : 'none', stroke: f ? 'none' : color }); }
+        const f = p.d.startsWith('F '); const d = f ? p.d.slice(2) : p.d; const fill = f || (sel && p.sel === 'fill'), inv = sel && p.sel === 'inv';
+        return h('path', { key: i, d, fill: fill ? color : 'none', stroke: fill && !inv ? 'none' : inv ? pill : color });
+      });
+      return h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none', display: 'block' } }, paths);
+    };
+    const iconRows = ICONS.map(i => ({ name: i.name, use: i.use, el: ico(i.name, 20, ON), paths: i.paths.join('  ·  ') }));
+    const TABS = [['Live', 'tab-live'], ['Занятия', 'tab-practice'], ['Записи', 'tab-records'], ['Настройки', 'tab-settings']];
+    const navRec = TABS.map(([name, k]) => { const a = name === 'Записи'; return { name, icon: ico(k, 24, a ? ONPC : OV, { sel: a }), pill: a ? PC : 'transparent', fg: a ? ON : OV, fw: a ? 600 : 400 }; });
+    const circle = (size, style, child) => h('div', { style: { width: size, height: size, borderRadius: size / 2, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', ...style } }, child);
+    // tile: kind sound | video | mute; mode N (neutral) | A (accent); sel null | false | true
+    const tile = (kind, mode = 'N', sel = null, size = 40) => {
+      const k = size / 40;
+      if (sel === false) return circle(size, { border: `${2 * k}px solid ${DIM}` });
+      if (sel === true) return circle(size, { background: P }, ico('check', 20 * k, ONP));
+      const col = mode === 'A' ? P : OV, bg = mode === 'A' ? 'rgba(91,67,184,.35)' : SCH;
+      const icon = ico(kind === 'video' ? 'video' : 'note-one', 22 * k, col);
+      return circle(size, kind === 'mute' ? { boxShadow: `inset 0 0 0 ${1.5 * k}px ${OUTV}` } : { background: bg }, icon);
+    };
+    const tileEmpty = circle(56, { boxShadow: `inset 0 0 0 1.5px ${OUTV}` }, ico('note-one', 30, DIM));
+    // ---- old cards (22a1)
+    const bars = arr => arr.map(z => ({ h: (z === 0 ? 28 : z === 1 ? 16 : 8) + 'px', c: z === 0 ? G : z === 1 ? Y : R }));
+    const oldTile = (score, take, sound) => { const col = zone(score); return circle(44, sound ? { background: hexA(col, .16) } : { boxShadow: `inset 0 0 0 1.5px ${col}` }, ico(take ? 'note-pair' : 'note-one', 26, col)); };
+    const oldCards = [
+      { score: 84, title: 'Менуэт соль мажор', take: true, meta: 'сегодня · 2:05', b: [0, 0, 1, 0, 0, 0, 1, 0], sound: true },
+      { score: 71, title: 'Сессия · 20 сентября', take: false, meta: 'сегодня · 8:15', b: [0, 1, 0, 1, 0, 2, 0, 1], sound: true },
+      { score: 88, title: 'Мелодия', take: true, meta: 'вчера · 3:40', b: [0, 0, 0, 0, 1, 0, 0, 0], sound: true },
+      { score: 58, title: 'Этюд Кайзера №3', take: false, meta: '17 сен · 6:02', b: [1, 0, 2, 1, 0, 1, 2, 0], sound: false },
+      { score: 47, title: 'Концерт ля минор, I часть', take: true, meta: '12 сен · 4:10', b: [2, 1, 2, 0, 1, 2, 1, 2], sound: true },
+      { score: 79, title: 'Сессия · 11 сентября', take: false, meta: '11 сен · 5:30', b: [0, 0, 1, 0, 0, 1, 0, 0], sound: true },
+    ].map(c => ({ title: c.title, meta: c.meta, bars: bars(c.b), more: c.sound, left: oldTile(c.score, c.take, c.sound) }));
+    // ---- new cards
+    const mk = (title, kind, time, dur, o = {}) => ({ title, kind, time, dur, take: !!o.take, best: !!o.best });
+    const GROUPS = [
+      { date: '20 сентября, воскресенье', today: true, recs: [mk('Менуэт соль мажор', 'sound', '18:42', '2:05', { take: true }), mk('Запись', 'sound', '17:10', '8:15'), mk('Запись', 'sound', '16:55', '3:02')] },
+      { date: '19 сентября, суббота', recs: [mk('Мелодия', 'video', '19:20', '3:40', { take: true }), mk('Разбор второй части концерта перед уроком', 'sound', '11:05', '12:48')] },
+      { date: '17 сентября, четверг', recs: [mk('Этюд Кайзера №3', 'mute', '20:12', '6:02'), mk('Менуэт соль мажор', 'sound', '19:30', '2:10', { take: true, best: true }), mk('Гаммы D-dur', 'sound', '9:05', '5:30')] },
+      { date: '12 сентября, суббота', recs: [mk('Концерт ля минор, I часть', 'sound', '18:00', '4:10', { take: true })] },
+    ];
+    const card = (r, o = {}) => {
+      const inSel = !!o.selected, selected = inSel ? o.selected.includes(r.title + r.time) : null;
+      return { title: r.title, meta: o.fullDate ? `${o.fullDate} · ${r.dur}` : `${r.time} · ${r.dur}`, best: r.best, more: !inSel && (r.kind !== 'mute' || r.take), left: inSel ? tile(r.kind, 'N', selected) : tile(r.kind, o.mode || 'N'), bg: selected ? SEL : SC, ring: selected ? `inset 0 0 0 1.5px ${P}` : 'none' };
+    };
+    const groups = (o = {}) => GROUPS.map(g => ({ date: g.date, today: !!g.today, cards: g.recs.map(r => card(r, o)) }));
+    const recFrames = [
+      { id: '22a2', label: 'После — нейтральная плитка 40 (note-one / video onSurfaceVariant на surfaceContainerHigh), карточка 64; переключатель «Записи | Репертуар» вместо заголовка; график «Записи за две недели»; заголовки дней; «18:42 · 8:15»', groups: groups() },
+      { id: '22a3', label: 'После — акцентная плитка (primary на primaryContainer 35 %). Для сравнения', groups: groups({ mode: 'A' }) },
+    ];
+    const selFrames = [
+      { id: '22d1', label: 'Вход — долгое нажатие на «Запись 17:10»: панель сменила шапку-переключатель; график и фильтры α .38; заголовки дней на месте', selCount: 1, scroll: '0', groups: groups({ selected: ['Запись17:10'] }) },
+      { id: '22d2', label: '3 выбраны, среди них лучший дубль (звезда видна); список прокручен — панель прилипла, заголовки уехали вместе с карточками', selCount: 3, scroll: '-330px', groups: groups({ selected: ['Запись17:10', 'Менуэт соль мажор19:30', 'Гаммы D-dur9:05'] }) },
+    ];
+    const landGroups = groups().slice(0, 2);
+    const cardsN = [card(mk('Запись', 'sound', '17:10', '8:15')), card(mk('Мелодия', 'video', '19:20', '3:40', { take: true })), card(mk('Этюд Кайзера №3', 'mute', '20:12', '6:02')), card(mk('Менуэт соль мажор', 'sound', '19:30', '2:10', { take: true, best: true })), card(mk('Гаммы D-dur', 'sound', '9:05', '5:30'), { selected: [] }), card(mk('Гаммы D-dur', 'sound', '9:05', '5:30'), { selected: ['Гаммы D-dur9:05'] })];
+    const cardsA = [card(mk('Запись', 'sound', '17:10', '8:15'), { mode: 'A' }), card(mk('Мелодия', 'video', '19:20', '3:40', { take: true }), { mode: 'A' }), card(mk('Этюд Кайзера №3', 'mute', '20:12', '6:02'), { mode: 'A' }), card(mk('Менуэт соль мажор', 'sound', '19:30', '2:10', { take: true, best: true }), { mode: 'A' }), card(mk('Гаммы D-dur', 'sound', '9:05', '5:30'), { selected: [] }), card(mk('Гаммы D-dur', 'sound', '9:05', '5:30'), { selected: ['Гаммы D-dur9:05'] })];
+    const TS = [['sound', null, 'звук'], ['video', null, 'видео'], ['mute', null, 'без звука'], ['sound', false, 'чекбокс'], ['sound', true, 'выбран']];
+    const tileStates = TS.map(([k, s, cap]) => ({ el: tile(k, 'N', s), cap }));
+    const tileBig = TS.map(([k, s]) => ({ el: tile(k, 'N', s, 80) }));
+    const dayHeads = [
+      { date: '17 сентября, четверг', today: false, card: card(mk('Гаммы D-dur', 'sound', '9:05', '5:30')) },
+      { date: '20 сентября, воскресенье', today: true, card: card(mk('Запись', 'sound', '17:10', '8:15')) },
+      { date: '28 декабря 2025, воскресенье', today: false, card: card(mk('Запись', 'sound', '15:20', '4:12')) },
+    ];
+    // ---- graph
+    const graph = counts => {
+      const max = Math.max(1, ...counts), total = counts.reduce((a, b) => a + b, 0), n = counts.length;
+      const word = total % 10 === 1 && total % 100 !== 11 ? 'запись' : [2, 3, 4].includes(total % 10) && ![12, 13, 14].includes(total % 100) ? 'записи' : 'записей';
+      const bars = counts.map((c, i) => { const today = i === n - 1; const lbl = i === 0 ? '7 сен' : i === 7 ? '14 сен' : today ? 'сегодня' : '';
+        return { h: c ? Math.max(4, Math.round(c / max * 58)) + 'px' : '2px', r: c ? '3px 3px 1px 1px' : '1px', bg: c ? (today ? P : PC) : OUTV, num: c === max && c > 0 ? String(c) : '', lbl, lc: today ? P : OV, la: today ? 'right' : i === 0 ? 'left' : 'center', lj: today ? 'end' : i === 0 ? 'start' : 'center' }; });
+      return { bars, total: `${total} ${word}` };
+    };
+    const C14 = [1, 0, 2, 0, 0, 3, 1, 0, 2, 0, 1, 0, 2, 3];
+    const g14 = graph(C14);
+    const graphs = [
+      { id: '22c2', label: 'Обычные две недели: 15 записей, максимум 3 — число только над самыми высокими; сегодня — primary; пустые дни — отметка 2 dp на базовой линии', g: g14 },
+      { id: '22c3', label: 'Один день с записями (не сегодня)', g: graph([0, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0]) },
+      { id: '22c4', label: 'Все дни пустые, кроме сегодня', g: graph([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1]) },
+      { id: '22c5', label: 'День с 12 записями — ось растянута по максимуму, остальные сжались', g: graph([1, 0, 2, 12, 0, 3, 1, 0, 2, 0, 1, 0, 2, 3]) },
+    ];
+    // ---- takes
+    const TK = (title, time, dur, o = {}) => ({ title, time, dur, ...o });
+    const TAKES = [TK('18 сентября', '18:42', '2:05', { isNew: true }), TK('16 сентября', '20:10', '1:58'), TK('12 сентября', '19:30', '2:10', { best: true }), TK('9 сентября', '18:05', '2:14'), TK('Перед уроком', '17:40', '2:22', { renamed: '6 сентября' }), TK('3 сентября', '19:00', '2:30')];
+    const takeRows = (o = {}) => { let arr = TAKES.map(t => ({ ...t, best: o.noBest ? false : t.best })); if (!o.noBest) arr = [...arr.filter(t => t.best), ...arr.filter(t => !t.best)];
+      return arr.map(t => ({ title: t.title, meta: t.renamed ? `${t.renamed} · ${t.dur}` : `${t.time} · ${t.dur}`, best: !!t.best, left: tile('sound', 'N'), bg: t.isNew && !o.noNew ? SEL : SC, ring: t.isNew && !o.noNew ? `inset 0 0 0 1.5px ${P}` : 'none' })); };
+    const mi = (icon, text) => ({ icon: ico(icon, 20, ON), text });
+    const menuBest = [mi('star-outline', 'Отметить лучшим'), mi('share', 'Поделиться'), mi('sound', 'Звук…')];
+    const menuUnbest = [mi('star', 'Снять отметку „лучший“'), mi('share', 'Поделиться'), mi('sound', 'Звук…')];
+    const pieceFrames = [
+      { id: '22e1', label: 'Лучший (12 сентября) закреплён первым со звездой; новый дубль (18 сентября) — вторым, подсвечен; переименованный дубль — имя, дата в строке; строка прогресса «максимум»', takes: takeRows(), menu: false },
+      { id: '22e2', label: 'Меню «⋯» у нового дубля: «Отметить лучшим» первым пунктом', takes: takeRows({ noNew: true }), menu: true, menuTop: '96px', menuItems: menuBest },
+      { id: '22e3', label: 'Лучшего нет — порядок по времени, ничего не подсвечено', takes: takeRows({ noBest: true, noNew: true }), menu: false },
+    ];
+    const takesLand = takeRows().slice(0, 4);
+    const menus = [
+      { cap: 'дубль со звуком', items: menuBest },
+      { cap: 'лучший дубль', items: menuUnbest },
+      { cap: 'дубль без звука', items: [mi('star-outline', 'Отметить лучшим')] },
+      { cap: 'свободная запись («Записи»)', items: [mi('share', 'Поделиться'), mi('sound', 'Звук…')] },
+    ];
+    const progVals = [55, 61, 69, 88, 78, 82];
+    const progPts = progVals.map((v, i) => ({ x: 6 + i * 29.6, y: 40 - (v - 50) * .8 }));
+    const progLine = progPts.map(p => `${p.x},${p.y}`).join(' ');
+    // ---- record screen
+    const strip = Array.from({ length: 40 }, (_, i) => { const z = [3, 11, 17, 24, 31, 36].includes(i) ? 1 : [22, 33].includes(i) ? 2 : 0; return { h: (z === 0 ? 40 : z === 1 ? 24 : 12) + 'px', c: z === 0 ? G : z === 1 ? Y : R }; });
+    const recScreens = [
+      { id: '22f1', label: 'Не лучший — звезда контурная onSurface между названием и «Поделиться»; подзаголовок «дубль · 18:42 · 2:05»', star: ico('star-outline', 24, ON), toast: false },
+      { id: '22f2', label: 'После тапа — звезда залита primary, снек «Отмечен как лучший» 2 с', star: ico('star', 24, P), toast: true },
+    ];
+    // ---- other places
+    const dayCards = [card(mk('Этюд Кайзера №3', 'mute', '20:12', '6:02')), card(mk('Менуэт соль мажор', 'sound', '19:30', '2:10', { take: true, best: true })), card(mk('Гаммы D-dur', 'sound', '9:05', '5:30'))];
+    const pieceCards = [
+      { title: 'Менуэт соль мажор', composer: 'И. С. Бах', keyTempo: 'G-dur · ♩ = 96', thumbBg: 'linear-gradient(160deg,#B8B4C4,#8E8A9E)', noPages: false, chip: 'Учу', chipBg: PC, chipFg: ONPC, l1: '20 сентября', l2: '6 дублей', best: true },
+      { title: 'Мелодия', composer: 'К. Глюк', keyTempo: 'F-dur · ♩ = 72', thumbBg: 'linear-gradient(160deg,#C4BFCF,#98939F)', noPages: false, chip: 'Учу', chipBg: PC, chipFg: ONPC, l1: '19 сентября', l2: '3 дубля', best: false },
+      { title: 'Гавот', composer: 'Ж.-Б. Люлли', keyTempo: '♩ = 120', thumbBg: SCH, noPages: true, chip: 'Хочу', chipBg: SCH, chipFg: OV, l1: 'нет дублей', l2: '', best: false },
+    ];
+    const emptyFrames = [
+      { id: '22i1', label: 'Записей нет совсем — без графика; переключатель остаётся', graph: false, none: true },
+      { id: '22i2', label: 'Фильтр «Эта неделя», под ним пусто — график на месте, «0 записей», текст по центру; «Выбрать» скрыта', graph: true, none: false },
+    ];
+    const week = [62, 68, 71, 70, 78, 84];
+    const weekPts = week.map((v, i) => ({ x: 10 + i * 65.6, y: 92 - (v - 50) * 1.6 }));
+    const weekLine = weekPts.map(p => `${p.x},${p.y}`).join(' ');
+    // ---- dev
+    const tokens = [
+      { name: 'tile.bg', hex: SCH, use: 'фон плитки записи со звуком и видео (= surfaceContainerHigh); знак — onSurfaceVariant. Зонных цветов в списках больше нет' },
+      { name: 'tile.icon', hex: OV, use: 'знак note-one / video в плитке (= onSurfaceVariant); без звука — тот же знак, фон нет, кольцо inset 1.5 tile.ring' },
+      { name: 'tile.ring', hex: OUTV, use: 'кольцо плитки без звука и плитки 56 в пустом состоянии (= outlineVariant)' },
+      { name: 'day.header', hex: OV, use: 'заголовок дня 13/600 (= onSurfaceVariant); чип «сегодня» — primary контур, как 10c1' },
+      { name: 'bar.today', hex: P, use: 'столбик сегодняшнего дня и подпись «сегодня» (= primary)' },
+      { name: 'bar.rest', hex: PC, use: 'остальные столбики (= primaryContainer)' },
+      { name: 'bar.empty', hex: OUTV, use: 'отметка 2 dp пустого дня на базовой линии (= outlineVariant); базовая линия — surfaceContainerHigh 1 dp' },
+      { name: 'best.mark', hex: P, use: 'звезда «лучший» — 14 у названия, 12 в карточке произведения, 24 в шапке записи (= primary). Контурная в шапке — onSurface' },
+      { name: 'card.selected', hex: SEL, use: 'без изменений: выбранная карточка и новый дубль — фон + кольцо inset 1.5 primary' },
+    ];
+    const sizes = [
+      { name: 'Плитка', v: 'круг 40 (было 44); знак 22 внутри; фон tile.bg или кольцо 1.5 tile.ring (без звука). Чекбокс — тот же круг 40: контур 2 check.empty / заливка primary с check 20' },
+      { name: 'Карточка записи', v: 'surfaceContainer r16, padding 12 16, gap 14 → высота 64 (было 72). Название 15/600 ellipsis, звезда 14 после (gap 6, не сжимается); строка 13 onSurfaceVariant tnum; «⋯» 40 в правом поле (margin −12). Без столбиков, чипов, смещения' },
+      { name: 'Заголовок дня', v: '13/600 day.header, высота 22, padding 8 сверху (между группами 16 = 8 + gap 8), 4 слева; чип «сегодня» 11/700 primary, контур 1, r6, padding 1 6, gap 8. Не прилипает, не нажимается' },
+      { name: 'Шапка «Записей»', v: 'крупный заголовок удалён; переключатель «Записи | Репертуар» 40 dp, 12 от статус-бара (зона 52); landscape — 320 × 36 по центру' },
+      { name: 'График', v: 'карточка surfaceContainer r20, padding 16 16 14; заголовок 13 + итог 15/700; поле 80 (число 14 + gap 4 + столбик ≤ 58 + базовая 1); 14 столбиков 17 × h, gap 8, r 3 сверху / 1 снизу; пустой день — 17 × 2 r1; подписи 11 через 6 под осью; landscape — столбик 16' },
+      { name: 'Название дубля в списке дублей', v: 'дата «18 сентября» (прошлый год — с годом) 15/600 tnum; строка «18:42 · 2:05». Переименованный — имя, строка «6 сентября · 2:22»' },
+      { name: 'Меню «⋯»', v: 'surfaceContainerHigh r12, ширина 236 (по самому длинному пункту), padding 8 0; пункт 48, иконка 20 + 15, padding 0 16; тень 0 8 24 α .45. У дубля — 3 пункта (без звука — 1), у свободной записи — 2' },
+      { name: 'Шапка экрана записи (дубль)', v: '56: back 48 · заголовок 17/600 + подзаголовок 12 onSurfaceVariant · звезда 48 (иконка 24) · поделиться 48. У свободной записи звезды нет' },
+      { name: 'Карточка произведения', v: 'правая колонка — текст 12 onSurfaceVariant, две строки по правому краю, gap 3: дата последнего дубля (+ звезда 12 primary, gap 5, если есть лучший) / «N дублей»; без дублей — «нет дублей». Плитка и пунктирное кольцо удалены' },
+      { name: 'Строка прогресса', v: '«последний 82 % · максимум 88 %» / «6 дублей» — без изменений размеров' },
+      { name: 'Пустые состояния', v: 'совсем: плитка 56 кольцо tile.ring + note-one 30 outline, gap 16, текст 15 onSurfaceVariant по центру (поле без нижней панели); под фильтром: счётчик «0 записей», текст 15 по центру, padding 40 24, «Выбрать» скрыта' },
+      { name: 'Landscape', v: 'две колонки 360 + остальное, gap 16; «Записи»: график слева, фильтры + счётчик + «Выбрать» в одной строке справа, карточки padding 10 14; произведение: запись → прогресс → заметки слева, «Дубли» справа' },
+    ];
+    const anims = [
+      { name: 'Отметить лучшим (в списке дублей)', v: 'звезда у названия: scale .6 → 1 + α 0 → 1, 150 FastOutSlowIn; затем карточка едет на первое место — animateItemPlacement 250 FastOutSlowIn, соседи сдвигаются вниз тем же; у прежнего лучшего звезда гаснет 120 и карточка возвращается на место по времени в той же перестановке. Haptic Tick' },
+      { name: 'Снять отметку', v: 'звезда α → 0 за 120; карточка уезжает на место по времени, 250. Если она уже там (единственный / последний по времени) — только звезда' },
+      { name: 'Звезда в шапке записи', v: 'тап: контур → заливка primary, scale .8 → 1 за 150 (Overshoot лёгкий, 1.1 на t .6); снек снизу 48 dp — вход 200 (translateY 16 → 0 + α), 2 с, выход 150. Возврат на экран произведения — карточка уже первая, без перестановки на глазах' },
+      { name: 'Столбики графика', v: 'при открытии вкладки: высота 0 → h за 300 FastOutSlowIn, ступень 15 мс слева направо (14 × 15 = 210, всего ~510); число над столбиком — α 0 → 1 в последние 100. При смене данных (новая запись) — только изменившийся столбик, 250. Пустые отметки — без анимации' },
+      { name: 'Заголовки дней при удалении', v: 'если удалили все карточки дня — заголовок схлопывается вместе с ними (α 150, высота 250), той же ступенью; при появлении первой записи нового дня — заголовок и карточка входят вместе (высота 0 → 250 + α)' },
+      { name: 'Режим выбора', v: 'без изменений (19e): плитка ↔ чекбокс 200, панель crossfade 200; заголовки дней — без изменений состояния' },
+      { name: '«Убрать анимации»', v: 'перестановка мгновенная; столбики сразу на высоте; звезда — смена без scale; снек — как обычно (это сообщение, не украшение)' },
+    ];
+    return { navRec, oldCards, weekLine, weekPts, recFrames, selFrames, landGroups, cardsN, cardsA, tileStates, tileBig, dayHeads, g14, graphs, pieceFrames, takesLand, menus, progLine, progPts, strip, recScreens, dayCards, pieceCards, emptyFrames, tileEmpty,
+      icClose: ico('close', 24, ON), icBack: ico('back', 24, ON), icTrash: ico('trash', 24, ON), icTrashE: ico('trash', 18, ERR), icMore: ico('more', 24, OV), icSelectP: ico('select', 16, P), icStar14: ico('star', 14, P), icStar12: ico('star', 12, P), icPencilP: ico('pencil', 18, P), icShare: ico('share', 24, ON), icPlay: ico('play', 22, ONP), icSlidersP: ico('sliders', 22, P), icChevR: ico('chevron-right', 20, OV),
+      iconRows, tokens, sizes, anims };
+  }
+}
+</script>
+</body>
+</html>

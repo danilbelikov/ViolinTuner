@@ -7,6 +7,10 @@ import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Transaction
+import com.example.violintuner.core.domain.home.HomeHouse
+import com.example.violintuner.core.domain.home.HomeItem
+import com.example.violintuner.core.domain.home.HomeRepository
+import com.example.violintuner.core.domain.home.HomeState
 import com.example.violintuner.core.domain.journey.Arrival
 import com.example.violintuner.core.domain.journey.BoughtExtra
 import com.example.violintuner.core.domain.journey.JourneyExtra
@@ -37,8 +41,37 @@ data class ArrivalEntity(@PrimaryKey val stopId: String, val arrivedAtEpochMs: L
 @Entity(tableName = "journey_extras", primaryKeys = ["stopId", "extra"])
 data class ExtraEntity(val stopId: String, val extra: String, val price: Int, val boughtAtEpochMs: Long)
 
+/** A thing or a home bought for the home (spec 3.24), with what it cost then. One purse with the road: the balance subtracts this table as well. */
+@Entity(tableName = "home_purchases")
+data class HomePurchaseEntity(@PrimaryKey val id: String, val kind: String, val price: Int, val boughtAtEpochMs: Long)
+
+/** What stands where: slot → item id, an empty id — the place left bare; the key `@house` — the home lived in. */
+@Entity(tableName = "home_choices")
+data class HomeChoiceEntity(@PrimaryKey val slot: String, val itemId: String)
+
 @Dao
 abstract class JourneyDao {
+    @Query("SELECT * FROM home_purchases")
+    abstract fun observeHomePurchases(): Flow<List<HomePurchaseEntity>>
+
+    @Query("SELECT * FROM home_choices")
+    abstract fun observeHomeChoices(): Flow<List<HomeChoiceEntity>>
+
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    protected abstract suspend fun insertHomePurchase(purchase: HomePurchaseEntity): Long
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    abstract suspend fun putHomeChoice(choice: HomeChoiceEntity)
+
+    /** Pays for a thing of the home and puts it where it belongs, or does neither. */
+    @Transaction
+    open suspend fun buyForHome(id: String, kind: String, price: Int, slot: String, now: Long): Boolean {
+        if (balance() < price) return false
+        if (insertHomePurchase(HomePurchaseEntity(id, kind, price, now)) == -1L) return false
+        putHomeChoice(HomeChoiceEntity(slot, id))
+        return true
+    }
+
     @Query("SELECT * FROM journey_earnings ORDER BY id")
     abstract fun observeEarnings(): Flow<List<EarningEntity>>
 
@@ -62,7 +95,7 @@ abstract class JourneyDao {
 
     @Query(
         "SELECT COALESCE((SELECT SUM(takts) FROM journey_earnings), 0) - COALESCE((SELECT SUM(price) FROM journey_arrivals), 0) " +
-            "- COALESCE((SELECT SUM(price) FROM journey_extras), 0)",
+            "- COALESCE((SELECT SUM(price) FROM journey_extras), 0) - COALESCE((SELECT SUM(price) FROM home_purchases), 0)",
     )
     protected abstract suspend fun balance(): Long
 
@@ -87,10 +120,11 @@ abstract class JourneyDao {
 
 class RoomJourneyRepository @Inject constructor(private val dao: JourneyDao) : JourneyRepository {
     override val progress: Flow<JourneyProgress> =
-        combine(dao.observeEarnings(), dao.observeArrivals(), dao.observeExtras()) { earnings, arrivals, extras ->
+        combine(dao.observeEarnings(), dao.observeArrivals(), dao.observeExtras(), dao.observeHomePurchases()) { earnings, arrivals, extras, home ->
             JourneyProgress(
                 earned = earnings.sumOf { it.takts.toLong() },
-                spent = arrivals.sumOf { it.price.toLong() } + extras.sumOf { it.price.toLong() },
+                // one purse: the road, the extras of the stops and the home (spec 3.24)
+                spent = arrivals.sumOf { it.price.toLong() } + extras.sumOf { it.price.toLong() } + home.sumOf { it.price.toLong() },
                 arrivals = arrivals.map { Arrival(it.stopId, it.arrivedAtEpochMs) },
                 // an extra this build does not know (a row written by a newer one) is simply not shown
                 extras = extras.mapNotNull { row -> JourneyExtra.entries.firstOrNull { it.name == row.extra }?.let { BoughtExtra(row.stopId, it) } }.toSet(),
@@ -112,5 +146,31 @@ class RoomJourneyRepository @Inject constructor(private val dao: JourneyDao) : J
     override suspend fun earn(earning: TaktEarning) {
         if (earning.takts <= 0) return
         dao.insertEarning(EarningEntity(0, earning.atEpochMs, earning.notesPlayed, earning.notesInTune, earning.durationMs, earning.takts))
+    }
+}
+
+class RoomHomeRepository @Inject constructor(private val dao: JourneyDao) : HomeRepository {
+    override val state: Flow<HomeState> = combine(dao.observeHomePurchases(), dao.observeHomeChoices()) { purchases, choices ->
+        HomeState(
+            loaded = true,
+            purchased = purchases.filter { it.kind == ITEM }.map { it.id }.toSet(),
+            houses = purchases.filter { it.kind == HOUSE }.map { it.id }.toSet(),
+            choices = choices.associate { it.slot to it.itemId },
+            movedInAtEpochMs = purchases.filter { it.kind == HOUSE }.maxOfOrNull { it.boughtAtEpochMs },
+        )
+    }
+
+    override suspend fun buy(item: HomeItem, nowEpochMs: Long): Boolean = dao.buyForHome(item.id, ITEM, item.price, item.slot, nowEpochMs)
+
+    override suspend fun buy(house: HomeHouse, nowEpochMs: Long): Boolean =
+        house.drawn && dao.buyForHome(house.id, HOUSE, house.price, HomeState.HOUSE_KEY, nowEpochMs)
+
+    override suspend fun place(slot: String, itemId: String) = dao.putHomeChoice(HomeChoiceEntity(slot, itemId))
+
+    override suspend fun liveIn(house: String) = dao.putHomeChoice(HomeChoiceEntity(HomeState.HOUSE_KEY, house))
+
+    private companion object {
+        const val ITEM = "ITEM"
+        const val HOUSE = "HOUSE"
     }
 }

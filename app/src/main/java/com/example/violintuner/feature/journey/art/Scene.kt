@@ -1,5 +1,7 @@
 package com.example.violintuner.feature.journey.art
 
+import com.example.violintuner.core.domain.home.HomeCatalogData
+
 /** One layer of a postcard (handoff `Путешествие`, «Сетка и формат слоя»): a path with how it is filled. Pure data — colours are resolved when it is drawn. */
 data class SceneLayer(
     /** A token of the palette, a literal `#rrggbb` / `rgba(…)`, or one of the special fills [SKY] and [GLOW]. */
@@ -30,18 +32,27 @@ data class SceneLayer(
  * `ride:speed:from:to` — goes sideways at `speed` units a second and wraps, its shift running `from`…`to`
  * (far enough both ways for the thing to leave the frame); `bob:amplitude:period` — rises and falls;
  * `bird:left:span` — a bird crossing `span` units from `left`, flapping, fading at both ends;
- * `blink:period` — a light going on and off; `fall:speed:top:height` — falls through `height` units below `top` and starts again from the top, fading at both ends.
+ * `flash:period` — a light going on and off; `blink:period` — eyes: open but for a moment once a period;
+ * `flick:period[:delay]` — a flame: dims to about a half and back; `rise:period[:delay]` — smoke: goes up ten units and fades;
+ * `sway:amount:period` — leans sideways and back; `swing:degrees:period:px:py` — turns to and fro about a point (a pendulum); `fall:speed:top:height` — falls through `height` units below `top` and starts again from the top, fading at both ends.
  */
 data class SceneAnim(
     val ride: Ride? = null,
     val bob: Bob? = null,
     val bird: Way? = null,
+    val flashPeriod: Float? = null,
     val blinkPeriod: Float? = null,
+    val flick: Timed? = null,
+    val rise: Timed? = null,
+    val sway: Bob? = null,
+    val swing: Swing? = null,
     val fall: Fall? = null,
 ) {
     data class Ride(val speed: Float, val from: Float, val to: Float)
     data class Bob(val amplitude: Float, val period: Float)
     data class Way(val left: Float, val span: Float)
+    data class Timed(val period: Float, val delay: Float)
+    data class Swing(val degrees: Float, val period: Float, val pivotX: Float, val pivotY: Float)
     data class Fall(val speed: Float, val top: Float, val height: Float)
 
     companion object {
@@ -55,7 +66,12 @@ data class SceneAnim(
                     "ride" -> anim.copy(ride = Ride(n[0], n[1], n[2]))
                     "bob" -> anim.copy(bob = Bob(n[0], n[1]))
                     "bird" -> anim.copy(bird = Way(n[0], n[1]))
+                    "flash" -> anim.copy(flashPeriod = n[0])
                     "blink" -> anim.copy(blinkPeriod = n[0])
+                    "flick" -> anim.copy(flick = Timed(n[0], n.getOrElse(1) { 0f }))
+                    "rise" -> anim.copy(rise = Timed(n[0], n.getOrElse(1) { 0f }))
+                    "sway" -> anim.copy(sway = Bob(n[0], n[1]))
+                    "swing" -> anim.copy(swing = Swing(n[0], n[1], n.getOrElse(2) { 0f }, n.getOrElse(3) { 0f }))
                     "fall" -> anim.copy(fall = Fall(n[0], n[1], n[2]))
                     else -> throw IllegalArgumentException("a movement this build does not know: ${f[0]}")
                 }
@@ -65,7 +81,8 @@ data class SceneAnim(
     }
 }
 
-data class Scene(val location: String, val aerial: Boolean, val layers: List<SceneLayer>)
+/** [overrides] are colours of tokens that belong to this very scene — the wallpaper somebody chose — and win over every palette. */
+data class Scene(val location: String, val aerial: Boolean, val layers: List<SceneLayer>, val overrides: Map<String, Long> = emptyMap())
 
 /**
  * Reads a scene exported from the handoff (`assets/journey/<key>.<mode>.scene`): a header and one
@@ -84,7 +101,8 @@ object SceneParser {
         )
     }
 
-    private fun layerOf(line: String): SceneLayer {
+    /** One layer line, as the exporters write it. */
+    fun layerOf(line: String): SceneLayer {
         val f = line.split('\t')
         require(f.size == FIELDS) { "a scene layer has $FIELDS fields, this one has ${f.size}" }
         return SceneLayer(
@@ -162,12 +180,13 @@ object ScenePalette {
     )
 
     fun token(name: String, location: String, mode: SceneMode): Long? =
-        (locations[location] ?: ExtraScenePalettes.locations[location])?.get(name) ?: (if (mode == SceneMode.DAY) day else evening)[name]
+        (if (location == HOUSE) houseToken(name, mode) else null)
+            ?: (locations[location] ?: ExtraScenePalettes.locations[location])?.get(name) ?: (if (mode == SceneMode.DAY) day else evening)[name]
 
     /** The colour a layer is filled with; null for a token this build does not know — such a layer is not drawn rather than drawn wrong. */
     fun colorOf(fill: String, depth: Int, scene: Scene, mode: SceneMode): Long? {
         val literal = parse(fill)
-        val base = literal ?: token(fill, scene.location, mode) ?: return null
+        val base = literal ?: scene.overrides[fill] ?: token(fill, scene.location, mode) ?: return null
         // only opaque colours take the air: shadows and glows are already air
         val opaque = base ushr ALPHA_SHIFT == 0xFFL
         // the flat sky above the frame continues the gradient, whose top is the pure colour: air is not mixed into the sky itself
@@ -193,6 +212,12 @@ object ScenePalette {
         }
         return channel(ALPHA_SHIFT) or channel(16) or channel(8) or channel(0)
     }
+
+    /** The location of every scene composed of the home's catalogue: its tokens come from the catalogue, the day lightens some of them. */
+    const val HOUSE = "house"
+
+    private fun houseToken(name: String, mode: SceneMode): Long? =
+        (if (mode == SceneMode.DAY) HomeCatalogData.dayTokens[name] else null) ?: HomeCatalogData.tokens[name]
 
     private const val ALPHA_SHIFT = 24
 }
