@@ -80,10 +80,12 @@ fun ScenePicture(
     overlay: (DrawScope.(seconds: Float?) -> Unit)? = null,
     /** A home seen whole stands in the middle of the screen, ceiling above and floor below; a city stands on the bottom edge under its sky. */
     centred: Boolean = false,
+    /** Seen whole, by its width, whatever the box: a title card is a picture, not a panorama. Ignored when there is a [camera]. */
+    whole: Boolean = false,
 ) {
     Canvas(modifier.clipToBounds().background(Color(NIGHT)).semantics { contentDescription = description }) {
         if (prepared == null) return@Canvas
-        val (zoom, panX, panY) = camera?.invoke() ?: Triple(1f, 0f, 0f)
+        val (zoom, panX, panY) = camera?.invoke() ?: Triple(if (whole) SceneCamera.wholeZoom(size.width, size.height) else 1f, 0f, 0f)
         val k = SceneCamera.cover(size.width, size.height) * zoom
         val t = seconds?.value
         translate((size.width - SceneGrid.WIDTH * k) / 2, SceneCamera.top(zoom, size.width, size.height, outdoors = prepared.scene.aerial && !centred) + panY) {
@@ -98,19 +100,20 @@ fun DrawScope.drawPrepared(prepared: PreparedScene, k: Float, seconds: Float? = 
 
 /** Loads `assets/journey/<key>.<mode>.scene` off the main thread; null while it loads and when there is no such picture. */
 @Composable
-fun rememberScene(sceneKey: String?, mode: SceneMode): PreparedScene? {
+fun rememberScene(sceneKey: String?, mode: SceneMode, folder: String = "journey"): PreparedScene? {
     val context = LocalContext.current
     val id = sceneKey?.let { "$it.${mode.suffix}" }
-    val prepared by produceState(initialValue = id?.let(SceneCache::get), id) {
+    val cacheKey = id?.let { "$folder/$it" }
+    val prepared by produceState(initialValue = cacheKey?.let(SceneCache::get), cacheKey) {
         if (id == null) {
             value = null
             return@produceState
         }
-        value = SceneCache.get(id) ?: withContext(Dispatchers.Default) {
-            runCatching { context.assets.open("journey/$id.scene").bufferedReader().use { it.readText() } }.getOrNull()?.let { text ->
+        value = SceneCache.get(cacheKey!!) ?: withContext(Dispatchers.Default) {
+            runCatching { context.assets.open("$folder/$id.scene").bufferedReader().use { it.readText() } }.getOrNull()?.let { text ->
                 val scene = SceneParser.parse(text)
                 val paths = scene.layers.map { PathParser().parsePathString(it.path).toPath() }
-                PreparedScene(scene, mode, paths, paths.map { it.getBounds() }).also { SceneCache.put(id, it) }
+                PreparedScene(scene, mode, paths, paths.map { it.getBounds() }).also { SceneCache.put(cacheKey, it) }
             }
         }
     }

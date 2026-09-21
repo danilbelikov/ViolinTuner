@@ -37,7 +37,12 @@ import androidx.compose.ui.unit.IntSize
 import com.example.violintuner.feature.home.art.rememberHouseArt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.sp
+import com.example.violintuner.feature.journey.cityOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
@@ -133,6 +138,8 @@ fun ShopScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
             Modifier.widthIn(max = 720.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
+            // where takts come from, said once — until the first purchase (handoff `dev`: «в лавке, первый вход»)
+            if (ui.home.purchased.isEmpty()) Text(stringResource(R.string.shop_takts_note), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             HomeGroup.entries.filter { ui.category == null || ui.category == it }.forEach { group ->
                 // what the room came with is not for sale
                 val things = HomeCatalog.items.filter { it.group == group && it.id !in HomeCatalog.startItems }
@@ -157,38 +164,58 @@ fun ShopScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
     }
 }
 
+/**
+ * A thing on a shelf (handoff 28e): a tile of 100 dp — three in a row at 360 dp of width, four at 412 —
+ * that holds the worst of the texts. Where the thing comes from is a pill on the picture, without a
+ * preposition, read before the name like a label on the thing; under the board — the name in up to
+ * two lines and one line: a price or a state. A thing of a city not reached yet stands faint, «привезут».
+ */
 @Composable
 private fun Tile(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit) {
     val tag = tagOf(item, ui)
     val name = itemName(item.id)
-    val from = item.from?.let { cityToOf(JourneyRoute.indexOf(it)) }
+    val city = item.from?.let { cityOf(JourneyRoute.indexOf(it)) }
     val under = when (tag) {
         Tag.PRICE -> Formats.takts(item.price.toLong())
         Tag.GIFT -> stringResource(R.string.shop_gift)
         Tag.STANDING -> stringResource(if (item.outside) R.string.shop_standing_outside else R.string.shop_standing)
         Tag.OWNED -> stringResource(R.string.shop_owned)
-        Tag.LOCKED -> stringResource(R.string.shop_opens_in, from.orEmpty())
+        Tag.LOCKED -> stringResource(R.string.shop_soon)
     }
-    val description = stringResource(R.string.shop_item_description, name, if (tag == Tag.PRICE) stringResource(R.string.shop_price_takts, under) else under)
+    val description = listOfNotNull(name, city, if (tag == Tag.PRICE) stringResource(R.string.shop_price_takts, under) else under).joinToString(", ")
     Column(
         Modifier.width(100.dp).clip(TileShape)
-            // a thing of the next city is a silhouette that calls to the road: it has no card yet
+            // a thing of the next city calls to the road: it has no card yet
             .then(if (tag == Tag.LOCKED) Modifier else Modifier.clickable(role = Role.Button) { onIntent(HomeIntent.ItemClicked(item.id)) })
-            .semantics(mergeDescendants = true) { contentDescription = description },
+            .clearAndSetSemantics { contentDescription = description },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(Modifier.size(100.dp, 76.dp).clip(TileShape).background(Color.Black.copy(alpha = 0.22f))) {
-            ItemThumb(item, silhouette = if (tag == Tag.LOCKED) Color.White.copy(alpha = 0.22f) else null)
+            Box(Modifier.fillMaxSize().alpha(if (tag == Tag.LOCKED) LOCKED_ALPHA else 1f)) { ItemThumb(item) }
+            if (city != null) {
+                Text(
+                    city,
+                    modifier = Modifier.align(Alignment.TopStart).padding(4.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.5f)).padding(horizontal = 6.dp, vertical = 1.dp),
+                    color = Color.White.copy(alpha = 0.9f), fontSize = 9.5.sp, lineHeight = 14.sp, maxLines = 1, softWrap = false,
+                )
+            }
         }
-        Text(if (tag == Tag.LOCKED) "" else name, color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.labelMedium, textAlign = TextAlign.Center, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
+        Text(
+            name, color = Color.White.copy(alpha = if (tag == Tag.LOCKED) 0.55f else 0.92f), fontSize = 11.sp, lineHeight = 14.sp,
+            textAlign = TextAlign.Center, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp),
+        )
         if (tag == Tag.PRICE) {
             TaktAmount(under, color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium, icon = 12.dp)
         } else {
-            Text(under, color = Color.White.copy(alpha = if (tag == Tag.STANDING) 0.92f else 0.6f), style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center)
+            Text(under, color = Color.White.copy(alpha = if (tag == Tag.STANDING) 0.92f else 0.6f), style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
         }
-        if (from != null && tag != Tag.LOCKED) Text(stringResource(R.string.shop_from, from), color = Color.White.copy(alpha = 0.55f), style = MaterialTheme.typography.labelSmall, maxLines = 1)
     }
 }
+
+private const val LOCKED_ALPHA = 0.4f
+
+/** Trying on starts a step back from «covering»: the floor of the room, where the violin and the rug are, must not hide under the buttons. */
+private const val TRY_ON_ZOOM = 0.62f
 
 /** The card of a thing (handoff 27b2): the thing large, a line about it, where it will stand, what will be left — and «Примерить · Купить». */
 @Composable
@@ -251,7 +278,7 @@ private fun TryOn(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit, mo
     val box = rememberHouseArt(ui.house, mode)?.items?.get(item.id)
     var size by remember { mutableStateOf(IntSize.Zero) }
     // upright the room is wider than the screen: the eye starts on the thing, not on the middle of the room
-    LaunchedEffect(item.id, box != null, size) { if (box != null && size != IntSize.Zero) camera.lookAt((box.left + box.right) / 2, size.width.toFloat(), size.height.toFloat()) }
+    LaunchedEffect(item.id, box != null, size) { if (box != null && size != IntSize.Zero) camera.lookAt((box.left + box.right) / 2, size.width.toFloat(), size.height.toFloat(), atZoom = TRY_ON_ZOOM) }
     Box(modifier.fillMaxSize().background(Color.Black).onSizeChanged { size = it }) {
         HomePicture(
             ui.home, outside = item.outside, mode = mode, description = itemName(item.id), ghost = item,
@@ -265,8 +292,9 @@ private fun TryOn(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit, mo
             Text(itemName(item.id), color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
             Text(slotName(item.at ?: item.slot), color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall)
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                OutlinedButton(onClick = { onIntent(HomeIntent.TryClosed) }, modifier = Modifier.weight(1f).height(52.dp)) { Text(stringResource(R.string.shop_try_back), color = Color.White, maxLines = 1, style = MaterialTheme.typography.labelLarge) }
-                BuyButton(item.price, ui.balance, if (item.price == 0) stringResource(R.string.shop_take) else stringResource(R.string.shop_buy, Formats.takts(item.price.toLong())), { onIntent(HomeIntent.BuyClicked) }, Modifier.weight(1.2f))
+                // «Убрать» keeps its own width, buying takes the rest: the row does not break at 360 dp (handoff 28f)
+                OutlinedButton(onClick = { onIntent(HomeIntent.TryClosed) }, modifier = Modifier.height(52.dp)) { Text(stringResource(R.string.shop_try_remove), color = Color.White, maxLines = 1, softWrap = false) }
+                BuyButton(item.price, ui.balance, if (item.price == 0) stringResource(R.string.shop_take) else stringResource(R.string.shop_buy, Formats.takts(item.price.toLong())), { onIntent(HomeIntent.BuyClicked) }, Modifier.weight(1f))
             }
         }
     }

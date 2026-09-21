@@ -33,8 +33,15 @@ class SceneCameraState {
         settle(panX, panY, width, height)
     }
 
+    /** Steps back until the whole picture is seen by its width: how a home opens on the whole screen (spec 3.25). */
+    fun whole(width: Float, height: Float) {
+        zoom = SceneCamera.wholeZoom(width, height)
+        settle(0f, 0f, width, height)
+    }
+
     /** Turns to the point [gridX] of the scene, as far as the picture allows: what is tried on stands at the edge of a room as often as in its middle. */
-    fun lookAt(gridX: Float, width: Float, height: Float) {
+    fun lookAt(gridX: Float, width: Float, height: Float, atZoom: Float? = null) {
+        if (atZoom != null) zoom = atZoom.coerceIn(SceneCamera.wholeZoom(width, height), SceneCamera.MAX_ZOOM)
         val k = SceneCamera.cover(width, height) * zoom
         settle((SceneGrid.WIDTH / 2 - gridX) * k, panY, width, height)
     }

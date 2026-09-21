@@ -15,9 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.motion.LocalReduceMotion
-import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.feature.home.HomeLookViewModel
-import com.example.violintuner.feature.journey.HomeWindowCard
 import com.example.violintuner.feature.journey.JourneyWindowCard
 import com.example.violintuner.feature.journey.LocalHomeLook
 import com.example.violintuner.core.ui.motion.rememberAnimationsRemoved
@@ -66,9 +64,8 @@ fun PracticeRoute(
             modifier = modifier,
             journeyCard = { compact ->
                 journey?.let { window ->
-                    JourneyWindowCard(window, compact, onClick = { viewModel.onIntent(PracticeIntent.JourneyClicked) })
-                    // at home the window is the room itself; on the road home stands by as a narrow card
-                    if (window.current.id != JourneyRoute.HOME) HomeWindowCard(onClick = { viewModel.onIntent(PracticeIntent.HomeClicked) })
+                    // the window is always the home (spec 3.25): the road is taken from there
+                    JourneyWindowCard(window, compact, onClick = { viewModel.onIntent(PracticeIntent.HomeClicked) })
                 }
             },
         )

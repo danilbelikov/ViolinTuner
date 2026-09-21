@@ -26,6 +26,7 @@ fun HomeRoute(
     onOpenArrange: () -> Unit,
     onOpenHouses: () -> Unit,
     onOpenHome: () -> Unit,
+    onOpenJourney: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HomeViewModel = hiltViewModel(),
@@ -39,6 +40,7 @@ fun HomeRoute(
     val houses by rememberUpdatedState(onOpenHouses)
     val home by rememberUpdatedState(onOpenHome)
     val close by rememberUpdatedState(onClose)
+    val journey by rememberUpdatedState(onOpenJourney)
     val reduce = rememberAnimationsRemoved()
 
     LaunchedEffect(viewModel, reduce) { viewModel.onIntent(HomeIntent.ReduceMotionChanged(reduce)) }
@@ -51,6 +53,7 @@ fun HomeRoute(
                     HomeEffect.OpenArrange -> arrange()
                     HomeEffect.OpenHouses -> houses()
                     HomeEffect.OpenHome -> home()
+                    HomeEffect.OpenJourney -> journey()
                     is HomeEffect.ShowBought -> HomeTexts.itemNames[effect.itemId]?.let { name ->
                         Toast.makeText(context, resources.getString(R.string.shop_bought, resources.getString(name)), Toast.LENGTH_SHORT).show()
                     }
@@ -59,7 +62,7 @@ fun HomeRoute(
         }
     }
     // «назад» folds the card or the trying-on first; the film of moving in has no way out
-    BackHandler(enabled = ui.card != null || ui.tryOn != null || ui.houseCard != null || ui.moving != null) { viewModel.onIntent(HomeIntent.BackClicked) }
+    BackHandler(enabled = ui.card != null || ui.tryOn != null || ui.houseCard != null || ui.moving != null || ui.fullscreen) { viewModel.onIntent(HomeIntent.BackClicked) }
     CompositionLocalProvider(LocalReduceMotion provides reduce) {
         when (view) {
             HomeView.MAIN -> HomeScreen(ui, viewModel::onIntent, modifier)

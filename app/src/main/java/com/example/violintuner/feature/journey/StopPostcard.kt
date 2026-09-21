@@ -27,10 +27,12 @@ fun StopPostcard(
     mode: SceneMode = SceneMode.EVENING,
     inside: Boolean = false,
     seconds: State<Float>? = null,
+    /** Home seen from the street: on the journey's own screen home is a stop like the others, a building (handoff 28c2). */
+    homeOutside: Boolean = false,
 ) {
     val home = LocalHomeLook.current
     if (stop.id == JourneyRoute.HOME && home != null && home.loaded) {
-        HomePicture(home, outside = false, mode = homeModeNow(), description = description, modifier = modifier, seconds = seconds)
+        HomePicture(home, outside = homeOutside, mode = homeModeNow(), description = description, modifier = modifier, seconds = seconds)
     } else {
         Postcard(stop, description, modifier, mode, inside, seconds)
     }

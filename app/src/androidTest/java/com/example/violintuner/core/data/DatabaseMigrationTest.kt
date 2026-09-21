@@ -310,14 +310,15 @@ class DatabaseMigrationTest {
         val dao = db.journeyDao()
 
         assertEquals(listOf("cremona", "home"), dao.observeArrivals().first().map { it.stopId }.sorted())
-        assertEquals(emptyList<Any>(), dao.observeHomePurchases().first())
-        assertEquals(emptyList<Any>(), dao.observeHomeChoices().first())
+        // nothing but the rug the rented room used to come with: it went to the shop, and whoever had the room keeps it for nothing
+        assertEquals(listOf("rug_plum" to 0), dao.observeHomePurchases().first().map { it.id to it.price })
+        assertEquals(mapOf("rug" to "rug_plum"), dao.observeHomeChoices().first().associate { it.slot to it.itemId })
 
         // 1000 earned, 300 gone on the road: 700 left for both the road and the home
         assertEquals(false, dao.buyForHome("piano", "ITEM", price = 5_000, slot = "floorL", now = 3))
         assertEquals(true, dao.buyForHome("cat_ginger", "ITEM", price = 600, slot = "pet", now = 3))
         assertEquals(false, dao.buyForHome("cat_ginger", "ITEM", price = 0, slot = "pet", now = 4))
-        assertEquals(mapOf("pet" to "cat_ginger"), dao.observeHomeChoices().first().associate { it.slot to it.itemId })
+        assertEquals(mapOf("rug" to "rug_plum", "pet" to "cat_ginger"), dao.observeHomeChoices().first().associate { it.slot to it.itemId })
         // what the cat cost is not there for the road any more
         assertEquals(false, dao.arrive("milan", "cremona", price = 500, now = 5))
         assertEquals(true, dao.buyForHome("tea", "ITEM", price = 60, slot = "deskR", now = 6))

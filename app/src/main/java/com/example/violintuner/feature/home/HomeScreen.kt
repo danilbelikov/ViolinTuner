@@ -35,7 +35,27 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.IntSize
+import com.example.violintuner.core.domain.journey.JourneyRules
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.feature.journey.JourneyMotion
+import com.example.violintuner.feature.journey.art.rememberSceneCamera
+import com.example.violintuner.feature.journey.art.sceneCamera
+import com.example.violintuner.feature.journey.cityOf
+import com.example.violintuner.feature.journey.cityToOf
+import kotlinx.coroutines.delay
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -121,6 +141,10 @@ internal fun TwoWay(first: String, second: String, secondChosen: Boolean, onChoo
 @Composable
 fun HomeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
+    if (ui.fullscreen && !ui.loading) {
+        FullscreenHome(ui, onIntent, modifier)
+        return
+    }
     Column(modifier.fillMaxSize().background(colors.surface), horizontalAlignment = Alignment.CenterHorizontally) {
         JourneyTopBar(stringResource(R.string.home_title), onBack = { onIntent(HomeIntent.BackClicked) }) { Balance(ui) }
         if (ui.loading) return@Column
@@ -147,13 +171,71 @@ fun HomeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
 @Composable
 private fun Picture(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier) {
     val name = houseName(ui.house)
-    Box(modifier.clip(PictureShape)) {
+    val whole = stringResource(R.string.home_fullscreen)
+    Box(modifier.clip(PictureShape).clickable(onClickLabel = whole, role = Role.Button) { onIntent(HomeIntent.FullscreenClicked) }) {
         HomePicture(
             ui.home, ui.outside, homeModeNow(),
             description = stringResource(if (ui.outside) R.string.home_picture_outside else R.string.home_picture_room, name),
             modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds(),
         )
         TwoWay(stringResource(R.string.home_room), stringResource(R.string.home_outside), ui.outside, { onIntent(HomeIntent.SideSelected(it)) }, Modifier.align(Alignment.TopStart).padding(10.dp))
+        Box(Modifier.align(Alignment.BottomEnd).padding(10.dp).size(36.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.45f)), contentAlignment = Alignment.Center) {
+            AppIcon(AppIcons.Fullscreen, contentDescription = null, size = 20.dp, tint = Color.White)
+        }
+    }
+}
+
+/**
+ * The home on the whole screen (spec 3.25, handoff 28g). Unlike a city it opens seen whole, by its
+ * width: the rooms have a ceiling above and a floor towards the viewer for that. A pinch comes
+ * closer, a double tap walks round the zooms; the panel leaves by itself; the screen stays on.
+ */
+@Composable
+private fun FullscreenHome(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = Modifier) {
+    val reduce = LocalReduceMotion.current
+    val camera = rememberSceneCamera()
+    var size by remember { mutableStateOf(IntSize.Zero) }
+    var panel by remember { mutableStateOf(true) }
+    var touches by remember { mutableIntStateOf(0) }
+    LaunchedEffect(size) { if (size != IntSize.Zero) camera.whole(size.width.toFloat(), size.height.toFloat()) }
+    LaunchedEffect(panel, touches) {
+        if (!panel) return@LaunchedEffect
+        delay(JourneyMotion.FULLSCREEN_PANEL_HIDE_MS)
+        panel = false
+    }
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val before = view.keepScreenOn
+        view.keepScreenOn = true
+        onDispose { view.keepScreenOn = before }
+    }
+    val name = houseName(ui.house)
+    Box(modifier.fillMaxSize().background(Color.Black).onSizeChanged { size = it }.sceneCamera(camera) { panel = !panel }) {
+        HomePicture(
+            ui.home, ui.outside, homeModeNow(), description = stringResource(if (ui.outside) R.string.home_picture_outside else R.string.home_picture_room, name),
+            modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds(), camera = camera::read,
+        )
+        val fade = if (reduce) 0 else JourneyMotion.FULLSCREEN_PANEL_FADE_MS
+        androidx.compose.animation.AnimatedVisibility(visible = panel, enter = fadeIn(tween(fade)), exit = fadeOut(tween(fade)), modifier = Modifier.fillMaxSize()) {
+            Box(Modifier.fillMaxSize()) {
+                Row(
+                    Modifier.fillMaxWidth().background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.55f), Color.Transparent))).padding(start = 4.dp, end = 12.dp, top = 8.dp, bottom = 24.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(
+                        Modifier.size(48.dp).clip(CircleShape).clickable(onClickLabel = stringResource(R.string.home_fullscreen_close), role = Role.Button) { onIntent(HomeIntent.FullscreenClosed) },
+                        contentAlignment = Alignment.Center,
+                    ) { AppIcon(AppIcons.FullscreenExit, contentDescription = null, tint = Color.White) }
+                    Text(name, modifier = Modifier.weight(1f).padding(start = 4.dp), color = Color.White, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    TwoWay(stringResource(R.string.home_room), stringResource(R.string.home_outside), ui.outside, { touches++; onIntent(HomeIntent.SideSelected(it)) })
+                }
+                Text(
+                    stringResource(R.string.home_fullscreen_hint),
+                    modifier = Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.6f)))).padding(start = 16.dp, end = 16.dp, top = 28.dp, bottom = 20.dp),
+                    color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall,
+                )
+            }
+        }
     }
 }
 
@@ -172,8 +254,26 @@ private fun About(ui: HomeUi, onIntent: (HomeIntent) -> Unit) {
             color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium,
         )
     }
+    // The road is the aim, the shop and the wardrobe are ways to spend: one filled button that says how far the next
+    // city — it stands for the card of the way ahead — and two outlined ones under it (handoff 28b1).
+    Button(onClick = { onIntent(HomeIntent.TravelClicked) }, modifier = Modifier.fillMaxWidth().height(60.dp)) {
+        AppIcon(AppIcons.Travel, contentDescription = null, size = 22.dp)
+        Column(Modifier.padding(start = 12.dp), horizontalAlignment = Alignment.Start) {
+            Text(stringResource(R.string.home_travel), style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold))
+            val at = JourneyRules.currentIndex(ui.progress)
+            val next = JourneyRules.next(ui.progress)
+            Text(
+                when {
+                    next == null -> stringResource(R.string.home_travel_end, cityOf(at))
+                    JourneyRules.canDepart(ui.progress) -> stringResource(R.string.home_travel_enough, cityOf(at), cityToOf(at + 1))
+                    else -> stringResource(R.string.home_travel_line, cityOf(at), cityToOf(at + 1), Formats.takts(JourneyRules.missing(ui.progress)))
+                },
+                style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        Button(onClick = { onIntent(HomeIntent.ShopClicked) }, modifier = Modifier.weight(1f).height(52.dp)) { Text(stringResource(R.string.home_shop)) }
+        OutlinedButton(onClick = { onIntent(HomeIntent.ShopClicked) }, modifier = Modifier.weight(1f).height(52.dp)) { Text(stringResource(R.string.home_shop)) }
         OutlinedButton(onClick = { onIntent(HomeIntent.ArrangeClicked) }, modifier = Modifier.weight(1f).height(52.dp)) { Text(stringResource(R.string.home_arrange)) }
     }
     if (HomeRules.giftWaiting(ui.home)) {

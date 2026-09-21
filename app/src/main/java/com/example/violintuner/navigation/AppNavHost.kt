@@ -17,6 +17,8 @@ import com.example.violintuner.feature.history.HistoryRoute
 import com.example.violintuner.core.domain.journey.JourneyRoute as JourneyStops
 import com.example.violintuner.feature.home.HomeRoute
 import com.example.violintuner.feature.home.HomeView
+import com.example.violintuner.feature.home.SplashKind
+import com.example.violintuner.feature.home.SplashRoute
 import com.example.violintuner.feature.journey.JourneyRoute
 import com.example.violintuner.feature.journey.JourneyView
 import com.example.violintuner.feature.journey.StopRoute
@@ -62,6 +64,8 @@ private const val HOME_ROUTE = "home"
 private const val HOME_SHOP_ROUTE = "homeShop"
 private const val HOME_ARRANGE_ROUTE = "homeArrange"
 private const val HOME_HOUSES_ROUTE = "homeHouses"
+private const val SPLASH_AWAY_ROUTE = "splashAway"
+private const val SPLASH_HOME_ROUTE = "splashHome"
 private const val BACKUP_ROUTE = "backup"
 private const val RESTORE_ROUTE = "restore"
 private const val RESTORE_PATTERN = "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}={${RestoreViewModel.ARG_URI}}"
@@ -229,7 +233,8 @@ fun AppNavHost(
                     onOpenMap = { navController.navigate(JOURNEY_MAP_ROUTE) { launchSingleTop = true } },
                     onOpenPassport = { navController.navigate(JOURNEY_PASSPORT_ROUTE) { launchSingleTop = true } },
                     // home is not a stop with a postcard any more: it is a section of its own (spec 3.24)
-                    onOpenStop = { stopId -> navController.navigate(if (stopId == JourneyStops.HOME) HOME_ROUTE else "$JOURNEY_STOP_ROUTE/$stopId") { launchSingleTop = true } },
+                    // home is a section of its own (spec 3.24); the way into it goes through its title card (3.25)
+                    onOpenStop = { stopId -> navController.navigate(if (stopId == JourneyStops.HOME) SPLASH_HOME_ROUTE else "$JOURNEY_STOP_ROUTE/$stopId") { launchSingleTop = true } },
                     onClose = navController::popBackStack,
                 )
             }
@@ -247,9 +252,20 @@ fun AppNavHost(
                     onOpenArrange = { navController.navigate(HOME_ARRANGE_ROUTE) { launchSingleTop = true } },
                     onOpenHouses = { navController.navigate(HOME_HOUSES_ROUTE) { launchSingleTop = true } },
                     onOpenHome = { if (!navController.popBackStack(HOME_ROUTE, inclusive = false)) navController.navigate(HOME_ROUTE) { launchSingleTop = true } },
+                    onOpenJourney = { navController.navigate(SPLASH_AWAY_ROUTE) { launchSingleTop = true } },
                     onClose = navController::popBackStack,
                 )
             }
+        }
+        // The title cards between the home and the journey (spec 3.25): each gives its place in the stack to where it leads.
+        composable(SPLASH_AWAY_ROUTE) {
+            SplashRoute(SplashKind.AWAY, onDone = { navController.navigate(JOURNEY_ROUTE) { popUpTo(SPLASH_AWAY_ROUTE) { inclusive = true }; launchSingleTop = true } })
+        }
+        composable(SPLASH_HOME_ROUTE) {
+            SplashRoute(SplashKind.HOME, onDone = {
+                // the home the journey was entered from is under it: go back there rather than put a second one on top
+                if (!navController.popBackStack(HOME_ROUTE, inclusive = false)) navController.navigate(HOME_ROUTE) { popUpTo(SPLASH_HOME_ROUTE) { inclusive = true }; launchSingleTop = true }
+            })
         }
         // A copy of the data and its coming back (spec 3.20): above the tabs, without the bottom bar.
         composable(BACKUP_ROUTE) { BackupRoute(onClose = navController::popBackStack) }

@@ -53,6 +53,7 @@ class HomeViewModel @Inject constructor(
             // «назад» folds what is open before it leaves the screen
             HomeIntent.BackClicked -> when {
                 now.moving != null -> Unit
+                now.fullscreen -> look.update { it.copy(fullscreen = false) }
                 now.tryOn != null -> look.update { it.copy(tryOn = null, tryMode = null) }
                 now.card != null -> look.update { it.copy(card = null) }
                 now.houseCard != null -> look.update { it.copy(houseCard = null) }
@@ -62,6 +63,9 @@ class HomeViewModel @Inject constructor(
             HomeIntent.ShopClicked -> effectChannel.trySend(HomeEffect.OpenShop)
             HomeIntent.ArrangeClicked -> effectChannel.trySend(HomeEffect.OpenArrange)
             HomeIntent.HousesClicked -> effectChannel.trySend(HomeEffect.OpenHouses)
+            HomeIntent.TravelClicked -> effectChannel.trySend(HomeEffect.OpenJourney)
+            HomeIntent.FullscreenClicked -> look.update { it.copy(fullscreen = true) }
+            HomeIntent.FullscreenClosed -> look.update { it.copy(fullscreen = false) }
             HomeIntent.GiftTaken -> buy(HomeCatalog.GIFT)
             is HomeIntent.CategorySelected -> look.update { it.copy(category = intent.group) }
             is HomeIntent.ItemClicked -> HomeCatalog.byId[intent.id]?.let { item -> look.update { it.copy(card = item) } }

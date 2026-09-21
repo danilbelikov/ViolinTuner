@@ -56,7 +56,9 @@ import com.example.violintuner.R
 import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.core.domain.journey.JourneyStop
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.domain.home.HomeRules
 import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.feature.home.HomeTexts
 import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.motion.LocalReduceMotion
 import com.example.violintuner.feature.journey.art.Postcard
@@ -117,7 +119,12 @@ internal fun JourneyTopBar(title: String, onBack: () -> Unit, modifier: Modifier
 private fun IdleContent(state: JourneyState, onIntent: (JourneyIntent) -> Unit) {
     Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
         JourneyTopBar(stringResource(R.string.journey_title), onBack = { onIntent(JourneyIntent.BackClicked) }) {
-            TaktAmount(Formats.takts(state.balance), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), icon = 18.dp)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                TaktAmount(Formats.takts(state.balance), color = MaterialTheme.colorScheme.primary, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold), icon = 18.dp)
+                // the two that are about the road stay in the bar, as icons; the door home is not of their row (handoff 28c)
+                BarIcon(AppIcons.Map, stringResource(R.string.journey_map)) { onIntent(JourneyIntent.MapClicked) }
+                BarIcon(AppIcons.Passport, stringResource(R.string.journey_passport)) { onIntent(JourneyIntent.PassportClicked) }
+            }
         }
         BoxWithConstraints(Modifier.fillMaxSize()) {
             if (maxWidth > maxHeight) {
@@ -151,7 +158,7 @@ private fun Place(state: JourneyState, postcardHeight: Dp, onIntent: (JourneyInt
         Modifier.fillMaxWidth().height(postcardHeight).clip(PostcardShape)
             .clickable(onClickLabel = city, role = Role.Button) { onIntent(JourneyIntent.StopClicked(state.current.id)) },
     ) {
-        StopPostcard(state.current, description = stringResource(R.string.journey_card_description, city), modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds())
+        StopPostcard(state.current, description = stringResource(R.string.journey_card_description, city), modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds(), homeOutside = true)
         Text(
             text = if (state.currentIndex == 0) stringResource(R.string.journey_stop_home, state.totalStops) else stringResource(R.string.journey_stop_of, state.currentIndex, state.totalStops),
             modifier = Modifier.align(Alignment.TopStart).padding(12.dp).clip(CircleShape).background(colors.surface.copy(alpha = 0.72f)).padding(horizontal = 10.dp, vertical = 4.dp),
@@ -169,6 +176,41 @@ private fun Place(state: JourneyState, postcardHeight: Dp, onIntent: (JourneyInt
     )
     Spacer(Modifier.height(8.dp))
     Text(factOf(state.currentIndex), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge)
+    Spacer(Modifier.height(14.dp))
+    HomeDoor(atHome = state.currentIndex == 0, onClick = { onIntent(JourneyIntent.StopClicked(JourneyRoute.HOME)) })
+}
+
+/**
+ * The door home (handoff 28c): a card with the room in it — the lamp and the cat are seen — named
+ * by what it does. At the stop «Дом» it is the main action of the screen and is filled; in a city
+ * the way ahead is the main one and the door is a quiet card.
+ */
+@Composable
+private fun HomeDoor(atHome: Boolean, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val home = LocalHomeLook.current
+    val content = if (atHome) colors.onPrimary else colors.onSurface
+    Row(
+        Modifier.fillMaxWidth().clip(CardShape).background(if (atHome) colors.primary else colors.surfaceContainer).clickable(role = Role.Button, onClick = onClick).padding(10.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(Modifier.size(72.dp, 48.dp).clip(RoundedCornerShape(10.dp))) {
+            StopPostcard(JourneyRoute.stops.first(), description = "", modifier = Modifier.fillMaxSize())
+        }
+        Column(Modifier.weight(1f)) {
+            Text(stringResource(R.string.journey_enter_home), color = content, style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold))
+            val house = home?.let { HomeTexts.houseNames[HomeRules.house(it)] }?.let { stringResource(it) }
+            Text(if (atHome) stringResource(R.string.journey_enter_home_at) else house.orEmpty(), color = content.copy(alpha = 0.8f), style = MaterialTheme.typography.bodySmall)
+        }
+        AppIcon(AppIcons.Door, contentDescription = null, tint = content)
+    }
+}
+
+@Composable
+private fun BarIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+    Box(Modifier.size(Target).clip(CircleShape).clickable(onClickLabel = label, role = Role.Button, onClick = onClick), contentAlignment = Alignment.Center) {
+        AppIcon(icon, contentDescription = label, tint = MaterialTheme.colorScheme.onSurface)
+    }
 }
 
 /** The way ahead, the postcards behind, and the two doors: the map and the passport. */
@@ -216,12 +258,6 @@ private fun Way(state: JourneyState, onIntent: (JourneyIntent) -> Unit) {
             }
         }
     }
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedButton(onClick = { onIntent(JourneyIntent.MapClicked) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.journey_map)) }
-        OutlinedButton(onClick = { onIntent(JourneyIntent.PassportClicked) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.journey_passport)) }
-        // home is a section of its own now (spec 3.24): the door to it is always here, wherever the road has led
-        OutlinedButton(onClick = { onIntent(JourneyIntent.StopClicked(JourneyRoute.HOME)) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.journey_home)) }
-    }
 }
 
 @Composable
@@ -249,6 +285,8 @@ private fun IntroContent(onIntent: (JourneyIntent) -> Unit) {
             StopPostcard(JourneyRoute.stops.first(), description = cityOf(0), modifier = Modifier.fillMaxWidth().height(PostcardHeight).clip(PostcardShape), seconds = rememberSceneSeconds())
             Text(stringResource(R.string.journey_intro_title), color = colors.onSurface, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
             Text(stringResource(R.string.journey_intro_text), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge)
+            // where takts come from — without the arithmetic: the formula is our secret (spec 3.25)
+            Text(stringResource(R.string.journey_intro_takts), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge)
             Text(stringResource(R.string.journey_intro_first, taktsInWords(first.price.toLong())), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
             Button(onClick = { onIntent(JourneyIntent.IntroConfirmed) }, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text(stringResource(R.string.journey_intro_start)) }
         }

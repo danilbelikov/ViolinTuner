@@ -89,6 +89,27 @@
     <string name="houses_moved_cat">%1$s · кошка уже на крыльце</string>
     <string name="houses_close">Закрыть</string>
 
+    <!-- Second iteration (spec 3.25) -->
+    <string name="home_travel">В дорогу</string>
+    <string name="home_travel_line">%1$s → до %2$s %3$s</string>
+    <string name="home_travel_enough">%1$s → хватает до %2$s</string>
+    <string name="home_travel_end">%1$s · маршрут пройден</string>
+    <string name="home_fullscreen">На весь экран</string>
+    <string name="home_fullscreen_close">Свернуть</string>
+    <string name="home_fullscreen_hint">Щипок — ближе · потяните — осмотреться</string>
+    <string name="home_card_title">Дом · %1$s</string>
+    <string name="home_card_away">в пути · %1$s · остановка %2$d из %3$d</string>
+    <string name="journey_enter_home">Войти в дом</string>
+    <string name="journey_enter_home_at">вы дома</string>
+    <string name="splash_away">в дорогу</string>
+    <string name="splash_home">домой</string>
+    <string name="splash_stop">%1$s · остановка %2$d из %3$d</string>
+    <string name="splash_skip">Пропустить</string>
+    <string name="shop_soon">привезут</string>
+    <string name="shop_try_remove">Убрать</string>
+    <string name="shop_takts_note">Такты приходят с занятий: мы слушаем вашу игру и считаем сами. Здесь их можно потратить на вещи для дома.</string>
+    <string name="journey_intro_takts">Приложение слушает, как вы занимаетесь, и переводит чистую игру и время за инструментом в такты. Тактами оплачивается дорога — от города к городу.</string>
+
     <string name="journey_home">Дом</string>
     <string name="journey_home_card">Дом: %1$s</string>
 </resources>

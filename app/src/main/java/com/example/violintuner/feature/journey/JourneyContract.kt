@@ -123,7 +123,7 @@ object JourneyMotion {
     const val ARRIVAL_FADE_MS = 600
     const val ARRIVAL_TEXT_DELAY_MS = 300
     const val STAMP_MS = 350
-    const val EARNED_PILL_MS = 3_000L
+    const val EARNED_PILL_MS = 4_000L
     const val PHASE_FADE_MS = 300
     const val FULLSCREEN_PANEL_HIDE_MS = 3_000L
     const val FULLSCREEN_PANEL_FADE_MS = 300

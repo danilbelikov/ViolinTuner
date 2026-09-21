@@ -28,6 +28,8 @@ data class HomeUi(
     val houseCard: HomeHouse? = null,
     /** The little film of moving in (handoff 27e3). */
     val moving: HomeHouse? = null,
+    /** The home alone on the whole screen, seen whole (spec 3.25). */
+    val fullscreen: Boolean = false,
 ) {
     val balance: Long get() = progress.balance
 }
@@ -38,6 +40,9 @@ sealed interface HomeIntent {
     data object ShopClicked : HomeIntent
     data object ArrangeClicked : HomeIntent
     data object HousesClicked : HomeIntent
+    data object TravelClicked : HomeIntent
+    data object FullscreenClicked : HomeIntent
+    data object FullscreenClosed : HomeIntent
     data object GiftTaken : HomeIntent
     data class CategorySelected(val group: HomeGroup?) : HomeIntent
     data class ItemClicked(val id: String) : HomeIntent
@@ -59,6 +64,9 @@ sealed interface HomeEffect {
     data object OpenShop : HomeEffect
     data object OpenArrange : HomeEffect
     data object OpenHouses : HomeEffect
+
+    /** «В дорогу»: a title card, then the journey. */
+    data object OpenJourney : HomeEffect
     data class ShowBought(val itemId: String) : HomeEffect
 
     /** Moved in: back to the home itself, whatever screen the move was made from. */
