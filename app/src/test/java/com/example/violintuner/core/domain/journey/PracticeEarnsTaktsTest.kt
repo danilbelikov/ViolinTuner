@@ -21,11 +21,11 @@ class PracticeEarnsTaktsTest {
     private val finisher = PracticeFinisher(practice, store, clock, notes, journey, JourneyConfig())
 
     @Test
-    fun `saving a practice earns its notes in tune and two takts a minute, once`() = runTest {
+    fun `saving a practice earns a takt for every three notes in tune and two takts a minute, once`() = runTest {
         store.start(1_000)
         notes.add(1_000, NoteCount(played = 412, inTune = 264))
         assertTrue(finisher.save(1_000, durationMs = 38 * 60_000L))
-        assertEquals(TaktEarning(9_000_000, 412, 264, 38 * 60_000L, takts = 340), journey.earnings.single())
+        assertEquals(TaktEarning(9_000_000, 412, 264, 38 * 60_000L, takts = 164), journey.earnings.single())
         assertEquals(NoteCount.ZERO, notes.count)
         // a second answer to the same practice stores and earns nothing
         assertTrue(!finisher.save(1_000, 38 * 60_000L))

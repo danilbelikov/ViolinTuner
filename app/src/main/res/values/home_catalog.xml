@@ -115,7 +115,7 @@
     <string name="home_item_vln_electric_note" formatted="false">Каркас вместо корпуса. Не сразу понимаешь, что это скрипка.</string>
     <string name="home_item_vln_old_note" formatted="false">Двести лет чужих рук. Лак почти чёрный.</string>
     <string name="home_item_vln_cremona_note" formatted="false">Огненный клён на спинке. У неё есть имя, но его не говорят.</string>
-    <string name="home_item_case_black_note" formatted="false">Тот, что с самого начала.</string>
+    <string name="home_item_case_black_note" formatted="false">Тот, что с самого начала. Лежит открытым у окна.</string>
     <string name="home_item_case_velvet_note" formatted="false">Снаружи строгий, внутри — вишня.</string>
     <string name="home_item_case_carbon_note" formatted="false">Лёгкий, как футляр для очков.</string>
     <string name="home_item_case_leather_note" formatted="false">Наклейки городов, где вы уже побывали. Появляются сами.</string>
@@ -181,7 +181,7 @@
     <string name="home_item_commode_note" formatted="false">Три ящика. В верхнем — струны.</string>
     <string name="home_item_mirror_note" formatted="false">Проверить постановку рук.</string>
     <string name="home_item_clock_note" formatted="false">Маятник качается. Стрелки — по вашему времени.</string>
-    <string name="home_item_rug_plum_note" formatted="false">Овальный, тот, что есть.</string>
+    <string name="home_item_rug_plum_note" formatted="false">Простой, в тон стенам. Первый и недорогой.</string>
     <string name="home_item_rug_persian_note" formatted="false">Бордовый, с каймой.</string>
     <string name="home_item_rug_stripe_note" formatted="false">Домотканый, в полоску.</string>
     <string name="home_item_rug_round_note" formatted="false">Небольшой, тёплый.</string>
@@ -233,9 +233,9 @@
     <string name="home_slot_chair" formatted="false">Стул</string>
     <string name="home_slot_chairTop" formatted="false">На стуле</string>
     <string name="home_slot_stand" formatted="false">Пюпитр</string>
-    <string name="home_slot_violin" formatted="false">Скрипка</string>
-    <string name="home_slot_case" formatted="false">Футляр</string>
-    <string name="home_slot_rug" formatted="false">Ковёр</string>
+    <string name="home_slot_violin" formatted="false">Скрипка · передний план</string>
+    <string name="home_slot_case" formatted="false">Футляр · у окна на полу</string>
+    <string name="home_slot_rug" formatted="false">Ковёр · центр пола</string>
     <string name="home_slot_pet" formatted="false">Питомец</string>
     <string name="home_slot_floorL" formatted="false">Угол слева</string>
     <string name="home_slot_floorR" formatted="false">Угол справа</string>

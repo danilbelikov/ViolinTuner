@@ -54,7 +54,9 @@ class JourneyTest {
 
     @Test
     fun `a note in tune is a takt and a whole minute is two`() {
-        assertEquals(340, JourneyRules.taktsFor(notesInTune = 264, durationMs = 38 * 60_000L + 59_000, config))
+        assertEquals(88 + 76, JourneyRules.taktsFor(notesInTune = 264, durationMs = 38 * 60_000L + 59_000, config))
+        // three notes make a takt, rounded up: one clean note is a takt already, none is none
+        assertEquals(listOf(0, 1, 1, 1, 2, 2, 2, 3), (0..7).map { JourneyRules.taktsFor(it, 0, config) })
         assertEquals(0, JourneyRules.taktsFor(0, 59_000, config))
         assertEquals(0, JourneyRules.taktsFor(-5, -1, config))
     }

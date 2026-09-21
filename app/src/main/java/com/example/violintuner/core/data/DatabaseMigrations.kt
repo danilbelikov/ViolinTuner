@@ -135,6 +135,18 @@ object DatabaseMigrations {
         }
     }
 
+    /**
+     * No change of the schema: the plum rug left the rented room for the shop (spec 3.25), and nothing is taken away —
+     * whoever had the room before keeps the rug as bought for nothing, lying where it lay unless they chose otherwise.
+     * A fresh install is created at this version without this migration, and so without the rug.
+     */
+    val MIGRATION_10_11 = object : Migration(10, 11) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL("INSERT OR IGNORE INTO `home_purchases` (`id`, `kind`, `price`, `boughtAtEpochMs`) VALUES ('rug_plum', 'ITEM', 0, 0)")
+            db.execSQL("INSERT OR IGNORE INTO `home_choices` (`slot`, `itemId`) VALUES ('rug', 'rug_plum')")
+        }
+    }
+
     /** The columns of `SoundColumns`, as Room declares them: both sound tables embed the same set. Internal for the migration test, which lays out a version 5 file by hand. */
     internal const val SOUND_COLUMNS =
         "`eqEnabled` INTEGER NOT NULL, `lowCutEnabled` INTEGER NOT NULL, `lowCutHz` REAL NOT NULL, `lowHz` REAL NOT NULL, " +
@@ -146,5 +158,5 @@ object DatabaseMigrations {
             "`reverbPreDelayMs` REAL NOT NULL, `reverbBrightness` REAL NOT NULL, `reverbMix` REAL NOT NULL, " +
             "`outputEnabled` INTEGER NOT NULL, `outputGainDb` REAL NOT NULL"
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10)
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
 }

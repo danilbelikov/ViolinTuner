@@ -173,9 +173,9 @@ class HomeViewModelTest {
         assertEquals("desk_simple", HomeRules.placed(viewModel.state.value.home)["desk"]?.id)
         assertEquals("chair_simple", HomeRules.placed(viewModel.state.value.home)["chair"]?.id)
 
-        viewModel.onIntent(HomeIntent.Placed("rug", ""))
+        viewModel.onIntent(HomeIntent.Placed("deskTop", ""))
         runCurrent()
-        assertNull(HomeRules.placed(viewModel.state.value.home)["rug"])
+        assertNull(HomeRules.placed(viewModel.state.value.home)["deskTop"])
     }
 
     @Test

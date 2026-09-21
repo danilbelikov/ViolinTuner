@@ -86,6 +86,11 @@ internal object IconPaths {
     /** отметка «лучший дубль» (12 dp, primary, залитая) */
     /** The tile of a bow stroke (handoff `Упражнения`, 24c): drawn on a grid of 30 there, brought to 24 here. */
     val BOW = listOf("M4 20L20 4", "M7.2 20.8C10.4 16 16 9.6 20.8 6.4", "M2.4 17.6L6.4 21.6")
+    /** Second handoff of the home (`home-catalog.js` → `ICONS`, frame 28h), carried by hand: the map folded in three, the passport with its stamp, the door home, the case with an arrow — «в дорогу». */
+    val MAP = listOf("M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5V6.5z", "M9 4v13.5M15 6.5V20", "M6 14.5c2-1 4 .5 6-1s3.5-3 6-3.5")
+    val PASSPORT = listOf("M6 3.5h12a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z", "M12 8a3.5 3.5 0 1 0 0 7 3.5 3.5 0 1 0 0-7z", "M9 17.5h6")
+    val DOOR = listOf("M4 20.5h16", "M6 20.5V6l6-3 6 3v14.5", "M9 20.5v-7a3 3 0 0 1 6 0v7", "F M14.2 15.2a.9.9 0 1 0 0 1.8.9.9 0 1 0 0-1.8z")
+    val TRAVEL = listOf("M6 7.5h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z", "M8.5 7.5V5.8a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1.7", "M4 13h13", "M17.5 6.5l3-3M20.5 6.5v-3h-3")
     val STAR_OUTLINE = listOf("M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z")
     val STAR = listOf("F M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z")
 

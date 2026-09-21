@@ -46,7 +46,7 @@ object SceneMotion {
     private const val WATER = "waterLit"
 
     fun moves(layer: SceneLayer, mode: SceneMode): Boolean =
-        layer.anim != null || layer.fill == WATER || (mode == SceneMode.EVENING && (layer.fill in WINDOWS || layer.fill == SceneLayer.GLOW || layer.warmGlow))
+        (layer.anim != null && layer.anim != SceneAnim(dash = layer.anim.dash)) || layer.fill == WATER || (mode == SceneMode.EVENING && (layer.fill in WINDOWS || layer.fill == SceneLayer.GLOW || layer.warmGlow))
 
     /** What the layer's own opacity is multiplied by at [seconds]; 1 for a layer that does not flicker. */
     fun alpha(layer: SceneLayer, index: Int, mode: SceneMode, seconds: Float): Float = when {
@@ -81,7 +81,8 @@ object SceneMotion {
             val span = ride.to - ride.from
             if (span > 0f) dx += ride.from + (((-ride.from + seconds * ride.speed) % span) + span) % span
         }
-        anim.bob?.let { bob -> dy += bob.amplitude * sin(2 * PI.toFloat() * seconds / bob.period) }
+        anim.bob?.let { bob -> dy += bob.amplitude * sin(2 * PI.toFloat() * (seconds + bob.delay) / bob.period) }
+        anim.fly?.let { fly -> dx += fly.amplitude * ((seconds % fly.period) / fly.period) }
         anim.bird?.let { way ->
             val speed = 8f + hash(index, 11) * 7f
             val along = (((baseX - way.left) + seconds * speed) % way.span + way.span) % way.span
@@ -95,7 +96,7 @@ object SceneMotion {
         anim.blinkPeriod?.let { period -> val at = ((seconds + (index % 4) * 0.7f) % period) / period; if (at in 0.92f..0.97f) alpha = 0f }
         anim.flick?.let { alpha *= 1f - 0.45f * wave(seconds + it.delay, it.period, phase = 0f) }
         anim.rise?.let { val at = (((seconds + it.delay) % it.period) + it.period) % it.period / it.period; dy -= 10f * at; alpha *= 0.7f * (1f - at) }
-        anim.sway?.let { dx += it.amplitude * sin(2 * PI.toFloat() * seconds / it.period) }
+        anim.sway?.let { dx += it.amplitude * sin(2 * PI.toFloat() * (seconds + it.delay) / it.period) }
         var degrees = 0f
         anim.swing?.let { degrees = it.degrees * sin(2 * PI.toFloat() * seconds / it.period) }
         anim.fall?.let { fall ->

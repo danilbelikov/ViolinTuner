@@ -58,17 +58,31 @@ class HomeComposerTest {
     }
 
     @Test
-    fun `the room is put together back to front - the traveller after the furniture, the pet after the traveller`() {
-        val state = loaded.copy(purchased = setOf("cat_ginger", "piano"), choices = mapOf("pet" to "cat_ginger", "floorL" to "piano"))
+    fun `the room is put together back to front - furniture, then the violin, then the pet - and the traveller is not at home`() {
+        val state = loaded.copy(purchased = setOf("cat_ginger", "piano", "vln_student"), choices = mapOf("pet" to "cat_ginger", "floorL" to "piano", "violin" to "vln_student"))
         val art = art("rent", SceneMode.EVENING)
         val layers = HomeComposer.compose(art, HomeRules.standing(state, "rent", false, today), false, SceneMode.EVENING).scene.layers
         fun at(part: List<SceneLayer>) = layers.indexOfFirst { it === part.first() }
-        val hero = at(art.hero)
-        assertTrue(at(art.items.getValue("piano").layers) in 0 until hero)
-        assertTrue(at(art.items.getValue("cat_ginger").layers) > hero)
-        // what came with the room is there, what was not chosen is not
+        assertTrue(at(art.items.getValue("piano").layers) in 0 until at(art.items.getValue("vln_student").layers))
+        assertTrue(at(art.items.getValue("cat_ginger").layers) > at(art.items.getValue("vln_student").layers))
+        assertEquals(-1, at(art.hero))
+        // what came with the room is there, what was not chosen is not; the rug is for the shop now
         assertTrue(at(art.items.getValue("desk_simple").layers) >= 0)
         assertEquals(-1, at(art.items.getValue("desk_oak").layers))
+        assertEquals(-1, at(art.items.getValue("rug_plum").layers))
+    }
+
+    @Test
+    fun `until a violin stands on its stand the student's one lies in the open case`() {
+        val art = art("rent", SceneMode.EVENING)
+        val lying = art.caseViolins.getValue("case_black")
+        fun layersOf(state: HomeState, ghost: String? = null) = HomeComposer.compose(art, HomeRules.standing(state, "rent", false, today), false, SceneMode.EVENING, ghost = ghost?.let { HomeCatalog.byId.getValue(it) }).scene.layers
+        assertTrue(layersOf(loaded).any { it === lying.first() })
+        val withViolin = loaded.copy(purchased = setOf("vln_student"), choices = mapOf("violin" to "vln_student"))
+        assertTrue(layersOf(withViolin).none { it === lying.first() })
+        // trying a violin on takes it out of the case as well; a case put away takes the violin with it
+        assertTrue(layersOf(loaded, ghost = "vln_master").none { it === lying.first() })
+        assertTrue(layersOf(loaded.copy(choices = mapOf("case" to ""))).none { it === lying.first() })
     }
 
     @Test
@@ -85,14 +99,18 @@ class HomeComposerTest {
     }
 
     @Test
-    fun `a thing tried on takes the place of what stood there, at half its density and still`() {
+    fun `a thing tried on takes the place of what stood there - whole and still, the room a little darker, a glow under it`() {
         val art = art("rent", SceneMode.EVENING)
-        val oak = HomeCatalog.byId.getValue("desk_oak")
-        val composed = HomeComposer.compose(art, HomeRules.standing(loaded, "rent", false, today), false, SceneMode.EVENING, ghost = oak)
+        val oak = art.items.getValue("desk_oak")
+        val composed = HomeComposer.compose(art, HomeRules.standing(loaded, "rent", false, today), false, SceneMode.EVENING, ghost = HomeCatalog.byId.getValue("desk_oak"))
+        val layers = composed.scene.layers
         assertNotNull(composed.ghost)
-        assertTrue(composed.scene.layers.none { it === art.items.getValue("desk_simple").layers.first() })
-        val ghostLayers = composed.scene.layers.filter { layer -> art.items.getValue("desk_oak").layers.any { it.path == layer.path && it.fill == layer.fill } }
-        assertTrue(ghostLayers.isNotEmpty() && ghostLayers.all { it.opacity <= 0.5f && it.anim == null })
+        assertTrue(layers.none { it === art.items.getValue("desk_simple").layers.first() })
+        val dim = layers.indexOfFirst { it.fill.startsWith("rgba(14,14,18") }
+        val glow = layers.indexOfFirst { it.fill == SceneLayer.GLOW && it.anim?.flick != null && it.path.startsWith("M${(oak.left + oak.right) / 2 - ((oak.right - oak.left) * 0.9f + 14f)}") }
+        val thing = layers.indexOfFirst { layer -> layer.path == oak.layers.first().path && layer.fill == oak.layers.first().fill }
+        assertTrue("dim $dim, glow $glow, thing $thing", dim >= 0 && glow > dim && thing > glow)
+        assertTrue(layers.drop(thing).take(oak.layers.size).all { it.opacity == oak.layers[layers.drop(thing).indexOf(it)].opacity && it.anim == null })
     }
 
     @Test
@@ -113,10 +131,9 @@ class HomeComposerTest {
         val layers = HomeComposer.compose(art, HomeRules.standing(loaded, "rent", false, today), false, SceneMode.EVENING).scene.layers
         val window = art.items.getValue("window_simple").layers
         val view = art.items.getValue("view_city").layers
-        val backing = layers.indexOfFirst { it === window.first() }
+        val backing = layers.indexOfFirst { it === art.backs.getValue("window_simple").first() }
         val sky = layers.indexOfFirst { it === view.first() }
-        val bars = layers.indexOfFirst { it === window[1] }
+        val bars = layers.indexOfFirst { it === window.first() }
         assertTrue(backing in 0 until sky && sky < bars)
-        assertEquals(1, layers.count { it === window.first() })
     }
 }

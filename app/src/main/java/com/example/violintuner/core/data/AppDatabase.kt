@@ -38,7 +38,7 @@ import com.example.violintuner.core.data.sound.SoundSettingsEntity
         HomePurchaseEntity::class,
         HomeChoiceEntity::class,
     ],
-    version = 10,
+    version = 11,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {

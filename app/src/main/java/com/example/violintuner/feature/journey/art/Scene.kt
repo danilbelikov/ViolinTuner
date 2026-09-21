@@ -34,7 +34,8 @@ data class SceneLayer(
  * `bird:left:span` — a bird crossing `span` units from `left`, flapping, fading at both ends;
  * `flash:period` — a light going on and off; `blink:period` — eyes: open but for a moment once a period;
  * `flick:period[:delay]` — a flame: dims to about a half and back; `rise:period[:delay]` — smoke: goes up ten units and fades;
- * `sway:amount:period` — leans sideways and back; `swing:degrees:period:px:py` — turns to and fro about a point (a pendulum); `fall:speed:top:height` — falls through `height` units below `top` and starts again from the top, fading at both ends.
+ * `sway:amount:period[:delay]` — leans sideways and back (`bob` takes a delay as well); `fly:distance:period` — goes `distance` to the right in `period`, again and again;
+ * `dash:on:off` — not a movement: the stroke of the layer is dashed (the format has no field of its own for it); `swing:degrees:period:px:py` — turns to and fro about a point (a pendulum); `fall:speed:top:height` — falls through `height` units below `top` and starts again from the top, fading at both ends.
  */
 data class SceneAnim(
     val ride: Ride? = null,
@@ -46,10 +47,12 @@ data class SceneAnim(
     val rise: Timed? = null,
     val sway: Bob? = null,
     val swing: Swing? = null,
+    val fly: Bob? = null,
+    val dash: Pair<Float, Float>? = null,
     val fall: Fall? = null,
 ) {
     data class Ride(val speed: Float, val from: Float, val to: Float)
-    data class Bob(val amplitude: Float, val period: Float)
+    data class Bob(val amplitude: Float, val period: Float, val delay: Float = 0f)
     data class Way(val left: Float, val span: Float)
     data class Timed(val period: Float, val delay: Float)
     data class Swing(val degrees: Float, val period: Float, val pivotX: Float, val pivotY: Float)
@@ -64,13 +67,15 @@ data class SceneAnim(
                 val n = f.drop(1).map { it.toFloat() }
                 anim = when (f[0]) {
                     "ride" -> anim.copy(ride = Ride(n[0], n[1], n[2]))
-                    "bob" -> anim.copy(bob = Bob(n[0], n[1]))
+                    "bob" -> anim.copy(bob = Bob(n[0], n[1], n.getOrElse(2) { 0f }))
+                    "fly" -> anim.copy(fly = Bob(n[0], n[1]))
+                    "dash" -> anim.copy(dash = n[0] to n.getOrElse(1) { n[0] })
                     "bird" -> anim.copy(bird = Way(n[0], n[1]))
                     "flash" -> anim.copy(flashPeriod = n[0])
                     "blink" -> anim.copy(blinkPeriod = n[0])
                     "flick" -> anim.copy(flick = Timed(n[0], n.getOrElse(1) { 0f }))
                     "rise" -> anim.copy(rise = Timed(n[0], n.getOrElse(1) { 0f }))
-                    "sway" -> anim.copy(sway = Bob(n[0], n[1]))
+                    "sway" -> anim.copy(sway = Bob(n[0], n[1], n.getOrElse(2) { 0f }))
                     "swing" -> anim.copy(swing = Swing(n[0], n[1], n.getOrElse(2) { 0f }, n.getOrElse(3) { 0f }))
                     "fall" -> anim.copy(fall = Fall(n[0], n[1], n[2]))
                     else -> throw IllegalArgumentException("a movement this build does not know: ${f[0]}")

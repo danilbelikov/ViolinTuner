@@ -41,6 +41,9 @@ class HomeRulesTest {
         assertEquals("desk_simple", placed["desk"]?.id)
         assertEquals("case_black", placed["case"]?.id)
         assertNull(placed["violin"])
+        // the plum rug left the room for the shop (spec 3.25)
+        assertNull(placed["rug"])
+        assertEquals(100, item("rug_plum").price)
         assertTrue(HomeRules.giftWaiting(loaded))
         assertFalse(HomeRules.giftWaiting(HomeState.EMPTY))
         assertFalse(HomeRules.giftWaiting(loaded.copy(purchased = setOf(HomeCatalog.GIFT))))
@@ -61,11 +64,11 @@ class HomeRulesTest {
 
     @Test
     fun `one place holds one thing - a choice replaces, an empty choice leaves the place bare, a thing not owned is not placed`() {
-        val state = loaded.copy(purchased = setOf("desk_oak", "cat_ginger"), choices = mapOf("desk" to "desk_oak", "pet" to "cat_ginger", "rug" to "", "chair" to "rocking"))
+        val state = loaded.copy(purchased = setOf("desk_oak", "cat_ginger"), choices = mapOf("desk" to "desk_oak", "pet" to "cat_ginger", "deskTop" to "", "chair" to "rocking"))
         val placed = HomeRules.placed(state)
         assertEquals("desk_oak", placed["desk"]?.id)
         assertEquals("cat_ginger", placed["pet"]?.id)
-        assertNull(placed["rug"])
+        assertNull(placed["deskTop"])
         assertEquals("chair_simple", placed["chair"]?.id)
         assertEquals(listOf("desk_simple", "desk_oak"), HomeRules.wardrobe("desk", state).map { it.id })
     }

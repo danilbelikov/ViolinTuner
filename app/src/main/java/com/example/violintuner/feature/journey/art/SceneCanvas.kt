@@ -14,6 +14,7 @@ import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -77,13 +78,15 @@ fun ScenePicture(
     seconds: State<Float>? = null,
     camera: (() -> Triple<Float, Float, Float>)? = null,
     overlay: (DrawScope.(seconds: Float?) -> Unit)? = null,
+    /** A home seen whole stands in the middle of the screen, ceiling above and floor below; a city stands on the bottom edge under its sky. */
+    centred: Boolean = false,
 ) {
     Canvas(modifier.clipToBounds().background(Color(NIGHT)).semantics { contentDescription = description }) {
         if (prepared == null) return@Canvas
         val (zoom, panX, panY) = camera?.invoke() ?: Triple(1f, 0f, 0f)
         val k = SceneCamera.cover(size.width, size.height) * zoom
         val t = seconds?.value
-        translate((size.width - SceneGrid.WIDTH * k) / 2, SceneCamera.top(zoom, size.width, size.height, outdoors = prepared.scene.aerial) + panY) {
+        translate((size.width - SceneGrid.WIDTH * k) / 2, SceneCamera.top(zoom, size.width, size.height, outdoors = prepared.scene.aerial && !centred) + panY) {
             drawScene(prepared, k, panX, t)
             if (overlay != null) translate(panX, 0f) { scale(k, k, pivot = Offset.Zero) { overlay(t) } }
         }
@@ -176,7 +179,7 @@ private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, 
             if (!layer.fillNone && brush != null) drawPath(path, brush, alpha = alpha)
             val stroke = layer.stroke?.let { ScenePalette.colorOf(it, layer.depth, scene, prepared.mode) }
             if (stroke != null && layer.strokeWidth > 0f) {
-                drawPath(path, Color(stroke), alpha = alpha, style = Stroke(layer.strokeWidth, cap = StrokeCap.Round))
+                drawPath(path, Color(stroke), alpha = alpha, style = Stroke(layer.strokeWidth, cap = StrokeCap.Round, pathEffect = layer.anim?.dash?.let { PathEffect.dashPathEffect(floatArrayOf(it.first, it.second)) }))
             }
         }
         // the sky's own life goes right over the sky, under everything else

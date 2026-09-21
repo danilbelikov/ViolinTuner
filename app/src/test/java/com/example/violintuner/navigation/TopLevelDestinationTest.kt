@@ -6,8 +6,8 @@ import org.junit.Test
 class TopLevelDestinationTest {
 
     @Test
-    fun `start destination is Live`() {
-        assertEquals(TopLevelDestination.LIVE, TopLevelDestination.START)
+    fun `the app opens on Practice - the second tab`() {
+        assertEquals(TopLevelDestination.PRACTICE, TopLevelDestination.START)
     }
 
     @Test

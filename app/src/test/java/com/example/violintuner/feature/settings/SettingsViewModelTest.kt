@@ -88,7 +88,7 @@ class SettingsViewModelTest {
 
         val returning = appStart(repository, sessions)
         runCurrent()
-        assertEquals(TopLevelDestination.LIVE.route, returning.startRoute.value)
+        assertEquals(TopLevelDestination.PRACTICE.route, returning.startRoute.value)
         assertEquals("orphaned audio is cleaned up on every start", 2, sessions.orphanCleanups)
     }
 

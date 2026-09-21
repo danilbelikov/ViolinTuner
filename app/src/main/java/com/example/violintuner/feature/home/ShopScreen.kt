@@ -254,7 +254,7 @@ private fun TryOn(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit, mo
     LaunchedEffect(item.id, box != null, size) { if (box != null && size != IntSize.Zero) camera.lookAt((box.left + box.right) / 2, size.width.toFloat(), size.height.toFloat()) }
     Box(modifier.fillMaxSize().background(Color.Black).onSizeChanged { size = it }) {
         HomePicture(
-            ui.home, outside = item.outside, mode = mode, description = itemName(item.id), ghost = item, frame = colors.primary,
+            ui.home, outside = item.outside, mode = mode, description = itemName(item.id), ghost = item,
             modifier = Modifier.fillMaxSize().sceneCamera(camera), seconds = rememberSceneSeconds(), camera = camera::read,
         )
         TwoWay(stringResource(R.string.home_evening), stringResource(R.string.home_day), mode == SceneMode.DAY, { onIntent(HomeIntent.TryModeSelected(if (it) SceneMode.DAY else SceneMode.EVENING)) }, Modifier.align(Alignment.TopCenter).padding(top = 16.dp))

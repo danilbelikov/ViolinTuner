@@ -2,6 +2,7 @@ package com.example.violintuner.feature.home.art
 
 import com.example.violintuner.core.domain.home.HomeItem
 import com.example.violintuner.feature.journey.art.Scene
+import com.example.violintuner.feature.journey.art.SceneAnim
 import com.example.violintuner.feature.journey.art.SceneLayer
 import com.example.violintuner.feature.journey.art.SceneMode
 import com.example.violintuner.feature.journey.art.SceneParser
@@ -22,6 +23,10 @@ class HouseArt(
     val hero: List<SceneLayer>,
     val items: Map<String, ItemArt>,
     val porch: Map<String, List<SceneLayer>>,
+    /** The backing of a window: drawn before the view, the glazing bars after it. */
+    val backs: Map<String, List<SceneLayer>>,
+    /** The student's violin lying in the open case, by the id of the case: shown until a violin stands on its stand. */
+    val caseViolins: Map<String, List<SceneLayer>>,
     val wallPatterns: Map<String, List<SceneLayer>>,
     val floorPatterns: Map<String, List<SceneLayer>>,
 ) {
@@ -37,6 +42,8 @@ class HouseArt(
             val hero = ArrayList<SceneLayer>()
             val items = HashMap<String, ItemArt>()
             val porch = HashMap<String, List<SceneLayer>>()
+            val backs = HashMap<String, List<SceneLayer>>()
+            val caseViolins = HashMap<String, List<SceneLayer>>()
             val walls = HashMap<String, List<SceneLayer>>()
             val floors = HashMap<String, List<SceneLayer>>()
             var into: MutableList<SceneLayer> = room
@@ -52,6 +59,8 @@ class HouseArt(
                         "@hero" -> into = hero
                         "@item" -> { items[f[1]] = ItemArt(fresh, f[2].toFloat(), f[3].toFloat(), f[4].toFloat(), f[5].toFloat()); into = fresh }
                         "@porch" -> { porch[f[1]] = fresh; into = fresh }
+                        "@back" -> { backs[f[1]] = fresh; into = fresh }
+                        "@caseviolin" -> { caseViolins[f[1]] = fresh; into = fresh }
                         "@pat" -> { walls[f[1]] = fresh; into = fresh }
                         "@floorpat" -> { floors[f[1]] = fresh; into = fresh }
                         else -> throw IllegalArgumentException("a section this build does not know: ${f[0]}")
@@ -60,7 +69,7 @@ class HouseArt(
                 }
                 into += SceneParser.layerOf(line)
             }
-            return HouseArt(room, outside, hero, items, porch, walls, floors)
+            return HouseArt(room, outside, hero, items, porch, backs, caseViolins, walls, floors)
         }
     }
 }
@@ -77,7 +86,10 @@ class ComposedHome(val scene: Scene, val ghost: ItemArt?)
 object HomeComposer {
     private const val FRONT = 5
     private const val WINDOW = "window"
-    private const val GHOST_DENSITY = 0.5f
+    private const val DIM = "rgba(14,14,18,.12)"
+    private const val GLOW_PERIOD_S = 2.4f
+    private const val VIOLIN = "violin"
+    private const val CASE = "case"
     private const val DAY_LIFT = 0.18f
     private const val WHITE = 0xFFFFFFFFL
     private val WALLS = setOf("wallHome", "wallLitHome")
@@ -106,18 +118,26 @@ object HomeComposer {
                 }
             }
         }
-        // A window is its backing, then the glazing bars and the sill; the view belongs between them. Sorted by `z`
-        // alone (the handoff's way) the backing covers the view — found on the emulator: the window was a brown board.
-        val window = things.firstOrNull { it.slot == WINDOW }?.let { art.items[it.id] }
-        window?.layers?.firstOrNull()?.let { layers += it }
-        fun draw(item: HomeItem) {
-            val drawn = art.items[item.id] ?: return
-            layers += if (item.slot == WINDOW) drawn.layers.drop(1) else drawn.layers
-        }
+        // A window is its backing, then the view, then the glazing bars (found on the emulator in the first
+        // iteration, a section of its own since the second handoff).
+        if (!outside) things.firstOrNull { it.slot == WINDOW }?.let { layers += art.backs[it.id].orEmpty() }
+        fun draw(item: HomeItem) { art.items[item.id]?.let { layers += it.layers } }
         things.filter { it.z < FRONT }.forEach(::draw)
+        // no violin yet — the student's one lies in the open case (handoff 28b)
+        if (!outside && things.none { it.slot == VIOLIN } && ghost?.slot != VIOLIN) things.firstOrNull { it.slot == CASE }?.let { layers += art.caseViolins[it.id].orEmpty() }
+        // Trying on without a frame (handoff 28f): the room a little darker, a warm glow under the thing that breathes,
+        // the thing itself at its full density and still.
         val ghostArt = ghost?.let { art.items[it.id] }
-        ghostArt?.layers?.forEach { layers += it.copy(opacity = it.opacity * GHOST_DENSITY, anim = null) }
-        if (!outside) layers += art.hero
+        if (ghostArt != null) {
+            layers += SceneLayer(DIM, 2, 1f, 0f, 0f, 1f, false, null, 0f, false, "M-600 -1200h1600v2000h-1600Z")
+            val rx = (ghostArt.right - ghostArt.left) * 0.9f + 14f
+            val ry = (ghostArt.bottom - ghostArt.top) * 0.18f + 8f
+            val cx = (ghostArt.left + ghostArt.right) / 2
+            val cy = ghostArt.bottom + 2f
+            layers += SceneLayer(SceneLayer.GLOW, 2, 1f, 0f, 0f, 1f, false, null, 0f, false, "M${cx - rx} ${cy}a$rx $ry 0 1 0 ${2 * rx} 0a$rx $ry 0 1 0 ${-2 * rx} 0Z", SceneAnim(flick = SceneAnim.Timed(GLOW_PERIOD_S, 0f)))
+            ghostArt.layers.forEach { layers += it.copy(anim = null) }
+        }
+        // at home the traveller is not drawn: home is «I» (handoff 28b); in the cities he stays
         if (outside && porchCat != null) layers += art.porch[porchCat.id].orEmpty()
         things.filter { it.z >= FRONT }.forEach(::draw)
         return ComposedHome(Scene(ScenePalette.HOUSE, aerial = outside, layers = layers, overrides = overrides), ghostArt)

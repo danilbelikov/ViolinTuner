@@ -15,6 +15,7 @@ enum class TopLevelDestination(
     SETTINGS("settings", R.string.nav_settings);
 
     companion object {
-        val START = LIVE
+        /** The app opens on «Занятия» (spec 3.25): one comes to start a practice, and the home is there. The order of the tabs is another matter. */
+        val START = PRACTICE
     }
 }

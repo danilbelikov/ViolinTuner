@@ -5,7 +5,8 @@ import kotlinx.coroutines.flow.Flow
 /** Every number of the journey (spec 5.17). None of it is about intonation. */
 data class JourneyConfig(
     /** A note played in tune is one takt; a minute of practice is two — a day of slow scales must not be poorer than a day of fast runs. */
-    val taktsPerNoteInTune: Int = 1,
+    /** Notes in tune that make one takt, rounded up: one clean note is a takt already (spec 5.19). */
+    val notesPerTakt: Int = 3,
     val taktsPerMinute: Int = 2,
     /** A note counts from this length on: the same threshold the analysis of a recording uses (spec 5.5). */
     val minNoteMs: Long = 200,
@@ -96,7 +97,8 @@ data class JourneyProgress(
 /** Where the player stands on the route and what the next leg costs. Pure. */
 object JourneyRules {
     fun taktsFor(notesInTune: Int, durationMs: Long, config: JourneyConfig): Int =
-        notesInTune.coerceAtLeast(0) * config.taktsPerNoteInTune + (durationMs.coerceAtLeast(0) / MS_PER_MINUTE).toInt() * config.taktsPerMinute
+        // the whole practice is divided once, not every portion of it: rounding up ten-second portions would add takts out of nothing
+        (notesInTune.coerceAtLeast(0) + config.notesPerTakt - 1) / config.notesPerTakt + (durationMs.coerceAtLeast(0) / MS_PER_MINUTE).toInt() * config.taktsPerMinute
 
     /** The farthest stop reached; home before anything else. */
     fun currentIndex(progress: JourneyProgress): Int =
