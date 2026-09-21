@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- translated from values-ru/home_catalog.xml (which is generated from the design handoff); keys must match — see LocalizationTest -->
+<resources>
+    <string name="home_item_vln_student" formatted="false">Violon d\'étude · sur son support</string>
+    <string name="home_item_vln_quarter" formatted="false">Le quart, le tout premier</string>
+    <string name="home_item_vln_light" formatted="false">Clair, pas encore joué</string>
+    <string name="home_item_vln_master" formatted="false">Violon de luthier</string>
+    <string name="home_item_vln_electric" formatted="false">Violon électrique</string>
+    <string name="home_item_vln_old" formatted="false">Ancien, au vernis sombre</string>
+    <string name="home_item_vln_cremona" formatted="false">Crémonais, 1720</string>
+    <string name="home_item_case_black" formatted="false">Étui noir</string>
+    <string name="home_item_case_velvet" formatted="false">Étui au velours cerise</string>
+    <string name="home_item_case_carbon" formatted="false">Étui en carbone</string>
+    <string name="home_item_case_leather" formatted="false">Vieil étui en cuir à étiquettes</string>
+    <string name="home_item_stand_fold" formatted="false">Pupitre pliant</string>
+    <string name="home_item_stand_concert" formatted="false">Pupitre de concert</string>
+    <string name="home_item_stand_wood" formatted="false">Pupitre en bois sculpté</string>
+    <string name="home_item_stand_candle" formatted="false">Pupitre ancien à bougies</string>
+    <string name="home_item_metronome" formatted="false">Métronome</string>
+    <string name="home_item_notes" formatted="false">Pile de partitions</string>
+    <string name="home_item_portrait" formatted="false">Portrait de compositeur</string>
+    <string name="home_item_poster" formatted="false">Affiche de votre concert</string>
+    <string name="home_item_postcards" formatted="false">Cartes postales du voyage</string>
+    <string name="home_item_shelf_scores" formatted="false">Étagère à partitions</string>
+    <string name="home_item_gramophone" formatted="false">Gramophone</string>
+    <string name="home_item_radio" formatted="false">Radio-phono</string>
+    <string name="home_item_piano" formatted="false">Piano droit</string>
+    <string name="home_item_cello" formatted="false">Violoncelle dans le coin</string>
+    <string name="home_item_guitar" formatted="false">Guitare au mur</string>
+    <string name="home_item_wp_plum" formatted="false">Murs prune</string>
+    <string name="home_item_wp_warm" formatted="false">Murs chauds, ocre</string>
+    <string name="home_item_wp_cool" formatted="false">Murs froids, bleus</string>
+    <string name="home_item_wp_green" formatted="false">Murs vert profond</string>
+    <string name="home_item_wp_stripe" formatted="false">Papier peint à rayures</string>
+    <string name="home_item_wp_damask" formatted="false">Papier peint damassé</string>
+    <string name="home_item_wp_floral" formatted="false">Papier peint à fleurettes</string>
+    <string name="home_item_wp_notes" formatted="false">Papier peint « notes »</string>
+    <string name="home_item_wp_panels" formatted="false">Boiseries</string>
+    <string name="home_item_floor_plank" formatted="false">Sol — plancher d\'origine</string>
+    <string name="home_item_floor_light" formatted="false">Sol — plancher clair</string>
+    <string name="home_item_floor_dark" formatted="false">Sol — chêne foncé</string>
+    <string name="home_item_floor_herring" formatted="false">Parquet à chevrons</string>
+    <string name="home_item_floor_tile" formatted="false">Carrelage en damier</string>
+    <string name="home_item_curtain_plum" formatted="false">Rideaux lilas</string>
+    <string name="home_item_curtain_velvet" formatted="false">Rideaux cerise</string>
+    <string name="home_item_curtain_sand" formatted="false">Rideaux sable</string>
+    <string name="home_item_curtain_teal" formatted="false">Rideaux bleu canard</string>
+    <string name="home_item_curtain_tulle" formatted="false">Voilage</string>
+    <string name="home_item_blinds" formatted="false">Stores</string>
+    <string name="home_item_window_simple" formatted="false">Fenêtre simple</string>
+    <string name="home_item_window_arched" formatted="false">Haute fenêtre cintrée</string>
+    <string name="home_item_window_stained" formatted="false">Vitrail</string>
+    <string name="home_item_view_city" formatted="false">Vue — la ville</string>
+    <string name="home_item_view_sea" formatted="false">Vue — la mer</string>
+    <string name="home_item_view_mount" formatted="false">Vue — la montagne</string>
+    <string name="home_item_view_garden" formatted="false">Vue — le jardin</string>
+    <string name="home_item_view_night" formatted="false">Vue — métropole la nuit</string>
+    <string name="home_item_garland" formatted="false">Guirlande au-dessus de la fenêtre</string>
+    <string name="home_item_lamp_table" formatted="false">Lampe de bureau</string>
+    <string name="home_item_lamp_brass" formatted="false">Lampe en laiton</string>
+    <string name="home_item_floorlamp" formatted="false">Lampadaire</string>
+    <string name="home_item_chandelier" formatted="false">Lustre</string>
+    <string name="home_item_candles" formatted="false">Bougies</string>
+    <string name="home_item_fireplace" formatted="false">Cheminée</string>
+    <string name="home_item_desk_simple" formatted="false">Table simple</string>
+    <string name="home_item_desk_oak" formatted="false">Table en chêne à tiroir</string>
+    <string name="home_item_bureau" formatted="false">Secrétaire à casiers</string>
+    <string name="home_item_chair_simple" formatted="false">Chaise</string>
+    <string name="home_item_armchair" formatted="false">Fauteuil</string>
+    <string name="home_item_rocking" formatted="false">Fauteuil à bascule</string>
+    <string name="home_item_plaid" formatted="false">Plaid sur le fauteuil</string>
+    <string name="home_item_pouf" formatted="false">Pouf</string>
+    <string name="home_item_bookshelf" formatted="false">Bibliothèque</string>
+    <string name="home_item_commode" formatted="false">Commode</string>
+    <string name="home_item_mirror" formatted="false">Miroir</string>
+    <string name="home_item_clock" formatted="false">Horloge à balancier</string>
+    <string name="home_item_rug_plum" formatted="false">Tapis prune</string>
+    <string name="home_item_rug_persian" formatted="false">Tapis persan</string>
+    <string name="home_item_rug_stripe" formatted="false">Tapis rayé</string>
+    <string name="home_item_rug_round" formatted="false">Tapis rond, ocre</string>
+    <string name="home_item_rug_green" formatted="false">Tapis vert</string>
+    <string name="home_item_ficus" formatted="false">Ficus</string>
+    <string name="home_item_monstera" formatted="false">Monstera</string>
+    <string name="home_item_tulips" formatted="false">Tulipes sur le rebord</string>
+    <string name="home_item_vase" formatted="false">Vase et son bouquet</string>
+    <string name="home_item_xmas" formatted="false">Sapin de Noël</string>
+    <string name="home_item_tea" formatted="false">Tasse de thé</string>
+    <string name="home_item_books" formatted="false">Pile de livres</string>
+    <string name="home_item_passport" formatted="false">Passeport du voyage</string>
+    <string name="home_item_globe" formatted="false">Globe à petits drapeaux</string>
+    <string name="home_item_cat_ginger" formatted="false">Chat roux</string>
+    <string name="home_item_cat_black" formatted="false">Chat noir</string>
+    <string name="home_item_cat_grey" formatted="false">Chat gris tigré</string>
+    <string name="home_item_cat_white" formatted="false">Chat blanc</string>
+    <string name="home_item_dog" formatted="false">Chien</string>
+    <string name="home_item_turtle" formatted="false">Tortue</string>
+    <string name="home_item_canary" formatted="false">Canari en cage</string>
+    <string name="home_item_aquarium" formatted="false">Aquarium et son poisson</string>
+    <string name="home_item_parrot" formatted="false">Perroquet sur son perchoir</string>
+    <string name="home_item_mailbox" formatted="false">Boîte aux lettres</string>
+    <string name="home_item_lantern" formatted="false">Lanterne près de l\'allée</string>
+    <string name="home_item_bench" formatted="false">Banc</string>
+    <string name="home_item_bike" formatted="false">Vélo contre le mur</string>
+    <string name="home_item_flowerbed" formatted="false">Massif de fleurs</string>
+    <string name="home_item_swing" formatted="false">Balançoire au jardin</string>
+    <string name="home_item_feeder" formatted="false">Mangeoire et ses oiseaux</string>
+    <string name="home_item_vane" formatted="false">Girouette</string>
+    <string name="home_item_car_old" formatted="false">Vieille petite voiture</string>
+    <string name="home_item_car_wagon" formatted="false">Break</string>
+    <string name="home_item_car_cabrio" formatted="false">Cabriolet</string>
+    <string name="home_item_vln_student_note" formatted="false">Cadeau de la boutique : le violon sort de son étui, à la lumière.</string>
+    <string name="home_item_vln_quarter_note" formatted="false">Celui par qui tout a commencé. Tout petit.</string>
+    <string name="home_item_vln_light_note" formatted="false">Le vernis n\'a pas encore foncé — il n\'a pas encore vraiment sonné.</string>
+    <string name="home_item_vln_master_note" formatted="false">Un seul atelier, une seule paire de mains, six mois de travail.</string>
+    <string name="home_item_vln_electric_note" formatted="false">Un cadre à la place de la caisse. On ne voit pas tout de suite que c\'est un violon.</string>
+    <string name="home_item_vln_old_note" formatted="false">Deux cents ans passés entre d\'autres mains. Un vernis presque noir.</string>
+    <string name="home_item_vln_cremona_note" formatted="false">Érable flammé au dos. Il a un nom, mais on ne le prononce pas.</string>
+    <string name="home_item_case_black_note" formatted="false">Celui du tout début. Il reste ouvert près de la fenêtre.</string>
+    <string name="home_item_case_velvet_note" formatted="false">Sobre dehors, cerise dedans.</string>
+    <string name="home_item_case_carbon_note" formatted="false">Léger comme un étui à lunettes.</string>
+    <string name="home_item_case_leather_note" formatted="false">Les étiquettes des villes où vous êtes passé. Elles apparaissent toutes seules.</string>
+    <string name="home_item_stand_fold_note" formatted="false">En métal, comme à l\'école.</string>
+    <string name="home_item_stand_concert_note" formatted="false">Noir, lourd, à large tablette.</string>
+    <string name="home_item_stand_wood_note" formatted="false">Une lyre sculptée. Vient d\'une boutique viennoise.</string>
+    <string name="home_item_stand_candle_note" formatted="false">Le soir, les bougies brûlent. Le jour, elles sont là, simplement.</string>
+    <string name="home_item_metronome_note" formatted="false">Le balancier oscille toujours. En silence.</string>
+    <string name="home_item_notes_note" formatted="false">Tout ce qui est déchiffré, et ce qui ne l\'est pas encore.</string>
+    <string name="home_item_portrait_note" formatted="false">Un ovale, comme au conservatoire. Qui est-ce ? À vous de décider.</string>
+    <string name="home_item_poster_note" formatted="false">La date n\'est pas encore fixée. Le lieu, lui, est connu.</string>
+    <string name="home_item_postcards_note" formatted="false">Celles déjà ouvertes. Elles arrivent toutes seules, une par ville.</string>
+    <string name="home_item_shelf_scores_note" formatted="false">Des dos bien alignés. Ça sent le papier.</string>
+    <string name="home_item_gramophone_note" formatted="false">Le pavillon regarde la pièce. Il ne joue pas — principe n° 2.</string>
+    <string name="home_item_radio_note" formatted="false">À lampes, en bois chaleureux. Elle se tait.</string>
+    <string name="home_item_piano_note" formatted="false">Le second instrument. Couvercle ouvert, partition en place.</string>
+    <string name="home_item_cello_note" formatted="false">Appuyé contre le mur. Parfois, on en a envie.</string>
+    <string name="home_item_guitar_note" formatted="false">Pour les jours où les doigts ont envie d\'autre chose.</string>
+    <string name="home_item_wp_plum_note" formatted="false">Ceux qui étaient là.</string>
+    <string name="home_item_wp_warm_note" formatted="false">Unis, légèrement chauds.</string>
+    <string name="home_item_wp_cool_note" formatted="false">Lumière du nord.</string>
+    <string name="home_item_wp_green_note" formatted="false">Comme le velours d\'une loge.</string>
+    <string name="home_item_wp_stripe_note" formatted="false">Rayure fine, à peine plus claire que le fond.</string>
+    <string name="home_item_wp_damask_note" formatted="false">Des losanges à volutes — ici, des losanges.</string>
+    <string name="home_item_wp_floral_note" formatted="false">Des fleurs en pointillé, roses sur fond chaud.</string>
+    <string name="home_item_wp_notes_note" formatted="false">De petites notes sur le mur. Elles ne forment aucune mélodie — tant mieux.</string>
+    <string name="home_item_wp_panels_note" formatted="false">Du bois jusqu\'à mi-hauteur, le mur au-dessus.</string>
+    <string name="home_item_floor_plank_note" formatted="false">Le plancher sombre de la chambre louée.</string>
+    <string name="home_item_floor_light_note" formatted="false">Du pin, presque du miel.</string>
+    <string name="home_item_floor_dark_note" formatted="false">Presque noir, il brille près de la fenêtre.</string>
+    <string name="home_item_floor_herring_note" formatted="false">Comme dans les vieux appartements.</string>
+    <string name="home_item_floor_tile_note" formatted="false">Frais, façon cuisine.</string>
+    <string name="home_item_curtain_plum_note" formatted="false">Ceux qui étaient accrochés.</string>
+    <string name="home_item_curtain_velvet_note" formatted="false">Comme le rideau de la Scala.</string>
+    <string name="home_item_curtain_sand_note" formatted="false">Chauds, en lin.</string>
+    <string name="home_item_curtain_teal_note" formatted="false">Un bleu-vert profond.</string>
+    <string name="home_item_curtain_tulle_note" formatted="false">Léger, il laisse passer la lumière.</string>
+    <string name="home_item_blinds_note" formatted="false">En bois, la lumière en lames.</string>
+    <string name="home_item_window_simple_note" formatted="false">Des croisillons, comme avant.</string>
+    <string name="home_item_window_arched_note" formatted="false">On dirait que le plafond a pris de la hauteur.</string>
+    <string name="home_item_window_stained_note" formatted="false">Des verres colorés devant la vue — on la devine.</string>
+    <string name="home_item_view_city_note" formatted="false">Les toits d\'en face. Le soir, la lune.</string>
+    <string name="home_item_view_sea_note" formatted="false">L\'horizon et une seule voile.</string>
+    <string name="home_item_view_mount_note" formatted="false">De la neige sur les sommets toute l\'année.</string>
+    <string name="home_item_view_garden_note" formatted="false">Une pelouse et deux arbres.</string>
+    <string name="home_item_view_night_note" formatted="false">Des fenêtres jusqu\'au ciel. Le jour, ce n\'est que du verre.</string>
+    <string name="home_item_garland_note" formatted="false">Elle scintille le soir. Pas seulement en hiver.</string>
+    <string name="home_item_lamp_table_note" formatted="false">Celle qui était là. Elle éclaire le soir.</string>
+    <string name="home_item_lamp_brass_note" formatted="false">Métal chaud, lumière chaude.</string>
+    <string name="home_item_floorlamp_note" formatted="false">Dans son coin, il lit avec vous.</string>
+    <string name="home_item_chandelier_note" formatted="false">Cinq bougies en cercle. Le soir, elles brûlent.</string>
+    <string name="home_item_candles_note" formatted="false">Trois, de hauteurs différentes. Le soir, elles vivent.</string>
+    <string name="home_item_fireplace_note" formatted="false">Seulement dans une maison à cheminée. Le soir, le feu ; le jour, les bûches.</string>
+    <string name="home_item_desk_simple_note" formatted="false">Quatre pieds et un plateau.</string>
+    <string name="home_item_desk_oak_note" formatted="false">Plateau épais, poignée en laiton.</string>
+    <string name="home_item_bureau_note" formatted="false">Une table sur laquelle a poussé un mur de petits tiroirs.</string>
+    <string name="home_item_chair_simple_note" formatted="false">En bois, elle grince un peu.</string>
+    <string name="home_item_armchair_note" formatted="false">Profond, tapissé de tissu. Le chat appréciera.</string>
+    <string name="home_item_rocking_note" formatted="false">Il se balance tout seul, à peine. Toujours.</string>
+    <string name="home_item_plaid_note" formatted="false">Plié, à franges. Il attend le soir.</string>
+    <string name="home_item_pouf_note" formatted="false">Pour s\'asseoir une minute avec la partition.</string>
+    <string name="home_item_bookshelf_note" formatted="false">Elle ne touche pas le plafond, mais presque.</string>
+    <string name="home_item_commode_note" formatted="false">Trois tiroirs. Dans celui du haut, les cordes.</string>
+    <string name="home_item_mirror_note" formatted="false">Pour vérifier la tenue des mains.</string>
+    <string name="home_item_clock_note" formatted="false">Le balancier oscille. Les aiguilles sont à votre heure.</string>
+    <string name="home_item_rug_plum_note" formatted="false">Simple, assorti aux murs. Le premier, et pas cher.</string>
+    <string name="home_item_rug_persian_note" formatted="false">Bordeaux, avec sa bordure.</string>
+    <string name="home_item_rug_stripe_note" formatted="false">Tissé main, à rayures.</string>
+    <string name="home_item_rug_round_note" formatted="false">Petit et chaleureux.</string>
+    <string name="home_item_rug_green_note" formatted="false">Comme l\'herbe du jardin.</string>
+    <string name="home_item_ficus_note" formatted="false">Il pousse lentement, mais ne fane jamais.</string>
+    <string name="home_item_monstera_note" formatted="false">Des feuilles ajourées, grandes comme la main.</string>
+    <string name="home_item_tulips_note" formatted="false">Trois. Elles ne fanent pas — principe du jeu tranquille.</string>
+    <string name="home_item_vase_note" formatted="false">Des fleurs des champs. Ou du jardin sous la fenêtre.</string>
+    <string name="home_item_xmas_note" formatted="false">De saison : de décembre à janvier, il se dresse tout seul, s\'il est acheté.</string>
+    <string name="home_item_tea_note" formatted="false">Elle fume toujours. Elle ne refroidit pas.</string>
+    <string name="home_item_books_note" formatted="false">Trois. L\'un parle du violon.</string>
+    <string name="home_item_passport_note" formatted="false">Il reste sur la table quand vous n\'êtes pas en route.</string>
+    <string name="home_item_globe_note" formatted="false">Un drapeau sur chaque ville où vous êtes passé. Ils se plantent tout seuls.</string>
+    <string name="home_item_cat_ginger_note" formatted="false">Il dort sur le rebord de la fenêtre. Il respire, cligne parfois des yeux. Inutile de le nourrir.</string>
+    <string name="home_item_cat_black_note" formatted="false">On ne voit que ses yeux — et encore, pas toujours.</string>
+    <string name="home_item_cat_grey_note" formatted="false">Des rayures assorties au sol.</string>
+    <string name="home_item_cat_white_note" formatted="false">Sur un tapis sombre, comme une tache de lumière.</string>
+    <string name="home_item_dog_note" formatted="false">Couché à vos pieds. Parfois, il lève la tête.</string>
+    <string name="home_item_turtle_note" formatted="false">La plus silencieuse de tous. Elle bouge parfois — vous ne le remarquerez pas.</string>
+    <string name="home_item_canary_note" formatted="false">Il saute de perchoir en perchoir. Il ne chante pas — principe n° 2.</string>
+    <string name="home_item_aquarium_note" formatted="false">Un seul poisson, qui va et vient. L\'eau ne se trouble pas.</string>
+    <string name="home_item_parrot_note" formatted="false">Vert et rouge. Il regarde par la fenêtre.</string>
+    <string name="home_item_mailbox_note" formatted="false">Drapeau levé — une carte postale est arrivée.</string>
+    <string name="home_item_lantern_note" formatted="false">Elle s\'allume avec le soir.</string>
+    <string name="home_item_bench_note" formatted="false">Pour s\'asseoir avec l\'étui avant de partir.</string>
+    <string name="home_item_bike_note" formatted="false">Appuyé contre la maison. Il ne va nulle part.</string>
+    <string name="home_item_flowerbed_note" formatted="false">Il y a toujours quelque chose en fleur.</string>
+    <string name="home_item_swing_note" formatted="false">Elle se balance au vent, même quand il n\'y a personne.</string>
+    <string name="home_item_feeder_note" formatted="false">Les oiseaux viennent d\'eux-mêmes. Les graines ne manquent jamais.</string>
+    <string name="home_item_vane_note" formatted="false">Elle montre d\'où vient le vent. Ici, il est toujours favorable.</string>
+    <string name="home_item_car_old_note" formatted="false">Elle démarre au troisième essai. Couleur cerise.</string>
+    <string name="home_item_car_wagon_note" formatted="false">Le violoncelle rentre. Vérifié.</string>
+    <string name="home_item_car_cabrio_note" formatted="false">La capote est toujours repliée. Ici, il ne pleut jamais.</string>
+    <string name="home_slot_wallpaper" formatted="false">Murs</string>
+    <string name="home_slot_floor" formatted="false">Sol</string>
+    <string name="home_slot_view" formatted="false">Vue de la fenêtre</string>
+    <string name="home_slot_window" formatted="false">Fenêtre</string>
+    <string name="home_slot_curtain" formatted="false">Rideaux</string>
+    <string name="home_slot_garland" formatted="false">Au-dessus de la fenêtre</string>
+    <string name="home_slot_sill" formatted="false">Rebord de fenêtre, à droite</string>
+    <string name="home_slot_sillL" formatted="false">Rebord de fenêtre, à gauche</string>
+    <string name="home_slot_ceiling" formatted="false">Plafond</string>
+    <string name="home_slot_wallL" formatted="false">Mur de gauche</string>
+    <string name="home_slot_wallM" formatted="false">Mur près de la fenêtre</string>
+    <string name="home_slot_desk" formatted="false">Table</string>
+    <string name="home_slot_deskTop" formatted="false">Sur la table, à gauche</string>
+    <string name="home_slot_deskM" formatted="false">Sur la table</string>
+    <string name="home_slot_deskR" formatted="false">Sur la table, à droite</string>
+    <string name="home_slot_chair" formatted="false">Chaise</string>
+    <string name="home_slot_chairTop" formatted="false">Sur la chaise</string>
+    <string name="home_slot_stand" formatted="false">Pupitre</string>
+    <string name="home_slot_violin" formatted="false">Violon · premier plan</string>
+    <string name="home_slot_case" formatted="false">Étui · au sol près de la fenêtre</string>
+    <string name="home_slot_rug" formatted="false">Tapis · centre du sol</string>
+    <string name="home_slot_pet" formatted="false">Animal</string>
+    <string name="home_slot_floorL" formatted="false">Coin gauche</string>
+    <string name="home_slot_floorR" formatted="false">Coin droit</string>
+    <string name="home_slot_fire" formatted="false">Cheminée</string>
+    <string name="home_slot_oL" formatted="false">Près de l\'allée</string>
+    <string name="home_slot_oR" formatted="false">Contre le mur de la maison</string>
+    <string name="home_slot_oG" formatted="false">Jardin</string>
+    <string name="home_slot_oCar" formatted="false">Devant la maison</string>
+    <string name="home_slot_oRoof" formatted="false">Toit</string>
+    <string name="home_slot_oPorch" formatted="false">Perron</string>
+    <string name="home_house_rent" formatted="false">Chambre louée</string>
+    <string name="home_house_wood" formatted="false">Petite maison en bois</string>
+    <string name="home_house_flat" formatted="false">Appartement dans l\'ancien</string>
+    <string name="home_house_sea" formatted="false">Maison au bord de la mer</string>
+    <string name="home_house_chalet" formatted="false">Chalet à la montagne</string>
+    <string name="home_house_mansion" formatted="false">Hôtel particulier</string>
+    <string name="home_house_villa" formatted="false">Villa avec salle de concert</string>
+    <string name="home_house_rent_note" formatted="false">en ville, troisième étage</string>
+    <string name="home_house_wood_note" formatted="false">perron, cheminée, pommier</string>
+    <string name="home_house_flat_note" formatted="false">bow-window, moulures, parquet</string>
+    <string name="home_house_sea_note" formatted="false">véranda, phare au loin, mouettes</string>
+    <string name="home_house_chalet_note" formatted="false">cheminée, neige, sapins</string>
+    <string name="home_house_mansion_note" formatted="false">colonnes, jardin, salon au piano à queue</string>
+    <string name="home_house_villa_note" formatted="false">le final</string>
+    <string-array name="home_house_rent_news">
+    </string-array>
+    <string-array name="home_house_wood_news">
+        <item>cheminée — un nouvel emplacement</item>
+        <item>perron et jardin à l\'extérieur</item>
+        <item>pas de « coin gauche » ni de papier peint — murs en rondins</item>
+    </string-array>
+    <string-array name="home_house_flat_news">
+        <item>bow-window — une fenêtre sur trois côtés</item>
+        <item>une place pour le piano près du bow-window</item>
+    </string-array>
+    <string-array name="home_house_sea_news">
+        <item>véranda — un second « dehors »</item>
+        <item>la vue de la fenêtre, c\'est toujours la mer</item>
+    </string-array>
+    <string-array name="home_house_chalet_news">
+        <item>la cheminée est déjà dans la maison</item>
+        <item>neige sur le toit en hiver</item>
+    </string-array>
+    <string-array name="home_house_mansion_news">
+        <item>une seconde pièce — le salon de musique</item>
+        <item>piano à queue (ici seulement)</item>
+    </string-array>
+    <string-array name="home_house_villa_news">
+        <item>trois pièces</item>
+        <item>une salle de quarante fauteuils</item>
+    </string-array>
+</resources>

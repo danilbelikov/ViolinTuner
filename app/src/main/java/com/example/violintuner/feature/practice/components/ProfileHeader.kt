@@ -386,7 +386,7 @@ private fun TrophyBadgeIcon(badge: TrophyBadge, size: Dp, motion: Boolean) {
 private fun trophyWords(header: ProfileHeader): String {
     val count = header.givenTrophies.takeIf { it > 0 }?.let {
         stringResource(
-            Formats.pluralRu(it, R.string.progress_trophies_one, R.string.progress_trophies_few, R.string.progress_trophies_many),
+            Formats.plural(it, R.string.progress_trophies_one, R.string.progress_trophies_few, R.string.progress_trophies_many),
             it,
         )
     }

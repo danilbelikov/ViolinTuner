@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- translated from values-ru/home_catalog.xml (which is generated from the design handoff); keys must match — see LocalizationTest -->
+<resources>
+    <string name="home_item_vln_student" formatted="false">学生琴 · 放在琴架上</string>
+    <string name="home_item_vln_quarter" formatted="false">四分之一琴，第一把</string>
+    <string name="home_item_vln_light" formatted="false">浅色新琴，尚未拉开</string>
+    <string name="home_item_vln_master" formatted="false">工坊手工琴</string>
+    <string name="home_item_vln_electric" formatted="false">电小提琴</string>
+    <string name="home_item_vln_old" formatted="false">深色漆的古琴</string>
+    <string name="home_item_vln_cremona" formatted="false">克雷莫纳琴，1720</string>
+    <string name="home_item_case_black" formatted="false">黑色琴盒</string>
+    <string name="home_item_case_velvet" formatted="false">樱桃红丝绒琴盒</string>
+    <string name="home_item_case_carbon" formatted="false">碳纤维琴盒</string>
+    <string name="home_item_case_leather" formatted="false">贴满贴纸的旧皮琴盒</string>
+    <string name="home_item_stand_fold" formatted="false">折叠谱架</string>
+    <string name="home_item_stand_concert" formatted="false">演出谱架</string>
+    <string name="home_item_stand_wood" formatted="false">雕花木谱架</string>
+    <string name="home_item_stand_candle" formatted="false">带烛台的古董谱架</string>
+    <string name="home_item_metronome" formatted="false">节拍器</string>
+    <string name="home_item_notes" formatted="false">一摞乐谱</string>
+    <string name="home_item_portrait" formatted="false">作曲家肖像</string>
+    <string name="home_item_poster" formatted="false">自己音乐会的海报</string>
+    <string name="home_item_postcards" formatted="false">旅途中的明信片</string>
+    <string name="home_item_shelf_scores" formatted="false">总谱书架</string>
+    <string name="home_item_gramophone" formatted="false">留声机</string>
+    <string name="home_item_radio" formatted="false">老式收音电唱机</string>
+    <string name="home_item_piano" formatted="false">立式钢琴</string>
+    <string name="home_item_cello" formatted="false">角落里的大提琴</string>
+    <string name="home_item_guitar" formatted="false">墙上的吉他</string>
+    <string name="home_item_wp_plum" formatted="false">梅紫色墙面</string>
+    <string name="home_item_wp_warm" formatted="false">暖色墙面，赭黄</string>
+    <string name="home_item_wp_cool" formatted="false">冷色墙面，蓝</string>
+    <string name="home_item_wp_green" formatted="false">深绿色墙面</string>
+    <string name="home_item_wp_stripe" formatted="false">条纹墙纸</string>
+    <string name="home_item_wp_damask" formatted="false">锦缎纹墙纸</string>
+    <string name="home_item_wp_floral" formatted="false">小碎花墙纸</string>
+    <string name="home_item_wp_notes" formatted="false">“音符”墙纸</string>
+    <string name="home_item_wp_panels" formatted="false">木墙板</string>
+    <string name="home_item_floor_plank" formatted="false">地板——原有的木板</string>
+    <string name="home_item_floor_light" formatted="false">地板——浅色木板</string>
+    <string name="home_item_floor_dark" formatted="false">地板——深色橡木</string>
+    <string name="home_item_floor_herring" formatted="false">人字拼木地板</string>
+    <string name="home_item_floor_tile" formatted="false">棋盘格地砖</string>
+    <string name="home_item_curtain_plum" formatted="false">淡紫色窗帘</string>
+    <string name="home_item_curtain_velvet" formatted="false">樱桃红窗帘</string>
+    <string name="home_item_curtain_sand" formatted="false">沙色窗帘</string>
+    <string name="home_item_curtain_teal" formatted="false">海蓝绿窗帘</string>
+    <string name="home_item_curtain_tulle" formatted="false">纱帘</string>
+    <string name="home_item_blinds" formatted="false">百叶窗</string>
+    <string name="home_item_window_simple" formatted="false">普通窗</string>
+    <string name="home_item_window_arched" formatted="false">高拱窗</string>
+    <string name="home_item_window_stained" formatted="false">彩色玻璃窗</string>
+    <string name="home_item_view_city" formatted="false">窗景——城市</string>
+    <string name="home_item_view_sea" formatted="false">窗景——大海</string>
+    <string name="home_item_view_mount" formatted="false">窗景——群山</string>
+    <string name="home_item_view_garden" formatted="false">窗景——花园</string>
+    <string name="home_item_view_night" formatted="false">窗景——都市夜色</string>
+    <string name="home_item_garland" formatted="false">窗上的串灯</string>
+    <string name="home_item_lamp_table" formatted="false">台灯</string>
+    <string name="home_item_lamp_brass" formatted="false">黄铜灯</string>
+    <string name="home_item_floorlamp" formatted="false">落地灯</string>
+    <string name="home_item_chandelier" formatted="false">吊灯</string>
+    <string name="home_item_candles" formatted="false">蜡烛</string>
+    <string name="home_item_fireplace" formatted="false">壁炉</string>
+    <string name="home_item_desk_simple" formatted="false">简单的桌子</string>
+    <string name="home_item_desk_oak" formatted="false">带抽屉的橡木桌</string>
+    <string name="home_item_bureau" formatted="false">带格架的写字台</string>
+    <string name="home_item_chair_simple" formatted="false">椅子</string>
+    <string name="home_item_armchair" formatted="false">扶手椅</string>
+    <string name="home_item_rocking" formatted="false">摇椅</string>
+    <string name="home_item_plaid" formatted="false">扶手椅上的毯子</string>
+    <string name="home_item_pouf" formatted="false">软凳</string>
+    <string name="home_item_bookshelf" formatted="false">书柜</string>
+    <string name="home_item_commode" formatted="false">抽屉柜</string>
+    <string name="home_item_mirror" formatted="false">镜子</string>
+    <string name="home_item_clock" formatted="false">摆钟</string>
+    <string name="home_item_rug_plum" formatted="false">梅紫色地毯</string>
+    <string name="home_item_rug_persian" formatted="false">波斯地毯</string>
+    <string name="home_item_rug_stripe" formatted="false">条纹地毯</string>
+    <string name="home_item_rug_round" formatted="false">圆地毯，赭黄</string>
+    <string name="home_item_rug_green" formatted="false">绿色地毯</string>
+    <string name="home_item_ficus" formatted="false">榕树盆栽</string>
+    <string name="home_item_monstera" formatted="false">龟背竹</string>
+    <string name="home_item_tulips" formatted="false">窗台上的郁金香</string>
+    <string name="home_item_vase" formatted="false">插着花束的花瓶</string>
+    <string name="home_item_xmas" formatted="false">圣诞树</string>
+    <string name="home_item_tea" formatted="false">一杯茶</string>
+    <string name="home_item_books" formatted="false">一摞书</string>
+    <string name="home_item_passport" formatted="false">旅程护照</string>
+    <string name="home_item_globe" formatted="false">插着小旗的地球仪</string>
+    <string name="home_item_cat_ginger" formatted="false">橘猫</string>
+    <string name="home_item_cat_black" formatted="false">黑猫</string>
+    <string name="home_item_cat_grey" formatted="false">灰色虎斑猫</string>
+    <string name="home_item_cat_white" formatted="false">白猫</string>
+    <string name="home_item_dog" formatted="false">狗</string>
+    <string name="home_item_turtle" formatted="false">乌龟</string>
+    <string name="home_item_canary" formatted="false">笼中的金丝雀</string>
+    <string name="home_item_aquarium" formatted="false">养着一条鱼的鱼缸</string>
+    <string name="home_item_parrot" formatted="false">栖架上的鹦鹉</string>
+    <string name="home_item_mailbox" formatted="false">信箱</string>
+    <string name="home_item_lantern" formatted="false">小路旁的路灯</string>
+    <string name="home_item_bench" formatted="false">长椅</string>
+    <string name="home_item_bike" formatted="false">靠墙的自行车</string>
+    <string name="home_item_flowerbed" formatted="false">花坛</string>
+    <string name="home_item_swing" formatted="false">花园里的秋千</string>
+    <string name="home_item_feeder" formatted="false">有鸟儿的喂鸟器</string>
+    <string name="home_item_vane" formatted="false">风向标</string>
+    <string name="home_item_car_old" formatted="false">老式小汽车</string>
+    <string name="home_item_car_wagon" formatted="false">旅行车</string>
+    <string name="home_item_car_cabrio" formatted="false">敞篷车</string>
+    <string name="home_item_vln_student_note" formatted="false">小店的礼物：小提琴走出琴盒，见到光。</string>
+    <string name="home_item_vln_quarter_note" formatted="false">一切就是从它开始的。很小。</string>
+    <string name="home_item_vln_light_note" formatted="false">漆还没变深——它还没真正发过声。</string>
+    <string name="home_item_vln_master_note" formatted="false">一间工坊，一双手，半年的功夫。</string>
+    <string name="home_item_vln_electric_note" formatted="false">只有骨架，没有琴身。一眼还看不出是小提琴。</string>
+    <string name="home_item_vln_old_note" formatted="false">两百年，经过许多人的手。漆几乎成了黑色。</string>
+    <string name="home_item_vln_cremona_note" formatted="false">背板是火焰纹枫木。它有名字，只是没人说出口。</string>
+    <string name="home_item_case_black_note" formatted="false">从一开始就在的那只。敞开着放在窗边。</string>
+    <string name="home_item_case_velvet_note" formatted="false">外表严肃，里面是樱桃红。</string>
+    <string name="home_item_case_carbon_note" formatted="false">轻得像眼镜盒。</string>
+    <string name="home_item_case_leather_note" formatted="false">贴着你到过的城市的贴纸。它们会自己出现。</string>
+    <string name="home_item_stand_fold_note" formatted="false">金属的，和学校里的一样。</string>
+    <string name="home_item_stand_concert_note" formatted="false">黑色，沉稳，谱板宽大。</string>
+    <string name="home_item_stand_wood_note" formatted="false">雕着里拉琴。来自维也纳的小店。</string>
+    <string name="home_item_stand_candle_note" formatted="false">傍晚烛火亮着。白天只是立在那里。</string>
+    <string name="home_item_metronome_note" formatted="false">摆锤一直在摆。悄无声息。</string>
+    <string name="home_item_notes_note" formatted="false">练过的和还没练的，都在这里。</string>
+    <string name="home_item_portrait_note" formatted="false">椭圆画框，像音乐学院里那样。是谁——由你决定。</string>
+    <string name="home_item_poster_note" formatted="false">日期还没定。地点——已经知道了。</string>
+    <string name="home_item_postcards_note" formatted="false">已经解锁的那些。每座城市一张，会自己出现。</string>
+    <string name="home_item_shelf_scores_note" formatted="false">书脊排成一排。闻得到纸香。</string>
+    <string name="home_item_gramophone_note" formatted="false">喇叭朝着房间。不出声——这是原则二。</string>
+    <string name="home_item_radio_note" formatted="false">电子管的，暖色木壳。沉默着。</string>
+    <string name="home_item_piano_note" formatted="false">第二件乐器。琴盖开着，谱子摆着。</string>
+    <string name="home_item_cello_note" formatted="false">靠墙立着。有时也想拉一拉。</string>
+    <string name="home_item_guitar_note" formatted="false">留给手指想换换口味的日子。</string>
+    <string name="home_item_wp_plum_note" formatted="false">原来就有的。</string>
+    <string name="home_item_wp_warm_note" formatted="false">纯色，略带暖意。</string>
+    <string name="home_item_wp_cool_note" formatted="false">北方的光。</string>
+    <string name="home_item_wp_green_note" formatted="false">像包厢里的丝绒。</string>
+    <string name="home_item_wp_stripe_note" formatted="false">细条纹，比底色稍浅。</string>
+    <string name="home_item_wp_damask_note" formatted="false">本该是带卷纹的菱形——这里只有菱形。</string>
+    <string name="home_item_wp_floral_note" formatted="false">点点小花，暖底上的粉色。</string>
+    <string name="home_item_wp_notes_note" formatted="false">墙上满是小音符。连不成旋律——这样正好。</string>
+    <string name="home_item_wp_panels_note" formatted="false">墙的下半是木板，上半还是墙。</string>
+    <string name="home_item_floor_plank_note" formatted="false">出租房里的深色木板。</string>
+    <string name="home_item_floor_light_note" formatted="false">松木，近乎蜂蜜色。</string>
+    <string name="home_item_floor_dark_note" formatted="false">近乎黑色，在窗边泛着光。</string>
+    <string name="home_item_floor_herring_note" formatted="false">像老公寓里的那种。</string>
+    <string name="home_item_floor_tile_note" formatted="false">凉凉的，厨房味道。</string>
+    <string name="home_item_curtain_plum_note" formatted="false">原来就挂着的。</string>
+    <string name="home_item_curtain_velvet_note" formatted="false">像斯卡拉歌剧院的大幕。</string>
+    <string name="home_item_curtain_sand_note" formatted="false">暖色，亚麻质地。</string>
+    <string name="home_item_curtain_teal_note" formatted="false">深沉的蓝绿色。</string>
+    <string name="home_item_curtain_tulle_note" formatted="false">轻薄，透光。</string>
+    <string name="home_item_blinds_note" formatted="false">木质，把光切成一条条。</string>
+    <string name="home_item_window_simple_note" formatted="false">十字窗棂，原来的样子。</string>
+    <string name="home_item_window_arched_note" formatted="false">天花板仿佛变高了。</string>
+    <string name="home_item_window_stained_note" formatted="false">彩色玻璃盖在窗景上——窗景依稀可辨。</string>
+    <string name="home_item_view_city_note" formatted="false">对面的屋顶。傍晚有月亮。</string>
+    <string name="home_item_view_sea_note" formatted="false">海平线和一片帆。</string>
+    <string name="home_item_view_mount_note" formatted="false">山顶终年积雪。</string>
+    <string name="home_item_view_garden_note" formatted="false">一片草地和两棵树。</string>
+    <string name="home_item_view_night_note" formatted="false">窗户一直亮到天上。白天只是玻璃。</string>
+    <string name="home_item_garland_note" formatted="false">傍晚闪烁。不只在冬天。</string>
+    <string name="home_item_lamp_table_note" formatted="false">原来就有的那盏。傍晚亮起。</string>
+    <string name="home_item_lamp_brass_note" formatted="false">温暖的金属，温暖的光。</string>
+    <string name="home_item_floorlamp_note" formatted="false">站在角落，陪你一起读谱。</string>
+    <string name="home_item_chandelier_note" formatted="false">五支烛灯围成一圈。傍晚点亮。</string>
+    <string name="home_item_candles_note" formatted="false">三支，高矮不一。傍晚烛火摇曳。</string>
+    <string name="home_item_fireplace_note" formatted="false">只能放在带烟囱的家里。傍晚燃着，白天是柴火。</string>
+    <string name="home_item_desk_simple_note" formatted="false">四条腿加一块桌面。</string>
+    <string name="home_item_desk_oak_note" formatted="false">厚实的桌面，黄铜拉手。</string>
+    <string name="home_item_bureau_note" formatted="false">一张桌子，上面长出了一面墙的小抽屉。</string>
+    <string name="home_item_chair_simple_note" formatted="false">木头的，有点吱呀响。</string>
+    <string name="home_item_armchair_note" formatted="false">又深又软，布面。猫会喜欢的。</string>
+    <string name="home_item_rocking_note" formatted="false">自己轻轻地摇。一直如此。</string>
+    <string name="home_item_plaid_note" formatted="false">叠好了，带流苏。等着傍晚。</string>
+    <string name="home_item_pouf_note" formatted="false">拿着谱子坐上一分钟。</string>
+    <string name="home_item_bookshelf_note" formatted="false">够不到天花板，但也差不多了。</string>
+    <string name="home_item_commode_note" formatted="false">三个抽屉。最上面那个放琴弦。</string>
+    <string name="home_item_mirror_note" formatted="false">用来检查手的姿势。</string>
+    <string name="home_item_clock_note" formatted="false">钟摆在摆。指针走的是你的时间。</string>
+    <string name="home_item_rug_plum_note" formatted="false">简单，与墙同色。第一块，也不贵。</string>
+    <string name="home_item_rug_persian_note" formatted="false">酒红色，带镶边。</string>
+    <string name="home_item_rug_stripe_note" formatted="false">手织的，条纹。</string>
+    <string name="home_item_rug_round_note" formatted="false">不大，暖暖的。</string>
+    <string name="home_item_rug_green_note" formatted="false">像花园里的草。</string>
+    <string name="home_item_ficus_note" formatted="false">长得慢，但永不枯萎。</string>
+    <string name="home_item_monstera_note" formatted="false">叶子带裂口，有手掌那么大。</string>
+    <string name="home_item_tulips_note" formatted="false">三枝。不会凋谢——这是安静游戏的原则。</string>
+    <string name="home_item_vase_note" formatted="false">野花。或者来自窗下的花园。</string>
+    <string name="home_item_xmas_note" formatted="false">季节限定：买下后，十二月到一月会自己立起来。</string>
+    <string name="home_item_tea_note" formatted="false">一直冒着热气。不会凉。</string>
+    <string name="home_item_books_note" formatted="false">三本。有一本讲小提琴。</string>
+    <string name="home_item_passport_note" formatted="false">不在路上的时候，就放在桌上。</string>
+    <string name="home_item_globe_note" formatted="false">你去过的每座城市都有一面小旗。它们会自己插上。</string>
+    <string name="home_item_cat_ginger_note" formatted="false">睡在窗台上。呼吸着，偶尔眨眨眼。不用喂。</string>
+    <string name="home_item_cat_black_note" formatted="false">只看得见眼睛——而且不是每次都能看见。</string>
+    <string name="home_item_cat_grey_note" formatted="false">条纹和地板一个色调。</string>
+    <string name="home_item_cat_white_note" formatted="false">在深色地毯上——像一块光斑。</string>
+    <string name="home_item_dog_note" formatted="false">趴在脚边。偶尔抬起头。</string>
+    <string name="home_item_turtle_note" formatted="false">所有动物里最安静的。偶尔动一动——你不会察觉。</string>
+    <string name="home_item_canary_note" formatted="false">在栖木之间跳来跳去。不唱歌——这是原则二。</string>
+    <string name="home_item_aquarium_note" formatted="false">一条小鱼游来游去。水不会变浑。</string>
+    <string name="home_item_parrot_note" formatted="false">绿中带红。望着窗外。</string>
+    <string name="home_item_mailbox_note" formatted="false">小旗竖起——明信片到了。</string>
+    <string name="home_item_lantern_note" formatted="false">随着傍晚亮起。</string>
+    <string name="home_item_bench_note" formatted="false">上路之前，带着琴盒坐一会儿。</string>
+    <string name="home_item_bike_note" formatted="false">靠在屋边。哪儿也不去。</string>
+    <string name="home_item_flowerbed_note" formatted="false">总有什么在开花。</string>
+    <string name="home_item_swing_note" formatted="false">在风里轻轻摇，哪怕没有人。</string>
+    <string name="home_item_feeder_note" formatted="false">鸟儿自己会飞来。谷粒永远吃不完。</string>
+    <string name="home_item_vane_note" formatted="false">指示风从哪里来。在这里——永远是顺风。</string>
+    <string name="home_item_car_old_note" formatted="false">第三次才打得着火。樱桃红色。</string>
+    <string name="home_item_car_wagon_note" formatted="false">大提琴放得下。试过了。</string>
+    <string name="home_item_car_cabrio_note" formatted="false">车篷一直收着。这里从不下雨。</string>
+    <string name="home_slot_wallpaper" formatted="false">墙面</string>
+    <string name="home_slot_floor" formatted="false">地板</string>
+    <string name="home_slot_view" formatted="false">窗外的景色</string>
+    <string name="home_slot_window" formatted="false">窗</string>
+    <string name="home_slot_curtain" formatted="false">窗帘</string>
+    <string name="home_slot_garland" formatted="false">窗上方</string>
+    <string name="home_slot_sill" formatted="false">窗台，右侧</string>
+    <string name="home_slot_sillL" formatted="false">窗台，左侧</string>
+    <string name="home_slot_ceiling" formatted="false">天花板</string>
+    <string name="home_slot_wallL" formatted="false">左侧墙面</string>
+    <string name="home_slot_wallM" formatted="false">窗边墙面</string>
+    <string name="home_slot_desk" formatted="false">桌子</string>
+    <string name="home_slot_deskTop" formatted="false">桌上，左侧</string>
+    <string name="home_slot_deskM" formatted="false">桌上</string>
+    <string name="home_slot_deskR" formatted="false">桌上，右侧</string>
+    <string name="home_slot_chair" formatted="false">椅子</string>
+    <string name="home_slot_chairTop" formatted="false">椅子上</string>
+    <string name="home_slot_stand" formatted="false">谱架</string>
+    <string name="home_slot_violin" formatted="false">小提琴 · 前景</string>
+    <string name="home_slot_case" formatted="false">琴盒 · 窗边地上</string>
+    <string name="home_slot_rug" formatted="false">地毯 · 地板中央</string>
+    <string name="home_slot_pet" formatted="false">宠物</string>
+    <string name="home_slot_floorL" formatted="false">左侧角落</string>
+    <string name="home_slot_floorR" formatted="false">右侧角落</string>
+    <string name="home_slot_fire" formatted="false">壁炉</string>
+    <string name="home_slot_oL" formatted="false">小路旁</string>
+    <string name="home_slot_oR" formatted="false">屋墙边</string>
+    <string name="home_slot_oG" formatted="false">花园</string>
+    <string name="home_slot_oCar" formatted="false">屋前</string>
+    <string name="home_slot_oRoof" formatted="false">屋顶</string>
+    <string name="home_slot_oPorch" formatted="false">门廊</string>
+    <string name="home_house_rent" formatted="false">租来的房间</string>
+    <string name="home_house_wood" formatted="false">小木屋</string>
+    <string name="home_house_flat" formatted="false">老楼里的公寓</string>
+    <string name="home_house_sea" formatted="false">海边的房子</string>
+    <string name="home_house_chalet" formatted="false">山间木屋</string>
+    <string name="home_house_mansion" formatted="false">城中宅邸</string>
+    <string name="home_house_villa" formatted="false">带音乐厅的别墅</string>
+    <string name="home_house_rent_note" formatted="false">城里，三楼</string>
+    <string name="home_house_wood_note" formatted="false">门廊、烟囱、苹果树</string>
+    <string name="home_house_flat_note" formatted="false">凸窗、石膏雕花、拼木地板</string>
+    <string name="home_house_sea_note" formatted="false">露台、远处的灯塔、海鸥</string>
+    <string name="home_house_chalet_note" formatted="false">壁炉、雪、云杉</string>
+    <string name="home_house_mansion_note" formatted="false">立柱、花园、放着三角钢琴的大厅</string>
+    <string name="home_house_villa_note" formatted="false">终点</string>
+    <string-array name="home_house_rent_news">
+    </string-array>
+    <string-array name="home_house_wood_news">
+        <item>壁炉——新的位置</item>
+        <item>屋外有门廊和花园</item>
+        <item>没有“左侧角落”和墙纸——墙是原木的</item>
+    </string-array>
+    <string-array name="home_house_flat_news">
+        <item>凸窗——三面都是窗</item>
+        <item>凸窗旁可以放钢琴</item>
+    </string-array>
+    <string-array name="home_house_sea_news">
+        <item>露台——第二处“屋外”</item>
+        <item>窗外永远是大海</item>
+    </string-array>
+    <string-array name="home_house_chalet_news">
+        <item>壁炉已在屋里</item>
+        <item>冬天屋顶有雪</item>
+    </string-array>
+    <string-array name="home_house_mansion_news">
+        <item>第二个房间——大厅</item>
+        <item>三角钢琴（只在这里）</item>
+    </string-array>
+    <string-array name="home_house_villa_news">
+        <item>三个房间</item>
+        <item>四十个座位的音乐厅</item>
+    </string-array>
+</resources>

@@ -314,7 +314,7 @@ private val TempoIconGap = 5.dp
 /** «1 дубль», «2 дубля», «6 дублей». */
 @Composable
 fun takesLabel(count: Int): String = stringResource(
-    Formats.pluralRu(count, R.string.takes_one, R.string.takes_few, R.string.takes_many), count,
+    Formats.plural(count, R.string.takes_one, R.string.takes_few, R.string.takes_many), count,
 )
 
 private fun addLabelOf(section: SectionRef): Int = when (section) {

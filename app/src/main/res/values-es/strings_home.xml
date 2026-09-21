@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home (spec 3.24). Names of things, places and homes are generated: home_catalog.xml. -->
+<resources>
+    <string name="home_title">Casa</string>
+    <string name="home_back">Atrás</string>
+    <string name="home_room">Habitación</string>
+    <string name="home_outside">Exterior</string>
+    <string name="home_evening">tarde</string>
+    <string name="home_day">día</string>
+    <string name="home_shop">Tienda</string>
+    <string name="home_arrange">Amueblar</string>
+    <string name="home_picture_room">Habitación: %1$s</string>
+    <string name="home_picture_outside">La casa por fuera: %1$s</string>
+    <string name="home_things_none">todo como estaba al alquilarla</string>
+    <string name="home_things_one">%1$d cosa</string>
+    <string name="home_things_few">%1$d cosas</string>
+    <string name="home_things_many">%1$d cosas</string>
+    <string name="home_things_brought">%1$s, %2$d traídas del viaje</string>
+    <string name="home_gift_title">El primer regalo espera en la tienda</string>
+    <string name="home_gift_text">Un soporte: el violín sale del estuche. Gratis.</string>
+    <string name="home_gift_take">Recoger</string>
+    <string name="home_brought">Traído del viaje</string>
+    <string name="home_next_house">La próxima casa</string>
+    <string name="home_all_houses">Todas las casas</string>
+    <string name="home_have">%1$s / %2$s</string>
+    <string name="home_house_soon">pronto</string>
+
+    <string name="shop_all">Todo</string>
+    <string name="shop_group_instrument">Instrumentos</string>
+    <string name="shop_group_music">Música</string>
+    <string name="shop_group_room">Habitación</string>
+    <string name="shop_group_light">Luz</string>
+    <string name="shop_group_furniture">Muebles</string>
+    <string name="shop_group_plant">Plantas</string>
+    <string name="shop_group_life">Detalles</string>
+    <string name="shop_group_pet">Animales</string>
+    <string name="shop_group_outside">Exterior</string>
+    <string name="shop_shelf_instrument">El taller del lutier</string>
+    <string name="shop_shelf_music">Partituras y música</string>
+    <string name="shop_shelf_room">Paredes, suelo, ventana</string>
+    <string name="shop_shelf_light">Mercado · luz</string>
+    <string name="shop_shelf_furniture">Mercado · muebles</string>
+    <string name="shop_shelf_plant">El puesto de flores</string>
+    <string name="shop_shelf_life">Pequeñas cosas de la vida</string>
+    <string name="shop_shelf_pet">Animales de compañía</string>
+    <string name="shop_shelf_outside">Para el jardín</string>
+    <string name="shop_shelf_yours">El estante es tuyo: todo comprado</string>
+    <string name="shop_from">de %1$s</string>
+    <string name="shop_opens_in">llegará de %1$s</string>
+    <string name="shop_standing">en la habitación</string>
+    <string name="shop_standing_outside">junto a la casa</string>
+    <string name="shop_owned">comprado</string>
+    <string name="shop_gift">regalo</string>
+    <string name="shop_no_place">no hay sitio en esta casa</string>
+    <string name="shop_needs_chimney">hace falta una casa con chimenea</string>
+    <string name="shop_waits_season">espera a diciembre</string>
+    <string name="shop_place">Lugar: %1$s</string>
+    <string name="shop_try">Probar</string>
+    <string name="shop_buy">Comprar · %1$s</string>
+    <string name="shop_take">Recoger</string>
+    <string name="shop_put">Colocar</string>
+    <string name="shop_missing">faltan %1$s</string>
+    <string name="shop_sessions_one">más o menos una práctica más</string>
+    <string name="shop_sessions_few">unas %1$d prácticas más</string>
+    <string name="shop_sessions_many">unas %1$d prácticas más</string>
+    <string name="shop_left_after">quedarán %1$s</string>
+    <string name="shop_left_after_road">quedarán %1$s · hasta %2$s faltan %3$s</string>
+    <string name="shop_item_description">%1$s, %2$s</string>
+    <string name="shop_price_takts">%1$s compases</string>
+    <string name="shop_try_back">Dejar como estaba</string>
+    <string name="shop_bought">Comprado: %1$s</string>
+
+    <string name="arrange_title">Amueblar</string>
+    <string name="arrange_places_few">%1$d lugares, %2$d ocupados</string>
+    <string name="arrange_empty">vacío</string>
+    <string name="arrange_in_shop">en la tienda: %1$d</string>
+    <string name="arrange_not_here">Lugares que esta casa no tiene</string>
+    <string name="arrange_waiting">espera en el armario: %1$s</string>
+
+    <string name="houses_title">Casas</string>
+    <string name="houses_live_here">vivo aquí</string>
+    <string name="houses_live">Vivir aquí</string>
+    <string name="houses_of">casa %1$d de %2$d</string>
+    <string name="houses_news">Novedades</string>
+    <string name="houses_moving_text">Todas las cosas se mudarán solas y ocuparán los mismos lugares. La casa anterior se conserva: se puede volver cualquier día.</string>
+    <string name="houses_move">Mudarse · %1$s</string>
+    <string name="houses_moving">Mudanza</string>
+    <string name="houses_moved_things">%1$s en su sitio</string>
+    <string name="houses_moved_cat">%1$s · el gato ya está en el porche</string>
+    <string name="houses_close">Cerrar</string>
+
+    <!-- Second iteration (spec 3.25) -->
+    <string name="home_travel">De viaje</string>
+    <string name="home_travel_line">%1$s → hasta %2$s %3$s</string>
+    <string name="home_travel_enough">%1$s → alcanza hasta %2$s</string>
+    <string name="home_travel_end">%1$s · ruta completada</string>
+    <string name="home_fullscreen">Pantalla completa</string>
+    <string name="home_fullscreen_close">Reducir</string>
+    <string name="home_fullscreen_hint">Pellizca para acercar · arrastra para mirar alrededor</string>
+    <string name="home_card_title">Casa · %1$s</string>
+    <string name="home_card_away">de viaje · %1$s · parada %2$d de %3$d</string>
+    <string name="journey_enter_home">Entrar en casa</string>
+    <string name="journey_enter_home_at">estás en casa</string>
+    <string name="splash_away">de viaje</string>
+    <string name="splash_home">a casa</string>
+    <string name="splash_stop">%1$s · parada %2$d de %3$d</string>
+    <string name="splash_skip">Omitir</string>
+    <string name="shop_soon">llegará</string>
+    <string name="shop_try_remove">Quitar</string>
+    <string name="shop_takts_note">Los compases llegan con la práctica: escuchamos cómo tocas y los contamos nosotros. Aquí se pueden gastar en cosas para la casa.</string>
+    <string name="journey_intro_takts">La aplicación escucha cómo practicas y convierte las notas limpias y el tiempo con el instrumento en compases. Con compases se paga el camino, de ciudad en ciudad.</string>
+
+    <string name="journey_home">Casa</string>
+    <string name="journey_home_card">Casa: %1$s</string>
+</resources>

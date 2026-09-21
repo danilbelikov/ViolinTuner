@@ -206,7 +206,7 @@ fun HistoryScreen(
         )
     }
     if (selection.confirming) {
-        val words = Formats.pluralRu(selection.count, R.string.selection_delete_records_one, R.string.selection_delete_records_few, R.string.selection_delete_records_many)
+        val words = Formats.plural(selection.count, R.string.selection_delete_records_one, R.string.selection_delete_records_few, R.string.selection_delete_records_many)
         DeleteDialog(
             title = stringResource(words, selection.count),
             text = deleteTextOf(state.cards.filter { it.id in selection.ids }.sumOf { it.videoBytes }),
@@ -270,7 +270,7 @@ private fun CountRow(total: Int, selecting: Boolean, onSelect: () -> Unit) {
             .height(CountRowHeight),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val countRes = Formats.pluralRu(total, R.string.history_count_one, R.string.history_count_few, R.string.history_count_many)
+        val countRes = Formats.plural(total, R.string.history_count_one, R.string.history_count_few, R.string.history_count_many)
         Text(
             text = stringResource(countRes, total),
             modifier = Modifier.weight(1f),
@@ -303,7 +303,7 @@ private fun ChartCard(state: HistoryState, modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
             )
             Text(
-                text = stringResource(Formats.pluralRu(total, R.string.history_count_one, R.string.history_count_few, R.string.history_count_many), total),
+                text = stringResource(Formats.plural(total, R.string.history_count_one, R.string.history_count_few, R.string.history_count_many), total),
                 modifier = Modifier.alignByBaseline(),
                 color = colors.onSurface,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),

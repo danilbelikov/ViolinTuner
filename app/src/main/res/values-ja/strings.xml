@@ -1,0 +1,917 @@
+<resources>
+    <string name="app_name">ViolinTuner</string>
+
+    <string name="nav_live">Live</string>
+    <string name="nav_practice">練習</string>
+    <string name="nav_history">録音</string>
+    <string name="nav_settings">設定</string>
+
+    <string name="mode_play">演奏</string>
+    <string name="mode_tuning">調弦</string>
+    <string name="tuning_string_hz">%1$d Hz</string>
+    <string name="tuning_hint_auto">自動 · 開放弦を弾いてください</string>
+    <string name="tuning_hint_locked">目標を固定中：%1$s · %2$d Hz · タップで解除</string>
+    <string name="tuning_string_locked">固定中</string>
+    <string name="tuning_string_auto">自動</string>
+    <string name="status_in_tune">合っています</string>
+    <string name="status_sharp">高い</string>
+    <string name="status_flat">低い</string>
+    <string name="live_silence">弾いてください…</string>
+    <string name="live_too_noisy">周りの音が大きすぎます</string>
+    <string name="live_mic_unavailable">マイクを使用できません</string>
+    <string name="mic_permission_title">マイクへのアクセスが必要です</string>
+    <string name="mic_permission_text">マイクがないと、ヴァイオリンの音を聴き取れません。音はこの端末内で処理され、どこにも送信されません。</string>
+    <string name="mic_permission_grant">アクセスを許可</string>
+    <string name="record_button">録音</string>
+    <string name="record_start">録音を開始</string>
+    <string name="record_stop">録音を停止</string>
+    <string name="record_no_notes">録音に音が見つかりませんでした</string>
+    <string name="recording_elapsed_description">録音中、%1$s</string>
+    <string name="recording_strip_label">録音 ·</string>
+    <string name="practice_chip_label">練習 ·</string>
+
+    <string name="onboarding_mic_title">ヴァイオリンの音を聴かせてください</string>
+    <string name="onboarding_mic_text">マイクで音を聴き取りますが、インターネットには何も送信しません。音はこの端末内で処理されます。</string>
+    <string name="onboarding_mic_cta">マイクを許可</string>
+    <string name="onboarding_mic_foot">スマートフォンを譜面台に置き、50〜80 cm離してください</string>
+    <string name="onboarding_a4_title">どの高さに合わせますか？</string>
+    <string name="onboarding_a4_text">家庭や学校ではふつう440 Hzです。オーケストラでは442 Hzもよく使われます。設定でいつでも変更できます。</string>
+    <string name="onboarding_a4_cta">次へ</string>
+    <string name="onboarding_a4_foot">演奏中は画面が消えません</string>
+    <string name="onboarding_tolerance_title">どのくらい厳しく判定しますか？</string>
+    <string name="onboarding_tolerance_text">緑のゾーンの幅です。まずはゆるめに。あとからいつでも狭められます。</string>
+    <string name="onboarding_tolerance_cta">演奏を始める</string>
+    <string name="onboarding_tolerance_foot">設定でいつでも変更できます</string>
+    <string name="onboarding_step_description">ステップ %1$d / %2$d</string>
+
+    <string name="tolerance_beginner_name">初級</string>
+    <string name="tolerance_beginner_text">緑のゾーンが広い</string>
+    <string name="tolerance_intermediate_name">中級</string>
+    <string name="tolerance_intermediate_text">ヴィブラートがわかる</string>
+    <string name="tolerance_pro_name">上級</string>
+    <string name="tolerance_pro_text">厳しめ</string>
+    <string name="tolerance_cents">±%1$d セント</string>
+    <string name="a4_option_description">%1$d ヘルツ</string>
+
+    <string name="settings_a4_title">基準ピッチ A4</string>
+    <string name="settings_a4_text">A4（ラ）の周波数（Hz）です。すべての音と弦の高さはここから計算されます。</string>
+    <string name="settings_tolerance_title">許容範囲</string>
+    <string name="settings_tolerance_text">緑のゾーンの幅です。どのくらい近ければ「合っています」とするかを決めます。</string>
+    <string name="settings_language">言語</string>
+    <string name="settings_restart_onboarding">最初の案内をもう一度見る</string>
+
+    <string name="session_default_title">録音 · %1$s</string>
+    <string name="record_default_title">録音</string>
+    <string name="session_take_subtitle">テイク · %1$s · %2$s</string>
+    <string name="session_back">戻る</string>
+    <string name="session_not_found">録音が見つかりません</string>
+    <string name="session_percent">%1$d%%</string>
+    <string name="session_meta">合っていた割合 · %1$s · ±%2$d セント</string>
+    <string name="session_bias_mean">平均 %1$s セント</string>
+    <string name="session_bias_none">ずれなし</string>
+    <string name="session_bias_hint_none">ちょうど中心です</string>
+    <string name="session_bias_hint_flat">少し低め — 指を駒寄りに</string>
+    <string name="session_bias_hint_sharp">少し高め — 指をナット寄りに</string>
+    <string name="session_card_distribution">分布</string>
+    <string name="session_card_mean_error">平均誤差</string>
+    <string name="session_card_per_string">弦ごと</string>
+    <string name="session_cents_unit">セント</string>
+    <string name="session_bias_small_none">ずれなし</string>
+    <string name="session_bias_small_down">低い方へ %1$s セント</string>
+    <string name="session_bias_small_up">高い方へ %1$s セント</string>
+    <string name="session_string_not_played">—</string>
+    <string name="session_problem_notes">気になる音</string>
+    <string name="session_problem_note">%2$s線の %1$s</string>
+    <string name="session_cents_value">%1$s セント</string>
+    <string name="session_no_problem_notes">いつも外れる音はありません — とても良い録音です。</string>
+    <string name="session_action_rename">名前を変更</string>
+    <string name="session_action_delete">削除</string>
+    <string name="session_rename_title">録音の名前</string>
+    <string name="session_rename_hint">空欄にすると日付の名前に戻ります</string>
+    <string name="session_rename_confirm">保存</string>
+    <string name="session_delete_title">録音を削除しますか？</string>
+    <string name="session_delete_text">音と分析が削除されます。元には戻せません。</string>
+    <string name="session_delete_confirm">削除</string>
+    <string name="dialog_cancel">キャンセル</string>
+    <string name="session_note_target">目標</string>
+    <string name="session_note_mean">平均</string>
+    <string name="session_note_min_max">最小 / 最大</string>
+    <string name="session_note_min_max_value">%1$s / %2$s</string>
+    <string name="session_note_duration">長さ</string>
+    <string name="session_note_duration_value">%1$s 秒</string>
+    <string name="session_note_range">ゆれ幅</string>
+    <string name="session_note_range_value">±%1$d セント</string>
+    <string name="session_note_position">%1$s線 · %2$s</string>
+    <string name="finger_open">開放弦</string>
+    <string name="finger_first">1の指</string>
+    <string name="finger_second">2の指</string>
+    <string name="finger_third">3の指</string>
+    <string name="finger_fourth">4の指</string>
+    <string name="finger_higher_position">ポジション移動</string>
+    <string name="session_tip_stable">安定しています。ヴィブラートも均等です</string>
+    <string name="session_tip_wandering">平均では合っていますが、音が揺れています</string>
+    <string name="session_tip_flat">指が低めです — 少し駒寄りに</string>
+    <string name="session_tip_sharp">指が高めです — 少しナット寄りに</string>
+    <string name="session_player_play">録音を聴く</string>
+    <string name="session_player_pause">一時停止</string>
+    <string name="session_player_position">再生位置</string>
+    <string name="session_roll_description">音のタイムライン。音をタップすると詳細が表示されます。</string>
+
+    <string name="history_count_one">録音 %1$d 件</string>
+    <string name="history_count_few">録音 %1$d 件</string>
+    <string name="history_count_many">録音 %1$d 件</string>
+    <string name="history_chart_title">この2週間の録音</string>
+    <string name="history_chart_description">この2週間の日ごとの録音数</string>
+    <string name="history_filter_all">すべて</string>
+    <string name="history_filter_this_week">今週</string>
+    <string name="history_filter_month">1か月</string>
+    <string name="history_day_today">今日</string>
+    <string name="record_meta">%1$s · %2$s</string>
+    <string name="history_chart_bar">%1$s、%2$s</string>
+    <string name="backup_block_title">データ</string>
+    <string name="backup_row_save">コピーを保存</string>
+    <string name="backup_row_never">まだ保存していません</string>
+    <string name="backup_row_last">前回 — %1$s</string>
+    <string name="backup_row_stale">前回 — %1$s · それ以降 %2$s</string>
+    <string name="backup_new_records_one">新しい録音 %1$d 件</string>
+    <string name="backup_new_records_few">新しい録音 %1$d 件</string>
+    <string name="backup_new_records_many">新しい録音 %1$d 件</string>
+    <string name="backup_row_running">保存中 · %1$d %%</string>
+    <string name="backup_row_restore">コピーから復元</string>
+    <string name="backup_row_total">アプリ内のデータ：%1$s</string>
+    <string name="backup_onboarding_link">データのコピーがあります</string>
+    <string name="backup_title">データのバックアップ</string>
+    <string name="backup_text">アプリ内のすべてを1つのファイルにまとめます。このスマートフォン以外の場所 — パソコン、USBメモリ、クラウドのフォルダ — に置くのがおすすめです。</string>
+    <string name="backup_part_data">分析、練習、進み具合、設定</string>
+    <string name="backup_part_data_short">分析、練習、進み具合</string>
+    <string name="backup_part_sheets">楽譜の写真</string>
+    <string name="backup_part_audio">録音の音</string>
+    <string name="backup_part_audio_short">音</string>
+    <string name="backup_part_video">動画</string>
+    <string name="backup_part_always">常に含む</string>
+    <string name="backup_total">コピーのサイズ</string>
+    <string name="backup_total_value">≈ %1$s</string>
+    <string name="backup_without_video">動画なし：復元後、動画テイクには分析だけが残り、映像と音はなくなります。</string>
+    <string name="backup_without_audio">音なし：復元後の録音は音がなく、分析だけが残ります。</string>
+    <string name="backup_without_sheets">楽譜の写真なし：復元後の曲には楽譜のページがありません。</string>
+    <string name="backup_save_to">保存先を選ぶ…</string>
+    <string name="backup_saving_button">保存中…</string>
+    <string name="backup_share">送信…</string>
+    <string name="backup_too_big_to_share">この大きさのコピーはメッセージアプリやメールでは送れません。フォルダかUSBメモリに保存してください</string>
+    <string name="backup_busy_recording">先に録音を終えてください</string>
+    <string name="backup_nothing_title">保存するものがまだありません</string>
+    <string name="backup_nothing_text">最初のテイクを録るか曲を追加すると、ここでコピーを作れます</string>
+    <string name="backup_file_name">Intonation · コピー · %1$s.zip</string>
+    <string name="backup_saving_title">コピーを保存しています</string>
+    <string name="backup_phase_data">分析、練習、進み具合</string>
+    <string name="backup_phase_files">%1$s · %2$d / %3$d</string>
+    <string name="backup_phase_verifying_file">ファイルを確認しています</string>
+    <string name="backup_percent">%1$d %%</string>
+    <string name="backup_done_of">%1$s / %2$s</string>
+    <string name="backup_remaining">残り %1$s</string>
+    <string name="backup_remaining_minutes">約 %1$d 分</string>
+    <string name="backup_remaining_seconds">数秒</string>
+    <string name="backup_can_leave_title">アプリを閉じても大丈夫です。コピーは最後まで進みます。</string>
+    <string name="backup_can_leave_text">終わるまで電源を切ったり、USBメモリを抜いたりしないでください。</string>
+    <string name="backup_cancel">キャンセル</string>
+    <string name="backup_stop_title">中止しますか？</string>
+    <string name="backup_stop_text">書きかけのファイルは削除されます。</string>
+    <string name="backup_stop_continue">続ける</string>
+    <string name="backup_stop_confirm">中止</string>
+    <string name="backup_saved_title">コピーを保存しました</string>
+    <string name="backup_saved_place">%1$s · %2$s</string>
+    <string name="backup_place_downloads">ダウンロード</string>
+    <string name="backup_saved_advice">ファイルをスマートフォンの外にコピーしてください。同じ端末にあるコピーでは、端末に何かあったときに役に立ちません。</string>
+    <string name="backup_done">完了</string>
+    <string name="backup_failed_space_title">保存先の空き容量が足りませんでした</string>
+    <string name="backup_failed_space_text">書きかけのファイルは削除しました。別の保存先を選ぶか、動画なしで保存してください。</string>
+    <string name="backup_failed_space_inside">送信用のコピーを作るには、端末の空き容量があと %1$s 必要です。フォルダに直接保存してください。</string>
+    <string name="backup_failed_gone_title">保存先にアクセスできなくなりました</string>
+    <string name="backup_failed_gone_text">USBメモリが抜かれたか、フォルダがなくなりました。書きかけのファイルは削除しました。メディアを挿し直して、もう一度お試しください。</string>
+    <string name="backup_failed_title">コピーを保存できませんでした</string>
+    <string name="backup_failed_text">書きかけのファイルは削除しました。アプリ内のデータはそのままです。</string>
+    <string name="backup_retry">もう一度</string>
+    <string name="backup_close">閉じる</string>
+    <string name="backup_count_sessions_one">録音 %1$d 件</string>
+    <string name="backup_count_sessions_few">録音 %1$d 件</string>
+    <string name="backup_count_sessions_many">録音 %1$d 件</string>
+    <string name="backup_count_pieces_one">%1$d 曲</string>
+    <string name="backup_count_pieces_few">%1$d 曲</string>
+    <string name="backup_count_pieces_many">%1$d 曲</string>
+    <string name="backup_count_pages_one">%1$d ページ</string>
+    <string name="backup_count_pages_few">%1$d ページ</string>
+    <string name="backup_count_pages_many">%1$d ページ</string>
+    <string name="backup_count_days_one">練習 %1$d 日</string>
+    <string name="backup_count_days_few">練習 %1$d 日</string>
+    <string name="backup_count_days_many">練習 %1$d 日</string>
+    <string name="backup_count_trophies_one">トロフィー %1$d 個</string>
+    <string name="backup_count_trophies_few">トロフィー %1$d 個</string>
+    <string name="backup_count_trophies_many">トロフィー %1$d 個</string>
+    <string name="backup_count_takes_one">%1$d テイク</string>
+    <string name="backup_count_takes_few">%1$d テイク</string>
+    <string name="backup_count_takes_many">%1$d テイク</string>
+    <string name="backup_count_sound_one">音つきの録音 %1$d 件</string>
+    <string name="backup_count_sound_few">音つきの録音 %1$d 件</string>
+    <string name="backup_count_sound_many">音つきの録音 %1$d 件</string>
+    <string name="backup_count_video">動画 %1$d 本</string>
+    <string name="backup_count_level">レベル %1$d</string>
+    <string name="backup_notification_channel">データのバックアップ</string>
+    <string name="backup_notification_saving">コピーを保存中 · %1$d %%</string>
+    <string name="backup_notification_restoring">データを復元中 · %1$d %%</string>
+    <string name="restore_title">コピーから復元</string>
+    <string name="restore_reading">コピーを開いています…</string>
+    <string name="restore_made">%1$s · %2$s</string>
+    <string name="restore_without_video">動画なし — 動画テイクには分析だけが残ります</string>
+    <string name="restore_without_audio">音なし — 録音には分析だけが残ります</string>
+    <string name="restore_without_sheets">楽譜の写真なし</string>
+    <string name="restore_now_title">現在のアプリ内</string>
+    <string name="restore_warning">いまアプリにあるものはすべて、コピーのデータに置き換えられます。元には戻せません。</string>
+    <string name="restore_save_first">先に現在のデータを保存する</string>
+    <string name="restore_empty_app">アプリはまだ空です。復元するとコピーの中身がすべてここに入り、最初の案内も不要になります。</string>
+    <string name="restore_button">復元</string>
+    <string name="restore_confirm_title">データを置き換えますか？</string>
+    <string name="restore_confirm_text">この端末の%1$sは削除され、代わりに %2$s のコピーが入ります。</string>
+    <string name="restore_confirm_button">置き換える</string>
+    <string name="restore_not_ours_title">これは「Intonation」のコピーではありません</string>
+    <string name="restore_not_ours_text">別のアプリのファイルか、ふつうのアーカイブです。コピーの名前は「Intonation · コピー · 日付.zip」です。</string>
+    <string name="restore_too_new_title">このコピーは新しいバージョンのアプリで作られています</string>
+    <string name="restore_too_new_text">アプリを更新してから、もう一度ファイルを開いてください。</string>
+    <string name="restore_damaged_title">ファイルが壊れているか、ダウンロードが途中です</string>
+    <string name="restore_damaged_text">保管場所からもう一度コピーして、やり直してください。</string>
+    <string name="restore_pick_another">別のファイルを選ぶ</string>
+    <string name="restore_no_room_title">安全に復元するには、あと %1$s 必要です</string>
+    <string name="restore_no_room_text">コピーはまず現在のデータの隣に展開され、そのあとで置き換えます。端末の空き容量を増やすか、安全策なしで復元してください。</string>
+    <string name="restore_no_room_ok">わかりました</string>
+    <string name="restore_unsafe_button">現在のデータを削除して復元</string>
+    <string name="restore_unsafe_title">すべて削除して復元しますか？</string>
+    <string name="restore_unsafe_text">まずコピー全体を確認します。そのあと%1$sが端末から削除されます。復元に失敗しても、元には戻せません。</string>
+    <string name="restore_unsafe_confirm">削除して復元</string>
+    <string name="restore_progress_title">データを復元しています</string>
+    <string name="restore_step_verifying">確認</string>
+    <string name="restore_step_extracting">復元</string>
+    <string name="restore_step_finishing">もうすぐ完了</string>
+    <string name="restore_phase_verifying">コピーを確認しています</string>
+    <string name="restore_phase_extracting">復元中 · %1$s %2$d</string>
+    <string name="restore_can_leave_title">アプリを閉じても大丈夫です。復元は最後まで進みます。</string>
+    <string name="restore_can_stop">データはまだそのままです。確認と展開の間は中止できます。</string>
+    <string name="restore_cannot_stop">復元したデータを開いています — ここからは中止できません。</string>
+    <string name="restore_done_title">データを復元しました</string>
+    <string name="restore_opening">データを開いています…</string>
+    <string name="restore_failed_title">復元できませんでした</string>
+    <string name="restore_failed_text">データはそのままです。何も変わっていません。</string>
+    <string name="restore_failed_lost_title">復元できず、以前のデータも残っていません</string>
+    <string name="restore_failed_lost_text">コピーは確認済みで壊れていません。同じファイルでもう一度お試しください。それでもだめなら、まっさらな状態から始めてください。</string>
+    <string name="restore_retry_same">このファイルでもう一度</string>
+    <string name="restore_start_clean">まっさらな状態から始める</string>
+    <string name="restore_busy">先に録音を終えてください</string>
+    <string name="video_description">動画</string>
+    <string name="video_state_playing">再生中、ダブルタップで一時停止</string>
+    <string name="video_state_paused">一時停止中、ダブルタップで再開</string>
+    <string name="video_fullscreen">全画面</string>
+    <string name="video_fullscreen_exit">全画面を終了</string>
+    <string name="video_lost_title">動画が見つかりません — 分析は残っています</string>
+    <string name="video_lost_text">ファイルがアプリの保存領域から削除されています。音もありません — 音なしの録音と同じ状態です。</string>
+    <string name="video_undecodable_title">この動画はここでは表示できません</string>
+    <string name="video_undecodable_text">この端末では映像を読み取れません。音と分析はそのままです。</string>
+    <string name="video_row_time">%1$s / %2$s · %3$s セント</string>
+    <string name="video_size">動画 · %1$s · %2$s</string>
+    <string name="video_size_lost">動画が見つかりません</string>
+    <string name="video_resolution">%1$dp</string>
+    <string name="video_watch_place">この箇所を見る</string>
+    <string name="video_listen_place">この箇所を聴く</string>
+    <string name="video_delete_text">動画（%1$s）、音、分析が削除されます。元には戻せません。</string>
+    <string name="record_tile_video">動画つき</string>
+    <string name="size_mb">%1$s MB</string>
+    <string name="size_kb">%1$d KB</string>
+    <string name="video_take">動画テイク</string>
+    <string name="video_take_busy">分析中…</string>
+    <string name="video_shoot">動画を撮る</string>
+    <string name="video_shoot_hint">端末のカメラが開きます</string>
+    <string name="video_pick">ギャラリーの動画</string>
+    <string name="video_pick_hint">1本ずつ、60分まで</string>
+    <string name="video_copying">動画を追加しています…</string>
+    <string name="video_listening">録音を聴いています…</string>
+    <string name="video_percent">%1$d %%</string>
+    <string name="video_remaining">残り約 %1$d 秒</string>
+    <string name="video_cancel">キャンセル</string>
+    <string name="video_stop_title">分析を中止しますか？</string>
+    <string name="video_stop_text">この動画は撮ったばかりで、ほかのどこにも保存されていません。なくさないようにどこかへ送信するか、削除できます。</string>
+    <string name="video_stopped_title">分析を中止しました</string>
+    <string name="video_delete">削除</string>
+    <string name="video_send">動画を送信</string>
+    <string name="video_continue">分析を続ける</string>
+    <string name="video_ok">わかりました</string>
+    <string name="video_error_no_sound">動画に音がありません</string>
+    <string name="video_error_too_long">60分を超える動画は分析できません</string>
+    <string name="video_error_cannot_open">動画を開けませんでした</string>
+    <string name="video_error_no_notes">動画に音が見つからず、テイクは追加されませんでした</string>
+    <string name="video_error_no_notes_gallery">元の動画はギャラリーに残っています。</string>
+    <string name="video_error_no_space">空き容量が足りません：あと %1$d MB 必要です</string>
+    <string name="video_rescue_file">Video.mp4</string>
+    <string name="video_thumb">動画の最初のフレーム</string>
+    <string name="selection_select">選択</string>
+    <string name="selection_count">%1$d 件を選択中</string>
+    <string name="selection_all">すべて選択</string>
+    <string name="selection_none">すべて解除</string>
+    <string name="selection_close">選択を終了</string>
+    <string name="selection_delete">選択したものを削除</string>
+    <string name="selection_delete_records_one">%1$d 件の録音を削除しますか？</string>
+    <string name="selection_delete_records_few">%1$d 件の録音を削除しますか？</string>
+    <string name="selection_delete_records_many">%1$d 件の録音を削除しますか？</string>
+    <string name="selection_delete_takes_one">%1$d テイクを削除しますか？</string>
+    <string name="selection_delete_takes_few">%1$d テイクを削除しますか？</string>
+    <string name="selection_delete_takes_many">%1$d テイクを削除しますか？</string>
+    <string name="selection_delete_text">音と分析が削除されます。元には戻せません。</string>
+    <string name="record_tile_take">テイク</string>
+    <string name="record_tile_record">録音</string>
+    <string name="record_tile_sound">音あり</string>
+    <string name="record_tile_only_video">動画</string>
+    <string name="record_tile_no_sound">音なし</string>
+    <string name="history_empty_filter">この期間の録音はありません</string>
+    <string name="history_empty">ここにあなたの録音が並びます。Live 画面の録音ボタンを押してください。</string>
+
+    <string name="practice_start">練習を始める</string>
+    <string name="practice_stop">練習を終える</string>
+    <string name="practice_running">練習中</string>
+    <string name="practice_timer_description">練習中、%1$s</string>
+    <string name="practice_today">今日：%1$s</string>
+    <string name="practice_today_none">今日はまだ練習していません</string>
+    <string name="practice_empty">ヴァイオリンを手に取ったら「練習を始める」、置いたら「練習を終える」を押してください。ここにカレンダーができていきます。</string>
+    <string name="practice_week">今週</string>
+    <string name="practice_month">月</string>
+    <string name="practice_streak">連続日数</string>
+    <string name="practice_no_value">—</string>
+    <string name="practice_month_back">前の月</string>
+    <string name="practice_month_forward">次の月</string>
+    <string-array name="practice_weekdays">
+        <item>月</item>
+        <item>火</item>
+        <item>水</item>
+        <item>木</item>
+        <item>金</item>
+        <item>土</item>
+        <item>日</item>
+    </string-array>
+    <string name="practice_day_description">%1$s、%2$s</string>
+    <string name="practice_legend_less">少ない</string>
+    <string name="practice_legend_more">多い</string>
+    <string name="practice_day_today">今日</string>
+    <string name="practice_day_none">練習なし</string>
+    <string name="practice_edit_time">時間を変更</string>
+    <string name="practice_add_time">時間を追加</string>
+    <string name="practice_day_records">この日の録音</string>
+    <string name="practice_summary_title">練習</string>
+    <string name="practice_step_hint">%1$d 分刻み</string>
+    <string name="practice_step_down">%1$d 分減らす</string>
+    <string name="practice_step_up">%1$d 分増やす</string>
+    <string name="practice_save">保存</string>
+    <string name="practice_discard">保存しない</string>
+    <string name="practice_edit_title">1日の練習時間</string>
+    <string name="practice_edit_hint">その日の合計時間です。0にすると、その日はカレンダーから消えます。</string>
+    <string name="practice_chip_plus_minutes">+%1$d</string>
+    <string name="practice_chip_plus_hour">+1 時間</string>
+    <string name="practice_chip_zero">0</string>
+    <string name="practice_too_short">短すぎます</string>
+    <string name="practice_forgotten_title">練習が終了していません</string>
+    <string name="practice_forgotten_text">練習が %1$s 続いています。</string>
+    <string name="practice_forgotten_sound">最後にヴァイオリンの音がしたのは %1$s です。</string>
+    <string name="practice_end_at">%1$s に終了</string>
+    <string name="practice_end_now">いま終了</string>
+    <string name="practice_continue">練習を続けます</string>
+
+    <!-- Profile and progress (spec 3.13, 5.7). Level and trophy names follow the order of ProgressConfig. -->
+    <string-array name="progress_level_names">
+        <item>はじめての音</item>
+        <item>生徒</item>
+        <item>開放弦</item>
+        <item>第1ポジション</item>
+        <item>音階</item>
+        <item>練習曲</item>
+        <item>ヴィブラート</item>
+        <item>第3ポジション</item>
+        <item>アンサンブル</item>
+        <item>コンサートマスター</item>
+        <item>ソリスト</item>
+        <item>ヴィルトゥオーゾ</item>
+        <item>マエストロ</item>
+        <item>名匠</item>
+        <item>レジェンド</item>
+    </string-array>
+    <string-array name="progress_trophy_names">
+        <item>松脂</item>
+        <item>ペグ</item>
+        <item>弦</item>
+        <item>弓</item>
+        <item>あご当て</item>
+        <item>音叉</item>
+        <item>譜面台</item>
+        <item>ケース</item>
+        <item>ヴァイオリン</item>
+        <item>コンサート</item>
+    </string-array>
+    <string name="progress_no_name">ヴァイオリンとともに</string>
+    <string name="progress_level">レベル %1$d · %2$s</string>
+    <string name="progress_to_next_level">レベル %1$d まで — %2$s</string>
+    <string name="progress_open_profile">プロフィールを開く</string>
+    <string name="progress_total_description">ヴァイオリンと過ごした合計時間：%1$s</string>
+    <string name="progress_open_trophies">トロフィーを開く</string>
+    <string name="progress_trophies_one">トロフィー %1$d 個</string>
+    <string name="progress_trophies_few">トロフィー %1$d 個</string>
+    <string name="progress_trophies_many">トロフィー %1$d 個</string>
+    <string name="progress_next_trophy">次は %1$s</string>
+    <string name="progress_trophies_and_next">%1$s · %2$s</string>
+    <string name="progress_more_trophies">+%1$d</string>
+    <string name="profile_title">プロフィール</string>
+    <string name="profile_pick_photo">写真を選ぶ</string>
+    <string name="profile_remove_photo">写真を外す</string>
+    <string name="profile_name_label">名前</string>
+    <string name="profile_name_placeholder">お名前は？</string>
+    <string name="profile_name_counter">%1$d / %2$d</string>
+    <string name="profile_done">完了</string>
+    <string name="profile_no_name_letter">\?</string>
+    <string name="profile_photo_failed">写真を開けませんでした</string>
+    <string name="gift_title">新しいトロフィー</string>
+    <string name="gift_hours_one">ヴァイオリンと %1$s 時間</string>
+    <string name="gift_hours_few">ヴァイオリンと %1$s 時間</string>
+    <string name="gift_hours_many">ヴァイオリンと %1$s 時間</string>
+    <string name="gift_thanks">ありがとう</string>
+    <string name="trophies_title">トロフィー</string>
+    <string name="trophies_total">ヴァイオリンと過ごした時間 — %1$s</string>
+    <string name="trophies_awarded">%1$s に獲得</string>
+    <string name="trophies_remaining">あと %1$s</string>
+    <string name="trophies_far">まだずっと先</string>
+    <string name="trophies_line_given">%1$s、%2$s、%3$s に獲得</string>
+    <string name="trophies_line_remaining">%1$s、%2$s、あと %3$s</string>
+    <string name="trophies_line_far">%1$s、%2$s、まだずっと先</string>
+
+    <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
+    <string name="history_section_sessions">録音</string>
+    <string name="history_section_repertoire">レパートリー</string>
+    <string name="session_take_title">%1$s · %2$s</string>
+    <string name="dot_separator"> · </string>
+    <string name="repertoire_add">曲を追加</string>
+    <string name="repertoire_empty">ここはあなたの曲の置き場所です。楽譜、メモ、録音をまとめておけます。最初の1曲を追加しましょう。</string>
+    <string name="repertoire_empty_filter">「%1$s」の曲はありません。</string>
+    <string name="repertoire_show_all">すべて表示</string>
+    <string name="repertoire_no_takes">テイクなし</string>
+    <string name="piece_status_reading">譜読み中</string>
+    <string name="piece_status_learning">練習中</string>
+    <string name="piece_status_in_repertoire">レパートリー</string>
+    <string name="piece_status_learned">習得済み</string>
+    <!-- The journey (spec 3.23): arrays follow the order of JourneyRoute.stops -->
+    <string-array name="journey_cities">
+        <item>家</item>
+        <item>クレモナ</item>
+        <item>ミラノ</item>
+        <item>ザルツブルク</item>
+        <item>ウィーン</item>
+        <item>プラハ</item>
+        <item>ライプツィヒ</item>
+        <item>ベルリン</item>
+        <item>アムステルダム</item>
+        <item>パリ</item>
+        <item>ロンドン</item>
+        <item>サンクトペテルブルク</item>
+        <item>モスクワ</item>
+        <item>ニューヨーク</item>
+        <item>ブエノスアイレス</item>
+        <item>東京</item>
+        <item>シドニー</item>
+    </string-array>
+    <string-array name="journey_cities_to">
+        <item>家</item>
+        <item>クレモナ</item>
+        <item>ミラノ</item>
+        <item>ザルツブルク</item>
+        <item>ウィーン</item>
+        <item>プラハ</item>
+        <item>ライプツィヒ</item>
+        <item>ベルリン</item>
+        <item>アムステルダム</item>
+        <item>パリ</item>
+        <item>ロンドン</item>
+        <item>サンクトペテルブルク</item>
+        <item>モスクワ</item>
+        <item>ニューヨーク</item>
+        <item>ブエノスアイレス</item>
+        <item>東京</item>
+        <item>シドニー</item>
+    </string-array>
+    <string-array name="journey_places">
+        <item>自分の部屋、窓辺の譜面台</item>
+        <item>ヴァイオリン職人の工房</item>
+        <item>スカラ座</item>
+        <item>モーツァルトの生家と街を見下ろす城塞</item>
+        <item>楽友協会、黄金のホール</item>
+        <item>ルドルフィヌム</item>
+        <item>ゲヴァントハウス · 聖トーマス教会</item>
+        <item>フィルハーモニー</item>
+        <item>コンセルトヘボウ</item>
+        <item>オペラ・ガルニエ</item>
+        <item>ロイヤル・アルバート・ホール</item>
+        <item>フィルハーモニア、大ホール</item>
+        <item>音楽院大ホール</item>
+        <item>カーネギー・ホール</item>
+        <item>コロン劇場</item>
+        <item>サントリーホール</item>
+        <item>オペラハウス</item>
+    </string-array>
+    <string-array name="journey_countries">
+        <item></item>
+        <item>イタリア</item>
+        <item>イタリア</item>
+        <item>オーストリア</item>
+        <item>オーストリア</item>
+        <item>チェコ</item>
+        <item>ドイツ</item>
+        <item>ドイツ</item>
+        <item>オランダ</item>
+        <item>フランス</item>
+        <item>イギリス</item>
+        <item>ロシア</item>
+        <item>ロシア</item>
+        <item>アメリカ</item>
+        <item>アルゼンチン</item>
+        <item>日本</item>
+        <item>オーストラリア</item>
+    </string-array>
+    <string-array name="journey_facts">
+        <item>誰もがここから始めます。最初の立ち寄り先は、ヴァイオリンが生まれた街クレモナです。</item>
+        <item>アマティ、ストラディヴァリ、グァルネリがここで働きました。いまの形のヴァイオリンは、この街で生まれました。</item>
+        <item>1778年に開場。ヴェルディのオペラやプッチーニの「蝶々夫人」がここで初演されました。</item>
+        <item>モーツァルトが生まれた街。ホーエンザルツブルク城は11世紀から街を見下ろしています。</item>
+        <item>毎年1月1日、ここからニューイヤーコンサートが世界中に届けられます。音響は世界屈指といわれます。</item>
+        <item>チェコ・フィルハーモニーの最初の演奏会は、ここでドヴォルザークが指揮しました。</item>
+        <item>バッハは四半世紀にわたり、聖トーマス教会のカントルを務めました。</item>
+        <item>「テント」のようなホールで、舞台が客席の真ん中にあります。</item>
+        <item>このホールのオーケストラは「ロイヤル」の称号を持っています。</item>
+        <item>1875年に開場。客席の天井画は1964年にマルク・シャガールが描きました。</item>
+        <item>1871年に開場。毎年夏にはプロムスが開かれます。</item>
+        <item>1942年8月、包囲下のこの街で、ショスタコーヴィチの交響曲第7番がここで演奏されました。</item>
+        <item>1901年に開場。チャイコフスキー国際コンクールの会場です。</item>
+        <item>「カーネギー・ホールへはどう行けばいいですか？」「練習することです」。</item>
+        <item>1908年にオペラ「アイーダ」で開場。音響は世界最高のひとつといわれます。</item>
+        <item>「ヴィンヤード」型のホールで、客席が段々畑のように舞台を囲みます。1986年に開場。</item>
+        <item>「帆」の下にいくつものホールがあります。オーストラリアに行ったことがない人でも、この姿は知っています。</item>
+    </string-array>
+    <string-array name="journey_roads">
+        <item></item>
+        <item>列車で · 6時間</item>
+        <item>列車で · 1時間</item>
+        <item>列車で · 7時間</item>
+        <item>列車で · 3時間</item>
+        <item>列車で · 4時間</item>
+        <item>列車で · 4時間</item>
+        <item>列車で · 1時間</item>
+        <item>列車で · 6時間</item>
+        <item>列車で · 3時間</item>
+        <item>列車で · 2時間</item>
+        <item>船で · 4日</item>
+        <item>列車で · 4時間</item>
+        <item>飛行機で · 10時間</item>
+        <item>船で · 3週間</item>
+        <item>飛行機で · 30時間</item>
+        <item>飛行機で · 9時間</item>
+    </string-array>
+    <string name="journey_title">旅</string>
+    <string name="journey_map">地図</string>
+    <string name="journey_passport">パスポート</string>
+    <string name="journey_back">戻る</string>
+    <string name="journey_stop_of">立ち寄り先 %1$d / %2$d</string>
+    <string name="journey_stop_home">立ち寄り先 0 / %1$d · 家</string>
+    <string name="journey_since">%1$s から</string>
+    <string name="journey_next">%1$sまで · %2$s</string>
+    <string name="journey_next_short">%1$sまで %2$s</string>
+    <string name="journey_have">%1$s / %2$s</string>
+    <string name="journey_depart">出発 · %1$s</string>
+    <string name="journey_missing">あと %1$s 足りません</string>
+    <string name="journey_enough">%1$sまで行けます — 出発</string>
+    <string name="journey_soon">ワールドツアーを巡り終えました。小節は貯まり続け、新しい街を待っています。街はアップデートで届きます。</string>
+    <string name="journey_soon_short">新しい街はもうすぐ</string>
+    <string name="journey_passed">%2$d のうち %1$d を通過</string>
+    <string name="journey_all_cards">すべての絵はがき</string>
+    <string name="journey_no_cards">最初の絵はがきはクレモナで手に入ります</string>
+    <string name="journey_intro_title">道は家から始まります</string>
+    <string name="journey_intro_text">ヴァイオリン弾きなら誰でも、世界の名ホールで弾くことを夢見ます。そこへの道は長く、旅費はお金ではなく、澄んだ音で払います。</string>
+    <string name="journey_intro_first">最初の立ち寄り先は、ヴァイオリンが生まれた街クレモナ。そこまで %1$s です。</string>
+    <string name="journey_intro_start">ケースに荷物を詰める</string>
+    <string name="journey_road">%1$s → %2$s</string>
+    <string name="journey_stamp">スタンプを押す</string>
+    <string name="journey_stamp_page">パスポート · %1$d ページ</string>
+    <string name="journey_stamp_text">スタンプ No. %1$d。%2$sまで — %3$s。</string>
+    <string name="journey_stamp_text_last">スタンプ No. %1$d。この先の道は、まだ描いているところです。</string>
+    <string name="journey_done">完了</string>
+    <string name="journey_stop_meta">%1$d / %2$d · %3$s から</string>
+    <string name="journey_stop_where">%1$s · %2$s</string>
+    <string name="journey_mode_evening">夕方</string>
+    <string name="journey_mode_day">昼</string>
+    <string name="journey_mode_inside">中</string>
+    <string name="journey_mode_outside">外</string>
+    <string name="journey_extras">追加アイテム</string>
+    <string name="journey_extra_time">もうひとつの時間帯</string>
+    <string name="journey_extra_view">もうひとつの眺め</string>
+    <string name="journey_extra_souvenir">パスポートに貼るおみやげ</string>
+    <string name="journey_extra_bought">入手済み</string>
+    <string name="journey_extra_buy">%1$s で開く</string>
+    <string name="journey_fullscreen">全画面</string>
+    <string name="journey_fullscreen_close">全画面を終了</string>
+    <string name="journey_fullscreen_hint">横にドラッグで見回す · ピンチで拡大</string>
+    <string name="journey_passport_soon">もうすぐ</string>
+    <string name="journey_passport_count">%1$d / %2$d</string>
+    <string name="journey_earned">+%1$s</string>
+    <string name="journey_earned_detail">%1$s + 時間の分 %2$s</string>
+    <string name="journey_notes_in_tune_one">合っていた音 %1$d 個</string>
+    <string name="journey_notes_in_tune_few">合っていた音 %1$d 個</string>
+    <string name="journey_notes_in_tune_many">合っていた音 %1$d 個</string>
+    <string name="takt_one">%1$s 小節</string>
+    <string name="takt_few">%1$s 小節</string>
+    <string name="takt_many">%1$s 小節</string>
+    <string name="takt_icon">小節</string>
+    <string name="journey_card_description">旅：%1$s</string>
+    <string name="journey_stamp_description">スタンプ：%1$s</string>
+    <string name="journey_stamp_locked_description">%1$s — まだこの先</string>
+    <string name="journey_map_description">旅の地図：%2$d のうち %1$d を通過</string>
+    <string name="section_pieces">曲</string>
+    <string name="section_scales">音階</string>
+    <string name="section_etudes">練習曲</string>
+    <string name="section_strokes">ボウイング</string>
+    <string name="section_learned">%2$d のうち %1$d を習得</string>
+    <string name="section_empty_count">まだ空です</string>
+    <string name="section_bar_description">譜読み中 %1$d、練習中 %2$d、習得済み %3$d</string>
+    <string name="section_add">セクションを追加</string>
+    <string name="section_add_scale">音階を追加</string>
+    <string name="section_add_etude">練習曲を追加</string>
+    <string name="section_add_stroke">ボウイングを追加</string>
+    <string name="section_add_own">追加</string>
+    <string name="section_empty_scales">音階を選ぶと、アプリが楽譜を描きます</string>
+    <string name="section_empty_etudes">練習曲の置き場所です。楽譜、メモ、テイクをまとめておけます。</string>
+    <string name="section_empty_strokes">取り組んでいるボウイング：デタシェ、スピッカート、マルトレ…</string>
+    <string name="section_empty_own">このセクションにはまだ何もありません。</string>
+    <string name="section_menu">その他</string>
+    <string name="section_rename">名前を変更</string>
+    <string name="section_delete">セクションを削除</string>
+    <string name="section_new_title">新しいセクション</string>
+    <string name="section_rename_title">セクションの名前を変更</string>
+    <string name="section_name_label">セクション名</string>
+    <string name="section_create">作成</string>
+    <string name="section_save">保存</string>
+    <string name="section_delete_title">「%1$s」を削除しますか？</string>
+    <string name="section_delete_text_empty">セクションは空です。録音は残ります。</string>
+    <string name="section_delete_text_one">%1$d 件の項目は「曲」に移ります。録音は残ります。</string>
+    <string name="section_delete_text_few">%1$d 件の項目は「曲」に移ります。録音は残ります。</string>
+    <string name="section_delete_text_many">%1$d 件の項目は「曲」に移ります。録音は残ります。</string>
+    <string name="section_delete_confirm">削除</string>
+    <string name="section_back">戻る</string>
+    <string name="form_section">セクション</string>
+    <string name="form_author">作者</string>
+    <string name="form_new_etude">新しい練習曲</string>
+    <string name="form_new_stroke">新しいボウイング</string>
+    <string name="form_new_element">新しい項目</string>
+    <string-array name="stroke_suggestions">
+        <item>デタシェ</item>
+        <item>レガート</item>
+        <item>スタッカート</item>
+        <item>スピッカート</item>
+        <item>マルトレ</item>
+        <item>ソティエ</item>
+        <item>リコシェ</item>
+    </string-array>
+    <string name="scale_new">新しい音階</string>
+    <string name="scale_edit">音階</string>
+    <string name="scale_key">調</string>
+    <string name="scale_kind">種類</string>
+    <string name="scale_octaves">オクターブ</string>
+    <string name="scale_kind_major">長音階</string>
+    <string name="scale_kind_natural">自然的短音階</string>
+    <string name="scale_kind_harmonic">和声的短音階</string>
+    <string name="scale_kind_melodic">旋律的短音階</string>
+    <string name="scale_suffix_harmonic">和声的</string>
+    <string name="scale_suffix_melodic">旋律的</string>
+    <string name="scale_octave_one">%1$d オクターブ</string>
+    <string name="scale_octave_few">%1$d オクターブ</string>
+    <string name="scale_octave_many">%1$d オクターブ</string>
+    <string name="scale_title">%1$s · %2$s</string>
+    <string name="scale_range">%1$s – %2$s</string>
+    <string name="scale_preview_empty">主音を選ぶと、ここに楽譜が描かれます</string>
+    <string name="scale_exists">同じ音階がすでにあります</string>
+    <string name="scale_open">開く</string>
+    <string name="scale_locked">それは別の音階になります。新しく追加してください</string>
+    <string name="scale_notes_description">音階 %1$s の楽譜</string>
+    <string name="scale_more_systems_one">あと %1$d 段</string>
+    <string name="scale_more_systems_few">あと %1$d 段</string>
+    <string name="scale_more_systems_many">あと %1$d 段</string>
+    <string name="scale_add_photo">楽譜の写真を追加</string>
+    <string name="scale_notes">楽譜</string>
+    <string name="scale_open_stand">譜面台で開く</string>
+    <string name="piece_tempo_value">♩ = %1$d</string>
+    <string name="piece_tempo_description">テンポ %1$d</string>
+    <string name="takes_one">%1$d テイク</string>
+    <string name="takes_few">%1$d テイク</string>
+    <string name="takes_many">%1$d テイク</string>
+    <string name="piece_edit">編集</string>
+    <string name="piece_status_change">ステータス：%1$s。変更</string>
+    <string name="piece_sheets_none">楽譜</string>
+    <string name="piece_sheets_count">楽譜 · %1$d ページ</string>
+    <string name="piece_sheets_add">楽譜の写真を追加</string>
+    <string name="piece_sheets_add_short">追加</string>
+    <string name="piece_sheets_camera">写真を撮る</string>
+    <string name="piece_sheets_gallery">ギャラリーから</string>
+    <string name="piece_sheet_page">%1$d ページ</string>
+    <string name="piece_notes_add">メモを追加</string>
+    <string name="piece_notes_more">続きを見る</string>
+    <string name="piece_notes_less">たたむ</string>
+    <string name="piece_form_title_new">新しい曲</string>
+    <string name="piece_form_title_edit">曲</string>
+    <string name="piece_form_close">閉じる</string>
+    <string name="piece_form_discard_title">保存しませんか？</string>
+    <string name="piece_form_discard_confirm">保存しない</string>
+    <string name="piece_field_title">曲名</string>
+    <string name="piece_field_composer">作曲者</string>
+    <string name="piece_field_key">調</string>
+    <string name="piece_field_tempo">テンポ</string>
+    <string name="piece_field_status">ステータス</string>
+    <string name="piece_field_notes">メモ</string>
+    <string name="piece_title_error">曲名がないと保存できません</string>
+    <string name="piece_key_major">長調</string>
+    <string name="piece_key_minor">短調</string>
+    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="piece_tempo_slower">遅く</string>
+    <string name="piece_tempo_faster">速く</string>
+    <string name="piece_tempo_clear">テンポなし</string>
+    <string name="piece_delete">曲を削除</string>
+    <string name="piece_delete_title">「%1$s」を削除しますか？</string>
+    <string name="piece_delete_text">楽譜とメモは削除されます。録音は「録音」に残ります。</string>
+    <string name="piece_delete_confirm">削除</string>
+    <string name="take_record">テイクを録る</string>
+    <string name="take_record_hint">録音中、画面には音程のヒントが出ません。分析は録り終えてから表示されます。</string>
+    <string name="take_recording">録音 · %1$s</string>
+    <string name="take_level_description">マイクが音を拾っています</string>
+    <string name="take_no_permission">テイクを録るには、マイクへのアクセスが必要です。</string>
+    <string name="take_grant_permission">アクセスを許可</string>
+    <string name="take_progress">最新 %1$d %% · 最高 %2$d %%</string>
+    <string name="take_chart_description">テイクのスコア（録音順）：%1$s</string>
+    <string name="takes_title">テイク</string>
+    <string name="takes_empty">テイクはまだありません。最初のテイクを録ると、曲の変化が見えてきます。</string>
+    <string name="take_best">ベスト</string>
+    <!-- «Звук»: processing of recorded sound (spec 3.17) -->
+    <string name="sound_everyone_title">録音のサウンド</string>
+    <string name="sound_everyone_subtitle">すべての録音に適用 · %1$s</string>
+    <string name="sound_reset">リセット</string>
+    <string name="sound_caption_off">加工なし</string>
+    <string name="sound_caption_custom">個別の設定</string>
+    <string name="sound_caption_saved_hint">個別の設定 · 自動で保存されます</string>
+    <string name="sound_caption_everyone">共通 · %1$s</string>
+    <string name="sound_caption_own">個別の設定 · %1$s</string>
+    <string name="sound_row_off">オフ</string>
+    <string-array name="sound_preset_names">
+        <item>加工なし</item>
+        <item>ナチュラル</item>
+        <item>部屋</item>
+        <item>室内楽ホール</item>
+        <item>大ホール</item>
+        <item>あたたかく</item>
+    </string-array>
+    <string name="sound_preset_custom">カスタム</string>
+    <string name="sound_preset_save">プリセットとして保存</string>
+    <string name="sound_preset_remove_hint">長押しで削除</string>
+    <string name="sound_mode_everyone">共通</string>
+    <string name="sound_mode_own">この録音だけ</string>
+    <string name="sound_mode_everyone_text">%1$s —「設定 → 録音のサウンド」の内容です。そちらを変えると、ここも変わります。どれかのつまみに触れると、この録音は個別の設定になります。</string>
+    <string name="sound_mode_own_text">この録音だけの設定です。「共通」に戻すと共通の設定になり、個別の設定は消えます。</string>
+    <string name="sound_listen_on">試聴する録音</string>
+    <string name="sound_listen_latest">音つきの最新の録音</string>
+    <string name="sound_listen_none">音つきの録音がまだありません。設定は決めておけますが、試聴は最初の録音のあとになります。</string>
+    <string name="sound_affected_one">%1$d 件の録音に適用</string>
+    <string name="sound_affected_many">%1$d 件の録音に適用</string>
+    <string name="sound_order">順番：イコライザー → コンプレッサー → ホール → 音量</string>
+    <string name="sound_block_eq">イコライザー</string>
+    <string name="sound_block_compressor">コンプレッサー</string>
+    <string name="sound_block_compressor_sub">音量をそろえます</string>
+    <string name="sound_block_reverb">ホール</string>
+    <string name="sound_block_reverb_sub">リバーブ</string>
+    <string name="sound_block_output">音量</string>
+    <string name="sound_block_switch">%1$s：オンにする</string>
+    <string name="sound_block_off">オフ</string>
+    <string name="sound_block_expand">開く</string>
+    <string name="sound_block_collapse">たたむ</string>
+    <string name="sound_eq_flat">フラット</string>
+    <string-array name="sound_band_names">
+        <item>うなり</item>
+        <item>低域</item>
+        <item>ボディ</item>
+        <item>きつさ</item>
+        <item>空気感</item>
+    </string-array>
+    <string name="sound_band_low_cut_switch">うなりをカット</string>
+    <string name="sound_eq_curve_description">イコライザーのカーブ。各帯域の点はドラッグできます。同じ値は下のスライダーでも変えられます。</string>
+    <string name="sound_param_frequency">周波数</string>
+    <string name="sound_param_gain">ゲイン</string>
+    <string name="sound_param_width">幅</string>
+    <string name="sound_param_width_hint">小さいほど広い</string>
+    <string name="sound_param_amount">かけ具合</string>
+    <string name="sound_param_amount_own">手動</string>
+    <string name="sound_amount_little">少し</string>
+    <string name="sound_amount_noticeable">はっきり</string>
+    <string name="sound_amount_lot">強く</string>
+    <string name="sound_param_threshold">スレッショルド</string>
+    <string name="sound_param_threshold_hint">どの音量から圧縮するか</string>
+    <string name="sound_param_ratio">レシオ</string>
+    <string name="sound_param_attack">アタック</string>
+    <string name="sound_param_attack_hint">かかり始めの速さ</string>
+    <string name="sound_param_release">リリース</string>
+    <string name="sound_param_release_hint">戻るときの速さ</string>
+    <string name="sound_param_makeup">音量の補正</string>
+    <string name="sound_comp_text">小さい音は大きく、大きい音は小さくなります。録音がなめらかに聞こえ、何も失われません。</string>
+    <string name="sound_comp_now">現在の圧縮</string>
+    <string name="sound_comp_details">詳細</string>
+    <string-array name="sound_space_names">
+        <item>部屋</item>
+        <item>ホール</item>
+        <item>大聖堂</item>
+    </string-array>
+    <string name="sound_param_decay">残響の長さ</string>
+    <string name="sound_param_decay_hint">静かになるまでの時間</string>
+    <string name="sound_param_pre_delay">プリディレイ</string>
+    <string name="sound_param_pre_delay_hint">響きが始まるまでの間</string>
+    <string name="sound_param_brightness">残響の明るさ</string>
+    <string name="sound_param_brightness_hint">こもった ↔ 明るい</string>
+    <string name="sound_param_mix">ミックス</string>
+    <string name="sound_param_mix_hint">ドライ ↔ ホールの響き</string>
+    <string name="sound_param_output">出力ゲイン</string>
+    <string name="sound_limiter_note">出力には常にリミッターがかかっています。スピーカーでもファイルでも音割れは起きません。</string>
+    <string name="sound_limiter_hot">リミッターが働いています。上げた分が収まりきっていません。ゲインを下げると、音がのびやかになります。</string>
+    <string name="sound_meter_output">出力</string>
+    <string name="sound_meter_limiter">リミッター</string>
+    <string name="sound_meter_none">—</string>
+    <string name="sound_slider_minus">%1$s：下げる</string>
+    <string name="sound_slider_plus">%1$s：上げる</string>
+    <string name="sound_slider_reset_hint">ダブルタップでリセット</string>
+    <string name="sound_slider_off">オフ</string>
+    <string name="sound_dialog_everyone_title">共通の設定に戻しますか？</string>
+    <string name="sound_dialog_everyone_text">この録音の個別の設定は消えます。</string>
+    <string name="sound_dialog_everyone_confirm">戻す</string>
+    <string name="sound_dialog_reset_title">録音のサウンドをリセットしますか？</string>
+    <string name="sound_dialog_reset_text">個別の設定がない録音はすべて、録音したままの音に戻ります。</string>
+    <string name="sound_dialog_preset_title">新しいプリセット</string>
+    <string name="sound_dialog_preset_hint">名前</string>
+    <string name="sound_dialog_preset_save">保存</string>
+    <string name="sound_dialog_delete_title">プリセット「%1$s」を削除しますか？</string>
+    <string name="sound_dialog_pick_title">試聴する録音</string>
+    <string name="sound_share">共有</string>
+    <string name="share_message">%1$s · %2$d %% · %3$s</string>
+    <string name="share_message_session">録音</string>
+    <string name="share_title">録音を共有</string>
+    <string name="share_processed">加工したサウンド</string>
+    <string name="share_processed_caption">%1$s · アプリで聞こえるとおり</string>
+    <string name="share_original">オリジナル</string>
+    <string name="share_original_caption">録音したまま、加工なし</string>
+    <string name="share_video_processed">加工したサウンドつきの動画</string>
+    <string name="share_video_original">撮ったままの動画</string>
+    <string name="share_video_original_caption">元のファイル、音は加工なし</string>
+    <string name="share_video">動画</string>
+    <string name="share_video_caption">撮ったまま</string>
+    <string name="share_sound_only">音だけ</string>
+    <string name="share_sound_only_processed">加工あり · ≈ %1$s · モノラル</string>
+    <string name="share_sound_only_caption">録音したまま · ≈ %1$s · モノラル</string>
+    <string name="share_video_details">%1$s · %2$dp · ≈ %3$s</string>
+    <string name="share_large_file">大きなファイルです。メッセージアプリでは圧縮されたり、送れなかったりすることがあります</string>
+    <string name="share_failed_video_title">動画を準備できませんでした</string>
+    <string name="share_failed_video_text">テイクと設定はそのままです。もう一度試すか、音を加工せずに撮ったままの動画を送信できます。</string>
+    <string name="share_send_as_shot">撮ったまま送信</string>
+    <string name="share_file_details">%1$s · ≈ %2$s · モノラル</string>
+    <string name="share_with_text">テキストを追加：「%1$s」</string>
+    <string name="share_continue">続ける</string>
+    <string name="share_busy">準備中…</string>
+    <string name="share_preparing">ファイルを準備しています</string>
+    <string name="share_remaining">残り約 %1$d 秒</string>
+    <string name="share_failed_title">ファイルを準備できませんでした</string>
+    <string name="share_failed_text">録音も設定もそのままです。もう一度試すか、加工なしのオリジナルを送信できます。</string>
+    <string name="share_retry">もう一度</string>
+    <string name="share_send_original">オリジナルを送信</string>
+    <string name="share_chooser">録音を共有</string>
+    <string name="share_no_app">録音を受け取れるアプリがありません</string>
+    <string name="share_size_kb">%1$d KB</string>
+    <string name="share_size_mb">%1$s MB</string>
+    <string name="card_menu">その他</string>
+    <string name="card_menu_share">共有</string>
+    <string name="card_menu_sound">サウンド…</string>
+    <string name="best_set">ベストにする</string>
+    <string name="best_clear">「ベスト」を外す</string>
+    <string name="best_marked">ベストにしました</string>
+    <string name="best_marked_moved">ベストにしました。前のベストは外れました</string>
+    <string name="sound_session_row">サウンド</string>
+    <string name="sound_session_silent">音のない録音です — 音程の分析だけがあります</string>
+    <string name="sound_settings_row">録音のサウンド</string>
+    <string name="sound_settings_row_caption">%1$s · すべての録音に適用</string>
+    <string name="sound_ab_original">オリジナル：録音したまま</string>
+    <string name="sound_ab_processed">加工あり</string>
+    <string name="stand_counter">%1$d / %2$d</string>
+    <string name="stand_page_description">%1$d / %2$d ページ</string>
+    <string name="stand_delete_page">ページを削除</string>
+    <string name="stand_delete_title">ページを削除しますか？</string>
+    <string name="stand_delete_text">このページの写真が削除されます。ほかのページはそのまま残ります。</string>
+    <string name="stand_hint">紙の端をタップ — 次のページ</string>
+    <string name="stand_previous_page">前のページ</string>
+    <string name="stand_next_page">次のページ</string>
+    <string name="stand_recording_description">テイクを録音中、%1$s</string>
+</resources>

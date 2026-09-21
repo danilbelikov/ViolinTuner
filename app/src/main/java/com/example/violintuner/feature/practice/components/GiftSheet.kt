@@ -151,6 +151,6 @@ internal fun GiftSheetContent(gift: Gift, onAccept: () -> Unit, modifier: Modifi
 /** «1 час за скрипкой», «10 часов за скрипкой», «2500 часов за скрипкой». */
 @Composable
 private fun giftHours(hours: Int): String = stringResource(
-    Formats.pluralRu(hours, R.string.gift_hours_one, R.string.gift_hours_few, R.string.gift_hours_many),
+    Formats.plural(hours, R.string.gift_hours_one, R.string.gift_hours_few, R.string.gift_hours_many),
     Formats.grouped(hours.toLong()),
 )

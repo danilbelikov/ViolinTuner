@@ -1,0 +1,917 @@
+<resources>
+    <string name="app_name">ViolinTuner</string>
+
+    <string name="nav_live">Live</string>
+    <string name="nav_practice">연습</string>
+    <string name="nav_history">녹음</string>
+    <string name="nav_settings">설정</string>
+
+    <string name="mode_play">연주</string>
+    <string name="mode_tuning">조율</string>
+    <string name="tuning_string_hz">%1$d Hz</string>
+    <string name="tuning_hint_auto">자동 · 개방현을 켜 보세요</string>
+    <string name="tuning_hint_locked">목표 고정: %1$s · %2$d Hz · 탭하면 해제</string>
+    <string name="tuning_string_locked">고정됨</string>
+    <string name="tuning_string_auto">자동</string>
+    <string name="status_in_tune">정확</string>
+    <string name="status_sharp">높음</string>
+    <string name="status_flat">낮음</string>
+    <string name="live_silence">연주하세요…</string>
+    <string name="live_too_noisy">주변이 너무 시끄러워요</string>
+    <string name="live_mic_unavailable">마이크를 사용할 수 없어요</string>
+    <string name="mic_permission_title">마이크 접근 권한이 필요해요</string>
+    <string name="mic_permission_text">마이크가 없으면 바이올린 소리를 들을 수 없어요. 소리는 휴대폰에서만 처리되며 어디로도 전송되지 않습니다.</string>
+    <string name="mic_permission_grant">접근 허용</string>
+    <string name="record_button">녹음</string>
+    <string name="record_start">녹음 시작</string>
+    <string name="record_stop">녹음 중지</string>
+    <string name="record_no_notes">녹음에서 음을 찾지 못했어요</string>
+    <string name="recording_elapsed_description">녹음 중, %1$s</string>
+    <string name="recording_strip_label">녹음 ·</string>
+    <string name="practice_chip_label">연습 ·</string>
+
+    <string name="onboarding_mic_title">바이올린 소리를 들려주세요</string>
+    <string name="onboarding_mic_text">앱은 마이크로 소리를 듣고, 인터넷으로 아무것도 보내지 않습니다. 소리는 휴대폰에서만 처리됩니다.</string>
+    <string name="onboarding_mic_cta">마이크 허용</string>
+    <string name="onboarding_mic_foot">휴대폰을 보면대 위, 50–80cm 거리에 두세요</string>
+    <string name="onboarding_a4_title">어떤 음에 맞춰 조율하나요?</string>
+    <string name="onboarding_a4_text">집이나 학교에서는 보통 440 Hz, 오케스트라는 442를 자주 씁니다. 설정에서 바꿀 수 있어요.</string>
+    <string name="onboarding_a4_cta">다음</string>
+    <string name="onboarding_a4_foot">연주하는 동안 화면이 꺼지지 않습니다</string>
+    <string name="onboarding_tolerance_title">얼마나 엄격하게 볼까요?</string>
+    <string name="onboarding_tolerance_text">초록 구간의 너비입니다. 넉넉하게 시작하세요 — 언제든 좁힐 수 있어요.</string>
+    <string name="onboarding_tolerance_cta">연주 시작</string>
+    <string name="onboarding_tolerance_foot">설정에서 언제든 바꿀 수 있어요</string>
+    <string name="onboarding_step_description">%2$d단계 중 %1$d단계</string>
+
+    <string name="tolerance_beginner_name">초급</string>
+    <string name="tolerance_beginner_text">넓은 초록 구간</string>
+    <string name="tolerance_intermediate_name">중급</string>
+    <string name="tolerance_intermediate_text">비브라토가 느껴져요</string>
+    <string name="tolerance_pro_name">전문가</string>
+    <string name="tolerance_pro_text">엄격하게</string>
+    <string name="tolerance_cents">±%1$d센트</string>
+    <string name="a4_option_description">%1$d헤르츠</string>
+
+    <string name="settings_a4_title">기준음 A4</string>
+    <string name="settings_a4_text">가온 다 위 라(A4) 음의 주파수(Hz)입니다. 모든 음과 현이 이 값을 기준으로 계산됩니다.</string>
+    <string name="settings_tolerance_title">허용 범위</string>
+    <string name="settings_tolerance_text">초록 구간의 너비: 음에 얼마나 가까워야 “정확”으로 볼지 정합니다.</string>
+    <string name="settings_language">언어</string>
+    <string name="settings_restart_onboarding">온보딩 다시 보기</string>
+
+    <string name="session_default_title">녹음 · %1$s</string>
+    <string name="record_default_title">녹음</string>
+    <string name="session_take_subtitle">테이크 · %1$s · %2$s</string>
+    <string name="session_back">뒤로</string>
+    <string name="session_not_found">녹음을 찾을 수 없어요</string>
+    <string name="session_percent">%1$d%%</string>
+    <string name="session_meta">정확 · %1$s · ±%2$d센트</string>
+    <string name="session_bias_mean">평균 %1$s센트</string>
+    <string name="session_bias_none">편차 없음</string>
+    <string name="session_bias_hint_none">정확히 가운데</string>
+    <string name="session_bias_hint_flat">조금 낮게 짚어요 — 손가락을 브리지 쪽으로</string>
+    <string name="session_bias_hint_sharp">조금 높게 짚어요 — 손가락을 너트 쪽으로</string>
+    <string name="session_card_distribution">분포</string>
+    <string name="session_card_mean_error">평균 오차</string>
+    <string name="session_card_per_string">현별</string>
+    <string name="session_cents_unit">센트</string>
+    <string name="session_bias_small_none">편차 없음</string>
+    <string name="session_bias_small_down">편차 %1$s센트 낮음</string>
+    <string name="session_bias_small_up">편차 %1$s센트 높음</string>
+    <string name="session_string_not_played">—</string>
+    <string name="session_problem_notes">문제가 되는 음</string>
+    <string name="session_problem_note">%2$s현의 %1$s</string>
+    <string name="session_cents_value">%1$s센트</string>
+    <string name="session_no_problem_notes">꾸준히 벗어나는 음이 하나도 없어요 — 훌륭한 녹음입니다.</string>
+    <string name="session_action_rename">이름 변경</string>
+    <string name="session_action_delete">삭제</string>
+    <string name="session_rename_title">녹음 이름</string>
+    <string name="session_rename_hint">비워 두면 날짜로 된 이름으로 돌아갑니다</string>
+    <string name="session_rename_confirm">저장</string>
+    <string name="session_delete_title">녹음을 삭제할까요?</string>
+    <string name="session_delete_text">소리와 분석이 삭제되며 되돌릴 수 없습니다.</string>
+    <string name="session_delete_confirm">삭제</string>
+    <string name="dialog_cancel">취소</string>
+    <string name="session_note_target">목표</string>
+    <string name="session_note_mean">평균</string>
+    <string name="session_note_min_max">최소 / 최대</string>
+    <string name="session_note_min_max_value">%1$s / %2$s</string>
+    <string name="session_note_duration">길이</string>
+    <string name="session_note_duration_value">%1$s초</string>
+    <string name="session_note_range">폭</string>
+    <string name="session_note_range_value">±%1$d센트</string>
+    <string name="session_note_position">%1$s현 · %2$s</string>
+    <string name="finger_open">개방현</string>
+    <string name="finger_first">1번 손가락</string>
+    <string name="finger_second">2번 손가락</string>
+    <string name="finger_third">3번 손가락</string>
+    <string name="finger_fourth">4번 손가락</string>
+    <string name="finger_higher_position">높은 포지션</string>
+    <string name="session_tip_stable">안정적이고 비브라토가 고릅니다</string>
+    <string name="session_tip_wandering">평균은 정확하지만 음이 흔들려요</string>
+    <string name="session_tip_flat">손가락이 낮아요 — 브리지 쪽으로 조금만</string>
+    <string name="session_tip_sharp">손가락이 높아요 — 너트 쪽으로 조금만</string>
+    <string name="session_player_play">녹음 듣기</string>
+    <string name="session_player_pause">일시정지</string>
+    <string name="session_player_position">녹음 재생 위치</string>
+    <string name="session_roll_description">음 타임라인. 음을 누르면 자세히 볼 수 있어요.</string>
+
+    <string name="history_count_one">녹음 %1$d개</string>
+    <string name="history_count_few">녹음 %1$d개</string>
+    <string name="history_count_many">녹음 %1$d개</string>
+    <string name="history_chart_title">최근 2주간의 녹음</string>
+    <string name="history_chart_description">최근 2주간의 날짜별 녹음</string>
+    <string name="history_filter_all">전체</string>
+    <string name="history_filter_this_week">이번 주</string>
+    <string name="history_filter_month">한 달</string>
+    <string name="history_day_today">오늘</string>
+    <string name="record_meta">%1$s · %2$s</string>
+    <string name="history_chart_bar">%1$s, %2$s</string>
+    <string name="backup_block_title">데이터</string>
+    <string name="backup_row_save">사본 저장</string>
+    <string name="backup_row_never">아직 저장한 적 없음</string>
+    <string name="backup_row_last">마지막 — %1$s</string>
+    <string name="backup_row_stale">마지막 — %1$s · 그 뒤로 %2$s</string>
+    <string name="backup_new_records_one">새 녹음 %1$d개</string>
+    <string name="backup_new_records_few">새 녹음 %1$d개</string>
+    <string name="backup_new_records_many">새 녹음 %1$d개</string>
+    <string name="backup_row_running">진행 중 · %1$d%%</string>
+    <string name="backup_row_restore">사본에서 복원</string>
+    <string name="backup_row_total">현재 앱 데이터: %1$s</string>
+    <string name="backup_onboarding_link">데이터 사본이 있어요</string>
+    <string name="backup_title">데이터 백업</string>
+    <string name="backup_text">앱에 있는 모든 것을 담은 파일 하나입니다. 이 휴대폰이 아닌 곳 — 컴퓨터, USB 메모리, 클라우드 폴더 — 에 두는 것이 좋습니다.</string>
+    <string name="backup_part_data">분석, 연습, 진행 상황, 설정</string>
+    <string name="backup_part_data_short">분석, 연습, 진행 상황</string>
+    <string name="backup_part_sheets">악보 사진</string>
+    <string name="backup_part_audio">녹음의 소리</string>
+    <string name="backup_part_audio_short">소리</string>
+    <string name="backup_part_video">영상</string>
+    <string name="backup_part_always">항상</string>
+    <string name="backup_total">사본 크기</string>
+    <string name="backup_total_value">≈ %1$s</string>
+    <string name="backup_without_video">영상 제외: 복원하면 영상 테이크에는 분석만 남고 화면과 소리는 없습니다.</string>
+    <string name="backup_without_audio">소리 제외: 복원한 녹음에는 소리가 없고 분석만 남습니다.</string>
+    <string name="backup_without_sheets">악보 사진 제외: 복원한 곡에는 악보 페이지가 없습니다.</string>
+    <string name="backup_save_to">저장 위치 선택…</string>
+    <string name="backup_saving_button">저장 중…</string>
+    <string name="backup_share">보내기…</string>
+    <string name="backup_too_big_to_share">이 크기의 사본은 메신저나 메일로 보낼 수 없어요 — 폴더나 USB 메모리에 저장하세요</string>
+    <string name="backup_busy_recording">먼저 녹음을 끝내 주세요</string>
+    <string name="backup_nothing_title">아직 저장할 것이 없어요</string>
+    <string name="backup_nothing_text">첫 테이크를 녹음하거나 곡을 추가하면 여기에서 사본을 만들 수 있어요</string>
+    <string name="backup_file_name">Intonation · 백업 · %1$s.zip</string>
+    <string name="backup_saving_title">사본 저장 중</string>
+    <string name="backup_phase_data">분석, 연습, 진행 상황</string>
+    <string name="backup_phase_files">%1$s · %2$d / %3$d</string>
+    <string name="backup_phase_verifying_file">파일 확인 중</string>
+    <string name="backup_percent">%1$d%%</string>
+    <string name="backup_done_of">%1$s / %2$s</string>
+    <string name="backup_remaining">남은 시간 %1$s</string>
+    <string name="backup_remaining_minutes">약 %1$d분</string>
+    <string name="backup_remaining_seconds">몇 초</string>
+    <string name="backup_can_leave_title">앱을 닫아 두어도 됩니다 — 사본은 알아서 완성됩니다.</string>
+    <string name="backup_can_leave_text">끝날 때까지 휴대폰을 끄거나 USB 메모리를 빼지 마세요.</string>
+    <string name="backup_cancel">취소</string>
+    <string name="backup_stop_title">중지할까요?</string>
+    <string name="backup_stop_text">쓰다 만 파일은 삭제됩니다.</string>
+    <string name="backup_stop_continue">계속</string>
+    <string name="backup_stop_confirm">중지</string>
+    <string name="backup_saved_title">사본을 저장했어요</string>
+    <string name="backup_saved_place">%1$s · %2$s</string>
+    <string name="backup_place_downloads">다운로드</string>
+    <string name="backup_saved_advice">파일을 휴대폰 밖으로 복사해 두세요. 같은 휴대폰에 있는 사본은 휴대폰에 문제가 생기면 소용이 없습니다.</string>
+    <string name="backup_done">완료</string>
+    <string name="backup_failed_space_title">저장하던 곳에 공간이 부족했어요</string>
+    <string name="backup_failed_space_text">쓰다 만 파일은 삭제했습니다. 다른 위치를 고르거나 영상 없이 저장해 보세요.</string>
+    <string name="backup_failed_space_inside">보낼 사본을 만들기에 휴대폰 저장 공간이 %1$s 부족합니다. 폴더에 바로 저장하세요.</string>
+    <string name="backup_failed_gone_title">저장 위치를 사용할 수 없게 되었어요</string>
+    <string name="backup_failed_gone_text">USB 메모리가 빠졌거나 폴더가 사라졌습니다. 쓰다 만 파일은 삭제했으니 저장 장치를 연결하고 다시 시도하세요.</string>
+    <string name="backup_failed_title">사본을 저장하지 못했어요</string>
+    <string name="backup_failed_text">쓰다 만 파일은 삭제했습니다. 앱의 데이터는 그대로입니다.</string>
+    <string name="backup_retry">다시 시도</string>
+    <string name="backup_close">닫기</string>
+    <string name="backup_count_sessions_one">녹음 %1$d개</string>
+    <string name="backup_count_sessions_few">녹음 %1$d개</string>
+    <string name="backup_count_sessions_many">녹음 %1$d개</string>
+    <string name="backup_count_pieces_one">곡 %1$d개</string>
+    <string name="backup_count_pieces_few">곡 %1$d개</string>
+    <string name="backup_count_pieces_many">곡 %1$d개</string>
+    <string name="backup_count_pages_one">%1$d페이지</string>
+    <string name="backup_count_pages_few">%1$d페이지</string>
+    <string name="backup_count_pages_many">%1$d페이지</string>
+    <string name="backup_count_days_one">연습한 날 %1$d일</string>
+    <string name="backup_count_days_few">연습한 날 %1$d일</string>
+    <string name="backup_count_days_many">연습한 날 %1$d일</string>
+    <string name="backup_count_trophies_one">트로피 %1$d개</string>
+    <string name="backup_count_trophies_few">트로피 %1$d개</string>
+    <string name="backup_count_trophies_many">트로피 %1$d개</string>
+    <string name="backup_count_takes_one">테이크 %1$d개</string>
+    <string name="backup_count_takes_few">테이크 %1$d개</string>
+    <string name="backup_count_takes_many">테이크 %1$d개</string>
+    <string name="backup_count_sound_one">소리가 있는 녹음 %1$d개</string>
+    <string name="backup_count_sound_few">소리가 있는 녹음 %1$d개</string>
+    <string name="backup_count_sound_many">소리가 있는 녹음 %1$d개</string>
+    <string name="backup_count_video">영상 %1$d개</string>
+    <string name="backup_count_level">레벨 %1$d</string>
+    <string name="backup_notification_channel">데이터 백업</string>
+    <string name="backup_notification_saving">사본 저장 중 · %1$d%%</string>
+    <string name="backup_notification_restoring">데이터 복원 중 · %1$d%%</string>
+    <string name="restore_title">사본에서 복원</string>
+    <string name="restore_reading">사본을 여는 중…</string>
+    <string name="restore_made">%1$s · %2$s</string>
+    <string name="restore_without_video">영상 없음 — 영상 테이크에는 분석만 남습니다</string>
+    <string name="restore_without_audio">소리 없음 — 녹음에는 분석만 남습니다</string>
+    <string name="restore_without_sheets">악보 사진 없음</string>
+    <string name="restore_now_title">현재 앱에 있는 것</string>
+    <string name="restore_warning">지금 앱에 있는 모든 것이 사본의 데이터로 바뀝니다. 되돌릴 수 없습니다.</string>
+    <string name="restore_save_first">먼저 현재 데이터 저장</string>
+    <string name="restore_empty_app">앱이 아직 비어 있어요. 복원하면 사본의 모든 것이 여기에 들어오고, 온보딩은 필요 없습니다.</string>
+    <string name="restore_button">복원</string>
+    <string name="restore_confirm_title">데이터를 바꿀까요?</string>
+    <string name="restore_confirm_text">이 휴대폰에서 삭제되는 것: %1$s. 그 자리에 %2$s 사본이 들어옵니다.</string>
+    <string name="restore_confirm_button">바꾸기</string>
+    <string name="restore_not_ours_title">“Intonation”의 사본이 아니에요</string>
+    <string name="restore_not_ours_text">다른 앱의 파일이거나 일반 압축 파일입니다. 사본의 이름은 “Intonation · 백업 · 날짜.zip”입니다.</string>
+    <string name="restore_too_new_title">더 새로운 버전의 앱에서 만든 사본이에요</string>
+    <string name="restore_too_new_text">앱을 업데이트한 뒤 파일을 다시 열어 주세요.</string>
+    <string name="restore_damaged_title">파일이 손상되었거나 덜 받아졌어요</string>
+    <string name="restore_damaged_text">보관된 곳에서 파일을 다시 복사한 뒤 한 번 더 시도하세요.</string>
+    <string name="restore_pick_another">다른 파일 선택</string>
+    <string name="restore_no_room_title">안전하게 복원하기에 %1$s 부족해요</string>
+    <string name="restore_no_room_text">사본은 먼저 현재 데이터 옆에 풀린 다음에야 그것을 대신합니다. 휴대폰 공간을 비우거나, 안전장치 없이 복원하세요.</string>
+    <string name="restore_no_room_ok">확인</string>
+    <string name="restore_unsafe_button">현재 데이터를 삭제하고 복원</string>
+    <string name="restore_unsafe_title">모두 삭제하고 복원할까요?</string>
+    <string name="restore_unsafe_text">먼저 사본 전체를 확인합니다. 그다음 휴대폰에서 삭제되는 것: %1$s — 복원이 실패하면 되찾을 수 없습니다.</string>
+    <string name="restore_unsafe_confirm">삭제하고 복원</string>
+    <string name="restore_progress_title">데이터 복원 중</string>
+    <string name="restore_step_verifying">확인</string>
+    <string name="restore_step_extracting">복원</string>
+    <string name="restore_step_finishing">거의 완료</string>
+    <string name="restore_phase_verifying">사본 확인 중</string>
+    <string name="restore_phase_extracting">복원 중 · %1$s %2$d</string>
+    <string name="restore_can_leave_title">앱을 닫아 두어도 됩니다 — 복원은 알아서 끝납니다.</string>
+    <string name="restore_can_stop">데이터는 아직 그대로입니다. 확인하고 압축을 푸는 동안에는 중지할 수 있어요.</string>
+    <string name="restore_cannot_stop">복원한 데이터를 여는 중입니다 — 이제는 중지할 수 없어요.</string>
+    <string name="restore_done_title">데이터를 복원했어요</string>
+    <string name="restore_opening">데이터를 여는 중…</string>
+    <string name="restore_failed_title">복원하지 못했어요</string>
+    <string name="restore_failed_text">데이터는 그대로입니다 — 아무것도 바뀌지 않았어요.</string>
+    <string name="restore_failed_lost_title">복원하지 못했고, 이전 데이터는 이미 없습니다</string>
+    <string name="restore_failed_lost_text">사본은 확인을 마쳤고 온전합니다 — 같은 파일로 다시 시도하세요. 그래도 안 되면 빈 앱으로 시작하세요.</string>
+    <string name="restore_retry_same">이 파일로 다시 시도</string>
+    <string name="restore_start_clean">빈 앱으로 시작</string>
+    <string name="restore_busy">먼저 녹음을 끝내 주세요</string>
+    <string name="video_description">영상</string>
+    <string name="video_state_playing">재생 중, 두 번 탭하면 일시정지</string>
+    <string name="video_state_paused">일시정지됨, 두 번 탭하면 계속</string>
+    <string name="video_fullscreen">전체 화면</string>
+    <string name="video_fullscreen_exit">전체 화면 닫기</string>
+    <string name="video_lost_title">영상을 찾을 수 없어요 — 분석은 남아 있습니다</string>
+    <string name="video_lost_text">파일이 앱 저장 공간에서 삭제되었습니다. 소리도 없어서 소리 없는 녹음과 같습니다.</string>
+    <string name="video_undecodable_title">이 영상은 여기서 보여 드릴 수 없어요</string>
+    <string name="video_undecodable_text">휴대폰이 이 영상의 화면을 읽지 못합니다. 소리와 분석은 그대로입니다.</string>
+    <string name="video_row_time">%1$s / %2$s · %3$s센트</string>
+    <string name="video_size">영상 · %1$s · %2$s</string>
+    <string name="video_size_lost">영상을 찾을 수 없음</string>
+    <string name="video_resolution">%1$dp</string>
+    <string name="video_watch_place">이 부분 보기</string>
+    <string name="video_listen_place">이 부분 듣기</string>
+    <string name="video_delete_text">영상(%1$s), 소리, 분석이 삭제됩니다. 되돌릴 수 없습니다.</string>
+    <string name="record_tile_video">영상 포함</string>
+    <string name="size_mb">%1$s MB</string>
+    <string name="size_kb">%1$d KB</string>
+    <string name="video_take">영상 테이크</string>
+    <string name="video_take_busy">분석 중…</string>
+    <string name="video_shoot">영상 촬영</string>
+    <string name="video_shoot_hint">휴대폰 카메라가 열립니다</string>
+    <string name="video_pick">갤러리의 영상</string>
+    <string name="video_pick_hint">한 번에 하나, 60분까지</string>
+    <string name="video_copying">영상을 추가하는 중…</string>
+    <string name="video_listening">녹음을 듣는 중…</string>
+    <string name="video_percent">%1$d%%</string>
+    <string name="video_remaining">약 %1$d초 남음</string>
+    <string name="video_cancel">취소</string>
+    <string name="video_stop_title">분석을 중지할까요?</string>
+    <string name="video_stop_text">방금 촬영한 영상이라 다른 곳에는 저장되어 있지 않습니다. 잃지 않도록 어딘가로 보내거나, 삭제할 수 있어요.</string>
+    <string name="video_stopped_title">분석을 중지했어요</string>
+    <string name="video_delete">삭제</string>
+    <string name="video_send">영상 보내기</string>
+    <string name="video_continue">분석 계속</string>
+    <string name="video_ok">확인</string>
+    <string name="video_error_no_sound">영상에 소리가 없어요</string>
+    <string name="video_error_too_long">60분이 넘는 영상은 분석할 수 없어요</string>
+    <string name="video_error_cannot_open">영상을 열지 못했어요</string>
+    <string name="video_error_no_notes">영상에서 음을 찾지 못해 테이크를 추가하지 않았어요</string>
+    <string name="video_error_no_notes_gallery">원본은 갤러리에 그대로 있습니다.</string>
+    <string name="video_error_no_space">공간이 부족해요: %1$d MB가 더 필요합니다</string>
+    <string name="video_rescue_file">영상.mp4</string>
+    <string name="video_thumb">영상의 첫 장면</string>
+    <string name="selection_select">선택</string>
+    <string name="selection_count">%1$d개 선택됨</string>
+    <string name="selection_all">모두 선택</string>
+    <string name="selection_none">모두 해제</string>
+    <string name="selection_close">선택 닫기</string>
+    <string name="selection_delete">선택 항목 삭제</string>
+    <string name="selection_delete_records_one">녹음 %1$d개를 삭제할까요?</string>
+    <string name="selection_delete_records_few">녹음 %1$d개를 삭제할까요?</string>
+    <string name="selection_delete_records_many">녹음 %1$d개를 삭제할까요?</string>
+    <string name="selection_delete_takes_one">테이크 %1$d개를 삭제할까요?</string>
+    <string name="selection_delete_takes_few">테이크 %1$d개를 삭제할까요?</string>
+    <string name="selection_delete_takes_many">테이크 %1$d개를 삭제할까요?</string>
+    <string name="selection_delete_text">소리와 분석이 삭제됩니다. 되돌릴 수 없습니다.</string>
+    <string name="record_tile_take">테이크</string>
+    <string name="record_tile_record">녹음</string>
+    <string name="record_tile_sound">소리</string>
+    <string name="record_tile_only_video">영상</string>
+    <string name="record_tile_no_sound">소리 없음</string>
+    <string name="history_empty_filter">이 기간에는 녹음이 없어요</string>
+    <string name="history_empty">여기에 녹음이 나타납니다. Live 화면에서 녹음 버튼을 눌러 보세요.</string>
+
+    <string name="practice_start">연습 시작</string>
+    <string name="practice_stop">연습 종료</string>
+    <string name="practice_running">연습 중</string>
+    <string name="practice_timer_description">연습 중, %1$s</string>
+    <string name="practice_today">오늘: %1$s</string>
+    <string name="practice_today_none">오늘은 아직 연습하지 않았어요</string>
+    <string name="practice_empty">바이올린을 들 때 “연습 시작”을, 내려놓을 때 “종료”를 누르세요. 여기에 나만의 달력이 생깁니다.</string>
+    <string name="practice_week">이번 주</string>
+    <string name="practice_month">이번 달</string>
+    <string name="practice_streak">연속 일수</string>
+    <string name="practice_no_value">—</string>
+    <string name="practice_month_back">이전 달</string>
+    <string name="practice_month_forward">다음 달</string>
+    <string-array name="practice_weekdays">
+        <item>월</item>
+        <item>화</item>
+        <item>수</item>
+        <item>목</item>
+        <item>금</item>
+        <item>토</item>
+        <item>일</item>
+    </string-array>
+    <string name="practice_day_description">%1$s, %2$s</string>
+    <string name="practice_legend_less">적게</string>
+    <string name="practice_legend_more">많이</string>
+    <string name="practice_day_today">오늘</string>
+    <string name="practice_day_none">연습하지 않음</string>
+    <string name="practice_edit_time">시간 수정</string>
+    <string name="practice_add_time">시간 추가</string>
+    <string name="practice_day_records">이날의 녹음</string>
+    <string name="practice_summary_title">연습</string>
+    <string name="practice_step_hint">%1$d분 단위</string>
+    <string name="practice_step_down">%1$d분 빼기</string>
+    <string name="practice_step_up">%1$d분 더하기</string>
+    <string name="practice_save">저장</string>
+    <string name="practice_discard">저장 안 함</string>
+    <string name="practice_edit_title">하루 연습 시간</string>
+    <string name="practice_edit_hint">하루 동안의 총 시간입니다. 0으로 하면 달력에서 이날이 지워집니다.</string>
+    <string name="practice_chip_plus_minutes">+%1$d</string>
+    <string name="practice_chip_plus_hour">+1시간</string>
+    <string name="practice_chip_zero">0</string>
+    <string name="practice_too_short">너무 짧아요</string>
+    <string name="practice_forgotten_title">연습이 끝나지 않았어요</string>
+    <string name="practice_forgotten_text">연습이 벌써 %1$s째 이어지고 있어요.</string>
+    <string name="practice_forgotten_sound">바이올린 소리가 마지막으로 들린 시각: %1$s.</string>
+    <string name="practice_end_at">%1$s에 종료</string>
+    <string name="practice_end_now">지금 종료</string>
+    <string name="practice_continue">계속 연습할게요</string>
+
+    <!-- Profile and progress (spec 3.13, 5.7). Level and trophy names follow the order of ProgressConfig. -->
+    <string-array name="progress_level_names">
+        <item>첫소리</item>
+        <item>학생</item>
+        <item>개방현</item>
+        <item>1포지션</item>
+        <item>음계</item>
+        <item>연습곡</item>
+        <item>비브라토</item>
+        <item>3포지션</item>
+        <item>앙상블</item>
+        <item>악장</item>
+        <item>솔리스트</item>
+        <item>비르투오소</item>
+        <item>마에스트로</item>
+        <item>거장</item>
+        <item>전설</item>
+    </string-array>
+    <string-array name="progress_trophy_names">
+        <item>송진</item>
+        <item>줄감개</item>
+        <item>현</item>
+        <item>활</item>
+        <item>턱받침</item>
+        <item>소리굽쇠</item>
+        <item>보면대</item>
+        <item>케이스</item>
+        <item>바이올린</item>
+        <item>콘서트</item>
+    </string-array>
+    <string name="progress_no_name">바이올린과 함께</string>
+    <string name="progress_level">레벨 %1$d · %2$s</string>
+    <string name="progress_to_next_level">레벨 %1$d까지 %2$s</string>
+    <string name="progress_open_profile">프로필 열기</string>
+    <string name="progress_total_description">바이올린과 함께한 시간: %1$s</string>
+    <string name="progress_open_trophies">트로피 열기</string>
+    <string name="progress_trophies_one">트로피 %1$d개</string>
+    <string name="progress_trophies_few">트로피 %1$d개</string>
+    <string name="progress_trophies_many">트로피 %1$d개</string>
+    <string name="progress_next_trophy">다음 %1$s</string>
+    <string name="progress_trophies_and_next">%1$s · %2$s</string>
+    <string name="progress_more_trophies">+%1$d</string>
+    <string name="profile_title">프로필</string>
+    <string name="profile_pick_photo">사진 선택</string>
+    <string name="profile_remove_photo">사진 지우기</string>
+    <string name="profile_name_label">이름</string>
+    <string name="profile_name_placeholder">이름이 무엇인가요?</string>
+    <string name="profile_name_counter">%1$d / %2$d</string>
+    <string name="profile_done">완료</string>
+    <string name="profile_no_name_letter">\?</string>
+    <string name="profile_photo_failed">사진을 열지 못했어요</string>
+    <string name="gift_title">새 트로피</string>
+    <string name="gift_hours_one">바이올린과 함께한 %1$s시간</string>
+    <string name="gift_hours_few">바이올린과 함께한 %1$s시간</string>
+    <string name="gift_hours_many">바이올린과 함께한 %1$s시간</string>
+    <string name="gift_thanks">고마워요</string>
+    <string name="trophies_title">트로피</string>
+    <string name="trophies_total">바이올린과 함께한 시간 — %1$s</string>
+    <string name="trophies_awarded">%1$s 획득</string>
+    <string name="trophies_remaining">%1$s 남음</string>
+    <string name="trophies_far">아직 먼 곳</string>
+    <string name="trophies_line_given">%1$s, %2$s, %3$s 획득</string>
+    <string name="trophies_line_remaining">%1$s, %2$s, %3$s 남음</string>
+    <string name="trophies_line_far">%1$s, %2$s, 아직 먼 곳</string>
+
+    <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
+    <string name="history_section_sessions">녹음</string>
+    <string name="history_section_repertoire">레퍼토리</string>
+    <string name="session_take_title">%1$s · %2$s</string>
+    <string name="dot_separator"> · </string>
+    <string name="repertoire_add">곡 추가</string>
+    <string name="repertoire_empty">여기는 내 곡들의 자리입니다: 악보, 메모, 녹음. 첫 곡을 추가해 보세요.</string>
+    <string name="repertoire_empty_filter">“%1$s” 상태인 항목이 없어요.</string>
+    <string name="repertoire_show_all">모두 보기</string>
+    <string name="repertoire_no_takes">테이크 없음</string>
+    <string name="piece_status_reading">읽는 중</string>
+    <string name="piece_status_learning">연습 중</string>
+    <string name="piece_status_in_repertoire">레퍼토리</string>
+    <string name="piece_status_learned">익힘</string>
+    <!-- The journey (spec 3.23): arrays follow the order of JourneyRoute.stops -->
+    <string-array name="journey_cities">
+        <item>집</item>
+        <item>크레모나</item>
+        <item>밀라노</item>
+        <item>잘츠부르크</item>
+        <item>빈</item>
+        <item>프라하</item>
+        <item>라이프치히</item>
+        <item>베를린</item>
+        <item>암스테르담</item>
+        <item>파리</item>
+        <item>런던</item>
+        <item>상트페테르부르크</item>
+        <item>모스크바</item>
+        <item>뉴욕</item>
+        <item>부에노스아이레스</item>
+        <item>도쿄</item>
+        <item>시드니</item>
+    </string-array>
+    <string-array name="journey_cities_to">
+        <item>집</item>
+        <item>크레모나</item>
+        <item>밀라노</item>
+        <item>잘츠부르크</item>
+        <item>빈</item>
+        <item>프라하</item>
+        <item>라이프치히</item>
+        <item>베를린</item>
+        <item>암스테르담</item>
+        <item>파리</item>
+        <item>런던</item>
+        <item>상트페테르부르크</item>
+        <item>모스크바</item>
+        <item>뉴욕</item>
+        <item>부에노스아이레스</item>
+        <item>도쿄</item>
+        <item>시드니</item>
+    </string-array>
+    <string-array name="journey_places">
+        <item>내 방, 창가의 보면대</item>
+        <item>바이올린 제작자의 공방</item>
+        <item>라 스칼라</item>
+        <item>모차르트 생가와 도시 위의 요새</item>
+        <item>무지크페라인 황금홀</item>
+        <item>루돌피눔</item>
+        <item>게반트하우스 · 성 토마스 교회</item>
+        <item>필하모니</item>
+        <item>콘세르트헤바우</item>
+        <item>오페라 가르니에</item>
+        <item>로열 앨버트 홀</item>
+        <item>필하모니아 대강당</item>
+        <item>음악원 대강당</item>
+        <item>카네기 홀</item>
+        <item>콜론 극장</item>
+        <item>산토리 홀</item>
+        <item>오페라 하우스</item>
+    </string-array>
+    <string-array name="journey_countries">
+        <item></item>
+        <item>이탈리아</item>
+        <item>이탈리아</item>
+        <item>오스트리아</item>
+        <item>오스트리아</item>
+        <item>체코</item>
+        <item>독일</item>
+        <item>독일</item>
+        <item>네덜란드</item>
+        <item>프랑스</item>
+        <item>영국</item>
+        <item>러시아</item>
+        <item>러시아</item>
+        <item>미국</item>
+        <item>아르헨티나</item>
+        <item>일본</item>
+        <item>오스트레일리아</item>
+    </string-array>
+    <string-array name="journey_facts">
+        <item>모두가 여기에서 시작합니다. 첫 정류지는 바이올린이 태어난 크레모나입니다.</item>
+        <item>아마티, 스트라디바리, 과르네리가 이곳에서 일했습니다. 지금 모습의 바이올린은 이 도시에서 태어났습니다.</item>
+        <item>1778년에 문을 연 극장. 베르디의 오페라들과 푸치니의 “나비부인”이 여기에서 초연되었습니다.</item>
+        <item>모차르트가 태어난 곳. 호엔잘츠부르크 요새는 11세기부터 도시를 내려다보고 있습니다.</item>
+        <item>해마다 1월 1일, 신년 음악회가 이곳에서 전 세계로 울려 퍼집니다. 음향이 가장 뛰어난 홀로 꼽힙니다.</item>
+        <item>체코 필하모닉의 첫 연주회를 이곳에서 드보르자크가 지휘했습니다.</item>
+        <item>바흐는 사반세기 동안 성 토마스 교회의 칸토르였습니다.</item>
+        <item>무대가 청중 한가운데에 놓인 “천막” 모양의 홀.</item>
+        <item>이 홀의 오케스트라는 “왕립”이라는 칭호를 갖고 있습니다.</item>
+        <item>1875년 개관. 객석의 천장화는 1964년에 마르크 샤갈이 그렸습니다.</item>
+        <item>1871년 개관. 여름마다 이곳에서 프롬스가 열립니다.</item>
+        <item>1942년 8월, 봉쇄 중이던 도시의 이곳에서 쇼스타코비치의 교향곡 7번이 울렸습니다.</item>
+        <item>1901년 개관. 차이콥스키 콩쿠르가 이곳에서 열립니다.</item>
+        <item>“카네기 홀에는 어떻게 가나요?” — “연습하세요.”</item>
+        <item>1908년 오페라 “아이다”로 개관. 음향이 세계 최고 수준으로 꼽힙니다.</item>
+        <item>“포도밭” 형식의 홀: 청중이 무대를 둘러싼 계단식 객석에 앉습니다. 1986년 개관.</item>
+        <item>“돛” 아래에 여러 개의 홀이 있습니다. 오스트레일리아에 가 본 적 없는 사람도 이 실루엣은 알아봅니다.</item>
+    </string-array>
+    <string-array name="journey_roads">
+        <item></item>
+        <item>기차로 · 6시간</item>
+        <item>기차로 · 1시간</item>
+        <item>기차로 · 7시간</item>
+        <item>기차로 · 3시간</item>
+        <item>기차로 · 4시간</item>
+        <item>기차로 · 4시간</item>
+        <item>기차로 · 1시간</item>
+        <item>기차로 · 6시간</item>
+        <item>기차로 · 3시간</item>
+        <item>기차로 · 2시간</item>
+        <item>배로 · 4일</item>
+        <item>기차로 · 4시간</item>
+        <item>비행기로 · 10시간</item>
+        <item>배로 · 3주</item>
+        <item>비행기로 · 30시간</item>
+        <item>비행기로 · 9시간</item>
+    </string-array>
+    <string name="journey_title">여행</string>
+    <string name="journey_map">지도</string>
+    <string name="journey_passport">여권</string>
+    <string name="journey_back">뒤로</string>
+    <string name="journey_stop_of">정류지 %1$d / %2$d</string>
+    <string name="journey_stop_home">정류지 0 / %1$d · 집</string>
+    <string name="journey_since">%1$s부터</string>
+    <string name="journey_next">%1$s까지 · %2$s</string>
+    <string name="journey_next_short">%1$s까지 %2$s</string>
+    <string name="journey_have">%1$s / %2$s</string>
+    <string name="journey_depart">출발 · %1$s</string>
+    <string name="journey_missing">%1$s 부족</string>
+    <string name="journey_enough">%1$s까지 갈 수 있어요 — 출발</string>
+    <string name="journey_soon">월드 투어를 마쳤습니다. 마디는 계속 쌓이며 새 도시를 기다립니다 — 새 도시는 업데이트로 찾아옵니다.</string>
+    <string name="journey_soon_short">곧 새로운 도시가 옵니다</string>
+    <string name="journey_passed">%2$d곳 중 %1$d곳 통과</string>
+    <string name="journey_all_cards">모든 엽서</string>
+    <string name="journey_no_cards">첫 엽서는 크레모나에서 생깁니다</string>
+    <string name="journey_intro_title">길은 집에서 시작됩니다</string>
+    <string name="journey_intro_text">바이올리니스트라면 누구나 세계 최고의 홀에서 연주하는 꿈이 있습니다. 그곳까지의 길은 멀고, 여비는 돈이 아니라 깨끗한 음으로 냅니다.</string>
+    <string name="journey_intro_first">첫 정류지는 바이올린이 태어난 크레모나입니다. 거기까지 %1$s.</string>
+    <string name="journey_intro_start">케이스 챙기기</string>
+    <string name="journey_road">%1$s → %2$s</string>
+    <string name="journey_stamp">도장 찍기</string>
+    <string name="journey_stamp_page">여권 · %1$d쪽</string>
+    <string name="journey_stamp_text">도장 %1$d번. %2$s까지 — %3$s.</string>
+    <string name="journey_stamp_text_last">도장 %1$d번. 그다음 길은 아직 그려지는 중입니다.</string>
+    <string name="journey_done">완료</string>
+    <string name="journey_stop_meta">%1$d / %2$d · %3$s부터</string>
+    <string name="journey_stop_where">%1$s · %2$s</string>
+    <string name="journey_mode_evening">저녁</string>
+    <string name="journey_mode_day">낮</string>
+    <string name="journey_mode_inside">안</string>
+    <string name="journey_mode_outside">밖</string>
+    <string name="journey_extras">추가 항목</string>
+    <string name="journey_extra_time">또 다른 시간대</string>
+    <string name="journey_extra_view">또 다른 풍경</string>
+    <string name="journey_extra_souvenir">여권에 붙일 기념품</string>
+    <string name="journey_extra_bought">열림</string>
+    <string name="journey_extra_buy">열기 · %1$s</string>
+    <string name="journey_fullscreen">전체 화면</string>
+    <string name="journey_fullscreen_close">전체 화면 닫기</string>
+    <string name="journey_fullscreen_hint">옆으로 끌면 둘러보기 · 두 손가락으로 확대</string>
+    <string name="journey_passport_soon">곧</string>
+    <string name="journey_passport_count">%1$d / %2$d</string>
+    <string name="journey_earned">+%1$s</string>
+    <string name="journey_earned_detail">%1$s + 시간으로 %2$s</string>
+    <string name="journey_notes_in_tune_one">정확한 음 %1$d개</string>
+    <string name="journey_notes_in_tune_few">정확한 음 %1$d개</string>
+    <string name="journey_notes_in_tune_many">정확한 음 %1$d개</string>
+    <string name="takt_one">%1$s마디</string>
+    <string name="takt_few">%1$s마디</string>
+    <string name="takt_many">%1$s마디</string>
+    <string name="takt_icon">마디</string>
+    <string name="journey_card_description">여행: %1$s</string>
+    <string name="journey_stamp_description">도장: %1$s</string>
+    <string name="journey_stamp_locked_description">%1$s — 아직 앞에 있어요</string>
+    <string name="journey_map_description">여행 경로 지도: %2$d곳 중 %1$d곳 통과</string>
+    <string name="section_pieces">곡</string>
+    <string name="section_scales">음계</string>
+    <string name="section_etudes">연습곡</string>
+    <string name="section_strokes">운궁법</string>
+    <string name="section_learned">%2$d개 중 %1$d개 익힘</string>
+    <string name="section_empty_count">아직 비어 있음</string>
+    <string name="section_bar_description">읽는 중 %1$d, 연습 중 %2$d, 익힘 %3$d</string>
+    <string name="section_add">섹션 추가</string>
+    <string name="section_add_scale">음계 추가</string>
+    <string name="section_add_etude">연습곡 추가</string>
+    <string name="section_add_stroke">운궁법 추가</string>
+    <string name="section_add_own">추가</string>
+    <string name="section_empty_scales">음계를 고르면 앱이 악보를 그려 드립니다</string>
+    <string name="section_empty_etudes">연습곡의 자리입니다: 악보, 메모, 테이크.</string>
+    <string name="section_empty_strokes">지금 다듬고 있는 운궁법: 데타셰, 스피카토, 마르텔레…</string>
+    <string name="section_empty_own">이 섹션에는 아직 아무것도 없어요.</string>
+    <string name="section_menu">더보기</string>
+    <string name="section_rename">이름 변경</string>
+    <string name="section_delete">섹션 삭제</string>
+    <string name="section_new_title">새 섹션</string>
+    <string name="section_rename_title">섹션 이름 변경</string>
+    <string name="section_name_label">섹션 이름</string>
+    <string name="section_create">만들기</string>
+    <string name="section_save">저장</string>
+    <string name="section_delete_title">“%1$s” 섹션을 삭제할까요?</string>
+    <string name="section_delete_text_empty">섹션이 비어 있습니다. 녹음은 그대로 남습니다.</string>
+    <string name="section_delete_text_one">항목 %1$d개가 “곡”으로 옮겨집니다. 녹음은 그대로 남습니다.</string>
+    <string name="section_delete_text_few">항목 %1$d개가 “곡”으로 옮겨집니다. 녹음은 그대로 남습니다.</string>
+    <string name="section_delete_text_many">항목 %1$d개가 “곡”으로 옮겨집니다. 녹음은 그대로 남습니다.</string>
+    <string name="section_delete_confirm">삭제</string>
+    <string name="section_back">뒤로</string>
+    <string name="form_section">섹션</string>
+    <string name="form_author">작곡가</string>
+    <string name="form_new_etude">새 연습곡</string>
+    <string name="form_new_stroke">새 운궁법</string>
+    <string name="form_new_element">새 항목</string>
+    <string-array name="stroke_suggestions">
+        <item>데타셰</item>
+        <item>레가토</item>
+        <item>스타카토</item>
+        <item>스피카토</item>
+        <item>마르텔레</item>
+        <item>소티예</item>
+        <item>리코셰</item>
+    </string-array>
+    <string name="scale_new">새 음계</string>
+    <string name="scale_edit">음계</string>
+    <string name="scale_key">조성</string>
+    <string name="scale_kind">종류</string>
+    <string name="scale_octaves">옥타브</string>
+    <string name="scale_kind_major">장음계</string>
+    <string name="scale_kind_natural">자연단음계</string>
+    <string name="scale_kind_harmonic">화성단음계</string>
+    <string name="scale_kind_melodic">가락단음계</string>
+    <string name="scale_suffix_harmonic">화성단음계</string>
+    <string name="scale_suffix_melodic">가락단음계</string>
+    <string name="scale_octave_one">%1$d옥타브</string>
+    <string name="scale_octave_few">%1$d옥타브</string>
+    <string name="scale_octave_many">%1$d옥타브</string>
+    <string name="scale_title">%1$s · %2$s</string>
+    <string name="scale_range">%1$s – %2$s</string>
+    <string name="scale_preview_empty">으뜸음을 고르면 여기에 악보가 그려집니다</string>
+    <string name="scale_exists">같은 음계가 이미 있어요</string>
+    <string name="scale_open">열기</string>
+    <string name="scale_locked">그러면 다른 음계가 됩니다 — 새로 추가하세요</string>
+    <string name="scale_notes_description">%1$s 음계 악보</string>
+    <string name="scale_more_systems_one">%1$d단 더</string>
+    <string name="scale_more_systems_few">%1$d단 더</string>
+    <string name="scale_more_systems_many">%1$d단 더</string>
+    <string name="scale_add_photo">악보 사진 추가</string>
+    <string name="scale_notes">악보</string>
+    <string name="scale_open_stand">보면대에서 열기</string>
+    <string name="piece_tempo_value">♩ = %1$d</string>
+    <string name="piece_tempo_description">템포 %1$d</string>
+    <string name="takes_one">테이크 %1$d개</string>
+    <string name="takes_few">테이크 %1$d개</string>
+    <string name="takes_many">테이크 %1$d개</string>
+    <string name="piece_edit">편집</string>
+    <string name="piece_status_change">상태: %1$s. 변경</string>
+    <string name="piece_sheets_none">악보</string>
+    <string name="piece_sheets_count">악보 · %1$d쪽</string>
+    <string name="piece_sheets_add">악보 사진 추가</string>
+    <string name="piece_sheets_add_short">추가</string>
+    <string name="piece_sheets_camera">사진 찍기</string>
+    <string name="piece_sheets_gallery">갤러리에서</string>
+    <string name="piece_sheet_page">%1$d쪽</string>
+    <string name="piece_notes_add">메모 추가</string>
+    <string name="piece_notes_more">더보기</string>
+    <string name="piece_notes_less">접기</string>
+    <string name="piece_form_title_new">새 곡</string>
+    <string name="piece_form_title_edit">곡</string>
+    <string name="piece_form_close">닫기</string>
+    <string name="piece_form_discard_title">저장하지 않을까요?</string>
+    <string name="piece_form_discard_confirm">저장 안 함</string>
+    <string name="piece_field_title">제목</string>
+    <string name="piece_field_composer">작곡가</string>
+    <string name="piece_field_key">조성</string>
+    <string name="piece_field_tempo">템포</string>
+    <string name="piece_field_status">상태</string>
+    <string name="piece_field_notes">메모</string>
+    <string name="piece_title_error">제목이 없으면 저장할 수 없어요</string>
+    <string name="piece_key_major">장조</string>
+    <string name="piece_key_minor">단조</string>
+    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="piece_tempo_slower">느리게</string>
+    <string name="piece_tempo_faster">빠르게</string>
+    <string name="piece_tempo_clear">템포 없음</string>
+    <string name="piece_delete">곡 삭제</string>
+    <string name="piece_delete_title">“%1$s” 항목을 삭제할까요?</string>
+    <string name="piece_delete_text">악보와 메모가 삭제됩니다. 녹음은 “녹음” 탭에 남습니다.</string>
+    <string name="piece_delete_confirm">삭제</string>
+    <string name="take_record">테이크 녹음</string>
+    <string name="take_record_hint">녹음하는 동안 화면은 아무것도 알려 주지 않습니다 — 분석은 끝난 뒤에 나옵니다.</string>
+    <string name="take_recording">녹음 · %1$s</string>
+    <string name="take_level_description">마이크가 듣고 있어요</string>
+    <string name="take_no_permission">테이크를 녹음하려면 마이크 접근 권한이 필요해요.</string>
+    <string name="take_grant_permission">접근 허용</string>
+    <string name="take_progress">최근 %1$d%% · 최고 %2$d%%</string>
+    <string name="take_chart_description">테이크 순서대로 본 점수: %1$s</string>
+    <string name="takes_title">테이크</string>
+    <string name="takes_empty">아직 테이크가 없어요. 첫 테이크를 녹음하면 곡이 어떻게 달라지는지 볼 수 있습니다.</string>
+    <string name="take_best">베스트</string>
+    <!-- «Звук»: processing of recorded sound (spec 3.17) -->
+    <string name="sound_everyone_title">녹음 사운드</string>
+    <string name="sound_everyone_subtitle">모든 녹음에 적용 · %1$s</string>
+    <string name="sound_reset">초기화</string>
+    <string name="sound_caption_off">처리 없음</string>
+    <string name="sound_caption_custom">개별 설정</string>
+    <string name="sound_caption_saved_hint">개별 설정 · 자동 저장</string>
+    <string name="sound_caption_everyone">공통 설정 · %1$s</string>
+    <string name="sound_caption_own">개별 설정 · %1$s</string>
+    <string name="sound_row_off">꺼짐</string>
+    <string-array name="sound_preset_names">
+        <item>처리 없음</item>
+        <item>자연스럽게</item>
+        <item>방</item>
+        <item>실내악 홀</item>
+        <item>대형 홀</item>
+        <item>따뜻하게</item>
+    </string-array>
+    <string name="sound_preset_custom">개별</string>
+    <string name="sound_preset_save">프리셋으로 저장</string>
+    <string name="sound_preset_remove_hint">길게 눌러 삭제</string>
+    <string name="sound_mode_everyone">공통 설정</string>
+    <string name="sound_mode_own">이 녹음만의 설정</string>
+    <string name="sound_mode_everyone_text">%1$s — “설정 → 녹음 사운드”의 값입니다. 거기에서 바꾸면 여기도 바뀝니다. 조절 항목을 하나라도 건드리면 이 녹음은 개별 설정을 갖게 됩니다.</string>
+    <string name="sound_mode_own_text">이 녹음에만 적용됩니다. “공통 설정”을 고르면 공통 값으로 돌아가고 개별 설정은 사라집니다.</string>
+    <string name="sound_listen_on">들어 볼 녹음</string>
+    <string name="sound_listen_latest">소리가 있는 최근 녹음</string>
+    <string name="sound_listen_none">아직 소리가 있는 녹음이 없어요. 설정은 지금 해 둘 수 있고, 들어 보는 것은 첫 녹음 뒤에 가능합니다.</string>
+    <string name="sound_affected_one">녹음 %1$d개에 적용</string>
+    <string name="sound_affected_many">녹음 %1$d개에 적용</string>
+    <string name="sound_order">순서: 이퀄라이저 → 컴프레서 → 홀 → 볼륨</string>
+    <string name="sound_block_eq">이퀄라이저</string>
+    <string name="sound_block_compressor">컴프레서</string>
+    <string name="sound_block_compressor_sub">음량을 고르게</string>
+    <string name="sound_block_reverb">홀</string>
+    <string name="sound_block_reverb_sub">리버브</string>
+    <string name="sound_block_output">볼륨</string>
+    <string name="sound_block_switch">%1$s: 켜기</string>
+    <string name="sound_block_off">꺼짐</string>
+    <string name="sound_block_expand">펼치기</string>
+    <string name="sound_block_collapse">접기</string>
+    <string name="sound_eq_flat">평탄</string>
+    <string-array name="sound_band_names">
+        <item>럼블</item>
+        <item>저음</item>
+        <item>몸통</item>
+        <item>날카로움</item>
+        <item>공기감</item>
+    </string-array>
+    <string name="sound_band_low_cut_switch">럼블 제거</string>
+    <string name="sound_eq_curve_description">이퀄라이저 곡선. 밴드의 점을 끌어서 옮길 수 있고, 같은 값을 아래 슬라이더로도 조절할 수 있습니다.</string>
+    <string name="sound_param_frequency">주파수</string>
+    <string name="sound_param_gain">게인</string>
+    <string name="sound_param_width">폭</string>
+    <string name="sound_param_width_hint">작을수록 넓게</string>
+    <string name="sound_param_amount">정도</string>
+    <string name="sound_param_amount_own">개별</string>
+    <string name="sound_amount_little">살짝</string>
+    <string name="sound_amount_noticeable">뚜렷하게</string>
+    <string name="sound_amount_lot">강하게</string>
+    <string name="sound_param_threshold">스레숄드</string>
+    <string name="sound_param_threshold_hint">어느 음량부터 누를지</string>
+    <string name="sound_param_ratio">레이시오</string>
+    <string name="sound_param_attack">어택</string>
+    <string name="sound_param_attack_hint">얼마나 빨리 잡는지</string>
+    <string name="sound_param_release">릴리스</string>
+    <string name="sound_param_release_hint">얼마나 빨리 놓는지</string>
+    <string name="sound_param_makeup">음량 보정</string>
+    <string name="sound_comp_text">조용한 부분은 커지고 큰 부분은 작아집니다. 녹음이 더 고르게 들리고, 사라지는 것은 없습니다.</string>
+    <string name="sound_comp_now">지금 압축 중</string>
+    <string name="sound_comp_details">자세히</string>
+    <string-array name="sound_space_names">
+        <item>방</item>
+        <item>홀</item>
+        <item>대성당</item>
+    </string-array>
+    <string name="sound_param_decay">잔향 길이</string>
+    <string name="sound_param_decay_hint">고요해질 때까지</string>
+    <string name="sound_param_pre_delay">프리 딜레이</string>
+    <string name="sound_param_pre_delay_hint">잔향이 시작되기 전의 틈</string>
+    <string name="sound_param_brightness">잔향 밝기</string>
+    <string name="sound_param_brightness_hint">어둡게 ↔ 밝게</string>
+    <string name="sound_param_mix">비율</string>
+    <string name="sound_param_mix_hint">드라이 ↔ 홀과 함께</string>
+    <string name="sound_param_output">출력 게인</string>
+    <string name="sound_limiter_note">출력에는 항상 리미터가 걸려 있습니다. 스피커에서도 파일에서도 소리가 깨지지 않습니다.</string>
+    <string name="sound_limiter_hot">리미터가 작동 중입니다: 담을 수 있는 것보다 더 올렸어요. 게인을 줄이면 소리가 한결 편안해집니다.</string>
+    <string name="sound_meter_output">출력</string>
+    <string name="sound_meter_limiter">리미터</string>
+    <string name="sound_meter_none">—</string>
+    <string name="sound_slider_minus">%1$s: 줄이기</string>
+    <string name="sound_slider_plus">%1$s: 늘리기</string>
+    <string name="sound_slider_reset_hint">두 번 탭하면 초기화</string>
+    <string name="sound_slider_off">꺼짐</string>
+    <string name="sound_dialog_everyone_title">공통 설정으로 되돌릴까요?</string>
+    <string name="sound_dialog_everyone_text">이 녹음의 개별 설정은 사라집니다.</string>
+    <string name="sound_dialog_everyone_confirm">되돌리기</string>
+    <string name="sound_dialog_reset_title">녹음 사운드를 초기화할까요?</string>
+    <string name="sound_dialog_reset_text">개별 설정이 없는 모든 녹음이 다시 녹음된 그대로 들립니다.</string>
+    <string name="sound_dialog_preset_title">새 프리셋</string>
+    <string name="sound_dialog_preset_hint">이름</string>
+    <string name="sound_dialog_preset_save">저장</string>
+    <string name="sound_dialog_delete_title">“%1$s” 프리셋을 삭제할까요?</string>
+    <string name="sound_dialog_pick_title">들어 볼 녹음</string>
+    <string name="sound_share">공유</string>
+    <string name="share_message">%1$s · %2$d%% · %3$s</string>
+    <string name="share_message_session">녹음</string>
+    <string name="share_title">녹음 공유</string>
+    <string name="share_processed">처리된 소리</string>
+    <string name="share_processed_caption">%1$s · 앱에서 들리는 그대로</string>
+    <string name="share_original">원본</string>
+    <string name="share_original_caption">녹음된 그대로, 처리 없음</string>
+    <string name="share_video_processed">처리된 소리의 영상</string>
+    <string name="share_video_original">촬영한 그대로의 영상</string>
+    <string name="share_video_original_caption">원본 파일, 소리 처리 없음</string>
+    <string name="share_video">영상</string>
+    <string name="share_video_caption">촬영한 그대로</string>
+    <string name="share_sound_only">소리만</string>
+    <string name="share_sound_only_processed">처리됨 · ≈ %1$s · 모노</string>
+    <string name="share_sound_only_caption">녹음된 그대로 · ≈ %1$s · 모노</string>
+    <string name="share_video_details">%1$s · %2$dp · ≈ %3$s</string>
+    <string name="share_large_file">큰 파일입니다: 메신저가 압축하거나 받지 않을 수 있어요</string>
+    <string name="share_failed_video_title">영상을 준비하지 못했어요</string>
+    <string name="share_failed_video_text">테이크와 설정은 그대로입니다. 다시 시도하거나, 소리 처리 없이 촬영한 그대로 보낼 수 있어요.</string>
+    <string name="share_send_as_shot">촬영한 그대로 보내기</string>
+    <string name="share_file_details">%1$s · ≈ %2$s · 모노</string>
+    <string name="share_with_text">텍스트 추가: “%1$s”</string>
+    <string name="share_continue">계속</string>
+    <string name="share_busy">준비 중…</string>
+    <string name="share_preparing">파일 준비 중</string>
+    <string name="share_remaining">약 %1$d초 남음</string>
+    <string name="share_failed_title">파일을 준비하지 못했어요</string>
+    <string name="share_failed_text">녹음도 설정도 그대로입니다. 다시 시도하거나 처리 없는 원본을 보낼 수 있어요.</string>
+    <string name="share_retry">다시 시도</string>
+    <string name="share_send_original">원본 보내기</string>
+    <string name="share_chooser">녹음 공유</string>
+    <string name="share_no_app">녹음을 받을 수 있는 앱이 없어요</string>
+    <string name="share_size_kb">%1$d KB</string>
+    <string name="share_size_mb">%1$s MB</string>
+    <string name="card_menu">더보기</string>
+    <string name="card_menu_share">공유</string>
+    <string name="card_menu_sound">사운드…</string>
+    <string name="best_set">베스트로 표시</string>
+    <string name="best_clear">“베스트” 표시 해제</string>
+    <string name="best_marked">베스트로 표시했어요</string>
+    <string name="best_marked_moved">베스트로 표시했어요. 이전 표시는 해제되었습니다</string>
+    <string name="sound_session_row">사운드</string>
+    <string name="sound_session_silent">소리 없는 녹음 — 음정 분석만 있습니다</string>
+    <string name="sound_settings_row">녹음 사운드</string>
+    <string name="sound_settings_row_caption">%1$s · 모든 녹음에 적용</string>
+    <string name="sound_ab_original">원본: 녹음된 그대로</string>
+    <string name="sound_ab_processed">처리 적용</string>
+    <string name="stand_counter">%1$d / %2$d</string>
+    <string name="stand_page_description">%2$d쪽 중 %1$d쪽</string>
+    <string name="stand_delete_page">페이지 삭제</string>
+    <string name="stand_delete_title">페이지를 삭제할까요?</string>
+    <string name="stand_delete_text">이 페이지의 사진이 삭제됩니다. 나머지는 제자리에 남습니다.</string>
+    <string name="stand_hint">악보 가장자리를 탭하면 다음 페이지</string>
+    <string name="stand_previous_page">이전 페이지</string>
+    <string name="stand_next_page">다음 페이지</string>
+    <string name="stand_recording_description">테이크 녹음 중, %1$s</string>
+</resources>

@@ -251,7 +251,7 @@ private fun ItemCard(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit)
                     } else {
                         val sessions = ((-left + TAKTS_A_SESSION - 1) / TAKTS_A_SESSION).toInt().coerceAtLeast(1)
                         Text(
-                            if (sessions == 1) stringResource(R.string.shop_sessions_one) else stringResource(Formats.pluralRu(sessions, R.string.shop_sessions_few, R.string.shop_sessions_few, R.string.shop_sessions_many), sessions),
+                            if (sessions == 1) stringResource(R.string.shop_sessions_one) else stringResource(Formats.plural(sessions, R.string.shop_sessions_few, R.string.shop_sessions_few, R.string.shop_sessions_many), sessions),
                             color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall,
                         )
                     }

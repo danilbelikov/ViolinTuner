@@ -1,0 +1,53 @@
+# Translating the interface — rules and glossary
+
+The source of every text is Russian: `app/src/main/res/values-ru/` — `strings.xml`, `strings_home.xml`, `home_catalog.xml` (the last is generated from the design handoff). English lives in `res/values/` (the fallback for every language the app does not speak); the others in `res/values-<tag>/` (`de`, `fr`, `es`, `it`, `pt`, `ko`, `zh`, `ja`). `LocalizationTest` fails the build when a translation misses a key, has a different set of placeholders, or an array of another length.
+
+## What the app is
+
+A practice companion for violinists. **Live** shows the note being played and whether it is in tune — read from a music stand with peripheral vision. **Practice** tracks time at the instrument (levels, trophies, a streak). **Recordings** keeps analysed recordings and a **repertoire** of pieces with sheet-music photos, takes and video takes. A quiet game on top: clean notes and practice time earn a currency that pays for a **journey** through the concert halls of the world and for furnishing a **home**. The tone is calm, warm, never pushy; nothing is ever taken away. Address the user politely and plainly (de: «Sie»; fr: «vous»; es: «usted» is too stiff — use neutral/infinitive forms or «tú»-free phrasing where possible, otherwise «tú»; it: «tu»-free/infinitive where possible; pt: neutral Brazilian-friendly Portuguese; ko: 합쇼체/해요체 polite; ja: です・ます; zh: 简体, 您 is not needed — neutral).
+
+## Hard rules
+
+1. Keep every `name="…"`, every attribute (`formatted="false"`, `translatable`), the order of entries, XML comments (translate the comment text or leave it — either is fine), and the file names.
+2. Keep every placeholder exactly: `%1$s`, `%2$d`, `%1$d%%` … The same set must appear in the translation; their order in the sentence may change.
+3. Android escaping: an apostrophe is `\'`, a double quote is `\"`, `&` is `&amp;`, `<` is `&lt;`. French and Italian are full of apostrophes — escape every one (`l\'archet`). Do not wrap strings in quotes.
+4. Keep special characters where they carry meaning: the real minus `−` (U+2212), `·` as a separator, `…`, no-break spaces, `→`, `♩`, `★`. Use the quotation marks natural for the language («» → “ ” in English, „ “ in German, « » with no-break spaces in French, 「」 in Japanese, “” in Chinese).
+5. `string-array`s keep their length and order: item N of `journey_cities` is the same city in every language.
+6. Three plural strings (`…_one`, `…_few`, `…_many`) exist for Russian. In other languages the app asks only for `_one` (exactly one; in French also zero) and `_many` (everything else); Korean, Chinese and Japanese are only ever asked for `_many`. Still translate all three: make `_few` the same as `_many`.
+7. Do not translate: note names (A4, F#5, G D A E), German key names used as notation (`G-dur`, `a-moll` — they are notation in this app, keep them in every language), `Hz`, file extensions, `Live` (the name of the tab — keep «Live»), the app name.
+8. Units inside strings. Musical cents, Russian «ц»: en `c`, de `ct`, fr `cts`, es `c`, it `c`, pt `c`, ko `센트`, zh `音分`, ja `セント`. «мин», «ч», «с» → the usual short forms of the language (en `min`, `h`, `s`). «Гц» → `Hz`, «дБ» → `dB`, «МБ / ГБ» → `MB / GB` (fr `Mo / Go`).
+9. Keep texts short: many sit on buttons, chips and tiles 100 dp wide. If the natural translation is much longer than the Russian, find a shorter one.
+10. City names in arrays: the Russian file has three arrays of the same cities — nominative (`journey_cities`), genitive after «до / из» (`journey_cities_to`), and sentences built as «до %s», «из %s». In your language give the city name in the form that fits after your own preposition in those sentences («to Prague», «nach Prag», «à Prague», «a Praga», «프라하까지», «前往布拉格»). Check every string that takes a city as `%s` and make the sentence grammatical.
+
+## Glossary (Russian → meaning → preferred terms)
+
+| Russian | Meaning | en | de | fr | es | it | pt | ko | zh | ja |
+|---|---|---|---|---|---|---|---|---|---|---|
+| Занятия / занятие | the tab and one practice session (timed by the user) | Practice / practice | Üben / Übezeit | Pratique / séance | Práctica / práctica | Studio / sessione | Prática / prática | 연습 | 练习 | 練習 |
+| Записи / запись | the tab; a recording with intonation analysis | Recordings / recording | Aufnahmen / Aufnahme | Enregistrements / enregistrement | Grabaciones / grabación | Registrazioni / registrazione | Gravações / gravação | 녹음 | 录音 | 録音 |
+| Настройки | settings tab | Settings | Einstellungen | Réglages | Ajustes | Impostazioni | Ajustes | 설정 | 设置 | 設定 |
+| Игра / Настройка (режимы Live) | Live modes: playing / tuning the open strings | Play / Tune | Spielen / Stimmen | Jeu / Accord | Tocar / Afinar | Suona / Accorda | Tocar / Afinar | 연주 / 조율 | 演奏 / 调音 | 演奏 / 調弦 |
+| в строе · выше · ниже | in tune · sharp · flat | in tune · sharp · flat | sauber · zu hoch · zu tief | juste · trop haut · trop bas | afinado · alto · bajo | intonato · crescente · calante | afinado · alto · baixo | 정확 · 높음 · 낮음 | 准 · 偏高 · 偏低 | 合っています · 高い · 低い |
+| допуск | tolerance: width of the green zone in cents | tolerance | Toleranz | tolérance | tolerancia | tolleranza | tolerância | 허용 범위 | 容差 | 許容範囲 |
+| эталон A4 | reference pitch of A4 | reference pitch A4 | Kammerton A4 | diapason (la4) | La de referencia (A4) | La di riferimento (A4) | Lá de referência (A4) | 기준음 A4 | 标准音 A4 | 基準ピッチ A4 |
+| балл | score: percent of time in tune | score | Wertung | score | puntuación | punteggio | pontuação | 점수 | 得分 | スコア |
+| смещение | average bias in cents | bias | Abweichung | décalage | desviación | scostamento | desvio | 편차 | 偏差 | ずれ |
+| произведение | a piece of the repertoire | piece | Stück | morceau | obra | brano | peça | 곡 | 曲目 | 曲 |
+| дубль / видео-дубль | a take of a piece / a take with video | take / video take | Take / Video-Take | prise / prise vidéo | toma / toma de vídeo | take / take video | take / take em vídeo | 테이크 / 영상 테이크 | 录制 / 视频录制 | テイク / 動画テイク |
+| лучший (дубль) | the take the player marked as best | best | bester | meilleure | mejor | migliore | melhor | 베스트 | 最佳 | ベスト |
+| Репертуар · разделы · Гаммы · Этюды · Штрихи | repertoire, its sections: scales, études, bow strokes | Repertoire · sections · Scales · Études · Bow strokes | Repertoire · Bereiche · Tonleitern · Etüden · Stricharten | Répertoire · sections · Gammes · Études · Coups d\'archet | Repertorio · secciones · Escalas · Estudios · Golpes de arco | Repertorio · sezioni · Scale · Studi · Colpi d\'arco | Repertório · seções · Escalas · Estudos · Golpes de arco | 레퍼토리 · 섹션 · 음계 · 연습곡 · 운궁법 | 曲库 · 分区 · 音阶 · 练习曲 · 弓法 | レパートリー · セクション · 音階 · 練習曲 · ボウイング |
+| Разбираю · Учу · В репертуаре · Выучено | status of a piece: reading it / learning it / in repertoire / learnt | Reading · Learning · In repertoire · Learnt | Lese ich · Übe ich · Im Repertoire · Gelernt | Déchiffrage · En travail · Au répertoire · Appris | Leyendo · Estudiando · En repertorio · Aprendido | In lettura · In studio · In repertorio · Imparato | Lendo · Estudando · No repertório · Aprendido | 읽는 중 · 연습 중 · 레퍼토리 · 익힘 | 视奏中 · 练习中 · 保留曲目 · 已学会 | 譜読み中 · 練習中 · レパートリー · 習得済み |
+| пюпитр (режим пюпитра) | full-screen sheet-music view | music stand | Notenpult | pupitre | atril | leggio | estante | 보면대 | 谱架 | 譜面台 |
+| Звук · обработка · оригинал · Зал | sound processing of a recording; «Зал» = reverb block | Sound · processing · original · Hall | Klang · Bearbeitung · Original · Saal | Son · traitement · original · Salle | Sonido · procesado · original · Sala | Suono · elaborazione · originale · Sala | Som · processamento · original · Sala | 사운드 · 처리 · 원본 · 홀 | 声音 · 处理 · 原声 · 厅堂 | サウンド · 加工 · オリジナル · ホール |
+| Поделиться | share | Share | Teilen | Partager | Compartir | Condividi | Compartilhar | 공유 | 分享 | 共有 |
+| Копия данных · Сохранить копию · Восстановить | backup of all data / save a copy / restore | Data backup · Save a copy · Restore | Datensicherung · Kopie speichern · Wiederherstellen | Sauvegarde · Enregistrer une copie · Restaurer | Copia de datos · Guardar copia · Restaurar | Copia dei dati · Salva copia · Ripristina | Cópia dos dados · Salvar cópia · Restaurar | 데이터 백업 · 사본 저장 · 복원 | 数据备份 · 保存副本 · 恢复 | データのバックアップ · コピーを保存 · 復元 |
+| уровень · трофей · дней подряд | level / trophy / day streak | level · trophy · day streak | Stufe · Trophäe · Tage in Folge | niveau · trophée · jours d\'affilée | nivel · trofeo · días seguidos | livello · trofeo · giorni di fila | nível · troféu · dias seguidos | 레벨 · 트로피 · 연속 일수 | 等级 · 奖杯 · 连续天数 | レベル · トロフィー · 連続日数 |
+| такт(ы) | the currency of the journey — a musical bar/measure | bars | Takte | mesures | compases | battute | compassos | 마디 | 小节 | 小節 |
+| Путешествие · остановка · открытка · паспорт · штамп · В путь / В дорогу | the journey: stop, postcard, passport, stamp, «set off» | Journey · stop · postcard · passport · stamp · Set off / On the road | Reise · Station · Postkarte · Pass · Stempel · Los geht\'s / Auf die Reise | Voyage · étape · carte postale · passeport · tampon · En route | Viaje · parada · postal · pasaporte · sello · En marcha / De viaje | Viaggio · tappa · cartolina · passaporto · timbro · In viaggio | Viagem · parada · cartão-postal · passaporte · carimbo · Pé na estrada | 여행 · 정류지 · 엽서 · 여권 · 도장 · 출발 | 旅程 · 站 · 明信片 · 护照 · 印章 · 出发 | 旅 · 立ち寄り先 · 絵はがき · パスポート · スタンプ · 出発 |
+| Дом · Лавка · Обставить · Примерить · Войти в дом | home section: shop, «furnish» (wardrobe of the room), try on, enter the home | Home · Shop · Furnish · Try it · Go home | Zuhause · Laden · Einrichten · Anprobieren · Nach Hause | Maison · Boutique · Aménager · Essayer · Rentrer | Casa · Tienda · Amueblar · Probar · Entrar en casa | Casa · Bottega · Arreda · Prova · Entra in casa | Casa · Loja · Mobiliar · Experimentar · Entrar em casa | 집 · 상점 · 꾸미기 · 놓아 보기 · 집으로 | 家 · 小店 · 布置 · 试摆 · 回家 | 家 · お店 · 模様替え · 試し置き · 家に入る |
+
+Violin vocabulary (rosin, peg, bow, chin rest, tuning fork, music stand, case, scroll, varnish; détaché, legato, staccato, spiccato, martelé, sautillé, ricochet) — use the terms violinists of your language actually use; bow-stroke names usually stay French/Italian.
+
+## Tone of the longer texts
+
+Facts about concert halls, descriptions of things in the shop, onboarding sentences: one calm sentence, no exclamation marks, no marketing voice. Things in the shop have a touch of warmth and wit in Russian («Снаружи строгий, внутри — вишня») — keep it if it survives translation, otherwise say it plainly.

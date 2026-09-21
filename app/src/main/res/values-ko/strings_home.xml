@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home (spec 3.24). Names of things, places and homes are generated: home_catalog.xml. -->
+<resources>
+    <string name="home_title">집</string>
+    <string name="home_back">뒤로</string>
+    <string name="home_room">방</string>
+    <string name="home_outside">바깥</string>
+    <string name="home_evening">저녁</string>
+    <string name="home_day">낮</string>
+    <string name="home_shop">상점</string>
+    <string name="home_arrange">꾸미기</string>
+    <string name="home_picture_room">방: %1$s</string>
+    <string name="home_picture_outside">집 바깥: %1$s</string>
+    <string name="home_things_none">처음 세 들었을 때 그대로</string>
+    <string name="home_things_one">물건 %1$d개</string>
+    <string name="home_things_few">물건 %1$d개</string>
+    <string name="home_things_many">물건 %1$d개</string>
+    <string name="home_things_brought">%1$s, 그중 %2$d개는 여행에서 가져옴</string>
+    <string name="home_gift_title">첫 선물이 상점에서 기다리고 있어요</string>
+    <string name="home_gift_text">스탠드 — 바이올린이 케이스 밖으로 나옵니다. 무료.</string>
+    <string name="home_gift_take">받기</string>
+    <string name="home_brought">여행에서 가져온 것</string>
+    <string name="home_next_house">다음 집</string>
+    <string name="home_all_houses">모든 집</string>
+    <string name="home_have">%1$s / %2$s</string>
+    <string name="home_house_soon">곧</string>
+
+    <string name="shop_all">전체</string>
+    <string name="shop_group_instrument">악기</string>
+    <string name="shop_group_music">음악</string>
+    <string name="shop_group_room">방</string>
+    <string name="shop_group_light">조명</string>
+    <string name="shop_group_furniture">가구</string>
+    <string name="shop_group_plant">식물</string>
+    <string name="shop_group_life">소품</string>
+    <string name="shop_group_pet">동물</string>
+    <string name="shop_group_outside">바깥</string>
+    <string name="shop_shelf_instrument">악기 장인의 가게</string>
+    <string name="shop_shelf_music">악보와 음악</string>
+    <string name="shop_shelf_room">벽, 바닥, 창문</string>
+    <string name="shop_shelf_light">시장 · 조명</string>
+    <string name="shop_shelf_furniture">시장 · 가구</string>
+    <string name="shop_shelf_plant">꽃 가게 골목</string>
+    <string name="shop_shelf_life">일상의 소품</string>
+    <string name="shop_shelf_pet">동물 농장</string>
+    <string name="shop_shelf_outside">마당용</string>
+    <string name="shop_shelf_yours">이 선반은 이제 내 것 — 모두 샀어요</string>
+    <string name="shop_from">%1$s에서</string>
+    <string name="shop_opens_in">%1$s에서 들여옵니다</string>
+    <string name="shop_standing">방에 있음</string>
+    <string name="shop_standing_outside">집 앞에 있음</string>
+    <string name="shop_owned">구매함</string>
+    <string name="shop_gift">선물</string>
+    <string name="shop_no_place">이 집에는 자리가 없어요</string>
+    <string name="shop_needs_chimney">굴뚝 있는 집이 필요해요</string>
+    <string name="shop_waits_season">12월을 기다려요</string>
+    <string name="shop_place">자리: %1$s</string>
+    <string name="shop_try">놓아 보기</string>
+    <string name="shop_buy">구매 · %1$s</string>
+    <string name="shop_take">받기</string>
+    <string name="shop_put">놓기</string>
+    <string name="shop_missing">%1$s 부족</string>
+    <string name="shop_sessions_one">연습 한 번쯤 더</string>
+    <string name="shop_sessions_few">연습 %1$d번쯤 더</string>
+    <string name="shop_sessions_many">연습 %1$d번쯤 더</string>
+    <string name="shop_left_after">%1$s 남음</string>
+    <string name="shop_left_after_road">%1$s 남음 · %2$s까지 %3$s 더</string>
+    <string name="shop_item_description">%1$s, %2$s</string>
+    <string name="shop_price_takts">%1$s마디</string>
+    <string name="shop_try_back">원래대로</string>
+    <string name="shop_bought">구매함: %1$s</string>
+
+    <string name="arrange_title">꾸미기</string>
+    <string name="arrange_places_few">자리 %1$d곳, %2$d곳 사용 중</string>
+    <string name="arrange_empty">비어 있음</string>
+    <string name="arrange_in_shop">상점에 %1$d개</string>
+    <string name="arrange_not_here">이 집에는 없는 자리</string>
+    <string name="arrange_waiting">옷장에서 기다리는 중: %1$s</string>
+
+    <string name="houses_title">집</string>
+    <string name="houses_live_here">여기 살아요</string>
+    <string name="houses_live">여기서 살기</string>
+    <string name="houses_of">집 %1$d / %2$d</string>
+    <string name="houses_news">새로운 점</string>
+    <string name="houses_moving_text">모든 물건이 알아서 옮겨져 같은 자리에 놓입니다. 이전 집은 그대로 남으니 언제든 돌아갈 수 있어요.</string>
+    <string name="houses_move">이사 · %1$s</string>
+    <string name="houses_moving">이사</string>
+    <string name="houses_moved_things">%1$s 제자리에</string>
+    <string name="houses_moved_cat">%1$s · 고양이는 벌써 현관에 있어요</string>
+    <string name="houses_close">닫기</string>
+
+    <!-- Second iteration (spec 3.25) -->
+    <string name="home_travel">출발</string>
+    <string name="home_travel_line">%1$s → %2$s까지 %3$s</string>
+    <string name="home_travel_enough">%1$s → %2$s까지 갈 수 있어요</string>
+    <string name="home_travel_end">%1$s · 여정 완주</string>
+    <string name="home_fullscreen">전체 화면</string>
+    <string name="home_fullscreen_close">전체 화면 닫기</string>
+    <string name="home_fullscreen_hint">두 손가락으로 확대 · 끌어서 둘러보기</string>
+    <string name="home_card_title">집 · %1$s</string>
+    <string name="home_card_away">여행 중 · %1$s · 정류지 %2$d / %3$d</string>
+    <string name="journey_enter_home">집으로</string>
+    <string name="journey_enter_home_at">집에 있어요</string>
+    <string name="splash_away">길을 떠나요</string>
+    <string name="splash_home">집으로</string>
+    <string name="splash_stop">%1$s · 정류지 %2$d / %3$d</string>
+    <string name="splash_skip">건너뛰기</string>
+    <string name="shop_soon">들여올 예정</string>
+    <string name="shop_try_remove">치우기</string>
+    <string name="shop_takts_note">마디는 연습에서 생깁니다. 앱이 연주를 듣고 직접 셉니다. 여기서는 마디로 집에 둘 물건을 살 수 있어요.</string>
+    <string name="journey_intro_takts">앱은 연습하는 소리를 듣고, 깨끗한 연주와 악기와 함께한 시간을 마디로 바꿔 줍니다. 도시에서 도시로 가는 여비는 마디로 냅니다.</string>
+
+    <string name="journey_home">집</string>
+    <string name="journey_home_card">집: %1$s</string>
+</resources>

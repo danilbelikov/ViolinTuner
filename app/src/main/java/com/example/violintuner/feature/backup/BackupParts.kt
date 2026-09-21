@@ -60,7 +60,7 @@ internal fun partColor(part: BackupPart): Color = with(ViolinTheme.backupColors)
 }
 
 @Composable
-internal fun plural(count: Int, one: Int, few: Int, many: Int): String = stringResource(Formats.pluralRu(count, one, few, many), count)
+internal fun plural(count: Int, one: Int, few: Int, many: Int): String = stringResource(Formats.plural(count, one, few, many), count)
 
 @Composable
 internal fun sessionsWord(count: Int) = plural(count, R.string.backup_count_sessions_one, R.string.backup_count_sessions_few, R.string.backup_count_sessions_many)

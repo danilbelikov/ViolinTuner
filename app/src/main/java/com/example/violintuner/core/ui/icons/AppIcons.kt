@@ -41,6 +41,7 @@ object AppIcons {
     val Passport: ImageVector by lazy { icon("Passport", IconPaths.PASSPORT) }
     val Door: ImageVector by lazy { icon("Door", IconPaths.DOOR) }
     val Travel: ImageVector by lazy { icon("Travel", IconPaths.TRAVEL) }
+    val Globe: ImageVector by lazy { icon("Globe", IconPaths.GLOBE) }
     val StarOutline: ImageVector by lazy { icon("StarOutline", IconPaths.STAR_OUTLINE) }
     val Select: ImageVector by lazy { icon("Select", IconPaths.SELECT) }
     val Star: ImageVector by lazy { icon("Star", IconPaths.STAR) }
@@ -109,6 +110,7 @@ object AppIcons {
         "Passport" to { Passport },
         "Door" to { Door },
         "Travel" to { Travel },
+        "Globe" to { Globe },
         "StarOutline" to { StarOutline },
         "Select" to { Select },
         "Star" to { Star },

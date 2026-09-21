@@ -286,7 +286,7 @@ private fun Bars(state: PieceState, selectionHeight: Dp, onIntent: (PieceIntent)
         }
     }
     if (selection.confirming) {
-        val words = Formats.pluralRu(selection.count, R.string.selection_delete_takes_one, R.string.selection_delete_takes_few, R.string.selection_delete_takes_many)
+        val words = Formats.plural(selection.count, R.string.selection_delete_takes_one, R.string.selection_delete_takes_few, R.string.selection_delete_takes_many)
         DeleteDialog(
             title = stringResource(words, selection.count),
             text = deleteTextOf(state.takes.filter { it.card.id in selection.ids }.sumOf { it.card.videoBytes }),
@@ -676,7 +676,7 @@ private fun DrawnScale(scale: Scale, metrics: Metrics, onClick: () -> Unit) {
                 if (folded) {
                     val more = systems - FOLDED_SYSTEMS
                     TextButton(onClick = { expanded = true }) {
-                        Text(stringResource(Formats.pluralRu(more, R.string.scale_more_systems_one, R.string.scale_more_systems_few, R.string.scale_more_systems_many), more))
+                        Text(stringResource(Formats.plural(more, R.string.scale_more_systems_one, R.string.scale_more_systems_few, R.string.scale_more_systems_many), more))
                     }
                 }
             }

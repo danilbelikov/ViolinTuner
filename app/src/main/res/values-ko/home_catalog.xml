@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- translated from values-ru/home_catalog.xml (which is generated from the design handoff); keys must match — see LocalizationTest -->
+<resources>
+    <string name="home_item_vln_student" formatted="false">학생용 · 스탠드에</string>
+    <string name="home_item_vln_quarter" formatted="false">1/4 사이즈, 첫 바이올린</string>
+    <string name="home_item_vln_light" formatted="false">밝은색, 길들지 않은</string>
+    <string name="home_item_vln_master" formatted="false">수제 바이올린</string>
+    <string name="home_item_vln_electric" formatted="false">전자 바이올린</string>
+    <string name="home_item_vln_old" formatted="false">올드, 짙은 바니시</string>
+    <string name="home_item_vln_cremona" formatted="false">크레모나산, 1720</string>
+    <string name="home_item_case_black" formatted="false">검은 케이스</string>
+    <string name="home_item_case_velvet" formatted="false">체리빛 벨벳 케이스</string>
+    <string name="home_item_case_carbon" formatted="false">카본 케이스</string>
+    <string name="home_item_case_leather" formatted="false">스티커 붙은 낡은 가죽 케이스</string>
+    <string name="home_item_stand_fold" formatted="false">접이식 보면대</string>
+    <string name="home_item_stand_concert" formatted="false">연주회용 보면대</string>
+    <string name="home_item_stand_wood" formatted="false">조각된 나무 보면대</string>
+    <string name="home_item_stand_candle" formatted="false">촛대 달린 옛 보면대</string>
+    <string name="home_item_metronome" formatted="false">메트로놈</string>
+    <string name="home_item_notes" formatted="false">악보 더미</string>
+    <string name="home_item_portrait" formatted="false">작곡가의 초상</string>
+    <string name="home_item_poster" formatted="false">내 연주회 포스터</string>
+    <string name="home_item_postcards" formatted="false">여행에서 온 엽서</string>
+    <string name="home_item_shelf_scores" formatted="false">총보가 꽂힌 선반</string>
+    <string name="home_item_gramophone" formatted="false">축음기</string>
+    <string name="home_item_radio" formatted="false">라디오 전축</string>
+    <string name="home_item_piano" formatted="false">업라이트 피아노</string>
+    <string name="home_item_cello" formatted="false">구석의 첼로</string>
+    <string name="home_item_guitar" formatted="false">벽에 걸린 기타</string>
+    <string name="home_item_wp_plum" formatted="false">자두색 벽</string>
+    <string name="home_item_wp_warm" formatted="false">따뜻한 황토색 벽</string>
+    <string name="home_item_wp_cool" formatted="false">차가운 푸른 벽</string>
+    <string name="home_item_wp_green" formatted="false">짙은 녹색 벽</string>
+    <string name="home_item_wp_stripe" formatted="false">줄무늬 벽지</string>
+    <string name="home_item_wp_damask" formatted="false">다마스크 벽지</string>
+    <string name="home_item_wp_floral" formatted="false">잔꽃무늬 벽지</string>
+    <string name="home_item_wp_notes" formatted="false">“음표” 벽지</string>
+    <string name="home_item_wp_panels" formatted="false">나무 패널</string>
+    <string name="home_item_floor_plank" formatted="false">바닥 — 원래의 마루</string>
+    <string name="home_item_floor_light" formatted="false">바닥 — 밝은 마루</string>
+    <string name="home_item_floor_dark" formatted="false">바닥 — 짙은 오크</string>
+    <string name="home_item_floor_herring" formatted="false">헤링본 마루</string>
+    <string name="home_item_floor_tile" formatted="false">체크무늬 타일</string>
+    <string name="home_item_curtain_plum" formatted="false">연보라 커튼</string>
+    <string name="home_item_curtain_velvet" formatted="false">체리빛 커튼</string>
+    <string name="home_item_curtain_sand" formatted="false">모래색 커튼</string>
+    <string name="home_item_curtain_teal" formatted="false">바다색 커튼</string>
+    <string name="home_item_curtain_tulle" formatted="false">망사 커튼</string>
+    <string name="home_item_blinds" formatted="false">블라인드</string>
+    <string name="home_item_window_simple" formatted="false">단순한 창</string>
+    <string name="home_item_window_arched" formatted="false">높은 아치 창</string>
+    <string name="home_item_window_stained" formatted="false">스테인드글라스</string>
+    <string name="home_item_view_city" formatted="false">전망 — 도시</string>
+    <string name="home_item_view_sea" formatted="false">전망 — 바다</string>
+    <string name="home_item_view_mount" formatted="false">전망 — 산</string>
+    <string name="home_item_view_garden" formatted="false">전망 — 정원</string>
+    <string name="home_item_view_night" formatted="false">전망 — 밤의 대도시</string>
+    <string name="home_item_garland" formatted="false">창 위의 꼬마전구</string>
+    <string name="home_item_lamp_table" formatted="false">탁상 램프</string>
+    <string name="home_item_lamp_brass" formatted="false">황동 램프</string>
+    <string name="home_item_floorlamp" formatted="false">플로어 램프</string>
+    <string name="home_item_chandelier" formatted="false">샹들리에</string>
+    <string name="home_item_candles" formatted="false">양초</string>
+    <string name="home_item_fireplace" formatted="false">벽난로</string>
+    <string name="home_item_desk_simple" formatted="false">단순한 책상</string>
+    <string name="home_item_desk_oak" formatted="false">서랍 달린 오크 책상</string>
+    <string name="home_item_bureau" formatted="false">선반 달린 뷰로</string>
+    <string name="home_item_chair_simple" formatted="false">의자</string>
+    <string name="home_item_armchair" formatted="false">안락의자</string>
+    <string name="home_item_rocking" formatted="false">흔들의자</string>
+    <string name="home_item_plaid" formatted="false">안락의자 위 담요</string>
+    <string name="home_item_pouf" formatted="false">푸프</string>
+    <string name="home_item_bookshelf" formatted="false">책장</string>
+    <string name="home_item_commode" formatted="false">서랍장</string>
+    <string name="home_item_mirror" formatted="false">거울</string>
+    <string name="home_item_clock" formatted="false">추시계</string>
+    <string name="home_item_rug_plum" formatted="false">자두색 러그</string>
+    <string name="home_item_rug_persian" formatted="false">페르시아 러그</string>
+    <string name="home_item_rug_stripe" formatted="false">줄무늬 러그</string>
+    <string name="home_item_rug_round" formatted="false">황토색 원형 러그</string>
+    <string name="home_item_rug_green" formatted="false">초록 러그</string>
+    <string name="home_item_ficus" formatted="false">고무나무</string>
+    <string name="home_item_monstera" formatted="false">몬스테라</string>
+    <string name="home_item_tulips" formatted="false">창턱의 튤립</string>
+    <string name="home_item_vase" formatted="false">꽃다발 꽃병</string>
+    <string name="home_item_xmas" formatted="false">크리스마스트리</string>
+    <string name="home_item_tea" formatted="false">차 한 잔</string>
+    <string name="home_item_books" formatted="false">책 더미</string>
+    <string name="home_item_passport" formatted="false">여행 여권</string>
+    <string name="home_item_globe" formatted="false">깃발 꽂힌 지구본</string>
+    <string name="home_item_cat_ginger" formatted="false">치즈 고양이</string>
+    <string name="home_item_cat_black" formatted="false">검은 고양이</string>
+    <string name="home_item_cat_grey" formatted="false">회색 줄무늬 고양이</string>
+    <string name="home_item_cat_white" formatted="false">흰 고양이</string>
+    <string name="home_item_dog" formatted="false">개</string>
+    <string name="home_item_turtle" formatted="false">거북이</string>
+    <string name="home_item_canary" formatted="false">새장 속 카나리아</string>
+    <string name="home_item_aquarium" formatted="false">물고기 어항</string>
+    <string name="home_item_parrot" formatted="false">횃대 위의 앵무새</string>
+    <string name="home_item_mailbox" formatted="false">우편함</string>
+    <string name="home_item_lantern" formatted="false">길가의 가로등</string>
+    <string name="home_item_bench" formatted="false">벤치</string>
+    <string name="home_item_bike" formatted="false">벽에 기댄 자전거</string>
+    <string name="home_item_flowerbed" formatted="false">꽃밭</string>
+    <string name="home_item_swing" formatted="false">정원의 그네</string>
+    <string name="home_item_feeder" formatted="false">새 모이통</string>
+    <string name="home_item_vane" formatted="false">풍향계</string>
+    <string name="home_item_car_old" formatted="false">낡은 소형차</string>
+    <string name="home_item_car_wagon" formatted="false">왜건</string>
+    <string name="home_item_car_cabrio" formatted="false">컨버터블</string>
+    <string name="home_item_vln_student_note" formatted="false">상점의 선물: 바이올린이 케이스에서 나와 빛을 봅니다.</string>
+    <string name="home_item_vln_quarter_note" formatted="false">모든 것이 시작된 바로 그 악기. 작아요.</string>
+    <string name="home_item_vln_light_note" formatted="false">바니시가 아직 짙어지지 않았어요 — 제대로 울려 본 적이 없거든요.</string>
+    <string name="home_item_vln_master_note" formatted="false">한 공방, 한 사람의 손, 반년의 작업.</string>
+    <string name="home_item_vln_electric_note" formatted="false">몸통 대신 뼈대뿐. 바이올린인 줄 바로 알아보기 어렵습니다.</string>
+    <string name="home_item_vln_old_note" formatted="false">이백 년 동안 남의 손을 거쳤습니다. 바니시는 거의 검은색.</string>
+    <string name="home_item_vln_cremona_note" formatted="false">뒤판은 불꽃무늬 단풍나무. 이름이 있지만 아무도 입에 올리지 않습니다.</string>
+    <string name="home_item_case_black_note" formatted="false">처음부터 함께한 케이스. 창가에 열린 채 놓여 있어요.</string>
+    <string name="home_item_case_velvet_note" formatted="false">겉은 단정하고, 속은 체리빛.</string>
+    <string name="home_item_case_carbon_note" formatted="false">안경집처럼 가볍습니다.</string>
+    <string name="home_item_case_leather_note" formatted="false">이미 다녀온 도시들의 스티커. 저절로 붙습니다.</string>
+    <string name="home_item_stand_fold_note" formatted="false">학교에서 쓰던 것 같은 금속제.</string>
+    <string name="home_item_stand_concert_note" formatted="false">검고 묵직하며 받침이 넓습니다.</string>
+    <string name="home_item_stand_wood_note" formatted="false">리라 모양 조각. 빈의 가게에서 왔습니다.</string>
+    <string name="home_item_stand_candle_note" formatted="false">저녁에는 촛불이 켜집니다. 낮에는 그냥 서 있어요.</string>
+    <string name="home_item_metronome_note" formatted="false">추는 늘 흔들립니다. 조용히.</string>
+    <string name="home_item_notes_note" formatted="false">이미 읽은 곡과 아직 읽지 못한 곡 전부.</string>
+    <string name="home_item_portrait_note" formatted="false">음악원에 걸린 것 같은 타원형 액자. 누구인지는 직접 정하세요.</string>
+    <string name="home_item_poster_note" formatted="false">날짜는 아직 미정. 장소는 정해져 있습니다.</string>
+    <string name="home_item_postcards_note" formatted="false">이미 열린 엽서들. 도시마다 한 장씩 저절로 생깁니다.</string>
+    <string name="home_item_shelf_scores_note" formatted="false">책등이 나란히. 종이 냄새가 납니다.</string>
+    <string name="home_item_gramophone_note" formatted="false">나팔이 방을 향해 있습니다. 소리는 내지 않아요 — 원칙 2.</string>
+    <string name="home_item_radio_note" formatted="false">진공관식, 따뜻한 나무 빛깔. 말이 없습니다.</string>
+    <string name="home_item_piano_note" formatted="false">두 번째 악기. 뚜껑은 열려 있고 악보가 놓여 있어요.</string>
+    <string name="home_item_cello_note" formatted="false">벽에 기대어 서 있습니다. 가끔은 켜 보고 싶어요.</string>
+    <string name="home_item_guitar_note" formatted="false">손가락이 다른 것을 원하는 날을 위해.</string>
+    <string name="home_item_wp_plum_note" formatted="false">원래 있던 벽.</string>
+    <string name="home_item_wp_warm_note" formatted="false">단색, 살짝 따뜻하게.</string>
+    <string name="home_item_wp_cool_note" formatted="false">북쪽 창의 빛.</string>
+    <string name="home_item_wp_green_note" formatted="false">박스석의 벨벳처럼.</string>
+    <string name="home_item_wp_stripe_note" formatted="false">바탕보다 살짝 밝은 가는 줄무늬.</string>
+    <string name="home_item_wp_damask_note" formatted="false">소용돌이 장식의 마름모 — 여기서는 마름모만.</string>
+    <string name="home_item_wp_floral_note" formatted="false">따뜻한 바탕에 분홍 점 같은 꽃.</string>
+    <string name="home_item_wp_notes_note" formatted="false">벽 가득 작은 음표. 멜로디는 되지 않아요 — 그래서 좋습니다.</string>
+    <string name="home_item_wp_panels_note" formatted="false">벽 중간까지는 나무, 그 위는 벽.</string>
+    <string name="home_item_floor_plank_note" formatted="false">셋방의 짙은 마루.</string>
+    <string name="home_item_floor_light_note" formatted="false">소나무, 거의 꿀색.</string>
+    <string name="home_item_floor_dark_note" formatted="false">거의 검은색, 창가에서 윤이 납니다.</string>
+    <string name="home_item_floor_herring_note" formatted="false">오래된 아파트처럼.</string>
+    <string name="home_item_floor_tile_note" formatted="false">서늘한, 부엌 같은 타일.</string>
+    <string name="home_item_curtain_plum_note" formatted="false">원래 걸려 있던 것.</string>
+    <string name="home_item_curtain_velvet_note" formatted="false">라 스칼라의 막처럼.</string>
+    <string name="home_item_curtain_sand_note" formatted="false">따뜻한 리넨.</string>
+    <string name="home_item_curtain_teal_note" formatted="false">깊은 청록색.</string>
+    <string name="home_item_curtain_tulle_note" formatted="false">가볍고 빛이 통합니다.</string>
+    <string name="home_item_blinds_note" formatted="false">나무 블라인드, 빛이 줄무늬로 들어옵니다.</string>
+    <string name="home_item_window_simple_note" formatted="false">십자 창살, 원래 그대로.</string>
+    <string name="home_item_window_arched_note" formatted="false">천장이 더 높아진 것 같아요.</string>
+    <string name="home_item_window_stained_note" formatted="false">전망 위에 색유리 — 전망은 짐작할 수 있어요.</string>
+    <string name="home_item_view_city_note" formatted="false">맞은편의 지붕들. 저녁에는 달.</string>
+    <string name="home_item_view_sea_note" formatted="false">수평선과 돛 하나.</string>
+    <string name="home_item_view_mount_note" formatted="false">봉우리에는 일 년 내내 눈.</string>
+    <string name="home_item_view_garden_note" formatted="false">잔디밭과 나무 두 그루.</string>
+    <string name="home_item_view_night_note" formatted="false">하늘까지 닿는 창들. 낮에는 그냥 유리.</string>
+    <string name="home_item_garland_note" formatted="false">저녁에 반짝입니다. 겨울에만 그런 것은 아니에요.</string>
+    <string name="home_item_lamp_table_note" formatted="false">원래 있던 램프. 저녁에 켜집니다.</string>
+    <string name="home_item_lamp_brass_note" formatted="false">따뜻한 금속, 따뜻한 빛.</string>
+    <string name="home_item_floorlamp_note" formatted="false">구석에 서서 함께 책을 읽습니다.</string>
+    <string name="home_item_chandelier_note" formatted="false">둥글게 놓인 촛불 다섯 개. 저녁에 켜집니다.</string>
+    <string name="home_item_candles_note" formatted="false">높이가 다른 세 개. 저녁에는 불꽃이 살아납니다.</string>
+    <string name="home_item_fireplace_note" formatted="false">굴뚝 있는 집에서만. 저녁에는 타오르고, 낮에는 장작만.</string>
+    <string name="home_item_desk_simple_note" formatted="false">다리 네 개와 상판 하나.</string>
+    <string name="home_item_desk_oak_note" formatted="false">두꺼운 상판, 황동 손잡이.</string>
+    <string name="home_item_bureau_note" formatted="false">책상 위로 작은 서랍의 벽이 자라났습니다.</string>
+    <string name="home_item_chair_simple_note" formatted="false">나무 의자, 살짝 삐걱거려요.</string>
+    <string name="home_item_armchair_note" formatted="false">깊숙하고 천을 씌웠습니다. 고양이가 좋아할 거예요.</string>
+    <string name="home_item_rocking_note" formatted="false">저절로 흔들립니다, 아주 조금. 언제나.</string>
+    <string name="home_item_plaid_note" formatted="false">술 장식이 달린 채 개어져 있어요. 저녁을 기다립니다.</string>
+    <string name="home_item_pouf_note" formatted="false">악보를 들고 잠깐 앉는 자리.</string>
+    <string name="home_item_bookshelf_note" formatted="false">천장에는 닿지 않지만, 거의 닿습니다.</string>
+    <string name="home_item_commode_note" formatted="false">서랍 세 칸. 맨 위 칸에는 현이 들어 있어요.</string>
+    <string name="home_item_mirror_note" formatted="false">자세와 손 모양을 확인하는 용도.</string>
+    <string name="home_item_clock_note" formatted="false">추가 흔들립니다. 바늘은 실제 시각을 가리켜요.</string>
+    <string name="home_item_rug_plum_note" formatted="false">벽 색에 맞춘 단순한 러그. 첫 번째이고 비싸지 않아요.</string>
+    <string name="home_item_rug_persian_note" formatted="false">테두리가 있는 버건디색.</string>
+    <string name="home_item_rug_stripe_note" formatted="false">손으로 짠 줄무늬.</string>
+    <string name="home_item_rug_round_note" formatted="false">작고 따뜻합니다.</string>
+    <string name="home_item_rug_green_note" formatted="false">정원의 잔디처럼.</string>
+    <string name="home_item_ficus_note" formatted="false">천천히 자라지만 결코 시들지 않습니다.</string>
+    <string name="home_item_monstera_note" formatted="false">구멍 난 잎, 손바닥만 한 크기.</string>
+    <string name="home_item_tulips_note" formatted="false">세 송이. 시들지 않아요 — 조용한 게임의 원칙입니다.</string>
+    <string name="home_item_vase_note" formatted="false">들꽃. 아니면 창 아래 정원에서 온 꽃.</string>
+    <string name="home_item_xmas_note" formatted="false">계절 한정: 사 두면 12월부터 1월까지 저절로 서 있습니다.</string>
+    <string name="home_item_tea_note" formatted="false">김이 늘 피어오릅니다. 식지 않아요.</string>
+    <string name="home_item_books_note" formatted="false">세 권. 한 권은 바이올린에 관한 책.</string>
+    <string name="home_item_passport_note" formatted="false">여행 중이 아닐 때는 책상 위에 놓여 있어요.</string>
+    <string name="home_item_globe_note" formatted="false">다녀온 도시마다 깃발 하나. 저절로 꽂힙니다.</string>
+    <string name="home_item_cat_ginger_note" formatted="false">창턱에서 잡니다. 숨을 쉬고 가끔 눈을 깜빡여요. 밥은 주지 않아도 됩니다.</string>
+    <string name="home_item_cat_black_note" formatted="false">눈만 보입니다 — 그것도 늘 보이는 건 아니에요.</string>
+    <string name="home_item_cat_grey_note" formatted="false">줄무늬가 바닥 색과 어울려요.</string>
+    <string name="home_item_cat_white_note" formatted="false">짙은 러그 위에서는 한 조각의 빛 같아요.</string>
+    <string name="home_item_dog_note" formatted="false">발치에 누워 있습니다. 가끔 고개를 들어요.</string>
+    <string name="home_item_turtle_note" formatted="false">누구보다 조용합니다. 가끔 움직이지만 눈치채기 어려워요.</string>
+    <string name="home_item_canary_note" formatted="false">횃대에서 횃대로 뛰어다닙니다. 노래는 하지 않아요 — 원칙 2.</string>
+    <string name="home_item_aquarium_note" formatted="false">물고기 한 마리가 이리저리 헤엄칩니다. 물은 흐려지지 않아요.</string>
+    <string name="home_item_parrot_note" formatted="false">초록에 빨강. 창밖을 바라봅니다.</string>
+    <string name="home_item_mailbox_note" formatted="false">깃발이 올라가 있으면 엽서가 온 것입니다.</string>
+    <string name="home_item_lantern_note" formatted="false">저녁이 되면 켜집니다.</string>
+    <string name="home_item_bench_note" formatted="false">길 떠나기 전, 케이스와 함께 잠시 앉는 자리.</string>
+    <string name="home_item_bike_note" formatted="false">집에 기대어 있습니다. 어디로도 가지 않아요.</string>
+    <string name="home_item_flowerbed_note" formatted="false">언제나 무언가는 피어 있습니다.</string>
+    <string name="home_item_swing_note" formatted="false">아무도 없어도 바람에 흔들립니다.</string>
+    <string name="home_item_feeder_note" formatted="false">새들이 알아서 날아옵니다. 모이는 떨어지지 않아요.</string>
+    <string name="home_item_vane_note" formatted="false">바람이 어디서 부는지 알려 줍니다. 여기서는 언제나 순풍.</string>
+    <string name="home_item_car_old_note" formatted="false">세 번째에야 시동이 걸립니다. 체리색.</string>
+    <string name="home_item_car_wagon_note" formatted="false">첼로가 들어갑니다. 확인했어요.</string>
+    <string name="home_item_car_cabrio_note" formatted="false">지붕은 늘 접혀 있습니다. 여기는 비가 오지 않으니까요.</string>
+    <string name="home_slot_wallpaper" formatted="false">벽</string>
+    <string name="home_slot_floor" formatted="false">바닥</string>
+    <string name="home_slot_view" formatted="false">창밖 전망</string>
+    <string name="home_slot_window" formatted="false">창문</string>
+    <string name="home_slot_curtain" formatted="false">커튼</string>
+    <string name="home_slot_garland" formatted="false">창 위</string>
+    <string name="home_slot_sill" formatted="false">창턱, 오른쪽</string>
+    <string name="home_slot_sillL" formatted="false">창턱, 왼쪽</string>
+    <string name="home_slot_ceiling" formatted="false">천장</string>
+    <string name="home_slot_wallL" formatted="false">왼쪽 벽</string>
+    <string name="home_slot_wallM" formatted="false">창 옆 벽</string>
+    <string name="home_slot_desk" formatted="false">책상</string>
+    <string name="home_slot_deskTop" formatted="false">책상 위, 왼쪽</string>
+    <string name="home_slot_deskM" formatted="false">책상 위</string>
+    <string name="home_slot_deskR" formatted="false">책상 위, 오른쪽</string>
+    <string name="home_slot_chair" formatted="false">의자</string>
+    <string name="home_slot_chairTop" formatted="false">의자 위</string>
+    <string name="home_slot_stand" formatted="false">보면대</string>
+    <string name="home_slot_violin" formatted="false">바이올린 · 앞쪽</string>
+    <string name="home_slot_case" formatted="false">케이스 · 창가 바닥</string>
+    <string name="home_slot_rug" formatted="false">러그 · 바닥 가운데</string>
+    <string name="home_slot_pet" formatted="false">반려동물</string>
+    <string name="home_slot_floorL" formatted="false">왼쪽 구석</string>
+    <string name="home_slot_floorR" formatted="false">오른쪽 구석</string>
+    <string name="home_slot_fire" formatted="false">벽난로</string>
+    <string name="home_slot_oL" formatted="false">길가</string>
+    <string name="home_slot_oR" formatted="false">집 벽 옆</string>
+    <string name="home_slot_oG" formatted="false">정원</string>
+    <string name="home_slot_oCar" formatted="false">집 앞</string>
+    <string name="home_slot_oRoof" formatted="false">지붕</string>
+    <string name="home_slot_oPorch" formatted="false">현관</string>
+    <string name="home_house_rent" formatted="false">셋방</string>
+    <string name="home_house_wood" formatted="false">작은 나무집</string>
+    <string name="home_house_flat" formatted="false">오래된 건물의 아파트</string>
+    <string name="home_house_sea" formatted="false">바닷가의 집</string>
+    <string name="home_house_chalet" formatted="false">산속의 샬레</string>
+    <string name="home_house_mansion" formatted="false">도심의 저택</string>
+    <string name="home_house_villa" formatted="false">콘서트홀이 있는 빌라</string>
+    <string name="home_house_rent_note" formatted="false">도시, 3층</string>
+    <string name="home_house_wood_note" formatted="false">현관, 굴뚝, 사과나무</string>
+    <string name="home_house_flat_note" formatted="false">퇴창, 석고 장식, 원목 마루</string>
+    <string name="home_house_sea_note" formatted="false">베란다, 멀리 등대, 갈매기</string>
+    <string name="home_house_chalet_note" formatted="false">벽난로, 눈, 전나무</string>
+    <string name="home_house_mansion_note" formatted="false">기둥, 정원, 그랜드 피아노가 있는 홀</string>
+    <string name="home_house_villa_note" formatted="false">피날레</string>
+    <string-array name="home_house_rent_news">
+    </string-array>
+    <string-array name="home_house_wood_news">
+        <item>벽난로 — 새로운 자리</item>
+        <item>바깥에 현관과 정원</item>
+        <item>“왼쪽 구석” 자리와 벽지가 없음 — 통나무 벽</item>
+    </string-array>
+    <string-array name="home_house_flat_news">
+        <item>퇴창 — 세 방향으로 난 창</item>
+        <item>퇴창 옆에 피아노 자리</item>
+    </string-array>
+    <string-array name="home_house_sea_news">
+        <item>베란다 — 두 번째 “바깥”</item>
+        <item>창밖 전망은 언제나 바다</item>
+    </string-array>
+    <string-array name="home_house_chalet_news">
+        <item>벽난로가 이미 집 안에</item>
+        <item>겨울에는 지붕에 눈</item>
+    </string-array>
+    <string-array name="home_house_mansion_news">
+        <item>두 번째 방 — 홀</item>
+        <item>그랜드 피아노(여기에만)</item>
+    </string-array>
+    <string-array name="home_house_villa_news">
+        <item>방 세 개</item>
+        <item>좌석 마흔 개의 홀</item>
+    </string-array>
+</resources>

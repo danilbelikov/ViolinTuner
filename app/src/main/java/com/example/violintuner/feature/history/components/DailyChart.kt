@@ -90,7 +90,7 @@ fun DailyChart(days: List<DayCount>, top: Int, modifier: Modifier = Modifier, ba
     val labelStyle = TextStyle(color = colors.onSurfaceVariant, fontSize = 11.sp, fontFeatureSettings = "tnum")
     val todayWord = stringResource(R.string.history_day_today)
     val barWords = days.filter { it.count > 0 }.map { day ->
-        val count = stringResource(Formats.pluralRu(day.count, R.string.history_count_one, R.string.history_count_few, R.string.history_count_many), day.count)
+        val count = stringResource(Formats.plural(day.count, R.string.history_count_one, R.string.history_count_few, R.string.history_count_many), day.count)
         stringResource(R.string.history_chart_bar, Formats.dayAndMonth(day.date), count)
     }
     val description = (listOf(stringResource(R.string.history_chart_description)) + barWords).joinToString("; ")

@@ -1,7 +1,7 @@
 package com.example.violintuner.feature.sound
 
 import com.example.violintuner.core.domain.sound.SoundUnit
-import java.util.Locale
+import com.example.violintuner.core.ui.format.Formats
 import kotlin.math.abs
 import kotlin.math.roundToInt
 
@@ -11,15 +11,16 @@ import kotlin.math.roundToInt
  * The locale is fixed, as everywhere in the app's formats: the interface is Russian.
  */
 object SoundFormats {
-    private val LOCALE = Locale.forLanguageTag("ru")
+    private val LOCALE get() = Formats.LOCALE
+    private val units get() = Formats.language.sound
     private const val NBSP = ' '
     private const val MINUS = '−'
 
     fun value(unit: SoundUnit, value: Double): String = when (unit) {
         SoundUnit.HERTZ -> hertz(value)
         SoundUnit.DECIBEL -> decibels(value, signed = true)
-        SoundUnit.MILLISECOND -> "${value.roundToInt()}${NBSP}мс"
-        SoundUnit.SECOND -> "${oneDecimal(value)}${NBSP}с"
+        SoundUnit.MILLISECOND -> "${value.roundToInt()}${NBSP}${units.ms}"
+        SoundUnit.SECOND -> "${oneDecimal(value)}${NBSP}${units.s}"
         SoundUnit.PERCENT -> "${(value * PERCENT).roundToInt()}${NBSP}%"
         SoundUnit.RATIO -> ratio(value)
         SoundUnit.WIDTH -> oneDecimal(value)
@@ -28,9 +29,9 @@ object SoundFormats {
 
     /** «80 Гц», «950 Гц», «1 кГц», «2,4 кГц», «12 кГц». */
     fun hertz(hz: Double): String = when {
-        hz < KILO -> "${hz.roundToInt()}${NBSP}Гц"
-        hz < TEN_KILO -> "${trimmed(hz / KILO)}${NBSP}кГц"
-        else -> "${(hz / KILO).roundToInt()}${NBSP}кГц"
+        hz < KILO -> "${hz.roundToInt()}${NBSP}${units.hz}"
+        hz < TEN_KILO -> "${trimmed(hz / KILO)}${NBSP}${units.khz}"
+        else -> "${(hz / KILO).roundToInt()}${NBSP}${units.khz}"
     }
 
     /** «+2,5 дБ», «−18 дБ», «0 дБ»; [signed] false leaves the plus out — for levels, which are all below zero anyway. */
@@ -41,14 +42,14 @@ object SoundFormats {
             rounded > 0 && signed -> "+"
             else -> ""
         }
-        return "$sign${trimmed(abs(rounded))}${NBSP}дБ"
+        return "$sign${trimmed(abs(rounded))}${NBSP}${units.db}"
     }
 
     /** «3:1», «3,5:1». */
     fun ratio(ratio: Double): String = "${trimmed(ratio)}:1"
 
     /** Short axis labels of the curve: «100», «1 к», «10 к». */
-    fun axis(hz: Double): String = if (hz < KILO) hz.roundToInt().toString() else "${(hz / KILO).roundToInt()}${NBSP}к"
+    fun axis(hz: Double): String = if (hz < KILO) hz.roundToInt().toString() else "${(hz / KILO).roundToInt()}${NBSP}${units.kilo}"
 
     private fun oneDecimal(value: Double) = "%.1f".format(LOCALE, value)
 

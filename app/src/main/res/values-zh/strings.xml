@@ -1,0 +1,917 @@
+<resources>
+    <string name="app_name">ViolinTuner</string>
+
+    <string name="nav_live">Live</string>
+    <string name="nav_practice">练习</string>
+    <string name="nav_history">录音</string>
+    <string name="nav_settings">设置</string>
+
+    <string name="mode_play">演奏</string>
+    <string name="mode_tuning">调音</string>
+    <string name="tuning_string_hz">%1$d Hz</string>
+    <string name="tuning_hint_auto">自动 · 请拉一根空弦</string>
+    <string name="tuning_hint_locked">目标已锁定：%1$s · %2$d Hz · 轻触解除</string>
+    <string name="tuning_string_locked">已锁定</string>
+    <string name="tuning_string_auto">自动</string>
+    <string name="status_in_tune">准</string>
+    <string name="status_sharp">偏高</string>
+    <string name="status_flat">偏低</string>
+    <string name="live_silence">请演奏…</string>
+    <string name="live_too_noisy">环境太吵</string>
+    <string name="live_mic_unavailable">麦克风不可用</string>
+    <string name="mic_permission_title">需要使用麦克风</string>
+    <string name="mic_permission_text">没有麦克风，应用就听不到小提琴。声音只在手机上处理，不会发送到任何地方。</string>
+    <string name="mic_permission_grant">允许访问</string>
+    <string name="record_button">录音</string>
+    <string name="record_start">开始录音</string>
+    <string name="record_stop">停止录音</string>
+    <string name="record_no_notes">录音中没有找到音符</string>
+    <string name="recording_elapsed_description">正在录音，%1$s</string>
+    <string name="recording_strip_label">录音 ·</string>
+    <string name="practice_chip_label">练习 ·</string>
+
+    <string name="onboarding_mic_title">让我听听你的小提琴</string>
+    <string name="onboarding_mic_text">应用通过麦克风聆听，不会向网络发送任何内容。声音只在手机上处理。</string>
+    <string name="onboarding_mic_cta">允许使用麦克风</string>
+    <string name="onboarding_mic_foot">把手机放在谱架上，距离 50–80 厘米</string>
+    <string name="onboarding_a4_title">以哪个标准音调音？</string>
+    <string name="onboarding_a4_text">家里和学校通常用 440 Hz，乐团常用 442。之后可在设置中更改。</string>
+    <string name="onboarding_a4_cta">下一步</string>
+    <string name="onboarding_a4_foot">演奏时屏幕不会熄灭</string>
+    <string name="onboarding_tolerance_title">评判要多严格？</string>
+    <string name="onboarding_tolerance_text">这是绿色区域的宽度。先从宽松开始——随时可以收窄。</string>
+    <string name="onboarding_tolerance_cta">开始演奏</string>
+    <string name="onboarding_tolerance_foot">可随时在设置中更改</string>
+    <string name="onboarding_step_description">第 %1$d 步，共 %2$d 步</string>
+
+    <string name="tolerance_beginner_name">初学</string>
+    <string name="tolerance_beginner_text">宽绿色区域</string>
+    <string name="tolerance_intermediate_name">中级</string>
+    <string name="tolerance_intermediate_text">能感觉到揉弦</string>
+    <string name="tolerance_pro_name">专业</string>
+    <string name="tolerance_pro_text">严格</string>
+    <string name="tolerance_cents">±%1$d 音分</string>
+    <string name="a4_option_description">%1$d 赫兹</string>
+
+    <string name="settings_a4_title">标准音 A4</string>
+    <string name="settings_a4_text">小字一组 A 音的频率（Hz）。所有音和弦都以它为基准。</string>
+    <string name="settings_tolerance_title">容差</string>
+    <string name="settings_tolerance_text">绿色区域的宽度：离音多近才算“准”。</string>
+    <string name="settings_language">语言</string>
+    <string name="settings_restart_onboarding">重新查看引导</string>
+
+    <string name="session_default_title">录音 · %1$s</string>
+    <string name="record_default_title">录音</string>
+    <string name="session_take_subtitle">录制 · %1$s · %2$s</string>
+    <string name="session_back">返回</string>
+    <string name="session_not_found">未找到录音</string>
+    <string name="session_percent">%1$d%%</string>
+    <string name="session_meta">准 · %1$s · ±%2$d 音分</string>
+    <string name="session_bias_mean">平均 %1$s 音分</string>
+    <string name="session_bias_none">无偏差</string>
+    <string name="session_bias_hint_none">正在中心</string>
+    <string name="session_bias_hint_flat">略偏低——手指往琴码方向靠一点</string>
+    <string name="session_bias_hint_sharp">略偏高——手指往弦枕方向靠一点</string>
+    <string name="session_card_distribution">分布</string>
+    <string name="session_card_mean_error">平均误差</string>
+    <string name="session_card_per_string">各弦</string>
+    <string name="session_cents_unit">音分</string>
+    <string name="session_bias_small_none">无偏差</string>
+    <string name="session_bias_small_down">偏低 %1$s 音分</string>
+    <string name="session_bias_small_up">偏高 %1$s 音分</string>
+    <string name="session_string_not_played">—</string>
+    <string name="session_problem_notes">问题音</string>
+    <string name="session_problem_note">%2$s 弦上的 %1$s</string>
+    <string name="session_cents_value">%1$s 音分</string>
+    <string name="session_no_problem_notes">没有哪个音持续跑偏——这次录音很出色。</string>
+    <string name="session_action_rename">重命名</string>
+    <string name="session_action_delete">删除</string>
+    <string name="session_rename_title">录音名称</string>
+    <string name="session_rename_hint">留空则恢复为按日期命名</string>
+    <string name="session_rename_confirm">保存</string>
+    <string name="session_delete_title">删除这条录音？</string>
+    <string name="session_delete_text">声音和分析将被删除，无法恢复。</string>
+    <string name="session_delete_confirm">删除</string>
+    <string name="dialog_cancel">取消</string>
+    <string name="session_note_target">目标</string>
+    <string name="session_note_mean">平均</string>
+    <string name="session_note_min_max">最小 / 最大</string>
+    <string name="session_note_min_max_value">%1$s / %2$s</string>
+    <string name="session_note_duration">时长</string>
+    <string name="session_note_duration_value">%1$s 秒</string>
+    <string name="session_note_range">幅度</string>
+    <string name="session_note_range_value">±%1$d 音分</string>
+    <string name="session_note_position">%1$s 弦 · %2$s</string>
+    <string name="finger_open">空弦</string>
+    <string name="finger_first">1 指</string>
+    <string name="finger_second">2 指</string>
+    <string name="finger_third">3 指</string>
+    <string name="finger_fourth">4 指</string>
+    <string name="finger_higher_position">高把位</string>
+    <string name="session_tip_stable">稳定，揉弦均匀</string>
+    <string name="session_tip_wandering">平均是准的，但音在漂</string>
+    <string name="session_tip_flat">手指偏低——往琴码方向靠一点</string>
+    <string name="session_tip_sharp">手指偏高——往弦枕方向靠一点</string>
+    <string name="session_player_play">播放录音</string>
+    <string name="session_player_pause">暂停</string>
+    <string name="session_player_position">播放位置</string>
+    <string name="session_roll_description">音符条。轻触音符查看详情。</string>
+
+    <string name="history_count_one">%1$d 条录音</string>
+    <string name="history_count_few">%1$d 条录音</string>
+    <string name="history_count_many">%1$d 条录音</string>
+    <string name="history_chart_title">两周内的录音</string>
+    <string name="history_chart_description">两周内每天的录音数</string>
+    <string name="history_filter_all">全部</string>
+    <string name="history_filter_this_week">本周</string>
+    <string name="history_filter_month">本月</string>
+    <string name="history_day_today">今天</string>
+    <string name="record_meta">%1$s · %2$s</string>
+    <string name="history_chart_bar">%1$s，%2$s</string>
+    <string name="backup_block_title">数据</string>
+    <string name="backup_row_save">保存副本</string>
+    <string name="backup_row_never">尚未保存过</string>
+    <string name="backup_row_last">上次——%1$s</string>
+    <string name="backup_row_stale">上次——%1$s · 此后有 %2$s</string>
+    <string name="backup_new_records_one">%1$d 条新录音</string>
+    <string name="backup_new_records_few">%1$d 条新录音</string>
+    <string name="backup_new_records_many">%1$d 条新录音</string>
+    <string name="backup_row_running">进行中 · %1$d\u00A0%%</string>
+    <string name="backup_row_restore">从副本恢复</string>
+    <string name="backup_row_total">应用内现有：%1$s</string>
+    <string name="backup_onboarding_link">我有数据副本</string>
+    <string name="backup_title">数据备份</string>
+    <string name="backup_text">一个文件，装下应用里的一切。最好不要放在这部手机上——放到电脑、U 盘或云端文件夹。</string>
+    <string name="backup_part_data">分析、练习、进度、设置</string>
+    <string name="backup_part_data_short">分析、练习、进度</string>
+    <string name="backup_part_sheets">乐谱照片</string>
+    <string name="backup_part_audio">录音的声音</string>
+    <string name="backup_part_audio_short">声音</string>
+    <string name="backup_part_video">视频</string>
+    <string name="backup_part_always">始终</string>
+    <string name="backup_total">副本大小</string>
+    <string name="backup_total_value">≈\u00A0%1$s</string>
+    <string name="backup_without_video">不含视频：恢复后，视频录制只保留分析，没有画面和声音。</string>
+    <string name="backup_without_audio">不含声音：恢复后录音没有声音——只保留分析。</string>
+    <string name="backup_without_sheets">不含乐谱照片：恢复后曲目没有乐谱页。</string>
+    <string name="backup_save_to">保存到…</string>
+    <string name="backup_saving_button">正在保存…</string>
+    <string name="backup_share">发送…</string>
+    <string name="backup_too_big_to_share">这样大的副本，聊天软件和邮箱都收不下——请保存到文件夹或 U 盘</string>
+    <string name="backup_busy_recording">请先结束录音</string>
+    <string name="backup_nothing_title">暂时没有可保存的内容</string>
+    <string name="backup_nothing_text">录下第一次录制或添加一首曲目——副本就会出现在这里</string>
+    <string name="backup_file_name">Intonation · 副本 · %1$s.zip</string>
+    <string name="backup_saving_title">正在保存副本</string>
+    <string name="backup_phase_data">分析、练习、进度</string>
+    <string name="backup_phase_files">%1$s · %2$d / %3$d</string>
+    <string name="backup_phase_verifying_file">正在检查文件</string>
+    <string name="backup_percent">%1$d\u00A0%%</string>
+    <string name="backup_done_of">%1$s / %2$s</string>
+    <string name="backup_remaining">还剩%1$s</string>
+    <string name="backup_remaining_minutes">约 %1$d 分钟</string>
+    <string name="backup_remaining_seconds">几秒钟</string>
+    <string name="backup_can_leave_title">可以把应用切到后台——副本会自行完成。</string>
+    <string name="backup_can_leave_text">完成之前，请不要关机，也不要拔出 U 盘。</string>
+    <string name="backup_cancel">取消</string>
+    <string name="backup_stop_title">要停止吗？</string>
+    <string name="backup_stop_text">未写完的文件将被删除。</string>
+    <string name="backup_stop_continue">继续</string>
+    <string name="backup_stop_confirm">停止</string>
+    <string name="backup_saved_title">副本已保存</string>
+    <string name="backup_saved_place">%1$s · %2$s</string>
+    <string name="backup_place_downloads">下载</string>
+    <string name="backup_saved_advice">请把文件从手机上拷走：副本留在同一部手机上，手机出事时就救不了数据。</string>
+    <string name="backup_done">完成</string>
+    <string name="backup_failed_space_title">保存位置空间不足</string>
+    <string name="backup_failed_space_text">未写完的文件已删除。请换一个位置，或保存不含视频的副本。</string>
+    <string name="backup_failed_space_inside">手机存储还差 %1$s，无法生成用于发送的副本。请直接保存到文件夹。</string>
+    <string name="backup_failed_gone_title">保存位置已不可用</string>
+    <string name="backup_failed_gone_text">U 盘被拔出或文件夹不见了。未写完的文件已删除——请插回存储设备后重试。</string>
+    <string name="backup_failed_title">副本保存失败</string>
+    <string name="backup_failed_text">未写完的文件已删除。应用内的数据完好。</string>
+    <string name="backup_retry">重试</string>
+    <string name="backup_close">关闭</string>
+    <string name="backup_count_sessions_one">%1$d 条录音</string>
+    <string name="backup_count_sessions_few">%1$d 条录音</string>
+    <string name="backup_count_sessions_many">%1$d 条录音</string>
+    <string name="backup_count_pieces_one">%1$d 首曲目</string>
+    <string name="backup_count_pieces_few">%1$d 首曲目</string>
+    <string name="backup_count_pieces_many">%1$d 首曲目</string>
+    <string name="backup_count_pages_one">%1$d 页</string>
+    <string name="backup_count_pages_few">%1$d 页</string>
+    <string name="backup_count_pages_many">%1$d 页</string>
+    <string name="backup_count_days_one">%1$d 天练习</string>
+    <string name="backup_count_days_few">%1$d 天练习</string>
+    <string name="backup_count_days_many">%1$d 天练习</string>
+    <string name="backup_count_trophies_one">%1$d 座奖杯</string>
+    <string name="backup_count_trophies_few">%1$d 座奖杯</string>
+    <string name="backup_count_trophies_many">%1$d 座奖杯</string>
+    <string name="backup_count_takes_one">%1$d 次录制</string>
+    <string name="backup_count_takes_few">%1$d 次录制</string>
+    <string name="backup_count_takes_many">%1$d 次录制</string>
+    <string name="backup_count_sound_one">%1$d 条有声录音</string>
+    <string name="backup_count_sound_few">%1$d 条有声录音</string>
+    <string name="backup_count_sound_many">%1$d 条有声录音</string>
+    <string name="backup_count_video">%1$d 个视频</string>
+    <string name="backup_count_level">等级 %1$d</string>
+    <string name="backup_notification_channel">数据备份</string>
+    <string name="backup_notification_saving">正在保存副本 · %1$d\u00A0%%</string>
+    <string name="backup_notification_restoring">正在恢复数据 · %1$d\u00A0%%</string>
+    <string name="restore_title">从副本恢复</string>
+    <string name="restore_reading">正在打开副本…</string>
+    <string name="restore_made">%1$s · %2$s</string>
+    <string name="restore_without_video">不含视频——视频录制只保留分析</string>
+    <string name="restore_without_audio">不含声音——录音只保留分析</string>
+    <string name="restore_without_sheets">不含乐谱照片</string>
+    <string name="restore_now_title">应用内现有</string>
+    <string name="restore_warning">应用内现有的一切都将被副本中的数据替换。此操作无法撤销。</string>
+    <string name="restore_save_first">先保存当前数据</string>
+    <string name="restore_empty_app">应用里还是空的——恢复后这里会有副本中的全部内容，也无需再看引导。</string>
+    <string name="restore_button">恢复</string>
+    <string name="restore_confirm_title">替换数据？</string>
+    <string name="restore_confirm_text">这部手机上的%1$s将被删除，取而代之的是 %2$s 的副本。</string>
+    <string name="restore_confirm_button">替换</string>
+    <string name="restore_not_ours_title">这不是“Intonation”的副本</string>
+    <string name="restore_not_ours_text">这是其他应用的文件或普通压缩包。副本的名称是“Intonation · 副本 · 日期.zip”。</string>
+    <string name="restore_too_new_title">副本由更新版本的应用创建</string>
+    <string name="restore_too_new_text">请更新应用后再打开该文件。</string>
+    <string name="restore_damaged_title">文件已损坏或未下载完整</string>
+    <string name="restore_damaged_text">请从存放它的地方重新拷贝一份，然后再试。</string>
+    <string name="restore_pick_another">选择其他文件</string>
+    <string name="restore_no_room_title">还差 %1$s 才能安全恢复</string>
+    <string name="restore_no_room_text">副本会先解压到现有数据旁边，然后才替换它们。请在手机上腾出空间——或者不留退路直接恢复。</string>
+    <string name="restore_no_room_ok">知道了</string>
+    <string name="restore_unsafe_button">删除当前数据并恢复</string>
+    <string name="restore_unsafe_title">全部删除并恢复？</string>
+    <string name="restore_unsafe_text">我们会先完整检查副本。之后%1$s将从手机上删除——如果恢复中断，它们将无法找回。</string>
+    <string name="restore_unsafe_confirm">删除并恢复</string>
+    <string name="restore_progress_title">正在恢复数据</string>
+    <string name="restore_step_verifying">检查</string>
+    <string name="restore_step_extracting">恢复</string>
+    <string name="restore_step_finishing">即将完成</string>
+    <string name="restore_phase_verifying">正在检查副本</string>
+    <string name="restore_phase_extracting">正在恢复 · %1$s %2$d</string>
+    <string name="restore_can_leave_title">可以把应用切到后台——恢复会自行完成。</string>
+    <string name="restore_can_stop">你的数据还在：检查和解压期间可以停止。</string>
+    <string name="restore_cannot_stop">正在打开恢复的数据——现在已无法停止。</string>
+    <string name="restore_done_title">数据已恢复</string>
+    <string name="restore_opening">正在打开你的数据…</string>
+    <string name="restore_failed_title">恢复失败</string>
+    <string name="restore_failed_text">你的数据完好——什么都没有改变。</string>
+    <string name="restore_failed_lost_title">恢复失败，而原有数据已不在</string>
+    <string name="restore_failed_lost_text">副本已检查且完好——请用同一个文件再试一次。如果仍不成功，请从全新的应用开始。</string>
+    <string name="restore_retry_same">用此文件重试</string>
+    <string name="restore_start_clean">从全新的应用开始</string>
+    <string name="restore_busy">请先结束录音</string>
+    <string name="video_description">视频</string>
+    <string name="video_state_playing">正在播放，双击暂停</string>
+    <string name="video_state_paused">已暂停，双击继续</string>
+    <string name="video_fullscreen">全屏</string>
+    <string name="video_fullscreen_exit">退出全屏</string>
+    <string name="video_lost_title">未找到视频——分析还在</string>
+    <string name="video_lost_text">文件已从应用存储中删除。声音也没有了——如同无声录音。</string>
+    <string name="video_undecodable_title">此视频无法在这里显示</string>
+    <string name="video_undecodable_text">手机无法读取它的画面。声音和分析完好。</string>
+    <string name="video_row_time">%1$s / %2$s · %3$s 音分</string>
+    <string name="video_size">视频 · %1$s · %2$s</string>
+    <string name="video_size_lost">未找到视频</string>
+    <string name="video_resolution">%1$dp</string>
+    <string name="video_watch_place">观看这一处</string>
+    <string name="video_listen_place">聆听这一处</string>
+    <string name="video_delete_text">视频（%1$s）、声音和分析都将删除。此操作无法撤销。</string>
+    <string name="record_tile_video">含视频</string>
+    <string name="size_mb">%1$s MB</string>
+    <string name="size_kb">%1$d KB</string>
+    <string name="video_take">视频录制</string>
+    <string name="video_take_busy">分析中…</string>
+    <string name="video_shoot">拍摄视频</string>
+    <string name="video_shoot_hint">将打开手机相机</string>
+    <string name="video_pick">从相册选视频</string>
+    <string name="video_pick_hint">一次一个，最长 60 分钟</string>
+    <string name="video_copying">正在添加视频…</string>
+    <string name="video_listening">正在聆听录音…</string>
+    <string name="video_percent">%1$d\u00A0%%</string>
+    <string name="video_remaining">还剩约 %1$d 秒</string>
+    <string name="video_cancel">取消</string>
+    <string name="video_stop_title">停止分析？</string>
+    <string name="video_stop_text">视频刚刚拍摄，别处没有保存。可以把它发送到别处以免丢失，或者删除。</string>
+    <string name="video_stopped_title">分析已停止</string>
+    <string name="video_delete">删除</string>
+    <string name="video_send">发送视频</string>
+    <string name="video_continue">继续分析</string>
+    <string name="video_ok">知道了</string>
+    <string name="video_error_no_sound">视频没有声音</string>
+    <string name="video_error_too_long">视频超过 60 分钟——无法分析</string>
+    <string name="video_error_cannot_open">无法打开视频</string>
+    <string name="video_error_no_notes">视频中没有找到音符——未添加录制</string>
+    <string name="video_error_no_notes_gallery">原视频仍在相册中。</string>
+    <string name="video_error_no_space">空间不足：还需要 %1$d MB</string>
+    <string name="video_rescue_file">Video.mp4</string>
+    <string name="video_thumb">视频的第一帧</string>
+    <string name="selection_select">选择</string>
+    <string name="selection_count">已选：%1$d</string>
+    <string name="selection_all">全选</string>
+    <string name="selection_none">全不选</string>
+    <string name="selection_close">关闭选择</string>
+    <string name="selection_delete">删除所选</string>
+    <string name="selection_delete_records_one">删除 %1$d 条录音？</string>
+    <string name="selection_delete_records_few">删除 %1$d 条录音？</string>
+    <string name="selection_delete_records_many">删除 %1$d 条录音？</string>
+    <string name="selection_delete_takes_one">删除 %1$d 次录制？</string>
+    <string name="selection_delete_takes_few">删除 %1$d 次录制？</string>
+    <string name="selection_delete_takes_many">删除 %1$d 次录制？</string>
+    <string name="selection_delete_text">声音和分析都将删除。此操作无法撤销。</string>
+    <string name="record_tile_take">录制</string>
+    <string name="record_tile_record">录音</string>
+    <string name="record_tile_sound">声音</string>
+    <string name="record_tile_only_video">视频</string>
+    <string name="record_tile_no_sound">无声</string>
+    <string name="history_empty_filter">这段时间没有录音</string>
+    <string name="history_empty">你的录音会出现在这里。请在 Live 界面按下录音按钮。</string>
+
+    <string name="practice_start">开始练习</string>
+    <string name="practice_stop">结束练习</string>
+    <string name="practice_running">练习进行中</string>
+    <string name="practice_timer_description">练习进行中，%1$s</string>
+    <string name="practice_today">今天：%1$s</string>
+    <string name="practice_today_none">今天还没有练习</string>
+    <string name="practice_empty">拿起琴时按“开始练习”，放下琴时按“结束”。你的日历会出现在这里。</string>
+    <string name="practice_week">本周</string>
+    <string name="practice_month">本月</string>
+    <string name="practice_streak">连续天数</string>
+    <string name="practice_no_value">—</string>
+    <string name="practice_month_back">上个月</string>
+    <string name="practice_month_forward">下个月</string>
+    <string-array name="practice_weekdays">
+        <item>一</item>
+        <item>二</item>
+        <item>三</item>
+        <item>四</item>
+        <item>五</item>
+        <item>六</item>
+        <item>日</item>
+    </string-array>
+    <string name="practice_day_description">%1$s，%2$s</string>
+    <string name="practice_legend_less">少</string>
+    <string name="practice_legend_more">多</string>
+    <string name="practice_day_today">今天</string>
+    <string name="practice_day_none">没有练习</string>
+    <string name="practice_edit_time">修改时间</string>
+    <string name="practice_add_time">添加时间</string>
+    <string name="practice_day_records">当天的录音</string>
+    <string name="practice_summary_title">练习</string>
+    <string name="practice_step_hint">步长 %1$d 分钟</string>
+    <string name="practice_step_down">减 %1$d 分钟</string>
+    <string name="practice_step_up">加 %1$d 分钟</string>
+    <string name="practice_save">保存</string>
+    <string name="practice_discard">不保存</string>
+    <string name="practice_edit_title">当天时间</string>
+    <string name="practice_edit_hint">这是当天的总时间。设为零会把这一天从日历中移除。</string>
+    <string name="practice_chip_plus_minutes">+%1$d</string>
+    <string name="practice_chip_plus_hour">+1 小时</string>
+    <string name="practice_chip_zero">0</string>
+    <string name="practice_too_short">太短了</string>
+    <string name="practice_forgotten_title">练习尚未结束</string>
+    <string name="practice_forgotten_text">练习已进行 %1$s。</string>
+    <string name="practice_forgotten_sound">小提琴最后一次响起是在 %1$s。</string>
+    <string name="practice_end_at">在 %1$s 结束</string>
+    <string name="practice_end_now">现在结束</string>
+    <string name="practice_continue">我还在练习</string>
+
+    <!-- Profile and progress (spec 3.13, 5.7). Level and trophy names follow the order of ProgressConfig. -->
+    <string-array name="progress_level_names">
+        <item>第一声</item>
+        <item>学徒</item>
+        <item>空弦</item>
+        <item>第一把位</item>
+        <item>音阶</item>
+        <item>练习曲</item>
+        <item>揉弦</item>
+        <item>第三把位</item>
+        <item>重奏</item>
+        <item>乐团首席</item>
+        <item>独奏家</item>
+        <item>演奏大师</item>
+        <item>大师</item>
+        <item>宗师</item>
+        <item>传奇</item>
+    </string-array>
+    <string-array name="progress_trophy_names">
+        <item>松香</item>
+        <item>弦轴</item>
+        <item>琴弦</item>
+        <item>琴弓</item>
+        <item>腮托</item>
+        <item>音叉</item>
+        <item>谱架</item>
+        <item>琴盒</item>
+        <item>小提琴</item>
+        <item>音乐会</item>
+    </string-array>
+    <string name="progress_no_name">与琴相伴</string>
+    <string name="progress_level">等级 %1$d · %2$s</string>
+    <string name="progress_to_next_level">距 %1$d 级——%2$s</string>
+    <string name="progress_open_profile">打开个人资料</string>
+    <string name="progress_total_description">练琴总时间：%1$s</string>
+    <string name="progress_open_trophies">打开奖杯</string>
+    <string name="progress_trophies_one">%1$d 座奖杯</string>
+    <string name="progress_trophies_few">%1$d 座奖杯</string>
+    <string name="progress_trophies_many">%1$d 座奖杯</string>
+    <string name="progress_next_trophy">下一座 %1$s</string>
+    <string name="progress_trophies_and_next">%1$s · %2$s</string>
+    <string name="progress_more_trophies">+%1$d</string>
+    <string name="profile_title">个人资料</string>
+    <string name="profile_pick_photo">选择照片</string>
+    <string name="profile_remove_photo">移除照片</string>
+    <string name="profile_name_label">名字</string>
+    <string name="profile_name_placeholder">怎么称呼你？</string>
+    <string name="profile_name_counter">%1$d / %2$d</string>
+    <string name="profile_done">完成</string>
+    <string name="profile_no_name_letter">\?</string>
+    <string name="profile_photo_failed">无法打开照片</string>
+    <string name="gift_title">新奖杯</string>
+    <string name="gift_hours_one">练琴 %1$s 小时</string>
+    <string name="gift_hours_few">练琴 %1$s 小时</string>
+    <string name="gift_hours_many">练琴 %1$s 小时</string>
+    <string name="gift_thanks">谢谢</string>
+    <string name="trophies_title">奖杯</string>
+    <string name="trophies_total">练琴总时间——%1$s</string>
+    <string name="trophies_awarded">%1$s 获得</string>
+    <string name="trophies_remaining">还差 %1$s</string>
+    <string name="trophies_far">遥远的前方</string>
+    <string name="trophies_line_given">%1$s，%2$s，%3$s 获得</string>
+    <string name="trophies_line_remaining">%1$s，%2$s，还差 %3$s</string>
+    <string name="trophies_line_far">%1$s，%2$s，遥远的前方</string>
+
+    <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
+    <string name="history_section_sessions">录音</string>
+    <string name="history_section_repertoire">曲库</string>
+    <string name="session_take_title">%1$s · %2$s</string>
+    <string name="dot_separator">\u0020·\u0020</string>
+    <string name="repertoire_add">添加曲目</string>
+    <string name="repertoire_empty">这里存放你的曲目：乐谱、笔记和录音。添加第一首吧。</string>
+    <string name="repertoire_empty_filter">没有状态为“%1$s”的内容。</string>
+    <string name="repertoire_show_all">显示全部</string>
+    <string name="repertoire_no_takes">暂无录制</string>
+    <string name="piece_status_reading">视奏中</string>
+    <string name="piece_status_learning">练习中</string>
+    <string name="piece_status_in_repertoire">保留曲目</string>
+    <string name="piece_status_learned">已学会</string>
+    <!-- The journey (spec 3.23): arrays follow the order of JourneyRoute.stops -->
+    <string-array name="journey_cities">
+        <item>家</item>
+        <item>克雷莫纳</item>
+        <item>米兰</item>
+        <item>萨尔茨堡</item>
+        <item>维也纳</item>
+        <item>布拉格</item>
+        <item>莱比锡</item>
+        <item>柏林</item>
+        <item>阿姆斯特丹</item>
+        <item>巴黎</item>
+        <item>伦敦</item>
+        <item>圣彼得堡</item>
+        <item>莫斯科</item>
+        <item>纽约</item>
+        <item>布宜诺斯艾利斯</item>
+        <item>东京</item>
+        <item>悉尼</item>
+    </string-array>
+    <string-array name="journey_cities_to">
+        <item>家</item>
+        <item>克雷莫纳</item>
+        <item>米兰</item>
+        <item>萨尔茨堡</item>
+        <item>维也纳</item>
+        <item>布拉格</item>
+        <item>莱比锡</item>
+        <item>柏林</item>
+        <item>阿姆斯特丹</item>
+        <item>巴黎</item>
+        <item>伦敦</item>
+        <item>圣彼得堡</item>
+        <item>莫斯科</item>
+        <item>纽约</item>
+        <item>布宜诺斯艾利斯</item>
+        <item>东京</item>
+        <item>悉尼</item>
+    </string-array>
+    <string-array name="journey_places">
+        <item>自己的房间，窗边的谱架</item>
+        <item>制琴师的工坊</item>
+        <item>斯卡拉歌剧院</item>
+        <item>莫扎特故居与城市上方的城堡</item>
+        <item>音乐之友协会，金色大厅</item>
+        <item>鲁道夫音乐厅</item>
+        <item>布商大厦音乐厅 · 圣托马斯教堂</item>
+        <item>爱乐音乐厅</item>
+        <item>皇家音乐厅</item>
+        <item>加尼叶歌剧院</item>
+        <item>皇家阿尔伯特音乐厅</item>
+        <item>爱乐大厅</item>
+        <item>音乐学院大音乐厅</item>
+        <item>卡内基音乐厅</item>
+        <item>科隆剧院</item>
+        <item>三得利音乐厅</item>
+        <item>悉尼歌剧院</item>
+    </string-array>
+    <string-array name="journey_countries">
+        <item></item>
+        <item>意大利</item>
+        <item>意大利</item>
+        <item>奥地利</item>
+        <item>奥地利</item>
+        <item>捷克</item>
+        <item>德国</item>
+        <item>德国</item>
+        <item>荷兰</item>
+        <item>法国</item>
+        <item>英国</item>
+        <item>俄罗斯</item>
+        <item>俄罗斯</item>
+        <item>美国</item>
+        <item>阿根廷</item>
+        <item>日本</item>
+        <item>澳大利亚</item>
+    </string-array>
+    <string-array name="journey_facts">
+        <item>所有人都从这里出发。第一站是克雷莫纳——小提琴诞生的地方。</item>
+        <item>阿马蒂、斯特拉迪瓦里和瓜奈里都曾在这里工作——今天模样的小提琴就诞生在这座城市。</item>
+        <item>剧院于 1778 年开幕；威尔第的歌剧和普契尼的《蝴蝶夫人》都在这里首演。</item>
+        <item>莫扎特出生在这里；萨尔茨堡要塞自 11 世纪起就矗立在城市上方。</item>
+        <item>每年 1 月 1 日，新年音乐会从这里传向全世界。这座大厅被誉为音响效果最好的音乐厅之一。</item>
+        <item>捷克爱乐乐团在这里的第一场音乐会由德沃夏克指挥。</item>
+        <item>巴赫在圣托马斯教堂担任了四分之一个世纪的乐长。</item>
+        <item>一座“帐篷”式音乐厅，舞台就在听众中间。</item>
+        <item>这座音乐厅的乐团拥有“皇家”称号。</item>
+        <item>1875 年开幕；观众厅的天顶画由马克·夏加尔于 1964 年绘制。</item>
+        <item>1871 年开幕；每年夏天在这里举办逍遥音乐会。</item>
+        <item>1942 年 8 月，围城之中，肖斯塔科维奇的《第七交响曲》在这里奏响。</item>
+        <item>1901 年开幕；柴可夫斯基国际音乐比赛在这里举行。</item>
+        <item>“怎样才能到卡内基音乐厅？——练习。”</item>
+        <item>1908 年以歌剧《阿依达》开幕；它的音响效果被称为世界最佳之一。</item>
+        <item>“葡萄园”式音乐厅：听众环绕舞台层层而坐。1986 年开幕。</item>
+        <item>“风帆”之下有好几个演出厅；连从未到过澳大利亚的人也认得它的轮廓。</item>
+    </string-array>
+    <string-array name="journey_roads">
+        <item></item>
+        <item>乘火车 · 6 小时</item>
+        <item>乘火车 · 1 小时</item>
+        <item>乘火车 · 7 小时</item>
+        <item>乘火车 · 3 小时</item>
+        <item>乘火车 · 4 小时</item>
+        <item>乘火车 · 4 小时</item>
+        <item>乘火车 · 1 小时</item>
+        <item>乘火车 · 6 小时</item>
+        <item>乘火车 · 3 小时</item>
+        <item>乘火车 · 2 小时</item>
+        <item>乘船 · 4 天</item>
+        <item>乘火车 · 4 小时</item>
+        <item>乘飞机 · 10 小时</item>
+        <item>乘船 · 3 周</item>
+        <item>乘飞机 · 30 小时</item>
+        <item>乘飞机 · 9 小时</item>
+    </string-array>
+    <string name="journey_title">旅程</string>
+    <string name="journey_map">地图</string>
+    <string name="journey_passport">护照</string>
+    <string name="journey_back">返回</string>
+    <string name="journey_stop_of">第 %1$d 站，共 %2$d 站</string>
+    <string name="journey_stop_home">第 0 站，共 %1$d 站 · 家</string>
+    <string name="journey_since">自 %1$s</string>
+    <string name="journey_next">前往%1$s · %2$s</string>
+    <string name="journey_next_short">距%1$s %2$s</string>
+    <string name="journey_have">%1$s / %2$s</string>
+    <string name="journey_depart">出发 · %1$s</string>
+    <string name="journey_missing">还差 %1$s</string>
+    <string name="journey_enough">够到%1$s了——出发</string>
+    <string name="journey_soon">世界巡演已走完。小节会继续积攒，等待新的城市——它们会随更新到来。</string>
+    <string name="journey_soon_short">新城市即将到来</string>
+    <string name="journey_passed">已走过 %1$d / %2$d</string>
+    <string name="journey_all_cards">全部明信片</string>
+    <string name="journey_no_cards">第一张明信片将在克雷莫纳出现</string>
+    <string name="journey_intro_title">旅途从家开始</string>
+    <string name="journey_intro_text">每位小提琴手都有一个梦想——在世界最好的音乐厅里演奏。去那里的路很长，付的不是钱，而是干净的音。</string>
+    <string name="journey_intro_first">第一站是克雷莫纳——小提琴诞生的地方。到那里需要 %1$s。</string>
+    <string name="journey_intro_start">收拾琴盒</string>
+    <string name="journey_road">%1$s → %2$s</string>
+    <string name="journey_stamp">盖上印章</string>
+    <string name="journey_stamp_page">护照 · 第 %1$d 页</string>
+    <string name="journey_stamp_text">第 %1$d 枚印章。到%2$s——%3$s。</string>
+    <string name="journey_stamp_text_last">第 %1$d 枚印章。前方的路还在绘制中。</string>
+    <string name="journey_done">完成</string>
+    <string name="journey_stop_meta">%1$d / %2$d · 自 %3$s</string>
+    <string name="journey_stop_where">%1$s · %2$s</string>
+    <string name="journey_mode_evening">傍晚</string>
+    <string name="journey_mode_day">白天</string>
+    <string name="journey_mode_inside">内部</string>
+    <string name="journey_mode_outside">外部</string>
+    <string name="journey_extras">附加内容</string>
+    <string name="journey_extra_time">另一个时段</string>
+    <string name="journey_extra_view">另一个视角</string>
+    <string name="journey_extra_souvenir">护照纪念贴</string>
+    <string name="journey_extra_bought">已解锁</string>
+    <string name="journey_extra_buy">%1$s 解锁</string>
+    <string name="journey_fullscreen">全屏</string>
+    <string name="journey_fullscreen_close">退出全屏</string>
+    <string name="journey_fullscreen_hint">向两侧拖动——环顾四周 · 双指张开——拉近</string>
+    <string name="journey_passport_soon">即将</string>
+    <string name="journey_passport_count">%1$d / %2$d</string>
+    <string name="journey_earned">+%1$s</string>
+    <string name="journey_earned_detail">%1$s + 时间 %2$s</string>
+    <string name="journey_notes_in_tune_one">%1$d 个准音</string>
+    <string name="journey_notes_in_tune_few">%1$d 个准音</string>
+    <string name="journey_notes_in_tune_many">%1$d 个准音</string>
+    <string name="takt_one">%1$s 小节</string>
+    <string name="takt_few">%1$s 小节</string>
+    <string name="takt_many">%1$s 小节</string>
+    <string name="takt_icon">小节</string>
+    <string name="journey_card_description">旅程：%1$s</string>
+    <string name="journey_stamp_description">印章：%1$s</string>
+    <string name="journey_stamp_locked_description">%1$s——还在前方</string>
+    <string name="journey_map_description">路线地图：已走过 %1$d / %2$d</string>
+    <string name="section_pieces">曲目</string>
+    <string name="section_scales">音阶</string>
+    <string name="section_etudes">练习曲</string>
+    <string name="section_strokes">弓法</string>
+    <string name="section_learned">已学会 %1$d / %2$d</string>
+    <string name="section_empty_count">暂时为空</string>
+    <string name="section_bar_description">视奏中 %1$d，练习中 %2$d，已学会 %3$d</string>
+    <string name="section_add">添加分区</string>
+    <string name="section_add_scale">添加音阶</string>
+    <string name="section_add_etude">添加练习曲</string>
+    <string name="section_add_stroke">添加弓法</string>
+    <string name="section_add_own">添加</string>
+    <string name="section_empty_scales">选择一条音阶——应用会画出它的乐谱</string>
+    <string name="section_empty_etudes">练习曲住在这里：乐谱、笔记、录制。</string>
+    <string name="section_empty_strokes">正在练的弓法：分弓、跳弓、顿弓…</string>
+    <string name="section_empty_own">这个分区里还没有内容。</string>
+    <string name="section_menu">更多</string>
+    <string name="section_rename">重命名</string>
+    <string name="section_delete">删除分区</string>
+    <string name="section_new_title">新分区</string>
+    <string name="section_rename_title">重命名分区</string>
+    <string name="section_name_label">分区名称</string>
+    <string name="section_create">创建</string>
+    <string name="section_save">保存</string>
+    <string name="section_delete_title">删除“%1$s”？</string>
+    <string name="section_delete_text_empty">分区是空的。录音会保留。</string>
+    <string name="section_delete_text_one">%1$d 个项目将移到“曲目”。录音会保留。</string>
+    <string name="section_delete_text_few">%1$d 个项目将移到“曲目”。录音会保留。</string>
+    <string name="section_delete_text_many">%1$d 个项目将移到“曲目”。录音会保留。</string>
+    <string name="section_delete_confirm">删除</string>
+    <string name="section_back">返回</string>
+    <string name="form_section">分区</string>
+    <string name="form_author">作者</string>
+    <string name="form_new_etude">新练习曲</string>
+    <string name="form_new_stroke">新弓法</string>
+    <string name="form_new_element">新项目</string>
+    <string-array name="stroke_suggestions">
+        <item>分弓</item>
+        <item>连弓</item>
+        <item>断弓</item>
+        <item>跳弓</item>
+        <item>顿弓</item>
+        <item>自然跳弓</item>
+        <item>抛弓</item>
+    </string-array>
+    <string name="scale_new">新音阶</string>
+    <string name="scale_edit">音阶</string>
+    <string name="scale_key">调性</string>
+    <string name="scale_kind">类型</string>
+    <string name="scale_octaves">八度</string>
+    <string name="scale_kind_major">大调</string>
+    <string name="scale_kind_natural">自然小调</string>
+    <string name="scale_kind_harmonic">和声小调</string>
+    <string name="scale_kind_melodic">旋律小调</string>
+    <string name="scale_suffix_harmonic">和声</string>
+    <string name="scale_suffix_melodic">旋律</string>
+    <string name="scale_octave_one">%1$d 个八度</string>
+    <string name="scale_octave_few">%1$d 个八度</string>
+    <string name="scale_octave_many">%1$d 个八度</string>
+    <string name="scale_title">%1$s · %2$s</string>
+    <string name="scale_range">%1$s – %2$s</string>
+    <string name="scale_preview_empty">选择主音——乐谱会画在这里</string>
+    <string name="scale_exists">这条音阶已经有了</string>
+    <string name="scale_open">打开</string>
+    <string name="scale_locked">那就是另一条音阶了——请添加新的</string>
+    <string name="scale_notes_description">%1$s 音阶的乐谱</string>
+    <string name="scale_more_systems_one">还有 %1$d 行谱</string>
+    <string name="scale_more_systems_few">还有 %1$d 行谱</string>
+    <string name="scale_more_systems_many">还有 %1$d 行谱</string>
+    <string name="scale_add_photo">添加乐谱照片</string>
+    <string name="scale_notes">乐谱</string>
+    <string name="scale_open_stand">在谱架上打开</string>
+    <string name="piece_tempo_value">♩ = %1$d</string>
+    <string name="piece_tempo_description">速度 %1$d</string>
+    <string name="takes_one">%1$d 次录制</string>
+    <string name="takes_few">%1$d 次录制</string>
+    <string name="takes_many">%1$d 次录制</string>
+    <string name="piece_edit">编辑</string>
+    <string name="piece_status_change">状态：%1$s。更改</string>
+    <string name="piece_sheets_none">乐谱</string>
+    <string name="piece_sheets_count">乐谱 · %1$d 页</string>
+    <string name="piece_sheets_add">添加乐谱照片</string>
+    <string name="piece_sheets_add_short">添加</string>
+    <string name="piece_sheets_camera">拍照</string>
+    <string name="piece_sheets_gallery">从相册选择</string>
+    <string name="piece_sheet_page">第 %1$d 页</string>
+    <string name="piece_notes_add">添加笔记</string>
+    <string name="piece_notes_more">展开</string>
+    <string name="piece_notes_less">收起</string>
+    <string name="piece_form_title_new">新曲目</string>
+    <string name="piece_form_title_edit">曲目</string>
+    <string name="piece_form_close">关闭</string>
+    <string name="piece_form_discard_title">不保存吗？</string>
+    <string name="piece_form_discard_confirm">不保存</string>
+    <string name="piece_field_title">标题</string>
+    <string name="piece_field_composer">作曲家</string>
+    <string name="piece_field_key">调性</string>
+    <string name="piece_field_tempo">速度</string>
+    <string name="piece_field_status">状态</string>
+    <string name="piece_field_notes">笔记</string>
+    <string name="piece_title_error">没有标题无法保存</string>
+    <string name="piece_key_major">大调</string>
+    <string name="piece_key_minor">小调</string>
+    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="piece_tempo_slower">更慢</string>
+    <string name="piece_tempo_faster">更快</string>
+    <string name="piece_tempo_clear">不设速度</string>
+    <string name="piece_delete">删除曲目</string>
+    <string name="piece_delete_title">删除“%1$s”？</string>
+    <string name="piece_delete_text">乐谱和笔记都将删除。录音会保留在“录音”中。</string>
+    <string name="piece_delete_confirm">删除</string>
+    <string name="take_record">开始录制</string>
+    <string name="take_record_hint">录制时屏幕不给提示——分析会在之后出现。</string>
+    <string name="take_recording">录音 · %1$s</string>
+    <string name="take_level_description">麦克风在听</string>
+    <string name="take_no_permission">要进行录制，需要使用麦克风。</string>
+    <string name="take_grant_permission">允许访问</string>
+    <string name="take_progress">最近 %1$d\u00A0%% · 最高 %2$d\u00A0%%</string>
+    <string name="take_chart_description">各次录制的得分依次为：%1$s</string>
+    <string name="takes_title">录制</string>
+    <string name="takes_empty">还没有录制。录下第一次——就能看到曲目的变化。</string>
+    <string name="take_best">最佳</string>
+    <!-- «Звук»: processing of recorded sound (spec 3.17) -->
+    <string name="sound_everyone_title">录音的声音</string>
+    <string name="sound_everyone_subtitle">用于所有录音 · %1$s</string>
+    <string name="sound_reset">重置</string>
+    <string name="sound_caption_off">无处理</string>
+    <string name="sound_caption_custom">自定义设置</string>
+    <string name="sound_caption_saved_hint">自定义设置 · 自动保存</string>
+    <string name="sound_caption_everyone">与全部相同 · %1$s</string>
+    <string name="sound_caption_own">自定义设置 · %1$s</string>
+    <string name="sound_row_off">已关闭</string>
+    <string-array name="sound_preset_names">
+        <item>无处理</item>
+        <item>自然</item>
+        <item>房间</item>
+        <item>室内乐厅</item>
+        <item>大音乐厅</item>
+        <item>温暖</item>
+    </string-array>
+    <string name="sound_preset_custom">自定义</string>
+    <string name="sound_preset_save">保存为预设</string>
+    <string name="sound_preset_remove_hint">长按即可删除</string>
+    <string name="sound_mode_everyone">与全部相同</string>
+    <string name="sound_mode_own">仅此录音</string>
+    <string name="sound_mode_everyone_text">%1$s——来自“设置 → 录音的声音”。在那里更改，这里也会随之改变。动任何一个旋钮，这条录音就会有自己的设置。</string>
+    <string name="sound_mode_own_text">仅用于这条录音。“与全部相同”会恢复通用设置——自定义设置将被遗忘。</string>
+    <string name="sound_listen_on">试听</string>
+    <string name="sound_listen_latest">最近一条有声录音</string>
+    <string name="sound_listen_none">还没有有声录音：设置可以先调好，试听要等第一条录音之后。</string>
+    <string name="sound_affected_one">影响 %1$d 条录音</string>
+    <string name="sound_affected_many">影响 %1$d 条录音</string>
+    <string name="sound_order">顺序：均衡器 → 压缩器 → 厅堂 → 音量</string>
+    <string name="sound_block_eq">均衡器</string>
+    <string name="sound_block_compressor">压缩器</string>
+    <string name="sound_block_compressor_sub">让音量更均匀</string>
+    <string name="sound_block_reverb">厅堂</string>
+    <string name="sound_block_reverb_sub">混响</string>
+    <string name="sound_block_output">音量</string>
+    <string name="sound_block_switch">%1$s：开启</string>
+    <string name="sound_block_off">已关闭</string>
+    <string name="sound_block_expand">展开</string>
+    <string name="sound_block_collapse">收起</string>
+    <string name="sound_eq_flat">平直</string>
+    <string-array name="sound_band_names">
+        <item>嗡声</item>
+        <item>低频</item>
+        <item>厚度</item>
+        <item>锐度</item>
+        <item>空气感</item>
+    </string-array>
+    <string name="sound_band_low_cut_switch">切除嗡声</string>
+    <string name="sound_eq_curve_description">均衡器曲线。各频段的点可以拖动；同样的数值也可用下方的滑块调节。</string>
+    <string name="sound_param_frequency">频率</string>
+    <string name="sound_param_gain">增益</string>
+    <string name="sound_param_width">宽度</string>
+    <string name="sound_param_width_hint">数值越小越宽</string>
+    <string name="sound_param_amount">程度</string>
+    <string name="sound_param_amount_own">自定义</string>
+    <string name="sound_amount_little">轻微</string>
+    <string name="sound_amount_noticeable">明显</string>
+    <string name="sound_amount_lot">强烈</string>
+    <string name="sound_param_threshold">阈值</string>
+    <string name="sound_param_threshold_hint">从多大音量开始压缩</string>
+    <string name="sound_param_ratio">压缩比</string>
+    <string name="sound_param_attack">启动</string>
+    <string name="sound_param_attack_hint">抓住声音有多快</string>
+    <string name="sound_param_release">释放</string>
+    <string name="sound_param_release_hint">放开声音有多快</string>
+    <string name="sound_param_makeup">音量补偿</string>
+    <string name="sound_comp_text">轻的地方会更响，响的地方会更轻。录音听起来更均匀，什么都不会丢。</string>
+    <string name="sound_comp_now">当前压缩</string>
+    <string name="sound_comp_details">详细</string>
+    <string-array name="sound_space_names">
+        <item>房间</item>
+        <item>厅堂</item>
+        <item>大教堂</item>
+    </string-array>
+    <string name="sound_param_decay">混响时长</string>
+    <string name="sound_param_decay_hint">衰减到无声</string>
+    <string name="sound_param_pre_delay">预延迟</string>
+    <string name="sound_param_pre_delay_hint">回响之前的停顿</string>
+    <string name="sound_param_brightness">混响亮度</string>
+    <string name="sound_param_brightness_hint">暗 ↔ 亮</string>
+    <string name="sound_param_mix">比例</string>
+    <string name="sound_param_mix_hint">干声 ↔ 带厅堂</string>
+    <string name="sound_param_output">输出增益</string>
+    <string name="sound_limiter_note">输出端始终有限制器：无论在扬声器还是文件里都不会过载。</string>
+    <string name="sound_limiter_hot">限制器正在工作：增益超出了容纳范围。调低增益——声音会更舒展。</string>
+    <string name="sound_meter_output">输出</string>
+    <string name="sound_meter_limiter">限制器</string>
+    <string name="sound_meter_none">—</string>
+    <string name="sound_slider_minus">%1$s：减小</string>
+    <string name="sound_slider_plus">%1$s：增大</string>
+    <string name="sound_slider_reset_hint">双击重置</string>
+    <string name="sound_slider_off">已关闭</string>
+    <string name="sound_dialog_everyone_title">恢复为与全部相同？</string>
+    <string name="sound_dialog_everyone_text">这条录音的自定义设置将被遗忘。</string>
+    <string name="sound_dialog_everyone_confirm">恢复</string>
+    <string name="sound_dialog_reset_title">重置录音的声音？</string>
+    <string name="sound_dialog_reset_text">所有没有自定义设置的录音，将恢复为录下时的声音。</string>
+    <string name="sound_dialog_preset_title">新预设</string>
+    <string name="sound_dialog_preset_hint">名称</string>
+    <string name="sound_dialog_preset_save">保存</string>
+    <string name="sound_dialog_delete_title">删除预设“%1$s”？</string>
+    <string name="sound_dialog_pick_title">试听</string>
+    <string name="sound_share">分享</string>
+    <string name="share_message">%1$s · %2$d\u00A0%% · %3$s</string>
+    <string name="share_message_session">录音</string>
+    <string name="share_title">分享录音</string>
+    <string name="share_processed">处理后的声音</string>
+    <string name="share_processed_caption">%1$s · 与应用内听到的一致</string>
+    <string name="share_original">原声</string>
+    <string name="share_original_caption">录下时的样子，无处理</string>
+    <string name="share_video_processed">视频配处理后的声音</string>
+    <string name="share_video_original">原始视频</string>
+    <string name="share_video_original_caption">原文件，声音无处理</string>
+    <string name="share_video">视频</string>
+    <string name="share_video_caption">原样</string>
+    <string name="share_sound_only">仅声音</string>
+    <string name="share_sound_only_processed">处理后 · ≈ %1$s · 单声道</string>
+    <string name="share_sound_only_caption">原样 · ≈ %1$s · 单声道</string>
+    <string name="share_video_details">%1$s · %2$dp · ≈ %3$s</string>
+    <string name="share_large_file">文件较大：聊天软件可能会压缩或拒收</string>
+    <string name="share_failed_video_title">视频准备失败</string>
+    <string name="share_failed_video_text">录制和设置完好。可以再试一次，或者发送声音未处理的原始视频。</string>
+    <string name="share_send_as_shot">发送原始视频</string>
+    <string name="share_file_details">%1$s · ≈ %2$s · 单声道</string>
+    <string name="share_with_text">附上文字：“%1$s”</string>
+    <string name="share_continue">继续</string>
+    <string name="share_busy">准备中…</string>
+    <string name="share_preparing">正在准备文件</string>
+    <string name="share_remaining">还剩约 %1$d 秒</string>
+    <string name="share_failed_title">文件准备失败</string>
+    <string name="share_failed_text">录音完好，设置也在。可以再试一次，或者发送未处理的原声。</string>
+    <string name="share_retry">重试</string>
+    <string name="share_send_original">发送原声</string>
+    <string name="share_chooser">分享录音</string>
+    <string name="share_no_app">没有可以接收录音的应用</string>
+    <string name="share_size_kb">%1$d KB</string>
+    <string name="share_size_mb">%1$s MB</string>
+    <string name="card_menu">更多</string>
+    <string name="card_menu_share">分享</string>
+    <string name="card_menu_sound">声音…</string>
+    <string name="best_set">标为最佳</string>
+    <string name="best_clear">取消“最佳”标记</string>
+    <string name="best_marked">已标为最佳</string>
+    <string name="best_marked_moved">已标为最佳，之前的标记已取消</string>
+    <string name="sound_session_row">声音</string>
+    <string name="sound_session_silent">无声录音——只有音准分析</string>
+    <string name="sound_settings_row">录音的声音</string>
+    <string name="sound_settings_row_caption">%1$s · 用于所有录音</string>
+    <string name="sound_ab_original">原声：录下时的样子</string>
+    <string name="sound_ab_processed">带处理</string>
+    <string name="stand_counter">%1$d / %2$d</string>
+    <string name="stand_page_description">第 %1$d 页，共 %2$d 页</string>
+    <string name="stand_delete_page">删除页面</string>
+    <string name="stand_delete_title">删除这一页？</string>
+    <string name="stand_delete_text">这一页的照片将被删除。其余页面保持不变。</string>
+    <string name="stand_hint">轻触纸张边缘——翻到下一页</string>
+    <string name="stand_previous_page">上一页</string>
+    <string name="stand_next_page">下一页</string>
+    <string name="stand_recording_description">正在录制，%1$s</string>
+</resources>

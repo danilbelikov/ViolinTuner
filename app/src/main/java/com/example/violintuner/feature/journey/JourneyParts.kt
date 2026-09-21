@@ -60,7 +60,7 @@ fun roadOf(index: Int): String = stringArrayResource(R.array.journey_roads).getO
 /** «1 640 тактов», «1 такт», «2 такта». */
 @Composable
 fun taktsInWords(value: Long): String =
-    stringResource(Formats.pluralRu((value % 1_000_000).toInt(), R.string.takt_one, R.string.takt_few, R.string.takt_many), Formats.takts(value))
+    stringResource(Formats.plural((value % 1_000_000).toInt(), R.string.takt_one, R.string.takt_few, R.string.takt_many), Formats.takts(value))
 
 private const val TAKT_STEM = "M15.5 15.5V9.5C15.5 6.5 18 5.5 19.5 4.2"
 private const val TAKT_ARROW = "M18 3.2l2.2 1.4-1.4 2.2"

@@ -4,7 +4,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class PluralRuTest {
-    private fun form(count: Int) = Formats.pluralRu(count, "сессия", "сессии", "сессий")
+    private fun form(count: Int) = Formats.plural(count, "сессия", "сессии", "сессий")
 
     @Test
     fun `russian plural forms`() {

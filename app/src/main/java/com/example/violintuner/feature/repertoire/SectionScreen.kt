@@ -89,7 +89,7 @@ fun SectionScreen(state: RepertoireState, onIntent: (RepertoireIntent) -> Unit, 
                 if (total == 0) {
                     stringResource(R.string.section_delete_text_empty)
                 } else {
-                    stringResource(Formats.pluralRu(total, R.string.section_delete_text_one, R.string.section_delete_text_few, R.string.section_delete_text_many), total)
+                    stringResource(Formats.plural(total, R.string.section_delete_text_one, R.string.section_delete_text_few, R.string.section_delete_text_many), total)
                 }
             },
             onConfirm = { onIntent(RepertoireIntent.DialogConfirmed) },

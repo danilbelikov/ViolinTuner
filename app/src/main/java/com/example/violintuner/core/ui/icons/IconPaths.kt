@@ -91,6 +91,8 @@ internal object IconPaths {
     val PASSPORT = listOf("M6 3.5h12a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z", "M12 8a3.5 3.5 0 1 0 0 7 3.5 3.5 0 1 0 0-7z", "M9 17.5h6")
     val DOOR = listOf("M4 20.5h16", "M6 20.5V6l6-3 6 3v14.5", "M9 20.5v-7a3 3 0 0 1 6 0v7", "F M14.2 15.2a.9.9 0 1 0 0 1.8.9.9 0 1 0 0-1.8z")
     val TRAVEL = listOf("M6 7.5h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z", "M8.5 7.5V5.8a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1.7", "M4 13h13", "M17.5 6.5l3-3M20.5 6.5v-3h-3")
+    /** The language of the interface (spec 3.26): drawn here, in the manner of the set — a globe of one meridian and the equator. */
+    val GLOBE = listOf("M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18z", "M3 12h18", "M12 3c2.8 2.6 4.2 5.6 4.2 9s-1.4 6.4-4.2 9c-2.8-2.6-4.2-5.6-4.2-9S9.2 5.6 12 3z")
     val STAR_OUTLINE = listOf("M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z")
     val STAR = listOf("F M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z")
 

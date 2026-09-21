@@ -112,7 +112,7 @@ internal fun houseName(id: String): String = HomeTexts.houseNames[id]?.let { str
 internal fun houseNote(id: String): String = HomeTexts.houseNotes[id]?.let { stringResource(it) }.orEmpty()
 
 @Composable
-internal fun thingsInWords(count: Int): String = stringResource(Formats.pluralRu(count, R.string.home_things_one, R.string.home_things_few, R.string.home_things_many), count)
+internal fun thingsInWords(count: Int): String = stringResource(Formats.plural(count, R.string.home_things_one, R.string.home_things_few, R.string.home_things_many), count)
 
 @Composable
 internal fun Balance(ui: HomeUi) {

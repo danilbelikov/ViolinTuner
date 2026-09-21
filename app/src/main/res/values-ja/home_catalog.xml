@@ -1,0 +1,290 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- translated from values-ru/home_catalog.xml (which is generated from the design handoff); keys must match — see LocalizationTest -->
+<resources>
+    <string name="home_item_vln_student" formatted="false">練習用 · スタンドつき</string>
+    <string name="home_item_vln_quarter" formatted="false">4分の1サイズ、最初の一本</string>
+    <string name="home_item_vln_light" formatted="false">明るい色の、弾き込む前の一本</string>
+    <string name="home_item_vln_master" formatted="false">工房製</string>
+    <string name="home_item_vln_electric" formatted="false">エレクトリックヴァイオリン</string>
+    <string name="home_item_vln_old" formatted="false">オールド、濃い色のニス</string>
+    <string name="home_item_vln_cremona" formatted="false">クレモナ製、1720年</string>
+    <string name="home_item_case_black" formatted="false">黒いケース</string>
+    <string name="home_item_case_velvet" formatted="false">チェリー色のビロードのケース</string>
+    <string name="home_item_case_carbon" formatted="false">カーボンケース</string>
+    <string name="home_item_case_leather" formatted="false">ステッカーつきの古い革ケース</string>
+    <string name="home_item_stand_fold" formatted="false">折りたたみ譜面台</string>
+    <string name="home_item_stand_concert" formatted="false">コンサート用譜面台</string>
+    <string name="home_item_stand_wood" formatted="false">木彫りの譜面台</string>
+    <string name="home_item_stand_candle" formatted="false">燭台つきのアンティーク譜面台</string>
+    <string name="home_item_metronome" formatted="false">メトロノーム</string>
+    <string name="home_item_notes" formatted="false">楽譜の山</string>
+    <string name="home_item_portrait" formatted="false">作曲家の肖像画</string>
+    <string name="home_item_poster" formatted="false">自分の演奏会のポスター</string>
+    <string name="home_item_postcards" formatted="false">旅の絵はがき</string>
+    <string name="home_item_shelf_scores" formatted="false">スコアの棚</string>
+    <string name="home_item_gramophone" formatted="false">蓄音機</string>
+    <string name="home_item_radio" formatted="false">ラジオつき電蓄</string>
+    <string name="home_item_piano" formatted="false">アップライトピアノ</string>
+    <string name="home_item_cello" formatted="false">部屋の隅のチェロ</string>
+    <string name="home_item_guitar" formatted="false">壁のギター</string>
+    <string name="home_item_wp_plum" formatted="false">プラム色の壁</string>
+    <string name="home_item_wp_warm" formatted="false">あたたかいオーカーの壁</string>
+    <string name="home_item_wp_cool" formatted="false">涼しげな青い壁</string>
+    <string name="home_item_wp_green" formatted="false">深緑の壁</string>
+    <string name="home_item_wp_stripe" formatted="false">ストライプの壁紙</string>
+    <string name="home_item_wp_damask" formatted="false">ダマスク柄の壁紙</string>
+    <string name="home_item_wp_floral" formatted="false">小花柄の壁紙</string>
+    <string name="home_item_wp_notes" formatted="false">「音符」の壁紙</string>
+    <string name="home_item_wp_panels" formatted="false">木の腰板</string>
+    <string name="home_item_floor_plank" formatted="false">床 — 元のままの板張り</string>
+    <string name="home_item_floor_light" formatted="false">床 — 明るい板張り</string>
+    <string name="home_item_floor_dark" formatted="false">床 — ダークオーク</string>
+    <string name="home_item_floor_herring" formatted="false">ヘリンボーンの寄木床</string>
+    <string name="home_item_floor_tile" formatted="false">市松模様のタイル</string>
+    <string name="home_item_curtain_plum" formatted="false">ライラック色のカーテン</string>
+    <string name="home_item_curtain_velvet" formatted="false">チェリー色のカーテン</string>
+    <string name="home_item_curtain_sand" formatted="false">砂色のカーテン</string>
+    <string name="home_item_curtain_teal" formatted="false">海の色のカーテン</string>
+    <string name="home_item_curtain_tulle" formatted="false">レースのカーテン</string>
+    <string name="home_item_blinds" formatted="false">ブラインド</string>
+    <string name="home_item_window_simple" formatted="false">シンプルな窓</string>
+    <string name="home_item_window_arched" formatted="false">背の高いアーチ窓</string>
+    <string name="home_item_window_stained" formatted="false">ステンドグラス</string>
+    <string name="home_item_view_city" formatted="false">眺め — 街</string>
+    <string name="home_item_view_sea" formatted="false">眺め — 海</string>
+    <string name="home_item_view_mount" formatted="false">眺め — 山</string>
+    <string name="home_item_view_garden" formatted="false">眺め — 庭</string>
+    <string name="home_item_view_night" formatted="false">眺め — 大都会の夜</string>
+    <string name="home_item_garland" formatted="false">窓の上のガーランドライト</string>
+    <string name="home_item_lamp_table" formatted="false">テーブルランプ</string>
+    <string name="home_item_lamp_brass" formatted="false">真鍮のランプ</string>
+    <string name="home_item_floorlamp" formatted="false">フロアランプ</string>
+    <string name="home_item_chandelier" formatted="false">シャンデリア</string>
+    <string name="home_item_candles" formatted="false">キャンドル</string>
+    <string name="home_item_fireplace" formatted="false">暖炉</string>
+    <string name="home_item_desk_simple" formatted="false">シンプルな机</string>
+    <string name="home_item_desk_oak" formatted="false">引き出しつきのオークの机</string>
+    <string name="home_item_bureau" formatted="false">棚つきのビューロー</string>
+    <string name="home_item_chair_simple" formatted="false">椅子</string>
+    <string name="home_item_armchair" formatted="false">ひじ掛け椅子</string>
+    <string name="home_item_rocking" formatted="false">ロッキングチェア</string>
+    <string name="home_item_plaid" formatted="false">椅子にかけたブランケット</string>
+    <string name="home_item_pouf" formatted="false">プーフ</string>
+    <string name="home_item_bookshelf" formatted="false">本棚</string>
+    <string name="home_item_commode" formatted="false">チェスト</string>
+    <string name="home_item_mirror" formatted="false">鏡</string>
+    <string name="home_item_clock" formatted="false">振り子時計</string>
+    <string name="home_item_rug_plum" formatted="false">プラム色のラグ</string>
+    <string name="home_item_rug_persian" formatted="false">ペルシャ絨毯</string>
+    <string name="home_item_rug_stripe" formatted="false">ストライプのラグ</string>
+    <string name="home_item_rug_round" formatted="false">丸いラグ、オーカー</string>
+    <string name="home_item_rug_green" formatted="false">緑のラグ</string>
+    <string name="home_item_ficus" formatted="false">フィカス</string>
+    <string name="home_item_monstera" formatted="false">モンステラ</string>
+    <string name="home_item_tulips" formatted="false">窓辺のチューリップ</string>
+    <string name="home_item_vase" formatted="false">花束の花瓶</string>
+    <string name="home_item_xmas" formatted="false">クリスマスツリー</string>
+    <string name="home_item_tea" formatted="false">一杯のお茶</string>
+    <string name="home_item_books" formatted="false">積んだ本</string>
+    <string name="home_item_passport" formatted="false">旅のパスポート</string>
+    <string name="home_item_globe" formatted="false">旗つきの地球儀</string>
+    <string name="home_item_cat_ginger" formatted="false">茶トラの猫</string>
+    <string name="home_item_cat_black" formatted="false">黒猫</string>
+    <string name="home_item_cat_grey" formatted="false">グレーのしま猫</string>
+    <string name="home_item_cat_white" formatted="false">白猫</string>
+    <string name="home_item_dog" formatted="false">犬</string>
+    <string name="home_item_turtle" formatted="false">カメ</string>
+    <string name="home_item_canary" formatted="false">かごのカナリア</string>
+    <string name="home_item_aquarium" formatted="false">魚のいる水槽</string>
+    <string name="home_item_parrot" formatted="false">止まり木のオウム</string>
+    <string name="home_item_mailbox" formatted="false">郵便受け</string>
+    <string name="home_item_lantern" formatted="false">小道の街灯</string>
+    <string name="home_item_bench" formatted="false">ベンチ</string>
+    <string name="home_item_bike" formatted="false">壁ぎわの自転車</string>
+    <string name="home_item_flowerbed" formatted="false">花壇</string>
+    <string name="home_item_swing" formatted="false">庭のブランコ</string>
+    <string name="home_item_feeder" formatted="false">小鳥のえさ台</string>
+    <string name="home_item_vane" formatted="false">風見</string>
+    <string name="home_item_car_old" formatted="false">古い小型車</string>
+    <string name="home_item_car_wagon" formatted="false">ステーションワゴン</string>
+    <string name="home_item_car_cabrio" formatted="false">カブリオレ</string>
+    <string name="home_item_vln_student_note" formatted="false">お店からの贈り物。ヴァイオリンがケースから明るいところへ出てきます。</string>
+    <string name="home_item_vln_quarter_note" formatted="false">すべてが始まった、あの一本。小さいです。</string>
+    <string name="home_item_vln_light_note" formatted="false">ニスはまだ色づいていません。本当の音はこれからです。</string>
+    <string name="home_item_vln_master_note" formatted="false">ひとつの工房、ひとりの手、半年の仕事。</string>
+    <string name="home_item_vln_electric_note" formatted="false">胴の代わりにフレームだけ。ヴァイオリンだとすぐには気づきません。</string>
+    <string name="home_item_vln_old_note" formatted="false">二百年、人の手から手へ。ニスはほとんど黒です。</string>
+    <string name="home_item_vln_cremona_note" formatted="false">裏板は炎のような杢のメープル。名前はありますが、口にはしません。</string>
+    <string name="home_item_case_black_note" formatted="false">最初からあるケース。窓辺で開いたままです。</string>
+    <string name="home_item_case_velvet_note" formatted="false">外はきりっと、中はチェリー色。</string>
+    <string name="home_item_case_carbon_note" formatted="false">メガネケースのように軽い。</string>
+    <string name="home_item_case_leather_note" formatted="false">訪れた街のステッカー。ひとりでに増えていきます。</string>
+    <string name="home_item_stand_fold_note" formatted="false">金属製。学校にあったような。</string>
+    <string name="home_item_stand_concert_note" formatted="false">黒くて重く、棚板が広い。</string>
+    <string name="home_item_stand_wood_note" formatted="false">彫り模様は竪琴。ウィーンの店から。</string>
+    <string name="home_item_stand_candle_note" formatted="false">夕方にはろうそくが灯ります。昼はただ立っています。</string>
+    <string name="home_item_metronome_note" formatted="false">振り子はいつも揺れています。静かに。</string>
+    <string name="home_item_notes_note" formatted="false">譜読みが済んだものも、まだのものも全部。</string>
+    <string name="home_item_portrait_note" formatted="false">音楽院にあるような楕円の額。誰なのかは、お好きに決めてください。</string>
+    <string name="home_item_poster_note" formatted="false">日にちは未定。会場は決まっています。</string>
+    <string name="home_item_postcards_note" formatted="false">もう手に入れたもの。街ごとに一枚、ひとりでに増えます。</string>
+    <string name="home_item_shelf_scores_note" formatted="false">背表紙がずらり。紙の匂いがします。</string>
+    <string name="home_item_gramophone_note" formatted="false">ラッパは部屋を向いています。鳴りません — 原則その2です。</string>
+    <string name="home_item_radio_note" formatted="false">真空管式で、あたたかい木の箱。黙っています。</string>
+    <string name="home_item_piano_note" formatted="false">ふたつめの楽器。ふたは開き、楽譜が立ててあります。</string>
+    <string name="home_item_cello_note" formatted="false">壁にもたれて立っています。ときどき弾きたくなります。</string>
+    <string name="home_item_guitar_note" formatted="false">指がほかのものを弾きたがる日のために。</string>
+    <string name="home_item_wp_plum_note" formatted="false">いまある壁です。</string>
+    <string name="home_item_wp_warm_note" formatted="false">無地で、ほんのりあたたかい。</string>
+    <string name="home_item_wp_cool_note" formatted="false">北の光。</string>
+    <string name="home_item_wp_green_note" formatted="false">ボックス席のビロードのよう。</string>
+    <string name="home_item_wp_stripe_note" formatted="false">細いストライプ。地の色より少し明るめ。</string>
+    <string name="home_item_wp_damask_note" formatted="false">渦巻き模様のひし形 — ここではひし形です。</string>
+    <string name="home_item_wp_floral_note" formatted="false">点々の花。あたたかい地にピンク。</string>
+    <string name="home_item_wp_notes_note" formatted="false">壁いっぱいの小さな音符。メロディーにはなりません — それでいいのです。</string>
+    <string name="home_item_wp_panels_note" formatted="false">壁の半分までは木、その上は壁。</string>
+    <string name="home_item_floor_plank_note" formatted="false">借りた部屋の、暗い色の板。</string>
+    <string name="home_item_floor_light_note" formatted="false">パイン材。ほとんどはちみつ色。</string>
+    <string name="home_item_floor_dark_note" formatted="false">ほとんど黒。窓ぎわでつやめきます。</string>
+    <string name="home_item_floor_herring_note" formatted="false">古いアパートにあるような。</string>
+    <string name="home_item_floor_tile_note" formatted="false">ひんやりして、台所のよう。</string>
+    <string name="home_item_curtain_plum_note" formatted="false">いま掛かっているもの。</string>
+    <string name="home_item_curtain_velvet_note" formatted="false">スカラ座の緞帳のよう。</string>
+    <string name="home_item_curtain_sand_note" formatted="false">あたたかいリネン。</string>
+    <string name="home_item_curtain_teal_note" formatted="false">深い青緑。</string>
+    <string name="home_item_curtain_tulle_note" formatted="false">軽くて、光を通します。</string>
+    <string name="home_item_blinds_note" formatted="false">木製。光がしま模様になります。</string>
+    <string name="home_item_window_simple_note" formatted="false">十字の桟。元のままです。</string>
+    <string name="home_item_window_arched_note" formatted="false">天井が高くなったように見えます。</string>
+    <string name="home_item_window_stained_note" formatted="false">眺めの上に色ガラス。景色はうっすら見えます。</string>
+    <string name="home_item_view_city_note" formatted="false">向かいの屋根。夕方には月。</string>
+    <string name="home_item_view_sea_note" formatted="false">水平線と、帆がひとつ。</string>
+    <string name="home_item_view_mount_note" formatted="false">山頂には一年じゅう雪。</string>
+    <string name="home_item_view_garden_note" formatted="false">芝生と二本の木。</string>
+    <string name="home_item_view_night_note" formatted="false">空まで届く窓あかり。昼はただのガラスです。</string>
+    <string name="home_item_garland_note" formatted="false">夕方にまたたきます。冬だけではありません。</string>
+    <string name="home_item_lamp_table_note" formatted="false">元からあったもの。夕方に灯ります。</string>
+    <string name="home_item_lamp_brass_note" formatted="false">あたたかい金属、あたたかい光。</string>
+    <string name="home_item_floorlamp_note" formatted="false">部屋の隅に立ち、いっしょに本を読みます。</string>
+    <string name="home_item_chandelier_note" formatted="false">輪になった五本のろうそく。夕方に灯ります。</string>
+    <string name="home_item_candles_note" formatted="false">高さの違う三本。夕方には炎が揺れます。</string>
+    <string name="home_item_fireplace_note" formatted="false">煙突のある家だけ。夕方は燃え、昼は薪が置いてあります。</string>
+    <string name="home_item_desk_simple_note" formatted="false">四本の脚と天板。</string>
+    <string name="home_item_desk_oak_note" formatted="false">厚い天板、真鍮の取っ手。</string>
+    <string name="home_item_bureau_note" formatted="false">机の上に、小引き出しの壁が育ちました。</string>
+    <string name="home_item_chair_simple_note" formatted="false">木製。少しきしみます。</string>
+    <string name="home_item_armchair_note" formatted="false">深くて布張り。猫が気に入ります。</string>
+    <string name="home_item_rocking_note" formatted="false">ひとりでに、ほんの少し揺れます。いつも。</string>
+    <string name="home_item_plaid_note" formatted="false">たたんであり、房つき。夕方を待っています。</string>
+    <string name="home_item_pouf_note" formatted="false">楽譜を手に、ちょっと腰かける。</string>
+    <string name="home_item_bookshelf_note" formatted="false">天井には届きませんが、あと少し。</string>
+    <string name="home_item_commode_note" formatted="false">引き出しは三段。いちばん上には弦。</string>
+    <string name="home_item_mirror_note" formatted="false">構えを確かめるために。</string>
+    <string name="home_item_clock_note" formatted="false">振り子が揺れます。針はあなたの時刻どおり。</string>
+    <string name="home_item_rug_plum_note" formatted="false">壁の色に合わせたシンプルな一枚。最初の、手ごろなラグ。</string>
+    <string name="home_item_rug_persian_note" formatted="false">えんじ色、縁どりつき。</string>
+    <string name="home_item_rug_stripe_note" formatted="false">手織りのストライプ。</string>
+    <string name="home_item_rug_round_note" formatted="false">小ぶりで、あたたかい。</string>
+    <string name="home_item_rug_green_note" formatted="false">庭の草のよう。</string>
+    <string name="home_item_ficus_note" formatted="false">育つのはゆっくりですが、決して枯れません。</string>
+    <string name="home_item_monstera_note" formatted="false">切れ込みのある、手のひらほどの葉。</string>
+    <string name="home_item_tulips_note" formatted="false">三本。枯れません — 静かなゲームの原則です。</string>
+    <string name="home_item_vase_note" formatted="false">野の花。あるいは窓の下の庭から。</string>
+    <string name="home_item_xmas_note" formatted="false">季節もの。買ってあれば、12月から1月までひとりでに飾られます。</string>
+    <string name="home_item_tea_note" formatted="false">いつも湯気が立っています。冷めません。</string>
+    <string name="home_item_books_note" formatted="false">三冊。一冊はヴァイオリンの本。</string>
+    <string name="home_item_passport_note" formatted="false">旅に出ていないときは、机の上にあります。</string>
+    <string name="home_item_globe_note" formatted="false">訪れた街ごとに旗が一本。ひとりでに立ちます。</string>
+    <string name="home_item_cat_ginger_note" formatted="false">窓辺で眠っています。息をして、たまにまばたき。えさはいりません。</string>
+    <string name="home_item_cat_black_note" formatted="false">見えるのは目だけ — それもいつもではありません。</string>
+    <string name="home_item_cat_grey_note" formatted="false">しま模様は床の色に合わせて。</string>
+    <string name="home_item_cat_white_note" formatted="false">暗いラグの上では、光のしみのよう。</string>
+    <string name="home_item_dog_note" formatted="false">足もとに寝そべっています。ときどき頭を上げます。</string>
+    <string name="home_item_turtle_note" formatted="false">いちばん静かな住人。ときどき動きますが、気づかないでしょう。</string>
+    <string name="home_item_canary_note" formatted="false">止まり木から止まり木へ跳ねます。歌いません — 原則その2です。</string>
+    <string name="home_item_aquarium_note" formatted="false">魚が一匹、行ったり来たり。水は濁りません。</string>
+    <string name="home_item_parrot_note" formatted="false">緑に赤。窓の外を見ています。</string>
+    <string name="home_item_mailbox_note" formatted="false">旗が上がっていたら、絵はがきが届いています。</string>
+    <string name="home_item_lantern_note" formatted="false">夕方とともに灯ります。</string>
+    <string name="home_item_bench_note" formatted="false">旅立つ前に、ケースを抱えてひと休み。</string>
+    <string name="home_item_bike_note" formatted="false">家に立てかけてあります。どこへも行きません。</string>
+    <string name="home_item_flowerbed_note" formatted="false">いつも何かが咲いています。</string>
+    <string name="home_item_swing_note" formatted="false">誰もいなくても、風に揺れています。</string>
+    <string name="home_item_feeder_note" formatted="false">鳥たちはひとりでにやって来ます。えさは尽きません。</string>
+    <string name="home_item_vane_note" formatted="false">風の向きを教えます。ここでは、いつも追い風です。</string>
+    <string name="home_item_car_old_note" formatted="false">三度目でエンジンがかかります。チェリー色。</string>
+    <string name="home_item_car_wagon_note" formatted="false">チェロが入ります。確認済みです。</string>
+    <string name="home_item_car_cabrio_note" formatted="false">屋根はいつもたたんだまま。ここでは雨が降りません。</string>
+    <string name="home_slot_wallpaper" formatted="false">壁</string>
+    <string name="home_slot_floor" formatted="false">床</string>
+    <string name="home_slot_view" formatted="false">窓からの眺め</string>
+    <string name="home_slot_window" formatted="false">窓</string>
+    <string name="home_slot_curtain" formatted="false">カーテン</string>
+    <string name="home_slot_garland" formatted="false">窓の上</string>
+    <string name="home_slot_sill" formatted="false">窓辺、右</string>
+    <string name="home_slot_sillL" formatted="false">窓辺、左</string>
+    <string name="home_slot_ceiling" formatted="false">天井</string>
+    <string name="home_slot_wallL" formatted="false">左の壁</string>
+    <string name="home_slot_wallM" formatted="false">窓のそばの壁</string>
+    <string name="home_slot_desk" formatted="false">机</string>
+    <string name="home_slot_deskTop" formatted="false">机の上、左</string>
+    <string name="home_slot_deskM" formatted="false">机の上</string>
+    <string name="home_slot_deskR" formatted="false">机の上、右</string>
+    <string name="home_slot_chair" formatted="false">椅子</string>
+    <string name="home_slot_chairTop" formatted="false">椅子の上</string>
+    <string name="home_slot_stand" formatted="false">譜面台</string>
+    <string name="home_slot_violin" formatted="false">ヴァイオリン · 手前</string>
+    <string name="home_slot_case" formatted="false">ケース · 窓ぎわの床</string>
+    <string name="home_slot_rug" formatted="false">ラグ · 床の中央</string>
+    <string name="home_slot_pet" formatted="false">ペット</string>
+    <string name="home_slot_floorL" formatted="false">左の隅</string>
+    <string name="home_slot_floorR" formatted="false">右の隅</string>
+    <string name="home_slot_fire" formatted="false">暖炉</string>
+    <string name="home_slot_oL" formatted="false">小道のそば</string>
+    <string name="home_slot_oR" formatted="false">家の壁ぎわ</string>
+    <string name="home_slot_oG" formatted="false">庭</string>
+    <string name="home_slot_oCar" formatted="false">家の前</string>
+    <string name="home_slot_oRoof" formatted="false">屋根</string>
+    <string name="home_slot_oPorch" formatted="false">玄関先</string>
+    <string name="home_house_rent" formatted="false">借りている部屋</string>
+    <string name="home_house_wood" formatted="false">小さな木の家</string>
+    <string name="home_house_flat" formatted="false">古い建物のアパート</string>
+    <string name="home_house_sea" formatted="false">海辺の家</string>
+    <string name="home_house_chalet" formatted="false">山のシャレー</string>
+    <string name="home_house_mansion" formatted="false">街の邸宅</string>
+    <string name="home_house_villa" formatted="false">コンサートホールつきのヴィラ</string>
+    <string name="home_house_rent_note" formatted="false">街の中、3階</string>
+    <string name="home_house_wood_note" formatted="false">玄関ポーチ、煙突、りんごの木</string>
+    <string name="home_house_flat_note" formatted="false">出窓、漆喰の装飾、寄木の床</string>
+    <string name="home_house_sea_note" formatted="false">ベランダ、遠くの灯台、カモメ</string>
+    <string name="home_house_chalet_note" formatted="false">暖炉、雪、もみの木</string>
+    <string name="home_house_mansion_note" formatted="false">円柱、庭、グランドピアノの広間</string>
+    <string name="home_house_villa_note" formatted="false">フィナーレ</string>
+    <string-array name="home_house_rent_news">
+    </string-array>
+    <string-array name="home_house_wood_news">
+        <item>暖炉 — 新しい置き場所</item>
+        <item>外には玄関ポーチと庭</item>
+        <item>「左の隅」と壁紙はありません — 壁は丸太です</item>
+    </string-array>
+    <string-array name="home_house_flat_news">
+        <item>出窓 — 三方に開く窓</item>
+        <item>出窓のそばにピアノの置き場所</item>
+    </string-array>
+    <string-array name="home_house_sea_news">
+        <item>ベランダ — ふたつめの「外」</item>
+        <item>窓からの眺めはいつも海</item>
+    </string-array>
+    <string-array name="home_house_chalet_news">
+        <item>暖炉は最初から家にあります</item>
+        <item>冬は屋根に雪</item>
+    </string-array>
+    <string-array name="home_house_mansion_news">
+        <item>ふたつめの部屋 — 広間</item>
+        <item>グランドピアノ（ここだけ）</item>
+    </string-array>
+    <string-array name="home_house_villa_news">
+        <item>三つの部屋</item>
+        <item>四十席のホール</item>
+    </string-array>
+</resources>

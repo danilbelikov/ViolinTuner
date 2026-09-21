@@ -48,7 +48,7 @@ internal object ScaleWords {
     )
 
     fun octaves(context: Context, count: Int): String =
-        context.getString(Formats.pluralRu(count, R.string.scale_octave_one, R.string.scale_octave_few, R.string.scale_octave_many), count)
+        context.getString(Formats.plural(count, R.string.scale_octave_one, R.string.scale_octave_few, R.string.scale_octave_many), count)
 
     /** «G3 – G6»: Latin names like everywhere in the app, «#» for a sharp (Manrope has no ♯), «b» for a flat. */
     fun range(context: Context, scale: Scale): String = context.getString(R.string.scale_range, nameOf(scale.lowest), nameOf(scale.highest))

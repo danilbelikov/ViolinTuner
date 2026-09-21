@@ -1,6 +1,11 @@
 package com.example.violintuner.feature.settings
 
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -37,7 +42,18 @@ fun SettingsRoute(
         }
     }
 
-    SettingsScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier) {
-        DataBlock(onOpenBackup = onOpenBackup, onOpenRestore = onOpenRestore)
+    val context = LocalContext.current
+    // Android 13 lets a person choose the language of one app; before it the app follows the device and there is nothing to open
+    val openLanguage: (() -> Unit)? = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        { context.startActivity(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", context.packageName, null))) }
+    } else {
+        null
     }
+    SettingsScreen(
+        state = state,
+        onIntent = viewModel::onIntent,
+        modifier = modifier,
+        dataBlock = { DataBlock(onOpenBackup = onOpenBackup, onOpenRestore = onOpenRestore) },
+        onLanguageClick = openLanguage,
+    )
 }

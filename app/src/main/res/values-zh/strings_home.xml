@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home (spec 3.24). Names of things, places and homes are generated: home_catalog.xml. -->
+<resources>
+    <string name="home_title">家</string>
+    <string name="home_back">返回</string>
+    <string name="home_room">房间</string>
+    <string name="home_outside">屋外</string>
+    <string name="home_evening">傍晚</string>
+    <string name="home_day">白天</string>
+    <string name="home_shop">小店</string>
+    <string name="home_arrange">布置</string>
+    <string name="home_picture_room">房间：%1$s</string>
+    <string name="home_picture_outside">屋外的样子：%1$s</string>
+    <string name="home_things_none">一切还是刚租下时的样子</string>
+    <string name="home_things_one">%1$d 件物品</string>
+    <string name="home_things_few">%1$d 件物品</string>
+    <string name="home_things_many">%1$d 件物品</string>
+    <string name="home_things_brought">%1$s，其中 %2$d 件从旅途带回</string>
+    <string name="home_gift_title">第一份礼物在小店里等着</string>
+    <string name="home_gift_text">琴架——让小提琴走出琴盒。免费。</string>
+    <string name="home_gift_take">领取</string>
+    <string name="home_brought">从旅途带回</string>
+    <string name="home_next_house">下一个家</string>
+    <string name="home_all_houses">所有的家</string>
+    <string name="home_have">%1$s / %2$s</string>
+    <string name="home_house_soon">即将</string>
+
+    <string name="shop_all">全部</string>
+    <string name="shop_group_instrument">乐器</string>
+    <string name="shop_group_music">音乐</string>
+    <string name="shop_group_room">房间</string>
+    <string name="shop_group_light">灯光</string>
+    <string name="shop_group_furniture">家具</string>
+    <string name="shop_group_plant">植物</string>
+    <string name="shop_group_life">小物</string>
+    <string name="shop_group_pet">动物</string>
+    <string name="shop_group_outside">屋外</string>
+    <string name="shop_shelf_instrument">制琴师的小店</string>
+    <string name="shop_shelf_music">乐谱与音乐</string>
+    <string name="shop_shelf_room">墙、地板、窗</string>
+    <string name="shop_shelf_light">集市 · 灯光</string>
+    <string name="shop_shelf_furniture">集市 · 家具</string>
+    <string name="shop_shelf_plant">花市</string>
+    <string name="shop_shelf_life">生活小物</string>
+    <string name="shop_shelf_pet">宠物之家</string>
+    <string name="shop_shelf_outside">院子用品</string>
+    <string name="shop_shelf_yours">这层货架归你了——全部买下</string>
+    <string name="shop_from">来自%1$s</string>
+    <string name="shop_opens_in">将从%1$s运来</string>
+    <string name="shop_standing">在房间里</string>
+    <string name="shop_standing_outside">在屋旁</string>
+    <string name="shop_owned">已购买</string>
+    <string name="shop_gift">礼物</string>
+    <string name="shop_no_place">这个家里没有位置</string>
+    <string name="shop_needs_chimney">需要带烟囱的家</string>
+    <string name="shop_waits_season">等待十二月</string>
+    <string name="shop_place">位置：%1$s</string>
+    <string name="shop_try">试摆</string>
+    <string name="shop_buy">购买 · %1$s</string>
+    <string name="shop_take">领取</string>
+    <string name="shop_put">摆上</string>
+    <string name="shop_missing">还差 %1$s</string>
+    <string name="shop_sessions_one">大约再练一次</string>
+    <string name="shop_sessions_few">大约再练 %1$d 次</string>
+    <string name="shop_sessions_many">大约再练 %1$d 次</string>
+    <string name="shop_left_after">将剩余 %1$s</string>
+    <string name="shop_left_after_road">将剩余 %1$s · 到%2$s还差 %3$s</string>
+    <string name="shop_item_description">%1$s，%2$s</string>
+    <string name="shop_price_takts">%1$s 小节</string>
+    <string name="shop_try_back">恢复原样</string>
+    <string name="shop_bought">已购买：%1$s</string>
+
+    <string name="arrange_title">布置</string>
+    <string name="arrange_places_few">%1$d 个位置，已用 %2$d 个</string>
+    <string name="arrange_empty">空</string>
+    <string name="arrange_in_shop">小店里有 %1$d 件</string>
+    <string name="arrange_not_here">这个家里没有的位置</string>
+    <string name="arrange_waiting">在储物间等着：%1$s</string>
+
+    <string name="houses_title">家</string>
+    <string name="houses_live_here">我住在这里</string>
+    <string name="houses_live">住在这里</string>
+    <string name="houses_of">第 %1$d 个家，共 %2$d 个</string>
+    <string name="houses_news">有什么新变化</string>
+    <string name="houses_moving_text">所有物品会自己搬过去，摆在原来的位置。原来的家会保留——哪天都可以回去。</string>
+    <string name="houses_move">搬家 · %1$s</string>
+    <string name="houses_moving">搬家</string>
+    <string name="houses_moved_things">%1$s已各就各位</string>
+    <string name="houses_moved_cat">%1$s · 猫已经在门廊上了</string>
+    <string name="houses_close">关闭</string>
+
+    <!-- Second iteration (spec 3.25) -->
+    <string name="home_travel">出发</string>
+    <string name="home_travel_line">%1$s → 到%2$s还差 %3$s</string>
+    <string name="home_travel_enough">%1$s → 够到%2$s了</string>
+    <string name="home_travel_end">%1$s · 路线已走完</string>
+    <string name="home_fullscreen">全屏</string>
+    <string name="home_fullscreen_close">退出全屏</string>
+    <string name="home_fullscreen_hint">双指张开——拉近 · 拖动——环顾四周</string>
+    <string name="home_card_title">家 · %1$s</string>
+    <string name="home_card_away">在路上 · %1$s · 第 %2$d 站，共 %3$d 站</string>
+    <string name="journey_enter_home">回家</string>
+    <string name="journey_enter_home_at">你在家里</string>
+    <string name="splash_away">出发</string>
+    <string name="splash_home">回家</string>
+    <string name="splash_stop">%1$s · 第 %2$d 站，共 %3$d 站</string>
+    <string name="splash_skip">跳过</string>
+    <string name="shop_soon">即将运来</string>
+    <string name="shop_try_remove">移除</string>
+    <string name="shop_takts_note">小节来自练习：我们聆听你的演奏，自动计数。在这里可以用它们为家添置物品。</string>
+    <string name="journey_intro_takts">应用聆听你的练习，把干净的演奏和练琴时间换算成小节。小节用来支付旅费——从一座城市到下一座。</string>
+
+    <string name="journey_home">家</string>
+    <string name="journey_home_card">家：%1$s</string>
+</resources>

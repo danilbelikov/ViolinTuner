@@ -10,11 +10,28 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * Number and date formats of the analysis screens. The interface is Russian only for now, so
- * the locale is fixed: month names must not follow the device language while the rest does not.
+ * Number and date formats of the app. They speak the language of the interface ([language]), not
+ * of the device: the two differ when the device is set to a language the app has no words for —
+ * month names must not come in Italian under English captions. The app sets the language when it
+ * starts and when the configuration changes ([use]); on the JVM, in tests, it is Russian — the
+ * language the formats were written and specified in.
  */
 object Formats {
-    val LOCALE: Locale = Locale.forLanguageTag("ru")
+    @Volatile
+    var language: FormatLanguage = FormatLanguage.RUSSIAN
+        private set
+
+    val LOCALE: Locale get() = language.locale
+
+    /** Follows the language the resources were resolved for. */
+    fun use(locale: Locale) {
+        language = FormatLanguage.of(locale)
+    }
+
+    /** For tests of another language; give the Russian back afterwards. */
+    fun use(language: FormatLanguage) {
+        this.language = language
+    }
 
     private const val MS_PER_SECOND = 1_000L
     private const val SECONDS_PER_MINUTE = 60L
@@ -29,13 +46,28 @@ object Formats {
 
     /** No-break space: a grouped number never wraps in the middle. */
     private const val GROUP_SEPARATOR = "\u00A0"
-    private val DAY_AND_MONTH = DateTimeFormatter.ofPattern("d MMMM", LOCALE)
-    private val DAY_AND_SHORT_MONTH = DateTimeFormatter.ofPattern("d MMM", LOCALE)
-    private val DAY_WITH_WEEKDAY = DateTimeFormatter.ofPattern("d MMMM, EEEE", LOCALE)
-    private val MONTH_AND_YEAR = DateTimeFormatter.ofPattern("LLLL yyyy", LOCALE)
-    private val DAY_MONTH_YEAR = DateTimeFormatter.ofPattern("d MMMM yyyy", LOCALE)
-    private val DAY_MONTH_YEAR_WEEKDAY = DateTimeFormatter.ofPattern("d MMMM yyyy, EEEE", LOCALE)
-    private val TIME_OF_DAY = DateTimeFormatter.ofPattern("HH:mm", LOCALE)
+    private class Patterns(l: FormatLanguage) {
+        val dayMonth: DateTimeFormatter = DateTimeFormatter.ofPattern(l.dayMonth, l.locale)
+        val dayShortMonth: DateTimeFormatter = DateTimeFormatter.ofPattern(l.dayShortMonth, l.locale)
+        val dayMonthWeekday: DateTimeFormatter = DateTimeFormatter.ofPattern(l.dayMonthWeekday, l.locale)
+        val monthYear: DateTimeFormatter = DateTimeFormatter.ofPattern(l.monthYear, l.locale)
+        val dayMonthYear: DateTimeFormatter = DateTimeFormatter.ofPattern(l.dayMonthYear, l.locale)
+        val dayMonthYearWeekday: DateTimeFormatter = DateTimeFormatter.ofPattern(l.dayMonthYearWeekday, l.locale)
+    }
+
+    private val patterns = java.util.concurrent.ConcurrentHashMap<String, Patterns>()
+    private val p: Patterns get() = language.let { l -> patterns.getOrPut(l.tag) { Patterns(l) } }
+    private val DAY_AND_MONTH get() = p.dayMonth
+    private val DAY_AND_SHORT_MONTH get() = p.dayShortMonth
+    private val DAY_WITH_WEEKDAY get() = p.dayMonthWeekday
+    private val MONTH_AND_YEAR get() = p.monthYear
+    private val DAY_MONTH_YEAR get() = p.dayMonthYear
+    private val DAY_MONTH_YEAR_WEEKDAY get() = p.dayMonthYearWeekday
+    private val TIME_OF_DAY = DateTimeFormatter.ofPattern("HH:mm", Locale.ROOT)
+
+    /** «45 мин», «45 min», «45분». */
+    private fun minutes(n: Long) = "$n${language.unitSpace}${language.minute}"
+    private fun hours(n: Any) = "$n${language.unitSpace}${language.hour}"
 
     /** "m:ss", minutes not padded: 0:07, 12:40, 60:00. */
     fun duration(ms: Long): String {
@@ -61,9 +93,9 @@ object Formats {
         val hours = minutes / MINUTES_PER_HOUR
         val rest = minutes % MINUTES_PER_HOUR
         return when {
-            hours == 0L -> "$rest мин"
-            rest == 0L -> "$hours ч"
-            else -> "$hours ч $rest мин"
+            hours == 0L -> minutes(rest)
+            rest == 0L -> hours(hours)
+            else -> "${hours(hours)} ${minutes(rest)}"
         }
     }
 
@@ -81,7 +113,7 @@ object Formats {
         wordsOf((ms.coerceAtLeast(0) + MS_PER_MINUTE - 1) / MS_PER_MINUTE, roundHoursUp = true)
 
     /** A mark in hours: "50 ч", "1000 ч", "10 000 ч". */
-    fun hoursMark(hours: Int): String = "${grouped(hours.toLong())} ч"
+    fun hoursMark(hours: Int): String = hours(grouped(hours.toLong()))
 
     /** Digits in groups of three from five digits on, as Russian typography has it: 1250, 10 000. */
     fun grouped(value: Long): String {
@@ -94,10 +126,10 @@ object Formats {
         val hours = minutes / MINUTES_PER_HOUR
         val rest = minutes % MINUTES_PER_HOUR
         return when {
-            hours >= HOURS_ONLY_FROM -> "${grouped(if (roundHoursUp && rest > 0) hours + 1 else hours)} ч"
-            hours == 0L -> "$rest мин"
-            rest == 0L -> "$hours ч"
-            else -> "$hours ч $rest мин"
+            hours >= HOURS_ONLY_FROM -> hours(grouped(if (roundHoursUp && rest > 0) hours + 1 else hours))
+            hours == 0L -> minutes(rest)
+            rest == 0L -> hours(hours)
+            else -> "${hours(hours)} ${minutes(rest)}"
         }
     }
 
@@ -109,10 +141,10 @@ object Formats {
     fun fileSize(bytes: Long): String {
         val mb = bytes / BYTES_PER_MB
         return when {
-            mb < 1 -> "меньше 1 МБ"
-            mb < DECIMAL_BELOW -> String.format(LOCALE, "%.1f МБ", mb)
-            mb < MB_PER_GB -> String.format(LOCALE, "%.0f МБ", mb)
-            else -> String.format(LOCALE, "%.1f ГБ", mb / MB_PER_GB)
+            mb < 1 -> language.underMegabyte
+            mb < DECIMAL_BELOW -> String.format(LOCALE, "%.1f %s", mb, language.megabyte)
+            mb < MB_PER_GB -> String.format(LOCALE, "%.0f %s", mb, language.megabyte)
+            else -> String.format(LOCALE, "%.1f %s", mb / MB_PER_GB, language.gigabyte)
         }
     }
 
@@ -133,19 +165,25 @@ object Formats {
     fun oneDecimal(value: Double): String = "%.1f".format(LOCALE, value)
 
     /**
-     * Russian plural form for [count]: 1 сессия, 2 сессии, 5 сессий, 21 сессия. Done by hand
-     * because `plurals` resources follow the device language, and the interface is Russian on
-     * an English phone too.
+     * The word for [count] out of three forms — Russian needs all three: 1 запись, 2 записи, 5 записей, 21 запись;
+     * most languages of the app take [one] for a single thing and [many] otherwise (their [few] is never asked
+     * for), Korean, Chinese and Japanese always [many]. Done by hand because `plurals` resources follow the
+     * device, and the interface may speak another language than the device does.
      */
-    fun <T> pluralRu(count: Int, one: T, few: T, many: T): T {
-        val lastTwo = abs(count) % 100
-        val last = lastTwo % 10
-        return when {
-            lastTwo in 11..14 -> many
-            last == 1 -> one
-            last in 2..4 -> few
-            else -> many
+    fun <T> plural(count: Int, one: T, few: T, many: T): T = when (language.plural) {
+        PluralRule.SLAVIC -> {
+            val lastTwo = abs(count) % 100
+            val last = lastTwo % 10
+            when {
+                lastTwo in 11..14 -> many
+                last == 1 -> one
+                last in 2..4 -> few
+                else -> many
+            }
         }
+        PluralRule.ONE_OTHER -> if (abs(count) == 1) one else many
+        PluralRule.ONE_UP_TO_TWO -> if (abs(count) < 2) one else many
+        PluralRule.NONE -> many
     }
 
     /** "14 сентября" */

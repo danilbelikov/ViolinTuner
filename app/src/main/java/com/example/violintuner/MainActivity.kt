@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import com.example.violintuner.core.ui.format.Formats
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.WindowInsets
@@ -45,6 +46,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        // the language chosen for the app alone reaches the activity's resources, not the application's
+        Formats.use(resources.configuration.locales[0])
         if (savedInstanceState == null) openBackup.value = intent?.getStringExtra(EXTRA_OPEN_BACKUP)
         setContent {
             ViolinTheme { ViolinTunerRoot(openBackup = openBackup.value, onBackupOpened = { openBackup.value = null }) }

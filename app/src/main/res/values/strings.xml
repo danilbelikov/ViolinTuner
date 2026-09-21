@@ -2,915 +2,916 @@
     <string name="app_name">ViolinTuner</string>
 
     <string name="nav_live">Live</string>
-    <string name="nav_practice">Занятия</string>
-    <string name="nav_history">Записи</string>
-    <string name="nav_settings">Настройки</string>
+    <string name="nav_practice">Practice</string>
+    <string name="nav_history">Recordings</string>
+    <string name="nav_settings">Settings</string>
 
-    <string name="mode_play">Игра</string>
-    <string name="mode_tuning">Настройка</string>
-    <string name="tuning_string_hz">%1$d Гц</string>
-    <string name="tuning_hint_auto">авто · сыграйте открытую струну</string>
-    <string name="tuning_hint_locked">цель зафиксирована: %1$s · %2$d Гц · тап — снять</string>
-    <string name="tuning_string_locked">зафиксирована</string>
-    <string name="tuning_string_auto">авто</string>
-    <string name="status_in_tune">в строе</string>
-    <string name="status_sharp">выше</string>
-    <string name="status_flat">ниже</string>
-    <string name="live_silence">Играйте…</string>
-    <string name="live_too_noisy">Слишком шумно</string>
-    <string name="live_mic_unavailable">Микрофон недоступен</string>
-    <string name="mic_permission_title">Нужен доступ к микрофону</string>
-    <string name="mic_permission_text">Без микрофона тренажёр не слышит скрипку. Звук обрабатывается на телефоне и никуда не отправляется.</string>
-    <string name="mic_permission_grant">Разрешить доступ</string>
-    <string name="record_button">Запись</string>
-    <string name="record_start">Начать запись</string>
-    <string name="record_stop">Остановить запись</string>
-    <string name="record_no_notes">В записи не нашлось нот</string>
-    <string name="recording_elapsed_description">Идёт запись, %1$s</string>
-    <string name="recording_strip_label">запись ·</string>
-    <string name="practice_chip_label">занятие ·</string>
+    <string name="mode_play">Play</string>
+    <string name="mode_tuning">Tune</string>
+    <string name="tuning_string_hz">%1$d Hz</string>
+    <string name="tuning_hint_auto">auto · play an open string</string>
+    <string name="tuning_hint_locked">target locked: %1$s · %2$d Hz · tap to unlock</string>
+    <string name="tuning_string_locked">locked</string>
+    <string name="tuning_string_auto">auto</string>
+    <string name="status_in_tune">in tune</string>
+    <string name="status_sharp">sharp</string>
+    <string name="status_flat">flat</string>
+    <string name="live_silence">Play…</string>
+    <string name="live_too_noisy">Too noisy</string>
+    <string name="live_mic_unavailable">Microphone unavailable</string>
+    <string name="mic_permission_title">Microphone access needed</string>
+    <string name="mic_permission_text">Without the microphone the app cannot hear the violin. Sound is processed on the phone and is never sent anywhere.</string>
+    <string name="mic_permission_grant">Allow access</string>
+    <string name="record_button">Record</string>
+    <string name="record_start">Start recording</string>
+    <string name="record_stop">Stop recording</string>
+    <string name="record_no_notes">No notes found in the recording</string>
+    <string name="recording_elapsed_description">Recording, %1$s</string>
+    <string name="recording_strip_label">rec ·</string>
+    <string name="practice_chip_label">practice ·</string>
 
-    <string name="onboarding_mic_title">Дайте мне услышать скрипку</string>
-    <string name="onboarding_mic_text">Тренажёр слушает через микрофон и ничего не отправляет в интернет. Звук обрабатывается на телефоне.</string>
-    <string name="onboarding_mic_cta">Разрешить микрофон</string>
-    <string name="onboarding_mic_foot">Поставьте телефон на пюпитр в 50–80 см</string>
-    <string name="onboarding_a4_title">К чему настраиваетесь?</string>
-    <string name="onboarding_a4_text">Дома и в школе обычно 440 Гц. Оркестры часто берут 442. Можно поменять в настройках.</string>
-    <string name="onboarding_a4_cta">Дальше</string>
-    <string name="onboarding_a4_foot">Экран не будет гаснуть во время игры</string>
-    <string name="onboarding_tolerance_title">Насколько строго судить?</string>
-    <string name="onboarding_tolerance_text">Это ширина зелёной зоны. Начните мягче — сузить всегда можно.</string>
-    <string name="onboarding_tolerance_cta">Начать играть</string>
-    <string name="onboarding_tolerance_foot">Меняется в настройках в любой момент</string>
-    <string name="onboarding_step_description">Шаг %1$d из %2$d</string>
+    <string name="onboarding_mic_title">Let me hear your violin</string>
+    <string name="onboarding_mic_text">The app listens through the microphone and sends nothing to the internet. Sound is processed on the phone.</string>
+    <string name="onboarding_mic_cta">Allow microphone</string>
+    <string name="onboarding_mic_foot">Put the phone on the music stand, 50–80 cm away</string>
+    <string name="onboarding_a4_title">What do you tune to?</string>
+    <string name="onboarding_a4_text">At home and at school it is usually 440 Hz. Orchestras often take 442. You can change it in Settings.</string>
+    <string name="onboarding_a4_cta">Next</string>
+    <string name="onboarding_a4_foot">The screen stays on while you play</string>
+    <string name="onboarding_tolerance_title">How strict should I be?</string>
+    <string name="onboarding_tolerance_text">This is the width of the green zone. Start gently — you can always narrow it.</string>
+    <string name="onboarding_tolerance_cta">Start playing</string>
+    <string name="onboarding_tolerance_foot">Change it in Settings at any time</string>
+    <string name="onboarding_step_description">Step %1$d of %2$d</string>
 
-    <string name="tolerance_beginner_name">Новичок</string>
-    <string name="tolerance_beginner_text">широкая зелёная зона</string>
-    <string name="tolerance_intermediate_name">Средний</string>
-    <string name="tolerance_intermediate_text">чувствуется вибрато</string>
-    <string name="tolerance_pro_name">Профи</string>
-    <string name="tolerance_pro_text">строго</string>
-    <string name="tolerance_cents">±%1$d ц</string>
-    <string name="a4_option_description">%1$d герц</string>
+    <string name="tolerance_beginner_name">Beginner</string>
+    <string name="tolerance_beginner_text">a wide green zone</string>
+    <string name="tolerance_intermediate_name">Intermediate</string>
+    <string name="tolerance_intermediate_text">vibrato shows</string>
+    <string name="tolerance_pro_name">Pro</string>
+    <string name="tolerance_pro_text">strict</string>
+    <string name="tolerance_cents">±%1$d c</string>
+    <string name="a4_option_description">%1$d hertz</string>
 
-    <string name="settings_a4_title">Эталон A4</string>
-    <string name="settings_a4_text">Частота ноты ля первой октавы, Гц. От неё считаются все ноты и струны.</string>
-    <string name="settings_tolerance_title">Допуск</string>
-    <string name="settings_tolerance_text">Ширина зелёной зоны: насколько близко к ноте считается «в строе».</string>
-    <string name="settings_restart_onboarding">Пройти онбординг снова</string>
+    <string name="settings_a4_title">Reference pitch A4</string>
+    <string name="settings_a4_text">The frequency of the A above middle C, in Hz. All notes and strings are measured from it.</string>
+    <string name="settings_tolerance_title">Tolerance</string>
+    <string name="settings_tolerance_text">The width of the green zone: how close to the note counts as “in tune”.</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_restart_onboarding">Go through onboarding again</string>
 
-    <string name="session_default_title">Запись · %1$s</string>
-    <string name="record_default_title">Запись</string>
-    <string name="session_take_subtitle">дубль · %1$s · %2$s</string>
-    <string name="session_back">Назад</string>
-    <string name="session_not_found">Запись не найдена</string>
+    <string name="session_default_title">Recording · %1$s</string>
+    <string name="record_default_title">Recording</string>
+    <string name="session_take_subtitle">take · %1$s · %2$s</string>
+    <string name="session_back">Back</string>
+    <string name="session_not_found">Recording not found</string>
     <string name="session_percent">%1$d%%</string>
-    <string name="session_meta">в строе · %1$s · ±%2$d ц</string>
-    <string name="session_bias_mean">в среднем %1$s ц</string>
-    <string name="session_bias_none">без смещения</string>
-    <string name="session_bias_hint_none">ровно по центру</string>
-    <string name="session_bias_hint_flat">чуть занижаете — пальцы ближе к подставке</string>
-    <string name="session_bias_hint_sharp">чуть завышаете — пальцы ближе к порожку</string>
-    <string name="session_card_distribution">Распределение</string>
-    <string name="session_card_mean_error">Средняя ошибка</string>
-    <string name="session_card_per_string">По струнам</string>
-    <string name="session_cents_unit">ц</string>
-    <string name="session_bias_small_none">смещения нет</string>
-    <string name="session_bias_small_down">смещение %1$s ц вниз</string>
-    <string name="session_bias_small_up">смещение %1$s ц вверх</string>
+    <string name="session_meta">in tune · %1$s · ±%2$d c</string>
+    <string name="session_bias_mean">%1$s c on average</string>
+    <string name="session_bias_none">no bias</string>
+    <string name="session_bias_hint_none">right in the centre</string>
+    <string name="session_bias_hint_flat">slightly flat — fingers closer to the bridge</string>
+    <string name="session_bias_hint_sharp">slightly sharp — fingers closer to the nut</string>
+    <string name="session_card_distribution">Distribution</string>
+    <string name="session_card_mean_error">Mean error</string>
+    <string name="session_card_per_string">By string</string>
+    <string name="session_cents_unit">c</string>
+    <string name="session_bias_small_none">no bias</string>
+    <string name="session_bias_small_down">bias %1$s c flat</string>
+    <string name="session_bias_small_up">bias %1$s c sharp</string>
     <string name="session_string_not_played">—</string>
-    <string name="session_problem_notes">Проблемные ноты</string>
-    <string name="session_problem_note">%1$s на струне %2$s</string>
-    <string name="session_cents_value">%1$s ц</string>
-    <string name="session_no_problem_notes">Ни одна нота не уходит стабильно — отличная запись.</string>
-    <string name="session_action_rename">Переименовать</string>
-    <string name="session_action_delete">Удалить</string>
-    <string name="session_rename_title">Название записи</string>
-    <string name="session_rename_hint">Пустое поле вернёт название по дате</string>
-    <string name="session_rename_confirm">Сохранить</string>
-    <string name="session_delete_title">Удалить запись?</string>
-    <string name="session_delete_text">Звук и разбор будут удалены без возможности восстановления.</string>
-    <string name="session_delete_confirm">Удалить</string>
-    <string name="dialog_cancel">Отмена</string>
-    <string name="session_note_target">цель</string>
-    <string name="session_note_mean">среднее</string>
-    <string name="session_note_min_max">мин / макс</string>
+    <string name="session_problem_notes">Problem notes</string>
+    <string name="session_problem_note">%1$s on the %2$s string</string>
+    <string name="session_cents_value">%1$s c</string>
+    <string name="session_no_problem_notes">No note drifts consistently — a fine recording.</string>
+    <string name="session_action_rename">Rename</string>
+    <string name="session_action_delete">Delete</string>
+    <string name="session_rename_title">Recording name</string>
+    <string name="session_rename_hint">Leave empty to go back to the date name</string>
+    <string name="session_rename_confirm">Save</string>
+    <string name="session_delete_title">Delete the recording?</string>
+    <string name="session_delete_text">The sound and the analysis will be deleted and cannot be restored.</string>
+    <string name="session_delete_confirm">Delete</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="session_note_target">target</string>
+    <string name="session_note_mean">mean</string>
+    <string name="session_note_min_max">min / max</string>
     <string name="session_note_min_max_value">%1$s / %2$s</string>
-    <string name="session_note_duration">длительность</string>
-    <string name="session_note_duration_value">%1$s с</string>
-    <string name="session_note_range">размах</string>
-    <string name="session_note_range_value">±%1$d ц</string>
-    <string name="session_note_position">струна %1$s · %2$s</string>
-    <string name="finger_open">открытая</string>
-    <string name="finger_first">1-й палец</string>
-    <string name="finger_second">2-й палец</string>
-    <string name="finger_third">3-й палец</string>
-    <string name="finger_fourth">4-й палец</string>
-    <string name="finger_higher_position">в позиции</string>
-    <string name="session_tip_stable">Стабильно, вибрато ровное</string>
-    <string name="session_tip_wandering">В среднем в строе, но нота плавает</string>
-    <string name="session_tip_flat">Палец стоит низко — чуть ближе к подставке</string>
-    <string name="session_tip_sharp">Палец стоит высоко — чуть ближе к порожку</string>
-    <string name="session_player_play">Слушать запись</string>
-    <string name="session_player_pause">Пауза</string>
-    <string name="session_player_position">Позиция в записи</string>
-    <string name="session_roll_description">Лента нот. Нажмите на ноту, чтобы увидеть детали.</string>
+    <string name="session_note_duration">duration</string>
+    <string name="session_note_duration_value">%1$s s</string>
+    <string name="session_note_range">range</string>
+    <string name="session_note_range_value">±%1$d c</string>
+    <string name="session_note_position">%1$s string · %2$s</string>
+    <string name="finger_open">open</string>
+    <string name="finger_first">1st finger</string>
+    <string name="finger_second">2nd finger</string>
+    <string name="finger_third">3rd finger</string>
+    <string name="finger_fourth">4th finger</string>
+    <string name="finger_higher_position">in a position</string>
+    <string name="session_tip_stable">Stable, the vibrato is even</string>
+    <string name="session_tip_wandering">In tune on average, but the note wanders</string>
+    <string name="session_tip_flat">The finger sits low — a little closer to the bridge</string>
+    <string name="session_tip_sharp">The finger sits high — a little closer to the nut</string>
+    <string name="session_player_play">Play the recording</string>
+    <string name="session_player_pause">Pause</string>
+    <string name="session_player_position">Position in the recording</string>
+    <string name="session_roll_description">Note roll. Tap a note to see its details.</string>
 
-    <string name="history_count_one">%1$d запись</string>
-    <string name="history_count_few">%1$d записи</string>
-    <string name="history_count_many">%1$d записей</string>
-    <string name="history_chart_title">Записи за две недели</string>
-    <string name="history_chart_description">Записи по дням за две недели</string>
-    <string name="history_filter_all">Все</string>
-    <string name="history_filter_this_week">Эта неделя</string>
-    <string name="history_filter_month">Месяц</string>
-    <string name="history_day_today">сегодня</string>
+    <string name="history_count_one">%1$d recording</string>
+    <string name="history_count_few">%1$d recordings</string>
+    <string name="history_count_many">%1$d recordings</string>
+    <string name="history_chart_title">Recordings in two weeks</string>
+    <string name="history_chart_description">Recordings per day over two weeks</string>
+    <string name="history_filter_all">All</string>
+    <string name="history_filter_this_week">This week</string>
+    <string name="history_filter_month">Month</string>
+    <string name="history_day_today">today</string>
     <string name="record_meta">%1$s · %2$s</string>
     <string name="history_chart_bar">%1$s, %2$s</string>
-    <string name="backup_block_title">Данные</string>
-    <string name="backup_row_save">Сохранить копию</string>
-    <string name="backup_row_never">ещё не сохраняли</string>
-    <string name="backup_row_last">последняя — %1$s</string>
-    <string name="backup_row_stale">последняя — %1$s · с тех пор %2$s</string>
-    <string name="backup_new_records_one">%1$d новая запись</string>
-    <string name="backup_new_records_few">%1$d новые записи</string>
-    <string name="backup_new_records_many">%1$d новых записей</string>
-    <string name="backup_row_running">идёт · %1$d\u00A0%%</string>
-    <string name="backup_row_restore">Восстановить из копии</string>
-    <string name="backup_row_total">В приложении сейчас: %1$s</string>
-    <string name="backup_onboarding_link">У меня есть копия данных</string>
-    <string name="backup_title">Копия данных</string>
-    <string name="backup_text">Один файл со всем, что есть в приложении. Лучше положить его не на этот телефон — на компьютер, флешку или в облачную папку.</string>
-    <string name="backup_part_data">Разбор, занятия, прогресс, настройки</string>
-    <string name="backup_part_data_short">Разбор, занятия, прогресс</string>
-    <string name="backup_part_sheets">Фото нот</string>
-    <string name="backup_part_audio">Звук записей</string>
-    <string name="backup_part_audio_short">Звук</string>
-    <string name="backup_part_video">Видео</string>
-    <string name="backup_part_always">всегда</string>
-    <string name="backup_total">Копия займёт</string>
-    <string name="backup_total_value">≈\u00A0%1$s</string>
-    <string name="backup_without_video">Без видео: после восстановления у видео-дублей останется разбор, картинки и звука не будет.</string>
-    <string name="backup_without_audio">Без звука: записи после восстановления будут без звука — останется разбор.</string>
-    <string name="backup_without_sheets">Без фото нот: произведения после восстановления будут без страниц нот.</string>
-    <string name="backup_save_to">Сохранить в…</string>
-    <string name="backup_saving_button">Сохраняем…</string>
-    <string name="backup_share">Отправить…</string>
-    <string name="backup_too_big_to_share">Такую копию мессенджер или почта не примут — сохраните её в папку или на флешку</string>
-    <string name="backup_busy_recording">Сначала закончите запись</string>
-    <string name="backup_nothing_title">Пока нечего сохранять</string>
-    <string name="backup_nothing_text">Запишите первый дубль или добавьте произведение — копия появится здесь</string>
-    <string name="backup_file_name">Интонация · копия · %1$s.zip</string>
-    <string name="backup_saving_title">Сохраняем копию</string>
-    <string name="backup_phase_data">Разбор, занятия, прогресс</string>
-    <string name="backup_phase_files">%1$s · %2$d из %3$d</string>
-    <string name="backup_phase_verifying_file">Проверяем файл</string>
-    <string name="backup_percent">%1$d\u00A0%%</string>
-    <string name="backup_done_of">%1$s из %2$s</string>
-    <string name="backup_remaining">осталось %1$s</string>
-    <string name="backup_remaining_minutes">около %1$d мин</string>
-    <string name="backup_remaining_seconds">несколько секунд</string>
-    <string name="backup_can_leave_title">Можно свернуть приложение — копия дойдёт сама.</string>
-    <string name="backup_can_leave_text">Не выключайте телефон и не вынимайте флешку, пока не закончится.</string>
-    <string name="backup_cancel">Отмена</string>
-    <string name="backup_stop_title">Остановить?</string>
-    <string name="backup_stop_text">Недописанный файл будет удалён.</string>
-    <string name="backup_stop_continue">Продолжить</string>
-    <string name="backup_stop_confirm">Остановить</string>
-    <string name="backup_saved_title">Копия сохранена</string>
+    <string name="backup_block_title">Data</string>
+    <string name="backup_row_save">Save a copy</string>
+    <string name="backup_row_never">never saved yet</string>
+    <string name="backup_row_last">last one — %1$s</string>
+    <string name="backup_row_stale">last one — %1$s · %2$s since then</string>
+    <string name="backup_new_records_one">%1$d new recording</string>
+    <string name="backup_new_records_few">%1$d new recordings</string>
+    <string name="backup_new_records_many">%1$d new recordings</string>
+    <string name="backup_row_running">in progress · %1$d %%</string>
+    <string name="backup_row_restore">Restore from a copy</string>
+    <string name="backup_row_total">In the app now: %1$s</string>
+    <string name="backup_onboarding_link">I have a data backup</string>
+    <string name="backup_title">Data backup</string>
+    <string name="backup_text">One file with everything the app holds. Better keep it off this phone — on a computer, a flash drive or in a cloud folder.</string>
+    <string name="backup_part_data">Analysis, practice, progress, settings</string>
+    <string name="backup_part_data_short">Analysis, practice, progress</string>
+    <string name="backup_part_sheets">Sheet-music photos</string>
+    <string name="backup_part_audio">Sound of recordings</string>
+    <string name="backup_part_audio_short">Sound</string>
+    <string name="backup_part_video">Video</string>
+    <string name="backup_part_always">always</string>
+    <string name="backup_total">The copy will take</string>
+    <string name="backup_total_value">≈ %1$s</string>
+    <string name="backup_without_video">Without video: after restoring, video takes keep their analysis but have no picture and no sound.</string>
+    <string name="backup_without_audio">Without sound: after restoring, recordings have no sound — the analysis stays.</string>
+    <string name="backup_without_sheets">Without sheet-music photos: after restoring, pieces have no sheet-music pages.</string>
+    <string name="backup_save_to">Save to…</string>
+    <string name="backup_saving_button">Saving…</string>
+    <string name="backup_share">Send…</string>
+    <string name="backup_too_big_to_share">A messenger or mail will not take a copy this big — save it to a folder or a flash drive</string>
+    <string name="backup_busy_recording">Finish recording first</string>
+    <string name="backup_nothing_title">Nothing to save yet</string>
+    <string name="backup_nothing_text">Record a first take or add a piece — the copy will appear here</string>
+    <string name="backup_file_name">Intonation · backup · %1$s.zip</string>
+    <string name="backup_saving_title">Saving the copy</string>
+    <string name="backup_phase_data">Analysis, practice, progress</string>
+    <string name="backup_phase_files">%1$s · %2$d of %3$d</string>
+    <string name="backup_phase_verifying_file">Checking the file</string>
+    <string name="backup_percent">%1$d %%</string>
+    <string name="backup_done_of">%1$s of %2$s</string>
+    <string name="backup_remaining">%1$s left</string>
+    <string name="backup_remaining_minutes">about %1$d min</string>
+    <string name="backup_remaining_seconds">a few seconds</string>
+    <string name="backup_can_leave_title">You can leave the app — the copy will finish on its own.</string>
+    <string name="backup_can_leave_text">Do not turn the phone off or pull out the flash drive until it is done.</string>
+    <string name="backup_cancel">Cancel</string>
+    <string name="backup_stop_title">Stop?</string>
+    <string name="backup_stop_text">The unfinished file will be deleted.</string>
+    <string name="backup_stop_continue">Continue</string>
+    <string name="backup_stop_confirm">Stop</string>
+    <string name="backup_saved_title">Copy saved</string>
     <string name="backup_saved_place">%1$s · %2$s</string>
-    <string name="backup_place_downloads">Загрузки</string>
-    <string name="backup_saved_advice">Скопируйте файл с телефона: копия на том же телефоне не спасёт, если с ним что-то случится.</string>
-    <string name="backup_done">Готово</string>
-    <string name="backup_failed_space_title">Не хватило места там, куда сохраняли</string>
-    <string name="backup_failed_space_text">Недописанный файл удалён. Выберите другое место или сохраните копию без видео.</string>
-    <string name="backup_failed_space_inside">Не хватает %1$s в памяти телефона, чтобы собрать копию для отправки. Сохраните её сразу в папку.</string>
-    <string name="backup_failed_gone_title">Место сохранения стало недоступно</string>
-    <string name="backup_failed_gone_text">Флешку вынули или папка пропала. Недописанный файл удалён — вставьте носитель и попробуйте снова.</string>
-    <string name="backup_failed_title">Не получилось сохранить копию</string>
-    <string name="backup_failed_text">Недописанный файл удалён. Данные в приложении на месте.</string>
-    <string name="backup_retry">Ещё раз</string>
-    <string name="backup_close">Закрыть</string>
-    <string name="backup_count_sessions_one">%1$d запись</string>
-    <string name="backup_count_sessions_few">%1$d записи</string>
-    <string name="backup_count_sessions_many">%1$d записей</string>
-    <string name="backup_count_pieces_one">%1$d произведение</string>
-    <string name="backup_count_pieces_few">%1$d произведения</string>
-    <string name="backup_count_pieces_many">%1$d произведений</string>
-    <string name="backup_count_pages_one">%1$d страница</string>
-    <string name="backup_count_pages_few">%1$d страницы</string>
-    <string name="backup_count_pages_many">%1$d страниц</string>
-    <string name="backup_count_days_one">%1$d день занятий</string>
-    <string name="backup_count_days_few">%1$d дня занятий</string>
-    <string name="backup_count_days_many">%1$d дней занятий</string>
-    <string name="backup_count_trophies_one">%1$d трофей</string>
-    <string name="backup_count_trophies_few">%1$d трофея</string>
-    <string name="backup_count_trophies_many">%1$d трофеев</string>
-    <string name="backup_count_takes_one">%1$d дубль</string>
-    <string name="backup_count_takes_few">%1$d дубля</string>
-    <string name="backup_count_takes_many">%1$d дублей</string>
-    <string name="backup_count_sound_one">%1$d запись со звуком</string>
-    <string name="backup_count_sound_few">%1$d записи со звуком</string>
-    <string name="backup_count_sound_many">%1$d записей со звуком</string>
-    <string name="backup_count_video">%1$d видео</string>
-    <string name="backup_count_level">уровень %1$d</string>
-    <string name="backup_notification_channel">Копия данных</string>
-    <string name="backup_notification_saving">Сохраняем копию · %1$d\u00A0%%</string>
-    <string name="backup_notification_restoring">Восстанавливаем данные · %1$d\u00A0%%</string>
-    <string name="restore_title">Восстановить из копии</string>
-    <string name="restore_reading">Открываем копию…</string>
+    <string name="backup_place_downloads">Downloads</string>
+    <string name="backup_saved_advice">Copy the file off the phone: a copy on the same phone will not help if something happens to it.</string>
+    <string name="backup_done">Done</string>
+    <string name="backup_failed_space_title">Not enough space where the copy was being saved</string>
+    <string name="backup_failed_space_text">The unfinished file has been deleted. Choose another place or save the copy without video.</string>
+    <string name="backup_failed_space_inside">The phone is %1$s short of space to build a copy for sending. Save it straight to a folder instead.</string>
+    <string name="backup_failed_gone_title">The save location became unavailable</string>
+    <string name="backup_failed_gone_text">The flash drive was removed or the folder is gone. The unfinished file has been deleted — put the drive back and try again.</string>
+    <string name="backup_failed_title">Could not save the copy</string>
+    <string name="backup_failed_text">The unfinished file has been deleted. The data in the app is safe.</string>
+    <string name="backup_retry">Try again</string>
+    <string name="backup_close">Close</string>
+    <string name="backup_count_sessions_one">%1$d recording</string>
+    <string name="backup_count_sessions_few">%1$d recordings</string>
+    <string name="backup_count_sessions_many">%1$d recordings</string>
+    <string name="backup_count_pieces_one">%1$d piece</string>
+    <string name="backup_count_pieces_few">%1$d pieces</string>
+    <string name="backup_count_pieces_many">%1$d pieces</string>
+    <string name="backup_count_pages_one">%1$d page</string>
+    <string name="backup_count_pages_few">%1$d pages</string>
+    <string name="backup_count_pages_many">%1$d pages</string>
+    <string name="backup_count_days_one">%1$d day of practice</string>
+    <string name="backup_count_days_few">%1$d days of practice</string>
+    <string name="backup_count_days_many">%1$d days of practice</string>
+    <string name="backup_count_trophies_one">%1$d trophy</string>
+    <string name="backup_count_trophies_few">%1$d trophies</string>
+    <string name="backup_count_trophies_many">%1$d trophies</string>
+    <string name="backup_count_takes_one">%1$d take</string>
+    <string name="backup_count_takes_few">%1$d takes</string>
+    <string name="backup_count_takes_many">%1$d takes</string>
+    <string name="backup_count_sound_one">%1$d recording with sound</string>
+    <string name="backup_count_sound_few">%1$d recordings with sound</string>
+    <string name="backup_count_sound_many">%1$d recordings with sound</string>
+    <string name="backup_count_video">%1$d videos</string>
+    <string name="backup_count_level">level %1$d</string>
+    <string name="backup_notification_channel">Data backup</string>
+    <string name="backup_notification_saving">Saving the copy · %1$d %%</string>
+    <string name="backup_notification_restoring">Restoring data · %1$d %%</string>
+    <string name="restore_title">Restore from a copy</string>
+    <string name="restore_reading">Opening the copy…</string>
     <string name="restore_made">%1$s · %2$s</string>
-    <string name="restore_without_video">без видео — у видео-дублей останется только разбор</string>
-    <string name="restore_without_audio">без звука — у записей останется только разбор</string>
-    <string name="restore_without_sheets">без фото нот</string>
-    <string name="restore_now_title">Сейчас в приложении</string>
-    <string name="restore_warning">Всё, что сейчас в приложении, будет заменено данными из копии. Это нельзя отменить.</string>
-    <string name="restore_save_first">Сначала сохранить текущие данные</string>
-    <string name="restore_empty_app">В приложении пока пусто — после восстановления здесь будет всё из копии, и онбординг не понадобится.</string>
-    <string name="restore_button">Восстановить</string>
-    <string name="restore_confirm_title">Заменить данные?</string>
-    <string name="restore_confirm_text">%1$s на этом телефоне будут удалены. Вместо них — копия от %2$s.</string>
-    <string name="restore_confirm_button">Заменить</string>
-    <string name="restore_not_ours_title">Это не копия «Интонации»</string>
-    <string name="restore_not_ours_text">Файл другого приложения или обычный архив. Копия называется «Интонация · копия · дата.zip».</string>
-    <string name="restore_too_new_title">Копия сделана более новой версией приложения</string>
-    <string name="restore_too_new_text">Обновите приложение и откройте файл снова.</string>
-    <string name="restore_damaged_title">Файл повреждён или недокачан</string>
-    <string name="restore_damaged_text">Скопируйте его ещё раз с того места, где он хранится, и попробуйте снова.</string>
-    <string name="restore_pick_another">Выбрать другой файл</string>
-    <string name="restore_no_room_title">Не хватает %1$s, чтобы восстановить безопасно</string>
-    <string name="restore_no_room_text">Копия сначала распаковывается рядом с текущими данными и только потом заменяет их. Освободите место на телефоне — или восстановите без страховки.</string>
-    <string name="restore_no_room_ok">Понятно</string>
-    <string name="restore_unsafe_button">Удалить текущие данные и восстановить</string>
-    <string name="restore_unsafe_title">Удалить всё и восстановить?</string>
-    <string name="restore_unsafe_text">Сначала проверим копию целиком. Потом %1$s будут удалены с телефона — если восстановление сорвётся, вернуть их будет нельзя.</string>
-    <string name="restore_unsafe_confirm">Удалить и восстановить</string>
-    <string name="restore_progress_title">Восстанавливаем данные</string>
-    <string name="restore_step_verifying">Проверяем</string>
-    <string name="restore_step_extracting">Восстанавливаем</string>
-    <string name="restore_step_finishing">Почти готово</string>
-    <string name="restore_phase_verifying">Проверяем копию</string>
-    <string name="restore_phase_extracting">Восстанавливаем · %1$s %2$d</string>
-    <string name="restore_can_leave_title">Можно свернуть приложение — восстановление дойдёт само.</string>
-    <string name="restore_can_stop">Ваши данные ещё на месте: пока идёт проверка и распаковка, можно остановить.</string>
-    <string name="restore_cannot_stop">Открываем восстановленные данные — это уже нельзя остановить.</string>
-    <string name="restore_done_title">Данные восстановлены</string>
-    <string name="restore_opening">Открываем ваши данные…</string>
-    <string name="restore_failed_title">Не получилось восстановить</string>
-    <string name="restore_failed_text">Ваши данные на месте — ничего не изменилось.</string>
-    <string name="restore_failed_lost_title">Не получилось восстановить, и прежних данных уже нет</string>
-    <string name="restore_failed_lost_text">Копия проверена и цела — попробуйте ещё раз с этим же файлом. Если снова не выйдет, начните с чистого приложения.</string>
-    <string name="restore_retry_same">Ещё раз с этим файлом</string>
-    <string name="restore_start_clean">Начать с чистого приложения</string>
-    <string name="restore_busy">Сначала закончите запись</string>
-    <string name="video_description">Видео</string>
-    <string name="video_state_playing">играет, двойное касание — пауза</string>
-    <string name="video_state_paused">на паузе, двойное касание — продолжить</string>
-    <string name="video_fullscreen">На весь экран</string>
-    <string name="video_fullscreen_exit">Свернуть</string>
-    <string name="video_lost_title">Видео не найдено — остался разбор</string>
-    <string name="video_lost_text">Файл удалён из памяти приложения. Звука тоже нет — как у записи без звука.</string>
-    <string name="video_undecodable_title">Это видео здесь не показать</string>
-    <string name="video_undecodable_text">Телефон не умеет читать его картинку. Звук и разбор на месте.</string>
-    <string name="video_row_time">%1$s / %2$s · %3$s ц</string>
-    <string name="video_size">видео · %1$s · %2$s</string>
-    <string name="video_size_lost">видео не найдено</string>
+    <string name="restore_without_video">no video — video takes will keep only their analysis</string>
+    <string name="restore_without_audio">no sound — recordings will keep only their analysis</string>
+    <string name="restore_without_sheets">no sheet-music photos</string>
+    <string name="restore_now_title">In the app now</string>
+    <string name="restore_warning">Everything in the app now will be replaced with the data from the copy. This cannot be undone.</string>
+    <string name="restore_save_first">Save the current data first</string>
+    <string name="restore_empty_app">The app is empty for now — after restoring, everything from the copy will be here, and onboarding will not be needed.</string>
+    <string name="restore_button">Restore</string>
+    <string name="restore_confirm_title">Replace the data?</string>
+    <string name="restore_confirm_text">%1$s on this phone will be deleted. In their place — the copy from %2$s.</string>
+    <string name="restore_confirm_button">Replace</string>
+    <string name="restore_not_ours_title">This is not an Intonation backup</string>
+    <string name="restore_not_ours_text">It is a file from another app or an ordinary archive. A backup is called “Intonation · backup · date.zip”.</string>
+    <string name="restore_too_new_title">The copy was made by a newer version of the app</string>
+    <string name="restore_too_new_text">Update the app and open the file again.</string>
+    <string name="restore_damaged_title">The file is damaged or incomplete</string>
+    <string name="restore_damaged_text">Copy it again from where it is kept and try once more.</string>
+    <string name="restore_pick_another">Choose another file</string>
+    <string name="restore_no_room_title">%1$s short of space to restore safely</string>
+    <string name="restore_no_room_text">The copy is first unpacked next to the current data and only then replaces it. Free some space on the phone — or restore without the safety net.</string>
+    <string name="restore_no_room_ok">Got it</string>
+    <string name="restore_unsafe_button">Delete current data and restore</string>
+    <string name="restore_unsafe_title">Delete everything and restore?</string>
+    <string name="restore_unsafe_text">First the whole copy is checked. Then %1$s will be deleted from the phone — if restoring fails, they cannot be brought back.</string>
+    <string name="restore_unsafe_confirm">Delete and restore</string>
+    <string name="restore_progress_title">Restoring data</string>
+    <string name="restore_step_verifying">Checking</string>
+    <string name="restore_step_extracting">Restoring</string>
+    <string name="restore_step_finishing">Almost done</string>
+    <string name="restore_phase_verifying">Checking the copy</string>
+    <string name="restore_phase_extracting">Restoring · %1$s %2$d</string>
+    <string name="restore_can_leave_title">You can leave the app — restoring will finish on its own.</string>
+    <string name="restore_can_stop">Your data is still in place: while the copy is being checked and unpacked, you can stop.</string>
+    <string name="restore_cannot_stop">Opening the restored data — this can no longer be stopped.</string>
+    <string name="restore_done_title">Data restored</string>
+    <string name="restore_opening">Opening your data…</string>
+    <string name="restore_failed_title">Could not restore</string>
+    <string name="restore_failed_text">Your data is in place — nothing has changed.</string>
+    <string name="restore_failed_lost_title">Could not restore, and the previous data is gone</string>
+    <string name="restore_failed_lost_text">The copy has been checked and is intact — try again with the same file. If it fails again, start with a clean app.</string>
+    <string name="restore_retry_same">Try again with this file</string>
+    <string name="restore_start_clean">Start with a clean app</string>
+    <string name="restore_busy">Finish recording first</string>
+    <string name="video_description">Video</string>
+    <string name="video_state_playing">playing, double-tap to pause</string>
+    <string name="video_state_paused">paused, double-tap to resume</string>
+    <string name="video_fullscreen">Full screen</string>
+    <string name="video_fullscreen_exit">Exit full screen</string>
+    <string name="video_lost_title">Video not found — the analysis remains</string>
+    <string name="video_lost_text">The file is gone from the app storage. There is no sound either — like a recording without sound.</string>
+    <string name="video_undecodable_title">This video cannot be shown here</string>
+    <string name="video_undecodable_text">The phone cannot read its picture. The sound and the analysis are in place.</string>
+    <string name="video_row_time">%1$s / %2$s · %3$s c</string>
+    <string name="video_size">video · %1$s · %2$s</string>
+    <string name="video_size_lost">video not found</string>
     <string name="video_resolution">%1$dp</string>
-    <string name="video_watch_place">Смотреть это место</string>
-    <string name="video_listen_place">Слушать это место</string>
-    <string name="video_delete_text">Видео (%1$s), звук и разбор удалятся. Это нельзя отменить.</string>
-    <string name="record_tile_video">с видео</string>
-    <string name="size_mb">%1$s МБ</string>
-    <string name="size_kb">%1$d КБ</string>
-    <string name="video_take">Видео-дубль</string>
-    <string name="video_take_busy">Разбираем…</string>
-    <string name="video_shoot">Снять видео</string>
-    <string name="video_shoot_hint">откроется камера телефона</string>
-    <string name="video_pick">Видео из галереи</string>
-    <string name="video_pick_hint">одно за раз, до 60 минут</string>
-    <string name="video_copying">Добавляем видео…</string>
-    <string name="video_listening">Слушаем запись…</string>
-    <string name="video_percent">%1$d\u00A0%%</string>
-    <string name="video_remaining">осталось около %1$d с</string>
-    <string name="video_cancel">Отмена</string>
-    <string name="video_stop_title">Остановить разбор?</string>
-    <string name="video_stop_text">Видео снято только что и больше нигде не хранится. Можно отправить его куда-нибудь, чтобы не потерять, или удалить.</string>
-    <string name="video_stopped_title">Разбор остановлен</string>
-    <string name="video_delete">Удалить</string>
-    <string name="video_send">Отправить видео</string>
-    <string name="video_continue">Продолжить разбор</string>
-    <string name="video_ok">Понятно</string>
-    <string name="video_error_no_sound">В видео нет звука</string>
-    <string name="video_error_too_long">Видео длиннее 60 минут — такое не разобрать</string>
-    <string name="video_error_cannot_open">Не получилось открыть видео</string>
-    <string name="video_error_no_notes">В видео не нашлось нот — дубль не добавлен</string>
-    <string name="video_error_no_notes_gallery">Исходник остался в галерее.</string>
-    <string name="video_error_no_space">Не хватает места: нужно ещё %1$d МБ</string>
-    <string name="video_rescue_file">Видео.mp4</string>
-    <string name="video_thumb">Первый кадр видео</string>
-    <string name="selection_select">Выбрать</string>
-    <string name="selection_count">Выбрано: %1$d</string>
-    <string name="selection_all">Выбрать все</string>
-    <string name="selection_none">Снять все</string>
-    <string name="selection_close">Закрыть выбор</string>
-    <string name="selection_delete">Удалить выбранные</string>
-    <string name="selection_delete_records_one">Удалить %1$d запись?</string>
-    <string name="selection_delete_records_few">Удалить %1$d записи?</string>
-    <string name="selection_delete_records_many">Удалить %1$d записей?</string>
-    <string name="selection_delete_takes_one">Удалить %1$d дубль?</string>
-    <string name="selection_delete_takes_few">Удалить %1$d дубля?</string>
-    <string name="selection_delete_takes_many">Удалить %1$d дублей?</string>
-    <string name="selection_delete_text">Звук и разбор удалятся. Это нельзя отменить.</string>
-    <string name="record_tile_take">дубль</string>
-    <string name="record_tile_record">запись</string>
-    <string name="record_tile_sound">звук</string>
-    <string name="record_tile_only_video">видео</string>
-    <string name="record_tile_no_sound">без звука</string>
-    <string name="history_empty_filter">За этот период записей нет</string>
-    <string name="history_empty">Здесь появятся ваши записи. Нажмите кнопку записи на экране Live.</string>
+    <string name="video_watch_place">Watch this spot</string>
+    <string name="video_listen_place">Listen to this spot</string>
+    <string name="video_delete_text">The video (%1$s), the sound and the analysis will be deleted. This cannot be undone.</string>
+    <string name="record_tile_video">with video</string>
+    <string name="size_mb">%1$s MB</string>
+    <string name="size_kb">%1$d KB</string>
+    <string name="video_take">Video take</string>
+    <string name="video_take_busy">Analysing…</string>
+    <string name="video_shoot">Shoot a video</string>
+    <string name="video_shoot_hint">the phone camera will open</string>
+    <string name="video_pick">Video from gallery</string>
+    <string name="video_pick_hint">one at a time, up to 60 minutes</string>
+    <string name="video_copying">Adding the video…</string>
+    <string name="video_listening">Listening to the recording…</string>
+    <string name="video_percent">%1$d %%</string>
+    <string name="video_remaining">about %1$d s left</string>
+    <string name="video_cancel">Cancel</string>
+    <string name="video_stop_title">Stop the analysis?</string>
+    <string name="video_stop_text">The video has just been shot and is not kept anywhere else. You can send it somewhere so as not to lose it, or delete it.</string>
+    <string name="video_stopped_title">Analysis stopped</string>
+    <string name="video_delete">Delete</string>
+    <string name="video_send">Send the video</string>
+    <string name="video_continue">Continue the analysis</string>
+    <string name="video_ok">Got it</string>
+    <string name="video_error_no_sound">The video has no sound</string>
+    <string name="video_error_too_long">The video is longer than 60 minutes — too long to analyse</string>
+    <string name="video_error_cannot_open">Could not open the video</string>
+    <string name="video_error_no_notes">No notes found in the video — the take was not added</string>
+    <string name="video_error_no_notes_gallery">The original is still in the gallery.</string>
+    <string name="video_error_no_space">Not enough space: %1$d MB more needed</string>
+    <string name="video_rescue_file">Video.mp4</string>
+    <string name="video_thumb">First frame of the video</string>
+    <string name="selection_select">Select</string>
+    <string name="selection_count">Selected: %1$d</string>
+    <string name="selection_all">Select all</string>
+    <string name="selection_none">Deselect all</string>
+    <string name="selection_close">Close selection</string>
+    <string name="selection_delete">Delete selected</string>
+    <string name="selection_delete_records_one">Delete %1$d recording?</string>
+    <string name="selection_delete_records_few">Delete %1$d recordings?</string>
+    <string name="selection_delete_records_many">Delete %1$d recordings?</string>
+    <string name="selection_delete_takes_one">Delete %1$d take?</string>
+    <string name="selection_delete_takes_few">Delete %1$d takes?</string>
+    <string name="selection_delete_takes_many">Delete %1$d takes?</string>
+    <string name="selection_delete_text">The sound and the analysis will be deleted. This cannot be undone.</string>
+    <string name="record_tile_take">take</string>
+    <string name="record_tile_record">recording</string>
+    <string name="record_tile_sound">sound</string>
+    <string name="record_tile_only_video">video</string>
+    <string name="record_tile_no_sound">no sound</string>
+    <string name="history_empty_filter">No recordings in this period</string>
+    <string name="history_empty">Your recordings will appear here. Press the record button on the Live screen.</string>
 
-    <string name="practice_start">Начать занятие</string>
-    <string name="practice_stop">Закончить занятие</string>
-    <string name="practice_running">Занятие идёт</string>
-    <string name="practice_timer_description">Занятие идёт, %1$s</string>
-    <string name="practice_today">Сегодня: %1$s</string>
-    <string name="practice_today_none">Сегодня ещё не занимались</string>
-    <string name="practice_empty">Нажмите „Начать занятие“, когда берёте скрипку, и „Закончить“ — когда откладываете. Здесь появится ваш календарь.</string>
-    <string name="practice_week">Неделя</string>
-    <string name="practice_month">Месяц</string>
-    <string name="practice_streak">Дней подряд</string>
+    <string name="practice_start">Start practice</string>
+    <string name="practice_stop">End practice</string>
+    <string name="practice_running">Practice in progress</string>
+    <string name="practice_timer_description">Practice in progress, %1$s</string>
+    <string name="practice_today">Today: %1$s</string>
+    <string name="practice_today_none">No practice yet today</string>
+    <string name="practice_empty">Press “Start practice” when you pick up the violin and “End” when you put it down. Your calendar will appear here.</string>
+    <string name="practice_week">Week</string>
+    <string name="practice_month">Month</string>
+    <string name="practice_streak">Day streak</string>
     <string name="practice_no_value">—</string>
-    <string name="practice_month_back">Предыдущий месяц</string>
-    <string name="practice_month_forward">Следующий месяц</string>
+    <string name="practice_month_back">Previous month</string>
+    <string name="practice_month_forward">Next month</string>
     <string-array name="practice_weekdays">
-        <item>пн</item>
-        <item>вт</item>
-        <item>ср</item>
-        <item>чт</item>
-        <item>пт</item>
-        <item>сб</item>
-        <item>вс</item>
+        <item>Mo</item>
+        <item>Tu</item>
+        <item>We</item>
+        <item>Th</item>
+        <item>Fr</item>
+        <item>Sa</item>
+        <item>Su</item>
     </string-array>
     <string name="practice_day_description">%1$s, %2$s</string>
-    <string name="practice_legend_less">меньше</string>
-    <string name="practice_legend_more">больше</string>
-    <string name="practice_day_today">сегодня</string>
-    <string name="practice_day_none">Не занимались</string>
-    <string name="practice_edit_time">Изменить время</string>
-    <string name="practice_add_time">Добавить время</string>
-    <string name="practice_day_records">Записи этого дня</string>
-    <string name="practice_summary_title">Занятие</string>
-    <string name="practice_step_hint">шаг %1$d мин</string>
-    <string name="practice_step_down">Минус %1$d минут</string>
-    <string name="practice_step_up">Плюс %1$d минут</string>
-    <string name="practice_save">Сохранить</string>
-    <string name="practice_discard">Не сохранять</string>
-    <string name="practice_edit_title">Время за день</string>
-    <string name="practice_edit_hint">Это суммарное время за день. Ноль уберёт день из календаря.</string>
+    <string name="practice_legend_less">less</string>
+    <string name="practice_legend_more">more</string>
+    <string name="practice_day_today">today</string>
+    <string name="practice_day_none">No practice</string>
+    <string name="practice_edit_time">Edit time</string>
+    <string name="practice_add_time">Add time</string>
+    <string name="practice_day_records">Recordings of this day</string>
+    <string name="practice_summary_title">Practice</string>
+    <string name="practice_step_hint">step %1$d min</string>
+    <string name="practice_step_down">Minus %1$d minutes</string>
+    <string name="practice_step_up">Plus %1$d minutes</string>
+    <string name="practice_save">Save</string>
+    <string name="practice_discard">Don\'t save</string>
+    <string name="practice_edit_title">Time for the day</string>
+    <string name="practice_edit_hint">This is the total time for the day. Zero removes the day from the calendar.</string>
     <string name="practice_chip_plus_minutes">+%1$d</string>
-    <string name="practice_chip_plus_hour">+1 ч</string>
+    <string name="practice_chip_plus_hour">+1 h</string>
     <string name="practice_chip_zero">0</string>
-    <string name="practice_too_short">Слишком коротко</string>
-    <string name="practice_forgotten_title">Занятие не закончено</string>
-    <string name="practice_forgotten_text">Занятие идёт уже %1$s.</string>
-    <string name="practice_forgotten_sound">Скрипка звучала последний раз в %1$s.</string>
-    <string name="practice_end_at">Закончить в %1$s</string>
-    <string name="practice_end_now">Закончить сейчас</string>
-    <string name="practice_continue">Продолжаю заниматься</string>
+    <string name="practice_too_short">Too short</string>
+    <string name="practice_forgotten_title">Practice not ended</string>
+    <string name="practice_forgotten_text">The practice has been running for %1$s.</string>
+    <string name="practice_forgotten_sound">The violin last sounded at %1$s.</string>
+    <string name="practice_end_at">End at %1$s</string>
+    <string name="practice_end_now">End now</string>
+    <string name="practice_continue">Still practising</string>
 
     <!-- Profile and progress (spec 3.13, 5.7). Level and trophy names follow the order of ProgressConfig. -->
     <string-array name="progress_level_names">
-        <item>Первый звук</item>
-        <item>Ученик</item>
-        <item>Открытые струны</item>
-        <item>Первая позиция</item>
-        <item>Гаммы</item>
-        <item>Этюды</item>
-        <item>Вибрато</item>
-        <item>Третья позиция</item>
-        <item>Ансамбль</item>
-        <item>Концертмейстер</item>
-        <item>Солист</item>
-        <item>Виртуоз</item>
-        <item>Маэстро</item>
-        <item>Мастер</item>
-        <item>Легенда</item>
+        <item>First sound</item>
+        <item>Pupil</item>
+        <item>Open strings</item>
+        <item>First position</item>
+        <item>Scales</item>
+        <item>Études</item>
+        <item>Vibrato</item>
+        <item>Third position</item>
+        <item>Ensemble</item>
+        <item>Concertmaster</item>
+        <item>Soloist</item>
+        <item>Virtuoso</item>
+        <item>Maestro</item>
+        <item>Master</item>
+        <item>Legend</item>
     </string-array>
     <string-array name="progress_trophy_names">
-        <item>Канифоль</item>
-        <item>Колок</item>
-        <item>Струна</item>
-        <item>Смычок</item>
-        <item>Подбородник</item>
-        <item>Камертон</item>
-        <item>Пюпитр</item>
-        <item>Футляр</item>
-        <item>Скрипка</item>
-        <item>Концерт</item>
+        <item>Rosin</item>
+        <item>Peg</item>
+        <item>String</item>
+        <item>Bow</item>
+        <item>Chin rest</item>
+        <item>Tuning fork</item>
+        <item>Music stand</item>
+        <item>Case</item>
+        <item>Violin</item>
+        <item>Concert</item>
     </string-array>
-    <string name="progress_no_name">За скрипкой</string>
-    <string name="progress_level">Уровень %1$d · %2$s</string>
-    <string name="progress_to_next_level">до %1$d уровня — %2$s</string>
-    <string name="progress_open_profile">Открыть профиль</string>
-    <string name="progress_total_description">Всего за скрипкой: %1$s</string>
-    <string name="progress_open_trophies">Открыть трофеи</string>
-    <string name="progress_trophies_one">%1$d трофей</string>
-    <string name="progress_trophies_few">%1$d трофея</string>
-    <string name="progress_trophies_many">%1$d трофеев</string>
-    <string name="progress_next_trophy">следующий %1$s</string>
+    <string name="progress_no_name">At the violin</string>
+    <string name="progress_level">Level %1$d · %2$s</string>
+    <string name="progress_to_next_level">to level %1$d — %2$s</string>
+    <string name="progress_open_profile">Open profile</string>
+    <string name="progress_total_description">Total at the violin: %1$s</string>
+    <string name="progress_open_trophies">Open trophies</string>
+    <string name="progress_trophies_one">%1$d trophy</string>
+    <string name="progress_trophies_few">%1$d trophies</string>
+    <string name="progress_trophies_many">%1$d trophies</string>
+    <string name="progress_next_trophy">next %1$s</string>
     <string name="progress_trophies_and_next">%1$s · %2$s</string>
     <string name="progress_more_trophies">+%1$d</string>
-    <string name="profile_title">Профиль</string>
-    <string name="profile_pick_photo">Выбрать фото</string>
-    <string name="profile_remove_photo">Убрать фото</string>
-    <string name="profile_name_label">Имя</string>
-    <string name="profile_name_placeholder">Как вас зовут?</string>
+    <string name="profile_title">Profile</string>
+    <string name="profile_pick_photo">Choose photo</string>
+    <string name="profile_remove_photo">Remove photo</string>
+    <string name="profile_name_label">Name</string>
+    <string name="profile_name_placeholder">What is your name?</string>
     <string name="profile_name_counter">%1$d / %2$d</string>
-    <string name="profile_done">Готово</string>
+    <string name="profile_done">Done</string>
     <string name="profile_no_name_letter">\?</string>
-    <string name="profile_photo_failed">Не удалось открыть фото</string>
-    <string name="gift_title">Новый трофей</string>
-    <string name="gift_hours_one">%1$s час за скрипкой</string>
-    <string name="gift_hours_few">%1$s часа за скрипкой</string>
-    <string name="gift_hours_many">%1$s часов за скрипкой</string>
-    <string name="gift_thanks">Спасибо</string>
-    <string name="trophies_title">Трофеи</string>
-    <string name="trophies_total">всего за скрипкой — %1$s</string>
-    <string name="trophies_awarded">получен %1$s</string>
-    <string name="trophies_remaining">ещё %1$s</string>
-    <string name="trophies_far">Далеко впереди</string>
-    <string name="trophies_line_given">%1$s, %2$s, получен %3$s</string>
-    <string name="trophies_line_remaining">%1$s, %2$s, ещё %3$s</string>
-    <string name="trophies_line_far">%1$s, %2$s, далеко впереди</string>
+    <string name="profile_photo_failed">Could not open the photo</string>
+    <string name="gift_title">New trophy</string>
+    <string name="gift_hours_one">%1$s hour at the violin</string>
+    <string name="gift_hours_few">%1$s hours at the violin</string>
+    <string name="gift_hours_many">%1$s hours at the violin</string>
+    <string name="gift_thanks">Thank you</string>
+    <string name="trophies_title">Trophies</string>
+    <string name="trophies_total">total at the violin — %1$s</string>
+    <string name="trophies_awarded">awarded %1$s</string>
+    <string name="trophies_remaining">%1$s to go</string>
+    <string name="trophies_far">Far ahead</string>
+    <string name="trophies_line_given">%1$s, %2$s, awarded %3$s</string>
+    <string name="trophies_line_remaining">%1$s, %2$s, %3$s to go</string>
+    <string name="trophies_line_far">%1$s, %2$s, far ahead</string>
 
-    <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
-    <string name="history_section_sessions">Записи</string>
-    <string name="history_section_repertoire">Репертуар</string>
+    <!-- Repertoire (spec 3.15). "Piece" and "take" are the two words of the feature. -->
+    <string name="history_section_sessions">Recordings</string>
+    <string name="history_section_repertoire">Repertoire</string>
     <string name="session_take_title">%1$s · %2$s</string>
-    <string name="dot_separator">\u0020·\u0020</string>
-    <string name="repertoire_add">Добавить произведение</string>
-    <string name="repertoire_empty">Здесь живут ваши произведения: ноты, заметки и записи. Добавьте первое.</string>
-    <string name="repertoire_empty_filter">Ничего со статусом «%1$s».</string>
-    <string name="repertoire_show_all">Показать все</string>
-    <string name="repertoire_no_takes">нет дублей</string>
-    <string name="piece_status_reading">Разбираю</string>
-    <string name="piece_status_learning">Учу</string>
-    <string name="piece_status_in_repertoire">В репертуаре</string>
-    <string name="piece_status_learned">Выучено</string>
+    <string name="dot_separator"> · </string>
+    <string name="repertoire_add">Add a piece</string>
+    <string name="repertoire_empty">Your pieces live here: sheet music, notes and recordings. Add the first one.</string>
+    <string name="repertoire_empty_filter">Nothing with the status “%1$s”.</string>
+    <string name="repertoire_show_all">Show all</string>
+    <string name="repertoire_no_takes">no takes</string>
+    <string name="piece_status_reading">Reading</string>
+    <string name="piece_status_learning">Learning</string>
+    <string name="piece_status_in_repertoire">In repertoire</string>
+    <string name="piece_status_learned">Learnt</string>
     <!-- The journey (spec 3.23): arrays follow the order of JourneyRoute.stops -->
     <string-array name="journey_cities">
-        <item>Дом</item>
-        <item>Кремона</item>
-        <item>Милан</item>
-        <item>Зальцбург</item>
-        <item>Вена</item>
-        <item>Прага</item>
-        <item>Лейпциг</item>
-        <item>Берлин</item>
-        <item>Амстердам</item>
-        <item>Париж</item>
-        <item>Лондон</item>
-        <item>Санкт-Петербург</item>
-        <item>Москва</item>
-        <item>Нью-Йорк</item>
-        <item>Буэнос-Айрес</item>
-        <item>Токио</item>
-        <item>Сидней</item>
+        <item>Home</item>
+        <item>Cremona</item>
+        <item>Milan</item>
+        <item>Salzburg</item>
+        <item>Vienna</item>
+        <item>Prague</item>
+        <item>Leipzig</item>
+        <item>Berlin</item>
+        <item>Amsterdam</item>
+        <item>Paris</item>
+        <item>London</item>
+        <item>Saint Petersburg</item>
+        <item>Moscow</item>
+        <item>New York</item>
+        <item>Buenos Aires</item>
+        <item>Tokyo</item>
+        <item>Sydney</item>
     </string-array>
     <string-array name="journey_cities_to">
-        <item>Дома</item>
-        <item>Кремоны</item>
-        <item>Милана</item>
-        <item>Зальцбурга</item>
-        <item>Вены</item>
-        <item>Праги</item>
-        <item>Лейпцига</item>
-        <item>Берлина</item>
-        <item>Амстердама</item>
-        <item>Парижа</item>
-        <item>Лондона</item>
-        <item>Санкт-Петербурга</item>
-        <item>Москвы</item>
-        <item>Нью-Йорка</item>
-        <item>Буэнос-Айреса</item>
-        <item>Токио</item>
-        <item>Сиднея</item>
+        <item>Home</item>
+        <item>Cremona</item>
+        <item>Milan</item>
+        <item>Salzburg</item>
+        <item>Vienna</item>
+        <item>Prague</item>
+        <item>Leipzig</item>
+        <item>Berlin</item>
+        <item>Amsterdam</item>
+        <item>Paris</item>
+        <item>London</item>
+        <item>Saint Petersburg</item>
+        <item>Moscow</item>
+        <item>New York</item>
+        <item>Buenos Aires</item>
+        <item>Tokyo</item>
+        <item>Sydney</item>
     </string-array>
     <string-array name="journey_places">
-        <item>Своя комната, пюпитр у окна</item>
-        <item>Мастерская скрипичного мастера</item>
-        <item>Ла Скала</item>
-        <item>Дом Моцарта и крепость над городом</item>
-        <item>Музикферайн, Золотой зал</item>
-        <item>Рудольфинум</item>
-        <item>Гевандхаус · церковь Св. Фомы</item>
-        <item>Филармония</item>
-        <item>Консертгебау</item>
-        <item>Опера Гарнье</item>
-        <item>Альберт-холл</item>
-        <item>Филармония, Большой зал</item>
-        <item>Большой зал Консерватории</item>
-        <item>Карнеги-холл</item>
-        <item>Театр Колон</item>
-        <item>Сантори-холл</item>
-        <item>Оперный театр</item>
+        <item>Your own room, a music stand by the window</item>
+        <item>A violin maker\'s workshop</item>
+        <item>La Scala</item>
+        <item>Mozart\'s house and the fortress above the city</item>
+        <item>Musikverein, the Golden Hall</item>
+        <item>Rudolfinum</item>
+        <item>Gewandhaus · St Thomas Church</item>
+        <item>Philharmonie</item>
+        <item>Concertgebouw</item>
+        <item>Opéra Garnier</item>
+        <item>Royal Albert Hall</item>
+        <item>Philharmonia, the Grand Hall</item>
+        <item>Great Hall of the Conservatory</item>
+        <item>Carnegie Hall</item>
+        <item>Teatro Colón</item>
+        <item>Suntory Hall</item>
+        <item>Opera House</item>
     </string-array>
     <string-array name="journey_countries">
         <item></item>
-        <item>Италия</item>
-        <item>Италия</item>
-        <item>Австрия</item>
-        <item>Австрия</item>
-        <item>Чехия</item>
-        <item>Германия</item>
-        <item>Германия</item>
-        <item>Нидерланды</item>
-        <item>Франция</item>
-        <item>Великобритания</item>
-        <item>Россия</item>
-        <item>Россия</item>
-        <item>США</item>
-        <item>Аргентина</item>
-        <item>Япония</item>
-        <item>Австралия</item>
+        <item>Italy</item>
+        <item>Italy</item>
+        <item>Austria</item>
+        <item>Austria</item>
+        <item>Czechia</item>
+        <item>Germany</item>
+        <item>Germany</item>
+        <item>Netherlands</item>
+        <item>France</item>
+        <item>United Kingdom</item>
+        <item>Russia</item>
+        <item>Russia</item>
+        <item>USA</item>
+        <item>Argentina</item>
+        <item>Japan</item>
+        <item>Australia</item>
     </string-array>
     <string-array name="journey_facts">
-        <item>Отсюда начинают все. Первая остановка — Кремона, где скрипку придумали.</item>
-        <item>Здесь работали Амати, Страдивари и Гварнери — скрипку в её нынешнем виде придумали в этом городе.</item>
-        <item>Театр открыт в 1778 году; здесь впервые прозвучали оперы Верди и «Мадам Баттерфляй» Пуччини.</item>
-        <item>Здесь родился Моцарт; крепость Хоэнзальцбург стоит над городом с XI века.</item>
-        <item>Каждый год 1 января отсюда на весь мир звучит Новогодний концерт. Зал считают одним из лучших по акустике.</item>
-        <item>Первый концерт Чешской филармонии здесь дирижировал Дворжак.</item>
-        <item>Бах четверть века был кантором церкви Св. Фомы.</item>
-        <item>Зал-«шатёр», где сцена стоит посреди слушателей.</item>
-        <item>Оркестр зала носит титул «королевского».</item>
-        <item>Открыта в 1875 году; плафон зрительного зала в 1964-м расписал Марк Шагал.</item>
-        <item>Открыт в 1871 году; каждое лето здесь проходят Променад-концерты.</item>
-        <item>Здесь в августе 1942 года, в блокаду, прозвучала Седьмая симфония Шостаковича.</item>
-        <item>Открыт в 1901 году; здесь проходит Конкурс имени Чайковского.</item>
-        <item>«Как попасть в Карнеги-холл? — Заниматься».</item>
-        <item>Открыт в 1908 году оперой «Аида»; его акустику называют одной из лучших в мире.</item>
-        <item>Зал-«виноградник»: слушатели сидят террасами вокруг сцены. Открыт в 1986 году.</item>
-        <item>Под «парусами» — несколько залов; силуэт узнают даже те, кто никогда не был в Австралии.</item>
+        <item>Everyone starts from here. The first stop is Cremona, where the violin was invented.</item>
+        <item>Amati, Stradivari and Guarneri worked here — the violin as we know it was invented in this city.</item>
+        <item>The theatre opened in 1778; operas by Verdi and Puccini\'s “Madama Butterfly” were first heard here.</item>
+        <item>Mozart was born here; Hohensalzburg Fortress has stood above the city since the 11th century.</item>
+        <item>Every year on 1 January the New Year\'s Concert goes out from here to the whole world. The hall is counted among the finest for acoustics.</item>
+        <item>Dvořák conducted the first concert of the Czech Philharmonic here.</item>
+        <item>Bach was cantor of St Thomas Church for a quarter of a century.</item>
+        <item>A “tent” of a hall, where the stage stands in the middle of the audience.</item>
+        <item>The orchestra of the hall bears the title “Royal”.</item>
+        <item>Opened in 1875; the ceiling of the auditorium was painted by Marc Chagall in 1964.</item>
+        <item>Opened in 1871; the Proms are held here every summer.</item>
+        <item>Here, in August 1942, during the siege, Shostakovich\'s Seventh Symphony was performed.</item>
+        <item>Opened in 1901; the Tchaikovsky Competition is held here.</item>
+        <item>“How do you get to Carnegie Hall? — Practice.”</item>
+        <item>Opened in 1908 with “Aida”; its acoustics are called some of the best in the world.</item>
+        <item>A “vineyard” hall: the audience sits in terraces around the stage. Opened in 1986.</item>
+        <item>Under the “sails” there are several halls; the silhouette is known even to those who have never been to Australia.</item>
     </string-array>
     <string-array name="journey_roads">
         <item></item>
-        <item>поездом · 6 часов</item>
-        <item>поездом · 1 час</item>
-        <item>поездом · 7 часов</item>
-        <item>поездом · 3 часа</item>
-        <item>поездом · 4 часа</item>
-        <item>поездом · 4 часа</item>
-        <item>поездом · 1 час</item>
-        <item>поездом · 6 часов</item>
-        <item>поездом · 3 часа</item>
-        <item>поездом · 2 часа</item>
-        <item>кораблём · 4 дня</item>
-        <item>поездом · 4 часа</item>
-        <item>самолётом · 10 часов</item>
-        <item>кораблём · 3 недели</item>
-        <item>самолётом · 30 часов</item>
-        <item>самолётом · 9 часов</item>
+        <item>by train · 6 hours</item>
+        <item>by train · 1 hour</item>
+        <item>by train · 7 hours</item>
+        <item>by train · 3 hours</item>
+        <item>by train · 4 hours</item>
+        <item>by train · 4 hours</item>
+        <item>by train · 1 hour</item>
+        <item>by train · 6 hours</item>
+        <item>by train · 3 hours</item>
+        <item>by train · 2 hours</item>
+        <item>by ship · 4 days</item>
+        <item>by train · 4 hours</item>
+        <item>by plane · 10 hours</item>
+        <item>by ship · 3 weeks</item>
+        <item>by plane · 30 hours</item>
+        <item>by plane · 9 hours</item>
     </string-array>
-    <string name="journey_title">Путешествие</string>
-    <string name="journey_map">Карта</string>
-    <string name="journey_passport">Паспорт</string>
-    <string name="journey_back">Назад</string>
-    <string name="journey_stop_of">остановка %1$d из %2$d</string>
-    <string name="journey_stop_home">остановка 0 из %1$d · дом</string>
-    <string name="journey_since">с %1$s</string>
-    <string name="journey_next">до %1$s · %2$s</string>
-    <string name="journey_next_short">до %1$s %2$s</string>
+    <string name="journey_title">Journey</string>
+    <string name="journey_map">Map</string>
+    <string name="journey_passport">Passport</string>
+    <string name="journey_back">Back</string>
+    <string name="journey_stop_of">stop %1$d of %2$d</string>
+    <string name="journey_stop_home">stop 0 of %1$d · home</string>
+    <string name="journey_since">since %1$s</string>
+    <string name="journey_next">to %1$s · %2$s</string>
+    <string name="journey_next_short">to %1$s %2$s</string>
     <string name="journey_have">%1$s / %2$s</string>
-    <string name="journey_depart">В путь · %1$s</string>
-    <string name="journey_missing">не хватает %1$s</string>
-    <string name="journey_enough">хватает до %1$s — в путь</string>
-    <string name="journey_soon">Мировое турне пройдено. Такты копятся и ждут новых городов — они приходят обновлениями.</string>
-    <string name="journey_soon_short">скоро новые города</string>
-    <string name="journey_passed">Пройдено %1$d из %2$d</string>
-    <string name="journey_all_cards">Все открытки</string>
-    <string name="journey_no_cards">Первая открытка появится в Кремоне</string>
-    <string name="journey_intro_title">Дорога начинается дома</string>
-    <string name="journey_intro_text">У каждого скрипача есть мечта — сыграть в лучших залах мира. Дорога туда длинная, и платят за неё не деньгами, а чистыми нотами.</string>
-    <string name="journey_intro_first">Первая остановка — Кремона, где скрипку придумали. До неё %1$s.</string>
-    <string name="journey_intro_start">Собрать футляр</string>
+    <string name="journey_depart">Set off · %1$s</string>
+    <string name="journey_missing">%1$s short</string>
+    <string name="journey_enough">enough to reach %1$s — set off</string>
+    <string name="journey_soon">The world tour is complete. Bars keep adding up and wait for new cities — they arrive with updates.</string>
+    <string name="journey_soon_short">new cities soon</string>
+    <string name="journey_passed">Visited %1$d of %2$d</string>
+    <string name="journey_all_cards">All postcards</string>
+    <string name="journey_no_cards">The first postcard will appear in Cremona</string>
+    <string name="journey_intro_title">The road begins at home</string>
+    <string name="journey_intro_text">Every violinist has a dream — to play in the best halls of the world. The road there is long, and it is paid for not with money but with clean notes.</string>
+    <string name="journey_intro_first">The first stop is Cremona, where the violin was invented. It is %1$s away.</string>
+    <string name="journey_intro_start">Pack the case</string>
     <string name="journey_road">%1$s → %2$s</string>
-    <string name="journey_stamp">Поставить штамп</string>
-    <string name="journey_stamp_page">Паспорт · страница %1$d</string>
-    <string name="journey_stamp_text">Штамп № %1$d. До %2$s — %3$s.</string>
-    <string name="journey_stamp_text_last">Штамп № %1$d. Дальше дорога ещё рисуется.</string>
-    <string name="journey_done">Готово</string>
-    <string name="journey_stop_meta">%1$d из %2$d · с %3$s</string>
+    <string name="journey_stamp">Stamp the passport</string>
+    <string name="journey_stamp_page">Passport · page %1$d</string>
+    <string name="journey_stamp_text">Stamp No. %1$d. To %2$s — %3$s.</string>
+    <string name="journey_stamp_text_last">Stamp No. %1$d. The road ahead is still being drawn.</string>
+    <string name="journey_done">Done</string>
+    <string name="journey_stop_meta">%1$d of %2$d · since %3$s</string>
     <string name="journey_stop_where">%1$s · %2$s</string>
-    <string name="journey_mode_evening">вечер</string>
-    <string name="journey_mode_day">день</string>
-    <string name="journey_mode_inside">внутри</string>
-    <string name="journey_mode_outside">снаружи</string>
-    <string name="journey_extras">Дополнения</string>
-    <string name="journey_extra_time">Второе время суток</string>
-    <string name="journey_extra_view">Второй вид</string>
-    <string name="journey_extra_souvenir">Сувенир в паспорт</string>
-    <string name="journey_extra_bought">открыто</string>
-    <string name="journey_extra_buy">Открыть за %1$s</string>
-    <string name="journey_fullscreen">На весь экран</string>
-    <string name="journey_fullscreen_close">Свернуть</string>
-    <string name="journey_fullscreen_hint">Потяните в сторону — осмотреться · щипок — ближе</string>
-    <string name="journey_passport_soon">скоро</string>
-    <string name="journey_passport_count">%1$d из %2$d</string>
+    <string name="journey_mode_evening">evening</string>
+    <string name="journey_mode_day">day</string>
+    <string name="journey_mode_inside">inside</string>
+    <string name="journey_mode_outside">outside</string>
+    <string name="journey_extras">Extras</string>
+    <string name="journey_extra_time">Second time of day</string>
+    <string name="journey_extra_view">Second view</string>
+    <string name="journey_extra_souvenir">Souvenir for the passport</string>
+    <string name="journey_extra_bought">unlocked</string>
+    <string name="journey_extra_buy">Unlock for %1$s</string>
+    <string name="journey_fullscreen">Full screen</string>
+    <string name="journey_fullscreen_close">Exit full screen</string>
+    <string name="journey_fullscreen_hint">Drag sideways to look around · pinch to zoom in</string>
+    <string name="journey_passport_soon">soon</string>
+    <string name="journey_passport_count">%1$d of %2$d</string>
     <string name="journey_earned">+%1$s</string>
-    <string name="journey_earned_detail">%1$s + %2$s за время</string>
-    <string name="journey_notes_in_tune_one">%1$d нота в строе</string>
-    <string name="journey_notes_in_tune_few">%1$d ноты в строе</string>
-    <string name="journey_notes_in_tune_many">%1$d нот в строе</string>
-    <string name="takt_one">%1$s такт</string>
-    <string name="takt_few">%1$s такта</string>
-    <string name="takt_many">%1$s тактов</string>
-    <string name="takt_icon">такты</string>
-    <string name="journey_card_description">Путешествие: %1$s</string>
-    <string name="journey_stamp_description">Штамп: %1$s</string>
-    <string name="journey_stamp_locked_description">%1$s — ещё впереди</string>
-    <string name="journey_map_description">Карта маршрута: пройдено %1$d из %2$d</string>
-    <string name="section_pieces">Произведения</string>
-    <string name="section_scales">Гаммы</string>
-    <string name="section_etudes">Этюды</string>
-    <string name="section_strokes">Штрихи</string>
-    <string name="section_learned">выучено %1$d из %2$d</string>
-    <string name="section_empty_count">пока пусто</string>
-    <string name="section_bar_description">разбираю %1$d, учу %2$d, выучено %3$d</string>
-    <string name="section_add">Добавить раздел</string>
-    <string name="section_add_scale">Добавить гамму</string>
-    <string name="section_add_etude">Добавить этюд</string>
-    <string name="section_add_stroke">Добавить штрих</string>
-    <string name="section_add_own">Добавить</string>
-    <string name="section_empty_scales">Выберите гамму — приложение нарисует её ноты</string>
-    <string name="section_empty_etudes">Этюды живут здесь: ноты, заметки, дубли.</string>
-    <string name="section_empty_strokes">Штрихи, над которыми работаете: деташе, спиккато, мартле…</string>
-    <string name="section_empty_own">В разделе пока ничего нет.</string>
-    <string name="section_menu">Ещё</string>
-    <string name="section_rename">Переименовать</string>
-    <string name="section_delete">Удалить раздел</string>
-    <string name="section_new_title">Новый раздел</string>
-    <string name="section_rename_title">Переименовать раздел</string>
-    <string name="section_name_label">Название раздела</string>
-    <string name="section_create">Создать</string>
-    <string name="section_save">Сохранить</string>
-    <string name="section_delete_title">Удалить «%1$s»?</string>
-    <string name="section_delete_text_empty">Раздел пуст. Записи останутся.</string>
-    <string name="section_delete_text_one">%1$d элемент переедет в «Произведения». Записи останутся.</string>
-    <string name="section_delete_text_few">%1$d элемента переедут в «Произведения». Записи останутся.</string>
-    <string name="section_delete_text_many">%1$d элементов переедут в «Произведения». Записи останутся.</string>
-    <string name="section_delete_confirm">Удалить</string>
-    <string name="section_back">Назад</string>
-    <string name="form_section">Раздел</string>
-    <string name="form_author">Автор</string>
-    <string name="form_new_etude">Новый этюд</string>
-    <string name="form_new_stroke">Новый штрих</string>
-    <string name="form_new_element">Новый элемент</string>
+    <string name="journey_earned_detail">%1$s + %2$s for time</string>
+    <string name="journey_notes_in_tune_one">%1$d note in tune</string>
+    <string name="journey_notes_in_tune_few">%1$d notes in tune</string>
+    <string name="journey_notes_in_tune_many">%1$d notes in tune</string>
+    <string name="takt_one">%1$s bar</string>
+    <string name="takt_few">%1$s bars</string>
+    <string name="takt_many">%1$s bars</string>
+    <string name="takt_icon">bars</string>
+    <string name="journey_card_description">Journey: %1$s</string>
+    <string name="journey_stamp_description">Stamp: %1$s</string>
+    <string name="journey_stamp_locked_description">%1$s — still ahead</string>
+    <string name="journey_map_description">Route map: visited %1$d of %2$d</string>
+    <string name="section_pieces">Pieces</string>
+    <string name="section_scales">Scales</string>
+    <string name="section_etudes">Études</string>
+    <string name="section_strokes">Bow strokes</string>
+    <string name="section_learned">learnt %1$d of %2$d</string>
+    <string name="section_empty_count">empty for now</string>
+    <string name="section_bar_description">reading %1$d, learning %2$d, learnt %3$d</string>
+    <string name="section_add">Add a section</string>
+    <string name="section_add_scale">Add a scale</string>
+    <string name="section_add_etude">Add an étude</string>
+    <string name="section_add_stroke">Add a bow stroke</string>
+    <string name="section_add_own">Add</string>
+    <string name="section_empty_scales">Choose a scale — the app will draw its notes</string>
+    <string name="section_empty_etudes">Études live here: sheet music, notes, takes.</string>
+    <string name="section_empty_strokes">The bow strokes you are working on: détaché, spiccato, martelé…</string>
+    <string name="section_empty_own">Nothing in this section yet.</string>
+    <string name="section_menu">More</string>
+    <string name="section_rename">Rename</string>
+    <string name="section_delete">Delete section</string>
+    <string name="section_new_title">New section</string>
+    <string name="section_rename_title">Rename section</string>
+    <string name="section_name_label">Section name</string>
+    <string name="section_create">Create</string>
+    <string name="section_save">Save</string>
+    <string name="section_delete_title">Delete “%1$s”?</string>
+    <string name="section_delete_text_empty">The section is empty. Recordings will stay.</string>
+    <string name="section_delete_text_one">%1$d item will move to “Pieces”. Recordings will stay.</string>
+    <string name="section_delete_text_few">%1$d items will move to “Pieces”. Recordings will stay.</string>
+    <string name="section_delete_text_many">%1$d items will move to “Pieces”. Recordings will stay.</string>
+    <string name="section_delete_confirm">Delete</string>
+    <string name="section_back">Back</string>
+    <string name="form_section">Section</string>
+    <string name="form_author">Author</string>
+    <string name="form_new_etude">New étude</string>
+    <string name="form_new_stroke">New bow stroke</string>
+    <string name="form_new_element">New item</string>
     <string-array name="stroke_suggestions">
-        <item>Деташе</item>
-        <item>Легато</item>
-        <item>Стаккато</item>
-        <item>Спиккато</item>
-        <item>Мартле</item>
-        <item>Сотийе</item>
-        <item>Рикошет</item>
+        <item>Détaché</item>
+        <item>Legato</item>
+        <item>Staccato</item>
+        <item>Spiccato</item>
+        <item>Martelé</item>
+        <item>Sautillé</item>
+        <item>Ricochet</item>
     </string-array>
-    <string name="scale_new">Новая гамма</string>
-    <string name="scale_edit">Гамма</string>
-    <string name="scale_key">Тональность</string>
-    <string name="scale_kind">Вид</string>
-    <string name="scale_octaves">Октавы</string>
-    <string name="scale_kind_major">мажор</string>
-    <string name="scale_kind_natural">минор натуральный</string>
-    <string name="scale_kind_harmonic">минор гармонический</string>
-    <string name="scale_kind_melodic">минор мелодический</string>
-    <string name="scale_suffix_harmonic">гармонический</string>
-    <string name="scale_suffix_melodic">мелодический</string>
-    <string name="scale_octave_one">%1$d октава</string>
-    <string name="scale_octave_few">%1$d октавы</string>
-    <string name="scale_octave_many">%1$d октав</string>
+    <string name="scale_new">New scale</string>
+    <string name="scale_edit">Scale</string>
+    <string name="scale_key">Key</string>
+    <string name="scale_kind">Type</string>
+    <string name="scale_octaves">Octaves</string>
+    <string name="scale_kind_major">major</string>
+    <string name="scale_kind_natural">natural minor</string>
+    <string name="scale_kind_harmonic">harmonic minor</string>
+    <string name="scale_kind_melodic">melodic minor</string>
+    <string name="scale_suffix_harmonic">harmonic</string>
+    <string name="scale_suffix_melodic">melodic</string>
+    <string name="scale_octave_one">%1$d octave</string>
+    <string name="scale_octave_few">%1$d octaves</string>
+    <string name="scale_octave_many">%1$d octaves</string>
     <string name="scale_title">%1$s · %2$s</string>
     <string name="scale_range">%1$s – %2$s</string>
-    <string name="scale_preview_empty">Выберите тонику — ноты нарисуются здесь</string>
-    <string name="scale_exists">Такая гамма уже есть</string>
-    <string name="scale_open">Открыть</string>
-    <string name="scale_locked">Это была бы другая гамма — добавьте новую</string>
-    <string name="scale_notes_description">Ноты гаммы %1$s</string>
-    <string name="scale_more_systems_one">ещё %1$d система</string>
-    <string name="scale_more_systems_few">ещё %1$d системы</string>
-    <string name="scale_more_systems_many">ещё %1$d систем</string>
-    <string name="scale_add_photo">Добавить фото нот</string>
-    <string name="scale_notes">Ноты</string>
-    <string name="scale_open_stand">Открыть на пюпитре</string>
+    <string name="scale_preview_empty">Choose a tonic — the notes will be drawn here</string>
+    <string name="scale_exists">This scale already exists</string>
+    <string name="scale_open">Open</string>
+    <string name="scale_locked">That would be a different scale — add a new one</string>
+    <string name="scale_notes_description">Notes of the scale %1$s</string>
+    <string name="scale_more_systems_one">%1$d more system</string>
+    <string name="scale_more_systems_few">%1$d more systems</string>
+    <string name="scale_more_systems_many">%1$d more systems</string>
+    <string name="scale_add_photo">Add sheet-music photos</string>
+    <string name="scale_notes">Sheet music</string>
+    <string name="scale_open_stand">Open on the music stand</string>
     <string name="piece_tempo_value">♩ = %1$d</string>
-    <string name="piece_tempo_description">темп %1$d</string>
-    <string name="takes_one">%1$d дубль</string>
-    <string name="takes_few">%1$d дубля</string>
-    <string name="takes_many">%1$d дублей</string>
-    <string name="piece_edit">Изменить</string>
-    <string name="piece_status_change">Статус: %1$s. Изменить</string>
-    <string name="piece_sheets_none">Ноты</string>
-    <string name="piece_sheets_count">Ноты · %1$d стр.</string>
-    <string name="piece_sheets_add">Добавить фото нот</string>
-    <string name="piece_sheets_add_short">Добавить</string>
-    <string name="piece_sheets_camera">Сфотографировать</string>
-    <string name="piece_sheets_gallery">Из галереи</string>
-    <string name="piece_sheet_page">Страница %1$d</string>
-    <string name="piece_notes_add">Добавить заметку</string>
-    <string name="piece_notes_more">ещё</string>
-    <string name="piece_notes_less">свернуть</string>
-    <string name="piece_form_title_new">Новое произведение</string>
-    <string name="piece_form_title_edit">Произведение</string>
-    <string name="piece_form_close">Закрыть</string>
-    <string name="piece_form_discard_title">Не сохранять?</string>
-    <string name="piece_form_discard_confirm">Не сохранять</string>
-    <string name="piece_field_title">Название</string>
-    <string name="piece_field_composer">Композитор</string>
-    <string name="piece_field_key">Тональность</string>
-    <string name="piece_field_tempo">Темп</string>
-    <string name="piece_field_status">Статус</string>
-    <string name="piece_field_notes">Заметки</string>
-    <string name="piece_title_error">Без названия не сохранить</string>
-    <string name="piece_key_major">мажор</string>
-    <string name="piece_key_minor">минор</string>
+    <string name="piece_tempo_description">tempo %1$d</string>
+    <string name="takes_one">%1$d take</string>
+    <string name="takes_few">%1$d takes</string>
+    <string name="takes_many">%1$d takes</string>
+    <string name="piece_edit">Edit</string>
+    <string name="piece_status_change">Status: %1$s. Change</string>
+    <string name="piece_sheets_none">Sheet music</string>
+    <string name="piece_sheets_count">Sheet music · %1$d p.</string>
+    <string name="piece_sheets_add">Add sheet-music photos</string>
+    <string name="piece_sheets_add_short">Add</string>
+    <string name="piece_sheets_camera">Take a photo</string>
+    <string name="piece_sheets_gallery">From gallery</string>
+    <string name="piece_sheet_page">Page %1$d</string>
+    <string name="piece_notes_add">Add a note</string>
+    <string name="piece_notes_more">more</string>
+    <string name="piece_notes_less">less</string>
+    <string name="piece_form_title_new">New piece</string>
+    <string name="piece_form_title_edit">Piece</string>
+    <string name="piece_form_close">Close</string>
+    <string name="piece_form_discard_title">Discard changes?</string>
+    <string name="piece_form_discard_confirm">Discard</string>
+    <string name="piece_field_title">Title</string>
+    <string name="piece_field_composer">Composer</string>
+    <string name="piece_field_key">Key</string>
+    <string name="piece_field_tempo">Tempo</string>
+    <string name="piece_field_status">Status</string>
+    <string name="piece_field_notes">Notes</string>
+    <string name="piece_title_error">Cannot save without a title</string>
+    <string name="piece_key_major">major</string>
+    <string name="piece_key_minor">minor</string>
     <string name="piece_tempo_empty">♩ = —</string>
-    <string name="piece_tempo_slower">Медленнее</string>
-    <string name="piece_tempo_faster">Быстрее</string>
-    <string name="piece_tempo_clear">Без темпа</string>
-    <string name="piece_delete">Удалить произведение</string>
-    <string name="piece_delete_title">Удалить «%1$s»?</string>
-    <string name="piece_delete_text">Ноты и заметки удалятся. Записи останутся в «Записях».</string>
-    <string name="piece_delete_confirm">Удалить</string>
-    <string name="take_record">Записать дубль</string>
-    <string name="take_record_hint">Экран не подсказывает во время записи — разбор появится после.</string>
-    <string name="take_recording">запись · %1$s</string>
-    <string name="take_level_description">Микрофон слышит</string>
-    <string name="take_no_permission">Чтобы записать дубль, нужен доступ к микрофону.</string>
-    <string name="take_grant_permission">Разрешить доступ</string>
-    <string name="take_progress">последний %1$d\u00A0%% · максимум %2$d\u00A0%%</string>
-    <string name="take_chart_description">Баллы дублей по порядку: %1$s</string>
-    <string name="takes_title">Дубли</string>
-    <string name="takes_empty">Дублей пока нет. Запишите первый — увидите, как меняется произведение.</string>
-    <string name="take_best">лучший</string>
-    <!-- «Звук»: processing of recorded sound (spec 3.17) -->
-    <string name="sound_everyone_title">Звук записей</string>
-    <string name="sound_everyone_subtitle">для всех записей · %1$s</string>
-    <string name="sound_reset">Сбросить</string>
-    <string name="sound_caption_off">без обработки</string>
-    <string name="sound_caption_custom">свои настройки</string>
-    <string name="sound_caption_saved_hint">свои настройки · сохраняются сами</string>
-    <string name="sound_caption_everyone">как у всех · %1$s</string>
-    <string name="sound_caption_own">свои настройки · %1$s</string>
-    <string name="sound_row_off">выключен</string>
+    <string name="piece_tempo_slower">Slower</string>
+    <string name="piece_tempo_faster">Faster</string>
+    <string name="piece_tempo_clear">No tempo</string>
+    <string name="piece_delete">Delete piece</string>
+    <string name="piece_delete_title">Delete “%1$s”?</string>
+    <string name="piece_delete_text">The sheet music and notes will be deleted. The recordings will stay in “Recordings”.</string>
+    <string name="piece_delete_confirm">Delete</string>
+    <string name="take_record">Record a take</string>
+    <string name="take_record_hint">The screen gives no hints while recording — the analysis comes afterwards.</string>
+    <string name="take_recording">rec · %1$s</string>
+    <string name="take_level_description">The microphone hears you</string>
+    <string name="take_no_permission">Recording a take needs microphone access.</string>
+    <string name="take_grant_permission">Allow access</string>
+    <string name="take_progress">last %1$d %% · highest %2$d %%</string>
+    <string name="take_chart_description">Scores of the takes in order: %1$s</string>
+    <string name="takes_title">Takes</string>
+    <string name="takes_empty">No takes yet. Record the first one — and see how the piece changes.</string>
+    <string name="take_best">best</string>
+    <!-- “Sound”: processing of recorded sound (spec 3.17) -->
+    <string name="sound_everyone_title">Sound of recordings</string>
+    <string name="sound_everyone_subtitle">for all recordings · %1$s</string>
+    <string name="sound_reset">Reset</string>
+    <string name="sound_caption_off">no processing</string>
+    <string name="sound_caption_custom">own settings</string>
+    <string name="sound_caption_saved_hint">own settings · saved automatically</string>
+    <string name="sound_caption_everyone">same as all · %1$s</string>
+    <string name="sound_caption_own">own settings · %1$s</string>
+    <string name="sound_row_off">off</string>
     <string-array name="sound_preset_names">
-        <item>Без обработки</item>
-        <item>Естественно</item>
-        <item>Комната</item>
-        <item>Камерный зал</item>
-        <item>Большой зал</item>
-        <item>Тепло</item>
+        <item>No processing</item>
+        <item>Natural</item>
+        <item>Room</item>
+        <item>Chamber hall</item>
+        <item>Large hall</item>
+        <item>Warm</item>
     </string-array>
-    <string name="sound_preset_custom">Свои</string>
-    <string name="sound_preset_save">Сохранить как пресет</string>
-    <string name="sound_preset_remove_hint">Удерживайте, чтобы удалить</string>
-    <string name="sound_mode_everyone">Как у всех</string>
-    <string name="sound_mode_own">Свои для этой записи</string>
-    <string name="sound_mode_everyone_text">%1$s — из «Настроек → Звук записей». Поменяете там — поменяется и здесь. Тронете любую ручку — запись получит свои настройки.</string>
-    <string name="sound_mode_own_text">Только у этой записи. «Как у всех» вернёт общие настройки — свои забудутся.</string>
-    <string name="sound_listen_on">Слушать на</string>
-    <string name="sound_listen_latest">последняя со звуком</string>
-    <string name="sound_listen_none">Записей со звуком пока нет: настройки можно задать, послушать — после первой записи.</string>
-    <string name="sound_affected_one">для %1$d записи</string>
-    <string name="sound_affected_many">для %1$d записей</string>
-    <string name="sound_order">Порядок: Эквалайзер → Компрессор → Зал → Громкость</string>
-    <string name="sound_block_eq">Эквалайзер</string>
-    <string name="sound_block_compressor">Компрессор</string>
-    <string name="sound_block_compressor_sub">выравнивает громкость</string>
-    <string name="sound_block_reverb">Зал</string>
-    <string name="sound_block_reverb_sub">реверберация</string>
-    <string name="sound_block_output">Громкость</string>
-    <string name="sound_block_switch">%1$s: включить</string>
-    <string name="sound_block_off">выключено</string>
-    <string name="sound_block_expand">Развернуть</string>
-    <string name="sound_block_collapse">Свернуть</string>
-    <string name="sound_eq_flat">ровно</string>
+    <string name="sound_preset_custom">Custom</string>
+    <string name="sound_preset_save">Save as preset</string>
+    <string name="sound_preset_remove_hint">Hold to delete</string>
+    <string name="sound_mode_everyone">Same as all</string>
+    <string name="sound_mode_own">Own for this recording</string>
+    <string name="sound_mode_everyone_text">%1$s — from “Settings → Sound of recordings”. Change it there and it changes here too. Touch any control and the recording gets its own settings.</string>
+    <string name="sound_mode_own_text">For this recording only. “Same as all” brings back the shared settings — its own ones will be forgotten.</string>
+    <string name="sound_listen_on">Listen on</string>
+    <string name="sound_listen_latest">the latest with sound</string>
+    <string name="sound_listen_none">No recordings with sound yet: you can set things up now and listen after the first recording.</string>
+    <string name="sound_affected_one">for %1$d recording</string>
+    <string name="sound_affected_many">for %1$d recordings</string>
+    <string name="sound_order">Order: Equalizer → Compressor → Hall → Volume</string>
+    <string name="sound_block_eq">Equalizer</string>
+    <string name="sound_block_compressor">Compressor</string>
+    <string name="sound_block_compressor_sub">evens out the volume</string>
+    <string name="sound_block_reverb">Hall</string>
+    <string name="sound_block_reverb_sub">reverb</string>
+    <string name="sound_block_output">Volume</string>
+    <string name="sound_block_switch">%1$s: turn on</string>
+    <string name="sound_block_off">off</string>
+    <string name="sound_block_expand">Expand</string>
+    <string name="sound_block_collapse">Collapse</string>
+    <string name="sound_eq_flat">flat</string>
     <string-array name="sound_band_names">
-        <item>Гул</item>
-        <item>Низ</item>
-        <item>Тело</item>
-        <item>Резкость</item>
-        <item>Воздух</item>
+        <item>Rumble</item>
+        <item>Low</item>
+        <item>Body</item>
+        <item>Edge</item>
+        <item>Air</item>
     </string-array>
-    <string name="sound_band_low_cut_switch">Срезать гул</string>
-    <string name="sound_eq_curve_description">Кривая эквалайзера. Точки полос можно перетаскивать; те же значения — ползунками ниже.</string>
-    <string name="sound_param_frequency">Частота</string>
-    <string name="sound_param_gain">Усиление</string>
-    <string name="sound_param_width">Ширина</string>
-    <string name="sound_param_width_hint">меньше — шире</string>
-    <string name="sound_param_amount">Сколько</string>
-    <string name="sound_param_amount_own">своё</string>
-    <string name="sound_amount_little">чуть</string>
-    <string name="sound_amount_noticeable">заметно</string>
-    <string name="sound_amount_lot">сильно</string>
-    <string name="sound_param_threshold">Порог</string>
-    <string name="sound_param_threshold_hint">с какой громкости сжимать</string>
-    <string name="sound_param_ratio">Степень</string>
-    <string name="sound_param_attack">Атака</string>
-    <string name="sound_param_attack_hint">как быстро схватывает</string>
-    <string name="sound_param_release">Восстановление</string>
-    <string name="sound_param_release_hint">как быстро отпускает</string>
-    <string name="sound_param_makeup">Компенсация громкости</string>
-    <string name="sound_comp_text">Тихие места станут громче, громкие — тише. Запись звучит ровнее, ничего не пропадает.</string>
-    <string name="sound_comp_now">Сейчас сжимает</string>
-    <string name="sound_comp_details">Подробно</string>
+    <string name="sound_band_low_cut_switch">Cut the rumble</string>
+    <string name="sound_eq_curve_description">Equalizer curve. The band points can be dragged; the same values are set with the sliders below.</string>
+    <string name="sound_param_frequency">Frequency</string>
+    <string name="sound_param_gain">Gain</string>
+    <string name="sound_param_width">Width</string>
+    <string name="sound_param_width_hint">lower is wider</string>
+    <string name="sound_param_amount">Amount</string>
+    <string name="sound_param_amount_own">custom</string>
+    <string name="sound_amount_little">a little</string>
+    <string name="sound_amount_noticeable">noticeable</string>
+    <string name="sound_amount_lot">a lot</string>
+    <string name="sound_param_threshold">Threshold</string>
+    <string name="sound_param_threshold_hint">the loudness where squeezing starts</string>
+    <string name="sound_param_ratio">Ratio</string>
+    <string name="sound_param_attack">Attack</string>
+    <string name="sound_param_attack_hint">how fast it grabs</string>
+    <string name="sound_param_release">Release</string>
+    <string name="sound_param_release_hint">how fast it lets go</string>
+    <string name="sound_param_makeup">Make-up gain</string>
+    <string name="sound_comp_text">Quiet passages get louder, loud ones quieter. The recording sounds more even, and nothing is lost.</string>
+    <string name="sound_comp_now">Compressing now</string>
+    <string name="sound_comp_details">Details</string>
     <string-array name="sound_space_names">
-        <item>Комната</item>
-        <item>Зал</item>
-        <item>Собор</item>
+        <item>Room</item>
+        <item>Hall</item>
+        <item>Cathedral</item>
     </string-array>
-    <string name="sound_param_decay">Длина хвоста</string>
-    <string name="sound_param_decay_hint">затихает до тишины</string>
-    <string name="sound_param_pre_delay">Предзадержка</string>
-    <string name="sound_param_pre_delay_hint">пауза перед отзвуком</string>
-    <string name="sound_param_brightness">Яркость хвоста</string>
-    <string name="sound_param_brightness_hint">глухо ↔ ярко</string>
-    <string name="sound_param_mix">Доля</string>
-    <string name="sound_param_mix_hint">сухой ↔ с залом</string>
-    <string name="sound_param_output">Усиление на выходе</string>
-    <string name="sound_limiter_note">На выходе всегда стоит ограничитель: перегруза не будет ни в динамике, ни в файле.</string>
-    <string name="sound_limiter_hot">Ограничитель работает: прибавлено больше, чем помещается. Убавьте усиление — звук станет свободнее.</string>
-    <string name="sound_meter_output">выход</string>
-    <string name="sound_meter_limiter">ограничитель</string>
+    <string name="sound_param_decay">Tail length</string>
+    <string name="sound_param_decay_hint">fades to silence</string>
+    <string name="sound_param_pre_delay">Pre-delay</string>
+    <string name="sound_param_pre_delay_hint">pause before the echo</string>
+    <string name="sound_param_brightness">Tail brightness</string>
+    <string name="sound_param_brightness_hint">dull ↔ bright</string>
+    <string name="sound_param_mix">Mix</string>
+    <string name="sound_param_mix_hint">dry ↔ with hall</string>
+    <string name="sound_param_output">Output gain</string>
+    <string name="sound_limiter_note">A limiter always sits at the output: nothing will clip, neither in the speaker nor in the file.</string>
+    <string name="sound_limiter_hot">The limiter is working: more has been added than fits. Lower the gain — the sound will breathe more freely.</string>
+    <string name="sound_meter_output">output</string>
+    <string name="sound_meter_limiter">limiter</string>
     <string name="sound_meter_none">—</string>
-    <string name="sound_slider_minus">%1$s: меньше</string>
-    <string name="sound_slider_plus">%1$s: больше</string>
-    <string name="sound_slider_reset_hint">двойное касание — сброс</string>
-    <string name="sound_slider_off">выключен</string>
-    <string name="sound_dialog_everyone_title">Вернуть как у всех?</string>
-    <string name="sound_dialog_everyone_text">Свои настройки этой записи забудутся.</string>
-    <string name="sound_dialog_everyone_confirm">Вернуть</string>
-    <string name="sound_dialog_reset_title">Сбросить звук записей?</string>
-    <string name="sound_dialog_reset_text">Все записи без своих настроек снова зазвучат как записаны.</string>
-    <string name="sound_dialog_preset_title">Новый пресет</string>
-    <string name="sound_dialog_preset_hint">Название</string>
-    <string name="sound_dialog_preset_save">Сохранить</string>
-    <string name="sound_dialog_delete_title">Удалить пресет «%1$s»?</string>
-    <string name="sound_dialog_pick_title">Слушать на</string>
-    <string name="sound_share">Поделиться</string>
-    <string name="share_message">%1$s · %2$d %% · %3$s</string>
-    <string name="share_message_session">Запись</string>
-    <string name="share_title">Поделиться записью</string>
-    <string name="share_processed">Обработанный звук</string>
-    <string name="share_processed_caption">%1$s · как слышно в приложении</string>
-    <string name="share_original">Оригинал</string>
-    <string name="share_original_caption">как записано, без обработки</string>
-    <string name="share_video_processed">Видео с обработанным звуком</string>
-    <string name="share_video_original">Видео как снято</string>
-    <string name="share_video_original_caption">оригинал файла, звук без обработки</string>
-    <string name="share_video">Видео</string>
-    <string name="share_video_caption">как снято</string>
-    <string name="share_sound_only">Только звук</string>
-    <string name="share_sound_only_processed">обработанный · ≈ %1$s · моно</string>
-    <string name="share_sound_only_caption">как записан · ≈ %1$s · моно</string>
+    <string name="sound_slider_minus">%1$s: less</string>
+    <string name="sound_slider_plus">%1$s: more</string>
+    <string name="sound_slider_reset_hint">double-tap to reset</string>
+    <string name="sound_slider_off">off</string>
+    <string name="sound_dialog_everyone_title">Go back to same as all?</string>
+    <string name="sound_dialog_everyone_text">This recording\'s own settings will be forgotten.</string>
+    <string name="sound_dialog_everyone_confirm">Go back</string>
+    <string name="sound_dialog_reset_title">Reset the sound of recordings?</string>
+    <string name="sound_dialog_reset_text">All recordings without their own settings will sound as recorded again.</string>
+    <string name="sound_dialog_preset_title">New preset</string>
+    <string name="sound_dialog_preset_hint">Name</string>
+    <string name="sound_dialog_preset_save">Save</string>
+    <string name="sound_dialog_delete_title">Delete the preset “%1$s”?</string>
+    <string name="sound_dialog_pick_title">Listen on</string>
+    <string name="sound_share">Share</string>
+    <string name="share_message">%1$s · %2$d %% · %3$s</string>
+    <string name="share_message_session">Recording</string>
+    <string name="share_title">Share the recording</string>
+    <string name="share_processed">Processed sound</string>
+    <string name="share_processed_caption">%1$s · as heard in the app</string>
+    <string name="share_original">Original</string>
+    <string name="share_original_caption">as recorded, no processing</string>
+    <string name="share_video_processed">Video with processed sound</string>
+    <string name="share_video_original">Video as shot</string>
+    <string name="share_video_original_caption">the original file, sound unprocessed</string>
+    <string name="share_video">Video</string>
+    <string name="share_video_caption">as shot</string>
+    <string name="share_sound_only">Sound only</string>
+    <string name="share_sound_only_processed">processed · ≈ %1$s · mono</string>
+    <string name="share_sound_only_caption">as recorded · ≈ %1$s · mono</string>
     <string name="share_video_details">%1$s · %2$dp · ≈ %3$s</string>
-    <string name="share_large_file">Большой файл: мессенджеры могут сжать его или не принять</string>
-    <string name="share_failed_video_title">Не получилось подготовить видео</string>
-    <string name="share_failed_video_text">Дубль и настройки на месте. Можно попробовать ещё раз или отправить видео как снято, без обработки звука.</string>
-    <string name="share_send_as_shot">Отправить как снято</string>
-    <string name="share_file_details">%1$s · ≈ %2$s · моно</string>
-    <string name="share_with_text">Добавить текст: «%1$s»</string>
-    <string name="share_continue">Продолжить</string>
-    <string name="share_busy">Готовим…</string>
-    <string name="share_preparing">Готовим файл</string>
-    <string name="share_remaining">осталось около %1$d с</string>
-    <string name="share_failed_title">Не получилось подготовить файл</string>
-    <string name="share_failed_text">Запись на месте, настройки тоже. Можно попробовать ещё раз или отправить оригинал без обработки.</string>
-    <string name="share_retry">Ещё раз</string>
-    <string name="share_send_original">Отправить оригинал</string>
-    <string name="share_chooser">Поделиться записью</string>
-    <string name="share_no_app">Нет приложения, которое приняло бы запись</string>
-    <string name="share_size_kb">%1$d КБ</string>
-    <string name="share_size_mb">%1$s МБ</string>
-    <string name="card_menu">Ещё</string>
-    <string name="card_menu_share">Поделиться</string>
-    <string name="card_menu_sound">Звук…</string>
-    <string name="best_set">Отметить лучшим</string>
-    <string name="best_clear">Снять отметку «лучший»</string>
-    <string name="best_marked">Отмечен как лучший</string>
-    <string name="best_marked_moved">Отмечен как лучший, прежняя отметка снята</string>
-    <string name="sound_session_row">Звук</string>
-    <string name="sound_session_silent">Запись без звука — только разбор интонации</string>
-    <string name="sound_settings_row">Звук записей</string>
-    <string name="sound_settings_row_caption">%1$s · для всех записей</string>
-    <string name="sound_ab_original">Оригинал: как записано</string>
-    <string name="sound_ab_processed">С обработкой</string>
+    <string name="share_large_file">A large file: messengers may compress it or refuse it</string>
+    <string name="share_failed_video_title">Could not prepare the video</string>
+    <string name="share_failed_video_text">The take and the settings are in place. You can try again or send the video as shot, with the sound unprocessed.</string>
+    <string name="share_send_as_shot">Send as shot</string>
+    <string name="share_file_details">%1$s · ≈ %2$s · mono</string>
+    <string name="share_with_text">Add text: “%1$s”</string>
+    <string name="share_continue">Continue</string>
+    <string name="share_busy">Preparing…</string>
+    <string name="share_preparing">Preparing the file</string>
+    <string name="share_remaining">about %1$d s left</string>
+    <string name="share_failed_title">Could not prepare the file</string>
+    <string name="share_failed_text">The recording is in place, and so are the settings. You can try again or send the original without processing.</string>
+    <string name="share_retry">Try again</string>
+    <string name="share_send_original">Send the original</string>
+    <string name="share_chooser">Share the recording</string>
+    <string name="share_no_app">No app that could take the recording</string>
+    <string name="share_size_kb">%1$d KB</string>
+    <string name="share_size_mb">%1$s MB</string>
+    <string name="card_menu">More</string>
+    <string name="card_menu_share">Share</string>
+    <string name="card_menu_sound">Sound…</string>
+    <string name="best_set">Mark as best</string>
+    <string name="best_clear">Remove the “best” mark</string>
+    <string name="best_marked">Marked as best</string>
+    <string name="best_marked_moved">Marked as best, the previous mark removed</string>
+    <string name="sound_session_row">Sound</string>
+    <string name="sound_session_silent">A recording without sound — intonation analysis only</string>
+    <string name="sound_settings_row">Sound of recordings</string>
+    <string name="sound_settings_row_caption">%1$s · for all recordings</string>
+    <string name="sound_ab_original">Original: as recorded</string>
+    <string name="sound_ab_processed">Processed</string>
     <string name="stand_counter">%1$d / %2$d</string>
-    <string name="stand_page_description">Страница %1$d из %2$d</string>
-    <string name="stand_delete_page">Удалить страницу</string>
-    <string name="stand_delete_title">Удалить страницу?</string>
-    <string name="stand_delete_text">Фото этой страницы удалится. Остальные останутся на местах.</string>
-    <string name="stand_hint">Тап по краю листа — следующая страница</string>
-    <string name="stand_previous_page">Предыдущая страница</string>
-    <string name="stand_next_page">Следующая страница</string>
-    <string name="stand_recording_description">Идёт запись дубля, %1$s</string>
+    <string name="stand_page_description">Page %1$d of %2$d</string>
+    <string name="stand_delete_page">Delete page</string>
+    <string name="stand_delete_title">Delete the page?</string>
+    <string name="stand_delete_text">The photo of this page will be deleted. The others will stay where they are.</string>
+    <string name="stand_hint">Tap the edge of the sheet for the next page</string>
+    <string name="stand_previous_page">Previous page</string>
+    <string name="stand_next_page">Next page</string>
+    <string name="stand_recording_description">Recording a take, %1$s</string>
 </resources>

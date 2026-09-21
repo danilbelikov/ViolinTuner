@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home (spec 3.24). Names of things, places and homes are generated: home_catalog.xml. -->
+<resources>
+    <string name="home_title">家</string>
+    <string name="home_back">戻る</string>
+    <string name="home_room">部屋</string>
+    <string name="home_outside">外</string>
+    <string name="home_evening">夕方</string>
+    <string name="home_day">昼</string>
+    <string name="home_shop">お店</string>
+    <string name="home_arrange">模様替え</string>
+    <string name="home_picture_room">部屋：%1$s</string>
+    <string name="home_picture_outside">家の外観：%1$s</string>
+    <string name="home_things_none">借りたときのままです</string>
+    <string name="home_things_one">%1$d 点</string>
+    <string name="home_things_few">%1$d 点</string>
+    <string name="home_things_many">%1$d 点</string>
+    <string name="home_things_brought">%1$s、うち %2$d 点は旅のおみやげ</string>
+    <string name="home_gift_title">最初の贈り物がお店で待っています</string>
+    <string name="home_gift_text">スタンド — ヴァイオリンがケースから出てきます。無料です。</string>
+    <string name="home_gift_take">受け取る</string>
+    <string name="home_brought">旅から持ち帰ったもの</string>
+    <string name="home_next_house">次の家</string>
+    <string name="home_all_houses">すべての家</string>
+    <string name="home_have">%1$s / %2$s</string>
+    <string name="home_house_soon">もうすぐ</string>
+
+    <string name="shop_all">すべて</string>
+    <string name="shop_group_instrument">楽器</string>
+    <string name="shop_group_music">音楽</string>
+    <string name="shop_group_room">部屋</string>
+    <string name="shop_group_light">あかり</string>
+    <string name="shop_group_furniture">家具</string>
+    <string name="shop_group_plant">植物</string>
+    <string name="shop_group_life">小物</string>
+    <string name="shop_group_pet">動物</string>
+    <string name="shop_group_outside">外</string>
+    <string name="shop_shelf_instrument">職人の店</string>
+    <string name="shop_shelf_music">楽譜と音楽</string>
+    <string name="shop_shelf_room">壁、床、窓</string>
+    <string name="shop_shelf_light">市場 · あかり</string>
+    <string name="shop_shelf_furniture">市場 · 家具</string>
+    <string name="shop_shelf_plant">花の売り場</string>
+    <string name="shop_shelf_life">暮らしの小物</string>
+    <string name="shop_shelf_pet">ペットの店</string>
+    <string name="shop_shelf_outside">庭のもの</string>
+    <string name="shop_shelf_yours">この棚はすべて購入済みです</string>
+    <string name="shop_from">%1$sから</string>
+    <string name="shop_opens_in">%1$sから届きます</string>
+    <string name="shop_standing">部屋にあります</string>
+    <string name="shop_standing_outside">家の外にあります</string>
+    <string name="shop_owned">購入済み</string>
+    <string name="shop_gift">贈り物</string>
+    <string name="shop_no_place">この家には置き場所がありません</string>
+    <string name="shop_needs_chimney">煙突のある家が必要です</string>
+    <string name="shop_waits_season">12月を待っています</string>
+    <string name="shop_place">場所：%1$s</string>
+    <string name="shop_try">試し置き</string>
+    <string name="shop_buy">購入 · %1$s</string>
+    <string name="shop_take">受け取る</string>
+    <string name="shop_put">置く</string>
+    <string name="shop_missing">あと %1$s 足りません</string>
+    <string name="shop_sessions_one">あと練習1回くらい</string>
+    <string name="shop_sessions_few">あと練習 %1$d 回くらい</string>
+    <string name="shop_sessions_many">あと練習 %1$d 回くらい</string>
+    <string name="shop_left_after">残り %1$s</string>
+    <string name="shop_left_after_road">残り %1$s · %2$sまであと %3$s</string>
+    <string name="shop_item_description">%1$s、%2$s</string>
+    <string name="shop_price_takts">%1$s 小節</string>
+    <string name="shop_try_back">元に戻す</string>
+    <string name="shop_bought">購入しました：%1$s</string>
+
+    <string name="arrange_title">模様替え</string>
+    <string name="arrange_places_few">置き場所 %1$d、使用中 %2$d</string>
+    <string name="arrange_empty">空き</string>
+    <string name="arrange_in_shop">お店に %1$d 点</string>
+    <string name="arrange_not_here">この家にない置き場所</string>
+    <string name="arrange_waiting">しまってあります：%1$s</string>
+
+    <string name="houses_title">家</string>
+    <string name="houses_live_here">ここに住んでいます</string>
+    <string name="houses_live">ここに住む</string>
+    <string name="houses_of">家 %1$d / %2$d</string>
+    <string name="houses_news">新しいところ</string>
+    <string name="houses_moving_text">持ち物はすべてひとりでに引っ越して、同じ場所に収まります。前の家は残るので、いつでも戻れます。</string>
+    <string name="houses_move">引っ越す · %1$s</string>
+    <string name="houses_moving">引っ越し</string>
+    <string name="houses_moved_things">%1$sが元の場所に収まりました</string>
+    <string name="houses_moved_cat">%1$s · 猫はもう玄関先にいます</string>
+    <string name="houses_close">閉じる</string>
+
+    <!-- Second iteration (spec 3.25) -->
+    <string name="home_travel">旅に出る</string>
+    <string name="home_travel_line">%1$s → %2$sまで %3$s</string>
+    <string name="home_travel_enough">%1$s → %2$sまで行けます</string>
+    <string name="home_travel_end">%1$s · 旅路を巡り終えました</string>
+    <string name="home_fullscreen">全画面</string>
+    <string name="home_fullscreen_close">全画面を終了</string>
+    <string name="home_fullscreen_hint">ピンチで拡大 · ドラッグで見回す</string>
+    <string name="home_card_title">家 · %1$s</string>
+    <string name="home_card_away">旅の途中 · %1$s · 立ち寄り先 %2$d / %3$d</string>
+    <string name="journey_enter_home">家に入る</string>
+    <string name="journey_enter_home_at">家にいます</string>
+    <string name="splash_away">旅へ</string>
+    <string name="splash_home">家へ</string>
+    <string name="splash_stop">%1$s · 立ち寄り先 %2$d / %3$d</string>
+    <string name="splash_skip">スキップ</string>
+    <string name="shop_soon">入荷予定</string>
+    <string name="shop_try_remove">片づける</string>
+    <string name="shop_takts_note">小節は練習から生まれます。アプリが演奏を聴いて、自動で数えます。ここでは家のものに使えます。</string>
+    <string name="journey_intro_takts">アプリは練習の様子を聴いて、澄んだ音と楽器に向かった時間を小節に換えます。街から街への旅費は、小節で払います。</string>
+
+    <string name="journey_home">家</string>
+    <string name="journey_home_card">家：%1$s</string>
+</resources>

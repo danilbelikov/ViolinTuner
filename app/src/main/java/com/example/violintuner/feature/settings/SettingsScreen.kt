@@ -33,6 +33,7 @@ import com.example.violintuner.core.domain.UserSettings
 import com.example.violintuner.core.domain.sound.BuiltInPreset
 import com.example.violintuner.core.ui.components.A4Selector
 import com.example.violintuner.core.ui.components.TolerancePresetList
+import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.core.ui.icons.IconLabel
@@ -55,6 +56,8 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
     /** The block «Данные» (spec 3.20): it has a view model of its own, the settings know nothing of copies. */
     dataBlock: @Composable () -> Unit = {},
+    /** Opens the system's choice of the language of this app; null where the system has none (before Android 13) — there the app follows the device. */
+    onLanguageClick: (() -> Unit)? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     Box(
@@ -125,6 +128,30 @@ fun SettingsScreen(
                     )
                 }
                 AppIcon(AppIcons.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            if (onLanguageClick != null) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(16.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainer)
+                        .clickable(role = Role.Button, onClick = onLanguageClick)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    AppIcon(AppIcons.Globe, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(stringResource(R.string.settings_language), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            // the language names itself in itself: «Deutsch», «한국어» — whoever looks for theirs finds it
+                            text = Formats.LOCALE.getDisplayLanguage(Formats.LOCALE).replaceFirstChar { it.titlecase(Formats.LOCALE) },
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    AppIcon(AppIcons.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
             dataBlock()
             OutlinedButton(onClick = { onIntent(SettingsIntent.RestartOnboardingClicked) }) {

@@ -1,0 +1,917 @@
+<resources>
+    <string name="app_name">ViolinTuner</string>
+
+    <string name="nav_live">Live</string>
+    <string name="nav_practice">Pratique</string>
+    <string name="nav_history">Enregistrements</string>
+    <string name="nav_settings">Réglages</string>
+
+    <string name="mode_play">Jeu</string>
+    <string name="mode_tuning">Accord</string>
+    <string name="tuning_string_hz">%1$d Hz</string>
+    <string name="tuning_hint_auto">auto · jouez une corde à vide</string>
+    <string name="tuning_hint_locked">cible verrouillée : %1$s · %2$d Hz · touchez pour libérer</string>
+    <string name="tuning_string_locked">verrouillée</string>
+    <string name="tuning_string_auto">auto</string>
+    <string name="status_in_tune">juste</string>
+    <string name="status_sharp">trop haut</string>
+    <string name="status_flat">trop bas</string>
+    <string name="live_silence">Jouez…</string>
+    <string name="live_too_noisy">Trop de bruit</string>
+    <string name="live_mic_unavailable">Micro indisponible</string>
+    <string name="mic_permission_title">L\'accès au micro est nécessaire</string>
+    <string name="mic_permission_text">Sans micro, l\'application n\'entend pas le violon. Le son est traité sur le téléphone et n\'est envoyé nulle part.</string>
+    <string name="mic_permission_grant">Autoriser l\'accès</string>
+    <string name="record_button">Enregistrement</string>
+    <string name="record_start">Démarrer l\'enregistrement</string>
+    <string name="record_stop">Arrêter l\'enregistrement</string>
+    <string name="record_no_notes">Aucune note trouvée dans l\'enregistrement</string>
+    <string name="recording_elapsed_description">Enregistrement en cours, %1$s</string>
+    <string name="recording_strip_label">enreg. ·</string>
+    <string name="practice_chip_label">séance ·</string>
+
+    <string name="onboarding_mic_title">Laissez-moi entendre le violon</string>
+    <string name="onboarding_mic_text">L\'application écoute par le micro et n\'envoie rien sur Internet. Le son est traité sur le téléphone.</string>
+    <string name="onboarding_mic_cta">Autoriser le micro</string>
+    <string name="onboarding_mic_foot">Posez le téléphone sur le pupitre, à 50–80 cm</string>
+    <string name="onboarding_a4_title">Sur quel la vous accordez-vous ?</string>
+    <string name="onboarding_a4_text">À la maison et à l\'école, c\'est en général 440 Hz. Les orchestres prennent souvent 442. Modifiable dans les réglages.</string>
+    <string name="onboarding_a4_cta">Suivant</string>
+    <string name="onboarding_a4_foot">L\'écran ne s\'éteindra pas pendant que vous jouez</string>
+    <string name="onboarding_tolerance_title">Avec quelle sévérité juger ?</string>
+    <string name="onboarding_tolerance_text">C\'est la largeur de la zone verte. Commencez large — on peut toujours la resserrer.</string>
+    <string name="onboarding_tolerance_cta">Commencer à jouer</string>
+    <string name="onboarding_tolerance_foot">Modifiable à tout moment dans les réglages</string>
+    <string name="onboarding_step_description">Étape %1$d sur %2$d</string>
+
+    <string name="tolerance_beginner_name">Débutant</string>
+    <string name="tolerance_beginner_text">zone verte large</string>
+    <string name="tolerance_intermediate_name">Intermédiaire</string>
+    <string name="tolerance_intermediate_text">le vibrato se fait sentir</string>
+    <string name="tolerance_pro_name">Pro</string>
+    <string name="tolerance_pro_text">strict</string>
+    <string name="tolerance_cents">±%1$d cts</string>
+    <string name="a4_option_description">%1$d hertz</string>
+
+    <string name="settings_a4_title">Diapason (la4)</string>
+    <string name="settings_a4_text">Fréquence du la du diapason (A4), en Hz. Toutes les notes et les cordes en découlent.</string>
+    <string name="settings_tolerance_title">Tolérance</string>
+    <string name="settings_tolerance_text">Largeur de la zone verte : à quelle distance de la note on est encore « juste ».</string>
+    <string name="settings_language">Langue</string>
+    <string name="settings_restart_onboarding">Refaire l\'introduction</string>
+
+    <string name="session_default_title">Enregistrement · %1$s</string>
+    <string name="record_default_title">Enregistrement</string>
+    <string name="session_take_subtitle">prise · %1$s · %2$s</string>
+    <string name="session_back">Retour</string>
+    <string name="session_not_found">Enregistrement introuvable</string>
+    <string name="session_percent">%1$d\u00A0%%</string>
+    <string name="session_meta">juste · %1$s · ±%2$d cts</string>
+    <string name="session_bias_mean">en moyenne %1$s cts</string>
+    <string name="session_bias_none">sans décalage</string>
+    <string name="session_bias_hint_none">bien au centre</string>
+    <string name="session_bias_hint_flat">un peu trop bas — doigts plus près du chevalet</string>
+    <string name="session_bias_hint_sharp">un peu trop haut — doigts plus près du sillet</string>
+    <string name="session_card_distribution">Répartition</string>
+    <string name="session_card_mean_error">Erreur moyenne</string>
+    <string name="session_card_per_string">Par corde</string>
+    <string name="session_cents_unit">cts</string>
+    <string name="session_bias_small_none">pas de décalage</string>
+    <string name="session_bias_small_down">décalage de %1$s cts vers le bas</string>
+    <string name="session_bias_small_up">décalage de %1$s cts vers le haut</string>
+    <string name="session_string_not_played">—</string>
+    <string name="session_problem_notes">Notes à problème</string>
+    <string name="session_problem_note">%1$s sur la corde %2$s</string>
+    <string name="session_cents_value">%1$s cts</string>
+    <string name="session_no_problem_notes">Aucune note ne dévie de façon régulière — très bel enregistrement.</string>
+    <string name="session_action_rename">Renommer</string>
+    <string name="session_action_delete">Supprimer</string>
+    <string name="session_rename_title">Nom de l\'enregistrement</string>
+    <string name="session_rename_hint">Un champ vide rétablit le nom par date</string>
+    <string name="session_rename_confirm">Enregistrer</string>
+    <string name="session_delete_title">Supprimer l\'enregistrement ?</string>
+    <string name="session_delete_text">Le son et l\'analyse seront supprimés définitivement.</string>
+    <string name="session_delete_confirm">Supprimer</string>
+    <string name="dialog_cancel">Annuler</string>
+    <string name="session_note_target">cible</string>
+    <string name="session_note_mean">moyenne</string>
+    <string name="session_note_min_max">min / max</string>
+    <string name="session_note_min_max_value">%1$s / %2$s</string>
+    <string name="session_note_duration">durée</string>
+    <string name="session_note_duration_value">%1$s s</string>
+    <string name="session_note_range">amplitude</string>
+    <string name="session_note_range_value">±%1$d cts</string>
+    <string name="session_note_position">corde %1$s · %2$s</string>
+    <string name="finger_open">à vide</string>
+    <string name="finger_first">1er doigt</string>
+    <string name="finger_second">2e doigt</string>
+    <string name="finger_third">3e doigt</string>
+    <string name="finger_fourth">4e doigt</string>
+    <string name="finger_higher_position">en position</string>
+    <string name="session_tip_stable">Stable, vibrato régulier</string>
+    <string name="session_tip_wandering">Juste en moyenne, mais la note flotte</string>
+    <string name="session_tip_flat">Doigt trop bas — un peu plus près du chevalet</string>
+    <string name="session_tip_sharp">Doigt trop haut — un peu plus près du sillet</string>
+    <string name="session_player_play">Écouter l\'enregistrement</string>
+    <string name="session_player_pause">Pause</string>
+    <string name="session_player_position">Position dans l\'enregistrement</string>
+    <string name="session_roll_description">Ruban des notes. Touchez une note pour voir les détails.</string>
+
+    <string name="history_count_one">%1$d enregistrement</string>
+    <string name="history_count_few">%1$d enregistrements</string>
+    <string name="history_count_many">%1$d enregistrements</string>
+    <string name="history_chart_title">Enregistrements sur deux semaines</string>
+    <string name="history_chart_description">Enregistrements par jour sur deux semaines</string>
+    <string name="history_filter_all">Tous</string>
+    <string name="history_filter_this_week">Cette semaine</string>
+    <string name="history_filter_month">Mois</string>
+    <string name="history_day_today">aujourd\'hui</string>
+    <string name="record_meta">%1$s · %2$s</string>
+    <string name="history_chart_bar">%1$s, %2$s</string>
+    <string name="backup_block_title">Données</string>
+    <string name="backup_row_save">Enregistrer une copie</string>
+    <string name="backup_row_never">jamais enregistrée</string>
+    <string name="backup_row_last">dernière — %1$s</string>
+    <string name="backup_row_stale">dernière — %1$s · depuis, %2$s</string>
+    <string name="backup_new_records_one">%1$d nouvel enregistrement</string>
+    <string name="backup_new_records_few">%1$d nouveaux enregistrements</string>
+    <string name="backup_new_records_many">%1$d nouveaux enregistrements</string>
+    <string name="backup_row_running">en cours · %1$d %%</string>
+    <string name="backup_row_restore">Restaurer depuis une copie</string>
+    <string name="backup_row_total">Dans l\'application : %1$s</string>
+    <string name="backup_onboarding_link">J\'ai une sauvegarde</string>
+    <string name="backup_title">Sauvegarde</string>
+    <string name="backup_text">Un seul fichier avec tout ce que contient l\'application. Mieux vaut le ranger ailleurs que sur ce téléphone — ordinateur, clé USB ou dossier dans le cloud.</string>
+    <string name="backup_part_data">Analyses, séances, progression, réglages</string>
+    <string name="backup_part_data_short">Analyses, séances, progression</string>
+    <string name="backup_part_sheets">Photos de partitions</string>
+    <string name="backup_part_audio">Son des enregistrements</string>
+    <string name="backup_part_audio_short">Son</string>
+    <string name="backup_part_video">Vidéo</string>
+    <string name="backup_part_always">toujours</string>
+    <string name="backup_total">La copie pèsera</string>
+    <string name="backup_total_value">≈ %1$s</string>
+    <string name="backup_without_video">Sans vidéo : après restauration, les prises vidéo garderont leur analyse, mais ni image ni son.</string>
+    <string name="backup_without_audio">Sans son : après restauration, les enregistrements seront muets — il restera l\'analyse.</string>
+    <string name="backup_without_sheets">Sans photos de partitions : après restauration, les morceaux n\'auront plus de pages.</string>
+    <string name="backup_save_to">Enregistrer dans…</string>
+    <string name="backup_saving_button">Enregistrement…</string>
+    <string name="backup_share">Envoyer…</string>
+    <string name="backup_too_big_to_share">Une copie de cette taille ne passera ni par messagerie ni par e-mail — enregistrez-la dans un dossier ou sur une clé USB</string>
+    <string name="backup_busy_recording">Terminez d\'abord l\'enregistrement</string>
+    <string name="backup_nothing_title">Rien à sauvegarder pour l\'instant</string>
+    <string name="backup_nothing_text">Enregistrez une première prise ou ajoutez un morceau — la copie apparaîtra ici</string>
+    <string name="backup_file_name">Intonation · copie · %1$s.zip</string>
+    <string name="backup_saving_title">Enregistrement de la copie</string>
+    <string name="backup_phase_data">Analyses, séances, progression</string>
+    <string name="backup_phase_files">%1$s · %2$d sur %3$d</string>
+    <string name="backup_phase_verifying_file">Vérification du fichier</string>
+    <string name="backup_percent">%1$d %%</string>
+    <string name="backup_done_of">%1$s sur %2$s</string>
+    <string name="backup_remaining">reste %1$s</string>
+    <string name="backup_remaining_minutes">environ %1$d min</string>
+    <string name="backup_remaining_seconds">quelques secondes</string>
+    <string name="backup_can_leave_title">Vous pouvez quitter l\'application — la copie se terminera toute seule.</string>
+    <string name="backup_can_leave_text">N\'éteignez pas le téléphone et ne retirez pas la clé USB avant la fin.</string>
+    <string name="backup_cancel">Annuler</string>
+    <string name="backup_stop_title">Arrêter ?</string>
+    <string name="backup_stop_text">Le fichier inachevé sera supprimé.</string>
+    <string name="backup_stop_continue">Continuer</string>
+    <string name="backup_stop_confirm">Arrêter</string>
+    <string name="backup_saved_title">Copie enregistrée</string>
+    <string name="backup_saved_place">%1$s · %2$s</string>
+    <string name="backup_place_downloads">Téléchargements</string>
+    <string name="backup_saved_advice">Copiez le fichier hors du téléphone : une copie restée dessus ne sauvera rien s\'il lui arrive quelque chose.</string>
+    <string name="backup_done">Terminé</string>
+    <string name="backup_failed_space_title">Plus de place à l\'endroit choisi</string>
+    <string name="backup_failed_space_text">Le fichier inachevé a été supprimé. Choisissez un autre endroit ou enregistrez la copie sans vidéo.</string>
+    <string name="backup_failed_space_inside">Il manque %1$s dans la mémoire du téléphone pour préparer la copie à envoyer. Enregistrez-la directement dans un dossier.</string>
+    <string name="backup_failed_gone_title">L\'emplacement n\'est plus accessible</string>
+    <string name="backup_failed_gone_text">La clé USB a été retirée ou le dossier a disparu. Le fichier inachevé a été supprimé — rebranchez le support et réessayez.</string>
+    <string name="backup_failed_title">Impossible d\'enregistrer la copie</string>
+    <string name="backup_failed_text">Le fichier inachevé a été supprimé. Les données de l\'application sont intactes.</string>
+    <string name="backup_retry">Réessayer</string>
+    <string name="backup_close">Fermer</string>
+    <string name="backup_count_sessions_one">%1$d enregistrement</string>
+    <string name="backup_count_sessions_few">%1$d enregistrements</string>
+    <string name="backup_count_sessions_many">%1$d enregistrements</string>
+    <string name="backup_count_pieces_one">%1$d morceau</string>
+    <string name="backup_count_pieces_few">%1$d morceaux</string>
+    <string name="backup_count_pieces_many">%1$d morceaux</string>
+    <string name="backup_count_pages_one">%1$d page</string>
+    <string name="backup_count_pages_few">%1$d pages</string>
+    <string name="backup_count_pages_many">%1$d pages</string>
+    <string name="backup_count_days_one">%1$d jour de pratique</string>
+    <string name="backup_count_days_few">%1$d jours de pratique</string>
+    <string name="backup_count_days_many">%1$d jours de pratique</string>
+    <string name="backup_count_trophies_one">%1$d trophée</string>
+    <string name="backup_count_trophies_few">%1$d trophées</string>
+    <string name="backup_count_trophies_many">%1$d trophées</string>
+    <string name="backup_count_takes_one">%1$d prise</string>
+    <string name="backup_count_takes_few">%1$d prises</string>
+    <string name="backup_count_takes_many">%1$d prises</string>
+    <string name="backup_count_sound_one">%1$d enregistrement avec son</string>
+    <string name="backup_count_sound_few">%1$d enregistrements avec son</string>
+    <string name="backup_count_sound_many">%1$d enregistrements avec son</string>
+    <string name="backup_count_video">%1$d vidéos</string>
+    <string name="backup_count_level">niveau %1$d</string>
+    <string name="backup_notification_channel">Sauvegarde</string>
+    <string name="backup_notification_saving">Enregistrement de la copie · %1$d %%</string>
+    <string name="backup_notification_restoring">Restauration des données · %1$d %%</string>
+    <string name="restore_title">Restaurer depuis une copie</string>
+    <string name="restore_reading">Ouverture de la copie…</string>
+    <string name="restore_made">%1$s · %2$s</string>
+    <string name="restore_without_video">sans vidéo — les prises vidéo n\'auront que leur analyse</string>
+    <string name="restore_without_audio">sans son — les enregistrements n\'auront que leur analyse</string>
+    <string name="restore_without_sheets">sans photos de partitions</string>
+    <string name="restore_now_title">Actuellement dans l\'application</string>
+    <string name="restore_warning">Tout ce que contient l\'application sera remplacé par les données de la copie. C\'est irréversible.</string>
+    <string name="restore_save_first">Enregistrer d\'abord les données actuelles</string>
+    <string name="restore_empty_app">L\'application est encore vide — après restauration, tout le contenu de la copie sera ici, et l\'introduction ne sera pas nécessaire.</string>
+    <string name="restore_button">Restaurer</string>
+    <string name="restore_confirm_title">Remplacer les données ?</string>
+    <string name="restore_confirm_text">Sur ce téléphone, ceci sera supprimé : %1$s. À la place — la copie du %2$s.</string>
+    <string name="restore_confirm_button">Remplacer</string>
+    <string name="restore_not_ours_title">Ce n\'est pas une copie d\'« Intonation »</string>
+    <string name="restore_not_ours_text">C\'est le fichier d\'une autre application ou une simple archive. La copie s\'appelle « Intonation · copie · date.zip ».</string>
+    <string name="restore_too_new_title">Copie créée par une version plus récente de l\'application</string>
+    <string name="restore_too_new_text">Mettez l\'application à jour et rouvrez le fichier.</string>
+    <string name="restore_damaged_title">Fichier endommagé ou incomplet</string>
+    <string name="restore_damaged_text">Copiez-le de nouveau depuis l\'endroit où il est conservé, puis réessayez.</string>
+    <string name="restore_pick_another">Choisir un autre fichier</string>
+    <string name="restore_no_room_title">Il manque %1$s pour restaurer en toute sécurité</string>
+    <string name="restore_no_room_text">La copie est d\'abord décompressée à côté des données actuelles, et ne les remplace qu\'ensuite. Libérez de la place sur le téléphone — ou restaurez sans filet.</string>
+    <string name="restore_no_room_ok">Compris</string>
+    <string name="restore_unsafe_button">Supprimer les données actuelles et restaurer</string>
+    <string name="restore_unsafe_title">Tout supprimer et restaurer ?</string>
+    <string name="restore_unsafe_text">Nous vérifierons d\'abord la copie en entier. Ensuite, ceci sera supprimé du téléphone : %1$s — si la restauration échoue, impossible de le récupérer.</string>
+    <string name="restore_unsafe_confirm">Supprimer et restaurer</string>
+    <string name="restore_progress_title">Restauration des données</string>
+    <string name="restore_step_verifying">Vérification</string>
+    <string name="restore_step_extracting">Restauration</string>
+    <string name="restore_step_finishing">Presque fini</string>
+    <string name="restore_phase_verifying">Vérification de la copie</string>
+    <string name="restore_phase_extracting">Restauration · %1$s %2$d</string>
+    <string name="restore_can_leave_title">Vous pouvez quitter l\'application — la restauration se terminera toute seule.</string>
+    <string name="restore_can_stop">Vos données sont encore là : pendant la vérification et la décompression, on peut arrêter.</string>
+    <string name="restore_cannot_stop">Ouverture des données restaurées — on ne peut plus arrêter.</string>
+    <string name="restore_done_title">Données restaurées</string>
+    <string name="restore_opening">Ouverture de vos données…</string>
+    <string name="restore_failed_title">Restauration impossible</string>
+    <string name="restore_failed_text">Vos données sont intactes — rien n\'a changé.</string>
+    <string name="restore_failed_lost_title">La restauration a échoué, et les anciennes données n\'existent plus</string>
+    <string name="restore_failed_lost_text">La copie a été vérifiée, elle est intacte — réessayez avec le même fichier. Si cela échoue encore, repartez d\'une application vierge.</string>
+    <string name="restore_retry_same">Réessayer avec ce fichier</string>
+    <string name="restore_start_clean">Repartir d\'une application vierge</string>
+    <string name="restore_busy">Terminez d\'abord l\'enregistrement</string>
+    <string name="video_description">Vidéo</string>
+    <string name="video_state_playing">lecture, touchez deux fois pour mettre en pause</string>
+    <string name="video_state_paused">en pause, touchez deux fois pour reprendre</string>
+    <string name="video_fullscreen">Plein écran</string>
+    <string name="video_fullscreen_exit">Réduire</string>
+    <string name="video_lost_title">Vidéo introuvable — il reste l\'analyse</string>
+    <string name="video_lost_text">Le fichier a été supprimé de la mémoire de l\'application. Il n\'y a pas de son non plus — comme pour un enregistrement sans son.</string>
+    <string name="video_undecodable_title">Cette vidéo ne peut pas être affichée ici</string>
+    <string name="video_undecodable_text">Le téléphone ne sait pas lire son image. Le son et l\'analyse sont là.</string>
+    <string name="video_row_time">%1$s / %2$s · %3$s cts</string>
+    <string name="video_size">vidéo · %1$s · %2$s</string>
+    <string name="video_size_lost">vidéo introuvable</string>
+    <string name="video_resolution">%1$dp</string>
+    <string name="video_watch_place">Voir ce passage</string>
+    <string name="video_listen_place">Écouter ce passage</string>
+    <string name="video_delete_text">La vidéo (%1$s), le son et l\'analyse seront supprimés. C\'est irréversible.</string>
+    <string name="record_tile_video">avec vidéo</string>
+    <string name="size_mb">%1$s Mo</string>
+    <string name="size_kb">%1$d Ko</string>
+    <string name="video_take">Prise vidéo</string>
+    <string name="video_take_busy">Analyse…</string>
+    <string name="video_shoot">Filmer</string>
+    <string name="video_shoot_hint">l\'appareil photo du téléphone s\'ouvrira</string>
+    <string name="video_pick">Vidéo de la galerie</string>
+    <string name="video_pick_hint">une à la fois, 60 minutes au plus</string>
+    <string name="video_copying">Ajout de la vidéo…</string>
+    <string name="video_listening">Écoute de l\'enregistrement…</string>
+    <string name="video_percent">%1$d %%</string>
+    <string name="video_remaining">reste environ %1$d s</string>
+    <string name="video_cancel">Annuler</string>
+    <string name="video_stop_title">Arrêter l\'analyse ?</string>
+    <string name="video_stop_text">La vidéo vient d\'être filmée et n\'existe nulle part ailleurs. Vous pouvez l\'envoyer quelque part pour ne pas la perdre, ou la supprimer.</string>
+    <string name="video_stopped_title">Analyse arrêtée</string>
+    <string name="video_delete">Supprimer</string>
+    <string name="video_send">Envoyer la vidéo</string>
+    <string name="video_continue">Poursuivre l\'analyse</string>
+    <string name="video_ok">Compris</string>
+    <string name="video_error_no_sound">La vidéo n\'a pas de son</string>
+    <string name="video_error_too_long">Vidéo de plus de 60 minutes — impossible à analyser</string>
+    <string name="video_error_cannot_open">Impossible d\'ouvrir la vidéo</string>
+    <string name="video_error_no_notes">Aucune note trouvée dans la vidéo — prise non ajoutée</string>
+    <string name="video_error_no_notes_gallery">L\'original est resté dans la galerie.</string>
+    <string name="video_error_no_space">Pas assez de place : il faut encore %1$d Mo</string>
+    <string name="video_rescue_file">Video.mp4</string>
+    <string name="video_thumb">Première image de la vidéo</string>
+    <string name="selection_select">Sélectionner</string>
+    <string name="selection_count">Sélection : %1$d</string>
+    <string name="selection_all">Tout sélectionner</string>
+    <string name="selection_none">Tout désélectionner</string>
+    <string name="selection_close">Fermer la sélection</string>
+    <string name="selection_delete">Supprimer la sélection</string>
+    <string name="selection_delete_records_one">Supprimer %1$d enregistrement ?</string>
+    <string name="selection_delete_records_few">Supprimer %1$d enregistrements ?</string>
+    <string name="selection_delete_records_many">Supprimer %1$d enregistrements ?</string>
+    <string name="selection_delete_takes_one">Supprimer %1$d prise ?</string>
+    <string name="selection_delete_takes_few">Supprimer %1$d prises ?</string>
+    <string name="selection_delete_takes_many">Supprimer %1$d prises ?</string>
+    <string name="selection_delete_text">Le son et l\'analyse seront supprimés. C\'est irréversible.</string>
+    <string name="record_tile_take">prise</string>
+    <string name="record_tile_record">enregistrement</string>
+    <string name="record_tile_sound">son</string>
+    <string name="record_tile_only_video">vidéo</string>
+    <string name="record_tile_no_sound">sans son</string>
+    <string name="history_empty_filter">Aucun enregistrement sur cette période</string>
+    <string name="history_empty">Vos enregistrements apparaîtront ici. Touchez le bouton d\'enregistrement sur l\'écran Live.</string>
+
+    <string name="practice_start">Commencer la séance</string>
+    <string name="practice_stop">Terminer la séance</string>
+    <string name="practice_running">Séance en cours</string>
+    <string name="practice_timer_description">Séance en cours, %1$s</string>
+    <string name="practice_today">Aujourd\'hui : %1$s</string>
+    <string name="practice_today_none">Pas encore de pratique aujourd\'hui</string>
+    <string name="practice_empty">Touchez « Commencer la séance » quand vous prenez le violon, et « Terminer » quand vous le reposez. Votre calendrier apparaîtra ici.</string>
+    <string name="practice_week">Semaine</string>
+    <string name="practice_month">Mois</string>
+    <string name="practice_streak">Jours d\'affilée</string>
+    <string name="practice_no_value">—</string>
+    <string name="practice_month_back">Mois précédent</string>
+    <string name="practice_month_forward">Mois suivant</string>
+    <string-array name="practice_weekdays">
+        <item>lun</item>
+        <item>mar</item>
+        <item>mer</item>
+        <item>jeu</item>
+        <item>ven</item>
+        <item>sam</item>
+        <item>dim</item>
+    </string-array>
+    <string name="practice_day_description">%1$s, %2$s</string>
+    <string name="practice_legend_less">moins</string>
+    <string name="practice_legend_more">plus</string>
+    <string name="practice_day_today">aujourd\'hui</string>
+    <string name="practice_day_none">Pas de pratique</string>
+    <string name="practice_edit_time">Modifier le temps</string>
+    <string name="practice_add_time">Ajouter du temps</string>
+    <string name="practice_day_records">Enregistrements de ce jour</string>
+    <string name="practice_summary_title">Séance</string>
+    <string name="practice_step_hint">pas de %1$d min</string>
+    <string name="practice_step_down">Moins %1$d minutes</string>
+    <string name="practice_step_up">Plus %1$d minutes</string>
+    <string name="practice_save">Enregistrer</string>
+    <string name="practice_discard">Ne pas enregistrer</string>
+    <string name="practice_edit_title">Temps de la journée</string>
+    <string name="practice_edit_hint">C\'est le temps total de la journée. Zéro retire le jour du calendrier.</string>
+    <string name="practice_chip_plus_minutes">+%1$d</string>
+    <string name="practice_chip_plus_hour">+1 h</string>
+    <string name="practice_chip_zero">0</string>
+    <string name="practice_too_short">Trop court</string>
+    <string name="practice_forgotten_title">Séance non terminée</string>
+    <string name="practice_forgotten_text">La séance dure déjà depuis %1$s.</string>
+    <string name="practice_forgotten_sound">Le violon a sonné pour la dernière fois à %1$s.</string>
+    <string name="practice_end_at">Terminer à %1$s</string>
+    <string name="practice_end_now">Terminer maintenant</string>
+    <string name="practice_continue">Je joue encore</string>
+
+    <!-- Profile and progress (spec 3.13, 5.7). Level and trophy names follow the order of ProgressConfig. -->
+    <string-array name="progress_level_names">
+        <item>Premier son</item>
+        <item>Élève</item>
+        <item>Cordes à vide</item>
+        <item>Première position</item>
+        <item>Gammes</item>
+        <item>Études</item>
+        <item>Vibrato</item>
+        <item>Troisième position</item>
+        <item>Ensemble</item>
+        <item>Premier violon</item>
+        <item>Soliste</item>
+        <item>Virtuose</item>
+        <item>Maestro</item>
+        <item>Maître</item>
+        <item>Légende</item>
+    </string-array>
+    <string-array name="progress_trophy_names">
+        <item>Colophane</item>
+        <item>Cheville</item>
+        <item>Corde</item>
+        <item>Archet</item>
+        <item>Mentonnière</item>
+        <item>Diapason</item>
+        <item>Pupitre</item>
+        <item>Étui</item>
+        <item>Violon</item>
+        <item>Concert</item>
+    </string-array>
+    <string name="progress_no_name">Au violon</string>
+    <string name="progress_level">Niveau %1$d · %2$s</string>
+    <string name="progress_to_next_level">niveau %1$d dans %2$s</string>
+    <string name="progress_open_profile">Ouvrir le profil</string>
+    <string name="progress_total_description">Temps total au violon : %1$s</string>
+    <string name="progress_open_trophies">Ouvrir les trophées</string>
+    <string name="progress_trophies_one">%1$d trophée</string>
+    <string name="progress_trophies_few">%1$d trophées</string>
+    <string name="progress_trophies_many">%1$d trophées</string>
+    <string name="progress_next_trophy">prochain à %1$s</string>
+    <string name="progress_trophies_and_next">%1$s · %2$s</string>
+    <string name="progress_more_trophies">+%1$d</string>
+    <string name="profile_title">Profil</string>
+    <string name="profile_pick_photo">Choisir une photo</string>
+    <string name="profile_remove_photo">Retirer la photo</string>
+    <string name="profile_name_label">Prénom</string>
+    <string name="profile_name_placeholder">Comment vous appelez-vous ?</string>
+    <string name="profile_name_counter">%1$d / %2$d</string>
+    <string name="profile_done">OK</string>
+    <string name="profile_no_name_letter">\?</string>
+    <string name="profile_photo_failed">Impossible d\'ouvrir la photo</string>
+    <string name="gift_title">Nouveau trophée</string>
+    <string name="gift_hours_one">%1$s heure au violon</string>
+    <string name="gift_hours_few">%1$s heures au violon</string>
+    <string name="gift_hours_many">%1$s heures au violon</string>
+    <string name="gift_thanks">Merci</string>
+    <string name="trophies_title">Trophées</string>
+    <string name="trophies_total">temps total au violon — %1$s</string>
+    <string name="trophies_awarded">reçu le %1$s</string>
+    <string name="trophies_remaining">encore %1$s</string>
+    <string name="trophies_far">Loin devant</string>
+    <string name="trophies_line_given">%1$s, %2$s, reçu le %3$s</string>
+    <string name="trophies_line_remaining">%1$s, %2$s, encore %3$s</string>
+    <string name="trophies_line_far">%1$s, %2$s, loin devant</string>
+
+    <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
+    <string name="history_section_sessions">Enregistrements</string>
+    <string name="history_section_repertoire">Répertoire</string>
+    <string name="session_take_title">%1$s · %2$s</string>
+    <string name="dot_separator"> · </string>
+    <string name="repertoire_add">Ajouter un morceau</string>
+    <string name="repertoire_empty">Ici vivent vos morceaux : partitions, notes et enregistrements. Ajoutez le premier.</string>
+    <string name="repertoire_empty_filter">Rien avec le statut « %1$s ».</string>
+    <string name="repertoire_show_all">Tout afficher</string>
+    <string name="repertoire_no_takes">aucune prise</string>
+    <string name="piece_status_reading">Déchiffrage</string>
+    <string name="piece_status_learning">En travail</string>
+    <string name="piece_status_in_repertoire">Au répertoire</string>
+    <string name="piece_status_learned">Appris</string>
+    <!-- The journey (spec 3.23): arrays follow the order of JourneyRoute.stops -->
+    <string-array name="journey_cities">
+        <item>Maison</item>
+        <item>Crémone</item>
+        <item>Milan</item>
+        <item>Salzbourg</item>
+        <item>Vienne</item>
+        <item>Prague</item>
+        <item>Leipzig</item>
+        <item>Berlin</item>
+        <item>Amsterdam</item>
+        <item>Paris</item>
+        <item>Londres</item>
+        <item>Saint-Pétersbourg</item>
+        <item>Moscou</item>
+        <item>New York</item>
+        <item>Buenos Aires</item>
+        <item>Tokyo</item>
+        <item>Sydney</item>
+    </string-array>
+    <string-array name="journey_cities_to">
+        <item>la maison</item>
+        <item>Crémone</item>
+        <item>Milan</item>
+        <item>Salzbourg</item>
+        <item>Vienne</item>
+        <item>Prague</item>
+        <item>Leipzig</item>
+        <item>Berlin</item>
+        <item>Amsterdam</item>
+        <item>Paris</item>
+        <item>Londres</item>
+        <item>Saint-Pétersbourg</item>
+        <item>Moscou</item>
+        <item>New York</item>
+        <item>Buenos Aires</item>
+        <item>Tokyo</item>
+        <item>Sydney</item>
+    </string-array>
+    <string-array name="journey_places">
+        <item>Votre chambre, le pupitre près de la fenêtre</item>
+        <item>L\'atelier d\'un luthier</item>
+        <item>La Scala</item>
+        <item>La maison de Mozart et la forteresse au-dessus de la ville</item>
+        <item>Musikverein, Salle dorée</item>
+        <item>Rudolfinum</item>
+        <item>Gewandhaus · église Saint-Thomas</item>
+        <item>Philharmonie</item>
+        <item>Concertgebouw</item>
+        <item>Opéra Garnier</item>
+        <item>Royal Albert Hall</item>
+        <item>Philharmonie, Grande salle</item>
+        <item>Grande salle du Conservatoire</item>
+        <item>Carnegie Hall</item>
+        <item>Teatro Colón</item>
+        <item>Suntory Hall</item>
+        <item>Opéra</item>
+    </string-array>
+    <string-array name="journey_countries">
+        <item></item>
+        <item>Italie</item>
+        <item>Italie</item>
+        <item>Autriche</item>
+        <item>Autriche</item>
+        <item>Tchéquie</item>
+        <item>Allemagne</item>
+        <item>Allemagne</item>
+        <item>Pays-Bas</item>
+        <item>France</item>
+        <item>Royaume-Uni</item>
+        <item>Russie</item>
+        <item>Russie</item>
+        <item>États-Unis</item>
+        <item>Argentine</item>
+        <item>Japon</item>
+        <item>Australie</item>
+    </string-array>
+    <string-array name="journey_facts">
+        <item>Tout le monde part d\'ici. Première étape : Crémone, où le violon a été inventé.</item>
+        <item>Amati, Stradivari et Guarneri ont travaillé ici — c\'est dans cette ville que le violon a pris sa forme actuelle.</item>
+        <item>Le théâtre a ouvert en 1778 ; des opéras de Verdi et « Madame Butterfly » de Puccini y ont été créés.</item>
+        <item>Mozart est né ici ; la forteresse de Hohensalzburg domine la ville depuis le XIe siècle.</item>
+        <item>Chaque 1er janvier, le Concert du Nouvel An résonne d\'ici dans le monde entier. L\'acoustique de la salle compte parmi les meilleures.</item>
+        <item>Le premier concert de la Philharmonie tchèque y fut dirigé par Dvořák.</item>
+        <item>Bach fut cantor de l\'église Saint-Thomas pendant un quart de siècle.</item>
+        <item>Une salle en forme de tente, où la scène est au milieu du public.</item>
+        <item>L\'orchestre de la salle porte le titre de « royal ».</item>
+        <item>Inauguré en 1875 ; le plafond de la salle a été peint par Marc Chagall en 1964.</item>
+        <item>Ouvert en 1871 ; les Proms s\'y tiennent chaque été.</item>
+        <item>C\'est ici qu\'en août 1942, pendant le siège, a retenti la Septième symphonie de Chostakovitch.</item>
+        <item>Ouverte en 1901 ; le Concours Tchaïkovski s\'y déroule.</item>
+        <item>« Comment arrive-t-on au Carnegie Hall ? — En travaillant. »</item>
+        <item>Inauguré en 1908 avec « Aïda » ; son acoustique passe pour l\'une des meilleures au monde.</item>
+        <item>Une salle « en vignoble » : le public est assis en terrasses autour de la scène. Ouverte en 1986.</item>
+        <item>Sous les « voiles », plusieurs salles ; même ceux qui ne sont jamais allés en Australie reconnaissent sa silhouette.</item>
+    </string-array>
+    <string-array name="journey_roads">
+        <item></item>
+        <item>en train · 6 heures</item>
+        <item>en train · 1 heure</item>
+        <item>en train · 7 heures</item>
+        <item>en train · 3 heures</item>
+        <item>en train · 4 heures</item>
+        <item>en train · 4 heures</item>
+        <item>en train · 1 heure</item>
+        <item>en train · 6 heures</item>
+        <item>en train · 3 heures</item>
+        <item>en train · 2 heures</item>
+        <item>en bateau · 4 jours</item>
+        <item>en train · 4 heures</item>
+        <item>en avion · 10 heures</item>
+        <item>en bateau · 3 semaines</item>
+        <item>en avion · 30 heures</item>
+        <item>en avion · 9 heures</item>
+    </string-array>
+    <string name="journey_title">Voyage</string>
+    <string name="journey_map">Carte</string>
+    <string name="journey_passport">Passeport</string>
+    <string name="journey_back">Retour</string>
+    <string name="journey_stop_of">étape %1$d sur %2$d</string>
+    <string name="journey_stop_home">étape 0 sur %1$d · maison</string>
+    <string name="journey_since">depuis le %1$s</string>
+    <string name="journey_next">vers %1$s · %2$s</string>
+    <string name="journey_next_short">vers %1$s : %2$s</string>
+    <string name="journey_have">%1$s / %2$s</string>
+    <string name="journey_depart">En route · %1$s</string>
+    <string name="journey_missing">il manque %1$s</string>
+    <string name="journey_enough">assez pour %1$s — en route</string>
+    <string name="journey_soon">La tournée mondiale est bouclée. Les mesures s\'accumulent en attendant de nouvelles villes — elles arrivent avec les mises à jour.</string>
+    <string name="journey_soon_short">nouvelles villes bientôt</string>
+    <string name="journey_passed">%1$d étapes sur %2$d</string>
+    <string name="journey_all_cards">Toutes les cartes postales</string>
+    <string name="journey_no_cards">La première carte postale vous attend à Crémone</string>
+    <string name="journey_intro_title">La route commence à la maison</string>
+    <string name="journey_intro_text">Chaque violoniste rêve de jouer dans les plus belles salles du monde. La route est longue, et on ne la paie pas en argent, mais en notes justes.</string>
+    <string name="journey_intro_first">Première étape : Crémone, où le violon a été inventé. Il faut %1$s pour y arriver.</string>
+    <string name="journey_intro_start">Préparer l\'étui</string>
+    <string name="journey_road">%1$s → %2$s</string>
+    <string name="journey_stamp">Apposer le tampon</string>
+    <string name="journey_stamp_page">Passeport · page %1$d</string>
+    <string name="journey_stamp_text">Tampon n° %1$d. Pour %2$s — %3$s.</string>
+    <string name="journey_stamp_text_last">Tampon n° %1$d. La suite de la route est encore en dessin.</string>
+    <string name="journey_done">Terminé</string>
+    <string name="journey_stop_meta">%1$d sur %2$d · depuis le %3$s</string>
+    <string name="journey_stop_where">%1$s · %2$s</string>
+    <string name="journey_mode_evening">soir</string>
+    <string name="journey_mode_day">jour</string>
+    <string name="journey_mode_inside">intérieur</string>
+    <string name="journey_mode_outside">extérieur</string>
+    <string name="journey_extras">Suppléments</string>
+    <string name="journey_extra_time">Autre moment de la journée</string>
+    <string name="journey_extra_view">Deuxième vue</string>
+    <string name="journey_extra_souvenir">Souvenir pour le passeport</string>
+    <string name="journey_extra_bought">ouvert</string>
+    <string name="journey_extra_buy">Ouvrir pour %1$s</string>
+    <string name="journey_fullscreen">Plein écran</string>
+    <string name="journey_fullscreen_close">Réduire</string>
+    <string name="journey_fullscreen_hint">Faites glisser pour regarder autour · pincez pour approcher</string>
+    <string name="journey_passport_soon">bientôt</string>
+    <string name="journey_passport_count">%1$d sur %2$d</string>
+    <string name="journey_earned">+%1$s</string>
+    <string name="journey_earned_detail">%1$s + %2$s pour le temps</string>
+    <string name="journey_notes_in_tune_one">%1$d note juste</string>
+    <string name="journey_notes_in_tune_few">%1$d notes justes</string>
+    <string name="journey_notes_in_tune_many">%1$d notes justes</string>
+    <string name="takt_one">%1$s mesure</string>
+    <string name="takt_few">%1$s mesures</string>
+    <string name="takt_many">%1$s mesures</string>
+    <string name="takt_icon">mesures</string>
+    <string name="journey_card_description">Voyage : %1$s</string>
+    <string name="journey_stamp_description">Tampon : %1$s</string>
+    <string name="journey_stamp_locked_description">%1$s — encore à venir</string>
+    <string name="journey_map_description">Carte de l\'itinéraire : %1$d étapes sur %2$d</string>
+    <string name="section_pieces">Morceaux</string>
+    <string name="section_scales">Gammes</string>
+    <string name="section_etudes">Études</string>
+    <string name="section_strokes">Coups d\'archet</string>
+    <string name="section_learned">appris : %1$d sur %2$d</string>
+    <string name="section_empty_count">encore vide</string>
+    <string name="section_bar_description">déchiffrage %1$d, en travail %2$d, appris %3$d</string>
+    <string name="section_add">Ajouter une section</string>
+    <string name="section_add_scale">Ajouter une gamme</string>
+    <string name="section_add_etude">Ajouter une étude</string>
+    <string name="section_add_stroke">Ajouter un coup d\'archet</string>
+    <string name="section_add_own">Ajouter</string>
+    <string name="section_empty_scales">Choisissez une gamme — l\'application en dessinera les notes</string>
+    <string name="section_empty_etudes">Les études vivent ici : partitions, notes, prises.</string>
+    <string name="section_empty_strokes">Les coups d\'archet que vous travaillez : détaché, spiccato, martelé…</string>
+    <string name="section_empty_own">Cette section est encore vide.</string>
+    <string name="section_menu">Plus</string>
+    <string name="section_rename">Renommer</string>
+    <string name="section_delete">Supprimer la section</string>
+    <string name="section_new_title">Nouvelle section</string>
+    <string name="section_rename_title">Renommer la section</string>
+    <string name="section_name_label">Nom de la section</string>
+    <string name="section_create">Créer</string>
+    <string name="section_save">Enregistrer</string>
+    <string name="section_delete_title">Supprimer « %1$s » ?</string>
+    <string name="section_delete_text_empty">La section est vide. Les enregistrements resteront.</string>
+    <string name="section_delete_text_one">%1$d élément ira dans « Morceaux ». Les enregistrements resteront.</string>
+    <string name="section_delete_text_few">%1$d éléments iront dans « Morceaux ». Les enregistrements resteront.</string>
+    <string name="section_delete_text_many">%1$d éléments iront dans « Morceaux ». Les enregistrements resteront.</string>
+    <string name="section_delete_confirm">Supprimer</string>
+    <string name="section_back">Retour</string>
+    <string name="form_section">Section</string>
+    <string name="form_author">Auteur</string>
+    <string name="form_new_etude">Nouvelle étude</string>
+    <string name="form_new_stroke">Nouveau coup d\'archet</string>
+    <string name="form_new_element">Nouvel élément</string>
+    <string-array name="stroke_suggestions">
+        <item>Détaché</item>
+        <item>Legato</item>
+        <item>Staccato</item>
+        <item>Spiccato</item>
+        <item>Martelé</item>
+        <item>Sautillé</item>
+        <item>Ricochet</item>
+    </string-array>
+    <string name="scale_new">Nouvelle gamme</string>
+    <string name="scale_edit">Gamme</string>
+    <string name="scale_key">Tonalité</string>
+    <string name="scale_kind">Type</string>
+    <string name="scale_octaves">Octaves</string>
+    <string name="scale_kind_major">majeur</string>
+    <string name="scale_kind_natural">mineur naturel</string>
+    <string name="scale_kind_harmonic">mineur harmonique</string>
+    <string name="scale_kind_melodic">mineur mélodique</string>
+    <string name="scale_suffix_harmonic">harmonique</string>
+    <string name="scale_suffix_melodic">mélodique</string>
+    <string name="scale_octave_one">%1$d octave</string>
+    <string name="scale_octave_few">%1$d octaves</string>
+    <string name="scale_octave_many">%1$d octaves</string>
+    <string name="scale_title">%1$s · %2$s</string>
+    <string name="scale_range">%1$s – %2$s</string>
+    <string name="scale_preview_empty">Choisissez la tonique — les notes se dessineront ici</string>
+    <string name="scale_exists">Cette gamme existe déjà</string>
+    <string name="scale_open">Ouvrir</string>
+    <string name="scale_locked">Ce serait une autre gamme — ajoutez-en une nouvelle</string>
+    <string name="scale_notes_description">Notes de la gamme %1$s</string>
+    <string name="scale_more_systems_one">encore %1$d système</string>
+    <string name="scale_more_systems_few">encore %1$d systèmes</string>
+    <string name="scale_more_systems_many">encore %1$d systèmes</string>
+    <string name="scale_add_photo">Ajouter une photo de partition</string>
+    <string name="scale_notes">Partition</string>
+    <string name="scale_open_stand">Ouvrir sur le pupitre</string>
+    <string name="piece_tempo_value">♩ = %1$d</string>
+    <string name="piece_tempo_description">tempo %1$d</string>
+    <string name="takes_one">%1$d prise</string>
+    <string name="takes_few">%1$d prises</string>
+    <string name="takes_many">%1$d prises</string>
+    <string name="piece_edit">Modifier</string>
+    <string name="piece_status_change">Statut : %1$s. Modifier</string>
+    <string name="piece_sheets_none">Partition</string>
+    <string name="piece_sheets_count">Partition · %1$d p.</string>
+    <string name="piece_sheets_add">Ajouter une photo de partition</string>
+    <string name="piece_sheets_add_short">Ajouter</string>
+    <string name="piece_sheets_camera">Photographier</string>
+    <string name="piece_sheets_gallery">Depuis la galerie</string>
+    <string name="piece_sheet_page">Page %1$d</string>
+    <string name="piece_notes_add">Ajouter une note</string>
+    <string name="piece_notes_more">plus</string>
+    <string name="piece_notes_less">réduire</string>
+    <string name="piece_form_title_new">Nouveau morceau</string>
+    <string name="piece_form_title_edit">Morceau</string>
+    <string name="piece_form_close">Fermer</string>
+    <string name="piece_form_discard_title">Ne pas enregistrer ?</string>
+    <string name="piece_form_discard_confirm">Ne pas enregistrer</string>
+    <string name="piece_field_title">Titre</string>
+    <string name="piece_field_composer">Compositeur</string>
+    <string name="piece_field_key">Tonalité</string>
+    <string name="piece_field_tempo">Tempo</string>
+    <string name="piece_field_status">Statut</string>
+    <string name="piece_field_notes">Notes personnelles</string>
+    <string name="piece_title_error">Impossible d\'enregistrer sans titre</string>
+    <string name="piece_key_major">majeur</string>
+    <string name="piece_key_minor">mineur</string>
+    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="piece_tempo_slower">Plus lent</string>
+    <string name="piece_tempo_faster">Plus rapide</string>
+    <string name="piece_tempo_clear">Sans tempo</string>
+    <string name="piece_delete">Supprimer le morceau</string>
+    <string name="piece_delete_title">Supprimer « %1$s » ?</string>
+    <string name="piece_delete_text">La partition et les notes personnelles seront supprimées. Les enregistrements resteront dans « Enregistrements ».</string>
+    <string name="piece_delete_confirm">Supprimer</string>
+    <string name="take_record">Enregistrer une prise</string>
+    <string name="take_record_hint">L\'écran ne donne aucune indication pendant l\'enregistrement — l\'analyse vient ensuite.</string>
+    <string name="take_recording">enreg. · %1$s</string>
+    <string name="take_level_description">Le micro entend</string>
+    <string name="take_no_permission">Pour enregistrer une prise, l\'accès au micro est nécessaire.</string>
+    <string name="take_grant_permission">Autoriser l\'accès</string>
+    <string name="take_progress">dernière %1$d %% · maximum %2$d %%</string>
+    <string name="take_chart_description">Scores des prises dans l\'ordre : %1$s</string>
+    <string name="takes_title">Prises</string>
+    <string name="takes_empty">Pas encore de prise. Enregistrez la première — vous verrez le morceau évoluer.</string>
+    <string name="take_best">meilleure</string>
+    <!-- «Звук»: processing of recorded sound (spec 3.17) -->
+    <string name="sound_everyone_title">Son des enregistrements</string>
+    <string name="sound_everyone_subtitle">pour tous les enregistrements · %1$s</string>
+    <string name="sound_reset">Réinitialiser</string>
+    <string name="sound_caption_off">sans traitement</string>
+    <string name="sound_caption_custom">réglages propres</string>
+    <string name="sound_caption_saved_hint">réglages propres · enregistrés automatiquement</string>
+    <string name="sound_caption_everyone">réglage commun · %1$s</string>
+    <string name="sound_caption_own">réglages propres · %1$s</string>
+    <string name="sound_row_off">désactivé</string>
+    <string-array name="sound_preset_names">
+        <item>Sans traitement</item>
+        <item>Naturel</item>
+        <item>Pièce</item>
+        <item>Salle de chambre</item>
+        <item>Grande salle</item>
+        <item>Chaleur</item>
+    </string-array>
+    <string name="sound_preset_custom">Perso</string>
+    <string name="sound_preset_save">Enregistrer comme préréglage</string>
+    <string name="sound_preset_remove_hint">Maintenez pour supprimer</string>
+    <string name="sound_mode_everyone">Réglage commun</string>
+    <string name="sound_mode_own">Propres à cet enregistrement</string>
+    <string name="sound_mode_everyone_text">%1$s — vient de « Réglages → Son des enregistrements ». Changez-le là-bas, il changera ici aussi. Touchez un curseur, et l\'enregistrement aura ses propres réglages.</string>
+    <string name="sound_mode_own_text">Pour cet enregistrement seulement. « Réglage commun » rétablit les réglages partagés — les siens seront oubliés.</string>
+    <string name="sound_listen_on">Écouter sur</string>
+    <string name="sound_listen_latest">le dernier avec son</string>
+    <string name="sound_listen_none">Pas encore d\'enregistrement avec son : vous pouvez régler dès maintenant, et écouter après le premier enregistrement.</string>
+    <string name="sound_affected_one">pour %1$d enregistrement</string>
+    <string name="sound_affected_many">pour %1$d enregistrements</string>
+    <string name="sound_order">Ordre : Égaliseur → Compresseur → Salle → Volume</string>
+    <string name="sound_block_eq">Égaliseur</string>
+    <string name="sound_block_compressor">Compresseur</string>
+    <string name="sound_block_compressor_sub">égalise le volume</string>
+    <string name="sound_block_reverb">Salle</string>
+    <string name="sound_block_reverb_sub">réverbération</string>
+    <string name="sound_block_output">Volume</string>
+    <string name="sound_block_switch">%1$s : activer</string>
+    <string name="sound_block_off">désactivé</string>
+    <string name="sound_block_expand">Développer</string>
+    <string name="sound_block_collapse">Réduire</string>
+    <string name="sound_eq_flat">plat</string>
+    <string-array name="sound_band_names">
+        <item>Ronflement</item>
+        <item>Grave</item>
+        <item>Corps</item>
+        <item>Dureté</item>
+        <item>Air</item>
+    </string-array>
+    <string name="sound_band_low_cut_switch">Couper le ronflement</string>
+    <string name="sound_eq_curve_description">Courbe de l\'égaliseur. Les points des bandes se déplacent au doigt ; les mêmes valeurs se règlent avec les curseurs ci-dessous.</string>
+    <string name="sound_param_frequency">Fréquence</string>
+    <string name="sound_param_gain">Gain</string>
+    <string name="sound_param_width">Largeur</string>
+    <string name="sound_param_width_hint">plus petit — plus large</string>
+    <string name="sound_param_amount">Dosage</string>
+    <string name="sound_param_amount_own">perso</string>
+    <string name="sound_amount_little">un peu</string>
+    <string name="sound_amount_noticeable">net</string>
+    <string name="sound_amount_lot">fort</string>
+    <string name="sound_param_threshold">Seuil</string>
+    <string name="sound_param_threshold_hint">à partir de quel volume compresser</string>
+    <string name="sound_param_ratio">Taux</string>
+    <string name="sound_param_attack">Attaque</string>
+    <string name="sound_param_attack_hint">vitesse de réaction</string>
+    <string name="sound_param_release">Relâchement</string>
+    <string name="sound_param_release_hint">vitesse de retour</string>
+    <string name="sound_param_makeup">Compensation du volume</string>
+    <string name="sound_comp_text">Les passages doux deviennent plus forts, les forts plus doux. L\'enregistrement sonne plus égal, rien ne se perd.</string>
+    <string name="sound_comp_now">Compression actuelle</string>
+    <string name="sound_comp_details">Détails</string>
+    <string-array name="sound_space_names">
+        <item>Pièce</item>
+        <item>Salle</item>
+        <item>Cathédrale</item>
+    </string-array>
+    <string name="sound_param_decay">Durée de la queue</string>
+    <string name="sound_param_decay_hint">s\'éteint jusqu\'au silence</string>
+    <string name="sound_param_pre_delay">Pré-délai</string>
+    <string name="sound_param_pre_delay_hint">pause avant la résonance</string>
+    <string name="sound_param_brightness">Brillance de la queue</string>
+    <string name="sound_param_brightness_hint">mat ↔ brillant</string>
+    <string name="sound_param_mix">Proportion</string>
+    <string name="sound_param_mix_hint">sec ↔ avec salle</string>
+    <string name="sound_param_output">Gain de sortie</string>
+    <string name="sound_limiter_note">Un limiteur veille toujours en sortie : aucune saturation, ni dans le haut-parleur ni dans le fichier.</string>
+    <string name="sound_limiter_hot">Le limiteur travaille : le gain dépasse ce qui peut passer. Baissez-le — le son respirera mieux.</string>
+    <string name="sound_meter_output">sortie</string>
+    <string name="sound_meter_limiter">limiteur</string>
+    <string name="sound_meter_none">—</string>
+    <string name="sound_slider_minus">%1$s : moins</string>
+    <string name="sound_slider_plus">%1$s : plus</string>
+    <string name="sound_slider_reset_hint">touchez deux fois pour réinitialiser</string>
+    <string name="sound_slider_off">désactivé</string>
+    <string name="sound_dialog_everyone_title">Revenir au réglage commun ?</string>
+    <string name="sound_dialog_everyone_text">Les réglages propres à cet enregistrement seront oubliés.</string>
+    <string name="sound_dialog_everyone_confirm">Revenir</string>
+    <string name="sound_dialog_reset_title">Réinitialiser le son des enregistrements ?</string>
+    <string name="sound_dialog_reset_text">Tous les enregistrements sans réglages propres sonneront de nouveau tels qu\'ils ont été enregistrés.</string>
+    <string name="sound_dialog_preset_title">Nouveau préréglage</string>
+    <string name="sound_dialog_preset_hint">Nom</string>
+    <string name="sound_dialog_preset_save">Enregistrer</string>
+    <string name="sound_dialog_delete_title">Supprimer le préréglage « %1$s » ?</string>
+    <string name="sound_dialog_pick_title">Écouter sur</string>
+    <string name="sound_share">Partager</string>
+    <string name="share_message">%1$s · %2$d %% · %3$s</string>
+    <string name="share_message_session">Enregistrement</string>
+    <string name="share_title">Partager l\'enregistrement</string>
+    <string name="share_processed">Son traité</string>
+    <string name="share_processed_caption">%1$s · comme dans l\'application</string>
+    <string name="share_original">Original</string>
+    <string name="share_original_caption">tel qu\'enregistré, sans traitement</string>
+    <string name="share_video_processed">Vidéo avec son traité</string>
+    <string name="share_video_original">Vidéo telle que filmée</string>
+    <string name="share_video_original_caption">fichier d\'origine, son sans traitement</string>
+    <string name="share_video">Vidéo</string>
+    <string name="share_video_caption">telle que filmée</string>
+    <string name="share_sound_only">Son seul</string>
+    <string name="share_sound_only_processed">traité · ≈ %1$s · mono</string>
+    <string name="share_sound_only_caption">tel qu\'enregistré · ≈ %1$s · mono</string>
+    <string name="share_video_details">%1$s · %2$dp · ≈ %3$s</string>
+    <string name="share_large_file">Gros fichier : les messageries risquent de le compresser ou de le refuser</string>
+    <string name="share_failed_video_title">Impossible de préparer la vidéo</string>
+    <string name="share_failed_video_text">La prise et les réglages sont intacts. Vous pouvez réessayer ou envoyer la vidéo telle que filmée, sans traitement du son.</string>
+    <string name="share_send_as_shot">Envoyer telle que filmée</string>
+    <string name="share_file_details">%1$s · ≈ %2$s · mono</string>
+    <string name="share_with_text">Ajouter le texte : « %1$s »</string>
+    <string name="share_continue">Continuer</string>
+    <string name="share_busy">Préparation…</string>
+    <string name="share_preparing">Préparation du fichier</string>
+    <string name="share_remaining">reste environ %1$d s</string>
+    <string name="share_failed_title">Impossible de préparer le fichier</string>
+    <string name="share_failed_text">L\'enregistrement est intact, les réglages aussi. Vous pouvez réessayer ou envoyer l\'original sans traitement.</string>
+    <string name="share_retry">Réessayer</string>
+    <string name="share_send_original">Envoyer l\'original</string>
+    <string name="share_chooser">Partager l\'enregistrement</string>
+    <string name="share_no_app">Aucune application ne peut recevoir l\'enregistrement</string>
+    <string name="share_size_kb">%1$d Ko</string>
+    <string name="share_size_mb">%1$s Mo</string>
+    <string name="card_menu">Plus</string>
+    <string name="card_menu_share">Partager</string>
+    <string name="card_menu_sound">Son…</string>
+    <string name="best_set">Marquer comme meilleure</string>
+    <string name="best_clear">Retirer la marque « meilleure »</string>
+    <string name="best_marked">Marquée comme meilleure</string>
+    <string name="best_marked_moved">Marquée comme meilleure, l\'ancienne marque est retirée</string>
+    <string name="sound_session_row">Son</string>
+    <string name="sound_session_silent">Enregistrement sans son — analyse de la justesse seulement</string>
+    <string name="sound_settings_row">Son des enregistrements</string>
+    <string name="sound_settings_row_caption">%1$s · pour tous les enregistrements</string>
+    <string name="sound_ab_original">Original : tel qu\'enregistré</string>
+    <string name="sound_ab_processed">Avec traitement</string>
+    <string name="stand_counter">%1$d / %2$d</string>
+    <string name="stand_page_description">Page %1$d sur %2$d</string>
+    <string name="stand_delete_page">Supprimer la page</string>
+    <string name="stand_delete_title">Supprimer la page ?</string>
+    <string name="stand_delete_text">La photo de cette page sera supprimée. Les autres resteront en place.</string>
+    <string name="stand_hint">Touchez le bord de la feuille — page suivante</string>
+    <string name="stand_previous_page">Page précédente</string>
+    <string name="stand_next_page">Page suivante</string>
+    <string name="stand_recording_description">Enregistrement d\'une prise en cours, %1$s</string>
+</resources>
