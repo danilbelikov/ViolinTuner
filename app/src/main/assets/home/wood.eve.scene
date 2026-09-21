@@ -49,7 +49,18 @@ floorLine	1									M396 200L398 200L666.8 600L662 600Z
 @out
 sky	0									M-600 -1200h1600v1210h-1600Z	
 SKY	0									M-600 0h1600v190h-1600Z	
+bird	1									M53.5 78Q56.75 74.1 60 78Q63.25 74.1 66.5 78Q63.25 76.31 60 79.3Q56.75 76.31 53.5 78Z	bird:-30:472
+bird	1									M74.8 90Q77.4 86.88 80 90Q82.6 86.88 85.2 90Q82.6 88.648 80 91.04Q77.4 88.648 74.8 90Z	bird:-30:472
+bird	1									M91.45 70Q93.725 67.27 96 70Q98.275 67.27 100.55 70Q98.275 68.81700000000001 96 70.91Q93.725 68.81700000000001 91.45 70Z	bird:-30:472
+bird	1									M344.15 62Q347.075 58.49 350 62Q352.925 58.49 355.85 62Q352.925 60.479 350 63.17Q347.075 60.479 344.15 62Z	bird:-30:472
 far	0									M0 190L0 150L60 120L130 160L200 130L300 170L360 140L412 160L412 190Z	
+rgba(20,16,30,.28)	1									M20 191.5h26v1.5h-26Z	ride:9:-70:556
+#B5483C	1									M20 185h26v6h-26Z	ride:9:-70:556
+#B5483C	1									M26 185l2.5 -4.5h10l2.5 4.5Z	ride:9:-70:556
+window	1									M28 184.5l1.5 -3h8l1.5 3Z	ride:9:-70:556
+#23202B	1									M23 191a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z	ride:9:-70:556
+#23202B	1									M39 191a2 2 0 1 0 4 0a2 2 0 1 0 -4 0Z	ride:9:-70:556
+window	1									M44.5 186.5h1.5v1.5h-1.5Z	ride:9:-70:556
 foliageShade	2									M-20 190h452v410h-452Z	
 foliage	2									M-20 190h452v6h-452Z	
 ground	2	0.5								M196 206L230 206L290 600L130 600Z	
@@ -789,25 +800,25 @@ wood	1									M242 113h112v5h-112Z
 wood	1									M242 122h112v5h-112Z	
 wood	1									M242 131h112v5h-112Z	
 @back window_simple
-woodDark	1									M236 34h124v114h-124Z	
-@item window_simple 232 40 364 153
-woodDark	1									M296 40h4v102h-4Z	
+woodDark	1									M236 19h124v129h-124Z	
+@item window_simple 232 25 364 153
+woodDark	1									M296 25h4v117h-4Z	
 woodDark	1									M242 90h112v4h-112Z	
 woodDark	1									M232 148h132v5h-132Z	
 @back window_arched
 woodDark	1									M236 148v-67a62 62 0 0 1 124 0v67Z	
-@item window_arched 232 40 364 153
-woodDark	1									M296 40h4v102h-4Z	
+@item window_arched 232 25 364 153
+woodDark	1									M296 25h4v117h-4Z	
 woodDark	1									M242 90h112v4h-112Z	
 woodDark	1									M232 148h132v5h-132Z	
 @back window_stained
 woodDark	1									M236 148v-67a62 62 0 0 1 124 0v67Z	
-@item window_stained 232 40 364 153
+@item window_stained 232 25 364 153
 rgba(142,47,63,.45)	1									M242 40h54v50h-54Z	
 rgba(91,67,184,.45)	1									M300 40h54v50h-54Z	
 rgba(217,178,107,.4)	1									M242 94h54v48h-54Z	
 rgba(78,142,87,.4)	1									M300 94h54v48h-54Z	
-woodDark	1									M296 40h4v102h-4Z	
+woodDark	1									M296 25h4v117h-4Z	
 woodDark	1									M242 90h112v4h-112Z	
 woodDark	1									M232 148h132v5h-132Z	
 @item view_city 242 25 354 142

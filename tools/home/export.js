@@ -2,7 +2,7 @@
 //
 //   node tools/home/export.js [previewDir]
 //
-// The handoff's catalogue is a runnable module (docs/design/project/home/project/home-catalog.js):
+// The handoff's catalogue is a runnable module (docs/design/project/home2/project/home-catalog.js):
 // items, slots, houses and the function that composes a room. It is run here and written out as
 //   app/src/main/assets/home/<house>.<eve|day>.scene              — the art: base, hero, every item in its place
 //   core/domain/home/HomeCatalogData.kt                            — what the rules need: prices, slots, cities
@@ -31,6 +31,22 @@ const line = l => [l.fill, l.depth, num(l.op), num(l.tx), num(l.ty), num(l.sc), 
 const BIRD = (x, y, s, left, span) => L('bird', `M${x - 5 * s} ${y}Q${x - 2.5 * s} ${y - 3 * s} ${x} ${y}Q${x + 2.5 * s} ${y - 3 * s} ${x + 5 * s} ${y}Q${x + 2.5 * s} ${y - 1.3 * s} ${x} ${y + 1 * s}Q${x - 2.5 * s} ${y - 1.3 * s} ${x - 5 * s} ${y}Z`, 1, { anim: `bird:${left}:${span}` });
 const birds = (x, y) => [[-30, -33, 1.05], [-16, -24, 1.3], [8, -38, .9], [20, -18, 1.15], [40, -30, 1]].map(([dx, dy, k]) => BIRD(x + dx, y + dy, k, x - 48, 96));
 
+// life outside (owner, after 0.51): a flock over the roofs and a car that passes — in the street before the rented room,
+// on the far road behind the garden of the wooden house (the grass hides its wheels). All layers of the car ride as one.
+const flockOut = spots => spots.map(([x, y, k]) => ({ ...BIRD(x, y, k * 1.3, -30, 472), depth: 1 }));
+const passing = (x, y, k, c, eve, depth) => [
+  L('rgba(20,16,30,.28)', `M${x} ${y + 1 * k}h${52 * k}v${3 * k}h${-52 * k}Z`, depth),
+  L(c.body, `M${x} ${y - 12 * k}h${52 * k}v${12 * k}h${-52 * k}Z`, depth), L(c.body, `M${x + 12 * k} ${y - 12 * k}l${5 * k} ${-9 * k}h${20 * k}l${5 * k} ${9 * k}Z`, depth),
+  L(eve ? 'window' : c.dark, `M${x + 16 * k} ${y - 13 * k}l${3 * k} ${-6 * k}h${16 * k}l${3 * k} ${6 * k}Z`, depth),
+  L(c.dark, `M${x + 6 * k} ${y}a${4 * k} ${4 * k} 0 1 0 ${8 * k} 0a${4 * k} ${4 * k} 0 1 0 ${-8 * k} 0Z`, depth), L(c.dark, `M${x + 38 * k} ${y}a${4 * k} ${4 * k} 0 1 0 ${8 * k} 0a${4 * k} ${4 * k} 0 1 0 ${-8 * k} 0Z`, depth),
+  L('window', `M${x + 49 * k} ${y - 9 * k}h${3 * k}v${3 * k}h${-3 * k}Z`, depth),
+];
+const riding = (layers, speed, x0, x1, pause) => layers.map(l => ({ ...l, anim: `ride:${speed}:${-(x1 + 24)}:${412 - x0 + 24 + pause}` }));
+const OUT_LIFE = {
+  rent: (layers, eve) => [...layers.slice(0, 2), ...flockOut([[70, 72, 1], [88, 84, .8], [330, 58, .9], [348, 70, .7]]), ...layers.slice(2), ...riding(passing(40, 232, 1.15, { body: '#3F6FA8', dark: '#23202B' }, eve, 2), 34, 40, 100, 260)],
+  wood: (layers, eve) => { const at = layers.findIndex(l => l.fill === 'foliageShade'); return [...layers.slice(0, 2), ...flockOut([[60, 78, 1], [80, 90, .8], [96, 70, .7], [350, 62, .9]]), ...layers.slice(2, at), ...riding(passing(20, 191, .5, { body: '#B5483C', dark: '#23202B' }, eve, 1), 9, 20, 46, 140), ...layers.slice(at)]; },
+};
+
 const out = path.join(root, 'app/src/main/assets/home');
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(out, { recursive: true });
@@ -44,7 +60,7 @@ for (const H of drawn) {
     const plain = H.room(eve, null, null), marked = H.room(eve, null, () => [L(MARK.floor, 'M0 0Z')]);
     const at = marked.findIndex(l => l.fill === MARK.floor);
     lines.push('@floorpat default', ...plain.slice(at, at + plain.length - marked.length + 1).map(line));
-    lines.push('@out', ...H.outside(eve, MARK.curtain).map(line));
+    lines.push('@out', ...(OUT_LIFE[H.id] ? OUT_LIFE[H.id](H.outside(eve, MARK.curtain), eve) : H.outside(eve, MARK.curtain)).map(line));
     lines.push('@hero', ...hero(H.hero[0], H.hero[1], .95, 1).map(line));
     for (const it of ITEMS) {
       if (it.pat) lines.push(`@${it.s === 'floor' ? 'floorpat' : 'pat'} ${it.id}`, ...it.pat(eve).map(line));
