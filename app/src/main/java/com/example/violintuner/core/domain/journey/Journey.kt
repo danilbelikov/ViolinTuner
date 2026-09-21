@@ -119,7 +119,8 @@ object JourneyRules {
 
     /** Extras belong to stops that have been reached and drawn; a second view — to those that have one. */
     fun offers(stop: JourneyStop, progress: JourneyProgress): List<JourneyExtra> {
-        if (progress.arrivals.none { it.stopId == stop.id }) return emptyList()
+        // home is a section of its own (spec 3.24): the clock gives its time of day, the shop gives the rest
+        if (stop.id == JourneyRoute.HOME || progress.arrivals.none { it.stopId == stop.id }) return emptyList()
         return JourneyExtra.entries.filter { extra ->
             when (extra) {
                 JourneyExtra.SECOND_TIME -> stop.views.isNotEmpty()

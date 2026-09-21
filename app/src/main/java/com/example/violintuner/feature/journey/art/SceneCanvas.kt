@@ -90,6 +90,9 @@ fun ScenePicture(
     }
 }
 
+/** Draws the layers of [prepared] at [k] pixels a unit, from the origin: for a thing shown alone, on a shelf. */
+fun DrawScope.drawPrepared(prepared: PreparedScene, k: Float, seconds: Float? = null) = drawScene(prepared, k, 0f, seconds)
+
 /** Loads `assets/journey/<key>.<mode>.scene` off the main thread; null while it loads and when there is no such picture. */
 @Composable
 fun rememberScene(sceneKey: String?, mode: SceneMode): PreparedScene? {

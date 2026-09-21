@@ -116,6 +116,12 @@ ZIP-архивом прямо в место, выбранное системны
 26a–26l), спека сверена с ними (0.40; в 0.41 четыре открытки дорисованы после хэндоффа), план и принятые расхождения — `docs/plan-journey.md`. Все четыре
 этапа сделаны; на эмуляторе проверено, на телефоне и инструменте — нет, **цены и курс тактов стартовые**.
 См. раздел «Путешествие» ниже.
+Последняя сделанная фича — дом (spec 3.24, 5.18, этапы 56–59): лавка на 107 вещей за те же такты, что и дорога (один
+кошелёк; лучшее «привозится» из городов маршрута), купленное появляется в комнате на своём месте, примерка до
+покупки, «Обставить», два дома из семи (съёмная комната и деревянный домик) с видом снаружи и переездом (база
+v10). Макеты — `docs/design/project/home/project/Дом.dc.html` (кадры 27a–27h) и исполняемый каталог
+`home-catalog.js`, спека сверена с ними (0.48), план и принятые расхождения — `docs/plan-home.md`. Все четыре
+этапа сделаны; на эмуляторе проверено, на телефоне — нет. См. раздел «Дом» ниже.
 Комментарии, фоновую запись, прочие настройки, светлую тему не делать, даже если удобно
 «заодно» (spec, раздел 7).
 
@@ -123,11 +129,11 @@ ZIP-архивом прямо в место, выбранное системны
 - Kotlin, Jetpack Compose + Material 3 (Compose BOM), Gradle Kotlin DSL, version catalog `gradle/libs.versions.toml`
 - Hilt, Coroutines/Flow, Navigation Compose
 - minSdk 26, Java 17 (`compileOptions`; Gradle-демон работает на JDK 21), один модуль `app`
-- DataStore Preferences — пользовательские настройки и идущее занятие (`core/settings`); Room — сессии, занятия, трофеи, репертуар и настройки звука (`core/data`, база `violin.db` v9)
+- DataStore Preferences — пользовательские настройки и идущее занятие (`core/settings`); Room — сессии, занятия, трофеи, репертуар и настройки звука (`core/data`, база `violin.db` v10)
 - Никаких сторонних DSP-библиотек: детектор высоты тона свой (YIN и MPM), параметры — в спеке
 
 ## Архитектура
-- Clean + MVI. Пакеты: `feature/live`, `feature/onboarding`, `feature/settings`, `feature/session`, `feature/history` (вкладка «Записи»), `feature/practice`, `feature/repertoire` (список, `form`, `piece`, `stand`), `feature/sound` (экран «Звук»), `feature/backup` (копия и восстановление), `feature/journey` (путешествие; открытки — `art`); общее — `core/audio`, `core/domain`, `core/data`, `core/settings`, `core/recording` (конвейер записи `TakePipeline`), `core/backup` (копия данных), `core/ui` (тема, токены, общие компоненты, форматы, запрос разрешения на микрофон).
+- Clean + MVI. Пакеты: `feature/live`, `feature/onboarding`, `feature/settings`, `feature/session`, `feature/history` (вкладка «Записи»), `feature/practice`, `feature/repertoire` (список, `form`, `piece`, `stand`), `feature/sound` (экран «Звук»), `feature/backup` (копия и восстановление), `feature/journey` (путешествие; открытки — `art`), `feature/home` (дом, лавка, «Обставить», дома; сборка комнаты — `art`); общее — `core/audio`, `core/domain`, `core/data`, `core/settings`, `core/recording` (конвейер записи `TakePipeline`), `core/backup` (копия данных), `core/ui` (тема, токены, общие компоненты, форматы, запрос разрешения на микрофон).
 - Экран: `LiveContract` (State / Intent / Effect), `LiveViewModel`, `LiveScreen` (stateless: принимает State и `(Intent) -> Unit`), `LiveRoute` (ViewModel + навигация).
 - Доменная логика (центы, зоны, сглаживание, гистерезис, снэп к струнам) — чистый Kotlin без Android-зависимостей в `core/domain`, покрыта unit-тестами.
 - Все числовые константы — в `IntonationConfig` со значениями из спеки; числа учёта занятий — в `PracticeConfig` (spec 5.6). Магических чисел в коде нет. Эталон A4 и допуск — выбор пользователя: готовый конфиг приходит потоком из `IntonationConfigSource`, синглтон `IntonationConfig` в Hilt — только значения по умолчанию.
@@ -312,6 +318,18 @@ ZIP-архивом прямо в место, выбранное системны
 - Огонёк — `StreakFlame` (`feature/practice/components`): `FlameArt` (два слоя из `FLAME` макета), чистый `FlameMath` с тестами, числа — `PracticeMotion.FLAME_*`, цвета — `practiceColors.flame*` (оранжевый между `zone.near` и `zone.off`, больше нигде не использовать). Колышется 6 с после входа в композицию и после разгорания, потом покой без кадров; при идущем занятии неподвижен — **трёх движений на «Занятиях» одновременно не бывает** (макет 19h назвал это витриной). Запасной вариант «только при росте серии» — `FLAME_SWAY_ON_OPEN = false`.
 - Рост серии «на глазах» — счётчик известной серии, пересоздаваемый со `scope` (как у `rolledValue`). Только что заслуженный огонёк прячется (`alpha = 0`) ещё в композиции: иначе один кадр он рисуется полностью и мигает — это поймано на видео.
 - Проверка движения на эмуляторе: `screenrecord` + Swift (`AVAssetImageGenerator`) и счёт оранжевых пикселей по кадрам; серию подкладывать строками `practice_entries` по минуте в день (трофеи не вручаются), базу потом вернуть. `screenrecord` пишет кадры только при изменениях экрана — длительность файла меньше `--time-limit`, это не сбой.
+
+## Дом
+Этапы 56–59 сделаны — план и отклонения в `docs/plan-home.md`. Не проверено: телефон, покупка домика и кино переезда руками, комната домика и двор глазами, landscape, день, ёлка, TalkBack.
+- Слова: «дом» (раздел и `HomeHouse`), «лавка», «вещь» (`HomeItem`), «место» (`HomeSlot`), «Обставить». **Вещь знает своё место, в месте стоит одна вещь, перетаскивания нет** — поэтому комната всегда собрана. Стены, пол и шторы — не вещи, а цвета (`palette`) и узор (`pattern`). Кошелёк один с дорогой; ничего не отнимается и не требует ухода; на Live ничего.
+- **Каталог сгенерирован**: `node tools/home/export.js [папка предпросмотра]` исполняет `docs/design/project/home/project/home-catalog.js` (заглушка React) и пишет `assets/home/<дом>.<eve|day>.scene`, `core/domain/home/HomeCatalogData.kt`, `feature/home/HomeTexts.kt`, `feature/home/art/HomeSilhouettes.kt`, `res/values/home_catalog.xml`. Вещь, цену, место меняют в хэндоффе и выгружают заново; руками — только `strings_home.xml` и Kotlin.
+- Домен — `core/domain/home/Home.kt`, чистый: `HomeCatalog` (`GIFT`, `startItems` — всё бесплатное, кроме подарка, принадлежит сразу и не продаётся), `HomeState` (`purchased`, `houses`, `choices`: место → вещь, `""` — «пусто», ключ `@house`), `HomeRules` (`placed` — выбор, иначе то, с чем комната досталась; `standing(state, house, outside, date)` — что видно, сзади вперёд; `unlocked` — город достигнут; `slotIn`; `inSeason` — ёлка 1.12–15.01; `catOnPorch`; `nextHouse`; `wardrobe`).
+- Хранение — в `JourneyDao` (покупке нужен общий баланс в одной транзакции): `home_purchases`, `home_choices`, `buyForHome`; `RoomJourneyRepository.progress.spent` включает дом. База v10 (`MIGRATION_9_10`, ничего не засевается); `DatabaseMigrationTest` стартует с v1–v9.
+- Сборка — `feature/home/art`: `HouseArt.parse` (секции `@room` с метками `@pat` / `@floorpat`, `@out` с меткой `@curtain`, `@hero`, `@item <id> <bbox>`, `@porch`, `@pat`, `@floorpat`), чистый `HomeComposer.compose` → `Scene(HOUSE, overrides = цвета стен, пола, штор)`. **Окно: подложка — до вида из окна, переплёт — после; шторы снаружи передаются отдельно** — в `compose` хэндоффа обе вещи сломаны, не «упрощай» обратно к сортировке по `z`. `HomePicture(state, outside, mode, ghost…)`, `ItemThumb` (вещь одна, по своему bbox; цвета — образцом; `silhouette` — для ещё не привезённых), `homeModeNow()` — день с 7 до 19. `HomeComposerTest` собирает каждый дом с каждой вещью и проверяет, что каждый цвет разрешается.
+- Общая отрисовка — в `feature/journey/art`: `ScenePicture(prepared, …, overlay)`, `prepare(scene, mode)` с кешем путей, `SceneCameraState` + `Modifier.sceneCamera` (перетаскивание, щипок, двойной тап, `lookAt(gridX)` — примерка поворачивается к вещи), `ScenePalette.HOUSE`. Движения слоя пополнились: `flick`, `rise`, `sway`, `swing:градусы:период:px:py` (поворот вокруг точки), `blink` — глаза; огонь самолёта теперь `flash`.
+- Экраны — `feature/home`: один `HomeViewModel` на четыре вида (`HomeView`), у каждого маршрута свой экземпляр; `card`, `tryOn`, `houseCard`, `moving` — состояние экрана, «назад» сначала складывает открытое (и `BackHandler` в `HomeRoute`). Дом оплачен до кино переезда. Интенты читают `latestHome` / `latestProgress`, не `state.value`.
+- Дом вместо открытки: `StopPostcard` рисует `HomePicture`, если остановка — дом и в `LocalHomeLook` есть состояние; его кладут `JourneyRoute` и `PracticeRoute` (`HomeLookViewModel`). Экран остановки «Дом» заменён маршрутом `home` (`AppNavHost.onOpenStop`), дополнений остановки у дома нет. На «Занятиях» в дороге под окном города — `HomeWindowCard` (96 dp).
+- Проверка на эмуляторе: вход — «Занятия» → карточка по описанию «Дом:»; такты подкладывать строкой в `journey_earnings`; скриншот сразу после перехода ловит пустой экран, пока читается состояние и разбирается файл слоёв — жди пару секунд.
 
 ## Путешествие
 Этапы 52–55 сделаны — план и отклонения в `docs/plan-journey.md`. Не проверено: телефон и живой инструмент (сколько тактов даёт настоящее занятие), движение открытки глазами и щипок в полном экране, landscape, таблетка «+N тактов» глазами, дорога кораблём и самолётом, «убрать анимации», TalkBack.

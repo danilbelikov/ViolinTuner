@@ -39,13 +39,13 @@ private val Shape = RoundedCornerShape(20.dp)
  * for anything: enough takts only change the line, the road is taken on the journey's own screen.
  */
 @Composable
-fun JourneyWindowCard(window: JourneyWindow, compact: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun JourneyWindowCard(window: JourneyWindow, compact: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier, onHomeClick: () -> Unit = {}) {
     val colors = MaterialTheme.colorScheme
     val index = JourneyRoute.indexOf(window.current.id)
     val city = cityOf(index)
     Column(modifier.fillMaxWidth().clip(Shape).background(colors.surfaceContainer).clickable(onClickLabel = stringResource(R.string.journey_title), role = Role.Button, onClick = onClick)) {
         Box(Modifier.fillMaxWidth().height(if (compact) 96.dp else 160.dp)) {
-            Postcard(window.current, description = stringResource(R.string.journey_card_description, city), modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds())
+            StopPostcard(window.current, description = stringResource(R.string.journey_card_description, city), modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds())
             Text(
                 city,
                 modifier = Modifier.align(Alignment.BottomStart).padding(12.dp).clip(CircleShape).background(colors.surface.copy(alpha = 0.72f)).padding(horizontal = 10.dp, vertical = 4.dp),
@@ -80,3 +80,26 @@ fun JourneyWindowCard(window: JourneyWindow, compact: Boolean, onClick: () -> Un
 }
 
 private fun next(window: JourneyWindow): Float? = window.next?.let { (window.balance.toFloat() / it.price).coerceIn(0f, 1f) }
+
+/**
+ * On the road the window is the city — the road is the main thing, as it was — and home stands by
+ * as a narrow card: the cat on the sill and the light of the lamp are enough to remember what
+ * else one is saving for (handoff 27g2). At home there is one card, the room itself.
+ */
+@Composable
+fun HomeWindowCard(onClick: () -> Unit, modifier: Modifier = Modifier) {
+    val home = LocalHomeLook.current?.takeIf { it.loaded } ?: return
+    val colors = MaterialTheme.colorScheme
+    val name = stringResource(R.string.journey_home)
+    Box(modifier.fillMaxWidth().height(96.dp).clip(Shape).clickable(onClickLabel = name, role = Role.Button, onClick = onClick)) {
+        com.example.violintuner.feature.home.art.HomePicture(
+            home, outside = false, mode = com.example.violintuner.feature.home.art.homeModeNow(),
+            description = stringResource(R.string.journey_home_card, name), modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds(),
+        )
+        Text(
+            name,
+            modifier = Modifier.align(Alignment.BottomStart).padding(10.dp).clip(CircleShape).background(colors.surface.copy(alpha = 0.72f)).padding(horizontal = 10.dp, vertical = 4.dp),
+            color = colors.onSurface, style = MaterialTheme.typography.labelLarge,
+        )
+    }
+}

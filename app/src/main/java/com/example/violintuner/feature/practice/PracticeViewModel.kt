@@ -137,6 +137,7 @@ class PracticeViewModel @Inject constructor(
             PracticeIntent.EditTimeSaved -> saveEdit()
             PracticeIntent.EditTimeCancelled -> ui.update { it.copy(sheet = null) }
             PracticeIntent.JourneyClicked -> effectChannel.trySend(PracticeEffect.OpenJourney)
+            PracticeIntent.HomeClicked -> effectChannel.trySend(PracticeEffect.OpenHome)
             is PracticeIntent.SessionClicked -> effectChannel.trySend(PracticeEffect.OpenSession(intent.id))
             PracticeIntent.ProfileClicked -> openSheet(PracticeSheet.Profile(latestProfile.name, importingPhoto = false))
             is PracticeIntent.ProfileNameChanged ->

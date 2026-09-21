@@ -13,6 +13,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.violintuner.core.ui.motion.LocalReduceMotion
+import com.example.violintuner.feature.home.HomeLookViewModel
 import com.example.violintuner.core.ui.motion.rememberAnimationsRemoved
 
 /** Which of the journey's three views of the same state a route shows. */
@@ -51,7 +52,8 @@ fun JourneyRoute(
     }
     // The road has no way out: it is two seconds, and the leg is already paid
     BackHandler(enabled = state.phase is JourneyPhase.Road) {}
-    CompositionLocalProvider(LocalReduceMotion provides reduce) {
+    val homeLook by hiltViewModel<HomeLookViewModel>().state.collectAsStateWithLifecycle()
+    CompositionLocalProvider(LocalReduceMotion provides reduce, LocalHomeLook provides homeLook) {
         when (view) {
             JourneyView.MAIN -> JourneyScreen(state, viewModel::onIntent, modifier)
             JourneyView.MAP -> MapScreen(state, viewModel::onIntent, modifier)

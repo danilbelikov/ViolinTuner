@@ -14,6 +14,9 @@ import com.example.violintuner.feature.backup.BackupRoute
 import com.example.violintuner.feature.backup.RestoreRoute
 import com.example.violintuner.feature.backup.RestoreViewModel
 import com.example.violintuner.feature.history.HistoryRoute
+import com.example.violintuner.core.domain.journey.JourneyRoute as JourneyStops
+import com.example.violintuner.feature.home.HomeRoute
+import com.example.violintuner.feature.home.HomeView
 import com.example.violintuner.feature.journey.JourneyRoute
 import com.example.violintuner.feature.journey.JourneyView
 import com.example.violintuner.feature.journey.StopRoute
@@ -55,6 +58,10 @@ private const val JOURNEY_MAP_ROUTE = "journeyMap"
 private const val JOURNEY_PASSPORT_ROUTE = "journeyPassport"
 private const val JOURNEY_STOP_ROUTE = "journeyStop"
 private const val JOURNEY_STOP_PATTERN = "$JOURNEY_STOP_ROUTE/{${StopViewModel.ARG_STOP_ID}}"
+private const val HOME_ROUTE = "home"
+private const val HOME_SHOP_ROUTE = "homeShop"
+private const val HOME_ARRANGE_ROUTE = "homeArrange"
+private const val HOME_HOUSES_ROUTE = "homeHouses"
 private const val BACKUP_ROUTE = "backup"
 private const val RESTORE_ROUTE = "restore"
 private const val RESTORE_PATTERN = "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}={${RestoreViewModel.ARG_URI}}"
@@ -84,6 +91,7 @@ fun AppNavHost(
                 onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },
                 onOpenSession = navController::navigateToSession,
                 onOpenJourney = { navController.navigate(JOURNEY_ROUTE) { launchSingleTop = true } },
+                onOpenHome = { navController.navigate(HOME_ROUTE) { launchSingleTop = true } },
             )
         }
         composable(TopLevelDestination.HISTORY.route) {
@@ -220,7 +228,8 @@ fun AppNavHost(
                     view = view,
                     onOpenMap = { navController.navigate(JOURNEY_MAP_ROUTE) { launchSingleTop = true } },
                     onOpenPassport = { navController.navigate(JOURNEY_PASSPORT_ROUTE) { launchSingleTop = true } },
-                    onOpenStop = { stopId -> navController.navigate("$JOURNEY_STOP_ROUTE/$stopId") { launchSingleTop = true } },
+                    // home is not a stop with a postcard any more: it is a section of its own (spec 3.24)
+                    onOpenStop = { stopId -> navController.navigate(if (stopId == JourneyStops.HOME) HOME_ROUTE else "$JOURNEY_STOP_ROUTE/$stopId") { launchSingleTop = true } },
                     onClose = navController::popBackStack,
                 )
             }
@@ -229,6 +238,19 @@ fun AppNavHost(
             route = JOURNEY_STOP_PATTERN,
             arguments = listOf(navArgument(StopViewModel.ARG_STOP_ID) { type = NavType.StringType }),
         ) { StopRoute(onClose = navController::popBackStack) }
+        // The home (spec 3.24): four views of one state, above the tabs.
+        mapOf(HOME_ROUTE to HomeView.MAIN, HOME_SHOP_ROUTE to HomeView.SHOP, HOME_ARRANGE_ROUTE to HomeView.ARRANGE, HOME_HOUSES_ROUTE to HomeView.HOUSES).forEach { (route, view) ->
+            composable(route) {
+                HomeRoute(
+                    view = view,
+                    onOpenShop = { navController.navigate(HOME_SHOP_ROUTE) { launchSingleTop = true } },
+                    onOpenArrange = { navController.navigate(HOME_ARRANGE_ROUTE) { launchSingleTop = true } },
+                    onOpenHouses = { navController.navigate(HOME_HOUSES_ROUTE) { launchSingleTop = true } },
+                    onOpenHome = { if (!navController.popBackStack(HOME_ROUTE, inclusive = false)) navController.navigate(HOME_ROUTE) { launchSingleTop = true } },
+                    onClose = navController::popBackStack,
+                )
+            }
+        }
         // A copy of the data and its coming back (spec 3.20): above the tabs, without the bottom bar.
         composable(BACKUP_ROUTE) { BackupRoute(onClose = navController::popBackStack) }
         composable(

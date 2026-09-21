@@ -142,6 +142,9 @@ sealed interface PracticeIntent {
     /** The window into the journey (spec 3.23). */
     data object JourneyClicked : PracticeIntent
 
+    /** The narrow card «дом» under the window into the journey (spec 3.24). */
+    data object HomeClicked : PracticeIntent
+
     data object StartClicked : PracticeIntent
 
     data object StopClicked : PracticeIntent
@@ -204,6 +207,8 @@ sealed interface PracticeEffect {
     data class OpenSession(val id: Long) : PracticeEffect
 
     data object OpenJourney : PracticeEffect
+
+    data object OpenHome : PracticeEffect
 
     data object ShowTooShort : PracticeEffect
 

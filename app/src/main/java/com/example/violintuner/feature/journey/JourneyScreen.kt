@@ -151,7 +151,7 @@ private fun Place(state: JourneyState, postcardHeight: Dp, onIntent: (JourneyInt
         Modifier.fillMaxWidth().height(postcardHeight).clip(PostcardShape)
             .clickable(onClickLabel = city, role = Role.Button) { onIntent(JourneyIntent.StopClicked(state.current.id)) },
     ) {
-        Postcard(state.current, description = stringResource(R.string.journey_card_description, city), modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds())
+        StopPostcard(state.current, description = stringResource(R.string.journey_card_description, city), modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds())
         Text(
             text = if (state.currentIndex == 0) stringResource(R.string.journey_stop_home, state.totalStops) else stringResource(R.string.journey_stop_of, state.currentIndex, state.totalStops),
             modifier = Modifier.align(Alignment.TopStart).padding(12.dp).clip(CircleShape).background(colors.surface.copy(alpha = 0.72f)).padding(horizontal = 10.dp, vertical = 4.dp),
@@ -209,7 +209,7 @@ private fun Way(state: JourneyState, onIntent: (JourneyIntent) -> Unit) {
                 itemsIndexed(behind.asReversed(), key = { _, it -> it.stop.id }) { _, visited ->
                     val city = cityOf(visited.index)
                     Column(Modifier.width(96.dp).clip(RoundedCornerShape(12.dp)).clickable(onClickLabel = city, role = Role.Button) { onIntent(JourneyIntent.StopClicked(visited.stop.id)) }) {
-                        Postcard(visited.stop, description = city, modifier = Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(12.dp)))
+                        StopPostcard(visited.stop, description = city, modifier = Modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(12.dp)))
                         Text(city, modifier = Modifier.padding(top = 4.dp, start = 2.dp), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
@@ -219,6 +219,8 @@ private fun Way(state: JourneyState, onIntent: (JourneyIntent) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedButton(onClick = { onIntent(JourneyIntent.MapClicked) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.journey_map)) }
         OutlinedButton(onClick = { onIntent(JourneyIntent.PassportClicked) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.journey_passport)) }
+        // home is a section of its own now (spec 3.24): the door to it is always here, wherever the road has led
+        OutlinedButton(onClick = { onIntent(JourneyIntent.StopClicked(JourneyRoute.HOME)) }, modifier = Modifier.weight(1f)) { Text(stringResource(R.string.journey_home)) }
     }
 }
 
@@ -244,7 +246,7 @@ private fun IntroContent(onIntent: (JourneyIntent) -> Unit) {
             modifier = Modifier.widthIn(max = MaxContentWidth).fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Postcard(JourneyRoute.stops.first(), description = cityOf(0), modifier = Modifier.fillMaxWidth().height(PostcardHeight).clip(PostcardShape), seconds = rememberSceneSeconds())
+            StopPostcard(JourneyRoute.stops.first(), description = cityOf(0), modifier = Modifier.fillMaxWidth().height(PostcardHeight).clip(PostcardShape), seconds = rememberSceneSeconds())
             Text(stringResource(R.string.journey_intro_title), color = colors.onSurface, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
             Text(stringResource(R.string.journey_intro_text), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge)
             Text(stringResource(R.string.journey_intro_first, taktsInWords(first.price.toLong())), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)

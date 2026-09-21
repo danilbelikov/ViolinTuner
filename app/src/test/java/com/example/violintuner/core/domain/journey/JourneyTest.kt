@@ -101,7 +101,8 @@ class JourneyTest {
         val progress = JourneyProgress(earned = 1_000, spent = 0, arrivals = listOf(Arrival("home", 1), Arrival("vienna", 2), Arrival("sketch", 3)), extras = emptySet())
         fun stop(id: String) = JourneyRoute.stops.first { it.id == id }
         assertEquals(JourneyExtra.entries.toList(), JourneyRules.offers(stop("vienna"), progress))
-        assertEquals(listOf(JourneyExtra.SECOND_TIME, JourneyExtra.SOUVENIR), JourneyRules.offers(stop("home"), progress))
+        // home is a section of its own: no extras of a stop
+        assertEquals(emptyList<JourneyExtra>(), JourneyRules.offers(stop("home"), progress))
         // a stop that has only its sketch yet: nothing to see by day
         assertEquals(listOf(JourneyExtra.SOUVENIR), JourneyRules.offers(JourneyStop("sketch", 100, Transport.TRAIN, 0f, 0f, available = true), progress))
         // every hall can be seen from inside, the two rooms of Italy from outside; only home has no second view

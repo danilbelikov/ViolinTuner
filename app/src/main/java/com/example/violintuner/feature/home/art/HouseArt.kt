@@ -76,6 +76,7 @@ class ComposedHome(val scene: Scene, val ghost: ItemArt?)
  */
 object HomeComposer {
     private const val FRONT = 5
+    private const val WINDOW = "window"
     private const val GHOST_DENSITY = 0.5f
     private const val DAY_LIFT = 0.18f
     private const val WHITE = 0xFFFFFFFFL
@@ -105,7 +106,14 @@ object HomeComposer {
                 }
             }
         }
-        fun draw(item: HomeItem) { art.items[item.id]?.let { layers += it.layers } }
+        // A window is its backing, then the glazing bars and the sill; the view belongs between them. Sorted by `z`
+        // alone (the handoff's way) the backing covers the view — found on the emulator: the window was a brown board.
+        val window = things.firstOrNull { it.slot == WINDOW }?.let { art.items[it.id] }
+        window?.layers?.firstOrNull()?.let { layers += it }
+        fun draw(item: HomeItem) {
+            val drawn = art.items[item.id] ?: return
+            layers += if (item.slot == WINDOW) drawn.layers.drop(1) else drawn.layers
+        }
         things.filter { it.z < FRONT }.forEach(::draw)
         val ghostArt = ghost?.let { art.items[it.id] }
         ghostArt?.layers?.forEach { layers += it.copy(opacity = it.opacity * GHOST_DENSITY, anim = null) }

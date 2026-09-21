@@ -106,4 +106,17 @@ class HomeComposerTest {
         val wood = HomeComposer.compose(woodArt, HomeRules.standing(state, "wood", true, today), true, SceneMode.EVENING, porchCat = HomeRules.catOnPorch(state, "wood")).scene
         assertTrue(wood.layers.any { it === woodArt.porch.getValue("cat_grey").first() })
     }
+
+    @Test
+    fun `the view is seen through the window - behind the glazing bars, in front of the backing`() {
+        val art = art("rent", SceneMode.EVENING)
+        val layers = HomeComposer.compose(art, HomeRules.standing(loaded, "rent", false, today), false, SceneMode.EVENING).scene.layers
+        val window = art.items.getValue("window_simple").layers
+        val view = art.items.getValue("view_city").layers
+        val backing = layers.indexOfFirst { it === window.first() }
+        val sky = layers.indexOfFirst { it === view.first() }
+        val bars = layers.indexOfFirst { it === window[1] }
+        assertTrue(backing in 0 until sky && sky < bars)
+        assertEquals(1, layers.count { it === window.first() })
+    }
 }

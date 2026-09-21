@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The home (spec 3.24). Names of things, places and homes are generated: home_catalog.xml. -->
+<resources>
+    <string name="home_title">Дом</string>
+    <string name="home_back">Назад</string>
+    <string name="home_room">Комната</string>
+    <string name="home_outside">Снаружи</string>
+    <string name="home_evening">вечер</string>
+    <string name="home_day">день</string>
+    <string name="home_shop">Лавка</string>
+    <string name="home_arrange">Обставить</string>
+    <string name="home_picture_room">Комната: %1$s</string>
+    <string name="home_picture_outside">Дом снаружи: %1$s</string>
+    <string name="home_things_none">всё как было, когда сняли</string>
+    <string name="home_things_one">%1$d вещь</string>
+    <string name="home_things_few">%1$d вещи</string>
+    <string name="home_things_many">%1$d вещей</string>
+    <string name="home_things_brought">%1$s, %2$d привезено из путешествия</string>
+    <string name="home_gift_title">Первый подарок ждёт в лавке</string>
+    <string name="home_gift_text">Подставка — скрипка выходит из футляра. Бесплатно.</string>
+    <string name="home_gift_take">Забрать</string>
+    <string name="home_brought">Привезено из путешествия</string>
+    <string name="home_next_house">Следующий дом</string>
+    <string name="home_all_houses">Все дома</string>
+    <string name="home_have">%1$s / %2$s</string>
+    <string name="home_house_soon">скоро</string>
+
+    <string name="shop_all">Всё</string>
+    <string name="shop_group_instrument">Инструменты</string>
+    <string name="shop_group_music">Музыка</string>
+    <string name="shop_group_room">Комната</string>
+    <string name="shop_group_light">Свет</string>
+    <string name="shop_group_furniture">Мебель</string>
+    <string name="shop_group_plant">Растения</string>
+    <string name="shop_group_life">Мелочи</string>
+    <string name="shop_group_pet">Животные</string>
+    <string name="shop_group_outside">Снаружи</string>
+    <string name="shop_shelf_instrument">Лавка мастера</string>
+    <string name="shop_shelf_music">Ноты и музыка</string>
+    <string name="shop_shelf_room">Стены, пол, окно</string>
+    <string name="shop_shelf_light">Рынок · свет</string>
+    <string name="shop_shelf_furniture">Рынок · мебель</string>
+    <string name="shop_shelf_plant">Цветочный ряд</string>
+    <string name="shop_shelf_life">Мелочи жизни</string>
+    <string name="shop_shelf_pet">Питомник</string>
+    <string name="shop_shelf_outside">Для двора</string>
+    <string name="shop_shelf_yours">Полка ваша — всё куплено</string>
+    <string name="shop_from">из %1$s</string>
+    <string name="shop_opens_in">привезут из %1$s</string>
+    <string name="shop_standing">в комнате</string>
+    <string name="shop_standing_outside">у дома</string>
+    <string name="shop_owned">куплено</string>
+    <string name="shop_gift">подарок</string>
+    <string name="shop_no_place">нет места в этом доме</string>
+    <string name="shop_needs_chimney">нужен дом с трубой</string>
+    <string name="shop_waits_season">ждёт декабря</string>
+    <string name="shop_place">Место: %1$s</string>
+    <string name="shop_try">Примерить</string>
+    <string name="shop_buy">Купить · %1$s</string>
+    <string name="shop_take">Забрать</string>
+    <string name="shop_put">Поставить</string>
+    <string name="shop_missing">не хватает %1$s</string>
+    <string name="shop_sessions_one">ещё примерно одно занятие</string>
+    <string name="shop_sessions_few">ещё примерно %1$d занятия</string>
+    <string name="shop_sessions_many">ещё примерно %1$d занятий</string>
+    <string name="shop_left_after">останется %1$s</string>
+    <string name="shop_left_after_road">останется %1$s · до %2$s ещё %3$s</string>
+    <string name="shop_item_description">%1$s, %2$s</string>
+    <string name="shop_price_takts">%1$s тактов</string>
+    <string name="shop_try_back">Вернуть как было</string>
+    <string name="shop_bought">Куплено: %1$s</string>
+
+    <string name="arrange_title">Обставить</string>
+    <string name="arrange_places_few">%1$d мест, %2$d занято</string>
+    <string name="arrange_empty">пусто</string>
+    <string name="arrange_in_shop">в лавке %1$d</string>
+    <string name="arrange_not_here">Мест, которых в этом доме нет</string>
+    <string name="arrange_waiting">ждёт в гардеробе: %1$s</string>
+
+    <string name="houses_title">Дома</string>
+    <string name="houses_live_here">здесь живу</string>
+    <string name="houses_live">Жить здесь</string>
+    <string name="houses_of">дом %1$d из %2$d</string>
+    <string name="houses_news">Что нового</string>
+    <string name="houses_moving_text">Все вещи переедут сами и встанут на те же места. Прежний дом останется — можно вернуться в любой день.</string>
+    <string name="houses_move">Переехать · %1$s</string>
+    <string name="houses_moving">Переезд</string>
+    <string name="houses_moved_things">%1$s на своих местах</string>
+    <string name="houses_moved_cat">%1$s · кошка уже на крыльце</string>
+    <string name="houses_close">Закрыть</string>
+
+    <string name="journey_home">Дом</string>
+    <string name="journey_home_card">Дом: %1$s</string>
+</resources>
