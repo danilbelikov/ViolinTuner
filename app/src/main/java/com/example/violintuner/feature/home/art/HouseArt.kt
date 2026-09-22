@@ -91,8 +91,8 @@ class ComposedHome(val scene: Scene, val ghost: ItemArt?)
 /**
  * Puts a home together (the handoff's `compose`): the base, the things back to front, the
  * traveller, then what stands in front of them — the pet. Colours of walls, floor and curtains are
- * the scene's own overrides. A thing tried on is drawn at half its density in the place of what
- * stood there. Pure.
+ * the scene's own overrides. A thing tried on stands in the place of what stood there, the room a
+ * little darker round it, and lives as it will in the room (spec 3.29). Pure.
  */
 object HomeComposer {
     private const val FRONT = 5
@@ -101,6 +101,8 @@ object HomeComposer {
     private const val GLOW_PERIOD_S = 2.4f
     private const val VIOLIN = "violin"
     private const val CASE = "case"
+    private const val CHAIR = "chair"
+    private const val ON_CHAIR = "chairTop"
     private const val DAY_LIFT = 0.18f
     private const val WHITE = 0xFFFFFFFFL
     private val WALLS = setOf("wallHome", "wallLitHome")
@@ -136,21 +138,26 @@ object HomeComposer {
         // A window is its backing, then the view, then the glazing bars (found on the emulator in the first
         // iteration, a section of its own since the second handoff).
         if (!outside) things.firstOrNull { it.slot == WINDOW }?.let { layers += art.backs[it.id].orEmpty() }
-        fun draw(item: HomeItem) { art.items[item.id]?.let { layers += it.layers } }
+        // what lies on a chair that rocks rocks with it — the plaid on the rocking chair (spec 3.29)
+        val chair = if (ghost?.slot == CHAIR) ghost else things.firstOrNull { it.slot == CHAIR }
+        val rocking = chair?.let { art.items[it.id] }?.layers?.firstNotNullOfOrNull { it.anim?.swing }
+        fun layersOf(item: HomeItem, drawn: ItemArt): List<SceneLayer> =
+            if (item.slot == ON_CHAIR && rocking != null) drawn.layers.map { it.copy(anim = (it.anim ?: SceneAnim()).copy(swing = rocking)) } else drawn.layers
+        fun draw(item: HomeItem) { art.items[item.id]?.let { layers += layersOf(item, it) } }
         things.filter { it.z < FRONT }.forEach(::draw)
         // no violin yet — the student's one lies in the open case (handoff 28b)
         if (withViolin && !outside && things.none { it.slot == VIOLIN } && ghost?.slot != VIOLIN) things.firstOrNull { it.slot == CASE }?.let { layers += art.caseViolins[it.id].orEmpty() }
         // Trying on without a frame (handoff 28f): the room a little darker, a warm glow under the thing that breathes,
-        // the thing itself at its full density and still.
+        // the thing itself at its full density — and alive, as it will be in the room: a still metronome read as broken (spec 3.29).
         val ghostArt = ghost?.let { art.items[it.id] }
-        if (ghostArt != null) {
+        if (ghost != null && ghostArt != null) {
             layers += SceneLayer(DIM, 2, 1f, 0f, 0f, 1f, false, null, 0f, false, "M-600 -1200h1600v2000h-1600Z")
             val rx = (ghostArt.right - ghostArt.left) * 0.9f + 14f
             val ry = (ghostArt.bottom - ghostArt.top) * 0.18f + 8f
             val cx = (ghostArt.left + ghostArt.right) / 2
             val cy = ghostArt.bottom + 2f
             layers += SceneLayer(SceneLayer.GLOW, 2, 1f, 0f, 0f, 1f, false, null, 0f, false, "M${cx - rx} ${cy}a$rx $ry 0 1 0 ${2 * rx} 0a$rx $ry 0 1 0 ${-2 * rx} 0Z", SceneAnim(flick = SceneAnim.Timed(GLOW_PERIOD_S, 0f)))
-            ghostArt.layers.forEach { layers += it.copy(anim = null) }
+            layers += layersOf(ghost, ghostArt)
         }
         // at home the traveller is not drawn: home is «I» (handoff 28b); in the cities he stays
         if (outside && porchCat != null) layers += art.porch[porchCat.id].orEmpty()

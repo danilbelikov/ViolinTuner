@@ -6,69 +6,59 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.BlendMode
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.geometry.RoundRect
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.layer.drawLayer
-import androidx.compose.ui.graphics.rememberGraphicsLayer
-import com.example.violintuner.core.domain.home.HomeCatalogData
+import androidx.compose.ui.unit.dp
 import com.example.violintuner.core.domain.home.HomeItem
-import com.example.violintuner.feature.journey.art.Scene
 import com.example.violintuner.feature.journey.art.SceneMode
-import com.example.violintuner.feature.journey.art.ScenePalette
 import com.example.violintuner.feature.journey.art.drawPrepared
 import com.example.violintuner.feature.journey.art.prepare
+import com.example.violintuner.feature.journey.art.rememberSceneSeconds
+import com.example.violintuner.feature.journey.art.watchedBy
 
-private const val FILL = 0.78f
-private const val MAX_SCALE = 3.2f
+/** How much of its picture a thing may take across and up (spec 5.22). */
+private const val FIT_WIDTH = 0.8f
+private const val FIT_HEIGHT = 0.9f
+
+/** Units of the grid a dp at most on a shelf: a passport is not blown up to a book. */
+const val SHELF_MAX_SCALE = 3.2f
+
+/** The same in the card of a thing, where the thing is the whole picture. */
+const val CARD_MAX_SCALE = 5f
+
+private val SAMPLE_CORNER = 8.dp
 
 /**
- * A thing alone, as it stands on a shelf of the shop: the very layers it has in the room, fitted
- * to the box — it is known at once, not by a photograph (handoff 27b). Walls and floors are
- * colours: a swatch. [silhouette] — a thing not brought yet: its shape in one tone.
+ * A thing as it stands on a shelf of the shop (spec 3.29): the very layers it has in the room, in the
+ * evening, fitted into the box and standing on its bottom edge — the board of the shelf; a wall, a
+ * floor or a part of the window as a sample of the room with it ([ItemThumbs]). [alive] — the card of
+ * a thing: it moves as it will in the room; on a shelf things stand still.
  */
 @Composable
-fun ItemThumb(item: HomeItem, modifier: Modifier = Modifier, silhouette: Color? = null) {
-    val art = rememberHouseArt(HOUSE_OF_THUMBS, SceneMode.EVENING)
-    val drawn = art?.items?.get(item.id)
-    val prepared = remember(drawn) {
-        // glows and floor shadows belong to the room, not to the thing on a shelf
-        drawn?.let { d -> prepare(Scene(ScenePalette.HOUSE, aerial = false, layers = d.layers.filter { it.fill != "GLOW" && !it.fill.startsWith("rgba(20,16,30") && !it.warmGlow }.map { it.copy(anim = null) }), SceneMode.DAY) }
-    }
-    val layer = rememberGraphicsLayer()
-    Canvas(modifier.fillMaxSize()) {
-        if (drawn != null && prepared != null) {
-            val w = drawn.right - drawn.left
-            val h = drawn.bottom - drawn.top
-            val k = minOf(size.width * FILL / w, size.height * FILL / h, MAX_SCALE * density)
-            val picture: androidx.compose.ui.graphics.drawscope.DrawScope.() -> Unit = {
-                translate((size.width - w * k) / 2 - drawn.left * k, (size.height - h * k) / 2 - drawn.top * k) { drawPrepared(prepared, k) }
-            }
-            if (silhouette == null) {
-                picture()
-            } else {
-                layer.record { picture() }
-                layer.colorFilter = ColorFilter.tint(silhouette, BlendMode.SrcIn)
-                drawLayer(layer)
-            }
-        } else if (item.palette.isNotEmpty()) {
-            val main = item.palette["wallHome"] ?: item.palette["floorHome"] ?: item.palette.values.first()
-            val lit = item.palette["wallLitHome"] ?: item.palette["floorLine"] ?: main
-            val side = minOf(size.width, size.height) * 0.62f
-            val topLeft = Offset((size.width - side) / 2, (size.height - side) / 2)
-            val tone = { c: Long -> silhouette ?: Color(c) }
-            drawRoundRect(tone(main), topLeft, Size(side, side), CornerRadius(side * 0.16f))
-            drawRoundRect(tone(lit), topLeft, Size(side / 2, side), CornerRadius(side * 0.16f))
+fun ItemThumb(item: HomeItem, modifier: Modifier = Modifier, alive: Boolean = false, maxScale: Float = SHELF_MAX_SCALE) {
+    val art = rememberHouseArt(ItemThumbs.houseOf(item), SceneMode.EVENING)
+    val thumb = remember(art, item.id, alive) { art?.let { ItemThumbs.of(item, it, glows = alive) } }
+    val prepared = remember(thumb) { thumb?.let { prepare(it.scene, SceneMode.EVENING) } }
+    val seconds = rememberSceneSeconds(enabled = alive)
+    Canvas(modifier.fillMaxSize().watchedBy(seconds)) {
+        val shown = thumb ?: return@Canvas
+        val scene = prepared ?: return@Canvas
+        val box = shown.box
+        val at = seconds?.value
+        if (shown.sample) {
+            // a sample card of the room, as wide as the picture and standing on the board
+            val k = minOf(size.width / box.width, size.height / box.height)
+            val left = (size.width - box.width * k) / 2
+            val top = size.height - box.height * k
+            val card = Path().apply { addRoundRect(RoundRect(left, top, left + box.width * k, size.height, CornerRadius(SAMPLE_CORNER.toPx()))) }
+            clipPath(card) { translate(left - box.left * k, top - box.top * k) { drawPrepared(scene, k, at) } }
         } else {
-            // what the room came with and has no colour of its own: the room's tone
-            val side = minOf(size.width, size.height) * 0.62f
-            drawRoundRect(silhouette ?: Color(HomeCatalogData.tokens.getValue(if (item.slot == "floor") "floorHome" else "wallHome")), Offset((size.width - side) / 2, (size.height - side) / 2), Size(side, side), CornerRadius(side * 0.16f))
+            val k = minOf(size.width * FIT_WIDTH / box.width, size.height * FIT_HEIGHT / box.height, maxScale * density)
+            // within the picture: what goes past it — the chandelier's rod, a halo — is cut by its edge
+            clipRect { translate((size.width - box.width * k) / 2 - box.left * k, size.height - box.bottom * k) { drawPrepared(scene, k, at) } }
         }
     }
 }
-
-/** Things are shown as they stand in the rented room: every home draws them the same, only elsewhere. */
-private const val HOUSE_OF_THUMBS = "rent"

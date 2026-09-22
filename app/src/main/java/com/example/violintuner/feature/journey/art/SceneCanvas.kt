@@ -289,13 +289,14 @@ private fun DrawScope.drawOne(prepared: PreparedScene, index: Int, k: Float, pan
     translate(SceneCamera.shift(panX, layer.depth) + drift * k, 0f) {
         scale(k, k, pivot = Offset.Zero) {
             if (moved != null) {
-                val fill = paint.fill
-                if (moved.alpha <= 0f || fill == null) return@scale
+                // a thing drawn by its outline moves as well — the runners of a rocking chair, steam over a cup (spec 3.29)
+                if (moved.alpha <= 0f || (paint.fill == null && paint.stroke == null)) return@scale
+                val seen = alpha * moved.alpha
                 translate(moved.dx, moved.dy) {
                     when {
-                        moved.flap != 1f -> scale(1f, moved.flap, pivot = bounds.center) { drawPath(path, fill, alpha = alpha * moved.alpha) }
-                        moved.degrees != 0f -> rotate(moved.degrees, pivot = Offset(moved.pivotX, moved.pivotY)) { drawPath(path, fill, alpha = alpha * moved.alpha) }
-                        else -> drawPath(path, fill, alpha = alpha * moved.alpha)
+                        moved.flap != 1f -> scale(1f, moved.flap, pivot = bounds.center) { drawLayer(path, paint, seen) }
+                        moved.degrees != 0f -> rotate(moved.degrees, pivot = Offset(moved.pivotX, moved.pivotY)) { drawLayer(path, paint, seen) }
+                        else -> drawLayer(path, paint, seen)
                     }
                 }
                 return@scale

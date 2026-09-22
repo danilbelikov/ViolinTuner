@@ -116,7 +116,7 @@ class HomeComposerTest {
     }
 
     @Test
-    fun `a thing tried on takes the place of what stood there - whole and still, the room a little darker, a glow under it`() {
+    fun `a thing tried on takes the place of what stood there - whole and alive, the room a little darker, a glow under it`() {
         val art = art("rent", SceneMode.EVENING)
         val oak = art.items.getValue("desk_oak")
         val composed = HomeComposer.compose(art, HomeRules.standing(loaded, "rent", false, today), false, SceneMode.EVENING, ghost = HomeCatalog.byId.getValue("desk_oak"))
@@ -127,7 +127,29 @@ class HomeComposerTest {
         val glow = layers.indexOfFirst { it.fill == SceneLayer.GLOW && it.anim?.flick != null && it.path.startsWith("M${(oak.left + oak.right) / 2 - ((oak.right - oak.left) * 0.9f + 14f)}") }
         val thing = layers.indexOfFirst { layer -> layer.path == oak.layers.first().path && layer.fill == oak.layers.first().fill }
         assertTrue("dim $dim, glow $glow, thing $thing", dim >= 0 && glow > dim && thing > glow)
-        assertTrue(layers.drop(thing).take(oak.layers.size).all { it.opacity == oak.layers[layers.drop(thing).indexOf(it)].opacity && it.anim == null })
+        assertEquals(oak.layers, layers.drop(thing).take(oak.layers.size))
+        // it lives as it will in the room: a still metronome in the try-on read as a broken one (spec 3.29)
+        val metronome = art.items.getValue("metronome").layers
+        val tried = HomeComposer.compose(art, HomeRules.standing(loaded, "rent", false, today), false, SceneMode.EVENING, ghost = HomeCatalog.byId.getValue("metronome")).scene.layers
+        val swinging = metronome.filter { it.anim?.swing != null }
+        assertTrue(swinging.isNotEmpty() && tried.containsAll(swinging))
+    }
+
+    @Test
+    fun `what lies on a rocking chair rocks with it - in the room and in the try-on (spec 3 29)`() {
+        val art = art("rent", SceneMode.EVENING)
+        val swing = art.items.getValue("rocking").layers.firstNotNullOf { it.anim?.swing }
+        val plaid = art.items.getValue("plaid").layers
+        fun plaidIn(layers: List<SceneLayer>) = layers.filter { layer -> plaid.any { it.path == layer.path && it.fill == layer.fill } }
+        val rocking = loaded.copy(purchased = setOf("rocking", "plaid"), choices = mapOf("chair" to "rocking", "chairTop" to "plaid"))
+        val inRoom = plaidIn(HomeComposer.compose(art, HomeRules.standing(rocking, "rent", false, today), false, SceneMode.EVENING).scene.layers)
+        assertEquals(plaid.size, inRoom.size)
+        assertTrue(inRoom.all { it.anim?.swing == swing })
+        // on the plain chair it lies still; tried on the rocking chair, the chair takes it along
+        val plain = loaded.copy(purchased = setOf("plaid"), choices = mapOf("chairTop" to "plaid"))
+        assertTrue(plaidIn(HomeComposer.compose(art, HomeRules.standing(plain, "rent", false, today), false, SceneMode.EVENING).scene.layers).all { it.anim == null })
+        val tried = HomeComposer.compose(art, HomeRules.standing(plain, "rent", false, today), false, SceneMode.EVENING, ghost = HomeCatalog.byId.getValue("rocking")).scene.layers
+        assertTrue(plaidIn(tried).all { it.anim?.swing == swing })
     }
 
     @Test
