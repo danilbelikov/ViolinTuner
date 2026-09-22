@@ -112,7 +112,8 @@ fun ScenePicture(
     whole: Boolean = false,
 ) {
     val baking = rememberSceneBaking(prepared)
-    Canvas(modifier.clipToBounds().background(Color(NIGHT)).semantics { contentDescription = description }) {
+    val watched = modifier.watchedBy(seconds)
+    Canvas(watched.clipToBounds().background(Color(NIGHT)).semantics { contentDescription = description }) {
         if (prepared == null) return@Canvas
         val (zoom, panX, panY) = camera?.invoke() ?: Triple(if (whole) SceneCamera.wholeZoom(size.width, size.height) else 1f, 0f, 0f)
         val k = SceneCamera.cover(size.width, size.height) * zoom
@@ -185,6 +186,7 @@ fun Postcard(
     val silhouette = remember(stop.id) { JourneySilhouettes.paths[stop.id].orEmpty().map { PathParser().parsePathString(it).toPath() } }
     Canvas(
         modifier = modifier
+            .watchedBy(seconds)
             .clipToBounds()
             .background(Color(NIGHT))
             .semantics { contentDescription = description },

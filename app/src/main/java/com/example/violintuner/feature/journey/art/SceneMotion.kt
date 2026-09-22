@@ -1,16 +1,22 @@
 package com.example.violintuner.feature.journey.art
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.onLayoutRectChanged
+import androidx.compose.ui.platform.LocalContext
 import com.example.violintuner.core.ui.motion.LocalReduceMotion
 import kotlin.math.PI
 import kotlin.math.sin
@@ -371,6 +377,37 @@ data class SceneFrame(val top: Float, val bottom: Float) {
 }
 
 /**
+ * The clock of a living picture: seconds stepped by frames. It runs only while a picture that reads
+ * it is on the screen — a card scrolled off the screen asks for no frames (docs/plan-performance.md);
+ * the picture tells the clock where its box is with [watchedBy].
+ */
+@Stable
+class SceneClock internal constructor() : State<Float> {
+    private val seconds = mutableFloatStateOf(0f)
+
+    override val value: Float get() = seconds.floatValue
+
+    /** True until a picture says its box has left the screen: the first frames come before the first word of it. */
+    internal var seen by mutableStateOf(true)
+
+    internal fun set(at: Float) {
+        seconds.floatValue = at
+    }
+}
+
+/**
+ * Tells the clock of a living picture whether its box is on the screen; a still picture (null clock)
+ * is left alone. The box is heard with the small delay `onLayoutRectChanged` keeps by itself, so a
+ * picture flying past under a finger does not start and stop the clock every frame.
+ */
+@Composable
+fun Modifier.watchedBy(seconds: State<Float>?): Modifier {
+    val clock = seconds as? SceneClock ?: return this
+    DisposableEffect(clock) { onDispose { clock.seen = false } }
+    return onLayoutRectChanged { clock.seen = it.fractionVisibleInWindow() > 0f }
+}
+
+/**
  * Seconds for a living postcard, stepped by frames while [enabled] and while «убрать анимации» is
  * off; it is read where the scene is drawn, so the postcard is redrawn, never recomposed. Null
  * when nothing should move.
@@ -381,7 +418,7 @@ fun rememberSceneSeconds(enabled: Boolean = true): State<Float>? {
     val context = LocalContext.current
     // debug builds may stop the time at a second, still ticking, so a baked frame can be compared with a drawn one
     val frozen = remember { SceneDebug.frozenSeconds(context) }
-    val seconds = remember { mutableFloatStateOf(0f) }
+    val clock = remember { SceneClock() }
     val run = enabled && !reduce
     LaunchedEffect(run) {
         if (!run) return@LaunchedEffect
@@ -389,17 +426,21 @@ fun rememberSceneSeconds(enabled: Boolean = true): State<Float>? {
         var shown = 0L
         var tick = false
         while (true) {
-            withFrameNanos { now ->
-                if (start < 0) start = now
-                if (now - shown >= SceneMotion.FRAME_NANOS) {
-                    shown = now
-                    tick = !tick
-                    seconds.floatValue = frozen?.let { if (tick) it else it + FROZEN_TICK } ?: ((now - start) / 1_000_000_000f)
+            // asleep while the picture is off the screen: it costs nothing until it comes back
+            snapshotFlow { clock.seen }.first { it }
+            while (clock.seen) {
+                withFrameNanos { now ->
+                    if (start < 0) start = now
+                    if (now - shown >= SceneMotion.FRAME_NANOS) {
+                        shown = now
+                        tick = !tick
+                        clock.set(frozen?.let { if (tick) it else it + FROZEN_TICK } ?: ((now - start) / 1_000_000_000f))
+                    }
                 }
             }
         }
     }
-    return if (run) seconds else null
+    return if (run) clock else null
 }
 
 /** How far a stopped clock steps back and forth, so the picture keeps being drawn: nothing moves by that much. */
