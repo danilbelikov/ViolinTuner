@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}@keyframes sway{0%,100%{transform:rotate(-1.2deg)}50%{transform:rotate(1.2deg)}}@keyframes ffly{0%,100%{opacity:.15}50%{opacity:.9}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}</style></helmet>
+
+<section class="dv-turn" id="s25a">
+<div class="dv-thd"><a class="dv-tid" href="#s25a">25a</a><span class="dv-tname">Четыре мира рядом — ключевой кадр «в середине пути» и начало → середина → расцвет</span></div>
+<div class="dv-opts">
+<sc-for list="{{ worlds }}" as="w" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ w.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ w.id }}">{{ w.id }}</a>{{ w.label }}</div>
+<div style="width:412px;display:flex;flex-direction:column;gap:10px">
+  <div style="border-radius:20px;overflow:hidden;background:#1E1D25;line-height:0">{{ w.key }}</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><sc-for list="{{ w.minis }}" as="m" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;gap:5px"><div style="border-radius:12px;overflow:hidden;background:#1E1D25;line-height:0">{{ m.el }}</div><div class="tn" style="font-size:11px;color:#A39FB5;text-align:center">{{ m.cap }}</div></div></sc-for></div>
+  <div style="font-size:12.5px;line-height:1.5;color:#A39FB5;text-wrap:pretty"><b style="color:#E6E4EE">{{ w.verdictTitle }}</b> {{ w.verdict }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Вывод (вопросы 1, 2, 6): делаем Сад</b> — точнее, скрещение: <b>сад музыканта, в центре которого сцена-беседка</b>. Он единственный из четырёх растёт непрерывно (предмет за предметом, а не «четыре остановки»), красив в объёме дешёвыми средствами (три плана, воздушная перспектива, тени-пятна, две-три заливки на форму) и никогда не выглядит упрёком: заброшенный сад — не грустный, а тихий. Сюжет берём у Сцены — беседку строим главами, к шестой главе на ней вечерний концерт, а трофеи (пюпитр, канифоль, футляр) селятся внутри беседки. Кусочек Животного тоже остаётся: кот — предмет пятой главы, приходит слушать, сидит на скамейке, не грустит и ничего не просит. <b>Почему не остальные.</b> Животное: характер зверя — это лицо и поза, а именно мелкая мимика у нас в векторе с двумя-тремя заливками получается хуже всего; без неё зверь — игрушка, с ней — тамагочи. Сцена: четыре зала на годы пути — между «камерным» и «филармонией» нечего покупать, кроме костюмов; зал на 40 кресел и 60 голов на телефоне — рябь (<a href="#25a3">25a3</a> честно показывает). Город: втрое больше рисунка (районы × дома × окна) и правила шкал, а серое начало на тёмном экране — вдвойне серо. <b>Персонаж-скрипач не нужен</b>: его место — беседка, его присутствие — футляр у скамейки и пюпитр на сцене; лицо и имя уже есть в профиле. <b>Вектор достаточен</b>, растр не нужен: весь сад в <a href="#25b">25b</a> нарисован тем, что разрешено в разделе 8 — заливки, два градиента (небо и свечение фонаря), повторение формы, смена палитры целиком. Приём — диорама: макет на столе, вид спереди-сверху, три плана.</p>
+</section>
+
+<section class="dv-turn" id="s25b">
+<div class="dv-thd"><a class="dv-tid" href="#s25b">25b</a><span class="dv-tname">Экран мира — от калитки до вечернего концерта</span></div>
+<div class="dv-opts">
+<sc-for list="{{ worldScreens }}" as="s" hint-placeholder-count="5">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:17px;font-weight:600">Сад</div><div style="height:40px;padding:0 14px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Главы</div></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:14px;padding:4px 16px 0;min-height:0">
+    <div style="flex:1;min-height:0;border-radius:24px;overflow:hidden;background:#1E1D25;position:relative;line-height:0">{{ s.scene }}
+      <sc-if value="{{ s.hint }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;line-height:1.3"><div style="height:28px;padding:0 12px;border-radius:14px;background:rgba(19,19,24,.62);font-size:12px;color:#E6E4EE;display:flex;align-items:center">{{ s.hint }}</div></div></sc-if>
+    </div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;flex:none">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><div style="font-size:16px;font-weight:700">{{ s.chapter }}</div><div class="tn" style="font-size:13px;color:#A39FB5;white-space:nowrap">{{ s.chapterNum }}</div></div>
+      <div style="font-size:14px;line-height:1.45;color:#A39FB5;text-wrap:pretty">{{ s.chapterText }}</div>
+      <div style="height:6px;border-radius:3px;background:#292833;overflow:hidden;margin-top:2px"><div style="height:100%;width:{{ s.pct }};border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div>
+      <div class="tn" style="font-size:12px;color:#A39FB5">{{ s.toNext }}</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;padding-bottom:16px;flex:none">
+      <div style="flex:1;display:flex;align-items:center;gap:8px;height:56px;padding:0 16px;border-radius:16px;background:#1E1D25">{{ tonGlyph }}<div class="tn" style="font-size:20px;font-weight:800;letter-spacing:-.01em">{{ s.balance }}</div><div style="font-size:13px;color:#A39FB5;margin-left:-2px">{{ s.balanceWord }}</div></div>
+      <div style="height:56px;padding:0 22px;border-radius:28px;background:{{ s.shopBg }};color:{{ s.shopFg }};display:flex;align-items:center;font-size:15px;font-weight:700;white-space:nowrap">{{ s.shopText }}</div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Экран мира</b> открывается из окна на «Занятиях», поверх вкладок (пятая вкладка не нужна — вопрос 7). Сад занимает всё, что остаётся над карточкой главы: карточка 24 dp скругления, сад — «макет на столе» со своим небом и передней гранью земли; так он сидит на тёмном экране как остров цвета, без белой рамки. Сад можно тянуть пальцем по горизонтали (±40 dp, три плана двигаются с разной скоростью — параллакс) и щипком приближать до 2×; отпущенный — плавно возвращается. Тап по предмету — его имя таблеткой на 2 с. Под садом — глава: название, одна фраза, полоса до следующей главы по времени занятий (тот же счётчик, что у уровней); ниже — счёт валюты и кнопка «Что добавить» (магазин), которая гаснет в tonal, когда в этой главе купить нечего или не хватает на самое дешёвое. Палитра сада — интерполяция трёх наборов токенов: «сухой» → «день» по мере глав и «день» → «вечер» с шестой главы (и по системному времени после 20:00 — вопрос 4 в <a href="#dev">dev</a>).</p>
+</section>
+
+<section class="dv-turn" id="s25c">
+<div class="dv-thd"><a class="dv-tid" href="#s25c">25c</a><span class="dv-tname">Окно в мир на «Занятиях»</span></div>
+<div class="dv-opts">
+<sc-for list="{{ lessonScreens }}" as="p" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ p.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ p.id }}">{{ p.id }}</a>{{ p.label }}</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:20px;padding:12px 16px 0">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px;min-height:56px">
+        <sc-if value="{{ p.circleWorld }}" hint-placeholder-val="{{ false }}"><div style="width:56px;height:56px;border-radius:50%;flex:none;overflow:hidden;background:#1E1D25;line-height:0">{{ p.circle }}</div></sc-if>
+        <sc-if value="{{ p.photo }}" hint-placeholder-val="{{ true }}"><div style="width:56px;height:56px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#8C7AB0 0%,#4E3F78 55%,#2A2352 100%)"></div></sc-if>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><div style="font-size:16px;font-weight:600;line-height:1.2">Аня · Уровень 6 · Гаммы</div><div class="tn" style="font-size:24px;font-weight:800;line-height:1.1;letter-spacing:-.01em;color:#C4ADFF">46 ч 10 мин</div></div>
+        <div style="display:flex;align-items:center;gap:4px;flex:none;height:44px"><sc-for list="{{ trophyRow }}" as="r" hint-placeholder-count="3"><div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center">{{ r }}</div></sc-for></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:31%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div><div class="tn" style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5"><div>Уровень 6 · Гаммы</div><div>до 7 уровня — 13 ч 50 мин</div></div></div>
+    </div>
+    <sc-if value="{{ p.card }}" hint-placeholder-val="{{ true }}">
+    <div style="position:relative;height:{{ p.cardH }};border-radius:20px;overflow:hidden;background:#1E1D25;line-height:0;flex:none">{{ p.window }}
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 14px;display:flex;align-items:flex-end;justify-content:space-between;line-height:1.3;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.55))"><div><div style="font-size:14px;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.4)">{{ p.wChapter }}</div><div class="tn" style="font-size:12px;color:#E6E4EE;opacity:.85">{{ p.wSub }}</div></div><div style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:14px;background:rgba(19,19,24,.62)">{{ tonGlyphS }}<div class="tn" style="font-size:13px;font-weight:700">{{ p.wBalance }}</div></div></div>
+      <sc-if value="{{ p.grew }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:10px;left:14px;height:26px;padding:0 10px;border-radius:13px;background:rgba(19,19,24,.62);font-size:12px;font-weight:600;color:#E6E4EE;display:flex;align-items:center;line-height:1">{{ p.grewText }}</div></sc-if>
+    </div>
+    </sc-if>
+    <sc-if value="{{ p.running }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;flex-direction:column;gap:10px"><div style="height:56px;border-radius:28px;border:1.5px solid #C4ADFF;color:#C4ADFF;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:700"><div style="width:10px;height:10px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div>Закончить · <span class="tn">24:16</span></div><div class="tn" style="text-align:center;font-size:14px;color:#A39FB5">сегодня 24 мин · серия 5 дней</div></div>
+    </sc-if>
+    <sc-if value="{{ p.idle }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:10px"><div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">Начать занятие</div><div class="tn" style="text-align:center;font-size:14px;color:#A39FB5">сегодня ещё не занимались · серия 5 дней</div></div>
+    </sc-if>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">неделя</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">3 ч 05 мин</div></div><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">месяц</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">11 ч 40 мин</div></div><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">дней подряд</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">5</div></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;height:40px"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M12.5 4 L6.5 10 L12.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="font-size:16px;font-weight:700">Сентябрь 2026</div><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;opacity:.3"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M7.5 4 L13.5 10 L7.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div></div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px;opacity:.9"><sc-for list="{{ cells }}" as="c" hint-placeholder-count="14"><div style="height:44px;display:flex;align-items:center;justify-content:center"><div style="width:40px;height:40px;border-radius:12px;background:{{ c.bg }};display:flex;align-items:center;justify-content:center"><div class="tn" style="font-size:15px;color:{{ c.fg }}">{{ c.n }}</div></div></div></sc-for></div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:50%;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">Live</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:4px;border:3px solid #E9DDFF;border-top-width:6px;box-sizing:border-box"></div></div><div style="font-size:12px;font-weight:600">Занятия</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:14px;border-radius:3px;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">Записи</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:5px;border:3px solid #A39FB5;transform:rotate(45deg)"></div></div><div style="font-size:12px;color:#A39FB5">Настройки</div></div>
+  </div>
+</div>
+</x-import>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Окно (вопрос 5) — карточка 160 dp под шапкой</b>, не круг: в круге 56 dp сад — зелёное пятно, объём не читается, а фото пользователя пришлось бы отнять (<a href="#25c1">25c1</a> оставлен для сравнения). Шапка не меняется: аватар (фото / буква / номер), имя, сумма часов, ряд трофеев и полоса уровня остаются как в 11; карточка встаёт между полосой и кнопкой «Начать занятие» и сдвигает всё ниже на 180 dp — календарь по-прежнему виден без прокрутки на 892. В карточке: сад кадрирован по средней полосе (беседка и пруд в кадре), поверх снизу — название главы и «до главы — 12 ч», справа счёт валюты. Тап — экран мира. Во время занятия карточка неподвижна (на экране уже живут таймер и огонёк); после сохранения занятия она один раз «подрастает» — таблетка «+340 тонов · сад подрос» на 3 с (<a href="#25c3">25c3</a>) — и снова замирает. При открытии экрана карточка оживает на 4 с (покачивание крон), затем стоп.</p>
+</section>
+
+<section class="dv-turn" id="s25d">
+<div class="dv-thd"><a class="dv-tid" href="#s25d">25d</a><span class="dv-tname">Сюжет — завязка, открытие главы, список глав</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="25d1"><div class="dv-olabel"><a class="dv-oid" href="#25d1">25d1</a>Завязка — один экран при первом входе в мир; сухой сад, три фразы, одна кнопка</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;position:relative;overflow:hidden;line-height:0">{{ introScene }}<div style="position:absolute;left:0;right:0;bottom:0;height:200px;background:linear-gradient(rgba(19,19,24,0),#131318)"></div></div>
+  <div style="padding:0 24px 32px;display:flex;flex-direction:column;gap:14px;margin-top:-40px;position:relative;line-height:1.3">
+    <div style="font-size:28px;font-weight:700;line-height:1.15;text-wrap:balance">За калиткой — сад</div>
+    <div style="font-size:16px;line-height:1.5;color:#A39FB5;text-wrap:pretty">Здесь давно никто не играл, и сад затих. Говорят, его будит музыка: каждая минута за инструментом — новый лист, каждая нота в тон — то, что вы решите посадить.</div>
+    <div style="font-size:16px;line-height:1.5;color:#A39FB5;text-wrap:pretty">Он никуда не спешит и не вянет. Он просто ждёт.</div>
+    <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-top:10px">Открыть калитку</div>
+  </div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="25d2"><div class="dv-olabel"><a class="dv-oid" href="#25d2">25d2</a>Открытие главы — лист как «Подарок» 11f: свечение, название, фраза, что появилось само и что теперь можно добавить</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;opacity:.35;line-height:0;padding:56px 16px 0">{{ dimScene }}</div>
+  <div style="position:absolute;inset:0;background:rgba(19,19,24,.45)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#292833;border-radius:28px 28px 0 0;padding:12px 24px 32px;display:flex;flex-direction:column;align-items:center;gap:6px">
+    <div style="width:32px;height:4px;border-radius:2px;background:#6B6880;margin-bottom:8px"></div>
+    <div style="width:240px;height:200px;display:flex;align-items:center;justify-content:center;background:radial-gradient(circle,rgba(196,173,255,.22) 0%,rgba(196,173,255,0) 70%);line-height:0">{{ chapterArt }}</div>
+    <div style="font-size:13px;font-weight:600;color:#C4ADFF;letter-spacing:.04em;text-transform:uppercase">Глава 4</div>
+    <div style="font-size:28px;font-weight:700;line-height:1.15;text-align:center">Вода</div>
+    <div style="font-size:15px;line-height:1.5;color:#A39FB5;text-align:center;text-wrap:pretty;max-width:320px">Пруд снова полон — на воду садятся птицы. Сад дошёл до воды за 40 часов вашей игры.</div>
+    <div style="width:100%;margin-top:12px;background:#1E1D25;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;font-size:14px"><div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#A39FB5">Появилось</span><span style="font-weight:600;text-align:right">пруд, птицы</span></div><div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#A39FB5">Теперь можно добавить</span><span style="font-weight:600;text-align:right">мостик, иву, кувшинки</span></div></div>
+    <div style="width:100%;height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-top:14px">Посмотреть</div>
+  </div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="25d3"><div class="dv-olabel"><a class="dv-oid" href="#25d3">25d3</a>Список глав — пройденные с датой, текущая с полосой, закрытые с порогом; последняя открывает свободный режим</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:17px;font-weight:600">Главы</div></div>
+  <div style="flex:1;padding:8px 16px 0;display:flex;flex-direction:column;gap:8px;overflow:hidden">
+    <sc-for list="{{ chapterRows }}" as="c" hint-placeholder-count="7">
+    <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:12px 14px;min-height:76px;box-sizing:border-box;opacity:{{ c.op }}">
+      <div style="width:56px;height:40px;border-radius:8px;overflow:hidden;background:#292833;flex:none;line-height:0;display:flex;align-items:center;justify-content:center">{{ c.thumb }}</div>
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px"><div style="display:flex;align-items:baseline;gap:8px"><div class="tn" style="font-size:12px;color:#A39FB5">{{ c.num }}</div><div style="font-size:16px;font-weight:600;color:{{ c.nameColor }}">{{ c.name }}</div></div><div style="font-size:13px;color:#A39FB5;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.phrase }}</div>
+        <sc-if value="{{ c.bar }}" hint-placeholder-val="{{ false }}"><div style="height:4px;border-radius:2px;background:#292833;overflow:hidden;margin-top:4px"><div style="height:100%;width:{{ c.pct }};background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div></sc-if>
+      </div>
+      <div class="tn" style="flex:none;font-size:12px;color:{{ c.metaColor }};text-align:right;white-space:nowrap">{{ c.meta }}</div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div>
+</div>
+<p class="dv-next"><b>Сюжет (вопрос 3) — семь глав</b>, пороги по времени занятий, согласованные с уровнями: Калитка 0 · Первые ростки 2 ч · Тень деревьев 10 ч · Вода 40 ч · Беседка 120 ч · Вечерний концерт 400 ч · Сад без края 1000 ч (свободный режим: каждые следующие 500 ч открывают новую грядку слотов, предметы всех глав доступны, ничего не заканчивается). Глава открывается листом при первом входе в приложение после порога — не во время занятия. Глава приносит что-то сама (пруд, беседку), чтобы мир рос и у того, кто ничего не покупает, и открывает новые предметы магазина.</p>
+</section>
+
+<section class="dv-turn" id="s25e">
+<div class="dv-thd"><a class="dv-tid" href="#s25e">25e</a><span class="dv-tname">Экономика — тоны, магазин, покупка, итог занятия</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="25e1"><div class="dv-olabel"><a class="dv-oid" href="#25e1">25e1</a>Валюта — «тон»: знак, формы слова, размеры</div>
+<div style="width:380px;background:#1E1D25;border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box">
+  <div style="display:flex;align-items:center;gap:20px"><div style="width:96px;height:96px;display:flex;align-items:center;justify-content:center;background:#292833;border-radius:24px">{{ tonGlyphXL }}</div><div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:22px;font-weight:800">тон</div><div style="font-size:13px;color:#A39FB5;line-height:1.45">1 тон · 2 тона · 5 тонов<br>«+340 тонов», «стоит 500 тонов»<br>нота в строе — 1 тон, минута занятия — 2 тона</div></div></div>
+  <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap"><div style="display:flex;align-items:center;gap:6px">{{ tonGlyph }}<span class="tn" style="font-size:20px;font-weight:800">1 240</span><span style="font-size:13px;color:#A39FB5">тонов</span></div><div style="display:flex;align-items:center;gap:5px">{{ tonGlyphS }}<span class="tn" style="font-size:13px;font-weight:700">1 240</span></div><div class="tn" style="height:24px;padding:0 8px;border-radius:6px;background:#292833;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600">{{ tonGlyphXS }}500</div></div>
+</div>
+</div>
+<div class="dv-opt" id="25e2"><div class="dv-olabel"><a class="dv-oid" href="#25e2">25e2</a>Магазин «Что добавить» — лист поверх сада; хватает · не хватает · закрыто главой; выбранный предмет показан на месте полупрозрачно</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:17px;font-weight:600">Сад</div></div>
+  <div style="margin:4px 16px 0;height:300px;border-radius:24px;overflow:hidden;background:#1E1D25;line-height:0;flex:none">{{ shopScene }}</div>
+  <div style="position:absolute;left:0;right:0;bottom:0;top:388px;background:#292833;border-radius:28px 28px 0 0;padding:12px 16px 0;display:flex;flex-direction:column;gap:10px">
+    <div style="width:32px;height:4px;border-radius:2px;background:#6B6880;align-self:center"></div>
+    <div style="display:flex;align-items:baseline;justify-content:space-between;padding:0 4px"><div style="font-size:20px;font-weight:700">Что добавить</div><div style="display:flex;align-items:center;gap:6px">{{ tonGlyphS }}<span class="tn" style="font-size:14px;font-weight:700">1 240</span></div></div>
+    <div style="display:flex;gap:8px;padding:0 4px"><sc-for list="{{ shopTabs }}" as="t" hint-placeholder-count="3"><div style="height:32px;padding:0 12px;border-radius:8px;background:{{ t.bg }};border:1px solid {{ t.border }};color:{{ t.fg }};display:flex;align-items:center;font-size:13px;font-weight:{{ t.fw }};box-sizing:border-box">{{ t.name }}</div></sc-for></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;overflow:hidden">
+      <sc-for list="{{ shopItems }}" as="i" hint-placeholder-count="6">
+      <div style="background:#1E1D25;border-radius:16px;padding:10px 12px 12px;display:flex;flex-direction:column;gap:6px;border:1.5px solid {{ i.border }};box-sizing:border-box;opacity:{{ i.op }}">
+        <div style="height:64px;display:flex;align-items:flex-end;justify-content:center;line-height:0">{{ i.icon }}</div>
+        <div style="font-size:14px;font-weight:600;line-height:1.2">{{ i.name }}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:6px"><div class="tn" style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:{{ i.priceColor }}">{{ tonGlyphXS }}{{ i.price }}</div><div style="font-size:11px;color:{{ i.stateColor }};font-weight:600;white-space:nowrap">{{ i.state }}</div></div>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="position:absolute;left:16px;right:16px;bottom:20px;height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:700">Посадить иву · <span class="tn" style="display:flex;align-items:center;gap:4px">{{ tonGlyphXSd }}1 200</span></div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="25e3"><div class="dv-olabel"><a class="dv-oid" href="#25e3">25e3</a>Момент покупки — лист ушёл, ива проявляется на месте со свечением 800 мс, счёт уменьшился; никаких конфетти</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:17px;font-weight:600">Сад</div><div style="height:40px;padding:0 14px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Главы</div></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:14px;padding:4px 16px 0;min-height:0">
+    <div style="flex:1;min-height:0;border-radius:24px;overflow:hidden;background:#1E1D25;position:relative;line-height:0">{{ buyScene }}<div style="position:absolute;left:0;right:0;bottom:12px;display:flex;justify-content:center;line-height:1.3"><div style="height:28px;padding:0 12px;border-radius:14px;background:rgba(19,19,24,.62);font-size:12px;color:#E6E4EE;display:flex;align-items:center">Ива — у пруда</div></div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;flex:none"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:16px;font-weight:700">Вода</div><div class="tn" style="font-size:13px;color:#A39FB5">глава 4 из 7</div></div><div style="font-size:14px;line-height:1.45;color:#A39FB5">Пруд снова полон — на воду садятся птицы.</div><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden;margin-top:2px"><div style="height:100%;width:8%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div><div class="tn" style="font-size:12px;color:#A39FB5">до «Беседки» — 73 ч 50 мин</div></div>
+    <div style="display:flex;align-items:center;gap:12px;padding-bottom:16px;flex:none"><div style="flex:1;display:flex;align-items:center;gap:8px;height:56px;padding:0 16px;border-radius:16px;background:#1E1D25">{{ tonGlyph }}<div class="tn" style="font-size:20px;font-weight:800;letter-spacing:-.01em">40</div><div style="font-size:13px;color:#A39FB5;margin-left:-2px">тонов</div></div><div style="height:56px;padding:0 22px;border-radius:28px;background:#292833;color:#A39FB5;display:flex;align-items:center;font-size:15px;font-weight:700;white-space:nowrap">Что добавить</div></div>
+  </div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="25e4"><div class="dv-olabel"><a class="dv-oid" href="#25e4">25e4</a>Лист итога занятия — строка «+340 тонов» под временем; без сравнений с вчера; сад подрос — миниатюра</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="position:absolute;inset:0;background:rgba(19,19,24,.6)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#292833;border-radius:28px 28px 0 0;padding:12px 24px 32px;display:flex;flex-direction:column;gap:18px">
+    <div style="width:32px;height:4px;border-radius:2px;background:#6B6880;align-self:center"></div>
+    <div><div style="font-size:13px;color:#A39FB5">Занятие сохранено</div><div class="tn" style="font-size:40px;font-weight:800;line-height:1.1;letter-spacing:-.01em;margin-top:4px">38 мин</div><div class="tn" style="font-size:14px;color:#A39FB5;margin-top:4px">сегодня 38 мин · серия 6 дней</div></div>
+    <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:12px 14px"><div style="width:96px;height:64px;border-radius:10px;overflow:hidden;flex:none;line-height:0">{{ summaryThumb }}</div><div style="flex:1;min-width:0"><div class="tn" style="display:flex;align-items:center;gap:6px;font-size:20px;font-weight:800">{{ tonGlyph }}+340 <span style="font-size:13px;font-weight:400;color:#A39FB5">тонов</span></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:3px;line-height:1.4">264 ноты в строе + 76 за время<br>Сад подрос · до «Беседки» — 73 ч 12 мин</div></div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">нот сыграно</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">412</div></div><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">в строе</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">64 %</div></div><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">допуск</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">±8 ¢</div></div></div>
+    <div style="display:flex;gap:8px"><div style="flex:1;height:56px;border-radius:28px;border:1px solid #3A3846;color:#C4ADFF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">В сад</div><div style="flex:1;height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">Готово</div></div>
+  </div>
+</div>
+</x-import>
+</div>
+</div>
+<p class="dv-next"><b>Экономика (вопрос 4).</b> Слово — <b>«тон»</b> (от «в тон»; 1 тон · 2 тона · 5 тонов), знак — головка ноты со штилем, срезанным в чёрточку строя: читается и в 12 dp. Курс: нота в строе — 1 тон, минута занятия — 2 тона; 38 минут при 64 % в строе — «+340»: половина от нот, четверть от времени — начинающий не наказан, а день медленных гамм не беднее. <b>Шкал нет</b>: у сада шкалы натянуты, а рост и так виден. <b>Размещение — само</b>: у каждого предмета 1–3 слота своего плана; второй экземпляр встаёт в следующий свободный; перестановка и продажа — не в первой версии (продажа противоречит «ничего не отнимается»). Накопленное не сгорает: когда в главе куплено всё, счёт растёт дальше — и следующая глава открывается с запасом («Пруд — 3000» станет по карману в день открытия). «Сегодня заработано» — да, на листе итога (<a href="#25e4">25e4</a>), всегда со знаком «+» и никогда рядом со вчера. С «ничего не вянет» согласны без оговорок: единственное, что меняется без вас, — время суток.</p>
+</section>
+
+<section class="dv-turn" id="s25f" style="max-width:1200px">
+<div class="dv-thd"><a class="dv-tid" href="#s25f">25f</a><span class="dv-tname">Предметы первой версии — по главам, с ценами и слотами</span></div>
+<div class="dv-tbl" style="grid-template-columns:52px minmax(0,1.2fr) minmax(0,.7fr) minmax(0,.6fr) minmax(0,1.6fr)">
+  <div class="h"></div><div class="h">Предмет</div><div class="h">Глава</div><div class="h">Цена</div><div class="h">Слот · план · как появляется</div>
+  <sc-for list="{{ itemRows }}" as="r" hint-placeholder-count="30"><div style="padding:6px 8px;line-height:0;display:flex;align-items:flex-end;justify-content:center;background:{{ r.bg }}">{{ r.icon }}</div><div style="font-weight:600">{{ r.name }}<sc-if value="{{ r.free }}" hint-placeholder-val="{{ false }}"><span style="font-weight:400;color:#A39FB5"> · приходит с главой</span></sc-if></div><div style="color:#A39FB5">{{ r.chapter }}</div><div class="mono tn" style="color:{{ r.priceColor }}">{{ r.price }}</div><div style="color:#A39FB5">{{ r.note }}</div></sc-for>
+</div>
+<p class="dv-next"><b>Объём первой версии (вопрос 8): 7 глав, 34 предмета, 4 фоновых слоя, 21 слот.</b> Из них 9 предметов приходят с главами бесплатно (калитка, дорожка, первое дерево, пруд, беседка в три этапа, вечер, вторая грядка) — это гарантия роста без покупок. Предметы — 14 форм; остальное — варианты (вторая ель — та же ель в другом слоте, вечерний фонарь — тот же фонарь с включённым стеклом). Трофеи из 11t селятся в беседке бесплатно: пюпитр — на сцене, канифоль и футляр — у скамейки, метроном — на перилах; их рисунки уже есть (viewBox 64), масштаб .5.</p>
+</section>
+
+<section class="dv-turn" id="s25g">
+<div class="dv-thd"><a class="dv-tid" href="#s25g">25g</a><span class="dv-tname">Объём — приём на одном предмете · сцена по планам</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="25g1"><div class="dv-olabel"><a class="dv-oid" href="#25g1">25g1</a>Одна липа: плоско (одна заливка) → объёмно (три заливки кроны + ствол с теневой гранью + тень-пятно) → на дальнем плане (масштаб .6, к небу на 30 %)</div>
+<div style="width:412px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><sc-for list="{{ volumeDemo }}" as="v" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;gap:6px"><div style="border-radius:14px;overflow:hidden;background:#1E1D25;line-height:0">{{ v.el }}</div><div style="font-size:11px;color:#A39FB5;text-align:center;line-height:1.35">{{ v.cap }}</div></div></sc-for></div>
+</div>
+<div class="dv-opt" id="25g2"><div class="dv-olabel"><a class="dv-oid" href="#25g2">25g2</a>Сцена по слоям: небо и дальний холм · земля-макет · дальний план · средний · ближний — и всё вместе</div>
+<div style="width:640px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><sc-for list="{{ layerDemo }}" as="v" hint-placeholder-count="6"><div style="display:flex;flex-direction:column;gap:6px"><div style="border-radius:14px;overflow:hidden;background:#1E1D25;line-height:0">{{ v.el }}</div><div style="font-size:11px;color:#A39FB5;text-align:center;line-height:1.35">{{ v.cap }}</div></div></sc-for></div>
+</div>
+</div>
+<p class="dv-next"><b>Приём объёма.</b> Свет слева-сверху для всего сада. У каждой формы — базовая заливка, теневая (крона целиком в `foliageShade`, поверх — `foliage` со сдвигом к свету, поверх — блик `foliageLit`), у построек — освещённая и теневая грань крыши. Под каждым предметом — тень-пятно: эллипс `shadow` α .28, вытянут вправо-вниз. Планы: дальний — масштаб .5–.6, цвета смешаны с нижним небом на 30 %; средний — .8–.95, на 12 %; ближний — 1, чистые. Земля — не плоскость, а «макет»: сверху зелёный эллипс с более светлым пятном, снизу выступает передняя грань земли `slabFront` 8 dp — от неё сад читается как объёмная вещь на столе. Всё это — заливки и один линейный градиент неба; свечение фонаря — радиальный градиент 44 dp.</p>
+</section>
+
+<section class="dv-turn" id="s25h">
+<div class="dv-thd"><a class="dv-tid" href="#s25h">25h</a><span class="dv-tname">Движение — живое состояние и рост после занятия</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="25h1"><div class="dv-olabel"><a class="dv-oid" href="#25h1">25h1</a>Живой сад на экране мира: кроны качаются (±1.2°, 4–6 с, у каждого дерева своя фаза), светлячки мерцают (3–5 с), птицы медленно плывут; всё низкоконтрастное</div>
+<div style="width:412px;border-radius:20px;overflow:hidden;background:#1E1D25;line-height:0">{{ liveScene }}</div>
+</div>
+<div class="dv-opt" id="25h2"><div class="dv-olabel"><a class="dv-oid" href="#25h2">25h2</a>Рост после сохранения занятия — 900 мс: палитра доезжает к новому t, новый предмет проявляется scale .7→1 + fade из своей тени; при «убрать анимации» — второй кадр сразу</div>
+<div style="width:640px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><sc-for list="{{ growDemo }}" as="v" hint-placeholder-count="3"><div style="display:flex;flex-direction:column;gap:6px"><div style="border-radius:14px;overflow:hidden;background:#1E1D25;line-height:0">{{ v.el }}</div><div class="tn" style="font-size:11px;color:#A39FB5;text-align:center;line-height:1.35">{{ v.cap }}</div></div></sc-for></div>
+</div>
+</div>
+<p class="dv-next">Движение — только на экране мира; в окне на «Занятиях» — 4 с после открытия экрана и один раз при росте, затем кадр. Ничто не движется быстрее 6 с на цикл и не меняет контраст сильнее, чем α .15 ↔ .9 у светлячков. Звука в мире нет (по умолчанию и без настройки — приложение беззвучно). Системный «убрать анимации»: качание, светлячки и параллакс выключены; рост — смена кадра, открытие главы — лист без масштаба.</p>
+</section>
+
+<section class="dv-turn" id="s25i">
+<div class="dv-thd"><a class="dv-tid" href="#s25i">25i</a><span class="dv-tname">Landscape 892×412 · маленький экран 360×640</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="25i1"><div class="dv-olabel"><a class="dv-oid" href="#25i1">25i1</a>Landscape — сад слева во всю высоту (кадр шире, видна вся ограда), глава и валюта колонкой справа</div>
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif">
+  <div style="flex:1;min-width:0;position:relative;line-height:0;border-radius:0 24px 24px 0;overflow:hidden;background:#1E1D25">{{ landScene }}<div style="position:absolute;left:8px;top:8px;width:44px;height:44px;border-radius:22px;background:rgba(19,19,24,.62);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div></div>
+  <div style="width:300px;flex:none;display:flex;flex-direction:column;gap:12px;padding:16px 16px 16px 14px;box-sizing:border-box">
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:17px;font-weight:600">Сад</div><div style="font-size:13px;font-weight:600;color:#C4ADFF">Главы</div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:8px;flex:1"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:16px;font-weight:700">Вода</div><div class="tn" style="font-size:13px;color:#A39FB5">глава 4 из 7</div></div><div style="font-size:14px;line-height:1.45;color:#A39FB5;text-wrap:pretty">Пруд снова полон — на воду садятся птицы.</div><div style="flex:1"></div><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:8%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div><div class="tn" style="font-size:12px;color:#A39FB5">до «Беседки» — 73 ч 50 мин</div></div>
+    <div style="display:flex;align-items:center;gap:8px;height:52px;padding:0 16px;border-radius:16px;background:#1E1D25">{{ tonGlyph }}<div class="tn" style="font-size:20px;font-weight:800">1 240</div><div style="font-size:13px;color:#A39FB5;margin-left:-2px">тонов</div></div>
+    <div style="height:52px;border-radius:26px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">Что добавить</div>
+  </div>
+</div>
+</div>
+<div class="dv-opt" id="25i2"><div class="dv-olabel"><a class="dv-oid" href="#25i2">25i2</a>360×640 — сад 3:2 сверху, карточка главы ужата до названия и полосы, валюта и кнопка в одну строку</div>
+<div style="width:360px;height:640px;border-radius:22px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;flex-direction:column;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif">
+  <div style="display:flex;align-items:center;gap:4px;padding:2px 4px 0;height:52px;flex:none"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:16px;font-weight:600">Сад</div><div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:13px;font-weight:600;color:#C4ADFF">Главы</div></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:10px;padding:2px 12px 0;min-height:0">
+    <div style="flex:1;min-height:0;border-radius:20px;overflow:hidden;background:#1E1D25;line-height:0">{{ smallScene }}</div>
+    <div style="background:#1E1D25;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:6px;flex:none"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:15px;font-weight:700">Вода</div><div class="tn" style="font-size:12px;color:#A39FB5">до «Беседки» — 73 ч</div></div><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:8%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div></div>
+    <div style="display:flex;align-items:center;gap:10px;padding-bottom:12px;flex:none"><div style="flex:1;display:flex;align-items:center;gap:6px;height:48px;padding:0 14px;border-radius:14px;background:#1E1D25">{{ tonGlyphS }}<div class="tn" style="font-size:17px;font-weight:800">1 240</div></div><div style="height:48px;padding:0 18px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;font-size:14px;font-weight:700">Что добавить</div></div>
+  </div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · сад: сцена, слоты, предметы, палитры</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(520px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Палитры мира — три набора токенов, всё остальное интерполяция</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) 70px 70px 70px">
+    <div class="h">Токен</div><div class="h">dry</div><div class="h">day</div><div class="h">eve</div>
+    <sc-for list="{{ palRows }}" as="t" hint-placeholder-count="20"><div class="mono">{{ t.name }}</div><div style="padding:6px 8px;display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:4px;background:{{ t.dry }};flex:none"></div><span class="mono" style="font-size:10px">{{ t.dry }}</span></div><div style="padding:6px 8px;display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:4px;background:{{ t.day }};flex:none"></div><span class="mono" style="font-size:10px">{{ t.day }}</span></div><div style="padding:6px 8px;display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:4px;background:{{ t.eve }};flex:none"></div><span class="mono" style="font-size:10px">{{ t.eve }}</span></div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px">`pal = lerp(dry, day, t)`, t = доля пройденного пути до главы 5 (0 в «Калитке», 1 в «Беседке»); с главы 6 `pal = lerp(day, eve, e)`, e = 1 после 20:00 по местному времени и 0 днём, переход 2 с при открытии экрана. Воздушная перспектива: цвет предмета = `mix(color, skyLow, [0.30, 0.12, 0][depth])`. Прочие: `shadow rgba(20,16,30,.28)`, глава/валюта — токены приложения (primary #C4ADFF, onSurfaceVariant #A39FB5).</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Слоты сцены (сетка 360×240; x, y — точка опоры предмета)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,.9fr) 56px 56px 64px 64px minmax(0,1.3fr)">
+    <div class="h">id</div><div class="h">x</div><div class="h">y</div><div class="h">план</div><div class="h">scale</div><div class="h">что встаёт</div>
+    <sc-for list="{{ slotRows }}" as="s" hint-placeholder-count="21"><div class="mono">{{ s.id }}</div><div class="mono tn">{{ s.x }}</div><div class="mono tn">{{ s.y }}</div><div class="mono tn">{{ s.depth }}</div><div class="mono tn">{{ s.scale }}</div><div style="color:#A39FB5">{{ s.what }}</div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px">Фоновые слои снизу вверх: `sky` (линейный градиент sky → skyLow, 0…120), `hill` (эллипс 180,150 r 220×50, groundShade, mix far), `slabFront` (эллипс 180,183 r 165×58), `ground` (эллипс 180,175 r 165×58) + `groundLit` (эллипс 150,165 r 110×35, α .5), `path` (камни — повторение эллипса по кривой от (180,232) до (232,192), 6 шт., масштаб 1 → .7). Порядок предметов — по `depth`, внутри — по y. Параллакс: сдвиг пальца dx → слой depth 0 на .3·dx, 1 на .6·dx, 2 на dx; пружина назад 400 мс.</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp / sp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Элемент</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="10"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="8"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты</div>
+  <div style="color:#A39FB5">Экран: «Сад», «Главы», «Что добавить», «глава 4 из 7», «до „Беседки“ — 73 ч 50 мин», «свободный режим»; таблетка предмета — его имя, «Ива — у пруда». Завязка: «За калиткой — сад» / «Здесь давно никто не играл, и сад затих. Говорят, его будит музыка: каждая минута за инструментом — новый лист, каждая нота в тон — то, что вы решите посадить.» / «Он никуда не спешит и не вянет. Он просто ждёт.» / «Открыть калитку». Главы: <sc-for list="{{ chapters }}" as="c" hint-placeholder-count="7"><span>«{{ c.name }}» ({{ c.hoursText }}) — «{{ c.phrase }}»; </span></sc-for> Лист главы: «Глава N», «Появилось», «Теперь можно добавить», «Посмотреть». Магазин: вкладки «Эта глава · Всё · Куплено», состояния «хватает» / «не хватает 260» / «глава 5», кнопка «Посадить иву · 1 200» («Поставить скамейку», «Зажечь фонарь», «Позвать кота»). Итог занятия: «+340 тонов», «264 ноты в строе + 76 за время», «Сад подрос», «В сад». Валюта: тон / тона / тонов; нигде нет «мало», «меньше», «вчера».</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">ITEMS — предметы (единицы сетки, y вверх отрицательный, опора (0,0) — низ по центру)</div>
+  <div style="color:#A39FB5;margin-bottom:8px">Запись `{ id, name, chapter, price, slots, sway, layers: [{ fill: token, d }] }`; рисовать `translate(slot.x, slot.y) · scale(slot.scale)`, заливка — `mix(pal[fill], pal.skyLow, aerial[depth])`. `sway` — группа слоёв, качающаяся вокруг опоры. Тень-пятно рисуется движком для всех предметов с `shadow: [rx, ry]`.</div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <sc-for list="{{ itemDefs }}" as="n" hint-placeholder-count="14">
+    <div style="background:#15151B;border-radius:12px;padding:10px 12px;display:flex;gap:14px;align-items:flex-start"><div style="width:64px;height:72px;flex:none;background:#1E1D25;border-radius:8px;display:flex;align-items:flex-end;justify-content:center;line-height:0;padding-bottom:6px;box-sizing:border-box">{{ n.preview }}</div><div style="min-width:0;flex:1"><div style="display:flex;gap:10px;align-items:baseline;flex-wrap:wrap"><span class="mono" style="font-weight:700;color:#E6E4EE">{{ n.id }}</span><span style="color:#A39FB5;font-size:12px">{{ n.name }} · {{ n.meta }}</span></div><div class="mono" style="color:#A39FB5;font-size:10.5px;line-height:1.45;overflow-wrap:anywhere;margin-top:6px">{{ n.code }}</div></div></div>
+    </sc-for>
+  </div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const ON = '#E6E4EE', OV = '#A39FB5', PR = '#C4ADFF', PC = '#5B43B8', OPC = '#E9DDFF', OUT = '#3A3846', SC = '#1E1D25', SCH = '#292833';
+    // ---------- palettes
+    const PAL = {
+      dry: { sky: '#2B2740', skyLow: '#4A4058', hill: '#4F4A52', ground: '#5C5647', groundLit: '#6E685A', groundShade: '#4A4539', slabFront: '#36312B', path: '#75705F', foliage: '#6F6C50', foliageLit: '#8A8766', foliageShade: '#56543E', trunk: '#4E4238', water: '#4F5A66', waterLit: '#6A7683', wood: '#6E5A48', woodShade: '#4B3E33', roof: '#5E4A4A', roofLit: '#775F5F', stone: '#7C766A', flowerA: '#8D7C78', flowerB: '#8E8A78', lamp: '#5A5560', lampGlass: '#8A8890', glow: 'rgba(0,0,0,0)', bird: '#5A5560', cat: '#3A3040' },
+      day: { sky: '#6FA6E6', skyLow: '#CFE4F6', hill: '#8FBF8A', ground: '#6FA85C', groundLit: '#8FC873', groundShade: '#4E8744', slabFront: '#6B4E3A', path: '#DCCBA6', foliage: '#4E9B57', foliageLit: '#82C873', foliageShade: '#357A42', trunk: '#7A5539', water: '#5FA8D8', waterLit: '#B0DCF2', wood: '#C99C6B', woodShade: '#8F6A46', roof: '#C96B5A', roofLit: '#E68D78', stone: '#C4BDAC', flowerA: '#F08AA8', flowerB: '#F5D76E', lamp: '#3B3A45', lampGlass: '#E4ECF2', glow: 'rgba(0,0,0,0)', bird: '#3B3A45', cat: '#3A3040' },
+      eve: { sky: '#2C2860', skyLow: '#D98A74', hill: '#4E4A7A', ground: '#3F6D4B', groundLit: '#59895C', groundShade: '#2E5238', slabFront: '#3C2E2A', path: '#A89178', foliage: '#2F6B48', foliageLit: '#4F8E5F', foliageShade: '#214D34', trunk: '#4A3A32', water: '#3A4F8A', waterLit: '#9A6E96', wood: '#A07A56', woodShade: '#5E4634', roof: '#8F4A48', roofLit: '#BC6A5F', stone: '#8C8578', flowerA: '#C97A96', flowerB: '#D9BC6A', lamp: '#2A2830', lampGlass: '#FFD98A', glow: 'rgba(255,196,110,.55)', bird: '#2A2830', cat: '#1E1A24' },
+    };
+    const hex2 = c => { if (c.startsWith('rgba')) { const m = c.match(/[\d.]+/g).map(Number); return [m[0], m[1], m[2], m[3]]; } const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255, 1]; };
+    const toC = ([r, g, b, a]) => a >= .999 ? '#' + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('') : `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${a.toFixed(2)})`;
+    const mix = (a, b, t) => { const A = hex2(a), B = hex2(b); return toC(A.map((v, i) => v + (B[i] - v) * t)); };
+    const lerpPal = (a, b, t) => { const o = {}; Object.keys(a).forEach(k => o[k] = mix(a[k], b[k], t)); return o; };
+    const palFor = (t, e = 0) => { const p = lerpPal(PAL.dry, PAL.day, Math.min(1, t)); return e ? lerpPal(p, PAL.eve, e) : p; };
+    const AER = [.30, .12, 0];
+
+    // ---------- geometry helpers
+    const f = n => +n.toFixed(2);
+    const circ = (cx, cy, r) => `M${f(cx - r)} ${f(cy)}a${r} ${r} 0 1 0 ${2 * r} 0a${r} ${r} 0 1 0 ${-2 * r} 0Z`;
+    const ell = (cx, cy, rx, ry) => `M${f(cx - rx)} ${f(cy)}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0Z`;
+    const rect = (x, y, w, hh) => `M${f(x)} ${f(y)}h${f(w)}v${f(hh)}h${f(-w)}Z`;
+    const L = (fill, d, o = {}) => ({ fill, d, ...o });
+
+    // ---------- item definitions (unit scale, anchor bottom-center)
+    const ITEMS = {
+      tree: { name: 'Липа', shadow: [16, 4], sway: [2, 3, 4], layers: [L('trunk', rect(-2.5, -24, 5, 24)), L('woodShade', rect(0, -24, 2.5, 24)), L('foliageShade', circ(0, -38, 19)), L('foliage', circ(-4, -42, 14)), L('foliageLit', circ(-9, -47, 6))] },
+      apple: { name: 'Яблоня', shadow: [14, 4], sway: [2, 3, 4, 5, 6], layers: [L('trunk', rect(-2, -18, 4, 18)), L('woodShade', rect(0, -18, 2, 18)), L('foliageShade', ell(0, -30, 17, 14)), L('foliage', ell(-4, -33, 12, 10)), L('foliageLit', circ(-8, -37, 4)), L('flowerA', circ(6, -28, 2)), L('flowerA', circ(-9, -25, 2))] },
+      fir: { name: 'Ель', shadow: [12, 3.5], sway: [1, 2, 3], layers: [L('trunk', rect(-2, -10, 4, 10)), L('foliageShade', 'M0 -62 L17 -8 L-17 -8Z'), L('foliage', 'M0 -62 L-17 -8 L0 -8Z'), L('foliageLit', 'M0 -62 L-6 -44 L0 -40Z')] },
+      willow: { name: 'Ива', shadow: [16, 4], sway: [2, 3, 4], layers: [L('trunk', 'M-3 0 L-4 -30 L4 -30 L3 0Z'), L('foliageShade', 'M-22 -10 Q-24 -46 0 -50 Q24 -46 22 -10 Q16 -16 12 -6 Q6 -14 0 -8 Q-6 -14 -12 -6 Q-16 -16 -22 -10Z'), L('foliage', 'M-16 -14 Q-18 -42 -2 -46 Q8 -40 6 -18 Q2 -22 -2 -14 Q-8 -20 -16 -14Z'), L('foliageLit', 'M-12 -30 Q-10 -42 -2 -44 Q0 -36 -4 -30Z')] },
+      bush: { name: 'Куст', shadow: [13, 3], layers: [L('foliageShade', ell(0, -9, 14, 9)), L('foliage', ell(-4, -12, 9, 7)), L('foliageLit', circ(-7, -15, 3))] },
+      bedA: { name: 'Клумба розовая', shadow: [0, 0], layers: [L('foliageShade', ell(0, -2, 16, 5)), L('foliage', ell(-3, -3, 11, 3.5)), L('flowerA', circ(-9, -7, 2.6)), L('flowerA', circ(-1, -9, 2.6)), L('flowerA', circ(7, -7, 2.6)), L('flowerB', circ(3, -5, 1.8))] },
+      bedB: { name: 'Клумба жёлтая', shadow: [0, 0], layers: [L('foliageShade', ell(0, -2, 16, 5)), L('foliage', ell(-3, -3, 11, 3.5)), L('flowerB', circ(-9, -7, 2.6)), L('flowerB', circ(-1, -9, 2.6)), L('flowerB', circ(7, -7, 2.6)), L('flowerA', circ(3, -5, 1.8))] },
+      bench: { name: 'Скамейка', shadow: [20, 3], layers: [L('woodShade', rect(-15, -8, 3, 8)), L('woodShade', rect(12, -8, 3, 8)), L('wood', rect(-19, -12, 38, 3.5)), L('woodShade', rect(-19, -8.5, 38, 2)), L('woodShade', rect(-15, -22, 2.5, 10)), L('woodShade', rect(12.5, -22, 2.5, 10)), L('wood', rect(-19, -22, 38, 3.5))] },
+      lantern: { name: 'Фонарь', shadow: [6, 2], glow: [0, -40, 26], layers: [L('lamp', rect(-1.5, -34, 3, 34)), L('lamp', rect(-6, -36, 12, 2)), L('lamp', 'M-6 -46h12v10h-12Z'), L('lampGlass', rect(-3.6, -44.5, 7.2, 7.5)), L('lamp', 'M-7 -46h14l-7 -5Z')] },
+      pond: { name: 'Пруд', shadow: [0, 0], layers: [L('waterLit', ell(0, 0, 42, 14)), L('water', ell(0, .6, 38, 11.5)), L('waterLit', ell(-9, -2.5, 11, 2.2)), L('stone', ell(-34, 6, 6, 2.5)), L('stone', ell(30, 8, 5, 2)), L('stone', ell(12, 12, 4, 1.6))] },
+      lilies: { name: 'Кувшинки', shadow: [0, 0], layers: [L('foliage', ell(-14, 2, 5, 2)), L('foliage', ell(-4, 5, 4.5, 1.8)), L('foliage', ell(16, 3, 5, 2)), L('flowerA', circ(-13, 1, 1.6)), L('flowerB', circ(17, 2, 1.6))] },
+      bridge: { name: 'Мостик', shadow: [0, 0], layers: [L('woodShade', 'M-28 2 Q0 -14 28 2 L28 6 Q0 -8 -28 6Z'), L('wood', 'M-28 -1 Q0 -18 28 -1 L28 2 Q0 -14 -28 2Z'), L('woodShade', rect(-26, -14, 2, 14)), L('woodShade', rect(-9, -20, 2, 14)), L('woodShade', rect(7, -20, 2, 14)), L('woodShade', rect(24, -14, 2, 14)), L('wood', 'M-26 -13 Q0 -30 26 -13 L26 -11 Q0 -27 -26 -11Z')] },
+      gate: { name: 'Калитка', shadow: [22, 3], layers: [L('stone', rect(-18, -32, 6, 32)), L('stone', rect(12, -32, 6, 32)), L('woodShade', 'M-15 -32 Q0 -46 15 -32 L15 -29 Q0 -42 -15 -29Z'), L('woodShade', rect(-11, -26, 1.6, 26)), L('woodShade', rect(-5, -27, 1.6, 27)), L('woodShade', rect(1, -27, 1.6, 27)), L('woodShade', rect(7, -26, 1.6, 26)), L('wood', rect(-12, -18, 24, 2))] },
+      gazebo0: { name: 'Беседка — руины', shadow: [34, 5], layers: [L('stone', ell(0, 0, 34, 10)), L('woodShade', ell(0, -1.5, 30, 8)), L('woodShade', rect(-24, -28, 4, 28)), L('woodShade', 'M-20 -26 L26 -6 L26 -3 L-20 -23Z')] },
+      gazebo1: { name: 'Беседка — пол и колонны', shadow: [34, 5], layers: [L('stone', ell(0, 0, 34, 10)), L('wood', ell(0, -1.5, 30, 8)), L('woodShade', ell(0, -1, 26, 6)), L('wood', rect(-27, -44, 4, 42)), L('wood', rect(23, -44, 4, 42)), L('woodShade', rect(-9, -48, 3.5, 40)), L('woodShade', rect(6, -48, 3.5, 40)), L('woodShade', rect(-27, -20, 54, 2))] },
+      gazebo2: { name: 'Беседка — крыша', shadow: [34, 5], layers: [L('stone', ell(0, 0, 34, 10)), L('wood', ell(0, -1.5, 30, 8)), L('wood', rect(-27, -44, 4, 42)), L('wood', rect(23, -44, 4, 42)), L('woodShade', rect(-9, -48, 3.5, 40)), L('woodShade', rect(6, -48, 3.5, 40)), L('woodShade', rect(-27, -20, 54, 2)), L('roofLit', 'M-42 -44 L0 -66 L0 -44Z'), L('roof', 'M0 -66 L42 -44 L0 -44Z'), L('woodShade', rect(-42, -45, 84, 2.5)), L('woodShade', rect(-1.5, -72, 3, 7))] },
+      gazebo3: { name: 'Беседка — сцена', shadow: [34, 5], layers: [L('stone', ell(0, 0, 34, 10)), L('wood', ell(0, -1.5, 30, 8)), L('wood', rect(-27, -44, 4, 42)), L('wood', rect(23, -44, 4, 42)), L('woodShade', rect(-9, -48, 3.5, 40)), L('woodShade', rect(6, -48, 3.5, 40)), L('woodShade', rect(-27, -20, 54, 2)), L('roofLit', 'M-42 -44 L0 -66 L0 -44Z'), L('roof', 'M0 -66 L42 -44 L0 -44Z'), L('woodShade', rect(-42, -45, 84, 2.5)), L('woodShade', rect(-1.5, -72, 3, 7)), L('lamp', rect(-.8, -30, 1.6, 26)), L('lamp', 'M-6 -30 L6 -30 L4 -20 L-4 -20Z'), L('lamp', 'M-5 -4 L5 -4 L3 -6 L-3 -6Z'), ...[-34, -22, -10, 2, 14, 26].map(x => L('lampGlass', circ(x, -40, 1.4)))] },
+      birds: { name: 'Птицы', shadow: [0, 0], layers: [L('bird', 'M-8 0 q4 -4 8 0 q4 -4 8 0 l0 1.6 q-4 -3 -8 .4 q-4 -3 -8 -.4Z'), L('bird', 'M10 -8 q3 -3 6 0 q3 -3 6 0 l0 1.4 q-3 -2 -6 .3 q-3 -2 -6 -.3Z')] },
+      cat: { name: 'Кот', shadow: [0, 0], layers: [L('cat', ell(0, -5, 8, 5)), L('cat', circ(6, -11, 4.2)), L('cat', 'M3 -14 L4 -19 L6.5 -15Z'), L('cat', 'M7.5 -15 L10 -19 L10 -14Z'), L('cat', 'M-8 -5 Q-14 -6 -12 -14 L-10 -14 Q-12 -7 -7 -7Z'), L('lampGlass', circ(5, -11.5, .8)), L('lampGlass', circ(8, -11.5, .8))] },
+      stones: { name: 'Камни дорожки', shadow: [0, 0], layers: [L('path', ell(0, 0, 8, 3)), L('path', ell(14, -6, 7, 2.6)), L('path', ell(26, -11, 6, 2.2))] },
+      fireflies: { name: 'Светлячки', shadow: [0, 0], layers: [[-60, -30], [-20, -46], [30, -22], [70, -40], [110, -28], [-90, -18]].map(([x, y]) => L('lampGlass', circ(x, y, 1.4), { fly: true })) },
+    };
+    const ITEM_META = { tree: 'глава 3 · 900', apple: 'глава 2 · 800', fir: 'глава 3 · 700', willow: 'глава 4 · 1 200', bush: 'глава 1 · 150', bedA: 'глава 2 · 150', bedB: 'глава 2 · 150', bench: 'глава 2 · 600', lantern: 'глава 3 · 500', pond: 'глава 4 · с главой', lilies: 'глава 4 · 200', bridge: 'глава 4 · 1 500', gate: 'глава 1 · с главой', gazebo0: 'глава 1 · с главой', gazebo1: 'глава 5 · с главой', gazebo2: 'глава 5 · 4 000', gazebo3: 'глава 5 · 3 000', birds: 'глава 4 · 300', cat: 'глава 6 · 1 500', stones: 'глава 1 · 100', fireflies: 'глава 6 · 500' };
+
+    // ---------- slots
+    const SLOTS = {
+      gate: { x: 46, y: 172, depth: 1, scale: .8, what: 'калитка' },
+      treeL: { x: 18, y: 160, depth: 1, scale: .85, what: 'липа / ель' },
+      tF1: { x: 72, y: 132, depth: 0, scale: .6, what: 'дерево дальнего ряда' }, tF2: { x: 122, y: 126, depth: 0, scale: .55, what: 'дерево' }, tF3: { x: 186, y: 121, depth: 0, scale: .5, what: 'дерево' }, tF4: { x: 246, y: 124, depth: 0, scale: .55, what: 'дерево' }, tF5: { x: 302, y: 130, depth: 0, scale: .6, what: 'дерево' },
+      pond: { x: 105, y: 192, depth: 1, scale: .85, what: 'пруд (с главой 4)' }, lilies: { x: 105, y: 192, depth: 1, scale: .85, what: 'кувшинки — на пруду' }, bridge: { x: 105, y: 184, depth: 1, scale: .85, what: 'мостик — над прудом' },
+      gazebo: { x: 242, y: 190, depth: 1, scale: .95, what: 'беседка, этапы 0–3' },
+      lanternM: { x: 172, y: 176, depth: 1, scale: .8, what: 'фонарь у беседки' }, lanternN: { x: 326, y: 220, depth: 2, scale: 1, what: 'фонарь ближний' },
+      bench: { x: 76, y: 224, depth: 2, scale: 1, what: 'скамейка' }, cat: { x: 70, y: 212, depth: 2, scale: 1, what: 'кот — на скамейке' },
+      bedA: { x: 150, y: 230, depth: 2, scale: 1, what: 'клумба' }, bedB: { x: 262, y: 232, depth: 2, scale: 1, what: 'клумба' },
+      bushA: { x: 332, y: 190, depth: 1, scale: .85, what: 'куст' }, bushB: { x: 28, y: 208, depth: 2, scale: 1, what: 'куст' }, treeR: { x: 340, y: 168, depth: 1, scale: .9, what: 'липа / яблоня' },
+      birds: { x: 210, y: 78, depth: 0, scale: 1, what: 'птицы — небо' }, fireflies: { x: 180, y: 200, depth: 2, scale: 1, what: 'светлячки — по всему саду' },
+    };
+
+    // ---------- renderer
+    let gid = 0;
+    function placeItem(itemId, slot, pal, opts = {}, key) {
+      const it = ITEMS[itemId]; const a = AER[slot.depth]; const col = t => mix(pal[t], pal.skyLow, a);
+      const els = [];
+      if (it.shadow && it.shadow[0]) els.push(h('path', { key: 'sh', d: ell(it.shadow[0] * .25, 1, it.shadow[0], it.shadow[1]), fill: 'rgba(20,16,30,.28)' }));
+      if (it.glow && opts.glow) els.push(h('circle', { key: 'gl', cx: it.glow[0], cy: it.glow[1], r: it.glow[2], fill: `url(#${opts.glowId})` }));
+      const body = it.layers.map((l, i) => h('path', { key: i, d: l.d, fill: col(l.fill), style: l.fly && opts.anim ? { animation: `ffly ${3 + (i % 3)}s ease-in-out ${i * .7}s infinite` } : undefined }));
+      if (it.sway && opts.anim) { const sw = body.filter((_, i) => it.sway.includes(i)); const rest = body.filter((_, i) => !it.sway.includes(i)); els.push(...rest, h('g', { key: 'sw', style: { animation: `sway ${4 + (key % 3)}s ease-in-out ${(key * .37) % 3}s infinite`, transformOrigin: '0px -24px' } }, sw)); } else els.push(...body);
+      return h('g', { key, transform: `translate(${slot.x} ${slot.y}) scale(${slot.scale * (opts.scale ?? 1)})`, opacity: opts.opacity ?? 1 }, els);
+    }
+    function garden(st, o = {}) {
+      const pal = palFor(st.t, st.e || 0); const id = 'g' + (gid++); const W = 360, H = 240;
+      const vb = o.viewBox || `0 0 ${W} ${H}`; const layersOn = o.layers || { sky: 1, slab: 1, far: 1, mid: 1, near: 1 };
+      const els = [h('defs', { key: 'd' }, h('linearGradient', { id: id + 's', x1: 0, y1: 0, x2: 0, y2: 1 }, h('stop', { offset: 0, stopColor: pal.sky }), h('stop', { offset: 1, stopColor: pal.skyLow })), h('radialGradient', { id: id + 'g' }, h('stop', { offset: 0, stopColor: pal.glow }), h('stop', { offset: 1, stopColor: 'rgba(255,196,110,0)' })))];
+      if (layersOn.sky) { els.push(h('rect', { key: 'sky0', x: -400, y: -900, width: 1160, height: 700, fill: pal.sky })); els.push(h('rect', { key: 'sky', x: -400, y: -200, width: 1160, height: 330, fill: `url(#${id}s)` })); els.push(h('path', { key: 'hill', d: ell(180, 150, 230, 52), fill: mix(pal.hill, pal.skyLow, .3) })); }
+      if (layersOn.slab) { els.push(h('path', { key: 'sf', d: ell(180, 184, 166, 58), fill: pal.slabFront })); els.push(h('path', { key: 'gr', d: ell(180, 176, 166, 58), fill: pal.ground })); els.push(h('path', { key: 'gl', d: ell(150, 168, 112, 36), fill: pal.groundLit, opacity: .5 })); els.push(h('path', { key: 'gs', d: ell(260, 205, 90, 22), fill: pal.groundShade, opacity: .35 }));
+        if (st.path) [0, 1, 2, 3, 4, 5].forEach(i => { const k = i / 5; els.push(h('path', { key: 'p' + i, d: ell(180 + 52 * k, 232 - 40 * k, 9 * (1 - .3 * k), 3.2 * (1 - .3 * k)), fill: pal.path })); }); }
+      const placed = st.items.map(([item, slotId, extra]) => ({ item, slot: SLOTS[slotId], extra: extra || {} })).filter(p => layersOn[['far', 'mid', 'near'][p.slot.depth]]).sort((a, b) => a.slot.depth - b.slot.depth || a.slot.y - b.slot.y);
+      placed.forEach((p, i) => els.push(placeItem(p.item, p.slot, pal, { glow: !!st.e, glowId: id + 'g', anim: o.anim, ...p.extra }, i + 1)));
+      if (o.hint) els.push(h('rect', { key: 'bg0', x: -200, y: -200, width: 760, height: 660, fill: 'none' }));
+      const style = { display: 'block' }; if (o.cssW) style.width = o.cssW; if (o.cssH) style.height = o.cssH;
+      return h('svg', { width: o.w || W, height: o.h || H, viewBox: vb, preserveAspectRatio: o.par || 'xMidYMid slice', style }, els);
+    }
+    // ---------- garden stages
+    const ST = {
+      s0: { t: 0, path: false, items: [['gate', 'gate'], ['gazebo0', 'gazebo'], ['bush', 'bushA'], ['bush', 'bushB'], ['stones', 'bedA']] },
+      s1: { t: .35, path: false, items: [['gate', 'gate'], ['gazebo0', 'gazebo'], ['bush', 'bushA'], ['bush', 'bushB'], ['stones', 'bedA'], ['bedA', 'bedB'], ['bench', 'bench'], ['apple', 'tF1']] },
+      s2: { t: .6, path: true, items: [['gate', 'gate'], ['gazebo0', 'gazebo'], ['bush', 'bushA'], ['bush', 'bushB'], ['bedA', 'bedA'], ['bedB', 'bedB'], ['bench', 'bench'], ['apple', 'tF1'], ['fir', 'tF2'], ['tree', 'tF4'], ['tree', 'treeR'], ['lantern', 'lanternN']] },
+      s3: { t: .85, path: true, items: [['gate', 'gate'], ['gazebo1', 'gazebo'], ['bush', 'bushA'], ['bush', 'bushB'], ['bedA', 'bedA'], ['bedB', 'bedB'], ['bench', 'bench'], ['apple', 'tF1'], ['fir', 'tF2'], ['tree', 'tF3'], ['tree', 'tF4'], ['fir', 'tF5'], ['tree', 'treeR'], ['fir', 'treeL'], ['lantern', 'lanternN'], ['pond', 'pond'], ['bridge', 'bridge'], ['birds', 'birds']] },
+      s4: { t: 1, path: true, items: [['gate', 'gate'], ['gazebo3', 'gazebo'], ['bush', 'bushA'], ['bush', 'bushB'], ['bedA', 'bedA'], ['bedB', 'bedB'], ['bench', 'bench'], ['apple', 'tF1'], ['fir', 'tF2'], ['tree', 'tF3'], ['tree', 'tF4'], ['fir', 'tF5'], ['tree', 'treeR'], ['fir', 'treeL'], ['lantern', 'lanternN'], ['lantern', 'lanternM'], ['pond', 'pond'], ['lilies', 'lilies'], ['bridge', 'bridge'], ['willow', 'tF1'], ['birds', 'birds']] },
+    };
+    ST.s4.items = ST.s4.items.filter(([i, s]) => !(i === 'apple' && s === 'tF1'));
+    ST.s5 = { ...ST.s4, e: 1, items: [...ST.s4.items, ['cat', 'cat'], ['fireflies', 'fireflies']] };
+    ST.s3w = { ...ST.s3, items: [...ST.s3.items, ['willow', 'tF1', { opacity: .45 }]].filter(([i, s]) => !(i === 'apple' && s === 'tF1')) };
+    ST.s3b = { ...ST.s3, items: [...ST.s3.items, ['willow', 'tF1', { scale: 1.06 }]].filter(([i, s]) => !(i === 'apple' && s === 'tF1')) };
+
+    // ---------- other worlds (comparison only)
+    const g = (key, ch) => h('g', { key }, ch);
+    const P = (key, d, fill, o = {}) => h('path', { key, d, fill, ...o });
+    const svgW = (els, o = {}) => h('svg', { width: o.w || 360, height: o.h || 240, viewBox: '0 0 360 240', preserveAspectRatio: 'xMidYMid slice', style: { display: 'block' } }, els);
+    function animalWorld(s) {
+      const wall = mix('#4A4258', '#5B4C78', s), floor = mix('#5A4A40', '#8A6A50', s), fur = mix('#8A6A55', '#E0803C', s), furL = mix('#A8907C', '#F2B27A', s), dark = '#3A2A2A', wood = mix('#5E4E42', '#C99C6B', s), woodS = mix('#463A31', '#8F6A46', s), win = mix('#3A3A52', '#F6D9A0', s);
+      const els = [P('w', rect(0, 0, 360, 170), wall), P('fl', rect(0, 170, 360, 70), floor), P('fs', rect(0, 170, 360, 6), mix(floor, '#000', .25)), P('bb', rect(0, 160, 360, 10), mix(wall, '#000', .2)),
+        P('wf', rect(236, 36, 92, 84), woodS), P('wi', rect(242, 42, 80, 72), win), P('wb', rect(280, 42, 3, 72), woodS), P('wb2', rect(242, 76, 80, 3), woodS), P('wl', 'M236 120 L328 120 L340 170 L224 170Z', mix(win, floor, .55), { opacity: .35 + .4 * s }),
+        P('sh', rect(40, 70, 90, 5), wood), P('sh2', rect(40, 110, 90, 5), wood)];
+      if (s > .3) els.push(P('b1', rect(48, 52, 10, 18), '#C96B5A'), P('b2', rect(60, 48, 8, 22), '#5B43B8'), P('b3', rect(70, 56, 12, 14), '#E5B03C'), P('ros', ell(100, 66, 8, 4), '#E5B03C'));
+      if (s > .7) els.push(P('vl', 'M52 108 Q46 96 54 90 Q60 96 56 108Z', '#C96B5A'), P('vn', rect(53, 78, 2, 14), dark), P('st', rect(150, 100, 2, 70), dark), P('st2', 'M138 100 L164 100 L160 88 L142 88Z', dark));
+      const fs = .55 + .55 * s, fx = 200, fy = 210; const F = d => d;
+      els.push(P('mat', ell(fx, fy + 2, 60 * fs + 20, 14), mix('#6A5A70', '#8B74D9', s), { opacity: .7 }), h('g', { key: 'fox', transform: `translate(${fx} ${fy}) scale(${fs})` }, [P('tail', 'M20 -6 Q50 -20 44 -44 Q36 -30 22 -22Z', fur), P('tt', 'M40 -34 Q46 -42 44 -44 Q40 -38 36 -34Z', furL), P('body', ell(0, -18, 30, 18), fur), P('belly', ell(-4, -14, 18, 10), furL), P('head', circ(-24, -38, 15), fur), P('ear1', 'M-36 -46 L-34 -66 L-24 -50Z', fur), P('ear2', 'M-18 -50 L-10 -66 L-10 -46Z', fur), P('muz', ell(-30, -32, 9, 6), furL), P('nose', circ(-37, -33, 1.8), dark), P('eye', 'M-30 -42 q3 -2 6 0', 'none', { stroke: dark, strokeWidth: 1.6, strokeLinecap: 'round' }), P('eye2', 'M-20 -42 q3 -2 6 0', 'none', { stroke: dark, strokeWidth: 1.6, strokeLinecap: 'round' }), P('paw', ell(-18, -2, 7, 3.5), furL), P('paw2', ell(2, -1, 7, 3.5), furL)]));
+      if (s > .7) els.push(P('scarf', 'M-46 -30 L-40 -22 L-30 -26 L-42 -34Z', '#C4ADFF'), P('scarf2', 'M182 190 L192 186 L196 194 L186 198Z', '#C4ADFF'));
+      return svgW(els);
+    }
+    function stageWorld(s) {
+      const els = [];
+      const wall = mix('#3A3648', '#5B2B3E', s), floor = mix('#6A5644', '#5A3A34', s), velvet = '#5B43B8', wood = '#C99C6B', woodS = '#8F6A46', gold = '#E5B03C';
+      els.push(P('w', rect(0, 0, 360, 150), wall), P('fl', rect(0, 150, 360, 90), floor));
+      for (let i = 0; i < 10; i++) els.push(P('fb' + i, rect(0, 150 + i * 9, 360, 1), 'rgba(0,0,0,.15)'));
+      if (s < .3) { els.push(P('win', rect(230, 30, 70, 80), '#2B2740'), P('winf', rect(226, 26, 78, 6), woodS), P('stool', rect(140, 150, 30, 4), wood), P('sl', rect(142, 154, 3, 22), woodS), P('sl2', rect(165, 154, 3, 22), woodS), P('stand', rect(200, 120, 2, 60), '#3A3A45'), P('stand2', 'M188 122 L214 122 L210 106 L192 106Z', '#3A3A45'), P('case', 'M60 176 Q60 150 80 150 L110 150 Q130 150 130 176Z', '#2A2430')); return svgW(els); }
+      // stage platform + curtains
+      const big = s > .7;
+      els.push(P('back', rect(60, 20, 240, 100), mix(wall, '#000', .35)), P('stg', rect(40, 118, 280, 22), wood), P('stgf', rect(40, 138, 280, 6), woodS));
+      if (big) { els.push(P('arch', 'M40 120 L40 0 L320 0 L320 120 L300 120 L300 24 L60 24 L60 120Z', mix('#6A3A3A', gold, .25)), P('ct', rect(40, 0, 280, 14), '#8E2F3F'), P('c1', 'M60 24 Q84 60 62 118 L60 118Z', '#8E2F3F'), P('c2', 'M300 24 Q276 60 298 118 L300 118Z', '#8E2F3F'), P('ch', circ(180, 40, 10), gold), P('chb', rect(179, 20, 2, 12), gold)); [-16, -8, 0, 8, 16].forEach((dx, i) => els.push(P('cl' + i, circ(180 + dx, 48, 2), '#FFE9B0'))); }
+      // performer
+      els.push(P('per', ell(180, 118, 7, 3), 'rgba(0,0,0,.3)'), P('pb', 'M172 118 L174 88 L186 88 L188 118Z', '#2A2430'), P('ph', circ(180, 80, 6), '#D9A98A'), P('pv', 'M170 96 L192 92 L192 96 L170 100Z', '#C96B5A'));
+      // seats: repeated shape rows with fading
+      const rows = big ? 6 : 3, per = big ? 14 : 8;
+      for (let r = 0; r < rows; r++) { const y = 160 + r * (big ? 13 : 22), sc = 1 + r * .08, w = 360 / (per + 1) * sc, op = 1 - r * .07; const off = ((360 - w * per) / 2) - (r % 2) * w * .3;
+        for (let i = 0; i < per; i++) { const x = off + i * w + w / 2; els.push(P(`s${r}${i}`, rect(x - w * .38, y, w * .76, big ? 9 : 14), velvet, { opacity: op })); if (Math.random() > .35 || big) els.push(P(`h${r}${i}`, circ(x, y + 1, big ? 3.2 : 4.5), '#2A2430', { opacity: op })); } }
+      return svgW(els);
+    }
+    function cityWorld(s) {
+      const grey = c => mix(mix(c, '#7A7680', .85), c, s);
+      const els = [P('sky', rect(0, 0, 360, 240), grey('#7FB2E8')), P('far', rect(0, 100, 360, 60), grey('#A9BFD9')), P('riv', rect(0, 196, 360, 44), grey('#5FA8D8')), P('gr', rect(0, 172, 360, 24), grey('#6FA85C'))];
+      const B = [[10, 70, 34, '#C96B5A'], [50, 50, 40, '#E5B03C'], [96, 90, 30, '#8B74D9'], [132, 40, 46, '#C4BDAC'], [184, 74, 36, '#C96B5A'], [226, 30, 50, '#5B43B8'], [282, 66, 40, '#E68D78'], [328, 84, 30, '#8B74D9']];
+      B.forEach(([x, top, w, c], i) => { els.push(P('b' + i, rect(x, top, w, 172 - top), grey(c)), P('bs' + i, rect(x + w * .7, top, w * .3, 172 - top), mix(grey(c), '#000', .25)), P('br' + i, rect(x, top - 4, w, 4), mix(grey(c), '#fff', .2)));
+        for (let r = 0; r < Math.floor((172 - top) / 14); r++) for (let k = 0; k < Math.floor(w / 10) - 1; k++) els.push(P(`w${i}${r}${k}`, rect(x + 5 + k * 10, top + 6 + r * 14, 4, 6), s > .6 ? '#FFE9B0' : mix(grey(c), '#000', .35), { opacity: s > .6 ? .5 + .5 * Math.random() : .6 })); });
+      // park & bridge
+      [[60, 172, 14], [82, 172, 12], [300, 172, 14]].forEach(([x, y, r], i) => els.push(P('tr' + i, rect(x - 1.5, y - r, 3, r), grey('#7A5539')), P('tc' + i, circ(x, y - r - 4, r * .8), grey('#4E9B57')), P('tl' + i, circ(x - 3, y - r - 6, r * .4), grey('#82C873'))));
+      els.push(P('br', 'M120 196 Q180 176 240 196 L240 204 Q180 184 120 204Z', grey('#C4BDAC')), P('brs', rect(150, 196, 3, 20), grey('#8F6A46')), P('brs2', rect(208, 196, 3, 20), grey('#8F6A46')));
+      for (let i = 0; i < 6; i++) els.push(P('lp' + i, rect(30 + i * 60, 160, 1.5, 12), '#3B3A45'), P('ll' + i, circ(30.7 + i * 60, 159, 2), s > .6 ? '#FFE9B0' : '#6B6660'));
+      return svgW(els);
+    }
+    const mini = (fn, s, cap) => ({ el: React.cloneElement(fn(s), { width: 360, height: 240, style: { display: 'block', width: '100%', height: 'auto' } }), cap });
+    const gardenAt = st => garden(st, {});
+    const keyF = el => React.cloneElement(el, { width: 412, height: 275 });
+    const worlds = [
+      { id: '25a1', label: 'Животное — лиса в своём уголке; растёт лиса, обживается комната; сюжет: лиса тоже учится', key: animalWorld(.5), minis: [mini(animalWorld, 0, 'начало'), mini(animalWorld, .5, 'середина'), mini(animalWorld, 1, 'расцвет')], verdictTitle: 'Милый, но опасный.', verdict: 'Вся прелесть — в мимике и позе, а это как раз мелкая деталь, которую двумя-тремя заливками не сыграть. Уголок кончается быстро: полка, окно, лампа — и всё. И зверь, который «слушает», молча превращается в зверя, который ждёт.' },
+      { id: '25a2', label: 'Сад — заброшенный сад музыканта с беседкой-сценой в центре; диорама, три плана', key: gardenAt(ST.s3), minis: [mini(gardenAt, ST.s0, 'начало'), mini(gardenAt, ST.s2, 'середина'), mini(gardenAt, ST.s5, 'расцвет')], verdictTitle: 'Выбран.', verdict: 'Растёт непрерывно и бесконечно, объём даётся дёшево (планы, тени, две грани), сухое начало — тихое, не грустное. Сюжет — беседка, которую строим главами; на ней в конце вечерний концерт.' },
+      { id: '25a3', label: 'Сцена — от комнаты до зала; кресла и головы — повторение формы с затуханием', key: stageWorld(.5), minis: [mini(stageWorld, 0, 'начало'), mini(stageWorld, .5, 'середина'), mini(stageWorld, 1, 'расцвет')], verdictTitle: 'Красив в конце, пуст посередине.', verdict: 'Четыре остановки на годы пути; между ними покупать нечего, кроме костюмов и смычков, которых на картинке почти не видно. Зал на 80 голов на телефоне — рябь, как и опасались.' },
+      { id: '25a4', label: 'Город — серый → цветной как интерполяция палитры; окна — повторение формы', key: cityWorld(.5), minis: [mini(cityWorld, 0, 'начало'), mini(cityWorld, .5, 'середина'), mini(cityWorld, 1, 'расцвет')], verdictTitle: 'Лучший сюжет, худшая цена.', verdict: 'Ясная цель и финал, но втрое больше рисунка (районы × дома × окна) плюс правила шкал; окна размером в пиксель шумят, а серый город на тёмном экране первые недели просто тёмно-серый.' },
+    ].map(w => ({ ...w, key: keyF(w.key) }));
+
+    // ---------- currency glyph
+    const ton = (size, color = PR) => h('svg', { width: size, height: size, viewBox: '0 0 24 24', style: { display: 'block', flex: 'none' } }, h('path', { d: 'M16.5 4v11.2', stroke: color, strokeWidth: 2.4, strokeLinecap: 'round' }), h('path', { d: 'M12.5 4h8', stroke: color, strokeWidth: 2.4, strokeLinecap: 'round' }), h('path', { d: ellipseRot(11, 17.2, 5.6, 3.9), fill: color }));
+    function ellipseRot(cx, cy, a, b) { const th = -20 * Math.PI / 180, c = Math.cos(th), s = Math.sin(th), k = .5523; const T = (x, y) => `${(cx + x * c - y * s).toFixed(2)} ${(cy + x * s + y * c).toFixed(2)}`; return `M${T(a, 0)}C${T(a, k * b)} ${T(k * a, b)} ${T(0, b)}C${T(-k * a, b)} ${T(-a, k * b)} ${T(-a, 0)}C${T(-a, -k * b)} ${T(-k * a, -b)} ${T(0, -b)}C${T(k * a, -b)} ${T(a, -k * b)} ${T(a, 0)}Z`; }
+
+    // ---------- chapters
+    const chapters = [
+      { n: 1, name: 'Калитка', hours: 0, phrase: 'За калиткой — сад, в котором давно никто не играл.', gives: 'калитка, камни, кусты', st: ST.s0 },
+      { n: 2, name: 'Первые ростки', hours: 2, phrase: 'Трава отзывается первой.', gives: 'яблоня', st: ST.s1 },
+      { n: 3, name: 'Тень деревьев', hours: 10, phrase: 'Деревья вспоминают, как расти.', gives: 'дорожка, липа', st: ST.s2 },
+      { n: 4, name: 'Вода', hours: 40, phrase: 'Пруд снова полон — на воду садятся птицы.', gives: 'пруд, птицы', st: ST.s3 },
+      { n: 5, name: 'Беседка', hours: 120, phrase: 'Сцена сада отстроена. Осталось выйти на неё.', gives: 'пол и колонны беседки', st: ST.s4 },
+      { n: 6, name: 'Вечерний концерт', hours: 400, phrase: 'Зажигаются фонари. Сад слушает.', gives: 'вечер, свет в беседке', st: ST.s5 },
+      { n: 7, name: 'Сад без края', hours: 1000, phrase: 'Сад больше не кончается у ограды.', gives: 'вторая грядка слотов; свободный режим', st: ST.s5 },
+    ].map(c => ({ ...c, hoursText: c.hours ? `${c.hours} ч` : 'с первого входа' }));
+    const wsBase = { shopBg: PR, shopFg: '#2E1A6E', shopText: 'Что добавить', balanceWord: 'тонов' };
+    const portrait = (st, anim) => garden(st, { viewBox: '-10 -20 380 262', par: 'xMidYMax meet', cssW: '100%', cssH: '100%', w: 380, h: 262, anim });
+    const worldScreens = [
+      { ...wsBase, id: '25b1', label: 'Глава 1 «Калитка» — сухой сад: калитка, руины беседки, два куста, камни; палитра dry', scene: portrait(ST.s0), chapter: 'Калитка', chapterNum: 'глава 1 из 7', chapterText: 'За калиткой — сад, в котором давно никто не играл.', pct: '0%', toNext: 'до «Первых ростков» — 2 ч', balance: '0', shopBg: SCH, shopFg: OV, hint: '' },
+      { ...wsBase, id: '25b2', label: 'Глава 2 «Первые ростки» (2 ч) — палитра t .35: трава зеленеет, куплены клумба и скамейка, с главой пришла яблоня', scene: portrait(ST.s1), chapter: 'Первые ростки', chapterNum: 'глава 2 из 7', chapterText: 'Трава отзывается первой.', pct: '46%', toNext: 'до «Тени деревьев» — 4 ч 20 мин', balance: '180', hint: '' },
+      { ...wsBase, id: '25b3', label: 'Глава 4 «Вода» (40 ч) — t .85: пруд и птицы с главой, куплены мостик, ели, липы, фонарь; таблетка имени по тапу', scene: portrait(ST.s3, true), chapter: 'Вода', chapterNum: 'глава 4 из 7', chapterText: 'Пруд снова полон — на воду садятся птицы.', pct: '8%', toNext: 'до «Беседки» — 73 ч 50 мин', balance: '1 240', hint: 'Мостик' },
+      { ...wsBase, id: '25b4', label: 'Глава 5 «Беседка» (120 ч) — t 1, палитра day целиком: беседка достроена, пюпитр на сцене, второй фонарь, кувшинки, ива', scene: portrait(ST.s4, true), chapter: 'Беседка', chapterNum: 'глава 5 из 7', chapterText: 'Сцена сада отстроена. Осталось выйти на неё.', pct: '62%', toNext: 'до «Вечернего концерта» — 106 ч', balance: '2 310', hint: '' },
+      { ...wsBase, id: '25b5', label: 'Глава 6 «Вечерний концерт» (400 ч) — палитра eve: фонари и гирлянда светят радиальным градиентом, светлячки, кот на скамейке', scene: portrait(ST.s5, true), chapter: 'Вечерний концерт', chapterNum: 'глава 6 из 7', chapterText: 'Зажигаются фонари. Сад слушает.', pct: '21%', toNext: 'до «Сада без края» — 474 ч', balance: '5 880', hint: '' },
+    ];
+    // ---------- lesson screens
+    const windowScene = (st, hgt) => garden(st, { viewBox: '0 60 360 160', w: 380, h: hgt, cssW: '100%', cssH: '100%' });
+    const circleScene = garden(ST.s3, { viewBox: '120 120 120 120', w: 56, h: 56 });
+    const trophyRow = [0, 1, 2].map(i => h('svg', { key: i, width: 24, height: 24, viewBox: '0 0 24 24' }, h('circle', { cx: 12, cy: 12, r: 9, fill: ['#E5B03C', '#C96B5A', '#8B74D9'][i] }), h('circle', { cx: 9, cy: 9, r: 3, fill: 'rgba(255,255,255,.35)' })));
+    const cells = Array.from({ length: 14 }, (_, i) => ({ n: i + 1, bg: [0, 2, 5, 6, 8, 9, 12, 13].includes(i) ? ['#2A2352', '#3D2F80', '#5B43B8'][i % 3] : 'transparent', fg: i === 13 ? PR : ON }));
+    const lessonScreens = [
+      { id: '25c1', label: 'Круг вместо аватара 56 dp — для сравнения, не выбран: сад — зелёное пятно, фото пользователя вытеснено', circleWorld: true, circle: circleScene, photo: false, card: false, idle: true, running: false },
+      { id: '25c2', label: 'Карточка-окно 160 dp под полосой уровня — выбрано; шапка и фото не тронуты; глава и счёт поверх кадра', circleWorld: false, photo: true, card: true, cardH: '160px', window: windowScene(ST.s3, 160), wChapter: 'Вода · глава 4', wSub: 'до «Беседки» — 73 ч 50 мин', wBalance: '1 240', idle: true, running: false, grew: false },
+      { id: '25c3', label: 'Идёт занятие — карточка неподвижна; после сохранения один раз подрастает и показывает «+340 тонов · сад подрос» 3 с', circleWorld: false, photo: true, card: true, cardH: '160px', window: windowScene(ST.s3b, 160), wChapter: 'Вода · глава 4', wSub: 'до «Беседки» — 73 ч 12 мин', wBalance: '1 580', idle: false, running: true, grew: true, grewText: '+340 тонов · сад подрос' },
+    ];
+    // ---------- story
+    const introScene = garden(ST.s0, { viewBox: '-10 -60 380 302', par: 'xMidYMin meet', w: 412, h: 520, cssW: '100%', cssH: '100%' });
+    const dimScene = garden(ST.s3, { viewBox: '-10 -20 380 262', par: 'xMidYMax meet', w: 380, h: 262, cssW: '100%', cssH: '100%' });
+    const chapterArt = garden({ t: .85, path: false, items: [['pond', 'pond'], ['birds', 'birds'], ['bridge', 'bridge']] }, { viewBox: '40 60 140 150', w: 200, h: 200, layers: { sky: 0, slab: 0, far: 1, mid: 1, near: 1 } });
+    const thumb = st => garden(st, { viewBox: '40 90 280 130', w: 56, h: 40 });
+    const chapterRows = chapters.map((c, i) => { const done = i < 3, cur = i === 3; return { num: `${c.n}`, name: c.name, phrase: c.phrase, thumb: cur || done ? thumb(c.st) : h('div', { style: { width: 16, height: 16, borderRadius: 4, border: `1.5px solid ${OUT}` } }), op: done || cur ? 1 : .55, nameColor: ON, bar: cur, pct: '8%', meta: done ? ['12 мая', '3 июня', '28 июля'][i] : cur ? '46 ч 10 мин' : c.n === 7 ? `${c.hours} ч · свободный режим` : `${c.hours} ч`, metaColor: cur ? PR : OV }; });
+    // ---------- economy
+    const icon = (itemId, w = 44, hgt = 60, pal = PAL.day, sc = .85) => { const it = ITEMS[itemId]; return h('svg', { width: w, height: hgt, viewBox: `${-w / 2 / sc} ${-hgt / sc + 6} ${w / sc} ${hgt / sc}`, style: { display: 'block' } }, it.layers.map((l, i) => h('path', { key: i, d: l.d, fill: pal[l.fill] }))); };
+    const shopTabs = [['Эта глава', true], ['Всё', false], ['Куплено', false]].map(([name, on]) => ({ name, bg: on ? PC : 'transparent', border: on ? PC : OUT, fg: on ? OPC : ON, fw: on ? 600 : 400 }));
+    const shopItems = [
+      { name: 'Ива', item: 'willow', price: '1 200', state: 'хватает', ok: true, sel: true },
+      { name: 'Кувшинки', item: 'lilies', price: '200', state: 'хватает', ok: true },
+      { name: 'Мостик', item: 'bridge', price: '1 500', state: 'не хватает 260', ok: false },
+      { name: 'Ель', item: 'fir', price: '700', state: 'хватает', ok: true },
+      { name: 'Крыша беседки', item: 'gazebo2', price: '4 000', state: 'глава 5', locked: true },
+      { name: 'Второй фонарь', item: 'lantern', price: '500', state: 'хватает', ok: true },
+    ].map(i => ({ ...i, icon: icon(i.item, 60, 64, PAL.day, i.item.startsWith('gazebo') ? .6 : i.item === 'pond' || i.item === 'bridge' || i.item === 'lilies' ? .9 : .85), border: i.sel ? PR : 'transparent', op: i.locked ? .45 : 1, priceColor: i.ok || i.locked ? ON : '#E8565C', stateColor: i.ok ? '#9FE4BE' : i.locked ? OV : '#E8565C' }));
+    const shopScene = garden(ST.s3w, { viewBox: '0 20 360 220', w: 380, h: 300, cssW: '100%', cssH: '100%' });
+    const buyScene = (() => { const st = { ...ST.s3, items: ST.s3.items.filter(([i, s]) => !(i === 'apple' && s === 'tF1')).concat([['willow', 'tF1']]) }; return garden(st, { viewBox: '-10 -20 380 262', par: 'xMidYMax meet', w: 380, h: 262, cssW: '100%', cssH: '100%' }); })();
+    const summaryThumb = garden(ST.s3, { viewBox: '60 100 240 160', w: 96, h: 64 });
+    // ---------- items table
+    const itemRowsRaw = [
+      ['gate', 'Калитка', 1, 0, 'gate · средний · с главой; в dry — покосившаяся', true], ['stones', 'Камни дорожки', 1, 100, 'bedA/bedB · ближний; в главе 3 сменяются дорожкой'], ['bush', 'Куст', 1, 150, 'bushA, bushB · до 2'], ['gazebo0', 'Руины беседки', 1, 0, 'gazebo · средний · с главой', true],
+      ['bedA', 'Клумба розовая', 2, 150, 'bedA, bedB'], ['bedB', 'Клумба жёлтая', 2, 150, 'bedA, bedB'], ['bench', 'Скамейка', 2, 600, 'bench · ближний'], ['apple', 'Яблоня', 2, 800, 'tF1 · дальний · первая — с главой', true],
+      ['tree', 'Липа', 3, 900, 'tF3, tF4, treeR, treeL · до 4'], ['fir', 'Ель', 3, 700, 'tF2, tF5, treeL · до 3'], ['lantern', 'Фонарь', 3, 500, 'lanternN, lanternM · до 2'], ['stones', 'Дорожка до беседки', 3, 0, 'path · камни по кривой · с главой', true],
+      ['pond', 'Пруд', 4, 0, 'pond · средний · с главой', true], ['birds', 'Птицы', 4, 300, 'birds · небо · плывут 40 с'], ['bridge', 'Мостик', 4, 1500, 'bridge · над прудом'], ['lilies', 'Кувшинки', 4, 200, 'lilies · на пруду'], ['willow', 'Ива', 4, 1200, 'tF1 · заменяет яблоню (та переезжает в treeR, если свободен)'],
+      ['gazebo1', 'Пол и колонны беседки', 5, 0, 'gazebo · с главой', true], ['gazebo2', 'Крыша беседки', 5, 4000, 'gazebo · этап 2'], ['gazebo3', 'Гирлянда и сцена', 5, 3000, 'gazebo · этап 3; пюпитр — трофей из 11t'],
+      ['lantern', 'Вечер в саду', 6, 0, 'палитра eve после 20:00 · с главой', true], ['cat', 'Кот', 6, 1500, 'cat · на скамейке; сидит, моргает раз в 6 с'], ['fireflies', 'Светлячки', 6, 500, 'fireflies · 6 точек · мерцают'],
+      ['bush', 'Вторая грядка', 7, 0, 'ещё 6 слотов дальнего ряда · с главой', true], ['tree', 'Все предметы прошлых глав', 7, 0, 'свободный режим: цены прежние, число экземпляров не ограничено, пока есть слоты', true],
+    ];
+    const itemRows = itemRowsRaw.map(([item, name, ch, price, note, free]) => ({ icon: icon(item, 36, 44, PAL.day, item.startsWith('gazebo') || item === 'pond' || item === 'bridge' ? .5 : .65), name, chapter: `${ch} · ${chapters[ch - 1].name}`, price: price ? price.toLocaleString('ru-RU') : '—', priceColor: price ? ON : OV, note, free: !!free, bg: '#15151B' }));
+    // ---------- volume & layers demo
+    const treeDemo = (mode) => { const pal = PAL.day; const els = [h('rect', { key: 'bg', x: 0, y: 0, width: 130, height: 130, fill: mix(pal.sky, pal.skyLow, .6) }), h('path', { key: 'g', d: ell(65, 118, 80, 20), fill: pal.ground })];
+      if (mode === 'flat') els.push(h('g', { key: 't', transform: 'translate(65 112) scale(1.15)' }, h('path', { d: rect(-2.5, -24, 5, 24), fill: pal.trunk }), h('path', { d: circ(0, -38, 19), fill: pal.foliage })));
+      else if (mode === 'vol') els.push(placeItem('tree', { x: 65, y: 112, depth: 2, scale: 1.15 }, pal, {}, 1));
+      else els.push(placeItem('tree', { x: 65, y: 112, depth: 0, scale: .7 }, pal, {}, 1));
+      return h('svg', { width: '100%', viewBox: '0 0 130 130', style: { display: 'block' } }, els); };
+    const volumeDemo = [{ el: treeDemo('flat'), cap: 'плоско: одна заливка' }, { el: treeDemo('vol'), cap: 'объёмно: тень, ствол с гранью, три слоя кроны' }, { el: treeDemo('far'), cap: 'дальний план: .6, к небу на 30 %' }];
+    const fluid = el => React.cloneElement(el, { width: 360, height: 240, style: { display: 'block', width: '100%', height: 'auto' } });
+    const layerSvg = (layers, cap) => ({ el: fluid(garden(ST.s4, { layers })), cap });
+    const layerDemo = [layerSvg({ sky: 1 }, 'небо (градиент) и дальний холм'), layerSvg({ slab: 1 }, 'земля-макет: передняя грань, поляна, светлое пятно, дорожка'), layerSvg({ far: 1 }, 'дальний план · масштаб .5–.6 · к небу 30 %'), layerSvg({ mid: 1 }, 'средний · .8–.95 · 12 %'), layerSvg({ near: 1 }, 'ближний · 1 · чистый цвет'), layerSvg({ sky: 1, slab: 1, far: 1, mid: 1, near: 1 }, 'всё вместе')];
+    // ---------- motion
+    const liveScene = fluid(garden(ST.s5, { anim: true }));
+    const growFrame = (st, cap) => ({ el: fluid(garden(st)), cap });
+    const growDemo = [growFrame({ ...ST.s3, items: ST.s3.items.filter(([i, s]) => !(i === 'tree' && s === 'tF3')) }, '0 мс — до занятия'), growFrame({ ...ST.s3, t: .87, items: ST.s3.items.map(([i, s]) => i === 'tree' && s === 'tF3' ? [i, s, { scale: .82, opacity: .5 }] : [i, s]) }, '~450 мс — липа проявляется из тени, палитра едет'), growFrame({ ...ST.s3, t: .88 }, '900 мс — стоит; кадр «убрать анимации»')];
+    // ---------- landscape / small
+    const landScene = garden(ST.s3, { viewBox: '-40 -30 440 300', w: 590, h: 396, cssW: '100%', cssH: '100%', anim: true });
+    const smallScene = garden(ST.s3, { viewBox: '0 -20 360 262', par: 'xMidYMax meet', w: 336, h: 262, cssW: '100%', cssH: '100%' });
+    // ---------- dev
+    const palRows = Object.keys(PAL.day).map(k => ({ name: k, dry: PAL.dry[k], day: PAL.day[k], eve: PAL.eve[k] }));
+    const slotRows = Object.entries(SLOTS).map(([id, s]) => ({ id, ...s }));
+    const itemDefs = Object.entries(ITEMS).filter(([id]) => !['gazebo1', 'gazebo2'].includes(id)).map(([id, it]) => ({ id, name: it.name, meta: ITEM_META[id], preview: icon(id, 56, 60, PAL.day, id.startsWith('gazebo') || id === 'pond' || id === 'bridge' || id === 'fireflies' ? .55 : .8), code: `shadow:[${it.shadow}]${it.sway ? ` sway:[${it.sway}]` : ''}${it.glow ? ` glow:[${it.glow}]` : ''} layers:[${it.layers.map(l => `{${l.fill}: "${l.d}"}`).join(', ')}]` }));
+    const sizes = [
+      { name: 'Экран мира', v: 'TopAppBar 56 «Сад» + текстовая «Главы»; сад — карточка r24, flex 1 (на 892 — ~470 dp), viewBox −10 −20 380 262, xMidYMax meet — небо продолжается вверх сплошным градиентом; карточка главы surfaceContainer r16 padding 14 16: название 16 sp 700, «глава 4 из 7» 13 sp, фраза 14 sp onSurfaceVariant, полоса 6, подпись 12 sp; счёт — плитка 56 r16 с знаком 24 и суммой 20 sp 800; кнопка 56 r28 filled (tonal, когда нечего купить)' },
+      { name: 'Окно на «Занятиях»', v: '160 dp, r20, между полосой уровня и «Начать занятие»; viewBox 0 60 360 160 slice; подложка снизу — градиент 0 → .55 surface; глава 14 sp 700, подпись 12 sp; счёт — капсула 28 r14 (знак 16 + 13 sp); таблетка роста 26 r13 сверху слева' },
+      { name: 'Знак «тон»', v: 'viewBox 24: штиль 2.4 от (16.5,4) до 15.2, чёрточка строя 12.5–20.5 на y 4, головка 5.6×3.9 под −20° в (11,17.2); размеры 24 (счёт), 16 (капсулы), 12 (цены), 72 (лист валюты); цвет primary, на кнопке — onPrimaryContainer' },
+      { name: 'Магазин', v: 'ModalBottomSheet до y 388 (сад 300 dp остаётся виден), r28; заголовок 20 sp + счёт; чипы 32 r8; сетка 2 × карточки r16 padding 10 12 12: рисунок 64, имя 14 sp 600, цена 13 sp 700 (error, когда не хватает), состояние 11 sp; выбранный — рамка primary 1.5, предмет на сцене α .45; кнопка 56 r28 внизу поверх листа' },
+      { name: 'Лист главы', v: 'как «Подарок» 11f: сцена 240×200 со свечением gift.glow, «ГЛАВА 4» 13 sp primary caps, название 28 sp 700, фраза 15 sp, карточка «Появилось / Теперь можно добавить» 14 sp, кнопка «Посмотреть» 56' },
+      { name: 'Список глав', v: 'строка 76 r16: превью 56×40 r8 (закрытая — квадрат 16 outline), номер 12 sp + название 16 sp 600, фраза 13 sp; текущая — полоса 4 dp; закрытые α .55, справа порог «120 ч»' },
+      { name: 'Завязка', v: 'сад во весь экран (viewBox −10 −60 380 302, xMidYMin meet) с градиентом в surface на 200 dp; заголовок 28 sp, два абзаца 16 sp / 1.5 onSurfaceVariant, кнопка 56 «Открыть калитку»; показывается один раз' },
+      { name: 'Итог занятия', v: 'карточка «+340 тонов»: миниатюра сада 96×64 r10 (viewBox 60 100 240 160), сумма 20 sp 800 со знаком 24, две строки 13 sp; кнопки «В сад» outlined + «Готово» filled' },
+      { name: 'Landscape', v: 'сад слева flex 1 во всю высоту (viewBox −40 −30 440 300), правая колонка 300: карточка главы flex 1, счёт 52, кнопка 52; «Назад» — круг 44 поверх сада' },
+      { name: '360 × 640', v: 'сад flex 1 (~370 dp) viewBox 0 −20 360 262 meet; карточка главы — только название, «до „Беседки“ — 73 ч» и полоса; счёт 48 r14 + кнопка 48 в строку' },
+    ];
+    const anims = [
+      { name: 'Кроны', v: 'группа sway: rotate ±1.2° вокруг (0, −24) · 4–6 с ease-in-out · фаза = index × .37 с; только на экране мира и 4 с после открытия «Занятий»' },
+      { name: 'Светлячки', v: 'α .15 ↔ .9 · 3–5 с · фазы через .7 с; в палитре eve; выключены при «убрать анимации»' },
+      { name: 'Птицы', v: 'сдвиг x −30 → +30 за 40 с, линейно, зацикленно; кот моргает раз в 6 с (глаза scaleY 1 → .1 → 1 за 120 мс)' },
+      { name: 'Параллакс', v: 'drag по x: depth 0 → .3·dx, 1 → .6·dx, 2 → dx, предел ±40; отпуск — spring stiffness 200 damping .8 к нулю; щипок 1–2×, двойной тап 1 ↔ 1.6×' },
+      { name: 'Рост после занятия', v: '900 мс: палитра tween t → t′ FastOutSlowIn; новый предмет — scale .7 → 1 + α 0 → 1 400 мс cubic(.2,.8,.2,1) с задержкой 300 мс, из точки опоры; в окне на «Занятиях» — то же + таблетка «+340 тонов · сад подрос» 3 с (fade 150)' },
+      { name: 'Покупка', v: 'лист уходит 200 мс; предмет: α .45 → 1 и scale .94 → 1 за 400 мс, под ним радиальное свечение primary α .22 r 40 → 0 за 800 мс; счёт — цифры countdown 300 мс' },
+      { name: 'Открытие главы', v: 'лист как «Подарок»: вход 250 мс, сцена scale .88 → 1 + fade 400 мс, свечение fade 600 мс; палитра сада на экране за листом доезжает за 900 мс' },
+      { name: 'День ↔ вечер', v: 'e 0 ↔ 1 за 2000 мс при открытии экрана, если время суток сменилось; в окне на «Занятиях» — без анимации' },
+      { name: 'Убрать анимации', v: 'sway, светлячки, птицы, параллакс — выключены; рост, покупка, глава — смена кадра с crossfade 150 мс' },
+    ];
+    return { worlds, worldScreens, lessonScreens, trophyRow, cells, introScene, dimScene, chapterArt, chapterRows, chapters, shopTabs, shopItems, shopScene, buyScene, summaryThumb, itemRows, volumeDemo, layerDemo, liveScene, growDemo, landScene, smallScene, palRows, slotRows, itemDefs, sizes, anims, tonGlyph: ton(24), tonGlyphS: ton(16), tonGlyphXS: ton(12), tonGlyphXSd: ton(14, '#2E1A6E'), tonGlyphXL: ton(72) };
+  }
+}
+</script>
+</body>
+</html>

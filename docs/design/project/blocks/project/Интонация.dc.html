@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6)}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5)}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}</style></helmet>
+
+<section class="dv-turn" id="v1">
+<div class="dv-thd"><a class="dv-tid" href="#v1">v1</a><span class="dv-tname">Live · финальный (вариант 8) · все состояния</span></div>
+<div class="dv-opts">
+<sc-for list="{{ live }}" as="s" hint-placeholder-count="6">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative">
+  <div style="position:absolute;left:0;right:0;top:64px;height:560px;background:{{ s.zoneBg }}"></div>
+  <div style="position:relative;display:flex;justify-content:center;padding:12px 24px 0;opacity:{{ s.chromeOpacity }}">
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px;width:100%">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid #E9DDFF"></div>Игра</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:#E6E4EE;border-left:1px solid #3A3846"><div style="width:4px;height:14px;border-radius:2px;background:#A39FB5"></div>Настройка</div>
+    </div>
+  </div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
+    <div style="position:relative;width:{{ s.ringSize }};height:{{ s.ringSize }};display:flex;align-items:center;justify-content:center">
+      <svg width="300" height="300" viewBox="0 0 300 300" style="position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)"><circle cx="150" cy="150" r="144" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"></circle><circle cx="150" cy="150" r="144" fill="none" stroke="{{ s.color }}" stroke-width="6" stroke-linecap="round" stroke-dasharray="905" stroke-dashoffset="{{ s.ringOffset }}"></circle></svg>
+      <sc-if value="{{ s.sounding }}" hint-placeholder-val="{{ true }}"><div style="font-size:176px;font-weight:700;line-height:1;letter-spacing:-6px;display:flex;align-items:baseline">{{ s.note }}<span style="font-size:52px;font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">{{ s.oct }}</span></div></sc-if>
+      <sc-if value="{{ s.silent }}" hint-placeholder-val="{{ false }}"><div style="font-size:32px;font-weight:600;color:#A39FB5">Играйте…</div></sc-if>
+      <sc-if value="{{ s.mic }}" hint-placeholder-val="{{ false }}"><div style="width:72px;height:72px;border-radius:50%;background:#292833;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:32px;border-radius:9px;background:#A39FB5"></div></div></sc-if>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;color:{{ s.color }};height:64px">
+      <sc-if value="{{ s.up }}" hint-placeholder-val="{{ false }}"><svg width="64" height="64" viewBox="0 0 56 56"><path d="M28 6 L50 34 H36 V50 H20 V34 H6 Z" fill="{{ s.color }}"></path></svg></sc-if>
+      <sc-if value="{{ s.down }}" hint-placeholder-val="{{ false }}"><svg width="64" height="64" viewBox="0 0 56 56"><path d="M28 50 L6 22 H20 V6 H36 V22 H50 Z" fill="{{ s.color }}"></path></svg></sc-if>
+      <sc-if value="{{ s.inTune }}" hint-placeholder-val="{{ true }}"><div style="width:24px;height:24px;border-radius:50%;background:{{ s.color }}"></div></sc-if>
+      <sc-if value="{{ s.sounding }}" hint-placeholder-val="{{ true }}"><div style="font-size:28px;font-weight:600">{{ s.word }}</div></sc-if>
+    </div>
+    <sc-if value="{{ s.mic }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:16px;max-width:300px;text-align:center;margin-top:-56px">
+        <div style="font-size:24px;font-weight:700;color:#E6E4EE;line-height:1.2">Нужен доступ к микрофону</div>
+        <div style="font-size:15px;line-height:1.45;color:#A39FB5">Без микрофона тренажёр не слышит скрипку. Звук обрабатывается на телефоне и никуда не отправляется.</div>
+        <div style="height:48px;padding:0 24px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;font-size:15px;font-weight:700">Разрешить доступ</div>
+      </div>
+    </sc-if>
+  </div>
+  <div style="position:relative;padding:0 24px 8px;opacity:{{ s.scaleOpacity }}">
+    <div style="position:relative;height:36px">
+      <div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:#292833"></div>
+      <div style="position:absolute;left:45%;width:10%;top:12px;height:12px;border-radius:6px;background:#47C97E"></div>
+      <div style="position:absolute;left:50%;top:8px;width:2px;height:20px;background:#3A3846;margin-left:-1px"></div>
+      <sc-if value="{{ s.sounding }}" hint-placeholder-val="{{ true }}">
+      <div style="position:absolute;left:{{ s.markerLeft }};top:6px;width:{{ s.haloW }};height:24px;transform:translateX(-50%);border-radius:12px;background:{{ s.color }};opacity:.28;filter:blur(4px)"></div>
+      <div style="position:absolute;left:{{ s.markerLeft }};top:4px;width:6px;height:28px;margin-left:-3px;border-radius:3px;background:#E6E4EE;box-shadow:0 0 0 2px #131318"></div>
+      </sc-if>
+    </div>
+  </div>
+  <div style="position:relative;display:flex;align-items:center;justify-content:center;padding:12px 24px 12px;opacity:{{ s.chromeOpacity }}">
+    <div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:50%;border:3px solid #E9DDFF"></div></div><div style="font-size:12px;font-weight:600">Live</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:14px;border-radius:3px;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">История</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:5px;border:3px solid #A39FB5;transform:rotate(45deg)"></div></div><div style="font-size:12px;color:#A39FB5">Настройки</div></div>
+  </div>
+  <sc-if value="{{ s.noise }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(19,19,24,.78);display:flex;align-items:center;justify-content:center;padding:32px">
+    <div style="background:#292833;border-radius:28px;padding:28px 24px;width:100%;display:flex;flex-direction:column;gap:12px">
+      <div style="width:44px;height:44px;border-radius:50%;background:#5B43B8;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 22 22" fill="none" stroke="#E9DDFF" stroke-width="2.2" stroke-linecap="round"><path d="M3 11h2l2-6 3 12 3-9 2 5 2-2h2"></path></svg></div>
+      <div style="font-size:24px;font-weight:700;line-height:1.2">Слишком шумно</div>
+      <div style="font-size:15px;line-height:1.45;color:#A39FB5">Фон мешает распознать высоту. Отойдите от источника шума — оценка продолжится сама.</div>
+      <div style="display:flex;justify-content:flex-end;margin-top:8px"><div style="height:40px;padding:0 20px;display:flex;align-items:center;border-radius:20px;background:#C4ADFF;color:#2E1A6E;font-size:14px;font-weight:700">Понятно</div></div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+
+<div class="dv-opt" id="v1-land"><div class="dv-olabel"><a class="dv-oid" href="#v1-land">v1-land</a>Ландшафт 892×412 — кольцо слева, статус и шкала справа</div><div class="dv-card">
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;box-sizing:border-box">
+  <div style="position:absolute;left:0;top:0;bottom:0;width:440px;background:radial-gradient(ellipse 60% 70% at 50% 50%,#1A4A36 0%,#153A2C 45%,#131318 100%)"></div>
+  <div style="position:relative;width:440px;display:flex;align-items:center;justify-content:center">
+    <div style="position:relative;width:320px;height:320px;display:flex;align-items:center;justify-content:center">
+      <svg width="320" height="320" viewBox="0 0 320 320" style="position:absolute;inset:0;transform:rotate(-90deg)"><circle cx="160" cy="160" r="154" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"></circle><circle cx="160" cy="160" r="154" fill="none" stroke="#47C97E" stroke-width="6" stroke-linecap="round" stroke-dasharray="968" stroke-dashoffset="290"></circle></svg>
+      <div style="font-size:176px;font-weight:700;line-height:1;letter-spacing:-6px;display:flex;align-items:baseline">A<span style="font-size:52px;font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">4</span></div>
+    </div>
+  </div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;padding:16px 24px 16px 8px;gap:12px">
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid #E9DDFF"></div>Игра</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:#E6E4EE;border-left:1px solid #3A3846"><div style="width:4px;height:14px;border-radius:2px;background:#A39FB5"></div>Настройка</div>
+    </div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:12px;color:#47C97E"><div style="width:24px;height:24px;border-radius:50%;background:#47C97E"></div><div style="font-size:32px;font-weight:600">в строе</div></div>
+    <div style="position:relative;height:36px">
+      <div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:#292833"></div>
+      <div style="position:absolute;left:45%;width:10%;top:12px;height:12px;border-radius:6px;background:#47C97E"></div>
+      <div style="position:absolute;left:50%;top:8px;width:2px;height:20px;background:#3A3846;margin-left:-1px"></div>
+      <div style="position:absolute;left:52%;top:6px;width:44px;height:24px;transform:translateX(-50%);border-radius:12px;background:#47C97E;opacity:.28;filter:blur(4px)"></div>
+      <div style="position:absolute;left:52%;top:4px;width:6px;height:28px;margin-left:-3px;border-radius:3px;background:#E6E4EE;box-shadow:0 0 0 2px #131318"></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;padding-top:4px"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div></div>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">Логика показа: название ноты обновляется сразу; цвет зоны, фон и стрелка — после 100 мс стабильного питча. Тишина = нет питча &gt; 600 мс: фон и статус уходят кроссфейдом 300 мс, бегунок скрывается, трек шкалы остаётся приглушённым. NavigationBar в ландшафте скрыт.</p>
+</section>
+
+<section class="dv-turn" id="v1-tune">
+<div class="dv-thd"><a class="dv-tid" href="#v1-tune">v1</a><span class="dv-tname">Режим «Настройка» · выбор струны: авто и фиксация</span></div>
+<div class="dv-opts">
+<sc-for list="{{ tune }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative">
+  <div style="position:absolute;left:0;right:0;top:140px;height:500px;background:{{ s.zoneBg }}"></div>
+  <div style="position:relative;display:flex;justify-content:center;padding:12px 24px 0">
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px;width:100%">
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:#E6E4EE"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid #A39FB5"></div>Игра</div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF;border-left:1px solid #3A3846"><div style="width:4px;height:14px;border-radius:2px;background:#E9DDFF"></div>Настройка</div>
+    </div>
+  </div>
+  <div style="position:relative;display:flex;justify-content:center;gap:12px;padding:12px 16px 0">
+    <sc-for list="{{ s.strings }}" as="st" hint-placeholder-count="4">
+    <div style="position:relative;width:76px;height:64px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:{{ st.fw }};color:{{ st.fg }};background:{{ st.bg }};border:1px solid {{ st.border }};box-sizing:border-box">{{ st.name }}<span style="font-size:11px;font-weight:500">{{ st.hz }}</span>
+      <sc-if value="{{ st.locked }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#E6E4EE;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #131318"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#2E1A6E" stroke-width="1.8"><rect x="2" y="5.5" width="8" height="5.5" rx="1.2" fill="#2E1A6E" stroke="none"></rect><path d="M3.8 5.5V4a2.2 2.2 0 0 1 4.4 0v1.5"></path></svg></div></sc-if>
+    </div>
+    </sc-for>
+  </div>
+  <div style="position:relative;text-align:center;font-size:14px;color:#A39FB5;margin-top:10px">{{ s.hint }}</div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:24px">
+    <div style="position:relative;width:280px;height:280px;display:flex;align-items:center;justify-content:center">
+      <svg width="280" height="280" viewBox="0 0 280 280" style="position:absolute;inset:0;transform:rotate(-90deg)"><circle cx="140" cy="140" r="134" fill="none" stroke="rgba(255,255,255,.1)" stroke-width="6"></circle><circle cx="140" cy="140" r="134" fill="none" stroke="{{ s.color }}" stroke-width="6" stroke-linecap="round" stroke-dasharray="842" stroke-dashoffset="{{ s.ringOffset }}"></circle></svg>
+      <div style="font-size:160px;font-weight:700;line-height:1;letter-spacing:-6px;display:flex;align-items:baseline">{{ s.note }}<span style="font-size:48px;font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">{{ s.oct }}</span></div>
+    </div>
+    <div style="display:flex;align-items:center;gap:12px;color:{{ s.color }};height:64px">
+      <sc-if value="{{ s.down }}" hint-placeholder-val="{{ false }}"><svg width="64" height="64" viewBox="0 0 56 56"><path d="M28 50 L6 22 H20 V6 H36 V22 H50 Z" fill="{{ s.color }}"></path></svg></sc-if>
+      <sc-if value="{{ s.inTune }}" hint-placeholder-val="{{ true }}"><div style="width:24px;height:24px;border-radius:50%;background:{{ s.color }}"></div></sc-if>
+      <div style="font-size:28px;font-weight:600">{{ s.word }}</div>
+    </div>
+  </div>
+  <div style="position:relative;padding:0 24px 8px">
+    <div style="position:relative;height:36px">
+      <div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:#292833"></div>
+      <div style="position:absolute;left:45%;width:10%;top:12px;height:12px;border-radius:6px;background:#47C97E"></div>
+      <div style="position:absolute;left:50%;top:8px;width:2px;height:20px;background:#3A3846;margin-left:-1px"></div>
+      <div style="position:absolute;left:{{ s.markerLeft }};top:6px;width:{{ s.haloW }};height:24px;transform:translateX(-50%);border-radius:12px;background:{{ s.color }};opacity:.28;filter:blur(4px)"></div>
+      <div style="position:absolute;left:{{ s.markerLeft }};top:4px;width:6px;height:28px;margin-left:-3px;border-radius:3px;background:#E6E4EE;box-shadow:0 0 0 2px #131318"></div>
+    </div>
+  </div>
+  <div style="position:relative;display:flex;align-items:center;justify-content:center;padding:12px 24px 12px">
+    <div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:50%;border:3px solid #E9DDFF"></div></div><div style="font-size:12px;font-weight:600">Live</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:14px;border-radius:3px;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">История</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:5px;border:3px solid #A39FB5;transform:rotate(45deg)"></div></div><div style="font-size:12px;color:#A39FB5">Настройки</div></div>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+
+<div class="dv-opt" id="v1-stubs"><div class="dv-olabel"><a class="dv-oid" href="#v1-stubs">v1-stubs</a>Заглушки v1 — История и Настройки</div><div class="dv-card" style="display:flex;gap:16px">
+<sc-for list="{{ stubs }}" as="st" hint-placeholder-count="2">
+<div style="width:206px;height:446px;border-radius:14px;overflow:hidden;background:#131318;color:#E6E4EE;display:flex;flex-direction:column;border:4px solid rgba(116,119,117,.5);box-sizing:border-box">
+  <div style="padding:14px 10px 0;font-size:16px;font-weight:700">{{ st.title }}</div>
+  <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#A39FB5;text-align:center;padding:0 20px"><div style="width:36px;height:36px;border-radius:50%;background:#1E1D25;display:flex;align-items:center;justify-content:center"><div style="width:12px;height:12px;border-radius:{{ st.iconR }};border:2px solid #A39FB5;transform:{{ st.iconT }}"></div></div><div style="font-size:15px;font-weight:600;color:#E6E4EE">Скоро</div><div style="font-size:11px;line-height:1.4">{{ st.text }}</div></div>
+  <div style="height:40px;display:flex;background:#1E1D25">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border-radius:50%;border:2px solid {{ st.n1 }}"></div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:8px;border-radius:2px;border:2px solid {{ st.n2 }}"></div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center"><div style="width:10px;height:10px;border-radius:3px;border:2px solid {{ st.n3 }};transform:rotate(45deg)"></div></div>
+  </div>
+</div>
+</sc-for>
+</div></div>
+</div>
+<p class="dv-next">Авто: ближайшая к сыгранному питчу струна подсвечивается primaryContainer, подпись «авто». Тап по кнопке — фиксация (primary + замок, подпись «цель зафиксирована»), ноты других струн считаются относительно неё. Повторный тап по зафиксированной — снова авто. Фон зоны в этом режиме начинается под рядом струн.</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · Live v1 · тёмная тема</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(520px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Цветовые токены</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.4fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Hex</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="12"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Фоновый градиент зоны (ToneZone)</div>
+  <div style="color:#A39FB5;margin-bottom:8px">Тип: <span class="mono">radial-gradient(ellipse 70% 60% at 50% 45%)</span> → Compose <span class="mono">Brush.radialGradient(colorStops, center = Offset(0.5w, 0.45h), radius = 0.7w)</span>. Слой: портрет «Игра» — top 64 dp, height 560 dp; «Настройка» — top 140 dp, height 500 dp; ландшафт — левая панель 440 dp, ellipse 60% 70% at 50% 50%.</div>
+  <div class="dv-tbl" style="grid-template-columns:repeat(4,minmax(0,1fr))">
+    <div class="h">Состояние</div><div class="h">Стоп 0%</div><div class="h">Стоп 45%</div><div class="h">Стоп 100%</div>
+    <sc-for list="{{ gradients }}" as="g" hint-placeholder-count="4"><div style="font-weight:600">{{ g.name }}</div><div class="mono" style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:{{ g.s0 }}"></div>{{ g.s0 }}</div><div class="mono" style="display:flex;align-items:center;gap:6px"><div style="width:12px;height:12px;border-radius:3px;background:{{ g.s1 }}"></div>{{ g.s1 }}</div><div class="mono">{{ g.s2 }}</div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px">Эквивалент через прозрачность (если рисуете цвет зоны поверх surface): стопы α = 0.26 → 0.16 → 0 от цвета зоны; hex-стопы выше — канонические. Тишина / ошибки: слой прозрачный (без градиента).</div></div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp / sp) · базовый экран 412×892</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Элемент</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="14"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="8"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Логика зон</div>
+  <div style="color:#A39FB5">Δ = сглаженные центы от цели. <span class="mono">|Δ| ≤ tol</span> → inTune; <span class="mono">≤ 2·tol</span> → near; иначе off. tol по умолчанию 5 ц (диапазон 3–15). Питч: медианный фильтр 5 кадров → EMA α 0.18 (режим «Вибрато»). Название ноты — из сырого значения. Тишина: нет уверенного питча &gt; 600 мс. Шум: SNR ниже порога &gt; 2 с → диалог. <span class="mono">FLAG_KEEP_SCREEN_ON</span> на Live.</div></div>
+</div>
+</div>
+</section>
+
+<section class="dv-turn" id="v2">
+<div class="dv-thd"><a class="dv-tid" href="#v2">v2</a><span class="dv-tname">Позже (v2) · Анализ сессии · История · Настройки · Онбординг — не финализировано</span></div>
+<div class="dv-opts">
+
+<div class="dv-opt" id="4a"><div class="dv-olabel"><a class="dv-oid" href="#4a">4a</a>Анализ сессии — piano roll, плеер, статистика</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:20px;font-weight:600">Сессия · 14 сентября</div></div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:16px;padding:8px 16px 0">
+    <div style="display:flex;align-items:flex-end;justify-content:space-between">
+      <div><div style="font-size:64px;font-weight:800;line-height:1;font-variant-numeric:tabular-nums;letter-spacing:-2px">84<span style="font-size:28px;font-weight:600;color:#A39FB5;letter-spacing:0">%</span></div><div style="font-size:15px;color:#A39FB5;margin-top:6px">в строе · 12:40 · Гаммы D-dur</div></div>
+      <div style="text-align:right;padding-bottom:4px"><div style="display:inline-flex;align-items:center;gap:6px;color:#E5B03C;font-size:15px;font-weight:600">в среднем −6 ц</div><div style="font-size:13px;color:#A39FB5;margin-top:2px">чуть занижаете</div></div>
+    </div>
+    <div style="background:#1E1D25;border-radius:20px;padding:12px 12px 8px">
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5;margin-bottom:8px"><span>0:00</span><span>0:04</span><span>0:08</span><span>0:12</span></div>
+      <div style="position:relative;height:216px">
+        <sc-for list="{{ rollRows }}" as="r" hint-placeholder-count="8">
+          <div style="position:absolute;left:0;right:0;top:{{ r.top }};height:1px;background:#292833"></div>
+          <div style="position:absolute;left:0;top:{{ r.labelTop }};font-size:11px;color:#A39FB5;width:30px">{{ r.label }}</div>
+        </sc-for>
+        <sc-for list="{{ rollSegs }}" as="g" hint-placeholder-count="9">
+          <div style="position:absolute;left:{{ g.left }};top:{{ g.top }};width:{{ g.width }};height:20px;border-radius:5px;background:{{ g.color }};opacity:.9"></div>
+          <svg style="position:absolute;left:{{ g.left }};top:{{ g.top }};overflow:visible" width="{{ g.w }}" height="20" viewBox="0 0 {{ g.w }} 20"><polyline points="{{ g.contour }}" fill="none" stroke="#131318" stroke-width="1.6" stroke-linejoin="round"></polyline></svg>
+        </sc-for>
+        <div style="position:absolute;left:41%;top:-6px;bottom:-4px;width:2px;background:#C4ADFF"></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <div style="width:48px;height:48px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="display:flex;gap:4px"><div style="width:5px;height:18px;border-radius:2px;background:#2E1A6E"></div><div style="width:5px;height:18px;border-radius:2px;background:#2E1A6E"></div></div></div>
+      <div style="font-size:14px;font-variant-numeric:tabular-nums;color:#A39FB5">5:12</div>
+      <div style="flex:1;position:relative;height:20px"><div style="position:absolute;left:0;right:0;top:8px;height:4px;border-radius:2px;background:#292833"></div><div style="position:absolute;left:0;width:41%;top:8px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:41%;top:0;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#C4ADFF"></div></div>
+      <div style="font-size:14px;font-variant-numeric:tabular-nums;color:#A39FB5">12:40</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+      <div style="background:#1E1D25;border-radius:16px;padding:14px"><div style="font-size:12px;color:#A39FB5">Распределение</div><div style="display:flex;height:8px;border-radius:4px;overflow:hidden;margin:10px 0 8px"><div style="width:84%;background:#47C97E"></div><div style="width:11%;background:#E5B03C"></div><div style="width:5%;background:#E8565C"></div></div><div style="display:flex;gap:10px;font-size:12px"><span style="color:#47C97E">84%</span><span style="color:#E5B03C">11%</span><span style="color:#E8565C">5%</span></div></div>
+      <div style="background:#1E1D25;border-radius:16px;padding:14px"><div style="font-size:12px;color:#A39FB5">Средняя ошибка</div><div style="font-size:28px;font-weight:700;margin-top:6px">7,3<span style="font-size:14px;font-weight:500;color:#A39FB5"> ц</span></div><div style="font-size:12px;color:#A39FB5">смещение −6 ц вниз</div></div>
+    </div>
+    <div>
+      <div style="font-size:14px;font-weight:700;margin-bottom:8px">Проблемные ноты</div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:12px;background:#1E1D25;border-radius:14px;padding:10px 14px"><div style="width:10px;height:10px;border-radius:50%;background:#E8565C"></div><div style="flex:1;font-size:15px;font-weight:600">F♯5 на струне Ре</div><div style="font-size:15px;font-weight:700;color:#E8565C">−18 ц</div></div>
+        <div style="display:flex;align-items:center;gap:12px;background:#1E1D25;border-radius:14px;padding:10px 14px"><div style="width:10px;height:10px;border-radius:50%;background:#E5B03C"></div><div style="flex:1;font-size:15px;font-weight:600">C♯5 на струне Ля</div><div style="font-size:15px;font-weight:700;color:#E5B03C">−9 ц</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div></div>
+
+<div class="dv-opt" id="4c"><div class="dv-olabel"><a class="dv-oid" href="#4c">4c</a>История — динамика по неделям, карточки сессий</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE">
+  <div style="padding:16px 16px 0;display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:28px;font-weight:700">История</div><div style="font-size:14px;color:#A39FB5">6 недель</div></div>
+  <div style="flex:1;overflow:hidden;padding:16px 16px 0;display:flex;flex-direction:column;gap:16px">
+    <div style="background:#1E1D25;border-radius:20px;padding:16px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13px;color:#A39FB5">Средний балл за неделю</div><div style="font-size:15px;font-weight:700;color:#47C97E">+6 за неделю</div></div>
+      <svg width="348" height="120" viewBox="0 0 348 120" style="display:block;margin-top:8px;overflow:visible">
+        <line x1="0" y1="110" x2="348" y2="110" stroke="#292833"></line>
+        <polyline points="{{ historyLine }}" fill="none" stroke="#C4ADFF" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></polyline>
+        <sc-for list="{{ historyPts }}" as="p" hint-placeholder-count="6"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="5" fill="#131318" stroke="#C4ADFF" stroke-width="3"></circle><text x="{{ p.x }}" y="{{ p.ty }}" font-size="11" fill="#E6E4EE" text-anchor="middle" font-weight="700" font-family="Manrope">{{ p.v }}</text></sc-for>
+      </svg>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#A39FB5;margin-top:6px"><span>11 авг</span><span>18</span><span>25</span><span>1 сен</span><span>8</span><span>15</span></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ sessions }}" as="ss" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:14px 16px">
+        <div style="width:52px;text-align:center"><div style="font-size:26px;font-weight:800;line-height:1;color:{{ ss.color }}">{{ ss.score }}</div><div style="font-size:11px;color:#A39FB5">%</div></div>
+        <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600">{{ ss.title }}</div><div style="font-size:13px;color:#A39FB5;margin-top:2px">{{ ss.meta }}</div></div>
+        <div style="display:flex;align-items:flex-end;gap:2px;height:28px"><sc-for list="{{ ss.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:50%;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">Live</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:14px;border-radius:3px;border:3px solid #E9DDFF"></div></div><div style="font-size:12px;font-weight:600">История</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:5px;border:3px solid #A39FB5;transform:rotate(45deg)"></div></div><div style="font-size:12px;color:#A39FB5">Настройки</div></div>
+  </div>
+</div>
+</x-import>
+</div></div>
+
+<div class="dv-opt" id="4d"><div class="dv-olabel"><a class="dv-oid" href="#4d">4d</a>Настройки — эталон A4, допуск, сглаживание, тема</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE">
+  <div style="padding:16px 16px 0;font-size:28px;font-weight:700">Настройки</div>
+  <div style="flex:1;overflow:hidden;padding:20px 16px 0;display:flex;flex-direction:column;gap:22px">
+    <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px"><div style="font-size:16px;font-weight:600">Эталон A4</div><div style="font-size:13px;color:#A39FB5">оркестровый — 442</div></div>
+      <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF">440</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;border-left:1px solid #3A3846">441</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;border-left:1px solid #3A3846">442</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;border-left:1px solid #3A3846">443</div></div></div>
+    <div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px"><div style="font-size:16px;font-weight:600">Допуск зелёной зоны</div><div style="font-size:20px;font-weight:700;color:#47C97E">±5 ц</div></div>
+      <div style="position:relative;height:44px"><div style="position:absolute;left:0;right:0;top:20px;height:4px;border-radius:2px;background:#3A3846"></div><div style="position:absolute;left:0;width:17%;top:20px;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="position:absolute;left:17%;top:12px;width:20px;height:20px;margin-left:-10px;border-radius:50%;background:#C4ADFF"></div></div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5"><span>3 — профи</span><span>8 — средний</span><span>15 — новичок</span></div></div>
+    <div><div style="font-size:16px;font-weight:600;margin-bottom:10px">Сглаживание</div>
+      <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px">Быстрое</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF;border-left:1px solid #3A3846">Вибрато</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;border-left:1px solid #3A3846">Плавное</div></div></div>
+    <div><div style="font-size:16px;font-weight:600;margin-bottom:10px">Названия нот</div>
+      <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF">A4 · F♯5</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;border-left:1px solid #3A3846">ля · фа-диез</div></div></div>
+    <div><div style="font-size:16px;font-weight:600;margin-bottom:10px">Тема</div>
+      <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF">Тёмная</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;border-left:1px solid #3A3846">Светлая</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;border-left:1px solid #3A3846">Системная</div></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between"><div style="font-size:16px;font-weight:600">Не гасить экран в сессии</div><div style="width:52px;height:32px;border-radius:16px;background:#C4ADFF;position:relative"><div style="position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:50%;background:#2E1A6E"></div></div></div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:50%;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">Live</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:14px;border-radius:3px;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">История</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:5px;border:3px solid #E9DDFF;transform:rotate(45deg)"></div></div><div style="font-size:12px;font-weight:600">Настройки</div></div>
+  </div>
+</div>
+</x-import>
+</div></div>
+
+<sc-for list="{{ onboarding }}" as="o" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ o.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ o.id }}">{{ o.id }}</a>{{ o.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;padding:24px">
+  <div style="display:flex;gap:6px"><div style="flex:1;height:4px;border-radius:2px;background:{{ o.p1 }}"></div><div style="flex:1;height:4px;border-radius:2px;background:{{ o.p2 }}"></div><div style="flex:1;height:4px;border-radius:2px;background:{{ o.p3 }}"></div></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px">
+    <div style="width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#2A2352 0%,#131318 70%);align-self:center;display:flex;align-items:center;justify-content:center">
+      <sc-if value="{{ o.isMic }}" hint-placeholder-val="{{ true }}"><div style="width:44px;height:76px;border-radius:22px;background:#C4ADFF"></div></sc-if>
+      <sc-if value="{{ o.isA4 }}" hint-placeholder-val="{{ false }}"><div style="font-size:88px;font-weight:800;letter-spacing:-4px;line-height:1">A<span style="font-size:32px;color:#A39FB5;letter-spacing:0">4</span></div></sc-if>
+      <sc-if value="{{ o.isTol }}" hint-placeholder-val="{{ false }}"><div style="position:relative;width:160px;height:24px"><div style="position:absolute;left:0;right:0;top:8px;height:8px;border-radius:4px;background:#292833"></div><div style="position:absolute;left:35%;width:30%;top:6px;height:12px;border-radius:6px;background:#47C97E"></div></div></sc-if>
+    </div>
+    <div style="font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-.5px">{{ o.title }}</div>
+    <div style="font-size:16px;line-height:1.5;color:#A39FB5">{{ o.text }}</div>
+  </div>
+  <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">{{ o.cta }}</div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next">В v1 не входит. Bottom sheet деталей ноты, фильтры истории и светлая тема — тоже v2.</p>
+</section>
+
+<section class="dv-turn" id="archive" style="max-width:900px">
+<div class="dv-thd"><a class="dv-tid" href="#archive">архив</a><span class="dv-tname">Принятые решения (макеты удалены)</span></div>
+<ul style="margin:0;padding-left:18px;font-size:13px;line-height:1.6;color:rgba(230,228,238,.75);display:flex;flex-direction:column;gap:4px">
+  <li>Заливка фона: выбрана зона ~60% за индикатором (было: полная заливка и минимум только на кольце/бегунке).</li>
+  <li>Режим настройки: сегментный переключатель «Игра / Настройка» над индикатором (было: чип «Настройка струн» рядом с записью, камертон-чип в ряду струн, текстовая ссылка).</li>
+  <li>Минимализм Live: убраны цифры центов и подписи −50/0/+50; струны и подсказка «струна · палец» показываются только в «Настройке»; нота 176 sp, кольцо 300 dp.</li>
+  <li>Акцент — фиолетовый (Material tonal, primary #C4ADFF), семантика зон не зависит от темы.</li>
+</ul>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const G = '#47C97E', Y = '#E5B03C', R = '#E8565C', P = '#C4ADFF', off = '#292833';
+    const zone = (a, b) => `radial-gradient(ellipse 70% 60% at 50% 45%,${a} 0%,${b} 45%,#131318 100%)`;
+    const base = { ringSize: '300px', sounding: true, silent: false, mic: false, noise: false, up: false, down: false, inTune: false, chromeOpacity: 1, scaleOpacity: 1, ringOffset: '905', note: '', oct: '', word: '', markerLeft: '50%', haloW: '44px' };
+    const live = [
+      { ...base, id: '8a', label: 'В строе — A4, кольцо удержания 70%', zoneBg: zone('#1A4A36', '#153A2C'), note: 'A', oct: '4', color: G, inTune: true, word: 'в строе', markerLeft: '52%', ringOffset: String(Math.round(905 * .3)) },
+      { ...base, id: '8b', label: 'Выше — F♯5, янтарный (near)', zoneBg: zone('#4A3A12', '#3A2E12'), note: 'F♯', oct: '5', color: Y, up: true, word: 'выше', markerLeft: '64%', haloW: '60px' },
+      { ...base, id: '8c', label: 'Ниже — D4, красный (off)', zoneBg: zone('#4A1C22', '#3A181D'), note: 'D', oct: '4', color: R, down: true, word: 'ниже', markerLeft: '23%', haloW: '36px' },
+      { ...base, id: '8d', label: 'Тишина — фон без градиента, статус и бегунок скрыты', zoneBg: 'transparent', sounding: false, silent: true, color: '#3A3846', scaleOpacity: .45 },
+      { ...base, id: '8e', label: 'Слишком шумно — оценка приостановлена, диалог', zoneBg: 'transparent', sounding: false, silent: true, color: '#3A3846', scaleOpacity: .45, noise: true },
+      { ...base, id: '8f', label: 'Нет доступа к микрофону — пояснение и кнопка', zoneBg: 'transparent', sounding: false, mic: true, color: '#3A3846', scaleOpacity: .3, chromeOpacity: .4, ringSize: '200px' },
+    ];
+    const hz = { G: '196 Гц', D: '294 Гц', A: '440 Гц', E: '659 Гц' };
+    const strs = (active, locked) => ['G', 'D', 'A', 'E'].map(n => { const a = n === active; return { name: n, hz: hz[n], locked: a && locked, fw: a ? 700 : 600, fg: a ? (locked ? '#2E1A6E' : '#E9DDFF') : '#A39FB5', bg: a ? (locked ? P : '#5B43B8') : '#1E1D25', border: a ? (locked ? P : '#5B43B8') : '#1E1D25' }; });
+    const tune = [
+      { id: '9a', label: 'Авто — ближайшая струна подсвечена', zoneBg: zone('#1A4A36', '#153A2C'), strings: strs('A', false), hint: 'авто · ближайшая: Ля · 440 Гц', note: 'A', oct: '4', color: G, inTune: true, down: false, word: 'в строе', markerLeft: '51%', haloW: '40px', ringOffset: String(Math.round(842 * .15)) },
+      { id: '9b', label: 'Зафиксирована струна Ре — замок, повторный тап снимает', zoneBg: zone('#4A1C22', '#3A181D'), strings: strs('D', true), hint: 'цель зафиксирована: Ре · 294 Гц · тап — снять', note: 'D', oct: '4', color: R, inTune: false, down: true, word: 'ниже', markerLeft: '26%', haloW: '36px', ringOffset: '842' },
+    ];
+    const stubs = [
+      { title: 'История', text: 'Записи сессий и динамика появятся в следующей версии', iconR: '3px', iconT: 'none', n1: '#A39FB5', n2: '#E9DDFF', n3: '#A39FB5' },
+      { title: 'Настройки', text: 'Эталон A4, допуск и сглаживание — в следующей версии', iconR: '4px', iconT: 'rotate(45deg)', n1: '#A39FB5', n2: '#A39FB5', n3: '#E9DDFF' },
+    ];
+    const tokens = [
+      { name: 'zone.inTune', hex: G, use: 'кольцо, стрелка/точка, статус, ореол, зелёная зона шкалы' },
+      { name: 'zone.near', hex: Y, use: 'то же при |Δ| ≤ 2·tol' },
+      { name: 'zone.off', hex: R, use: 'то же при |Δ| > 2·tol' },
+      { name: 'zone.none', hex: '#3A3846', use: 'цвет кольца в тишине / ошибках' },
+      { name: 'primary', hex: P, use: 'кнопка записи, CTA, замок' },
+      { name: 'onPrimary', hex: '#2E1A6E', use: 'иконка внутри записи, текст CTA' },
+      { name: 'primaryContainer', hex: '#5B43B8', use: 'активный сегмент переключателя, авто-струна, активный пункт nav' },
+      { name: 'onPrimaryContainer', hex: '#E9DDFF', use: 'текст на primaryContainer' },
+      { name: 'surface', hex: '#131318', use: 'фон экрана, обводка бегунка' },
+      { name: 'surfaceContainer', hex: '#1E1D25', use: 'NavigationBar, неактивные струны' },
+      { name: 'surfaceContainerHigh', hex: '#292833', use: 'трек шкалы, диалог' },
+      { name: 'outlineVariant', hex: '#3A3846', use: 'рамка переключателя, тик 0' },
+      { name: 'onSurface', hex: '#E6E4EE', use: 'нота, бегунок, основной текст' },
+      { name: 'onSurfaceVariant', hex: '#A39FB5', use: 'октава, «Играйте…», подсказки' },
+      { name: 'ring.track', hex: 'rgba(255,255,255,.10)', use: 'подложка кольца' },
+    ];
+    const gradients = [
+      { name: 'inTune', s0: '#1A4A36', s1: '#153A2C', s2: '#131318 (surface)' },
+      { name: 'near', s0: '#4A3A12', s1: '#3A2E12', s2: '#131318' },
+      { name: 'off', s0: '#4A1C22', s1: '#3A181D', s2: '#131318' },
+      { name: 'тишина / шум / нет микрофона', s0: 'transparent', s1: 'transparent', s2: 'transparent' },
+    ];
+    const sizes = [
+      { name: 'Нота', v: '176 sp / 700 / letter-spacing −0.04em / line-height 1; ландшафт 176 sp' },
+      { name: 'Октава', v: '52 sp / 600 / onSurfaceVariant, baseline к ноте, отступ 4 dp' },
+      { name: 'Кольцо', v: 'Ø 300 dp (ландшафт 320), stroke 6 dp, cap round, старт −90°, подложка ring.track' },
+      { name: 'Статус', v: 'стрелка 64 dp (Path-треугольник), точка «в строе» 24 dp, слово 28 sp / 600; ряд высотой 64 dp, gap 12' },
+      { name: 'Шкала', v: 'длина = ширина − 48 dp (364 dp), трек 8 dp r4, диапазон ±50 ц' },
+      { name: 'Зелёная зона шкалы', v: 'высота 12 dp r6, ширина = 2·tol% длины (tol 5 → 10% ≈ 36 dp), по центру' },
+      { name: 'Тик 0', v: '2 × 20 dp, outlineVariant' },
+      { name: 'Бегунок', v: '6 × 28 dp r3, onSurface, обводка 2 dp surface; x = (Δ+50)/100 · длина' },
+      { name: 'Ореол вибрато', v: 'высота 24 dp, ширина 20–60 dp (= размах × 3.5 + 12), blur 4 dp, α 0.28 цвета зоны' },
+      { name: 'Кнопка записи', v: 'Ø 72 dp primary; idle — круг 26 dp onPrimary; запись — квадрат 24 dp r4, фон zone.off' },
+      { name: 'Переключатель режима', v: 'ширина − 48 dp, высота 40 dp, r20, рамка 1 dp outlineVariant; иконки 14 dp, текст 14 sp / 600' },
+      { name: 'Кнопки струн', v: '76 × 64 dp r20, gap 12; буква 22 sp, частота 11 sp; замок 22 dp в правом верхнем углу (−6, −6)' },
+      { name: 'Отступы', v: 'поля 24 dp; переключатель ↔ индикатор автоматически (flex); шкала ↔ запись 12 dp; NavigationBar 80 dp' },
+      { name: 'Ландшафт', v: 'левая панель 440 dp с кольцом; правая: переключатель, статус (flex), шкала, запись; nav скрыт' },
+    ];
+    const anims = [
+      { name: 'Кроссфейд цвета зоны', v: 'animateColorAsState, tween 300 мс, FastOutSlowIn — кольцо, стрелка, статус, ореол; срабатывает после 100 мс стабильного питча' },
+      { name: 'Фон зоны', v: 'кроссфейд стопов градиента tween 350 мс' },
+      { name: 'Бегунок шкалы', v: 'Animatable, spring(dampingRatio 0.8, stiffness 600) ≈ 120 мс до покоя; ширина ореола tween 300 мс' },
+      { name: 'Кольцо удержания', v: 'заполнение 0→360° за 3000 мс linear пока inTune; при выходе — сброс до 0 tween 250 мс' },
+      { name: 'Стрелка ↔ точка', v: 'смена направления: scale 0.6→1 tween 150 мс, без поворота' },
+      { name: 'Тишина', v: 'через 600 мс без питча: фон/статус/бегунок fade-out 300 мс; «Играйте…» fade-in 300 мс' },
+      { name: 'Переключатель режима', v: 'сдвиг заливки сегмента 200 мс; ряд струн — expandVertically 200 мс' },
+      { name: 'Фиксация струны', v: 'замок scale-in 150 мс (overshoot 1.1)' },
+      { name: 'Кнопка записи', v: 'круг ↔ квадрат: размер и радиус tween 200 мс' },
+      { name: 'Диалог «Шумно»', v: 'AlertDialog, fade 200 мс + scrim 0.78' },
+    ];
+    // v2 data
+    const rowsN = ['A5', 'G5', 'F♯5', 'E5', 'D5', 'C♯5', 'B4', 'A4'];
+    const rollRows = rowsN.map((label, i) => ({ label, top: (i * 27 + 13) + 'px', labelTop: (i * 27 + 6) + 'px' }));
+    const segs = [[7, 0, 1.4, G], [6, 1.5, 1.1, G], [5, 2.7, .9, Y], [4, 3.7, 1.7, G], [2, 5.5, 1.1, R], [3, 6.7, 1.3, G], [2, 8.1, 1.1, Y], [1, 9.3, 1.1, G], [0, 10.5, 1.5, G]];
+    const px = 350 / 12;
+    const rollSegs = segs.map(([row, t, d, color], k) => { const w = Math.round(d * px), pts = []; for (let x = 0; x <= w; x += 4) pts.push(`${x},${(10 + Math.sin(x / 3 + k) * 3).toFixed(1)}`); return { left: (36 + t * px) + 'px', top: (row * 27 + 3) + 'px', width: w + 'px', w, color, contour: pts.join(' ') }; });
+    const scores = [62, 68, 71, 70, 78, 84];
+    const historyPts = scores.map((v, i) => { const x = 10 + i * 65.6, y = 110 - (v - 50) * 2; return { x, y, ty: y - 12, v }; });
+    const bars = (arr) => arr.map(z => ({ h: (z === 0 ? 28 : z === 1 ? 16 : 8) + 'px', c: z === 0 ? G : z === 1 ? Y : R }));
+    const sessions = [
+      { score: 84, color: G, title: 'Гаммы D-dur', meta: 'сегодня · 12:40 · −6 ц', bars: bars([0, 0, 1, 0, 2, 0, 1, 0]) },
+      { score: 79, color: G, title: 'Этюд Кайзера №3', meta: 'вчера · 8:15 · −4 ц', bars: bars([0, 1, 0, 0, 1, 0, 0, 2]) },
+      { score: 66, color: Y, title: 'Без названия', meta: '12 сен · 21:02 · +9 ц', bars: bars([1, 1, 0, 2, 1, 0, 1, 1]) },
+      { score: 71, color: Y, title: 'Гаммы G-dur', meta: '10 сен · 15:30 · −7 ц', bars: bars([0, 1, 2, 0, 0, 1, 0, 1]) },
+    ];
+    const onboarding = [
+      { id: '5a', label: 'Онбординг 1 — микрофон', p1: P, p2: off, p3: off, isMic: true, title: 'Дайте мне услышать скрипку', text: 'Тренажёр слушает через микрофон и ничего не отправляет в интернет.', cta: 'Разрешить микрофон' },
+      { id: '5b', label: 'Онбординг 2 — эталон A4', p1: P, p2: P, p3: off, isA4: true, title: 'К чему настраиваетесь?', text: 'Дома и в школе обычно 440 Гц. Оркестры часто берут 442.', cta: 'Дальше' },
+      { id: '5c', label: 'Онбординг 3 — допуск', p1: P, p2: P, p3: P, isTol: true, title: 'Насколько строго судить?', text: 'Это ширина зелёной зоны. Начните мягче — сузить всегда можно.', cta: 'Начать играть' },
+    ];
+    return { live, tune, stubs, tokens, gradients, sizes, anims, rollRows, rollSegs, historyPts, historyLine: historyPts.map(p => `${p.x},${p.y}`).join(' '), sessions, onboarding };
+  }
+}
+</script>
+</body>
+</html>

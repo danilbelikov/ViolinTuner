@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}.card{border-radius:20px;overflow:hidden;background:#1E1D25;line-height:0}@keyframes ring{0%{transform:scale(.8);opacity:.7}100%{transform:scale(1.6);opacity:0}}@keyframes flick{0%,100%{opacity:1}50%{opacity:.55}}@keyframes drift{0%{transform:translateX(0)}100%{transform:translateX(24px)}}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}</style></helmet>
+
+<section class="dv-turn" id="s26a">
+<div class="dv-thd"><a class="dv-tid" href="#s26a">26a</a><span class="dv-tname">Экран путешествия — начало, середина, почти конец · хватает и не хватает</span></div>
+<div class="dv-opts">
+<sc-for list="{{ journeyScreens }}" as="s" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:17px;font-weight:600">Путешествие</div><div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Карта</div><div style="height:40px;padding:0 12px 0 4px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Паспорт</div></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:14px;padding:4px 16px 0;min-height:0">
+    <div style="position:relative;height:240px;border-radius:24px;overflow:hidden;background:#1E1D25;line-height:0;flex:none">{{ s.scene }}<div style="position:absolute;left:14px;top:12px;height:26px;padding:0 10px;border-radius:13px;background:rgba(19,19,24,.62);font-size:12px;font-weight:600;display:flex;align-items:center;line-height:1;gap:6px" class="tn">{{ s.stopText }}</div></div>
+    <div style="display:flex;flex-direction:column;gap:4px;flex:none"><div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><div style="font-size:24px;font-weight:700;line-height:1.15">{{ s.city }}</div><div class="tn" style="font-size:13px;color:#A39FB5;white-space:nowrap">{{ s.arrived }}</div></div><div style="font-size:14px;color:#A39FB5">{{ s.place }}</div><div style="font-size:14px;line-height:1.45;color:#E6E4EE;text-wrap:pretty;margin-top:4px">{{ s.fact }}</div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:none">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><div style="font-size:14px;font-weight:600">{{ s.nextText }}</div><div class="tn" style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700;color:{{ s.haveColor }}">{{ taktS }}{{ s.haveText }}</div></div>
+      <div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:{{ s.pct }};border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div>
+      <div style="display:flex;align-items:center;justify-content:space-between;gap:12px"><div class="tn" style="font-size:12px;color:#A39FB5">{{ s.transportText }}</div><div style="height:44px;padding:0 20px;border-radius:22px;background:{{ s.btnBg }};color:{{ s.btnFg }};display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700;white-space:nowrap" class="tn">{{ s.btnText }}</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px;flex:none"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:14px;font-weight:600">{{ s.passedText }}</div><div style="font-size:13px;font-weight:600;color:#C4ADFF">Все открытки</div></div><div style="display:flex;gap:8px;overflow:hidden"><sc-for list="{{ s.strip }}" as="t" hint-placeholder-count="4"><div style="width:96px;height:64px;border-radius:10px;overflow:hidden;flex:none;background:#1E1D25;line-height:0;position:relative">{{ t.el }}<div style="position:absolute;left:0;right:0;bottom:0;padding:3px 6px;font-size:10px;font-weight:600;line-height:1.2;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.7))">{{ t.city }}</div></div></sc-for><sc-if value="{{ s.stripEmpty }}" hint-placeholder-val="{{ false }}"><div style="height:64px;flex:1;border-radius:10px;border:1.5px dashed #3A3846;display:flex;align-items:center;justify-content:center;font-size:12px;color:#A39FB5;text-align:center;padding:0 12px;line-height:1.35">Первая открытка появится в Кремоне</div></sc-if></div></div>
+  </div>
+</div>
+</x-import>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Экран (вопрос 4) — иллюстрация главная, карта вторым видом.</b> Сверху открытка текущей локации 240 dp с таблеткой «остановка 4 из 16»; под ней город, место и факт (две строки, 14 sp — место под текст владельца); карточка пути: «до Праги» и счёт «1 640 / 1 600», полоса, вид транспорта и кнопка «В путь» — filled, когда хватает, и tonal с «не хватает 360», когда нет: полоса при этом заполнена ровно на долю, и человек видит, сколько ещё; ниже лента пройденных открыток и вход в паспорт. Маршрут <b>линейный</b>: развилки ломают линию на карте и историю «дороги в Карнеги»; выбор даём внутри локации (дополнения). Открытие — только по кнопке; накопленное сверх цены остаётся.</p>
+</section>
+
+<section class="dv-turn" id="s26b">
+<div class="dv-thd"><a class="dv-tid" href="#s26b">26b</a><span class="dv-tname">Вена в трёх степенях подробности · вечер · Золотой зал внутри</span></div>
+<div class="dv-opts">
+<sc-for list="{{ viennaCards }}" as="c" hint-placeholder-count="5">
+<div class="dv-opt" id="{{ c.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ c.id }}">{{ c.id }}</a>{{ c.label }}</div><div class="card" style="width:412px">{{ c.el }}</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Степень (вопрос 1) — «как надо» (<a href="#26b2">26b2</a>).</b> «Просто» — силуэт и окна одной заливкой: узнаётся плохо и объёма нет. «Богато» (<a href="#26b3">26b3</a>) — статуи, балюстрада, рамы, брусчатка, прохожие: на телефоне это шум, и рисовать так шестнадцать залов — месяцы. «Как надо» — три плана, свет слева, две грани у здания и крыши, ряд пилястр и арочных окон правилом (одна форма × 7), два фонаря, дерево и герой на ближнем плане. Так у одной локации 40–60 слоёв, из них половина — повторения. <b>Вечер по умолчанию — согласны</b>: горящие окна и фонари делают объём сами, а тёплая открытка на тёмном экране сидит лучше дневной; день остаётся дополнением. Интерьер Золотого зала (<a href="#26b5">26b5</a>) — второй вид Вены: одна точка схода, кариатиды и люстры правилом, ряды кресел сходятся к сцене.</p>
+</section>
+
+<section class="dv-turn" id="s26c">
+<div class="dv-thd"><a class="dv-tid" href="#s26c">26c</a><span class="dv-tname">Разная архитектура одним стилем · остальные остановки силуэтами</span></div>
+<div class="dv-opts">
+<sc-for list="{{ otherCards }}" as="c" hint-placeholder-count="5">
+<div class="dv-opt" id="{{ c.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ c.id }}">{{ c.id }}</a>{{ c.label }}</div><div class="card" style="width:412px">{{ c.el }}</div></div>
+</sc-for>
+<div class="dv-opt" id="26c6"><div class="dv-olabel"><a class="dv-oid" href="#26c6">26c6</a>Остальные одиннадцать — эскизы-силуэты (те же контуры идут в штампы паспорта и в «скоро» на карте)</div>
+<div style="width:412px;display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><sc-for list="{{ silCards }}" as="c" hint-placeholder-count="11"><div style="display:flex;flex-direction:column;gap:4px"><div style="border-radius:12px;overflow:hidden;background:#1E1D25;line-height:0">{{ c.el }}</div><div style="font-size:11px;color:#A39FB5;text-align:center;line-height:1.3">{{ c.cap }}</div></div></sc-for></div>
+</div>
+</div>
+<p class="dv-next"><b>Стиль держит (вопрос 2, 3).</b> Мастерская — интерьер с одним окном и рядом скрипок на рейке (одна форма × 5); Ла Скала — вид со сцены: пять ярусов лож — пять эллипсов друг над другом, ложи по дуге правилом, люстра радиальным градиентом; Альберт-холл — цилиндр из трёх граней с фризом и окнами, сжатыми к краям по косинусу; Сидней — четыре «паруса» из двух граней над водой, силуэт намеренно обобщён (права проверим перед выпуском; то же для берлинского «шатра»). <b>Внутри или снаружи:</b> главный вид — узнаваемый: снаружи у Сиднея, Альберт-холла, Гарнье, Берлина, Рудольфинума, Консертгебау, Карнеги; внутри у Вены, Ла Скалы, Кремоны (и у Дома). Второй вид — дополнение за такты у Вены, Милана, Парижа, Лондона, Нью-Йорка, Сиднея. <b>Маршрут</b> оставляем как в брифе; хуже всего рисуются Токио и Буэнос-Айрес (нет силуэта, который узнаёт не-музыкант) — их можно заменить на Осло (Опера-«льдина» у воды) и Гамбург (Эльбфилармония), но это тоже современные здания с вопросом прав; решаем перед второй партией.</p>
+</section>
+
+<section class="dv-turn" id="s26d">
+<div class="dv-thd"><a class="dv-tid" href="#s26d">26d</a><span class="dv-tname">Запасной вариант — «просто страна» рядом с залом</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="26d1"><div class="dv-olabel"><a class="dv-oid" href="#26d1">26d1</a>Австрия-открытка: горы, озеро, церковь с луковкой, шале — без конкретного здания; те же приёмы, ~35 слоёв</div><div class="card" style="width:412px">{{ countryCard }}</div></div>
+<div class="dv-opt" id="26d2"><div class="dv-olabel"><a class="dv-oid" href="#26d2">26d2</a>Вена-зал для сравнения — то же время, ~50 слоёв</div><div class="card" style="width:412px">{{ viennaCompare }}</div></div>
+</div>
+<p class="dv-next">Пейзаж-открытка дешевле процентов на тридцать и рисуется без оглядки на права, но <b>не даёт смысла скрипачу</b>: горы Австрии — это открытка про отпуск, а не про Музикферайн. Оставляем как страховку для дальних остановок второй партии (Буэнос-Айрес, Токио), если их залы не соберутся; там страна-пейзаж честнее вымышленного здания.</p>
+</section>
+
+<section class="dv-turn" id="s26e">
+<div class="dv-thd"><a class="dv-tid" href="#s26e">26e</a><span class="dv-tname">Карта с маршрутом — начало, середина, всё открыто</span></div>
+<div class="dv-opts">
+<sc-for list="{{ mapScreens }}" as="m" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ m.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ m.id }}">{{ m.id }}</a>{{ m.label }}</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none;position:relative;z-index:2"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:17px;font-weight:600">Карта</div><div class="tn" style="height:40px;padding:0 14px;display:flex;align-items:center;font-size:13px;color:#A39FB5">{{ m.count }}</div></div>
+  <div style="flex:1;position:relative;line-height:0;overflow:hidden">{{ m.el }}</div>
+  <div style="position:absolute;left:16px;right:16px;bottom:20px;display:flex;align-items:center;gap:12px;background:#1E1D25;border-radius:16px;padding:12px 14px;line-height:1.3"><div style="width:72px;height:48px;border-radius:8px;overflow:hidden;flex:none;line-height:0;background:#292833">{{ m.thumb }}</div><div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:700">{{ m.cur }}</div><div class="tn" style="font-size:12px;color:#A39FB5;margin-top:2px">{{ m.sub }}</div></div><svg width="12" height="12" viewBox="0 0 10 10" style="flex:none"><path d="M3.5 2 L6.5 5 L3.5 8" fill="none" stroke="#A39FB5" stroke-width="1.6" stroke-linecap="round"></path></svg></div>
+</div>
+</x-import>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Карта — маршрутная схема, не глобус</b>: Европа крупно (двенадцать остановок из шестнадцати), дальние города по краям; земля — surfaceContainer с кромкой surfaceContainerHigh, вода — surface. Линия пути: пройденное — сплошная primary поверх свечения (та же линия шириной 10 при α .18), текущий перегон — пунктир primary, дальше — пунктир outline. Точки: пройденные — заливка primary 8 dp, текущая — 12 dp с расходящимся кольцом, следующая — кольцо, дальние — 6 dp outline без подписи (подпись появляется, когда город следующий). Карту можно двигать и приближать 1–2.5×; открывается с центром между текущим и следующим городом. Тап по пройденной точке — карточка внизу и переход к открытке.</p>
+</section>
+
+<section class="dv-turn" id="s26f">
+<div class="dv-thd"><a class="dv-tid" href="#s26f">26f</a><span class="dv-tname">Открытие локации — «В путь» → дорога → прибытие → штамп</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="26f1"><div class="dv-olabel"><a class="dv-oid" href="#26f1">26f1</a>Кадр 1 — в Зальцбурге, хватает до Вены: кнопка filled «В путь · 1 200»</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:17px;font-weight:600">Путешествие</div><div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Карта</div><div style="height:40px;padding:0 12px 0 4px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Паспорт</div></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:14px;padding:4px 16px 0;min-height:0">
+    <div style="position:relative;height:240px;border-radius:24px;overflow:hidden;background:#1E1D25;line-height:0;flex:none;display:flex;align-items:center;justify-content:center">{{ salzburgSil }}<div style="position:absolute;left:14px;top:12px;height:26px;padding:0 10px;border-radius:13px;background:rgba(19,19,24,.62);font-size:12px;font-weight:600;display:flex;align-items:center;line-height:1" class="tn">остановка 3 из 16</div></div>
+    <div style="display:flex;flex-direction:column;gap:4px;flex:none"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:24px;font-weight:700;line-height:1.15">Зальцбург</div><div class="tn" style="font-size:13px;color:#A39FB5">с 3 июня</div></div><div style="font-size:14px;color:#A39FB5">Дом Моцарта и крепость над городом</div><div style="font-size:14px;line-height:1.45;color:#E6E4EE;margin-top:4px">Здесь родился Моцарт; крепость Хоэнзальцбург стоит над городом с XI века.</div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px;flex:none"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:14px;font-weight:600">до Вены · Музикферайн</div><div class="tn" style="display:flex;align-items:center;gap:5px;font-size:14px;font-weight:700">{{ taktS }}1 310 / 1 200</div></div><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:100%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div><div style="display:flex;align-items:center;justify-content:space-between"><div class="tn" style="font-size:12px;color:#A39FB5">поездом · 3 часа</div><div style="height:44px;padding:0 20px;border-radius:22px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;gap:6px;font-size:14px;font-weight:700" class="tn">В путь · {{ taktXSd }}1 200</div></div></div>
+  </div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="26f2"><div class="dv-olabel"><a class="dv-oid" href="#26f2">26f2</a>Кадр 2 — дорога 2 с: карта приближена к перегону, линия дорисовывается, поезд идёт по ней; «Зальцбург → Вена»</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;line-height:0;position:relative">{{ travelMap }}</div>
+  <div style="position:absolute;left:0;right:0;bottom:0;padding:0 24px 40px;display:flex;flex-direction:column;align-items:center;gap:8px;line-height:1.3;background:linear-gradient(rgba(19,19,24,0),#131318 40%)"><div style="font-size:13px;color:#A39FB5;letter-spacing:.04em;text-transform:uppercase;font-weight:600">поездом</div><div style="font-size:24px;font-weight:700">Зальцбург → Вена</div><div style="width:200px;height:4px;border-radius:2px;background:#292833;overflow:hidden;margin-top:6px"><div style="height:100%;width:62%;background:#C4ADFF"></div></div></div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="26f3"><div class="dv-olabel"><a class="dv-oid" href="#26f3">26f3</a>Кадр 3 — прибытие: открытка проявляется во весь экран (fade 600 мс), название, факт, одна кнопка</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;position:relative;overflow:hidden;line-height:0">{{ arriveScene }}<div style="position:absolute;left:0;right:0;bottom:0;height:240px;background:linear-gradient(rgba(19,19,24,0),#131318)"></div></div>
+  <div style="padding:0 24px 32px;display:flex;flex-direction:column;gap:10px;margin-top:-60px;position:relative;line-height:1.3">
+    <div style="font-size:13px;font-weight:600;color:#C4ADFF;letter-spacing:.04em;text-transform:uppercase">остановка 4 из 16</div>
+    <div style="font-size:32px;font-weight:700;line-height:1.1">Вена</div>
+    <div style="font-size:16px;color:#A39FB5">Музикферайн · Золотой зал</div>
+    <div style="font-size:15px;line-height:1.5;color:#E6E4EE;text-wrap:pretty;margin-top:6px">Каждый год 1 января отсюда на весь мир звучит Новогодний концерт. Зал считают одним из лучших по акустике.</div>
+    <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-top:14px">Поставить штамп</div>
+  </div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="26f4"><div class="dv-olabel"><a class="dv-oid" href="#26f4">26f4</a>Кадр 4 — штамп: лист паспорта, штамп «Вена» садится с масштаба 1.4 → 1 и лёгкого поворота; дата; «Готово»</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;opacity:.35;line-height:0">{{ arriveSceneDim }}</div>
+  <div style="position:absolute;inset:0;background:rgba(19,19,24,.45)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#292833;border-radius:28px 28px 0 0;padding:12px 24px 32px;display:flex;flex-direction:column;align-items:center;gap:8px">
+    <div style="width:32px;height:4px;border-radius:2px;background:#6B6880;margin-bottom:8px"></div>
+    <div style="font-size:13px;color:#A39FB5;letter-spacing:.04em;text-transform:uppercase;font-weight:600">Паспорт · страница 2</div>
+    <div style="width:100%;background:#1E1D25;border-radius:20px;padding:20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;box-sizing:border-box;margin-top:8px"><sc-for list="{{ stampPage }}" as="st" hint-placeholder-count="6"><div style="display:flex;justify-content:center;line-height:0;transform:rotate({{ st.rot }})">{{ st.el }}</div></sc-for></div>
+    <div style="font-size:15px;line-height:1.5;color:#A39FB5;text-align:center;margin-top:8px">Четвёртый штамп. До Праги — 1 600 тактов.</div>
+    <div style="width:100%;height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-top:10px">Готово</div>
+  </div>
+</div>
+</x-import>
+</div>
+</div>
+<p class="dv-next">Дорога — единственное «кино» в приложении: 2 с (поезд) / 2.5 с (корабль, самолёт), карта приближена к перегону 1.8×, линия рисуется от города к городу (trim path), транспорт едет по ней, снизу подпись. Прибытие — открытка fade 600 мс + масштаб .96 → 1, текст появляется через 300 мс. Штамп — на листе паспорта: scale 1.4 → 1, поворот −8° → −3°, 350 мс OvershootInterpolator(1.1), α 0 → 1 первые 150 мс. Без звука, без конфетти. «Убрать анимации»: дорога — карточка «Зальцбург → Вена» на 800 мс, затем прибытие кадром.</p>
+</section>
+
+<section class="dv-turn" id="s26g">
+<div class="dv-thd"><a class="dv-tid" href="#s26g">26g</a><span class="dv-tname">Паспорт · экран локации с дополнениями</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="26g1"><div class="dv-olabel"><a class="dv-oid" href="#26g1">26g1</a>Паспорт — штампы 3 в ряд; открытые — свой цвет чернил и дата, неоткрытые — пунктирный круг и контур силуэта (форма, не яркость)</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center"><svg width="24" height="24" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:17px;font-weight:600">Паспорт</div><div class="tn" style="height:40px;padding:0 14px;display:flex;align-items:center;font-size:13px;color:#A39FB5">7 из 16</div></div>
+  <div style="flex:1;padding:8px 16px 0;overflow:hidden"><div style="background:#1E1D25;border-radius:20px;padding:20px 16px;display:grid;grid-template-columns:repeat(3,1fr);gap:18px 8px"><sc-for list="{{ passport }}" as="st" hint-placeholder-count="16"><div style="display:flex;flex-direction:column;align-items:center;gap:6px"><div style="line-height:0;transform:rotate({{ st.rot }})">{{ st.el }}</div><div style="font-size:12px;font-weight:600;color:{{ st.nameColor }};text-align:center;line-height:1.2">{{ st.city }}</div><div class="tn" style="font-size:11px;color:#A39FB5;margin-top:-4px">{{ st.sub }}</div></div></sc-for></div></div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="26g2"><div class="dv-olabel"><a class="dv-oid" href="#26g2">26g2</a>Экран локации — открытка во весь верх, название, факт, дата; дополнения: вечерний вид, вид изнутри, сувенир — с ценой и состоянием</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="height:340px;position:relative;overflow:hidden;line-height:0;flex:none">{{ locScene }}<div style="position:absolute;left:8px;top:8px;width:44px;height:44px;border-radius:22px;background:rgba(19,19,24,.62);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="position:absolute;right:12px;top:12px;display:flex;gap:6px;line-height:1"><div style="height:28px;padding:0 10px;border-radius:14px;background:#C4ADFF;color:#2E1A6E;font-size:12px;font-weight:700;display:flex;align-items:center">вечер</div><div style="height:28px;padding:0 10px;border-radius:14px;background:rgba(19,19,24,.62);font-size:12px;font-weight:600;display:flex;align-items:center">день</div><div style="height:28px;padding:0 10px;border-radius:14px;background:rgba(19,19,24,.62);font-size:12px;font-weight:600;display:flex;align-items:center;opacity:.6">внутри</div></div><div style="position:absolute;left:0;right:0;bottom:0;height:80px;background:linear-gradient(rgba(19,19,24,0),#131318)"></div></div>
+  <div style="flex:1;padding:0 16px;display:flex;flex-direction:column;gap:14px;margin-top:-24px;position:relative">
+    <div style="display:flex;flex-direction:column;gap:4px"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:28px;font-weight:700;line-height:1.1">Вена</div><div class="tn" style="font-size:13px;color:#A39FB5">4 из 16 · с 28 июля</div></div><div style="font-size:14px;color:#A39FB5">Австрия · Музикферайн, Золотой зал</div><div style="font-size:15px;line-height:1.5;text-wrap:pretty;margin-top:6px">Каждый год 1 января отсюда на весь мир звучит Новогодний концерт. Зал считают одним из лучших по акустике — говорят, дело в деревянном полу на пустотах.</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:14px;font-weight:600">Дополнения</div>
+      <sc-for list="{{ addons }}" as="a" hint-placeholder-count="3"><div style="display:flex;align-items:center;gap:12px;background:#1E1D25;border-radius:14px;padding:10px 12px;min-height:56px;box-sizing:border-box"><div style="width:56px;height:36px;border-radius:8px;overflow:hidden;flex:none;line-height:0;background:#292833;display:flex;align-items:center;justify-content:center">{{ a.thumb }}</div><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600">{{ a.name }}</div><div style="font-size:12px;color:#A39FB5">{{ a.sub }}</div></div><div class="tn" style="height:32px;padding:0 12px;border-radius:16px;background:{{ a.bg }};color:{{ a.fg }};font-size:13px;font-weight:700;display:flex;align-items:center;gap:4px;white-space:nowrap">{{ a.price }}</div></div></sc-for>
+    </div>
+  </div>
+</div>
+</x-import>
+</div>
+</div>
+<p class="dv-next"><b>Траты внутри локации (вопрос 6) — да, три дешёвых</b>: второе время суток (200), второй вид (400 — только у шести локаций с интерьером/экстерьером), сувенир в паспорт (150 — наклейка рядом со штампом: скрипка Кремоны, партитура Вены, парус Сиднея). Они дают цель, когда до следующего города далеко, и не мешают маршруту. Паспорт: штамп — круг 84 dp, чернила чередуются по четырём цветам (лаванда, бирюза, роза, песок — без зелёного и янтарного), силуэт города внутри, дата под именем; неоткрытые — пунктирный круг outline и контур силуэта stroke 1.5 — отличие формой, как у трофеев.</p>
+</section>
+
+<section class="dv-turn" id="s26h">
+<div class="dv-thd"><a class="dv-tid" href="#s26h">26h</a><span class="dv-tname">Окно в путешествие на «Занятиях» · строка на листе итога</span></div>
+<div class="dv-opts">
+<sc-for list="{{ lessonScreens }}" as="p" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ p.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ p.id }}">{{ p.id }}</a>{{ p.label }}</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:20px;padding:12px 16px 0">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px;min-height:56px"><div style="width:56px;height:56px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#8C7AB0 0%,#4E3F78 55%,#2A2352 100%)"></div><div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><div style="font-size:16px;font-weight:600;line-height:1.2">Аня · Уровень 6 · Гаммы</div><div class="tn" style="font-size:24px;font-weight:800;line-height:1.1;letter-spacing:-.01em;color:#C4ADFF">46 ч 10 мин</div></div><div style="display:flex;align-items:center;gap:4px;flex:none;height:44px"><sc-for list="{{ trophyRow }}" as="r" hint-placeholder-count="3"><div style="width:32px;height:32px;display:flex;align-items:center;justify-content:center">{{ r }}</div></sc-for></div></div>
+      <div style="display:flex;flex-direction:column;gap:6px"><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:31%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div><div class="tn" style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5"><div>Уровень 6 · Гаммы</div><div>до 7 уровня — 13 ч 50 мин</div></div></div>
+    </div>
+    <div style="position:relative;height:160px;border-radius:20px;overflow:hidden;background:#1E1D25;line-height:0;flex:none">{{ p.window }}
+      <div style="position:absolute;left:0;right:0;bottom:0;padding:10px 14px;display:flex;align-items:flex-end;justify-content:space-between;line-height:1.3;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.6))"><div><div style="font-size:14px;font-weight:700">Вена · Музикферайн</div><div class="tn" style="font-size:12px;color:#E6E4EE;opacity:.85">{{ p.wSub }}</div></div><div style="display:flex;align-items:center;gap:6px;height:28px;padding:0 10px;border-radius:14px;background:rgba(19,19,24,.62)">{{ taktS }}<div class="tn" style="font-size:13px;font-weight:700">{{ p.wBalance }}</div></div></div>
+      <sc-if value="{{ p.grew }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:10px;left:14px;height:26px;padding:0 10px;border-radius:13px;background:rgba(19,19,24,.62);font-size:12px;font-weight:600;display:flex;align-items:center;line-height:1" class="tn">{{ p.grewText }}</div></sc-if>
+    </div>
+    <sc-if value="{{ p.running }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:10px"><div style="height:56px;border-radius:28px;border:1.5px solid #C4ADFF;color:#C4ADFF;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:700"><div style="width:10px;height:10px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div>Закончить · <span class="tn">24:16</span></div><div class="tn" style="text-align:center;font-size:14px;color:#A39FB5">сегодня 24 мин · серия 5 дней</div></div></sc-if>
+    <sc-if value="{{ p.idle }}" hint-placeholder-val="{{ true }}"><div style="display:flex;flex-direction:column;gap:10px"><div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">Начать занятие</div><div class="tn" style="text-align:center;font-size:14px;color:#A39FB5">сегодня ещё не занимались · серия 5 дней</div></div></sc-if>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">неделя</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">3 ч 05 мин</div></div><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">месяц</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">11 ч 40 мин</div></div><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">дней подряд</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">5</div></div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;height:40px"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M12.5 4 L6.5 10 L12.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="font-size:16px;font-weight:700">Сентябрь 2026</div><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;opacity:.3"><svg width="20" height="20" viewBox="0 0 20 20"><path d="M7.5 4 L13.5 10 L7.5 16" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div></div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px;opacity:.9"><sc-for list="{{ cells }}" as="c" hint-placeholder-count="14"><div style="height:44px;display:flex;align-items:center;justify-content:center"><div style="width:40px;height:40px;border-radius:12px;background:{{ c.bg }};display:flex;align-items:center;justify-content:center"><div class="tn" style="font-size:15px;color:{{ c.fg }}">{{ c.n }}</div></div></div></sc-for></div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:50%;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">Live</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:4px;border:3px solid #E9DDFF;border-top-width:6px;box-sizing:border-box"></div></div><div style="font-size:12px;font-weight:600">Занятия</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:14px;border-radius:3px;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">Записи</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:5px;border:3px solid #A39FB5;transform:rotate(45deg)"></div></div><div style="font-size:12px;color:#A39FB5">Настройки</div></div>
+  </div>
+</div>
+</x-import>
+</div>
+</sc-for>
+<div class="dv-opt" id="26h3"><div class="dv-olabel"><a class="dv-oid" href="#26h3">26h3</a>Лист итога занятия — «+340 тактов · до Праги осталось 20» с миниатюрой; кнопка «В путешествие»</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="position:absolute;inset:0;background:rgba(19,19,24,.6)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;background:#292833;border-radius:28px 28px 0 0;padding:12px 24px 32px;display:flex;flex-direction:column;gap:18px">
+    <div style="width:32px;height:4px;border-radius:2px;background:#6B6880;align-self:center"></div>
+    <div><div style="font-size:13px;color:#A39FB5">Занятие сохранено</div><div class="tn" style="font-size:40px;font-weight:800;line-height:1.1;letter-spacing:-.01em;margin-top:4px">38 мин</div><div class="tn" style="font-size:14px;color:#A39FB5;margin-top:4px">сегодня 38 мин · серия 6 дней</div></div>
+    <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:12px 14px"><div style="width:96px;height:64px;border-radius:10px;overflow:hidden;flex:none;line-height:0">{{ summaryThumb }}</div><div style="flex:1;min-width:0"><div class="tn" style="display:flex;align-items:center;gap:6px;font-size:20px;font-weight:800">{{ takt }}+340 <span style="font-size:13px;font-weight:400;color:#A39FB5">тактов</span></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:3px;line-height:1.4">264 ноты в строе + 76 за время<br>До Праги осталось 20</div></div></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">нот сыграно</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">412</div></div><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">в строе</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">64 %</div></div><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">допуск</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px">±8 ¢</div></div></div>
+    <div style="display:flex;gap:8px"><div style="flex:1;height:56px;border-radius:28px;border:1px solid #3A3846;color:#C4ADFF;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">В путешествие</div><div style="flex:1;height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700">Готово</div></div>
+  </div>
+</div>
+</x-import>
+</div>
+</div>
+<p class="dv-next"><b>Окно (вопрос 7) — открытка 160 dp под полосой уровня</b>; шапка, фото, уровни и трофеи остаются как есть — путешествие рядом, не вместо (круг вместо аватара отвергнут по тем же причинам, что в <a href="Мир.dc.html#25c1">25c1</a>: в 56 dp зал — пятно, а фото отнимать нельзя). В карточке — текущий город и «до Праги 360» поверх открытки, справа счёт. Во время занятия карточка неподвижна; после сохранения — один раз таблетка «+340 тактов» на 3 с; при «хватает» подпись меняется на «хватает до Праги — в путь» primary. На листе итога — строка со знаком «+», остаток до города и кнопка «В путешествие»; сравнений с вчера нет.</p>
+</section>
+
+<section class="dv-turn" id="s26i">
+<div class="dv-thd"><a class="dv-tid" href="#s26i">26i</a><span class="dv-tname">Завязка · герой крупно · знак и слово валюты</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="26i1"><div class="dv-olabel"><a class="dv-oid" href="#26i1">26i1</a>Завязка — один экран при первом входе: Дом вечером, скрипач у окна, три фразы, «В путь»</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;position:relative;overflow:hidden;line-height:0">{{ introScene }}<div style="position:absolute;left:0;right:0;bottom:0;height:220px;background:linear-gradient(rgba(19,19,24,0),#131318)"></div></div>
+  <div style="padding:0 24px 32px;display:flex;flex-direction:column;gap:14px;margin-top:-40px;position:relative;line-height:1.3">
+    <div style="font-size:28px;font-weight:700;line-height:1.15;text-wrap:balance">Дорога начинается дома</div>
+    <div style="font-size:16px;line-height:1.5;color:#A39FB5;text-wrap:pretty">У каждого скрипача есть мечта — сыграть в лучших залах мира. Дорога туда длинная, и платят за неё не деньгами, а чистыми нотами.</div>
+    <div style="font-size:16px;line-height:1.5;color:#A39FB5;text-wrap:pretty">Первая остановка — Кремона, где скрипку придумали. До неё 300 тактов.</div>
+    <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-top:10px">Собрать футляр</div>
+  </div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="26i2"><div class="dv-olabel"><a class="dv-oid" href="#26i2">26i2</a>Герой — спиной к нам, футляр в правой руке; без лица; три размера: 1 (открытка), .6 (дальний план), 3 (завязка); три заливки</div>
+<div style="width:412px;background:#1E1D25;border-radius:20px;padding:20px;display:flex;align-items:flex-end;justify-content:space-around;box-sizing:border-box;line-height:0">{{ heroDemo }}</div>
+</div>
+<div class="dv-opt" id="26i3"><div class="dv-olabel"><a class="dv-oid" href="#26i3">26i3</a>Валюта — «такт»: знак, формы слова, счёт, полоса «до следующего города»</div>
+<div style="width:412px;background:#1E1D25;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box">
+  <div style="display:flex;align-items:center;gap:20px"><div style="width:96px;height:96px;display:flex;align-items:center;justify-content:center;background:#292833;border-radius:24px">{{ taktXL }}</div><div style="display:flex;flex-direction:column;gap:6px"><div style="font-size:22px;font-weight:800">такт</div><div style="font-size:13px;color:#A39FB5;line-height:1.45">1 такт · 2 такта · 5 тактов<br>«до Праги 1 600 тактов», «+340 тактов»<br>нота в строе — 1 такт, минута занятия — 2 такта</div></div></div>
+  <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap"><div style="display:flex;align-items:center;gap:6px">{{ takt }}<span class="tn" style="font-size:20px;font-weight:800">1 640</span><span style="font-size:13px;color:#A39FB5">тактов</span></div><div style="display:flex;align-items:center;gap:5px">{{ taktS }}<span class="tn" style="font-size:13px;font-weight:700">1 640 / 1 600</span></div><div class="tn" style="height:24px;padding:0 8px;border-radius:6px;background:#292833;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600">{{ taktXS }}300</div></div>
+  <div style="display:flex;flex-direction:column;gap:8px"><div style="display:flex;justify-content:space-between;font-size:13px"><span style="font-weight:600">до Праги · Рудольфинум</span><span class="tn" style="color:#A39FB5">1 240 / 1 600</span></div><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:77.5%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div><div style="display:flex;justify-content:space-between;font-size:12px;color:#A39FB5"><span>поездом · 4 часа</span><span class="tn">не хватает 360</span></div></div>
+</div>
+</div>
+</div>
+<p class="dv-next"><b>Валюта (вопрос 6) — «такт»</b>: единица музыки и единица пути сразу («до Вены 1 200 тактов» читается как расстояние), склоняется без сюрпризов, короче «километров нот». Знак — головка ноты, штиль которой уходит вверх дорогой с поворотом: нота, которая едет. Курс тот же, что в саду: нота в строе — 1, минута занятия — 2 (38 минут при 64 % — «+340»). <b>Герой (вопрос 5) — да</b>: маленький, спиной, футляр в руке, три заливки (пальто, волосы, футляр в цвет primaryContainer) — это «я», и он же связывает открытки; на интерьерных видах он стоит в проходе или у окна. <b>Транспорт</b>: поезд по Европе, корабль Лондон → Санкт-Петербург и Нью-Йорк → Буэнос-Айрес, самолёт через океаны — три силуэта, рисуются один раз.</p>
+</section>
+
+<section class="dv-turn" id="s26k">
+<div class="dv-thd"><a class="dv-tid" href="#s26k">26k</a><span class="dv-tname">Landscape 892×412 · маленький экран 360×640</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="26k1"><div class="dv-olabel"><a class="dv-oid" href="#26k1">26k1</a>Landscape — открытка слева во всю высоту (кадр шире), справа город, факт, путь и кнопка</div>
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif">
+  <div style="flex:1;min-width:0;position:relative;line-height:0;border-radius:0 24px 24px 0;overflow:hidden;background:#1E1D25">{{ landScene }}<div style="position:absolute;left:8px;top:8px;width:44px;height:44px;border-radius:22px;background:rgba(19,19,24,.62);display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="position:absolute;left:60px;top:16px;height:28px;padding:0 10px;border-radius:14px;background:rgba(19,19,24,.62);font-size:12px;font-weight:600;display:flex;align-items:center;line-height:1" class="tn">остановка 4 из 16</div></div>
+  <div style="width:320px;flex:none;display:flex;flex-direction:column;gap:12px;padding:16px 16px 16px 14px;box-sizing:border-box">
+    <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:15px;font-weight:600">Путешествие</div><div style="display:flex;gap:12px;font-size:13px;font-weight:600;color:#C4ADFF"><span>Карта</span><span>Паспорт</span></div></div>
+    <div style="display:flex;flex-direction:column;gap:3px"><div style="font-size:22px;font-weight:700;line-height:1.15">Вена</div><div style="font-size:13px;color:#A39FB5">Музикферайн, Золотой зал · с 28 июля</div><div style="font-size:13px;line-height:1.45;margin-top:4px;text-wrap:pretty">Каждый год 1 января отсюда на весь мир звучит Новогодний концерт.</div></div>
+    <div style="flex:1"></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:12px 14px;display:flex;flex-direction:column;gap:8px"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:13px;font-weight:600">до Праги · Рудольфинум</div><div class="tn" style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700">{{ taktS }}1 640 / 1 600</div></div><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:100%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div></div>
+    <div style="height:52px;border-radius:26px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:6px;font-size:15px;font-weight:700" class="tn">В путь · {{ taktXSd }}1 600</div>
+  </div>
+</div>
+</div>
+<div class="dv-opt" id="26k2"><div class="dv-olabel"><a class="dv-oid" href="#26k2">26k2</a>360×640 — открытка 200 dp, факт в одну строку с «ещё», путь и кнопка в карточке, лента открыток ниже прокруткой</div>
+<div style="width:360px;height:640px;border-radius:22px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;flex-direction:column;box-sizing:border-box;font-family:Manrope,system-ui,sans-serif">
+  <div style="display:flex;align-items:center;gap:4px;padding:2px 4px 0;height:52px;flex:none"><div style="width:44px;height:44px;display:flex;align-items:center;justify-content:center"><svg width="22" height="22" viewBox="0 0 24 24"><path d="M15 5 L8 12 L15 19" fill="none" stroke="#E6E4EE" stroke-width="2.2" stroke-linecap="round"></path></svg></div><div style="flex:1;font-size:16px;font-weight:600">Путешествие</div><div style="display:flex;gap:10px;padding-right:12px;font-size:13px;font-weight:600;color:#C4ADFF"><span>Карта</span><span>Паспорт</span></div></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:10px;padding:2px 12px 0;min-height:0">
+    <div style="position:relative;height:200px;border-radius:20px;overflow:hidden;background:#1E1D25;line-height:0;flex:none">{{ smallScene }}<div style="position:absolute;left:12px;top:10px;height:24px;padding:0 8px;border-radius:12px;background:rgba(19,19,24,.62);font-size:11px;font-weight:600;display:flex;align-items:center;line-height:1" class="tn">остановка 4 из 16</div></div>
+    <div style="display:flex;flex-direction:column;gap:2px;flex:none"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:22px;font-weight:700">Вена</div><div class="tn" style="font-size:12px;color:#A39FB5">с 28 июля</div></div><div style="font-size:13px;color:#A39FB5">Музикферайн, Золотой зал</div><div style="display:flex;align-items:baseline;gap:6px;margin-top:2px"><div style="flex:1;min-width:0;font-size:13px;line-height:1.4;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Каждый год 1 января отсюда на весь мир звучит Новогодний концерт.</div><div style="flex:none;font-size:13px;color:#C4ADFF;font-weight:600">ещё</div></div></div>
+    <div style="background:#1E1D25;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;flex:none"><div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:13px;font-weight:600">до Праги</div><div class="tn" style="display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700">{{ taktS }}1 640 / 1 600</div></div><div style="height:6px;border-radius:3px;background:#292833;overflow:hidden"><div style="height:100%;width:100%;border-radius:3px;background:linear-gradient(90deg,#5B43B8,#C4ADFF)"></div></div><div style="height:44px;border-radius:22px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:700;margin-top:2px" class="tn">В путь · {{ taktXSd }}1 600</div></div>
+    <div style="display:flex;gap:8px;overflow:hidden;flex:none"><sc-for list="{{ smallStrip }}" as="t" hint-placeholder-count="4"><div style="width:84px;height:56px;border-radius:10px;overflow:hidden;flex:none;background:#1E1D25;line-height:0">{{ t.el }}</div></sc-for></div>
+  </div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="dv-turn" id="s26l">
+<div class="dv-thd"><a class="dv-tid" href="#s26l">26l</a><span class="dv-tname">Если приложение станет Music Journey — значок, первый экран, слово в шапке</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="26l1"><div class="dv-olabel"><a class="dv-oid" href="#26l1">26l1</a>Значок — нота-булавка: головка ноты как место на карте, штиль — дорога; адаптивный, монохромный и в трёх размерах</div>
+<div style="width:412px;background:#1E1D25;border-radius:20px;padding:24px;display:flex;align-items:center;justify-content:space-around;box-sizing:border-box;line-height:0">{{ iconDemo }}</div>
+</div>
+<div class="dv-opt" id="26l2"><div class="dv-olabel"><a class="dv-oid" href="#26l2">26l2</a>Первый экран онбординга — имя латиницей один раз, дальше по-русски; вместо «слушает и считает» — «слушает и ведёт»</div>
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div style="height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden">
+  <div style="flex:1;position:relative;overflow:hidden;line-height:0">{{ onboardMap }}<div style="position:absolute;left:0;right:0;bottom:0;height:260px;background:linear-gradient(rgba(19,19,24,0),#131318 70%)"></div></div>
+  <div style="padding:0 24px 32px;display:flex;flex-direction:column;gap:14px;margin-top:-80px;position:relative;line-height:1.3;align-items:flex-start">
+    <div style="display:flex;align-items:center;gap:12px">{{ iconSmall }}<div style="font-size:15px;font-weight:700;letter-spacing:.02em;color:#C4ADFF">Music Journey</div></div>
+    <div style="font-size:32px;font-weight:800;line-height:1.1;letter-spacing:-.01em;text-wrap:balance">Скрипка слушает вас — и ведёт по залам мира</div>
+    <div style="font-size:16px;line-height:1.5;color:#A39FB5;text-wrap:pretty">Приложение слышит каждую ноту и показывает, попала ли она в строй. Каждая чистая нота — шаг пути: от своей комнаты до Карнеги-холла.</div>
+    <div style="width:100%;height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;margin-top:10px">Начать</div>
+    <div style="width:100%;text-align:center;font-size:13px;color:#A39FB5">Понадобится микрофон — только пока вы играете</div>
+  </div>
+</div>
+</x-import>
+</div>
+<div class="dv-opt" id="26l3"><div class="dv-olabel"><a class="dv-oid" href="#26l3">26l3</a>Слово в шапке — не меняем: «Занятия» остаются «Занятиями», имя приложения живёт на значке и в «Настройках · О приложении»; карточка называется «Путешествие»</div>
+<div style="width:412px;background:#1E1D25;border-radius:20px;padding:20px;display:flex;flex-direction:column;gap:14px;box-sizing:border-box;font-size:13px;line-height:1.5;color:#A39FB5">
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:#292833;border-radius:12px">{{ iconSmall }}<div><div style="font-size:15px;font-weight:700;color:#E6E4EE">Music Journey</div><div style="font-size:12px">на значке, в магазине и в «О приложении»</div></div></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:#292833;border-radius:12px"><div style="width:40px;height:40px;border-radius:12px;background:#1E1D25;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;color:#E6E4EE">З</div><div><div style="font-size:15px;font-weight:700;color:#E6E4EE">Занятия · Live · Записи · Настройки</div><div style="font-size:12px">вкладки не переименовываем — они про дело</div></div></div>
+  <div style="display:flex;align-items:center;gap:12px;padding:10px 12px;background:#292833;border-radius:12px"><div style="width:40px;height:40px;border-radius:12px;overflow:hidden;line-height:0;flex:none">{{ iconThumb }}</div><div><div style="font-size:15px;font-weight:700;color:#E6E4EE">Путешествие</div><div style="font-size:12px">экран, карточка на «Занятиях», кнопка на листе итога</div></div></div>
+  <div>Лицо приложения меняется не словом, а картинкой: на значке и первом экране — дорога, а не тюнер. Всё, что про интонацию (зелёный/янтарный/красный, полоса допуска), остаётся внутри Live и не выходит на значок.</div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · Music Journey: локации, карта, палитры, слои</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(520px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">LOCATIONS — маршрут первой версии (цены в тактах, координаты карты на сетке 412 × 700)</div>
+  <div class="dv-tbl" style="grid-template-columns:34px minmax(0,.9fr) minmax(0,1.3fr) 70px 78px 86px minmax(0,.6fr)">
+    <div class="h">№</div><div class="h">Город</div><div class="h">Место · вид</div><div class="h">Цена</div><div class="h">Карта</div><div class="h">Транспорт</div><div class="h">Версия</div>
+    <sc-for list="{{ locRows }}" as="l" hint-placeholder-count="17"><div class="mono tn">{{ l.order }}</div><div style="font-weight:600">{{ l.city }}</div><div style="color:#A39FB5">{{ l.place }} · {{ l.view }}</div><div class="mono tn">{{ l.price }}</div><div class="mono tn">{{ l.map }}</div><div style="color:#A39FB5">{{ l.transport }}</div><div style="color:{{ l.verColor }}">{{ l.ver }}</div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px">Запись: `{ id, city, place, country, price, order, transport, map: {x, y}, fact, views: [{ id: 'main' | 'eve' | 'inside', palette: 'day' | 'eve', layers }], stamp: sil }`. Сумма цен маршрута — 81 700 тактов; при 300–400 за занятие это 200–270 занятий — годы, как и хотели. Первая версия — остановки 0–8 (Дом … Амстердам) с открытками, остальные на карте пунктиром с силуэтом и подписью «скоро» — их открытки приходят обновлениями, накопленные такты ждут.</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Палитры — базовые токены день / вечер (у локации — переопределения стен, крыш, воды)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) 84px 84px minmax(0,1.2fr)">
+    <div class="h">Токен</div><div class="h">day</div><div class="h">eve</div><div class="h">Где</div>
+    <sc-for list="{{ palRows }}" as="t" hint-placeholder-count="16"><div class="mono">{{ t.name }}</div><div style="padding:6px 8px;display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:4px;background:{{ t.day }};flex:none"></div><span class="mono" style="font-size:10px">{{ t.day }}</span></div><div style="padding:6px 8px;display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:4px;background:{{ t.eve }};flex:none"></div><span class="mono" style="font-size:10px">{{ t.eve }}</span></div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px">Вена: wall #D9B26B · wallLit #E9C98D · wallShade #B58E4D · trim #F2ECD8 · roof #6F7B7F; Альберт-холл: brick #A8583F / #C36F52 / #7F4130, frieze #E8DFC8, dome #8FA9B8; Сидней: sail #F2EFE6 / #FFFFFF / #C9C4B6, platform #B58E6B; Кремона: plaster #E6D5B8, wood #A9713F, varnish #B5672F; Ла Скала: velvet #8E2F3F, velvetDark #5A1E2A, gold #D9B26B, cream #F0E6D2. Карта: земля surfaceContainer #1E1D25, кромка #292833, вода surface #131318, линия primary, свечение primary α .18 ширина 10, будущий путь outline #3A3846 пунктир 4/6. Штампы: чернила `stamp.lavender #C4ADFF · stamp.teal #6FC7C2 · stamp.rose #E39AB6 · stamp.sand #D9B26B`, неоткрытый — outline #3A3846. Воздушная перспектива снаружи: `mix(color, skyLow, [.28, .10, 0][depth])`; в интерьерах не применяется.</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp / sp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Элемент</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="10"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.1fr) minmax(0,1.6fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="8"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты</div>
+  <div style="color:#A39FB5">Экран: «Путешествие», «Карта», «Паспорт», «остановка 4 из 16», «до Праги · Рудольфинум», «1 640 / 1 600», «В путь · 1 600», «не хватает 360», «поездом · 4 часа» / «кораблём · 2 дня» / «самолётом · 9 часов», «Пройдено 4 из 16», «Все открытки», «Первая открытка появится в Кремоне», «с 28 июля». Завязка: «Дорога начинается дома» / «У каждого скрипача есть мечта — сыграть в лучших залах мира. Дорога туда длинная, и платят за неё не деньгами, а чистыми нотами.» / «Первая остановка — Кремона, где скрипку придумали. До неё 300 тактов.» / «Собрать футляр». Дорога: «поездом», «Зальцбург → Вена». Прибытие: «остановка 4 из 16», город, место, факт, «Поставить штамп». Штамп: «Паспорт · страница 2», «Четвёртый штамп. До Праги — 1 600 тактов.», «Готово». Локация: «Австрия · Музикферайн, Золотой зал», «4 из 16 · с 28 июля», чипы «вечер · день · внутри», «Дополнения», «Вечерний вид — 200», «Золотой зал внутри — 400», «Сувенир в паспорт — 150», «открыто». Паспорт: «7 из 16», «скоро». Итог занятия: «+340 тактов», «264 ноты в строе + 76 за время», «До Праги осталось 20», «В путешествие». Валюта: такт / такта / тактов. Факты в макетах — примеры, финальные тексты владельца; место — 2 строки 14 sp на экране пути, 3–4 строки 15 sp на экране локации. Нигде нет «мало», «меньше», «вчера».</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Сетка и формат слоя</div>
+  <div style="color:#A39FB5">Открытка — сетка <b style="color:#E6E4EE">412 × 260</b>, горизонт у экстерьеров на y 190, точка схода интерьеров (206, 118). Полный экран — та же сетка с небом, продолженным вверх (viewBox −10 −80 380 340, meet по нижнему краю): небо — сплошная заливка `sky` выше градиента, поэтому любой рост кадра безопасен. Слой: `{ name, fill: token | '#hex', d, depth: 0 | 1 | 2, op?, stroke?, sw?, sway? }` либо `{ repeat: { d, count, step: [dx, dy], scale: [s0, s1], fn? } }` — одна форма × N: пилястры, окна, кариатиды, ложи, кресла, доски пола, отражения. Особые заливки: `SKY` — линейный градиент sky → skyLow (0…190), `GLOW` — радиальный glow → прозрачный. Порядок — как в массиве; параллакс сдвигает слои по depth (.3 / .6 / 1 от dx, предел ±24 dp).</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Вена · главный вид — слои как есть (степень «как надо»)</div>
+  <div class="mono" style="color:#A39FB5;font-size:10.5px;line-height:1.5;background:#15151B;border-radius:12px;padding:12px;overflow-wrap:anywhere;max-height:420px;overflow:auto">{{ viennaCode }}</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">MAP — карта (сетка 412 × 700)</div>
+  <div class="mono" style="color:#A39FB5;font-size:10.5px;line-height:1.5;background:#15151B;border-radius:12px;padding:12px;overflow-wrap:anywhere">{{ mapCode }}</div>
+  <div style="color:#A39FB5;margin-top:8px">Путь — одна кривая Catmull-Rom через точки по порядку (натяжение .5), разбитая на перегоны; пройденная часть рисуется целиком, текущий перегон — по прогрессу 0…1 во время дороги (trim path). Транспорт — силуэты 24 × 12 (поезд, корабль, самолёт), ориентированы по касательной. Штампы — те же силуэты `sil` (сетка 200 × 120), вписанные в круг 84 с масштабом .3.</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Герой и транспорт</div>
+  <div style="display:flex;gap:16px;align-items:flex-end;line-height:0;background:#15151B;border-radius:12px;padding:16px">{{ heroCode }}</div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const ON = '#E6E4EE', OV = '#A39FB5', PR = '#C4ADFF', PC = '#5B43B8', OPC = '#E9DDFF', OUT = '#3A3846', SC = '#1E1D25', SCH = '#292833', SURF = '#131318';
+    // ---------- color
+    const hex2 = c => { if (c.startsWith('rgba')) { const m = c.match(/[\d.]+/g).map(Number); return [m[0], m[1], m[2], m[3]]; } const n = parseInt(c.slice(1), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255, 1]; };
+    const toC = ([r, g, b, a]) => a >= .999 ? '#' + [r, g, b].map(v => Math.round(Math.max(0, Math.min(255, v))).toString(16).padStart(2, '0')).join('') : `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${a.toFixed(2)})`;
+    const mix = (a, b, t) => { const A = hex2(a), B = hex2(b); return toC(A.map((v, i) => v + (B[i] - v) * t)); };
+    const BASE = {
+      day: { sky: '#79B0E6', skyLow: '#D3E5F5', far: '#A9BFD9', farLit: '#C5D6E8', ground: '#8E8A86', groundLit: '#A8A49F', groundShade: '#6E6A66', window: '#5B6E85', windowLit: '#7F94AB', lamp: '#3B3A45', lampGlass: '#E4ECF2', glow: 'rgba(255,196,110,0)', water: '#5F9AD0', waterLit: '#B0DCF2', foliage: '#4E9B57', foliageLit: '#82C873', foliageShade: '#357A42', trunk: '#7A5539', chandelier: '#FFE9B0', hero: '#2A2430', heroHair: '#4A3A32', heroCase: '#5B43B8' },
+      eve: { sky: '#2A2857', skyLow: '#E08A63', far: '#4C4676', farLit: '#6A5E8C', ground: '#3F3A48', groundLit: '#57506A', groundShade: '#2C2834', window: '#FFD98A', windowLit: '#FFE9B0', lamp: '#2A2830', lampGlass: '#FFD98A', glow: 'rgba(255,196,110,.5)', water: '#2F3F7A', waterLit: '#E0A070', foliage: '#2F6B48', foliageLit: '#4F8E5F', foliageShade: '#214D34', trunk: '#4A3A32', chandelier: '#FFE9B0', hero: '#1E1A24', heroHair: '#3A2C28', heroCase: '#5B43B8' },
+    };
+    const LOCPAL = {
+      vienna: { wall: '#D9B26B', wallLit: '#E9C98D', wallShade: '#B58E4D', wallBase: '#C9A15C', trim: '#F2ECD8', roof: '#6F7B7F', roofLit: '#8C989C', dark: '#3A3040', gold: '#D9B26B', goldLit: '#EBCB86', goldShade: '#B08A45', goldDark: '#8E6E36', cream: '#F0E6D2', creamShade: '#DCCFB4', velvet: '#8E2F3F', velvetDark: '#5A1E2A', wood: '#A9713F' },
+      cremona: { plaster: '#E6D5B8', plasterShade: '#CDB891', floor: '#8E5E3A', floorShade: '#74492C', wood: '#A9713F', woodShade: '#7E5230', woodDark: '#5A3A22', varnish: '#B5672F', varnishLit: '#D48A4C', varnishRaw: '#D9B27A', metal: '#6B6C78', rope: '#8A7A66', glass: '#B7C7CF' },
+      milan: { velvet: '#8E2F3F', velvetDark: '#5A1E2A', velvetCurtain: '#6E2333', gold: '#D9B26B', goldLit: '#EBCB86', cream: '#F0E6D2', creamShade: '#DCCFB4', boxDark: '#3A1E28', wood: '#A9713F' },
+      london: { brick: '#A8583F', brickLit: '#C36F52', brickShade: '#7F4130', frieze: '#E8DFC8', friezeShade: '#CFC5A9', dome: '#8FA9B8', domeLit: '#B9CDD8', dark: '#3A3040' },
+      sydney: { sail: '#F2EFE6', sailLit: '#FFFFFF', sailShade: '#C9C4B6', platform: '#B58E6B', platformShade: '#8A6A4E' },
+      home: { wallHome: '#3E3652', wallLitHome: '#4A4262', floorHome: '#5A4A40', floorLine: '#4A3C34', curtain: '#5B43B8', woodDark: '#3A2A22', metal: '#6B6C78', paper: '#F1EEE6', rug: '#4A3F6E', velvet: '#8E2F3F', varnish: '#B5672F', caseOut: '#2A2430' },
+      austria: { mount: '#5F7480', mountLit: '#7E93A0', mountShade: '#46585F', snow: '#F2F5F8', meadow: '#6FA85C', meadowLit: '#8FC873', plaster: '#F0E6D2', roofGreen: '#4E7B6A', wood: '#A9713F', woodShade: '#7E5230' },
+    };
+    const palOf = (loc, mode) => ({ ...BASE[mode], ...(LOCPAL[loc] || {}) });
+    const AER = [.28, .10, 0];
+    // ---------- geometry
+    const R = (x, y, w, hh) => `M${x} ${y}h${w}v${hh}h${-w}Z`;
+    const RR = (x, y, w, hh, r) => `M${x + r} ${y}h${w - 2 * r}a${r} ${r} 0 0 1 ${r} ${r}v${hh - 2 * r}a${r} ${r} 0 0 1 ${-r} ${r}h${-(w - 2 * r)}a${r} ${r} 0 0 1 ${-r} ${-r}v${-(hh - 2 * r)}a${r} ${r} 0 0 1 ${r} ${-r}Z`;
+    const E = (cx, cy, rx, ry) => `M${cx - rx} ${cy}a${rx} ${ry} 0 1 0 ${2 * rx} 0a${rx} ${ry} 0 1 0 ${-2 * rx} 0Z`;
+    const C = (cx, cy, r) => E(cx, cy, r, r);
+    const PG = pts => 'M' + pts.map(p => p.join(' ')).join('L') + 'Z';
+    const ARCH = (x, y, w, hh) => `M${x} ${y + hh}v${-(hh - w / 2)}a${w / 2} ${w / 2} 0 0 1 ${w} 0v${hh - w / 2}Z`;
+    const L = (fill, d, depth = 1, o = {}) => ({ fill, d, depth, ...o });
+    const SKYL = [L('sky', R(-600, -1200, 1600, 1210), 0), L('SKY', R(-600, 0, 1600, 190), 0)];
+    // ---------- shared props
+    const hero = (x, y, s, depth = 2) => [L('rgba(20,16,30,.28)', E(x + 2 * s, y + 1, 11 * s, 2.6 * s), depth), L('hero', PG([[x - 6 * s, y], [x - 7 * s, y - 23 * s], [x + 7 * s, y - 23 * s], [x + 6 * s, y]]), depth), L('hero', R(x - 5 * s, y - 4 * s, 3.4 * s, 4 * s), depth), L('hero', R(x + 1.6 * s, y - 4 * s, 3.4 * s, 4 * s), depth), L('heroHair', C(x, y - 27.5 * s, 4.6 * s), depth), L('hero', E(x, y - 24 * s, 4.2 * s, 1.6 * s), depth), L('heroCase', RR(x + 7.5 * s, y - 17 * s, 6.5 * s, 18 * s, 2 * s), depth), L('rgba(255,255,255,.18)', R(x + 9 * s, y - 15 * s, 1.4 * s, 12 * s), depth)];
+    const lamp = (x, y, s, depth = 2, eve) => [L('rgba(20,16,30,.28)', E(x + 2, y + 1, 6 * s, 2 * s), depth), ...(eve ? [L('GLOW', C(x, y - 42 * s, 30 * s), depth)] : []), L('lamp', R(x - 1.5 * s, y - 36 * s, 3 * s, 36 * s), depth), L('lamp', R(x - 6 * s, y - 38 * s, 12 * s, 2 * s), depth), L('lamp', R(x - 6 * s, y - 48 * s, 12 * s, 10 * s), depth), L('lampGlass', R(x - 3.6 * s, y - 46.5 * s, 7.2 * s, 7.5 * s), depth), L('lamp', PG([[x - 7 * s, y - 48 * s], [x + 7 * s, y - 48 * s], [x, y - 53 * s]]), depth)];
+    const tree = (x, y, s, depth = 2) => [L('rgba(20,16,30,.28)', E(x + 4 * s, y + 1, 16 * s, 4 * s), depth), L('trunk', R(x - 2.5 * s, y - 26 * s, 5 * s, 26 * s), depth), L('foliageShade', C(x, y - 40 * s, 19 * s), depth), L('foliage', C(x - 4 * s, y - 44 * s, 14 * s, 14 * s), depth), L('foliageLit', C(x - 9 * s, y - 49 * s, 6 * s), depth)];
+    const fir = (x, y, s, depth = 2) => [L('trunk', R(x - 2 * s, y - 10 * s, 4 * s, 10 * s), depth), L('foliageShade', PG([[x, y - 62 * s], [x + 17 * s, y - 8 * s], [x - 17 * s, y - 8 * s]]), depth), L('foliage', PG([[x, y - 62 * s], [x - 17 * s, y - 8 * s], [x, y - 8 * s]]), depth)];
+    const rep = (n, fn) => Array.from({ length: n }, (_, i) => fn(i)).flat();
+    // ---------- locations
+    const VIENNA = (lv = 2, eve = true) => {
+      const l = [...SKYL];
+      l.push(L('far', PG([[0, 190], [0, 150], [30, 150], [30, 138], [56, 138], [56, 158], [86, 158], [86, 190]]), 0), L('far', R(340, 148, 72, 42), 0), L('far', C(376, 140, 16), 0), L('far', R(372, 118, 8, 22), 0), L('farLit', R(392, 136, 20, 54), 0));
+      if (lv === 1) { l.push(L('wall', R(86, 72, 240, 118)), L('roof', PG([[80, 72], [332, 72], [318, 52], [94, 52]])), ...rep(7, i => L('window', R(100 + i * 32, 96, 14, 50))), ...rep(7, i => L('window', R(100 + i * 32, 160, 14, 22))), L('ground', R(0, 190, 412, 70), 2)); return l; }
+      l.push(L('wallShade', PG([[326, 78], [352, 86], [352, 190], [326, 190]])), L('wall', R(86, 78, 240, 112)), L('wallBase', R(86, 150, 240, 40)), L('wallShade', R(86, 149, 240, 1.5)), L('trim', R(80, 70, 252, 8)), L('roof', PG([[80, 70], [332, 70], [318, 52], [94, 52]])), L('roofLit', PG([[80, 70], [206, 70], [206, 52], [94, 52]])));
+      l.push(...rep(8, i => [L('trim', R(88 + i * 32, 84, 6, 66)), L('trim', R(86 + i * 32, 84, 10, 4))]));
+      l.push(...rep(7, i => [L(eve ? 'window' : 'window', ARCH(101 + i * 32, 96, 14, 50)), ...(eve ? [L('rgba(255,217,138,.16)', R(97 + i * 32, 146, 22, 6))] : [])]));
+      l.push(...rep(7, i => i >= 2 && i <= 4 ? L('dark', ARCH(99 + i * 32, 156, 18, 34)) : L('dark', R(101 + i * 32, 160, 14, 22))));
+      l.push(L('trim', R(156, 188, 108, 4)), L('groundLit', R(0, 190, 412, 14), 2), L('ground', R(0, 204, 412, 56), 2), L('groundShade', R(0, 203, 412, 1.5), 2), L('rgba(20,16,30,.18)', PG([[86, 190], [352, 190], [372, 204], [100, 204]]), 2));
+      if (lv === 3) { l.push(...rep(9, i => [L('gold', C(96 + i * 28, 66, 3)), L('gold', R(94 + i * 28, 66, 4, 6))]), ...rep(26, i => L('trim', R(84 + i * 9.6, 60, 3, 8))), ...rep(7, i => L('rgba(255,255,255,.35)', ARCH(99 + i * 32, 94, 18, 54), 1, { stroke: 'rgba(255,255,255,.5)', sw: 1, fillNone: true })), ...rep(40, i => L('groundShade', E(10 + (i % 10) * 44 + (Math.floor(i / 10) % 2) * 22, 214 + Math.floor(i / 10) * 12, 9, 3), 2)), L('lamp', R(0, 120, 412, 1), 0), ...rep(3, i => [L('hero', PG([[120 + i * 90, 232], [118 + i * 90, 214], [128 + i * 90, 214], [126 + i * 90, 232]]), 2), L('heroHair', C(123 + i * 90, 210, 3.6), 2)])); }
+      l.push(...tree(26, 236, 1.05, 2), ...lamp(76, 238, 1, 2, eve), ...lamp(342, 238, 1, 2, eve), ...hero(262, 254, 1, 2));
+      return l;
+    };
+    const VIENNA_INT = () => {
+      const l = [];
+      l.push(L('cream', PG([[0, 0], [412, 0], [262, 78], [150, 78]])), ...rep(3, i => L('creamShade', PG([[40 + i * 100, 6], [130 + i * 100, 6], [244 - (2 - i) * 6, 74], [166 + i * 28, 74]]).replace('Z', 'Z'), 1, { op: .5 })), L('goldDark', R(150, 78, 112, 90)), L('gold', PG([[0, 0], [150, 78], [150, 168], [0, 260]])), L('goldShade', PG([[412, 0], [262, 78], [262, 168], [412, 260]])), L('velvetDark', PG([[0, 260], [150, 168], [262, 168], [412, 260]])));
+      l.push(L('goldLit', PG([[0, 150], [150, 128], [150, 134], [0, 164]])), L('goldDark', PG([[412, 150], [262, 128], [262, 134], [412, 164]])));
+      const car = (k, right) => { const t = k / 5, x0 = 10 + 128 * t, sc = 1 - .5 * t, yb = 258 - 92 * (x0 / 150) - 2; const x = right ? 412 - x0 : x0; const fill = right ? 'gold' : 'goldLit'; return [L('goldShade', R(x - 4 * sc, yb - 62 * sc, 8 * sc, 62 * sc)), L(fill, R(x - 3 * sc, yb - 60 * sc, 6 * sc, 60 * sc)), L(fill, E(x, yb - 58 * sc, 7 * sc, 3 * sc)), L(fill, C(x, yb - 66 * sc, 4 * sc)), L(fill, R(x - 6 * sc, yb - 4 * sc, 12 * sc, 4 * sc))]; };
+      l.push(...rep(6, k => [...car(k, false), ...car(k, true)]));
+      l.push(...rep(9, i => L('goldLit', R(166 + i * 9, 92 + (i % 2) * 6, 5, 60 - (i % 2) * 6))), L('goldShade', ARCH(160, 84, 92, 40), 1, { op: .35 }));
+      l.push(...rep(4, k => { const t = k / 3, y = 26 + 50 * t, dx = 112 - 72 * t, r = 9 - 5 * t; return [-1, 1].flatMap(sg => [L('goldShade', R(206 + sg * dx - .6, 0, 1.2, y - r)), L('rgba(255,196,110,.5)', C(206 + sg * dx, y, r * 3.2), 1, { glow: true }), L('chandelier', C(206 + sg * dx, y, r)), L('rgba(255,255,255,.8)', C(206 + sg * dx - r * .3, y - r * .3, r * .35))]); }));
+      l.push(L('wood', PG([[150, 168], [262, 168], [262, 176], [150, 176]])), L('hero', PG([[190, 168], [222, 168], [222, 152], [212, 148], [190, 152]])), L('hero', R(196, 168, 2, 6)), L('hero', R(216, 168, 2, 6)), L('lamp', R(233, 140, 1.4, 28)), L('lamp', PG([[228, 142], [240, 142], [238, 132], [230, 132]])));
+      l.push(...rep(8, k => { const t = k / 7, y = 252 - 76 * t, hw = 198 - 84 * t, hh = 9 * (1 - .5 * t); const n = Math.round(2 * hw / (16 * (1 - .4 * t))); return [L('velvet', R(206 - hw, y - hh, 2 * hw, hh)), L('velvetDark', R(206 - hw, y - hh, 2 * hw, hh * .3)), ...rep(n, i => L('velvetDark', R(206 - hw + i * (2 * hw / n), y - hh, 1.2, hh)))]; }));
+      return l;
+    };
+    const CREMONA = (eve = true) => {
+      const l = [];
+      l.push(L('plaster', R(0, 0, 412, 200)), L('plasterShade', R(0, 0, 412, 14)), L('floor', R(0, 200, 412, 60)), ...rep(9, i => L('floorShade', R(i * 48 + (i % 2) * 8, 200, 2, 60))), L('floorShade', R(0, 199, 412, 2)));
+      l.push(L('woodDark', R(28, 34, 100, 124)), L('SKY', R(34, 40, 88, 112)), L('far', R(40, 122, 18, 30)), L('far', R(64, 114, 22, 38)), L('far', R(94, 128, 22, 24)), L('woodDark', R(76, 40, 4, 112)), L('woodDark', R(34, 96, 88, 4)), L(eve ? 'rgba(255,217,138,.14)' : 'rgba(255,240,200,.2)', PG([[36, 200], [126, 200], [230, 260], [0, 260]]), 2));
+      l.push(L('woodDark', R(150, 26, 250, 5)), ...rep(5, i => { const x = 172 + i * 50, len = 14 + (i % 2) * 8, y = 31 + len; return [L('rope', R(x - .7, 31, 1.4, len)), L('varnish', R(x - 1.6, y, 3.2, 26)), L('varnishLit', C(x, y + 2, 3)), L('varnish', 'M0 -20 C 8 -20 10 -14 8 -8 C 6 -4 6 0 8 4 C 10 10 8 18 0 20 C -8 18 -10 10 -8 4 C -6 0 -6 -4 -8 -8 C -10 -14 -8 -20 0 -20Z', 1, { tx: x, ty: y + 44, sc: 1.05 }), L('varnishLit', 'M-2 -16 C 4 -16 5 -10 3.5 -6 C 2.5 -3 2.5 1 3.5 4 C 4.5 9 3 14 -1 15 C -5 13 -6 8 -4.5 4 C -3.5 1 -3.5 -3 -4.5 -6 C -6 -10 -5 -16 -2 -16Z', 1, { tx: x, ty: y + 44, sc: 1.05, op: .55 }), L('woodDark', R(x - .5, y + 26, 1, 36))]; }));
+      l.push(L('wood', R(20, 168, 116, 4)), L('woodShade', R(20, 172, 116, 2)), L('glass', RR(30, 150, 14, 18, 3)), L('glass', RR(52, 154, 12, 14, 3)), L('varnishRaw', RR(80, 148, 10, 20, 2)), L('metal', R(100, 160, 26, 8)));
+      l.push(L('woodDark', R(200, 168, 8, 44)), L('woodDark', R(366, 168, 8, 44)), L('wood', R(190, 150, 194, 9)), L('woodShade', R(190, 159, 194, 10)), L('varnishRaw', E(250, 146, 30, 9)), L('varnishRaw', E(250, 146, 20, 6), 1, { op: .01 }), L('plasterShade', E(250, 146, 6, 3)), L('metal', R(300, 143, 30, 6)), L('woodDark', R(304, 141, 22, 2)), L('metal', R(340, 144, 4, 6)), L('metal', R(350, 142, 12, 8)));
+      l.push(L('metal', R(300, 0, 2, 38)), L('GLOW', C(301, 52, 44), 1), L('metal', PG([[284, 40], [318, 40], [310, 26], [292, 26]])), L('chandelier', C(301, 44, 3.2)));
+      l.push(L('woodDark', RR(120, 200, 34, 6, 2), 2), L('woodDark', R(124, 206, 3, 26), 2), L('woodDark', R(147, 206, 3, 26), 2));
+      l.push(...hero(178, 252, 1, 2));
+      return l;
+    };
+    const MILAN = () => {
+      const l = [L('velvetDark', R(0, 0, 412, 260))];
+      l.push(L('cream', C(206, 14, 150)), L('creamShade', C(206, 14, 120)), L('gold', C(206, 14, 92), 1, { op: .5 }), L('rgba(255,196,110,.55)', C(206, 40, 64), 1, { glow: true }), L('goldLit', R(205, 0, 2, 22)), L('chandelier', E(206, 40, 24, 15)), L('goldLit', E(206, 30, 14, 6)), ...rep(9, i => L('chandelier', C(206 + Math.cos(Math.PI * (1 + i / 8)) * 30, 52 + Math.sin(Math.PI * (i / 8)) * 8, 1.8))));
+      rep(5, k => { const rx = 280 - 16 * k, ry = 250 - 34 * k; l.push(L(k % 2 ? 'creamShade' : 'cream', E(206, 330, rx, ry))); l.push(L('gold', `M${206 - rx} 330a${rx} ${ry} 0 0 1 ${2 * rx} 0`, 1, { stroke: 'gold', sw: 2.2, fillNone: true })); rep(11, j => { const th = Math.PI * (1.08 + .84 * j / 10); const px = 206 + rx * Math.cos(th), py = 330 + ry * Math.sin(th); l.push(L('boxDark', RR(px - 9, py + 4, 18, 20, 3)), L('velvet', R(px - 9, py + 18, 18, 6)), L('goldLit', R(px - 10, py + 24, 20, 1.4))); }); });
+      l.push(L('velvetDark', E(206, 330, 200, 112)), ...rep(5, k => { const t = k / 4, y = 254 - 30 * t, hw = 196 - 40 * t, hh = 6 - 2 * t; const n = Math.round(hw / 6); return [L('velvet', R(206 - hw, y - hh, 2 * hw, hh)), ...rep(n, i => L('velvetDark', R(206 - hw + i * (2 * hw / n), y - hh, 1, hh)))]; }));
+      l.push(L('wood', R(0, 256, 412, 4), 2), L('velvetCurtain', PG([[0, 0], [46, 0], [30, 260], [0, 260]]), 2), L('velvetCurtain', PG([[412, 0], [366, 0], [382, 260], [412, 260]]), 2), ...rep(4, i => [L('velvetDark', PG([[6 + i * 10, 0], [10 + i * 10, 0], [6 + i * 7, 260], [4 + i * 7, 260]]), 2, { op: .5 }), L('velvetDark', PG([[406 - i * 10, 0], [402 - i * 10, 0], [406 - i * 7, 260], [408 - i * 7, 260]]), 2, { op: .5 })]));
+      return l;
+    };
+    const LONDON = (eve = true) => {
+      const l = [...SKYL];
+      l.push(L('far', PG([[0, 190], [0, 156], [24, 156], [24, 146], [44, 146], [44, 160], [60, 160], [60, 190]]), 0), L('far', R(352, 150, 60, 40), 0), L('far', R(384, 126, 8, 30), 0), L('farLit', R(388, 118, 3, 10), 0));
+      l.push(L('ground', R(0, 190, 412, 70), 2), L('groundLit', R(0, 190, 412, 10), 2), L('frieze', R(40, 184, 332, 6)), L('friezeShade', R(48, 190, 316, 4)));
+      l.push(L('brick', PG([[56, 100], [356, 100], [356, 186], [56, 186]])), L('brickShade', PG([[276, 100], [356, 100], [356, 186], [276, 186]])), L('brickLit', PG([[56, 100], [114, 100], [114, 186], [56, 186]])));
+      l.push(...rep(13, i => { const ph = (-72 + i * 12) * Math.PI / 180, x = 206 + 150 * Math.sin(ph), w = 13 * Math.cos(ph); return [L('window', ARCH(x - w / 2, 122, w, 38)), L('dark', ARCH(x - w * .6, 166, w * 1.2, 20))]; }));
+      l.push(L('friezeShade', E(206, 106, 152, 22)), L('frieze', E(206, 98, 152, 22)), L('brickShade', E(206, 92, 152, 22)), L('brick', E(206, 88, 150, 20)));
+      l.push(L('dome', `M56 88A150 62 0 0 1 356 88Z`), L('domeLit', `M72 84A134 52 0 0 1 226 34Q160 44 72 84Z`, 1, { op: .8 }), L('frieze', R(200, 22, 12, 10)), L('frieze', C(206, 20, 6)), ...(eve ? rep(5, i => L('rgba(255,217,138,.35)', `M${100 + i * 53} 84A${106 - i * 20} 44 0 0 1 ${104 + i * 53} 84Z`, 1, { op: .25 })) : []));
+      l.push(...tree(22, 234, 1.15, 2), ...tree(396, 232, 1.05, 2), ...lamp(120, 236, .95, 2, eve), ...lamp(292, 236, .95, 2, eve), ...hero(206, 254, 1, 2));
+      return l;
+    };
+    const SYDNEY = (eve = true) => {
+      const l = [...SKYL];
+      l.push(L('far', `M-10 150Q100 40 220 150`, 0, { stroke: 'far', sw: 5, fillNone: true }), L('far', R(-10, 146, 230, 4), 0), L('far', R(26, 128, 8, 22), 0), L('far', R(176, 128, 8, 22), 0), ...rep(8, i => L('far', R(4 + i * 26, 150 - (i < 4 ? i : 7 - i) * 14, 1.2, (i < 4 ? i : 7 - i) * 14), 0)));
+      l.push(L('water', R(0, 168, 412, 92), 1), ...rep(12, i => L('waterLit', R(20 + (i * 97) % 380, 178 + i * 6, 26 + (i * 37) % 40, 1.6), 1, { op: .35 })), ...(eve ? [L('rgba(255,217,138,.25)', R(160, 176, 120, 60), 1, { op: .25 })] : []));
+      l.push(L('platformShade', PG([[60, 170], [392, 170], [404, 182], [46, 182]])), L('platform', PG([[70, 164], [382, 164], [392, 172], [60, 172]])));
+      const sail = (pts, shade) => [L('sail', pts[0]), L('sailShade', pts[1]), L('sailLit', pts[2], 1, { op: .7 })];
+      l.push(...sail([`M120 166Q150 62 214 42Q206 104 236 166Z`, `M176 166Q192 96 214 42Q206 104 236 166Z`, `M128 160Q152 76 200 52Q170 90 150 160Z`]), ...sail([`M154 166Q212 78 282 72Q262 116 290 166Z`, `M228 166Q250 108 282 72Q262 116 290 166Z`, `M162 162Q212 92 262 80Q222 112 200 162Z`]), ...sail([`M240 166Q276 96 344 82Q326 124 352 166Z`, `M300 166Q318 116 344 82Q326 124 352 166Z`, `M248 162Q280 108 326 92Q296 120 276 162Z`]), ...sail([`M310 166Q334 126 376 122Q364 144 386 166Z`, `M350 166Q360 138 376 122Q364 144 386 166Z`, `M316 162Q336 132 362 128Q344 140 336 162Z`]));
+      l.push(L('ground', R(0, 234, 412, 26), 2), L('groundLit', R(0, 234, 412, 4), 2), ...lamp(120, 236, .8, 2, eve), ...hero(58, 254, 1, 2));
+      return l;
+    };
+    const HOME = (eve = true) => {
+      const l = [];
+      l.push(L('wallHome', R(0, 0, 412, 200)), L('wallLitHome', R(0, 0, 200, 200)), L('floorHome', R(0, 200, 412, 60)), ...rep(9, i => L('floorLine', R(i * 48 + 12, 200, 2, 60))), L('floorLine', R(0, 199, 412, 2)));
+      l.push(L('woodDark', R(236, 34, 124, 114)), L('SKY', R(242, 40, 112, 102)), L('far', R(250, 100, 20, 42)), L('far', R(276, 88, 28, 54)), L('far', R(312, 106, 34, 36)), L('farLit', R(320, 96, 8, 10)), L('chandelier', C(330, 62, 8)), L('woodDark', R(296, 40, 4, 102)), L('woodDark', R(242, 90, 112, 4)), L('curtain', PG([[224, 28], [252, 28], [246, 156], [224, 156]])), L('curtain', PG([[372, 28], [344, 28], [350, 156], [372, 156]])));
+      l.push(L('woodDark', R(40, 150, 96, 6)), L('woodDark', R(46, 156, 5, 44)), L('woodDark', R(125, 156, 5, 44)), ...(eve ? [L('GLOW', C(84, 126, 40))] : []), L('metal', R(82, 118, 3, 32)), L('metal', PG([[68, 120], [100, 120], [92, 100], [76, 100]])), L('chandelier', C(84, 124, 3)));
+      l.push(L('metal', R(203, 112, 2.4, 88)), L('metal', PG([[186, 118], [222, 118], [218, 94], [190, 94]])), L('paper', R(192, 96, 24, 20)), ...rep(4, i => L('rgba(0,0,0,.35)', R(195, 100 + i * 4, 18, 1))), L('metal', PG([[194, 200], [214, 200], [204, 190]])));
+      l.push(L('woodDark', RR(140, 160, 42, 8, 2)), L('woodDark', R(142, 168, 3, 34)), L('woodDark', R(177, 168, 3, 34)), L('woodDark', R(142, 128, 4, 34)), L('woodDark', R(142, 128, 38, 4)));
+      l.push(L('caseOut', E(300, 238, 42, 11), 2), L('velvet', E(300, 238, 36, 8), 2), L('varnish', E(300, 238, 27, 5), 2), L('woodDark', R(300 - 1, 224, 2, 8), 2), L('rug', E(206, 246, 130, 14), 2, { op: .8 }));
+      l.push(...hero(300, 212, .95, 1));
+      return l;
+    };
+    const AUSTRIA = (eve = true) => {
+      const l = [...SKYL];
+      l.push(L('far', PG([[0, 190], [0, 120], [60, 70], [110, 110], [160, 60], [230, 120], [290, 50], [340, 100], [412, 70], [412, 190]]), 0), L('farLit', PG([[150, 72], [160, 60], [172, 74]]), 0), L('farLit', PG([[278, 64], [290, 50], [304, 66]]), 0), L('farLit', PG([[50, 82], [60, 70], [72, 82]]), 0));
+      l.push(L('mount', PG([[0, 190], [0, 150], [80, 96], [150, 150], [210, 110], [300, 170], [360, 130], [412, 160], [412, 190]]), 1), L('mountShade', PG([[80, 96], [150, 150], [110, 150], [80, 130]]), 1), L('mountLit', PG([[210, 110], [230, 140], [190, 150], [200, 130]]), 1));
+      l.push(L('water', R(0, 170, 412, 44), 1), ...rep(10, i => L('waterLit', R(10 + (i * 89) % 380, 176 + i * 3.6, 20 + (i * 23) % 40, 1.4), 1, { op: .4 })), L('meadow', PG([[0, 214], [412, 214], [412, 260], [0, 260]]), 2), L('meadowLit', E(120, 224, 120, 8), 2, { op: .5 }));
+      l.push(L('woodShade', R(178, 122, 18, 48)), L('plaster', R(176, 116, 16, 52)), L('roofGreen', E(184, 116, 12, 7)), L('roofGreen', PG([[172, 116], [196, 116], [184, 96]])), L('roofGreen', R(183, 88, 2, 10)), L('plaster', R(192, 140, 44, 30)), L('roofGreen', PG([[190, 140], [238, 140], [214, 126]])), L('window', R(182, 130, 4, 8)), L('window', R(206, 150, 6, 8)), L('window', R(222, 150, 6, 8)));
+      l.push(...[[60, 160, .8], [300, 156, .7]].flatMap(([x, y, s]) => [L('wood', R(x, y, 40 * s, 22 * s)), L('woodShade', R(x + 28 * s, y, 12 * s, 22 * s)), L('roofGreen', PG([[x - 4 * s, y], [x + 44 * s, y], [x + 20 * s, y - 16 * s]])), L('window', R(x + 8 * s, y + 8 * s, 6 * s, 8 * s))]));
+      l.push(...fir(30, 236, .9, 2), ...fir(380, 240, 1, 2), ...fir(352, 226, .7, 2), ...tree(110, 232, .8, 2), ...hero(240, 254, 1, 2));
+      return l;
+    };
+    // ---------- renderer
+    let gid = 0;
+    function draw(layers, loc, mode, o = {}) {
+      const pal = palOf(loc, mode); const id = 'p' + (gid++); const W = 412, H = 260; const aerial = o.aerial ?? true;
+      const col = (t, depth) => { const c = t.startsWith('#') || t.startsWith('rgba') ? t : (pal[t] ?? t); return aerial && depth < 2 && c.startsWith('#') ? mix(c, pal.skyLow, AER[depth]) : c; };
+      const els = [h('defs', { key: 'd' }, h('linearGradient', { id: id + 's', x1: 0, y1: 0, x2: 0, y2: 1 }, h('stop', { offset: 0, stopColor: pal.sky }), h('stop', { offset: 1, stopColor: pal.skyLow })), h('radialGradient', { id: id + 'g' }, h('stop', { offset: 0, stopColor: pal.glow }), h('stop', { offset: 1, stopColor: 'rgba(255,196,110,0)' })), h('radialGradient', { id: id + 'w' }, h('stop', { offset: 0, stopColor: 'rgba(255,196,110,.55)' }), h('stop', { offset: 1, stopColor: 'rgba(255,196,110,0)' })))];
+      layers.forEach((l, i) => { const fill = l.fill === 'SKY' ? `url(#${id}s)` : l.fill === 'GLOW' ? `url(#${id}g)` : l.glow ? `url(#${id}w)` : col(l.fill, l.depth); const p = { key: i, d: l.d, fill: l.fillNone ? 'none' : fill, opacity: l.op, stroke: l.stroke ? col(l.stroke, l.depth) : undefined, strokeWidth: l.sw, strokeLinecap: 'round' }; if (l.tx !== undefined) p.transform = `translate(${l.tx} ${l.ty}) scale(${l.sc || 1})`; if (o.anim && l.fill === 'window' && mode === 'eve') p.style = { animation: `flick ${4 + (i % 3)}s ease-in-out ${(i % 5) * .6}s infinite` }; els.push(h('path', p)); });
+      const style = { display: 'block' }; if (o.cssW) style.width = o.cssW; if (o.cssH) style.height = o.cssH;
+      return h('svg', { width: o.w || W, height: o.h || H, viewBox: o.viewBox || `0 0 ${W} ${H}`, preserveAspectRatio: o.par || 'xMidYMid slice', style }, els);
+    }
+    const SCENES = { home: { fn: HOME, loc: 'home', aerial: false }, cremona: { fn: CREMONA, loc: 'cremona', aerial: false }, milan: { fn: () => MILAN(), loc: 'milan', aerial: false }, vienna: { fn: e => VIENNA(2, e), loc: 'vienna' }, viennaInt: { fn: () => VIENNA_INT(), loc: 'vienna', aerial: false }, london: { fn: LONDON, loc: 'london' }, sydney: { fn: SYDNEY, loc: 'sydney' }, austria: { fn: AUSTRIA, loc: 'austria' } };
+    const scene = (key, mode = 'eve', o = {}) => { const s = SCENES[key]; return draw(s.fn(mode === 'eve'), s.loc, mode, { aerial: s.aerial, ...o }); };
+    const FULL = { viewBox: '-10 -80 380 340', par: 'xMidYMax meet', cssW: '100%', cssH: '100%' };
+    // ---------- silhouettes (200×120)
+    const SIL = {
+      home: [PG([[40, 110], [40, 60], [100, 24], [160, 60], [160, 110]]), R(120, 70, 20, 40), R(60, 66, 20, 20)],
+      cremona: ['M100 20 C 118 20 122 34 118 46 C 114 54 114 62 118 70 C 122 82 118 100 100 106 C 82 100 78 82 82 70 C 86 62 86 54 82 46 C 78 34 82 20 100 20Z', R(97, 0, 6, 24)],
+      milan: [PG([[20, 110], [20, 40], [180, 40], [180, 110]]), ...rep(3, k => `M${30 + k * 6} ${100 - k * 20}a${70 - k * 6} ${40 - k * 8} 0 0 1 ${140 - k * 12} 0v6a${70 - k * 6} ${40 - k * 8} 0 0 0 ${-(140 - k * 12)} 0Z`), C(100, 30, 8)],
+      salzburg: [PG([[0, 110], [0, 80], [40, 60], [60, 66], [60, 40], [72, 40], [72, 30], [80, 30], [80, 40], [110, 40], [110, 60], [150, 56], [200, 80], [200, 110]]), R(20, 90, 14, 20), E(120, 90, 8, 10), R(116, 90, 8, 20), R(150, 86, 20, 24), PG([[148, 86], [172, 86], [160, 74]])],
+      vienna: [R(30, 60, 140, 50), PG([[26, 60], [174, 60], [162, 46], [38, 46]]), ...rep(5, i => R(46 + i * 26, 70, 8, 30)), PG([[80, 46], [120, 46], [100, 30]])],
+      prague: [R(30, 60, 140, 50), ...rep(7, i => R(40 + i * 19, 70, 6, 40)), PG([[70, 60], [130, 60], [100, 40]]), E(100, 40, 22, 10), C(100, 32, 10), R(98, 18, 4, 10)],
+      leipzig: [PG([[60, 110], [60, 60], [110, 30], [160, 60], [160, 110]]), R(30, 110, 30, 0), R(36, 40, 24, 70), PG([[30, 40], [66, 40], [48, 6]]), R(46, 0, 4, 10)],
+      berlin: [PG([[10, 110], [10, 78], [50, 40], [110, 30], [150, 56], [190, 70], [190, 110]]), PG([[110, 30], [150, 56], [160, 100], [118, 104]]), PG([[50, 40], [110, 30], [118, 104], [60, 102]])],
+      amsterdam: [R(30, 58, 140, 52), PG([[26, 58], [174, 58], [156, 34], [44, 34]]), PG([[76, 58], [124, 58], [100, 40]]), R(98, 14, 4, 20), C(100, 14, 5), ...rep(5, i => R(48 + i * 24, 72, 12, 26))],
+      paris: [R(20, 64, 160, 46), PG([[16, 64], [184, 64], [172, 50], [28, 50]]), E(100, 50, 40, 14), `M60 50A40 30 0 0 1 140 50Z`, R(98, 12, 4, 10), ...rep(7, i => R(34 + i * 21, 74, 10, 24)), C(40, 44, 4), C(160, 44, 4)],
+      spb: [R(30, 60, 140, 50), ...rep(8, i => R(38 + i * 17, 66, 6, 44)), PG([[60, 60], [140, 60], [100, 38]]), R(26, 56, 148, 4)],
+      moscow: [R(40, 62, 120, 48), ...rep(5, i => R(50 + i * 22, 70, 7, 40)), PG([[40, 62], [160, 62], [100, 40]]), R(160, 100, 30, 10), R(170, 74, 10, 26), C(175, 68, 5), PG([[168, 74], [182, 74], [180, 94], [170, 94]])],
+      newyork: [R(50, 30, 100, 80), ...rep(4, i => rep(3, j => R(60 + j * 30, 40 + i * 14, 10, 8))).flat(), ...rep(3, i => ARCH(58 + i * 30, 88, 20, 22)), R(46, 26, 108, 6)],
+      buenosaires: [R(20, 64, 160, 46), PG([[16, 64], [184, 64], [174, 54], [26, 54]]), `M64 54A36 26 0 0 1 136 54Z`, R(98, 22, 4, 10), ...rep(6, i => ARCH(30 + i * 24, 74, 14, 30))],
+      tokyo: [R(30, 60, 100, 50), R(140, 20, 40, 90), ...rep(6, i => R(146, 28 + i * 12, 28, 4)), ...rep(4, i => R(40 + i * 22, 70, 14, 30)), C(60, 52, 10), R(58, 60, 4, 8)],
+      london: [R(40, 60, 120, 50), `M40 60A60 30 0 0 1 160 60Z`, R(96, 22, 8, 10), ...rep(7, i => R(50 + i * 15, 76, 6, 16)), R(30, 108, 140, 4)],
+      sydney: [R(20, 100, 160, 10), `M30 100Q60 30 100 20Q90 60 110 100Z`, `M70 100Q110 40 150 40Q130 70 150 100Z`, `M120 100Q150 60 185 60Q170 80 190 100Z`],
+    };
+    const silSvg = (id, w = 120, hh = 72, fill = '#3A3846', bg = null, outline = false) => h('svg', { width: w, height: hh, viewBox: '0 0 200 120', style: { display: 'block' } }, bg ? h('rect', { width: 200, height: 120, fill: bg }) : null, SIL[id].map((d, i) => h('path', { key: i, d, fill: outline ? 'none' : fill, stroke: outline ? fill : undefined, strokeWidth: outline ? 3 : undefined, strokeLinejoin: 'round' })));
+    // ---------- locations data
+    const LOC = [
+      { id: 'home', city: 'Дом', place: 'Своя комната', country: '', price: 0, transport: '—', map: [70, 380], view: 'внутри', ver: 1, scene: 'home', fact: 'Отсюда начинают все.' },
+      { id: 'cremona', city: 'Кремона', place: 'Мастерская скрипичного мастера', country: 'Италия', price: 300, transport: 'поезд', map: [150, 372], view: 'внутри', ver: 1, scene: 'cremona', fact: 'Здесь работали Амати, Страдивари и Гварнери — скрипку в её нынешнем виде придумали в этом городе.' },
+      { id: 'milan', city: 'Милан', place: 'Ла Скала', country: 'Италия', price: 500, transport: 'поезд', map: [132, 344], view: 'внутри + снаружи', ver: 1, scene: 'milan', fact: 'Театр открыт в 1778 году; здесь впервые прозвучали оперы Верди и «Мадам Баттерфляй» Пуччини.' },
+      { id: 'salzburg', city: 'Зальцбург', place: 'Дом Моцарта и крепость', country: 'Австрия', price: 800, transport: 'поезд', map: [212, 318], view: 'снаружи', ver: 1, fact: 'Здесь родился Моцарт; крепость Хоэнзальцбург стоит над городом с XI века.' },
+      { id: 'vienna', city: 'Вена', place: 'Музикферайн, Золотой зал', country: 'Австрия', price: 1200, transport: 'поезд', map: [262, 326], view: 'снаружи + внутри', ver: 1, scene: 'vienna', fact: 'Каждый год 1 января отсюда на весь мир звучит Новогодний концерт. Зал считают одним из лучших по акустике.' },
+      { id: 'prague', city: 'Прага', place: 'Рудольфинум', country: 'Чехия', price: 1600, transport: 'поезд', map: [238, 282], view: 'снаружи', ver: 1, fact: 'Первый концерт Чешской филармонии здесь дирижировал Дворжак.' },
+      { id: 'leipzig', city: 'Лейпциг', place: 'Гевандхаус · церковь Св. Фомы', country: 'Германия', price: 2000, transport: 'поезд', map: [206, 250], view: 'снаружи', ver: 1, fact: 'Бах четверть века был кантором церкви Св. Фомы.' },
+      { id: 'berlin', city: 'Берлин', place: 'Филармония', country: 'Германия', price: 2500, transport: 'поезд', map: [244, 218], view: 'снаружи', ver: 1, fact: 'Зал-«шатёр», где сцена стоит посреди слушателей.' },
+      { id: 'amsterdam', city: 'Амстердам', place: 'Консертгебау', country: 'Нидерланды', price: 3000, transport: 'поезд', map: [166, 214], view: 'снаружи', ver: 1, fact: 'Оркестр зала носит титул «королевского».' },
+      { id: 'paris', city: 'Париж', place: 'Опера Гарнье', country: 'Франция', price: 4000, transport: 'поезд', map: [118, 270], view: 'снаружи + внутри', ver: 2, fact: '' },
+      { id: 'london', city: 'Лондон', place: 'Альберт-холл', country: 'Великобритания', price: 5000, transport: 'поезд', map: [110, 186], view: 'снаружи + внутри', ver: 2, scene: 'london', fact: 'Открыт в 1871 году; каждое лето здесь проходят Променад-концерты.' },
+      { id: 'spb', city: 'Санкт-Петербург', place: 'Филармония, Большой зал', country: 'Россия', price: 6000, transport: 'корабль', map: [340, 150], view: 'снаружи', ver: 2, fact: '' },
+      { id: 'moscow', city: 'Москва', place: 'Большой зал Консерватории', country: 'Россия', price: 7000, transport: 'поезд', map: [388, 208], view: 'снаружи', ver: 2, fact: '' },
+      { id: 'newyork', city: 'Нью-Йорк', place: 'Карнеги-холл', country: 'США', price: 9000, transport: 'самолёт', map: [40, 480], view: 'снаружи + внутри', ver: 2, fact: '«Как попасть в Карнеги-холл? — Заниматься».' },
+      { id: 'buenosaires', city: 'Буэнос-Айрес', place: 'Театр Колон', country: 'Аргентина', price: 11000, transport: 'корабль', map: [86, 640], view: 'снаружи', ver: 2, fact: '' },
+      { id: 'tokyo', city: 'Токио', place: 'Сантори-холл', country: 'Япония', price: 13000, transport: 'самолёт', map: [392, 420], view: 'снаружи', ver: 2, fact: '' },
+      { id: 'sydney', city: 'Сидней', place: 'Оперный театр', country: 'Австралия', price: 15000, transport: 'самолёт', map: [372, 650], view: 'снаружи + внутри', ver: 2, scene: 'sydney', fact: 'Под «парусами» — несколько залов; силуэт узнают даже те, кто никогда не был в Австралии.' },
+    ];
+    const thumb = (id, w = 96, hh = 64) => LOC.find(l => l.id === id).scene ? draw(SCENES[LOC.find(l => l.id === id).scene].fn(true), SCENES[LOC.find(l => l.id === id).scene].loc, 'eve', { w, h: hh, viewBox: '40 30 332 210', aerial: SCENES[LOC.find(l => l.id === id).scene].aerial }) : h('div', { style: { width: w, height: hh, background: SCH, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, silSvg(id, w * .7, hh * .7, '#6B6880'));
+    // ---------- currency glyph «такт»
+    const takt = (size, color = PR) => h('svg', { width: size, height: size, viewBox: '0 0 24 24', style: { display: 'block', flex: 'none' } }, h('path', { d: 'M15.5 15.5V9.5C15.5 6.5 18 5.5 19.5 4.2', stroke: color, strokeWidth: 2.4, strokeLinecap: 'round', fill: 'none' }), h('path', { d: 'M18 3.2l2.2 1.4-1.4 2.2', stroke: color, strokeWidth: 2.2, strokeLinecap: 'round', strokeLinejoin: 'round', fill: 'none' }), h('path', { d: ellipseRot(10.6, 17.4, 5.4, 3.8), fill: color }));
+    function ellipseRot(cx, cy, a, b) { const th = -20 * Math.PI / 180, c = Math.cos(th), s = Math.sin(th), k = .5523; const T = (x, y) => `${(cx + x * c - y * s).toFixed(2)} ${(cy + x * s + y * c).toFixed(2)}`; return `M${T(a, 0)}C${T(a, k * b)} ${T(k * a, b)} ${T(0, b)}C${T(-k * a, b)} ${T(-a, k * b)} ${T(-a, 0)}C${T(-a, -k * b)} ${T(-k * a, -b)} ${T(0, -b)}C${T(k * a, -b)} ${T(a, -k * b)} ${T(a, 0)}Z`; }
+    const fmt = n => n.toLocaleString('ru-RU').replace(/\u00a0/g, ' ');
+    // ---------- journey screens
+    const strip = ids => ids.map(id => ({ el: thumb(id), city: LOC.find(l => l.id === id).city }));
+    const jBase = { btnBg: PR, btnFg: '#2E1A6E', haveColor: ON };
+    const journeyScreens = [
+      { ...jBase, id: '26a1', label: 'Начало — Дом, вечер; 0 тактов, до Кремоны 300; ленты открыток ещё нет', scene: scene('home', 'eve', { w: 380, h: 240, cssW: '100%', cssH: '100%' }), stopText: 'остановка 0 из 16 · дом', city: 'Дом', arrived: '', place: 'Своя комната, пюпитр у окна', fact: 'Отсюда начинают все. Первая остановка — Кремона, где скрипку придумали.', nextText: 'до Кремоны · мастерская', haveText: '0 / 300', pct: '0%', transportText: 'поездом · 6 часов', btnText: 'не хватает 300', btnBg: SCH, btnFg: OV, passedText: 'Пройдено 0 из 16', strip: [], stripEmpty: true },
+      { ...jBase, id: '26a2', label: 'Середина — Вена, хватает до Праги: 1 640 / 1 600, кнопка filled «В путь · 1 600»; лента пройденных открыток', scene: scene('vienna', 'eve', { w: 380, h: 240, cssW: '100%', cssH: '100%', anim: true }), stopText: 'остановка 4 из 16', city: 'Вена', arrived: 'с 28 июля', place: 'Музикферайн, Золотой зал', fact: 'Каждый год 1 января отсюда на весь мир звучит Новогодний концерт. Зал считают одним из лучших по акустике.', nextText: 'до Праги · Рудольфинум', haveText: '1 640 / 1 600', pct: '100%', transportText: 'поездом · 4 часа', btnText: 'В путь · 1 600', passedText: 'Пройдено 4 из 16', strip: strip(['salzburg', 'milan', 'cremona', 'home']), stripEmpty: false },
+      { ...jBase, id: '26a3', label: 'Почти конец — Лондон, до Санкт-Петербурга 6 000: 2 310, не хватает 3 690; кораблём', scene: scene('london', 'eve', { w: 380, h: 240, cssW: '100%', cssH: '100%' }), stopText: 'остановка 10 из 16', city: 'Лондон', arrived: 'с 2 марта', place: 'Альберт-холл', fact: 'Открыт в 1871 году; каждое лето здесь проходят Променад-концерты — самый большой фестиваль классики в мире.', nextText: 'до Санкт-Петербурга · Филармония', haveText: '2 310 / 6 000', pct: '38.5%', transportText: 'кораблём · 2 дня', btnText: 'не хватает 3 690', btnBg: SCH, btnFg: OV, passedText: 'Пройдено 10 из 16', strip: strip(['paris', 'amsterdam', 'berlin', 'leipzig']), stripEmpty: false },
+    ];
+    // ---------- vienna cards
+    const card = (layers, loc, mode, o) => draw(layers, loc, mode, { w: 412, h: 260, ...o });
+    const viennaCards = [
+      { id: '26b1', label: '«Просто» — силуэт и окна одной заливкой, 20 слоёв: узнаётся плохо, объёма нет', el: card(VIENNA(1, true), 'vienna', 'eve') },
+      { id: '26b2', label: '«Как надо» — три плана, две грани, пилястры и окна правилом, два фонаря, дерево, герой; ~50 слоёв — выбрано', el: card(VIENNA(2, true), 'vienna', 'eve', { anim: true }) },
+      { id: '26b3', label: '«Богато» — статуи, балюстрада, рамы, брусчатка, прохожие, провод: ~130 слоёв и шум на телефоне', el: card(VIENNA(3, true), 'vienna', 'eve') },
+      { id: '26b4', label: 'День — та же геометрия, палитра day: окна тёмные, фонари погашены, воздушная перспектива к светлому небу', el: card(VIENNA(2, false), 'vienna', 'day') },
+      { id: '26b5', label: 'Золотой зал внутри — второй вид Вены: одна точка схода, кариатиды и люстры правилом, кресла сходятся к сцене', el: card(VIENNA_INT(), 'vienna', 'eve', { aerial: false }) },
+    ];
+    const otherCards = [
+      { id: '26c1', label: 'Кремона — мастерская: окно, рейка со скрипками (одна форма × 5), верстак с белой заготовкой, лампа', el: scene('cremona', 'eve', { w: 412, h: 260 }) },
+      { id: '26c2', label: 'Милан — Ла Скала со сцены: пять ярусов лож эллипсами, ложи по дуге правилом, люстра, кулисы бархата', el: scene('milan', 'eve', { w: 412, h: 260 }) },
+      { id: '26c3', label: 'Лондон — Альберт-холл: цилиндр из трёх граней, фриз, окна сжаты к краям по косинусу, стеклянный купол', el: scene('london', 'eve', { w: 412, h: 260, anim: true }) },
+      { id: '26c4', label: 'Сидней — «паруса» над водой: четыре раковины из двух граней, отражения правилом, мост намёком; силуэт обобщён', el: scene('sydney', 'eve', { w: 412, h: 260 }) },
+      { id: '26c5', label: 'Дом — начало: комната вечером, пюпитр, открытый футляр, герой у окна', el: scene('home', 'eve', { w: 412, h: 260 }) },
+    ];
+    const silCards = ['salzburg', 'prague', 'leipzig', 'berlin', 'amsterdam', 'paris', 'spb', 'moscow', 'newyork', 'buenosaires', 'tokyo'].map(id => ({ el: silSvg(id, 132, 79, '#6B6880', SC), cap: LOC.find(l => l.id === id).city }));
+    const countryCard = scene('austria', 'day', { w: 412, h: 260 });
+    const viennaCompare = card(VIENNA(2, true), 'vienna', 'eve');
+    // ---------- map
+    const LAND = { europe: 'M150 160C190 130 250 128 300 140C340 150 380 170 404 200C412 240 400 280 370 300C350 330 330 360 300 392C270 410 220 412 180 398C150 386 118 360 100 330C86 300 90 260 110 230C120 200 130 180 150 160Z', britain: 'M96 168C110 156 130 162 138 178C144 194 138 212 124 220C110 226 94 216 92 200C90 188 90 176 96 168Z', americas: 'M0 420C30 410 60 430 70 460C80 500 66 540 60 580C56 620 80 640 96 660C100 680 80 700 50 700C20 700 0 690 0 680Z', asia: 'M404 300C412 300 412 300 412 300V520C400 520 380 500 372 470C364 440 350 420 360 390C368 360 396 330 404 300Z', australia: 'M320 620C340 600 370 600 394 610C410 618 412 640 412 660C412 690 390 700 366 700C340 700 316 686 312 660C310 646 310 632 320 620Z' };
+    const LBL = { home: [-8, -8, 'end'], cremona: [8, 14, 'start'], milan: [-8, -8, 'end'], salzburg: [-6, 16, 'end'], vienna: [10, -6, 'start'], prague: [8, -8, 'start'], leipzig: [-8, -8, 'end'], berlin: [8, -8, 'start'], amsterdam: [-8, -8, 'end'], paris: [-8, 14, 'end'], london: [-8, -8, 'end'], spb: [-8, -8, 'end'], moscow: [-8, 16, 'end'], newyork: [8, -8, 'start'], buenosaires: [8, -8, 'start'], tokyo: [-8, -8, 'end'], sydney: [-8, -8, 'end'] };
+    function catmull(pts) { let d = `M${pts[0][0]} ${pts[0][1]}`; for (let i = 0; i < pts.length - 1; i++) { const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)]; const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]; d += `C${c1[0].toFixed(1)} ${c1[1].toFixed(1)} ${c2[0].toFixed(1)} ${c2[1].toFixed(1)} ${p2[0]} ${p2[1]}`; } return d; }
+    const seg = (i) => { const pts = LOC.map(l => l.map); const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)]; const c1 = [p1[0] + (p2[0] - p0[0]) / 6, p1[1] + (p2[1] - p0[1]) / 6], c2 = [p2[0] - (p3[0] - p1[0]) / 6, p2[1] - (p3[1] - p1[1]) / 6]; return `M${p1[0]} ${p1[1]}C${c1[0]} ${c1[1]} ${c2[0]} ${c2[1]} ${p2[0]} ${p2[1]}`; };
+    const train = (x, y, ang) => h('g', { transform: `translate(${x} ${y}) rotate(${ang})` }, h('rect', { x: -12, y: -7, width: 24, height: 10, rx: 2.5, fill: PR }), h('rect', { x: -9, y: -4.5, width: 5, height: 4, fill: '#2E1A6E' }), h('rect', { x: -1, y: -4.5, width: 5, height: 4, fill: '#2E1A6E' }), h('rect', { x: 6, y: -4.5, width: 4, height: 4, fill: '#2E1A6E' }), h('circle', { cx: -7, cy: 4.5, r: 2, fill: '#2E1A6E' }), h('circle', { cx: 7, cy: 4.5, r: 2, fill: '#2E1A6E' }));
+    function mapSvg(visited, o = {}) {
+      const W = 412, H = 700; const els = [h('rect', { key: 'bg', x: -400, y: -400, width: 1200, height: 1500, fill: SURF })];
+      Object.entries(LAND).forEach(([k, d]) => { els.push(h('path', { key: k + 'e', d, fill: SCH, transform: 'translate(0 3)' })); els.push(h('path', { key: k, d, fill: SC })); });
+      const pts = LOC.map(l => l.map); const k = o.k || 1;
+      for (let i = 0; i < pts.length - 1; i++) { const done = i < visited, cur = i === visited; if (done) els.push(h('path', { key: 'gl' + i, d: seg(i), fill: 'none', stroke: 'rgba(196,173,255,.18)', strokeWidth: 10 / k, strokeLinecap: 'round' })); els.push(h('path', { key: 's' + i, d: seg(i), fill: 'none', stroke: done ? PR : cur ? PR : OUT, strokeWidth: (done ? 2.4 : 2) / k, strokeDasharray: done ? undefined : `${4 / k} ${6 / k}`, strokeLinecap: 'round', opacity: cur ? .75 : 1 })); }
+      LOC.forEach((l, i) => { const [x, y] = l.map; const done = i < visited, cur = i === visited, next = i === visited + 1; if (cur) els.push(h('circle', { key: 'r' + i, cx: x, cy: y, r: 10 / k, fill: 'none', stroke: PR, strokeWidth: 1.5 / k, opacity: .5, style: o.anim ? { animation: 'ring 2.4s ease-out infinite', transformOrigin: `${x}px ${y}px`, transformBox: 'view-box' } : undefined })); els.push(h('circle', { key: 'd' + i, cx: x, cy: y, r: (cur ? 6 : done ? 4 : next ? 4 : 3) / k, fill: done || cur ? PR : next ? SURF : OUT, stroke: next ? PR : undefined, strokeWidth: next ? 1.5 / k : undefined })); const lb = LBL[l.id]; if (done || cur || next) els.push(h('text', { key: 't' + i, x: x + lb[0] / k, y: y + lb[1] / k, fill: cur ? ON : OV, fontSize: 11 / k, fontWeight: cur ? 700 : 500, fontFamily: 'Manrope, sans-serif', textAnchor: lb[2] }, l.city + (next ? ' · скоро' : ''))); });
+      if (o.train) { const [x, y] = o.train; els.push(h('g', { key: 'tr', transform: `translate(${x} ${y}) scale(${1 / k})` }, train(0, 0, o.trainAng || 0))); }
+      const style = { display: 'block' }; if (o.cssW) style.width = o.cssW; if (o.cssH) style.height = o.cssH;
+      return h('svg', { width: o.w || W, height: o.h || H, viewBox: o.viewBox || `0 0 ${W} ${H}`, preserveAspectRatio: o.par || 'xMidYMid slice', style }, els);
+    }
+    const MAPV = { viewBox: '0 110 412 610', par: 'xMidYMid meet', cssW: '100%', cssH: '100%', w: 380, h: 740 };
+    const mapScreens = [
+      { id: '26e1', label: 'Начало — Дом отмечен, Кремона «скоро» кольцом, остальной путь пунктиром outline без подписей', el: mapSvg(0, MAPV), count: '0 из 16', cur: 'Дом', sub: 'до Кремоны — 300 тактов', thumb: thumb('home', 72, 48) },
+      { id: '26e2', label: 'Середина — четыре перегона пройдены со свечением, Вена с расходящимся кольцом, Прага «скоро»', el: mapSvg(4, { ...MAPV, anim: true }), count: '4 из 16', cur: 'Вена · Музикферайн', sub: 'до Праги — 1 600 тактов', thumb: thumb('vienna', 72, 48) },
+      { id: '26e3', label: 'Всё открыто — линия до Сиднея, «мировое турне»: новые города приходят обновлениями', el: mapSvg(16, MAPV), count: '16 из 16', cur: 'Сидней · Оперный театр', sub: 'мировое турне — новые города скоро', thumb: thumb('sydney', 72, 48) },
+    ];
+    const travelMap = mapSvg(3, { viewBox: '123 130 229 500', par: 'xMidYMid slice', cssW: '100%', cssH: '100%', w: 380, h: 780, k: 1.8, train: [238, 330], trainAng: 8 });
+    const salzburgSil = h('div', { style: { width: 380, height: 240, display: 'flex', alignItems: 'center', justifyContent: 'center', background: SC } }, silSvg('salzburg', 240, 144, '#6B6880'));
+    const arriveScene = scene('vienna', 'eve', { ...FULL, w: 412, h: 560, anim: true });
+    const arriveSceneDim = scene('vienna', 'eve', { ...FULL, w: 412, h: 560 });
+    // ---------- stamps
+    const INK = [PR, '#6FC7C2', '#E39AB6', '#D9B26B'];
+    const stamp = (id, i, visited, date, size = 84) => { const ink = INK[i % 4]; const l = LOC.find(x => x.id === id); return h('svg', { width: size, height: size, viewBox: '0 0 84 84', style: { display: 'block' } }, h('circle', { cx: 42, cy: 42, r: 39, fill: 'none', stroke: visited ? ink : OUT, strokeWidth: visited ? 2.2 : 1.5, strokeDasharray: visited ? undefined : '3 4' }), visited ? h('circle', { cx: 42, cy: 42, r: 34, fill: 'none', stroke: ink, strokeWidth: .8, opacity: .6 }) : null, h('g', { transform: 'translate(12 20) scale(.3)' }, SIL[id].map((d, k) => h('path', { key: k, d, fill: visited ? ink : 'none', stroke: visited ? undefined : OUT, strokeWidth: visited ? undefined : 4, strokeLinejoin: 'round' }))), visited ? h('text', { x: 42, y: 68, fill: ink, fontSize: 8, fontWeight: 700, fontFamily: 'Manrope, sans-serif', textAnchor: 'middle', letterSpacing: .6 }, l.city.toUpperCase()) : null, visited && date ? h('text', { x: 42, y: 76, fill: ink, fontSize: 6, fontFamily: 'Manrope, sans-serif', textAnchor: 'middle', opacity: .8 }, date) : null); };
+    const DATES = ['12.05', '19.05', '03.06', '28.07', '', '', '', '', '', '', '', '', '', '', '', ''];
+    const stampPage = [['home', 0, true, '12.05', '-4deg'], ['cremona', 1, true, '19.05', '3deg'], ['milan', 2, true, '03.06', '-2deg'], ['salzburg', 3, true, '21.06', '5deg'], ['vienna', 4, true, '28.07', '-3deg'], ['prague', 5, false, '', '0deg']].map(([id, i, v, d, rot]) => ({ el: stamp(id, i, v, d), rot }));
+    const passport = LOC.map((l, i) => ({ el: stamp(l.id, i, i < 7, ['12.05', '19.05', '03.06', '21.06', '28.07', '30.08', '14.09'][i] || ''), rot: `${(i % 3 - 1) * 3}deg`, city: l.city, nameColor: i < 7 ? ON : OV, sub: i < 7 ? ['12 мая', '19 мая', '3 июня', '21 июня', '28 июля', '30 августа', '14 сентября'][i] : i === 7 ? 'следующая' : fmt(l.price) })).slice(0, 12);
+    const addons = [
+      { name: 'Вечерний вид', sub: 'открыт с прибытием', thumb: draw(VIENNA(2, true), 'vienna', 'eve', { w: 56, h: 36, viewBox: '60 40 300 190' }), price: 'открыто', bg: 'transparent', fg: OV },
+      { name: 'День', sub: 'та же Вена утром', thumb: draw(VIENNA(2, false), 'vienna', 'day', { w: 56, h: 36, viewBox: '60 40 300 190' }), price: '200', bg: PR, fg: '#2E1A6E' },
+      { name: 'Золотой зал внутри', sub: 'второй вид', thumb: draw(VIENNA_INT(), 'vienna', 'eve', { w: 56, h: 36, viewBox: '40 20 332 210', aerial: false }), price: '400', bg: PR, fg: '#2E1A6E' },
+      { name: 'Сувенир в паспорт', sub: 'партитура Нового года', thumb: h('div', { style: { width: 20, height: 26, borderRadius: 2, background: '#F1EEE6', boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.2)' } }), price: '150', bg: SCH, fg: ON },
+    ];
+    const locScene = scene('vienna', 'eve', { viewBox: '-10 -60 380 320', par: 'xMidYMax meet', cssW: '100%', cssH: '100%', w: 412, h: 340, anim: true });
+    // ---------- lesson screens
+    const windowScene = (key, mode) => scene(key, mode, { viewBox: '16 40 380 160', w: 380, h: 160, cssW: '100%', cssH: '100%' });
+    const trophyRow = [0, 1, 2].map(i => h('svg', { key: i, width: 24, height: 24, viewBox: '0 0 24 24' }, h('circle', { cx: 12, cy: 12, r: 9, fill: ['#E5B03C', '#C96B5A', '#8B74D9'][i] }), h('circle', { cx: 9, cy: 9, r: 3, fill: 'rgba(255,255,255,.35)' })));
+    const cells = Array.from({ length: 14 }, (_, i) => ({ n: i + 1, bg: [0, 2, 5, 6, 8, 9, 12, 13].includes(i) ? ['#2A2352', '#3D2F80', '#5B43B8'][i % 3] : 'transparent', fg: i === 13 ? PR : ON }));
+    const lessonScreens = [
+      { id: '26h1', label: 'Карточка-открытка 160 dp под полосой уровня — выбрано; шапка, фото, трофеи не тронуты; «до Праги 360»', window: windowScene('vienna', 'eve'), wSub: 'до Праги — 360 тактов', wBalance: '1 240', idle: true, running: false, grew: false },
+      { id: '26h2', label: 'Идёт занятие — карточка неподвижна; после сохранения таблетка «+340 тактов» 3 с; хватает — подпись меняется на «в путь»', window: windowScene('vienna', 'eve'), wSub: 'хватает до Праги — в путь', wBalance: '1 640', idle: false, running: true, grew: true, grewText: '+340 тактов' },
+    ];
+    const summaryThumb = scene('vienna', 'eve', { w: 96, h: 64, viewBox: '40 30 332 210' });
+    // ---------- intro / hero
+    const introScene = scene('home', 'eve', { viewBox: '-10 -70 380 330', par: 'xMidYMin meet', cssW: '100%', cssH: '100%', w: 412, h: 540 });
+    const heroDemo = [[0.6, 'дальний план'], [1, 'открытка'], [3, 'завязка']].map(([s, cap]) => h('div', { key: s, style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } }, h('svg', { width: 32 * s + 16, height: 36 * s + 8, viewBox: `${-16 * s - 8} ${-34 * s - 4} ${32 * s + 16} ${36 * s + 8}`, style: { display: 'block', borderRadius: 10 } }, h('rect', { x: -16 * s - 8, y: -34 * s - 4, width: 32 * s + 16, height: 36 * s + 8, fill: '#4C4676' }), hero(0, 0, s).map((l, i) => h('path', { key: i, d: l.d, fill: l.fill.startsWith('#') || l.fill.startsWith('rgba') ? l.fill : BASE.eve[l.fill] }))), h('div', { style: { fontSize: 11, color: OV, lineHeight: 1.3 } }, cap)));
+    // ---------- icon
+    const icon = (size, o = {}) => h('svg', { width: size, height: size, viewBox: '0 0 108 108', style: { display: 'block', borderRadius: o.round ?? size * .22, flex: 'none' } }, h('defs', null, h('linearGradient', { id: 'icg' + size, x1: 0, y1: 0, x2: 1, y2: 1 }, h('stop', { offset: 0, stopColor: o.mono ? SCH : '#3D2F80' }), h('stop', { offset: 1, stopColor: o.mono ? SCH : '#1E1640' }))), h('rect', { width: 108, height: 108, fill: `url(#icg${size})` }), h('path', { d: 'M22 88C34 80 38 66 52 60C66 54 70 40 72 24', stroke: o.mono ? ON : 'rgba(196,173,255,.35)', strokeWidth: 4, strokeLinecap: 'round', strokeDasharray: '2 8', fill: 'none' }), h('path', { d: 'M66 66V38C66 30 72 27 78 22', stroke: o.mono ? ON : PR, strokeWidth: 7, strokeLinecap: 'round', fill: 'none' }), h('path', { d: ellipseRot(52, 74, 16, 11), fill: o.mono ? ON : PR }), h('circle', { cx: 22, cy: 88, r: 4, fill: o.mono ? ON : PR }));
+    const iconDemo = [h('div', { key: 'a', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } }, icon(96), h('div', { style: { fontSize: 11, color: OV } }, '96 · адаптивный')), h('div', { key: 'b', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } }, icon(48), h('div', { style: { fontSize: 11, color: OV } }, '48')), h('div', { key: 'c', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } }, icon(24), h('div', { style: { fontSize: 11, color: OV } }, '24')), h('div', { key: 'd', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 } }, icon(96, { mono: true }), h('div', { style: { fontSize: 11, color: OV } }, 'монохромный · тема'))];
+    const iconSmall = icon(40, { round: 12 });
+    const iconThumb = thumb('vienna', 40, 40);
+    const onboardMap = mapSvg(4, { viewBox: '60 120 292 420', cssW: '100%', cssH: '100%', w: 412, h: 600, k: 1.4, anim: true });
+    // ---------- landscape / small
+    const landScene = scene('vienna', 'eve', { viewBox: '-40 -40 440 300', par: 'xMidYMax meet', cssW: '100%', cssH: '100%', w: 560, h: 396, anim: true });
+    const smallScene = scene('vienna', 'eve', { w: 336, h: 200, cssW: '100%', cssH: '100%', viewBox: '0 20 412 240' });
+    const smallStrip = ['salzburg', 'milan', 'cremona', 'home'].map(id => ({ el: thumb(id, 84, 56) }));
+    // ---------- dev
+    const locRows = LOC.map((l, i) => ({ order: i, city: l.city, place: l.place, view: l.view, price: l.price ? fmt(l.price) : '—', map: `${l.map[0]}, ${l.map[1]}`, transport: l.transport, ver: l.ver === 1 ? 'первая' : 'вторая', verColor: l.ver === 1 ? ON : OV }));
+    const palRows = [['sky', 'небо, верх градиента'], ['skyLow', 'небо у горизонта; к нему смешиваются дальние планы'], ['far', 'дальний город, мост'], ['farLit', 'освещённые грани дальнего плана'], ['ground', 'улица, площадь'], ['groundLit', 'тротуар, бровка'], ['groundShade', 'тени на земле'], ['window', 'окна (вечером — горят)'], ['windowLit', 'блик окна'], ['lamp', 'фонарь, металл'], ['lampGlass', 'стекло фонаря'], ['glow', 'радиальное свечение фонарей (вечер)'], ['water', 'вода'], ['waterLit', 'отражения'], ['foliage', 'крона'], ['foliageLit', 'блик кроны'], ['foliageShade', 'тень кроны'], ['chandelier', 'люстры, лампы интерьеров'], ['hero', 'пальто героя'], ['heroCase', 'футляр (= primaryContainer)']].map(([name, use]) => ({ name, day: BASE.day[name], eve: BASE.eve[name], use }));
+    const viennaCode = VIENNA(2, true).map((l, i) => `${String(i).padStart(2, '0')} ${l.depth} ${l.fill}${l.op ? ' α' + l.op : ''}: ${l.d}`).join('\n');
+    const mapCode = `LAND = ${JSON.stringify(Object.fromEntries(Object.entries(LAND).map(([k, d]) => [k, d.slice(0, 60) + '…'])))}\nROUTE = catmullRom([${LOC.map(l => `[${l.map}]`).join(', ')}], tension .5)\nPOINTS: done r4 primary · current r6 + ring r10 (anim 2.4 с) · next r4 outline primary + «скоро» · future r3 outline`;
+    const heroCode = [h('div', { key: 'h', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 } }, h('svg', { width: 60, height: 60, viewBox: '-30 -50 60 60', style: { borderRadius: 8 } }, h('rect', { x: -30, y: -50, width: 60, height: 60, fill: '#4C4676' }), hero(0, 0, 1.5).map((l, i) => h('path', { key: i, d: l.d, fill: l.fill.startsWith('#') || l.fill.startsWith('rgba') ? l.fill : BASE.eve[l.fill] }))), h('div', { style: { fontSize: 11, color: OV } }, 'hero: 8 слоёв')), h('div', { key: 't', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 } }, h('svg', { width: 60, height: 60, viewBox: '-30 -30 60 60' }, train(0, 0, 0)), h('div', { style: { fontSize: 11, color: OV } }, 'train 24×12')), h('div', { key: 's', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 } }, h('svg', { width: 60, height: 60, viewBox: '-30 -30 60 60' }, h('path', { d: 'M-14 4h28l-6 6h-16z', fill: PR }), h('rect', { x: -6, y: -6, width: 10, height: 10, fill: PR }), h('rect', { x: -2, y: -12, width: 3, height: 6, fill: PR })), h('div', { style: { fontSize: 11, color: OV } }, 'ship 28×18')), h('div', { key: 'p', style: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 } }, h('svg', { width: 60, height: 60, viewBox: '-30 -30 60 60' }, h('path', { d: 'M-16 2h32l4-2-4-2h-32z', fill: PR }), h('path', { d: 'M-2 0l-8-12h5l8 12z M-2 0l-8 12h5l8-12z', fill: PR }), h('path', { d: 'M-16 0l-4-6h3l4 6z', fill: PR })), h('div', { style: { fontSize: 11, color: OV } }, 'plane 40×24'))];
+    const sizes = [
+      { name: 'Экран путешествия', v: 'TopAppBar 56 «Путешествие» + текстовые «Карта», «Паспорт»; открытка 240 dp r24 (сетка 412×260, slice), таблетка «остановка 4 из 16» 26 r13 сверху слева; город 24 sp 700 + дата 13 sp; место 14 sp onSurfaceVariant; факт 14 sp / 1.45 onSurface, 2 строки; карточка пути surfaceContainer r16 padding 14 16: подпись 14 sp 600, счёт 14 sp 700 со знаком 16, полоса 6, транспорт 12 sp, кнопка 44 r22 (filled / tonal); лента 96×64 r10 gap 8 + «Все открытки»' },
+      { name: 'Окно на «Занятиях»', v: '160 dp r20 между полосой уровня и «Начать занятие»; viewBox 16 40 380 160 slice; подложка снизу градиент 0 → .6 surface; название 14 sp 700, подпись 12 sp; счёт — капсула 28 r14 (знак 16 + 13 sp); таблетка «+340 тактов» 26 r13 сверху слева' },
+      { name: 'Знак «такт»', v: 'viewBox 24: головка 5.4×3.8 под −20° в (10.6, 17.4); штиль 2.4 от (15.5, 15.5) вверх до 9.5 и дугой к (19.5, 4.2); стрелка 2.2; размеры 24 / 16 / 12 / 72; цвет primary, на кнопке onPrimaryContainer' },
+      { name: 'Карта', v: 'сетка 412×700, viewBox 0 110 412 610 meet на портрете; при масштабе k линии, точки и подписи делятся на k (в dp они постоянны); земля surfaceContainer с кромкой +3 dp surfaceContainerHigh; линия 2.4 / пунктир 2 (4/6); точки 8 / 12 / 8 / 6; подписи 11 sp; карточка внизу 16 dp от краёв: превью 72×48, город 15 sp 700, подпись 12 sp' },
+      { name: 'Дорога', v: 'карта 1.8× к перегону; поезд 24×12 primary, окна onPrimaryContainer; подпись снизу: «поездом» 13 sp caps, «Зальцбург → Вена» 24 sp 700, полоса 200×4' },
+      { name: 'Прибытие', v: 'открытка во весь экран (viewBox −10 −80 380 340, meet по низу) + градиент в surface 240 dp; «остановка 4 из 16» 13 sp primary caps, город 32 sp 700, место 16 sp, факт 15 sp / 1.5, кнопка 56' },
+      { name: 'Штамп', v: 'круг 84: обод 2.2 + внутренний 0.8 α .6, силуэт (сетка 200×120) масштаб .3 от (12, 20), город 8 sp caps letterSpacing .6, дата 6 sp; неоткрытый — пунктир 3/4 outline 1.5, силуэт stroke 4 outline; в паспорте 3 в ряд gap 18/8, поворот ±3°' },
+      { name: 'Экран локации', v: 'открытка 340 dp сверху (meet по низу) с кнопкой «назад» 44 в круге и чипами видов 28 r14; город 28 sp, «4 из 16 · с 28 июля» 13 sp, страна и место 14 sp, факт 15 sp / 1.5 (3–4 строки); дополнения — строки 56 r14: превью 56×36, имя 14 sp 600, подпись 12 sp, цена — чип 32 r16 filled / «открыто» текстом' },
+      { name: 'Итог занятия', v: 'карточка «+340 тактов»: миниатюра 96×64 r10 (viewBox 40 30 332 210), сумма 20 sp 800 со знаком 24, две строки 13 sp; кнопки «В путешествие» outlined + «Готово» filled' },
+      { name: 'Landscape / 360×640', v: 'landscape: открытка слева flex 1 (viewBox −40 −40 440 300 meet), колонка 320 справа; 360: открытка 200 dp, факт в одну строку + «ещё», лента 84×56' },
+      { name: 'Значок', v: 'адаптивный 108: фон градиент #3D2F80 → #1E1640, головка ноты 16×11 под −20° в (52, 74), штиль 7 от (66, 66) до (66, 38) с изгибом к (78, 22), пунктир дороги 4 (2/8) от точки (22, 88); монохромный — onSurface на surfaceContainerHigh' },
+    ];
+    const anims = [
+      { name: 'Открытка — тихая жизнь', v: 'окна (fill window) мерцают α 1 ↔ .55, 4–6 с, фазы через .6 с — не больше 7 окон одновременно; облака (если есть) сдвиг 24 dp за 40 с; фонарь качается ±1° 5 с; всё только на экране путешествия и локации' },
+      { name: 'Окно на «Занятиях»', v: '4 с после открытия экрана — мерцание окон, затем кадр; после сохранения занятия — таблетка «+340 тактов» fade 150 мс, 3 с; во время занятия неподвижно' },
+      { name: 'Дорога', v: '2 с (поезд) / 2.5 с (корабль, самолёт): карта zoom 1 → 1.8 к центру перегона 400 мс FastOutSlowIn; линия перегона trim 0 → 1 линейно, транспорт по касательной; подпись снизу fade 200 мс; при «убрать анимации» — карточка «Зальцбург → Вена» 800 мс' },
+      { name: 'Прибытие', v: 'открытка α 0 → 1 + scale .96 → 1 за 600 мс cubic(.2,.8,.2,1); текст через 300 мс fade 250; кнопка через 600 мс' },
+      { name: 'Штамп', v: 'scale 1.4 → 1, поворот −8° → −3°, 350 мс OvershootInterpolator(1.1), α 0 → 1 первые 150 мс; лист — ModalBottomSheet 250 мс' },
+      { name: 'Карта', v: 'кольцо текущего города r 8 → 16, α .7 → 0, 2.4 с ease-out, зацикленно; drag и pinch 1–2.5×; открывается с центром между текущим и следующим' },
+      { name: 'Кнопка «В путь»', v: 'tonal → filled crossfade 200 мс в момент, когда накопленного стало хватать (на экране путешествия и в подписи окна)' },
+      { name: 'Дополнение локации', v: 'чип вида — палитра день ↔ вечер crossfade 600 мс (интерполяция токенов, не два рисунка); покупка — чип цены → «открыто» 200 мс' },
+      { name: 'Убрать анимации', v: 'мерцание, кольцо, дорога — выключены; прибытие и штамп — смена кадра с crossfade 150 мс' },
+    ];
+    return { journeyScreens, viennaCards, otherCards, silCards, countryCard, viennaCompare, mapScreens, travelMap, salzburgSil, arriveScene, arriveSceneDim, stampPage, passport, addons, locScene, lessonScreens, trophyRow, cells, summaryThumb, introScene, heroDemo, iconDemo, iconSmall, iconThumb, onboardMap, landScene, smallScene, smallStrip, locRows, palRows, viennaCode, mapCode, heroCode, sizes, anims, takt: takt(24), taktS: takt(16), taktXS: takt(12), taktXSd: takt(14, '#2E1A6E'), taktXL: takt(72) };
+  }
+}
+</script>
+</body>
+</html>

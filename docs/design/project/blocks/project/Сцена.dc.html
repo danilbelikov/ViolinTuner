@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}.cap{font-size:11px;color:rgba(230,228,238,.5);line-height:1.4}.scr{height:100%;display:flex;flex-direction:column;background:#131318;color:#E6E4EE;position:relative;overflow:hidden}@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}</style></helmet>
+
+<section class="dv-turn" id="s23a">
+<div class="dv-thd"><a class="dv-tid" href="#s23a">23a</a><span class="dv-tname">Сравнение · нынешний Live и направления A / B / C — тишина и «в строе»</span></div>
+<div class="dv-opts">
+<sc-for list="{{ cmpFrames }}" as="s" hint-placeholder-count="8">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="scr">
+  {{ s.stage }}
+  <div style="position:absolute;left:0;right:0;top:{{ s.bgTop }};height:560px;background:{{ s.bg }}"></div>
+  <div style="position:relative;display:flex;justify-content:center;padding:12px 24px 0"><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px;width:100%"><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:{{ s.playBg }};color:{{ s.playFg }}"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid {{ s.playIc }}"></div>Игра</div><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:{{ s.tuneBg }};color:{{ s.tuneFg }};border-left:1px solid #3A3846"><div style="width:4px;height:14px;border-radius:2px;background:{{ s.tuneIc }}"></div>Настройка</div></div></div>
+  <sc-if value="{{ s.chip }}" hint-placeholder-val="{{ false }}"><div style="position:relative;display:flex;justify-content:center;padding-top:8px"><div style="height:28px;border-radius:14px;background:#1E1D25;display:flex;align-items:center;gap:6px;padding:0 12px 0 10px;font-size:13px;color:#A39FB5"><div style="width:6px;height:6px;border-radius:50%;background:#C4ADFF"></div>занятие · <span class="tn" style="color:#E6E4EE;font-weight:600">12:34</span></div></div></sc-if>
+  <sc-if value="{{ s.tuning }}" hint-placeholder-val="{{ false }}"><div style="position:relative;display:flex;justify-content:center;gap:12px;padding:12px 16px 0"><sc-for list="{{ s.strings }}" as="st" hint-placeholder-count="4"><div style="position:relative;width:76px;height:64px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:{{ st.fw }};color:{{ st.fg }};background:{{ st.bg }};border:1px solid {{ st.border }};box-sizing:border-box">{{ st.name }}<span style="font-size:11px;font-weight:500">{{ st.hz }}</span><sc-if value="{{ st.locked }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#E6E4EE;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #131318"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#2E1A6E" stroke-width="1.8"><rect x="2" y="5.5" width="8" height="5.5" rx="1.2" fill="#2E1A6E" stroke="none"></rect><path d="M3.8 5.5V4a2.2 2.2 0 0 1 4.4 0v1.5"></path></svg></div></sc-if></div></sc-for></div></sc-if>
+  <div style="position:relative;height:28px;margin-top:{{ s.statusMt }};display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#A39FB5;opacity:{{ s.statusOp }}"><sc-if value="{{ s.dotReady }}" hint-placeholder-val="{{ true }}"><div style="width:8px;height:8px;border-radius:50%;background:#7CB99A"></div></sc-if><sc-if value="{{ s.dotBlocked }}" hint-placeholder-val="{{ false }}"><div style="width:8px;height:8px;border-radius:50%;border:2px solid #C4877F;box-sizing:border-box"></div></sc-if><div>{{ s.statusText }}</div></div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:{{ s.gap }}">
+    <div style="position:relative;width:{{ s.ringPx }};height:{{ s.ringPx }};display:flex;align-items:center;justify-content:center"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);line-height:0">{{ s.ring }}</div><sc-if value="{{ s.sounding }}" hint-placeholder-val="{{ true }}"><div style="position:relative;font-size:{{ s.noteSize }};font-weight:700;line-height:1;letter-spacing:-6px;display:flex;align-items:baseline">{{ s.note }}<span style="font-size:{{ s.octSize }};font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">{{ s.oct }}</span></div></sc-if></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px;justify-content:center;opacity:{{ s.wordOp }}"><div style="display:flex;align-items:center;gap:14px;color:{{ s.color }}"><sc-if value="{{ s.up }}" hint-placeholder-val="{{ false }}"><svg width="40" height="40" viewBox="0 0 56 56"><path d="M28 6 L50 34 H36 V50 H20 V34 H6 Z" fill="{{ s.color }}"></path></svg></sc-if><sc-if value="{{ s.down }}" hint-placeholder-val="{{ false }}"><svg width="40" height="40" viewBox="0 0 56 56"><path d="M28 50 L6 22 H20 V6 H36 V22 H50 Z" fill="{{ s.color }}"></path></svg></sc-if><sc-if value="{{ s.inTune }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:50%;background:{{ s.color }}"></div></sc-if><div style="font-size:28px;font-weight:600">{{ s.word }}</div><div class="tn" style="font-size:36px;font-weight:700;color:#A39FB5;min-width:3.1ch;text-align:left;margin-left:2px">{{ s.cents }}</div></div></div>
+    <sc-if value="{{ s.noPerm }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;align-items:center;gap:16px;max-width:300px;text-align:center;margin-top:-40px"><div style="font-size:24px;font-weight:700;color:#E6E4EE;line-height:1.2">Нужен доступ к микрофону</div><div style="font-size:15px;line-height:1.45;color:#A39FB5">Без микрофона тренажёр не слышит скрипку. Звук обрабатывается на телефоне и никуда не отправляется.</div><div style="height:48px;padding:0 24px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;font-size:15px;font-weight:700">Разрешить доступ</div></div></sc-if>
+  </div>
+  <sc-if value="{{ s.tuning }}" hint-placeholder-val="{{ false }}"><div style="position:relative;padding:0 24px 8px"><div style="position:relative;height:36px"><div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:#292833"></div><div style="position:absolute;left:45%;width:10%;top:12px;height:12px;border-radius:6px;background:#47C97E"></div><div style="position:absolute;left:50%;top:8px;width:2px;height:20px;background:#3A3846;margin-left:-1px"></div><sc-if value="{{ s.sounding }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;left:{{ s.markerLeft }};top:4px;width:6px;height:28px;margin-left:-3px;border-radius:3px;background:#E6E4EE;box-shadow:0 0 0 2px #131318"></div></sc-if></div></div></sc-if>
+  <sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}"><div style="position:relative;display:flex;align-items:center;gap:12px;padding:8px 24px 0"><div style="width:10px;height:10px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div><div style="font-size:16px;font-weight:600" class="tn">запись · 01:24</div><div style="flex:1;height:6px;border-radius:3px;background:#292833;display:flex;gap:2px;overflow:hidden"><div style="width:9%;background:#47C97E"></div><div style="width:7%;background:#47C97E"></div><div style="width:6%;background:#E5B03C"></div><div style="width:12%;background:#47C97E"></div><div style="width:8%;background:#E8565C"></div><div style="width:10%;background:#47C97E"></div></div></div></sc-if>
+  <div style="position:relative;display:flex;align-items:center;justify-content:center;padding:12px 24px 12px"><sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}"><div style="width:72px;height:72px;border-radius:50%;background:#E8565C;display:flex;align-items:center;justify-content:center"><div style="width:24px;height:24px;border-radius:4px;background:#FFFFFF"></div></div></sc-if><sc-if value="{{ s.notRec }}" hint-placeholder-val="{{ true }}"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div></sc-if></div>
+  <div style="height:80px;display:flex;background:#1E1D25;position:relative"><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:50%;border:3px solid #E9DDFF"></div></div><div style="font-size:12px;font-weight:600">Live</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="position:relative;width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:4px;border:3px solid #A39FB5;border-top-width:6px;box-sizing:border-box"></div><sc-if value="{{ s.chip }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:4px;right:14px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px #1E1D25"></div></sc-if></div><div style="font-size:12px;color:#A39FB5">Занятия</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:14px;border-radius:3px;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">Записи</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:5px;border:3px solid #A39FB5;transform:rotate(45deg)"></div></div><div style="font-size:12px;color:#A39FB5">Настройки</div></div></div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Вопрос 1 — получается, но только в одном направлении.</b> <b>A</b> (<a href="#23a3">23a3</a>, <a href="#23a4">23a4</a>) неживое: семь рядов поднимаются до 560 dp и оказываются под словом статуса и под нижней кромкой ореола; в тишине это семь полос текстуры на экране, где до сих пор было чистое поле, а при звуке градиент зоны ложится на них пятнами — ряды спорят с самым важным сигналом экрана. Убавляй контраст сколько угодно — либо это грязь, либо рябь. <b>C</b> (<a href="#23a7">23a7</a>, <a href="#23a8">23a8</a>) красиво в тишине, но при звуке на экране два источника света — прожекторы сверху и ореол кольца — и глаз не понимает, что светит; конусы к тому же проходят через переключатель и строку состояния. Кольцо уже и есть свет этого экрана, второй ему не нужен. <b>B</b> (<a href="#23a5">23a5</a>, <a href="#23a6">23a6</a>) живое: сцена занимает то, что и так занято — низ с кнопкой записи, — и не трогает поле вокруг кольца. Кнопка на краю сцены — удача: она стоит на досках, как исполнитель. Дальше — B.</p>
+</section>
+
+<section class="dv-turn" id="s23b">
+<div class="dv-thd"><a class="dv-tid" href="#s23b">23b · 23c</a><span class="dv-tname">Направление B, все состояния · «Настройка» · запись и занятие</span></div>
+<div class="dv-opts">
+<sc-for list="{{ stFrames }}" as="s" hint-placeholder-count="8">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="scr">
+  {{ s.stage }}
+  <div style="position:absolute;left:0;right:0;top:{{ s.bgTop }};height:560px;background:{{ s.bg }}"></div>
+  <div style="position:relative;display:flex;justify-content:center;padding:12px 24px 0"><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px;width:100%"><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:{{ s.playBg }};color:{{ s.playFg }}"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid {{ s.playIc }}"></div>Игра</div><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:{{ s.tuneBg }};color:{{ s.tuneFg }};border-left:1px solid #3A3846"><div style="width:4px;height:14px;border-radius:2px;background:{{ s.tuneIc }}"></div>Настройка</div></div></div>
+  <sc-if value="{{ s.chip }}" hint-placeholder-val="{{ false }}"><div style="position:relative;display:flex;justify-content:center;padding-top:8px"><div style="height:28px;border-radius:14px;background:#1E1D25;display:flex;align-items:center;gap:6px;padding:0 12px 0 10px;font-size:13px;color:#A39FB5"><div style="width:6px;height:6px;border-radius:50%;background:#C4ADFF"></div>занятие · <span class="tn" style="color:#E6E4EE;font-weight:600">12:34</span></div></div></sc-if>
+  <sc-if value="{{ s.tuning }}" hint-placeholder-val="{{ false }}"><div style="position:relative;display:flex;justify-content:center;gap:12px;padding:12px 16px 0"><sc-for list="{{ s.strings }}" as="st" hint-placeholder-count="4"><div style="position:relative;width:76px;height:64px;border-radius:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:22px;font-weight:{{ st.fw }};color:{{ st.fg }};background:{{ st.bg }};border:1px solid {{ st.border }};box-sizing:border-box">{{ st.name }}<span style="font-size:11px;font-weight:500">{{ st.hz }}</span><sc-if value="{{ st.locked }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:-6px;right:-6px;width:22px;height:22px;border-radius:50%;background:#E6E4EE;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #131318"><svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#2E1A6E" stroke-width="1.8"><rect x="2" y="5.5" width="8" height="5.5" rx="1.2" fill="#2E1A6E" stroke="none"></rect><path d="M3.8 5.5V4a2.2 2.2 0 0 1 4.4 0v1.5"></path></svg></div></sc-if></div></sc-for></div></sc-if>
+  <div style="position:relative;height:28px;margin-top:{{ s.statusMt }};display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#A39FB5;opacity:{{ s.statusOp }}"><sc-if value="{{ s.dotReady }}" hint-placeholder-val="{{ true }}"><div style="width:8px;height:8px;border-radius:50%;background:#7CB99A"></div></sc-if><sc-if value="{{ s.dotBlocked }}" hint-placeholder-val="{{ false }}"><div style="width:8px;height:8px;border-radius:50%;border:2px solid #C4877F;box-sizing:border-box"></div></sc-if><div>{{ s.statusText }}</div></div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:{{ s.gap }}">
+    <div style="position:relative;width:{{ s.ringPx }};height:{{ s.ringPx }};display:flex;align-items:center;justify-content:center"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);line-height:0">{{ s.ring }}</div><sc-if value="{{ s.sounding }}" hint-placeholder-val="{{ true }}"><div style="position:relative;font-size:{{ s.noteSize }};font-weight:700;line-height:1;letter-spacing:-6px;display:flex;align-items:baseline">{{ s.note }}<span style="font-size:{{ s.octSize }};font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">{{ s.oct }}</span></div></sc-if></div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:2px;min-height:48px;justify-content:center;opacity:{{ s.wordOp }}"><div style="display:flex;align-items:center;gap:14px;color:{{ s.color }}"><sc-if value="{{ s.up }}" hint-placeholder-val="{{ false }}"><svg width="40" height="40" viewBox="0 0 56 56"><path d="M28 6 L50 34 H36 V50 H20 V34 H6 Z" fill="{{ s.color }}"></path></svg></sc-if><sc-if value="{{ s.down }}" hint-placeholder-val="{{ false }}"><svg width="40" height="40" viewBox="0 0 56 56"><path d="M28 50 L6 22 H20 V6 H36 V22 H50 Z" fill="{{ s.color }}"></path></svg></sc-if><sc-if value="{{ s.inTune }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:50%;background:{{ s.color }}"></div></sc-if><div style="font-size:28px;font-weight:600">{{ s.word }}</div><div class="tn" style="font-size:36px;font-weight:700;color:#A39FB5;min-width:3.1ch;text-align:left;margin-left:2px">{{ s.cents }}</div></div></div>
+    <sc-if value="{{ s.noPerm }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;align-items:center;gap:16px;max-width:300px;text-align:center;margin-top:-40px"><div style="font-size:24px;font-weight:700;color:#E6E4EE;line-height:1.2">Нужен доступ к микрофону</div><div style="font-size:15px;line-height:1.45;color:#A39FB5">Без микрофона тренажёр не слышит скрипку. Звук обрабатывается на телефоне и никуда не отправляется.</div><div style="height:48px;padding:0 24px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;font-size:15px;font-weight:700">Разрешить доступ</div></div></sc-if>
+  </div>
+  <sc-if value="{{ s.tuning }}" hint-placeholder-val="{{ false }}"><div style="position:relative;padding:0 24px 8px"><div style="position:relative;height:36px"><div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:#292833"></div><div style="position:absolute;left:45%;width:10%;top:12px;height:12px;border-radius:6px;background:#47C97E"></div><div style="position:absolute;left:50%;top:8px;width:2px;height:20px;background:#3A3846;margin-left:-1px"></div><sc-if value="{{ s.sounding }}" hint-placeholder-val="{{ true }}"><div style="position:absolute;left:{{ s.markerLeft }};top:4px;width:6px;height:28px;margin-left:-3px;border-radius:3px;background:#E6E4EE;box-shadow:0 0 0 2px #131318"></div></sc-if></div></div></sc-if>
+  <sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}"><div style="position:relative;display:flex;align-items:center;gap:12px;padding:8px 24px 0"><div style="width:10px;height:10px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div><div style="font-size:16px;font-weight:600" class="tn">запись · 01:24</div><div style="flex:1;height:6px;border-radius:3px;background:#292833;display:flex;gap:2px;overflow:hidden"><div style="width:9%;background:#47C97E"></div><div style="width:7%;background:#47C97E"></div><div style="width:6%;background:#E5B03C"></div><div style="width:12%;background:#47C97E"></div><div style="width:8%;background:#E8565C"></div><div style="width:10%;background:#47C97E"></div></div></div></sc-if>
+  <div style="position:relative;display:flex;align-items:center;justify-content:center;padding:12px 24px 12px"><sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}"><div style="width:72px;height:72px;border-radius:50%;background:#E8565C;display:flex;align-items:center;justify-content:center"><div style="width:24px;height:24px;border-radius:4px;background:#FFFFFF"></div></div></sc-if><sc-if value="{{ s.notRec }}" hint-placeholder-val="{{ true }}"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div></sc-if></div>
+  <div style="height:80px;display:flex;background:#1E1D25;position:relative"><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:50%;border:3px solid #E9DDFF"></div></div><div style="font-size:12px;font-weight:600">Live</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="position:relative;width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:4px;border:3px solid #A39FB5;border-top-width:6px;box-sizing:border-box"></div><sc-if value="{{ s.chip }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:4px;right:14px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px #1E1D25"></div></sc-if></div><div style="font-size:12px;color:#A39FB5">Занятия</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:14px;border-radius:3px;border:3px solid #A39FB5"></div></div><div style="font-size:12px;color:#A39FB5">Записи</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;display:flex;align-items:center;justify-content:center"><div style="width:18px;height:18px;border-radius:5px;border:3px solid #A39FB5;transform:rotate(45deg)"></div></div><div style="font-size:12px;color:#A39FB5">Настройки</div></div></div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Вопрос 2 — насколько тихо.</b> Ряды — `surfaceContainer` на `surface`, одна ступень; ближний ряд α .9, дальше .6 и .4. Доски — градиент от `#201F28` у рампы к `#17161C` у панели вкладок: край сцены чуть светлее, чем глубина, потому что его освещает рампа. Сама рампа — линия 2 dp `primary` α .18 и след света вверх 36 dp (α .10 → 0): единственный фиолетовый на сцене, и он еле виден. Это ещё сцена, а не грязь, потому что форм три и они крупные: доска, линия, три дуги спинок — с 60 см читается «что-то внизу, похожее на зал», ближе — зал. <b>Вопрос 3 — свет зоны на зале: делаем</b>, но тихо: цвет рядов — `lerp(stage.row, тёмный стоп градиента зоны, k·glow)`, k = .7 в строе, .55 рядом, .35 мимо. Это цвет слоя целиком, без растра; красный зал при «мимо» (<a href="#23b5">23b5</a>) — едва тёплые спинки, не драма. Градиент зоны сам заканчивается на 624 dp — до рампы не доходит, так что зал освещён только этим сдвигом цвета. Растровый свет на силуэтах не нужен. <b>«Слишком шумно», «Микрофон недоступен», нет разрешения</b> — сцена остаётся: это место, а не состояние; текст лежит в чистом поле, рядов под ним нет. <b>«Настройка»</b> — та же сцена: ряд струн и шкала занимают верх и середину, низ у них тот же. <b>Запись</b> — ничего не меняется, согласны: «идёт концерт» и так говорит красная кнопка на досках.</p>
+</section>
+
+<section class="dv-turn" id="s23d">
+<div class="dv-thd"><a class="dv-tid" href="#s23d">23d</a><span class="dv-tname">Landscape 892 × 412 · тишина, в строе, «Настройка», запись</span></div>
+<div class="dv-opts">
+<sc-for list="{{ landFrames }}" as="s" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<div style="width:892px;height:412px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;box-sizing:border-box">
+  {{ s.stage }}
+  <div style="position:absolute;left:0;top:0;bottom:0;width:400px;background:{{ s.bg }}"></div>
+  <div style="position:relative;width:400px;display:flex;align-items:center;justify-content:center"><div style="position:relative;width:260px;height:260px;display:flex;align-items:center;justify-content:center"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);line-height:0">{{ s.ring }}</div><sc-if value="{{ s.sounding }}" hint-placeholder-val="{{ true }}"><div style="position:relative;font-size:150px;font-weight:700;line-height:1;letter-spacing:-6px;display:flex;align-items:baseline">{{ s.note }}<span style="font-size:44px;font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">{{ s.oct }}</span></div></sc-if></div></div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;padding:16px 24px 16px 8px;gap:8px">
+    <div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px;flex:none"><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:{{ s.playBg }};color:{{ s.playFg }}"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid {{ s.playIc }}"></div>Игра</div><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:{{ s.tuneBg }};color:{{ s.tuneFg }};border-left:1px solid #3A3846"><div style="width:4px;height:14px;border-radius:2px;background:{{ s.tuneIc }}"></div>Настройка</div></div>
+    <sc-if value="{{ s.tuning }}" hint-placeholder-val="{{ false }}"><div style="display:flex;justify-content:center;gap:10px;flex:none"><sc-for list="{{ s.strings }}" as="st" hint-placeholder-count="4"><div style="width:64px;height:52px;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:19px;font-weight:{{ st.fw }};color:{{ st.fg }};background:{{ st.bg }};border:1px solid {{ st.border }};box-sizing:border-box">{{ st.name }}<span style="font-size:10px;font-weight:500">{{ st.hz }}</span></div></sc-for></div></sc-if>
+    <div style="height:28px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;color:#A39FB5;opacity:{{ s.statusOp }};flex:none"><div style="width:8px;height:8px;border-radius:50%;background:#7CB99A"></div>{{ s.statusText }}</div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;gap:14px;color:{{ s.color }};opacity:{{ s.wordOp }}"><sc-if value="{{ s.inTune }}" hint-placeholder-val="{{ true }}"><div style="width:18px;height:18px;border-radius:50%;background:{{ s.color }}"></div></sc-if><sc-if value="{{ s.down }}" hint-placeholder-val="{{ false }}"><svg width="40" height="40" viewBox="0 0 56 56"><path d="M28 50 L6 22 H20 V6 H36 V22 H50 Z" fill="{{ s.color }}"></path></svg></sc-if><div style="font-size:28px;font-weight:600">{{ s.word }}</div><div class="tn" style="font-size:36px;font-weight:700;color:#A39FB5;min-width:3.1ch;margin-left:2px">{{ s.cents }}</div></div>
+    <sc-if value="{{ s.tuning }}" hint-placeholder-val="{{ false }}"><div style="position:relative;height:36px;flex:none"><div style="position:absolute;left:0;right:0;top:14px;height:8px;border-radius:4px;background:#292833"></div><div style="position:absolute;left:45%;width:10%;top:12px;height:12px;border-radius:6px;background:#47C97E"></div><div style="position:absolute;left:50%;top:8px;width:2px;height:20px;background:#3A3846;margin-left:-1px"></div></div></sc-if>
+    <sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:12px;flex:none"><div style="width:10px;height:10px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div><div style="font-size:16px;font-weight:600" class="tn">запись · 01:24</div><div style="flex:1;height:6px;border-radius:3px;background:#292833;display:flex;gap:2px;overflow:hidden"><div style="width:9%;background:#47C97E"></div><div style="width:7%;background:#47C97E"></div><div style="width:6%;background:#E5B03C"></div><div style="width:12%;background:#47C97E"></div><div style="width:8%;background:#E8565C"></div></div></div></sc-if>
+    <div style="display:flex;align-items:center;justify-content:center;flex:none"><sc-if value="{{ s.rec }}" hint-placeholder-val="{{ false }}"><div style="width:72px;height:72px;border-radius:50%;background:#E8565C;display:flex;align-items:center;justify-content:center"><div style="width:24px;height:24px;border-radius:4px;background:#FFFFFF"></div></div></sc-if><sc-if value="{{ s.notRec }}" hint-placeholder-val="{{ true }}"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div></sc-if></div>
+  </div>
+</div>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Landscape — самый выигрышный кадр, а не самый шумный.</b> Зал во всю ширину 892 — это и есть «смотрим со сцены»: два ряда спинок на 22 dp дуги и доски 92 dp внизу, кольцо слева висит над залом, а его ореол (до 388 dp) ложится нижним краем на первый ряд — вот проверка 4.2: ореол — прозрачный градиент, спинки под ним просто чуть зеленеют, швов нет (<a href="#23d2">23d2</a>). Кнопка записи справа стоит на досках. Нижней панели нет — доски уходят в край экрана, и сцена здесь читается лучше, чем в портрете.</p>
+</section>
+
+<section class="dv-turn" id="s23e">
+<div class="dv-thd"><a class="dv-tid" href="#s23e">23e · 23f</a><span class="dv-tname">Маленький экран 360 × 640 · проверка периферии</span></div>
+<div class="dv-opts">
+<sc-for list="{{ smallFrames }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<div style="width:360px;height:640px;border-radius:18px;border:8px solid rgba(116,119,117,.5);box-shadow:0 30px 80px rgba(0,0,0,.35);overflow:hidden;background:#131318;color:#E6E4EE;position:relative;display:flex;flex-direction:column;box-sizing:border-box">
+  {{ s.stage }}
+  <div style="position:absolute;left:0;right:0;top:56px;height:400px;background:{{ s.bg }}"></div>
+  <div style="position:relative;display:flex;justify-content:center;padding:10px 20px 0"><div style="display:flex;border:1px solid #3A3846;border-radius:18px;overflow:hidden;height:36px;width:100%"><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;background:#5B43B8;color:#E9DDFF"><div style="width:12px;height:12px;border-radius:50%;border:2.5px solid #E9DDFF"></div>Игра</div><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;color:#E6E4EE;border-left:1px solid #3A3846"><div style="width:4px;height:12px;border-radius:2px;background:#A39FB5"></div>Настройка</div></div></div>
+  <div style="position:relative;height:24px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:#A39FB5;opacity:{{ s.statusOp }}"><div style="width:8px;height:8px;border-radius:50%;background:#7CB99A"></div>Играйте…</div>
+  <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:10px">
+    <div style="position:relative;width:220px;height:220px;display:flex;align-items:center;justify-content:center"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);line-height:0">{{ s.ring }}</div><sc-if value="{{ s.sounding }}" hint-placeholder-val="{{ true }}"><div style="position:relative;font-size:128px;font-weight:700;line-height:1;letter-spacing:-4px;display:flex;align-items:baseline">A<span style="font-size:38px;font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">4</span></div></sc-if></div>
+    <div style="display:flex;align-items:center;gap:12px;color:#47C97E;min-height:40px;opacity:{{ s.wordOp }}"><div style="width:16px;height:16px;border-radius:50%;background:#47C97E"></div><div style="font-size:24px;font-weight:600">в строе</div><div class="tn" style="font-size:30px;font-weight:700;color:#A39FB5;min-width:3.1ch">+3</div></div>
+  </div>
+  <div style="position:relative;display:flex;align-items:center;justify-content:center;padding:8px 20px 8px"><div style="width:64px;height:64px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:24px;height:24px;border-radius:50%;background:#2E1A6E"></div></div></div>
+  <div style="height:64px;display:flex;background:#1E1D25;position:relative"><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><div style="width:56px;height:28px;border-radius:14px;background:#5B43B8;display:flex;align-items:center;justify-content:center"><div style="width:16px;height:16px;border-radius:50%;border:3px solid #E9DDFF"></div></div><div style="font-size:11px;font-weight:600">Live</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><div style="width:56px;height:28px;display:flex;align-items:center;justify-content:center"><div style="width:16px;height:16px;border-radius:4px;border:3px solid #A39FB5;border-top-width:6px;box-sizing:border-box"></div></div><div style="font-size:11px;color:#A39FB5">Занятия</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><div style="width:56px;height:28px;display:flex;align-items:center;justify-content:center"><div style="width:16px;height:12px;border-radius:3px;border:3px solid #A39FB5"></div></div><div style="font-size:11px;color:#A39FB5">Записи</div></div><div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px"><div style="width:56px;height:28px;display:flex;align-items:center;justify-content:center"><div style="width:16px;height:16px;border-radius:5px;border:3px solid #A39FB5;transform:rotate(45deg)"></div></div><div style="font-size:11px;color:#A39FB5">Настройки</div></div></div>
+</div>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="23f"><div class="dv-olabel"><a class="dv-oid" href="#23f">23f</a>Проверка периферии — «в строе» glow 1: B со сценой и нынешний Live, уменьшены до .4 и размыты 4 dp; ниже — те же без размытия</div><div class="dv-card">
+<div style="display:grid;grid-template-columns:165px 165px;gap:16px 20px;background:#0E0E12;padding:16px;border-radius:16px">
+  <sc-for list="{{ peri }}" as="p" hint-placeholder-count="4">
+  <div style="display:flex;flex-direction:column;gap:6px"><div style="width:165px;height:357px;overflow:hidden;border-radius:10px;position:relative"><div style="width:412px;height:892px;transform:scale(.4);transform-origin:0 0;filter:{{ p.filter }};position:absolute;left:0;top:0">
+    <div class="scr">
+      {{ p.s.stage }}
+      <div style="position:absolute;left:0;right:0;top:64px;height:560px;background:{{ p.s.bg }}"></div>
+      <div style="position:relative;display:flex;justify-content:center;padding:12px 24px 0"><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px;width:100%"><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF"><div style="width:14px;height:14px;border-radius:50%;border:2.5px solid #E9DDFF"></div>Игра</div><div style="flex:1;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;border-left:1px solid #3A3846"><div style="width:4px;height:14px;border-radius:2px;background:#A39FB5"></div>Настройка</div></div></div>
+      <div style="position:relative;height:28px;margin-top:12px"></div>
+      <div style="position:relative;flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px">
+        <div style="position:relative;width:300px;height:300px;display:flex;align-items:center;justify-content:center"><div style="position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);line-height:0">{{ p.s.ring }}</div><div style="position:relative;font-size:174px;font-weight:700;line-height:1;letter-spacing:-6px;display:flex;align-items:baseline">A<span style="font-size:52px;font-weight:600;letter-spacing:0;margin-left:4px;color:#A39FB5">4</span></div></div>
+        <div style="display:flex;align-items:center;gap:14px;color:#47C97E;min-height:48px"><div style="width:18px;height:18px;border-radius:50%;background:#47C97E"></div><div style="font-size:28px;font-weight:600">в строе</div><div class="tn" style="font-size:36px;font-weight:700;color:#A39FB5;min-width:3.1ch;margin-left:2px">+2</div></div>
+      </div>
+      <div style="position:relative;display:flex;align-items:center;justify-content:center;padding:12px 24px 12px"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div></div>
+      <div style="height:80px;background:#1E1D25;position:relative"></div>
+    </div>
+  </div></div><div class="cap" style="text-align:center">{{ p.cap }}</div></div>
+  </sc-for>
+</div>
+</div></div>
+</div>
+<p class="dv-next">На малом экране — два ряда вместо трёх (верхний упирался бы в слово статуса), доски 84 dp. В миниатюре с размытием (<a href="#23f">23f</a>) сцена почти исчезает: остаётся тёмная полоса внизу чуть иного тона, а зелёное поле, кольцо и нота читаются так же, как без сцены. Это и есть критерий из брифа — выполнен.</p>
+</section>
+
+<section class="dv-turn" id="s23g">
+<div class="dv-thd"><a class="dv-tid" href="#s23g">23g · 23h</a><span class="dv-tname">Сцена без интерфейса · слои по одному и вместе · кольцо на сцене при glow 0 / .4 / 1</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="23g1"><div class="dv-olabel"><a class="dv-oid" href="#23g1">23g1</a>Портрет ×.5: доски · рампа · ряды · всё вместе (B) · A · C. Пунктир — положение кольца</div><div class="dv-card">
+<div style="display:flex;gap:12px;flex-wrap:wrap;width:680px">
+  <sc-for list="{{ layerTiles }}" as="t" hint-placeholder-count="6"><div style="display:flex;flex-direction:column;gap:6px;width:206px"><div style="width:206px;height:446px;border-radius:12px;overflow:hidden;background:#131318;position:relative">{{ t.el }}</div><div class="cap">{{ t.cap }}</div></div></sc-for>
+</div>
+</div></div>
+<div class="dv-opt" id="23g2"><div class="dv-olabel"><a class="dv-oid" href="#23g2">23g2</a>Landscape ×.5 — B вместе; ряды 2, доски 92</div><div class="dv-card">
+<div style="width:446px;height:206px;border-radius:12px;overflow:hidden;background:#131318;position:relative">{{ landAlone }}</div>
+</div></div>
+<div class="dv-opt" id="23h"><div class="dv-olabel"><a class="dv-oid" href="#23h">23h</a>Кольцо над залом — вырез 412 × 300 (y 450–750), glow 0 · .4 (рядом) · 1 (в строе): ореол заканчивается на 623, ряды начинаются с 636</div><div class="dv-card">
+<div style="display:flex;flex-direction:column;gap:12px">
+  <sc-for list="{{ glowTiles }}" as="t" hint-placeholder-count="3"><div style="display:flex;gap:12px;align-items:center"><div style="width:412px;height:300px;border-radius:12px;overflow:hidden;background:#131318;position:relative"><div style="position:absolute;left:0;top:-450px;width:412px;height:892px">{{ t.stage }}<div style="position:absolute;left:0;right:0;top:64px;height:560px;background:{{ t.bg }}"></div><div style="position:absolute;left:50%;top:404px;transform:translate(-50%,-50%);line-height:0">{{ t.ring }}</div><div style="position:absolute;left:0;right:0;top:574px;height:48px;display:flex;align-items:center;justify-content:center;gap:14px;color:{{ t.col }};opacity:{{ t.wop }}"><div style="width:18px;height:18px;border-radius:50%;background:{{ t.col }}"></div><div style="font-size:28px;font-weight:600">{{ t.word }}</div><div class="tn" style="font-size:36px;font-weight:700;color:#A39FB5;min-width:3.1ch;margin-left:2px">{{ t.cents }}</div></div><div style="position:absolute;left:0;right:0;top:716px;display:flex;justify-content:center;padding-top:12px"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF"></div></div></div></div><div class="cap" style="width:120px">{{ t.cap }}</div></div></sc-for>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 4 — сцена неподвижна.</b> Единственное движение, которое мы допускаем, — не движение форм, а цвет слоя рядов, который идёт за glow (см. 4.3): в тишине ряды серые, при звуке — чуть в цвет зоны, с теми же 500 / 900 мс, что и свечение кольца. Проявление от громкости (α рядов × (.8 + .2·level)) мы попробовали и не рекомендуем: это второе «слышу тебя» рядом с дыханием ореола, и на периферии оно читается как мерцание внизу экрана. В `anims` — оба, второе выключено флагом. <b>Вопрос 6 — выключатель</b> пока не нужен: константа `stageEnabled`, решение после недели на инструменте; если сцена останется — тогда пункт в «Настройках» рядом с «Убрать анимации». <b>Запись дубля</b> «вслепую» на экране произведения — не лучшее место: там нет кольца, которое «звучит в зал», а есть только кнопка и таймер; сцена без исполнителя — пустой зал. Live — правильно.</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · STAGE, tokens stage.*, sizes, anims</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(560px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">STAGE — слои снизу вверх, сетка 412 × 892 (B). Один Canvas за содержимым, рисуется один раз на размер; всё, что меняется, — цвет / α слоя</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,.6fr) minmax(0,.9fr) minmax(0,2.2fr)">
+    <div class="h">name</div><div class="h">fill · alpha · anchor</div><div class="h">геометрия</div>
+    <sc-for list="{{ stageRows }}" as="r" hint-placeholder-count="4"><div class="mono">{{ r.name }}</div><div class="mono" style="color:#A39FB5;font-size:10.5px">{{ r.fill }}</div><div style="color:#A39FB5">{{ r.geo }}</div></sc-for>
+  </div>
+  <div style="color:#A39FB5;margin-top:8px" class="mono">seat(x0, x1, top, b) = L x0 top+b · C x0 top, x1 top, x1 top+b — одна форма спинки; ряд = seat × n вдоль дуги y(x) = base − curv·((x − W/2)/(W/2))², затем вниз до base + 40 и Z. Для A: rows.count 7, h·.82ᵏ, n + 2 за ряд, α .9·(1 − .13k). Для C: rows нет, cone × 2: полигон (cx − 230, −10) → (cx − 90, −10) → (cx + 30, cy + 30) → (cx − 30, cy + 30), зеркально; fill linear ↓ primary α .07 → 0.</div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Токены stage.*</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.6fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Значение</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="7"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры и привязки (dp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Что</div><div class="h">Правило</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="8"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="4"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const ON = '#E6E4EE', OV = '#A39FB5', SURF = '#131318', SC = '#1E1D25', PC = '#5B43B8', OUT = '#3A3846', P = '#C4ADFF';
+    const Z = { in: '#47C97E', near: '#E5B03C', off: '#E8565C' };
+    const ZD = { in: '#1A4A36', near: '#4A3A12', off: '#4A1C22' }, ZD2 = { in: '#153A2C', near: '#3A2E10', off: '#3A171C' };
+    const KZ = { in: .7, near: .55, off: .35 };
+    const FLOOR_T = '#201F28', FLOOR_B = '#17161C', ROW = SC;
+    const hex2 = c => [1, 3, 5].map(i => parseInt(c.slice(i, i + 2), 16));
+    const mix = (a, b, t) => { const A = hex2(a), B = hex2(b); return '#' + A.map((v, i) => Math.round(v + (B[i] - v) * t).toString(16).padStart(2, '0')).join(''); };
+    const rgba = (c, a) => { const [r, g, b] = hex2(c); return `rgba(${r},${g},${b},${a.toFixed(3)})`; };
+    const bgFor = (zone, w = '70% 60%', at = '50% 45%') => zone ? `radial-gradient(ellipse ${w} at ${at},${rgba(ZD[zone], 1)} 0%,${rgba(ZD2[zone], .85)} 45%,${rgba(SURF, 0)} 100%)` : 'transparent';
+    let gid = 0;
+    // ---- ring (Live 2)
+    const ring = (ringPx, zone, glow, o = {}) => {
+      const R = ringPx / 2, box = ringPx * 1.4, c = box / 2, id = 'g' + (gid++);
+      const col = zone ? Z[zone] : OUT, lvl = o.level ?? 0;
+      const haloR = R * 1.4 * (1 + 0.04 * lvl);
+      const core = mix(col, '#FFFFFF', 0.45 * glow);
+      const kids = [
+        h('defs', { key: 'd' },
+          h('radialGradient', { id: id + 'o' }, h('stop', { offset: (R / haloR).toFixed(3), stopColor: col, stopOpacity: 0.32 * glow }), h('stop', { offset: (R / haloR + 0.12).toFixed(3), stopColor: col, stopOpacity: 0.10 * glow }), h('stop', { offset: '1', stopColor: col, stopOpacity: 0 })),
+          h('radialGradient', { id: id + 'i' }, h('stop', { offset: '0.6', stopColor: col, stopOpacity: 0 }), h('stop', { offset: '0.88', stopColor: col, stopOpacity: 0.07 * glow }), h('stop', { offset: '1', stopColor: col, stopOpacity: 0.18 * glow }))),
+        glow > 0 && h('circle', { key: 'o', cx: c, cy: c, r: haloR, fill: `url(#${id}o)` }),
+        glow > 0 && h('circle', { key: 'i', cx: c, cy: c, r: R, fill: `url(#${id}i)` }),
+        glow > 0 && h('circle', { key: 's', cx: c, cy: c, r: R, fill: 'none', stroke: col, strokeWidth: 6 + 10 * glow, opacity: 0.25 * glow }),
+        h('circle', { key: 't', cx: c, cy: c, r: R, fill: 'none', stroke: glow > 0 ? core : OUT, strokeWidth: 6, opacity: glow > 0 ? 0.6 + 0.4 * glow : 1 }),
+        ...(o.waves || []).map((w, i) => h('circle', { key: 'w' + i, cx: c, cy: c, r: R * w.r, fill: 'none', stroke: col, strokeWidth: 2, opacity: w.a })),
+      ].filter(Boolean);
+      return h('svg', { width: box, height: box, viewBox: `0 0 ${box} ${box}`, style: { display: 'block' } }, kids);
+    };
+    // ---- stage
+    const LAY = {
+      portrait: { W: 412, H: 892, navTop: 812, rampa: 712, cx: 206, cy: 404, rows: [{ base: 706, h: 30, n: 7, curv: 10 }, { base: 676, h: 22, n: 9, curv: 8 }, { base: 652, h: 16, n: 11, curv: 6 }] },
+      small: { W: 360, H: 640, navTop: 576, rampa: 492, cx: 180, cy: 286, rows: [{ base: 486, h: 20, n: 6, curv: 8 }, { base: 462, h: 14, n: 8, curv: 6 }] },
+      land: { W: 892, H: 412, navTop: 412, rampa: 320, cx: 200, cy: 206, rows: [{ base: 314, h: 18, n: 12, curv: 8 }, { base: 292, h: 13, n: 15, curv: 6 }] },
+    };
+    const rowsA = () => { const out = []; let base = 706, hh = 30, n = 7; for (let k = 0; k < 7; k++) { out.push({ base, h: hh, n, curv: 10 * (1 - k * .1), a: .9 * (1 - k * .13) }); base -= hh + 6 * Math.pow(.82, k); hh *= .82; n += 2; } return out; };
+    const rowPath = (W, base, hgt, n, curv, ov = 40) => {
+      const w = (W + 2 * ov) / n, b = hgt * .4; const yb = x => base - curv * Math.pow((x - W / 2) / (W / 2), 2);
+      let d = `M${-ov} ${base + 40} L${-ov} ${(yb(-ov) - hgt + b).toFixed(1)}`;
+      for (let i = 0; i < n; i++) { const x0 = -ov + i * w, x1 = x0 + w, t0 = yb(x0) - hgt, t1 = yb(x1) - hgt; d += ` L${x0.toFixed(1)} ${(t0 + b).toFixed(1)} C${x0.toFixed(1)} ${t0.toFixed(1)} ${x1.toFixed(1)} ${t1.toFixed(1)} ${x1.toFixed(1)} ${(t1 + b).toFixed(1)}`; }
+      return d + ` L${W + ov} ${base + 40} Z`;
+    };
+    const stage = (o = {}) => {
+      const L = LAY[o.layout || 'portrait'], dir = o.dir || 'B', id = 's' + (gid++), zone = o.zone, glow = o.glow || 0, only = o.only;
+      const want = n => !only || only === n; const scale = o.scale || 1;
+      const defs = [], kids = [];
+      if (want('floor')) { defs.push(h('linearGradient', { key: 'f', id: id + 'f', x1: 0, y1: 0, x2: 0, y2: 1 }, h('stop', { offset: 0, stopColor: FLOOR_T }), h('stop', { offset: 1, stopColor: FLOOR_B }))); kids.push(h('rect', { key: 'floor', x: 0, y: L.rampa, width: L.W, height: L.navTop - L.rampa, fill: `url(#${id}f)` })); }
+      if (want('rampa')) { defs.push(h('linearGradient', { key: 'r', id: id + 'r', x1: 0, y1: 0, x2: 0, y2: 1 }, h('stop', { offset: 0, stopColor: P, stopOpacity: 0 }), h('stop', { offset: 1, stopColor: P, stopOpacity: dir === 'C' ? .05 : .10 }))); kids.push(h('rect', { key: 'rg', x: 0, y: L.rampa - 36, width: L.W, height: 36, fill: `url(#${id}r)` })); kids.push(h('rect', { key: 'rl', x: 0, y: L.rampa - 1, width: L.W, height: 2, fill: dir === 'C' ? OUT : P, opacity: dir === 'C' ? .5 : .18 })); }
+      if (want('rows') && dir !== 'C') {
+        const rows = dir === 'A' ? rowsA() : L.rows.map((r, k) => ({ ...r, a: [.9, .6, .4][k] }));
+        const tint = zone && o.light !== false ? c => mix(c, ZD[zone], KZ[zone] * glow) : c => c;
+        const lvlA = o.volume ? (.8 + .2 * (o.level ?? .5)) : 1;
+        rows.forEach((r, k) => kids.push(h('path', { key: 'row' + k, d: rowPath(L.W, r.base, r.h, r.n, r.curv), fill: tint(ROW), opacity: Math.max(0, r.a * lvlA) })));
+      }
+      if (want('cones') && dir === 'C') {
+        defs.push(h('linearGradient', { key: 'c', id: id + 'c', x1: 0, y1: 0, x2: 0, y2: 1 }, h('stop', { offset: 0, stopColor: P, stopOpacity: zone ? .10 : .07 }), h('stop', { offset: 1, stopColor: P, stopOpacity: 0 })));
+        const { cx, cy } = L; const cone = (s, key) => h('path', { key, d: `M${cx + s * 230} -10 L${cx + s * 90} -10 L${cx - s * 30} ${cy + 30} L${cx + s * 30} ${cy + 30} Z`, fill: `url(#${id}c)` });
+        kids.push(cone(-1, 'cl'), cone(1, 'cr'));
+      }
+      if (o.ghost) kids.push(h('circle', { key: 'gh', cx: L.cx, cy: L.cy, r: o.layout === 'land' ? 130 : o.layout === 'small' ? 110 : 150, fill: 'none', stroke: OUT, strokeWidth: 2, strokeDasharray: '6 8' }));
+      return h('svg', { width: L.W * scale, height: L.H * scale, viewBox: `0 0 ${L.W} ${L.H}`, style: { position: 'absolute', left: 0, top: 0, display: 'block' } }, [h('defs', { key: 'defs' }, defs), ...kids]);
+    };
+    // ---- frames
+    const seg = t => ({ playBg: t ? 'transparent' : PC, playFg: t ? ON : '#E9DDFF', playIc: t ? OV : '#E9DDFF', tuneBg: t ? PC : 'transparent', tuneFg: t ? '#E9DDFF' : ON, tuneIc: t ? '#E9DDFF' : OV });
+    const strings = (auto, lock) => [['G', '196'], ['D', '293.7'], ['A', '440'], ['E', '659.3']].map(([name, hz]) => { const a = name === auto, l = name === lock; return { name, hz, locked: l, fw: a || l ? 700 : 600, fg: l ? '#2E1A6E' : ON, bg: l ? P : a ? PC : SC, border: a || l ? 'transparent' : OUT }; });
+    const mk = (id, label, zone, glow, o = {}) => {
+      const sounding = !!zone, dir = o.dir || 'in', tuning = !!o.tuning; const ringPx = o.ringPx || (tuning ? 260 : 300); const noteSize = Math.round(ringPx * 0.58);
+      return { id, label, ...seg(tuning), tuning, chip: !!o.chip, rec: !!o.rec, notRec: !o.rec, noPerm: !!o.noPerm,
+        stage: o.stage === null ? null : stage({ dir: o.stage || 'B', zone, glow, light: o.light, volume: o.volume, level: o.level }),
+        bg: bgFor(zone), bgTop: tuning ? '140px' : o.chip ? '96px' : '64px',
+        statusText: o.status ?? (tuning ? (o.lock ? `цель — ${o.lock} · сыграйте струну` : 'авто · сыграйте открытую струну') : 'Играйте…'), statusOp: o.statusOn ?? (sounding && !tuning ? 0 : 1), statusMt: tuning ? '10px' : '12px',
+        dotReady: !o.blocked, dotBlocked: !!o.blocked, ringPx: ringPx + 'px', noteSize: noteSize + 'px', octSize: Math.round(noteSize * 0.3) + 'px', gap: tuning ? '16px' : '20px',
+        ring: o.noPerm ? h('div') : ring(ringPx, zone, glow, { level: o.level ?? 0.5, waves: o.waves }), sounding, note: o.note || 'A', oct: o.oct || '4', wordOp: sounding ? 1 : 0,
+        color: sounding ? Z[zone] : 'transparent', up: dir === 'up', down: dir === 'down', inTune: dir === 'in', word: dir === 'up' ? 'выше' : dir === 'down' ? 'ниже' : 'в строе', cents: o.cents || '+3', strings: strings(o.auto, o.lock), markerLeft: o.marker || '50%' };
+    };
+    const cmpFrames = [
+      mk('23a1', 'Сейчас — тишина: чистое поле', null, 0, { stage: null }),
+      mk('23a2', 'Сейчас — в строе glow 1', 'in', 1, { stage: null, cents: '+2', level: .8 }),
+      mk('23a3', 'A «Зал из темноты» — тишина: семь рядов до 560 dp, ряды под словом статуса и ореолом', null, 0, { stage: 'A' }),
+      mk('23a4', 'A — в строе: градиент зоны ложится на ряды пятнами', 'in', 1, { stage: 'A', cents: '+2', level: .8 }),
+      mk('23a5', 'B «Рампа и первые ряды» — тишина: доски, линия рампы, три ряда спинок; выше — чистое поле', null, 0, { stage: 'B' }),
+      mk('23a6', 'B — в строе: ряды чуть зеленеют (свет зоны), кольцо и поле как раньше', 'in', 1, { stage: 'B', cents: '+2', level: .8 }),
+      mk('23a7', 'C «Свет, а не предметы» — тишина: два конуса primary α .07 к кольцу, горизонт зала', null, 0, { stage: 'C' }),
+      mk('23a8', 'C — в строе: два источника света — конусы и ореол', 'in', 1, { stage: 'C', cents: '+2', level: .8 }),
+    ];
+    const stFrames = [
+      mk('23b1', 'Тишина — ряды stage.row, рампа primary α .18', null, 0),
+      mk('23b2', 'В строе, glow .6 с волной — ряды lerp к зелёному на .42', 'in', .6, { cents: '+3', waves: [{ r: 1.2, a: .12 }] }),
+      mk('23b3', 'В строе, glow 1 — ряды на .7; главный кадр', 'in', 1, { cents: '+2', level: .8 }),
+      mk('23b4', 'Рядом, янтарь glow .4 — ряды на .22', 'near', .4, { dir: 'up', cents: '+12', note: 'F♯', oct: '5' }),
+      mk('23b5', 'Мимо, красный glow .25 — ряды на .09: едва тёплые', 'off', .25, { dir: 'down', cents: '−27', note: 'C♯', oct: '5' }),
+      mk('23b6', 'Слишком шумно — сцена остаётся', null, 0, { status: 'Слишком шумно', blocked: true }),
+      mk('23b7', 'Микрофон недоступен', null, 0, { status: 'Микрофон недоступен', blocked: true }),
+      mk('23b8', 'Нет разрешения — текст в чистом поле, сцена внизу', null, 0, { statusOn: 0, noPerm: true }),
+      mk('23c1', '«Настройка», авто, A в строе — сцена та же, шкала над кнопкой', 'in', .9, { tuning: true, auto: 'A', cents: '+2', marker: '52%', level: .7 }),
+      mk('23c2', '«Настройка», зафиксирована D, ниже', 'off', .25, { tuning: true, lock: 'D', dir: 'down', note: 'D', oct: '4', cents: '−18', marker: '32%' }),
+      mk('23c3', 'Запись идёт — красная кнопка на досках; сцена не меняется', 'in', .8, { rec: true, cents: '+1', ringPx: 280, waves: [{ r: 1.3, a: .06 }] }),
+      mk('23c4', 'Занятие идёт — чип под переключателем; без изменений', 'in', .7, { chip: true, cents: '+3' }),
+      mk('23c5', 'Оба сразу + слишком шумно', null, 0, { rec: true, chip: true, status: 'Слишком шумно', blocked: true, ringPx: 280 }),
+      mk('23c6', 'Проявление от громкости (не рекомендуем): в тишине ряды α × .8 — сравнить с 23b1', null, 0, { volume: true, level: 0 }),
+    ];
+    const mkL = (id, label, zone, glow, o = {}) => { const sounding = !!zone, tuning = !!o.tuning, dir = o.dir || 'in'; return { id, label, ...seg(tuning), tuning, rec: !!o.rec, notRec: !o.rec, stage: stage({ layout: 'land', zone, glow }), bg: bgFor(zone, '60% 70%', '50% 50%'), ring: ring(260, zone, glow, { level: o.level ?? .5 }), sounding, note: o.note || 'A', oct: o.oct || '4', statusText: tuning ? 'авто · сыграйте открытую струну' : 'Играйте…', statusOp: sounding && !tuning ? 0 : 1, wordOp: sounding ? 1 : 0, color: sounding ? Z[zone] : 'transparent', inTune: dir === 'in', down: dir === 'down', word: dir === 'down' ? 'ниже' : 'в строе', cents: o.cents || '+3', strings: strings(o.auto, o.lock) }; };
+    const landFrames = [
+      mkL('23d1', 'Тишина — зал во всю ширину, два ряда, доски 92; кнопка на досках', null, 0),
+      mkL('23d2', 'В строе glow 1 — ореол до 388 dp ложится на первый ряд без шва', 'in', 1, { cents: '+2', level: .6 }),
+      mkL('23d3', '«Настройка», авто — ряд струн 64 × 52 справа, шкала над кнопкой', 'in', .9, { tuning: true, auto: 'A', cents: '+2' }),
+      mkL('23d4', 'Запись — полоса над кнопкой справа', 'in', .8, { rec: true, cents: '+1' }),
+    ];
+    const smallFrames = [
+      { id: '23e1', label: '360 × 640, тишина — два ряда (20 и 14), доски 84', stage: stage({ layout: 'small' }), bg: 'transparent', ring: ring(220, null, 0), sounding: false, statusOp: 1, wordOp: 0 },
+      { id: '23e2', label: '360 × 640, в строе — слово статуса заканчивается на 446, ряды начинаются с 448', stage: stage({ layout: 'small', zone: 'in', glow: 1 }), bg: bgFor('in'), ring: ring(220, 'in', 1), sounding: true, statusOp: 0, wordOp: 1 },
+    ];
+    const periS = (st) => ({ stage: st ? stage({ zone: 'in', glow: 1 }) : null, bg: bgFor('in'), ring: ring(300, 'in', 1, { level: .8 }) });
+    const peri = [
+      { s: periS(true), filter: 'blur(4px)', cap: 'B, размыто' }, { s: periS(false), filter: 'blur(4px)', cap: 'сейчас, размыто' },
+      { s: periS(true), filter: 'none', cap: 'B' }, { s: periS(false), filter: 'none', cap: 'сейчас' },
+    ];
+    const layerTiles = [
+      { cap: 'stage.floor — доски 712 → 812, градиент', el: stage({ only: 'floor', scale: .5, ghost: true }) },
+      { cap: 'stage.rampa — линия 2 + след 36 вверх', el: stage({ only: 'rampa', scale: .5, ghost: true }) },
+      { cap: 'stage.row × 3 — спинки 7 / 9 / 11 на дугах', el: stage({ only: 'rows', scale: .5, ghost: true }) },
+      { cap: 'B вместе', el: stage({ scale: .5, ghost: true }) },
+      { cap: 'A — 7 рядов до 556', el: stage({ dir: 'A', scale: .5, ghost: true }) },
+      { cap: 'C — конусы и горизонт', el: stage({ dir: 'C', scale: .5, ghost: true }) },
+    ];
+    const landAlone = stage({ layout: 'land', scale: .5, ghost: true });
+    const glowTiles = [
+      { cap: 'glow 0 — тишина', stage: stage({}), bg: 'transparent', ring: ring(300, null, 0), col: 'transparent', wop: 0, word: '', cents: '' },
+      { cap: 'glow .4 — рядом: ряды на .22 к янтарю', stage: stage({ zone: 'near', glow: .4 }), bg: bgFor('near'), ring: ring(300, 'near', .4), col: Z.near, wop: 1, word: 'в строе', cents: '+8' },
+      { cap: 'glow 1 — в строе: ореол до 623, ряды с 636', stage: stage({ zone: 'in', glow: 1 }), bg: bgFor('in'), ring: ring(300, 'in', 1, { level: .8 }), col: Z.in, wop: 1, word: 'в строе', cents: '+2' },
+    ];
+    // ---- dev
+    const stageRows = [
+      { name: 'floor', fill: 'linear ↓ stage.floorTop → stage.floorBottom · α 1 · anchor bottom', geo: 'rect x 0, y rampaY, w W, h navTop − rampaY. Портрет: 712 → 812 (100); малый: 492 → 576 (84); landscape: 320 → 412 (92). Растягивается по ширине' },
+      { name: 'rampaGlow', fill: 'linear ↓ primary α 0 → .10 · anchor rampaY', geo: 'rect y rampaY − 36, h 36, w W' },
+      { name: 'rampa', fill: 'primary · α .18 · anchor rampaY', geo: 'rect y rampaY − 1, h 2, w W' },
+      { name: 'rows', fill: 'stage.row → lerp(stage.row, zoneDark, k·glow) · α [.9, .6, .4] · anchor rampaY', geo: 'repeat: { d: seat, count: 3, base: [706, 676, 652], h: [30, 22, 16], n: [7, 9, 11], curv: [10, 8, 6], overhang 40 } — портрет. Малый: 2 ряда base [486, 462], h [20, 14], n [6, 8]. Landscape: 2 ряда base [314, 292], h [18, 13], n [12, 15], curv [8, 6]' },
+    ];
+    const tokens = [
+      { name: 'stage.floorTop', hex: FLOOR_T, use: 'верх досок у рампы (чуть светлее surfaceContainer по синему)' },
+      { name: 'stage.floorBottom', hex: FLOOR_B, use: 'низ досок у панели вкладок (между surface и surfaceContainer)' },
+      { name: 'stage.row', hex: ROW, use: 'спинки кресел в тишине (= surfaceContainer); α по рядам .9 / .6 / .4' },
+      { name: 'stage.rampa', hex: rgba(P, .18), use: 'линия рампы 2 dp (primary α .18); след вверх — primary α .10 → 0 за 36 dp. Единственный акцент сцены' },
+      { name: 'stage.row · in', hex: mix(ROW, ZD.in, .7), use: 'ряды при glow 1 в строе = lerp(stage.row, #1A4A36, .7). k: in .7, near .55, off .35, × glow' },
+      { name: 'stage.row · near', hex: mix(ROW, ZD.near, .55 * .4), use: 'ряды при glow .4 рядом (k .55 × .4 = .22)' },
+      { name: 'stage.row · off', hex: mix(ROW, ZD.off, .35 * .25), use: 'ряды при glow .25 мимо (k .35 × .25 = .09) — почти серые' },
+      { name: 'zone bg', hex: rgba(ZD2.in, .85), use: 'градиент зоны теперь заканчивается прозрачным (surface α 0), а не surface α 1, — иначе он закрывал бы сцену; стопы 0 % zoneDark α 1 · 45 % zoneDark2 α .85 · 100 % α 0' },
+    ];
+    const sizes = [
+      { name: 'Где живёт', v: 'один Canvas за всем содержимым на весь экран, под панелью вкладок (панель непрозрачная и закрывает низ досок); в landscape панели нет — доски до края' },
+      { name: 'rampaY', v: 'портрет = navTop − 100 (712 при 892); малый = navTop − 84 (492 при 640); landscape = H − 92 (320). Полоса записи над кнопкой рампу не сдвигает — блок кнопки фиксирован' },
+      { name: 'Ряды', v: 'от рампы вверх: ближний base = rampaY − 6; следующий base = предыдущий top − 8 (портрет) / − 4 (малый, landscape); высота ряда .034·H, ×.73 за ряд; число спинок n + 2 за ряд; overhang 40 за края экрана — крайние спинки обрезаны, это и есть перспектива' },
+      { name: 'Ограничение сверху', v: 'верхний ряд не выше низа слова статуса − 12: портрет 636 (слово 574–622); малый 448 (слово ≤ 446) — поэтому 2 ряда; landscape 279 — слово справа, ограничивает ореол: rows.top ≥ cy + 1.4 R − ... не требуется, ореол прозрачный' },
+      { name: 'Кольцо ↔ сцена', v: 'ореол до 1.456 R: портрет 404 + 218 = 622 < 636 — не касаются; landscape 206 + 189 = 395 > 279 — ореол лежит на рядах и досках, это допустимо (градиент α → 0)' },
+      { name: 'Планшет', v: 'правило то же от H и W: рампа navTop − 100, ряды .034·H, спинок n = round(W / 60) + 2k, overhang W·.1' },
+      { name: 'Что не меняется', v: 'формы и их положение — никогда после layout; меняются только fill рядов (цвет) и, если включён volume, их α' },
+      { name: 'Флаги', v: 'stageEnabled (константа, по умолчанию true после пробы); stageVolume (false); stageZoneLight (true)' },
+    ];
+    const anims = [
+      { name: 'Свет зоны на рядах', v: 'fill рядов = lerp(stage.row, zoneDark, k·glow) — считается от того же glow, что и кольцо: подъём 500 мс FastOutSlowIn, спад 900 мс LinearOutSlowIn; смена зоны — animateColorAsState 150 мс. Это единственное «движение» сцены, и оно не движение форм' },
+      { name: 'Проявление от громкости (stageVolume, выкл)', v: 'α рядов × (.8 + .2·level), level с EMA 120 мс — как дыхание ореола. Не рекомендуем: второе «слышу тебя», на периферии — мерцание внизу' },
+      { name: 'Появление / уход экрана', v: 'сцена появляется вместе с экраном Live без собственной анимации (никакого «поднятия занавеса»); смена ориентации — перерисовка без перехода' },
+      { name: '«Убрать анимации»', v: 'цвет рядов — ступени по зоне с crossfade 300 мс, как glow; volume — выключен всегда' },
+    ];
+    return { cmpFrames, stFrames, landFrames, smallFrames, peri, layerTiles, landAlone, glowTiles, stageRows, tokens, sizes, anims };
+  }
+}
+</script>
+</body>
+</html>

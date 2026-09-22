@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}.frag{width:412px;background:#131318;border-radius:16px;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;color:#E6E4EE}.cap{font-size:11px;color:rgba(230,228,238,.5);line-height:1.4}.phone{height:100%;display:flex;flex-direction:column;background:#131318;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE;position:relative;overflow:hidden}.box{background:#131318;border-radius:16px;box-sizing:border-box;display:flex;flex-direction:column;color:#E6E4EE;position:relative;overflow:hidden}
+@keyframes shine{0%{transform:translateX(-100%)}100%{transform:translateX(var(--to))}}
+@keyframes breath{0%,100%{transform:scale(1);opacity:.7}50%{transform:scale(1.25);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes flameSway{0%,100%{transform:rotate(0deg) scaleY(1)}30%{transform:rotate(-3deg) scaleY(1.05)}60%{transform:rotate(2.5deg) scaleY(.97)}}
+@keyframes flameCore{0%,100%{transform:scaleY(1)}30%{transform:scaleY(.94)}60%{transform:scaleY(1.06)}}</style></helmet>
+
+<section class="dv-turn" id="s19a">
+<div class="dv-thd"><a class="dv-tid" href="#s19a">19a</a><span class="dv-tname">«Записи» · до и после — плитка с нотой вместо процентов, варианты A и B, строка без смещения</span></div>
+<div class="dv-opts">
+<sc-for list="{{ recFrames }}" as="s" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <sc-if value="{{ s.plain }}" hint-placeholder-val="{{ true }}">
+  <div style="padding:16px 16px 0;display:flex;align-items:baseline;justify-content:space-between;height:40px;flex:none"><div style="font-size:28px;font-weight:700;line-height:1">Записи</div></div>
+  </sc-if>
+  <sc-if value="{{ s.sel }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none;background:#131318;box-shadow:0 1px 0 #292833">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icClose }}</div>
+    <div class="tn" style="flex:1;font-size:17px;font-weight:600">Выбрано: {{ s.selCount }}</div>
+    <div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF;white-space:nowrap">{{ s.selAllText }}</div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icTrash }}</div>
+  </div>
+  </sc-if>
+  <div style="padding:14px 16px 0;opacity:{{ s.dimOp }}"><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px">
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF">Сессии</div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;border-left:1px solid #3A3846">Репертуар</div>
+  </div></div>
+  <div style="flex:1;overflow:hidden;padding:16px 16px 0;display:flex;flex-direction:column;gap:14px">
+    <sc-if value="{{ s.showGraph }}" hint-placeholder-val="{{ true }}">
+    <div style="background:#1E1D25;border-radius:20px;padding:16px;opacity:{{ s.dimOp }}">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13px;color:#A39FB5">Средний балл за неделю</div><div style="font-size:15px;font-weight:700;color:#47C97E">+6 за неделю</div></div>
+      <svg width="348" height="100" viewBox="0 0 348 100" style="display:block;margin-top:8px;overflow:visible"><line x1="0" y1="92" x2="348" y2="92" stroke="#292833"></line><polyline points="{{ weekLine }}" fill="none" stroke="#C4ADFF" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></polyline><sc-for list="{{ weekPts }}" as="p" hint-placeholder-count="6"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="5" fill="#131318" stroke="#C4ADFF" stroke-width="3"></circle></sc-for></svg>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#A39FB5;margin-top:6px"><span>11 авг</span><span>18</span><span>25</span><span>1 сен</span><span>8</span><span>15</span></div>
+    </div>
+    </sc-if>
+    <div style="display:flex;gap:8px;opacity:{{ s.dimOp }}"><div style="height:32px;padding:0 12px;border-radius:8px;background:#5B43B8;color:#E9DDFF;display:flex;align-items:center;font-size:13px;font-weight:600">Все</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Эта неделя</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Месяц</div></div>
+    <div style="display:flex;align-items:center;justify-content:space-between;height:24px;margin:-4px 0 -6px"><div class="tn" style="font-size:13px;color:#A39FB5">23 сессии</div><sc-if value="{{ s.selectBtn }}" hint-placeholder-val="{{ true }}"><div style="height:32px;padding:0 10px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF;margin-right:-10px">{{ icSelectP }}Выбрать</div></sc-if></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ s.cards }}" as="c" hint-placeholder-count="6">
+      <div style="display:flex;align-items:center;gap:14px;background:{{ c.bg }};border-radius:16px;padding:14px 16px;box-shadow:{{ c.ring }}">
+        {{ c.left }}
+        <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><sc-if value="{{ c.chip }}" hint-placeholder-val="{{ false }}"><div style="flex:none;height:20px;padding:0 6px;border-radius:6px;background:#292833;font-size:11px;font-weight:600;color:#A39FB5;display:flex;align-items:center;gap:4px">{{ icNoteChip }}дубль</div></sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.meta }}</div></div>
+        <div style="display:flex;align-items:flex-end;gap:2px;height:28px;flex:none"><sc-for list="{{ c.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+        <sc-if value="{{ c.more }}" hint-placeholder-val="{{ false }}"><div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div></sc-if>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ navRec }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}</div><div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div></div>
+    </sc-for>
+  </div>
+  <sc-if value="{{ s.dialog }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:24px">
+    <div style="width:100%;background:#292833;border-radius:28px;padding:28px 24px 20px;display:flex;flex-direction:column;gap:16px">
+      <div style="width:44px;height:44px;border-radius:22px;background:rgba(232,86,92,.16);display:flex;align-items:center;justify-content:center">{{ icTrashE }}</div>
+      <div style="font-size:24px;font-weight:700;line-height:1.2">Удалить {{ s.dialogN }}?</div>
+      <div style="font-size:15px;color:#A39FB5;line-height:1.45;text-wrap:pretty">Звук и разбор удалятся. Это нельзя отменить.</div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px"><div style="height:48px;padding:0 16px;border-radius:24px;display:flex;align-items:center;font-size:15px;font-weight:600;color:#C4ADFF">Отмена</div><div style="height:48px;padding:0 22px;border-radius:24px;background:#E8565C;color:#FFFFFF;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700">{{ icTrashW }}Удалить</div></div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Вопрос 1 — A, нота цветом зоны.</b> Табель делали не цвета, а цифры: столбец «84 / 71 / 88 / 58» читался как отметки, и глаз сравнивал карточки между собой. Без числа зелёная нота говорит только «хорошо было» — про одну запись, не про соседей; а мини-столбики справа для взгляда с расстояния слишком мелкие (4 dp), они работают вблизи. В B (<a href="#19a3">19a3</a>) список спокойнее, но одинаковые фиолетовые плитки перестают что-либо значить — первый вопрос «как получилось?» требует открыть запись. <b>Два знака:</b> одиночная восьмая — свободная сессия, пара восьмых под ребром — дубль (запись из серии по произведению). Правило осмысленное, поэтому <b>чип «дубль» убираем</b> (вопрос 2): дубль узнаётся по названию произведения и по паре нот; чип оставлен в <a href="#19a3">19a3</a> для сравнения — с плиткой он дублирует. <b>Без звука</b> — плитка контурная (кольцо 1.5 цветом зоны, без заливки): «есть разбор, нет записи» видно ещё до отсутствия «⋯». <b>Смещение «−4 ц» оставить</b> — оно серое, 13 sp, в конце строки и не выстраивается в столбец; вариант без него (<a href="#19a4">19a4</a>) короче, но теряет единственную подсказку «в какую сторону» до открытия записи. <b>Вопрос 3 — «Выбрать»</b> стоит справа в строке над списком, напротив счётчика «23 сессии» (счётчик переехал из шапки к списку — он про список). Та же строка у блока «Дубли» на экране произведения.</p>
+</section>
+
+<section class="dv-turn" id="s19b">
+<div class="dv-thd"><a class="dv-tid" href="#s19b">19b</a><span class="dv-tname">Плитка с нотой · крупно и все состояния</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="19b1"><div class="dv-olabel"><a class="dv-oid" href="#19b1">19b1</a>Два знака ×3 (132 dp): одиночная восьмая — сессия, пара под ребром — дубль. Сетка 24, головки залиты, штили 1.8</div><div class="dv-card">
+<div class="frag" style="flex-direction:row;gap:24px;align-items:center;justify-content:center;padding:28px">{{ bigOne }}{{ bigPair }}</div>
+</div></div>
+<div class="dv-opt" id="19b2"><div class="dv-olabel"><a class="dv-oid" href="#19b2">19b2</a>Состояния плитки 44 dp: три зоны · без звука (контур) · нейтральная B · чекбокс пустой · выбранный. Ниже — те же ×2</div><div class="dv-card">
+<div class="frag" style="gap:20px">
+  <div style="display:flex;gap:14px;flex-wrap:wrap"><sc-for list="{{ tileStates }}" as="t" hint-placeholder-count="7"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:88px">{{ t.el }}<div class="cap" style="text-align:center">{{ t.cap }}</div></div></sc-for></div>
+  <div style="display:flex;gap:16px;flex-wrap:wrap;align-items:center"><sc-for list="{{ tileBig }}" as="t" hint-placeholder-count="7">{{ t.el }}</sc-for></div>
+</div>
+</div></div>
+<div class="dv-opt" id="19b3"><div class="dv-olabel"><a class="dv-oid" href="#19b3">19b3</a>Переход плитка → чекбокс → выбран (200 мс): кадры 0 · 100 · 200 мс и обратно</div><div class="dv-card">
+<div class="frag" style="gap:12px">
+  <div style="display:flex;gap:18px;align-items:center"><sc-for list="{{ morph }}" as="m" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;align-items:center;gap:8px;width:60px">{{ m.el }}<div class="cap tn" style="text-align:center">{{ m.cap }}</div></div></sc-for></div>
+  <div class="cap">Круг остаётся кругом — меняется только содержимое: заливка зоны гаснет до прозрачного, нота тает (α 1 → 0, 120 мс), появляется контур 2 dp `check.empty`; выбор — заливка primary растёт от центра (scale .6 → 1, 150 мс) с галочкой. Форма не прыгает, поэтому список не «дёргается» при входе в режим.</div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">Плитка — <b>круг 44 dp</b>, а не скруглённый квадрат: в режиме выбора она становится кружком-чекбоксом, и переход не меняет форму. Заливка — цвет зоны на 16 % (`tile.bg` = zone α .16), нота — цвет зоны на 100 %: цветовая пара та же, что была у числа и его «%», но пятно мягче, потому что заливка занимает 44 dp, а не 26 sp жирного шрифта. Нота 26 dp внутри — крупнее иконки набора (24), с залитой головкой; в чипе «дубль» нота была 14 dp контурная — она отменена вместе с чипом.</p>
+</section>
+
+<section class="dv-turn" id="s19c">
+<div class="dv-thd"><a class="dv-tid" href="#s19c">19c · 19d</a><span class="dv-tname">Остальные места карточки · дубли произведения, карточка произведения, «Записи этого дня»</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="19c1"><div class="dv-olabel"><a class="dv-oid" href="#19c1">19c1</a>Экран произведения — прогресс (числа остаются) и дубли после: пара нот цветом зоны, «★ лучший» контурным чипом primary, новый дубль подсвечен; в строке «Дубли» — «Выбрать»</div><div class="dv-card">
+<div class="frag" style="gap:12px">
+  <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:16px">
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><div class="tn" style="font-size:13px;color:#A39FB5;white-space:nowrap">последний <span style="color:#E6E4EE;font-weight:700">82 %</span> · лучший <span style="color:#E6E4EE;font-weight:700">88 %</span></div><div class="tn" style="font-size:13px;color:#A39FB5">6 дублей</div></div>
+    <svg width="120" height="44" viewBox="0 0 160 44" preserveAspectRatio="none" style="flex:none;overflow:visible"><line x1="0" y1="20" x2="160" y2="20" stroke="#3A3846" stroke-dasharray="3 3"></line><polyline points="{{ progLine }}" fill="none" stroke="#C4ADFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline><sc-for list="{{ progPts }}" as="p" hint-placeholder-count="6"><circle cx="{{ p.x }}" cy="{{ p.y }}" r="3.5" fill="#1E1D25" stroke="#C4ADFF" stroke-width="2"></circle></sc-for></svg>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;height:32px"><div style="font-size:16px;font-weight:700">Дубли</div><div style="height:32px;padding:0 10px 0 8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;color:#C4ADFF;margin-right:-10px">{{ icSelectP }}Выбрать</div></div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <sc-for list="{{ takeCards }}" as="t" hint-placeholder-count="4">
+    <div style="display:flex;align-items:center;gap:14px;background:{{ t.bg }};border-radius:16px;padding:12px 16px;box-shadow:{{ t.ring }}">
+      {{ t.left }}
+      <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><div class="tn" style="font-size:15px;font-weight:600">{{ t.date }}</div><sc-if value="{{ t.best }}" hint-placeholder-val="{{ false }}"><div style="height:22px;padding:0 8px 0 6px;border-radius:6px;border:1px solid #C4ADFF;color:#C4ADFF;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px">{{ icStarS }}лучший</div></sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ t.meta }}</div></div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:28px;flex:none"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+      <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;margin:-8px -12px -8px -4px">{{ icMore }}</div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</div></div>
+<div class="dv-opt" id="19c2"><div class="dv-olabel"><a class="dv-oid" href="#19c2">19c2</a>Карточка произведения в репертуаре — справа вместо «82 %» плитка 36 цветом зоны последнего дубля и «вчера · 6 дублей»; без дублей — пунктирное кольцо и «нет дублей»</div><div class="dv-card">
+<div class="frag" style="gap:8px">
+  <sc-for list="{{ pieceCards }}" as="p" hint-placeholder-count="2">
+  <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:12px 14px 12px 12px;min-height:96px;box-sizing:border-box">
+    <div style="width:54px;height:72px;border-radius:6px;flex:none;background:{{ p.thumbBg }};display:flex;align-items:center;justify-content:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)"><sc-if value="{{ p.noPages }}" hint-placeholder-val="{{ false }}"><div style="width:18px;height:22px;border:1.5px solid #6B6880;border-radius:2px"></div></sc-if></div>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:3px">
+      <div style="font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25">{{ p.title }}</div>
+      <div style="font-size:13px;color:#A39FB5">{{ p.composer }}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-top:3px"><div style="height:22px;padding:0 8px;border-radius:6px;background:#5B43B8;color:#E9DDFF;font-size:11px;font-weight:600;display:flex;align-items:center;flex:none">Учу</div><div class="tn" style="font-size:12px;color:#A39FB5">{{ p.keyTempo }}</div></div>
+    </div>
+    <div style="flex:none;display:flex;flex-direction:column;align-items:center;gap:6px;width:76px">{{ p.tile }}<div class="tn" style="font-size:11px;color:#A39FB5;text-align:center;line-height:1.3">{{ p.sub }}</div></div>
+  </div>
+  </sc-for>
+</div>
+</div></div>
+<div class="dv-opt" id="19d"><div class="dv-olabel"><a class="dv-oid" href="#19d">19d</a>«Занятия» → «Записи этого дня» после — та же карточка без «⋯» и без режима выбора</div><div class="dv-card">
+<div class="frag" style="gap:12px">
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+    <div><div style="font-size:14px;color:#A39FB5;display:flex;align-items:center;gap:8px">15 сентября, вторник</div><div class="tn" style="font-size:32px;font-weight:700;line-height:1.1;margin-top:4px">1 ч 20 мин</div></div>
+    <div style="height:40px;padding:0 16px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF;white-space:nowrap">{{ icPencilP }}Изменить время</div>
+  </div>
+  <div style="font-size:14px;font-weight:700">Записи этого дня</div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <sc-for list="{{ dayCards }}" as="c" hint-placeholder-count="2">
+    <div style="display:flex;align-items:center;gap:14px;background:#1E1D25;border-radius:16px;padding:14px 16px">
+      {{ c.left }}
+      <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ c.meta }}</div></div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:28px;flex:none"><sc-for list="{{ c.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+    </div>
+    </sc-for>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Список дублей:</b> без чисел «лучший» — единственный указатель, поэтому чип подрос с 20 до 22 dp, получил звезду 12 dp и жирность 700; на фоне остальных строк, где справа от даты пусто, он читается сразу. Числа последнего и лучшего дубля остаются в карточке прогресса над списком — там они по делу, и глаз, которому нужен балл, находит его на том же экране. <b>Вопрос 6 — карточка произведения:</b> плитка 36 цветом зоны последнего дубля + подпись «вчера · 6 дублей» в две строки. Только текст был бы честнее, но у пяти карточек правые колонки стали бы неразличимы; плитка даёт то же «как идёт дело», что нота в списке сессий. Без дублей — пунктирное кольцо 1.5 outlineVariant и «нет дублей»: не дыра и не оценка.</p>
+</section>
+
+<section class="dv-turn" id="s19e">
+<div class="dv-thd"><a class="dv-tid" href="#s19e">19e</a><span class="dv-tname">Режим выбора на «Записях» · вход, 1 · 3 · все, диалог, landscape</span></div>
+<div class="dv-opts">
+<sc-for list="{{ selFrames }}" as="s" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none;background:#131318;box-shadow:0 1px 0 #292833;position:relative;z-index:2">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icClose }}</div>
+    <div class="tn" style="flex:1;font-size:17px;font-weight:600">Выбрано: {{ s.selCount }}</div>
+    <div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF;white-space:nowrap">{{ s.selAllText }}</div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icTrash }}</div>
+  </div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:14px;padding:0 16px;margin-top:{{ s.scroll }}">
+    <div style="padding-top:14px;opacity:.38"><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF">Сессии</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;border-left:1px solid #3A3846">Репертуар</div></div></div>
+    <div style="background:#1E1D25;border-radius:20px;padding:16px;opacity:.38;margin-top:2px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:13px;color:#A39FB5">Средний балл за неделю</div><div style="font-size:15px;font-weight:700;color:#47C97E">+6 за неделю</div></div>
+      <svg width="348" height="100" viewBox="0 0 348 100" style="display:block;margin-top:8px;overflow:visible"><line x1="0" y1="92" x2="348" y2="92" stroke="#292833"></line><polyline points="{{ weekLine }}" fill="none" stroke="#C4ADFF" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"></polyline></svg>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#A39FB5;margin-top:6px"><span>11 авг</span><span>18</span><span>25</span><span>1 сен</span><span>8</span><span>15</span></div>
+    </div>
+    <div style="display:flex;gap:8px;opacity:.38"><div style="height:32px;padding:0 12px;border-radius:8px;background:#5B43B8;color:#E9DDFF;display:flex;align-items:center;font-size:13px;font-weight:600">Все</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Эта неделя</div><div style="height:32px;padding:0 12px;border-radius:8px;border:1px solid #3A3846;display:flex;align-items:center;font-size:13px">Месяц</div></div>
+    <div style="display:flex;align-items:center;height:24px;margin:-4px 0 -6px"><div class="tn" style="font-size:13px;color:#A39FB5">23 сессии</div></div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <sc-for list="{{ s.cards }}" as="c" hint-placeholder-count="6">
+      <div style="display:flex;align-items:center;gap:14px;background:{{ c.bg }};border-radius:16px;padding:14px 16px;box-shadow:{{ c.ring }};transform:scale({{ c.scale }})">
+        {{ c.left }}
+        <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.meta }}</div></div>
+        <div style="display:flex;align-items:flex-end;gap:2px;height:28px;flex:none"><sc-for list="{{ c.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ navRec }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}</div><div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div></div>
+    </sc-for>
+  </div>
+  <sc-if value="{{ s.dialog }}" hint-placeholder-val="{{ false }}">
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;padding:24px;z-index:3">
+    <div style="width:100%;background:#292833;border-radius:28px;padding:28px 24px 20px;display:flex;flex-direction:column;gap:16px">
+      <div style="width:44px;height:44px;border-radius:22px;background:rgba(232,86,92,.16);display:flex;align-items:center;justify-content:center">{{ icTrashE }}</div>
+      <div style="font-size:24px;font-weight:700;line-height:1.2">Удалить {{ s.dialogN }}?</div>
+      <div style="font-size:15px;color:#A39FB5;line-height:1.45;text-wrap:pretty">Звук и разбор удалятся. Это нельзя отменить.</div>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px"><div style="height:48px;padding:0 16px;border-radius:24px;display:flex;align-items:center;font-size:15px;font-weight:600;color:#C4ADFF">Отмена</div><div style="height:48px;padding:0 22px;border-radius:24px;background:#E8565C;color:#FFFFFF;display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700">{{ icTrashW }}Удалить</div></div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="19e5"><div class="dv-olabel"><a class="dv-oid" href="#19e5">19e5</a>Landscape 892 × 412 — панель выбора на всю ширину, список в две колонки, нижняя панель вкладок остаётся; 2 выбраны</div><div class="dv-card">
+<div class="box" style="width:892px;height:412px">
+  <div style="display:flex;align-items:center;gap:4px;padding:2px 8px 0;height:52px;flex:none;box-shadow:0 1px 0 #292833">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icClose }}</div>
+    <div class="tn" style="flex:1;font-size:17px;font-weight:600">Выбрано: 2</div>
+    <div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Выбрать все</div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icTrash }}</div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:12px 16px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start">
+    <sc-for list="{{ landCards }}" as="c" hint-placeholder-count="6">
+    <div style="display:flex;align-items:center;gap:12px;background:{{ c.bg }};border-radius:16px;padding:12px 14px;box-shadow:{{ c.ring }}">
+      {{ c.left }}
+      <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.title }}</div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.meta }}</div></div>
+      <div style="display:flex;align-items:flex-end;gap:2px;height:28px;flex:none"><sc-for list="{{ c.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+    </div>
+    </sc-for>
+  </div>
+  <div style="height:64px;display:flex;background:#1E1D25;flex:none;justify-content:center">
+    <sc-for list="{{ navRec }}" as="n" hint-placeholder-count="4">
+    <div style="width:160px;display:flex;align-items:center;justify-content:center;gap:8px"><div style="width:56px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}</div><div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div></div>
+    </sc-for>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Панель выбора</b> — 56 dp, как шапка экрана: ✕ 48 слева, «Выбрано: 3» 17/600, «Выбрать все» текстом, корзина 48 справа. Она сменяет шапку crossfade 200 мс и <b>прилипает сверху</b>: заголовок «Записи» скроллился со списком, панель — нет, иначе корзина уезжала бы за экран у длинного списка (<a href="#19e2">19e2</a> — список прокручен, панель на месте). <b>Вопрос 4 — корзина сверху.</b> Внизу уже стоит панель вкладок; вторая плашка над ней — два ряда кнопок подряд, и корзина оказалась бы в 16 dp от «Записей». Тянуться наверх за необратимым удалением — не недостаток: выбирают одной рукой, удаляют осознанно. Пока режим открыт, переключатель, график и фильтры — α .38 и не нажимаются; счётчик списка остаётся. Вход по долгому нажатию: карточка сжимается до .98 на 100 мс, отпускание — она выбрана (<a href="#19e1">19e1</a>). Снял последнюю — режим закрывается сам. <b>Диалог</b> — как у удаления сессии: иконка 44 в кольце error 16 %, заголовок 24/700 со счётом «Удалить 3 записи?», «Удалить» — залитая error с корзиной, «Отмена» — текстом. После удаления карточки уходят (fade 150 + схлопывание 250, ступень 30 мс), режим закрыт, тоста нет.</p>
+</section>
+
+<section class="dv-turn" id="s19f">
+<div class="dv-thd"><a class="dv-tid" href="#s19f">19f</a><span class="dv-tname">Режим выбора в списке дублей · портрет и landscape</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="19f1"><div class="dv-olabel"><a class="dv-oid" href="#19f1">19f1</a>Экран произведения, прокручен к дублям: панель выбора вместо шапки «назад · Менуэт · Изменить»; 2 выбраны; кнопка записи приглушена — пока выбираем, не записываем</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none;background:#131318;box-shadow:0 1px 0 #292833;position:relative;z-index:2">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icClose }}</div>
+    <div class="tn" style="flex:1;font-size:17px;font-weight:600">Выбрано: 2</div>
+    <div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Выбрать все</div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icTrash }}</div>
+  </div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:24px;padding:0 16px;margin-top:-236px">
+    <div style="display:flex;flex-direction:column;gap:10px;opacity:.38"><div style="font-size:16px;font-weight:700">Заметки</div><div style="background:#1E1D25;border-radius:16px;padding:14px 16px;font-size:15px;line-height:1.5">Такты 9–12: не спешить на восьмых. Ми-бекар в 14-м такте — низко. Смычок ближе к подставке в forte.</div></div>
+    <div style="display:flex;align-items:center;gap:16px;opacity:.38"><div style="width:72px;height:72px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center;flex:none"><div style="width:26px;height:26px;border-radius:50%;background:#2E1A6E"></div></div><div style="flex:1;min-width:0"><div style="font-size:16px;font-weight:700">Записать дубль</div><div style="font-size:13px;color:#A39FB5;line-height:1.4;margin-top:3px">Экран не подсказывает во время записи — разбор появится после.</div></div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;align-items:center;gap:16px;opacity:.38">
+      <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:4px"><div class="tn" style="font-size:13px;color:#A39FB5;white-space:nowrap">последний <span style="color:#E6E4EE;font-weight:700">82 %</span> · лучший <span style="color:#E6E4EE;font-weight:700">88 %</span></div><div class="tn" style="font-size:13px;color:#A39FB5">6 дублей</div></div>
+      <svg width="120" height="44" viewBox="0 0 160 44" preserveAspectRatio="none" style="flex:none;overflow:visible"><line x1="0" y1="20" x2="160" y2="20" stroke="#3A3846" stroke-dasharray="3 3"></line><polyline points="{{ progLine }}" fill="none" stroke="#C4ADFF" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></polyline></svg>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px;padding-bottom:16px">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:32px"><div style="font-size:16px;font-weight:700">Дубли</div><div class="tn" style="font-size:13px;color:#A39FB5">6</div></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <sc-for list="{{ takeSel }}" as="t" hint-placeholder-count="6">
+        <div style="display:flex;align-items:center;gap:14px;background:{{ t.bg }};border-radius:16px;padding:12px 16px;box-shadow:{{ t.ring }}">
+          {{ t.left }}
+          <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><div class="tn" style="font-size:15px;font-weight:600">{{ t.date }}</div><sc-if value="{{ t.best }}" hint-placeholder-val="{{ false }}"><div style="height:22px;padding:0 8px 0 6px;border-radius:6px;border:1px solid #C4ADFF;color:#C4ADFF;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px">{{ icStarS }}лучший</div></sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ t.meta }}</div></div>
+          <div style="display:flex;align-items:flex-end;gap:2px;height:28px;flex:none"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+        </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-import>
+</div></div>
+<div class="dv-opt" id="19f2"><div class="dv-olabel"><a class="dv-oid" href="#19f2">19f2</a>Landscape 892 × 412 — экран произведения без нижней панели: панель выбора сверху, дубли в две колонки</div><div class="dv-card">
+<div class="box" style="width:892px;height:412px">
+  <div style="display:flex;align-items:center;gap:4px;padding:2px 8px 0;height:52px;flex:none;box-shadow:0 1px 0 #292833">
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icClose }}</div>
+    <div class="tn" style="flex:1;font-size:17px;font-weight:600">Выбрано: 2</div>
+    <div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Выбрать все</div>
+    <div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icTrash }}</div>
+  </div>
+  <div style="flex:1;overflow:hidden;padding:12px 16px 0;display:flex;flex-direction:column;gap:10px">
+    <div style="display:flex;align-items:center;justify-content:space-between;height:28px"><div style="font-size:16px;font-weight:700">Дубли</div><div class="tn" style="font-size:13px;color:#A39FB5">6</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;align-content:start">
+      <sc-for list="{{ takeSel }}" as="t" hint-placeholder-count="6">
+      <div style="display:flex;align-items:center;gap:12px;background:{{ t.bg }};border-radius:16px;padding:12px 14px;box-shadow:{{ t.ring }}">
+        {{ t.left }}
+        <div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:8px"><div class="tn" style="font-size:15px;font-weight:600">{{ t.date }}</div><sc-if value="{{ t.best }}" hint-placeholder-val="{{ false }}"><div style="height:22px;padding:0 8px 0 6px;border-radius:6px;border:1px solid #C4ADFF;color:#C4ADFF;font-size:11px;font-weight:700;display:flex;align-items:center;gap:4px">{{ icStarS }}лучший</div></sc-if></div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">{{ t.meta }}</div></div>
+        <div style="display:flex;align-items:flex-end;gap:2px;height:28px;flex:none"><sc-for list="{{ t.bars }}" as="b" hint-placeholder-count="8"><div style="width:4px;height:{{ b.h }};border-radius:2px;background:{{ b.c }}"></div></sc-for></div>
+      </div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">На экране произведения панель выбора встаёт на место шапки «назад · название · Изменить» и тоже прилипает; экран остаётся прокручиваемым целиком, но всё выше блока «Дубли» — заметки, кнопка записи, прогресс — приглушено до α .38 и не нажимается: пока выбираем, дубль не записать (и наоборот — во время записи «Выбрать» и долгое нажатие не работают). «Выбрать все» здесь — все дубли произведения. Строка «Дубли · 6» вместо «Дубли · Выбрать» — счётчик занимает место кнопки, чтобы строка не пустела.</p>
+</section>
+
+<section class="dv-turn" id="s19g">
+<div class="dv-thd"><a class="dv-tid" href="#s19g">19g</a><span class="dv-tname">Огонёк «Дней подряд» · крупно, раскадровка, карточка, ступени, «убрать анимации»</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="19g1"><div class="dv-olabel"><a class="dv-oid" href="#19g1">19g1</a>Огонёк ×5 (120 dp), живой: два слоя — язык `flame.outer` качается ±3° от основания и дышит по высоте, ядро `flame.core` в противофазе; цикл 2.6 с</div><div class="dv-card">
+<div class="frag" style="align-items:center;justify-content:center;padding:28px;flex-direction:row;gap:36px">{{ flameBig }}{{ flameBigHot }}</div>
+</div></div>
+<div class="dv-opt" id="19g2"><div class="dv-olabel"><a class="dv-oid" href="#19g2">19g2</a>Раскадровка одного цикла ×2 (48 dp): 0 · 0.65 · 1.3 · 1.95 · 2.6 с. Ни яркость, ни цвет не меняются — только форма</div><div class="dv-card">
+<div class="frag" style="gap:8px"><div style="display:flex;gap:18px;justify-content:space-between;align-items:flex-end"><sc-for list="{{ flamePhases }}" as="f" hint-placeholder-count="5"><div style="display:flex;flex-direction:column;align-items:center;gap:10px;width:60px">{{ f.el }}<div class="cap tn" style="text-align:center;white-space:nowrap">{{ f.t }}</div><div class="cap tn" style="text-align:center;font-size:10px">{{ f.note }}</div></div></sc-for></div></div>
+</div></div>
+<div class="dv-opt" id="19g3"><div class="dv-olabel"><a class="dv-oid" href="#19g3">19g3</a>Карточки сводки, портрет (380 dp, три по ~121): огонёк 24 dp после числа, gap 6. Ниже — ступени серии: 3–6 дней малый (20), 7–29 полный, от 30 — ядро ярче `flame.hot`</div><div class="dv-card">
+<div class="frag" style="gap:16px">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+    <div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">Неделя</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;white-space:nowrap">3 ч 30 мин</div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">Месяц</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;white-space:nowrap">12 ч 45 мин</div></div>
+    <div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">Дней подряд</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;display:flex;align-items:center;gap:6px;white-space:nowrap;height:24px">7{{ flame24 }}</div></div>
+  </div>
+  <div class="cap">Ступени серии, серия 2 дня, трёхзначная серия</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+    <sc-for list="{{ streakCards }}" as="k" hint-placeholder-count="6"><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">{{ k.n }}</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;display:flex;align-items:center;gap:6px;white-space:nowrap;height:24px">{{ k.v }}{{ k.el }}</div></div></sc-for>
+  </div>
+</div>
+</div></div>
+<div class="dv-opt" id="19g4"><div class="dv-olabel"><a class="dv-oid" href="#19g4">19g4</a>Landscape (карточки мельче: значение 15 sp, огонёк 20) · «Убрать анимации» — тот же огонёк, форма d0, неподвижен</div><div class="dv-card">
+<div class="frag" style="gap:16px">
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;width:280px">
+    <div style="background:#1E1D25;border-radius:14px;padding:10px 10px 8px"><div style="font-size:11px;color:#A39FB5">Неделя</div><div class="tn" style="font-size:15px;font-weight:700;margin-top:3px;white-space:nowrap">3 ч 30</div></div>
+    <div style="background:#1E1D25;border-radius:14px;padding:10px 10px 8px"><div style="font-size:11px;color:#A39FB5">Месяц</div><div class="tn" style="font-size:15px;font-weight:700;margin-top:3px;white-space:nowrap">12 ч 45</div></div>
+    <div style="background:#1E1D25;border-radius:14px;padding:10px 10px 8px"><div style="font-size:11px;color:#A39FB5">Подряд</div><div class="tn" style="font-size:15px;font-weight:700;margin-top:3px;display:flex;align-items:center;gap:5px;white-space:nowrap;height:20px">7{{ flame20 }}</div></div>
+  </div>
+  <div class="cap">«Убрать анимации»</div>
+  <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">Дней подряд</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;display:flex;align-items:center;gap:6px;white-space:nowrap;height:24px">7{{ flameStill }}</div></div></div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Огонёк — свеча.</b> Два слоя на сетке 24: внешний язык `flame.outer` (#F28C3B — оранжевый между янтарём и кораллом, ни в одну зону не попадает) и ядро `flame.core` (#FFE29A, светлый). Ядро — не белое: белое на тёмном рядом с числом 18 sp Bold спорило бы с ним. Движение — только трансформации слоёв, без изменения цвета и альфы: язык поворачивается 0 → −3° → +2.5° → 0 вокруг основания (12, 19.5) и дышит scaleY 1 → 1.05 → .97 → 1; ядро — scaleY в противофазе от (12, 19). Цикл 2.6 с, EaseInOutSine. Компоузу это одна `Canvas` с двумя `Path` и `withTransform`; вариант с морфом d0 ↔ d1 в `FLAME` — если захочется живее (структура команд у d0 и d1 одинаковая, лерп по координатам). <b>Ступени</b> дёшевы, поэтому три: 3–6 дней — 20 dp, 7–29 — 24, от 30 — ядро `flame.hot`; серия до 3 дней — без огонька (согласны: серый «ещё не горит» читался бы как упрёк). <b>Разгорание</b> при росте серии: 600 мс, scale 1 → 1.35 → 1 от основания, один раз. Трёхзначная серия влезает: «365» 18 sp ≈ 36 dp + 6 + 24 = 66 из 97 внутренних.</p>
+</section>
+
+<section class="dv-turn" id="s19h">
+<div class="dv-thd"><a class="dv-tid" href="#s19h">19h</a><span class="dv-tname">«Занятия» целиком, занятие идёт · блик + живой таймер + огонёк</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="19h"><div class="dv-olabel"><a class="dv-oid" href="#19h">19h</a>Три движения на одном экране (до: <a href="Иконки%20и%20жизнь.dc.html#15a">15a</a>) — смотреть 10 секунд</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="height:100%">
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:20px;padding:12px 16px 0">
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:center;gap:12px;min-height:56px">
+        <div style="width:56px;height:56px;border-radius:50%;flex:none;background:radial-gradient(circle at 35% 30%,#8C7AB0 0%,#4E3F78 55%,#2A2352 100%)"></div>
+        <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:2px"><div style="font-size:16px;font-weight:600;line-height:1.2">Анна</div><div class="tn" style="font-size:24px;font-weight:800;line-height:1.1;letter-spacing:-.01em;color:#C4ADFF">16 ч 40 мин</div></div>
+        <div style="display:flex;align-items:center;gap:4px;flex:none;height:44px">{{ trophyRow }}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">{{ shineMain }}
+        <div class="tn" style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;font-size:12px;color:#A39FB5;white-space:nowrap"><div>Уровень 4 · Первая позиция</div><div>до 5 уровня — 8 ч 20 мин</div></div>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+      <div class="tn" style="font-size:64px;font-weight:700;line-height:1;letter-spacing:-1px">12:34</div>
+      <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#A39FB5">{{ liveDot }}Занятие идёт</div>
+      <div style="height:56px;border-radius:28px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:600;color:#E6E4EE;align-self:stretch;margin-top:6px">{{ icFlag }}Закончить занятие</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+      <div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">Неделя</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;white-space:nowrap">3 ч 30 мин</div></div>
+      <div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">Месяц</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;white-space:nowrap">12 ч 45 мин</div></div>
+      <div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">Дней подряд</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;display:flex;align-items:center;gap:6px;white-space:nowrap;height:24px">7{{ flameScreen }}</div></div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:40px">
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center">{{ icChevL }}</div>
+        <div style="font-size:16px;font-weight:700">Сентябрь 2026</div>
+        <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;opacity:.3">{{ icChevR }}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:11px;color:#A39FB5;text-align:center;font-weight:600"><div>пн</div><div>вт</div><div>ср</div><div>чт</div><div>пт</div><div>сб</div><div>вс</div></div>
+      <div style="display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px">
+        <sc-for list="{{ cells }}" as="c" hint-placeholder-count="35">
+        <div style="height:44px;display:flex;align-items:center;justify-content:center;opacity:{{ c.op }}">
+          <div style="position:relative;width:40px;height:40px;border-radius:12px;background:{{ c.bg }};box-shadow:{{ c.shadow }};display:flex;align-items:center;justify-content:center">
+            <div class="tn" style="font-size:15px;font-weight:{{ c.fw }};color:{{ c.fg }};margin-top:{{ c.mt }}">{{ c.n }}</div>
+            <sc-if value="{{ c.dot }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;bottom:6px;left:50%;margin-left:-2px;width:4px;height:4px;border-radius:50%;background:{{ c.fg }}"></div></sc-if>
+          </div>
+        </div>
+        </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+      <div><div style="font-size:14px;color:#A39FB5;display:flex;align-items:center;gap:8px">17 сентября, четверг<span style="font-size:11px;font-weight:700;color:#C4ADFF;border:1px solid #C4ADFF;border-radius:6px;padding:1px 6px">сегодня</span></div><div class="tn" style="font-size:32px;font-weight:700;line-height:1.1;margin-top:4px">45 мин</div></div>
+      <div style="height:40px;padding:0 16px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF;white-space:nowrap">{{ icPencilP }}Изменить время</div>
+    </div>
+  </div>
+  <div style="height:80px;display:flex;background:#1E1D25;flex:none">
+    <sc-for list="{{ navRun }}" as="n" hint-placeholder-count="4">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px"><div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center">{{ n.icon }}<sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:4px;right:14px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px {{ n.markRing }}"></div></sc-if></div><div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div></div>
+    </sc-for>
+  </div>
+</div>
+</x-import>
+</div></div>
+</div>
+<p class="dv-next"><b>Честно: втроём — витрина.</b> Блик приходит раз в 4 с и уходит, точка дышит медленно, но огонёк движется всё время, и глаз, поставленный на таймер, ловит его боковым зрением каждую секунду. Поодиночке ни одно не кричит; вместе на экране «тихой игры» — многовато. <b>Правило:</b> огонёк колышется <b>6 с после открытия экрана</b> и после разгорания серии, затем замирает в форме d0 (замирание — плавно за 600 мс, не стоп-кадр). Пока идёт занятие, живое — таймер: его точка и кольцо. В покое (занятие не идёт) на экране остаются блик и замерший огонёк — два движения, как и было. Тёплый цвет на фиолетовом экране — единственное тёплое пятно, и это хорошо: он маленький (24 dp), в тёмной карточке, ниже линии взгляда, и не спорит с primary-акцентами, потому что не является кнопкой. Если по итогу и это лишнее — второй порог: огонёк оживает только при росте серии (600 мс + 6 с) и больше никогда.</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · дополнение ICONS, FLAME, tokens, sizes, anims</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(560px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Дополнение ICONS (viewBox 24, stroke 1.8, round, fill none; `F ` — заливка). `flame` из набора — удалить</div>
+  <div class="dv-tbl" style="grid-template-columns:36px minmax(0,.7fr) minmax(0,1fr) minmax(0,2fr)">
+    <div class="h"></div><div class="h">name</div><div class="h">use</div><div class="h">paths</div>
+    <sc-for list="{{ iconRows }}" as="r" hint-placeholder-count="3"><div style="padding:6px 8px;display:flex;align-items:center">{{ r.el }}</div><div class="mono">{{ r.name }}</div><div style="color:#A39FB5">{{ r.use }}</div><div class="mono" style="color:#A39FB5;font-size:10.5px">{{ r.paths }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">FLAME — слои снизу вверх, сетка 24 × 24, без mask / clipPath / градиентов; d0 — покой, d1 — крайняя фаза (одинаковая структура: M + 6C + Z / M + 4C + Z)</div>
+  <div class="dv-tbl" style="grid-template-columns:36px minmax(0,.5fr) minmax(0,.6fr) minmax(0,2.4fr)">
+    <div class="h"></div><div class="h">name</div><div class="h">fill</div><div class="h">d0 · d1 · pivot</div>
+    <sc-for list="{{ flameRows }}" as="r" hint-placeholder-count="2"><div style="padding:6px 8px;display:flex;align-items:center">{{ r.el }}</div><div class="mono">{{ r.name }}</div><div class="mono">{{ r.fill }}</div><div class="mono" style="color:#A39FB5;font-size:10.5px">{{ r.d }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Новые токены</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.6fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Значение</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="7"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты</div>
+  <div style="color:#A39FB5">«Выбрать» · «Выбрано: N» · «Выбрать все» / «Снять все» · «Удалить N записей?» (склонение: 1 запись, 2–4 записи, 5+ записей; в дублях — «дубль / дубля / дублей») · «Звук и разбор удалятся. Это нельзя отменить.» · «Удалить» / «Отмена» · «нет дублей» · TalkBack карточки: «Менуэт, дубль, вчера, 2 минуты 5 секунд, хорошо / так себе / мимо» — зона словами, балл не озвучивается; в режиме выбора роль «флажок», состояние «выбрано»</div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Где</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="10"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="9"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const P = '#C4ADFF', PC = '#5B43B8', ONPC = '#E9DDFF', ON = '#E6E4EE', OV = '#A39FB5', ONP = '#2E1A6E', ERR = '#E8565C', SURF = '#131318', SC = '#1E1D25', SCH = '#292833', OUTV = '#3A3846', DIM = '#6B6880';
+    const G = '#47C97E', Y = '#E5B03C', R = '#E8565C';
+    const FO = '#F28C3B', FC = '#FFE29A', FH = '#FFF6DC', SEL = '#2A2540';
+    const zone = v => v >= 75 ? G : v >= 55 ? Y : R;
+    const hexA = (hex, a) => { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; };
+    const ICONS = [
+      { name: 'note-one', use: 'плитка записи — свободная сессия (26 dp в круге 44)', paths: ['M12.2 17.5V4.5', 'M12.2 4.5c3.6 1.4 5.6 3.9 4.4 7.6', 'F M9.2 15.4a3.2 2.5 0 1 0 0 5 3.2 2.5 0 1 0 0-5z'] },
+      { name: 'note-pair', use: 'плитка записи — дубль произведения; карточка произведения (36)', paths: ['M9.6 17.6V5.6M18.6 15.6V3.7', 'F M9.6 4.4l9-1.9v2.6l-9 1.9z', 'F M6.8 16.5a2.9 2.3 0 1 0 0 4.6 2.9 2.3 0 1 0 0-4.6z', 'F M15.8 14.5a2.9 2.3 0 1 0 0 4.6 2.9 2.3 0 1 0 0-4.6z'] },
+      { name: 'select', use: '«Выбрать» над списком (16 dp, primary)', paths: ['M4 6.5h8M4 12h8M4 17.5h6', 'M14.5 12.5l2.5 2.5 5-5.5'] },
+    ];
+    const OLD = [
+      { name: 'back', paths: ['M15 5 8 12l7 7'] }, { name: 'close', paths: ['M6 6l12 12M18 6 6 18'] }, { name: 'check', paths: ['M5 12.5 9.5 17 19 7.5'] },
+      { name: 'more', paths: ['F M5 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'F M12 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z', 'F M19 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z'] },
+      { name: 'pencil', paths: ['M4 20l.9-4.1L15.7 5.1a1.6 1.6 0 0 1 2.3 0l.9.9a1.6 1.6 0 0 1 0 2.3L8.1 19.1 4 20z', 'M14.2 6.6l3.2 3.2'] },
+      { name: 'trash', paths: ['M4 7h16', 'M9 7V4.8a.8.8 0 0 1 .8-.8h4.4a.8.8 0 0 1 .8.8V7', 'M6 7l.9 12.2a1 1 0 0 0 1 .8h8.2a1 1 0 0 0 1-.8L18 7', 'M10 11v5M14 11v5'] },
+      { name: 'note', paths: ['M10 17.5V5l7 2.5v3.5l-7-2.5', 'F M7.5 15.5a2.5 2 0 1 0 0 4 2.5 2 0 1 0 0-4z'] },
+      { name: 'star', paths: ['F M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z'] },
+      { name: 'flag', paths: ['M6 21V4', 'M6 4.5c2.5-1.5 5-1.5 7.5 0s5 1.5 6.5.5v9c-1.5 1-4 1-6.5-.5s-5-1.5-7.5 0'] },
+      { name: 'chevron-left', paths: ['M14.5 6l-6 6 6 6'] }, { name: 'chevron-right', paths: ['M9.5 6l6 6-6 6'] },
+      { name: 'tab-live', tab: true, paths: [{ d: 'M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8z', sel: 'fill' }, { d: 'M17.7 6.3a8 8 0 0 1 0 11.4' }, { d: 'M6.3 6.3a8 8 0 0 0 0 11.4' }] },
+      { name: 'tab-practice', tab: true, paths: [{ d: 'M12 6.5a7 7 0 1 0 0 14 7 7 0 1 0 0-14z', sel: 'fill' }, { d: 'M12 13.5V10', sel: 'inv' }, { d: 'M10 3h4M12 3v3.5' }] },
+      { name: 'tab-records', tab: true, paths: [{ d: 'M4 6h8M4 12h6M4 18h5' }, { d: 'M15 17V7.5l5-1.5v3' }, { d: 'F M13 15a2 2 0 1 0 0 4 2 2 0 1 0 0-4z', sel: 'fill' }] },
+      { name: 'tab-settings', tab: true, paths: [{ d: 'M4 7h9M18.5 7H20M4 17h6M14.5 17H20' }, { d: 'M15.5 4.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z', sel: 'fill' }, { d: 'M10.5 14.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z', sel: 'fill' }] },
+    ];
+    const byName = Object.fromEntries([...ICONS, ...OLD].map(i => [i.name, i]));
+    const ico = (name, size = 24, color = ON, opt = {}) => {
+      const ic = byName[name]; const sel = opt.sel, pill = opt.pill || PC;
+      const paths = ic.paths.map((p, i) => {
+        if (typeof p === 'string') { const f = p.startsWith('F '); return h('path', { key: i, d: f ? p.slice(2) : p, fill: f ? color : 'none', stroke: f ? 'none' : color }); }
+        const f = p.d.startsWith('F '); const d = f ? p.d.slice(2) : p.d; const fill = f || (sel && p.sel === 'fill'), inv = sel && p.sel === 'inv';
+        return h('path', { key: i, d, fill: fill ? color : 'none', stroke: fill && !inv ? 'none' : inv ? pill : color });
+      });
+      return h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.8 * (24 / Math.max(size, 24)) * (size > 24 ? 1 : 1), strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none', display: 'block' } }, paths);
+    };
+    const iconRows = ICONS.map(i => ({ name: i.name, use: i.use, el: ico(i.name, 20, ON), paths: i.paths.join('  ·  ') }));
+    const TABS = [['Live', 'tab-live'], ['Занятия', 'tab-practice'], ['Записи', 'tab-records'], ['Настройки', 'tab-settings']];
+    const nav = (active, running) => TABS.map(([name, k]) => { const a = name === active; return { name, icon: ico(k, 24, a ? ONPC : OV, { sel: a }), pill: a ? PC : 'transparent', fg: a ? ON : OV, fw: a ? 600 : 400, mark: running && k === 'tab-practice', markRing: a ? PC : SC }; });
+    const navRec = nav('Записи'), navRun = nav('Занятия', true);
+    // ---- cards
+    const bars = arr => arr.map(z => ({ h: (z === 0 ? 28 : z === 1 ? 16 : 8) + 'px', c: z === 0 ? G : z === 1 ? Y : R }));
+    const REC = [
+      { score: 84, title: 'Менуэт соль мажор', take: true, meta: 'вчера · 2:05 · −4 ц', bars: [0, 0, 1, 0, 0, 0, 1, 0], sound: true },
+      { score: 71, title: 'Гаммы D-dur', take: false, meta: 'вчера · 8:15 · −6 ц', bars: [0, 1, 0, 1, 0, 2, 0, 1], sound: true },
+      { score: 88, title: 'Мелодия', take: true, meta: '15 сен · 3:40 · +2 ц', bars: [0, 0, 0, 0, 1, 0, 0, 0], sound: true },
+      { score: 58, title: 'Этюд Кайзера №3', take: false, meta: '15 сен · 6:02 · −9 ц', bars: [1, 0, 2, 1, 0, 1, 2, 0], sound: false },
+      { score: 47, title: 'Концерт ля минор, I часть', take: true, meta: '14 сен · 4:10 · −12 ц', bars: [2, 1, 2, 0, 1, 2, 1, 2], sound: true },
+      { score: 79, title: 'Сессия', take: false, meta: '12 сен · 5:30 · −3 ц', bars: [0, 0, 1, 0, 0, 1, 0, 0], sound: false },
+      { score: 63, title: 'Сессия', take: false, meta: '11 сен · 2:48 · −7 ц', bars: [1, 0, 1, 2, 0, 1, 0, 1], sound: true },
+    ];
+    const circle = (size, style, child) => h('div', { style: { width: size, height: size, borderRadius: size / 2, flex: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box', ...style } }, child);
+    const tile = (c, mode = 'A', sel = null, size = 44) => {
+      const k = size / 44;
+      if (sel === false) return circle(size, { border: `${2 * k}px solid ${DIM}` });
+      if (sel === true) return circle(size, { background: P }, ico('check', 22 * k, ONP));
+      const col = mode === 'B' ? P : zone(c.score); const bg = mode === 'B' ? 'rgba(91,67,184,.35)' : hexA(col, .16);
+      return circle(size, c.sound ? { background: bg } : { boxShadow: `inset 0 0 0 ${1.5 * k}px ${col}` }, ico(c.take ? 'note-pair' : 'note-one', 26 * k, col));
+    };
+    const scoreCol = c => h('div', { style: { width: 52, textAlign: 'center', flex: 'none' } }, [h('div', { key: 1, className: 'tn', style: { fontSize: 26, fontWeight: 800, lineHeight: 1, color: zone(c.score) } }, c.score), h('div', { key: 2, style: { fontSize: 11, color: OV } }, '%')]);
+    const stripCents = m => m.replace(/ · [−+]\d+ ц$/, '');
+    const cards = (o = {}) => REC.map((c, i) => {
+      const selected = o.selected ? o.selected.includes(i) : null; const inSel = !!o.selected;
+      return { title: c.title, chip: !!o.chip && c.take, meta: o.noCents ? stripCents(c.meta) : c.meta, bars: bars(c.bars), more: c.sound && !inSel, bg: selected ? SEL : SC, ring: selected ? `inset 0 0 0 1.5px ${P}` : 'none', scale: o.press === i ? .98 : 1,
+        left: inSel ? tile(c, 'A', selected) : o.mode === 'old' ? scoreCol(c) : tile(c, o.mode) };
+    });
+    const recFrames = [
+      { id: '19a1', label: 'До — балл 26 sp цветом зоны и «%», чип «дубль», «⋯» у записей со звуком (из Репертуар 13a1)', plain: true, sel: false, dimOp: 1, showGraph: true, selectBtn: false, cards: cards({ mode: 'old', chip: true }), dialog: false },
+      { id: '19a2', label: 'После, вариант A — нота цветом зоны на плитке 44; дубль — пара нот, чип убран; без звука — контур; над списком «23 сессии · Выбрать»', plain: true, sel: false, dimOp: 1, showGraph: true, selectBtn: true, cards: cards({ mode: 'A' }), dialog: false },
+      { id: '19a3', label: 'После, вариант B — нейтральная нота primary на primaryContainer 35 %; чип «дубль» оставлен для сравнения', plain: true, sel: false, dimOp: 1, showGraph: true, selectBtn: true, cards: cards({ mode: 'B', chip: true }), dialog: false },
+      { id: '19a4', label: 'A без смещения — «вчера · 8:15»', plain: true, sel: false, dimOp: 1, showGraph: true, selectBtn: true, cards: cards({ mode: 'A', noCents: true }), dialog: false },
+    ];
+    const selFrames = [
+      { id: '19e1', label: 'Вход — долгое нажатие на «Гаммы D-dur»: карточка сжата до .98, панель выбора уже сменила шапку (crossfade 200), карточка выбрана; остальные — пустые кружки', selCount: 1, selAllText: 'Выбрать все', scroll: '0', cards: cards({ selected: [1], press: 1 }), dialog: false },
+      { id: '19e2', label: '3 выбраны; список прокручен — панель прилипла сверху, график ушёл под неё', selCount: 3, selAllText: 'Выбрать все', scroll: '-150px', cards: cards({ selected: [1, 3, 5] }), dialog: false },
+      { id: '19e3', label: '«Выбрать все» → выбраны все 23 под фильтром «Все»; кнопка стала «Снять все»', selCount: 23, selAllText: 'Снять все', scroll: '-150px', cards: cards({ selected: [0, 1, 2, 3, 4, 5, 6] }), dialog: false },
+      { id: '19e4', label: 'Корзина → диалог подтверждения; «Удалить» — error, «Отмена» — текст', selCount: 3, selAllText: 'Выбрать все', scroll: '-150px', cards: cards({ selected: [1, 3, 5] }), dialog: true, dialogN: '3 записи' },
+    ];
+    const landCards = cards({ selected: [1, 3] }).slice(0, 6);
+    // takes
+    const TAKES = [
+      { score: 82, date: '18 сентября', meta: '2:05 · −4 ц · Камерный зал', bars: [0, 0, 1, 0, 0, 0, 1, 0], isNew: true },
+      { score: 78, date: '16 сентября', meta: '1:58 · −6 ц', bars: [0, 1, 0, 0, 1, 0, 0, 0] },
+      { score: 88, date: '12 сентября', meta: '2:10 · +2 ц', bars: [0, 0, 0, 0, 1, 0, 0, 0], best: true },
+      { score: 69, date: '9 сентября', meta: '2:14 · −8 ц', bars: [1, 0, 1, 0, 2, 1, 0, 1] },
+      { score: 61, date: '6 сентября', meta: '2:22 · −9 ц', bars: [1, 1, 0, 2, 1, 0, 1, 1] },
+      { score: 55, date: '3 сентября', meta: '2:30 · −11 ц', bars: [2, 1, 1, 2, 0, 1, 2, 1] },
+    ];
+    const takeRows = (sel) => TAKES.map((t, i) => { const c = { score: t.score, take: true, sound: true }; const selected = sel ? sel.includes(i) : null; return { date: t.date, meta: t.meta, best: !!t.best, bars: bars(t.bars), left: sel ? tile(c, 'A', selected) : tile(c, 'A'), bg: selected ? SEL : (!sel && t.isNew ? SEL : SC), ring: selected || (!sel && t.isNew) ? `inset 0 0 0 1.5px ${P}` : 'none' }; });
+    const takeCards = takeRows(null).slice(0, 4), takeSel = takeRows([0, 3]);
+    const progVals = [55, 61, 69, 88, 78, 82];
+    const progPts = progVals.map((v, i) => ({ x: 6 + i * 29.6, y: 40 - (v - 50) * .8 }));
+    const progLine = progPts.map(p => `${p.x},${p.y}`).join(' ');
+    const week = [62, 68, 71, 70, 78, 84];
+    const weekPts = week.map((v, i) => ({ x: 10 + i * 65.6, y: 92 - (v - 50) * 1.6 }));
+    const weekLine = weekPts.map(p => `${p.x},${p.y}`).join(' ');
+    const pieceCards = [
+      { title: 'Менуэт соль мажор', composer: 'И. С. Бах', keyTempo: 'G-dur · ♩ = 96', thumbBg: 'linear-gradient(160deg,#B8B4C4,#8E8A9E)', noPages: false, tile: tile({ score: 82, take: true, sound: true }, 'A', null, 36), sub: 'вчера · 6 дублей' },
+      { title: 'Гавот', composer: 'Ж.-Б. Люлли', keyTempo: '♩ = 120', thumbBg: SCH, noPages: true, tile: circle(36, { border: `1.5px dashed ${OUTV}` }, ico('note-pair', 20, DIM)), sub: 'нет дублей' },
+    ];
+    const dayCards = [{ score: 79, title: 'Этюд Кайзера №3', take: false, meta: '8:15 · −4 ц', bars: [0, 1, 0, 0, 1, 0, 0, 2], sound: true }, { score: 71, title: 'Гаммы D-dur', take: false, meta: '12:40 · −6 ц', bars: [0, 1, 0, 1, 0, 2, 0, 1], sound: false }].map(c => ({ title: c.title, meta: c.meta, bars: bars(c.bars), left: tile(c, 'A') }));
+    // 19b
+    const bigOne = ico('note-one', 132, G), bigPair = ico('note-pair', 132, G);
+    const TS = [[{ score: 84, take: false, sound: true }, 'A', null, 'в строе · сессия'], [{ score: 64, take: true, sound: true }, 'A', null, 'рядом · дубль'], [{ score: 47, take: false, sound: true }, 'A', null, 'мимо · сессия'], [{ score: 84, take: true, sound: false }, 'A', null, 'без звука — контур'], [{ score: 84, take: true, sound: true }, 'B', null, 'вариант B'], [{}, 'A', false, 'чекбокс пустой'], [{}, 'A', true, 'выбран']];
+    const tileStates = TS.map(([c, m, s, cap]) => ({ el: tile(c, m, s), cap }));
+    const tileBig = TS.map(([c, m, s]) => ({ el: tile(c, m, s, 88) }));
+    const morph = [
+      { cap: '0 мс', el: tile({ score: 84, take: true, sound: true }) },
+      { cap: '100 мс', el: circle(44, { background: hexA(G, .06), border: `2px solid ${hexA(DIM, .5)}` }, h('div', { style: { opacity: .3, display: 'flex' } }, ico('note-pair', 26, G))) },
+      { cap: '200 мс', el: tile({}, 'A', false) },
+      { cap: 'тап +75', el: circle(44, { border: `2px solid ${DIM}` }, circle(26, { background: P }, ico('check', 14, ONP))) },
+      { cap: '+150', el: tile({}, 'A', true) },
+    ];
+    // ---- flame
+    const FLAME = [
+      { name: 'outer', fill: 'flame.outer', hex: FO, pivot: '12, 19.5', d0: 'M12 2.5C12.6 6.3 16.5 8.1 17.4 11.7C18.3 15.3 15.7 19.5 12 19.5C8.3 19.5 5.7 15.3 6.6 11.7C7 10.2 7.8 9 8.7 8C9 9.4 9.7 10.4 10.7 11C10.6 7.8 11.1 5 12 2.5Z', d1: 'M12.7 2.5C13.7 6.3 17 8.4 17.6 12C18.2 15.5 15.7 19.5 12 19.5C8.3 19.5 5.8 15.5 6.4 12C6.8 10.4 7.8 9.2 8.9 8.2C9 9.6 9.5 10.6 10.4 11.3C10.6 7.9 11.5 5.1 12.7 2.5Z' },
+      { name: 'core', fill: 'flame.core', hex: FC, pivot: '12, 19', d0: 'M12 10.5C13.2 12.5 14.6 13.6 14.6 15.6C14.6 17.6 13.4 19 12 19C10.6 19 9.4 17.6 9.4 15.6C9.4 13.6 10.8 12.5 12 10.5Z', d1: 'M11.8 11.2C13 13 14.4 13.9 14.4 15.8C14.4 17.6 13.3 19 12 19C10.7 19 9.6 17.6 9.6 15.8C9.6 13.9 10.6 13 11.8 11.2Z' },
+    ];
+    const flame = (size, o = {}) => {
+      const st = o.pose ? { transform: `rotate(${o.pose.r}deg) scaleY(${o.pose.s})` } : o.still ? {} : { animation: 'flameSway 2.6s ease-in-out infinite' };
+      const cs = o.pose ? { transform: `scaleY(${o.pose.c})` } : o.still ? {} : { animation: 'flameCore 2.6s ease-in-out infinite' };
+      return h('svg', { width: size, height: size, viewBox: '0 0 24 24', style: { display: 'block', flex: 'none', overflow: 'visible' } }, [
+        h('path', { key: 'o', d: FLAME[0].d0, fill: FO, style: { transformOrigin: '12px 19.5px', transformBox: 'view-box', ...st } }),
+        h('path', { key: 'c', d: FLAME[1].d0, fill: o.hot ? FH : FC, style: { transformOrigin: '12px 19px', transformBox: 'view-box', ...cs } })]);
+    };
+    const flameBig = flame(120), flameBigHot = flame(120, { hot: true }), flame24 = flame(24), flame20 = flame(20), flameStill = flame(24, { still: true }), flameScreen = flame(24);
+    const poses = [[0, 1, 1, 'покой'], [-2.5, 1.04, .95, 'влево, выше'], [.7, 1, 1.03, 'через центр'], [1.6, .98, 1.04, 'вправо, ниже'], [0, 1, 1, 'покой']];
+    const flamePhases = poses.map(([r, s, c, note], i) => ({ el: flame(48, { pose: { r, s, c } }), t: (i * .65).toFixed(2).replace('.', ',') + ' с', note }));
+    const streakCards = [{ n: 'Дней подряд', v: '4', el: flame(20) }, { n: 'Дней подряд', v: '12', el: flame(24) }, { n: 'Дней подряд', v: '31', el: flame(24, { hot: true }) }, { n: 'Дней подряд', v: '2', el: null }, { n: 'Дней подряд', v: '365', el: flame(24, { hot: true }) }, { n: 'Дней подряд', v: '—', el: null }];
+    const flameRows = FLAME.map(f => ({ name: f.name, fill: f.fill + ' ' + f.hex, d: `d0: ${f.d0}   ·   d1: ${f.d1}   ·   pivot ${f.pivot}`, el: h('svg', { width: 24, height: 24, viewBox: '0 0 24 24' }, h('path', { d: f.d0, fill: f.hex })) }));
+    // ---- Занятия screen bits
+    const shine = (pct, width, dur, band, key) => {
+      const fillPx = width * pct / 100; const to = `${fillPx + band}px`;
+      const beam = { position: 'absolute', top: 0, bottom: 0, left: 0, width: band, background: 'linear-gradient(90deg,rgba(233,221,255,0) 0%,rgba(233,221,255,.35) 50%,rgba(233,221,255,0) 100%)', '--to': to };
+      return h('div', { key, style: { height: 6, borderRadius: 3, background: SCH, overflow: 'hidden', width: '100%' } }, h('div', { style: { position: 'relative', height: '100%', width: pct + '%', borderRadius: 3, background: 'linear-gradient(90deg,#5B43B8,#C4ADFF)', overflow: 'hidden' } }, h(Pauser, { dur, period: 4, style: beam })));
+    };
+    const shineMain = shine(62, 380, 1.2, 56, 'm');
+    const liveDot = h('div', { style: { position: 'relative', width: 20, height: 20, display: 'flex', alignItems: 'center', justifyContent: 'center', flex: 'none' } }, [
+      h('svg', { key: 'r', width: 20, height: 20, viewBox: '0 0 20 20', style: { position: 'absolute', inset: 0, animation: 'spin 60s linear infinite' } }, h('path', { d: 'M10 1.5a8.5 8.5 0 0 1 8.5 8.5', fill: 'none', stroke: P, strokeOpacity: .5, strokeWidth: 1.5, strokeLinecap: 'round' })),
+      h('div', { key: 'd', style: { width: 8, height: 8, borderRadius: '50%', background: P, animation: 'breath 4s ease-in-out infinite' } })]);
+    const tr = (size, locked) => h('svg', { width: size, height: size, viewBox: '0 0 64 64' }, locked ? [h('rect', { key: 1, x: 12, y: 20, width: 40, height: 28, rx: 6, fill: 'none', stroke: DIM, strokeWidth: 1.5 }), h('rect', { key: 2, x: 8, y: 44, width: 48, height: 6, rx: 3, fill: 'none', stroke: DIM, strokeWidth: 1.5 })] : [h('rect', { key: 1, x: 8, y: 44, width: 48, height: 6, rx: 3, fill: '#8C7AB0' }), h('rect', { key: 2, x: 12, y: 20, width: 40, height: 28, rx: 6, fill: P }), h('rect', { key: 3, x: 18, y: 26, width: 28, height: 6, rx: 3, fill: PC })]);
+    const trophyRow = [tr(32, false), tr(32, false), tr(32, true)].map((e, i) => h('div', { key: i, style: { width: 32, height: 32, display: 'flex', alignItems: 'center', justifyContent: 'center' } }, e));
+    const steps = [null, { bg: '#2A2352', fg: ON }, { bg: '#3D2F80', fg: ON }, { bg: PC, fg: ONPC }, { bg: P, fg: ONP }];
+    const mins = { 1: 30, 2: 50, 4: 100, 5: 15, 7: 45, 8: 70, 9: 25, 11: 125, 12: 40, 13: 55, 14: 35, 15: 80, 16: 50, 17: 45 };
+    const stepOf = m => m <= 0 ? 0 : m < 20 ? 1 : m < 45 ? 2 : m < 90 ? 3 : 4;
+    const cells = [{ n: '', bg: 'transparent', fg: ON, fw: 500, shadow: 'none', op: 1, dot: false, mt: '0' }];
+    for (let d = 1; d <= 30; d++) { const m = mins[d] || 0, st = stepOf(m), fut = d > 17, today = d === 17, s = steps[st]; cells.push({ n: String(d), bg: s ? s.bg : 'transparent', fg: s ? s.fg : ON, fw: today ? 800 : 500, shadow: today ? `0 0 0 2px ${SURF},0 0 0 4px ${P}` : 'none', op: fut ? .4 : 1, dot: st > 0, mt: st > 0 ? '-4px' : '0' }); }
+    // ---- dev
+    const tokens = [
+      { name: 'flame.outer', hex: FO, use: 'внешний язык огонька. Оранжевый между zone.near (#E5B03C) и zone.off (#E8565C) — ни в одну зону не попадает; больше нигде не использовать' },
+      { name: 'flame.core', hex: FC, use: 'ядро огонька при серии 3–29' },
+      { name: 'flame.hot', hex: FH, use: 'ядро при серии ≥ 30' },
+      { name: 'tile.bg', hex: hexA(G, .16), use: 'фон плитки = цвет зоны α .16 (пример — zone.inTune); нота — цвет зоны α 1; без звука — фон нет, кольцо 1.5 цветом зоны' },
+      { name: 'tile.neutral', hex: 'rgba(91,67,184,.35)', use: 'вариант B (не выбран): primaryContainer α .35, нота primary' },
+      { name: 'card.selected', hex: SEL, use: 'фон выбранной карточки + кольцо inset 1.5 primary (= take.new)' },
+      { name: 'check.empty', hex: DIM, use: 'контур пустого чекбокса 2 dp (= outline)' },
+    ];
+    const sizes = [
+      { name: 'Плитка', v: 'круг 44; нота 26 внутри (note-one / note-pair); фон tile.bg или кольцо inset 1.5 (без звука); слева в карточке вместо колонки 52 — gap 14 сохраняется; в карточке произведения 36 / нота 20; без дублей — кольцо dashed 1.5 outlineVariant + note-pair 20 outline' },
+      { name: 'Карточка записи', v: 'без изменений: surfaceContainer r16, padding 14 16, gap 14; название 15/600 ellipsis; строка 13 onSurfaceVariant; столбики 4×(8/16/28) gap 2; «⋯» 40 в правом поле (margin −12). Чип «дубль» — удалён' },
+      { name: 'Чип «лучший»', v: '22 dp r6, контур 1 primary, звезда 12 (filled) + «лучший» 11/700, padding 0 8 0 6' },
+      { name: 'Строка над списком', v: '24 dp: счётчик 13 onSurfaceVariant слева («23 сессии» / «Дубли» 16/700), справа «Выбрать» — select 16 + 13/600 primary, зона 32, выступает в поле на 10' },
+      { name: 'Панель выбора', v: '56 dp (landscape 52), фон surface, тень-линия 1 surfaceContainerHigh снизу; ✕ 48; «Выбрано: N» 17/600 tnum; «Выбрать все / Снять все» 14/600 primary, 40 dp; корзина 48. Прилипает сверху (Scaffold topBar)' },
+      { name: 'Чекбокс', v: 'круг 44 на месте плитки: пустой — контур 2 check.empty; выбран — заливка primary, check 22 onPrimary. Зона касания — вся карточка' },
+      { name: 'Выбранная карточка', v: 'фон card.selected, кольцо inset 1.5 primary; «⋯» скрыта у всех карточек в режиме' },
+      { name: 'Приглушение в режиме', v: 'переключатель, график, фильтры (на «Записях»); заметки, запись, прогресс (на произведении) — α .38, не кликабельны; нижняя панель вкладок — обычная' },
+      { name: 'Диалог удаления', v: 'surfaceContainerHigh r28, padding 28 24 20; иконка trash 24 error в круге 44 error α .16; заголовок 24/700; текст 15 onSurfaceVariant; «Удалить» — filled error 48 r24 с trash 18 + 15/700 белым; «Отмена» — текст primary 48' },
+      { name: 'Огонёк', v: '24 dp после числа 18/700, gap 6, по центру строки высотой 24; серия 3–6 — 20 dp; landscape — 20 (значение 15); pivot язык (12, 19.5), ядро (12, 19). Меньше 3 дней — не рисуется, число одно' },
+    ];
+    const anims = [
+      { name: 'Вход в режим (долгое нажатие)', v: '400 мс до срабатывания; карточка scale 1 → .98 за 100 (FastOutSlowIn), haptic LongPress, обратно .98 → 1 за 150; шапка ↔ панель crossfade 200; все плитки → чекбоксы 200 (ниже), нажатая сразу «выбрана»' },
+      { name: 'Плитка ↔ чекбокс', v: '200 мс FastOutSlowIn: заливка плитки → transparent и нота α 1 → 0 за 120; контур 2 dp α 0 → 1 с 80 до 200. Обратно — зеркально. Круг не меняет размер' },
+      { name: 'Выбор / снятие', v: 'заливка primary scale .6 → 1 + галочка α 0 → 1 за 150 FastOutSlowIn; фон карточки → card.selected и кольцо за 150; снятие — 120 обратно. Haptic Tick' },
+      { name: '«Выбрать все»', v: 'без волны: все чекбоксы за одни 150 мс; текст кнопки crossfade 100' },
+      { name: 'Удаление', v: 'диалог — как у сессии (scale .95 → 1 + fade 200); после «Удалить»: карточки α → 0 за 150, высота → 0 за 250 (FastOutSlowIn), ступень 30 мс сверху вниз; панель → шапка crossfade 200 одновременно' },
+      { name: 'Выход (✕ / назад / снята последняя)', v: 'чекбоксы → плитки 200, фон карточек → surfaceContainer 150, панель → шапка crossfade 200, приглушённое α .38 → 1 за 200' },
+      { name: 'Огонёк — колыхание', v: 'цикл 2600 мс EaseInOutSine, infiniteRepeatable. Язык: rotate 0 → −3° (t .3) → +2.5° (t .6) → 0, scaleY 1 → 1.05 → .97 → 1, pivot (12, 19.5); ядро: scaleY 1 → .94 → 1.06 → 1, pivot (12, 19). Альтернатива — морф d0 ↔ d1 по sin(2πt), lerp координат. Цвет и альфа не меняются' },
+      { name: 'Огонёк — когда живой', v: 'после появления экрана «Занятия» — 6 с колыхания, затем плавно в d0 за 600 (не стоп-кадр); после разгорания — тоже 6 с. Пока идёт занятие, живёт таймер (точка + кольцо), огонёк остальное время неподвижен. Экран не виден — не рисуется' },
+      { name: 'Огонёк — разгорание', v: 'при росте серии на глазах (сохранили занятие → серия 3 или больше прежней): один раз 600 мс: scale 1 → 1.35 (200, EaseOut) → 1 (400, EaseInOut) от pivot основания; если огонёк появился впервые (серия стала 3) — перед этим α 0 → 1 за 200. Затем 6 с колыхания' },
+      { name: '«Убрать анимации»', v: 'огонёк — d0, неподвижен, разгорание — просто появление; переходы режима выбора — 0, crossfade — мгновенная замена' },
+    ];
+    return { recFrames, selFrames, landCards, navRec, navRun, weekLine, weekPts, progLine, progPts, takeCards, takeSel, pieceCards, dayCards, bigOne, bigPair, tileStates, tileBig, morph,
+      flameBig, flameBigHot, flame24, flame20, flameStill, flameScreen, flamePhases, streakCards, flameRows, shineMain, liveDot, trophyRow, cells,
+      icClose: ico('close', 24, ON), icTrash: ico('trash', 24, ON), icTrashE: ico('trash', 24, ERR), icTrashW: ico('trash', 18, '#FFFFFF'), icMore: ico('more', 24, OV), icSelectP: ico('select', 16, P), icNoteChip: ico('note', 14, OV), icStarS: ico('star', 12, P), icPencilP: ico('pencil', 18, P), icFlag: ico('flag', 20, ON), icChevL: ico('chevron-left', 20, ON), icChevR: ico('chevron-right', 20, ON),
+      iconRows, tokens, sizes, anims };
+  }
+}
+class Pauser extends React.Component {
+  constructor(p) { super(p); this.state = { k: 0 }; }
+  componentDidMount() { this.t = setInterval(() => this.setState(s => ({ k: s.k + 1 })), this.props.period * 1000); }
+  componentWillUnmount() { clearInterval(this.t); }
+  render() { const { style, dur } = this.props; return React.createElement('div', { key: this.state.k, style: { ...style, animation: `shine ${dur}s cubic-bezier(.4,0,.2,1) 1 forwards` } }); }
+}
+</script>
+</body>
+</html>
