@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -40,7 +41,7 @@ import com.example.violintuner.feature.live.TuningState
  * height: the ring below does not jump. Nothing here pulses.
  */
 @Composable
-fun StatusLineRow(line: StatusLine?, tuning: TuningState, modifier: Modifier = Modifier) {
+fun StatusLineRow(line: StatusLine?, tuning: TuningState, modifier: Modifier = Modifier, plate: Boolean = false) {
     var lastShown by remember { mutableStateOf(line) }
     if (line != null) SideEffect { lastShown = line }
     val alpha by animateFloatAsState(
@@ -58,7 +59,18 @@ fun StatusLineRow(line: StatusLine?, tuning: TuningState, modifier: Modifier = M
     ) {
         Crossfade(targetState = line ?: lastShown, animationSpec = tween(LiveMotion.STATUS_LINE_SWAP_MS), label = "statusLine") { shown ->
             if (shown != null) {
+                // over the picture the line stands on a plate of smoked glass, as the label of the place does
+                // (handoff venue, second version): on a cream ceiling bare grey words are lost
+                val glass = ViolinTheme.venueColors.plate
                 Row(
+                    modifier = if (plate) {
+                        Modifier
+                            .height(LiveDimens.StatusPlateHeight)
+                            .background(glass, RoundedCornerShape(LiveDimens.StatusPlateCorner))
+                            .padding(horizontal = LiveDimens.StatusPlatePadding)
+                    } else {
+                        Modifier
+                    },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(LiveDimens.StatusLineGap),
                 ) {

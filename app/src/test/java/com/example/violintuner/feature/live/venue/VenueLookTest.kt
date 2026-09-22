@@ -60,6 +60,13 @@ class VenueLookTest {
     }
 
     @Test
+    fun `the curtain over the top lives only while the light is on, like the veil`() {
+        assertEquals(0.58f, VenueLook.curtainAlpha(0f), 1e-6f)
+        assertEquals(0.29f, VenueLook.curtainAlpha(0.5f), 1e-6f)
+        assertEquals(0f, VenueLook.curtainAlpha(1f))
+    }
+
+    @Test
     fun `the glowing layers go down to a quarter and the untouched controls to 0,38`() {
         assertEquals(1f, VenueLook.lightAlpha(0f))
         assertEquals(0.25f, VenueLook.lightAlpha(1f))

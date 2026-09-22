@@ -47,7 +47,7 @@ fun VenueLabel(venue: Venue, modifier: Modifier = Modifier) {
     Row(
         modifier = modifier
             .height(LiveDimens.PlaceRowHeight)
-            .background(glass.labelFill, shape)
+            .background(glass.plate, shape)
             .padding(horizontal = LiveDimens.PlaceLabelPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(LiveDimens.PlaceLabelGap),

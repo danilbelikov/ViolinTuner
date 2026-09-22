@@ -45,11 +45,15 @@ object VenueLook {
     const val VEIL_MID_STOP = 0.42f
 
     /**
-     * The veil under the controls — upright the band above the ring, lying down the column on the
-     * right — while the light is on. Not in the handoff: its veil round the ring does not reach the
-     * status line, and «Играйте…» was lost on the light ceilings of the halls (found on the emulator).
+     * `venue.scrim.top`: the curtain over the top of the frame while the light is on — under the switcher, the
+     * practice tag and the status line, upright and lying down alike. The veil is a circle round the ring and hardly
+     * reaches the top edge: on the cream ceiling of Vienna the status line read 1.1 : 1; with the curtain and the
+     * plate under the line it reads 5.2 : 1 (handoff venue, second version).
      */
-    const val BAND = 0.55f
+    const val CURTAIN = 0.58f
+
+    /** The share of the frame's height the curtain covers, fading from [CURTAIN] at the top edge to nothing. */
+    const val CURTAIN_HEIGHT = 0.24f
 
     /** The reach of the veil, in diameters of the ring: 300 dp for the ring of 300 in the room, a little more in the bright halls. */
     const val VEIL_ROOM = 1f
@@ -117,8 +121,8 @@ object VenueLook {
         return VEIL * on to VEIL_MID * on
     }
 
-    /** The alpha of the veil under the controls: it lives only while the light is on. */
-    fun bandAlpha(darkness: Float): Float = BAND * (1f - darkness.coerceIn(0f, 1f))
+    /** The alpha of the curtain at the top edge: it lives only while the light is on, like the veil. */
+    fun curtainAlpha(darkness: Float): Float = CURTAIN * (1f - darkness.coerceIn(0f, 1f))
 
     /** The controls one does not touch while playing, as the light goes out. */
     fun chromeAlpha(darkness: Float): Float = 1f - (1f - CHROME_DIM) * darkness.coerceIn(0f, 1f)

@@ -277,6 +277,7 @@ private fun PortraitLayout(
             modifier = Modifier
                 .padding(top = LiveDimens.StatusLineTopPadding)
                 .chrome(1f, chrome),
+            plate = showVenue,
         )
         BoxWithConstraints(
             modifier = Modifier
@@ -429,7 +430,7 @@ private fun LandscapeLayout(
                     topPadding = LiveDimens.StringPegHeadRise,
                 )
             }
-            StatusLineRow(line = state.statusLine, tuning = state.tuning, modifier = Modifier.chrome(1f, chrome))
+            StatusLineRow(line = state.statusLine, tuning = state.tuning, modifier = Modifier.chrome(1f, chrome), plate = showVenue)
             BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)

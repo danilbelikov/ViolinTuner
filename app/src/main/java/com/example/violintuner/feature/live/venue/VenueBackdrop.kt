@@ -75,8 +75,8 @@ private fun rememberRoomPicture(home: HomeState?): PreparedScene? {
 /**
  * The picture behind Live (spec 3.27, handoff 29a–29h): the place, framed by [VenueFraming]; the light
  * going down with [darkness] — the colours to the dusk, the lamps to a quarter, the life of the scene
- * frozen — and over it the veil under the controls while the light is on, and the light of the zone
- * while it is out. Everything that changes on every frame is read while drawing: the picture itself
+ * frozen — and over it the veil round the ring and the curtain over the top while the light is on, and
+ * the light of the zone while it is out. Everything that changes on every frame is read while drawing: the picture itself
  * is its own layer and is drawn again only while the light changes or the scene lives.
  *
  * [ringCenter] and [ringDiameter] are in pixels of this box; [fadeInto] — the colour of the tab bar
@@ -104,7 +104,7 @@ fun VenueBackdrop(
             if (shown != null) PlacePicture(shown, kind, landscape, darkness, surface)
         }
         Canvas(Modifier.fillMaxSize()) {
-            drawLight(kind, landscape, darkness(), glow(), zoneColor(), zoneScale(), ringCenter(), ringDiameter(), surface)
+            drawLight(kind, darkness(), glow(), zoneColor(), zoneScale(), ringCenter(), ringDiameter(), surface)
             if (fadeInto != null) {
                 val fade = VenueMotion.BottomFade.toPx()
                 drawRect(Brush.verticalGradient(listOf(fadeInto.copy(alpha = 0f), fadeInto), startY = size.height - fade, endY = size.height), topLeft = Offset(0f, size.height - fade))
@@ -130,26 +130,17 @@ private fun PlacePicture(picture: PreparedScene, kind: PictureKind, landscape: B
     }
 }
 
-private fun DrawScope.drawLight(kind: PictureKind, landscape: Boolean, darkness: Float, glow: Float, zone: Color, zoneScale: Float, center: Offset, diameter: Float, surface: Color) {
-    if (!center.isSpecified || diameter <= 0f) return
+private fun DrawScope.drawLight(kind: PictureKind, darkness: Float, glow: Float, zone: Color, zoneScale: Float, center: Offset, diameter: Float, surface: Color) {
     // the whole dark picture leans towards the colour of the zone: the light of the ring has fallen on the room
     val tint = VenueLook.tintAlpha(glow, darkness, zoneScale)
     if (tint > 0f) drawRect(zone.copy(alpha = tint))
-    val band = VenueLook.bandAlpha(darkness)
-    if (band > 0f) {
-        val fade = VenueMotion.BandFade.toPx()
-        val veiled = surface.copy(alpha = band)
-        val clear = surface.copy(alpha = 0f)
-        if (landscape) {
-            // the column of the controls on the right
-            val from = size.width * VenueMotion.LANDSCAPE_PANEL - fade
-            drawRect(Brush.horizontalGradient(0f to clear, (2 * fade / (size.width - from)).coerceAtMost(1f) to veiled, 1f to veiled, startX = from, endX = size.width), topLeft = Offset(from, 0f))
-        } else {
-            // the band of the controls above the ring: dark where they stand, softly gone by the top of the ring
-            val end = (center.y - diameter / 2).coerceAtLeast(fade)
-            drawRect(Brush.verticalGradient(0f to veiled, BAND_HOLD to veiled, 1f to clear, startY = 0f, endY = end), size = Size(size.width, end))
-        }
+    // the curtain over the top quarter: the switcher, the tag and the status line stand on it (handoff venue, second version)
+    val curtain = VenueLook.curtainAlpha(darkness)
+    if (curtain > 0f) {
+        val end = size.height * VenueLook.CURTAIN_HEIGHT
+        drawRect(Brush.verticalGradient(listOf(surface.copy(alpha = curtain), surface.copy(alpha = 0f)), startY = 0f, endY = end), size = Size(size.width, end))
     }
+    if (!center.isSpecified || diameter <= 0f) return
     val veil = diameter * if (kind == PictureKind.HALL) VenueLook.VEIL_HALL else VenueLook.VEIL_ROOM
     val (veilCentre, veilMiddle) = VenueLook.veilAlphas(darkness)
     if (veilCentre > 0f) {
@@ -168,9 +159,6 @@ private fun DrawScope.drawLight(kind: PictureKind, landscape: Boolean, darkness:
     }
 }
 
-/** How far down the band above the ring keeps its full dark before it fades out. */
-private const val BAND_HOLD = 0.45f
-
 /** Durations of the place behind Live (handoff `anims`); the light itself is in LiveMotion. */
 object VenueMotion {
     /** `picture.swap`: one place gives way to another. */
@@ -182,9 +170,4 @@ object VenueMotion {
     /** The picture fades into the tab bar instead of ending with a knife (handoff `sizes`). */
     val BottomFade = 14.dp
 
-    /** How softly the veil under the controls ends. */
-    val BandFade = 48.dp
-
-    /** Lying down, the controls stand right of this share of the width (LiveDimens.LANDSCAPE_RING_PANEL_FRACTION). */
-    const val LANDSCAPE_PANEL = 400f / 892f
 }

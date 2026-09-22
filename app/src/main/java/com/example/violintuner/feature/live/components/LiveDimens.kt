@@ -62,6 +62,10 @@ internal object LiveDimens {
     val StatusLineDot = 8.dp
     val StatusLineDotStroke = 2.dp
     val StatusLineGap = 8.dp
+    /** The plate of smoked glass under the status line over the picture (handoff venue `venue.plate`). */
+    val StatusPlateHeight = 26.dp
+    val StatusPlateCorner = 13.dp
+    val StatusPlatePadding = 13.dp
 
     // Status word with the cents beside it (handoff 12c1)
     val StatusRowHeight = 48.dp
