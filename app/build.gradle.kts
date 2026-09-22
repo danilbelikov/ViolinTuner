@@ -9,6 +9,10 @@ plugins {
 // microphone: for emulators and for checking every Live state without an instrument.
 val fakePitch = providers.gradleProperty("fakePitch").map(String::toBoolean).getOrElse(false)
 
+// `-PplainLive=true` builds Live without the room and the halls behind it (spec 3.27): the plain dark
+// field of before, to compare the two from a music stand until one of them is chosen.
+val plainLive = providers.gradleProperty("plainLive").map(String::toBoolean).getOrElse(false)
+
 android {
     namespace = "com.example.violintuner"
     compileSdk {
@@ -24,6 +28,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "FAKE_PITCH_SOURCE", fakePitch.toString())
+        buildConfigField("boolean", "PLAIN_LIVE", plainLive.toString())
     }
 
     buildTypes {

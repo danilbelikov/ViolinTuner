@@ -1,14 +1,20 @@
 package com.example.violintuner.feature.live
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.tooling.preview.Preview
 import com.example.violintuner.core.domain.Direction
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
+import com.example.violintuner.core.domain.home.HomeState
+import com.example.violintuner.core.domain.journey.JourneyProgress
 import com.example.violintuner.core.domain.session.RecordingBar
+import com.example.violintuner.core.domain.venue.Venue
+import com.example.violintuner.core.domain.venue.VenueRules
 import com.example.violintuner.core.ui.theme.ViolinTheme
+import com.example.violintuner.feature.journey.LocalHomeLook
 
 // One preview per row of the state table in spec 3.4, mirroring handoff frames 8a–8f
 // (the area above the navigation bar of the 412 × 892 base screen).
@@ -25,10 +31,13 @@ private fun LivePreview(
     recording: RecordingState? = null,
     practiceMs: Long? = null,
     reduceMotion: Boolean = false,
+    venue: Venue? = null,
 ) {
     val config = IntonationConfig()
     val target = LiveTarget(mode, lockedString)
     ViolinTheme {
+        // the pictures are read from the assets: an interactive preview shows them, a static one the field
+        CompositionLocalProvider(LocalHomeLook provides HomeState.EMPTY.copy(loaded = true)) {
         LiveScreen(
             state = LiveState(
                 mode = mode,
@@ -42,10 +51,13 @@ private fun LivePreview(
                 glowStep = LiveReducer.glowTargetOf(signal, config, stepped = true),
                 statusLine = LiveReducer.statusLineOf(target, signal),
                 practiceMs = practiceMs,
+                venue = venue,
+                venueMenu = VenueRules.menu(JourneyProgress.EMPTY),
             ),
             onIntent = {},
             reduceMotion = reduceMotion,
         )
+        }
     }
 }
 
@@ -238,4 +250,45 @@ private fun TuningNoisyPreview() = LivePreview(LiveSignal.TooNoisy, mode = LiveM
 @Composable
 private fun SmallScreenPreview() = LivePreview(
     LiveSignal.Sounding(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 1.0, level = 0.6f),
+)
+
+// In the room and in the halls (spec 3.27, handoff venue 29c, 29d): the light is on in silence and
+// out while a note sounds; the pictures come from the assets, so only an interactive preview shows them.
+
+@Preview(name = "29c1 In the room · silence, the light on", widthDp = 412, heightDp = 788)
+@Composable
+private fun RoomSilencePreview() = LivePreview(LiveSignal.Silence, venue = Venue.Home)
+
+@Preview(name = "29c2 In the room · in tune, the light out", widthDp = 412, heightDp = 788)
+@Composable
+private fun RoomInTunePreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.3, level = 0.5f),
+    venue = Venue.Home,
+)
+
+@Preview(name = "29d Vienna from the stage · silence", widthDp = 412, heightDp = 788)
+@Composable
+private fun HallSilencePreview() = LivePreview(LiveSignal.Silence, venue = Venue.Hall("vienna"))
+
+@Preview(name = "29d Paris from the stage · off, the light out", widthDp = 412, heightDp = 788)
+@Composable
+private fun HallOffPreview() = LivePreview(
+    LiveSignal.Sounding(Note(D4), cents = -27.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    venue = Venue.Hall("paris"),
+)
+
+@Preview(name = "29e In a hall · tuning, string D locked", widthDp = 412, heightDp = 788)
+@Composable
+private fun HallTuningPreview() = LivePreview(
+    LiveSignal.Sounding(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    mode = LiveMode.TUNING,
+    lockedString = ViolinString.D4,
+    venue = Venue.Hall("vienna"),
+)
+
+@Preview(name = "29g Landscape in the room · in tune", widthDp = 892, heightDp = 412)
+@Composable
+private fun RoomLandscapePreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 1.0, level = 0.7f),
+    venue = Venue.Home,
 )

@@ -6,6 +6,8 @@ import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.session.RecordingBar
+import com.example.violintuner.core.domain.venue.Venue
+import com.example.violintuner.core.domain.venue.VenueEntry
 import kotlin.math.roundToInt
 
 enum class LiveMode { PLAY, TUNING }
@@ -94,6 +96,10 @@ data class LiveState(
     val statusLine: StatusLine? = null,
     /** How long the running practice has been going; null when none runs (the chip, spec 3.12). */
     val practiceMs: Long? = null,
+    /** Where the player is, and so where Live takes place: the room or a hall (spec 3.27); null until it is read. */
+    val venue: Venue? = null,
+    /** The list «Где играть»: the room, the reached halls, the next stop, the road ahead. */
+    val venueMenu: List<VenueEntry> = emptyList(),
 )
 
 sealed interface LiveIntent {
@@ -112,6 +118,9 @@ sealed interface LiveIntent {
 
     /** The «занятие · 12:34» chip leads to the practice tab. */
     data object PracticeChipClicked : LiveIntent
+
+    /** «Где играть»: the player goes to [venue] (spec 3.27); not while a recording runs. */
+    data class VenueChosen(val venue: Venue) : LiveIntent
 }
 
 sealed interface LiveEffect {

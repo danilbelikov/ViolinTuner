@@ -40,6 +40,8 @@ object AppIcons {
     val Map: ImageVector by lazy { icon("Map", IconPaths.MAP) }
     val Passport: ImageVector by lazy { icon("Passport", IconPaths.PASSPORT) }
     val Door: ImageVector by lazy { icon("Door", IconPaths.DOOR) }
+    val House: ImageVector by lazy { icon("House", IconPaths.HOUSE) }
+    val Theatre: ImageVector by lazy { icon("Theatre", IconPaths.THEATRE) }
     val Travel: ImageVector by lazy { icon("Travel", IconPaths.TRAVEL) }
     val Globe: ImageVector by lazy { icon("Globe", IconPaths.GLOBE) }
     val StarOutline: ImageVector by lazy { icon("StarOutline", IconPaths.STAR_OUTLINE) }

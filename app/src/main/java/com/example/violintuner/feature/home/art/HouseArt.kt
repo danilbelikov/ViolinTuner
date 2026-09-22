@@ -5,8 +5,8 @@ import com.example.violintuner.feature.journey.art.Scene
 import com.example.violintuner.feature.journey.art.SceneAnim
 import com.example.violintuner.feature.journey.art.SceneLayer
 import com.example.violintuner.feature.journey.art.SceneMode
-import com.example.violintuner.feature.journey.art.SceneParser
 import com.example.violintuner.feature.journey.art.ScenePalette
+import com.example.violintuner.feature.journey.art.SceneParser
 
 /** A thing as it is drawn in one home: its layers where it stands there, and the box they take (without glows and shadows). */
 class ItemArt(val layers: List<SceneLayer>, val left: Float, val top: Float, val right: Float, val bottom: Float)
@@ -94,9 +94,13 @@ object HomeComposer {
     private const val WHITE = 0xFFFFFFFFL
     private val WALLS = setOf("wallHome", "wallLitHome")
 
-    /** [curtains] — the curtains hung inside: from outside our window is the one in their colour (the handoff's own `compose` loses them there). */
-    fun compose(art: HouseArt, standing: List<HomeItem>, outside: Boolean, mode: SceneMode, ghost: HomeItem? = null, porchCat: HomeItem? = null, curtains: HomeItem? = null): ComposedHome {
-        val things = (if (ghost == null) standing else standing.filter { it.slot != ghost.slot }).sortedBy { it.z }
+    /**
+     * [curtains] — the curtains hung inside: from outside our window is the one in their colour (the handoff's own `compose` loses them there).
+     * [withViolin] false — the room of Live (spec 3.27): the violin is in the player's hands, neither on its stand nor in the case.
+     */
+    fun compose(art: HouseArt, standing: List<HomeItem>, outside: Boolean, mode: SceneMode, ghost: HomeItem? = null, porchCat: HomeItem? = null, curtains: HomeItem? = null, withViolin: Boolean = true): ComposedHome {
+        val present = if (withViolin) standing else standing.filter { it.slot != VIOLIN }
+        val things = (if (ghost == null) present else present.filter { it.slot != ghost.slot }).sortedBy { it.z }
         val dressed = if (ghost != null && (ghost.palette.isNotEmpty() || ghost.pattern)) things + ghost else things
         val overrides = HashMap<String, Long>()
         dressed.forEach { overrides.putAll(it.palette) }
@@ -124,7 +128,7 @@ object HomeComposer {
         fun draw(item: HomeItem) { art.items[item.id]?.let { layers += it.layers } }
         things.filter { it.z < FRONT }.forEach(::draw)
         // no violin yet — the student's one lies in the open case (handoff 28b)
-        if (!outside && things.none { it.slot == VIOLIN } && ghost?.slot != VIOLIN) things.firstOrNull { it.slot == CASE }?.let { layers += art.caseViolins[it.id].orEmpty() }
+        if (withViolin && !outside && things.none { it.slot == VIOLIN } && ghost?.slot != VIOLIN) things.firstOrNull { it.slot == CASE }?.let { layers += art.caseViolins[it.id].orEmpty() }
         // Trying on without a frame (handoff 28f): the room a little darker, a warm glow under the thing that breathes,
         // the thing itself at its full density and still.
         val ghostArt = ghost?.let { art.items[it.id] }

@@ -43,14 +43,15 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.ViolinString
+import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.live.TuningState
 
 private val LetterSize = 22.sp
 private val CaptionSize = 11.sp
 
 /**
- * G · D · A · E buttons of the tuning mode (spec 3.5). The hint that used to stand under them is
- * the status line of the screen now (spec 3.14).
+ * G · D · A · E buttons of the tuning mode (spec 3.5), drawn as four pegs (spec 3.27). The hint
+ * that used to stand under them is the status line of the screen now (spec 3.14).
  * The target string is highlighted; a tap pins it (lock badge), a second tap returns to auto.
  */
 @Composable
@@ -80,6 +81,10 @@ fun StringRow(
     }
 }
 
+/**
+ * A peg (spec 3.27, handoff 29j): ebony with a nickel head; the nearest string is maple with a bone
+ * head; the locked one is bone with a brass rim and head and wears the lock.
+ */
 @Composable
 private fun StringButton(
     letter: String,
@@ -88,26 +93,34 @@ private fun StringButton(
     isLocked: Boolean,
     onClick: () -> Unit,
 ) {
-    val colors = MaterialTheme.colorScheme
-    val container = when {
-        isLocked -> colors.primary
-        isTarget -> colors.primaryContainer
-        else -> colors.surfaceContainer
+    val wood = ViolinTheme.venueColors
+    val body = when {
+        isLocked -> wood.bone
+        isTarget -> wood.maple
+        else -> wood.ebony
     }
-    val content = when {
-        isLocked -> colors.onPrimary
-        isTarget -> colors.onPrimaryContainer
-        else -> colors.onSurfaceVariant
+    val edge = when {
+        isLocked -> wood.brass
+        isTarget -> wood.mapleLit
+        else -> wood.ebonyEdge
     }
+    val head = when {
+        isLocked -> wood.brass
+        isTarget -> wood.boneShade
+        else -> wood.nickel
+    }
+    val letterColor = if (isLocked) wood.ink else wood.bone
+    val captionColor = if (isLocked) wood.inkSoft else wood.caption
     val shape = RoundedCornerShape(LiveDimens.StringButtonCorner)
     val lockedDescription = stringResource(R.string.tuning_string_locked)
     val autoDescription = stringResource(R.string.tuning_string_auto)
-    Box {
+    Box(contentAlignment = Alignment.TopCenter) {
         Column(
             modifier = Modifier
                 .size(LiveDimens.StringButtonWidth, LiveDimens.StringButtonHeight)
                 .clip(shape)
-                .background(container)
+                .background(body)
+                .border(LiveDimens.StringButtonEdge, edge, shape)
                 .selectable(selected = isTarget, role = Role.Button, onClick = onClick)
                 .semantics { stateDescription = if (isLocked) lockedDescription else autoDescription },
             verticalArrangement = Arrangement.Center,
@@ -115,22 +128,22 @@ private fun StringButton(
         ) {
             Text(
                 text = letter,
-                color = content,
-                style = MaterialTheme.typography.titleLarge.copy(
-                    fontSize = LetterSize,
-                    lineHeight = LetterSize,
-                    fontWeight = if (isTarget) FontWeight.Bold else FontWeight.SemiBold,
-                ),
+                color = letterColor,
+                style = MaterialTheme.typography.titleLarge.copy(fontSize = LetterSize, lineHeight = LetterSize, fontWeight = FontWeight.Bold),
             )
             Text(
                 text = stringResource(R.string.tuning_string_hz, hz),
-                color = content,
-                style = MaterialTheme.typography.labelSmall.copy(
-                    fontSize = CaptionSize,
-                    fontWeight = FontWeight.Medium,
-                ),
+                color = captionColor,
+                style = MaterialTheme.typography.labelSmall.copy(fontSize = CaptionSize, fontWeight = FontWeight.Medium),
             )
         }
+        // the head of the peg stands out over the top edge
+        Box(
+            Modifier
+                .offset(y = -LiveDimens.StringPegHeadRise)
+                .size(LiveDimens.StringPegHeadWidth, LiveDimens.StringPegHeadHeight)
+                .background(head, RoundedCornerShape(LiveDimens.StringPegHeadHeight / 2)),
+        )
         AnimatedVisibility(
             visible = isLocked,
             modifier = Modifier
@@ -154,16 +167,14 @@ private const val LOCK_VIEWPORT = 12f
 
 @Composable
 private fun LockBadge(modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
+    val wood = ViolinTheme.venueColors
     Box(
         modifier = modifier
             .size(LiveDimens.StringLockBadgeSize)
-            .border(LiveDimens.StringLockBadgeOutline, colors.surface, CircleShape)
-            .padding(LiveDimens.StringLockBadgeOutline / 2)
-            .background(colors.onSurface, CircleShape),
+            .background(wood.bone, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        val glyph: Color = colors.onPrimary
+        val glyph: Color = wood.ink
         Canvas(Modifier.size(LiveDimens.StringLockIconSize)) {
             scale(scale = size.width / LOCK_VIEWPORT, pivot = Offset.Zero) {
                 drawRoundRect(

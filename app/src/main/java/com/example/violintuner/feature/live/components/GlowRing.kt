@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateListOf
@@ -36,38 +37,16 @@ private class Wave(val startAlpha: Float) {
 }
 
 /**
- * The ring of Live (spec 3.14, handoff 12a, 12h): an outline that shines with the zone color.
- * How much is one number, [glowTarget]; the ring moves towards it by itself, faster up than
- * down, so that a note slipping out of the zone for a moment does not put it out — nothing on
- * this screen blinks. The halo breathes with [level]; a wave leaves the ring when [noteSerial]
- * moves and when [holdComplete] turns true. With [reduceMotion] there are no waves and no
- * breath, and the glow only changes in steps.
- *
- * Everything that changes many times a second is read in the draw phase: the ring redraws, it
- * does not recompose. The halo reaches past the bounds ([GlowMath.EXTENT] × the radius) and is
- * not clipped on purpose; the layout leaves it room.
+ * How strongly the ring glows (spec 5.8): it moves towards [glowTarget] by itself, faster up than
+ * down, so that a note slipping out of the zone for a moment does not put it out — nothing on this
+ * screen blinks. With [reduceMotion] the glow only changes in steps. Hoisted out of the ring: the
+ * picture behind Live is lit by the same number (spec 3.27). What is already true when the screen
+ * appears is shown as it is: no climb from zero after a rotation or a return to the tab.
  */
 @Composable
-fun GlowRing(
-    glowTarget: Float,
-    level: Float,
-    zoneColor: Color,
-    noteSerial: Int,
-    holdComplete: Boolean,
-    reduceMotion: Boolean,
-    size: Dp,
-    modifier: Modifier = Modifier,
-    content: @Composable () -> Unit,
-) {
+fun rememberRingGlow(glowTarget: Float, reduceMotion: Boolean): State<Float> {
     val target by rememberUpdatedState(glowTarget)
-    val loudness by rememberUpdatedState(if (reduceMotion) 0f else level)
-    val color by rememberUpdatedState(zoneColor)
-    // What is already true when the ring appears is shown as it is: no climb from zero after a
-    // rotation or a return to the tab.
     val glow = remember { mutableFloatStateOf(glowTarget) }
-    val waves = remember { mutableStateListOf<Wave>() }
-    val gate = remember { WaveGate(LiveMotion.WAVE_MIN_INTERVAL_MS) }
-
     LaunchedEffect(reduceMotion) {
         val riseMs = if (reduceMotion) LiveMotion.GLOW_STEP_MS else LiveMotion.GLOW_RISE_MS
         val fallMs = if (reduceMotion) LiveMotion.GLOW_STEP_MS else LiveMotion.GLOW_FALL_MS
@@ -85,6 +64,35 @@ fun GlowRing(
             }
         }
     }
+    return glow
+}
+
+/**
+ * The ring of Live (spec 3.14, handoff 12a, 12h): an outline that shines with the zone color, as
+ * strongly as [glow] says ([rememberRingGlow]). The halo breathes with [level]; a wave leaves the
+ * ring when [noteSerial] moves and when [holdComplete] turns true. With [reduceMotion] there are no
+ * waves and no breath.
+ *
+ * Everything that changes many times a second is read in the draw phase: the ring redraws, it
+ * does not recompose. The halo reaches past the bounds ([GlowMath.EXTENT] × the radius) and is
+ * not clipped on purpose; the layout leaves it room.
+ */
+@Composable
+fun GlowRing(
+    glow: State<Float>,
+    level: Float,
+    zoneColor: Color,
+    noteSerial: Int,
+    holdComplete: Boolean,
+    reduceMotion: Boolean,
+    size: Dp,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit,
+) {
+    val loudness by rememberUpdatedState(if (reduceMotion) 0f else level)
+    val color by rememberUpdatedState(zoneColor)
+    val waves = remember { mutableStateListOf<Wave>() }
+    val gate = remember { WaveGate(LiveMotion.WAVE_MIN_INTERVAL_MS) }
 
     suspend fun wave(startAlpha: Float) {
         if (reduceMotion || !gate.tryStart(withFrameMillis { it })) return
@@ -109,7 +117,7 @@ fun GlowRing(
         modifier = modifier
             .size(size)
             .drawBehind {
-                drawRing(glow.floatValue, loudness, color)
+                drawRing(glow.value, loudness, color)
                 waves.forEach { drawWave(it.startAlpha, it.progress.value, color) }
             },
         contentAlignment = Alignment.Center,

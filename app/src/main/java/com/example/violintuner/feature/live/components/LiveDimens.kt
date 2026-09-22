@@ -8,29 +8,45 @@ internal object LiveDimens {
 
     val SwitcherTopPadding = 12.dp
     val SwitcherHeight = 40.dp
-    val SwitcherCorner = 20.dp
+    // The maple plank with its bone slider (handoff venue 29j)
+    val SwitcherCorner = 21.dp
+    val SwitcherInset = 3.dp
+    val SwitcherSliderCorner = 18.dp
+    val SwitcherSegmentPadding = 20.dp
     val SwitcherBorder = 1.dp
     val SwitcherIconSize = 14.dp
     val SwitcherIconStroke = 2.5.dp
     val SwitcherTuningIconWidth = 4.dp
     val SwitcherIconGap = 8.dp
 
+    /** The row under the switcher: the practice tag on the left, the label of the place on the right (handoff venue 29k). */
+    val PlaceRowTopPadding = 10.dp
+    val PlaceRowHeight = 28.dp
+    val PlaceLabelCorner = 14.dp
+    val PlaceLabelPadding = 11.dp
+    val PlaceLabelIcon = 14.dp
+    val PlaceLabelGap = 7.dp
+    val PlaceLabelEdge = 1.dp
     /** «занятие · 12:34» under the mode switcher (handoff 10h). */
-    val PracticeChipTopPadding = 10.dp
     val PracticeChipHeight = 28.dp
-    val PracticeChipPaddingStart = 10.dp
-    val PracticeChipPaddingEnd = 12.dp
-    val PracticeChipDotSize = 6.dp
+    /** A paper tag (handoff venue 29j). */
+    val PracticeChipCorner = 5.dp
+    val PracticeChipPaddingHorizontal = 12.dp
+    val PracticeChipDotSize = 7.dp
     val PracticeChipGap = 6.dp
 
     val StringRowTopPadding = 12.dp
     val StringButtonWidth = 76.dp
     val StringButtonHeight = 64.dp
-    val StringButtonCorner = 20.dp
-    val StringButtonGap = 12.dp
+    // A peg: its head stands out over the top edge (handoff venue 29j)
+    val StringButtonCorner = 12.dp
+    val StringButtonGap = 14.dp
+    val StringButtonEdge = 1.5.dp
+    val StringPegHeadWidth = 26.dp
+    val StringPegHeadHeight = 9.dp
+    val StringPegHeadRise = 5.dp
     val StringLockBadgeSize = 22.dp
-    val StringLockBadgeOffset = 6.dp
-    val StringLockBadgeOutline = 2.dp
+    val StringLockBadgeOffset = 7.dp
     val StringLockIconSize = 12.dp
     val StringHintTopPadding = 10.dp
 
@@ -62,22 +78,28 @@ internal object LiveDimens {
 
     val ScaleHeight = 36.dp
     val ScaleBottomPadding = 8.dp
-    val ScaleTrackHeight = 8.dp
+    // The wooden ruler (handoff venue 29j)
+    val ScaleRulerHeight = 26.dp
+    val ScaleRulerCorner = 8.dp
+    val ScaleRulerEdge = 1.dp
     val ScalePillHeight = 12.dp
     val ScaleTickWidth = 2.dp
-    val ScaleTickHeight = 20.dp
-    val MarkerWidth = 6.dp
-    val MarkerHeight = 28.dp
-    val MarkerOutline = 2.dp
+    val ScaleTickHeight = 18.dp
+    val MarkerWidth = 8.dp
+    val MarkerHeight = 24.dp
     val HaloWidth = 44.dp
     val HaloHeight = 24.dp
     val HaloFeather = 4.dp
 
     val RecordButtonSize = 72.dp
-    val RecordDotSize = 26.dp
+    // The key of a tape recorder: bone face, brass rim, a hard shadow it goes down onto (handoff venue 29j)
+    val RecordRim = 3.dp
+    val RecordShadow = 4.dp
+    val RecordTravel = 3.dp
+    val RecordDotSize = 20.dp
     val RecordPaddingVertical = 12.dp
-    val RecordStopSize = 24.dp
-    val RecordStopCorner = 4.dp
+    val RecordStopSize = 22.dp
+    val RecordStopCorner = 3.dp
 
     val RecordingStripTopPadding = 8.dp
     val RecordingStripGap = 12.dp
@@ -107,7 +129,11 @@ internal object LiveDimens {
     val MicGlyphHeight = 32.dp
     val PromptMaxWidth = 300.dp
     val PromptSpacing = 16.dp
-    val PromptButtonHeight = 48.dp
+    val PromptButtonHeight = 44.dp
+    /** The card of paper the permission prompt is written on (handoff venue 29c8). */
+    val PromptCardCorner = 14.dp
+    val PromptCardPaddingHorizontal = 18.dp
+    val PromptCardPaddingVertical = 16.dp
     val PromptButtonPaddingHorizontal = 24.dp
 
     // Opacity of dimmed parts (handoff states 8d–8f)

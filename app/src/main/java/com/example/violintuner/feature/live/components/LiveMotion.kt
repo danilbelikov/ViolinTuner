@@ -1,10 +1,18 @@
 package com.example.violintuner.feature.live.components
 
+import androidx.compose.animation.core.CubicBezierEasing
+
 /**
  * Motion of the Live screen from the handoff `anims` table. The zone color cross-fade is not
  * here: it is a spec number (5.3) and arrives through LiveState.
  */
 internal object LiveMotion {
+    /** `light.off`: cubic-bezier(.3, 0, .8, .15). */
+    val LightOffEasing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)
+
+    /** `light.on`: cubic-bezier(0, 0, 0, 1). */
+    val LightOnEasing = CubicBezierEasing(0f, 0f, 0f, 1f)
+
     /** Note, placeholder, status and marker appearing or disappearing. */
     const val CONTENT_FADE_MS = 300
 
@@ -39,6 +47,16 @@ internal object LiveMotion {
 
     /** Record button: circle to square, accent to red. */
     const val RECORD_MORPH_MS = 200
+
+    /** The key goes down by its travel and comes back. */
+    const val RECORD_PRESS_MS = 90
+
+    // The light in the hall (spec 3.27, 5.20; handoff `light.*`): it goes out like a switch — fast,
+    // gathering speed — when a note is held, and comes back like a dimmer — slowly, easing — after
+    // six seconds without one. A recording puts it out at once and keeps it out until «стоп».
+    const val LIGHT_OFF_MS = 420
+    const val LIGHT_ON_MS = 1_600
+    const val LIGHT_ON_AFTER_MS = 6_000L
 
     /** One full breath of the red dot while recording. */
     const val RECORDING_PULSE_MS = 1_200

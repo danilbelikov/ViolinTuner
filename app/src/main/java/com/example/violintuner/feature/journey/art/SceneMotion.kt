@@ -3,12 +3,16 @@ package com.example.violintuner.feature.journey.art
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
 import com.example.violintuner.core.ui.motion.LocalReduceMotion
 import kotlin.math.PI
 import kotlin.math.sin
+import kotlinx.coroutines.flow.first
 
 /**
  * How a postcard lives (spec 3.23): nothing is marked in the scenes for it — a layer moves by what
@@ -227,3 +231,34 @@ fun rememberSceneSeconds(enabled: Boolean = true): State<Float>? {
     }
     return if (run) seconds else null
 }
+
+/**
+ * Seconds for a picture that lives only while [running] says so, and stops where it is otherwise —
+ * not back at the start: the picture behind Live freezes when the light goes out and goes on from
+ * the same frame when it comes back (spec 3.27, handoff `light.freeze`). Asleep while stopped: no
+ * frames are spent on a dark picture. Null with «убрать анимации»: the picture is still.
+ */
+@Composable
+fun rememberPausableSceneSeconds(running: () -> Boolean): State<Float>? {
+    val reduce = LocalReduceMotion.current
+    val seconds = remember { mutableFloatStateOf(0f) }
+    val live by rememberUpdatedState(running)
+    LaunchedEffect(reduce) {
+        if (reduce) return@LaunchedEffect
+        while (true) {
+            snapshotFlow { live() }.first { it }
+            var last = withFrameNanos { it }
+            while (live()) {
+                val now = withFrameNanos { it }
+                if (now - last >= SceneMotion.FRAME_NANOS) {
+                    seconds.floatValue += (now - last) / NANOS_PER_SECOND
+                    last = now
+                }
+            }
+        }
+    }
+    return if (reduce) null else seconds
+}
+
+private const val NANOS_PER_SECOND = 1_000_000_000f
+

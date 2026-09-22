@@ -12,13 +12,21 @@ import com.example.violintuner.core.domain.PitchFrame
 import com.example.violintuner.core.domain.TolerancePreset
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
+import com.example.violintuner.core.domain.journey.Arrival
+import com.example.violintuner.core.domain.journey.FakeJourneyRepository
 import com.example.violintuner.core.domain.journey.FakePracticeNotesStore
 import com.example.violintuner.core.domain.journey.JourneyConfig
+import com.example.violintuner.core.domain.journey.JourneyProgress
+import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.core.domain.journey.NoteCount
 import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.RunningPractice
 import com.example.violintuner.core.domain.session.FakeSessionRepository
+import com.example.violintuner.core.domain.venue.FakeVenueStore
+import com.example.violintuner.core.domain.venue.Venue
+import com.example.violintuner.core.domain.venue.VenueAccess
+import com.example.violintuner.core.domain.venue.Venues
 import com.example.violintuner.core.recording.TakePipeline
 import com.example.violintuner.core.settings.FakeSettingsRepository
 import com.example.violintuner.core.settings.SettingsConfigSource
@@ -70,6 +78,8 @@ class LiveViewModelTest {
     private val audioFiles = FakeAudioFiles()
     private val practice = FakeRunningPracticeStore()
     private val practiceNotes = FakePracticeNotesStore()
+    private val journey = FakeJourneyRepository()
+    private val venueStore = FakeVenueStore()
 
     private class FakeAudioFiles : SessionAudioFiles {
         val created = mutableListOf<File>()
@@ -116,7 +126,7 @@ class LiveViewModelTest {
             source, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
             practiceNotes = practiceNotes, journeyConfig = JourneyConfig(notesFlushMs = 1_000),
         )
-        return LiveViewModel(takes, SettingsConfigSource(base, settings), practice, clock)
+        return LiveViewModel(takes, SettingsConfigSource(base, settings), practice, clock, Venues(venueStore, journey))
     }
 
     private fun TestScope.advance(millis: Long) {
@@ -776,5 +786,36 @@ class LiveViewModelTest {
         assertTrue(signal.noteSerial > 0)
         assertEquals(signal.cents, signal.displayCents.toDouble(), 1.5)
         job.cancel()
+    }
+
+    // ---- where Live takes place (spec 3.27)
+
+    private fun inCremona() {
+        journey.progress.value = JourneyProgress.EMPTY.copy(arrivals = listOf(Arrival(JourneyRoute.HOME, 0), Arrival("cremona", 1)))
+    }
+
+    @Test
+    fun `Live takes place where the player is, and the list offers the reached places and the next stop`() = runTest {
+        inCremona()
+        val viewModel = viewModel(FakeScenario.SILENCE)
+        observe(viewModel, 300)
+        assertEquals(Venue.Hall("cremona"), viewModel.state.value.venue)
+        assertEquals(listOf(VenueAccess.OPEN, VenueAccess.OPEN, VenueAccess.NEXT), viewModel.state.value.venueMenu.take(3).map { it.access })
+        viewModel.onIntent(LiveIntent.VenueChosen(Venue.Home))
+        advance(100)
+        assertEquals(Venue.Home, viewModel.state.value.venue)
+        assertEquals("home", venueStore.stored.value)
+    }
+
+    @Test
+    fun `the place is fixed while a recording runs, like the mode`() = runTest {
+        inCremona()
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        observe(viewModel, 300)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(300)
+        viewModel.onIntent(LiveIntent.VenueChosen(Venue.Home))
+        advance(300)
+        assertEquals(Venue.Hall("cremona"), viewModel.state.value.venue)
     }
 }

@@ -95,8 +95,12 @@ fun ScenePicture(
     }
 }
 
-/** Draws the layers of [prepared] at [k] pixels a unit, from the origin: for a thing shown alone, on a shelf. */
-fun DrawScope.drawPrepared(prepared: PreparedScene, k: Float, seconds: Float? = null) = drawScene(prepared, k, 0f, seconds)
+/**
+ * Draws the layers of [prepared] at [k] pixels a unit, from the origin: for a thing shown alone, on a
+ * shelf, and for the picture behind Live, where [lightAlpha] puts the lamps and chandeliers out as
+ * the light in the hall goes down (spec 3.27).
+ */
+fun DrawScope.drawPrepared(prepared: PreparedScene, k: Float, seconds: Float? = null, lightAlpha: Float = 1f) = drawScene(prepared, k, 0f, seconds, lightAlpha)
 
 /** Loads `assets/journey/<key>.<mode>.scene` off the main thread; null while it loads and when there is no such picture. */
 @Composable
@@ -161,7 +165,7 @@ fun Postcard(
     }
 }
 
-private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, seconds: Float?) {
+private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, seconds: Float?, lightAlpha: Float = 1f) {
     val scene = prepared.scene
     val sky = ScenePalette.token("sky", scene.location, prepared.mode) ?: NIGHT
     val skyLow = ScenePalette.token("skyLow", scene.location, prepared.mode) ?: NIGHT
@@ -176,7 +180,8 @@ private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, 
             else -> ScenePalette.colorOf(layer.fill, layer.depth, scene, prepared.mode)?.let { Color(it) }?.let { androidx.compose.ui.graphics.SolidColor(it) }
         }
         val alive = seconds != null && SceneMotion.moves(layer, prepared.mode)
-        val alpha = if (alive) layer.opacity * SceneMotion.alpha(layer, index, prepared.mode, seconds!!) else layer.opacity
+        val own = if (layer.fill == SceneLayer.GLOW || layer.warmGlow) layer.opacity * lightAlpha else layer.opacity
+        val alpha = if (alive) own * SceneMotion.alpha(layer, index, prepared.mode, seconds!!) else own
         val drift = if (alive) SceneMotion.drift(layer, index, seconds!!) else 0f
         val draw: DrawScope.() -> Unit = {
             if (!layer.fillNone && brush != null) drawPath(path, brush, alpha = alpha)

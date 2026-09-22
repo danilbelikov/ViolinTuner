@@ -1,39 +1,50 @@
 package com.example.violintuner.feature.live.components
 
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
+import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.live.LiveMode
 
-private const val HALF = 0.5f
+private val LabelStyle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold)
 
-/** Segmented "Игра | Настройка" control; the active segment is filled (spec 3.1). */
+/**
+ * «Игра | Настройка» (spec 3.1) as a thing of the room (spec 3.27, handoff 29j): a maple plank with
+ * a bone slider that slides under the chosen word. Both halves are as wide as the longer word, so
+ * the slider only moves. While a recording runs the plank is faded and does not answer.
+ */
 @Composable
 fun ModeSwitcher(
     mode: LiveMode,
@@ -41,88 +52,54 @@ fun ModeSwitcher(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    val colors = MaterialTheme.colorScheme
-    val shape = RoundedCornerShape(LiveDimens.SwitcherCorner)
-    val fillBias by animateFloatAsState(
-        targetValue = if (mode == LiveMode.PLAY) -1f else 1f,
-        animationSpec = tween(LiveMotion.SWITCHER_SLIDE_MS),
-        label = "switcherFill",
-    )
+    val wood = ViolinTheme.venueColors
+    val surface = MaterialTheme.colorScheme.surface
+    val play = stringResource(R.string.mode_play)
+    val tuning = stringResource(R.string.mode_tuning)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val half = remember(play, tuning, density) {
+        with(density) { maxOf(measurer.measure(play, LabelStyle).size.width, measurer.measure(tuning, LabelStyle).size.width).toDp() } + LiveDimens.SwitcherSegmentPadding * 2
+    }
+    val slider by animateDpAsState(if (mode == LiveMode.PLAY) 0.dp else half, tween(LiveMotion.SWITCHER_SLIDE_MS), label = "switcherSlider")
+    val plank = if (enabled) wood.maple else lerp(wood.maple, surface, DISABLED_PLANK)
+    val bone = if (enabled) wood.bone else lerp(wood.bone, surface, DISABLED_SLIDER)
     Box(
         modifier = modifier
-            .fillMaxWidth()
             .height(LiveDimens.SwitcherHeight)
-            .clip(shape)
-            .border(LiveDimens.SwitcherBorder, colors.outlineVariant, shape),
+            .clip(RoundedCornerShape(LiveDimens.SwitcherCorner))
+            .background(plank)
+            .border(LiveDimens.SwitcherBorder, wood.mapleDark, RoundedCornerShape(LiveDimens.SwitcherCorner))
+            .padding(LiveDimens.SwitcherInset),
     ) {
-        // The fill slides between the halves; the segments themselves are transparent.
         Box(
             Modifier
-                .fillMaxWidth(HALF)
+                .offset { IntOffset(slider.roundToPx(), 0) }
+                .width(half)
                 .fillMaxHeight()
-                .align(BiasAlignment(horizontalBias = fillBias, verticalBias = 0f))
-                .background(colors.primaryContainer),
+                .background(bone, RoundedCornerShape(LiveDimens.SwitcherSliderCorner)),
         )
-        Row(modifier = Modifier.selectableGroup()) {
-            Segment(
-                label = stringResource(R.string.mode_play),
-                selected = mode == LiveMode.PLAY,
-                enabled = enabled,
-                onClick = { onSelect(LiveMode.PLAY) },
-            ) { tint ->
-                Box(
-                    Modifier
-                        .size(LiveDimens.SwitcherIconSize)
-                        .border(LiveDimens.SwitcherIconStroke, tint, CircleShape),
-                )
-            }
-            Box(
-                Modifier
-                    .fillMaxHeight()
-                    .width(LiveDimens.SwitcherBorder)
-                    .background(colors.outlineVariant),
-            )
-            Segment(
-                label = stringResource(R.string.mode_tuning),
-                selected = mode == LiveMode.TUNING,
-                enabled = enabled,
-                onClick = { onSelect(LiveMode.TUNING) },
-            ) { tint ->
-                Box(
-                    Modifier
-                        .size(LiveDimens.SwitcherTuningIconWidth, LiveDimens.SwitcherIconSize)
-                        .background(tint, CircleShape),
-                )
-            }
+        Row(Modifier.selectableGroup()) {
+            Segment(play, mode == LiveMode.PLAY, enabled, half, wood.ink, if (enabled) wood.boneShade else wood.muted) { onSelect(LiveMode.PLAY) }
+            Segment(tuning, mode == LiveMode.TUNING, enabled, half, wood.ink, if (enabled) wood.boneShade else wood.muted) { onSelect(LiveMode.TUNING) }
         }
     }
 }
 
 @Composable
-private fun RowScope.Segment(
-    label: String,
-    selected: Boolean,
-    enabled: Boolean,
-    onClick: () -> Unit,
-    icon: @Composable (tint: Color) -> Unit,
-) {
-    val colors = MaterialTheme.colorScheme
-    Row(
+private fun Segment(label: String, selected: Boolean, enabled: Boolean, width: Dp, ink: Color, idle: Color, onClick: () -> Unit) {
+    Box(
         modifier = Modifier
-            .weight(1f)
+            .width(width)
             .fillMaxHeight()
+            .clip(RoundedCornerShape(LiveDimens.SwitcherSliderCorner))
             .selectable(selected = selected, enabled = enabled, role = Role.Tab, onClick = onClick),
-        horizontalArrangement = Arrangement.spacedBy(
-            LiveDimens.SwitcherIconGap,
-            Alignment.CenterHorizontally,
-        ),
-        verticalAlignment = Alignment.CenterVertically,
+        contentAlignment = Alignment.Center,
     ) {
-        icon(if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant)
-        Text(
-            text = label,
-            color = if (selected) colors.onPrimaryContainer else colors.onSurface,
-            style = MaterialTheme.typography.labelLarge,
-        )
+        Text(text = label, color = if (selected) ink else idle, style = LabelStyle, maxLines = 1)
     }
 }
+
+/** A plank that does not answer: its wood sinks into the dark (handoff 29j, «неактивен во время записи»). */
+private const val DISABLED_PLANK = 0.45f
+private const val DISABLED_SLIDER = 0.5f

@@ -3,6 +3,8 @@ package com.example.violintuner.feature.live
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -14,23 +16,29 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
@@ -39,6 +47,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.ui.theme.ViolinTheme
+import com.example.violintuner.feature.journey.LocalHomeLook
 import com.example.violintuner.feature.live.components.CentsScale
 import com.example.violintuner.feature.live.components.GlowRing
 import com.example.violintuner.feature.live.components.LiveDimens
@@ -54,11 +63,24 @@ import com.example.violintuner.feature.live.components.StatusLineRow
 import com.example.violintuner.feature.live.components.StatusRow
 import com.example.violintuner.feature.live.components.StringRow
 import com.example.violintuner.feature.live.components.ZoneEllipse
+import com.example.violintuner.feature.live.components.rememberRingGlow
 import com.example.violintuner.feature.live.components.zoneBackground
+import com.example.violintuner.feature.live.venue.VenueBackdrop
+import com.example.violintuner.feature.live.venue.VenueLabel
+import com.example.violintuner.feature.live.venue.VenueLook
+import com.example.violintuner.feature.live.venue.VenueSheet
+import com.example.violintuner.feature.live.venue.rememberVenuePicture
+import kotlinx.coroutines.delay
 
 /**
- * Live screen (spec 3.1, handoff variant 8). Stateless. Wider than tall gets the landscape
- * layout (ring on the left, controls on the right), anything else the portrait column.
+ * Live screen (spec 3.1, handoff variant 8; in the room and in the halls — spec 3.27, handoff venue).
+ * Stateless. Wider than tall gets the landscape layout (ring on the left, controls on the right),
+ * anything else the portrait column.
+ *
+ * Behind it is the place the player is in: the room, or a hall seen from its stage. While the violin
+ * is silent the light is on; as soon as a note is held it goes down, the picture sinks into the dusk
+ * and freezes, the colour of the zone lights it, and the controls one does not touch fade with it.
+ * [showVenue] false is the Live of before, on its plain dark field (a build for comparison).
  */
 @Composable
 fun LiveScreen(
@@ -67,6 +89,7 @@ fun LiveScreen(
     modifier: Modifier = Modifier,
     /** System animations are switched off: the ring stands still and changes in steps (spec 3.14). */
     reduceMotion: Boolean = false,
+    showVenue: Boolean = true,
 ) {
     val zoneColors = ViolinTheme.zoneColors
     val sounding = state.signal as? LiveSignal.Sounding
@@ -77,38 +100,130 @@ fun LiveScreen(
         animationSpec = tween(state.zoneCrossfadeMs),
         label = "zoneColor",
     )
+    // the ring and the light of the zone on the picture are lit by one number
+    val glow = rememberRingGlow(if (reduceMotion) state.glowStep else state.glowTarget, reduceMotion)
+    val darkness = rememberHouseLights(down = sounding != null || state.recording != null, reduceMotion = reduceMotion, enabled = showVenue)
+    val chrome = { VenueLook.chromeAlpha(darkness.value) }
 
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
     var ringCenter by remember { mutableStateOf(Offset.Unspecified) }
-    val ringModifier = Modifier.onGloballyPositioned { ringCenter = it.centerIn(rootPosition) }
+    val ringDiameter = remember { mutableFloatStateOf(0f) }
+    val ringModifier = Modifier.onGloballyPositioned {
+        ringCenter = it.centerIn(rootPosition)
+        ringDiameter.floatValue = it.size.width.toFloat()
+    }
+    var choosing by rememberSaveable { mutableStateOf(false) }
+    val home = LocalHomeLook.current
+    val place = PlaceUi(
+        shown = showVenue,
+        canChoose = state.recording == null,
+        onChoose = { choosing = true },
+    )
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val landscape = LiveLayoutMath.isLandscape(maxWidth.value, maxHeight.value)
+        val zoneScale = VenueLook.zoneScale(sounding?.zone)
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
                 .onGloballyPositioned { rootPosition = it.positionInRoot() }
-                .zoneBackground(
-                    gradient = zoneColors.gradientFor(sounding?.zone),
-                    crossfadeMs = state.zoneCrossfadeMs,
-                    ellipse = if (landscape) ZoneEllipse.LANDSCAPE else ZoneEllipse.PORTRAIT,
-                    center = { ringCenter },
+                .then(
+                    if (showVenue) {
+                        Modifier
+                    } else {
+                        Modifier.zoneBackground(
+                            gradient = zoneColors.gradientFor(sounding?.zone),
+                            crossfadeMs = state.zoneCrossfadeMs,
+                            ellipse = if (landscape) ZoneEllipse.LANDSCAPE else ZoneEllipse.PORTRAIT,
+                            center = { ringCenter },
+                        )
+                    },
                 ),
         ) {
+            if (showVenue) {
+                VenueBackdrop(
+                    venue = state.venue,
+                    picture = rememberVenuePicture(state.venue, home),
+                    landscape = landscape,
+                    darkness = { darkness.value },
+                    glow = { glow.value },
+                    zoneColor = { zoneColor },
+                    zoneScale = { zoneScale },
+                    ringCenter = { ringCenter },
+                    ringDiameter = { ringDiameter.floatValue },
+                    // upright the tab bar lies under the picture: the floor fades into it
+                    fadeInto = if (landscape) null else MaterialTheme.colorScheme.surfaceContainer,
+                )
+            }
             if (landscape) {
-                LandscapeLayout(state, zoneColor, onIntent, ringModifier, reduceMotion)
+                LandscapeLayout(state, zoneColor, glow, chrome, place, onIntent, ringModifier, reduceMotion)
             } else {
-                PortraitLayout(state, zoneColor, onIntent, ringModifier, reduceMotion)
+                PortraitLayout(state, zoneColor, glow, chrome, place, onIntent, ringModifier, reduceMotion)
             }
         }
     }
+    val here = state.venue
+    if (choosing && showVenue && here != null) {
+        VenueSheet(
+            current = here,
+            menu = state.venueMenu,
+            home = home,
+            onChoose = { venue ->
+                onIntent(LiveIntent.VenueChosen(venue))
+                choosing = false
+            },
+            onDismiss = { choosing = false },
+        )
+    }
 }
+
+/** What the screen knows about choosing the place: the label is there only with a picture, and silent while recording. */
+private class PlaceUi(val shown: Boolean, val canChoose: Boolean, val onChoose: () -> Unit)
+
+/**
+ * The light in the hall (spec 3.27, 5.20): 0 — on, 1 — out. It goes out as soon as a note is held or
+ * a recording starts, like a switch; it comes back like a dimmer, only after [LiveMotion.LIGHT_ON_AFTER_MS]
+ * without either — a bow change, a breath, a rest in the music do not light it. Whether it is out
+ * survives a rotation, so a note held through it does not flash the room.
+ */
+@Composable
+private fun rememberHouseLights(down: Boolean, reduceMotion: Boolean, enabled: Boolean): State<Float> {
+    // a screen that opens on a note already sounding starts with the light out
+    var out by rememberSaveable { mutableStateOf(down && enabled) }
+    LaunchedEffect(down, enabled) {
+        if (!enabled) {
+            out = false
+        } else if (down) {
+            out = true
+        } else {
+            delay(LiveMotion.LIGHT_ON_AFTER_MS)
+            out = false
+        }
+    }
+    val darkness = remember { Animatable(if (out) 1f else 0f) }
+    LaunchedEffect(out, reduceMotion) {
+        // «убрать анимации»: one plain cross-fade, no gathering speed
+        val spec = if (out) {
+            tween<Float>(LiveMotion.LIGHT_OFF_MS, easing = if (reduceMotion) LinearEasing else LiveMotion.LightOffEasing)
+        } else {
+            tween(LiveMotion.LIGHT_ON_MS, easing = if (reduceMotion) LinearEasing else LiveMotion.LightOnEasing)
+        }
+        darkness.animateTo(if (out) 1f else 0f, spec)
+    }
+    return darkness.asState()
+}
+
+/** The alpha of a control one does not touch while playing: its own, times the light (handoff `chrome.dim`). */
+private fun Modifier.chrome(base: Float, chrome: () -> Float): Modifier = graphicsLayer { alpha = base * chrome() }
 
 @Composable
 private fun PortraitLayout(
     state: LiveState,
     zoneColor: Color,
+    glow: State<Float>,
+    chrome: () -> Float,
+    place: PlaceUi,
     onIntent: (LiveIntent) -> Unit,
     ringModifier: Modifier,
     reduceMotion: Boolean,
@@ -129,13 +244,21 @@ private fun PortraitLayout(
                     end = LiveDimens.ScreenPadding,
                     top = LiveDimens.SwitcherTopPadding,
                 )
-                .alpha(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha),
+                .chrome(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha, chrome),
         )
-        PracticeChipSlot(
-            practiceMs = state.practiceMs,
-            onClick = { onIntent(LiveIntent.PracticeChipClicked) },
-            modifier = Modifier.padding(top = LiveDimens.PracticeChipTopPadding),
-        )
+        // the practice tag on the left, the place on the right (handoff 29k)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = LiveDimens.ScreenPadding, end = LiveDimens.ScreenPadding, top = LiveDimens.PlaceRowTopPadding)
+                .height(LiveDimens.PlaceRowHeight)
+                .chrome(1f, chrome),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            PracticeChipSlot(practiceMs = state.practiceMs, onClick = { onIntent(LiveIntent.PracticeChipClicked) })
+            Spacer(Modifier.weight(1f))
+            if (place.shown) state.venue?.let { VenueLabel(it, enabled = place.canChoose, onClick = place.onChoose) }
+        }
         AnimatedVisibility(
             visible = state.mode == LiveMode.TUNING,
             enter = expandVertically(tween(LiveMotion.STRING_ROW_EXPAND_MS)) +
@@ -146,13 +269,15 @@ private fun PortraitLayout(
             StringRow(
                 tuning = state.tuning,
                 onStringClick = { onIntent(LiveIntent.StringClicked(it)) },
-                modifier = Modifier.alpha(chromeAlpha),
+                modifier = Modifier.chrome(chromeAlpha, chrome),
             )
         }
         StatusLineRow(
             line = state.statusLine,
             tuning = state.tuning,
-            modifier = Modifier.padding(top = LiveDimens.StatusLineTopPadding),
+            modifier = Modifier
+                .padding(top = LiveDimens.StatusLineTopPadding)
+                .chrome(1f, chrome),
         )
         BoxWithConstraints(
             modifier = Modifier
@@ -174,7 +299,7 @@ private fun PortraitLayout(
                 ),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Ring(state, zoneColor, ringSize, ringModifier, reduceMotion)
+                Ring(state, zoneColor, glow, ringSize, ringModifier, reduceMotion)
                 if (noMic) {
                     MicPermissionPrompt(onGrantClick = { onIntent(LiveIntent.GrantMicClicked) })
                 } else {
@@ -211,7 +336,8 @@ private fun PortraitLayout(
             onClick = { onIntent(LiveIntent.RecordClicked) },
             modifier = Modifier
                 .padding(vertical = LiveDimens.RecordPaddingVertical)
-                .alpha(if (state.canRecord || recording != null) 1f else LiveDimens.DISABLED_ALPHA),
+                // the key of a running recording stays whole in the dark: it is how the performance ends
+                .chrome(if (state.canRecord || recording != null) 1f else LiveDimens.DISABLED_ALPHA) { if (recording != null) 1f else chrome() },
         )
     }
 }
@@ -221,6 +347,9 @@ private fun PortraitLayout(
 private fun LandscapeLayout(
     state: LiveState,
     zoneColor: Color,
+    glow: State<Float>,
+    chrome: () -> Float,
+    place: PlaceUi,
     onIntent: (LiveIntent) -> Unit,
     ringModifier: Modifier,
     reduceMotion: Boolean,
@@ -238,7 +367,7 @@ private fun LandscapeLayout(
             contentAlignment = Alignment.Center,
         ) {
             val ringSize = ringSizeFor(state, landscape = true, maxWidth, maxHeight, reserved = 0.dp)
-            Ring(state, zoneColor, ringSize, ringModifier, reduceMotion)
+            Ring(state, zoneColor, glow, ringSize, ringModifier, reduceMotion)
         }
         Column(
             modifier = Modifier
@@ -254,22 +383,27 @@ private fun LandscapeLayout(
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             // The only sign of a running practice here: there is no tab bar in landscape.
-            PracticeChipSlot(practiceMs = state.practiceMs, onClick = { onIntent(LiveIntent.PracticeChipClicked) })
-            ModeSwitcher(
-                mode = state.mode,
-                onSelect = { onIntent(LiveIntent.SelectMode(it)) },
-                enabled = recording == null,
-                modifier = Modifier.alpha(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha),
-            )
+            PracticeChipSlot(practiceMs = state.practiceMs, onClick = { onIntent(LiveIntent.PracticeChipClicked) }, modifier = Modifier.chrome(1f, chrome))
+            // the switcher, and the place to its right (handoff 29g)
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                ModeSwitcher(
+                    mode = state.mode,
+                    onSelect = { onIntent(LiveIntent.SelectMode(it)) },
+                    enabled = recording == null,
+                    modifier = Modifier.chrome(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha, chrome),
+                )
+                Spacer(Modifier.weight(1f))
+                if (place.shown) state.venue?.let { VenueLabel(it, enabled = place.canChoose, onClick = place.onChoose, modifier = Modifier.chrome(1f, chrome)) }
+            }
             if (state.mode == LiveMode.TUNING) {
                 StringRow(
                     tuning = state.tuning,
                     onStringClick = { onIntent(LiveIntent.StringClicked(it)) },
-                    modifier = Modifier.alpha(chromeAlpha),
-                    topPadding = 0.dp,
+                    modifier = Modifier.chrome(chromeAlpha, chrome),
+                    topPadding = LiveDimens.StringPegHeadRise,
                 )
             }
-            StatusLineRow(line = state.statusLine, tuning = state.tuning)
+            StatusLineRow(line = state.statusLine, tuning = state.tuning, modifier = Modifier.chrome(1f, chrome))
             BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
@@ -299,7 +433,7 @@ private fun LandscapeLayout(
                 onClick = { onIntent(LiveIntent.RecordClicked) },
                 modifier = Modifier
                     .padding(top = LiveDimens.LandscapeRecordTopPadding)
-                    .alpha(if (state.canRecord || recording != null) 1f else LiveDimens.DISABLED_ALPHA),
+                    .chrome(if (state.canRecord || recording != null) 1f else LiveDimens.DISABLED_ALPHA) { if (recording != null) 1f else chrome() },
             )
         }
     }
@@ -338,13 +472,13 @@ private fun ringSizeFor(state: LiveState, landscape: Boolean, maxWidth: Dp, maxH
 }
 
 @Composable
-private fun Ring(state: LiveState, zoneColor: Color, size: Dp, modifier: Modifier, reduceMotion: Boolean) {
+private fun Ring(state: LiveState, zoneColor: Color, glow: State<Float>, size: Dp, modifier: Modifier, reduceMotion: Boolean) {
     val sounding = state.signal as? LiveSignal.Sounding
     // Silence has no count of its own; keeping the last one means going silent is not "a new note".
     var noteSerial by remember { mutableIntStateOf(sounding?.noteSerial ?: 0) }
     if (sounding != null) noteSerial = sounding.noteSerial
     GlowRing(
-        glowTarget = if (reduceMotion) state.glowStep else state.glowTarget,
+        glow = glow,
         level = sounding?.level ?: 0f,
         zoneColor = zoneColor,
         noteSerial = noteSerial,
@@ -360,7 +494,7 @@ private fun Ring(state: LiveState, zoneColor: Color, size: Dp, modifier: Modifie
 /**
  * The scale with its marker belongs to tuning mode only (spec 3.14): turning a peg is a slow
  * move made with the eyes on the gauge. In play mode its place is empty until a recording
- * puts its strip there.
+ * puts its strip there. It stays whole in the dark: it is read, not touched.
  */
 @Composable
 private fun ScaleSlot(state: LiveState, zoneColor: Color, modifier: Modifier = Modifier) {
@@ -380,13 +514,13 @@ private fun Scale(state: LiveState, zoneColor: Color, modifier: Modifier = Modif
         markerFraction = sounding?.let { ScaleMath.markerFraction(it.cents, state.scale).toFloat() },
         inTuneFraction = ScaleMath.inTuneFraction(state.scale).toFloat(),
         haloColor = zoneColor,
-        modifier = modifier.alpha(
-            when {
+        modifier = modifier.graphicsLayer {
+            alpha = when {
                 sounding != null -> 1f
                 state.signal == LiveSignal.NoMicPermission -> LiveDimens.SCALE_ALPHA_NO_MIC
                 else -> LiveDimens.SCALE_ALPHA_IDLE
-            },
-        ),
+            }
+        },
     )
 }
 

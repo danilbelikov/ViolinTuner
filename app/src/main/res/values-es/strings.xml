@@ -914,4 +914,33 @@
     <string name="stand_previous_page">Página anterior</string>
     <string name="stand_next_page">Página siguiente</string>
     <string name="stand_recording_description">Grabando una toma, %1$s</string>
+    <!-- Live in the room and in the halls (spec 3.27): where the player is and plays -->
+    <string name="venue_home">En casa</string>
+    <string name="venue_pair">%1$s · %2$s</string>
+    <string name="venue_sheet_title">Dónde tocar</string>
+    <string name="venue_here">aquí</string>
+    <string name="venue_next">se abre al llegar a %1$s</string>
+    <string name="venue_ahead">aún no abierto</string>
+    <string name="venue_choose">Elegir dónde tocar</string>
+    <string name="venue_play_here">Tocar aquí</string>
+    <string name="venue_play_here_hint">Live se abrirá aquí; la elección se guarda.</string>
+    <string-array name="venue_halls">
+        <item></item>
+        <item>taller</item>
+        <item>La Scala</item>
+        <item>Mozarteum</item>
+        <item>Sala Dorada</item>
+        <item>Rudolfinum</item>
+        <item>Santo Tomás</item>
+        <item>Filarmónica</item>
+        <item>Concertgebouw</item>
+        <item>Palais Garnier</item>
+        <item>Albert Hall</item>
+        <item>Filarmónica</item>
+        <item>Conservatorio</item>
+        <item>Carnegie Hall</item>
+        <item>Teatro Colón</item>
+        <item>Suntory Hall</item>
+        <item>Ópera</item>
+    </string-array>
 </resources>

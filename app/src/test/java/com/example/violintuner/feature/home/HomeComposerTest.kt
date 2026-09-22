@@ -73,6 +73,19 @@ class HomeComposerTest {
     }
 
     @Test
+    fun `the room of Live has no violin - it is in the player's hands, neither on its stand nor in the case`() {
+        val art = art("rent", SceneMode.EVENING)
+        val withStand = loaded.copy(purchased = setOf("vln_student"), choices = mapOf("violin" to "vln_student"))
+        for (state in listOf(loaded, withStand)) {
+            val layers = HomeComposer.compose(art, HomeRules.standing(state, "rent", false, today), false, SceneMode.EVENING, withViolin = false).scene.layers
+            assertFalse(layers.any { it === art.caseViolins.getValue("case_black").first() })
+            assertFalse(layers.any { it === art.items.getValue("vln_student").layers.first() })
+            // the case itself stays, open and empty
+            assertTrue(layers.any { it === art.items.getValue("case_black").layers.first() })
+        }
+    }
+
+    @Test
     fun `until a violin stands on its stand the student's one lies in the open case`() {
         val art = art("rent", SceneMode.EVENING)
         val lying = art.caseViolins.getValue("case_black")

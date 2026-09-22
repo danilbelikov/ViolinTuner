@@ -914,4 +914,33 @@
     <string name="stand_previous_page">上一页</string>
     <string name="stand_next_page">下一页</string>
     <string name="stand_recording_description">正在录制，%1$s</string>
+    <!-- Live in the room and in the halls (spec 3.27): where the player is and plays -->
+    <string name="venue_home">家中</string>
+    <string name="venue_pair">%1$s · %2$s</string>
+    <string name="venue_sheet_title">演奏地点</string>
+    <string name="venue_here">在此</string>
+    <string name="venue_next">到达%1$s后开放</string>
+    <string name="venue_ahead">尚未开放</string>
+    <string name="venue_choose">选择演奏地点</string>
+    <string name="venue_play_here">在这里演奏</string>
+    <string name="venue_play_here_hint">Live 将在这里打开，选择会被记住。</string>
+    <string-array name="venue_halls">
+        <item></item>
+        <item>工坊</item>
+        <item>斯卡拉</item>
+        <item>莫扎特音乐厅</item>
+        <item>金色大厅</item>
+        <item>鲁道夫音乐厅</item>
+        <item>圣托马斯</item>
+        <item>爱乐音乐厅</item>
+        <item>音乐厅</item>
+        <item>加尼叶歌剧院</item>
+        <item>阿尔伯特音乐厅</item>
+        <item>爱乐大厅</item>
+        <item>音乐学院</item>
+        <item>卡内基音乐厅</item>
+        <item>科隆剧院</item>
+        <item>三得利音乐厅</item>
+        <item>歌剧院</item>
+    </string-array>
 </resources>

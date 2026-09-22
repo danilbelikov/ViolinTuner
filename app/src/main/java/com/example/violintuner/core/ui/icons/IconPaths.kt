@@ -90,6 +90,9 @@ internal object IconPaths {
     val MAP = listOf("M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5V6.5z", "M9 4v13.5M15 6.5V20", "M6 14.5c2-1 4 .5 6-1s3.5-3 6-3.5")
     val PASSPORT = listOf("M6 3.5h12a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z", "M12 8a3.5 3.5 0 1 0 0 7 3.5 3.5 0 1 0 0-7z", "M9 17.5h6")
     val DOOR = listOf("M4 20.5h16", "M6 20.5V6l6-3 6 3v14.5", "M9 20.5v-7a3 3 0 0 1 6 0v7", "F M14.2 15.2a.9.9 0 1 0 0 1.8.9.9 0 1 0 0-1.8z")
+    // Where Live takes place (spec 3.27, handoff venue 29k): the house of the room, the front of a hall.
+    val HOUSE = listOf("M4 11l8-6 8 6", "M6 10v9h12v-9")
+    val THEATRE = listOf("M4 19h16", "M6 19V9l6-4 6 4v10", "M9.5 19v-5h5v5")
     val TRAVEL = listOf("M6 7.5h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z", "M8.5 7.5V5.8a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1.7", "M4 13h13", "M17.5 6.5l3-3M20.5 6.5v-3h-3")
     /** The language of the interface (spec 3.26): drawn here, in the manner of the set — a globe of one meridian and the equator. */
     val GLOBE = listOf("M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18z", "M3 12h18", "M12 3c2.8 2.6 4.2 5.6 4.2 9s-1.4 6.4-4.2 9c-2.8-2.6-4.2-5.6-4.2-9S9.2 5.6 12 3z")

@@ -914,4 +914,33 @@
     <string name="stand_previous_page">Предыдущая страница</string>
     <string name="stand_next_page">Следующая страница</string>
     <string name="stand_recording_description">Идёт запись дубля, %1$s</string>
+    <!-- Live in the room and in the halls (spec 3.27): where the player is and plays -->
+    <string name="venue_home">Дома</string>
+    <string name="venue_pair">%1$s · %2$s</string>
+    <string name="venue_sheet_title">Где играть</string>
+    <string name="venue_here">здесь</string>
+    <string name="venue_next">откроется, когда доедете до %1$s</string>
+    <string name="venue_ahead">ещё не открыт</string>
+    <string name="venue_choose">Выбрать, где играть</string>
+    <string name="venue_play_here">Играть здесь</string>
+    <string name="venue_play_here_hint">Live откроется здесь; выбор запомнится.</string>
+    <string-array name="venue_halls">
+        <item></item>
+        <item>мастерская</item>
+        <item>Ла Скала</item>
+        <item>Моцартеум</item>
+        <item>Золотой зал</item>
+        <item>Рудольфинум</item>
+        <item>Св. Фомы</item>
+        <item>Филармония</item>
+        <item>Консертгебау</item>
+        <item>Опера Гарнье</item>
+        <item>Альберт-холл</item>
+        <item>Филармония</item>
+        <item>Консерватория</item>
+        <item>Карнеги-холл</item>
+        <item>Театр Колон</item>
+        <item>Сантори-холл</item>
+        <item>Оперный театр</item>
+    </string-array>
 </resources>

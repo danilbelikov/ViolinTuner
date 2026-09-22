@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -29,16 +30,16 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.ui.format.Formats
+import com.example.violintuner.core.ui.theme.ViolinTheme
 
 private const val TABULAR_FIGURES = "tnum"
 
 /**
- * «● занятие · 12:34» (spec 3.12, handoff 10h): a practice is running. Accent dot, no motion,
- * no zone colour — it must not compete with the ring. Fades in and out; while fading out it
+ * «● занятие · 12:34» (spec 3.12, handoff 10h): a practice is running. A paper tag with a velvet
+ * dot (spec 3.27), no motion, no zone colour — it must not compete with the ring. Fades in and out; while fading out it
  * keeps the last time, because the state is already back to "no practice".
  */
 @Composable
@@ -57,16 +58,18 @@ fun PracticeChipSlot(practiceMs: Long?, onClick: () -> Unit, modifier: Modifier 
 
 @Composable
 private fun PracticeChip(elapsedMs: Long, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
+    // a paper tag, as a thing of the room (spec 3.27, handoff 29j); the dot is velvet, never the colour of a zone
+    val paper = ViolinTheme.venueColors
     val time = Formats.timer(elapsedMs)
     val description = stringResource(R.string.practice_timer_description, time)
+    val shape = RoundedCornerShape(LiveDimens.PracticeChipCorner)
     Row(
         modifier = Modifier
             .height(LiveDimens.PracticeChipHeight)
-            .clip(CircleShape)
-            .background(colors.surfaceContainer)
+            .clip(shape)
+            .background(paper.bone, shape)
             .clickable(role = Role.Button, onClick = onClick)
-            .padding(start = LiveDimens.PracticeChipPaddingStart, end = LiveDimens.PracticeChipPaddingEnd)
+            .padding(horizontal = LiveDimens.PracticeChipPaddingHorizontal)
             .semantics(mergeDescendants = true) { contentDescription = description },
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(LiveDimens.PracticeChipGap),
@@ -74,19 +77,17 @@ private fun PracticeChip(elapsedMs: Long, onClick: () -> Unit) {
         Box(
             Modifier
                 .size(LiveDimens.PracticeChipDotSize)
-                .background(colors.primary, CircleShape),
+                .background(paper.velvet, CircleShape),
         )
         Text(
             text = stringResource(R.string.practice_chip_label),
-            color = colors.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+            color = paper.ink,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold),
         )
         Text(
             text = time,
-            color = colors.onSurface,
-            style = MaterialTheme.typography.bodySmall.copy(
-                fontSize = 13.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES,
-            ),
+            color = paper.ink,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
         )
     }
 }

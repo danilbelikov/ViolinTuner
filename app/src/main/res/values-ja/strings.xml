@@ -914,4 +914,33 @@
     <string name="stand_previous_page">前のページ</string>
     <string name="stand_next_page">次のページ</string>
     <string name="stand_recording_description">テイクを録音中、%1$s</string>
+    <!-- Live in the room and in the halls (spec 3.27): where the player is and plays -->
+    <string name="venue_home">家</string>
+    <string name="venue_pair">%1$s · %2$s</string>
+    <string name="venue_sheet_title">演奏する場所</string>
+    <string name="venue_here">ここ</string>
+    <string name="venue_next">%1$sに着くと開きます</string>
+    <string name="venue_ahead">まだ開いていません</string>
+    <string name="venue_choose">演奏する場所を選ぶ</string>
+    <string name="venue_play_here">ここで弾く</string>
+    <string name="venue_play_here_hint">Live はここで開きます。選んだ場所は保存されます。</string>
+    <string-array name="venue_halls">
+        <item></item>
+        <item>工房</item>
+        <item>スカラ座</item>
+        <item>モーツァルテウム</item>
+        <item>黄金のホール</item>
+        <item>ルドルフィヌム</item>
+        <item>聖トーマス</item>
+        <item>フィルハーモニー</item>
+        <item>コンセルトヘボウ</item>
+        <item>ガルニエ宮</item>
+        <item>アルバート・ホール</item>
+        <item>フィルハーモニア</item>
+        <item>音楽院</item>
+        <item>カーネギー・ホール</item>
+        <item>コロン劇場</item>
+        <item>サントリーホール</item>
+        <item>オペラハウス</item>
+    </string-array>
 </resources>

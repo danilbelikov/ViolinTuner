@@ -6,10 +6,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -39,31 +42,41 @@ fun MicGlyph(modifier: Modifier = Modifier) {
     }
 }
 
-/** Explanation and the "Разрешить доступ" button (spec 3.4, NoMicPermission). */
+/**
+ * Explanation and the "Разрешить доступ" button (spec 3.4, NoMicPermission), written on a card of
+ * paper (spec 3.27, handoff 29c8): it has to be read over a bright room, and it is the one state of
+ * Live that asks for a tap.
+ */
 @Composable
 fun MicPermissionPrompt(onGrantClick: () -> Unit, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
+    val paper = ViolinTheme.venueColors
     val typography = ViolinTheme.liveTypography
+    val shape = RoundedCornerShape(LiveDimens.PromptCardCorner)
     Column(
-        modifier = modifier.widthIn(max = LiveDimens.PromptMaxWidth),
+        modifier = modifier
+            .widthIn(max = LiveDimens.PromptMaxWidth)
+            .background(paper.bone, shape)
+            .padding(horizontal = LiveDimens.PromptCardPaddingHorizontal, vertical = LiveDimens.PromptCardPaddingVertical),
         verticalArrangement = Arrangement.spacedBy(LiveDimens.PromptSpacing),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
             text = stringResource(R.string.mic_permission_title),
-            color = colors.onSurface,
+            color = paper.ink,
             textAlign = TextAlign.Center,
             style = typography.promptTitle,
         )
         Text(
             text = stringResource(R.string.mic_permission_text),
-            color = colors.onSurfaceVariant,
+            color = paper.ink,
             textAlign = TextAlign.Center,
             style = typography.promptBody,
         )
         Button(
             onClick = onGrantClick,
             modifier = Modifier.height(LiveDimens.PromptButtonHeight),
+            shape = RoundedCornerShape(LiveDimens.PromptButtonHeight / 2),
+            colors = ButtonDefaults.buttonColors(containerColor = paper.ink, contentColor = paper.bone),
             contentPadding = PaddingValues(horizontal = LiveDimens.PromptButtonPaddingHorizontal),
         ) {
             Text(

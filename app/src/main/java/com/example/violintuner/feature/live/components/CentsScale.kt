@@ -6,7 +6,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,14 +21,15 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.live.MarkerSpring
 import kotlinx.coroutines.flow.first
 
 /**
- * Cents scale (spec 3.1): thin track, green in-tune pill in the middle, zero tick and a white
- * marker with a halo of the zone color. No labels or numbers. [markerFraction] is 0..1 along
+ * Cents scale (spec 3.1) as a wooden ruler (spec 3.27, handoff 29j): green in-tune pill in the
+ * middle, zero tick and a bone slider with a halo of the zone color. No labels or numbers. [markerFraction] is 0..1 along
  * the track, null hides the marker; [inTuneFraction] is the pill width as a track fraction.
  */
 @Composable
@@ -39,7 +39,7 @@ fun CentsScale(
     haloColor: Color,
     modifier: Modifier = Modifier,
 ) {
-    val colors = MaterialTheme.colorScheme
+    val wood = ViolinTheme.venueColors
     val pillColor = ViolinTheme.zoneColors.inTune
     // After silence the marker shows up where the pitch is instead of travelling from its old
     // place; while sounding it rides a spring. It stays put while fading out. The spring is
@@ -80,10 +80,15 @@ fun CentsScale(
             .fillMaxWidth()
             .height(LiveDimens.ScaleHeight),
     ) {
-        centeredBar(colors.surfaceContainerHigh, CENTER, size.width, LiveDimens.ScaleTrackHeight)
+        // a wooden ruler (spec 3.27, handoff 29j): the green pill of the tolerance and the zero on it
+        val rulerHeight = LiveDimens.ScaleRulerHeight.toPx()
+        val rulerTop = (size.height - rulerHeight) / 2
+        val corner = CornerRadius(LiveDimens.ScaleRulerCorner.toPx())
+        drawRoundRect(wood.ruler, topLeft = Offset(0f, rulerTop), size = Size(size.width, rulerHeight), cornerRadius = corner)
+        drawRoundRect(wood.mapleDark, topLeft = Offset(0f, rulerTop), size = Size(size.width, rulerHeight), cornerRadius = corner, style = Stroke(LiveDimens.ScaleRulerEdge.toPx()))
         centeredBar(pillColor, CENTER, size.width * inTuneFraction, LiveDimens.ScalePillHeight)
         centeredBar(
-            colors.outlineVariant, CENTER, LiveDimens.ScaleTickWidth.toPx(), LiveDimens.ScaleTickHeight,
+            wood.bone.copy(alpha = ZERO_TICK_ALPHA), CENTER, LiveDimens.ScaleTickWidth.toPx(), LiveDimens.ScaleTickHeight,
             rounded = false,
         )
         if (markerAlpha > 0f) {
@@ -97,13 +102,9 @@ fun CentsScale(
                 haloColor.copy(alpha = LiveDimens.HALO_ALPHA_CORE * markerAlpha), animatedMarker,
                 LiveDimens.HaloWidth.toPx(), LiveDimens.HaloHeight,
             )
-            val outline = LiveDimens.MarkerOutline
+            // the bone slider of the ruler
             centeredBar(
-                colors.surface.copy(alpha = markerAlpha), animatedMarker,
-                (LiveDimens.MarkerWidth + outline * 2).toPx(), LiveDimens.MarkerHeight + outline * 2,
-            )
-            centeredBar(
-                colors.onSurface.copy(alpha = markerAlpha), animatedMarker,
+                wood.bone.copy(alpha = markerAlpha), animatedMarker,
                 LiveDimens.MarkerWidth.toPx(), LiveDimens.MarkerHeight,
             )
         }
@@ -111,6 +112,7 @@ fun CentsScale(
 }
 
 private const val CENTER = 0.5f
+private const val ZERO_TICK_ALPHA = 0.7f
 
 /** A pill centered vertically on the scale and horizontally at [fraction] of its width. */
 private fun DrawScope.centeredBar(

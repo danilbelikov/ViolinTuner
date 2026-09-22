@@ -6,6 +6,7 @@ import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.LocalActivity
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -21,9 +22,13 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.example.violintuner.BuildConfig
 import com.example.violintuner.R
+import com.example.violintuner.core.ui.motion.LocalReduceMotion
 import com.example.violintuner.core.ui.permission.isMicPermissionGranted
 import com.example.violintuner.core.ui.permission.rememberMicPermissionRequester
+import com.example.violintuner.feature.home.HomeLookViewModel
+import com.example.violintuner.feature.journey.LocalHomeLook
 
 /** Entry point of the Live destination: owns the ViewModel, its effects and the mic permission. */
 @Composable
@@ -73,7 +78,11 @@ fun LiveRoute(
         }
     }
 
-    LiveScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier, reduceMotion = reduceMotion)
+    // the room of Live is the home as it stands (spec 3.27): the same look the journey and «Занятия» draw
+    val homeLook by hiltViewModel<HomeLookViewModel>().state.collectAsStateWithLifecycle()
+    CompositionLocalProvider(LocalHomeLook provides homeLook, LocalReduceMotion provides reduceMotion) {
+        LiveScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier, reduceMotion = reduceMotion, showVenue = !BuildConfig.PLAIN_LIVE)
+    }
 }
 
 /** True when the user has switched system animations off (accessibility: "remove animations"). */

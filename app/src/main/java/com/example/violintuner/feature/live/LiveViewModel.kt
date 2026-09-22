@@ -2,10 +2,13 @@ package com.example.violintuner.feature.live
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.violintuner.core.recording.TakePipeline
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.practice.RunningPracticeStore
 import com.example.violintuner.core.domain.practice.elapsedTicker
+import com.example.violintuner.core.domain.venue.Venue
+import com.example.violintuner.core.domain.venue.VenueEntry
+import com.example.violintuner.core.domain.venue.Venues
+import com.example.violintuner.core.recording.TakePipeline
 import com.example.violintuner.core.settings.IntonationConfigSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
@@ -30,6 +33,7 @@ class LiveViewModel @Inject constructor(
     private val configSource: IntonationConfigSource,
     private val runningPractice: RunningPracticeStore,
     private val clock: Clock,
+    private val venues: Venues,
 ) : ViewModel() {
 
     init {
@@ -87,15 +91,22 @@ class LiveViewModel @Inject constructor(
             }
         }
 
+    /** Where Live takes place, and where else the player may go (spec 3.27). */
+    private data class Place(val venue: Venue, val menu: List<VenueEntry>)
+
+    private val place: Flow<Place> = combine(venues.current, venues.menu, ::Place)
+
+    private val around: Flow<Pair<Long?, Place>> = combine(runningPractice.elapsedTicker(clock), place, ::Pair)
+
     val state: StateFlow<LiveState> =
         combine(
-            target, configSource.config, recordingRequested, output, runningPractice.elapsedTicker(clock),
-        ) { target, config, requested, output, practiceMs ->
-            stateOf(target, config, requested, output, practiceMs)
+            target, configSource.config, recordingRequested, output, around,
+        ) { target, config, requested, output, (practiceMs, place) ->
+            stateOf(target, config, requested, output, practiceMs, place)
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-            initialValue = stateOf(target.value, configSource.default, false, TakePipeline.Output(LiveSignal.Silence), null),
+            initialValue = stateOf(target.value, configSource.default, false, TakePipeline.Output(LiveSignal.Silence), null, null),
         )
 
     fun onIntent(intent: LiveIntent) {
@@ -112,6 +123,8 @@ class LiveViewModel @Inject constructor(
             is LiveIntent.MicPermissionChanged ->
                 if (takes.requiresMicPermission) micPermissionGranted.value = intent.granted
             LiveIntent.PracticeChipClicked -> effectChannel.trySend(LiveEffect.OpenPractice)
+            // the place is fixed while a recording runs, like the mode
+            is LiveIntent.VenueChosen -> if (!recordingRequested.value) viewModelScope.launch { venues.choose(intent.venue) }
         }
     }
 
@@ -121,6 +134,7 @@ class LiveViewModel @Inject constructor(
         recordingRequested: Boolean,
         output: TakePipeline.Output<LiveSignal>,
         practiceMs: Long?,
+        place: Place?,
     ) = LiveState(
         mode = target.mode,
         signal = output.shown,
@@ -138,6 +152,8 @@ class LiveViewModel @Inject constructor(
         glowStep = LiveReducer.glowTargetOf(output.shown, config, stepped = true),
         statusLine = LiveReducer.statusLineOf(target, output.shown),
         practiceMs = practiceMs,
+        venue = place?.venue,
+        venueMenu = place?.menu.orEmpty(),
     )
 
     private companion object {

@@ -36,6 +36,7 @@ fun ViolinTheme(content: @Composable () -> Unit) {
         LocalVideoColors provides DarkVideoColors,
         LocalBackupColors provides DarkBackupColors,
         LocalExerciseColors provides DarkExerciseColors,
+        LocalVenueColors provides DarkVenueColors,
     ) {
         MaterialTheme(
             colorScheme = DarkColorScheme,
@@ -75,6 +76,10 @@ object ViolinTheme {
 
     val exerciseColors: ExerciseColors
         @Composable @ReadOnlyComposable get() = LocalExerciseColors.current
+
+    /** The controls of Live in the style of the room (spec 3.27). */
+    val venueColors: VenueColors
+        @Composable @ReadOnlyComposable get() = LocalVenueColors.current
 
     val accentGlow: Color
         get() = AccentGlow
