@@ -5,11 +5,14 @@ import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.audio.playback.SessionWaveforms
 import com.example.violintuner.core.audio.share.ShareFiles
 import com.example.violintuner.core.data.profile.AvatarFiles
+import com.example.violintuner.core.domain.practice.BlockStore
 import com.example.violintuner.core.domain.practice.ForgottenPractice
+import com.example.violintuner.core.domain.practice.NoBlocks
 import com.example.violintuner.core.domain.practice.PracticeCheck
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeFinisher
 import com.example.violintuner.core.domain.practice.PracticeRepository
+import com.example.violintuner.core.domain.practice.RunningPractice
 import com.example.violintuner.core.domain.practice.RunningPracticeStore
 import com.example.violintuner.core.domain.progress.ProfileRepository
 import com.example.violintuner.core.domain.progress.Progress
@@ -55,9 +58,10 @@ class AppStartViewModel @Inject constructor(
     awarder: TrophyAwarder,
     profile: ProfileRepository,
     avatarFiles: AvatarFiles,
-    repertoire: RepertoireRepository,
+    private val repertoire: RepertoireRepository,
     waveforms: SessionWaveforms,
     shareFiles: ShareFiles,
+    private val blocks: BlockStore = NoBlocks,
 ) : ViewModel() {
     init {
         viewModelScope.launch { sessions.deleteOrphanAudio() }
@@ -105,9 +109,7 @@ class AppStartViewModel @Inject constructor(
                 is PracticeCheck.Forgotten -> PracticePrompt.Forgotten(check.elapsedMs, check.lastSoundEpochMs)
                 // Ended by itself; the store still holds it until the sheet is answered, so a
                 // process death in between loses nothing.
-                is PracticeCheck.Expired -> PracticePrompt.Summary(
-                    PracticeReducer.summarySheet(running.startedAtEpochMs, check.endEpochMs - running.startedAtEpochMs, config),
-                )
+                is PracticeCheck.Expired -> PracticePrompt.Summary(summaryOf(running, check.endEpochMs - running.startedAtEpochMs))
             }
         }
     }
@@ -127,7 +129,7 @@ class AppStartViewModel @Inject constructor(
             PracticePromptIntent.EditTime -> viewModelScope.launch {
                 val running = runningPractice.running.first() ?: return@launch prompt.update { null }
                 val elapsed = running.elapsedMs(clock.millis()).coerceAtMost(config.maxPracticeMs)
-                prompt.value = PracticePrompt.Summary(PracticeReducer.summarySheet(running.startedAtEpochMs, elapsed, config))
+                prompt.value = PracticePrompt.Summary(summaryOf(running, elapsed))
             }
             is PracticePromptIntent.SummaryStepped -> prompt.update { current ->
                 (current as? PracticePrompt.Summary)?.let { PracticePrompt.Summary(PracticeReducer.step(it.sheet, intent.steps, config)) }
@@ -144,6 +146,15 @@ class AppStartViewModel @Inject constructor(
             }
         }
     }
+
+    /** The summary sheet with «Что играли» (spec 3.28): the blocks of the practice under the names of their elements. */
+    private suspend fun summaryOf(running: RunningPractice, durationMs: Long) = PracticeReducer.summarySheet(
+        startedAtEpochMs = running.startedAtEpochMs,
+        actualMs = durationMs,
+        config = config,
+        blocks = blocks.blocks.first(),
+        titles = repertoire.pieces.first().associate { it.id to it.title },
+    )
 
     private fun endForgotten(endEpochMs: Long) {
         viewModelScope.launch {

@@ -3,6 +3,8 @@ package com.example.violintuner.navigation
 import com.example.violintuner.core.audio.playback.FakeSessionWaveforms
 import com.example.violintuner.core.audio.share.FakeShareFiles
 import com.example.violintuner.core.data.profile.FakeAvatarFiles
+import com.example.violintuner.core.domain.practice.BlockRules
+import com.example.violintuner.core.domain.practice.FakeBlockStore
 import com.example.violintuner.core.domain.practice.FakePracticeRepository
 import com.example.violintuner.core.domain.practice.FakeRunningPracticeStore
 import com.example.violintuner.core.domain.practice.PracticeConfig
@@ -16,8 +18,10 @@ import com.example.violintuner.core.domain.progress.ProgressConfig
 import com.example.violintuner.core.domain.progress.Trophy
 import com.example.violintuner.core.domain.progress.TrophyAwarder
 import com.example.violintuner.core.domain.repertoire.FakeRepertoireRepository
+import com.example.violintuner.core.domain.repertoire.PieceDraft
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.settings.FakeSettingsRepository
+import com.example.violintuner.feature.practice.PlayedLine
 import com.example.violintuner.feature.practice.PracticePrompt
 import com.example.violintuner.feature.practice.PracticePromptIntent
 import java.time.Clock
@@ -58,10 +62,12 @@ class AppStartViewModelTest {
     private val profile = FakeProfileRepository()
     private val avatarFiles = FakeAvatarFiles()
     private val repertoire = FakeRepertoireRepository()
+    private val blocks = FakeBlockStore()
 
     private fun viewModel() = AppStartViewModel(
         FakeSettingsRepository(), FakeSessionRepository(), store, PracticeFinisher(repository, store, clock), config, clock,
         repository, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), profile, avatarFiles, repertoire, FakeSessionWaveforms(), FakeShareFiles(),
+        blocks,
     )
 
     private suspend fun running(elapsedMs: Long, lastSoundAgoMs: Long?) {
@@ -247,5 +253,29 @@ class AppStartViewModelTest {
         viewModel()
         runCurrent()
         assertEquals(1, repertoire.orphanCleanups)
+    }
+
+    @Test
+    fun `the sheet of a practice that ended by itself lists what was played, cut where the practice ended`() = runTest {
+        val scale = repertoire.add(PieceDraft(title = "G-dur · 3 октавы"), 0)
+        val minuet = repertoire.add(PieceDraft(title = "Менуэт соль мажор"), 0)
+        running(elapsedMs = 14 * MS_PER_HOUR, lastSoundAgoMs = null)
+        val start = now - 14 * MS_PER_HOUR
+        // the scale for its ten minutes; the minuet left running for hours, its goal long passed by the end
+        blocks.update { BlockRules.started(it, start, scale, 10 * MS_PER_MINUTE, start) }
+        blocks.update { BlockRules.started(it, start, minuet, 30 * MS_PER_MINUTE, start + 10 * MS_PER_MINUTE) }
+        val viewModel = viewModel()
+        viewModel.onAppOpened()
+        runCurrent()
+        // no sound at all: the practice ends an hour after its start, and so do its blocks
+        val summary = viewModel.practicePrompt.value as PracticePrompt.Summary
+        assertEquals(
+            listOf(PlayedLine("G-dur · 3 октавы", 10, 10, done = true), PlayedLine("Менуэт соль мажор", 30, 30, done = true)),
+            summary.sheet.played,
+        )
+        // five minutes on the stepper: the minuet begun at ten no longer fits
+        repeat(11) { viewModel.onPromptIntent(PracticePromptIntent.SummaryStepped(-1)) }
+        runCurrent()
+        assertEquals(listOf(PlayedLine("G-dur · 3 октавы", 5, 10, done = false)), (viewModel.practicePrompt.value as PracticePrompt.Summary).sheet.played)
     }
 }

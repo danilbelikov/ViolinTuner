@@ -964,4 +964,8 @@
     <string name="block_goal_minus">−%1$d</string>
     <string name="block_goal_plus">+%1$d</string>
     <string name="block_goal_option">%1$d min</string>
+    <!-- Blocks in the practice (spec 3.28): «Что играли» in the summary, the running block under the timer -->
+    <string name="block_played_title">What was played</string>
+    <string name="block_part_of">%1$d of %2$d min</string>
+    <string name="block_line">%1$s · %2$s</string>
 </resources>

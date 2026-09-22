@@ -1,10 +1,13 @@
 package com.example.violintuner.feature.practice
 
 import com.example.violintuner.core.domain.repertoire.Piece
+import com.example.violintuner.core.domain.practice.BlockRules
+import com.example.violintuner.core.domain.practice.PracticeBlocks
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeEntry
 import com.example.violintuner.core.domain.practice.PracticeStats
+import com.example.violintuner.core.domain.practice.RunningPractice
 import com.example.violintuner.core.domain.progress.Profile
 import com.example.violintuner.core.domain.progress.Progress
 import com.example.violintuner.core.domain.progress.ProgressConfig
@@ -35,6 +38,7 @@ object PracticeReducer {
         profile: Profile,
         avatarPath: String?,
         progressConfig: ProgressConfig,
+        runningBlock: RunningBlockLine? = null,
     ): PracticeState {
         val totals = PracticeStats.dayTotals(entries)
         val totalMs = Progress.totalMs(entries)
@@ -80,7 +84,15 @@ object PracticeReducer {
             gift = if (sheet == null) ProgressReducer.giftOf(trophies, progressConfig) else null,
             sheet = sheet,
             stepMinutes = config.editStepMinutes,
+            runningBlock = runningBlock.takeIf { runningMs != null },
         )
+    }
+
+    /** The block of the running practice under «Занятие идёт»: minutes left, or «готово» once it reached its goal. */
+    fun runningBlockOf(running: RunningPractice?, blocks: PracticeBlocks?, titles: Map<Long, String>, nowEpochMs: Long): RunningBlockLine? {
+        val current = BlockRules.ofPractice(running, blocks)?.current ?: return null
+        val title = titles[current.pieceId] ?: return null
+        return RunningBlockLine(title, minutesLeft = BlockRules.minutesLeft(current, nowEpochMs).takeIf { BlockRules.isRunning(current, nowEpochMs) })
     }
 
     fun loading(today: LocalDate, config: PracticeConfig, progressConfig: ProgressConfig): PracticeState = PracticeState(
@@ -100,8 +112,17 @@ object PracticeReducer {
         stepMinutes = config.editStepMinutes,
     )
 
-    /** The summary sheet for a practice that ran [actualMs] (spec 3.12: trim from 5 min to the actual length). */
-    fun summarySheet(startedAtEpochMs: Long, actualMs: Long, config: PracticeConfig): PracticeSheet.Summary {
+    /**
+     * The summary sheet for a practice that ran [actualMs] (spec 3.12: trim from 5 min to the actual length), with
+     * «Что играли» — the [blocks] of the practice under the names in [titles] (spec 3.28).
+     */
+    fun summarySheet(
+        startedAtEpochMs: Long,
+        actualMs: Long,
+        config: PracticeConfig,
+        blocks: PracticeBlocks? = null,
+        titles: Map<Long, String> = emptyMap(),
+    ): PracticeSheet.Summary {
         val actualMinutes = wholeMinutes(actualMs)
         return PracticeSheet.Summary(
             startedAtEpochMs = startedAtEpochMs,
@@ -110,13 +131,28 @@ object PracticeReducer {
             minMinutes = minOf(config.minEditableMinutes, actualMinutes),
             maxMinutes = actualMinutes,
             edited = false,
-        )
+            blocks = blocks,
+            titles = titles,
+        ).withPlayed(config)
     }
 
     fun step(sheet: PracticeSheet.Summary, steps: Int, config: PracticeConfig): PracticeSheet.Summary {
         val minutes = (sheet.minutes + steps * config.editStepMinutes).coerceIn(sheet.minMinutes, sheet.maxMinutes)
-        return sheet.copy(minutes = minutes, edited = true)
+        return sheet.copy(minutes = minutes, edited = true).withPlayed(config)
     }
+
+    /**
+     * «Что играли» for the length the sheet would save (spec 5.21): the stepper cuts the blocks that do not fit —
+     * a block begun after the new end leaves the list, one cut short loses its tick. In the order they were played.
+     */
+    fun playedOf(sheet: PracticeSheet.Summary, config: PracticeConfig): List<PlayedLine> =
+        BlockRules.played(sheet.blocks, sheet.startedAtEpochMs + durationToSave(sheet), config).mapNotNull { block ->
+            sheet.titles[block.pieceId]?.let { title ->
+                PlayedLine(title, minutes = wholeMinutes(block.durationMs), goalMinutes = (block.goalMs / MS_PER_MINUTE).toInt(), done = block.done)
+            }
+        }
+
+    private fun PracticeSheet.Summary.withPlayed(config: PracticeConfig) = copy(played = playedOf(this, config))
 
     /** What the summary sheet saves: the exact timed length unless the stepper was used. */
     fun durationToSave(sheet: PracticeSheet.Summary): Long =

@@ -6,6 +6,9 @@ import com.example.violintuner.core.data.profile.AvatarFiles
 import com.example.violintuner.core.domain.journey.JourneyRepository
 import com.example.violintuner.core.domain.journey.NoJourney
 import com.example.violintuner.core.domain.journey.TaktEarning
+import com.example.violintuner.core.domain.practice.BlockStore
+import com.example.violintuner.core.domain.practice.NoBlocks
+import com.example.violintuner.core.domain.practice.PracticeBlocks
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeFinisher
@@ -52,7 +55,7 @@ class PracticeViewModel @Inject constructor(
     private val finisher: PracticeFinisher,
     sessions: SessionRepository,
     private val config: PracticeConfig,
-    repertoire: RepertoireRepository,
+    private val repertoire: RepertoireRepository,
     private val clock: Clock,
     private val trophies: TrophyRepository,
     private val profiles: ProfileRepository,
@@ -60,6 +63,7 @@ class PracticeViewModel @Inject constructor(
     private val progressConfig: ProgressConfig,
     journey: JourneyRepository = NoJourney,
     venues: Venues = Venues(FollowTheRoad, journey),
+    private val blocks: BlockStore = NoBlocks,
 ) : ViewModel() {
 
     /**
@@ -90,11 +94,14 @@ class PracticeViewModel @Inject constructor(
 
     private val runningMs: Flow<Long?> = runningStore.elapsedTicker(clock)
 
+    /** The practice's time and its blocks travel together: a block's minutes left follow the same tick (spec 3.28). */
+    private val running = combine(runningMs, runningStore.running, blocks.blocks, ::Triple)
+
     /** Trophies and the profile travel together: `combine` takes five flows at most. */
     private val progress: Flow<Pair<List<Trophy>, Profile>> = combine(trophies.trophies, profiles.profile, ::Pair)
 
     val state: StateFlow<PracticeState> =
-        combine(repository.entries, combine(sessions.sessions, repertoire.pieces, ::Pair), runningMs, ui, progress) { entries, (sessions, pieces), runningMs, ui, (trophies, profile) ->
+        combine(repository.entries, combine(sessions.sessions, repertoire.pieces, ::Pair), running, ui, progress) { entries, (sessions, pieces), (runningMs, running, blocks), ui, (trophies, profile) ->
             PracticeReducer.stateOf(
                 entries = entries,
                 sessions = sessions,
@@ -111,6 +118,7 @@ class PracticeViewModel @Inject constructor(
                 // A name without its file (cleared storage) is no photo, not a broken one.
                 avatarPath = profile.avatarFile?.let(avatarFiles::existing)?.path,
                 progressConfig = progressConfig,
+                runningBlock = PracticeReducer.runningBlockOf(running, blocks, pieces.associate { it.id to it.title }, clock.millis()),
             )
         }.stateIn(
             scope = viewModelScope,
@@ -167,11 +175,12 @@ class PracticeViewModel @Inject constructor(
         val elapsed = running.elapsedMs(clock.millis()).coerceAtMost(config.maxPracticeMs)
         if (elapsed < config.minPracticeMs) {
             viewModelScope.launch {
-                runningStore.clear()
+                // too short to keep: its notes and blocks go with it
+                finisher.discard()
                 effectChannel.send(PracticeEffect.ShowTooShort)
             }
         } else {
-            ui.update { it.copy(sheet = PracticeReducer.summarySheet(running.startedAtEpochMs, elapsed, config)) }
+            ui.update { it.copy(sheet = PracticeReducer.summarySheet(running.startedAtEpochMs, elapsed, config, latestBlocks, latestTitles)) }
         }
     }
 
@@ -180,9 +189,13 @@ class PracticeViewModel @Inject constructor(
     private var latestRunning: RunningPractice? = null
     private var latestTotals: Map<LocalDate, Long> = emptyMap()
     private var latestProfile: Profile = Profile.EMPTY
+    private var latestBlocks: PracticeBlocks? = null
+    private var latestTitles: Map<Long, String> = emptyMap()
 
     init {
         viewModelScope.launch { profiles.profile.collect { latestProfile = it } }
+        viewModelScope.launch { blocks.blocks.collect { latestBlocks = it } }
+        viewModelScope.launch { repertoire.pieces.collect { pieces -> latestTitles = pieces.associate { it.id to it.title } } }
         viewModelScope.launch { runningStore.running.collect { latestRunning = it } }
         viewModelScope.launch { repository.entries.collect { latestTotals = PracticeStats.dayTotals(it) } }
     }

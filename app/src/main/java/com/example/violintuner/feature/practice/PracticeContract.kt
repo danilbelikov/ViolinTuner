@@ -1,5 +1,6 @@
 package com.example.violintuner.feature.practice
 
+import com.example.violintuner.core.domain.practice.PracticeBlocks
 import com.example.violintuner.feature.history.HistoryCard
 import java.time.LocalDate
 import java.time.YearMonth
@@ -83,6 +84,12 @@ data class TrophyLine(
     val isFar: Boolean,
 )
 
+/** One element played in the practice, as «Что играли» lists it (spec 3.28, handoff 30g): «7 из 10 мин», or the goal with a tick. */
+data class PlayedLine(val title: String, val minutes: Int, val goalMinutes: Int, val done: Boolean)
+
+/** The block that runs, under «Занятие идёт» (handoff 30g4): «ещё 7 мин», or «готово» when [minutesLeft] is null. */
+data class RunningBlockLine(val title: String, val minutesLeft: Int?)
+
 sealed interface PracticeSheet {
     /**
      * "Закончить занятие": the timed length with a chance to trim it. [minutes] is what the
@@ -95,6 +102,11 @@ sealed interface PracticeSheet {
         val minMinutes: Int,
         val maxMinutes: Int,
         val edited: Boolean,
+        /** The blocks of this practice and the names of their elements: «Что играли» follows the length being saved. */
+        val blocks: PracticeBlocks? = null,
+        val titles: Map<Long, String> = emptyMap(),
+        /** What «Что играли» lists for the length the sheet would save now; empty without blocks — the sheet as it was. */
+        val played: List<PlayedLine> = emptyList(),
     ) : PracticeSheet
 
     /**
@@ -136,6 +148,8 @@ data class PracticeState(
     val sheet: PracticeSheet?,
     /** Whole minutes of one stepper step, from the config: the sheets word their hint with it. */
     val stepMinutes: Int,
+    /** The block that runs within the practice (spec 3.28); null without one. */
+    val runningBlock: RunningBlockLine? = null,
 )
 
 sealed interface PracticeIntent {

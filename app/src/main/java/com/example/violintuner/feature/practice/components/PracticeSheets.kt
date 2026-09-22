@@ -9,12 +9,23 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
+import com.example.violintuner.core.ui.icons.AppIcon
+import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.feature.practice.PlayedLine
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -33,6 +44,11 @@ import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.feature.practice.PracticeIntent
 import com.example.violintuner.feature.practice.PracticeSheet
 
+private val PlayedRowHeight = 44.dp
+private val PlayedTick = 16.dp
+/** More than this and «Что играли» scrolls inside itself. */
+private const val PLAYED_ROWS_IN_SIGHT = 4
+private const val TABULAR_FIGURES = "tnum"
 private val SheetPadding = 24.dp
 private val SheetBottom = 32.dp
 private val PrimaryButtonHeight = 56.dp
@@ -50,6 +66,8 @@ private const val CHIP_HOUR = 60
 fun SummarySheet(sheet: PracticeSheet.Summary, stepMinutes: Int, onIntent: (PracticeIntent) -> Unit) {
     ModalBottomSheet(
         onDismissRequest = { onIntent(PracticeIntent.SummaryDiscarded) },
+        // with «Что играли» the sheet is taller than half a screen: it opens whole, «Не сохранять» never under the fold
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         SummarySheetContent(sheet, stepMinutes, onIntent)
@@ -70,8 +88,62 @@ internal fun SummarySheetContent(sheet: PracticeSheet.Summary, stepMinutes: Int,
                 upDescription = stringResource(R.string.practice_step_up, stepMinutes),
             )
         }
+        if (sheet.played.isNotEmpty()) PlayedBlock(sheet.played)
         PrimaryButton(text = stringResource(R.string.practice_save), onClick = { onIntent(PracticeIntent.SummarySaved) })
         SecondaryButton(text = stringResource(R.string.practice_discard), onClick = { onIntent(PracticeIntent.SummaryDiscarded) })
+    }
+}
+
+/**
+ * «Что играли» (spec 3.28, handoff 30g): the blocks of the practice in the order they were played — the element,
+ * its time, the tick of one played to its goal. No takts: they come as one «+N» on «Занятия». A long list scrolls
+ * inside itself, so the stepper and «Сохранить» stay in sight in a low window.
+ */
+@Composable
+private fun PlayedBlock(played: List<PlayedLine>) {
+    val colors = MaterialTheme.colorScheme
+    Column {
+        Text(
+            text = stringResource(R.string.block_played_title),
+            modifier = Modifier.padding(bottom = 6.dp),
+            color = colors.onSurface,
+            style = MaterialTheme.typography.titleSmall.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold),
+        )
+        Column(
+            modifier = Modifier
+                .heightIn(max = PlayedRowHeight * PLAYED_ROWS_IN_SIGHT)
+                .verticalScroll(rememberScrollState()),
+        ) {
+            played.forEach { line ->
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = PlayedRowHeight)
+                        .semantics(mergeDescendants = true) {},
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(
+                        text = line.title,
+                        modifier = Modifier.weight(1f),
+                        color = colors.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
+                    )
+                    Text(
+                        text = if (line.done) Formats.minutesInWords(line.goalMinutes * MS_PER_MINUTE) else stringResource(R.string.block_part_of, line.minutes, line.goalMinutes),
+                        color = if (line.done) colors.onSurface else colors.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
+                    )
+                    if (line.done) {
+                        AppIcon(AppIcons.Check, contentDescription = stringResource(R.string.block_done), size = PlayedTick, tint = colors.onSurface)
+                    } else {
+                        Spacer(Modifier.size(PlayedTick))
+                    }
+                }
+            }
+        }
     }
 }
 

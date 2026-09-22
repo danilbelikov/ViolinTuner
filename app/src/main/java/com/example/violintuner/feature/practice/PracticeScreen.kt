@@ -42,6 +42,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
@@ -283,6 +284,22 @@ private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit,
                         text = stringResource(R.string.practice_running),
                         color = colors.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                    )
+                }
+                // the block that runs within the practice (spec 3.28, handoff 30g4): a quiet line, no motion of its own
+                state.runningBlock?.let { block ->
+                    val left = block.minutesLeft
+                    Text(
+                        text = stringResource(
+                            R.string.block_line,
+                            block.title,
+                            if (left == null) stringResource(R.string.block_done) else stringResource(Formats.plural(left, R.string.block_left_one, R.string.block_left_few, R.string.block_left_many), left),
+                        ),
+                        modifier = Modifier.padding(top = 2.dp, start = 16.dp, end = 16.dp),
+                        color = colors.onSurfaceVariant,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES),
                     )
                 }
                 OutlinedButton(

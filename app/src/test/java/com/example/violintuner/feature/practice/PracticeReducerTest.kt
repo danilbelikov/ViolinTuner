@@ -2,9 +2,12 @@ package com.example.violintuner.feature.practice
 
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.Zone
+import com.example.violintuner.core.domain.practice.PieceBlock
+import com.example.violintuner.core.domain.practice.PracticeBlocks
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeEntry
+import com.example.violintuner.core.domain.practice.RunningPractice
 import com.example.violintuner.core.domain.progress.Profile
 import com.example.violintuner.core.domain.progress.ProgressConfig
 import com.example.violintuner.core.domain.session.SessionSummary
@@ -135,5 +138,54 @@ class PracticeReducerTest {
         assertEquals(720, PracticeReducer.add(sheet, 700).minutes)
         assertEquals(0, PracticeReducer.step(PracticeReducer.editSheet(today, 0, config), -1, config).minutes)
         assertEquals(720, PracticeReducer.editSheet(today, 13 * 60 * MS_PER_MINUTE, config).minutes)
+    }
+
+    /** Handoff 30g: the scale 10 of 10, Kaiser 15 of 15, the minuet stopped at 7 of 10, the concerto from minute 34 for 20; 47 minutes. */
+    private val lessonStart = 1_000_000_000L
+    private fun at(minutes: Long) = lessonStart + minutes * MS_PER_MINUTE
+    private val lesson = PracticeBlocks(
+        practiceStartedAtEpochMs = lessonStart,
+        current = PieceBlock(4, at(34), 20 * MS_PER_MINUTE),
+        finished = listOf(
+            PieceBlock(1, at(0), 10 * MS_PER_MINUTE, endedAtEpochMs = at(10)),
+            PieceBlock(2, at(10), 15 * MS_PER_MINUTE, endedAtEpochMs = at(25)),
+            PieceBlock(3, at(25), 10 * MS_PER_MINUTE, endedAtEpochMs = at(32)),
+        ),
+    )
+    private val titles = mapOf(1L to "G-dur · 3 октавы", 2L to "Кайзер № 3", 3L to "Менуэт соль мажор", 4L to "Концерт ля минор, I ч.")
+
+    @Test
+    fun `«Что играли» lists the blocks in the order played and follows the stepper (30g1, 30g2)`() {
+        val sheet = PracticeReducer.summarySheet(lessonStart, 47 * MS_PER_MINUTE, config, lesson, titles)
+        assertEquals(
+            listOf(
+                PlayedLine("G-dur · 3 октавы", 10, 10, done = true),
+                PlayedLine("Кайзер № 3", 15, 15, done = true),
+                PlayedLine("Менуэт соль мажор", 7, 10, done = false),
+                PlayedLine("Концерт ля минор, I ч.", 13, 20, done = false),
+            ),
+            sheet.played,
+        )
+        // 47 → 30 minutes: the concerto begun at 34 leaves, the minuet keeps five of its minutes
+        var trimmed = sheet
+        repeat(4) { trimmed = PracticeReducer.step(trimmed, -1, config) }
+        assertEquals(27, trimmed.minutes)
+        trimmed = PracticeReducer.step(PracticeReducer.step(trimmed, +1, config), -1, config)
+        assertEquals(
+            listOf(PlayedLine("G-dur · 3 октавы", 10, 10, done = true), PlayedLine("Кайзер № 3", 15, 15, done = true), PlayedLine("Менуэт соль мажор", 2, 10, done = false)),
+            trimmed.played,
+        )
+        // without blocks the sheet is the sheet it was
+        assertEquals(emptyList<PlayedLine>(), PracticeReducer.summarySheet(lessonStart, 47 * MS_PER_MINUTE, config).played)
+    }
+
+    @Test
+    fun `under «Занятие идёт» the running block says what is left, or «готово» at its goal`() {
+        val running = RunningPractice(lessonStart, lastSoundEpochMs = null)
+        assertEquals(RunningBlockLine("Концерт ля минор, I ч.", minutesLeft = 7), PracticeReducer.runningBlockOf(running, lesson, titles, at(47)))
+        assertEquals(RunningBlockLine("Концерт ля минор, I ч.", minutesLeft = null), PracticeReducer.runningBlockOf(running, lesson, titles, at(60)))
+        assertNull(PracticeReducer.runningBlockOf(running, lesson.copy(current = null), titles, at(47)))
+        assertNull(PracticeReducer.runningBlockOf(RunningPractice(lessonStart + 1, null), lesson, titles, at(47)))
+        assertNull(PracticeReducer.runningBlockOf(running, lesson, titles - 4L, at(47)))
     }
 }
