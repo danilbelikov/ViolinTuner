@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Гриф — карта нот</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>
+body{margin:0;background:#131318;font-family:Manrope,sans-serif;color:#E6E4EE}
+.cell-new{animation:cellIn 4.8s ease-in-out infinite both;transform-box:fill-box;transform-origin:center}
+.cell-old{animation:cellOut 4.8s ease-in-out infinite both;transform-box:fill-box;transform-origin:center}
+@keyframes cellIn{0%,22%{opacity:0;transform:scale(.6)}34%{opacity:1;transform:scale(1.18)}40%,100%{opacity:1;transform:scale(1)}}
+@keyframes cellOut{0%,22%{opacity:1}32%,100%{opacity:0}}
+</style>
+</helmet>
+<div style="width: {{w}}px; height: {{h}}px; position: relative; overflow: hidden; background: #131318;">
+<svg width="{{sw}}" height="{{sh}}" viewBox="{{vb}}" style="position: absolute; left: {{left}}px; top: {{top}}px;" role="img" aria-label="Гриф скрипки: ноты от G3 до E7 клетками на струнах G, D, A, E">
+<g transform="{{mat}}">
+<polygon points="84,96 328,96 346,1260 66,1260" fill="#0C0B10" stroke="#34323F" stroke-width="1.5"></polygon>
+<rect x="160" y="14" width="92" height="82" rx="14" fill="#3B2519"></rect>
+<rect x="184" y="26" width="44" height="64" rx="8" fill="#1A100B"></rect>
+<ellipse cx="148" cy="40" rx="12" ry="7" fill="#2C1C14"></ellipse>
+<ellipse cx="148" cy="72" rx="12" ry="7" fill="#2C1C14"></ellipse>
+<ellipse cx="264" cy="40" rx="12" ry="7" fill="#2C1C14"></ellipse>
+<ellipse cx="264" cy="72" rx="12" ry="7" fill="#2C1C14"></ellipse>
+<rect x="84" y="94" width="244" height="7" rx="2" fill="#E6DFCC"></rect>
+<sc-for list="{{strings}}" as="s" hint-placeholder-count="4">
+<line x1="{{s.x1}}" y1="100" x2="{{s.x2}}" y2="1260" stroke="#8D8A96" stroke-opacity="0.75" stroke-width="{{s.w}}"></line>
+</sc-for>
+<line x1="64" y1="104" x2="64" y2="{{bracketEnd}}" stroke="#A39FB5" stroke-opacity="0.6" stroke-width="1.2"></line>
+<line x1="64" y1="104" x2="72" y2="104" stroke="#A39FB5" stroke-opacity="0.6" stroke-width="1.2"></line>
+<line x1="64" y1="{{bracketEnd}}" x2="72" y2="{{bracketEnd}}" stroke="#A39FB5" stroke-opacity="0.6" stroke-width="1.2"></line>
+<text x="50" y="{{bracketMid}}" transform="{{bracketRot}}" text-anchor="middle" dominant-baseline="central" fill="#A39FB5" font-size="12" font-weight="600" font-family="Manrope, sans-serif">I позиция</text>
+<sc-for list="{{octaves}}" as="o" hint-placeholder-count="2">
+<line x1="318" y1="{{o.y}}" x2="350" y2="{{o.y}}" stroke="#A39FB5" stroke-opacity="0.45" stroke-width="1" stroke-dasharray="2 3"></line>
+<text x="{{o.tx}}" y="{{o.y}}" transform="{{o.rot}}" text-anchor="{{o.anchor}}" dominant-baseline="central" fill="#A39FB5" font-size="12" font-weight="700" font-family="Manrope, sans-serif">{{o.label}}</text>
+</sc-for>
+<sc-for list="{{cells}}" as="c" hint-placeholder-count="46">
+<g>
+<sc-if value="{{c.hasOld}}" hint-placeholder-val="{{false}}">
+<g class="cell-old" style="animation-delay: {{c.delay}};">
+<sc-if value="{{c.old.ring}}" hint-placeholder-val="{{false}}">
+<circle cx="{{c.x}}" cy="{{c.y}}" r="18.5" fill="none" stroke="#C9A24A" stroke-width="1.8"></circle>
+</sc-if>
+<circle cx="{{c.x}}" cy="{{c.y}}" r="15" fill="{{c.old.fill}}" stroke="{{c.old.stroke}}" stroke-opacity="{{c.old.so}}" stroke-width="{{c.old.sw}}" stroke-dasharray="{{c.old.dash}}"></circle>
+<sc-if value="{{c.old.label}}" hint-placeholder-val="{{true}}">
+<text x="{{c.x}}" y="{{c.y}}" transform="{{c.trot}}" text-anchor="middle" dominant-baseline="central" fill="{{c.old.lc}}" font-size="11" font-weight="700" font-family="Manrope, sans-serif">{{c.name}}<tspan font-size="7.5" font-weight="600" dy="2.5">{{c.oct}}</tspan></text>
+</sc-if>
+</g>
+</sc-if>
+<g class="{{c.cls}}" style="animation-delay: {{c.delay}};">
+<sc-if value="{{c.ring}}" hint-placeholder-val="{{false}}">
+<circle cx="{{c.x}}" cy="{{c.y}}" r="18.5" fill="none" stroke="#C9A24A" stroke-width="1.8"></circle>
+</sc-if>
+<circle cx="{{c.x}}" cy="{{c.y}}" r="15" fill="{{c.fill}}" stroke="{{c.stroke}}" stroke-opacity="{{c.so}}" stroke-width="{{c.sw}}" stroke-dasharray="{{c.dash}}"></circle>
+<sc-if value="{{c.label}}" hint-placeholder-val="{{true}}">
+<text x="{{c.x}}" y="{{c.y}}" transform="{{c.trot}}" text-anchor="middle" dominant-baseline="central" fill="{{c.lc}}" font-size="11" font-weight="700" font-family="Manrope, sans-serif">{{c.name}}<tspan font-size="7.5" font-weight="600" dy="2.5">{{c.oct}}</tspan></text>
+</sc-if>
+</g>
+<sc-if value="{{c.selected}}" hint-placeholder-val="{{false}}">
+<circle cx="{{c.x}}" cy="{{c.y}}" r="22" fill="none" stroke="#C4ADFF" stroke-width="2.4"></circle>
+</sc-if>
+</g>
+</sc-for>
+</g>
+</svg>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"mode":{"editor":"enum","options":["filled","empty","reveal"],"default":"filled"},"land":{"editor":"boolean","default":false},"scale":{"editor":"float","default":1,"min":0.5,"max":1.5,"step":0.05},"w":{"editor":null},"h":{"editor":null},"offset":{"editor":"int","default":0,"min":0,"max":1000},"selected":{"editor":"int","default":0},"$preview":{"width":412,"height":1260}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const p = this.props;
+    const mode = p.mode ?? 'filled';
+    const land = p.land === true || p.land === 'true';
+    const scale = Number(p.scale ?? 1);
+    const W = 412, H = 1260;
+    const w = Number(p.w ?? (land ? H * scale : W * scale));
+    const h = Number(p.h ?? (land ? W * scale : H * scale));
+    const offset = Number(p.offset ?? 0);
+    const selected = Number(p.selected ?? 0);
+
+    const NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+    const XS = [118, 176, 236, 294];
+    const OPEN = [55, 62, 69, 76];
+    const WIDTHS = [2.2, 1.8, 1.4, 1.0];
+    const r = Math.pow(36 / 56, 1 / 23);
+    const yOf = (n) => { let y = 100, s = 56; for (let k = 0; k < n; k++) { y += s; s *= r; } return y; };
+    const xOf = (si, y) => XS[si] + (XS[si] - 206) / 88 * 6 * (y - 100) / 1160;
+    const stringOf = (m) => (m <= 61 ? 0 : m <= 68 ? 1 : m <= 75 ? 2 : 3);
+
+    // A month or so of playing: open strings are «своя», first position mostly clean, the E string thins out upwards.
+    const FILLED = {
+      55: 4, 56: 1, 57: 3, 58: 2, 59: 3, 60: 2, 61: 1,
+      62: 4, 63: 2, 64: 3, 65: 2, 66: 3, 67: 3, 68: 1,
+      69: 4, 70: 2, 71: 3, 72: 3, 73: 2, 74: 3, 75: 1,
+      76: 4, 77: 3, 78: 2, 79: 3, 80: 1, 81: 3, 82: 1, 83: 2, 84: 2, 85: 1, 86: 1, 88: 1,
+    };
+    const BEFORE = Object.assign({}, FILLED, { 81: 2, 84: 1, 86: 0 });
+    const NEW_ORDER = [81, 84, 86];
+
+    const STYLE = [
+      { fill: '#15141B', stroke: '#A39FB5', so: 0.4, sw: 1.2, dash: '3 3', label: false, lc: '#A39FB5', ring: false },
+      { fill: '#1E1D25', stroke: '#A39FB5', so: 1, sw: 1.4, dash: '', label: true, lc: '#A39FB5', ring: false },
+      { fill: '#5B43B8', stroke: '#5B43B8', so: 1, sw: 0, dash: '', label: true, lc: '#E9DDFF', ring: false },
+      { fill: '#C9A24A', stroke: '#C9A24A', so: 1, sw: 0, dash: '', label: true, lc: '#2A2430', ring: false },
+      { fill: '#C9A24A', stroke: '#C9A24A', so: 1, sw: 0, dash: '', label: true, lc: '#2A2430', ring: true },
+    ];
+
+    const cells = [];
+    for (let m = 55; m <= 100; m++) {
+      const si = stringOf(m);
+      const n = m - OPEN[si];
+      const y = yOf(n);
+      const x = xOf(si, y);
+      const stage = mode === 'empty' ? 0 : (FILLED[m] ?? 0);
+      const newIdx = mode === 'reveal' ? NEW_ORDER.indexOf(m) : -1;
+      const isNew = newIdx >= 0;
+      cells.push(Object.assign({}, STYLE[stage], {
+        x: x.toFixed(1), y: y.toFixed(1),
+        name: NAMES[m % 12], oct: String(Math.floor(m / 12) - 1),
+        trot: land ? `rotate(90 ${x.toFixed(1)} ${y.toFixed(1)})` : '',
+        selected: m === selected,
+        hasOld: isNew,
+        old: isNew ? STYLE[BEFORE[m] ?? 0] : STYLE[0],
+        cls: isNew ? 'cell-new' : '',
+        delay: isNew ? `${(newIdx * 0.12).toFixed(2)}s` : '0s',
+      }));
+    }
+
+    const strings = XS.map((x0, si) => ({ x1: x0, x2: xOf(si, 1260).toFixed(1), w: WIDTHS[si] }));
+    const bracketEnd = yOf(7) - 20;
+    const octaves = [12, 24].map((n) => {
+      const y = yOf(n);
+      return {
+        y: y.toFixed(1),
+        label: n === 12 ? 'E6' : 'E7',
+        tx: land ? 334 : 354,
+        anchor: land ? 'middle' : 'start',
+        rot: land ? `rotate(90 334 ${y.toFixed(1)})` : '',
+      };
+    });
+
+    return {
+      w, h,
+      sw: (land ? H : W) * scale,
+      sh: (land ? W : H) * scale,
+      vb: land ? `0 0 ${H} ${W}` : `0 0 ${W} ${H}`,
+      left: land ? -offset * scale : 0,
+      top: land ? 0 : -offset * scale,
+      mat: land ? 'matrix(0,-1,1,0,0,412)' : '',
+      strings, cells, octaves,
+      bracketEnd: bracketEnd.toFixed(1),
+      bracketMid: ((104 + bracketEnd) / 2).toFixed(1),
+      bracketRot: land ? `rotate(90 50 ${((104 + bracketEnd) / 2).toFixed(1)})` : `rotate(-90 50 ${((104 + bracketEnd) / 2).toFixed(1)})`,
+    };
+  }
+}
+</script>
+</body>
+</html>

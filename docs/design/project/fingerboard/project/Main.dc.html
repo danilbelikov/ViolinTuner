@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Занятия с карточкой «Гриф»</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>body{margin:0;background:#131318;font-family:Manrope,sans-serif;color:#E6E4EE}</style>
+</helmet>
+<div style="width: 412px; height: 892px; position: relative; overflow: hidden; background: #131318; font-family: Manrope, sans-serif; color: #E6E4EE;">
+<div style="position: absolute; left: 0; top: 0; right: 0; bottom: 80px; overflow: hidden; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; align-items: center; gap: 12px; height: 56px;">
+<div style="width: 48px; height: 48px; border-radius: 24px; background: #5B43B8; color: #E9DDFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700;">И</div>
+<div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
+<div style="font-size: 18px; font-weight: 700;">[Имя]</div>
+<div style="font-size: 13px; color: #A39FB5; font-feature-settings: 'tnum';">Уровень 12 · 86 ч</div>
+<div style="height: 6px; border-radius: 3px; background: #292833; overflow: hidden;"><div style="width: 62%; height: 6px; background: #C4ADFF; border-radius: 3px;"></div></div>
+</div>
+</div>
+<div style="height: 160px; border-radius: 20px; border: 1.5px dashed #3A3846; box-sizing: border-box; display: flex; align-items: center; justify-content: center; color: #6B6880; font-size: 14px; font-weight: 600;">карточка дома — как сейчас</div>
+<div style="display: flex; flex-direction: column; gap: 8px; align-items: stretch;">
+<button type="button" style="height: 56px; border: none; border-radius: 28px; background: #C4ADFF; color: #2E1A6E; font-family: Manrope, sans-serif; font-size: 16px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px;">
+<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="7.5" fill="none" stroke="#2E1A6E" stroke-width="2"></circle><path d="M12 9.5V13l2.2 1.6M10 3h4" fill="none" stroke="#2E1A6E" stroke-width="2" stroke-linecap="round"></path></svg>
+Начать занятие</button>
+<div style="font-size: 14px; color: #A39FB5; text-align: center; font-feature-settings: 'tnum';">Сегодня: 45 мин</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;">
+<div style="height: 72px; border-radius: 16px; background: #1E1D25; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;"><div style="font-size: 12px; color: #A39FB5;">Неделя</div><div style="font-size: 17px; font-weight: 700; font-feature-settings: 'tnum';">3 ч 20 мин</div></div>
+<div style="height: 72px; border-radius: 16px; background: #1E1D25; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;"><div style="font-size: 12px; color: #A39FB5;">Месяц</div><div style="font-size: 17px; font-weight: 700; font-feature-settings: 'tnum';">14 ч</div></div>
+<div style="height: 72px; border-radius: 16px; background: #1E1D25; padding: 12px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between;"><div style="font-size: 12px; color: #A39FB5;">Дней подряд</div><div style="font-size: 17px; font-weight: 700; font-feature-settings: 'tnum';">6</div></div>
+</div>
+<dc-import name="Card" variant="new" hint-size="380px,64px"></dc-import>
+<div style="display: flex; flex-direction: column; gap: 10px;">
+<div style="display: flex; align-items: center; justify-content: space-between; height: 32px;">
+<div style="font-size: 17px; font-weight: 700;">Сентябрь 2026</div>
+<div style="display: flex; gap: 4px; color: #A39FB5;">
+<svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6" fill="none" stroke="#A39FB5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+<svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6" fill="none" stroke="#3A3846" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; font-size: 12px; color: #A39FB5; text-align: center;">
+<div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+</div>
+<div style="display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px;">
+<sc-for list="{{days}}" as="d" hint-placeholder-count="14">
+<div style="height: 40px; border-radius: 12px; background: {{d.bg}}; color: {{d.fg}}; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; font-feature-settings: 'tnum';">{{d.n}}</div>
+</sc-for>
+</div>
+</div>
+</div>
+<nav style="position: absolute; left: 0; right: 0; bottom: 0; height: 80px; background: #1E1D25; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); align-items: center;">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: #A39FB5;">
+<div style="width: 64px; height: 32px; display: flex; align-items: center; justify-content: center;"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8" fill="none" stroke="#A39FB5" stroke-width="2"></circle><circle cx="12" cy="12" r="2.5" fill="#A39FB5"></circle></svg></div>Live</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: #E6E4EE; font-weight: 700;">
+<div style="width: 64px; height: 32px; border-radius: 16px; background: #5B43B8; display: flex; align-items: center; justify-content: center;"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3" fill="none" stroke="#E9DDFF" stroke-width="2"></rect><path d="M4 10h16M9 3v4M15 3v4" fill="none" stroke="#E9DDFF" stroke-width="2" stroke-linecap="round"></path></svg></div>Занятия</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: #A39FB5;">
+<div style="width: 64px; height: 32px; display: flex; align-items: center; justify-content: center;"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h9" fill="none" stroke="#A39FB5" stroke-width="2" stroke-linecap="round"></path></svg></div>Записи</div>
+<div style="display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: 12px; color: #A39FB5;">
+<div style="width: 64px; height: 32px; display: flex; align-items: center; justify-content: center;"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7h9M18 7h1M5 17h1M10 17h9" fill="none" stroke="#A39FB5" stroke-width="2" stroke-linecap="round"></path><circle cx="16" cy="7" r="2" fill="none" stroke="#A39FB5" stroke-width="2"></circle><circle cx="8" cy="17" r="2" fill="none" stroke="#A39FB5" stroke-width="2"></circle></svg></div>Настройки</div>
+</nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":412,"height":892}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tone = { 0: 'transparent', 1: '#2A2352', 2: '#3D2F80', 3: '#5B43B8', 4: '#7A62D8' };
+    const played = { 1: 2, 2: 3, 3: 1, 5: 2, 6: 4, 8: 3, 9: 2, 10: 3, 11: 1, 12: 4, 13: 2 };
+    const days = [];
+    for (let i = 1; i <= 14; i++) {
+      const t = played[i] ?? 0;
+      days.push({ n: i, bg: tone[t], fg: t >= 3 ? '#E9DDFF' : '#E6E4EE' });
+    }
+    return { days };
+  }
+}
+</script>
+</body>
+</html>

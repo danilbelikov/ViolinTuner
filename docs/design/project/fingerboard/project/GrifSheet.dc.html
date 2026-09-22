@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Гриф — лист клетки</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>body{margin:0;background:#131318;font-family:Manrope,sans-serif;color:#E6E4EE}</style>
+</helmet>
+<div style="width: 412px; height: 892px; position: relative; overflow: hidden; background: #131318; font-family: Manrope, sans-serif; color: #E6E4EE; display: flex; flex-direction: column;">
+<div style="height: 64px; display: flex; align-items: center; gap: 4px; padding: 0 8px; flex-shrink: 0;">
+<a href="Main.dc.html" aria-label="Назад" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 24px;"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="#E6E4EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
+<div style="font-size: 22px; font-weight: 700;">Гриф</div>
+</div>
+<div style="padding: 0 16px; font-size: 14px; color: #A39FB5; font-feature-settings: 'tnum'; height: 24px; flex-shrink: 0;">на грифе 33 из 46 · чистых 15 · своих 4</div>
+<div style="height: 44px; padding: 0 16px; display: flex; align-items: center; gap: 12px; font-size: 12px; color: #A39FB5; flex-shrink: 0;">
+<div style="display: flex; align-items: center; gap: 5px;"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="#15141B" stroke="#A39FB5" stroke-opacity="0.45" stroke-width="1.2" stroke-dasharray="2 2"></circle></svg>туман</div>
+<div style="display: flex; align-items: center; gap: 5px;"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="5.5" fill="#1E1D25" stroke="#A39FB5" stroke-width="1.3"></circle></svg>звучала</div>
+<div style="display: flex; align-items: center; gap: 5px;"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#5B43B8"></circle></svg>в строе</div>
+<div style="display: flex; align-items: center; gap: 5px;"><svg width="14" height="14" viewBox="0 0 14 14" aria-hidden="true"><circle cx="7" cy="7" r="6" fill="#C9A24A"></circle></svg>чистая</div>
+<div style="display: flex; align-items: center; gap: 5px;"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="5" fill="#C9A24A"></circle><circle cx="8" cy="8" r="7" fill="none" stroke="#C9A24A" stroke-width="1.2"></circle></svg>своя</div>
+</div>
+<dc-import name="Neck" mode="filled" selected="81" w="412" h="760" hint-size="412px,760px"></dc-import>
+<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.5);"></div>
+<div role="dialog" aria-label="Нота A5" style="position: absolute; left: 0; right: 0; bottom: 0; height: 392px; background: #292833; border-radius: 28px 28px 0 0; padding: 12px 24px 24px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px;">
+<div style="width: 32px; height: 4px; border-radius: 2px; background: #6B6880; align-self: center;"></div>
+<div style="display: flex; align-items: baseline; gap: 10px;">
+<div style="font-size: 34px; font-weight: 800; font-feature-settings: 'tnum';">A<span style="font-size: 20px; color: #A39FB5;">5</span></div>
+<div style="font-size: 14px; color: #A39FB5;">струна E · первая позиция</div>
+<div style="flex-grow: 1;"></div>
+<div style="height: 28px; padding: 0 12px 0 8px; border-radius: 14px; background: #C9A24A; color: #2A2430; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; align-self: center;"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="#2A2430"></circle></svg>чистая</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 0;">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="4">
+<div style="display: flex; align-items: center; gap: 12px; min-height: 40px;">
+<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="flex-shrink: 0;"><circle cx="9" cy="9" r="7" fill="{{s.dotFill}}" stroke="{{s.dotStroke}}" stroke-width="1.4" stroke-dasharray="{{s.dash}}"></circle></svg>
+<div style="font-size: 15px; font-weight: {{s.weight}}; color: {{s.color}}; flex-grow: 1;">{{s.text}}</div>
+<div style="font-size: 14px; color: #A39FB5; font-feature-settings: 'tnum';">{{s.date}}</div>
+</div>
+</sc-for>
+</div>
+<div style="height: 1px; background: #3A3846;"></div>
+<div style="font-size: 13px; line-height: 19px; color: #A39FB5; font-feature-settings: 'tnum';">Сыграна 412 раз · в строе 351 · последний раз 22 сентября</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":412,"height":892}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const done = (text, date) => ({ text, date, dotFill: '#C9A24A', dotStroke: '#C9A24A', dash: '', weight: 600, color: '#E6E4EE' });
+    return {
+      steps: [
+        done('Звучала', '3 сентября'),
+        done('В строе', '8 сентября'),
+        done('Чистая', '21 сентября'),
+        { text: 'Своя — ещё 4 чистых дня', date: '', dotFill: 'none', dotStroke: '#A39FB5', dash: '3 3', weight: 500, color: '#A39FB5' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

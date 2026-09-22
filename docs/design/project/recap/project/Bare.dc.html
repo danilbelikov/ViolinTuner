@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Итог — первое занятие без нот</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>body{margin:0;background:#131318;font-family:Manrope,sans-serif;color:#E6E4EE}</style>
+</helmet>
+<div style="width: 412px; height: 892px; position: relative; overflow: hidden; background: #131318; font-family: Manrope, sans-serif; color: #E6E4EE;">
+<div style="position: absolute; left: 0; top: 0; right: 0; padding: 16px; box-sizing: border-box; display: flex; flex-direction: column; gap: 16px;">
+<div style="display: flex; align-items: center; gap: 12px; height: 56px;">
+<div style="width: 48px; height: 48px; border-radius: 24px; background: #5B43B8; color: #E9DDFF; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 700;">И</div>
+<div style="display: flex; flex-direction: column; gap: 4px; flex-grow: 1;">
+<div style="font-size: 18px; font-weight: 700;">[Имя]</div>
+<div style="font-size: 13px; color: #A39FB5; font-feature-settings: 'tnum';">Уровень 7 · 154 ч</div>
+<div style="height: 6px; border-radius: 3px; background: #292833; overflow: hidden;"><div style="width: 54%; height: 6px; background: #C4ADFF; border-radius: 3px;"></div></div>
+</div>
+</div>
+<div style="height: 160px; border-radius: 20px; background: #1E1D25; position: relative; overflow: hidden;">
+<div style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #6B6880; font-size: 14px; font-weight: 600; border: 1.5px dashed #3A3846; border-radius: 20px;">карточка дома — как сейчас</div>
+
+<div style="position: absolute; left: 16px; right: 16px; bottom: 12px; display: flex; flex-direction: column; gap: 6px;">
+<div style="font-size: 13px; color: #E6E4EE; font-weight: 600; font-feature-settings: 'tnum';">до Праги 903</div>
+<div style="height: 4px; border-radius: 2px; background: #292833;"><div style="width: 43.6%; height: 4px; border-radius: 2px; background: #C4ADFF;"></div></div>
+</div>
+</div>
+<button type="button" style="height: 56px; border: none; border-radius: 28px; background: #C4ADFF; color: #2E1A6E; font-family: Manrope, sans-serif; font-size: 16px; font-weight: 700;">Начать занятие</button>
+<div style="font-size: 14px; color: #A39FB5; text-align: center; font-feature-settings: 'tnum';">Сегодня: 1 ч 25 мин</div>
+<div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px;">
+<div style="height: 72px; border-radius: 16px; background: #1E1D25;"></div><div style="height: 72px; border-radius: 16px; background: #1E1D25;"></div><div style="height: 72px; border-radius: 16px; background: #1E1D25;"></div>
+</div>
+</div>
+<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.55);"></div>
+<div style="position: absolute; left: 0; bottom: 0;"><dc-import name="Recap" variant="bare" h="570" hint-size="412px,570px"></dc-import></div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":412,"height":892}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

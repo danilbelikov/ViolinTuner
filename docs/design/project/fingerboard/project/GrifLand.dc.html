@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>Гриф — landscape</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&amp;display=swap">
+<style>body{margin:0;background:#131318;font-family:Manrope,sans-serif;color:#E6E4EE}</style>
+</helmet>
+<div style="width: 892px; height: 412px; position: relative; overflow: hidden; background: #131318; font-family: Manrope, sans-serif; color: #E6E4EE; display: flex; flex-direction: column;">
+<div style="display: flex; flex-direction: row; height: 412px;">
+<div style="width: 592px; display: flex; flex-direction: column;"><div style="height: 52px; display: flex; align-items: center; gap: 4px; padding: 0 8px; flex-shrink: 0;">
+<a href="Main.dc.html" aria-label="Назад" style="width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; border-radius: 24px;"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 12H5M11 6l-6 6 6 6" fill="none" stroke="#E6E4EE" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></a>
+<div style="font-size: 20px; font-weight: 700;">Гриф</div>
+<div style="font-size: 13px; color: #A39FB5; margin-left: 12px; font-feature-settings: 'tnum';">на грифе 33 из 46 · чистых 15 · своих 4</div>
+</div><dc-import name="Neck" mode="filled" land="{{yes}}" scale="0.82" selected="81" w="592" h="340" hint-size="592px,340px"></dc-import></div>
+<div role="dialog" aria-label="Нота A5" style="width: 300px; height: 412px; background: #292833; border-radius: 28px 0 0 28px; padding: 20px 20px; box-sizing: border-box; display: flex; flex-direction: column; gap: 12px;">
+<div style="display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;">
+<div style="font-size: 28px; font-weight: 800; font-feature-settings: 'tnum';">A<span style="font-size: 20px; color: #A39FB5;">5</span></div>
+<div style="font-size: 14px; color: #A39FB5;">струна E · первая позиция</div>
+<div style="height: 28px; padding: 0 12px 0 8px; border-radius: 14px; background: #C9A24A; color: #2A2430; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 6px; align-self: center;"><svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><circle cx="6" cy="6" r="4.5" fill="#2A2430"></circle></svg>чистая</div>
+</div>
+<div style="display: flex; flex-direction: column; gap: 0;">
+<sc-for list="{{steps}}" as="s" hint-placeholder-count="4">
+<div style="display: flex; align-items: center; gap: 12px; min-height: 40px;">
+<svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true" style="flex-shrink: 0;"><circle cx="9" cy="9" r="7" fill="{{s.dotFill}}" stroke="{{s.dotStroke}}" stroke-width="1.4" stroke-dasharray="{{s.dash}}"></circle></svg>
+<div style="font-size: 15px; font-weight: {{s.weight}}; color: {{s.color}}; flex-grow: 1;">{{s.text}}</div>
+<div style="font-size: 14px; color: #A39FB5; font-feature-settings: 'tnum';">{{s.date}}</div>
+</div>
+</sc-for>
+</div>
+<div style="height: 1px; background: #3A3846;"></div>
+<div style="font-size: 13px; line-height: 19px; color: #A39FB5; font-feature-settings: 'tnum';">Сыграна 412 раз · в строе 351 · последний раз 22 сентября</div>
+</div>
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":892,"height":412}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const done = (text, date) => ({ text, date, dotFill: '#C9A24A', dotStroke: '#C9A24A', dash: '', weight: 600, color: '#E6E4EE' });
+    return {
+      yes: true,
+      steps: [
+        done('Звучала', '3 сентября'),
+        done('В строе', '8 сентября'),
+        done('Чистая', '21 сентября'),
+        { text: 'Своя — ещё 4 чистых дня', date: '', dotFill: 'none', dotStroke: '#A39FB5', dash: '3 3', weight: 500, color: '#A39FB5' },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>
