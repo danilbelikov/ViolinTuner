@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Дом · вещи и лавка</title>
+<style>
+  :root { --bg: #131318; --card: #1E1D25; --line: rgba(255,255,255,.08); --text: #E6E4EE; --dim: #A39FB5; --accent: #C4ADFF; --onAccent: #2E1A6E; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 13px/1.45 Manrope, system-ui, sans-serif; }
+  header { padding: 28px 32px 8px; max-width: 1100px; }
+  h1 { font-size: 22px; margin: 0 0 6px; }
+  h2 { font-size: 16px; margin: 28px 32px 10px; }
+  p, li { color: var(--dim); max-width: 980px; }
+  .toggle { display: inline-flex; gap: 4px; background: var(--card); border-radius: 18px; padding: 3px; margin: 6px 8px 0 0; }
+  .toggle button { border: 0; background: none; color: var(--text); font: 600 12px Manrope, system-ui; padding: 6px 12px; border-radius: 14px; cursor: pointer; }
+  .toggle button.on { background: var(--accent); color: var(--onAccent); }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(560px, 1fr)); gap: 10px; padding: 0 32px; }
+  .grid.all { grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); }
+  .cell { background: var(--card); border-radius: 12px; padding: 10px 12px; }
+  .head b { font-size: 13px; } .head .id { color: var(--dim); font-size: 11px; } .head i { color: #F0C060; font-size: 11px; }
+  .note { color: var(--dim); font-size: 11.5px; min-height: 16px; }
+  .row { display: flex; gap: 8px; align-items: flex-end; margin-top: 6px; }
+  figure { margin: 0; display: flex; flex-direction: column; gap: 3px; align-items: center; }
+  figure svg { background: #0E0D12; border-radius: 8px; display: block; }
+  figcaption { color: var(--dim); font-size: 11px; }
+  .rooms { display: flex; flex-wrap: wrap; gap: 12px; padding: 0 32px; }
+  #shelves { display: flex; flex-direction: column; gap: 14px; width: 356px; margin: 0 32px; padding: 12px; background: #131318; border-radius: 24px; }
+  .shelf { border-radius: 16px; padding: 12px 12px 4px; }
+  .shelf.wood { background: linear-gradient(180deg, #4A3428, #2F2119); }
+  .shelf.cloth { background: repeating-linear-gradient(90deg, #3B3450 0 22px, #342E48 22px 44px); }
+  .shelf.pet { background: repeating-linear-gradient(90deg, #2E3A40 0 22px, #29343A 22px 44px); }
+  .shelf-name { color: rgba(255,255,255,.92); font-weight: 700; font-size: 14px; margin-bottom: 6px; }
+  .shelf-row { display: flex; justify-content: space-between; position: relative; padding-bottom: 8px; }
+  .shelf-row::before { content: ''; position: absolute; left: -4px; right: -4px; top: 76px; height: 6px; border-radius: 2px; box-shadow: 0 3px 5px rgba(0,0,0,.35); }
+  .wood .shelf-row::before { background: linear-gradient(180deg, #B07A48, #7E5230); }
+  .cloth .shelf-row::before { background: linear-gradient(180deg, #7A62D8, #5B43B8); }
+  .pet .shelf-row::before { background: linear-gradient(180deg, #6FA8A0, #4E7A74); }
+  .tile { width: 100px; display: flex; flex-direction: column; align-items: center; }
+  .pic { position: relative; width: 100px; height: 76px; }
+  .pic svg { background: none !important; }
+  .pill { position: absolute; left: 3px; top: 3px; background: rgba(0,0,0,.5); color: rgba(255,255,255,.9); font-size: 9.5px; padding: 0 6px; border-radius: 8px; line-height: 14px; }
+  .name { color: rgba(255,255,255,.92); font-size: 11px; line-height: 14px; text-align: center; margin-top: 10px; height: 28px; overflow: hidden; }
+  .price { color: rgba(255,255,255,.8); font-size: 11px; font-weight: 600; }
+  .icons { display: flex; gap: 24px; padding: 0 32px; align-items: flex-start; flex-wrap: wrap; }
+  .phone { width: 380px; background: var(--bg); border: 1px solid var(--line); border-radius: 22px; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+  .travel { height: 60px; border-radius: 30px; background: var(--accent); color: var(--onAccent); display: flex; align-items: center; justify-content: center; gap: 12px; font-weight: 700; font-size: 15px; }
+  .outlined { flex: 1; height: 52px; border-radius: 26px; border: 1px solid #938F99; color: var(--text); display: flex; align-items: center; justify-content: center; gap: 8px; font-weight: 600; font-size: 14px; }
+  .big svg { background: var(--card); border-radius: 12px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Дом · вещи и лавка — третья итерация (spec 3.29)</h1>
+  <p>Лист проверки: каждая вещь каталога «было — стало», живая, как её двигает приложение (порт <code>SceneMotion.kt</code>), одна — как на полке — и на своём месте в комнате. Ниже — комнаты целиком, полки лавки и иконки. Каталог — <code>home-catalog.js</code> рядом (исполняемый, его выгружает <code>tools/home/export.js</code>); «было» — каталог второго хэндоффа, <code>../../home2/project/home-catalog.js</code>.</p>
+  <div class="toggle"><button data-mode="eve">вечер</button><button data-mode="day">день</button></div>
+  <div class="toggle"><button data-house="rent">съёмная комната</button><button data-house="wood">деревянный домик</button></div>
+</header>
+
+<h2>Иконки «Лавка» и «Обставить»</h2>
+<div class="icons">
+  <div class="phone">
+    <div class="travel"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7.5h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z"/><path d="M8.5 7.5V5.8a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1.7"/><path d="M4 13h13"/><path d="M17.5 6.5l3-3M20.5 6.5v-3h-3"/></svg><span>В дорогу</span></div>
+    <div style="display:flex;gap:12px">
+      <div class="outlined"><svg id="ico-shop" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg>Лавка</div>
+      <div class="outlined"><svg id="ico-arrange" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg>Обставить</div>
+    </div>
+  </div>
+  <div class="big"><svg id="ico-shop-big" width="120" height="120" viewBox="-1 -1 26 26" fill="none" stroke="#E6E4EE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg></div>
+  <div class="big"><svg id="ico-arrange-big" width="120" height="120" viewBox="-1 -1 26 26" fill="none" stroke="#E6E4EE" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></svg></div>
+</div>
+
+<h2>Что изменилось · <span id="changed-count"></span></h2>
+<div class="grid" id="changed"></div>
+
+<h2>Комната целиком</h2>
+<div class="rooms" id="rooms"></div>
+
+<h2>Полки лавки (360 dp)</h2>
+<div id="shelves"></div>
+
+<h2>Все вещи</h2>
+<div class="grid all" id="all"></div>
+
+<script src="../../home2/project/home-catalog.js"></script>
+<script>window.buildBefore = window.buildHomeCatalog;</script>
+<script src="home-catalog.js"></script>
+<script>
+  // the two new icons of the set (IconPaths.SHOP, IconPaths.ARRANGE): the catalogue's ICONS carry them
+  (function () {
+    const icons = window.buildHomeCatalog({ createElement: () => null }).ICONS;
+    const draw = (id, name) => {
+      const icon = icons.find(i => i.name === name);
+      if (!icon) return;
+      document.getElementById(id).innerHTML = icon.paths.map(p => p.startsWith('F ') ? `<path d="${p.slice(2)}" fill="currentColor" stroke="none"/>` : `<path d="${p}"/>`).join('');
+    };
+    ['', '-big'].forEach(s => { draw('ico-shop' + s, 'shop'); draw('ico-arrange' + s, 'arrange'); });
+    document.getElementById('ico-shop-big').style.color = '#E6E4EE';
+    document.getElementById('ico-arrange-big').style.color = '#E6E4EE';
+  })();
+</script>
+<script src="shop-review.js"></script>
+</body>
+</html>
