@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
-import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeRecap
 import com.example.violintuner.core.domain.practice.RecapRoad
 import com.example.violintuner.core.domain.progress.LevelProgress
@@ -203,7 +202,8 @@ private fun TaktsCard(recap: PracticeRecap, grow: Float, low: Boolean) {
         HorizontalDivider(Modifier.padding(vertical = 8.dp), color = colors.outlineVariant)
         // Only what paid: a practice without Live has no line of notes (spec 3.31).
         if (sources.notesTakts > 0) SourceRow(stringResource(R.string.recap_source_notes), sources.notesInTune.toString(), sources.notesTakts)
-        if (sources.timeTakts > 0) SourceRow(stringResource(R.string.recap_source_time), Formats.minutesInWords(sources.minutes * MS_PER_MINUTE), sources.timeTakts)
+        // the time as the header says it (rounded), not the whole minutes the takts are counted in: «2 мин» above and «1 мин» here would read as a mistake
+        if (sources.timeTakts > 0) SourceRow(stringResource(R.string.recap_source_time), Formats.minutesInWords(recap.durationMs), sources.timeTakts)
         if (sources.piecesTakts > 0) SourceRow(stringResource(R.string.block_entry), sources.pieces.toString(), sources.piecesTakts)
     }
 }
