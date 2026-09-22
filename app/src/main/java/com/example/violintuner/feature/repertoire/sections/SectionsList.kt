@@ -62,9 +62,16 @@ private val BarGap = 2.dp
 private val AddHeight = 44.dp
 private const val BAR_MS = 400
 private const val TABULAR_FIGURES = "tnum"
+/** Rows of «Время по элементам» before «Все N»: three upright keep every section card above the fold (handoff 30h1), five in the landscape column. */
+private const val TIME_ROWS_UPRIGHT = 3
+const val TIME_ROWS_LANDSCAPE = 5
 
-/** The way into the repertoire (spec 3.22, handoff 24a1): its sections as cards, then «Добавить раздел». Items of the tab's one lazy list. */
-fun LazyListScope.sectionItems(state: SectionsState, onIntent: (SectionsIntent) -> Unit) {
+/**
+ * The way into the repertoire (spec 3.22, handoff 24a1): its sections as cards, then «Добавить раздел». Items of the
+ * tab's one lazy list. Above the sections, [showTime] — «Время по элементам» (spec 3.28, handoff 30h1); in landscape
+ * it stands in the left column instead.
+ */
+fun LazyListScope.sectionItems(state: SectionsState, onIntent: (SectionsIntent) -> Unit, showTime: Boolean = true) {
     if (state.loading) return
     item(key = "sectionsTotal") {
         // in the place of the former «5 произведений»: everything there is, and how much of it is learnt
@@ -74,6 +81,11 @@ fun LazyListScope.sectionItems(state: SectionsState, onIntent: (SectionsIntent) 
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
         )
+    }
+    if (showTime) {
+        state.time?.let { time ->
+            item(key = "pieceTime") { PieceTimeCardView(time, visibleRows = TIME_ROWS_UPRIGHT, onIntent = onIntent, modifier = Modifier.padding(top = CardSpacing)) }
+        }
     }
     items(state.cards.size, key = { "section-" + com.example.violintuner.feature.repertoire.SectionKeys.keyOf(state.cards[it].ref) }) { index ->
         val card = state.cards[index]

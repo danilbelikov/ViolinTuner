@@ -30,6 +30,7 @@ fun HistoryRoute(
     onOpenSession: (sessionId: Long) -> Unit,
     onOpenSound: (sessionId: Long) -> Unit,
     onOpenSection: (SectionRef) -> Unit,
+    onOpenPiece: (pieceId: Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel = hiltViewModel(),
     sectionsViewModel: SectionsViewModel = hiltViewModel(),
@@ -38,6 +39,7 @@ fun HistoryRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val sections by sectionsViewModel.state.collectAsStateWithLifecycle()
     val currentOnOpenSection by rememberUpdatedState(onOpenSection)
+    val currentOnOpenPiece by rememberUpdatedState(onOpenPiece)
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnOpenSession by rememberUpdatedState(onOpenSession)
 
@@ -56,6 +58,7 @@ fun HistoryRoute(
             sectionsViewModel.effects.collect { effect ->
                 when (effect) {
                     is SectionsEffect.OpenSection -> currentOnOpenSection(effect.ref)
+                    is SectionsEffect.OpenPiece -> currentOnOpenPiece(effect.id)
                 }
             }
         }

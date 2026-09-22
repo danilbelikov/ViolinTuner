@@ -2,6 +2,9 @@ package com.example.violintuner.feature.repertoire
 
 import androidx.lifecycle.SavedStateHandle
 import com.example.violintuner.core.data.repertoire.FakeSheetFiles
+import com.example.violintuner.core.domain.practice.FakePieceBlockRepository
+import com.example.violintuner.core.domain.practice.PracticeConfig
+import com.example.violintuner.core.domain.practice.SavedBlock
 import com.example.violintuner.core.domain.repertoire.Accidental
 import com.example.violintuner.core.domain.repertoire.FakeRepertoireRepository
 import com.example.violintuner.core.domain.repertoire.PieceDraft
@@ -20,11 +23,13 @@ import com.example.violintuner.feature.repertoire.scale.ScaleFormEffect
 import com.example.violintuner.feature.repertoire.scale.ScaleFormIntent
 import com.example.violintuner.feature.repertoire.scale.ScaleFormViewModel
 import com.example.violintuner.feature.repertoire.scale.ScaleTexts
+import com.example.violintuner.feature.repertoire.sections.PieceTimeRow
 import com.example.violintuner.feature.repertoire.sections.SectionsEffect
 import com.example.violintuner.feature.repertoire.sections.SectionsIntent
 import com.example.violintuner.feature.repertoire.sections.SectionsViewModel
 import java.time.Clock
 import java.time.Instant
+import java.time.LocalDate
 import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -60,8 +65,10 @@ class SectionsTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
+    private val blocks = FakePieceBlockRepository()
+
     private fun TestScope.sections(): Pair<SectionsViewModel, MutableList<SectionsEffect>> {
-        val viewModel = SectionsViewModel(repertoire, config, clock)
+        val viewModel = SectionsViewModel(repertoire, config, clock, blocks, PracticeConfig())
         val effects = mutableListOf<SectionsEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -294,5 +301,44 @@ class SectionsTest {
         assertEquals("G-dur MAJOR 2", saved.title)
         assertEquals(7_000L, saved.learnedAtEpochMs)
         assertEquals(ScaleFormEffect.Close, effects.last())
+    }
+
+    /** A block of [minutes] of [pieceId] on [date] (spec 3.28): what a saved practice leaves. */
+    private fun block(pieceId: Long, date: LocalDate, minutes: Long) =
+        SavedBlock(pieceId, date, 0, minutes * 60_000, minutes * 60_000, done = true, paid = false)
+
+    @Test
+    fun `time by element - thirty days with today apart, the most first and by name when equal, a row opens its element`() = runTest {
+        val minuet = repertoire.add(PieceDraft(title = "Менуэт соль мажор"), 0)
+        val etude = repertoire.add(PieceDraft(title = "Кайзер № 3", section = PieceSection.ETUDES), 0)
+        val stroke = repertoire.add(PieceDraft(title = "Деташе", section = PieceSection.STROKES), 0)
+        val today = LocalDate.of(1970, 1, 1)
+        blocks.blocks.value = listOf(
+            block(minuet, today, 7), block(minuet, today.minusDays(29), 30), block(minuet, today.minusDays(30), 60),
+            block(etude, today.minusDays(3), 37), block(stroke, today.minusDays(1), 20),
+        )
+        val (viewModel, effects) = sections()
+        val time = viewModel.state.value.time!!
+        assertEquals(30, time.days)
+        assertEquals(
+            listOf(PieceTimeRow(etude, "Кайзер № 3", 37 * 60_000, 0), PieceTimeRow(minuet, "Менуэт соль мажор", 37 * 60_000, 7 * 60_000), PieceTimeRow(stroke, "Деташе", 20 * 60_000, 0)),
+            time.rows,
+        )
+        assertFalse(time.expanded)
+        viewModel.onIntent(SectionsIntent.TimeToggled)
+        runCurrent()
+        assertTrue(viewModel.state.value.time!!.expanded)
+        viewModel.onIntent(SectionsIntent.TimePieceClicked(minuet))
+        runCurrent()
+        assertEquals(listOf<SectionsEffect>(SectionsEffect.OpenPiece(minuet)), effects)
+    }
+
+    @Test
+    fun `without a repertoire there is no time card, without blocks it is empty`() = runTest {
+        val (empty, _) = sections()
+        assertNull(empty.state.value.time)
+        repertoire.add(PieceDraft(title = "Менуэт соль мажор"), 0)
+        runCurrent()
+        assertEquals(emptyList<PieceTimeRow>(), empty.state.value.time!!.rows)
     }
 }

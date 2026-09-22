@@ -740,7 +740,7 @@
     <string name="piece_tempo_clear">No tempo</string>
     <string name="piece_delete">Delete piece</string>
     <string name="piece_delete_title">Delete “%1$s”?</string>
-    <string name="piece_delete_text">The sheet music and notes will be deleted. The recordings will stay in “Recordings”.</string>
+    <string name="piece_delete_text">The sheet music, notes and the time spent on it will be deleted. The recordings will stay in “Recordings”.</string>
     <string name="piece_delete_confirm">Delete</string>
     <string name="take_record">Record a take</string>
     <string name="take_record_hint">The screen gives no hints while recording — the analysis comes afterwards.</string>
@@ -968,4 +968,15 @@
     <string name="block_played_title">What was played</string>
     <string name="block_part_of">%1$d of %2$d min</string>
     <string name="block_line">%1$s · %2$s</string>
+    <!-- «Время по элементам» on the repertoire landing (spec 3.28) -->
+    <string name="piece_time_title">Time by element</string>
+    <string name="piece_time_days_one">%1$d day</string>
+    <string name="piece_time_days_few">%1$d days</string>
+    <string name="piece_time_days_many">%1$d days</string>
+    <string name="piece_time_all">All %1$d</string>
+    <string name="piece_time_less">Show less</string>
+    <string name="piece_time_empty">Here you will see how much time each element gets. Choose an element on Live during a practice.</string>
+    <string name="piece_time_today">today %1$s</string>
+    <string name="piece_time_row_description">%1$s: %2$s over %3$s</string>
+    <string name="piece_time_row_today_description">%1$s: %2$s over %3$s, today %4$s</string>
 </resources>

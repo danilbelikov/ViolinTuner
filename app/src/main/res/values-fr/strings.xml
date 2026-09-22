@@ -740,7 +740,7 @@
     <string name="piece_tempo_clear">Sans tempo</string>
     <string name="piece_delete">Supprimer le morceau</string>
     <string name="piece_delete_title">Supprimer « %1$s » ?</string>
-    <string name="piece_delete_text">La partition et les notes personnelles seront supprimées. Les enregistrements resteront dans « Enregistrements ».</string>
+    <string name="piece_delete_text">La partition, les notes personnelles et le temps passé dessus seront supprimés. Les enregistrements resteront dans « Enregistrements ».</string>
     <string name="piece_delete_confirm">Supprimer</string>
     <string name="take_record">Enregistrer une prise</string>
     <string name="take_record_hint">L\'écran ne donne aucune indication pendant l\'enregistrement — l\'analyse vient ensuite.</string>
@@ -968,4 +968,15 @@
     <string name="block_played_title">Ce qui a été joué</string>
     <string name="block_part_of">%1$d sur %2$d min</string>
     <string name="block_line">%1$s · %2$s</string>
+    <!-- «Время по элементам» on the repertoire landing (spec 3.28) -->
+    <string name="piece_time_title">Temps par élément</string>
+    <string name="piece_time_days_one">%1$d jour</string>
+    <string name="piece_time_days_few">%1$d jours</string>
+    <string name="piece_time_days_many">%1$d jours</string>
+    <string name="piece_time_all">Tous (%1$d)</string>
+    <string name="piece_time_less">Réduire</string>
+    <string name="piece_time_empty">Ici, vous verrez combien de temps reçoit chaque élément. Choisissez un élément sur Live pendant une séance.</string>
+    <string name="piece_time_today">aujourd\'hui %1$s</string>
+    <string name="piece_time_row_description">%1$s : %2$s sur %3$s</string>
+    <string name="piece_time_row_today_description">%1$s : %2$s sur %3$s, aujourd\'hui %4$s</string>
 </resources>

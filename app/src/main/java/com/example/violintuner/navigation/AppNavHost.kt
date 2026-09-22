@@ -106,6 +106,7 @@ fun AppNavHost(
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
                 onOpenSection = navController::navigateToSection,
+                onOpenPiece = navController::navigateToPiece,
             )
         }
         // Above the tabs and without the bottom bar; back returns to where it was opened from.

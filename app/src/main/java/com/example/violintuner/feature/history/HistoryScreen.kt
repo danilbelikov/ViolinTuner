@@ -5,6 +5,8 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -59,6 +61,8 @@ import com.example.violintuner.core.domain.repertoire.SectionCount
 import com.example.violintuner.feature.repertoire.sections.SectionNameDialog
 import com.example.violintuner.feature.repertoire.sections.SectionsIntent
 import com.example.violintuner.feature.repertoire.sections.SectionsState
+import com.example.violintuner.feature.repertoire.sections.PieceTimeCardView
+import com.example.violintuner.feature.repertoire.sections.TIME_ROWS_LANDSCAPE
 import com.example.violintuner.feature.repertoire.sections.sectionItems
 import java.time.ZoneId
 
@@ -113,7 +117,7 @@ fun HistoryScreen(
         }
         val list: LazyListScope.() -> Unit = {
             when {
-                state.section == HistorySection.REPERTOIRE -> sectionItems(sections, onSectionsIntent)
+                state.section == HistorySection.REPERTOIRE -> sectionItems(sections, onSectionsIntent, showTime = !landscape)
                 state.loading -> Unit
                 state.totalCount == 0 -> item(key = "empty") { EmptyHistory(Modifier.fillParentMaxHeight(EMPTY_HEIGHT_FRACTION)) }
                 else -> {
@@ -174,6 +178,18 @@ fun HistoryScreen(
                 switch(Modifier.padding(top = LandscapeSwitchTop).width(LandscapeSwitchWidth).align(Alignment.CenterHorizontally))
                 Row(modifier = Modifier.padding(top = LandscapeSwitchTop), horizontalArrangement = Arrangement.spacedBy(ScreenPadding)) {
                     if (records) ChartCard(state, Modifier.width(LandscapeChartWidth).dimmedWhen(selecting))
+                    // «Время по элементам» takes the same left column in the repertoire (handoff 30h6)
+                    val time = sections.time
+                    if (state.section == HistorySection.REPERTOIRE && time != null) {
+                        PieceTimeCardView(
+                            card = time,
+                            visibleRows = TIME_ROWS_LANDSCAPE,
+                            onIntent = onSectionsIntent,
+                            modifier = Modifier
+                                .width(LandscapeChartWidth)
+                                .verticalScroll(rememberScrollState()),
+                        )
+                    }
                     LazyColumn(modifier = Modifier.weight(1f).fillMaxHeight(), contentPadding = PaddingValues(bottom = ScreenPadding), content = list)
                 }
             }

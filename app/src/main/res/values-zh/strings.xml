@@ -740,7 +740,7 @@
     <string name="piece_tempo_clear">不设速度</string>
     <string name="piece_delete">删除曲目</string>
     <string name="piece_delete_title">删除“%1$s”？</string>
-    <string name="piece_delete_text">乐谱和笔记都将删除。录音会保留在“录音”中。</string>
+    <string name="piece_delete_text">乐谱、笔记和用在上面的时间都将删除。录音会保留在“录音”中。</string>
     <string name="piece_delete_confirm">删除</string>
     <string name="take_record">开始录制</string>
     <string name="take_record_hint">录制时屏幕不给提示——分析会在之后出现。</string>
@@ -968,4 +968,15 @@
     <string name="block_played_title">练过的内容</string>
     <string name="block_part_of">%1$d / %2$d 分钟</string>
     <string name="block_line">%1$s · %2$s</string>
+    <!-- «Время по элементам» on the repertoire landing (spec 3.28) -->
+    <string name="piece_time_title">各项时间</string>
+    <string name="piece_time_days_one">%1$d 天</string>
+    <string name="piece_time_days_few">%1$d 天</string>
+    <string name="piece_time_days_many">%1$d 天</string>
+    <string name="piece_time_all">全部 %1$d</string>
+    <string name="piece_time_less">收起</string>
+    <string name="piece_time_empty">这里会显示每一项花了多少时间。练习时在 Live 中选择一项。</string>
+    <string name="piece_time_today">今天 %1$s</string>
+    <string name="piece_time_row_description">%1$s：%3$s内 %2$s</string>
+    <string name="piece_time_row_today_description">%1$s：%3$s内 %2$s，今天 %4$s</string>
 </resources>

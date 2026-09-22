@@ -740,7 +740,7 @@
     <string name="piece_tempo_clear">Sem andamento</string>
     <string name="piece_delete">Excluir a peça</string>
     <string name="piece_delete_title">Excluir “%1$s”?</string>
-    <string name="piece_delete_text">A partitura e as anotações serão excluídas. As gravações ficam em “Gravações”.</string>
+    <string name="piece_delete_text">A partitura, as anotações e o tempo dedicado serão excluídos. As gravações ficam em “Gravações”.</string>
     <string name="piece_delete_confirm">Excluir</string>
     <string name="take_record">Gravar um take</string>
     <string name="take_record_hint">A tela não dá dicas durante a gravação — a análise aparece depois.</string>
@@ -968,4 +968,15 @@
     <string name="block_played_title">O que foi tocado</string>
     <string name="block_part_of">%1$d de %2$d min</string>
     <string name="block_line">%1$s · %2$s</string>
+    <!-- «Время по элементам» on the repertoire landing (spec 3.28) -->
+    <string name="piece_time_title">Tempo por elemento</string>
+    <string name="piece_time_days_one">%1$d dia</string>
+    <string name="piece_time_days_few">%1$d dias</string>
+    <string name="piece_time_days_many">%1$d dias</string>
+    <string name="piece_time_all">Todos (%1$d)</string>
+    <string name="piece_time_less">Mostrar menos</string>
+    <string name="piece_time_empty">Aqui você verá quanto tempo cada elemento recebe. Escolha um elemento no Live durante uma prática.</string>
+    <string name="piece_time_today">hoje %1$s</string>
+    <string name="piece_time_row_description">%1$s: %2$s em %3$s</string>
+    <string name="piece_time_row_today_description">%1$s: %2$s em %3$s, hoje %4$s</string>
 </resources>

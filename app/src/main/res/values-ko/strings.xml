@@ -740,7 +740,7 @@
     <string name="piece_tempo_clear">템포 없음</string>
     <string name="piece_delete">곡 삭제</string>
     <string name="piece_delete_title">“%1$s” 항목을 삭제할까요?</string>
-    <string name="piece_delete_text">악보와 메모가 삭제됩니다. 녹음은 “녹음” 탭에 남습니다.</string>
+    <string name="piece_delete_text">악보, 메모, 이 곡에 쓴 시간이 삭제됩니다. 녹음은 “녹음” 탭에 남습니다.</string>
     <string name="piece_delete_confirm">삭제</string>
     <string name="take_record">테이크 녹음</string>
     <string name="take_record_hint">녹음하는 동안 화면은 아무것도 알려 주지 않습니다 — 분석은 끝난 뒤에 나옵니다.</string>
@@ -968,4 +968,15 @@
     <string name="block_played_title">연주한 곡</string>
     <string name="block_part_of">%2$d분 중 %1$d분</string>
     <string name="block_line">%1$s · %2$s</string>
+    <!-- «Время по элементам» on the repertoire landing (spec 3.28) -->
+    <string name="piece_time_title">곡별 시간</string>
+    <string name="piece_time_days_one">%1$d일</string>
+    <string name="piece_time_days_few">%1$d일</string>
+    <string name="piece_time_days_many">%1$d일</string>
+    <string name="piece_time_all">모두 %1$d</string>
+    <string name="piece_time_less">접기</string>
+    <string name="piece_time_empty">여기에서 곡마다 얼마나 시간을 쓰는지 볼 수 있습니다. 연습 중에 Live에서 곡을 고르세요.</string>
+    <string name="piece_time_today">오늘 %1$s</string>
+    <string name="piece_time_row_description">%1$s: %3$s 동안 %2$s</string>
+    <string name="piece_time_row_today_description">%1$s: %3$s 동안 %2$s, 오늘 %4$s</string>
 </resources>

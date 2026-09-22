@@ -740,7 +740,7 @@
     <string name="piece_tempo_clear">テンポなし</string>
     <string name="piece_delete">曲を削除</string>
     <string name="piece_delete_title">「%1$s」を削除しますか？</string>
-    <string name="piece_delete_text">楽譜とメモは削除されます。録音は「録音」に残ります。</string>
+    <string name="piece_delete_text">楽譜、メモ、この曲にかけた時間は削除されます。録音は「録音」に残ります。</string>
     <string name="piece_delete_confirm">削除</string>
     <string name="take_record">テイクを録る</string>
     <string name="take_record_hint">録音中、画面には音程のヒントが出ません。分析は録り終えてから表示されます。</string>
@@ -968,4 +968,15 @@
     <string name="block_played_title">弾いたもの</string>
     <string name="block_part_of">%2$d分中%1$d分</string>
     <string name="block_line">%1$s · %2$s</string>
+    <!-- «Время по элементам» on the repertoire landing (spec 3.28) -->
+    <string name="piece_time_title">項目ごとの時間</string>
+    <string name="piece_time_days_one">%1$d日</string>
+    <string name="piece_time_days_few">%1$d日</string>
+    <string name="piece_time_days_many">%1$d日</string>
+    <string name="piece_time_all">すべて %1$d</string>
+    <string name="piece_time_less">閉じる</string>
+    <string name="piece_time_empty">ここに、それぞれの項目にかけた時間が表示されます。練習中に Live で項目を選んでください。</string>
+    <string name="piece_time_today">今日 %1$s</string>
+    <string name="piece_time_row_description">%1$s：%3$sで%2$s</string>
+    <string name="piece_time_row_today_description">%1$s：%3$sで%2$s、今日 %4$s</string>
 </resources>

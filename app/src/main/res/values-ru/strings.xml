@@ -740,7 +740,7 @@
     <string name="piece_tempo_clear">Без темпа</string>
     <string name="piece_delete">Удалить произведение</string>
     <string name="piece_delete_title">Удалить «%1$s»?</string>
-    <string name="piece_delete_text">Ноты и заметки удалятся. Записи останутся в «Записях».</string>
+    <string name="piece_delete_text">Ноты, заметки и время по нему удалятся. Записи останутся в «Записях».</string>
     <string name="piece_delete_confirm">Удалить</string>
     <string name="take_record">Записать дубль</string>
     <string name="take_record_hint">Экран не подсказывает во время записи — разбор появится после.</string>
@@ -968,4 +968,15 @@
     <string name="block_played_title">Что играли</string>
     <string name="block_part_of">%1$d из %2$d мин</string>
     <string name="block_line">%1$s · %2$s</string>
+    <!-- «Время по элементам» on the repertoire landing (spec 3.28) -->
+    <string name="piece_time_title">Время по элементам</string>
+    <string name="piece_time_days_one">%1$d день</string>
+    <string name="piece_time_days_few">%1$d дня</string>
+    <string name="piece_time_days_many">%1$d дней</string>
+    <string name="piece_time_all">Все %1$d</string>
+    <string name="piece_time_less">Свернуть</string>
+    <string name="piece_time_empty">Здесь будет видно, сколько времени получает каждый элемент. Выберите элемент на Live во время занятия.</string>
+    <string name="piece_time_today">сегодня %1$s</string>
+    <string name="piece_time_row_description">%1$s: %2$s за %3$s</string>
+    <string name="piece_time_row_today_description">%1$s: %2$s за %3$s, сегодня %4$s</string>
 </resources>

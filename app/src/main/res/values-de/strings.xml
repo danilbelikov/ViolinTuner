@@ -740,7 +740,7 @@
     <string name="piece_tempo_clear">Ohne Tempo</string>
     <string name="piece_delete">Stück löschen</string>
     <string name="piece_delete_title">„%1$s“ löschen?</string>
-    <string name="piece_delete_text">Noten und Notizen werden gelöscht. Die Aufnahmen bleiben unter „Aufnahmen“.</string>
+    <string name="piece_delete_text">Noten, Notizen und die Zeit dafür werden gelöscht. Die Aufnahmen bleiben unter „Aufnahmen“.</string>
     <string name="piece_delete_confirm">Löschen</string>
     <string name="take_record">Take aufnehmen</string>
     <string name="take_record_hint">Während der Aufnahme gibt der Bildschirm keine Hinweise – die Analyse kommt danach.</string>
@@ -968,4 +968,15 @@
     <string name="block_played_title">Was gespielt wurde</string>
     <string name="block_part_of">%1$d von %2$d Min.</string>
     <string name="block_line">%1$s · %2$s</string>
+    <!-- «Время по элементам» on the repertoire landing (spec 3.28) -->
+    <string name="piece_time_title">Zeit pro Element</string>
+    <string name="piece_time_days_one">%1$d Tag</string>
+    <string name="piece_time_days_few">%1$d Tage</string>
+    <string name="piece_time_days_many">%1$d Tage</string>
+    <string name="piece_time_all">Alle %1$d</string>
+    <string name="piece_time_less">Weniger</string>
+    <string name="piece_time_empty">Hier sehen Sie, wie viel Zeit jedes Element bekommt. Wählen Sie während der Übezeit ein Element im Bereich Live.</string>
+    <string name="piece_time_today">heute %1$s</string>
+    <string name="piece_time_row_description">%1$s: %2$s in %3$s</string>
+    <string name="piece_time_row_today_description">%1$s: %2$s in %3$s, heute %4$s</string>
 </resources>
