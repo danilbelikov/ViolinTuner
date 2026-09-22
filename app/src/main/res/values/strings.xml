@@ -979,4 +979,19 @@
     <string name="piece_time_today">today %1$s</string>
     <string name="piece_time_row_description">%1$s: %2$s over %3$s</string>
     <string name="piece_time_row_today_description">%1$s: %2$s over %3$s, today %4$s</string>
+
+    <!-- The recap of a practice (spec 3.31). -->
+    <string name="recap_title">Practice saved</string>
+    <string name="recap_day_total">the whole day: %1$s</string>
+    <string name="recap_source_notes">Notes in tune</string>
+    <string name="recap_source_time">Time</string>
+    <string name="recap_source_count">· %1$s</string>
+    <string name="recap_road_left">to %1$s — %2$s to go</string>
+    <string name="recap_road_enough">Enough to reach %1$s</string>
+    <string name="recap_road_leg">%1$s → %2$s</string>
+    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_done">Route complete · %1$s in the purse</string>
+    <string name="recap_road_not_started">Bars are adding up — the road begins at home</string>
+    <string name="recap_level_up">New level</string>
+    <string name="recap_streak_up">+1 day</string>
 </resources>

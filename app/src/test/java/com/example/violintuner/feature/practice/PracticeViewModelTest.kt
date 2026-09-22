@@ -71,7 +71,7 @@ class PracticeViewModelTest {
 
     private fun TestScope.viewModel(): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
         val viewModel = PracticeViewModel(
-            repository, store, PracticeFinisher(repository, store, clock), sessions, config, FakeRepertoireRepository(), clock,
+            repository, store, PracticeFinisher(repository, store, clock, journey = journey), sessions, config, FakeRepertoireRepository(), clock,
             trophies, profiles, avatarFiles, ProgressConfig(), journey,
         )
         val effects = mutableListOf<PracticeEffect>()
@@ -165,7 +165,8 @@ class PracticeViewModelTest {
             repository.entries.value,
         )
         assertNull(store.running.value)
-        assertNull(viewModel.state.value.sheet)
+        // «Занятие сохранено» takes the summary's place (spec 3.31)
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.Recap)
         assertNull(viewModel.state.value.runningMs)
         assertTrue(viewModel.state.value.hasHistory)
         assertEquals(47 * MS_PER_MINUTE + 20_000, viewModel.state.value.todayMs)
@@ -449,7 +450,7 @@ class PracticeViewModelTest {
     }
 
     @Test
-    fun `the journey window shows takts earned on the spot, not those earned before`() = runTest {
+    fun `the journey window shows takts earned on the spot after their recap, not those earned before`() = runTest {
         journey.start(clock.millis())
         journey.earn(TaktEarning(clock.millis(), 100, 80, 600_000, 100))
         val (viewModel, effects) = viewModel()
@@ -460,9 +461,20 @@ class PracticeViewModelTest {
         assertEquals(100L, before.balance)
         assertEquals(200L, before.missing)
         assertNull(before.justEarned)
+        assertNull(viewModel.state.value.sheet) // history is not recapped
 
+        // saved elsewhere — the forgotten-practice prompt over this screen: the recap opens here all the same
+        repository.add(PracticeEntry(today, clock.millis() - 2_280_000, 2_280_000, manual = false))
         journey.earn(TaktEarning(clock.millis(), 300, 264, 2_280_000, 340))
         runCurrent()
+        val recap = (viewModel.state.value.sheet as PracticeSheet.Recap).recap
+        assertEquals(340, recap.takts)
+        assertEquals(2_280_000L, recap.durationMs)
+        assertNull(viewModel.journeyWindow.value!!.justEarned) // the pill waits for the recap
+
+        viewModel.onIntent(PracticeIntent.RecapClosed)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
         val fresh = viewModel.journeyWindow.value!!
         assertEquals(340, fresh.justEarned)
         assertTrue(fresh.canDepart)
@@ -475,5 +487,76 @@ class PracticeViewModelTest {
         viewModel.onIntent(PracticeIntent.JourneyClicked)
         runCurrent()
         assertEquals(PracticeEffect.OpenJourney, effects.last())
+    }
+
+    @Test
+    fun `saving recaps the practice once, and the recap comes before the gift and the pill`() = runTest {
+        journey.start(clock.millis())
+        val (viewModel, _) = viewModel()
+        backgroundScope.launch { viewModel.journeyWindow.collect {} }
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        pass(62 * MS_PER_MINUTE)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        viewModel.onIntent(PracticeIntent.SummarySaved)
+        trophies.award(1, today) // the hour the practice has just crossed
+        runCurrent()
+
+        val recap = (viewModel.state.value.sheet as PracticeSheet.Recap).recap
+        assertEquals(124, recap.takts) // 62 minutes, no notes, no elements
+        assertEquals(124, recap.sources.timeTakts)
+        assertEquals(0, recap.sources.notesTakts)
+        assertEquals(1, recap.streakDays)
+        assertTrue(recap.streakExtended)
+        assertNull(recap.dayTotalMs)
+        assertEquals(1, journey.earnings.size)
+        assertNull(viewModel.state.value.gift) // it waits for the recap
+
+        viewModel.onIntent(PracticeIntent.RecapClosed)
+        runCurrent()
+        assertEquals(1, viewModel.state.value.gift?.hours)
+        assertNull(viewModel.journeyWindow.value!!.justEarned) // and the pill waits for the gift
+
+        viewModel.onIntent(PracticeIntent.GiftAccepted(1))
+        runCurrent()
+        assertEquals(124, viewModel.journeyWindow.value!!.justEarned)
+        advanceTimeBy(JourneyMotion.EARNED_PILL_MS + 1)
+        runCurrent()
+        assertNull(viewModel.journeyWindow.value!!.justEarned)
+        // the earning seen by the journey flow afterwards is the same practice: no second recap
+        assertNull(viewModel.state.value.sheet)
+    }
+
+    @Test
+    fun `«В дорогу» of the recap closes it and goes home`() = runTest {
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        pass(10 * MS_PER_MINUTE)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        viewModel.onIntent(PracticeIntent.SummarySaved)
+        runCurrent()
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.Recap)
+
+        viewModel.onIntent(PracticeIntent.RecapTravelClicked)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+        assertEquals(PracticeEffect.OpenHome, effects.last())
+    }
+
+    @Test
+    fun `a discarded practice and one too short are not recapped`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        pass(10 * MS_PER_MINUTE)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        viewModel.onIntent(PracticeIntent.SummaryDiscarded)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        pass(30_000)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+        assertTrue(journey.earnings.isEmpty())
     }
 }

@@ -9,6 +9,11 @@ import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.practice.PracticeConfig
 import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeEntry
+import com.example.violintuner.core.domain.practice.PracticeRecap
+import com.example.violintuner.core.domain.practice.RecapRoad
+import com.example.violintuner.core.domain.journey.JourneyConfig
+import com.example.violintuner.core.domain.journey.JourneyRules
+import com.example.violintuner.core.domain.progress.Progress
 import com.example.violintuner.core.domain.progress.Profile
 import com.example.violintuner.core.domain.progress.ProgressConfig
 import com.example.violintuner.core.domain.progress.Trophy
@@ -17,6 +22,7 @@ import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.practice.components.EditTimeSheetContent
 import com.example.violintuner.feature.practice.components.GiftSheetContent
 import com.example.violintuner.feature.practice.components.ProfileSheetContent
+import com.example.violintuner.feature.practice.components.RecapSheetContent
 import com.example.violintuner.feature.practice.components.SummarySheetContent
 import com.example.violintuner.feature.practice.components.TrophiesSheetContent
 import java.time.LocalDate
@@ -182,3 +188,64 @@ private fun EditTimeSheetPreview() {
         )
     }
 }
+
+/** The recaps of the mockup (`docs/design/project/recap`): Vienna → Prague, 212 clean notes, 47 minutes, two elements. */
+private object RecapSample {
+    private val progress = ProgressConfig()
+    private const val HOUR = 60 * MS_PER_MINUTE
+
+    fun recap(
+        inTune: Int = 212,
+        minutes: Long = 47,
+        pieces: Int = 2,
+        road: RecapRoad = RecapRoad.Leg(nextIndex = 5, price = 1_600, balanceBefore = 472, balanceAfter = 697),
+        totalBefore: Long = 153 * HOUR + 23 * MS_PER_MINUTE,
+        streak: Int = 6,
+        extended: Boolean = true,
+        dayTotal: Long? = 85 * MS_PER_MINUTE,
+    ): PracticeRecap {
+        val duration = minutes * MS_PER_MINUTE
+        val sources = JourneyRules.taktsBySource(inTune, duration, JourneyConfig(), pieces)
+        return PracticeRecap(
+            durationMs = duration, dayTotalMs = dayTotal, takts = sources.total, sources = sources, road = road,
+            streakDays = streak, streakExtended = extended,
+            levelBefore = Progress.levelOf(totalBefore, progress), levelAfter = Progress.levelOf(totalBefore + duration, progress),
+        )
+    }
+}
+
+@Composable
+private fun RecapPreview(recap: PracticeRecap, low: Boolean = false) {
+    ViolinTheme {
+        RecapSheetContent(recap, onClose = {}, onTravel = {}, modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh), low = low, animated = false)
+    }
+}
+
+@Preview(name = "recap", widthDp = 412)
+@Composable
+private fun RecapSheetPreview() = RecapPreview(RecapSample.recap())
+
+@Preview(name = "recap enough to Prague, new level", widthDp = 412)
+@Composable
+private fun RecapEnoughPreview() = RecapPreview(
+    RecapSample.recap(
+        inTune = 404, minutes = 70, pieces = 1, road = RecapRoad.Leg(5, 1_600, 1_345, 1_650),
+        totalBefore = 199 * 60 * MS_PER_MINUTE, streak = 12, extended = false, dayTotal = null,
+    ),
+)
+
+@Preview(name = "recap first practice, no notes, road not begun", widthDp = 412)
+@Composable
+private fun RecapBarePreview() = RecapPreview(
+    RecapSample.recap(inTune = 0, minutes = 12, pieces = 0, road = RecapRoad.NotStarted, totalBefore = 0, streak = 1, dayTotal = null),
+)
+
+@Preview(name = "recap route done", widthDp = 412)
+@Composable
+private fun RecapDonePreview() = RecapPreview(
+    RecapSample.recap(inTune = 216, minutes = 52, pieces = 0, road = RecapRoad.RouteDone(2_516), totalBefore = 530 * 60 * MS_PER_MINUTE, streak = 31, dayTotal = null),
+)
+
+@Preview(name = "recap landscape", widthDp = 560, heightDp = 412)
+@Composable
+private fun RecapLandscapePreview() = RecapPreview(RecapSample.recap(), low = true)

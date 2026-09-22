@@ -1,6 +1,7 @@
 package com.example.violintuner.feature.practice
 
 import com.example.violintuner.core.domain.practice.PracticeBlocks
+import com.example.violintuner.core.domain.practice.PracticeRecap
 import com.example.violintuner.feature.history.HistoryCard
 import java.time.LocalDate
 import java.time.YearMonth
@@ -118,6 +119,9 @@ sealed interface PracticeSheet {
     /** «Трофеи»: the list itself is [PracticeState.trophies]. */
     data object Trophies : PracticeSheet
 
+    /** «Занятие сохранено» (spec 3.31): what the practice just saved earned and changed. */
+    data class Recap(val recap: PracticeRecap) : PracticeSheet
+
     /** "Изменить время" of a day: the whole day's time, zero removes the day. */
     data class EditTime(
         val date: LocalDate,
@@ -212,6 +216,12 @@ sealed interface PracticeIntent {
 
     /** «Спасибо» and a swipe down alike: the trophy of [hours] has been seen. */
     data class GiftAccepted(val hours: Int) : PracticeIntent
+
+    /** «Готово», a swipe down and «назад» alike close «Занятие сохранено». */
+    data object RecapClosed : PracticeIntent
+
+    /** «В дорогу» of «Занятие сохранено»: home, where the road is taken (spec 3.25). */
+    data object RecapTravelClicked : PracticeIntent
 }
 
 sealed interface PracticeEffect {

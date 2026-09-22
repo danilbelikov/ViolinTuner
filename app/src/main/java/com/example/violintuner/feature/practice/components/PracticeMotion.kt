@@ -35,6 +35,12 @@ internal object PracticeMotion {
     const val FLAME_FLARE_SCALE = 1.35f
     const val FLAME_APPEAR_MS = 200L
 
+    // «Занятие сохранено» (spec 5.24): the takts roll and the bars grow once, a moment after the sheet is up;
+    // a new level runs the old bar out and the new one in, a half each.
+    const val RECAP_DELAY_MS = 200L
+    const val RECAP_GROW_MS = 600
+    const val RECAP_LEVEL_HALF_MS = 400
+
     /** The fallback of the handoff, to be decided on a phone: false — the flame comes alive only when the streak grows. */
     const val FLAME_SWAY_ON_OPEN = true
 }

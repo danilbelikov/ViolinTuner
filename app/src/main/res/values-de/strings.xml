@@ -979,4 +979,19 @@
     <string name="piece_time_today">heute %1$s</string>
     <string name="piece_time_row_description">%1$s: %2$s in %3$s</string>
     <string name="piece_time_row_today_description">%1$s: %2$s in %3$s, heute %4$s</string>
+
+    <!-- The recap of a practice (spec 3.31). -->
+    <string name="recap_title">Übezeit gespeichert</string>
+    <string name="recap_day_total">am ganzen Tag: %1$s</string>
+    <string name="recap_source_notes">Töne sauber</string>
+    <string name="recap_source_time">Zeit</string>
+    <string name="recap_source_count">· %1$s</string>
+    <string name="recap_road_left">bis %1$s – noch %2$s</string>
+    <string name="recap_road_enough">Reicht bis %1$s</string>
+    <string name="recap_road_leg">%1$s → %2$s</string>
+    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_done">Route geschafft · %1$s im Geldbeutel</string>
+    <string name="recap_road_not_started">Die Takte sammeln sich – die Reise beginnt zu Hause</string>
+    <string name="recap_level_up">Neue Stufe</string>
+    <string name="recap_streak_up">+1 Tag</string>
 </resources>

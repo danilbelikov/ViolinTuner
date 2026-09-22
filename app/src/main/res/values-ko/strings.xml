@@ -979,4 +979,19 @@
     <string name="piece_time_today">오늘 %1$s</string>
     <string name="piece_time_row_description">%1$s: %3$s 동안 %2$s</string>
     <string name="piece_time_row_today_description">%1$s: %3$s 동안 %2$s, 오늘 %4$s</string>
+
+    <!-- The recap of a practice (spec 3.31). -->
+    <string name="recap_title">연습 저장됨</string>
+    <string name="recap_day_total">하루 전체 %1$s</string>
+    <string name="recap_source_notes">정확한 음</string>
+    <string name="recap_source_time">시간</string>
+    <string name="recap_source_count">· %1$s</string>
+    <string name="recap_road_left">%1$s까지 %2$s 남음</string>
+    <string name="recap_road_enough">%1$s까지 갈 수 있어요</string>
+    <string name="recap_road_leg">%1$s → %2$s</string>
+    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_done">경로 완주 · 지갑에 %1$s</string>
+    <string name="recap_road_not_started">마디가 모이고 있어요 — 길은 집에서 시작돼요</string>
+    <string name="recap_level_up">새 레벨</string>
+    <string name="recap_streak_up">+1일</string>
 </resources>

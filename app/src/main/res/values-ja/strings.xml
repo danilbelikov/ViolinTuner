@@ -979,4 +979,19 @@
     <string name="piece_time_today">今日 %1$s</string>
     <string name="piece_time_row_description">%1$s：%3$sで%2$s</string>
     <string name="piece_time_row_today_description">%1$s：%3$sで%2$s、今日 %4$s</string>
+
+    <!-- The recap of a practice (spec 3.31). -->
+    <string name="recap_title">練習を保存しました</string>
+    <string name="recap_day_total">この日の合計 %1$s</string>
+    <string name="recap_source_notes">音程の合った音</string>
+    <string name="recap_source_time">時間</string>
+    <string name="recap_source_count">· %1$s</string>
+    <string name="recap_road_left">%1$sまで あと %2$s</string>
+    <string name="recap_road_enough">%1$sまで行けます</string>
+    <string name="recap_road_leg">%1$s → %2$s</string>
+    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_done">ルート完走 · 財布に %1$s</string>
+    <string name="recap_road_not_started">小節がたまっています — 旅は家から始まります</string>
+    <string name="recap_level_up">新しいレベル</string>
+    <string name="recap_streak_up">+1日</string>
 </resources>

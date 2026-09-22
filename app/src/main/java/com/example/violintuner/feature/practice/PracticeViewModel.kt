@@ -3,6 +3,8 @@ package com.example.violintuner.feature.practice
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.data.profile.AvatarFiles
+import com.example.violintuner.core.domain.journey.JourneyConfig
+import com.example.violintuner.core.domain.journey.JourneyProgress
 import com.example.violintuner.core.domain.journey.JourneyRepository
 import com.example.violintuner.core.domain.journey.NoJourney
 import com.example.violintuner.core.domain.journey.TaktEarning
@@ -14,6 +16,7 @@ import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_
 import com.example.violintuner.core.domain.practice.PracticeFinisher
 import com.example.violintuner.core.domain.practice.PracticeRepository
 import com.example.violintuner.core.domain.practice.PracticeStats
+import com.example.violintuner.core.domain.practice.RecapRules
 import com.example.violintuner.core.domain.practice.RunningPractice
 import com.example.violintuner.core.domain.practice.RunningPracticeStore
 import com.example.violintuner.core.domain.practice.elapsedTicker
@@ -34,15 +37,15 @@ import java.time.Clock
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.channelFlow
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -61,30 +64,22 @@ class PracticeViewModel @Inject constructor(
     private val profiles: ProfileRepository,
     private val avatarFiles: AvatarFiles,
     private val progressConfig: ProgressConfig,
-    journey: JourneyRepository = NoJourney,
+    private val journey: JourneyRepository = NoJourney,
     venues: Venues = Venues(FollowTheRoad, journey),
     private val blocks: BlockStore = NoBlocks,
+    private val journeyConfig: JourneyConfig = JourneyConfig(),
 ) : ViewModel() {
+
+    /** Takts of the practice saved a moment ago, as the pill on the card; null the rest of the time. */
+    private val earnedPill = MutableStateFlow<Int?>(null)
 
     /**
      * The window into the journey (spec 3.23): its own flow, like the take on the piece screen — the
-     * card changes when takts do, the rest of the screen has nothing to do with it. An earning that
-     * arrives while the screen is watched shows as «+340 тактов» for a few seconds; the first value
-     * read is history, not news.
+     * card changes when takts do, the rest of the screen has nothing to do with it. The pill «+340»
+     * comes after «Занятие сохранено» is closed (spec 3.31): it shows where the takts went.
      */
-    val journeyWindow: StateFlow<JourneyWindow?> = channelFlow {
-        var known: TaktEarning? = null
-        var first = true
-        combine(journey.progress, venues.current, ::Pair).collectLatest { (progress, here) ->
-            val fresh = progress.lastEarning?.takeIf { !first && it != known && it.takts > 0 }
-            known = progress.lastEarning
-            first = false
-            if (fresh != null) {
-                send(JourneyReducer.windowOf(progress, justEarned = fresh.takts, here = here))
-                delay(JourneyMotion.EARNED_PILL_MS)
-            }
-            send(JourneyReducer.windowOf(progress, here = here))
-        }
+    val journeyWindow: StateFlow<JourneyWindow?> = combine(journey.progress, venues.current, earnedPill) { progress, here, pill ->
+        JourneyReducer.windowOf(progress, justEarned = pill, here = here)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     /** What only the screen decides: the month shown, the day picked and the open sheet. */
@@ -160,6 +155,11 @@ class PracticeViewModel @Inject constructor(
             PracticeIntent.TrophiesClosed -> ui.update { if (it.sheet == PracticeSheet.Trophies) it.copy(sheet = null) else it }
             // The next trophy not seen, if any, becomes the gift by itself: the state follows the table.
             is PracticeIntent.GiftAccepted -> viewModelScope.launch { trophies.markShown(intent.hours) }
+            PracticeIntent.RecapClosed -> closeRecap()
+            PracticeIntent.RecapTravelClicked -> {
+                closeRecap()
+                effectChannel.trySend(PracticeEffect.OpenHome)
+            }
         }
     }
 
@@ -198,13 +198,69 @@ class PracticeViewModel @Inject constructor(
         viewModelScope.launch { repertoire.pieces.collect { pieces -> latestTitles = pieces.associate { it.id to it.title } } }
         viewModelScope.launch { runningStore.running.collect { latestRunning = it } }
         viewModelScope.launch { repository.entries.collect { latestTotals = PracticeStats.dayTotals(it) } }
+        // A practice saved elsewhere — the forgotten-practice prompt over this screen — is recapped here all the
+        // same. The first value read is history, not news.
+        viewModelScope.launch {
+            var first = true
+            journey.progress.collect { progress ->
+                val last = progress.lastEarning
+                if (first) {
+                    recapped = last
+                    first = false
+                } else if (last != null && last != recapped && last.takts > 0) {
+                    openRecap(last, progress)
+                }
+            }
+        }
     }
+
+    /** The earning the recap was last opened for (or history, read first): a practice is recapped once, whoever notices it first. */
+    private var recapped: TaktEarning? = null
+    private var pillJob: Job? = null
 
     private fun saveSummary() {
         val sheet = ui.value.sheet as? PracticeSheet.Summary ?: return
         viewModelScope.launch {
-            finisher.save(sheet.startedAtEpochMs, PracticeReducer.durationToSave(sheet))
-            ui.update { it.copy(sheet = null) }
+            val earning = finisher.save(sheet.startedAtEpochMs, PracticeReducer.durationToSave(sheet))
+            // «Занятие сохранено» takes the summary's place (spec 3.31); without an earning the sheet just goes
+            if (earning == null) ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it } else openRecap(earning)
+        }
+    }
+
+    /**
+     * Builds the recap from what is stored after the save — the entries and the journey already hold the
+     * practice (spec 5.24) — and opens it in place of the summary. Another sheet open (nothing can be
+     * saved from under it, but a prompt can): no recap, the pill alone.
+     */
+    private suspend fun openRecap(earning: TaktEarning, progress: JourneyProgress? = null) {
+        if (earning == recapped) return
+        recapped = earning
+        val recap = RecapRules.of(earning, repository.entries.first(), progress ?: journey.progress.first(), today(), journeyConfig, progressConfig)
+        var opened = false
+        ui.update {
+            opened = it.sheet == null || it.sheet is PracticeSheet.Summary
+            if (opened) it.copy(sheet = PracticeSheet.Recap(recap)) else it
+        }
+        if (!opened) showPill(earning.takts)
+    }
+
+    private fun closeRecap() {
+        val sheet = ui.value.sheet as? PracticeSheet.Recap ?: return
+        ui.update { if (it.sheet is PracticeSheet.Recap) it.copy(sheet = null) else it }
+        showPill(sheet.recap.takts)
+    }
+
+    /** The pill waits for the gift of a trophy, if the practice brought one (spec 3.31: recap, gift, then the pill). */
+    private fun showPill(takts: Int) {
+        pillJob?.cancel()
+        pillJob = viewModelScope.launch {
+            state.first { it.sheet == null && it.gift == null }
+            earnedPill.value = takts
+            try {
+                delay(JourneyMotion.EARNED_PILL_MS)
+            } finally {
+                earnedPill.value = null
+            }
         }
     }
 

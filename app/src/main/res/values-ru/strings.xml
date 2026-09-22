@@ -979,4 +979,19 @@
     <string name="piece_time_today">сегодня %1$s</string>
     <string name="piece_time_row_description">%1$s: %2$s за %3$s</string>
     <string name="piece_time_row_today_description">%1$s: %2$s за %3$s, сегодня %4$s</string>
+
+    <!-- The recap of a practice (spec 3.31). -->
+    <string name="recap_title">Занятие сохранено</string>
+    <string name="recap_day_total">всего за день — %1$s</string>
+    <string name="recap_source_notes">Ноты в строе</string>
+    <string name="recap_source_time">Время</string>
+    <string name="recap_source_count">· %1$s</string>
+    <string name="recap_road_left">до %1$s — ещё %2$s</string>
+    <string name="recap_road_enough">Хватает до %1$s</string>
+    <string name="recap_road_leg">%1$s → %2$s</string>
+    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_done">Маршрут пройден · в кошельке %1$s</string>
+    <string name="recap_road_not_started">Такты копятся — дорога начнётся из дома</string>
+    <string name="recap_level_up">Новый уровень</string>
+    <string name="recap_streak_up">+1 день</string>
 </resources>

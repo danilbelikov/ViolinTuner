@@ -979,4 +979,19 @@
     <string name="piece_time_today">今天 %1$s</string>
     <string name="piece_time_row_description">%1$s：%3$s内 %2$s</string>
     <string name="piece_time_row_today_description">%1$s：%3$s内 %2$s，今天 %4$s</string>
+
+    <!-- The recap of a practice (spec 3.31). -->
+    <string name="recap_title">练习已保存</string>
+    <string name="recap_day_total">当天共 %1$s</string>
+    <string name="recap_source_notes">音准的音</string>
+    <string name="recap_source_time">时间</string>
+    <string name="recap_source_count">· %1$s</string>
+    <string name="recap_road_left">距%1$s还差 %2$s</string>
+    <string name="recap_road_enough">够到%1$s了</string>
+    <string name="recap_road_leg">%1$s → %2$s</string>
+    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_done">路线已走完 · 钱包里有 %1$s</string>
+    <string name="recap_road_not_started">小节正在积攒——旅程从家出发</string>
+    <string name="recap_level_up">新等级</string>
+    <string name="recap_streak_up">+1 天</string>
 </resources>

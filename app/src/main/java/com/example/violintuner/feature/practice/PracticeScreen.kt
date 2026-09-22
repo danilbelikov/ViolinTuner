@@ -55,6 +55,7 @@ import com.example.violintuner.feature.history.components.SessionCard
 import com.example.violintuner.feature.practice.components.CalendarMetrics
 import com.example.violintuner.feature.practice.components.EditTimeSheet
 import com.example.violintuner.feature.practice.components.GiftSheet
+import com.example.violintuner.feature.practice.components.RecapSheet
 import com.example.violintuner.feature.practice.components.PracticeCalendar
 import com.example.violintuner.feature.practice.components.PracticeMotion
 import com.example.violintuner.feature.practice.components.ProfileHeader
@@ -147,6 +148,7 @@ fun PracticeScreen(
         is PracticeSheet.EditTime -> EditTimeSheet(sheet, state.stepMinutes, onIntent)
         is PracticeSheet.Profile -> ProfileSheet(sheet, state.header, onIntent)
         PracticeSheet.Trophies -> TrophiesSheet(state.trophies, state.header.totalMs, onIntent)
+        is PracticeSheet.Recap -> RecapSheet(sheet.recap, onIntent)
         // The gift waits for the other sheets: the reducer offers it only when none is open.
         null -> state.gift?.let { GiftSheet(it, onIntent) }
     }
