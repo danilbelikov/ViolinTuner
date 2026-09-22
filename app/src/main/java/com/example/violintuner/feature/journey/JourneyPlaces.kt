@@ -1,6 +1,7 @@
 package com.example.violintuner.feature.journey
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
@@ -47,6 +49,7 @@ import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.feature.journey.art.Postcard
 import com.example.violintuner.feature.journey.art.SceneMode
 import com.example.violintuner.feature.journey.art.rememberSceneSeconds
@@ -77,6 +80,7 @@ fun StopScreen(state: StopState, onIntent: (StopIntent) -> Unit, modifier: Modif
                 Row(Modifier.fillMaxSize().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                     Column(Modifier.width(360.dp).fillMaxHeight().verticalScroll(rememberScrollState()).padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         StopCard(state, city, 180.dp, onIntent)
+                        PlayHere(state, onIntent)
                     }
                     Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()).padding(bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         StopWords(state)
@@ -89,6 +93,7 @@ fun StopScreen(state: StopState, onIntent: (StopIntent) -> Unit, modifier: Modif
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     StopCard(state, city, 240.dp, onIntent)
+                    PlayHere(state, onIntent)
                     StopWords(state)
                     Extras(state, onIntent)
                 }
@@ -124,6 +129,28 @@ private fun StopCard(state: StopState, city: String, height: Dp, onIntent: (Stop
             }
         }
     }
+}
+
+/**
+ * «Играть здесь» under the postcard (spec 3.27, handoff 29k3): the player goes to this city and Live
+ * opens on the stage of its hall; beside it the round door home. Only a reached stop has a screen.
+ */
+@Composable
+private fun PlayHere(state: StopState, onIntent: (StopIntent) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    if (state.arrivedAtEpochMs == null) return
+    Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
+        Button(onClick = { onIntent(StopIntent.PlayHereClicked) }, modifier = Modifier.weight(1f).height(56.dp)) {
+            IconLabel(AppIcons.Theatre, stringResource(R.string.venue_play_here))
+        }
+        val door = stringResource(R.string.journey_enter_home)
+        Box(
+            Modifier.size(56.dp).clip(CircleShape).border(1.5.dp, colors.outlineVariant, CircleShape)
+                .clickable(onClickLabel = door, role = Role.Button) { onIntent(StopIntent.HomeClicked) },
+            contentAlignment = Alignment.Center,
+        ) { AppIcon(AppIcons.House, contentDescription = door, tint = colors.onSurface) }
+    }
+    Text(stringResource(R.string.venue_play_here_hint), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
 }
 
 @Composable

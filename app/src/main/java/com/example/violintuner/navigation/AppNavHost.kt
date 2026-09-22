@@ -10,11 +10,13 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.example.violintuner.core.domain.journey.JourneyRoute as JourneyStops
+import com.example.violintuner.core.domain.repertoire.PieceSection
+import com.example.violintuner.core.domain.repertoire.SectionRef
 import com.example.violintuner.feature.backup.BackupRoute
 import com.example.violintuner.feature.backup.RestoreRoute
 import com.example.violintuner.feature.backup.RestoreViewModel
 import com.example.violintuner.feature.history.HistoryRoute
-import com.example.violintuner.core.domain.journey.JourneyRoute as JourneyStops
 import com.example.violintuner.feature.home.HomeRoute
 import com.example.violintuner.feature.home.HomeView
 import com.example.violintuner.feature.home.SplashKind
@@ -26,17 +28,15 @@ import com.example.violintuner.feature.journey.StopViewModel
 import com.example.violintuner.feature.live.LiveRoute
 import com.example.violintuner.feature.onboarding.OnboardingRoute
 import com.example.violintuner.feature.practice.PracticeRoute
-import com.example.violintuner.core.domain.repertoire.PieceSection
-import com.example.violintuner.core.domain.repertoire.SectionRef
 import com.example.violintuner.feature.repertoire.RepertoireViewModel
 import com.example.violintuner.feature.repertoire.SectionKeys
 import com.example.violintuner.feature.repertoire.SectionRoute
 import com.example.violintuner.feature.repertoire.form.PieceFormRoute
-import com.example.violintuner.feature.repertoire.scale.ScaleFormRoute
-import com.example.violintuner.feature.repertoire.scale.ScaleFormViewModel
 import com.example.violintuner.feature.repertoire.form.PieceFormViewModel
 import com.example.violintuner.feature.repertoire.piece.PieceRoute
 import com.example.violintuner.feature.repertoire.piece.PieceViewModel
+import com.example.violintuner.feature.repertoire.scale.ScaleFormRoute
+import com.example.violintuner.feature.repertoire.scale.ScaleFormViewModel
 import com.example.violintuner.feature.repertoire.stand.StandRoute
 import com.example.violintuner.feature.repertoire.stand.StandViewModel
 import com.example.violintuner.feature.session.SessionRoute
@@ -235,6 +235,8 @@ fun AppNavHost(
                     // home is not a stop with a postcard any more: it is a section of its own (spec 3.24)
                     // home is a section of its own (spec 3.24); the way into it goes through its title card (3.25)
                     onOpenStop = { stopId -> navController.navigate(if (stopId == JourneyStops.HOME) SPLASH_HOME_ROUTE else "$JOURNEY_STOP_ROUTE/$stopId") { launchSingleTop = true } },
+                    // «Сыграть здесь» after an arrival: the tabs come back, on Live (spec 3.27)
+                    onOpenLive = navController::navigateToLiveLeavingTheGame,
                     onClose = navController::popBackStack,
                 )
             }
@@ -242,7 +244,14 @@ fun AppNavHost(
         composable(
             route = JOURNEY_STOP_PATTERN,
             arguments = listOf(navArgument(StopViewModel.ARG_STOP_ID) { type = NavType.StringType }),
-        ) { StopRoute(onClose = navController::popBackStack) }
+        ) {
+            StopRoute(
+                onClose = navController::popBackStack,
+                // «Играть здесь»: the tabs come back, on Live, in this city (spec 3.27)
+                onOpenLive = navController::navigateToLiveLeavingTheGame,
+                onOpenHome = { navController.navigate(SPLASH_HOME_ROUTE) { launchSingleTop = true } },
+            )
+        }
         // The home (spec 3.24): four views of one state, above the tabs.
         mapOf(HOME_ROUTE to HomeView.MAIN, HOME_SHOP_ROUTE to HomeView.SHOP, HOME_ARRANGE_ROUTE to HomeView.ARRANGE, HOME_HOUSES_ROUTE to HomeView.HOUSES).forEach { (route, view) ->
             composable(route) {
@@ -289,6 +298,15 @@ fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
         launchSingleTop = true
         restoreState = true
     }
+}
+
+/**
+ * From the journey to Live (spec 3.27, «Играть здесь»): the home, the journey and the stop lie on the
+ * stack of «Занятия»; they are folded first, or the tab would open on them next time.
+ */
+fun NavHostController.navigateToLiveLeavingTheGame() {
+    popBackStack(TopLevelDestination.START.route, inclusive = false)
+    navigateToTopLevel(TopLevelDestination.LIVE)
 }
 
 fun NavHostController.navigateToBackup() {

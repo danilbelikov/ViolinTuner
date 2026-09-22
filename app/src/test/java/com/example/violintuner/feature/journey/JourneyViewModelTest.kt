@@ -6,11 +6,16 @@ import com.example.violintuner.core.domain.journey.JourneyConfig
 import com.example.violintuner.core.domain.journey.JourneyExtra
 import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.core.domain.journey.TaktEarning
+import com.example.violintuner.core.domain.venue.FakeVenueStore
+import com.example.violintuner.core.domain.venue.Venue
+import com.example.violintuner.core.domain.venue.VenueRules
+import com.example.violintuner.core.domain.venue.Venues
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneOffset
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -32,6 +37,8 @@ class JourneyViewModelTest {
     private val dispatcher = StandardTestDispatcher()
     private val clock = Clock.fixed(Instant.parse("2026-09-20T10:00:00Z"), ZoneOffset.UTC)
     private val journey = FakeJourneyRepository()
+    private val venueStore = FakeVenueStore()
+    private val venues = Venues(venueStore, journey)
 
     @Before
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -42,7 +49,7 @@ class JourneyViewModelTest {
     private suspend fun earn(takts: Int) = journey.earn(TaktEarning(clock.millis(), takts, takts, 0, takts))
 
     private fun TestScope.viewModel(): Pair<JourneyViewModel, MutableList<JourneyEffect>> {
-        val viewModel = JourneyViewModel(journey, clock)
+        val viewModel = JourneyViewModel(journey, clock, venues)
         val effects = mutableListOf<JourneyEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -166,7 +173,7 @@ class JourneyViewModelTest {
         journey.start(clock.millis())
         earn(300 + 500 + 800 + 1200 + 700)
         JourneyRoute.stops.subList(1, 5).forEach { assertTrue(journey.depart(it, clock.millis())) }
-        val viewModel = StopViewModel(SavedStateHandle(mapOf(StopViewModel.ARG_STOP_ID to "vienna")), journey, JourneyConfig(), clock)
+        val viewModel = StopViewModel(SavedStateHandle(mapOf(StopViewModel.ARG_STOP_ID to "vienna")), journey, JourneyConfig(), clock, venues)
         backgroundScope.launch { viewModel.state.collect {} }
         runCurrent()
 
@@ -203,10 +210,10 @@ class JourneyViewModelTest {
     @Test
     fun backFromTheWholeScreenFoldsThePostcard_backAgainLeavesTheStop() = runTest(dispatcher) {
         journey.start(clock.millis())
-        val viewModel = StopViewModel(SavedStateHandle(mapOf(StopViewModel.ARG_STOP_ID to "home")), journey, JourneyConfig(), clock)
-        val closes = mutableListOf<Unit>()
+        val viewModel = StopViewModel(SavedStateHandle(mapOf(StopViewModel.ARG_STOP_ID to "home")), journey, JourneyConfig(), clock, venues)
+        val closes = mutableListOf<StopEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
-        backgroundScope.launch { viewModel.closes.collect { closes += it } }
+        backgroundScope.launch { viewModel.effects.collect { closes += it } }
         runCurrent()
 
         viewModel.onIntent(StopIntent.PostcardClicked)
@@ -221,5 +228,56 @@ class JourneyViewModelTest {
         viewModel.onIntent(StopIntent.BackClicked)
         runCurrent()
         assertEquals(1, closes.size)
+    }
+
+    // ---- where the player is (spec 3.27)
+
+    @Test
+    fun theDoorHomeTakesThePlayerHome_andAnArrivalPutsThemInTheNewCity() = runTest(dispatcher) {
+        journey.start(clock.millis())
+        earn(340)
+        val (viewModel, effects) = viewModel()
+
+        viewModel.onIntent(JourneyIntent.StopClicked(JourneyRoute.HOME))
+        runCurrent()
+        assertEquals(VenueRules.HOME, venueStore.stored.value)
+        assertEquals(JourneyEffect.OpenStop(JourneyRoute.HOME), effects.last())
+
+        viewModel.onIntent(JourneyIntent.DepartClicked)
+        runCurrent()
+        assertEquals(null, venueStore.stored.value)
+        assertEquals(Venue.Hall("cremona"), venues.current.first())
+
+        advanceTimeBy(JourneyMotion.ROAD_TRAIN_MS + 1L)
+        runCurrent()
+        viewModel.onIntent(JourneyIntent.StampClicked)
+        runCurrent()
+        // «Сыграть здесь» on the page of the stamp: Live, in the city just reached
+        viewModel.onIntent(JourneyIntent.PlayHereClicked)
+        runCurrent()
+        assertEquals(JourneyEffect.OpenLive, effects.last())
+        assertEquals(JourneyPhase.Idle, viewModel.state.value.phase)
+    }
+
+    @Test
+    fun playHereTakesThePlayerToTheCity_andTheRoundDoorTakesThemHome() = runTest(dispatcher) {
+        journey.start(clock.millis())
+        earn(300 + 500)
+        JourneyRoute.stops.subList(1, 3).forEach { assertTrue(journey.depart(it, clock.millis())) }
+        val viewModel = StopViewModel(SavedStateHandle(mapOf(StopViewModel.ARG_STOP_ID to "cremona")), journey, JourneyConfig(), clock, venues)
+        val effects = mutableListOf<StopEffect>()
+        backgroundScope.launch { viewModel.state.collect {} }
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        runCurrent()
+
+        viewModel.onIntent(StopIntent.PlayHereClicked)
+        runCurrent()
+        assertEquals(Venue.Hall("cremona"), venues.current.first())
+        assertEquals(StopEffect.OpenLive, effects.last())
+
+        viewModel.onIntent(StopIntent.HomeClicked)
+        runCurrent()
+        assertEquals(Venue.Home, venues.current.first())
+        assertEquals(StopEffect.OpenHome, effects.last())
     }
 }

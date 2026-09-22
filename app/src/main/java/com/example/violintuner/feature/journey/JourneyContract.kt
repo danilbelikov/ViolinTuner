@@ -3,6 +3,7 @@ package com.example.violintuner.feature.journey
 import com.example.violintuner.core.domain.journey.JourneyExtra
 import com.example.violintuner.core.domain.journey.JourneyStop
 import com.example.violintuner.core.domain.journey.Transport
+import com.example.violintuner.core.domain.venue.Venue
 
 /** A stop the player has been to, as the strip of postcards and the passport show it. */
 data class VisitedStop(val stop: JourneyStop, val index: Int, val arrivedAtEpochMs: Long, val souvenir: Boolean)
@@ -50,6 +51,9 @@ sealed interface JourneyIntent {
 
     data object StampDone : JourneyIntent
 
+    /** «Сыграть здесь» on the page of the stamp: Live opens in the city just reached. */
+    data object PlayHereClicked : JourneyIntent
+
     data object MapClicked : JourneyIntent
 
     data object PassportClicked : JourneyIntent
@@ -68,6 +72,8 @@ sealed interface JourneyEffect {
     data object OpenPassport : JourneyEffect
 
     data class OpenStop(val stopId: String) : JourneyEffect
+
+    data object OpenLive : JourneyEffect
 }
 
 /** The window into the journey on «Занятия» (handoff 26h): where the player is and how far the next city. */
@@ -79,6 +85,8 @@ data class JourneyWindow(
     val canDepart: Boolean,
     /** Takts of the practice saved a moment ago: a pill on the card for a few seconds. Null otherwise. */
     val justEarned: Int? = null,
+    /** Where the player is (spec 3.27): the card shows the room at home and the city on the road. */
+    val here: Venue = Venue.Home,
 )
 
 /** One extra of a stop as its screen offers it. */
@@ -113,6 +121,21 @@ sealed interface StopIntent {
     data object PostcardClicked : StopIntent
 
     data object FullscreenClosed : StopIntent
+
+    /** «Играть здесь»: go to this city; Live opens on its stage (spec 3.27). */
+    data object PlayHereClicked : StopIntent
+
+    /** The round door beside it: go home. */
+    data object HomeClicked : StopIntent
+}
+
+sealed interface StopEffect {
+    data object Close : StopEffect
+
+    data object OpenLive : StopEffect
+
+    /** Home, through its title card. */
+    data object OpenHome : StopEffect
 }
 
 /** How long the road takes on screen (handoff `anims`). */

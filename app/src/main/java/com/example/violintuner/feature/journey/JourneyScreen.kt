@@ -1,12 +1,12 @@
 package com.example.violintuner.feature.journey
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.togetherWith
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -35,6 +35,7 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -53,14 +54,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.example.violintuner.R
+import com.example.violintuner.core.domain.home.HomeRules
 import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.core.domain.journey.JourneyStop
 import com.example.violintuner.core.ui.format.Formats
-import com.example.violintuner.core.domain.home.HomeRules
 import com.example.violintuner.core.ui.icons.AppIcon
-import com.example.violintuner.feature.home.HomeTexts
 import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.motion.LocalReduceMotion
+import com.example.violintuner.feature.home.HomeTexts
 import com.example.violintuner.feature.journey.art.Postcard
 import com.example.violintuner.feature.journey.art.rememberSceneSeconds
 import java.time.ZoneId
@@ -376,6 +378,8 @@ private fun StampContent(stamp: JourneyPhase.Stamp, state: JourneyState, onInten
             color = colors.onSurface, style = MaterialTheme.typography.bodyLarge, textAlign = TextAlign.Center,
         )
         Button(onClick = { onIntent(JourneyIntent.StampDone) }, modifier = Modifier.widthIn(max = MaxContentWidth).fillMaxWidth().height(52.dp)) { Text(stringResource(R.string.journey_done)) }
+        // quietly, a text button: the arrival is about the postcard (spec 3.27, handoff 29k)
+        TextButton(onClick = { onIntent(JourneyIntent.PlayHereClicked) }) { IconLabel(AppIcons.Theatre, stringResource(R.string.venue_play_here)) }
     }
 }
 

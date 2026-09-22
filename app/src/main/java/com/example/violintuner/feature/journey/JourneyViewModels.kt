@@ -10,6 +10,8 @@ import com.example.violintuner.core.domain.journey.JourneyProgress
 import com.example.violintuner.core.domain.journey.JourneyRepository
 import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.core.domain.journey.JourneyRules
+import com.example.violintuner.core.domain.venue.Venue
+import com.example.violintuner.core.domain.venue.Venues
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import javax.inject.Inject
@@ -53,13 +55,14 @@ object JourneyReducer {
         )
     }
 
-    fun windowOf(progress: JourneyProgress, justEarned: Int? = null) = JourneyWindow(
+    fun windowOf(progress: JourneyProgress, justEarned: Int? = null, here: Venue = Venue.Home) = JourneyWindow(
         current = JourneyRoute.stops[JourneyRules.currentIndex(progress)],
         next = JourneyRules.next(progress),
         balance = progress.balance,
         missing = JourneyRules.missing(progress),
         canDepart = JourneyRules.canDepart(progress),
         justEarned = justEarned,
+        here = here,
     )
 
     val loading = JourneyState(
@@ -73,6 +76,7 @@ object JourneyReducer {
 class JourneyViewModel @Inject constructor(
     private val journey: JourneyRepository,
     private val clock: Clock,
+    private val venues: Venues,
 ) : ViewModel() {
     // The road, the arrival and the stamp are moments of the screen, not of the journey: the leg is
     // paid and the stop reached before the train leaves, so a process that dies on the way loses nothing.
@@ -95,9 +99,18 @@ class JourneyViewModel @Inject constructor(
             JourneyIntent.DepartClicked -> depart()
             JourneyIntent.StampClicked -> (phase.value as? JourneyPhase.Arrival)?.let { phase.value = JourneyPhase.Stamp(it.stop, it.index) }
             JourneyIntent.StampDone -> if (phase.value is JourneyPhase.Stamp) phase.value = null
+            // «Сыграть здесь» after the stamp: the arrival has put the player in the city already (spec 3.27)
+            JourneyIntent.PlayHereClicked -> if (phase.value is JourneyPhase.Stamp) {
+                phase.value = null
+                effectChannel.trySend(JourneyEffect.OpenLive)
+            }
             JourneyIntent.MapClicked -> if (phase.value == null) effectChannel.trySend(JourneyEffect.OpenMap)
             JourneyIntent.PassportClicked -> if (phase.value == null) effectChannel.trySend(JourneyEffect.OpenPassport)
-            is JourneyIntent.StopClicked -> if (phase.value == null) effectChannel.trySend(JourneyEffect.OpenStop(intent.stopId))
+            is JourneyIntent.StopClicked -> if (phase.value == null) {
+                // the door home takes the player home (spec 3.27): the room is where Live will be
+                if (intent.stopId == JourneyRoute.HOME) viewModelScope.launch { venues.goHome() }
+                effectChannel.trySend(JourneyEffect.OpenStop(intent.stopId))
+            }
             is JourneyIntent.ReduceMotionChanged -> reduceMotion = intent.reduce
         }
     }
@@ -115,6 +128,8 @@ class JourneyViewModel @Inject constructor(
                 phase.value = null
                 return@launch
             }
+            // whoever arrives is in the city: the window on «Занятия» and Live are there now
+            venues.followRoad()
             delay(road.durationMs.toLong())
             phase.value = JourneyPhase.Arrival(to, fromIndex + 1)
         }
@@ -132,6 +147,7 @@ class StopViewModel @Inject constructor(
     private val journey: JourneyRepository,
     private val config: JourneyConfig,
     private val clock: Clock,
+    private val venues: Venues,
 ) : ViewModel() {
     private val stop = JourneyRoute.stops.firstOrNull { it.id == savedState.get<String>(ARG_STOP_ID) } ?: JourneyRoute.stops.first()
     private val index = JourneyRoute.indexOf(stop.id)
@@ -168,15 +184,23 @@ class StopViewModel @Inject constructor(
         StopState(true, stop, index, JourneyReducer.totalStops, null, 0, emptyList(), day = false, inside = stop.views.firstOrNull()?.inside ?: false, dayUnlocked = false, secondViewUnlocked = false),
     )
 
-    private val effectChannel = Channel<Unit>(Channel.BUFFERED)
+    private val effectChannel = Channel<StopEffect>(Channel.BUFFERED)
 
-    /** The one effect of the screen: close. */
-    val closes: Flow<Unit> = effectChannel.receiveAsFlow()
+    val effects: Flow<StopEffect> = effectChannel.receiveAsFlow()
 
     fun onIntent(intent: StopIntent) {
         when (intent) {
             // «назад» from the whole screen folds the postcard back, it does not leave the stop
-            StopIntent.BackClicked -> if (shown.value.fullscreen) shown.value = shown.value.copy(fullscreen = false) else effectChannel.trySend(Unit)
+            StopIntent.BackClicked -> if (shown.value.fullscreen) shown.value = shown.value.copy(fullscreen = false) else effectChannel.trySend(StopEffect.Close)
+            // «Играть здесь» (spec 3.27): the player goes to this city and Live opens on its stage
+            StopIntent.PlayHereClicked -> if (state.value.arrivedAtEpochMs != null) viewModelScope.launch {
+                venues.choose(Venue.Hall(stop.id))
+                effectChannel.send(StopEffect.OpenLive)
+            }
+            StopIntent.HomeClicked -> viewModelScope.launch {
+                venues.goHome()
+                effectChannel.send(StopEffect.OpenHome)
+            }
             StopIntent.PostcardClicked -> shown.value = shown.value.copy(fullscreen = true)
             StopIntent.FullscreenClosed -> shown.value = shown.value.copy(fullscreen = false)
             is StopIntent.DaySelected -> shown.value = shown.value.copy(day = intent.day)

@@ -14,11 +14,12 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.violintuner.R
+import com.example.violintuner.core.domain.venue.Venue
 import com.example.violintuner.core.ui.motion.LocalReduceMotion
+import com.example.violintuner.core.ui.motion.rememberAnimationsRemoved
 import com.example.violintuner.feature.home.HomeLookViewModel
 import com.example.violintuner.feature.journey.JourneyWindowCard
 import com.example.violintuner.feature.journey.LocalHomeLook
-import com.example.violintuner.core.ui.motion.rememberAnimationsRemoved
 
 @Composable
 fun PracticeRoute(
@@ -64,8 +65,8 @@ fun PracticeRoute(
             modifier = modifier,
             journeyCard = { compact ->
                 journey?.let { window ->
-                    // the window is always the home (spec 3.25): the road is taken from there
-                    JourneyWindowCard(window, compact, onClick = { viewModel.onIntent(PracticeIntent.HomeClicked) })
+                    // the window is where the player is (spec 3.27): the home leads home, a city to the journey
+                    JourneyWindowCard(window, compact, onClick = { viewModel.onIntent(if (window.here is Venue.Hall) PracticeIntent.JourneyClicked else PracticeIntent.HomeClicked) })
                 }
             },
         )

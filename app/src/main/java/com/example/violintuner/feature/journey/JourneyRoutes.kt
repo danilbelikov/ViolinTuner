@@ -13,8 +13,8 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.example.violintuner.core.ui.motion.LocalReduceMotion
-import com.example.violintuner.feature.home.HomeLookViewModel
 import com.example.violintuner.core.ui.motion.rememberAnimationsRemoved
+import com.example.violintuner.feature.home.HomeLookViewModel
 
 /** Which of the journey's three views of the same state a route shows. */
 enum class JourneyView { MAIN, MAP, PASSPORT }
@@ -25,6 +25,7 @@ fun JourneyRoute(
     onOpenMap: () -> Unit,
     onOpenPassport: () -> Unit,
     onOpenStop: (stopId: String) -> Unit,
+    onOpenLive: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: JourneyViewModel = hiltViewModel(),
@@ -34,6 +35,7 @@ fun JourneyRoute(
     val currentOnOpenMap by rememberUpdatedState(onOpenMap)
     val currentOnOpenPassport by rememberUpdatedState(onOpenPassport)
     val currentOnOpenStop by rememberUpdatedState(onOpenStop)
+    val currentOnOpenLive by rememberUpdatedState(onOpenLive)
     val currentOnClose by rememberUpdatedState(onClose)
     val reduce = rememberAnimationsRemoved()
 
@@ -46,6 +48,7 @@ fun JourneyRoute(
                     JourneyEffect.OpenMap -> currentOnOpenMap()
                     JourneyEffect.OpenPassport -> currentOnOpenPassport()
                     is JourneyEffect.OpenStop -> currentOnOpenStop(effect.stopId)
+                    JourneyEffect.OpenLive -> currentOnOpenLive()
                 }
             }
         }
@@ -63,12 +66,22 @@ fun JourneyRoute(
 }
 
 @Composable
-fun StopRoute(onClose: () -> Unit, modifier: Modifier = Modifier, viewModel: StopViewModel = hiltViewModel()) {
+fun StopRoute(onClose: () -> Unit, onOpenLive: () -> Unit, onOpenHome: () -> Unit, modifier: Modifier = Modifier, viewModel: StopViewModel = hiltViewModel()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnClose by rememberUpdatedState(onClose)
+    val currentOnOpenLive by rememberUpdatedState(onOpenLive)
+    val currentOnOpenHome by rememberUpdatedState(onOpenHome)
     LaunchedEffect(viewModel, lifecycleOwner) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) { viewModel.closes.collect { currentOnClose() } }
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            viewModel.effects.collect { effect ->
+                when (effect) {
+                    StopEffect.Close -> currentOnClose()
+                    StopEffect.OpenLive -> currentOnOpenLive()
+                    StopEffect.OpenHome -> currentOnOpenHome()
+                }
+            }
+        }
     }
     BackHandler(enabled = state.fullscreen) { viewModel.onIntent(StopIntent.FullscreenClosed) }
     CompositionLocalProvider(LocalReduceMotion provides rememberAnimationsRemoved()) {

@@ -3,16 +3,12 @@ package com.example.violintuner.feature.practice
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.data.profile.AvatarFiles
-import com.example.violintuner.core.domain.repertoire.RepertoireRepository
-import com.example.violintuner.core.domain.practice.PracticeConfig
-import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.journey.JourneyRepository
 import com.example.violintuner.core.domain.journey.NoJourney
 import com.example.violintuner.core.domain.journey.TaktEarning
+import com.example.violintuner.core.domain.practice.PracticeConfig
+import com.example.violintuner.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.example.violintuner.core.domain.practice.PracticeFinisher
-import com.example.violintuner.feature.journey.JourneyMotion
-import com.example.violintuner.feature.journey.JourneyReducer
-import com.example.violintuner.feature.journey.JourneyWindow
 import com.example.violintuner.core.domain.practice.PracticeRepository
 import com.example.violintuner.core.domain.practice.PracticeStats
 import com.example.violintuner.core.domain.practice.RunningPractice
@@ -23,18 +19,24 @@ import com.example.violintuner.core.domain.progress.ProfileRepository
 import com.example.violintuner.core.domain.progress.ProgressConfig
 import com.example.violintuner.core.domain.progress.Trophy
 import com.example.violintuner.core.domain.progress.TrophyRepository
+import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.session.SessionRepository
+import com.example.violintuner.core.domain.venue.FollowTheRoad
+import com.example.violintuner.core.domain.venue.Venues
+import com.example.violintuner.feature.journey.JourneyMotion
+import com.example.violintuner.feature.journey.JourneyReducer
+import com.example.violintuner.feature.journey.JourneyWindow
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.LocalDate
 import java.time.YearMonth
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.channelFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
@@ -57,6 +59,7 @@ class PracticeViewModel @Inject constructor(
     private val avatarFiles: AvatarFiles,
     private val progressConfig: ProgressConfig,
     journey: JourneyRepository = NoJourney,
+    venues: Venues = Venues(FollowTheRoad, journey),
 ) : ViewModel() {
 
     /**
@@ -68,15 +71,15 @@ class PracticeViewModel @Inject constructor(
     val journeyWindow: StateFlow<JourneyWindow?> = channelFlow {
         var known: TaktEarning? = null
         var first = true
-        journey.progress.collectLatest { progress ->
+        combine(journey.progress, venues.current, ::Pair).collectLatest { (progress, here) ->
             val fresh = progress.lastEarning?.takeIf { !first && it != known && it.takts > 0 }
             known = progress.lastEarning
             first = false
             if (fresh != null) {
-                send(JourneyReducer.windowOf(progress, justEarned = fresh.takts))
+                send(JourneyReducer.windowOf(progress, justEarned = fresh.takts, here = here))
                 delay(JourneyMotion.EARNED_PILL_MS)
             }
-            send(JourneyReducer.windowOf(progress))
+            send(JourneyReducer.windowOf(progress, here = here))
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 

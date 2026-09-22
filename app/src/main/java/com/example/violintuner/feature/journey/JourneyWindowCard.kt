@@ -28,32 +28,41 @@ import androidx.compose.ui.unit.dp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.home.HomeRules
 import com.example.violintuner.core.domain.journey.JourneyRoute
+import com.example.violintuner.core.domain.venue.Venue
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.feature.home.HomeTexts
+import com.example.violintuner.feature.journey.art.Postcard
 import com.example.violintuner.feature.journey.art.rememberSceneSeconds
 
 private val Shape = RoundedCornerShape(20.dp)
 
 /**
- * The window on «Занятия» (spec 3.25, handoff 28a): always the home — the room with everything
- * bought, alive. Of the road it keeps what matters: how far the next city and the bar, the purse
- * in a pill, «+340» after a practice. On the road the room is the same, with a quiet note on top
- * that one is away: home remembers, but does not show the city. A tap opens the home, the road is
- * taken from there.
+ * The window on «Занятия» (spec 3.25, handoff 28a; spec 3.27): where the player is. At home — the
+ * room with everything bought, alive; in a city — the city's own postcard, alive, with a quiet note
+ * «в пути · Вена · остановка 4 из 16» (on Live the same city is its hall, seen from the stage). Of
+ * the road it keeps what matters: how far the next city and the bar, the purse in a pill, «+340»
+ * after a practice. A tap opens the home, or the journey from a city.
  */
 @Composable
 fun JourneyWindowCard(window: JourneyWindow, compact: Boolean, onClick: () -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val index = JourneyRoute.indexOf(window.current.id)
+    val here = window.here
     val home = LocalHomeLook.current
     val house = home?.let { HomeTexts.houseNames[HomeRules.house(it)] }?.let { stringResource(it) }.orEmpty()
-    val title = stringResource(R.string.home_card_title, house)
+    val title = if (here is Venue.Hall) stringResource(R.string.journey_card_description, cityOf(here.stopIndex)) else stringResource(R.string.home_card_title, house)
     Column(modifier.fillMaxWidth().clip(Shape).background(colors.surfaceContainer).clickable(onClickLabel = title, role = Role.Button, onClick = onClick)) {
         Box(Modifier.fillMaxWidth().height(if (compact) 96.dp else 160.dp)) {
-            StopPostcard(JourneyRoute.stops.first(), description = title, modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds())
-            if (index > 0) {
+            if (here is Venue.Hall) {
+                // the city as the journey shows it: its main view, outside for most, the workshop and La Scala inside
+                val stop = JourneyRoute.stops[here.stopIndex]
+                Postcard(stop, description = title, modifier = Modifier.fillMaxSize(), inside = stop.views.firstOrNull()?.inside ?: false, seconds = rememberSceneSeconds())
+            } else {
+                StopPostcard(JourneyRoute.stops.first(), description = title, modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds())
+            }
+            if (here is Venue.Hall) {
                 Text(
-                    stringResource(R.string.home_card_away, cityOf(index), index, JourneyRoute.stops.lastIndex),
+                    stringResource(R.string.home_card_away, cityOf(here.stopIndex), here.stopIndex, JourneyRoute.stops.lastIndex),
                     modifier = Modifier.align(Alignment.TopStart).padding(10.dp).clip(CircleShape).background(colors.surface.copy(alpha = 0.72f)).padding(horizontal = 10.dp, vertical = 4.dp),
                     color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelMedium,
                 )

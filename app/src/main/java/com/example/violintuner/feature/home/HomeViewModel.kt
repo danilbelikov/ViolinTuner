@@ -8,6 +8,7 @@ import com.example.violintuner.core.domain.home.HomeRules
 import com.example.violintuner.core.domain.home.HomeState
 import com.example.violintuner.core.domain.journey.JourneyProgress
 import com.example.violintuner.core.domain.journey.JourneyRepository
+import com.example.violintuner.core.domain.venue.Venues
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import javax.inject.Inject
@@ -29,6 +30,7 @@ class HomeViewModel @Inject constructor(
     private val home: HomeRepository,
     journey: JourneyRepository,
     private val clock: Clock,
+    private val venues: Venues,
 ) : ViewModel() {
     /** What only the screen decides. */
     private val look = MutableStateFlow(HomeUi(loading = true, home = HomeState.EMPTY, progress = JourneyProgress.EMPTY, house = HomeCatalog.START_HOUSE))
@@ -63,7 +65,11 @@ class HomeViewModel @Inject constructor(
             HomeIntent.ShopClicked -> effectChannel.trySend(HomeEffect.OpenShop)
             HomeIntent.ArrangeClicked -> effectChannel.trySend(HomeEffect.OpenArrange)
             HomeIntent.HousesClicked -> effectChannel.trySend(HomeEffect.OpenHouses)
-            HomeIntent.TravelClicked -> effectChannel.trySend(HomeEffect.OpenJourney)
+            // «В дорогу»: the player leaves home for where the road stands (spec 3.27)
+            HomeIntent.TravelClicked -> {
+                viewModelScope.launch { venues.followRoad() }
+                effectChannel.trySend(HomeEffect.OpenJourney)
+            }
             HomeIntent.FullscreenClicked -> look.update { it.copy(fullscreen = true) }
             HomeIntent.FullscreenClosed -> look.update { it.copy(fullscreen = false) }
             HomeIntent.GiftTaken -> buy(HomeCatalog.GIFT)

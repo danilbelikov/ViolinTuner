@@ -9,6 +9,9 @@ import com.example.violintuner.core.domain.home.HomeState
 import com.example.violintuner.core.domain.journey.FakeJourneyRepository
 import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.core.domain.journey.TaktEarning
+import com.example.violintuner.core.domain.venue.FakeVenueStore
+import com.example.violintuner.core.domain.venue.VenueRules
+import com.example.violintuner.core.domain.venue.Venues
 import com.example.violintuner.feature.journey.art.SceneMode
 import java.time.Clock
 import java.time.Instant
@@ -67,6 +70,7 @@ class HomeViewModelTest {
     private val clock = Clock.fixed(Instant.parse("2026-09-21T10:00:00Z"), ZoneOffset.UTC)
     private val journey = FakeJourneyRepository()
     private val home = FakeHomeRepository(journey)
+    private val venueStore = FakeVenueStore(initial = VenueRules.HOME)
 
     @Before
     fun setUp() = Dispatchers.setMain(dispatcher)
@@ -77,7 +81,7 @@ class HomeViewModelTest {
     private suspend fun earn(takts: Int) = journey.earn(TaktEarning(clock.millis(), takts, takts, 0, takts))
 
     private fun TestScope.viewModel(): Pair<HomeViewModel, MutableList<HomeEffect>> {
-        val viewModel = HomeViewModel(home, journey, clock)
+        val viewModel = HomeViewModel(home, journey, clock, Venues(venueStore, journey))
         val effects = mutableListOf<HomeEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -209,5 +213,15 @@ class HomeViewModelTest {
         viewModel.onIntent(HomeIntent.LiveHere("villa"))
         runCurrent()
         assertEquals(HomeCatalog.START_HOUSE, viewModel.state.value.house)
+    }
+
+    @Test
+    fun onTheRoadThePlayerLeavesHome() = runTest(dispatcher) {
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(HomeIntent.TravelClicked)
+        runCurrent()
+        // wherever the road stands, now and after the next leg (spec 3.27)
+        assertEquals(null, venueStore.stored.value)
+        assertEquals(HomeEffect.OpenJourney, effects.last())
     }
 }
