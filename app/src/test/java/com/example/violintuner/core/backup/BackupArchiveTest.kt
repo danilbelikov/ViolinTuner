@@ -4,6 +4,8 @@ import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
+import java.io.OutputStream
+import java.util.Arrays
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlinx.coroutines.Job
@@ -194,27 +196,117 @@ class BackupArchiveTest {
 
     @Test
     fun `sizes past four gigabytes go through`() = runTest {
-        // ZIP64: five gigabytes of zeros, written into nothing and counted — deflated, so that it takes seconds, not minutes
-        val size = 5L * 1024 * 1024 * 1024
-        val zeros = BackupEntry("db/huge.bin", BackupPart.DATA, size) {
+        // ZIP64: a video a megabyte past four gigabytes, as a big file of a real copy is. Media go in unsqueezed, so the
+        // archive grows past four gigabytes too, and where its last entry starts no longer fits in 32 bits either.
+        // Unsqueezed is also the cheap way through the zip: deflating the same zeros costs about twice as much.
+        val size = (4L shl 30) + (1 shl 20)
+        val zeros = BackupEntry("sessions/huge.mp4", BackupPart.VIDEO, size) {
             object : InputStream() {
                 var left = size
                 override fun read(): Int = if (left-- > 0) 0 else -1
                 override fun read(b: ByteArray, off: Int, len: Int): Int {
                     if (left <= 0) return -1
                     val count = minOf(len.toLong(), left).toInt()
-                    java.util.Arrays.fill(b, off, off + count, 0)
+                    Arrays.fill(b, off, off + count, 0)
                     left -= count
                     return count
                 }
             }
         }
         var last = 0L
-        val file = folder.newFile("huge.zip")
-        file.outputStream().use { out -> BackupWriter.write(out, manifest(), listOf(zeros)) { last = it.doneBytes } }
+        val archive = MostlyZeros()
+        BackupWriter.write(archive, manifest(), listOf(zeros)) { last = it.doneBytes }
         assertEquals(size, last)
+        assertTrue(archive.size > size)
         var read = 0L
-        BackupReader.verify(file.inputStream(), size) { read = it.doneBytes }
+        BackupReader.verify(archive.input(), size) { read = it.doneBytes }
         assertEquals(size, read)
+    }
+}
+
+/**
+ * An archive of gigabytes kept in memory: its runs of zeros are counted, not stored, and the rest — headers, the
+ * directory — lies in [kept] in its order. [runs] alternate: zeros, other bytes, zeros…
+ */
+private class MostlyZeros : OutputStream() {
+    private val kept = ByteArrayOutputStream()
+    private var runs = LongArray(1024)
+    private var count = 1 // the first run counts zeros, and may count none
+
+    var size = 0L
+        private set
+
+    override fun write(b: Int) = write(byteArrayOf(b.toByte()), 0, 1)
+
+    override fun write(b: ByteArray, off: Int, len: Int) {
+        size += len
+        val end = off + len
+        var i = off
+        while (i < end) {
+            val bytesFrom = firstNonZero(b, i, end)
+            if (bytesFrom > i) add(zeros = true, bytesFrom - i)
+            var zerosFrom = bytesFrom
+            while (zerosFrom < end && b[zerosFrom] != ZERO) zerosFrom++
+            if (zerosFrom > bytesFrom) {
+                add(zeros = false, zerosFrom - bytesFrom)
+                kept.write(b, bytesFrom, zerosFrom - bytesFrom)
+            }
+            i = zerosFrom
+        }
+    }
+
+    private fun add(zeros: Boolean, n: Int) {
+        val lastIsZeros = count % 2 == 1
+        if (lastIsZeros != zeros) {
+            if (count == runs.size) runs = runs.copyOf(count * 2)
+            count++
+        }
+        runs[count - 1] += n.toLong()
+    }
+
+    fun input(): InputStream = object : InputStream() {
+        private val bytes = kept.toByteArray()
+        private var run = 0
+        private var left = runs[0]
+        private var at = 0
+
+        override fun read(): Int {
+            val one = ByteArray(1)
+            return if (read(one, 0, 1) < 0) -1 else one[0].toInt() and 0xFF
+        }
+
+        override fun read(b: ByteArray, off: Int, len: Int): Int {
+            if (len == 0) return 0
+            while (left == 0L) {
+                if (++run == count) return -1
+                left = runs[run]
+            }
+            val n = minOf(len.toLong(), left).toInt()
+            if (run % 2 == 0) {
+                Arrays.fill(b, off, off + n, ZERO)
+            } else {
+                System.arraycopy(bytes, at, b, off, n)
+                at += n
+            }
+            left -= n
+            return n
+        }
+    }
+
+    private companion object {
+        const val ZERO: Byte = 0
+        val ZEROS = ByteArray(64 * 1024)
+
+        /** The first byte from [from] that is not zero, or [to]; compared a block at a time, which is fast. */
+        fun firstNonZero(b: ByteArray, from: Int, to: Int): Int {
+            var i = from
+            while (i < to) {
+                val n = minOf(ZEROS.size, to - i)
+                val at = Arrays.mismatch(b, i, i + n, ZEROS, 0, n)
+                if (at >= 0) return i + at
+                i += n
+            }
+            return to
+        }
     }
 }
