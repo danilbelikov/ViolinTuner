@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -50,6 +51,7 @@ import androidx.compose.ui.unit.IntSize
 import com.example.violintuner.core.domain.journey.JourneyRules
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.feature.journey.JourneyMotion
 import com.example.violintuner.feature.journey.art.rememberSceneCamera
 import com.example.violintuner.feature.journey.art.sceneCamera
@@ -95,6 +97,9 @@ internal val HomeMaxWidth = 560.dp
 internal val HomeCard = RoundedCornerShape(16.dp)
 private val PictureShape = RoundedCornerShape(20.dp)
 private val PictureHeight = 260.dp
+
+/** Room for an icon and the longest word of the two buttons at 360 dp of width. */
+private val HomeButtonPadding = PaddingValues(horizontal = 16.dp)
 
 @Composable
 internal fun itemName(id: String): String = HomeTexts.itemNames[id]?.let { stringResource(it) }.orEmpty()
@@ -272,9 +277,14 @@ private fun About(ui: HomeUi, onIntent: (HomeIntent) -> Unit) {
             )
         }
     }
+    // the stall and the armchair before the words, as the case before «В дорогу» (spec 3.29)
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedButton(onClick = { onIntent(HomeIntent.ShopClicked) }, modifier = Modifier.weight(1f).height(52.dp)) { Text(stringResource(R.string.home_shop)) }
-        OutlinedButton(onClick = { onIntent(HomeIntent.ArrangeClicked) }, modifier = Modifier.weight(1f).height(52.dp)) { Text(stringResource(R.string.home_arrange)) }
+        OutlinedButton(onClick = { onIntent(HomeIntent.ShopClicked) }, modifier = Modifier.weight(1f).height(52.dp), contentPadding = HomeButtonPadding) {
+            IconLabel(AppIcons.Shop, stringResource(R.string.home_shop))
+        }
+        OutlinedButton(onClick = { onIntent(HomeIntent.ArrangeClicked) }, modifier = Modifier.weight(1f).height(52.dp), contentPadding = HomeButtonPadding) {
+            IconLabel(AppIcons.Arrange, stringResource(R.string.home_arrange))
+        }
     }
     if (HomeRules.giftWaiting(ui.home)) {
         // the shop begins with a joy, not with a price tag (handoff 27a3)

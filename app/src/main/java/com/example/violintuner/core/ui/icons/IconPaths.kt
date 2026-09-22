@@ -94,6 +94,9 @@ internal object IconPaths {
     val HOUSE = listOf("M4 11l8-6 8 6", "M6 10v9h12v-9")
     val THEATRE = listOf("M4 19h16", "M6 19V9l6-4 6 4v10", "M9.5 19v-5h5v5")
     val TRAVEL = listOf("M6 7.5h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z", "M8.5 7.5V5.8a2 2 0 0 1 2-2h0a2 2 0 0 1 2 2v1.7", "M4 13h13", "M17.5 6.5l3-3M20.5 6.5v-3h-3")
+    /** Third handoff of the home (`home3/project/home-catalog.js` → `ICONS`, spec 3.29), carried by hand: a stall under a striped awning with scallops — «Лавка»; an armchair — «Обставить». */
+    val SHOP = listOf("M3.5 9.5 5.2 4.5h13.6l1.7 5", "M3.5 9.5a2.125 2.125 0 0 0 4.25 0 2.125 2.125 0 0 0 4.25 0 2.125 2.125 0 0 0 4.25 0 2.125 2.125 0 0 0 4.25 0", "M8.6 4.5 7.75 9.5M15.4 4.5l.85 5", "M5.5 12.5V20h13v-7.5", "M9.5 20v-3.3a1.2 1.2 0 0 1 1.2-1.2h2.6a1.2 1.2 0 0 1 1.2 1.2V20")
+    val ARRANGE = listOf("M6.5 11V7.2A2.2 2.2 0 0 1 8.7 5h6.6a2.2 2.2 0 0 1 2.2 2.2V11", "M4 12.2a1.9 1.9 0 0 1 3.8 0V15h8.4v-2.8a1.9 1.9 0 0 1 3.8 0v6.3H4z", "M6 18.5v2M18 18.5v2")
     /** The language of the interface (spec 3.26): drawn here, in the manner of the set — a globe of one meridian and the equator. */
     val GLOBE = listOf("M12 3a9 9 0 1 0 0 18 9 9 0 1 0 0-18z", "M3 12h18", "M12 3c2.8 2.6 4.2 5.6 4.2 9s-1.4 6.4-4.2 9c-2.8-2.6-4.2-5.6-4.2-9S9.2 5.6 12 3z")
     val STAR_OUTLINE = listOf("M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z")

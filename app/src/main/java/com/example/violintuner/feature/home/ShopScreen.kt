@@ -7,8 +7,7 @@ import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -43,8 +42,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.feature.journey.cityOf
+import androidx.compose.foundation.Canvas
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -62,6 +68,7 @@ import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.core.domain.journey.JourneyRules
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.feature.home.art.HomePicture
+import com.example.violintuner.feature.home.art.CARD_MAX_SCALE
 import com.example.violintuner.feature.home.art.ItemThumb
 import com.example.violintuner.feature.home.art.homeModeNow
 import com.example.violintuner.feature.journey.JourneyTopBar
@@ -73,12 +80,87 @@ import com.example.violintuner.feature.journey.art.sceneCamera
 import com.example.violintuner.feature.journey.cityToOf
 import java.time.LocalDate
 
-// the shelves are places, not tables: dark wood of the maker's, striped cloth of the market (handoff 27b)
-private val ShelfWood = Color(0xFF3A2A22)
-private val ShelfWoodLit = Color(0xFF5A4030)
-private val ShelfCloth = Color(0xFF3E3652)
-private val ShelfClothLit = Color(0xFF4E4468)
 private val TileShape = RoundedCornerShape(14.dp)
+
+// a shelf of the shop (spec 3.29, 5.22): tiles of 100 dp, a picture of 100 × 76 on a board of 6 dp
+private val TileWidth = 100.dp
+private const val PICTURE_RATIO = 0.76f
+private val TileGap = 8.dp
+private val RowGap = 6.dp
+private const val MIN_COLUMNS = 3
+private val BoardHeight = 6.dp
+private val BoardShadow = 5.dp
+private val BoardCorner = 2.dp
+private val StripeWidth = 22.dp
+
+// the card of a thing: the thing large on the material of its shelf, standing on its board
+private val CardPicture = 180.dp
+private val CardBoardInset = 18.dp
+
+/**
+ * What a shelf is made of (spec 3.29; handoff 27b and 28e): dark wood for the maker's and for music,
+ * striped cloth for the market, cloth the colour of the sea for the pets — each with a board of its
+ * own that the things stand on.
+ */
+private enum class ShelfMaterial(val top: Color, val bottom: Color, val stripe: Color?, val board: Color, val boardLit: Color) {
+    WOOD(Color(0xFF4A3428), Color(0xFF2F2119), null, Color(0xFF7E5230), Color(0xFFB07A48)),
+    CLOTH(Color(0xFF3B3450), Color(0xFF3B3450), Color(0xFF342E48), Color(0xFF5B43B8), Color(0xFF7A62D8)),
+    SEA(Color(0xFF2E3A40), Color(0xFF2E3A40), Color(0xFF29343A), Color(0xFF4E7A74), Color(0xFF6FA8A0)),
+    ;
+
+    fun paint(scope: DrawScope) = with(scope) {
+        drawRect(Brush.verticalGradient(listOf(top, bottom)))
+        val band = StripeWidth.toPx()
+        stripe?.let { tone ->
+            var x = band
+            while (x < size.width) {
+                drawRect(tone, topLeft = Offset(x, 0f), size = Size(band, size.height))
+                x += 2 * band
+            }
+        }
+    }
+
+    companion object {
+        fun of(group: HomeGroup): ShelfMaterial = when (group) {
+            HomeGroup.INSTRUMENT, HomeGroup.MUSIC -> WOOD
+            HomeGroup.PET -> SEA
+            else -> CLOTH
+        }
+    }
+}
+
+/** The board of a shelf with its lit edge and the shadow it throws on the cloth below. */
+@Composable
+private fun Board(material: ShelfMaterial, modifier: Modifier) {
+    Canvas(modifier) {
+        val shadow = BoardShadow.toPx()
+        drawRect(Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.35f), Color.Transparent), startY = size.height, endY = size.height + shadow), topLeft = Offset(0f, size.height), size = Size(size.width, shadow))
+        drawRoundRect(Brush.verticalGradient(listOf(material.boardLit, material.board)), cornerRadius = CornerRadius(BoardCorner.toPx()))
+    }
+}
+
+/**
+ * The things of a shelf in rows (spec 3.29, 5.22): as many tiles of 100 dp as there is room for,
+ * never fewer than three, with even gaps; a row not full starts at the left. Under every row — its
+ * board, the width of the shelf.
+ */
+@Composable
+private fun ShelfRows(things: List<HomeItem>, material: ShelfMaterial, tile: @Composable (HomeItem, Dp) -> Unit) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val fits = ((maxWidth + TileGap) / (TileWidth + TileGap)).toInt()
+        val columns = maxOf(MIN_COLUMNS, fits)
+        val width = if (fits >= MIN_COLUMNS) TileWidth else (maxWidth - TileGap * (MIN_COLUMNS - 1)) / MIN_COLUMNS
+        val gap = (maxWidth - width * columns) / (columns - 1)
+        Column(verticalArrangement = Arrangement.spacedBy(RowGap)) {
+            things.chunked(columns).forEach { row ->
+                Box(Modifier.fillMaxWidth()) {
+                    Board(material, Modifier.padding(top = width * PICTURE_RATIO).fillMaxWidth().height(BoardHeight))
+                    Row(horizontalArrangement = Arrangement.spacedBy(gap)) { row.forEach { tile(it, width) } }
+                }
+            }
+        }
+    }
+}
 
 /** A hole in the wall is not a choice: a room always has its window and something behind it. */
 private val NEVER_BARE = setOf("window", "view")
@@ -120,7 +202,7 @@ private fun tagOf(item: HomeItem, ui: HomeUi): Tag = when {
     else -> Tag.PRICE
 }
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShopScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
@@ -143,15 +225,13 @@ fun ShopScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
             HomeGroup.entries.filter { ui.category == null || ui.category == it }.forEach { group ->
                 // what the room came with is not for sale
                 val things = HomeCatalog.items.filter { it.group == group && it.id !in HomeCatalog.startItems }
-                val wooden = group == HomeGroup.INSTRUMENT || group == HomeGroup.MUSIC
+                val material = ShelfMaterial.of(group)
                 Column(
-                    Modifier.fillMaxWidth().clip(HomeCard).background(Brush.verticalGradient(if (wooden) listOf(ShelfWoodLit, ShelfWood) else listOf(ShelfClothLit, ShelfCloth))).padding(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
+                    Modifier.fillMaxWidth().clip(HomeCard).drawBehind { material.paint(this) }.padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 10.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(stringResource(shelfLabel(group)), color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.titleSmall)
-                    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        things.forEach { item -> Tile(item, ui, onIntent) }
-                    }
+                    ShelfRows(things, material) { item, width -> Tile(item, ui, onIntent, width) }
                     if (things.all { HomeRules.owned(it, ui.home) }) {
                         Text(stringResource(R.string.shop_shelf_yours), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                     }
@@ -165,13 +245,13 @@ fun ShopScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
 }
 
 /**
- * A thing on a shelf (handoff 28e): a tile of 100 dp — three in a row at 360 dp of width, four at 412 —
- * that holds the worst of the texts. Where the thing comes from is a pill on the picture, without a
- * preposition, read before the name like a label on the thing; under the board — the name in up to
+ * A thing on a shelf (handoff 28e, spec 3.29): a tile of 100 dp that holds the worst of the texts, the
+ * thing standing on the board of its row. Where the thing comes from is a pill on the picture, without
+ * a preposition, read before the name like a label on the thing; under the board — the name in up to
  * two lines and one line: a price or a state. A thing of a city not reached yet stands faint, «привезут».
  */
 @Composable
-private fun Tile(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit) {
+private fun Tile(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit, width: Dp) {
     val tag = tagOf(item, ui)
     val name = itemName(item.id)
     val city = item.from?.let { cityOf(JourneyRoute.indexOf(it)) }
@@ -184,13 +264,13 @@ private fun Tile(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit) {
     }
     val description = listOfNotNull(name, city, if (tag == Tag.PRICE) stringResource(R.string.shop_price_takts, under) else under).joinToString(", ")
     Column(
-        Modifier.width(100.dp).clip(TileShape)
+        Modifier.width(width).clip(TileShape)
             // a thing of the next city calls to the road: it has no card yet
             .then(if (tag == Tag.LOCKED) Modifier else Modifier.clickable(role = Role.Button) { onIntent(HomeIntent.ItemClicked(item.id)) })
             .clearAndSetSemantics { contentDescription = description },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(Modifier.size(100.dp, 76.dp).clip(TileShape).background(Color.Black.copy(alpha = 0.22f))) {
+        Box(Modifier.size(width, width * PICTURE_RATIO)) {
             Box(Modifier.fillMaxSize().alpha(if (tag == Tag.LOCKED) LOCKED_ALPHA else 1f)) { ItemThumb(item) }
             if (city != null) {
                 Text(
@@ -202,7 +282,7 @@ private fun Tile(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit) {
         }
         Text(
             name, color = Color.White.copy(alpha = if (tag == Tag.LOCKED) 0.55f else 0.92f), fontSize = 11.sp, lineHeight = 14.sp,
-            textAlign = TextAlign.Center, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp),
+            textAlign = TextAlign.Center, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = BoardHeight + 6.dp),
         )
         if (tag == Tag.PRICE) {
             TaktAmount(under, color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium, icon = 12.dp)
@@ -223,7 +303,12 @@ private fun ItemCard(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit)
     val colors = MaterialTheme.colorScheme
     val tag = tagOf(item, ui)
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        Box(Modifier.fillMaxWidth().height(170.dp).clip(HomeCard).background(colors.surfaceContainerHighest)) { ItemThumb(item) }
+        // the thing large and alive, on the material of its shelf and on its board (spec 3.29)
+        val material = ShelfMaterial.of(item.group)
+        Box(Modifier.fillMaxWidth().height(CardPicture).clip(HomeCard).drawBehind { material.paint(this) }) {
+            Board(material, Modifier.align(Alignment.BottomCenter).padding(bottom = CardBoardInset).fillMaxWidth().height(BoardHeight))
+            Box(Modifier.fillMaxSize().padding(top = 12.dp, bottom = CardBoardInset + BoardHeight)) { ItemThumb(item, alive = true, maxScale = CARD_MAX_SCALE) }
+        }
         item.from?.let { Text(stringResource(R.string.shop_from, cityToOf(JourneyRoute.indexOf(it))), color = colors.primary, style = MaterialTheme.typography.labelLarge) }
         Text(itemName(item.id), color = colors.onSurface, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
         itemNote(item.id).takeIf { it.isNotEmpty() }?.let { Text(it, color = colors.onSurface, style = MaterialTheme.typography.bodyLarge) }
