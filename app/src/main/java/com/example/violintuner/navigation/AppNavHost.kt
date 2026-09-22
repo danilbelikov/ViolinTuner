@@ -268,7 +268,11 @@ fun AppNavHost(
         }
         // The title cards between the home and the journey (spec 3.25): each gives its place in the stack to where it leads.
         composable(SPLASH_AWAY_ROUTE) {
-            SplashRoute(SplashKind.AWAY, onDone = { navController.navigate(JOURNEY_ROUTE) { popUpTo(SPLASH_AWAY_ROUTE) { inclusive = true }; launchSingleTop = true } })
+            SplashRoute(SplashKind.AWAY, onDone = {
+                // the player has left home for the road: the journey lies right on «Занятия», so «назад» leads
+                // there and not back into the home, whichever way the home was entered
+                navController.navigate(JOURNEY_ROUTE) { popUpTo(TopLevelDestination.START.route); launchSingleTop = true }
+            })
         }
         composable(SPLASH_HOME_ROUTE) {
             SplashRoute(SplashKind.HOME, onDone = {
