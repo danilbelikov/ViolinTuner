@@ -5,13 +5,17 @@ import java.io.File
 
 /** Remembers that it was asked to sweep; hands out nothing. */
 class FakeShareFiles : ShareFiles {
-    var sweptOlderThanMs: Long? = null
+    var sweeps = 0
+        private set
+    var sweptAtMs: Long? = null
+        private set
 
     override fun processed(audioName: String, settings: SoundSettings, fileName: String): File = File("/share/$fileName")
 
     override suspend fun original(audio: File, fileName: String): File? = null
 
-    override suspend fun deleteOlderThan(nowEpochMs: Long, maxAgeMs: Long) {
-        sweptOlderThanMs = maxAgeMs
+    override suspend fun sweep(nowEpochMs: Long) {
+        sweeps++
+        sweptAtMs = nowEpochMs
     }
 }

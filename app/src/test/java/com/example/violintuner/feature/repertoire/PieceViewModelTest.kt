@@ -111,7 +111,7 @@ class PieceViewModelTest {
     private object NoShareFiles : ShareFiles {
         override fun processed(audioName: String, settings: SoundSettings, fileName: String) = File("/cache/share/$fileName")
         override suspend fun original(audio: File, fileName: String): File = File("/cache/share/$fileName")
-        override suspend fun deleteOlderThan(nowEpochMs: Long, maxAgeMs: Long) = Unit
+        override suspend fun sweep(nowEpochMs: Long) = Unit
     }
 
     private fun TestScope.screen(pieceId: Long, saved: SavedStateHandle = SavedStateHandle(mapOf(PieceViewModel.ARG_PIECE_ID to pieceId))):

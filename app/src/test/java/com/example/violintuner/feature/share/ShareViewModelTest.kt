@@ -83,7 +83,7 @@ class ShareViewModelTest {
         override fun processed(audioName: String, settings: SoundSettings, fileName: String) = File(folder.root, "share/${settings.hashCode()}/$fileName")
         override suspend fun original(audio: File, fileName: String): File? =
             if (originalFails) null else File(folder.root, "share/original/$fileName").also { it.parentFile?.mkdirs(); audio.copyTo(it, overwrite = true) }
-        override suspend fun deleteOlderThan(nowEpochMs: Long, maxAgeMs: Long) = Unit
+        override suspend fun sweep(nowEpochMs: Long) = Unit
     }
 
     private val audioFiles = object : SessionAudioFiles {

@@ -37,7 +37,7 @@ object ShareNames {
  * Where files wait to be handed to other apps: `cache/share/<key>/<name as the receiver sees it>`.
  * The receiver is shown the name of the file on disk, hence the folder per file. A processed file
  * is kept under a key of its recording and its settings, so that the same sound is not rendered
- * twice; everything here is temporary and swept out by age.
+ * twice; everything here is temporary and swept out by age and by weight ([ShareSweep]).
  */
 interface ShareFiles {
     /** Where the processed file of [audioName] with [settings] lives — or will. */
@@ -46,7 +46,8 @@ interface ShareFiles {
     /** A copy of [audio] under [fileName]; null when it cannot be made. */
     suspend fun original(audio: File, fileName: String): File?
 
-    suspend fun deleteOlderThan(nowEpochMs: Long, maxAgeMs: Long)
+    /** Throws out what nobody will read any more; what that is, [ShareSweep] decides. */
+    suspend fun sweep(nowEpochMs: Long)
 }
 
 class AppShareFiles @Inject constructor(
@@ -83,15 +84,36 @@ class AppShareFiles @Inject constructor(
         }
     }
 
-    override suspend fun deleteOlderThan(nowEpochMs: Long, maxAgeMs: Long) = withContext(io) {
-        directory.listFiles().orEmpty()
-            .filter { folder -> folder.walkTopDown().all { nowEpochMs - it.lastModified() > maxAgeMs } }
-            .forEach { it.deleteRecursively() }
+    override suspend fun sweep(nowEpochMs: Long) = withContext(io) {
+        val folders = directory.listFiles().orEmpty().associateBy { it.name }
+        ShareSweep.toDelete(folders.values.map(::look), nowEpochMs).forEach { folders.getValue(it).deleteRecursively() }
+    }
+
+    /** What the sweep is told about a folder. A folder gone under our feet looks ancient and is deleted — that is, nothing happens. */
+    private fun look(folder: File): ShareFolder {
+        val entries = folder.walkTopDown().toList()
+        return ShareFolder(
+            name = folder.name,
+            bytes = entries.filter { it.isFile }.sumOf(::weightOf),
+            touchedAtEpochMs = entries.maxOf { it.lastModified() },
+            heavy = entries.any { entry -> HEAVY.any { entry.name.endsWith(it, ignoreCase = true) } },
+        )
+    }
+
+    /** A hard link (see [original]) costs nothing: those very bytes are already counted under `files/`. */
+    private fun weightOf(file: File): Long = try {
+        if (Os.stat(file.path).st_nlink > 1) 0 else file.length()
+    } catch (e: ErrnoException) {
+        Log.i(TAG, "cannot weigh ${file.name} (${e.message})")
+        file.length()
     }
 
     private companion object {
         const val TAG = "ShareFiles"
         const val DIRECTORY = "share"
         const val HEX = 16
+
+        /** What is as heavy as the thing it was made from: the picture of a take, all the data at once. */
+        val HEAVY = listOf(ShareNames.VIDEO_EXTENSION, ".zip")
     }
 }

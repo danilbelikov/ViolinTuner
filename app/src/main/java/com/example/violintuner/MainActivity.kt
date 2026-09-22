@@ -76,6 +76,8 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
 
     // "When the app is opened" (spec 3.12): the first start and every return from the background.
     LifecycleEventEffect(Lifecycle.Event.ON_START) { startViewModel.onAppOpened() }
+    // And every time it goes away: the temporary files of sending are swept then too (spec 5.11).
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { startViewModel.onAppStopped() }
     val navController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     // null outside the tabs: on the onboarding there is no bottom bar

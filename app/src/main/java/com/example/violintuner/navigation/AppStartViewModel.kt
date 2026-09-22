@@ -60,7 +60,7 @@ class AppStartViewModel @Inject constructor(
     avatarFiles: AvatarFiles,
     private val repertoire: RepertoireRepository,
     waveforms: SessionWaveforms,
-    shareFiles: ShareFiles,
+    private val shareFiles: ShareFiles,
     private val blocks: BlockStore = NoBlocks,
 ) : ViewModel() {
     init {
@@ -68,9 +68,7 @@ class AppStartViewModel @Inject constructor(
         // waveforms are reckoned from the sound and kept beside it; those of sessions that are gone go too
         viewModelScope.launch { waveforms.deleteOrphans(sessions.sessions.first().mapNotNull { it.audioPath }.toSet()) }
         viewModelScope.launch { avatarFiles.deleteOrphans(referenced = profile.profile.first().avatarFile) }
-        viewModelScope.launch { repertoire.deleteOrphanFiles() }
-        // files made to be handed to other apps: a day later nobody is reading them any more
-        viewModelScope.launch { shareFiles.deleteOlderThan(clock.millis(), SHARE_FILES_MAX_AGE_MS) }
+        sweepTemporaries()
         // Trophies are given here rather than where a practice is saved: the entries change
         // from the practice screen, its sheets and the forgotten-practice prompt alike, and
         // this view model lives as long as the app is open. Giving is idempotent, so the
@@ -112,6 +110,19 @@ class AppStartViewModel @Inject constructor(
                 is PracticeCheck.Expired -> PracticePrompt.Summary(summaryOf(running, check.endEpochMs - running.startedAtEpochMs))
             }
         }
+    }
+
+    /**
+     * Every time the app goes away. The temporary files are swept here as well as at the start
+     * (spec 5.11): a phone that is not restarted for days would otherwise keep every video
+     * prepared for sending — a second copy of a take each — until the next cold start.
+     */
+    fun onAppStopped() = sweepTemporaries()
+
+    /** What no one will read again: files made to be handed to other apps, shots of the camera nobody imported. */
+    private fun sweepTemporaries() {
+        viewModelScope.launch { shareFiles.sweep(clock.millis()) }
+        viewModelScope.launch { repertoire.deleteOrphanFiles() }
     }
 
     fun onPromptIntent(intent: PracticePromptIntent) {
@@ -168,7 +179,6 @@ class AppStartViewModel @Inject constructor(
     }
 
     private companion object {
-        const val SHARE_FILES_MAX_AGE_MS = 24 * 60 * 60_000L
         const val STOP_TIMEOUT_MS = 5_000L
     }
 }

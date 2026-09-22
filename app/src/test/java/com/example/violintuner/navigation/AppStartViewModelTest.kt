@@ -63,16 +63,29 @@ class AppStartViewModelTest {
     private val avatarFiles = FakeAvatarFiles()
     private val repertoire = FakeRepertoireRepository()
     private val blocks = FakeBlockStore()
+    private val shareFiles = FakeShareFiles()
 
     private fun viewModel() = AppStartViewModel(
         FakeSettingsRepository(), FakeSessionRepository(), store, PracticeFinisher(repository, store, clock), config, clock,
-        repository, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), profile, avatarFiles, repertoire, FakeSessionWaveforms(), FakeShareFiles(),
+        repository, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), profile, avatarFiles, repertoire, FakeSessionWaveforms(), shareFiles,
         blocks,
     )
 
     private suspend fun running(elapsedMs: Long, lastSoundAgoMs: Long?) {
         store.start(now - elapsedMs)
         if (lastSoundAgoMs != null) store.markSound(now - lastSoundAgoMs)
+    }
+
+    @Test
+    fun `temporary files are swept at the start and every time the app goes away`() = runTest {
+        val viewModel = viewModel()
+        runCurrent()
+        assertEquals(1, shareFiles.sweeps)
+
+        viewModel.onAppStopped()
+        runCurrent()
+        assertEquals(2, shareFiles.sweeps)
+        assertEquals(now, shareFiles.sweptAtMs)
     }
 
     @Test
