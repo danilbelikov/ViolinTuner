@@ -16,6 +16,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathEffect
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -38,8 +39,18 @@ object SceneGrid {
     const val HORIZON = 190f
 }
 
+/**
+ * How a layer is painted in its palette — the brush that fills it (null: nothing to fill), its stroke,
+ * whether it lives: worked out once, when the scene is made ready. A frame only reads it: a postcard is
+ * drawn up to thirty times a second, and a colour looked up and mixed with the air every time was most
+ * of what its frame cost (docs/plan-performance.md).
+ */
+class LayerPaint(val fill: Brush?, val stroke: Color?, val strokeStyle: Stroke?, val alive: Boolean)
+
 /** A scene with its paths built once: the postcard is drawn every frame it is on screen, parsed never again. */
 class PreparedScene(val scene: Scene, val mode: SceneMode, val paths: List<Path>, val bounds: List<Rect>) {
+    val paints: List<LayerPaint> = paintsOf(scene, mode, bounds)
+
     /** A place drawn for the whole screen has a high sky (spec 3.23): its stars and clouds are drawn over it. */
     val highSky: Boolean = scene.layers.any { it.fill == SceneLayer.SKY_HIGH }
 
@@ -197,53 +208,34 @@ private fun DrawScope.seen(left: Float, top: Float, panX: Float, k: Float): Rect
  */
 private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, seconds: Float?, lightAlpha: Float = 1f, seen: Rect? = null) {
     val scene = prepared.scene
-    val sky = ScenePalette.token("sky", scene.location, prepared.mode) ?: NIGHT
-    val skyLow = ScenePalette.token("skyLow", scene.location, prepared.mode) ?: NIGHT
-    val skyHigh = ScenePalette.token("skyHigh", scene.location, prepared.mode) ?: sky
-    val glow = ScenePalette.token("glow", scene.location, prepared.mode) ?: ScenePalette.TRANSPARENT_GLOW
     scene.layers.forEachIndexed { index, layer ->
         val path = prepared.paths[index]
         val bounds = prepared.bounds[index]
         if (seen == null || !outOfSight(layer, bounds, seen, (SceneCamera.shift(panX, layer.depth) - panX) / k)) {
-            val brush: Brush? = when {
-                layer.fill == SceneLayer.SKY -> Brush.verticalGradient(listOf(Color(sky), Color(skyLow)), startY = 0f, endY = SceneGrid.HORIZON)
-                layer.fill == SceneLayer.SKY_HIGH -> Brush.verticalGradient(listOf(Color(skyHigh), Color(sky)), startY = bounds.top, endY = bounds.bottom)
-                layer.fill == SceneLayer.GLOW -> radial(glow, bounds)
-                layer.warmGlow -> radial(ScenePalette.WARM_GLOW, bounds)
-                else -> ScenePalette.colorOf(layer.fill, layer.depth, scene, prepared.mode)?.let { Color(it) }?.let { androidx.compose.ui.graphics.SolidColor(it) }
-            }
-            val alive = seconds != null && SceneMotion.moves(layer, prepared.mode)
+            val paint = prepared.paints[index]
+            val alive = seconds != null && paint.alive
             val own = if (layer.fill == SceneLayer.GLOW || layer.warmGlow) layer.opacity * lightAlpha else layer.opacity
             val alpha = if (alive) own * SceneMotion.alpha(layer, index, prepared.mode, seconds!!) else own
             val drift = if (alive) SceneMotion.drift(layer, index, seconds!!) else 0f
-            val draw: DrawScope.() -> Unit = {
-                if (!layer.fillNone && brush != null) drawPath(path, brush, alpha = alpha)
-                val stroke = layer.stroke?.let { ScenePalette.colorOf(it, layer.depth, scene, prepared.mode) }
-                if (stroke != null && layer.strokeWidth > 0f) {
-                    drawPath(path, Color(stroke), alpha = alpha, style = Stroke(layer.strokeWidth, cap = StrokeCap.Round, pathEffect = layer.anim?.dash?.let { PathEffect.dashPathEffect(floatArrayOf(it.first, it.second)) }))
-                }
-            }
             val moved = if (alive && layer.anim != null) SceneMotion.moved(layer.anim, bounds.center.x, bounds.center.y, index, seconds!!) else null
             translate(SceneCamera.shift(panX, layer.depth) + drift * k, 0f) {
                 scale(k, k, pivot = Offset.Zero) {
                     if (moved != null) {
-                        if (moved.alpha <= 0f) return@scale
-                        val own: DrawScope.() -> Unit = {
-                            if (!layer.fillNone && brush != null) drawPath(path, brush, alpha = alpha * moved.alpha)
-                        }
+                        val fill = paint.fill
+                        if (moved.alpha <= 0f || fill == null) return@scale
                         translate(moved.dx, moved.dy) {
                             when {
-                                moved.flap != 1f -> scale(1f, moved.flap, pivot = bounds.center) { own() }
-                                moved.degrees != 0f -> rotate(moved.degrees, pivot = Offset(moved.pivotX, moved.pivotY)) { own() }
-                                else -> own()
+                                moved.flap != 1f -> scale(1f, moved.flap, pivot = bounds.center) { drawPath(path, fill, alpha = alpha * moved.alpha) }
+                                moved.degrees != 0f -> rotate(moved.degrees, pivot = Offset(moved.pivotX, moved.pivotY)) { drawPath(path, fill, alpha = alpha * moved.alpha) }
+                                else -> drawPath(path, fill, alpha = alpha * moved.alpha)
                             }
                         }
                         return@scale
                     }
                     if (layer.tx != 0f || layer.ty != 0f || layer.scale != 1f) {
-                        translate(layer.tx, layer.ty) { scale(layer.scale, layer.scale, pivot = Offset.Zero) { draw() } }
+                        translate(layer.tx, layer.ty) { scale(layer.scale, layer.scale, pivot = Offset.Zero) { drawLayer(path, paint, alpha) } }
                     } else {
-                        draw()
+                        drawLayer(path, paint, alpha)
                     }
                 }
             }
@@ -256,6 +248,34 @@ private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, 
                 }
             }
         }
+    }
+}
+
+private fun DrawScope.drawLayer(path: Path, paint: LayerPaint, alpha: Float) {
+    paint.fill?.let { drawPath(path, it, alpha = alpha) }
+    if (paint.stroke != null && paint.strokeStyle != null) drawPath(path, paint.stroke, alpha = alpha, style = paint.strokeStyle)
+}
+
+/** The paints of every layer of [scene] in [mode]; [bounds] — where the layers are, for the gradients that follow them. */
+private fun paintsOf(scene: Scene, mode: SceneMode, bounds: List<Rect>): List<LayerPaint> {
+    val sky = ScenePalette.token("sky", scene.location, mode) ?: NIGHT
+    val skyLow = ScenePalette.token("skyLow", scene.location, mode) ?: NIGHT
+    val skyHigh = ScenePalette.token("skyHigh", scene.location, mode) ?: sky
+    val glow = ScenePalette.token("glow", scene.location, mode) ?: ScenePalette.TRANSPARENT_GLOW
+    val band = Brush.verticalGradient(listOf(Color(sky), Color(skyLow)), startY = 0f, endY = SceneGrid.HORIZON)
+    return scene.layers.mapIndexed { index, layer ->
+        val area = bounds[index]
+        val fill = when {
+            layer.fillNone -> null
+            layer.fill == SceneLayer.SKY -> band
+            layer.fill == SceneLayer.SKY_HIGH -> Brush.verticalGradient(listOf(Color(skyHigh), Color(sky)), startY = area.top, endY = area.bottom)
+            layer.fill == SceneLayer.GLOW -> radial(glow, area)
+            layer.warmGlow -> radial(ScenePalette.WARM_GLOW, area)
+            else -> ScenePalette.colorOf(layer.fill, layer.depth, scene, mode)?.let { SolidColor(Color(it)) }
+        }
+        val stroke = layer.stroke?.takeIf { layer.strokeWidth > 0f }?.let { ScenePalette.colorOf(it, layer.depth, scene, mode) }?.let { Color(it) }
+        val style = stroke?.let { Stroke(layer.strokeWidth, cap = StrokeCap.Round, pathEffect = layer.anim?.dash?.let { PathEffect.dashPathEffect(floatArrayOf(it.first, it.second)) }) }
+        LayerPaint(fill, stroke, style, SceneMotion.moves(layer, mode))
     }
 }
 

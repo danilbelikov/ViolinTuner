@@ -59,6 +59,10 @@ data class SceneAnim(
     val glintPeriod: Float? = null,
     val peck: Swing? = null,
 ) {
+    /** It changes in time at all: a dash alone is only how its stroke is drawn. */
+    val lives: Boolean
+        get() = travels || flashPeriod != null || blinkPeriod != null || flick != null || glintPeriod != null
+
     /** It goes somewhere — not only brightens and dims where it stands: such a layer is drawn wherever the view is. */
     val travels: Boolean
         get() = ride != null || bob != null || bird != null || fly != null || fall != null || rise != null || sway != null || swing != null || peck != null
@@ -230,7 +234,7 @@ object ScenePalette {
     fun parse(value: String): Long? = when {
         value.startsWith("#") && value.length == 7 -> 0xFF000000L or value.substring(1).toLong(16)
         value.startsWith("rgba") -> {
-            val n = Regex("[\\d.]+").findAll(value).map { it.value.toFloat() }.toList()
+            val n = NUMBER.findAll(value).map { it.value.toFloat() }.toList()
             if (n.size < 4) null else (Math.round(n[3] * 255).toLong() shl ALPHA_SHIFT) or (n[0].toLong() shl 16) or (n[1].toLong() shl 8) or n[2].toLong()
         }
         else -> null
@@ -252,4 +256,7 @@ object ScenePalette {
         (if (mode == SceneMode.DAY) HomeCatalogData.dayTokens[name] else null) ?: HomeCatalogData.tokens[name]
 
     private const val ALPHA_SHIFT = 24
+
+    /** A number in `rgba(…)`: one pattern for the whole app, not one a colour. */
+    private val NUMBER = Regex("[\\d.]+")
 }

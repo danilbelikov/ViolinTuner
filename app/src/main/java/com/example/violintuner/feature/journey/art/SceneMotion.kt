@@ -63,7 +63,7 @@ object SceneMotion {
     private const val WATER = "waterLit"
 
     fun moves(layer: SceneLayer, mode: SceneMode): Boolean =
-        (layer.anim != null && layer.anim != SceneAnim(dash = layer.anim.dash)) || layer.fill == WATER || (mode == SceneMode.EVENING && (layer.fill in WINDOWS || layer.fill == SceneLayer.GLOW || layer.warmGlow))
+        layer.anim?.lives == true || layer.fill == WATER || (mode == SceneMode.EVENING && (layer.fill in WINDOWS || layer.fill == SceneLayer.GLOW || layer.warmGlow))
 
     /** What the layer's own opacity is multiplied by at [seconds]; 1 for a layer that does not flicker. */
     fun alpha(layer: SceneLayer, index: Int, mode: SceneMode, seconds: Float): Float = when {

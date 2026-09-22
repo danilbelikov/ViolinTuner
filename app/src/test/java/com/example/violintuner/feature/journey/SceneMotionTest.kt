@@ -28,6 +28,15 @@ class SceneMotionTest {
     }
 
     @Test
+    fun aDashAloneIsNoLife_everyOtherMovementIs() {
+        assertFalse(SceneAnim.parse("dash:4:3")!!.lives)
+        assertFalse(SceneMotion.moves(layer("trim").copy(anim = SceneAnim.parse("dash:4:3")), SceneMode.EVENING))
+        for (text in listOf("flick:4", "glint:3", "flash:1.4", "blink:5", "ride:16:-192:516", "peck:3:-14:1:1", "rise:5:0:30", "swing:9:2.4:93:-140", "fall:7:122:126")) {
+            assertTrue(text, SceneAnim.parse(text)!!.lives)
+        }
+    }
+
+    @Test
     fun aWindowWaversALittleAndNeverGoesOut() {
         val window = layer("window")
         val alphas = (0..400).map { SceneMotion.alpha(window, index = 7, SceneMode.EVENING, it / 10f) }
