@@ -2,6 +2,7 @@ package com.example.violintuner.feature.journey
 
 import com.example.violintuner.feature.journey.art.SceneAnim
 import com.example.violintuner.feature.journey.art.SceneCamera
+import com.example.violintuner.feature.journey.art.SceneFrame
 import com.example.violintuner.feature.journey.art.SceneGrid
 import com.example.violintuner.feature.journey.art.SceneLayer
 import com.example.violintuner.feature.journey.art.SceneMode
@@ -121,6 +122,92 @@ class SceneMotionTest {
         val (x, y) = SceneCamera.clamp(500f, 500f, whole, w, h)
         assertEquals(0f, x, 0f)
         assertEquals(0f, y, 0f)
+    }
+
+    // the full screen of a stop within its frame (spec 3.23): screens in pixels — tall, small, lying down, a tablet
+    private val boxes = listOf(1080f to 2400f, 720f to 1280f, 2400f to 1080f, 1600f to 2560f)
+    private val tall = SceneFrame(-420f, 600f)
+    private val stage = SceneFrame(-240f, 480f)
+
+    /** What the box shows at [zoom] and pan, in units of the grid: left, top, right, bottom of the near plane. */
+    private fun seen(frame: SceneFrame, zoom: Float, panX: Float, panY: Float, w: Float, h: Float): List<Float> {
+        val k = SceneCamera.cover(w, h) * zoom
+        val left = (w - SceneGrid.WIDTH * k) / 2 + panX
+        val top = frame.originY(zoom, w, h) + panY
+        return listOf(-left / k, -top / k, (w - left) / k, (h - top) / k)
+    }
+
+    @Test
+    fun aCardAloneOpensAsItDid_byItsHeight_andThereIsNoWayOutIntoTheDark() {
+        val frame = SceneFrame.CARD
+        for ((w, h) in boxes) {
+            assertEquals(SceneCamera.COVER_ZOOM, frame.openZoom(w, h), 0.0001f)
+            assertEquals(SceneCamera.COVER_ZOOM, frame.zoom(1f, 0.01f, w, h), 0.0001f)
+            // where it stands is where the card always stood
+            assertEquals(SceneCamera.top(1f, w, h, outdoors = true), frame.originY(1f, w, h), 0.01f)
+        }
+        // covering, closer, and back where it opened — there is no whole card under an empty sky any more
+        val closer = frame.nextZoom(1f, 1080f, 2400f)
+        assertEquals(SceneCamera.DOUBLE_TAP_ZOOM, closer, 0f)
+        assertEquals(1f, frame.nextZoom(closer, 1080f, 2400f), 0f)
+        assertFalse(frame.beyondTheCard)
+    }
+
+    @Test
+    fun aPlaceDrawnAsTallAsTheRoomsOfTheHomeOpensWholeByItsWidth_theCardInTheMiddle() {
+        val (w, h) = 1080f to 2400f
+        val open = tall.openZoom(w, h)
+        assertEquals(SceneCamera.wholeZoom(w, h), open, 0.0001f)
+        val (left, top, right, bottom) = seen(tall, open, 0f, 0f, w, h)
+        assertEquals(0f, left, 0.01f)
+        assertEquals(SceneGrid.WIDTH, right, 0.01f)
+        // the card's band is in the middle of the screen: as much drawn above it as below
+        assertEquals(SceneGrid.HEIGHT / 2, (top + bottom) / 2, 0.01f)
+        assertTrue(top >= tall.top && bottom <= tall.bottom)
+        assertTrue(tall.beyondTheCard)
+        // lying down it opens as the card did: by the width, which is the card's own cover there
+        assertEquals(SceneCamera.COVER_ZOOM, tall.openZoom(h, w), 0.0001f)
+    }
+
+    @Test
+    fun theFullScreenNeverShowsWhatIsNotDrawn_atAnyZoomAndAnyPan() {
+        for (frame in listOf(SceneFrame.CARD, tall, stage)) for ((w, h) in boxes) {
+            for (zoom in listOf(0f, frame.openZoom(w, h), 1f, 1.7f, SceneCamera.MAX_ZOOM, 9f)) {
+                val z = frame.zoom(zoom, 1f, w, h)
+                for (panX in listOf(-99_999f, 0f, 99_999f)) for (panY in listOf(-99_999f, 0f, 99_999f)) {
+                    val (x, y) = frame.clamp(panX, panY, z, w, h)
+                    val (left, top, right, bottom) = seen(frame, z, x, y, w, h)
+                    val where = "$frame on ${w.toInt()}×${h.toInt()} at $z"
+                    assertTrue("$where shows left of the drawing", left >= -0.01f)
+                    assertTrue("$where shows right of the drawing", right <= SceneGrid.WIDTH + 0.01f)
+                    assertTrue("$where shows above the drawing", top >= frame.top - 0.01f)
+                    assertTrue("$where shows below the drawing", bottom <= frame.bottom + 0.01f)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun aDoubleTapWalksRound_whereItOpened_theCardByItsHeight_closer() {
+        val (w, h) = 1080f to 2400f
+        val open = tall.openZoom(w, h)
+        // 0 is the view it opened at: the size of the box was not known yet
+        assertEquals(SceneCamera.COVER_ZOOM, tall.nextZoom(0f, w, h), 0f)
+        assertEquals(SceneCamera.COVER_ZOOM, tall.nextZoom(open, w, h), 0f)
+        assertEquals(SceneCamera.DOUBLE_TAP_ZOOM, tall.nextZoom(1f, w, h), 0f)
+        assertEquals(open, tall.nextZoom(2f, w, h), 0f)
+        // a pinch from the view it opened at starts from there as well
+        assertEquals(open * 1.5f, tall.zoom(0f, 1.5f, w, h), 0.0001f)
+    }
+
+    @Test
+    fun aFrameTheBoxHasOutgrownIsCentred_notACrash() {
+        // a zoom below the frame's own — the phone turned, the other view came in — until it is settled
+        val (w, h) = 1080f to 2400f
+        val origin = SceneFrame.CARD.originY(0.2f, w, h)
+        val k = SceneCamera.cover(w, h) * 0.2f
+        assertEquals((h - SceneGrid.HEIGHT * k) / 2, origin, 0.01f)
+        assertEquals(0f to 0f, SceneFrame.CARD.clamp(500f, 500f, 0.2f, w, h))
     }
 
     @Test

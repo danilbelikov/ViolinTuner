@@ -86,8 +86,17 @@ data class SceneAnim(
     }
 }
 
-/** [overrides] are colours of tokens that belong to this very scene — the wallpaper somebody chose — and win over every palette. */
-data class Scene(val location: String, val aerial: Boolean, val layers: List<SceneLayer>, val overrides: Map<String, Long> = emptyMap())
+/**
+ * [overrides] are colours of tokens that belong to this very scene — the wallpaper somebody chose — and win over every palette.
+ * [frame] is how far up and down it is drawn: the full screen never looks past it.
+ */
+data class Scene(
+    val location: String,
+    val aerial: Boolean,
+    val layers: List<SceneLayer>,
+    val overrides: Map<String, Long> = emptyMap(),
+    val frame: SceneFrame = SceneFrame.CARD,
+)
 
 /**
  * Reads a scene exported from the handoff (`assets/journey/<key>.<mode>.scene`): a header and one
@@ -103,6 +112,7 @@ object SceneParser {
             location = header.getValue("loc"),
             aerial = header["aerial"] == "1",
             layers = lines.drop(1).map(::layerOf),
+            frame = header["frame"]?.let(SceneFrame::parse) ?: SceneFrame.CARD,
         )
     }
 

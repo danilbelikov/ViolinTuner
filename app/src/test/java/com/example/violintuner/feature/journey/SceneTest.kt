@@ -4,6 +4,7 @@ import com.example.violintuner.core.domain.journey.JourneyRoute
 import com.example.violintuner.feature.journey.art.JourneySilhouettes
 import com.example.violintuner.feature.journey.art.Scene
 import com.example.violintuner.feature.journey.art.SceneAnim
+import com.example.violintuner.feature.journey.art.SceneFrame
 import com.example.violintuner.feature.journey.art.SceneLayer
 import com.example.violintuner.feature.journey.art.SceneMode
 import com.example.violintuner.feature.journey.art.ScenePalette
@@ -31,6 +32,18 @@ class SceneTest {
         assertTrue(scene.aerial)
         assertEquals(SceneLayer("wall", 1, 1f, 0f, 0f, 1f, false, null, 0f, false, "M0 0h10v10Z"), scene.layers[0])
         assertEquals(SceneLayer("rgba(20,16,30,.28)", 2, 0.5f, 3f, 4f, 2f, true, "trim", 1.5f, true, "M1 1h2Z", SceneAnim(ride = SceneAnim.Ride(16f, -192f, 516f))), scene.layers[1])
+        // a scene that does not say how far it is drawn is a card alone
+        assertEquals(SceneFrame.CARD, scene.frame)
+    }
+
+    @Test
+    fun `a scene says how far up and down it is drawn, and its frame always holds the card`() {
+        assertEquals(SceneFrame(-420f, 600f), SceneParser.parse("loc=vienna;aerial=1;frame=-420,600\nwall\t1\t\t\t\t\t\t\t\t\tM0 0h10v10Z\t\n").frame)
+        assertEquals(SceneFrame(-420f, 600f), SceneFrame.parse(" -420 , 600 "))
+        // a slip widens the frame to the card rather than letting the camera look past what is drawn
+        assertEquals(SceneFrame(0f, 260f), SceneFrame.parse("40,200"))
+        assertNull(SceneFrame.parse("-420"))
+        assertNull(SceneFrame.parse("up,down"))
     }
 
     @Test
@@ -58,6 +71,7 @@ class SceneTest {
             val scene = SceneParser.parse(file.readText())
             assertEquals("${stop.id}Stage", scene.location)
             assertTrue("a hall has no air", !scene.aerial)
+            assertEquals(SceneFrame(-240f, 480f), scene.frame)
         }
     }
 
@@ -69,6 +83,7 @@ class SceneTest {
             val scene = SceneParser.parse(file.readText())
             val mode = if (file.name.contains(".day.")) SceneMode.DAY else SceneMode.EVENING
             assertTrue(file.name, scene.layers.size > 20)
+            assertTrue("${file.name} holds the card in its frame", scene.frame.top <= 0f && scene.frame.bottom >= 260f)
             for (layer in scene.layers) {
                 if (layer.fill != SceneLayer.SKY && layer.fill != SceneLayer.GLOW && !layer.warmGlow && !layer.fillNone) {
                     assertNotNull("${file.name}: ${layer.fill}", ScenePalette.colorOf(layer.fill, layer.depth, scene, mode))

@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.example.violintuner.core.domain.journey.JourneyStop
+import com.example.violintuner.core.domain.journey.StopView
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
@@ -124,6 +125,9 @@ fun rememberScene(sceneKey: String?, mode: SceneMode, folder: String = "journey"
     return prepared
 }
 
+/** The view of [stop] asked for — inside or out — or its main one where it has only that. */
+fun viewOf(stop: JourneyStop, inside: Boolean): StopView? = stop.views.firstOrNull { it.inside == inside } ?: stop.views.firstOrNull()
+
 /**
  * A postcard (spec 3.23, handoff 26b): the layers of the scene in their order, filling the box
  * like a photograph does — cropped, never stretched. What has no picture yet is drawn from its
@@ -138,10 +142,13 @@ fun Postcard(
     inside: Boolean = false,
     /** Seconds of a living postcard ([rememberSceneSeconds]); null — a still one. Read while drawing. */
     seconds: State<Float>? = null,
-    /** Zoom, pan x, pan y in pixels — already within [SceneCamera.clamp]; null — the whole card, centred. Read while drawing. */
+    /**
+     * Zoom, pan x, pan y in pixels, for the full screen: kept within the scene's [SceneFrame] here as
+     * well, whatever the box has become since; null — the card's band covering the box. Read while drawing.
+     */
     camera: (() -> Triple<Float, Float, Float>)? = null,
 ) {
-    val view = stop.views.firstOrNull { it.inside == inside } ?: stop.views.firstOrNull()
+    val view = viewOf(stop, inside)
     val prepared = rememberScene(view?.scene, mode)
     val silhouette = remember(stop.id) { JourneySilhouettes.paths[stop.id].orEmpty().map { PathParser().parsePathString(it).toPath() } }
     Canvas(
@@ -150,12 +157,14 @@ fun Postcard(
             .background(Color(NIGHT))
             .semantics { contentDescription = description },
     ) {
-        // xMidYMid slice: the grid covers the box, its centre stays the centre
-        val (zoom, panX, panY) = camera?.invoke() ?: Triple(1f, 0f, 0f)
+        // xMidYMid slice: the card's band covers the box, its centre stays the centre
+        val frame = prepared?.scene?.frame ?: SceneFrame.CARD
+        val (wanted, wantedX, wantedY) = camera?.invoke() ?: Triple(SceneCamera.COVER_ZOOM, 0f, 0f)
+        val zoom = wanted.coerceIn(frame.openZoom(size.width, size.height), SceneCamera.MAX_ZOOM)
+        val (panX, panY) = frame.clamp(wantedX, wantedY, zoom, size.width, size.height)
         val k = SceneCamera.cover(size.width, size.height) * zoom
         val t = seconds?.value
-        val top = SceneCamera.top(zoom, size.width, size.height, outdoors = prepared?.scene?.aerial ?: true)
-        translate((size.width - SceneGrid.WIDTH * k) / 2, top + panY) {
+        translate((size.width - SceneGrid.WIDTH * k) / 2, frame.originY(zoom, size.width, size.height) + panY) {
             when {
                 // the planes are shifted one by one — that is the parallax — in pixels, then scaled
                 prepared != null -> drawScene(prepared, k, panX, t)

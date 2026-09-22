@@ -152,7 +152,8 @@ object SceneMotion {
 /**
  * Where the eye stands before a postcard shown larger than its frame: a zoom and a pan in pixels.
  * The planes answer the pan by their depth — the far one lags, which is all the parallax there is.
- * Pure geometry, with tests.
+ * Pure geometry, with tests. The home on the whole screen goes by [wholeZoom], [top] and [clamp];
+ * the full screen of a stop is kept within what its scene has drawn — [SceneFrame].
  */
 object SceneCamera {
     /** 1 is the zoom at which the picture covers the box. */
@@ -203,6 +204,80 @@ object SceneCamera {
 
     /** The sideways shift of a plane, in pixels, for a pan of [panX]. */
     fun shift(panX: Float, depth: Int): Float = panX * FOLLOW[depth.coerceIn(0, 2)]
+}
+
+/**
+ * How far up and down a scene is drawn, in units of the grid (spec 3.23): a card alone is just its
+ * band 0…260, a hall from the stage −240…480, a view drawn for the whole screen −420…600 like the
+ * rooms of the home. The full screen of a stop is kept within it: it opens at the widest view the
+ * frame still covers, and no pinch or drag goes past it — what is not drawn is never shown. Zooms
+ * are the camera's: 1 covers the box with the card's band. Pure geometry, with tests.
+ */
+data class SceneFrame(val top: Float, val bottom: Float) {
+    /** How tall the drawing is. */
+    val span: Float get() = bottom - top
+
+    /** Drawn beyond the card: the full screen opens whole by its width, the way the home does. */
+    val beyondTheCard: Boolean get() = span > SceneGrid.HEIGHT + EPSILON
+
+    /** The least zoom at which the frame covers the box: where the full screen opens and where the way out ends. */
+    fun openZoom(width: Float, height: Float): Float = maxOf(width / SceneGrid.WIDTH, height / span) / SceneCamera.cover(width, height)
+
+    /** [current] below [openZoom] — 0 before the box is known — counts as the view it opened at. */
+    fun zoom(current: Float, change: Float, width: Float, height: Float): Float {
+        val open = openZoom(width, height)
+        return (current.coerceAtLeast(open) * change).coerceIn(open, SceneCamera.MAX_ZOOM)
+    }
+
+    /** A double tap walks round: where it opened → the card by its height → closer → where it opened. */
+    fun nextZoom(current: Float, width: Float, height: Float): Float {
+        val open = openZoom(width, height)
+        val now = current.coerceAtLeast(open)
+        val next = when {
+            now > SceneCamera.COVER_ZOOM + ZOOM_EPSILON -> open
+            now < SceneCamera.COVER_ZOOM - ZOOM_EPSILON -> SceneCamera.COVER_ZOOM
+            else -> SceneCamera.DOUBLE_TAP_ZOOM
+        }
+        return next.coerceAtLeast(open)
+    }
+
+    /**
+     * Where the grid's y 0 stands in the box, in pixels, at [zoom]: the card's band in the middle of
+     * the box, moved only as far as the frame asks — its top never below the top of the box, its
+     * bottom never above the bottom. A frame lower than the box (a zoom below [openZoom]) is centred.
+     */
+    fun originY(zoom: Float, width: Float, height: Float): Float {
+        val k = SceneCamera.cover(width, height) * zoom
+        val middle = height / 2 - SceneGrid.HEIGHT / 2 * k
+        val lowest = -top * k
+        val highest = height - bottom * k
+        return if (highest <= lowest) middle.coerceIn(highest, lowest) else (lowest + highest) / 2
+    }
+
+    /** The pan kept within the frame: the near plane never shows its side edge, and nothing above or below the frame comes in. */
+    fun clamp(panX: Float, panY: Float, zoom: Float, width: Float, height: Float): Pair<Float, Float> {
+        val k = SceneCamera.cover(width, height) * zoom
+        val overX = ((SceneGrid.WIDTH * k - width) / 2).coerceAtLeast(0f)
+        val origin = originY(zoom, width, height)
+        val down = (-top * k - origin).coerceAtLeast(0f)
+        val up = (height - bottom * k - origin).coerceAtMost(0f)
+        return panX.coerceIn(-overX, overX) to panY.coerceIn(up, down)
+    }
+
+    companion object {
+        /** A card alone: its band and nothing more. */
+        val CARD = SceneFrame(0f, SceneGrid.HEIGHT)
+
+        /** `frame=top,bottom` in the header of a scene; a frame always holds the card's band, so a slip widens it instead of breaking the camera. */
+        fun parse(text: String): SceneFrame? {
+            val numbers = text.split(',').mapNotNull { it.trim().toFloatOrNull() }
+            if (numbers.size != 2) return null
+            return SceneFrame(minOf(numbers[0], 0f), maxOf(numbers[1], SceneGrid.HEIGHT))
+        }
+
+        private const val EPSILON = 0.5f
+        private const val ZOOM_EPSILON = 0.01f
+    }
 }
 
 /**
