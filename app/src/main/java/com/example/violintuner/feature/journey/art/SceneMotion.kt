@@ -43,6 +43,9 @@ object SceneMotion {
     /** The least time between two frames of a living postcard: thirty a second is plenty for something this slow. */
     const val FRAME_NANOS = 33_000_000L
 
+    /** The same for the picture behind Live: it lives only while the violin is silent, and a pause is not a picture to watch (docs/plan-performance.md). */
+    const val LIVE_FRAME_NANOS = 66_000_000L
+
     const val BIRD_FADE = 12f
     const val BIRD_BOB = 3f
     const val BIRD_FLAP_HZ = 2.6f
@@ -409,7 +412,7 @@ private const val FROZEN_TICK = 1e-4f
  * frames are spent on a dark picture. Null with «убрать анимации»: the picture is still.
  */
 @Composable
-fun rememberPausableSceneSeconds(running: () -> Boolean): State<Float>? {
+fun rememberPausableSceneSeconds(frameNanos: Long = SceneMotion.FRAME_NANOS, running: () -> Boolean): State<Float>? {
     val reduce = LocalReduceMotion.current
     val seconds = remember { mutableFloatStateOf(0f) }
     val live by rememberUpdatedState(running)
@@ -420,7 +423,7 @@ fun rememberPausableSceneSeconds(running: () -> Boolean): State<Float>? {
             var last = withFrameNanos { it }
             while (live()) {
                 val now = withFrameNanos { it }
-                if (now - last >= SceneMotion.FRAME_NANOS) {
+                if (now - last >= frameNanos) {
                     seconds.floatValue += (now - last) / NANOS_PER_SECOND
                     last = now
                 }

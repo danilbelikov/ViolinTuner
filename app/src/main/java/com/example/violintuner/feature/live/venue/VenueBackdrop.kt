@@ -8,24 +8,27 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.isSpecified
-import androidx.compose.ui.geometry.toRect
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.graphics.ColorMatrix
-import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.drawIntoCanvas
 import androidx.compose.ui.graphics.drawscope.translate
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.layer.CompositingStrategy
+import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.layer.drawLayer
+import androidx.compose.ui.platform.LocalGraphicsContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.toIntSize
 import com.example.violintuner.core.domain.home.HomeRules
 import com.example.violintuner.core.domain.home.HomeState
 import com.example.violintuner.core.domain.venue.Venue
@@ -34,6 +37,7 @@ import com.example.violintuner.feature.home.art.homeModeNow
 import com.example.violintuner.feature.home.art.rememberHouseArt
 import com.example.violintuner.feature.journey.art.PreparedScene
 import com.example.violintuner.feature.journey.art.SceneMode
+import com.example.violintuner.feature.journey.art.SceneMotion
 import com.example.violintuner.feature.journey.art.drawPrepared
 import com.example.violintuner.feature.journey.art.prepare
 import com.example.violintuner.feature.journey.art.rememberPausableSceneSeconds
@@ -77,7 +81,7 @@ private fun rememberRoomPicture(home: HomeState?): PreparedScene? {
  * going down with [darkness] — the colours to the dusk, the lamps to a quarter, the life of the scene
  * frozen — and over it the veil round the ring and the curtain over the top while the light is on, and
  * the light of the zone while it is out. Everything that changes on every frame is read while drawing: the picture itself
- * is its own layer and is drawn again only while the light changes or the scene lives.
+ * is its own layer ([KeptPicture]) and is drawn again only while the light changes or the scene lives.
  *
  * [ringCenter] and [ringDiameter] are in pixels of this box; [fadeInto] — the colour of the tab bar
  * under the picture, so that the picture does not end with a knife; null when there is no bar.
@@ -116,18 +120,56 @@ fun VenueBackdrop(
 @Composable
 private fun PlacePicture(picture: PreparedScene, kind: PictureKind, landscape: Boolean, darkness: () -> Float, surface: Color) {
     // the scene lives while the light is on and stops where it is when it goes out (handoff `light.freeze`)
-    val seconds = rememberPausableSceneSeconds { darkness() < 1f }
+    val seconds = rememberPausableSceneSeconds(SceneMotion.LIVE_FRAME_NANOS) { darkness() < 1f }
     val surfaceRgb = remember(surface) { floatArrayOf(surface.red, surface.green, surface.blue) }
-    Canvas(Modifier.fillMaxSize().graphicsLayer()) {
+    val kept = rememberKeptPicture()
+    Canvas(Modifier.fillMaxSize()) {
         val d = darkness()
         val framing = VenueFraming.of(kind, size.width, size.height, landscape)
-        val dim = d > 0f
-        if (dim) drawIntoCanvas { it.saveLayer(size.toRect(), Paint().apply { colorFilter = ColorFilter.colorMatrix(ColorMatrix(VenueLook.dimMatrix(d, surfaceRgb))) }) }
-        translate(-framing.left * framing.scale, -framing.top * framing.scale) {
-            drawPrepared(picture, framing.scale, seconds?.value, VenueLook.lightAlpha(d))
+        val lamps = VenueLook.lightAlpha(d)
+        val mark = KeptPicture.Mark(size, framing, seconds?.value, lamps)
+        if (kept.mark != mark) {
+            kept.mark = mark
+            kept.layer.record(size = size.toIntSize()) {
+                translate(-framing.left * framing.scale, -framing.top * framing.scale) {
+                    drawPrepared(picture, framing.scale, seconds?.value, lamps, seen = framing.seen(size))
+                }
+            }
         }
-        if (dim) drawIntoCanvas { it.restore() }
+        // putting the light out is one affine map of every colour (VenueLook), so it is the layer's own and the picture is not drawn again for it
+        if (kept.darkness != d || kept.surface != surface) {
+            kept.darkness = d
+            kept.surface = surface
+            kept.layer.colorFilter = if (d > 0f) ColorFilter.colorMatrix(ColorMatrix(VenueLook.dimMatrix(d, surfaceRgb))) else null
+        }
+        drawLayer(kept.layer)
     }
+}
+
+/** What of the scene's grid a box of [box] pixels shows at this framing: the rest is not drawn. */
+private fun Framing.seen(box: Size): Rect = Rect(left, top, left + box.width / scale, top + box.height / scale)
+
+/**
+ * The picture of the place as the GPU keeps it (docs/plan-performance.md): it is drawn again only
+ * when what it is drawn from has changed — the box, the framing, the second of a living scene, the
+ * lamps going out — and a frame otherwise only lays it down. While the violin sounds the picture
+ * stands still and the ring above it costs a frame nothing.
+ */
+private class KeptPicture(val layer: GraphicsLayer) {
+    /** Everything the drawn picture depends on. */
+    data class Mark(val box: Size, val framing: Framing, val seconds: Float?, val lamps: Float)
+
+    var mark: Mark? = null
+    var darkness = Float.NaN
+    var surface: Color? = null
+}
+
+@Composable
+private fun rememberKeptPicture(): KeptPicture {
+    val context = LocalGraphicsContext.current
+    val kept = remember(context) { KeptPicture(context.createGraphicsLayer().apply { compositingStrategy = CompositingStrategy.Offscreen }) }
+    DisposableEffect(kept) { onDispose { context.releaseGraphicsLayer(kept.layer) } }
+    return kept
 }
 
 private fun DrawScope.drawLight(kind: PictureKind, darkness: Float, glow: Float, zone: Color, zoneScale: Float, center: Offset, diameter: Float, surface: Color) {

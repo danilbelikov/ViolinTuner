@@ -128,9 +128,11 @@ fun ScenePicture(
 /**
  * Draws the layers of [prepared] at [k] pixels a unit, from the origin: for a thing shown alone, on a
  * shelf, and for the picture behind Live, where [lightAlpha] puts the lamps and chandeliers out as
- * the light in the hall goes down (spec 3.27).
+ * the light in the hall goes down (spec 3.27) and [seen] — what of the grid the box shows — leaves
+ * out what the framing cuts off.
  */
-fun DrawScope.drawPrepared(prepared: PreparedScene, k: Float, seconds: Float? = null, lightAlpha: Float = 1f) = drawScene(prepared, k, 0f, seconds, lightAlpha)
+fun DrawScope.drawPrepared(prepared: PreparedScene, k: Float, seconds: Float? = null, lightAlpha: Float = 1f, seen: Rect? = null) =
+    drawScene(prepared, k, 0f, seconds, lightAlpha, seen)
 
 /** Loads `assets/journey/<key>.<mode>.scene` off the main thread; null while it loads and when there is no such picture. */
 @Composable
