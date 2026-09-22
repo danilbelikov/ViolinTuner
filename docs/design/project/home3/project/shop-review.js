@@ -281,6 +281,15 @@
     return picture(shown, A.palOf('eve', it.over || {}), [(b[0] + b[2]) / 2 - vw / 2, b[3] + 2 / k - vh, vw, vh], 100, 76, false);
   };
 
+  // ?room=id,id — the room with what it came with and those things, whole: for things that must be seen together
+  const together = params.get('room');
+  if (together) {
+    document.body.innerHTML = '<div id="room" style="padding:12px"></div>';
+    const r = A.compose(house, mode, [...START(A).filter(s => !together.split(',').some(id => A.BYID[id].s === A.BYID[s].s)), ...together.split(',')], {});
+    document.getElementById('room').appendChild(picture(r.l, A.palOf(mode, r.over), [0, -140, 412, 400], 824, 800, !still));
+    requestAnimationFrame(tick);
+    return;
+  }
   // ?focus=id,id — those things large, before and after, alone and in the room: for drawing
   const focus = params.get('focus');
   if (focus) {
