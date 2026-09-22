@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><script src="support.js"></script></head><body>
+<div id="out" style="font:12px monospace;color:#ddd;background:#111;padding:12px;white-space:pre"></div>
+<div id="pic"></div>
+<script src="locations.js"></script>
+<script>
+(async () => {
+  const o = document.getElementById('out');
+  try {
+    const A = await window.LOC_READY;
+    let total = 0, lines = [];
+    for (const k of [...A.OUT, ...A.INT]) { const w = A.weight(k); total += w.full; lines.push(k.padEnd(16) + String(w.band).padStart(5) + ' → ' + String(w.full).padStart(5)); }
+    o.textContent = 'всего слоёв во всех 32 кадрах: ' + total + '  ·  максимум: ' + Math.max(...[...A.OUT,...A.INT].map(k=>A.weight(k).full));
+    const pic = document.getElementById('pic');
+    pic.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;background:#111;padding:8px';
+    const keys = (location.hash || '#vienna,austria,amsterdam,viennaInt').slice(1).split(',');
+    for (const k of keys) {
+      const box = document.createElement('div');
+      box.style.cssText = 'width:165px;height:366px;overflow:hidden;line-height:0';
+      pic.appendChild(box);
+      ReactDOM.createRoot(box).render(A.sceneEl(k,'eve','portrait',{cssW:'100%',cssH:'100%',w:undefined,h:undefined}));
+      await new Promise(r => setTimeout(r, 0));
+    }
+  } catch (e) { o.textContent = 'ERR ' + e.message + '\n' + e.stack; }
+})();
+</script>
+</body></html>

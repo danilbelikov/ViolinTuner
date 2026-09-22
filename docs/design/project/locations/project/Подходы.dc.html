@@ -1,0 +1,921 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><script src="home-catalog.js"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
+body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}
+a{color:#C4ADFF}a:hover{color:#E9DDFF}
+.dv-turn{padding:40px 44px 34px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif}
+.dv-sub{font:400 12px/1.55 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.55);max-width:1000px;margin:0 0 22px;text-wrap:pretty}
+.dv-opts{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);border-radius:5px;text-decoration:none;color:#E6E4EE}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11.5px/1.4 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.62);max-width:412px;text-wrap:pretty}
+.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}
+.dv-next{margin:22px 0 0;font:12px/1.6 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:1000px;text-wrap:pretty}
+.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}
+.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}
+.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
+.tn{font-variant-numeric:tabular-nums}
+.scr{border-radius:20px;overflow:hidden;background:#131318;position:relative;color:#E6E4EE;flex:none;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.cap{font:600 10.5px ui-monospace,Menlo,monospace;color:#FFD98A}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(var(--a))}}
+@keyframes sway{0%,100%{transform:translateX(0)}50%{transform:translateX(var(--a))}}
+@keyframes swing{0%,100%{transform:rotate(var(--n))}50%{transform:rotate(var(--a))}}
+@keyframes blink{0%,96%,100%{transform:scaleY(1)}98%{transform:scaleY(.1)}}
+@keyframes rise{0%{transform:translateY(0);opacity:.5}100%{transform:translateY(-14px);opacity:0}}
+@keyframes flick{0%,100%{opacity:1}50%{opacity:.82}}
+@keyframes fly{0%{transform:translate(0,0)}100%{transform:translate(var(--a),-90px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+</style></helmet>
+
+<section class="dv-turn" id="s30a">
+<div class="dv-thd"><a class="dv-tid" href="#s30a">30a</a><span class="dv-tname">Где живёт подход на Live — A, B, C на живых данных</span></div>
+<p class="dv-sub"><b>Выбрали B — закладку у клавиши записи.</b> Довод не в красоте, а в вашем же правиле: всё, что трогают в тишине, лежит внизу, под большим пальцем, а кольцо не отдаёт ни одного пикселя. У A цена названа в брифе: 34 dp сверху — это ровно та высота, которую кольцо теряет на 360 dp и в «Настройке», где над ним и так колки с подсказкой. C проверили и отбросили: «● занятие · 34:12 │ Концерт ля минор · ещё 7 мин» — 268 dp бумаги, подписи места остаётся 96, и «Вена · Золотой зал» обрезается на первом слове (<a href="#30a3">30a3</a>). Материал закладки — та же бумага, что у ярлычка занятия (`#F1EEE6`, чернила `#2A2430`), но форма другая: ленточка с раздвоенным правым краем, как закладка в нотах. Латунь — только ходом по нижнему краю и ободом в конце. Кнопкой Material это не выглядит и выглядеть не должно.</p>
+<div class="dv-opts">
+<sc-for list="{{ f30a }}" as="f" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:412px;height:892px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:12px 0 0">
+    <div style="display:flex;justify-content:center;flex:none;opacity:{{ f.chromeOp }}"><div style="display:flex;height:40px;padding:3px;border-radius:21px;background:#8B5E3C;border:1px solid #4E3424"><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.playBg }};color:{{ f.playFg }};font-size:14px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.tuneBg }};color:{{ f.tuneFg }};font-size:14px;font-weight:700">Настройка</div></div></div>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 24px 0;min-height:28px;flex:none;opacity:{{ f.rowOp }}">
+      <sc-if value="{{ f.chip }}" hint-placeholder-val="{{ true }}"><div class="tn" style="height:28px;padding:0 12px;border-radius:5px;background:#F1EEE6;color:#2A2430;font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;flex:none"><div style="width:7px;height:7px;border-radius:50%;background:#8E2F3F;flex:none"></div>занятие · 34:12<sc-if value="{{ f.chipC }}" hint-placeholder-val="{{ false }}"><div style="width:1px;height:14px;background:rgba(42,36,48,.28)"></div><div style="font-weight:600">{{ f.chipCText }}</div></sc-if></div></sc-if>
+      <div style="flex:1;min-width:6px"></div>
+      <div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#E6E4EE;white-space:nowrap;overflow:hidden;min-width:0">{{ f.whereIco }}{{ f.where }}</div>
+    </div>
+    <sc-if value="{{ f.rowA }}" hint-placeholder-val="{{ false }}">
+    <div style="padding:10px 24px 0;flex:none;opacity:{{ f.bmOp }}"><div style="position:relative;line-height:0">{{ f.rowASvg }}<div style="position:absolute;left:0;right:0;top:0;height:34px;display:flex;align-items:center;gap:10px;padding:0 13px"><div style="flex:1;min-width:0;font-size:13px;font-weight:600;color:#2A2430;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.rowAName }}</div><div class="tn" style="font-size:14px;font-weight:700;color:#2A2430;flex:none">{{ f.rowATime }}</div></div></div></div>
+    </sc-if>
+    <div style="display:flex;justify-content:center;margin-top:10px;flex:none;opacity:{{ f.statusOp }}"><div style="display:flex;align-items:center;gap:9px;height:26px;padding:0 13px;border-radius:13px;background:rgba(19,19,24,.7);font-size:14px;color:#A39FB5">{{ f.statusDot }}<span>{{ f.statusText }}</span></div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ f.ring }}
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-5px;line-height:1;font-size:{{ f.noteSize }};opacity:{{ f.noteOp }}" class="tn">{{ f.note }}<span style="font-size:52px;font-weight:600;color:#A39FB5;letter-spacing:0">{{ f.oct }}</span></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;height:46px;flex:none;opacity:{{ f.wordOp }};color:{{ f.zoneCol }}">{{ f.arrow }}<div style="font-size:28px;font-weight:700">{{ f.word }}</div><div class="tn" style="font-size:24px;font-weight:600;color:#A39FB5">{{ f.cents }}</div></div>
+    <div style="display:flex;align-items:center;padding:12px 0 10px;flex:none">
+      <div style="flex:1;display:flex;justify-content:flex-end;padding-right:16px;min-width:0;opacity:{{ f.bmOp }}">
+        <sc-if value="{{ f.bmShow }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative;flex:none;line-height:0">{{ f.bmSvg }}
+          <div style="position:absolute;left:13px;right:30px;top:0;bottom:4px;display:flex;flex-direction:column;justify-content:center;gap:3px;line-height:1.15">
+            <div style="font-size:{{ f.bmNameFs }};font-weight:600;color:{{ f.bmInk }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.bmName }}</div>
+            <sc-if value="{{ f.bmHasTime }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:5px">{{ f.bmCheck }}<div class="tn" style="font-size:15px;font-weight:700;color:{{ f.bmInk }};white-space:nowrap">{{ f.bmTime }}</div></div></sc-if>
+          </div>
+        </div>
+        </sc-if>
+      </div>
+      <div style="width:72px;height:72px;border-radius:36px;background:{{ f.recFace }};border:3px solid {{ f.recRing }};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);flex:none">{{ f.recGlyph }}</div>
+      <div style="flex:1"></div>
+    </div>
+    <div style="height:14px;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.92));flex:none"></div>
+    <div style="height:66px;background:rgba(19,19,24,.92);display:flex;align-items:center;padding:0 8px;flex:none">
+      <sc-for list="{{ navLive }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:11px;font-weight:600">{{ t.n }}</div></div></sc-for>
+    </div>
+  </div>
+</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Что показывает ход.</b> Латунная линия по нижнему краю бумаги — 122 dp полезной длины, 3 dp толщиной. За 15 минут она растёт на 8 dp в минуту: это не движение, а состояние, ровно как вы просили. Маленькое кольцо рядом с главным кольцом мы не рисуем — оно читается его эхом и тянет взгляд туда, где во время игры должен быть только строй.</p>
+</section>
+
+<section class="dv-turn" id="s30b">
+<div class="dv-thd"><a class="dv-tid" href="#s30b">30b</a><span class="dv-tname">Пять состояний закладки</span></div>
+<p class="dv-sub">Пустая закладка — тот же контур, но не залит: обводка бумаги `rgba(241,238,230,.5)` и одна строка «Репертуар» — 124 dp, слово стоит целиком и не просит многоточия ни на 360 dp, ни в немецком. Залитая бумага значит «отрезок идёт», пустой контур — «здесь можно начать». Слова «подход» в интерфейсе нет ни в одном состоянии (вопрос 8): вход называется местом, откуда берут, — «Репертуар», лист — «Что играем», конец — «готово».</p>
+<div class="dv-opts">
+<sc-for list="{{ f30b }}" as="f" hint-placeholder-count="5">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:412px;height:892px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:12px 0 0">
+    <div style="display:flex;justify-content:center;flex:none;opacity:{{ f.chromeOp }}"><div style="display:flex;height:40px;padding:3px;border-radius:21px;background:#8B5E3C;border:1px solid #4E3424"><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.playBg }};color:{{ f.playFg }};font-size:14px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.tuneBg }};color:{{ f.tuneFg }};font-size:14px;font-weight:700">Настройка</div></div></div>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 24px 0;min-height:28px;flex:none;opacity:{{ f.rowOp }}">
+      <sc-if value="{{ f.chip }}" hint-placeholder-val="{{ true }}"><div class="tn" style="height:28px;padding:0 12px;border-radius:5px;background:#F1EEE6;color:#2A2430;font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;flex:none"><div style="width:7px;height:7px;border-radius:50%;background:#8E2F3F;flex:none"></div>занятие · 34:12</div></sc-if>
+      <div style="flex:1;min-width:6px"></div>
+      <div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#E6E4EE;white-space:nowrap">{{ f.whereIco }}{{ f.where }}</div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:10px;flex:none;opacity:{{ f.statusOp }}"><div style="display:flex;align-items:center;gap:9px;height:26px;padding:0 13px;border-radius:13px;background:rgba(19,19,24,.7);font-size:14px;color:#A39FB5">{{ f.statusDot }}<span>{{ f.statusText }}</span></div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ f.ring }}
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-5px;line-height:1;font-size:{{ f.noteSize }};opacity:{{ f.noteOp }}" class="tn">{{ f.note }}<span style="font-size:52px;font-weight:600;color:#A39FB5;letter-spacing:0">{{ f.oct }}</span></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;height:46px;flex:none;opacity:{{ f.wordOp }};color:{{ f.zoneCol }}">{{ f.arrow }}<div style="font-size:28px;font-weight:700">{{ f.word }}</div><div class="tn" style="font-size:24px;font-weight:600;color:#A39FB5">{{ f.cents }}</div></div>
+    <div style="display:flex;align-items:center;padding:12px 0 10px;flex:none">
+      <div style="flex:1;display:flex;justify-content:flex-end;padding-right:16px;min-width:0;opacity:{{ f.bmOp }}">
+        <div style="position:relative;flex:none;line-height:0">{{ f.bmSvg }}
+          <div style="position:absolute;left:13px;right:30px;top:0;bottom:4px;display:flex;flex-direction:column;justify-content:center;gap:3px;line-height:1.15">
+            <div style="font-size:{{ f.bmNameFs }};font-weight:600;color:{{ f.bmInk }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.bmName }}</div>
+            <sc-if value="{{ f.bmHasTime }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:5px">{{ f.bmCheck }}<div class="tn" style="font-size:15px;font-weight:700;color:{{ f.bmInk }};white-space:nowrap">{{ f.bmTime }}</div></div></sc-if>
+          </div>
+        </div>
+      </div>
+      <div style="width:72px;height:72px;border-radius:36px;background:{{ f.recFace }};border:3px solid {{ f.recRing }};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);flex:none">{{ f.recGlyph }}</div>
+      <div style="flex:1"></div>
+    </div>
+    <div style="height:14px;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.92));flex:none"></div>
+    <div style="height:66px;background:rgba(19,19,24,.92);display:flex;align-items:center;padding:0 8px;flex:none">
+      <sc-for list="{{ navLive }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:11px;font-weight:600">{{ t.n }}</div></div></sc-for>
+    </div>
+  </div>
+</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Остаток — целыми минутами вверх</b> (вопрос 2): «ещё 7 мин» держится с 6:01 до 7:00, меняется раз в минуту. Секунд нет нигде, включая последнюю минуту: третий тикающий счётчик в поле зрения — это ровно то, чего вы не хотите, а «ещё 1 мин» и так значит «сейчас кончится». Таблично: `noch 7 Min.` · `encore 7 min` · `fertig` · `terminé`.</p>
+</section>
+
+<section class="dv-turn" id="s30c">
+<div class="dv-thd"><a class="dv-tid" href="#s30c">30c</a><span class="dv-tname">Подход в игре: свет, запись, «Настройка», зал, 360 dp, landscape</span></div>
+<p class="dv-sub"><b>Со светом закладка гаснет до 0,38, но «готово» — нет</b> (вопросы 3 и 4). Пока отрезок идёт, остаток не нужен: руки заняты, кончится он сам. А вот конец приходит именно во время игры — и это единственное, что должно достаться боковому зрению. Поэтому у состояния «сделан» приглушения нет: бумага остаётся в полную силу на приглушённой картине (<a href="#30c2">30c2</a>) и читается краем глаза без звука, вспышки и пульсации. Сравните с <a href="#30c1">30c1</a> — там закладка честно уходит в фон.</p>
+<div class="dv-opts">
+<sc-for list="{{ f30c }}" as="f" hint-placeholder-count="7">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:412px;height:892px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:12px 0 0">
+    <div style="display:flex;justify-content:center;flex:none;opacity:{{ f.chromeOp }}"><div style="display:flex;height:40px;padding:3px;border-radius:21px;background:#8B5E3C;border:1px solid #4E3424"><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.playBg }};color:{{ f.playFg }};font-size:14px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.tuneBg }};color:{{ f.tuneFg }};font-size:14px;font-weight:700">Настройка</div></div></div>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 24px 0;min-height:28px;flex:none;opacity:{{ f.rowOp }}">
+      <sc-if value="{{ f.chip }}" hint-placeholder-val="{{ true }}"><div class="tn" style="height:28px;padding:0 12px;border-radius:5px;background:#F1EEE6;color:#2A2430;font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;flex:none"><div style="width:7px;height:7px;border-radius:50%;background:#8E2F3F;flex:none"></div>занятие · 34:12</div></sc-if>
+      <div style="flex:1;min-width:6px"></div>
+      <div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#E6E4EE;white-space:nowrap;overflow:hidden;min-width:0">{{ f.whereIco }}{{ f.where }}</div>
+    </div>
+    <sc-if value="{{ f.tuning }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;gap:14px;justify-content:center;padding:14px 0 0;flex:none;opacity:{{ f.chromeOp }}">
+      <sc-for list="{{ f.strings }}" as="st" hint-placeholder-count="4">
+      <div style="position:relative;width:76px;height:64px;border-radius:12px;background:{{ st.bg }};border:1.5px solid {{ st.edge }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+        <div style="position:absolute;top:-5px;width:26px;height:9px;border-radius:5px;background:{{ st.peg }}"></div>
+        <div style="font-size:22px;font-weight:700;color:{{ st.fg }}">{{ st.name }}</div>
+        <div class="tn" style="font-size:11px;color:{{ st.hzFg }}">{{ st.hz }}</div>
+        <sc-if value="{{ st.locked }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:11px;background:#F1EEE6;display:flex;align-items:center;justify-content:center">{{ lockIco }}</div></sc-if>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
+    <div style="display:flex;justify-content:center;margin-top:10px;flex:none;opacity:{{ f.statusOp }}"><div style="display:flex;align-items:center;gap:9px;height:26px;padding:0 13px;border-radius:13px;background:rgba(19,19,24,.7);font-size:14px;color:#A39FB5">{{ f.statusDot }}<span>{{ f.statusText }}</span></div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ f.ring }}
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-5px;line-height:1;font-size:{{ f.noteSize }};opacity:{{ f.noteOp }}" class="tn">{{ f.note }}<span style="font-size:52px;font-weight:600;color:#A39FB5;letter-spacing:0">{{ f.oct }}</span></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;height:46px;flex:none;opacity:{{ f.wordOp }};color:{{ f.zoneCol }}">{{ f.arrow }}<div style="font-size:28px;font-weight:700">{{ f.word }}</div><div class="tn" style="font-size:24px;font-weight:600;color:#A39FB5">{{ f.cents }}</div></div>
+    <sc-if value="{{ f.tuning }}" hint-placeholder-val="{{ false }}">
+    <div style="margin:0 24px 6px;flex:none;opacity:{{ f.chromeOp }}">
+      <div style="position:relative;height:26px;border-radius:8px;background:#6E4A34;border:1px solid #4E3424;overflow:hidden"><div style="position:absolute;left:45%;width:10%;top:7px;height:12px;border-radius:6px;background:#47C97E"></div><div style="position:absolute;left:50%;top:4px;width:2px;height:18px;margin-left:-1px;background:rgba(241,238,230,.7)"></div><div style="position:absolute;left:{{ f.marker }};top:1px;width:8px;height:24px;margin-left:-4px;border-radius:4px;background:#F1EEE6;box-shadow:0 0 12px 3px {{ f.markerGlow }}"></div></div>
+      <div style="text-align:center;font-size:13px;color:#A39FB5;margin-top:8px">{{ f.hint }}</div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ f.rec }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:12px;padding:0 24px 8px;flex:none"><div style="width:10px;height:10px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div><div class="tn" style="font-size:16px;font-weight:700">запись · 01:24</div><div style="flex:1;height:6px;border-radius:3px;background:#292833;display:flex;gap:2px;overflow:hidden">{{ f.recLane }}</div></div>
+    </sc-if>
+    <div style="display:flex;align-items:center;padding:10px 0;flex:none">
+      <div style="flex:1;display:flex;justify-content:flex-end;padding-right:16px;min-width:0;opacity:{{ f.bmOp }}">
+        <div style="position:relative;flex:none;line-height:0">{{ f.bmSvg }}
+          <div style="position:absolute;left:13px;right:30px;top:0;bottom:4px;display:flex;flex-direction:column;justify-content:center;gap:3px;line-height:1.15">
+            <div style="font-size:{{ f.bmNameFs }};font-weight:600;color:{{ f.bmInk }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.bmName }}</div>
+            <sc-if value="{{ f.bmHasTime }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:5px">{{ f.bmCheck }}<div class="tn" style="font-size:15px;font-weight:700;color:{{ f.bmInk }};white-space:nowrap">{{ f.bmTime }}</div></div></sc-if>
+          </div>
+        </div>
+      </div>
+      <div style="width:72px;height:72px;border-radius:36px;background:{{ f.recFace }};border:3px solid {{ f.recRing }};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);flex:none">{{ f.recGlyph }}</div>
+      <div style="flex:1"></div>
+    </div>
+    <div style="height:14px;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.92));flex:none"></div>
+    <div style="height:66px;background:rgba(19,19,24,.92);display:flex;align-items:center;padding:0 8px;flex:none">
+      <sc-for list="{{ navLive }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:11px;font-weight:600">{{ t.n }}</div></div></sc-for>
+    </div>
+  </div>
+</div>
+</div>
+</sc-for>
+<sc-for list="{{ f30cs }}" as="f" hint-placeholder-count="1">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel" style="max-width:360px"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:360px;height:640px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:10px 0 0">
+    <div style="display:flex;justify-content:center;flex:none"><div style="display:flex;height:38px;padding:3px;border-radius:20px;background:#8B5E3C;border:1px solid #4E3424"><div style="display:flex;align-items:center;padding:0 16px;border-radius:17px;background:#F1EEE6;color:#2A2430;font-size:13px;font-weight:700">Spiel</div><div style="display:flex;align-items:center;padding:0 16px;border-radius:17px;color:#D8D0BE;font-size:13px;font-weight:700">Stimmen</div></div></div>
+    <div style="display:flex;align-items:center;gap:8px;padding:9px 18px 0;min-height:28px;flex:none">
+      <div class="tn" style="height:28px;padding:0 10px;border-radius:5px;background:#F1EEE6;color:#2A2430;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px;flex:none"><div style="width:7px;height:7px;border-radius:50%;background:#8E2F3F;flex:none"></div>Übung · 34:12</div>
+      <div style="flex:1;min-width:4px"></div>
+      <div style="height:28px;padding:0 10px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:6px;font-size:12px;font-weight:600;color:#E6E4EE;white-space:nowrap">{{ f.whereIco }}Zuhause</div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:8px;flex:none"><div style="display:flex;align-items:center;gap:9px;height:26px;padding:0 13px;border-radius:13px;background:rgba(19,19,24,.7);font-size:13px;color:#A39FB5">{{ f.statusDot }}<span>Spielen Sie…</span></div></div>
+    <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;line-height:0">{{ f.ring }}</div>
+    <div style="height:34px;flex:none"></div>
+    <div style="display:flex;align-items:center;padding:8px 0;flex:none">
+      <div style="flex:1;display:flex;justify-content:flex-end;padding-right:14px;min-width:0">
+        <div style="position:relative;flex:none;line-height:0">{{ f.bmSvg }}
+          <div style="position:absolute;left:12px;right:28px;top:0;bottom:4px;display:flex;flex-direction:column;justify-content:center;gap:2px;line-height:1.15">
+            <div style="font-size:12px;font-weight:600;color:#2A2430;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.bmName }}</div>
+            <div class="tn" style="font-size:14px;font-weight:700;color:#2A2430;white-space:nowrap">{{ f.bmTime }}</div>
+          </div>
+        </div>
+      </div>
+      <div style="width:64px;height:64px;border-radius:32px;background:#F1EEE6;border:3px solid #C9A24A;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);flex:none">{{ f.recGlyph }}</div>
+      <div style="flex:1"></div>
+    </div>
+    <div style="height:12px;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.92));flex:none"></div>
+    <div style="height:60px;background:rgba(19,19,24,.92);display:flex;align-items:center;padding:0 6px;flex:none">
+      <sc-for list="{{ navDe }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:10px;font-weight:600">{{ t.n }}</div></div></sc-for>
+    </div>
+  </div>
+</div>
+</div>
+</sc-for>
+<sc-for list="{{ f30cl }}" as="f" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel" style="max-width:892px"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:892px;height:412px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex">
+    <div style="width:400px;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ f.ring }}<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-4px;font-size:150px;line-height:1;opacity:{{ f.noteOp }}" class="tn">{{ f.note }}</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;padding:14px 22px 14px 0">
+      <div style="display:flex;align-items:center;gap:10px;flex:none;opacity:{{ f.chromeOp }}"><div style="display:flex;height:40px;padding:3px;border-radius:21px;background:#8B5E3C;border:1px solid #4E3424"><div style="display:flex;align-items:center;padding:0 18px;border-radius:18px;background:{{ f.playBg }};color:{{ f.playFg }};font-size:13px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 18px;border-radius:18px;background:{{ f.tuneBg }};color:{{ f.tuneFg }};font-size:13px;font-weight:700">Настройка</div></div><div style="flex:1"></div><div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#E6E4EE;white-space:nowrap">{{ f.whereIco }}{{ f.where }}</div></div>
+      <div style="display:flex;align-items:center;gap:8px;padding-top:10px;flex:none;opacity:{{ f.rowOp }}"><div class="tn" style="height:28px;padding:0 12px;border-radius:5px;background:#F1EEE6;color:#2A2430;font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;flex:none"><div style="width:7px;height:7px;border-radius:50%;background:#8E2F3F;flex:none"></div>занятие · 34:12</div></div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px">
+        <div style="display:flex;opacity:{{ f.statusOp }}"><div style="display:flex;align-items:center;gap:9px;height:26px;padding:0 13px;border-radius:13px;background:rgba(19,19,24,.7);font-size:14px;color:#A39FB5">{{ f.statusDot }}<span>{{ f.statusText }}</span></div></div>
+        <div style="display:flex;align-items:center;gap:14px;opacity:{{ f.wordOp }};color:{{ f.zoneCol }}">{{ f.arrow }}<div style="font-size:30px;font-weight:700">{{ f.word }}</div><div class="tn" style="font-size:24px;font-weight:600;color:#A39FB5">{{ f.cents }}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;gap:16px;flex:none">
+        <div style="opacity:{{ f.bmOp }};line-height:0;position:relative">{{ f.bmSvg }}
+          <div style="position:absolute;left:13px;right:30px;top:0;bottom:4px;display:flex;flex-direction:column;justify-content:center;gap:3px;line-height:1.15">
+            <div style="font-size:13px;font-weight:600;color:{{ f.bmInk }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.bmName }}</div>
+            <div class="tn" style="font-size:15px;font-weight:700;color:{{ f.bmInk }};white-space:nowrap">{{ f.bmTime }}</div>
+          </div>
+        </div>
+        <div style="width:64px;height:64px;border-radius:32px;background:{{ f.recFace }};border:3px solid {{ f.recRing }};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);flex:none">{{ f.recGlyph }}</div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Соседство внизу проверено.</b> На 412 dp левой колонке достаётся 170 dp, закладке — 150: до клавиши 16 dp воздуха. На 360 dp — 130 и 126. Полоса записи и шкала «Настройки» стоят <i>над</i> клавишей во всю ширину, закладка — <i>в её строке</i>: они не спорят ни по высоте, ни по касанию (закладка 150 × 56, клавиша 72, между ними 16). Немецкий на 360 dp — худший случай: «Konzert a-moll» обрезается, «noch 7 Min.» не переносится никогда, потому что цифра и единица идут одной табличной строкой.</p>
+</section>
+
+<section class="dv-turn" id="s30d">
+<div class="dv-thd"><a class="dv-tid" href="#s30d">30d</a><span class="dv-tname">Окончание — раскадровка снизу экрана</span></div>
+<p class="dv-sub"><b>Конец виден тем, что латунь замыкается ободом.</b> Ход дописывается до края, и та же латунь обходит бумагу по контуру — 1,8 dp. В темноте это яркая нитка на приглушённой картине: её видно, не глядя. Ни звука, ни вибрации, ни вспышки, ни цвета зон — только «готово», отметка чернилами и замкнутый обод. Держится до следующего выбора или до конца занятия; ярлычок сам не исчезает.</p>
+<div class="dv-opts" style="gap:14px">
+<sc-for list="{{ f30d }}" as="f" hint-placeholder-count="5">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel" style="max-width:412px"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a><span class="cap">{{ f.cap }}</span>{{ f.label }}</div>
+<div class="scr" style="width:412px;height:236px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;bottom:0;display:flex;flex-direction:column">
+    <div style="display:flex;align-items:center;padding:12px 0 10px">
+      <div style="flex:1;display:flex;justify-content:flex-end;padding-right:16px;min-width:0;opacity:{{ f.bmOp }}">
+        <div style="position:relative;flex:none;line-height:0">{{ f.bmSvg }}
+          <div style="position:absolute;left:13px;right:30px;top:0;bottom:4px;display:flex;flex-direction:column;justify-content:center;gap:3px;line-height:1.15">
+            <div style="font-size:12.5px;font-weight:600;color:{{ f.bmInk }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.bmName }}</div>
+            <div style="display:flex;align-items:center;gap:5px">{{ f.bmCheck }}<div class="tn" style="font-size:15px;font-weight:700;color:{{ f.bmInk }};white-space:nowrap">{{ f.bmTime }}</div></div>
+          </div>
+        </div>
+      </div>
+      <div style="width:72px;height:72px;border-radius:36px;background:#F1EEE6;border:3px solid #C9A24A;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);flex:none">{{ f.recGlyph }}</div>
+      <div style="flex:1"></div>
+    </div>
+    <div style="height:14px;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.92))"></div>
+    <div style="height:66px;background:rgba(19,19,24,.92);display:flex;align-items:center;padding:0 8px">
+      <sc-for list="{{ navLive }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:11px;font-weight:600">{{ t.n }}</div></div></sc-for>
+    </div>
+  </div>
+</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next">Тап по закладке в состоянии «готово» открывает «Что играем» — тот же лист, что и из пустого контура. Отдельного «закрыть» у отметки нет: её убирает следующий выбор. «Убрать анимации» — <a href="#30d5">30d5</a>: ход не дописывается плавно, обод и текст встают сразу, без 400 мс.</p>
+</section>
+
+<section class="dv-turn" id="s30e">
+<div class="dv-thd"><a class="dv-tid" href="#s30e">30e</a><span class="dv-tname">Лист «Что играем»</span></div>
+<p class="dv-sub"><b>Заголовки разделов в списке, а не чипы сверху</b> (вопрос 5): 17 элементов в пяти разделах — это полторы прокрутки, а чипы отняли бы 56 dp у списка и дали второй способ навигации там, где хватает одного. Порядок — как на экране разделов, отметки не меняют его никогда. Вторая строка — только там, где различает: композитор у произведений и этюдов; у гамм и штрихов название само себя объясняет («G-dur · 3 октавы»), и вторая строка стала бы шумом. Счёт — в заголовке раздела и только когда он не ноль: «Гаммы · сегодня 1». Строки «сыграно 2 из 17» сверху нет: она превращает лист в отчёт, а это лист выбора. Цель — в прилипшей панели, которая приходит вместе с выбором: до выбора её нет вовсе, так что неактивной кнопки не бывает.</p>
+<div class="dv-opts">
+<sc-for list="{{ f30e }}" as="f" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:412px;height:892px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;left:0;right:0;top:12px;display:flex;flex-direction:column;align-items:center;gap:10px">
+    <div style="display:flex;height:40px;padding:3px;border-radius:21px;background:#8B5E3C;border:1px solid #4E3424"><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:#F1EEE6;color:#2A2430;font-size:14px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;color:#D8D0BE;font-size:14px;font-weight:700">Настройка</div></div>
+    <div style="display:flex;align-items:center;gap:8px;align-self:stretch;padding:0 24px">
+      <sc-if value="{{ f.chip }}" hint-placeholder-val="{{ true }}"><div class="tn" style="height:28px;padding:0 12px;border-radius:5px;background:#F1EEE6;color:#2A2430;font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;flex:none"><div style="width:7px;height:7px;border-radius:50%;background:#8E2F3F;flex:none"></div>занятие · 34:12</div></sc-if>
+      <div style="flex:1"></div>
+      <div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#E6E4EE;white-space:nowrap">{{ f.whereIco }}Дома</div>
+    </div>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;top:104px;background:#292833;border-radius:28px 28px 0 0;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:12px 0 0;display:flex;justify-content:center;flex:none"><div style="width:32px;height:4px;border-radius:2px;background:#A39FB5;opacity:.5"></div></div>
+    <div style="padding:14px 24px 12px;flex:none"><div style="font-size:20px;font-weight:700">Что играем</div></div>
+    <sc-if value="{{ f.running }}" hint-placeholder-val="{{ true }}">
+    <div style="margin:0 20px 6px;padding:12px 14px;background:#1E1D25;border-radius:14px;display:flex;align-items:center;gap:12px;flex:none">
+      <div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Сейчас: Концерт ля минор</div><div class="tn" style="font-size:13px;color:#A39FB5;margin-top:2px">ещё 7 мин</div></div>
+      <div style="height:40px;padding:0 16px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF;flex:none">Остановить</div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ f.empty }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;padding:0 40px 60px;text-align:center">
+      <div style="font-size:15px;line-height:1.5;color:#A39FB5">В репертуаре пока пусто. Добавьте произведение или гамму — и выбирайте здесь, что играть.</div>
+      <div style="height:48px;padding:0 22px;border-radius:24px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;font-size:15px;font-weight:700">Открыть репертуар</div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ f.hasList }}" hint-placeholder-val="{{ true }}">
+    <div style="flex:1;overflow:hidden;padding:0 20px;display:flex;flex-direction:column;margin-top:{{ f.listMt }}">
+      <sc-for list="{{ f.rows }}" as="r" hint-placeholder-count="12">
+      <sc-if value="{{ r.isHead }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;align-items:baseline;gap:7px;padding:14px 4px 6px;flex:none"><div style="font-size:13px;font-weight:700;color:#A39FB5;letter-spacing:.02em">{{ r.name }}</div><div class="tn" style="font-size:12px;color:#A39FB5;opacity:.8">{{ r.cnt }}</div></div>
+      </sc-if>
+      <sc-if value="{{ r.isItem }}" hint-placeholder-val="{{ true }}">
+      <div style="display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 12px;border-radius:12px;background:{{ r.bg }};border:1px solid {{ r.bd }};box-sizing:border-box;flex:none">
+        <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;color:{{ r.fg }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.t }}</div><sc-if value="{{ r.hasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#A39FB5;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.s }}</div></sc-if></div>
+        <sc-if value="{{ r.mDone }}" hint-placeholder-val="{{ false }}"><div class="tn" style="height:28px;padding:0 10px;border-radius:14px;background:#1E1D25;display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;flex:none">{{ checkON }}{{ r.mt }}</div></sc-if>
+        <sc-if value="{{ r.mPart }}" hint-placeholder-val="{{ false }}"><div class="tn" style="font-size:13px;color:#A39FB5;flex:none">{{ r.mt }}</div></sc-if>
+        <sc-if value="{{ r.mRun }}" hint-placeholder-val="{{ false }}"><div style="height:28px;padding:0 11px;border-radius:14px;border:1px solid #C4ADFF;display:flex;align-items:center;font-size:12px;font-weight:700;color:#C4ADFF;flex:none">идёт</div></sc-if>
+      </div>
+      </sc-if>
+      </sc-for>
+    </div>
+    </sc-if>
+    <sc-if value="{{ f.goal }}" hint-placeholder-val="{{ false }}">
+    <div style="flex:none;background:#292833;border-top:1px solid #3A3846;padding:14px 14px 20px;display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;gap:5px;justify-content:center">
+        <div style="width:48px;height:48px;border-radius:10px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#A39FB5;flex:none">−5</div>
+        <sc-for list="{{ f.chips }}" as="c" hint-placeholder-count="5"><div class="tn" style="width:48px;height:48px;border-radius:10px;background:{{ c.bg }};border:1px solid {{ c.bd }};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:{{ c.fg }};flex:none">{{ c.n }}</div></sc-for>
+        <div style="width:48px;height:48px;border-radius:10px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#A39FB5;flex:none">+5</div>
+      </div>
+      <div class="tn" style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">{{ f.goalBtn }}</div>
+    </div>
+    </sc-if>
+  </div>
+</div>
+</div>
+</sc-for>
+<div class="dv-opt" id="30e5"><div class="dv-olabel" style="max-width:892px"><a class="dv-oid" href="#30e5">30e5</a>Landscape 892 × 412 — лист во всю высоту, цель и «Начать» в правой колонке без прокрутки</div>
+<div class="scr" style="width:892px;height:412px">
+  <div style="position:absolute;inset:0;line-height:0">{{ landPic }}</div>
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
+  <div style="position:absolute;inset:0;background:#292833;display:flex">
+    <div style="flex:1;display:flex;flex-direction:column;min-width:0;padding:14px 0 0 24px">
+      <div style="font-size:19px;font-weight:700;flex:none">Что играем</div>
+      <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;padding-right:18px;margin-top:6px">
+        <sc-for list="{{ landRows }}" as="r" hint-placeholder-count="8">
+        <sc-if value="{{ r.isHead }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:baseline;gap:7px;padding:10px 4px 4px;flex:none"><div style="font-size:12.5px;font-weight:700;color:#A39FB5">{{ r.name }}</div><div class="tn" style="font-size:12px;color:#A39FB5;opacity:.8">{{ r.cnt }}</div></div></sc-if>
+        <sc-if value="{{ r.isItem }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;align-items:center;gap:12px;min-height:48px;padding:6px 12px;border-radius:12px;background:{{ r.bg }};border:1px solid {{ r.bd }};box-sizing:border-box;flex:none">
+          <div style="flex:1;min-width:0"><div style="font-size:14.5px;font-weight:600;color:{{ r.fg }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.t }}</div></div>
+          <sc-if value="{{ r.mDone }}" hint-placeholder-val="{{ false }}"><div class="tn" style="height:26px;padding:0 9px;border-radius:13px;background:#1E1D25;display:flex;align-items:center;gap:5px;font-size:12.5px;font-weight:700;flex:none">{{ checkON }}{{ r.mt }}</div></sc-if>
+          <sc-if value="{{ r.mPart }}" hint-placeholder-val="{{ false }}"><div class="tn" style="font-size:12.5px;color:#A39FB5;flex:none">{{ r.mt }}</div></sc-if>
+          <sc-if value="{{ r.mRun }}" hint-placeholder-val="{{ false }}"><div style="height:26px;padding:0 10px;border-radius:13px;border:1px solid #C4ADFF;display:flex;align-items:center;font-size:11.5px;font-weight:700;color:#C4ADFF;flex:none">идёт</div></sc-if>
+        </div>
+        </sc-if>
+        </sc-for>
+      </div>
+    </div>
+    <div style="width:300px;flex:none;border-left:1px solid #3A3846;padding:16px 24px;display:flex;flex-direction:column;gap:14px">
+      <div><div style="font-size:12.5px;color:#A39FB5">Выбрано</div><div style="font-size:16px;font-weight:700;margin-top:3px">Кайзер № 8</div></div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <sc-for list="{{ landChips }}" as="c" hint-placeholder-count="5"><div class="tn" style="height:48px;border-radius:10px;background:{{ c.bg }};border:1px solid {{ c.bd }};display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;color:{{ c.fg }}">{{ c.n }}</div></sc-for>
+        <div style="height:48px;border-radius:10px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#A39FB5">+5</div>
+      </div>
+      <div style="flex:1"></div>
+      <div class="tn" style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">Начать · 15 мин</div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<p class="dv-next"><b>Выбор другого элемента при идущем отрезке</b> — блок «Сейчас» остаётся сверху, строка выбранного элемента подсвечивается, кнопка говорит «Начать · 15 мин». Нажатие кончает текущий как остановленный (минуты уже зачтены) и начинает новый — без подтверждения, как вы и решили. Идущий элемент в списке помечен «идёт» и не выбирается.</p>
+</section>
+
+<section class="dv-turn" id="s30f">
+<div class="dv-thd"><a class="dv-tid" href="#s30f">30f</a><span class="dv-tname">Лист «Сначала — занятие» и переход в выбор</span></div>
+<p class="dv-sub">Лист один и тот же: меняется его содержимое, а не лист. «Начать занятие» запускает занятие здесь же — кроссфейд 240 мс, высота листа доезжает до полной за 320 мс, и в этот же момент за листом появляется ярлычок занятия. Live не покидаем, обратно возвращаться не нужно.</p>
+<div class="dv-opts">
+<sc-for list="{{ f30f }}" as="f" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a><span class="cap">{{ f.cap }}</span>{{ f.label }}</div>
+<div class="scr" style="width:412px;height:892px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;left:0;right:0;top:12px;display:flex;flex-direction:column;align-items:center;gap:10px">
+    <div style="display:flex;height:40px;padding:3px;border-radius:21px;background:#8B5E3C;border:1px solid #4E3424"><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:#F1EEE6;color:#2A2430;font-size:14px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;color:#D8D0BE;font-size:14px;font-weight:700">Настройка</div></div>
+    <div style="display:flex;align-items:center;gap:8px;align-self:stretch;padding:0 24px;min-height:28px">
+      <sc-if value="{{ f.chip }}" hint-placeholder-val="{{ false }}"><div class="tn" style="height:28px;padding:0 12px;border-radius:5px;background:#F1EEE6;color:#2A2430;font-size:12px;font-weight:700;display:flex;align-items:center;gap:7px;flex:none;opacity:{{ f.chipOp }}"><div style="width:7px;height:7px;border-radius:50%;background:#8E2F3F;flex:none"></div>занятие · 0:04</div></sc-if>
+      <div style="flex:1"></div>
+      <div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#E6E4EE;white-space:nowrap">{{ f.whereIco }}Дома</div>
+    </div>
+  </div>
+  <div style="position:absolute;inset:0;background:rgba(0,0,0,.45)"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;top:{{ f.sheetTop }};background:#292833;border-radius:28px 28px 0 0;display:flex;flex-direction:column;overflow:hidden">
+    <div style="padding:12px 0 0;display:flex;justify-content:center;flex:none"><div style="width:32px;height:4px;border-radius:2px;background:#A39FB5;opacity:.5"></div></div>
+    <div style="position:relative;flex:1;min-height:0">
+      <div style="position:absolute;inset:0;padding:22px 24px 32px;display:flex;flex-direction:column;gap:18px;opacity:{{ f.lockOp }}">
+        <div style="font-size:22px;font-weight:700;line-height:1.25">Сначала — занятие</div>
+        <div style="font-size:15px;line-height:1.5;color:#A39FB5">Время на произведения, гаммы и этюды идёт внутри занятия. Начните его — и выберите, что играть.</div>
+        <div style="flex:1"></div>
+        <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:10px;font-size:16px;font-weight:700">{{ timerIco }}Начать занятие</div>
+        <div style="height:48px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#C4ADFF">Не сейчас</div>
+      </div>
+      <div style="position:absolute;inset:0;display:flex;flex-direction:column;opacity:{{ f.listOp }}">
+        <div style="padding:10px 24px 10px;flex:none"><div style="font-size:20px;font-weight:700">Что играем</div></div>
+        <div style="flex:1;overflow:hidden;padding:0 20px;display:flex;flex-direction:column">
+          <sc-for list="{{ shortRows }}" as="r" hint-placeholder-count="7">
+          <sc-if value="{{ r.isHead }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:baseline;gap:7px;padding:12px 4px 6px;flex:none"><div style="font-size:13px;font-weight:700;color:#A39FB5">{{ r.name }}</div><div class="tn" style="font-size:12px;color:#A39FB5;opacity:.8">{{ r.cnt }}</div></div></sc-if>
+          <sc-if value="{{ r.isItem }}" hint-placeholder-val="{{ true }}">
+          <div style="display:flex;align-items:center;gap:12px;min-height:56px;padding:8px 12px;border-radius:12px;box-sizing:border-box;flex:none">
+            <div style="flex:1;min-width:0"><div style="font-size:15px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.t }}</div><sc-if value="{{ r.hasSub }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;color:#A39FB5;margin-top:2px">{{ r.s }}</div></sc-if></div>
+            <sc-if value="{{ r.mDone }}" hint-placeholder-val="{{ false }}"><div class="tn" style="height:28px;padding:0 10px;border-radius:14px;background:#1E1D25;display:flex;align-items:center;gap:5px;font-size:13px;font-weight:700;flex:none">{{ checkON }}{{ r.mt }}</div></sc-if>
+            <sc-if value="{{ r.mPart }}" hint-placeholder-val="{{ false }}"><div class="tn" style="font-size:13px;color:#A39FB5;flex:none">{{ r.mt }}</div></sc-if>
+          </div>
+          </sc-if>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section class="dv-turn" id="s30g">
+<div class="dv-thd"><a class="dv-tid" href="#s30g">30g</a><span class="dv-tname">Конец занятия и строка на «Занятиях»</span></div>
+<p class="dv-sub">Лист итога получает раздел «Что играли» — в порядке времени, а не по длительности: так видно занятие, а не рейтинг. Отметка — та же галочка чернилами, что на закладке, но на тёмном листе она `onSurface`. Тактов здесь нет: они появятся одним «+N» на карточке «Занятий» после сохранения (вопрос 7 — оставляем секретом; «+30» у каждой строки превращает лист итога в кассовый чек).</p>
+<div class="dv-opts">
+<sc-for list="{{ f30g }}" as="f" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div style="width:412px;background:#16161C;border-radius:20px;padding:40px 0 0;flex:none">
+  <div style="background:#292833;border-radius:28px 28px 20px 20px;padding:12px 24px 28px;display:flex;flex-direction:column;gap:18px">
+    <div style="width:32px;height:4px;border-radius:2px;background:#A39FB5;opacity:.5;align-self:center"></div>
+    <div style="font-size:14px;color:#A39FB5">Занятие</div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <div style="width:56px;height:56px;border-radius:50%;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:24px;color:#E6E4EE">−</div>
+      <div style="text-align:center"><div class="tn" style="font-size:56px;font-weight:700;line-height:1">{{ f.total }}</div><div style="font-size:12px;color:#A39FB5;margin-top:6px">шаг 5 мин</div></div>
+      <div style="width:56px;height:56px;border-radius:50%;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:24px;color:#E6E4EE">+</div>
+    </div>
+    <sc-if value="{{ f.hasApp }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:2px">
+      <div style="font-size:14px;font-weight:700;margin-bottom:6px">Что играли</div>
+      <sc-for list="{{ f.apps }}" as="a" hint-placeholder-count="4">
+      <div style="display:flex;align-items:center;gap:12px;min-height:44px;padding:4px 0">
+        <div style="flex:1;min-width:0;font-size:15px;font-weight:600;color:{{ a.fg }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ a.t }}</div>
+        <div class="tn" style="font-size:14px;font-weight:600;color:{{ a.tFg }};flex:none">{{ a.time }}</div>
+        {{ a.check }}
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
+    <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">Сохранить</div>
+    <div style="height:40px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#C4ADFF;margin-top:-10px">Не сохранять</div>
+  </div>
+</div>
+</div>
+</sc-for>
+<div class="dv-opt" id="30g4"><div class="dv-olabel"><a class="dv-oid" href="#30g4">30g4</a>«Занятия» — тихая строка идущего отрезка под крупным таймером; движения на экране по-прежнему два</div>
+<div class="scr" style="width:412px;height:892px;background:#131318">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column">
+    <div style="flex:1;display:flex;flex-direction:column;gap:20px;padding:16px 16px 0;overflow:hidden">
+      <div style="font-size:28px;font-weight:700;line-height:1.1">Занятия</div>
+      <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+        <div class="tn" style="font-size:64px;font-weight:700;line-height:1;letter-spacing:-1px">34:12</div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:14px;color:#A39FB5"><div style="width:8px;height:8px;border-radius:50%;background:#C4ADFF"></div>Занятие идёт</div>
+        <div class="tn" style="font-size:14px;color:#A39FB5;margin-top:2px">Концерт ля минор · ещё 7 мин</div>
+        <div style="height:56px;border-radius:28px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:#E6E4EE;align-self:stretch;margin-top:8px">Закончить занятие</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <sc-for list="{{ sums }}" as="k" hint-placeholder-count="3"><div style="background:#1E1D25;border-radius:16px;padding:12px 12px 10px"><div style="font-size:12px;color:#A39FB5">{{ k.n }}</div><div class="tn" style="font-size:18px;font-weight:700;margin-top:4px;white-space:nowrap">{{ k.v }}</div></div></sc-for>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;justify-content:space-between;height:36px"><div style="font-size:16px;font-weight:700">Сентябрь 2026</div></div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);font-size:11px;color:#A39FB5;text-align:center;font-weight:600"><div>пн</div><div>вт</div><div>ср</div><div>чт</div><div>пт</div><div>сб</div><div>вс</div></div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);row-gap:4px">
+          <sc-for list="{{ calCells }}" as="c" hint-placeholder-count="28">
+          <div style="height:44px;display:flex;align-items:center;justify-content:center;opacity:{{ c.op }}"><div style="width:40px;height:40px;border-radius:12px;background:{{ c.bg }};box-shadow:{{ c.sh }};display:flex;align-items:center;justify-content:center"><div class="tn" style="font-size:15px;font-weight:{{ c.fw }};color:{{ c.fg }}">{{ c.n }}</div></div></div>
+          </sc-for>
+        </div>
+      </div>
+    </div>
+    <div style="height:80px;display:flex;background:#1E1D25;flex:none;align-items:center;padding:0 8px">
+      <sc-for list="{{ navPr }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:11px;font-weight:600">{{ t.n }}</div></div></sc-for>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<p class="dv-next"><b>Степпер и обрезка.</b> <a href="#30g2">30g2</a>: 47 → 30 мин срезает последние 17 минут занятия. «Концерт ля минор» начался на 34-й минуте — он уходит из списка целиком; «Менуэт» теряет четыре минуты и становится «3 из 10 мин». Отметки у того, что кончилось раньше нового конца, не двигаются. Пять отрезков в низком окне (landscape 892 × 412) — лист прокручивается, степпер и «Сохранить» прилипают снизу.</p>
+</section>
+
+<section class="dv-turn" id="s30h">
+<div class="dv-thd"><a class="dv-tid" href="#s30h">30h</a><span class="dv-tname">«Репертуар» — время по элементам</span></div>
+<p class="dv-sub"><b>Полосы, три строки, над разделами</b> (вопрос 6). Матрицу считали честно: 348 dp минус колонка названий 116 — на 30 дней остаётся 6,5 dp на клетку, втрое меньше клетки календаря «Занятий» (<a href="#30h2">30h2</a>), и она отвечает на вопрос «когда», которого никто не задавал. Полосы отвечают на заданный: куда уходит время. Три строки, а не пять — это ровно та высота (230 dp), при которой все пять карточек разделов и «Добавить раздел» остаются выше сгиба; «Все 8» раскрывает список на месте и тогда уже двигает разделы вниз. Цвет — фиолетовый времени (`#5B43B8`, сегодняшняя часть `#C4ADFF`); полосы вдвое толще долевых, у них цифры справа и подпись «30 дней» — с полосой «разбираю / учу / выучено» не путаются.</p>
+<div class="dv-opts">
+<sc-for list="{{ f30h }}" as="f" hint-placeholder-count="5">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:412px;height:892px;background:#131318">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column">
+    <div style="padding:16px 16px 0;display:flex;align-items:baseline;justify-content:space-between;flex:none"><div style="font-size:28px;font-weight:700">Записи</div><div class="tn" style="font-size:14px;color:#A39FB5">выучено 6 из 17</div></div>
+    <div style="padding:14px 16px 0;flex:none"><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:40px"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600">Сессии</div><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;background:#5B43B8;color:#E9DDFF;border-left:1px solid #3A3846">Репертуар</div></div></div>
+    <div style="flex:1;overflow:hidden;padding:16px 16px 0;display:flex;flex-direction:column;gap:10px">
+      <div style="background:#1E1D25;border-radius:16px;padding:14px 16px 12px;display:flex;flex-direction:column;gap:10px;flex:none">
+        <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:15px;font-weight:600">Время по элементам</div><div class="tn" style="font-size:12px;color:#A39FB5">{{ f.chartMeta }}</div></div>
+        <sc-if value="{{ f.chartEmpty }}" hint-placeholder-val="{{ false }}">
+        <div style="font-size:13.5px;line-height:1.5;color:#A39FB5;padding:6px 0 10px">Здесь будет видно, сколько времени получает каждый элемент. Выберите элемент на Live во время занятия.</div>
+        </sc-if>
+        <sc-if value="{{ f.chartOne }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;padding:4px 0 8px"><div style="font-size:15px;font-weight:600;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Менуэт соль мажор</div><div class="tn" style="font-size:14px;font-weight:700;color:#C4ADFF;flex:none;padding-left:12px">4 ч 20 мин</div></div>
+        <div style="font-size:12.5px;color:#A39FB5;margin-top:-6px">сегодня 7 мин · единственный элемент со временем — полосу не рисуем, сравнивать не с чем</div>
+        </sc-if>
+        <sc-if value="{{ f.chartBars }}" hint-placeholder-val="{{ true }}">
+        <div style="display:flex;flex-direction:column;gap:11px">
+          <sc-for list="{{ f.rows }}" as="r" hint-placeholder-count="3">
+          <div style="display:flex;flex-direction:column;gap:5px">
+            <div style="display:flex;align-items:baseline;gap:10px"><div style="flex:1;min-width:0;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.t }}</div><div class="tn" style="font-size:12.5px;font-weight:700;color:#A39FB5;flex:none">{{ r.time }}</div></div>
+            <div style="height:8px;border-radius:4px;background:#292833;overflow:hidden"><div style="height:100%;width:{{ r.w }};border-radius:4px;background:#5B43B8;display:flex;justify-content:flex-end"><sc-if value="{{ r.hasTd }}" hint-placeholder-val="{{ false }}"><div style="width:{{ r.tdW }};background:#C4ADFF;border-radius:4px"></div></sc-if></div></div>
+          </div>
+          </sc-for>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:center;height:36px;font-size:13.5px;font-weight:600;color:#C4ADFF;margin-top:2px">{{ f.moreText }}</div>
+        </sc-if>
+        <sc-if value="{{ f.chartMatrix }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <sc-for list="{{ matrix }}" as="m" hint-placeholder-count="8">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="width:116px;flex:none;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#E6E4EE">{{ m.t }}</div>
+            <div style="flex:1;display:flex;gap:1px">
+              <sc-for list="{{ m.cells }}" as="c" hint-placeholder-count="30"><div style="flex:1;height:14px;border-radius:2px;background:{{ c.c }}"></div></sc-for>
+            </div>
+          </div>
+          </sc-for>
+          <div style="display:flex;justify-content:space-between;font-size:10.5px;color:#A39FB5;padding:4px 0 0 124px"><span>23 авг</span><span>сегодня</span></div>
+        </div>
+        </sc-if>
+      </div>
+      <sc-for list="{{ f.secs }}" as="c" hint-placeholder-count="5">
+      <div style="background:#1E1D25;border-radius:16px;padding:13px 16px 14px;display:flex;flex-direction:column;gap:9px;flex:none">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px"><div style="font-size:16px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</div><div class="tn" style="font-size:13px;color:#A39FB5;white-space:nowrap">{{ c.txt }}</div></div>
+        <div style="height:6px;border-radius:3px;background:#292833;display:flex;overflow:hidden;gap:2px"><sc-for list="{{ c.sh }}" as="s" hint-placeholder-count="3"><div style="width:{{ s.w }};background:{{ s.c }};flex:none"></div></sc-for></div>
+      </div>
+      </sc-for>
+      <div style="height:44px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF;flex:none">{{ plusIco }}Добавить раздел</div>
+    </div>
+    <div style="height:80px;display:flex;background:#1E1D25;flex:none;align-items:center;padding:0 8px">
+      <sc-for list="{{ navPr }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:11px;font-weight:600">{{ t.n }}</div></div></sc-for>
+    </div>
+  </div>
+</div>
+</div>
+</sc-for>
+<div class="dv-opt" id="30h6"><div class="dv-olabel" style="max-width:892px"><a class="dv-oid" href="#30h6">30h6</a>Landscape 892 × 412 — карточка времени в левой колонке, разделы в правой</div>
+<div class="scr" style="width:892px;height:412px;background:#131318">
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column">
+    <div style="padding:14px 20px 0;display:flex;align-items:center;gap:20px;flex:none"><div style="font-size:24px;font-weight:700">Записи</div><div style="display:flex;border:1px solid #3A3846;border-radius:20px;overflow:hidden;height:36px"><div style="display:flex;align-items:center;padding:0 18px;font-size:13px;font-weight:600">Сессии</div><div style="display:flex;align-items:center;padding:0 18px;font-size:13px;font-weight:600;background:#5B43B8;color:#E9DDFF;border-left:1px solid #3A3846">Репертуар</div></div><div style="flex:1"></div><div class="tn" style="font-size:13px;color:#A39FB5">выучено 6 из 17</div></div>
+    <div style="flex:1;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:14px 20px 14px;min-height:0">
+      <div style="background:#1E1D25;border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:9px;min-height:0">
+        <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:14px;font-weight:600">Время по элементам</div><div class="tn" style="font-size:11.5px;color:#A39FB5">30 дней</div></div>
+        <sc-for list="{{ landBars }}" as="r" hint-placeholder-count="5">
+        <div style="display:flex;flex-direction:column;gap:4px">
+          <div style="display:flex;align-items:baseline;gap:10px"><div style="flex:1;min-width:0;font-size:12.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ r.t }}</div><div class="tn" style="font-size:11.5px;font-weight:700;color:#A39FB5;flex:none">{{ r.time }}</div></div>
+          <div style="height:7px;border-radius:4px;background:#292833;overflow:hidden"><div style="height:100%;width:{{ r.w }};border-radius:4px;background:#5B43B8;display:flex;justify-content:flex-end"><sc-if value="{{ r.hasTd }}" hint-placeholder-val="{{ false }}"><div style="width:{{ r.tdW }};background:#C4ADFF;border-radius:4px"></div></sc-if></div></div>
+        </div>
+        </sc-for>
+        <div style="display:flex;align-items:center;height:30px;font-size:12.5px;font-weight:600;color:#C4ADFF">Все 8</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:7px;min-height:0;overflow:hidden">
+        <sc-for list="{{ landSecs }}" as="c" hint-placeholder-count="4">
+        <div style="background:#1E1D25;border-radius:14px;padding:10px 14px 12px;display:flex;flex-direction:column;gap:8px;flex:none">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px"><div style="font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ c.name }}</div><div class="tn" style="font-size:12px;color:#A39FB5;white-space:nowrap">{{ c.txt }}</div></div>
+          <div style="height:6px;border-radius:3px;background:#292833;display:flex;overflow:hidden;gap:2px"><sc-for list="{{ c.sh }}" as="s" hint-placeholder-count="3"><div style="width:{{ s.w }};background:{{ s.c }};flex:none"></div></sc-for></div>
+        </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+</div>
+<p class="dv-next"><b>Значков разделов у строк графика не будет.</b> Четыре новых глифа по 14 dp в строке 13,5 sp — это четыре пятна, которые надо учить, ради различения, которое уже даёт само название («G-dur · 3 октавы» ни с чем не спутать). Новых иконок этот шаг не требует вообще: вход — слово, отметка — уже существующий `check`.</p>
+</section>
+
+<section class="dv-turn" id="s30i">
+<div class="dv-thd"><a class="dv-tid" href="#s30i">30i</a><span class="dv-tname">Удаление элемента — новый текст</span></div>
+<p class="dv-sub">Диалог тот же (`surfaceContainerHigh` r28, иконка 44 dp), меняется вторая фраза: время по элементу теперь тоже хранится и тоже удаляется, а записи живут отдельно и остаются.</p>
+<div class="dv-opts">
+<div class="dv-opt" id="30i1"><div class="dv-olabel" style="max-width:360px"><a class="dv-oid" href="#30i1">30i1</a>«Удалить элемент?» — ноты, заметки и время удаляются, записи остаются</div>
+<div style="width:360px;background:#292833;border-radius:28px;padding:28px 24px 20px;display:flex;flex-direction:column;gap:16px;flex:none;box-shadow:0 24px 60px rgba(0,0,0,.5)">
+  <div style="width:44px;height:44px;border-radius:22px;background:#5B43B8;display:flex;align-items:center;justify-content:center">{{ trashIco }}</div>
+  <div style="font-size:24px;font-weight:700;line-height:1.2">Удалить «Кайзер № 3»?</div>
+  <div style="font-size:15px;line-height:1.5;color:#A39FB5">Ноты, заметки и время по нему удалятся. Записи останутся в «Записях».</div>
+  <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px">
+    <div style="height:48px;padding:0 18px;border-radius:24px;display:flex;align-items:center;font-size:15px;font-weight:600;color:#C4ADFF">Отмена</div>
+    <div style="height:48px;padding:0 20px;border-radius:24px;display:flex;align-items:center;font-size:15px;font-weight:700;color:#E8565C">Удалить</div>
+  </div>
+</div>
+</div>
+</div>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1400px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Токены, размеры, анимации, тексты, ответы словами</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(460px,100%),1fr));gap:26px;font-size:13px;line-height:1.55">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">`take.*` — закладка, отметки, график</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.3fr) 96px minmax(0,1.5fr)">
+    <div class="h">Токен</div><div class="h">Значение</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="14"><div class="mono">{{ t.name }}</div><div style="padding:6px 8px;display:flex;align-items:center;gap:6px">{{ t.sw }}<span class="mono">{{ t.v }}</span></div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты (русские)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.5fr)">
+    <div class="h">Ключ</div><div class="h">Строка</div>
+    <sc-for list="{{ texts }}" as="t" hint-placeholder-count="12"><div class="mono">{{ t.k }}</div><div style="color:#A39FB5">{{ t.v }}</div></sc-for>
+  </div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,.9fr) minmax(0,2fr)">
+    <div class="h">Элемент</div><div class="h">dp / sp</div>
+    <sc-for list="{{ sizes }}" as="s" hint-placeholder-count="10"><div style="font-weight:600">{{ s.n }}</div><div style="color:#A39FB5">{{ s.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,.9fr) minmax(0,2fr)">
+    <div class="h">Что</div><div class="h">Как</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="6"><div style="font-weight:600">{{ a.n }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Реализация</div>
+  <div style="color:#A39FB5">Закладка — один `Canvas` с контуром `bmPath(w,h)` и латунной линией: «ход» — это длина в отрисовке, приглушение — `alpha` целого слоя, текст меняется раз в минуту. Отсчёт — `System.currentTimeMillis()` против метки конца в `DataStore`, как таймер занятия: приложение можно закрыть. Лист — `ModalBottomSheet` в нашей теме; прилипшая цель — `Column` вне `LazyColumn`. График — `Canvas` с восемью прямоугольниками и `drawRoundRect` для сегодняшней части; раскрытие «Все 8» — `animateContentSize`. Новых библиотек и новых иконок не нужно; `ICONS` дополнять не требуется — вход в отрезок называется словом, отметка использует существующий `check`.</div></div>
+</div>
+</div>
+<div style="margin-top:26px"><div style="font-weight:700;font-size:14px;margin-bottom:8px">Ответы на вопросы раздела 12</div>
+<div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr)">
+  <sc-for list="{{ answers }}" as="a" hint-placeholder-count="8"><div class="mono" style="color:#FFD98A">{{ a.n }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+</div></div>
+<p class="dv-next"><b>Что осталось нерешённым.</b> Слово «занятие» и слово «отрезок» рядом в листе итога («Занятие» сверху, «Что играли» ниже) — читается, но если у вас в спеке есть другое имя для отрезка, поменяем в одной строке ресурсов. И нижняя панель на кадрах 30g4 и 30h — как в 29-й серии («Дом · Занятия · Live · Путь»); экран репертуара мы открыли из «Занятий». Если он живёт в другой вкладке, изменится только активная вкладка, содержимое кадров — нет.</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1400,&quot;height&quot;:900}}">
+class Component extends DCLogic {
+  componentDidMount() {
+    import('./live-scene.js').then(m => { this.mk = m.buildLiveScene; this.forceUpdate(); });
+    this.t = setInterval(() => { if (window.buildHomeCatalog && this.mk) { clearInterval(this.t); this.forceUpdate(); } }, 100);
+  }
+  componentWillUnmount() { clearInterval(this.t); }
+  renderVals() {
+    const h = React.createElement;
+    const K = window.buildHomeCatalog ? window.buildHomeCatalog(React) : null;
+    if (!K || !this.mk) return {};
+    const S = this.mk(React, K, {});
+    const { picture, ring } = S;
+    const ON='#E6E4EE', OV='#A39FB5', SURF='#131318', SC='#1E1D25', SCH='#292833', OUT='#3A3846', PR='#C4ADFF', PC='#5B43B8', ONPC='#E9DDFF', ONP='#2E1A6E';
+    const BONE='#F1EEE6', INK='#2A2430', BONESH='#D8D0BE', BRASS='#C9A24A', WOOD='#8B5E3C', EBONY='#1C1A20', NICKEL='#6B6C78';
+    const Z = { in:'#47C97E', near:'#E5B03C', off:'#E8565C' };
+    const rep = (n,f) => Array.from({length:n},(_,i)=>f(i));
+
+    const sv = (s,ch) => h('svg',{width:s,height:s,viewBox:'0 0 24 24',fill:'none',style:{display:'block',flex:'none'}},ch);
+    const pt = (d,c,w=1.8) => h('path',{key:d,d,fill:'none',stroke:c,strokeWidth:w,strokeLinecap:'round',strokeLinejoin:'round'});
+    const icoCheck = (c,s=16) => sv(s,pt('M5 12.5 9.5 17 19 7.5',c,2.4));
+    const icoHome = (c=ON,s=14) => sv(s,[pt('M4 11l8-6 8 6',c),pt('M6 10v9h12v-9',c)]);
+    const icoHall = (c=ON,s=14) => sv(s,[pt('M4 19h16',c),pt('M6 19V9l6-4 6 4v10',c),pt('M9.5 19v-5h5v5',c)]);
+    const dotReady = h('div',{style:{width:8,height:8,borderRadius:4,background:'#7CB99A',flex:'none'}});
+    const dotIn = z => h('div',{style:{width:18,height:18,borderRadius:9,background:z}});
+    const recDot = h('div',{style:{width:20,height:20,borderRadius:10,background:PR}});
+    const recStop = h('div',{style:{width:22,height:22,borderRadius:3,background:'#E8565C'}});
+    const tabIco = (d,c) => h('svg',{width:22,height:22,viewBox:'0 0 24 24',style:{display:'block'}},pt(d,c,1.9));
+    const TB = [['Дом','M4 11l8-6 8 6M6 10v9h12v-9'],['Занятия','M5 4h14v16H5zM8 8h8M8 12h8M8 16h5'],['Live','M12 3v18M7 7v10M17 7v10M3 10v4M21 10v4'],['Путь','M3.5 6.5L9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5zM9 4v13.5M15 6.5V20']];
+    const navOf = (act,names) => TB.map(([n,d],i) => { const a=(names?names[i]:n)===act||n===act; return { n: names?names[i]:n, ic: tabIco(d, a?PR:OV), c: a?PR:OV }; });
+    const navLive = navOf('Live'), navPr = navOf('Занятия'), navDe = navOf('Live',['Zuhause','Übung','Live','Weg']);
+
+    // ---------- закладка (вариант B): бумага с раздвоенным краем, ход — латунь по нижней кромке
+    const bmPath = (w,ht) => `M6 0H${w}L${w-15} ${(ht/2).toFixed(1)}L${w} ${ht}H6Q0 ${ht} 0 ${ht-6}V6Q0 0 6 0Z`;
+    const bmk = (w,ht,o={}) => { const d = bmPath(w,ht);
+      const els = [h('path',{key:'sh',d,fill:'rgba(0,0,0,.30)',transform:'translate(0 3)'}),
+        h('path',{key:'p',d,fill:o.fill||'none',stroke:o.stroke||'none',strokeWidth:o.sw||1.6})];
+      if (o.prog!=null) { const x0=13, x1=w-27, len=x1-x0;
+        els.push(h('path',{key:'t',d:`M${x0} ${ht-9}H${x1}`,stroke:'rgba(42,36,48,.15)',strokeWidth:3,strokeLinecap:'round'}));
+        if (o.prog>0) els.push(h('path',{key:'f',d:`M${x0} ${ht-9}H${(x0+len*o.prog).toFixed(1)}`,stroke:BRASS,strokeWidth:3,strokeLinecap:'round'})); }
+      return h('svg',{width:w,height:ht+4,viewBox:`0 0 ${w} ${ht+4}`,style:{display:'block'}},els); };
+    const BMrun = (name,time,prog,w=150) => ({ bmShow:true, bmSvg:bmk(w,56,{fill:BONE,prog}), bmName:name, bmNameFs:'12.5px', bmInk:INK, bmHasTime:true, bmTime:time, bmCheck:null });
+    const BMdone = (name,word='готово',w=150) => ({ bmShow:true, bmSvg:bmk(w,56,{fill:BONE,prog:1,stroke:BRASS,sw:1.8}), bmName:name, bmNameFs:'12.5px', bmInk:INK, bmHasTime:true, bmTime:word, bmCheck:icoCheck(INK,15) });
+    const BMentry = (label='Репертуар',w=124) => ({ bmShow:true, bmSvg:bmk(w,56,{stroke:'rgba(241,238,230,.5)'}), bmName:label, bmNameFs:'13.5px', bmInk:BONE, bmHasTime:false, bmTime:'', bmCheck:null });
+    const BMnone = { bmShow:false, bmSvg:null, bmName:'', bmNameFs:'13px', bmInk:BONE, bmHasTime:false, bmTime:'', bmCheck:null };
+    // вариант A — бумажная лента во всю ширину
+    const stripA = (w,ht,prog) => h('svg',{width:w,height:ht+3,viewBox:`0 0 ${w} ${ht+3}`,style:{display:'block'}},[
+      h('rect',{key:'s',x:0,y:3,width:w,height:ht,rx:5,fill:'rgba(0,0,0,.30)'}),
+      h('rect',{key:'p',x:0,y:0,width:w,height:ht,rx:5,fill:BONE}),
+      h('path',{key:'t',d:`M13 ${ht-7}H${w-13}`,stroke:'rgba(42,36,48,.15)',strokeWidth:3,strokeLinecap:'round'}),
+      h('path',{key:'f',d:`M13 ${ht-7}H${(13+(w-26)*prog).toFixed(1)}`,stroke:BRASS,strokeWidth:3,strokeLinecap:'round'})]);
+
+    const STR = [['G','196'],['D','293,7'],['A','440'],['E','659,3']];
+    const strRow = (auto,lock) => STR.map(([name,hz]) => { const a=name===auto, l=name===lock;
+      return { name, hz, locked:l, bg: l?BONE : a?WOOD : EBONY, edge: l?BRASS : a?'#A9763F':'#2E2A32', fg: l?INK:BONE, hzFg: l?'#6E635C':'#8D8796', peg: l?BRASS : a?BONESH:NICKEL }; });
+    const lockIco = h('svg',{width:13,height:13,viewBox:'0 0 24 24'},[pt('M7.5 11V8.5a4.5 4.5 0 0 1 9 0V11',INK,2.4),h('rect',{key:'b',x:5.5,y:11,width:13,height:9,rx:2,fill:INK})]);
+
+    const LV = (id,label,o={}) => { const dark=!!o.dark, zone=o.zone||null, glow=o.glow||0, sounding=!!zone, fmt=o.fmt||'port', dim=dark?.38:1;
+      const isHall = o.where && o.where!=='rent' && o.where!=='wood';
+      return { id, label,
+        pic: picture(o.where||'rent',{ fmt, mode:'eve', dark, zone, glow }),
+        chromeOp: dim, rowOp: dim,
+        playBg: o.tuning?'transparent':BONE, playFg: o.tuning?BONESH:INK, tuneBg: o.tuning?BONE:'transparent', tuneFg: o.tuning?INK:BONESH,
+        chip: o.chip!==false, chipC: !!o.chipCText, chipCText: o.chipCText||'',
+        where: o.whereName||'Дома', whereIco: isHall?icoHall():icoHome(),
+        statusOp: (sounding && !o.tuning) ? 0 : dim, statusDot: dotReady,
+        statusText: o.tuning ? (o.lock?`цель — ${o.lock} · сыграйте струну`:'авто · сыграйте открытую струну') : 'Играйте…',
+        ring: ring(fmt==='land'?260 : fmt==='small'?224 : o.tuning?260:300, zone, glow, { level:.5 }),
+        note: o.note||'A', oct: o.oct||'4', noteOp: sounding?1:0, noteSize: fmt==='small'?'132px':(o.tuning?'150px':'174px'),
+        wordOp: sounding?1:0, zoneCol: sounding?Z[zone]:'transparent', arrow: sounding?dotIn(Z[zone]):null, word:'в строе', cents:o.cents||'+3',
+        tuning: !!o.tuning, strings: strRow(o.auto||'A', o.lock), marker: o.marker||'50%', markerGlow: sounding?'rgba(71,201,126,.5)':'rgba(0,0,0,0)',
+        hint: o.lock ? `цель зафиксирована: ${o.lock} · нажмите, чтобы отпустить` : 'ближайшая струна подсвечена сама',
+        rec: !!o.rec, recLane: rep(9,i=>h('div',{key:i,style:{width:(6+i%4)+'%',background:[Z.in,Z.in,Z.near,Z.in,Z.off,Z.in,Z.in,Z.near,Z.in][i]}})),
+        recFace: o.rec?'#E8565C':BONE, recRing: o.rec?'#A8323F':BRASS, recGlyph: o.rec?recStop:recDot,
+        rowA: !!o.rowA, rowASvg: o.rowA?stripA(364,34,o.rowA.prog):null, rowAName: o.rowA?o.rowA.name:'', rowATime: o.rowA?o.rowA.time:'',
+        bmOp: o.bmOp ?? dim,
+        ...(o.bm||BMnone) }; };
+
+    const VIV = 'Концерт ля минор', MEND = 'Концерт ми минор, соч. 64, I. Allegro molto appassionato';
+    const f30a = [
+      LV('30a1','A — своя строка под «занятие · место»: 364 dp, ход линией по нижней кромке. Читается лучше всех, но забирает 34 dp у кольца',{ rowA:{ name:'Концерт ля минор, I ч.', time:'ещё 7 мин', prog:.65 } }),
+      LV('30a2','B — закладка у клавиши записи, 150 × 56. Высоты у кольца не берёт, лежит под большим пальцем — выбрано',{ bm:BMrun(VIV,'ещё 7 мин',.65) }),
+      LV('30a3','C — одна бирка с занятием: бумаги 268 dp, подписи места остаётся 96 — «Вена · Золотой зал» обрезается. Отброшено',{ chipCText:'Концерт ля минор · ещё 7 мин', whereName:'Вена · Золотой зал', where:'vienna' }) ];
+    const f30b = [
+      LV('30b1','Нет занятия — пустой контур «Репертуар», 124 dp: слово целиком, без многоточия; тап откроет лист «Сначала — занятие»',{ chip:false, bm:BMentry() }),
+      LV('30b2','Занятие идёт, отрезка нет — тот же вход; тап откроет «Что играем»',{ bm:BMentry() }),
+      LV('30b3','Идёт — «ещё 7 мин», латунь дописана на 13 из 20 минут',{ bm:BMrun(VIV,'ещё 7 мин',.65) }),
+      LV('30b4','Последняя минута — «ещё 1 мин», секунд нет',{ bm:BMrun(VIV,'ещё 1 мин',.95) }),
+      LV('30b5','Сделан — латунь замкнулась ободом, «готово» и отметка чернилами',{ bm:BMdone(VIV) }) ];
+    const f30c = [
+      LV('30c1','Свет погашен, звучит нота — закладка приглушена до 0,38 вместе с ярлычком занятия и подписью места',{ dark:true, zone:'in', glow:.6, bm:BMrun(VIV,'ещё 7 мин',.72) }),
+      LV('30c2','Свет погашен, отрезок кончился во время игры — «готово» остаётся в полную силу: это и есть сигнал краем глаза',{ dark:true, zone:'in', glow:.6, bm:BMdone(VIV), bmOp:1 }),
+      LV('30c3','Идёт запись — полоса записи над клавишей, закладка в её строке; лист открылся бы поверх и записи не прервал',{ rec:true, bm:BMrun(VIV,'ещё 7 мин',.65) }),
+      LV('30c4','«Настройка», авто — кольцо 260, колки и шкала на местах, отрезок идёт дальше',{ tuning:true, bm:BMrun(VIV,'ещё 7 мин',.65) }),
+      LV('30c5','«Настройка», цель зафиксирована на E — закладка не двигается',{ tuning:true, lock:'E', auto:'E', marker:'58%', bm:BMrun(VIV,'ещё 6 мин',.70) }),
+      LV('30c6','Вена · Золотой зал, тишина — бумага на кремовом потолке: тень формой, контраст чернил 9,1 : 1',{ where:'vienna', whereName:'Вена · Золотой зал', bm:BMrun(VIV,'ещё 7 мин',.65) }),
+      LV('30c7','Самое длинное название — «Концерт ми минор, соч. 64…» обрезается многоточием, остаток не сдвигается',{ bm:BMrun(MEND,'ещё 12 мин',.4) }) ];
+    const f30cs = [ LV('30c8','360 × 640, немецкий — закладка 126 dp, «noch 7 Min.» одной строкой; кольцо 224 dp (у B оно и так меньше, чем было бы с A)',{ fmt:'small', bm:BMrun('Konzert a-moll','noch 7 Min.',.65,126) }) ];
+    const f30cl = [
+      LV('30c9','Landscape 892 × 412, тишина — закладка 170 dp слева от клавиши, в правой колонке',{ fmt:'land', bm:BMrun(VIV,'ещё 7 мин',.65,170) }),
+      LV('30c10','Landscape, игра при погашенном свете — приглушено всё, кроме кольца и слова строя',{ fmt:'land', dark:true, zone:'in', glow:.6, bm:BMrun(VIV,'ещё 7 мин',.72,170) }) ];
+
+    const cropPic = () => picture('rent',{ vb:'0 364 412 236', w:412, h:236, veil:false, mode:'eve' });
+    const D = (id,cap,label,bm,op=1) => ({ id, cap, label, pic:cropPic(), recGlyph:recDot, bmOp:op, ...bm });
+    const f30d = [
+      D('30d1','−45 с','Последняя минута: «ещё 1 мин», латунь на 95 %',BMrun(VIV,'ещё 1 мин',.95)),
+      D('30d2','0 мс','Цель достигнута: ход дописан до края, текст ещё прежний',BMrun(VIV,'ещё 1 мин',1)),
+      D('30d3','+400 мс','Обод замкнулся, «готово» и отметка встали на место кроссфейдом',BMdone(VIV)),
+      D('30d4','держится','Так и стоит — до следующего выбора или до конца занятия; тап открывает «Что играем»',BMdone(VIV)),
+      D('30d5','«убрать анимации»','Без промежуточного кадра: обод, текст и отметка появляются сразу',BMdone(VIV)) ];
+
+    // ---------- репертуар и отметки «сегодня»
+    const REP = [
+      { sec:'Произведения', items:[
+        { t:'Менуэт соль мажор', s:'И. С. Бах', m:'part', mt:'7 мин' },
+        { t:'Концерт ля минор, I ч.', s:'А. Вивальди', m:'run' },
+        { t:'Мелодия', s:'К. В. Глюк' }, { t:'Юмореска', s:'А. Дворжак' }, { t:MEND, s:'Ф. Мендельсон' } ] },
+      { sec:'Гаммы', done:1, items:[
+        { t:'G-dur · 3 октавы', m:'done', mt:'10 мин' }, { t:'a-moll гармонический · 2 октавы' }, { t:'D-dur · 2 октавы' }, { t:'Es-dur · 2 октавы' } ] },
+      { sec:'Этюды', done:1, items:[
+        { t:'Кайзер № 3', s:'Г. Кайзер', m:'done', mt:'15 мин' }, { t:'Кайзер № 8', s:'Г. Кайзер' }, { t:'Мазас № 2', s:'Ж. Мазас' } ] },
+      { sec:'Штрихи', items:[{ t:'Деташе' },{ t:'Спиккато' },{ t:'Мартле' }] },
+      { sec:'Двойные ноты', items:[{ t:'Терции' },{ t:'Сексты' }] } ];
+    const rowsOf = (sel,secs) => { const out=[];
+      (secs||REP).forEach(g => { out.push({ isHead:true, isItem:false, name:g.sec, cnt: g.done?`· сегодня ${g.done}`:'' });
+        g.items.forEach(it => out.push({ isHead:false, isItem:true, t:it.t, s:it.s||'', hasSub:!!it.s,
+          mDone: it.m==='done', mPart: it.m==='part', mRun: it.m==='run', mt: it.mt||'',
+          fg: it.t===sel?ONPC:ON, bg: it.t===sel?'rgba(196,173,255,.14)':'transparent', bd: it.t===sel?PC:'transparent' })); });
+      return out; };
+    const chipsOf = sel => [5,10,15,20,30].map(n => ({ n, bg: n===sel?PR:'transparent', bd: n===sel?PR:OUT, fg: n===sel?ONP:ON }));
+    const sheetPic = () => picture('rent',{ fmt:'port', mode:'eve' });
+    const f30e = [
+      { id:'30e1', label:'Обычный — отрезок идёт, сверху «Сейчас» и «Остановить»; отметки: ✓ 10 мин, 7 мин, «идёт»', pic:sheetPic(), whereIco:icoHome(), chip:true, running:true, hasList:true, empty:false, goal:false, rows:rowsOf(null), listMt:'0px', chips:chipsOf(15), goalBtn:'' },
+      { id:'30e2', label:'Выбран «Кайзер № 8» — цель пришла прилипшей панелью, кнопка говорит длительность', pic:sheetPic(), whereIco:icoHome(), chip:true, running:true, hasList:true, empty:false, goal:true, rows:rowsOf('Кайзер № 8'), listMt:'-116px', chips:chipsOf(15), goalBtn:'Начать · 15 мин' },
+      { id:'30e3', label:'Длинный репертуар прокручен к «Штрихам» и своему разделу — порядок тот же, отметки не уезжают', pic:sheetPic(), whereIco:icoHome(), chip:true, running:true, hasList:true, empty:false, goal:false, rows:rowsOf(null), listMt:'-392px', chips:chipsOf(15), goalBtn:'' },
+      { id:'30e4', label:'Репертуар пуст — текст и «Открыть репертуар»', pic:sheetPic(), whereIco:icoHome(), chip:true, running:false, hasList:false, empty:true, goal:false, rows:[], listMt:'0px', chips:chipsOf(15), goalBtn:'' } ];
+    const landRows = rowsOf('Кайзер № 8');
+    const landChips = chipsOf(15);
+    const landPic = picture('rent',{ fmt:'land', mode:'eve' });
+    const shortRows = rowsOf(null, REP.slice(0,2));
+
+    const timerIco = sv(20,[pt('M12 6.5a7 7 0 1 0 0 14 7 7 0 1 0 0-14z',ONP),pt('M12 13.5V10',ONP),pt('M10 3h4M12 3v3.5',ONP)]);
+    const f30f = [
+      { id:'30f1', cap:'0 мс', label:'Вход без занятия — лист «Сначала — занятие»: текст, залитая кнопка с секундомером, «Не сейчас»', pic:sheetPic(), whereIco:icoHome(), chip:false, chipOp:0, sheetTop:'520px', lockOp:1, listOp:0 },
+      { id:'30f2', cap:'+120 мс', label:'Кроссфейд содержимого: лист не закрывается, высота доезжает до полной', pic:sheetPic(), whereIco:icoHome(), chip:true, chipOp:.5, sheetTop:'300px', lockOp:.35, listOp:.5 },
+      { id:'30f3', cap:'+320 мс', label:'Выбор на месте листа, за ним на Live появился ярлычок занятия «0:04»', pic:sheetPic(), whereIco:icoHome(), chip:true, chipOp:1, sheetTop:'104px', lockOp:0, listOp:1 } ];
+
+    const checkON = icoCheck(ON,15);
+    const app = (t,time,done) => ({ t, time, fg: ON, tFg: done?ON:OV, check: done?icoCheck(ON,16):h('div',{style:{width:16,height:16,flex:'none'}}) });
+    const f30g = [
+      { id:'30g1', label:'Лист итога — четыре отрезка этого занятия, в порядке времени; тактов здесь нет', total:'47 мин', hasApp:true,
+        apps:[ app('G-dur · 3 октавы','10 мин',true), app('Кайзер № 3','15 мин',true), app('Менуэт соль мажор','7 из 10 мин',false), app('Концерт ля минор, I ч.','13 из 20 мин',false) ] },
+      { id:'30g2', label:'Степпер укоротил занятие до 30 мин — «Концерт ля минор» начался позже нового конца и ушёл, «Менуэт» укоротился до 3 из 10', total:'30 мин', hasApp:true,
+        apps:[ app('G-dur · 3 октавы','10 мин',true), app('Кайзер № 3','15 мин',true), app('Менуэт соль мажор','3 из 10 мин',false) ] },
+      { id:'30g3', label:'Занятие без отрезков — лист ровно такой, каким был (10d)', total:'47 мин', hasApp:false, apps:[] } ];
+    const sums = [{ n:'Сегодня', v:'34 мин' },{ n:'За неделю', v:'4 ч 10 мин' },{ n:'Дней подряд', v:'6' }];
+    const CAL = { 1:1,2:2,3:0,4:3,5:1,6:0,7:0,8:2,9:3,10:1,11:0,12:4,13:2,14:1,15:3,16:2,17:4,18:0,19:1,20:3,21:2,22:1 };
+    const calFill = ['transparent','#2A2352','#3D2F80','#5B43B8','#C4ADFF'];
+    const calCells = rep(28, i => { const n=i-1; const has=n>=1&&n<=22; const lvl=CAL[n]||0;
+      return { n: has?String(n):'', op: has?1:0, bg: has?calFill[lvl]:'transparent', sh: n===22?'inset 0 0 0 2px '+PR:'none',
+        fw: n===22?700:500, fg: lvl>=3?ONP:ON }; });
+
+    // ---------- график времени по элементам
+    const CH = [ { t:'Менуэт соль мажор', m:260, td:7 },{ t:'G-dur · 3 октавы', m:190, td:10 },{ t:'Кайзер № 3', m:165, td:15 },
+      { t:'Концерт ля минор, I ч.', m:125, td:0 },{ t:'Деташе', m:80, td:0 },{ t:'a-moll гармонический · 2 октавы', m:55, td:0 },
+      { t:'Мелодия', m:30, td:0 },{ t:'Терции', m:10, td:0 } ];
+    const hm = m => m>=60 ? `${Math.floor(m/60)} ч${m%60?' '+(m%60)+' мин':''}` : `${m} мин`;
+    const bar = r => ({ t:r.t, time:hm(r.m), w:(r.m/260*100).toFixed(1)+'%', hasTd:r.td>0, tdW:(r.td/r.m*100).toFixed(1)+'%' });
+    const bars3 = CH.slice(0,3).map(bar), bars8 = CH.map(bar), landBars = CH.slice(0,5).map(bar);
+    const matrix = CH.map((r,ri) => ({ t:r.t, cells: rep(30, i => { const v=(i*7+ri*13)%11, lvl=(i===29&&r.td)?4:(v>8?3:v>6?2:v>3?1:0);
+      return { c: ['#1E1D25','#2A2352','#3D2F80','#5B43B8','#C4ADFF'][lvl] }; }) }));
+    const shr = (a,b,c) => { const t=a+b+c; return [[a,'#4A3F6E'],[b,'#8B74D9'],[c,PR]].map(([v,col]) => ({ w:(v/t*100).toFixed(1)+'%', c:col })); };
+    const SECS = [ { name:'Произведения', txt:'выучено 1 из 5', sh:shr(2,2,1) },{ name:'Гаммы', txt:'выучено 2 из 4', sh:shr(1,1,2) },
+      { name:'Этюды', txt:'выучено 1 из 3', sh:shr(1,1,1) },{ name:'Штрихи', txt:'выучено 2 из 3', sh:shr(0,1,2) },
+      { name:'Двойные ноты', txt:'выучено 0 из 2', sh:shr(2,0,0) } ];
+    const hBase = { secs:SECS, chartEmpty:false, chartOne:false, chartBars:true, chartMatrix:false, chartMeta:'30 дней', rows:bars3, moreText:'Все 8' };
+    const f30h = [
+      { ...hBase, id:'30h1', label:'A — полосы над разделами: три строки, 230 dp. Все пять карточек разделов и «Добавить раздел» остаются выше сгиба — выбрано' },
+      { ...hBase, id:'30h2', label:'B — матрица 8 × 30: клетка 6,5 dp, втрое меньше клетки календаря «Занятий». Отвечает на «когда», а спрашивали «сколько». Отброшено', chartBars:false, chartMatrix:true, chartMeta:'последние 30 дней' },
+      { ...hBase, id:'30h3', label:'«Все 8» раскрыто на месте — вот теперь разделы уезжают вниз, и это нормально: человек сам попросил', rows:bars8, moreText:'Свернуть' },
+      { ...hBase, id:'30h4', label:'Пусто — за 30 дней отрезков не было', chartBars:false, chartEmpty:true, chartMeta:'30 дней' },
+      { ...hBase, id:'30h5', label:'Один элемент со временем — полосы нет: она была бы рекордом без соперников. Только цифра и «сегодня»', chartBars:false, chartOne:true } ];
+    const landSecs = SECS.slice(0,4);
+    const plusIco = h('svg',{width:16,height:16,viewBox:'0 0 18 18'},pt('M9 3v12M3 9h12',PR,2));
+    const trashIco = sv(22,[pt('M4 7h16',ONPC),pt('M9 7V4.8a.8.8 0 0 1 .8-.8h4.4a.8.8 0 0 1 .8.8V7',ONPC),pt('M6 7l.9 12.2a1 1 0 0 0 1 .8h8.2a1 1 0 0 0 1-.8L18 7',ONPC)]);
+
+    // ---------- dev
+    const swc = v => h('div',{style:{width:14,height:14,borderRadius:4,background:v,border:'1px solid rgba(255,255,255,.15)',flex:'none'}});
+    const tokens = [
+      { name:'take.paper', v:'#F1EEE6', sw:swc(BONE), use:'бумага закладки — та же, что у ярлычка занятия' },
+      { name:'take.ink', v:'#2A2430', sw:swc(INK), use:'название, остаток, «готово», отметка; на бумаге 12,6 : 1' },
+      { name:'take.edge', v:'бумага 0,5', sw:swc('rgba(241,238,230,.5)'), use:'контур пустой закладки — «здесь можно начать»' },
+      { name:'take.prog', v:'#C9A24A', sw:swc(BRASS), use:'ход по нижней кромке, 3 dp; в конце тот же цвет становится ободом 1,8 dp' },
+      { name:'take.progTrack', v:'чернила 0,15', sw:swc('rgba(42,36,48,.15)'), use:'непройденная часть хода' },
+      { name:'take.shadow', v:'чёрный 0,30', sw:swc('rgba(0,0,0,.30)'), use:'тень — тот же контур со сдвигом 3 dp, без размытия' },
+      { name:'take.dim', v:'0,38', sw:swc('#5C5A63'), use:'приглушение со светом — как у ярлычка занятия; состояние «сделан» не приглушается' },
+      { name:'take.mark.done', v:'#1E1D25 + #E6E4EE', sw:swc(SC), use:'отметка в листе: залитая таблетка 28 dp, галочка и минуты' },
+      { name:'take.mark.part', v:'#A39FB5', sw:swc(OV), use:'«7 мин» — просто текст, без таблетки: различие формой, а не цветом' },
+      { name:'take.mark.run', v:'обводка #C4ADFF', sw:swc(PR), use:'«идёт» — контурная таблетка у текущего элемента' },
+      { name:'take.sel', v:'primary 0,14 + #5B43B8', sw:swc('#2E2A44'), use:'выбранная строка листа — акцент, не цвет зоны' },
+      { name:'time.bar', v:'#5B43B8', sw:swc(PC), use:'полоса графика, 8 dp' },
+      { name:'time.today', v:'#C4ADFF', sw:swc(PR), use:'сегодняшняя часть полосы, в её конце' },
+      { name:'time.track', v:'#292833', sw:swc(SCH), use:'дорожка графика' },
+      { name:'time.cell', v:'4 ступени', sw:swc('#3D2F80'), use:'матрица — если всё-таки возьмёте B: #2A2352 · #3D2F80 · #5B43B8 · #C4ADFF' } ];
+    const sizes = [
+      { n:'Закладка, портрет', v:'150 × 56 dp, радиус 6 слева, вырез 15 dp справа; левой колонке 170, до клавиши 16 dp. Название 12,5 sp/600 в одну строку с многоточием, остаток 15 sp/700 табличные' },
+      { n:'Закладка, 360 dp', v:'126 × 56; колонка 130, воздух 14. Немецкий: «Konzert a-moll» обрезается, «noch 7 Min.» — никогда' },
+      { n:'Кольцо на 360 × 640', v:'224 dp: строке закладки высоты не нужно, но на 640 dp кольцу остаётся 319 из 630 — 224 × 1,4 = 314 влезает с запасом. С вариантом A пришлось бы уйти к 196' },
+      { n:'Закладка, landscape', v:'170 × 56 в строке клавиши правой колонки, справа от неё 16 dp' },
+      { n:'Пустой контур', v:'138 × 56, одна строка 13,5 sp/600; касание 138 × 56 — больше минимума в полтора раза' },
+      { n:'Строка A (не выбрана)', v:'364 × 34, ход 3 dp по кромке; отняла бы у кольца 34 dp в портрете и 30 на 360' },
+      { n:'Строки листа «Что играем»', v:'56 dp минимум, padding 8 × 12, радиус 12; заголовок раздела 13 sp/700 с отбивкой 14/6; название 15 sp/600, вторая строка 13 sp' },
+      { n:'Прилипшая цель', v:'высота 155: −5 · 5 · 10 · 15 · 20 · 30 · +5 — семь целей 48 × 48 с шагом 5 (380 dp при боковых отбивках 14), кнопка 56 dp r28' },
+      { n:'Лист', v:'`surfaceContainerHigh` #292833, r28 сверху, ручка 32 × 4; верх на 104 dp от края (88 % экрана); «Сначала — занятие» — 372 dp высоты' },
+      { n:'Лист итога', v:'как 10d плюс раздел «Что играли»: строка 44 dp, название 15 sp/600, время 14 sp/600 табличное, отметка 16 dp' },
+      { n:'Карточка графика', v:'380 × 230 при трёх строках: строка 40 (13,5 sp + полоса 8), шаг 11, «Все 8» 36 dp. Раскрытая — 480' },
+      { n:'Строка на «Занятиях»', v:'14 sp `onSurfaceVariant` под «Занятие идёт», отбивка 2 dp; без движения' } ];
+    const anims = [
+      { n:'Окончание', v:'ход дописывается до края 240 мс `easeOut`; обод и текст — кроссфейд 400 мс `easeInOut` с задержкой 80. Ни звука, ни вибрации, ни изменения размера' },
+      { n:'Появление закладки', v:'fade 300 мс; с пустого контура на залитую бумагу — кроссфейд 300, без сдвига' },
+      { n:'Приглушение со светом', v:'`animateFloatAsState` до 0,38 за 420 мс гашения и 1 600 мс возвращения — теми же кривыми, что картина (29b). «Сделан» остаётся на 1,0' },
+      { n:'Смена остатка', v:'без анимации: текст меняется раз в минуту, `AnimatedContent` здесь дал бы мигание раз в минуту' },
+      { n:'«Сначала — занятие» → выбор', v:'содержимое кроссфейдом 240 мс, высота листа `animateDpAsState` 320 мс `easeInOutCubic`; ярлычок занятия за листом — fade 200' },
+      { n:'Рост полос', v:'один раз при появлении карточки: 420 мс `easeOut`, сдвиг по строкам 40 мс, как столбики «Записей». Сегодняшняя часть растёт вместе с полосой' },
+      { n:'Раскрытие «Все 8»', v:'`animateContentSize` 280 мс; новые строки без своего роста — иначе два движения сразу' },
+      { n:'«Убрать анимации»', v:'все длительности 0; ход, обод, полосы и высота листа встают сразу' } ];
+    const texts = [
+      { k:'take_entry', v:'Репертуар' },{ k:'take_sheet_title', v:'Что играем' },
+      { k:'take_left', v:'ещё %d мин' },{ k:'take_done', v:'готово' },
+      { k:'take_now', v:'Сейчас: %s' },{ k:'take_stop', v:'Остановить' },
+      { k:'take_start', v:'Начать · %d мин' },{ k:'take_today_done', v:'%d мин (с галочкой)' },
+      { k:'take_today_part', v:'%d мин' },{ k:'take_running', v:'идёт' },
+      { k:'take_sec_today', v:'· сегодня %d' },{ k:'take_need_session_title', v:'Сначала — занятие' },
+      { k:'take_need_session_body', v:'Время на произведения, гаммы и этюды идёт внутри занятия. Начните его — и выберите, что играть.' },
+      { k:'take_not_now', v:'Не сейчас' },{ k:'take_empty_rep', v:'В репертуаре пока пусто. Добавьте произведение или гамму — и выбирайте здесь, что играть.' },
+      { k:'take_open_rep', v:'Открыть репертуар' },{ k:'take_summary_head', v:'Что играли' },
+      { k:'take_summary_part', v:'%1$d из %2$d мин' },{ k:'time_card_title', v:'Время по элементам' },
+      { k:'time_card_period', v:'30 дней' },{ k:'time_card_all', v:'Все %d' },
+      { k:'time_card_empty', v:'Здесь будет видно, сколько времени получает каждый элемент. Выберите элемент на Live во время занятия.' },
+      { k:'item_delete_body', v:'Ноты, заметки и время по нему удалятся. Записи останутся в «Записях».' } ];
+    const answers = [
+      { n:'1', v:'B — закладка у клавиши записи. Кольцо не отдаёт высоты, всё, что трогают в тишине, лежит внизу. Материал — бумага ярлычка занятия в форме нотной закладки: раздвоенный правый край, тень формой, латунь только ходом и ободом. A показали рядом (30a1) — она читается лучше всех, но 34 dp у кольца в портрете и 30 на 360 dp мы отдавать не готовы. C проверили и отбросили: подпись места не влезает.' },
+      { n:'2', v:'Минуты без секунд — да, и в последнюю минуту тоже. Ход — линия по нижней кромке бумаги, 122 dp на 3 dp: 8 dp в минуту при цели 15. Маленькое кольцо не берём — оно читается эхом главного и тянет взгляд туда, где во время игры должен быть только строй.' },
+      { n:'3', v:'Латунь замыкается ободом вокруг бумаги, текст становится «готово», появляется отметка чернилами. Яркая нитка на приглушённой картине видна боковым зрением и не двигается. Держится до следующего выбора или до конца занятия — сама не исчезает: человек мог не поднять глаз десять минут.' },
+      { n:'4', v:'Да, до 0,38 — но только пока отрезок идёт: остаток во время игры не нужен, руки заняты, кончится он сам. Состояние «сделан» не приглушается никогда (30c2): конец приходит именно во время игры, и это единственное, что должно достаться краю глаза.' },
+      { n:'5', v:'Заголовки разделов в списке (чипы дали бы вторую навигацию и отняли 56 dp). Вторая строка — только у произведений и этюдов (композитор); гаммы и штрихи объясняют себя названием. Счёт — в заголовке раздела и только не нулевой: «Гаммы · сегодня 1»; строки «сыграно 2 из 17» нет — лист выбора, не отчёт. Цель — прилипшая панель, приходит вместе с выбором, поэтому неактивной кнопки не бывает. Вид — нижний лист «Занятий», не бумажная карточка: бумага живёт в приборах, лист — в интерфейсе.' },
+      { n:'6', v:'Полосы, над разделами, три строки (230 dp — все разделы остаются выше сгиба), 30 дней, «Все 8» раскрывает на месте. Матрицу показали на данных (30h2): 6,5 dp на клетку и ответ на незаданный вопрос.' },
+      { n:'7', v:'Секретом. «+30» у строк листа итога превращает его в чек, а начисление всё равно одно — «+N» на карточке «Занятий». Где такты ждут, говорит отсутствие отметки «сегодня»; знака такта у несыгранных мы не ставим — он превратит лист выбора в список задолженностей.' },
+      { n:'8', v:'Слова «подход» в интерфейсе нет ни в одном состоянии. Вход — «Репертуар» (одно слово: на ленточке 124 dp оно стоит целиком на всех десяти языках — «Repertoire», «Répertoire», «Repertorio»), лист — «Что играем», конец — «готово», лист без занятия — «Сначала — занятие», раздел в итоге — «Что играли». Внутри кода и спеки «подход» оставляем: как имя сущности он точен, как слово на экране — из спортзала.' } ];
+
+    return { f30a, f30b, f30c, f30cs, f30cl, f30d, f30e, f30f, f30g, f30h,
+      navLive, navPr, navDe, lockIco, checkON, timerIco, plusIco, trashIco,
+      landRows, landChips, landPic, shortRows, sums, calCells, matrix, landBars, landSecs,
+      tokens, sizes, anims, texts, answers };
+  }
+}
+</script>
+</body>
+</html>

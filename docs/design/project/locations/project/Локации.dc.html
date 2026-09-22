@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
+body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}
+a{color:#C4ADFF}a:hover{color:#E9DDFF}
+.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 6px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif}
+.dv-sub{margin:0 0 20px;font:400 12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.55);max-width:940px;text-wrap:pretty}
+.dv-opts{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:8px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.35 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.62);max-width:212px;text-wrap:pretty}
+.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}
+.dv-next{margin:22px 0 0;font:12px/1.55 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.55);max-width:940px;text-wrap:pretty}
+.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px;max-width:1160px}
+.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere;line-height:1.45}
+.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
+.card{border-radius:18px;overflow:hidden;background:#1E1D25;line-height:0;flex:none}
+.card > img, .card > svg{display:block;width:100%;height:100%}
+.pre{background:#15151B;border-radius:12px;padding:16px 18px;font:11.5px/1.62 ui-monospace,Menlo,monospace;color:#C9C5D8;white-space:pre;overflow:auto;max-width:1160px;border:1px solid rgba(255,255,255,.07)}
+.tag{display:inline-block;font:600 10px ui-monospace,Menlo,monospace;padding:2px 6px;border-radius:4px;background:rgba(196,173,255,.16);color:#C4ADFF}
+</style></helmet>
+
+<section class="dv-turn" id="s31a">
+<div class="dv-thd"><a class="dv-tid" href="#s31a">31a</a><span class="dv-tname">Проблема и образец рядом · дом, Вена сейчас, Вена после</span></div>
+<p class="dv-sub">Комната дома нарисована от карниза до пола, продолженного к зрителю, и заполняет телефон целиком. Открытка путешествия нарисована в полосе 412 × 260 — во весь экран она либо увеличена в 3,5 раза (места не видно), либо лежит под пустым небом. Справа — та же Вена в новом кадре −420 … 600.</p>
+<div class="dv-opts">
+<div class="dv-opt" id="31a1"><div class="dv-olabel"><a class="dv-oid" href="#31a1">31a1</a>Дом — образец: комната во весь экран</div><div class="card" style="width:206px;height:458px"><img src="uploads/home-full.jpg" alt=""></div></div>
+<div class="dv-opt" id="31a2"><div class="dv-olabel"><a class="dv-oid" href="#31a2">31a2</a>Вена снаружи сейчас: 72 % экрана — ровная заливка неба</div><div class="card" style="width:206px;height:458px"><img src="uploads/vienna-full-out.jpg" alt=""></div></div>
+<div class="dv-opt" id="31a3"><div class="dv-olabel"><a class="dv-oid" href="#31a3">31a3</a>Вена изнутри сейчас: пустота сверху и снизу</div><div class="card" style="width:206px;height:458px"><img src="uploads/vienna-full-in.jpg" alt=""></div></div>
+<div class="dv-opt" id="31a4"><div class="dv-olabel"><a class="dv-oid" href="#31a4">31a4</a>Вена снаружи после: высокое небо, Карлскирхе и башня ратуши, Рингштрассе к зрителю</div>{{ heroOut }}</div>
+<div class="dv-opt" id="31a5"><div class="dv-olabel"><a class="dv-oid" href="#31a5">31a5</a>Вена изнутри после: потолок с кессонами над головой, партер к ногам</div>{{ heroIn }}</div>
+</div>
+<p class="dv-next"><b>Ничего не потеряно.</b> Полоса 0 … 260 не тронута ни в одной локации: карточка «Занятий», экран остановки, лента и прибытие кадрируют её как раньше — <a href="#s31g">31g</a>. Новое живёт только выше 0 и ниже 260.</p>
+</section>
+
+<section class="dv-turn" id="s31b">
+<div class="dv-thd"><a class="dv-tid" href="#s31b">31b</a><span class="dv-tname">Кадр локации · где полоса открытки и что видит телефон</span></div>
+<p class="dv-sub">Один кадр на все локации: <b>−420 … 600</b> по высоте, 0 … 412 по ширине — 1 060 единиц. Экран центрируется на середине открытки (y = 130) и прижимается к краю кадра, если не помещается. Ниже — весь кадр Вены и окна двух телефонов на нём.</p>
+<div class="dv-opts">
+<div class="dv-opt" id="31b1"><div class="dv-olabel"><a class="dv-oid" href="#31b1">31b1</a>Весь кадр −420 … 600 · полоса открытки размечена</div>
+<div style="position:relative;width:206px;height:530px">{{ frameWhole }}
+<div style="position:absolute;left:0;right:0;top:220px;height:130px;border-top:1.5px dashed rgba(196,173,255,.9);border-bottom:1.5px dashed rgba(196,173,255,.9);background:rgba(196,173,255,.10)"></div>
+<div style="position:absolute;left:6px;top:224px;font:600 9.5px ui-monospace,Menlo,monospace;color:#E9DDFF">0 · открытка 412 × 260</div>
+<div style="position:absolute;left:6px;top:336px;font:600 9.5px ui-monospace,Menlo,monospace;color:#E9DDFF">260</div>
+<div style="position:absolute;left:0;right:0;top:315px;border-top:1px solid rgba(255,255,255,.35)"></div>
+<div style="position:absolute;right:6px;top:301px;font:600 9.5px ui-monospace,Menlo,monospace;color:rgba(255,255,255,.75)">горизонт 190</div>
+</div></div>
+<div class="dv-opt" id="31b2"><div class="dv-olabel"><a class="dv-oid" href="#31b2">31b2</a>Окно телефона на кадре: 20 : 9 показывает −327 … 588, 16 : 9 — −190 … 450</div>
+<div style="position:relative;width:206px;height:530px">{{ frameWhole2 }}
+<div style="position:absolute;left:0;right:0;top:220px;height:130px;background:rgba(196,173,255,.10)"></div>
+<div style="position:absolute;left:0;right:0;top:56px;height:457px;border:1.5px solid #C4ADFF;border-radius:10px"></div>
+<div style="position:absolute;left:0;right:0;top:125px;height:320px;border:1.5px solid #6FC7C2;border-radius:10px"></div>
+<div style="position:absolute;left:8px;top:60px;font:600 9.5px ui-monospace,Menlo,monospace;color:#C4ADFF">412 × 915</div>
+<div style="position:absolute;left:8px;top:129px;font:600 9.5px ui-monospace,Menlo,monospace;color:#6FC7C2">360 × 640</div>
+</div></div>
+<div class="dv-opt" id="31b3"><div class="dv-olabel"><a class="dv-oid" href="#31b3">31b3</a>Правило переднего плана: всё, что лежит на полу, растёт как (y − горизонт)</div>{{ planeDiagram }}</div>
+</div>
+<p class="dv-next"><b>Почему хватает.</b> 20 : 9 (412 × 915) показывает 915 единиц из 1 060 — запас 72 сверху и 12 снизу. Самый вытянутый 21 : 9 (412 × 961) прижимается к нижнему краю и показывает −361 … 600. Щипок до 2,5× и перетаскивание остаются внутри кадра: пустоты не покажет ни то, ни другое.</p>
+</section>
+
+<section class="dv-turn" id="s31c">
+<div class="dv-thd"><a class="dv-tid" href="#s31c">31c</a><span class="dv-tname">Снаружи · шестнадцать городов, вечер, полный экран 412 × 915</span></div>
+<p class="dv-sub">Вверх — высокое небо со своей приметой у каждого города: та башня, купол или шпиль, что видно с этого места на самом деле. Каждая примета стоит на земле и уходит за главное здание — в небе ничего не висит. Вниз — площадь, улица, набережная, парк или гавань, доведённые до ног зрителя.</p>
+<div class="dv-opts">
+<sc-for list="{{ outEve }}" as="o" hint-placeholder-count="16">
+<div class="dv-opt" id="{{ o.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ o.id }}">{{ o.id }}</a>{{ o.label }}</div>{{ o.el }}</div>
+</sc-for>
+</div>
+</section>
+
+<section class="dv-turn" id="s31d">
+<div class="dv-thd"><a class="dv-tid" href="#s31d">31d</a><span class="dv-tname">Снаружи · день</span></div>
+<p class="dv-sub">Днём высокое небо держит градиент <span class="mono">skyHigh → sky</span> и пять облаков на всю высоту; звёзд нет. Приметы и передний план те же — меняются только палитра и то, что светится.</p>
+<div class="dv-opts">
+<sc-for list="{{ outDay }}" as="o" hint-placeholder-count="16">
+<div class="dv-opt" id="{{ o.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ o.id }}">{{ o.id }}</a>{{ o.label }}</div>{{ o.el }}</div>
+</sc-for>
+</div>
+</section>
+
+<section class="dv-turn" id="s31e">
+<div class="dv-thd"><a class="dv-tid" href="#s31e">31e</a><span class="dv-tname">Изнутри · шестнадцать залов и мастерская</span></div>
+<p class="dv-sub">Четыре построителя получили потолок и то, что под ногами. Коробка (<span class="mono">HALL</span>): кессоны над головой, штанги люстр доходят до потолка, партер продолжен к зрителю. Подкова (<span class="mono">HORSESHOE</span>): свод вокруг купола заполняет углы, а под ногами — доски сцены, потому что подкову мы видим со сцены. Виноградник: «облака» потолка над головой, терраса, в которой сидим, — к нам. Неф: та же прогрессия арок, ещё четыре пролёта.</p>
+<div class="dv-opts">
+<sc-for list="{{ inside }}" as="o" hint-placeholder-count="16">
+<div class="dv-opt" id="{{ o.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ o.id }}">{{ o.id }}</a>{{ o.label }}</div>{{ o.el }}</div>
+</sc-for>
+</div>
+</section>
+
+<section class="dv-turn" id="s31f">
+<div class="dv-thd"><a class="dv-tid" href="#s31f">31f</a><span class="dv-tname">Залы со сцены · шесть плоских потолков стали коробками</span></div>
+<p class="dv-sub">Кадр залов со сцены не меняется: −240 … 460, Live стоит на нём. Меняется только потолок у Зальцбурга, Праги, Амстердама, Петербурга, Москвы и Сиднея — правило второй Вены: кессоны сжимаются к задней стене, рёбра сходятся к точке схода (206, 150). И пылинки в рабочем свете там, где не двигалось ничего: Берлин, Лейпциг, Лондон, Нью-Йорк, Сидней.</p>
+<div class="dv-opts">
+<sc-for list="{{ stage }}" as="o" hint-placeholder-count="8">
+<div class="dv-opt" id="{{ o.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ o.id }}">{{ o.id }}</a>{{ o.label }}</div>{{ o.el }}</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Свет.</b> Всё, что здесь движется, живёт только при горящем свете и замирает вместе с ним (3.27): пылинки видны в луче, а луча при погашенном свете нет. Цвета зон по-прежнему ничего не значат.</p>
+</section>
+
+<section class="dv-turn" id="s31g">
+<div class="dv-thd"><a class="dv-tid" href="#s31g">31g</a><span class="dv-tname">Экраны · маленький, вытянутый, landscape и карточка</span></div>
+<p class="dv-sub">Полоса открытки продолжает работать сама по себе: карточка «Занятий» и экран остановки кадрируют те же 412 × 260, что и раньше. Landscape показывает середину полосы — 185 единиц из 260.</p>
+<div class="dv-opts">
+<sc-for list="{{ sizes }}" as="o" hint-placeholder-count="6">
+<div class="dv-opt" id="{{ o.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ o.id }}">{{ o.id }}</a>{{ o.label }}</div>{{ o.el }}</div>
+</sc-for>
+</div>
+</section>
+
+<section class="dv-turn" id="s31h">
+<div class="dv-thd"><a class="dv-tid" href="#s31h">31h</a><span class="dv-tname">Движение · заметно, медленно, не больше трёх-четырёх вещей в кадре</span></div>
+<p class="dv-sub">Новый вид движения ровно один: <span class="mono">peck</span>. Остальное — словарь формата, с числами.</p>
+<div class="dv-opts">
+<sc-for list="{{ motion }}" as="o" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ o.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ o.id }}">{{ o.id }}</a>{{ o.label }}</div>{{ o.el }}</div>
+</sc-for>
+</div>
+<div style="margin-top:24px" class="dv-tbl" id="motiontbl">
+<div class="h">Движение</div><div class="h">Запись и числа</div><div class="h">Где</div>
+<div class="mono">peck <span class="tag">новое</span></div><div class="mono">peck:period:angle — 2,6…5,2 с, 14°</div><div>Голуби на мостовой: 58 % периода стоят, клюют (наклон 14° вокруг низа тела), возвращаются, делают шажок 4 единицы вбок. Площади, парки, набережные, гавань.</div>
+<div class="mono">ride</div><div class="mono">ride:speed:x0:x1 — прохожие 6…11 ед/с, лодка 7, облака 0,87…2,5</div><div>Прохожие переднего плана уходят за рамку и возвращаются с другой стороны; лодка у набережной; пять облаков на всё небо.</div>
+<div class="mono">bird</div><div class="mono">bird:left:span — высокие стаи left −40, span 492</div><div>Стаи в высоком небе у всех шестнадцати городов; чайки над водой в Амстердаме, Петербурге, Сиднее; птица за окном нефа и мастерской.</div>
+<div class="mono">blink</div><div class="mono">blink:period — звёзды 2,4…6,0 с; маяки антенн 2,0…2,6 с</div><div>44 звезды на всё высокое небо; красные огни на антеннах Берлина, Москвы, Нью-Йорка, Токио.</div>
+<div class="mono">flick</div><div class="mono">flick:period — 4…7 с</div><div>Окна далёких домов, ореолы люстр, лужа под фонарём.</div>
+<div class="mono">flash</div><div class="mono">flash:period — 3,0…6,0 с, вспышка 4 % периода</div><div>Искры в хрустале люстр и в подвесках свода подковы.</div>
+<div class="mono">sway</div><div class="mono">sway:amp:period — блики воды 6…12 ед / 7…13 с; флюгер 8 / 11</div><div>Блики на воде дрейфуют; флюгер Лейпцига и корона Вестеркерк поворачиваются.</div>
+<div class="mono">swing</div><div class="mono">swing:angle:period — 9°, 2,4 с, ось — верх слоя</div><div>Маятник часов в мастерской Кремоны.</div>
+<div class="mono">bob</div><div class="mono">bob:amp:period — 3 ед, 6,5 с</div><div>Кошка на полу мастерской дышит.</div>
+<div class="mono">rise</div><div class="mono">rise:period:dist — 3…8 с, 14…40 ед, гаснет на обоих концах</div><div>Пылинки в луче света: залы, мастерская, неф, пять залов со сцены без движения.</div>
+<div class="mono">fall</div><div class="mono">fall:speed:y0:y1 — 14 ед/с, снос вбок 34 ед</div><div>Лепестки сакуры в Токио — теперь и на переднем плане.</div>
+</div>
+</section>
+
+<section class="dv-turn" id="sdev">
+<div class="dv-thd"><a class="dv-tid" href="#sdev">dev</a><span class="dv-tname">Построители, палитры, вес и ответы</span></div>
+
+<p class="dv-sub"><b>Один файл.</b> Код лежит в <span class="mono">locations.js</span> рядом с этим листом. Он не копирует ни одной строки ваших сцен: как и <span class="mono">export.js</span>, он вырезает помощники и <span class="mono">SCENES</span> из <span class="mono">Путешествие.dc.html</span> и запускает их вместе с <span class="mono">extra-scenes.js</span> и <span class="mono">stage-scenes.js</span>. Продолжение — это слои, вставленные в готовую сцену: высокое небо сразу после слоя <span class="mono">SKY</span>, передний план — в конец.</p>
+
+<div class="pre">// сборка одной локации
+build(key, mode) {
+  let l = EXTRA_INSERTS[key](SCENES[key].fn(eve), eve);          // сцена как есть, ничего не тронуто
+  if (снаружи) {
+    l = after(l, x =&gt; x.fill === 'SKY', [                        // сразу за градиентом горизонта
+      ...SKYH(),                                                 // L('SKYH', R(−600, −460, 1600, 460), 0)
+      ...(eve ? stars(44) : clouds()), ...OUT[key].high(eve),     // правило неба + приметы города
+    ]);
+    l = [...l, ...foreOf(key, eve)];                             // площадь / улица / набережная / парк / гавань
+  } else {
+    const { above, below } = insideLayers(key, INSIDE[key]);      // потолок и партер по типу зала
+    l = [...above, ...l, ...below];
+  }
+  return l;
+}</div>
+
+<p class="dv-next"><b>Правило, на котором всё держится.</b> У каждой сцены одна линия схода пола: снаружи это горизонт <span class="mono">y = 190</span>, в коробке <span class="mono">134</span>, в подкове <span class="mono">107</span>, в нефе <span class="mono">124</span>, на сцене <span class="mono">150</span>. Ниже неё всё, что лежит на этом полу, растёт пропорционально <span class="mono">(y − линия)</span>, а ряды идут геометрической прогрессией <span class="mono">y⁺ = v + (y − v)·q</span>. Второй картины не нужно — нужна та же плоскость, доведённая до зрителя.</p>
+
+<div style="margin-top:20px" class="dv-tbl" id="devbuilders">
+<div class="h">Построитель</div><div class="h">Что делает</div><div class="h">Числа</div>
+<div class="mono">SKYH + stars + clouds</div><div>Высокое небо: градиент, звёзды, облака. Звёзды и облака рисует правило, не слои сцены — экспортёру слои с заливкой <span class="mono">star</span> и <span class="mono">cloud</span> пропускать.</div><div class="mono">градиент −420…0; звёзды 44 шт., полоса −430…40, плотность падает к горизонту как t^1,45, r 0,7…2,2, op 0,35…0,95; облака 5 шт., y −340 / −238 / −150 / −62 / 128, rx 96 / 74 / 60 / 46 / 34, скорость 2,50 / 1,97 / 1,60 / 1,23 / 0,87 ед/с</div>
+<div class="mono">plane / nearWater / parapet</div><div>Передний план: плоскость до y = 640, швы к горизонту, поперечные ряды с растущим шагом, вода с дрейфующими бликами, парапет с балясинами.</div><div class="mono">швы 13 линий; шаг рядов g₀ 12…26, g ×1,26; ниже 470 — тень rgba(20,16,30,.16)</div>
+<div class="mono">ceilHall</div><div>Потолок коробки над головой: полуширина 206 + 1,923·(−y), балки поперёк, рёбра к углам задней стены, кессоны.</div><div class="mono">балки от y −6, шаг 24, ×1,42; кессоны в 5 первых пролётах; рёбер 7</div>
+<div class="mono">stallsNear</div><div>Партер к зрителю: ряды по прогрессии на той же плоскости, спинки в шахматном порядке.</div><div class="mono">v = 134, y₀ = 252, hw₀ = 198, hh₀ = 9, q = 1 + 14/118 ≈ 1,119; до 16 рядов, до 18 спинок в ряду</div>
+<div class="mono">boardsNear</div><div>Доски под ногами, когда зал виден со сцены (подкова).</div><div class="mono">13 досок, сходятся к (206, 150)</div>
+<div class="mono">vineyard near</div><div>Терраса, в которой сидим: ряды-дуги вокруг сцены.</div><div class="mono">9 рядов, y 262 → 660, hw 230 → 520, прогиб 16 → 40</div>
+<div class="mono">nave</div><div>Ещё четыре пролёта той же прогрессии арок и скамьи между ними.</div><div class="mono">s = 1,64 / 2,28 / 3,17 / 4,40 (шаг ×1,39)</div>
+<div class="mono">stageCeil</div><div>Коробка потолка для шести залов со сцены.</div><div class="mono">потолок [−30,−240]…[48,64]; полуширина 158 + (64 − y)·0,257; балки от 58, шаг 24 ×1,36</div>
+</div>
+
+<p class="dv-next"><b>Палитры.</b> Один новый токен на локацию — <span class="mono">skyHigh</span>. Остальные нужны только правилу неба и переднему плану и одинаковы у всех: их можно держать в «вечере» и «дне», а не в каждой локации.</p>
+<div style="margin-top:16px" class="dv-tbl" id="devpal">
+<div class="h">Токен</div><div class="h">вечер</div><div class="h">день</div><div class="h">Зачем</div>
+<div class="mono">skyHigh</div><div class="mono">#171436</div><div class="mono">#3D7FD4</div><div>Верх градиента <span class="mono">SKYH</span> на −420; внизу переходит в <span class="mono">sky</span>.</div>
+<div class="mono">star</div><div class="mono">#FFF6DC</div><div class="mono">прозрачный</div><div>Звёзды правила.</div>
+<div class="mono">cloud / cloudLit</div><div class="mono">#453E6E / #5B5286</div><div class="mono">#FFFFFF / #FFFFFF</div><div>Облака правила. У виноградников <span class="mono">cloud</span> уже занят — там выигрывает токен локации.</div>
+<div class="mono">bird</div><div class="mono">#221D31</div><div class="mono">#41404E</div><div><b>Уже используется</b> в <span class="mono">extra-scenes.js</span>, но ни в одной палитре его нет: <span class="mono">export.js</span> подставляет <span class="mono">magenta</span>. Просим добавить.</div>
+<div class="mono">birdSky</div><div class="mono">#6A5F94</div><div class="mono">#55627A</div><div>Стаи в высоком небе: тёмная птица на ночном небе не видна, а движение должно быть заметным.</div>
+<div class="mono">moon</div><div class="mono">#F6EFD8</div><div class="mono">rgba(255,255,255,.55)</div><div>Луна; ореол — обычный <span class="mono">glow</span>.</div>
+</div>
+
+<p class="dv-next"><b>Вес.</b> Самая тяжёлая сцена была 760 слоёв (виноградник Берлина) — стала 998. Тяжелее всех теперь Токио изнутри, 982; снаружи тяжелее всех Нью-Йорк, 467. Все в пределах ваших ~1 500. Мелочь держали крупной и редкой: швов мостовой 13, а не 130; спинок в ряду не больше 18; звёзд 44 на всё небо.</p>
+
+<div style="margin-top:20px" class="dv-tbl" id="devq">
+<div class="h">Вопрос</div><div class="h">Ответ</div>
+<div>1. Кадр для всех или у кого-то свой? Где полоса открытки?</div><div><b>−420 … 600 у всех шестнадцати, включая воду.</b> Единый кадр стоит дешевле любой выгоды от исключений, а вода продолжается тем же построителем. Полоса открытки — <b>по середине экрана</b>: экран центрируется на y = 130 и прижимается к краю кадра, если 130 ± половина экрана выходит за −420 или 600. Залы со сцены остаются в своём −240 … 460.</div>
+<div>2. Построители или отдельные картины?</div><div><b>Построители везде.</b> Снаружи два: высокое небо (градиент + правило звёзд и облаков) и передний план пяти видов — площадь, улица, набережная, парк, гавань. Изнутри четыре по типу зала плюс комната для мастерской. Своего у локации — только приметы: 5…20 слоёв на город.</div>
+<div>3. Нужен ли свой градиент выше 0, сколько звёзд и облаков?</div><div><b>Нужен:</b> <span class="mono">SKYH</span> — <span class="mono">skyHigh → sky</span> на −420 … 0, ровно как <span class="mono">SKY</span> на 0 … 190. <b>44 звезды</b> в полосе −430 … 40 (плотность падает к горизонту), <b>5 облаков</b> на всю высоту с числами из таблицы построителей. Две нижние тучи оставлены и вечером.</div>
+<div>4. Какие новые виды движения и с какими числами?</div><div><b>Один новый: <span class="mono">peck</span></b> (2,6…5,2 с, наклон 14° вокруг низа тела, шажок 4 единицы). Всё остальное — ваш словарь; нужны только два уточнения: у <span class="mono">swing</span> ось — верх слоя, у <span class="mono">rise</span> вещь гаснет на обоих концах пути. Числа — в таблице <a href="#s31h">31h</a>.</div>
+<div>5. Зальцбург снаружи — Моцартеум или Альпы?</div><div><b>Альпы.</b> Из шестнадцати остановок пятнадцать — здание, и только Зальцбург — место: озеро, церковь, горы. Фасад Моцартеума 1914 года встал бы в один ряд с четырнадцатью другими фасадами и ничего бы не прибавил, а Моцартеум и так главный вид изнутри. В высокое небо добавлена крепость Хоэнзальцбург на скале — примета города, которой не хватало.</div>
+<div>6. Где пришлось отступить?</div><div><b>Подковы вниз получили доски сцены, а не партер.</b> Париж, Лондон, Нью-Йорк, Буэнос-Айрес и Милан нарисованы <i>со сцены</i> (ярусы стоят вокруг нас), поэтому под ногами у них может быть только планшет сцены; партер у них наверху, в самой открытке. Если по смыслу они должны быть «из зала на сцену», как коробки, — скажите: это другой кадр, а не другое продолжение.<br><br><b>Дом не трогали.</b> И нашли одну вашу недоделку: токена <span class="mono">bird</span> нет ни в одной палитре — в <span class="mono">.scene</span> он уходит как есть, а <span class="mono">export.js</span> подставляет <span class="mono">magenta</span>. В этом листе он подставлен из «вечера» и «дня».</div>
+</div>
+
+<p class="dv-next"><b>Что легко подвинуть.</b> Приметы города — список из десяти-двадцати слоёв в <span class="mono">OUT[key].high</span>, вид земли — одно слово в <span class="mono">OUT[key].fore</span>. Если вид земли выбран неверно (Лондон — парк, Москва — площадь, Берлин — улица), это одна правка на локацию.</p>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1280,&quot;height&quot;:900}}">
+const OUTS = [['cremonaOut', 'Кремона', 'площадь с Торраццо · шпиль продолжен'], ['milanOut', 'Милан', 'Ла Скала · шпили Дуомо'], ['austria', 'Зальцбург', 'озеро, церковь, Хоэнзальцбург'], ['vienna', 'Вена', 'Музикферайн · Карлскирхе и ратуша'], ['prague', 'Прага', 'Рудольфинум · Св. Вит'], ['leipzig', 'Лейпциг', 'Св. Фома · флюгер'], ['berlin', 'Берлин', 'Филармония · телебашня, птицы'], ['amsterdam', 'Амстердам', 'Консертгебау · Вестеркерк, чайки'], ['paris', 'Париж', 'Гарнье · Эйфелева башня'], ['london', 'Лондон', 'Альберт-холл · мемориал, парк'], ['spb', 'Петербург', 'Филармония · Петропавловский шпиль'], ['moscow', 'Москва', 'Консерватория · высотка и главки'], ['newyork', 'Нью-Йорк', 'Карнеги · башни за кадр, птицы'], ['buenosaires', 'Буэнос-Айрес', 'Колон · Обелиско'], ['tokyo', 'Токио', 'Сантори · Токийская башня, лепестки'], ['sydney', 'Сидней', 'Опера · мост и гавань']];
+const INS = [['cremona', 'Кремона', 'мастерская · часы, кошка, пылинки'], ['milan', 'Милан', 'Ла Скала со сцены · доски'], ['salzburgInt', 'Зальцбург', 'Моцартеум · кессоны, партер'], ['viennaInt', 'Вена', 'Золотой зал · кессоны, люстры'], ['pragueInt', 'Прага', 'зал Дворжака'], ['leipzigInt', 'Лейпциг', 'неф · ещё четыре пролёта'], ['berlinInt', 'Берлин', 'виноградник · «облака» и терраса'], ['amsterdamInt', 'Амстердам', 'Гроте Зал · проход посередине'], ['parisInt', 'Париж', 'плафон Шагала · свод и доски'], ['londonInt', 'Лондон', 'круглый зал · «грибы» над головой'], ['spbInt', 'Петербург', 'Большой зал · хрусталь'], ['moscowInt', 'Москва', 'зал с портретами'], ['newyorkInt', 'Нью-Йорк', 'зал с балконами'], ['buenosairesInt', 'Буэнос-Айрес', 'шесть ярусов · свод Сольди'], ['tokyoInt', 'Токио', 'виноградник'], ['sydneyInt', 'Сидней', 'концертный зал · рёбра и лепестки']];
+const STAGES = [['salzburgStage', 'Зальцбург', 'потолок стал коробкой'], ['pragueStage', 'Прага', 'потолок стал коробкой'], ['amsterdamStage', 'Амстердам', 'потолок стал коробкой'], ['spbStage', 'Петербург', 'потолок стал коробкой'], ['moscowStage', 'Москва', 'потолок стал коробкой'], ['sydneyStage', 'Сидней', 'коробка и пылинки в луче'], ['leipzigStage', 'Лейпциг', 'было мертво — пылинки в луче'], ['newyorkStage', 'Нью-Йорк', 'было мертво — пылинки в луче']];
+
+class Component extends DCLogic {
+  state = { sys: null, err: '' };
+  componentDidMount() {
+    import('./locations.js').then(m => m.system())
+      .then(sys => this.setState({ sys }))
+      .catch(e => this.setState({ err: String((e && e.message) || e) }));
+  }
+  componentWillUnmount() { (this._urls || []).forEach(u => URL.revokeObjectURL(u)); }
+  // Thirty-three locations at once are ~29 000 <path> nodes and the sheet crawls. Every frame is one
+  // self-contained SVG handed to the page as an image: 70 nodes instead, and the CSS animations still run.
+  pic(svg, w, h, r) {
+    this._urls = this._urls || [];
+    const url = URL.createObjectURL(new Blob([svg], { type: 'image/svg+xml' }));
+    this._urls.push(url);
+    return React.createElement('div', { className: 'card', style: { width: w + 'px', height: h + 'px', borderRadius: (r === undefined ? 18 : r) + 'px' } },
+      React.createElement('img', { src: url, width: w, height: h, alt: '' }));
+  }
+  renderVals() {
+    const sys = this.state.sys;
+    if (!sys) return { outEve: [], outDay: [], inside: [], stage: [], sizes: [], motion: [], heroOut: this.state.err ? 'не загрузилось: ' + this.state.err : '', heroIn: '', frameWhole: '', frameWhole2: '', planeDiagram: '' };
+    (this._urls || []).forEach(u => URL.revokeObjectURL(u));
+    this._urls = [];
+    const F = (k, m, w, h, o) => this.pic(sys.render(k, m, Object.assign({ w: w, h: h }, o || {})), w, h, (o || {}).r);
+
+    // 31b3 — the rule of the near plane, drawn with the same helpers
+    const H = sys.helpers, L = H.L, R = H.R, PG = H.PG, rep = H.rep;
+    const at = (X, y) => 206 + (X - 206) * (y - 190) / (600 - 190);
+    const grid = [L('#15151B', R(-320, -460, 1052, 1120), 2), L('#1E1D25', R(-320, 190, 1052, 460), 2)];
+    rep(13, i => { const X = -320 + i * 84; grid.push(L('#3A3846', PG([[at(X, 192), 192], [at(X + 3, 192), 192], [at(X + 22, 640), 640], [at(X, 640), 640]]), 2)); });
+    let y = 200, g = 14;
+    while (y < 640) { grid.push(L('#3A3846', R(-320, y, 1052, 1 + (y - 190) / 170), 2)); y += g; g *= 1.26; }
+    grid.push(L('#C4ADFF', R(-320, 189, 1052, 1.6), 2));
+    [[262, .34], [340, .52], [452, .74], [598, 1]].forEach(p => { const s = p[1]; grid.push(L('#C4ADFF', R(206 - 26 * s, p[0] - 46 * s, 52 * s, 46 * s), 2, { op: .92 })); });
+    const planeSvg = sys.svgOf(grid, sys.pal('vienna', 'eve'), { viewBox: '0 120 412 540', w: 206, h: 270, aerial: false });
+
+    const out = (m) => OUTS.map((c, i) => ({ id: (m === 'eve' ? '31c' : '31d') + (i + 1), label: c[1] + ' · ' + c[2], el: F(c[0], m, m === 'eve' ? 206 : 152, m === 'eve' ? 458 : 338) }));
+
+    return {
+      heroOut: F('vienna', 'eve', 206, 458),
+      heroIn: F('viennaInt', 'eve', 206, 458),
+      frameWhole: F('vienna', 'eve', 206, 530, { viewBox: '0 -440 412 1060', r: 12 }),
+      frameWhole2: F('vienna', 'eve', 206, 530, { viewBox: '0 -440 412 1060', r: 12 }),
+      planeDiagram: this.pic(planeSvg, 206, 270, 12),
+      outEve: out('eve'),
+      outDay: out('day'),
+      inside: INS.map((c, i) => ({ id: '31e' + (i + 1), label: c[1] + ' · ' + c[2], el: F(c[0], 'eve', 206, 458) })),
+      stage: STAGES.map((c, i) => ({ id: '31f' + (i + 1), label: c[1] + ' · ' + c[2], el: F(c[0], 'eve', 206, 350) })),
+      sizes: [
+        { id: '31g1', label: 'Вена снаружи · 360 × 640', el: F('vienna', 'eve', 180, 320) },
+        { id: '31g2', label: 'Вена снаружи · 21 : 9, вид прижат к нижнему краю кадра', el: F('vienna', 'eve', 180, 420) },
+        { id: '31g3', label: 'Токио изнутри · 360 × 640', el: F('tokyoInt', 'eve', 180, 320) },
+        { id: '31g4', label: 'Вена снаружи · landscape 915 × 412 — середина полосы', el: F('vienna', 'eve', 412, 185, { viewBox: sys.viewBox(915, 412) }) },
+        { id: '31g5', label: 'Карточка «Занятий» · 240 dp, полоса как была', el: F('vienna', 'eve', 240, 151, { viewBox: '0 0 412 260' }) },
+        { id: '31g6', label: 'Амстердам · карточка 240 dp, день', el: F('amsterdam', 'day', 240, 151, { viewBox: '0 0 412 260' }) },
+      ],
+      motion: [
+        { id: '31h1', label: 'Вена · трамвай, прохожие, стая, облака, мерцание окон', el: F('vienna', 'eve', 206, 458) },
+        { id: '31h2', label: 'Амстердам · лодка, чайки, блики воды, голубь на парапете', el: F('amsterdam', 'eve', 206, 458) },
+        { id: '31h3', label: 'Кремона · маятник, кошка, пылинки в луче', el: F('cremona', 'eve', 206, 458) },
+        { id: '31h4', label: 'Москва · площадь: голуби клюют (peck), прохожие', el: F('moscow', 'day', 206, 458) },
+      ],
+    };
+  }
+}
+</script>
+</body>
+</html>

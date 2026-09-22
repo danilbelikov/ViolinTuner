@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-sub{font:400 12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.55);max-width:920px;margin:0 0 22px}.dv-opts{display:flex;flex-wrap:wrap;gap:26px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11.5px/1.35 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.62);max-width:260px}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.55 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:960px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}.pill{font:600 10.5px Manrope;padding:3px 9px;border-radius:11px;background:rgba(196,173,255,.16);color:#C4ADFF}.pick{box-shadow:0 0 0 2px #C4ADFF, 0 12px 30px rgba(0,0,0,.4)}.plate{background:#17171E;border:1px solid rgba(255,255,255,.06);border-radius:18px;padding:18px}.cap{font:500 11px Manrope;color:#A39FB5;text-align:center}.warm{color:#FFD98A}</style></helmet>
+
+<section class="dv-turn" id="hero">
+<div class="dv-thd"><a class="dv-tid" href="#hero">знак</a><span class="dv-tname">Violin Journey · рекомендация: <b style="color:#C4ADFF">Б — завиток-дорога</b></span></div>
+<p class="dv-sub">Один знак должен сказать три вещи по убыванию: <b>это скрипка</b> → <b>это путь</b> → <b>это наше</b>. Из пяти направлений завиток-дорога (<a href="#b">Б</a>) — единственная простая форма, которую не спутать ни с гитарой, ни с турагентством: спираль головки скрипки раскручивается в дорогу. Читается в 24 px, живёт одним цветом, переживёт монохром и смену имени. Ниже — она на обоих фонах; выберите фон здесь тумблером.</p>
+<div class="dv-opts" style="align-items:center">
+<div class="dv-opt"><div class="dv-olabel"><span class="pill">выбрано</span>{{ heroName }} · фон «{{ heroBgName }}»</div><div style="display:flex;gap:22px;align-items:flex-end">{{ heroBig }}</div></div>
+<div class="dv-opt"><div class="dv-olabel">оба фона рядом — тёмно-сиреневый честнее к приложению, вечернее небо заметнее на полке</div><div style="display:flex;gap:14px">{{ heroBoth }}</div></div>
+</div>
+</section>
+
+<section class="dv-turn" id="i1">
+<div class="dv-thd"><a class="dv-tid" href="#i1">1</a><span class="dv-tname">Пять направлений — крупно и в 96 / 48 / 24 px</span></div>
+<p class="dv-sub">Под каждым знаком — он же мелко. Сразу видно, что выживает на плитке магазина и на домашнем экране. Честная оценка «читается ли скрипка у не-музыканта» — в подписи каждого.</p>
+<div class="dv-opts">
+<sc-for list="{{ dirs }}" as="d" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ d.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ d.anchor }}">{{ d.id }}</a>{{ d.name }}</div>
+<div class="plate" style="display:flex;flex-direction:column;gap:16px;align-items:center">{{ d.big }}<div style="display:flex;gap:18px;align-items:flex-end">{{ d.sizesRow }}</div></div>
+<div class="dv-olabel" style="max-width:236px"><b class="warm">мелко:</b>&nbsp;{{ d.small }}</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Что бы выбрал сам.</b> Б (завиток) — ведущее: самая скрипичная из простых форм и самый честный образ пути; слабое — в 48 px спираль хочет «замылиться», держим её тугой и толстой. <b>А (эф на деке)</b> — сильный запасной: «скрипка» читается материалом (тёплое дерево во весь значок), «путь» — эф-линией; слабое — без дерева, в монохроме, эф для не-скрипача просто красивая линия. <b>Г (знак такта)</b> — собирает бренд со знаком валюты, но корпус-вид-сверху борется с «нотой» и не всегда побеждает. <b>В (открытка)</b> — красивее всех в 512, слабее всех в 48: держим как парадный кадр магазина, не как значок.</p>
+</section>
+
+<section class="dv-turn" id="i2">
+<div class="dv-thd"><a class="dv-tid" href="#i2">2</a><span class="dv-tname">Полка магазина — мы среди двадцати «скрипок под 45°»</span></div>
+<p class="dv-sub">Условные конкуренты (Trala, Violy, «Violin Tuner» ×N): скрипка целиком под 45° на синем / белом / красном. Наши две плитки — завиток-дорога на тёмно-сиреневом и на вечернем небе. Выделяемся не «ещё одной скрипкой», а силуэтом и тёплым светом.</p>
+<div class="dv-opts" style="gap:14px">{{ shelf }}</div>
+<p class="dv-next"><b>Фон: наш тёмно-сиреневый или вечернее небо?</b> На полке среди синих и чёрных плиток <b>вечернее небо заметнее</b> — тёплый низ ловит глаз. Но приложение внутри тёмно-сиреневое, поэтому честнее к первому впечатлению <b>тёмно-сиреневый</b>. Компромисс, который советуем: тёмно-сиреневый фон + тёплая точка «дома» на знаке — узнаётся своим и не растворяется среди синих.</p>
+</section>
+
+<section class="dv-turn" id="i3">
+<div class="dv-thd"><a class="dv-tid" href="#i3">3</a><span class="dv-tname">Домашний экран — 48 dp, подпись, три обоев × три маски</span></div>
+<p class="dv-sub">Круг / squircle / капля — маски разных лаунчеров. Знак сверстан во всё поле, важное — в центре, поэтому любую маску переживает. Подпись «Violin Journey» — 14 знаков; на узких лаунчерах режется до «Violin Jour…», показано в последнем столбце.</p>
+<div class="dv-opts">{{ homeScreens }}</div>
+</section>
+
+<section class="dv-turn" id="i4">
+<div class="dv-thd"><a class="dv-tid" href="#i4">4</a><span class="dv-tname">Адаптивный значок — background · foreground · monochrome (108 dp)</span></div>
+<p class="dv-sub">Три слоя на поле 108×108. Важное — в круге 66 dp; видимая область маски — 72 dp; фон с запасом на параллакс. Monochrome — тот же знак одной плоской заливкой: Android 13+ красит его в цвета обоев. Направление, которое не переживает монохром, — слабое; завиток переживает (он и так линия).</p>
+<div class="dv-opts">{{ adaptive }}</div>
+<p class="dv-next"><b>«Сезонный / вечер-день» вариант — согласны, лишнее.</b> У приложения есть время суток внутри, но значок — это имя на полке, он должен быть один и всегда узнаваемый; два значка размывают память формы. Вечернее небо на значке — это стиль, а не «текущее время». Оставляем один.</p>
+</section>
+
+<section class="dv-turn" id="i5">
+<div class="dv-thd"><a class="dv-tid" href="#i5">5–7</a><span class="dv-tname">Магазин 512 / 1024 · экран запуска · значок уведомления</span></div>
+<p class="dv-sub">Магазин рисуем полным квадратом без своей маски и тени (углы скругляет магазин). Экран запуска (Android 12+) — foreground по центру на сплошном #131318, без своего градиента. Значок уведомления — 24 dp, один цвет, прозрачный фон, в стиле набора.</p>
+<div class="dv-opts">{{ store }}</div>
+</section>
+
+<section class="dv-turn" id="i6">
+<div class="dv-thd"><a class="dv-tid" href="#i6">8</a><span class="dv-tname">Баннер магазина — feature graphic 1024 × 500</span></div>
+<p class="dv-sub">Знак + «Violin Journey» шрифтом Manrope + строка «Tuner · Intonation · Practice» на вечернем небе с полоской силуэтов городов из заставки. Без скриншотов телефона внутри.</p>
+<div style="max-width:720px">{{ banner }}</div>
+<p class="dv-next"><b>Смена имени (Via Violino, Bow Voyage).</b> Знак от имени не зависит — на баннере/значке имя набирается текстом рядом, а не внутри формы. Завиток (Б) и эф (А) переживут любое имя; открытка (В) и знак-такта (Г) — тоже, они не про слово. Букв «VJ» на значке нет нигде.</p>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1320px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · APP_ICON, токены, ответы словами</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(440px,100%),1fr));gap:28px;font-size:13px;line-height:1.55">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Новые токены значка (остальное — из наших палитр)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) 96px minmax(0,1.3fr)">
+    <div class="h">Токен</div><div class="h">Hex</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="8"><div class="mono">{{ t.name }}</div><div style="padding:6px 8px;display:flex;align-items:center;gap:6px"><div style="width:14px;height:14px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15);flex:none"></div><span class="mono" style="font-size:10px">{{ t.hex }}</span></div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Ответы словами (раздел 6 брифа)</div>
+  <div style="display:flex;flex-direction:column;gap:10px;color:#C7C4D4">
+    <sc-for list="{{ answers }}" as="a" hint-placeholder-count="5"><div style="background:#15151B;border-radius:12px;padding:12px 14px"><div style="font-weight:700;color:#E6E4EE;margin-bottom:3px">{{ a.q }}</div><div style="color:#A39FB5;line-height:1.5">{{ a.a }}</div></div></sc-for>
+  </div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:12px">
+  <div style="font-weight:700;font-size:14px">APP_ICON — слои на сетке 108×108 (перенос в VectorDrawable руками, как иконки и сцены)</div>
+  <div style="font-weight:600;font-size:12px;color:#A39FB5">Правила: только path, сплошные заливки + линейные/радиальные градиенты; свечение — радиальным градиентом в прозрачность, не размытием; ≤20 путей на слой; уведомление отдельно на 24×24.</div>
+  <pre style="margin:0;background:#0B0B0F;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;overflow:auto;max-height:560px;font:11px/1.5 ui-monospace,Menlo,monospace;color:#B7D8C9;white-space:pre">{{ appIconCode }}</pre>
+</div>
+</div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1320,&quot;height&quot;:900},&quot;heroDirection&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;scroll&quot;,&quot;neck&quot;,&quot;fhole&quot;,&quot;takt&quot;,&quot;postcard&quot;],&quot;default&quot;:&quot;scroll&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Значок&quot;},&quot;heroBackground&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;eve&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Значок&quot;},&quot;showSafeZones&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Значок&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    // ---- tokens
+    const SURF='#131318', GLOW='#2A2352', PC='#5B43B8', PR='#C4ADFF', PRL='#E9DDFF', DEEP='#2E1A6E',
+      ON='#E6E4EE', OV='#A39FB5', WOOD='#9A5530', WOODL='#C9814A', WOODD='#5E3016',
+      WARM='#FFD98A', WARMD='#E0A85A', EVE1='#2A2857', EVE2='#E08A63', CITY='#241C3E', CITYL='#3A2F5C',
+      INK='#1C1530', SIL='#B9B7C4';
+    let _g=(this._g||0); const uid=p=>p+(++_g); // unique per render pass; persists across renders fine
+    const lg=(stops,o={})=>{const id=uid('lg');return {id,el:h('linearGradient',{key:id,id,x1:o.x1??0,y1:o.y1??0,x2:o.x2??0,y2:o.y2??1},stops.map((s,i)=>h('stop',{key:i,offset:s[0],stopColor:s[1],stopOpacity:s[2]})))};};
+    const rg=(stops,o={})=>{const id=uid('rg');return {id,el:h('radialGradient',{key:id,id,cx:o.cx??'50%',cy:o.cy??'50%',r:o.r??'60%',fx:o.fx,fy:o.fy},stops.map((s,i)=>h('stop',{key:i,offset:s[0],stopColor:s[1],stopOpacity:s[2]})))};};
+    const P=(d,f,o={})=>h('path',{key:uid('p'),d,fill:f,...o});
+    const S=(d,st,w,o={})=>h('path',{key:uid('s'),d,fill:'none',stroke:st,strokeWidth:w,strokeLinecap:o.cap||'round',strokeLinejoin:'round',...(o.dash?{strokeDasharray:o.dash}:{}),...(o.rest||{})});
+
+    // ================= BACKGROUNDS =================
+    const bg=(kind)=>{ // returns {defs:[], els:[]} on -18..126 overscan (clipped to 108)
+      if(kind==='wood'){const g=rg([[0,WOODL],[.5,WOOD],[1,WOODD]],{cx:'42%',cy:'34%',r:'82%'});
+        return {defs:[g.el],els:[P('M-18 -18H126V126H-18Z',`url(#${g.id})`),
+          S('M-18 12C30 4 78 20 126 10',WOODD,3,{rest:{opacity:.22}}),
+          S('M-18 44C36 52 80 38 126 48',WOODD,2.4,{rest:{opacity:.16}}),
+          S('M-18 86C34 78 82 94 126 84',WOODD,3,{rest:{opacity:.2}}),
+          P('M-18 -18H126V126H-18Z','#000',{opacity:0}) ]};}
+      if(kind==='eve'||kind==='eve-city'){const g=lg([[0,EVE1],[.52,'#6E4A78'],[1,EVE2]]);
+        const els=[P('M-18 -18H126V126H-18Z',`url(#${g.id})`)];
+        if(kind==='eve-city'){ els.push(P(cityPath(108,78),CITY));
+          [[20,72],[33,68],[70,70],[86,66]].forEach(([x,y])=>els.push(P(`M${x} ${y}h3v3h-3Z`,WARM,{opacity:.9})));
+          els.push(P('M-18 108H126V126H-18Z',EVE2)); }
+        return {defs:[g.el],els};}
+      // dark (default)
+      const g=rg([[0,'#6E54C8'],[.34,'#3B2E78'],[.68,'#221C40'],[1,SURF]],{cx:'52%',cy:'45%',r:'64%'});
+      return {defs:[g.el],els:[P('M-18 -18H126V126H-18Z',`url(#${g.id})`)]};
+    };
+    function cityPath(W,base){ // stepped skyline path across 0..W ending at baseline
+      const b=[[6,60,14],[20,52,10],[30,44,12,'dome'],[42,56,9],[51,48,14],[65,54,10],[75,40,13,'spire'],[88,58,12],[100,50,8]];
+      let d=`M0 ${base}`; b.forEach(([x,top,w,kind])=>{ d+=`L${x} ${base}L${x} ${top}`;
+        if(kind==='dome'){d+=`Q${x+w/2} ${top-w*.7} ${x+w} ${top}`;}
+        else if(kind==='spire'){d+=`L${x+w/2} ${top-9}L${x+w} ${top}`;}
+        else d+=`L${x+w} ${top}`; d+=`L${x+w} ${base}`; });
+      d+=`L${W} ${base}L${W} ${base+30}L0 ${base+30}Z`; return d; }
+
+    // ================= MARKS (108 grid, foreground) =================
+    // -- Б scroll->road
+    function spiralRoad(){ const cx=45,cy=43,a=1.3,b=2.15,th0=0.5,turns=2.0,th1=th0+turns*2*Math.PI,N=42;
+      const pts=[]; for(let i=0;i<=N;i++){const t=th0+(th1-th0)*i/N,r=a+b*t; pts.push([cx+r*Math.cos(t),cy+r*Math.sin(t)]);}
+      let d='M'+pts[0][0].toFixed(1)+' '+pts[0][1].toFixed(1); for(let i=1;i<pts.length;i++) d+='L'+pts[i][0].toFixed(1)+' '+pts[i][1].toFixed(1);
+      const p=pts[pts.length-1],q=pts[pts.length-2],tx=p[0]-q[0],ty=p[1]-q[1],tl=Math.hypot(tx,ty)||1;
+      const goal=[82,84]; d+=` C${(p[0]+tx/tl*16).toFixed(1)} ${(p[1]+ty/tl*16).toFixed(1)} ${goal[0]-4} ${goal[1]-26} ${goal[0]} ${goal[1]}`;
+      return {d,eye:[cx,cy],goal}; }
+    const SR=spiralRoad();
+    const scrollMark=(mono)=>{ if(mono) return [S(SR.d,mono,7.4)];
+      const g=lg([[0,PC],[1,PR]],{x1:0,y1:0,x2:1,y2:1});
+      return [g.el, S(SR.d,`url(#${g.id})`,7.6),
+        S(SR.d,WARM,1.6,{dash:'0.1 12',rest:{opacity:.55}}),
+        P(`M${SR.goal[0]} ${SR.goal[1]-8.5}l2.4 5 5.4 .5-4.1 3.6 1.3 5.3-5-2.8-5 2.8 1.3-5.3-4.1-3.6 5.4-.5Z`,PRL),
+        h('circle',{key:uid('c'),cx:SR.eye[0],cy:SR.eye[1],r:3.4,fill:WARM}) ]; };
+    // -- А f-hole on wood
+    const fSpine='M60 30C55 41 59 50 54 57C49 64 53 73 48 83';
+    const fWing1='M47 53h15', fWing2='M49 61h15';
+    const fholeMark=(mono)=>{ if(mono) return [S(fSpine,mono,6.6),
+        h('circle',{key:uid('c'),cx:60,cy:30,r:6,fill:mono}),h('circle',{key:uid('c'),cx:48,cy:83,r:6,fill:mono}),
+        S(fWing1,mono,3.4),S(fWing2,mono,3.4)];
+      const g=lg([[0,PRL],[1,PC]]);
+      return [g.el, S(fSpine,`url(#${g.id})`,6.8),
+        S(fSpine,WARM,1.4,{dash:'0.1 10',rest:{opacity:.6}}),
+        S(fWing1,PR,3.4),S(fWing2,PR,3.4),
+        h('circle',{key:uid('c'),cx:60,cy:30,r:6.4,fill:PR}),h('circle',{key:uid('c'),cx:60,cy:30,r:2.4,fill:PRL}),
+        h('circle',{key:uid('c'),cx:48,cy:83,r:6.4,fill:WARM}) ]; };
+    // -- Г takt note + violin body (top view)
+    const vBody='M50 33C57 33 59 41 56 47C54 51 61 53 62 61C63 72 58 79 50 79C42 79 37 72 38 61C39 53 46 51 44 47C41 41 43 33 50 33Z';
+    const vStem='M50 33C50 26 49 22 53 18C57 14 63 15 66 12';
+    const taktMark=(mono)=>{ if(mono) return [P(vBody,mono), S(vStem,mono,3.6),
+        S('M66 12l4 1-1 4',mono,3.2)];
+      const g=lg([[0,PRL],[1,PC]],{x1:0,y1:0,x2:0,y2:1});
+      return [g.el, P(vBody,`url(#${g.id})`),
+        S('M46 58v9',INK,2.2,{rest:{opacity:.7}}),S('M54 58v9',INK,2.2,{rest:{opacity:.7}}),
+        h('circle',{key:uid('c'),cx:50,cy:56,r:2.2,fill:WARM}),
+        S(vStem,PR,3.8), S('M66 12l3.6 1-1 3.8',PR,3.4),
+        h('circle',{key:uid('c'),cx:71,cy:8,r:3.6,fill:PRL}) ]; };
+    // -- В postcard hero (violin upper half silhouette)
+    const heroBodyD='M52 20C56 20 58 24 57 28C56 31 55 33 55 36C61 40 66 47 66 58C66 74 60 86 52 86C44 86 38 74 38 58C38 47 43 40 49 36C49 33 48 31 47 28C46 24 48 20 52 20Z';
+    const postcardMark=(mono)=>{ if(mono) return [P('M50 16C54 16 55 20 54 23C57 24 59 27 58 30C61 33 55 33 54 36C60 40 65 47 65 58C65 74 59 86 51 86C43 86 37 74 37 58C37 47 42 40 48 36C47 33 41 33 44 30C43 27 45 24 48 23C47 20 46 16 50 16Z',mono)];
+      const g=lg([[0,'#3A2F5C'],[1,'#14101F']],{x1:0,y1:0,x2:0,y2:1});
+      return [g.el,
+        P(heroBodyD,`url(#${g.id})`),
+        S('M52 22C56 22 57 26 55 29',WARMD,1.6,{rest:{opacity:.9}}),
+        S('M64 56C65 66 61 80 54 84',WARMD,1.4,{rest:{opacity:.7}}),
+        S('M52 40C51 52 51 66 51 78',INK,1.4,{rest:{opacity:.6}}),
+        h('circle',{key:uid('c'),cx:52,cy:28,r:2,fill:WARM}) ]; };
+
+    // -- Д scroll + neck (pegbox spirals, then a tapered fingerboard-road)
+    const neckMark=(mono)=>{
+      const cx=41,cy=39,a=1.1,b=1.85,th0=0.6,turns=1.6,th1=th0+turns*2*Math.PI,N=32,pts=[];
+      for(let i=0;i<=N;i++){const t=th0+(th1-th0)*i/N,r=a+b*t;pts.push([cx+r*Math.cos(t),cy+r*Math.sin(t)]);}
+      let sd='M'+pts[0][0].toFixed(1)+' '+pts[0][1].toFixed(1);for(let i=1;i<pts.length;i++)sd+='L'+pts[i][0].toFixed(1)+' '+pts[i][1].toFixed(1);
+      const boardFill='M45 51C48 62 57 76 67 87Q72 90 77 84C68 74 60 60 54 47Z';
+      const center='M50 52C54 62 62 75 71 85';
+      if(mono) return [P(boardFill,mono), S(sd,mono,6.4), h('circle',{key:uid('c'),cx,cy,r:3,fill:mono}),h('circle',{key:uid('c'),cx:75,cy:85,r:3,fill:mono})];
+      const g=lg([[0,PC],[1,PR]],{x1:0,y1:0,x2:1,y2:1}); const g2=lg([[0,PR],[1,PC]],{x1:0,y1:0,x2:1,y2:1});
+      return [g.el,g2.el, P(boardFill,`url(#${g2.id})`),
+        S(center,WARM,1.6,{dash:'0.1 12',rest:{opacity:.55}}),
+        S(sd,`url(#${g.id})`,6.6),
+        h('circle',{key:uid('c'),cx,cy,r:3.2,fill:WARM}),
+        h('circle',{key:uid('c'),cx:75.5,cy:85,r:3.4,fill:PRL}) ]; };
+    const MARKS={ scroll:scrollMark, neck:neckMark, fhole:fholeMark, takt:taktMark, postcard:postcardMark };
+    const BGFOR={ scroll:'dark', neck:'dark', fhole:'wood', takt:'dark', postcard:'eve-city' };
+
+    // ================= COMPOSE =================
+    // helper to split gradient defs out of a mark array (marks put their gradient as first el)
+    const splitDefs=(arr)=>{const defs=[],els=[];arr.filter(Boolean).forEach(e=>{ if(e.type==='linearGradient'||e.type==='radialGradient') defs.push(e); else els.push(e);}); return {defs,els};};
+    // rebuild icon cleanly
+    const iconEl=(size,{dir='scroll',mono=false,monoColor='#E6E4EE',round,bgKind}={})=>{
+      const kind=bgKind||BGFOR[dir]; const b=mono?{defs:[],els:[]}:bg(kind);
+      const m=splitDefs(MARKS[dir](mono?monoColor:false));
+      const style={display:'block',flex:'none'}; if(round!==0) style.borderRadius=(round??size*0.225)+'px'; else style.borderRadius='0';
+      return h('svg',{key:uid('svg'),width:size,height:size,viewBox:'0 0 108 108',style},
+        (b.defs.length+m.defs.length)?h('defs',{key:'d'},[...b.defs,...m.defs]):null,
+        ...b.els,...m.els); };
+
+    const col=(gap,items)=>h('div',{key:uid('col'),style:{display:'flex',flexDirection:'column',alignItems:'center',gap}},items);
+    const capd=(el,txt)=>col(8,[el,h('div',{key:'c',className:'cap'},txt)]);
+
+    // ================= HERO =================
+    const hd=this.props.heroDirection??'scroll';
+    const hb=this.props.heroBackground??'dark';
+    const NAMES={scroll:'Б · завиток-дорога',neck:'Д · головка и гриф',fhole:'А · эф на деке',takt:'Г · знак такта',postcard:'В · открытка'};
+    const heroName=NAMES[hd]; const heroBgName=hb==='eve'?'вечернее небо':'тёмно-сиреневый';
+    const heroBig=[ capd(iconEl(168,{dir:hd,bgKind:hb==='eve'?(hd==='fhole'?'eve':'eve'):BGFOR[hd]}),'512'),
+      capd(iconEl(96,{dir:hd,bgKind:hb==='eve'?'eve':BGFOR[hd]}),'96'),
+      capd(iconEl(48,{dir:hd,bgKind:hb==='eve'?'eve':BGFOR[hd]}),'48'),
+      capd(iconEl(24,{dir:hd,round:6,bgKind:hb==='eve'?'eve':BGFOR[hd]}),'24') ];
+    const heroBoth=[ capd(iconEl(120,{dir:hd,bgKind:'dark'}),'тёмно-сиреневый'), capd(iconEl(120,{dir:hd,bgKind:'eve'}),'вечернее небо') ];
+
+    // ================= LINEUP =================
+    const DIR=[
+      {id:'Б',anchor:'b',key:'scroll',name:'Завиток-дорога — спираль головки раскручивается в дорогу к цели',small:'да — завиток ни с чем не спутать, дорога читается даже без «скрипки».'},
+      {id:'Д',anchor:'d',key:'neck',name:'Головка и гриф — тот же завиток, но продолжен грифом-дорогой: скрипка читается чуть сильнее',small:'да, чуть больше — пара «завиток + гриф» = головка скрипки; всё ещё не буквальный инструмент, дорога сохранена.'},
+      {id:'А',anchor:'a',key:'fhole',name:'Эф-дорога на деке — тёплое дерево во весь значок, эф-линия как маршрут',small:'частично — «скрипка» держится деревом; голый эф не-музыкант примет за красивую линию.'},
+      {id:'Г',anchor:'g',key:'takt',name:'Знак такта — корпус-вид-сверху вместо головки ноты, штиль уходит дорогой',small:'слабее — в 48 px борется с «нотой»; корпус побеждает не всегда.'},
+      {id:'В',anchor:'v',key:'postcard',name:'Открытка — силуэт скрипки-героя на вечернем небе с силуэтами городов',small:'плохо — красиво крупно, в 48 px тёмный «фасолина»-силуэт. Парадный кадр, не значок.'} ];
+    const dirs=DIR.map(d=>({ id:d.id, anchor:d.anchor, name:d.name, small:d.small,
+      big:iconEl(176,{dir:d.key}),
+      sizesRow:h('div',{key:uid('r'),style:{display:'flex',gap:18,alignItems:'flex-end'}},
+        [capd(iconEl(96,{dir:d.key}),'96'),capd(iconEl(48,{dir:d.key}),'48'),capd(iconEl(24,{dir:d.key,round:6}),'24')]) }));
+
+    // ================= SHELF =================
+    const genViolin=(col,rot)=>h('svg',{key:uid('gv'),width:56,height:56,viewBox:'0 0 48 48',style:{display:'block'}},
+      h('g',{transform:`rotate(${rot} 24 24)`},
+        P('M24 26C27 26 28 30 27 33C26 35 30 36 31 40C32 45 28 48 24 48C20 48 16 45 17 40C18 36 22 35 21 33C20 30 21 26 24 26Z',col),
+        S('M24 26V8',col,2.4),h('circle',{key:'s',cx:24,cy:7,r:3,fill:'none',stroke:col,strokeWidth:2}),
+        S('M22 12v22',col,.8),S('M26 12v22',col,.8)));
+    const tile=(node,label,sub,pick)=>h('div',{key:uid('t'),style:{display:'flex',flexDirection:'column',alignItems:'center',gap:7,width:78}},
+      h('div',{className:pick?'pick':'',style:{width:64,height:64,borderRadius:15,overflow:'hidden',lineHeight:0}},node),
+      h('div',{style:{font:'600 11px Manrope',color:pick?'#C4ADFF':'#A39FB5',textAlign:'center'}},label),
+      h('div',{style:{font:'500 10px Manrope',color:'rgba(230,228,238,.4)',textAlign:'center'}},sub));
+    const compTile=(bgc,vc)=>h('div',{style:{width:64,height:64,background:bgc,display:'flex',alignItems:'center',justifyContent:'center'}},genViolin(vc,-45));
+    const shelf=[
+      tile(compTile('#2C6BE0','#EAF0FF'),'конкурент','скрипка / синий'),
+      tile(compTile('#F3F1EC','#2C2A33'),'конкурент','скрипка / белый'),
+      tile(compTile('#D8433F','#FBE9E7'),'конкурент','скрипка / красный'),
+      tile(iconEl(64,{dir:'scroll',round:0,bgKind:'dark'}),'МЫ','тёмно-сиреневый',true),
+      tile(iconEl(64,{dir:'scroll',round:0,bgKind:'eve'}),'МЫ','вечернее небо',true),
+      tile(compTile('#1D6FA5','#DFF1FA'),'конкурент','скрипка / синий'),
+      tile(compTile('#EEEBE4','#332E2A'),'конкурент','скрипка / белый') ];
+
+    // ================= HOME SCREENS =================
+    const MASK={circle:'50%',squircle:'26%',teardrop:'50% 50% 50% 6px'};
+    const WP={ light:{bg:'linear-gradient(160deg,#EAD9C4,#D9C3E0)',fg:'#3A2E4E'},
+      dark:{bg:'linear-gradient(160deg,#15131C,#241C33)',fg:'#E6E4EE'},
+      photo:{bg:'linear-gradient(150deg,#2E6E7E 0%,#7C5AA6 55%,#E0925E 100%)',fg:'#FFFFFF'} };
+    const maskedIcon=(mask)=>h('div',{key:uid('m'),style:{width:58,height:58,borderRadius:MASK[mask],overflow:'hidden',boxShadow:'0 6px 16px rgba(0,0,0,.35)'}},iconEl(58,{dir:'scroll',round:0}));
+    const homeCell=(wpKey,label)=>{ const wp=WP[wpKey];
+      return h('div',{key:uid('h'),style:{background:wp.bg,borderRadius:22,padding:'22px 18px 16px',display:'flex',flexDirection:'column',alignItems:'center',gap:14,width:220}},
+        h('div',{style:{display:'flex',gap:16}},['circle','squircle','teardrop'].map(mk=>h('div',{key:mk,style:{display:'flex',flexDirection:'column',alignItems:'center',gap:7}},
+          maskedIcon(mk),
+          h('div',{style:{font:`600 11px Manrope`,color:wp.fg,maxWidth:60,textAlign:'center',lineHeight:1.15,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}},'Violin Journey')))),
+        h('div',{style:{font:'500 11px Manrope',color:wpKey==='light'?'rgba(58,46,78,.7)':'rgba(255,255,255,.75)'}},label)); };
+    const homeScreens=[ homeCell('light','светлые обои · круг / squircle / капля'), homeCell('dark','тёмные обои'), homeCell('photo','пёстрое фото') ];
+
+    // ================= ADAPTIVE =================
+    const bgLayer=()=>{const b=bg('dark');return h('svg',{key:uid('b'),width:150,height:150,viewBox:'0 0 108 108',style:{display:'block',borderRadius:14}},h('defs',null,b.defs),...b.els);};
+    const fgLayer=(guides)=>{const m=splitDefs(MARKS.scroll(false));
+      return h('svg',{key:uid('f'),width:150,height:150,viewBox:'0 0 108 108',style:{display:'block',borderRadius:14,background:'repeating-conic-gradient(#26242E 0% 25%, #1B1A22 0% 50%) 0/20px 20px'}},
+        m.defs.length?h('defs',null,m.defs):null,...m.els,
+        guides?h('circle',{key:'s1',cx:54,cy:54,r:33,fill:'none',stroke:'#C4ADFF',strokeWidth:1,strokeDasharray:'3 3',opacity:.9}):null,
+        guides?h('circle',{key:'s2',cx:54,cy:54,r:36,fill:'none',stroke:'#FFD98A',strokeWidth:1,strokeDasharray:'3 3',opacity:.7}):null);};
+    const monoChip=(bgc,fgc,label)=>col(8,[h('div',{key:uid('mc'),style:{width:96,height:96,borderRadius:'50%',background:bgc,display:'flex',alignItems:'center',justifyContent:'center',overflow:'hidden'}},
+      iconEl(96,{dir:'scroll',mono:true,monoColor:fgc,round:0})),h('div',{className:'cap'},label)]);
+    const showSafe=this.props.showSafeZones??true;
+    const adaptive=[
+      capd(bgLayer(),'background · с запасом на параллакс'),
+      col(8,[fgLayer(showSafe),h('div',{className:'cap'},showSafe?'foreground · круг 66 / маска 72':'foreground')]),
+      capd(iconEl(150,{dir:'scroll',round:14}),'собрано под круглой маской'),
+      h('div',{key:uid('mw'),style:{display:'flex',gap:16,alignItems:'flex-start'}},[
+        monoChip('#3E4A2E','#DCE8B0','тема «шалфей»'),
+        monoChip('#4A2E3A','#F2C9DA','тема «роза»'),
+        monoChip('#2E3A4A','#BBD4F2','тема «лёд»') ]) ];
+
+    // ================= STORE / SPLASH / NOTIF =================
+    const notifGlyph=(size,col)=>{ // 24-grid simplified scroll->arrow, stroke 1.8
+      const cx=10,cy=10,a=.9,b=1.25,th0=.6,turns=1.6,th1=th0+turns*2*Math.PI,N=26,pts=[];
+      for(let i=0;i<=N;i++){const t=th0+(th1-th0)*i/N,r=a+b*t;pts.push([cx+r*Math.cos(t),cy+r*Math.sin(t)]);}
+      let d='M'+pts[0][0].toFixed(1)+' '+pts[0][1].toFixed(1);for(let i=1;i<pts.length;i++)d+='L'+pts[i][0].toFixed(1)+' '+pts[i][1].toFixed(1);
+      const p=pts[pts.length-1];d+=`C${(p[0]+2).toFixed(1)} ${(p[1]+3).toFixed(1)} 17 15 19 20`;
+      return h('svg',{key:uid('ng'),width:size,height:size,viewBox:'0 0 24 24',style:{display:'block'}},
+        S(d,col,1.8),P('M19 20l.4-4.2 3.2 2.6Z',col,{stroke:col,strokeWidth:.6})); };
+    const statusBar=()=>h('div',{style:{width:260,height:30,borderRadius:9,background:'#0B0B0F',display:'flex',alignItems:'center',padding:'0 12px',gap:8,color:'#E6E4EE',font:'600 12px Manrope'}},
+      h('span',{key:'t'},'9:41'),notifGlyph(16,'#E6E4EE'),h('span',{key:'s',style:{flex:1}}),h('span',{key:'b',style:{font:'500 11px Manrope',color:'#A39FB5'}},'▲ 84%'));
+    const shadeRow=()=>h('div',{style:{width:260,background:'#1E1D25',borderRadius:14,padding:'12px 14px',display:'flex',alignItems:'center',gap:12}},
+      h('div',{style:{width:34,height:34,borderRadius:10,background:'#292833',display:'flex',alignItems:'center',justifyContent:'center'}},notifGlyph(20,'#C4ADFF')),
+      h('div',{key:'x'},[h('div',{key:'a',style:{font:'700 13px Manrope',color:'#E6E4EE'}},'Violin Journey'),h('div',{key:'b',style:{font:'400 12px Manrope',color:'#A39FB5'}},'Занятие сохранено · +340 тактов')]));
+    const store=[
+      capd(iconEl(180,{dir:'scroll',round:0,bgKind:'dark'}),'512 × 512 · Google Play (без своей маски и тени)'),
+      capd(iconEl(180,{dir:'scroll',round:0,bgKind:'dark'}),'1024 × 1024 · App Store (без прозрачности)'),
+      capd(h('div',{key:uid('sp'),style:{width:180,height:180,borderRadius:0,background:SURF,display:'flex',alignItems:'center',justifyContent:'center'}},
+        h('div',{style:{lineHeight:0}},iconEl(150,{dir:'scroll',mono:false,round:0,bgKind:'dark'}) )),'экран запуска — foreground на #131318'),
+      col(12,[statusBar(),shadeRow(),h('div',{className:'cap'},'уведомление 24 dp · строка и шторка')]) ];
+    // splash should be foreground-only on solid; rebuild:
+    store[2]=capd(h('div',{key:uid('sp'),style:{width:180,height:180,background:SURF,display:'flex',alignItems:'center',justifyContent:'center'}},
+      (()=>{const m=splitDefs(MARKS.scroll(false));return h('svg',{width:132,height:132,viewBox:'0 0 108 108',style:{display:'block'}},m.defs.length?h('defs',null,m.defs):null,...m.els);})()),'экран запуска — foreground на #131318, без своего градиента');
+
+    // ================= BANNER 1024×500 =================
+    // banner skyline across 1024
+    const bannerFixed=(()=>{ const skirt=lg([[0,EVE1],[.5,'#6E4A78'],[1,EVE2]]); const m=splitDefs(MARKS.scroll(false)); const bb=bg('dark');
+      const b2=[[40,360,90],[150,320,70,'dome'],[250,280,80,'spire'],[360,340,70],[720,330,80],[820,290,70,'dome'],[910,350,80]];
+      let sk=`M0 410`; b2.forEach(([x,top,w,kind])=>{ sk+=`L${x} 410L${x} ${top}`; if(kind==='dome'){sk+=`Q${x+w/2} ${top-w*.6} ${x+w} ${top}`;} else if(kind==='spire'){sk+=`L${x+w/2} ${top-40} ${x+w} ${top}`;} else sk+=`L${x+w} ${top}`; sk+=`L${x+w} 410`; }); sk+=`L1024 410L1024 500L0 500Z`;
+      return h('svg',{key:uid('bn2'),viewBox:'0 0 1024 500',style:{display:'block',width:'100%',borderRadius:16}},
+        h('defs',null,[skirt.el,...bb.defs,...m.defs]),
+        P('M0 0H1024V500H0Z',`url(#${skirt.id})`),
+        P(sk,CITY),
+        ...[[190,398],[300,390],[760,398],[860,384]].map(([x,y])=>h('rect',{key:uid('w'),x,y,width:7,height:7,fill:WARM,opacity:.9})),
+        h('g',{key:'tile',transform:'translate(84 118) scale(2.45)'},[
+          h('rect',{key:'r',width:108,height:108,rx:22,fill:'#131318'}),
+          ...bb.els.map((e,i)=>React.cloneElement(e,{key:'be'+i})),
+          ...m.els.map((e,i)=>React.cloneElement(e,{key:'me'+i})) ]),
+        h('text',{key:'ttl',x:420,y:224,fill:'#FFFFFF',fontFamily:'Manrope, sans-serif',fontSize:80,fontWeight:800,letterSpacing:'-1'},'Violin Journey'),
+        h('text',{key:'sub',x:424,y:278,fill:'rgba(255,255,255,.9)',fontFamily:'Manrope, sans-serif',fontSize:33,fontWeight:600,letterSpacing:'3'},'Tuner · Intonation · Practice') ); })();
+
+    // ================= DEV =================
+    const tokens=[
+      {name:'icon.bgCore',hex:'#6E54C8',use:'ярче primaryContainer — ядро свечения фона (радиальный градиент)'},
+      {name:'icon.bgEdge',hex:'#131318',use:'= surface — край фона; между ними accentGlow #2A2352'},
+      {name:'sign.primary',hex:'#C4ADFF',use:'= primary — тело знака (дорога, эф, корпус)'},
+      {name:'sign.light',hex:'#E9DDFF',use:'= почти-белый блик знака и цель-звезда'},
+      {name:'sign.container',hex:'#5B43B8',use:'= primaryContainer — тёмная грань знака (низ градиента)'},
+      {name:'home.warm',hex:'#FFD98A',use:'тёплая точка «дома» — окна открыток; единственный тёплый акцент на сиреневом знаке'},
+      {name:'wood',hex:'#9A5530',use:'дека в направлении А — из трофеев; блик #C9814A, край #5E3016'},
+      {name:'eve.sky',hex:'#2A2857→#E08A63',use:'вечернее небо — фон-альтернатива и открытка (В), баннер'} ];
+    const answers=[
+      {q:'Какое направление выбрал бы сам и что у него слабого',a:'Б — завиток-дорога. Самая скрипичная простая форма (спираль головки не спутать с гитарой) и самый честный образ пути. Слабое: спираль в 48 px хочет «замылиться» — держим её тугой, толстой (7.6) и с тёплой точкой в глазу, чтобы центр не пропал.'},
+      {q:'Читается ли «скрипка» у не-музыканта в 48 px — по каждому',a:'Б — да (завиток узнаваем и мелко). Д — да, чуть сильнее: завиток + гриф = головка скрипки, но дорога сохранена. А — только на дереве: материал говорит «инструмент», голый эф — нет. Г — борется с «нотой», корпус побеждает не всегда. В — нет, в 48 px тёмная «фасолина»; это парадный кадр, а не значок.'},
+      {q:'Фон: тёмно-сиреневый или вечернее небо',a:'На полке заметнее вечернее небо (тёплый низ ловит глаз среди синих плиток), честнее к приложению — тёмно-сиреневый. Совет: тёмно-сиреневый + тёплая точка «дома» — узнаётся своим и не тонет.'},
+      {q:'Нужен ли «сезонный / вечер-день» вариант',a:'Лишнее, согласны. Значок — имя на полке, он один и всегда одинаковый; два значка размывают память формы. Вечернее небо на знаке — стиль, а не «текущее время суток».'},
+      {q:'Переживёт ли знак смену имени (Via Violino, Bow Voyage)',a:'Да. Имя набирается текстом рядом на баннере, внутри формы букв нет. Б и А — точно; В и Г тоже, они не про слово. «VJ» на значке нет.'} ];
+    const g2=(v,d=1)=>Number(v).toFixed(d);
+    const codeSection=(title,body)=>`${title}\n${body}\n`;
+    const appIconCode =
+`APP_ICON = {   // сетка 108×108, перенос в VectorDrawable руками
+
+  // ── фон (background) — во всё поле, с запасом на параллакс (рисуем -18..126)
+  background: {
+    dark: { type:'radial', cx:'52%', cy:'45%', r:'64%',
+            stops:[[0,'#6E54C8'],[.34,'#3B2E78'],[.68,'#221C40'],[1,'#131318']] },
+    eve:  { type:'linear', x1:0,y1:0,x2:0,y2:1,
+            stops:[[0,'#2A2857'],[.52,'#6E4A78'],[1,'#E08A63']] }
+  },
+
+  // ── foreground — знак; важное в круге r33 (66dp), маска r36 (72dp)
+  // Б · завиток-дорога (ВЫБРАНО)
+  foreground_scroll: [
+    // spiral: Archimedean r=1.3+2.15θ, центр (45,43), θ 0.5..0.5+2·2π, 42 сегмента,
+    //         хвост-дорога Безье к цели (82,84)
+    { role:'road', kind:'stroke', w:7.6, cap:'round',
+      fill:{type:'linear',x1:0,y1:0,x2:1,y2:1,stops:[[0,'#5B43B8'],[1,'#C4ADFF']]},
+      d:${JSON.stringify(SR.d)} },
+    { role:'centerline', kind:'stroke', w:1.6, dash:'0.1 12', opacity:.55, fill:'#FFD98A', d:'<= d дороги' },
+    { role:'goalStar', fill:'#E9DDFF', d:'звезда 4 луча в (82,84) r≈6' },
+    { role:'homeDot', kind:'circle', cx:45, cy:43, r:3.4, fill:'#FFD98A' }
+  ],
+  // А · эф на деке — фон = wood (radial #C9814A→#9A5530→#5E3016) + 3 линии грани
+  foreground_fhole: [
+    { role:'fSpine', kind:'stroke', w:6.4,
+      fill:{type:'linear',stops:[[0,'#E9DDFF'],[1,'#5B43B8']]}, d:${JSON.stringify(fSpine)} },
+    { role:'centerline', kind:'stroke', w:1.4, dash:'0.1 10', opacity:.6, fill:'#FFD98A' },
+    { role:'wings', kind:'stroke', w:3.4, fill:'#C4ADFF', d:['M47 53h15','M49 61h15'] },
+    { role:'eyeTop(goal)', kind:'circle', cx:60, cy:30, r:6.4, fill:'#C4ADFF' },
+    { role:'eyeBottom(home)', kind:'circle', cx:48, cy:83, r:6.4, fill:'#FFD98A' }
+  ],
+  // Г · знак такта — корпус top-view + штиль-дорога
+  foreground_takt: [
+    { role:'body', fill:{type:'linear',stops:[[0,'#E9DDFF'],[1,'#5B43B8']]}, d:${JSON.stringify(vBody)} },
+    { role:'fholes', kind:'stroke', w:2.2, opacity:.7, fill:'#1C1530', d:['M46 58v9','M54 58v9'] },
+    { role:'bridge', kind:'circle', cx:50, cy:56, r:2.2, fill:'#FFD98A' },
+    { role:'stemRoad', kind:'stroke', w:3.8, fill:'#C4ADFF', d:${JSON.stringify(vStem)} },
+    { role:'goal', kind:'circle', cx:71, cy:8, r:3.6, fill:'#E9DDFF' }
+  ],
+  // В · открытка — фон = eve + skyline; герой-скрипка силуэтом
+  foreground_postcard: [
+    { role:'hero', fill:{type:'linear',stops:[[0,'#3A2F5C'],[1,'#14101F']]}, d:${JSON.stringify(heroBodyD)} },
+    { role:'rimLight', kind:'stroke', w:1.6, opacity:.9, fill:'#E0A85A' },
+    { role:'windowDot', kind:'circle', cx:52, cy:28, r:2, fill:'#FFD98A' }
+  ],
+
+  // ── monochrome (Android 13+ тематический) — одна плоская заливка, без градиентов
+  monochrome: [ { role:'mark', kind:'stroke', w:7.4, fill:'#000', d:'<= d завитка-дороги (тот же путь)' } ],
+
+  // ── notification (24×24, один цвет, прозрачный фон, обводка 1.8 в стиле набора)
+  notification: [
+    { kind:'stroke', w:1.8, d:'спираль r=0.9+1.25θ центр (10,10) θ .6..~10.6 + хвост к (19,20)' },
+    { kind:'fill', role:'arrowhead', d:'M19 20l.4-4.2 3.2 2.6Z' }
+  ],
+
+  // ── banner (feature graphic 1024×500): eve sky + skyline + плитка знака 264 + текст Manrope 800/600
+  banner: { size:[1024,500], bg:'eve', skyline:true, tile:{x:84,y:118,size:264,bg:'dark'},
+            title:{text:'Violin Journey', x:420, y:224, size:80, weight:800},
+            subtitle:{text:'Tuner · Intonation · Practice', x:424, y:278, size:33, weight:600} }
+};`;
+
+    return { heroName, heroBgName, heroBig, heroBoth, dirs, shelf, homeScreens, adaptive, store, banner:bannerFixed, tokens, answers, appIconCode };
+  }
+}
+</script>
+</body>
+</html>

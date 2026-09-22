@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><script src="home-catalog.js"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>
+body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}
+a{color:#C4ADFF}a:hover{color:#E9DDFF}
+.dv-turn{padding:40px 44px 34px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}
+.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}
+.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif}
+.dv-sub{font:400 12px/1.55 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.55);max-width:1000px;margin:0 0 22px;text-wrap:pretty}
+.dv-opts{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}
+.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);border-radius:5px;text-decoration:none;color:#E6E4EE}
+.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11.5px/1.4 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.62);max-width:412px;text-wrap:pretty}
+.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}
+.dv-next{margin:22px 0 0;font:12px/1.6 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:1000px;text-wrap:pretty}
+.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}
+.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}
+.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}
+.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}
+.tn{font-variant-numeric:tabular-nums}
+.scr{border-radius:20px;overflow:hidden;background:#131318;position:relative;color:#E6E4EE;flex:none;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+.pill{font:600 10.5px Manrope;padding:3px 9px;border-radius:11px;background:rgba(196,173,255,.16);color:#C4ADFF}
+.warm{color:#FFD98A}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(var(--a))}}
+@keyframes sway{0%,100%{transform:translateX(0)}50%{transform:translateX(var(--a))}}
+@keyframes swing{0%,100%{transform:rotate(var(--n))}50%{transform:rotate(var(--a))}}
+@keyframes blink{0%,96%,100%{transform:scaleY(1)}98%{transform:scaleY(.1)}}
+@keyframes rise{0%{transform:translateY(0);opacity:.5}100%{transform:translateY(-14px);opacity:0}}
+@keyframes flick{0%,100%{opacity:1}50%{opacity:.82}}
+@keyframes fly{0%{transform:translate(0,0)}100%{transform:translate(var(--a),-90px)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.45}}
+</style></helmet>
+
+<section class="dv-turn" id="s29a">
+<div class="dv-thd"><a class="dv-tid" href="#s29a">29a</a><span class="dv-tname">Live сейчас и Live в комнате — тишина и «в строе»</span></div>
+<p class="dv-sub"><b>Свет отвечает на возражение к A, но не в одиночку.</b> Пока звучит нота, приглушённая картина действительно перестаёт спорить — это чистое поле, и ряды под словом статуса исчезают сами. Но в <b>тишине</b> картина в полных красках, и там возражение возвращается целиком: кольцо и строка состояния оказываются на цветном. Поэтому вводим два приёма, оба дешёвые и обратимые, оба живут <i>только при горящем свете</i>. <b>Вуаль</b> — радиальное затемнение вокруг кольца: комната остаётся собой по краям, где она красива, а кольцу достаётся ровное поле. Этого хватает кольцу, но не строке состояния: интерфейс идёт во всю высоту, а вуаль — круг, и у верхнего края её уже почти нет. Поэтому сверху — <b>шторка</b> 24 % высоты (`surface` 0,58 → 0) и <b>плашка</b> под строкой состояния и подписью. На кремовом потолке Вены без них строка давала 1,1 : 1; с ними — 5,2 : 1.</p>
+<div class="dv-opts">
+<sc-for list="{{ f29a }}" as="f" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:412px;height:892px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:12px 0 0">
+    <div style="display:flex;justify-content:center;flex:none;opacity:{{ f.chromeOp }}"><div style="display:flex;height:40px;padding:3px;border-radius:21px;background:{{ f.swBg }};border:1px solid {{ f.swEdge }}"><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.playBg }};color:{{ f.playFg }};font-size:14px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.tuneBg }};color:{{ f.tuneFg }};font-size:14px;font-weight:700">Настройка</div></div></div>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 24px 0;min-height:28px;flex:none;opacity:{{ f.rowOp }}">
+      <sc-if value="{{ f.chip }}" hint-placeholder-val="{{ false }}"><div style="height:28px;padding:0 12px;border-radius:5px;background:#F1EEE6;color:#2A2430;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px" class="tn"><div style="width:7px;height:7px;border-radius:50%;background:#8E2F3F"></div>занятие · 12:34</div></sc-if>
+      <div style="flex:1"></div>
+      <div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#E6E4EE">{{ f.whereIco }}{{ f.where }}</div>
+    </div>
+    <div style="display:flex;justify-content:center;margin-top:10px;flex:none;opacity:{{ f.statusOp }}"><div style="display:flex;align-items:center;gap:9px;height:26px;padding:0 13px;border-radius:13px;background:rgba(19,19,24,.7);font-size:14px;color:#A39FB5">{{ f.statusDot }}<span>{{ f.statusText }}</span></div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ f.ring }}
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-5px;line-height:1;font-size:174px;opacity:{{ f.noteOp }}" class="tn">{{ f.note }}<span style="font-size:52px;font-weight:600;color:#A39FB5;letter-spacing:0">{{ f.oct }}</span></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;height:46px;flex:none;opacity:{{ f.wordOp }};color:{{ f.zoneCol }}">{{ f.arrow }}<div style="font-size:28px;font-weight:700">{{ f.word }}</div><div class="tn" style="font-size:24px;font-weight:600;color:#A39FB5">{{ f.cents }}</div></div>
+    <div style="display:flex;justify-content:center;padding:14px 0 10px;flex:none"><div style="width:72px;height:72px;border-radius:36px;background:{{ f.recFace }};border:3px solid {{ f.recRing }};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35)">{{ f.recGlyph }}</div></div>
+    <div style="height:14px;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.92));flex:none"></div>
+    <div style="height:66px;background:rgba(19,19,24,.92);display:flex;align-items:center;padding:0 8px;flex:none">
+      <sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:11px;font-weight:600">{{ t.n }}</div></div></sc-for>
+    </div>
+  </div>
+</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Насколько тёмной.</b> Ваш старт — 85 % смеси с `surface` и 20 % насыщенности — на наш глаз <i>перебор</i>: зал перестаёт быть залом и становится шумом, то есть ровно тем, за что вы ругали A. Предлагаем <b>76 % смеси и 12 % насыщенности</b>: дерево ещё тёплое, бархат ещё тёмно-красный на ощупь, но ни один цвет картины не спорит с зоной. Три степени рядом — в <a href="#29b5">29b5</a>. Светящиеся слои (`GLOW`, пламя, окна, люстры) в темноте гаснут отдельно — их α × 0,25: свет в зале действительно убавили, а не просто картинку затемнили.</p>
+</section>
+
+<section class="dv-turn" id="s29b">
+<div class="dv-thd"><a class="dv-tid" href="#s29b">29b</a><span class="dv-tname">Свет — раскадровка, запись, «убрать анимации», три степени темноты</span></div>
+<p class="dv-sub">Гаснет как выключатель — быстро и с разгоном; загорается как реостат — медленно и с торможением. Числа ниже — наши, чуть отличаются от ваших: пауза перед гашением 100 мс и 420 мс на само гашение; 6,0 с тишины и 1 600 мс на возвращение.</p>
+<div class="dv-opts" style="gap:14px">
+<sc-for list="{{ f29b }}" as="f" hint-placeholder-count="7">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel" style="max-width:206px"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:206px;height:446px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:6px 0 0">
+    <div style="display:flex;justify-content:center;flex:none;opacity:{{ f.chromeOp }}"><div style="display:flex;height:20px;padding:2px;border-radius:11px;background:{{ f.swBg }}"><div style="display:flex;align-items:center;padding:0 10px;border-radius:9px;background:{{ f.playBg }};color:{{ f.playFg }};font-size:7px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 10px;border-radius:9px;color:{{ f.tuneFg }};font-size:7px;font-weight:700">Настройка</div></div></div>
+    <div style="display:flex;align-items:center;justify-content:center;height:11px;margin-top:11px;font-size:7px;color:#A39FB5;opacity:{{ f.statusOp }}">{{ f.statusText }}</div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ f.ring }}
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-2px;font-size:87px;line-height:1;opacity:{{ f.noteOp }}" class="tn">{{ f.note }}</div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:6px;height:23px;flex:none;opacity:{{ f.wordOp }};color:{{ f.zoneCol }};font-size:14px;font-weight:700">{{ f.word }}</div>
+    <sc-if value="{{ f.rec }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:6px;padding:0 12px 4px;flex:none"><div style="width:6px;height:6px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div><div class="tn" style="font-size:9px;font-weight:700">01:24</div><div style="flex:1;height:4px;border-radius:2px;background:#292833"></div></div></sc-if>
+    <div style="display:flex;justify-content:center;padding:4px 0 8px;flex:none"><div style="width:38px;height:38px;border-radius:19px;background:{{ f.recFace }};border:2px solid {{ f.recRing }}"></div></div>
+    <div style="height:30px;background:rgba(19,19,24,.92);flex:none"></div>
+  </div>
+</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Первая нота после долгой паузы — приемлемо, с одной поправкой.</b> Свет зоны нарастает <i>по той же кривой</i>, что и гашение, а не мгновенно: на 200 мс картина потемнела наполовину и свет зоны поднялся наполовину. Полные краски и полный свет зоны вместе на экране не встречаются никогда — а именно это и было бы неприятно. <b>«Мимо» не становится самым драматичным кадром</b>: у красной зоны оба множителя × 0,7, как и у ореола кольца (принцип 5).</p>
+</section>
+
+<section class="dv-turn" id="s29c">
+<div class="dv-thd"><a class="dv-tid" href="#s29c">29c</a><span class="dv-tname">Комната — все состояния, вечер и день, съёмная и домик</span></div>
+<p class="dv-sub">Кадр портрета: сетка комнаты 412 в ширину, видно от −260 (потолок с карнизом) до 600 (пол, уходящий к зрителю). Кольцо стоит на окне и пюпитре, слово и кнопка записи — на пустом полу. <b>Скрипки в комнате нет</b> — её держат в руках; футляр у окна открыт и пуст, напольной подставки нет вовсе.</p>
+<div class="dv-opts">
+<sc-for list="{{ f29c }}" as="f" hint-placeholder-count="8">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:412px;height:892px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:12px 0 0">
+    <div style="display:flex;justify-content:center;flex:none;opacity:{{ f.chromeOp }}"><div style="display:flex;height:40px;padding:3px;border-radius:21px;background:{{ f.swBg }};border:1px solid {{ f.swEdge }}"><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.playBg }};color:{{ f.playFg }};font-size:14px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.tuneBg }};color:{{ f.tuneFg }};font-size:14px;font-weight:700">Настройка</div></div></div>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 24px 0;min-height:28px;flex:none;opacity:{{ f.rowOp }}"><div style="flex:1"></div><div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600">{{ f.whereIco }}{{ f.where }}</div></div>
+    <div style="display:flex;justify-content:center;margin-top:10px;flex:none;opacity:{{ f.statusOp }}"><div style="display:flex;align-items:center;gap:9px;height:26px;padding:0 13px;border-radius:13px;background:rgba(19,19,24,.7);font-size:14px;color:#A39FB5">{{ f.statusDot }}<span>{{ f.statusText }}</span></div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ f.ring }}
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-5px;line-height:1;font-size:174px;opacity:{{ f.noteOp }}" class="tn">{{ f.note }}<span style="font-size:52px;font-weight:600;color:#A39FB5;letter-spacing:0">{{ f.oct }}</span></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;height:46px;flex:none;opacity:{{ f.wordOp }};color:{{ f.zoneCol }}">{{ f.arrow }}<div style="font-size:28px;font-weight:700">{{ f.word }}</div><div class="tn" style="font-size:24px;font-weight:600;color:#A39FB5">{{ f.cents }}</div></div>
+    <sc-if value="{{ f.noPerm }}" hint-placeholder-val="{{ false }}"><div style="margin:0 24px 8px;padding:16px 18px;border-radius:14px;background:#F1EEE6;color:#2A2430;flex:none"><div style="font-size:14px;line-height:1.45;margin-bottom:12px">Чтобы слышать скрипку, приложению нужен микрофон. Запись не ведётся, пока вы её не начнёте.</div><div style="height:44px;border-radius:22px;background:#2A2430;color:#F1EEE6;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700">Разрешить доступ</div></div></sc-if>
+    <div style="display:flex;justify-content:center;padding:14px 0 10px;flex:none;opacity:{{ f.recOp }}"><div style="width:72px;height:72px;border-radius:36px;background:{{ f.recFace }};border:3px solid {{ f.recRing }};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35)">{{ f.recGlyph }}</div></div>
+    <div style="height:14px;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.92));flex:none"></div>
+    <div style="height:66px;background:rgba(19,19,24,.92);display:flex;align-items:center;padding:0 8px;flex:none"><sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:11px;font-weight:600">{{ t.n }}</div></div></sc-for></div>
+  </div>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section class="dv-turn" id="s29d">
+<div class="dv-thd"><a class="dv-tid" href="#s29d">29d</a><span class="dv-tname">Залы со сцены — по одному на построитель</span></div>
+<p class="dv-sub"><b>Вид со сцены получается у всех четырёх типов</b>, и это режим построителя, а не шестнадцать сцен руками: та же грамматика, у которой поменялась точка съёмки. Общая основа — доски сцены под ногами внизу, кресла, уходящие вверх от нас, ярусы, потолок. Примета зала переносится на то, что <i>видно со сцены</i>. Орган, который был за сценой, со сцены оказывается за спиной — его место занимает <b>задняя стена зала напротив</b>: у Зальцбурга аркада галереи, у Амстердама задний балкон, у Токио сами террасы. <b>«Коробке» это далось тяжелее всех</b> и потребовало своего правила: потолок у неё занимает треть портрета, и плоской заливкой он мёртв — поэтому кессоны сжимаются к задней стене, а продольные рёбра сходятся к точке схода; кариатиды стоят вдоль сходящихся стен и уменьшаются с глубиной, а не стоят в ряд по фронту.</p>
+<div class="dv-opts">
+<sc-for list="{{ f29d }}" as="f" hint-placeholder-count="5">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div style="display:flex;gap:12px;align-items:flex-start">
+<div class="scr" style="width:412px;height:892px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:12px 0 0">
+    <div style="display:flex;justify-content:center;flex:none"><div style="display:flex;height:40px;padding:3px;border-radius:21px;background:{{ f.swBg }};border:1px solid {{ f.swEdge }}"><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.playBg }};color:{{ f.playFg }};font-size:14px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;color:{{ f.tuneFg }};font-size:14px;font-weight:700">Настройка</div></div></div>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 24px 0;min-height:28px;flex:none"><div style="flex:1"></div><div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600">{{ f.whereIco }}{{ f.where }}</div></div>
+    <div style="display:flex;justify-content:center;margin-top:10px;flex:none"><div style="display:flex;align-items:center;gap:9px;height:26px;padding:0 13px;border-radius:13px;background:rgba(19,19,24,.7);font-size:14px;color:#A39FB5">{{ f.statusDot }}<span>Играйте…</span></div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;line-height:0">{{ f.ring }}</div>
+    <div style="height:46px;flex:none"></div>
+    <div style="display:flex;justify-content:center;padding:14px 0 10px;flex:none"><div style="width:72px;height:72px;border-radius:36px;background:#F1EEE6;border:3px solid #C9A24A;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35)"><div style="width:20px;height:20px;border-radius:10px;background:#C4ADFF"></div></div></div>
+    <div style="height:14px;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.92));flex:none"></div>
+    <div style="height:66px;background:rgba(19,19,24,.92);display:flex;align-items:center;padding:0 8px;flex:none"><sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:11px;font-weight:600">{{ t.n }}</div></div></sc-for></div>
+  </div>
+</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+  <sc-for list="{{ f.states }}" as="st" hint-placeholder-count="2">
+  <div style="display:flex;flex-direction:column;gap:6px"><div class="scr" style="width:206px;height:446px">
+    <div style="position:absolute;inset:0;line-height:0">{{ st.pic }}</div>
+      <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:6px 0 0">
+      <div style="display:flex;justify-content:center;flex:none;opacity:.38"><div style="display:flex;height:20px;padding:2px;border-radius:11px;background:#3A2A22"><div style="display:flex;align-items:center;padding:0 10px;border-radius:9px;background:#F1EEE6;color:#2A2430;font-size:7px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 10px;font-size:7px;font-weight:700">Настройка</div></div></div>
+      <div style="flex:1;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ st.ring }}<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-2px;font-size:87px;line-height:1" class="tn">A</div></div>
+      <div style="display:flex;align-items:center;justify-content:center;height:23px;flex:none;color:{{ st.zoneCol }};font-size:14px;font-weight:700">{{ st.word }}</div>
+      <div style="display:flex;justify-content:center;padding:4px 0 8px;flex:none;opacity:.38"><div style="width:38px;height:38px;border-radius:19px;background:#F1EEE6;border:2px solid #C9A24A"></div></div>
+      <div style="height:30px;background:rgba(19,19,24,.92);flex:none"></div>
+    </div>
+  </div><div class="dv-olabel" style="max-width:206px">{{ st.cap }}</div></div>
+  </sc-for>
+</div>
+</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Кремона — не зал, а мастерская</b>, и вид от верстака работает лучше всего: верстак с заготовкой под нашими руками внизу кадра, рейка со скрипками и окно напротив. Это единственная «сцена», где перед вами не кресла, — и именно поэтому она честно читается как «я дома у мастера», а не «я выступаю».</p>
+</section>
+
+<section class="dv-turn" id="s29e">
+<div class="dv-thd"><a class="dv-tid" href="#s29e">29e–29f</a><span class="dv-tname">«Настройка», запись, занятие</span></div>
+<p class="dv-sub">В «Настройке» кольцо 260, под ним деревянная линейка со шкалой: зелёная пилюля допуска, костяной бегунок с ореолом цвета зоны. Ряд струн — четыре колка; зафиксированная струна получает костяной замок и подсказку под рядом. Во время записи переключатель режима и выбор зала недоступны, полоса и кнопка «стоп» остаются в полную плотность даже при погашенном свете.</p>
+<div class="dv-opts">
+<sc-for list="{{ f29e }}" as="f" hint-placeholder-count="5">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:412px;height:892px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:12px 0 0">
+    <div style="display:flex;justify-content:center;flex:none;opacity:{{ f.chromeOp }}"><div style="display:flex;height:40px;padding:3px;border-radius:21px;background:{{ f.swBg }};border:1px solid {{ f.swEdge }}"><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.playBg }};color:{{ f.playFg }};font-size:14px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:{{ f.tuneBg }};color:{{ f.tuneFg }};font-size:14px;font-weight:700">Настройка</div></div></div>
+    <div style="display:flex;align-items:center;gap:8px;padding:10px 24px 0;min-height:28px;flex:none;opacity:{{ f.rowOp }}">
+      <sc-if value="{{ f.chip }}" hint-placeholder-val="{{ false }}"><div style="height:28px;padding:0 12px;border-radius:5px;background:#F1EEE6;color:#2A2430;font-size:12px;font-weight:700;display:flex;align-items:center;gap:6px" class="tn"><div style="width:7px;height:7px;border-radius:50%;background:#8E2F3F"></div>занятие · 12:34</div></sc-if>
+      <div style="flex:1"></div>
+      <div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;opacity:{{ f.whereOp }}">{{ f.whereIco }}{{ f.where }}</div>
+    </div>
+    <sc-if value="{{ f.tuning }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;gap:14px;justify-content:center;padding:14px 0 0;flex:none;opacity:{{ f.chromeOp }}">
+      <sc-for list="{{ f.strings }}" as="st" hint-placeholder-count="4">
+      <div style="position:relative;width:76px;height:64px;border-radius:12px;background:{{ st.bg }};border:1.5px solid {{ st.edge }};display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px">
+        <div style="position:absolute;top:-5px;width:26px;height:9px;border-radius:5px;background:{{ st.peg }}"></div>
+        <div style="font-size:22px;font-weight:700;color:{{ st.fg }}">{{ st.name }}</div>
+        <div class="tn" style="font-size:11px;color:{{ st.hzFg }}">{{ st.hz }}</div>
+        <sc-if value="{{ st.locked }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:-7px;right:-7px;width:22px;height:22px;border-radius:11px;background:#F1EEE6;display:flex;align-items:center;justify-content:center">{{ lockIco }}</div></sc-if>
+      </div>
+      </sc-for>
+    </div>
+    </sc-if>
+    <div style="display:flex;justify-content:center;margin-top:10px;flex:none;opacity:{{ f.statusOp }}"><div style="display:flex;align-items:center;gap:9px;height:26px;padding:0 13px;border-radius:13px;background:rgba(19,19,24,.7);font-size:14px;color:#A39FB5">{{ f.statusDot }}<span>{{ f.statusText }}</span></div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ f.ring }}
+      <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-5px;line-height:1;font-size:{{ f.noteSize }};opacity:{{ f.noteOp }}" class="tn">{{ f.note }}<span style="font-size:46px;font-weight:600;color:#A39FB5;letter-spacing:0">{{ f.oct }}</span></div>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:14px;height:42px;flex:none;opacity:{{ f.wordOp }};color:{{ f.zoneCol }}">{{ f.arrow }}<div style="font-size:26px;font-weight:700">{{ f.word }}</div><div class="tn" style="font-size:22px;font-weight:600;color:#A39FB5">{{ f.cents }}</div></div>
+    <sc-if value="{{ f.tuning }}" hint-placeholder-val="{{ true }}">
+    <div style="margin:0 24px 6px;flex:none">
+      <div style="position:relative;height:26px;border-radius:8px;background:#6E4A34;border:1px solid #4E3424;overflow:hidden"><div style="position:absolute;left:45%;width:10%;top:7px;height:12px;border-radius:6px;background:#47C97E"></div><div style="position:absolute;left:50%;top:4px;width:2px;height:18px;margin-left:-1px;background:rgba(241,238,230,.7)"></div><div style="position:absolute;left:{{ f.marker }};top:1px;width:8px;height:24px;margin-left:-4px;border-radius:4px;background:#F1EEE6;box-shadow:0 0 12px 3px {{ f.markerGlow }}"></div></div>
+      <div style="text-align:center;font-size:13px;color:#A39FB5;margin-top:8px">{{ f.hint }}</div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ f.rec }}" hint-placeholder-val="{{ false }}">
+    <div style="display:flex;align-items:center;gap:12px;padding:0 24px 8px;flex:none"><div style="width:10px;height:10px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div><div class="tn" style="font-size:16px;font-weight:700">запись · 01:24</div><div style="flex:1;height:6px;border-radius:3px;background:#292833;display:flex;gap:2px;overflow:hidden">{{ f.recLane }}</div></div>
+    </sc-if>
+    <div style="display:flex;justify-content:center;padding:10px 0 10px;flex:none"><div style="width:72px;height:72px;border-radius:36px;background:{{ f.recFace }};border:3px solid {{ f.recRing }};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35)">{{ f.recGlyph }}</div></div>
+    <div style="height:14px;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.92));flex:none"></div>
+    <div style="height:66px;background:rgba(19,19,24,.92);display:flex;align-items:center;padding:0 8px;flex:none"><sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:11px;font-weight:600">{{ t.n }}</div></div></sc-for></div>
+  </div>
+</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section class="dv-turn" id="s29g">
+<div class="dv-thd"><a class="dv-tid" href="#s29g">29g–29i</a><span class="dv-tname">Landscape, маленький экран, проверка периферии</span></div>
+<p class="dv-sub">Landscape — лучший кадр и здесь: картина во всё поле, кольцо 260 слева, приборы справа. Маленький экран 360 × 640 — комната обрезается по бокам, кольцо 240. Проверка периферии: ×0,4 с размытием 4 dp — то, что видно боковым зрением с пюпитра.</p>
+<div class="dv-opts">
+<sc-for list="{{ f29g }}" as="f" hint-placeholder-count="4">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel" style="max-width:892px"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:892px;height:412px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex">
+    <div style="width:400px;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ f.ring }}<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-4px;font-size:150px;line-height:1;opacity:{{ f.noteOp }}" class="tn">{{ f.note }}</div></div>
+    <div style="flex:1;display:flex;flex-direction:column;padding:14px 22px 14px 0">
+      <div style="display:flex;align-items:center;gap:10px;flex:none;opacity:{{ f.chromeOp }}"><div style="display:flex;height:40px;padding:3px;border-radius:21px;background:{{ f.swBg }};border:1px solid {{ f.swEdge }}"><div style="display:flex;align-items:center;padding:0 18px;border-radius:18px;background:{{ f.playBg }};color:{{ f.playFg }};font-size:13px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 18px;border-radius:18px;background:{{ f.tuneBg }};color:{{ f.tuneFg }};font-size:13px;font-weight:700">Настройка</div></div><div style="flex:1"></div><div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;opacity:{{ f.whereOp }}">{{ f.whereIco }}{{ f.where }}</div></div>
+      <sc-if value="{{ f.tuning }}" hint-placeholder-val="{{ false }}"><div style="display:flex;gap:10px;padding-top:12px;flex:none"><sc-for list="{{ f.strings }}" as="st" hint-placeholder-count="4"><div style="position:relative;width:76px;height:56px;border-radius:12px;background:{{ st.bg }};border:1.5px solid {{ st.edge }};display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="position:absolute;top:-5px;width:24px;height:9px;border-radius:5px;background:{{ st.peg }}"></div><div style="font-size:20px;font-weight:700;color:{{ st.fg }}">{{ st.name }}</div><div class="tn" style="font-size:10px;color:{{ st.hzFg }}">{{ st.hz }}</div></div></sc-for></div></sc-if>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:10px">
+        <div style="display:flex;opacity:{{ f.statusOp }}"><div style="display:flex;align-items:center;gap:9px;height:26px;padding:0 13px;border-radius:13px;background:rgba(19,19,24,.7);font-size:14px;color:#A39FB5">{{ f.statusDot }}<span>{{ f.statusText }}</span></div></div>
+        <div style="display:flex;align-items:center;gap:14px;opacity:{{ f.wordOp }};color:{{ f.zoneCol }}">{{ f.arrow }}<div style="font-size:30px;font-weight:700">{{ f.word }}</div><div class="tn" style="font-size:24px;font-weight:600;color:#A39FB5">{{ f.cents }}</div></div>
+        <sc-if value="{{ f.rec }}" hint-placeholder-val="{{ false }}"><div style="display:flex;align-items:center;gap:10px"><div style="width:10px;height:10px;border-radius:50%;background:#E8565C;animation:pulse 1.2s ease-in-out infinite"></div><div class="tn" style="font-size:15px;font-weight:700">запись · 01:24</div><div style="flex:1;height:6px;border-radius:3px;background:#292833;display:flex;gap:2px;overflow:hidden">{{ f.recLane }}</div></div></sc-if>
+      </div>
+      <div style="display:flex;justify-content:flex-end;flex:none"><div style="width:64px;height:64px;border-radius:32px;background:{{ f.recFace }};border:3px solid {{ f.recRing }};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35)">{{ f.recGlyph }}</div></div>
+    </div>
+  </div>
+</div>
+</div>
+</sc-for>
+<sc-for list="{{ f29h }}" as="f" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel" style="max-width:360px"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:360px;height:640px">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:10px 0 0">
+    <div style="display:flex;justify-content:center;flex:none;opacity:{{ f.chromeOp }}"><div style="display:flex;height:36px;padding:3px;border-radius:19px;background:{{ f.swBg }};border:1px solid {{ f.swEdge }}"><div style="display:flex;align-items:center;padding:0 16px;border-radius:16px;background:{{ f.playBg }};color:{{ f.playFg }};font-size:13px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 16px;border-radius:16px;color:{{ f.tuneFg }};font-size:13px;font-weight:700">Настройка</div></div></div>
+    <div style="display:flex;padding:8px 18px 0;flex:none;opacity:{{ f.rowOp }}"><div style="flex:1"></div><div style="height:26px;padding:0 10px;border-radius:13px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:6px;font-size:11px;font-weight:600">{{ f.whereIco }}{{ f.where }}</div></div>
+    <div style="display:flex;justify-content:center;margin-top:8px;flex:none;opacity:{{ f.statusOp }}"><div style="display:flex;align-items:center;gap:8px;height:24px;padding:0 12px;border-radius:12px;background:rgba(19,19,24,.7);font-size:13px;color:#A39FB5">{{ f.statusDot }}<span>{{ f.statusText }}</span></div></div>
+    <div style="flex:1;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ f.ring }}<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-4px;font-size:139px;line-height:1;opacity:{{ f.noteOp }}" class="tn">{{ f.note }}<span style="font-size:42px;font-weight:600;color:#A39FB5;letter-spacing:0">{{ f.oct }}</span></div></div>
+    <div style="display:flex;align-items:center;justify-content:center;gap:12px;height:40px;flex:none;opacity:{{ f.wordOp }};color:{{ f.zoneCol }}">{{ f.arrow }}<div style="font-size:24px;font-weight:700">{{ f.word }}</div><div class="tn" style="font-size:20px;font-weight:600;color:#A39FB5">{{ f.cents }}</div></div>
+    <div style="display:flex;justify-content:center;padding:8px 0 8px;flex:none"><div style="width:64px;height:64px;border-radius:32px;background:{{ f.recFace }};border:3px solid {{ f.recRing }};display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35)">{{ f.recGlyph }}</div></div>
+    <div style="height:12px;background:linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.92));flex:none"></div>
+    <div style="height:58px;background:rgba(19,19,24,.92);display:flex;align-items:center;padding:0 6px;flex:none"><sc-for list="{{ tabs }}" as="t" hint-placeholder-count="4"><div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;color:{{ t.c }}">{{ t.ic }}<div style="font-size:10px;font-weight:600">{{ t.n }}</div></div></sc-for></div>
+  </div>
+</div>
+</div>
+</sc-for>
+</div>
+<div class="dv-opts" style="margin-top:26px;align-items:flex-end">
+<sc-for list="{{ f29i }}" as="f" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel" style="max-width:190px"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div style="width:165px;height:357px;border-radius:9px;overflow:hidden;filter:blur(4px);position:relative;background:#131318">
+  <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+  <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+  <div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center">{{ f.ring }}</div>
+  <div style="position:absolute;left:0;right:0;bottom:44px;display:flex;justify-content:center;color:{{ f.zoneCol }};font-size:11px;font-weight:700">{{ f.word }}</div>
+</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next">Проверка пройдена: боковым зрением по-прежнему читаются <b>цвет всего экрана, свечение кольца и его размер</b> — картина в темноте не добавляет ни одного различимого пятна. Светлый зал в тишине (<a href="#29i4">29i4</a>) — единственный случай, где размытая картина заметна; но в тишине человек и не играет.</p>
+</section>
+
+<section class="dv-turn" id="s29j">
+<div class="dv-thd"><a class="dv-tid" href="#s29j">29j</a><span class="dv-tname">Приборы в стиле комнаты — состояния на светлой и приглушённой картине</span></div>
+<p class="dv-sub">Материалы: <b>эбен</b> `#1C1A20`, <b>клён</b> `#8B5E3C` / `#A9763F`, <b>кость и бумага</b> `#F1EEE6`, <b>никель</b> `#6B6C78`, <b>латунь</b> `#C9A24A` приглушённо, фиолетовый акцент приложения `#C4ADFF`. Плоские заливки, один-два тона на объём, без фотореализма — как вещи каталога. Цвета зон приборы не используют нигде; латунь и бархат не встают рядом с кольцом и словом статуса.</p>
+<div style="display:flex;flex-direction:column;gap:18px">
+<sc-for list="{{ ctrlRows }}" as="r" hint-placeholder-count="8">
+<div style="display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+  <div style="width:190px;flex:none;font-size:12px;line-height:1.4;color:#A39FB5"><b style="color:#E6E4EE;display:block;font-size:13px">{{ r.name }}</b>{{ r.note }}</div>
+  <div style="display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:16px;background:{{ r.litBg }};min-height:76px">{{ r.lit }}</div>
+  <div style="display:flex;gap:14px;align-items:center;padding:16px 18px;border-radius:16px;background:{{ r.dimBg }};min-height:76px">{{ r.dim }}</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>Что с приборами, пока звучит нота.</b> Два уровня. Переключатель режима, ряд струн и подпись «где играю» уходят до <b>0,38</b> — это осознанно: их не нужно читать и не нужно трогать, руки заняты. Всё, что относится к идущей записи (полоса, таймер, кнопка «стоп»), и всё, что относится к ноте (кольцо, нота, слово, центы), остаются <b>в полную плотность</b>. Требование 4,5 : 1 держим для всего, что должно читаться; на приглушённых элементах оно не проверяется, потому что они намеренно нечитаемы. <b>Нижнюю панель не трогаем</b> — только добавляем над ней градиент 14 dp из прозрачного в `surface`, чтобы картина не обрывалась ножом.</p>
+</section>
+
+<section class="dv-turn" id="s29k">
+<div class="dv-thd"><a class="dv-tid" href="#s29k">29k</a><span class="dv-tname">Где играть — подпись, лист, «Играть здесь»</span></div>
+<p class="dv-sub">Подпись стоит <b>на своей строке под переключателем, справа</b>: место, куда ничто не претендует, и там же слева живёт чип занятия. Пока звучит нота — уходит вместе с приборами. Тап открывает лист: комната сверху, достигнутые залы миниатюрами того, как они выглядят на Live, следующий — силуэтом, дальние — штампами паспорта.</p>
+<div class="dv-opts">
+<sc-for list="{{ f29k }}" as="f" hint-placeholder-count="3">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div class="scr" style="width:412px;height:892px">{{ f.el }}</div>
+</div>
+</sc-for>
+</div>
+<p class="dv-next"><b>«Сыграть здесь» в конце прибытия — да, но тихо.</b> Текстовой кнопкой рядом с «Дальше», не заполненной: прибытие про открытку, а заполненная кнопка отобрала бы у неё кадр. <b>Переход «Начать занятие» → Live — да, стоит.</b> Это дёшево (та же сцена, тот же холст) и говорит ровно то, что нужно: 400 мс, `viewBox` миниатюры комнаты с карточки интерполируется в кадр Live, обвязка карточки гаснет за 200 мс, приборы Live проявляются за последние 200 мс. Свет при этом горит — играть ещё не начали.</p>
+</section>
+
+<section class="dv-turn" id="s29l">
+<div class="dv-thd"><a class="dv-tid" href="#s29l">29l</a><span class="dv-tname">Картины без интерфейса — кадры, режимы построителей, продолжение вверх и вниз</span></div>
+<p class="dv-sub">Слева — комната в трёх форматах одной сеткой. Справа — по одному залу на построитель в режиме «со сцены», и рядом та же геометрия целиком, от потолка до досок под ногами, с отметками кадров.</p>
+<div class="dv-opts" style="align-items:flex-end">
+<sc-for list="{{ f29l }}" as="f" hint-placeholder-count="6">
+<div class="dv-opt" id="{{ f.id }}"><div class="dv-olabel" style="max-width:{{ f.capW }}"><a class="dv-oid" href="#{{ f.id }}">{{ f.id }}</a>{{ f.label }}</div>
+<div style="border-radius:14px;overflow:hidden;line-height:0;background:#131318">{{ f.el }}</div>
+</div>
+</sc-for>
+</div>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1400px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Токены, размеры, анимации, код режимов «со сцены», ответы словами</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(460px,100%),1fr));gap:26px;font-size:13px;line-height:1.55">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">`venue.*` — свет, вуаль, приборы</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1.25fr) 92px minmax(0,1.5fr)">
+    <div class="h">Токен</div><div class="h">Значение</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="14"><div class="mono">{{ t.name }}</div><div style="padding:6px 8px;display:flex;align-items:center;gap:6px">{{ t.sw }}<span class="mono" style="font-size:10px">{{ t.v }}</span></div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">`sizes` — кадры картин и приборы (dp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.7fr)">
+    <div class="h">Что</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="12"><div style="font-weight:600">{{ z.n }}</div><div style="color:#A39FB5" class="mono">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">`anims` — свет, подпись, лист, смена картины</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.9fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="11"><div style="font-weight:600" class="mono">{{ a.n }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Ответы словами (раздел 11)</div>
+  <div style="display:flex;flex-direction:column;gap:9px">
+    <sc-for list="{{ answers }}" as="a" hint-placeholder-count="9"><div style="background:#15151B;border-radius:12px;padding:11px 14px"><div style="font-weight:700;margin-bottom:3px">{{ a.q }}</div><div style="color:#A39FB5;line-height:1.5">{{ a.a }}</div></div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Режимы «со сцены» — построители</div>
+  <div style="font-weight:600;font-size:12px;color:#A39FB5;margin-bottom:8px">Сетка та же 412 × 260; вверх продолжается до −220 (потолок), вниз до 460 (доски сцены под ногами). Точка схода (206, 150). Никаких новых примитивов: `L / R / PG / E / C / ARCH / rep` и `repeat`-слои, как в открытках.</div>
+  <pre style="margin:0;background:#0B0B0F;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;overflow:auto;max-height:720px;font:10.5px/1.5 ui-monospace,Menlo,monospace;color:#B7D8C9;white-space:pre">{{ stageCode }}</pre></div>
+</div>
+</div>
+</section>
+
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;dimMix&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.76,&quot;min&quot;:0.5,&quot;max&quot;:0.92,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Свет&quot;},&quot;dimSat&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.12,&quot;min&quot;:0,&quot;max&quot;:0.4,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Свет&quot;},&quot;zoneTint&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.18,&quot;min&quot;:0,&quot;max&quot;:0.45,&quot;step&quot;:0.03,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Свет&quot;},&quot;veilStrength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.68,&quot;min&quot;:0,&quot;max&quot;:0.85,&quot;step&quot;:0.03,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Свет&quot;}}">
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const K = window.buildHomeCatalog ? window.buildHomeCatalog(React) : null;
+    if (!K) return {};
+    const { L, R, RR, E, C, PG, ARCH, rep, compose, HOUSES, caseL, violin } = K;
+    const ON='#E6E4EE', OV='#A39FB5', SURF='#131318', PR='#C4ADFF', OUT='#3A3846';
+    const Z = { in:'#47C97E', near:'#E5B03C', off:'#E8565C' };
+    const MAT = { ebony:'#1C1A20', wood:'#8B5E3C', woodLit:'#A9763F', woodDark:'#4E3424', bone:'#F1EEE6', boneSh:'#D8D0BE', nickel:'#6B6C78', brass:'#C9A24A', velvet:'#8E2F3F', ink:'#2A2430' };
+    // ---------- colour
+    const hx = c => { if (c.startsWith('rgba')) { const m=c.match(/[\d.]+/g).map(Number); return [m[0],m[1],m[2],m[3]]; } const n=parseInt(c.slice(1),16); return [n>>16&255,n>>8&255,n&255,1]; };
+    const toC = ([r,g,b,a]) => a>=.999 ? '#'+[r,g,b].map(v=>Math.round(Math.max(0,Math.min(255,v))).toString(16).padStart(2,'0')).join('') : `rgba(${Math.round(r)},${Math.round(g)},${Math.round(b)},${(+a).toFixed(2)})`;
+    const mix = (a,b,t) => { const A=hx(a), B=hx(b); return toC(A.map((v,i)=>v+(B[i]-v)*t)); };
+    const rgba = (c,a) => { const [r,g,b]=hx(c); return `rgba(${r},${g},${b},${(+a).toFixed(3)})`; };
+    const desat = (c,keep) => { const [r,g,b,a]=hx(c); const y=.2126*r+.7152*g+.0722*b; return toC([y+(r-y)*keep, y+(g-y)*keep, y+(b-y)*keep, a]); };
+    // light model
+    const DIM = { sat: this.props.dimSat ?? .12, mix: this.props.dimMix ?? .76, tint: this.props.zoneTint ?? .18, lightDrop: .25 };
+    const VEIL = this.props.veilStrength ?? .68;
+    const zScale = z => z==='off' ? .7 : 1;
+    const dimC = (c, zone, glow) => { let x = desat(c, DIM.sat); x = mix(x, SURF, DIM.mix); if (zone && glow>0) x = mix(x, Z[zone], DIM.tint*glow*zScale(zone)); return x; };
+    // ---------- renderer (mirrors Дом.dc.html draw + light)
+    let gid = 0;
+    const draw = (layers, mode, o = {}) => {
+      const pal = { ...K.palOf(mode, o.over), ...(o.pal||{}) }; const id='v'+(gid++); const [vbx,vby]=(o.viewBox||'0 0').split(' ').map(Number);
+      const dark = !!o.dark, zone = o.zone, glow = o.glow||0;
+      const raw = t => (t.startsWith('#')||t.startsWith('rgba')||t==='none') ? t : (pal[t] ?? t);
+      const col = t => { const c = raw(t); return (dark && c!=='none') ? dimC(c, zone, glow) : c; };
+      const gl0 = pal.glow, sky0 = pal.sky, skyLow0 = pal.skyLow;
+      const els = [h('defs',{key:'d'},
+        h('linearGradient',{id:id+'s',x1:0,y1:0,x2:0,y2:1},h('stop',{offset:0,stopColor:col(sky0)}),h('stop',{offset:1,stopColor:col(skyLow0)})),
+        h('radialGradient',{id:id+'g'},h('stop',{offset:0,stopColor:dark?rgba('#FFC46E',.5*DIM.lightDrop):gl0}),h('stop',{offset:1,stopColor:'rgba(255,196,110,0)'})),
+        o.veil ? h('radialGradient',{id:id+'v',cx:o.veilC[0],cy:o.veilC[1],r:o.veilC[2],gradientUnits:'userSpaceOnUse'},h('stop',{offset:0,stopColor:SURF,stopOpacity:VEIL}),h('stop',{offset:.42,stopColor:SURF,stopOpacity:VEIL*.68}),h('stop',{offset:1,stopColor:SURF,stopOpacity:0})) : null,
+        (zone&&glow>0&&dark) ? h('radialGradient',{id:id+'z',cx:o.veilC[0],cy:o.veilC[1],r:o.veilC[2]*1.35,gradientUnits:'userSpaceOnUse'},h('stop',{offset:0,stopColor:Z[zone],stopOpacity:.22*glow*zScale(zone)}),h('stop',{offset:.45,stopColor:Z[zone],stopOpacity:.07*glow*zScale(zone)}),h('stop',{offset:1,stopColor:Z[zone],stopOpacity:0})) : null)];
+      layers.forEach((l,i) => {
+        const isLight = l.fill==='GLOW' || l.glow;
+        const fill = l.fill==='SKY' ? `url(#${id}s)` : l.fill==='GLOW' ? `url(#${id}g)` : col(l.fill);
+        const p = { key:i, d:l.d, fill:l.fillNone?'none':fill, opacity: (l.op!=null? l.op:1) * (dark&&isLight?DIM.lightDrop:1), stroke:l.stroke?col(l.stroke):undefined, strokeWidth:l.sw, strokeLinecap:'round', strokeDasharray:l.dash };
+        if (p.opacity===1) delete p.opacity;
+        if (l.tx!==undefined) p.transform = `translate(${l.tx} ${l.ty}) scale(${l.sc||1})`;
+        if (o.anim!==false && !dark) {
+          if (l.anim) { const st={}; l.anim.split('+').forEach(a=>{ const [k,...v]=a.split(':'); const n=v.map(Number);
+            if(k==='bob'){st['--a']=`${-n[0]}px`;st.animation=`bob ${n[1]}s ease-in-out infinite`;}
+            else if(k==='sway'){st['--a']=`${n[0]}px`;st.animation=`sway ${n[1]}s ease-in-out infinite`;}
+            else if(k==='swing'){st['--a']=`${n[0]}deg`;st['--n']=`${-n[0]}deg`;st.transformOrigin=`${n[2]-(vbx||0)}px ${n[3]-(vby||0)}px`;st.transformBox='view-box';st.animation=`swing ${n[1]}s ease-in-out infinite`;}
+            else if(k==='blink')st.animation=`blink ${n[0]}s linear ${(i%4)*.7}s infinite`;
+            else if(k==='rise')st.animation=`rise ${n[0]}s ease-out ${n[1]||0}s infinite`;
+            else if(k==='flick')st.animation=`flick ${n[0]}s ease-in-out ${n[1]||0}s infinite`;
+            else if(k==='fly'){st['--a']=`${n[0]}px`;st.animation=`fly ${n[1]}s linear infinite`;} }); p.style=st; }
+          else if (l.fill==='window' && mode==='eve') p.style={animation:`flick ${4+(i%3)}s ease-in-out ${(i%5)*.6}s infinite`};
+        }
+        els.push(h('path',p));
+      });
+      if (o.veil) els.push(h('rect',{key:'vl',x:vbx,y:vby,width:o.vbw,height:o.vbh,fill:`url(#${id}v)`}));
+      if (zone && glow>0 && dark) els.push(h('rect',{key:'zl',x:vbx,y:vby,width:o.vbw,height:o.vbh,fill:`url(#${id}z)`,style:{mixBlendMode:'screen'}}));
+      const style={display:'block'}; if(o.cssW)style.width=o.cssW; if(o.cssH)style.height=o.cssH;
+      return h('svg',{width:o.w||412,height:o.h||260,viewBox:o.viewBox||'0 0 412 260',preserveAspectRatio:o.par||'xMidYMid slice',style},els);
+    };
+    // ---------- room owned sets (no violin, no floor stand; case is open and empty)
+    const RENT = ['wp_plum','floor_plank','window_simple','view_city','curtain_plum','desk_oak','lamp_table','chair_simple','plaid','stand_wood','rug_plum','notes','tea','books','ficus','portrait','shelf_scores','clock','cat_ginger','garland','metronome'];
+    const WOOD = ['floor_plank','window_simple','view_mount','curtain_sand','desk_simple','lamp_table','chair_simple','stand_fold','rug_stripe','fireplace','notes','candles','monstera','cat_grey','poster'];
+    const roomLayers = (hid, mode) => { const { l, over } = compose(hid, mode, hid==='wood'?WOOD:RENT); l.push(...caseL(340, 222, 'caseOut')); return { l, over }; };
+    // ---------- halls: view from the stage
+    const HT = { hvoid:'#140F1C', hwall:'#3A3048', hwallLit:'#4A3E5C', hwallSh:'#241D30', hgold:'#E2B74E', hgoldLit:'#F2D488', hgoldSh:'#A8863A', hseat:'#8E2F3F', hseatLit:'#A8323F', hseatSh:'#5A1E2A', hcream:'#F3EEE2', hcreamSh:'#D8D0BE', hboard:'#8B5E3C', hboardSh:'#6E4A34', hchand:'#FFE9B0', hdark:'#1C1530', hwood:'#A9713F', hwoodSh:'#7E5230', hstone:'#CFC6B4', hstoneSh:'#A89E8C' };
+    const row = (y,hw,hh,rise) => `M${(206-hw).toFixed(1)} ${y.toFixed(1)}q${hw.toFixed(1)} ${(-2*rise).toFixed(1)} ${(2*hw).toFixed(1)} 0v${(-hh).toFixed(1)}q${(-hw).toFixed(1)} ${(2*rise).toFixed(1)} ${(-2*hw).toFixed(1)} 0Z`;
+    const seats = (rise, n0=9) => rep(n0, k => { const t=k/(n0-1), y=300-96*t, hw=214-74*t, hh=12-5.5*t, rs=rise*(1-.45*t), n=Math.round(2*hw/(18-7*t));
+      return [ L('hseatSh', row(y,hw,hh,rs)), L('hseat', row(y-hh*.55,hw,hh*.45,rs)),
+        ...rep(n, i => L('hseatSh', R(206-hw+i*(2*hw/n), y-hh-rs*(1-Math.abs(i/(n/2)-1))*0+0, 1.1, hh))) ]; });
+    const boards = () => [ L('hdark', R(-30,304,472,6), 2), L('hboard', R(-30,310,472,150), 2),
+      ...rep(11, i => { const x0=(i*41-16); return L('hboardSh', PG([[x0,310],[x0+2.4,310],[206+(x0+2.4-206)*2.5,460],[206+(x0-206)*2.5,460]]), 2); }),
+      L('rgba(255,255,255,.07)', R(-30,310,472,3), 2) ];
+    const chand = (x,y,r) => [ L('hgoldSh', R(x-.6,-220,1.2,Math.max(2,(y-r)+220))), L('rgba(255,196,110,.5)', C(x,y,r*3.1), 1, { glow:true, anim:'flick:4' }), L('hchand', C(x,y,r)), L('rgba(255,255,255,.8)', C(x-r*.3,y-r*.3,r*.34)) ];
+    // кариатида в перспективе — та же грамматика, что в VIENNA_INT, но вдоль сходящихся стен
+    const cary = (x, yb, s, tok) => [ L('hgoldSh', R(x-4*s, yb-62*s, 8*s, 62*s)), L(tok, R(x-3*s, yb-60*s, 6*s, 60*s)), L(tok, E(x, yb-58*s, 7*s, 3*s)), L(tok, C(x, yb-66*s, 4*s)), L(tok, E(x, yb-70*s, 5*s, 2*s)), L(tok, R(x-6*s, yb-4*s, 12*s, 4*s)) ];
+    const backWall = () => [ L('hwall', R(48,64,316,140)), L('hwallLit', R(48,64,106,140), 1, {op:.28}),
+      L('hwallSh', PG([[0,-30],[48,64],[48,204],[0,300]])), L('hwallSh', PG([[412,-30],[364,64],[364,204],[412,300]])) ];
+    const STAGE = (o) => { const l=[L('hvoid', R(-30,-240,472,720))];
+      l.push(...(o.ceil?o.ceil():[])); l.push(...backWall()); l.push(...(o.tiers?o.tiers():[]));
+      l.push(...seats(o.rise ?? 0, o.rows)); l.push(...(o.mark?o.mark():[])); l.push(...boards()); return l; };
+    const tierArc = (y,hw,hh,rise,boxes) => { const l=[L('hgoldSh', row(y,hw,hh,rise)), L('hgold', row(y-hh*.62,hw,hh*.4,rise), 1, {op:.85})];
+      if (boxes) rep(boxes, j => { const t=j/(boxes-1), x=206-hw+2*hw*t, dy=-2*rise*t*(1-t)*2; l.push(L('hdark', RR(x-8, y+dy-hh-16, 16, 16, 2)), L('hseatSh', R(x-8, y+dy-hh-6, 16, 6))); });
+      return l; };
+    const HALLS = {
+      vienna: { n:'Вена · Золотой зал', type:'коробка', pal:{}, fn:()=>STAGE({ rise:6,
+        // потолок коробки уходит от нас к задней стене: поперечные кессоны сжимаются, продольные рёбра сходятся к (206,150)
+        ceil: ()=>{ const l=[L('hcream', R(-30,-240,472,304))];
+          l.push(...rep(6, k=>{ const t=Math.pow(k/5,.8), y=-240+300*t, hw=240-84*t;
+            return [ L('hgoldSh', PG([[206-hw,y],[206+hw,y],[206+hw-3,y+7],[206-hw+3,y+7]]), 1, {op:.42}),
+                     L('hcreamSh', PG([[206-hw+3,y+7],[206+hw-3,y+7],[206+hw-6,y+16],[206-hw+6,y+16]]), 1, {op:.22}) ]; }));
+          l.push(...[-.66,-.24,.24,.66].map(f=>L('hgoldSh', PG([[206+f*240,-240],[206+f*240+9,-240],[206+f*152+6,64],[206+f*152,64]]), 1, {op:.34})));
+          l.push(L('hcreamSh', PG([[-30,-240],[26,-240],[78,64],[-30,64]]), 1, {op:.3}), L('hcreamSh', PG([[442,-240],[386,-240],[334,64],[442,64]]), 1, {op:.3}));
+          l.push(...chand(118,-52,10), ...chand(294,-52,10), ...chand(206,4,7));
+          return l; },
+        // кариатиды стоят вдоль сходящихся стен и уменьшаются с глубиной — со сцены это и есть примета зала
+        tiers: ()=>{ const l=[];
+          rep(5, k=>{ const t=k/4, s=.98-.54*t, yb=202-40*t;
+            [-1,1].forEach(sg=>l.push(...cary(206+sg*(202-156*t), yb, s, sg<0?'hgoldLit':'hgold'))); });
+          l.push(...tierArc(156,180,11,6,0));
+          return l; },
+        mark: ()=>[ L('hgold', R(48,58,316,6)), L('hgoldSh', R(48,64,316,2)) ] }) },
+      paris: { n:'Париж · Опера Гарнье', type:'подкова', pal:{}, fn:()=>STAGE({ rise:16, rows:8,
+        ceil: ()=>[ L('hdark', R(-30,-240,472,300)), L('hcreamSh', C(206,-6,132)), L('hcream', C(206,-6,116)),
+          ...rep(6, i=>{ const a=Math.PI*(1.06+.88*i/5); return L(['#7A3E8E','#3E5A8E','#B94A4A','#D9B26B','#4E8E57','#C9814A'][i], E(206+Math.cos(a)*74, -6+Math.sin(a)*54, 26, 18), 1, {op:.55}); }),
+          L('hgold', C(206,-6,120), 1, {fillNone:true, stroke:'hgold', sw:3}), ...chand(206,46,15) ],
+        tiers: ()=>[ ...tierArc(168,196,10,16,13), ...tierArc(138,182,9,14,12), ...tierArc(110,168,8,12,11), ...tierArc(84,154,7,10,10) ] }) },
+      berlin: { n:'Берлин · Филармония', type:'виноградник', pal:{hwall:'#4A3E38',hwallLit:'#5C4E44',hseat:'#3E6E7A',hseatLit:'#4E8899',hseatSh:'#284A54'}, fn:()=>STAGE({ rise:4, rows:6,
+        ceil: ()=>[ L('hdark', R(-30,-240,472,300)), ...rep(7, i=>{ const x=32+i*58, y=-30-((i%3)*26); return [L('hcreamSh', E(x,y,34,11)), L('hcream', E(x,y-3,30,8)), L('hgoldSh', R(x-.5,-240,1,y-8))]; }) ],
+        tiers: ()=>rep(6, i=>{ const sg=i<3?-1:1, k=i%3, x=206+sg*(96+k*62), y=176-k*30, w=78-k*8;
+          return [ L('hwoodSh', PG([[x-w/2,y],[x+w/2,y],[x+w/2-5,y-16],[x-w/2+5,y-16]])), L('hwood', R(x-w/2+5,y-19,w-10,4)),
+            ...rep(5, j=>L('hseatSh', R(x-w/2+9+j*((w-20)/5), y-14, 7, 8))) ]; }) }) },
+      leipzig: { n:'Лейпциг · Св. Фомы', type:'неф', pal:{hwall:'#CFC6B4',hwallLit:'#E2DACA',hwallSh:'#A89E8C',hseat:'#6E5238',hseatLit:'#8B6A48',hseatSh:'#4E3A28'}, fn:()=>STAGE({ rise:0, rows:7,
+        ceil: ()=>[ L('hdark', R(-30,-240,472,220)), ...rep(4, i=>{ const t=i/3, hw=200-56*t, y=-10-t*52; return L('hstoneSh', `M${206-hw} ${y+70}L${206-hw} ${y}Q206 ${y-78} ${206+hw} ${y}L${206+hw} ${y+70}Z`, 1, {op:.5+.12*i}); }) ],
+        tiers: ()=>[ ...rep(2, s=>{ const sg=s?1:-1; return rep(3, i=>{ const t=i/2, x=206+sg*(150-36*t), y=190-t*30, hh=126-40*t, w=30-8*t;
+          return [ L('hstoneSh', ARCH(x-w/2, y-hh, w, hh)), L('hstone', ARCH(x-w/2+3, y-hh+4, w-6, hh-6), 1, {op:.35}) ]; }); }).flat(),
+          L('hstoneSh', C(206,86,44)), L('hcream', C(206,86,38), 1, {op:.5}), ...rep(8, i=>{ const a=Math.PI*2*i/8; return L('hgoldSh', R(206+Math.cos(a)*19-1.2, 86+Math.sin(a)*19-1.2, 2.4, 2.4)); }), L('hgold', C(206,86,40), 1, {fillNone:true, stroke:'hgold', sw:2.4}) ] }) },
+      cremona: { n:'Кремона · мастерская', type:'мастерская', pal:{}, fn:()=>{
+        const l=[L('#E6D5B8', R(-30,-240,472,480)), L('#CDB891', R(-30,-240,472,80))];
+        l.push(L('#5A3A22', R(28,26,128,140)), L('SKY', R(34,32,116,128)), L('#4C4676', R(42,104,24,54)), L('#4C4676', R(74,90,28,68)), L('#4C4676', R(110,112,30,46)), L('#5A3A22', R(88,32,5,128)), L('#5A3A22', R(34,92,116,5)));
+        l.push(L('#5A3A22', R(196,14,196,6)), ...rep(5, i=>{ const x=216+i*40, len=16+(i%2)*9, y=20+len; return [L('#8A7A66', R(x-.7,20,1.4,len)), ...violin(x, y+46, .9, { body: i%2?'varnish':'varnishLight' })]; }));
+        l.push(L('#6B6C78', R(300,-240,2,250)), L('GLOW', C(301,22,46), 1, {anim:'flick:4'}), L('#6B6C78', PG([[282,10],[320,10],[312,-6],[290,-6]])), L('#FFE9B0', C(301,14,3.4)));
+        l.push(L('#8E5E3A', R(-30,200,472,260), 2), ...rep(9, i=>L('#74492C', PG([[i*52-20,200],[i*52-17,200],[206+(i*52-17-206)*2.4,460],[206+(i*52-20-206)*2.4,460]]), 2)));
+        l.push(L('#5A3A22', R(-20,282,452,20), 2), L('#A9713F', R(-20,266,452,16), 2), L('#7E5230', R(-20,278,452,5), 2));
+        l.push(L('#D9B27A', E(150,262,34,10), 2), L('#CDB891', E(150,260,22,6), 2), L('#6B6C78', R(236,258,34,7), 2), L('#5A3A22', R(240,255,24,3), 2), L('#6B6C78', R(292,257,5,8), 2), L('#6B6C78', R(306,255,14,9), 2), L('#8A7A66', E(348,262,16,5), 2));
+        return l; } },
+    };
+    // ---------- pictures
+    const FRAMES = { port:{ vb:'0 -260 412 860', w:412, h:892, vc:[206,80,300] }, land:{ vb:'0 10 412 190', w:892, h:412, vc:[98,105,150] }, small:{ vb:'0 -180 412 732', w:360, h:640, vc:[206,84,250], par:'xMidYMid meet' },
+      half:{ vb:'0 -260 412 860', w:206, h:446, vc:[206,80,300] }, tiny:{ vb:'0 -260 412 860', w:165, h:357, vc:[206,80,300] } };
+    const HFR = { port:{ vb:'0 -190 412 660', w:412, h:892, vc:[206,20,270] }, land:{ vb:'0 -60 412 190', w:892, h:412, vc:[98,35,150] }, small:{ vb:'0 -150 412 590', w:360, h:640, vc:[206,10,240] },
+      half:{ vb:'0 -190 412 660', w:206, h:446, vc:[206,20,270] }, tiny:{ vb:'0 -190 412 660', w:165, h:357, vc:[206,20,270] } };
+    const picture = (where, o={}) => {
+      const fmt = o.fmt || 'port'; const isRoom = where==='rent'||where==='wood';
+      const F = isRoom ? FRAMES[fmt] : HFR[fmt];
+      const vb = o.vb || F.vb; const [vbx,vby,vbw,vbh] = vb.split(' ').map(Number);
+      const dark = !!o.dark;
+      const base = { w:o.w||F.w, h:o.h||F.h, viewBox:vb, par:o.par||F.par||'xMidYMid slice', vbw, vbh,
+        dark, zone:o.zone, glow:o.glow||0, anim:o.anim, veil: !dark && o.veil!==false, veilC:[F.vc[0], vby + vbh*(o.vcy ?? .38), F.vc[2]] };
+      if (isRoom) { const { l, over } = roomLayers(where, o.mode||'eve'); return draw(l, o.mode||'eve', { over, ...base }); }
+      const H = HALLS[where]; return draw(H.fn(), 'eve', { pal:{ ...HT, ...H.pal }, ...base });
+    };
+    // ---------- ring (unchanged model, spec 5.8)
+    const ring = (ringPx, zone, glow, o={}) => {
+      const Rr=ringPx/2, box=ringPx*1.4, c=box/2, id='r'+(gid++);
+      const colr = zone?Z[zone]:OUT, lvl=o.level??.5, haloR=Rr*1.4*(1+.04*lvl), core=mix(colr,'#FFFFFF',.45*glow);
+      return h('svg',{width:box,height:box,viewBox:`0 0 ${box} ${box}`,style:{display:'block'}},[
+        h('defs',{key:'d'},
+          h('radialGradient',{id:id+'o'},h('stop',{offset:(Rr/haloR).toFixed(3),stopColor:colr,stopOpacity:.32*glow}),h('stop',{offset:(Rr/haloR+.12).toFixed(3),stopColor:colr,stopOpacity:.10*glow}),h('stop',{offset:'1',stopColor:colr,stopOpacity:0})),
+          h('radialGradient',{id:id+'i'},h('stop',{offset:'.6',stopColor:colr,stopOpacity:0}),h('stop',{offset:'.88',stopColor:colr,stopOpacity:.07*glow}),h('stop',{offset:'1',stopColor:colr,stopOpacity:.18*glow}))),
+        glow>0 && h('circle',{key:'o',cx:c,cy:c,r:haloR,fill:`url(#${id}o)`}),
+        glow>0 && h('circle',{key:'i',cx:c,cy:c,r:Rr,fill:`url(#${id}i)`}),
+        glow>0 && h('circle',{key:'s',cx:c,cy:c,r:Rr,fill:'none',stroke:colr,strokeWidth:6+10*glow,opacity:.25*glow}),
+        h('circle',{key:'t',cx:c,cy:c,r:Rr,fill:'none',stroke:glow>0?core:OUT,strokeWidth:6,opacity:glow>0?.6+.4*glow:1}),
+        ...(o.waves||[]).map((w,i)=>h('circle',{key:'w'+i,cx:c,cy:c,r:Rr*w.r,fill:'none',stroke:colr,strokeWidth:2,opacity:w.a})),
+      ].filter(Boolean));
+    };
+    // ---------- glyphs
+    const sv = (s,ch,o={}) => h('svg',{width:s,height:s,viewBox:'0 0 24 24',style:{display:'block',flex:'none'},...o},ch);
+    const st = (d,c,w=1.8) => h('path',{key:d,d,fill:'none',stroke:c,strokeWidth:w,strokeLinecap:'round',strokeLinejoin:'round'});
+    const icoHome = (c='#E6E4EE',s=14) => sv(s,[st('M4 11l8-6 8 6',c,1.8),st('M6 10v9h12v-9',c,1.8)]);
+    const icoHall = (c='#E6E4EE',s=14) => sv(s,[st('M4 19h16',c,1.8),st('M6 19V9l6-4 6 4v10',c,1.8),st('M9.5 19v-5h5v5',c,1.8)]);
+    const lockIco = sv(13,[st('M7.5 11V8.5a4.5 4.5 0 0 1 9 0V11',MAT.ink,2.4),h('rect',{key:'b',x:5.5,y:11,width:13,height:9,rx:2,fill:MAT.ink})]);
+    const dotReady = h('div',{style:{width:8,height:8,borderRadius:4,background:'#7CB99A',flex:'none'}});
+    const dotBlocked = h('div',{style:{width:8,height:8,borderRadius:4,border:'2px solid #C4877F',flex:'none'}});
+    const arrowUp = z => h('svg',{width:22,height:22,viewBox:'0 0 24 24',style:{display:'block'}},st('M12 19V6M6 12l6-6 6 6',z,2.6));
+    const arrowDown = z => h('svg',{width:22,height:22,viewBox:'0 0 24 24',style:{display:'block'}},st('M12 5v13M6 12l6 6 6-6',z,2.6));
+    const dotIn = z => h('div',{style:{width:18,height:18,borderRadius:9,background:z}});
+    const recDot = h('div',{style:{width:20,height:20,borderRadius:10,background:PR}});
+    const recStop = h('div',{style:{width:22,height:22,borderRadius:3,background:'#E8565C'}});
+    const tabIco = (d,c) => sv(22,st(d,c,1.9));
+    const tabs = [ {n:'Дом',ic:tabIco('M4 11l8-6 8 6M6 10v9h12v-9','#A39FB5'),c:'#A39FB5'},
+      {n:'Занятия',ic:tabIco('M5 4h14v16H5zM8 8h8M8 12h8M8 16h5','#A39FB5'),c:'#A39FB5'},
+      {n:'Live',ic:tabIco('M12 3v18M7 7v10M17 7v10M3 10v4M21 10v4',PR),c:PR},
+      {n:'Путь',ic:tabIco('M3.5 6.5L9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5zM9 4v13.5M15 6.5V20','#A39FB5'),c:'#A39FB5'} ];
+    // ---------- frame builder
+    const STR = [['G','196'],['D','293,7'],['A','440'],['E','659,3']];
+    const strRow = (auto, lock) => STR.map(([name,hz]) => { const a=name===auto, l=name===lock;
+      return { name, hz, locked:l, bg: l?MAT.bone : a?MAT.wood : MAT.ebony, edge: l?MAT.brass : a?MAT.woodLit : '#2E2A32',
+        fg: l?MAT.ink : MAT.bone, hzFg: l?'#6E635C':'#8D8796', peg: l?MAT.brass : a?MAT.boneSh : MAT.nickel }; });
+    const F = (id, label, o={}) => {
+      const dark = !!o.dark, zone = o.zone||null, glow = o.glow||0, sounding = !!zone;
+      const ch = dark ? .38 : 1;
+      const fmt = o.fmt||'port';
+      return { id, label, fmt,
+        pic: picture(o.where||'rent', { fmt, mode:o.mode||'eve', dark, zone, glow, vcy:o.vcy, vb:o.vb, w:o.w, h:o.h, par:o.par }),
+        chromeOp: ch, rowOp: dark?.38:1, whereOp: dark?.38:1,
+        swBg: MAT.wood, swEdge: MAT.woodDark,
+        playBg: o.tuning?'transparent':MAT.bone, playFg: o.tuning?MAT.boneSh:MAT.ink,
+        tuneBg: o.tuning?MAT.bone:'transparent', tuneFg: o.tuning?MAT.ink:MAT.boneSh,
+        chip: !!o.chip, where: o.whereName || 'Дома', whereIco: (o.where&&o.where!=='rent'&&o.where!=='wood') ? icoHall(ON) : icoHome(ON),
+        statusOp: o.noPerm ? 1 : (sounding && !o.tuning ? 0 : (dark?.38:1)),
+        statusDot: o.blocked ? dotBlocked : dotReady,
+        statusText: o.status ?? (o.tuning ? (o.lock ? `цель — ${o.lock} · сыграйте струну` : 'авто · сыграйте открытую струну') : 'Играйте…'),
+        ring: ring(o.ringPx || (fmt==='land'?260 : fmt==='small'?240 : fmt==='half'?150 : fmt==='tiny'?120 : o.tuning?260:300), zone, glow, { level:o.level??.5, waves:o.waves }),
+        note: o.note||'A', oct: o.oct||'4', noteOp: sounding?1:0, noteSize: (o.tuning?'150px':'174px'),
+        wordOp: sounding?1:0, zoneCol: sounding?Z[zone]:'transparent',
+        arrow: !sounding ? null : (o.dir==='up'?arrowUp(Z[zone]) : o.dir==='down'?arrowDown(Z[zone]) : dotIn(Z[zone])),
+        word: o.dir==='up'?'выше' : o.dir==='down'?'ниже' : 'в строе', cents: o.cents||'+3',
+        rec: !!o.rec, noPerm: !!o.noPerm, recOp: o.noPerm?.38:1,
+        recFace: o.rec?'#E8565C':MAT.bone, recRing: o.rec?'#A8323F':MAT.brass, recGlyph: o.rec?recStop:recDot,
+        tuning: !!o.tuning, strings: strRow(o.auto||'A', o.lock), marker: o.marker||'50%', markerGlow: sounding?rgba(Z[zone],.5):'rgba(0,0,0,0)',
+        hint: o.lock ? `цель зафиксирована: ${o.lock} · нажмите, чтобы отпустить` : 'ближайшая струна подсвечена сама',
+        recLane: rep(9, i=>h('div',{key:i,style:{width:(6+i%4)+'%',background:[Z.in,Z.in,Z.near,Z.in,Z.off,Z.in,Z.in,Z.near,Z.in][i]}})) };
+    };
+    const f29a = [ F('29a1','Сейчас — тишина, фон `surface`, кольцо на пустом', { where:'rent', vb:'0 0 1 1', w:412, h:892 }),
+      F('29a2','Сейчас — «в строе», радиальный градиент зоны', { where:'rent', zone:'in', glow:.6, dir:'in', vb:'0 0 1 1', w:412, h:892 }),
+      F('29a3','В комнате — тишина, свет горит: картина живая, под кольцом вуаль', { where:'rent' }),
+      F('29a4','В комнате — «в строе», свет приглушён: цветной остался только цвет зоны', { where:'rent', zone:'in', glow:.6, dir:'in', dark:true }) ];
+    f29a[0].pic = h('div',{style:{position:'absolute',inset:0,background:SURF}});
+    f29a[1].pic = h('div',{style:{position:'absolute',inset:0,background:'radial-gradient(ellipse 70% 40% at 50% 38%,#1A4A36 0%,#153A2C 45%,#131318 100%)'}});
+    const f29b = [
+      F('29b1','0 c — тишина, свет горит', { where:'rent', fmt:'half' }),
+      F('29b2','+100 мс — нота зафиксирована, свет начал гаснуть; цвет зоны уже есть', { where:'rent', fmt:'half', zone:'in', glow:.25, dark:false }),
+      F('29b3','+520 мс — свет погас, картина замерла', { where:'rent', fmt:'half', zone:'in', glow:.6, dark:true }),
+      F('29b4','+2,5 c — держим, glow 1, волна', { where:'rent', fmt:'half', zone:'in', glow:1, dark:true, waves:[{r:1.22,a:.35},{r:1.4,a:.14}] }),
+      F('29b5','Короткая пауза 1,5 c — свет не загорается', { where:'rent', fmt:'half', dark:true }),
+      F('29b6','6,0 c тишины → +1 600 мс — свет вернулся', { where:'rent', fmt:'half' }),
+      F('29b7','Запись — нажатие гасит свет сразу и держит до «стоп»', { where:'rent', fmt:'half', rec:true, dark:true, zone:'near', glow:.4, dir:'up' }),
+      F('29b8','«Убрать анимации» — картина неподвижна всегда, свет меняется одним кроссфейдом', { where:'rent', fmt:'half', anim:false }) ];
+    const f29c = [
+      F('29c1','Съёмная, вечер — тишина', { where:'rent' }),
+      F('29c2','Съёмная, вечер — в строе, glow 0,6', { where:'rent', zone:'in', glow:.6, dark:true, dir:'in' }),
+      F('29c3','Съёмная, вечер — в строе, glow 1 + волна', { where:'rent', zone:'in', glow:1, dark:true, dir:'in', cents:'+1', waves:[{r:1.22,a:.35},{r:1.45,a:.12}] }),
+      F('29c4','Съёмная, вечер — рядом (янтарный), выше на 12', { where:'rent', zone:'near', glow:.4, dark:true, dir:'up', cents:'+12' }),
+      F('29c5','Съёмная, вечер — мимо (красный): не самый драматичный кадр, множитель 0,7', { where:'rent', zone:'off', glow:.25, dark:true, dir:'down', cents:'−38' }),
+      F('29c6','Съёмная, день — «Слишком шумно»: свет горит, кольцо пустое', { where:'rent', mode:'day', status:'Слишком шумно', blocked:true }),
+      F('29c7','Домик, вечер — «Микрофон недоступен»', { where:'wood', whereName:'Дома', status:'Микрофон недоступен', blocked:true }),
+      F('29c8','Домик, день — нет разрешения: бумажная карточка и кнопка «Разрешить доступ»', { where:'wood', mode:'day', status:'Микрофон недоступен', blocked:true, noPerm:true }) ];
+    const f29d = Object.keys(HALLS).map((k,i) => { const H=HALLS[k];
+      const base = F('29d'+(i+1), `${H.n} — построитель «${H.type}», вид со сцены; свет горит`, { where:k, whereName:H.n });
+      base.states = [
+        { pic: picture(k,{fmt:'half',dark:true,zone:'in',glow:.6}), ring: ring(150,'in',.6,{level:.5}), zoneCol:Z.in, word:'в строе', cap:'приглушён + «в строе»' },
+        { pic: picture(k,{fmt:'half',dark:true,zone:'off',glow:.25}), ring: ring(150,'off',.25,{level:.5}), zoneCol:Z.off, word:'ниже', cap:'приглушён + «мимо»' } ];
+      return base; });
+    const f29e = [
+      F('29e1','«Настройка» в комнате — авто, A подсвечена сама, бегунок в допуске', { where:'rent', tuning:true, zone:'in', glow:.6, dark:true, dir:'in', auto:'A', marker:'52%', cents:'+3' }),
+      F('29e2','«Настройка» в комнате — струна D зафиксирована, костяной замок и подсказка', { where:'rent', tuning:true, auto:'A', lock:'D', note:'D', oct:'4' }),
+      F('29e3','«Настройка» в зале — Вена, зафиксирована G, нота ниже', { where:'vienna', whereName:'Вена · Золотой зал', tuning:true, auto:'G', lock:'G', note:'G', oct:'3', zone:'off', glow:.25, dark:true, dir:'down', marker:'24%', cents:'−41' }),
+      F('29f1','Запись идёт — переключатель неактивен, полоса и «стоп» в полную плотность при погашенном свете', { where:'rent', rec:true, dark:true, zone:'in', glow:.6, dir:'in' }),
+      F('29f2','Занятие идёт — бумажный ярлычок слева, подпись «где играю» справа', { where:'rent', chip:true }),
+      F('29f3','Оба сразу — занятие и запись, зал Париж', { where:'paris', whereName:'Париж · Гарнье', chip:true, rec:true, dark:true, zone:'near', glow:.4, dir:'up', cents:'+9' }) ];
+    const f29g = [
+      F('29g1','Landscape, комната — тишина, свет горит; кольцо 260 слева, приборы справа', { where:'rent', fmt:'land' }),
+      F('29g2','Landscape, комната — в строе, свет приглушён', { where:'rent', fmt:'land', zone:'in', glow:.8, dark:true, dir:'in' }),
+      F('29g3','Landscape, зал Берлин — «Настройка», струна A', { where:'berlin', whereName:'Берлин · Филармония', fmt:'land', tuning:true, auto:'A', zone:'near', glow:.4, dark:true, dir:'up', cents:'+14', marker:'62%' }),
+      F('29g4','Landscape, комната — запись идёт', { where:'rent', fmt:'land', rec:true, dark:true, zone:'in', glow:.6, dir:'in' }) ];
+    const f29h = [ F('29h1','360 × 640 — комната, тишина: кадр обрезается по бокам, кольцо 240', { where:'rent', fmt:'small' }),
+      F('29h2','360 × 640 — комната, в строе', { where:'rent', fmt:'small', zone:'in', glow:.6, dark:true, dir:'in' }) ];
+    const f29i = [
+      { id:'29i1', label:'Сейчас — «в строе» ×0,4, размытие 4 dp', pic:h('div',{style:{position:'absolute',inset:0,background:'radial-gradient(ellipse 70% 40% at 50% 40%,#1A4A36 0%,#153A2C 45%,#131318 100%)'}}), ring:ring(120,'in',.6,{level:.5}), zoneCol:Z.in, word:'в строе' },
+      { id:'29i2', label:'Комната — то же', pic:picture('rent',{fmt:'tiny',dark:true,zone:'in',glow:.6}), ring:ring(120,'in',.6,{level:.5}), zoneCol:Z.in, word:'в строе' },
+      { id:'29i3', label:'Зал Вена — то же', pic:picture('vienna',{fmt:'tiny',dark:true,zone:'in',glow:.6}), ring:ring(120,'in',.6,{level:.5}), zoneCol:Z.in, word:'в строе' },
+      { id:'29i4', label:'Зал Вена — тишина, свет горит: единственный заметный кадр', pic:picture('vienna',{fmt:'tiny'}), ring:ring(120,null,0), zoneCol:'transparent', word:'' } ];
+    // ---------- 29j controls board
+    const cSw = (t) => h('div',{style:{display:'flex',height:40,padding:3,borderRadius:21,background:MAT.wood,border:'1px solid '+MAT.woodDark,opacity:t}},[
+      h('div',{key:1,style:{display:'flex',alignItems:'center',padding:'0 20px',borderRadius:18,background:MAT.bone,color:MAT.ink,fontSize:14,fontWeight:700}},'Игра'),
+      h('div',{key:2,style:{display:'flex',alignItems:'center',padding:'0 20px',borderRadius:18,color:MAT.boneSh,fontSize:14,fontWeight:700}},'Настройка')]);
+    const cSwDis = (t) => h('div',{style:{display:'flex',height:40,padding:3,borderRadius:21,background:mix(MAT.wood,SURF,.45),border:'1px solid '+MAT.woodDark,opacity:t*.55}},[
+      h('div',{key:1,style:{display:'flex',alignItems:'center',padding:'0 20px',borderRadius:18,background:mix(MAT.bone,SURF,.5),color:'#8D8796',fontSize:14,fontWeight:700}},'Игра'),
+      h('div',{key:2,style:{display:'flex',alignItems:'center',padding:'0 20px',borderRadius:18,color:'#6E687A',fontSize:14,fontWeight:700}},'Настройка')]);
+    const cChip = (t) => h('div',{style:{height:28,padding:'0 12px',borderRadius:5,background:MAT.bone,color:MAT.ink,fontSize:12,fontWeight:700,display:'flex',alignItems:'center',gap:6,opacity:t}},[h('div',{key:1,style:{width:7,height:7,borderRadius:4,background:MAT.velvet}}),'занятие · 12:34']);
+    const cPeg = (s,t) => h('div',{style:{position:'relative',width:76,height:64,borderRadius:12,background:s.bg,border:'1.5px solid '+s.edge,display:'flex',flexDirection:'column',alignItems:'center',justifyContent:'center',opacity:t}},[
+      h('div',{key:'p',style:{position:'absolute',top:-5,width:26,height:9,borderRadius:5,background:s.peg}}),
+      h('div',{key:'n',style:{fontSize:22,fontWeight:700,color:s.fg}},s.name),
+      h('div',{key:'h',className:'tn',style:{fontSize:11,color:s.hzFg}},s.hz),
+      s.locked ? h('div',{key:'l',style:{position:'absolute',top:-7,right:-7,width:22,height:22,borderRadius:11,background:MAT.bone,display:'flex',alignItems:'center',justifyContent:'center'}},lockIco) : null]);
+    const cRec = (state,t) => h('div',{style:{width:72,height:72,borderRadius:36,background: state==='rec'?'#E8565C':MAT.bone, border:'3px solid '+(state==='rec'?'#A8323F':MAT.brass), display:'flex',alignItems:'center',justifyContent:'center', boxShadow: state==='press'?'0 1px 0 rgba(0,0,0,.35)':'0 4px 0 rgba(0,0,0,.35)', transform: state==='press'?'translateY(3px)':'none', opacity:t}}, state==='rec'?recStop:recDot);
+    const cScale = (t,zone) => h('div',{style:{width:280,opacity:t}},[
+      h('div',{key:'t',style:{position:'relative',height:26,borderRadius:8,background:MAT.woodSh||'#6E4A34',border:'1px solid '+MAT.woodDark,overflow:'hidden'}},[
+        h('div',{key:1,style:{position:'absolute',left:'45%',width:'10%',top:7,height:12,borderRadius:6,background:Z.in}}),
+        h('div',{key:2,style:{position:'absolute',left:'50%',top:4,width:2,height:18,marginLeft:-1,background:'rgba(241,238,230,.7)'}}),
+        h('div',{key:3,style:{position:'absolute',left:'58%',top:1,width:8,height:24,marginLeft:-4,borderRadius:4,background:MAT.bone,boxShadow:zone?`0 0 12px 3px ${rgba(Z[zone],.5)}`:'none'}})])]);
+    const cWhere = (t,name,hall) => h('div',{style:{height:28,padding:'0 11px',borderRadius:14,background:'rgba(19,19,24,.55)',border:'1px solid rgba(230,228,238,.22)',display:'flex',alignItems:'center',gap:7,fontSize:12,fontWeight:600,color:ON,opacity:t}},[hall?icoHall(ON):icoHome(ON),name]);
+    const cStatus = (t,blocked,txt) => h('div',{style:{display:'flex',alignItems:'center',gap:9,height:26,padding:'0 13px',borderRadius:13,background:'rgba(19,19,24,.7)',fontSize:14,color:OV,opacity:t}},[blocked?dotBlocked:dotReady,h('span',{key:'s'},txt)]);
+    const cRecBar = (t) => h('div',{style:{display:'flex',alignItems:'center',gap:12,width:300,opacity:t}},[
+      h('div',{key:1,style:{width:10,height:10,borderRadius:5,background:'#E8565C',animation:'pulse 1.2s ease-in-out infinite'}}),
+      h('div',{key:2,className:'tn',style:{fontSize:16,fontWeight:700,color:ON}},'запись · 01:24'),
+      h('div',{key:3,style:{flex:1,height:6,borderRadius:3,background:'#292833',display:'flex',gap:2,overflow:'hidden'}}, rep(9,i=>h('div',{key:i,style:{width:(6+i%4)+'%',background:[Z.in,Z.in,Z.near,Z.in,Z.off,Z.in,Z.in,Z.near,Z.in][i]}})))]);
+    const LITBG = 'linear-gradient(135deg,#4A4262,#3E3652)', DIMBG = '#20202A';
+    const ctrlRows = [
+      { name:'Переключатель режима', note:'деревянная планка, костяной бегунок · 40 dp · неактивен во время записи', litBg:LITBG, dimBg:DIMBG, lit:[cSw(1),cSwDis(1)], dim:[cSw(.38),cSwDis(.38)] },
+      { name:'Чип занятия', note:'бумажный ярлычок · 28 dp · тап ведёт на «Занятия»', litBg:LITBG, dimBg:DIMBG, lit:[cChip(1)], dim:[cChip(.38)] },
+      { name:'Ряд струн — колки', note:'76 × 64 · эбен; ближайшая — клён; зафиксированная — кость с латунным ободом и замком', litBg:LITBG, dimBg:DIMBG,
+        lit: strRow('A','D').map(s=>cPeg(s,1)), dim: strRow('A','D').map(s=>cPeg(s,.38)) },
+      { name:'Строка состояния', note:'точки «можно» и «нельзя» различаются формой; во время ноты скрыта', litBg:LITBG, dimBg:DIMBG,
+        lit:[cStatus(1,false,'Играйте…'),cStatus(1,true,'Mikrofon nicht verfügbar')], dim:[cStatus(0,false,'Играйте…')] },
+      { name:'Кнопка записи', note:'клавиша магнитофона: кость, латунный обод, ход 3 dp · 72 dp', litBg:LITBG, dimBg:DIMBG,
+        lit:[cRec('idle',1),cRec('press',1),cRec('rec',1)], dim:[cRec('idle',.38),cRec('rec',1)] },
+      { name:'Полоса записи', note:'при погашенном свете остаётся в полную плотность — это идёт выступление', litBg:LITBG, dimBg:DIMBG, lit:[cRecBar(1)], dim:[cRecBar(1)] },
+      { name:'Шкала «Настройки»', note:'деревянная линейка, зелёная пилюля допуска, костяной бегунок с ореолом зоны', litBg:LITBG, dimBg:DIMBG, lit:[cScale(1,null)], dim:[cScale(.38,'in')] },
+      { name:'Подпись «где играю»', note:'28 dp · самый длинный случай — «cible verrouillée : D · 294 Hz»', litBg:LITBG, dimBg:DIMBG,
+        lit:[cWhere(1,'Дома',false),cWhere(1,'Вена · Золотой зал',true)], dim:[cWhere(.38,'Вена · Золотой зал',true)] } ];
+    // ---------- 29k
+    const miniCard = (key, name, sub, sel) => h('div',{key,style:{display:'flex',alignItems:'center',gap:14,padding:10,borderRadius:16,background: sel?'rgba(196,173,255,.12)':'#1E1D25', border:'1.5px solid '+(sel?PR:'transparent')}},[
+      h('div',{key:'t',style:{width:84,height:54,borderRadius:10,overflow:'hidden',lineHeight:0,flex:'none',background:'#292833'}}, key==='home' ? picture('rent',{fmt:'port',w:84,h:54,vb:'20 -170 372 240',veil:false}) : picture(key,{fmt:'port',w:84,h:54,vb:'20 -130 372 240',veil:false})),
+      h('div',{key:'x',style:{minWidth:0}},[h('div',{key:1,style:{fontSize:15,fontWeight:700}},name),h('div',{key:2,style:{fontSize:12,color:OV,marginTop:2}},sub)]),
+      h('div',{key:'f',style:{flex:1}}),
+      sel ? h('div',{key:'c',style:{color:PR,fontSize:13,fontWeight:700}},'здесь') : null]);
+    const lockedCard = (name, sub) => h('div',{key:name,style:{display:'flex',alignItems:'center',gap:14,padding:10,borderRadius:16,background:'#1A1A21',opacity:.75}},[
+      h('div',{key:'t',style:{width:84,height:54,borderRadius:10,background:'#232230',display:'flex',alignItems:'center',justifyContent:'center',flex:'none'}}, K.silSvg('rent',56,34,'#4A4658')),
+      h('div',{key:'x'},[h('div',{key:1,style:{fontSize:15,fontWeight:700,color:'#8D8796'}},name),h('div',{key:2,style:{fontSize:12,color:'#6E687A',marginTop:2}},sub)])]);
+    const sheetEl = h('div',{style:{position:'absolute',inset:0,display:'flex',flexDirection:'column'}},[
+      h('div',{key:'bg',style:{position:'absolute',inset:0,lineHeight:0}}, picture('rent',{fmt:'port'})),
+      h('div',{key:'sc',style:{position:'absolute',inset:0,background:'rgba(11,11,15,.6)'}}),
+      h('div',{key:'sh',style:{position:'absolute',left:0,right:0,bottom:0,background:'#131318',borderRadius:'28px 28px 0 0',padding:'10px 20px 26px',display:'flex',flexDirection:'column',gap:12,boxShadow:'0 -20px 60px rgba(0,0,0,.5)'}},[
+        h('div',{key:'g',style:{width:32,height:4,borderRadius:2,background:OUT,alignSelf:'center'}}),
+        h('div',{key:'t',style:{fontSize:22,fontWeight:700,margin:'4px 0 2px'}},'Где играть'),
+        miniCard('home','Дома','съёмная комната, вечер',true),
+        miniCard('cremona','Кремона','мастерская скрипичного мастера',false),
+        miniCard('vienna','Вена · Золотой зал','Музикферайн',false),
+        miniCard('paris','Париж · Опера Гарнье','плафон Шагала',false),
+        h('div',{key:'nx',style:{display:'flex',alignItems:'center',gap:14,padding:10,borderRadius:16,background:'#1A1A21',border:'1.5px dashed '+OUT}},[
+          h('div',{key:'t',style:{width:84,height:54,borderRadius:10,background:'#232230',display:'flex',alignItems:'center',justifyContent:'center',flex:'none'}}, K.silSvg('flat',56,34,'#4A4658',null,true)),
+          h('div',{key:'x'},[h('div',{key:1,style:{fontSize:15,fontWeight:700,color:'#9E99AC'}},'Прага · Рудольфинум'),h('div',{key:2,style:{fontSize:12,color:'#6E687A',marginTop:2}},'откроется в Праге')])]),
+        lockedCard('Лейпциг · Св. Фомы','ещё не открыт'),
+        lockedCard('Берлин · Филармония','ещё не открыт')])]);
+    const stopEl = h('div',{style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',background:SURF}},[
+      h('div',{key:'p',style:{height:300,lineHeight:0,flex:'none',position:'relative'}},[ picture('vienna',{fmt:'port',w:412,h:300,vb:'0 -60 412 300',veil:false}),
+        h('div',{key:'lb',style:{position:'absolute',left:16,top:14,height:26,padding:'0 10px',borderRadius:13,background:'rgba(19,19,24,.62)',fontSize:12,fontWeight:600,display:'flex',alignItems:'center'}},'Вена · Золотой зал')]),
+      h('div',{key:'b',style:{flex:1,padding:'18px 20px',display:'flex',flexDirection:'column',gap:14}},[
+        h('div',{key:1,style:{fontSize:26,fontWeight:700,lineHeight:1.12}},'Вена'),
+        h('div',{key:2,style:{fontSize:14,color:OV,lineHeight:1.45}},'Музикферайн, Золотой зал. Достигнуто 28.07.'),
+        h('div',{key:3,style:{display:'flex',gap:10,marginTop:2}},[
+          h('div',{key:'a',style:{flex:1,height:56,borderRadius:28,background:PR,color:'#2E1A6E',display:'flex',alignItems:'center',justifyContent:'center',gap:10,fontSize:16,fontWeight:700}},[icoHall('#2E1A6E',20),'Играть здесь']),
+          h('div',{key:'b',style:{width:56,height:56,borderRadius:28,border:'1.5px solid '+OUT,display:'flex',alignItems:'center',justifyContent:'center'}},icoHome(ON,22))]),
+        h('div',{key:4,style:{fontSize:12,color:OV,marginTop:-4}},'Live откроется в этом зале; выбор запомнится.'),
+        h('div',{key:5,style:{background:'#1E1D25',borderRadius:16,padding:'14px 16px',display:'flex',flexDirection:'column',gap:10}},[
+          h('div',{key:'a',style:{fontSize:14,fontWeight:600}},'Дополнения'),
+          h('div',{key:'b',style:{display:'flex',gap:10}}, ['Вечерний вид','День','Золотой зал внутри'].map((n,i)=>h('div',{key:i,style:{flex:1,height:64,borderRadius:12,background:'#292833',display:'flex',alignItems:'flex-end',padding:8,fontSize:11,fontWeight:600,color:i?'#9E99AC':PR}},n)))])])]);
+    const capEl = h('div',{style:{position:'absolute',inset:0}},[
+      h('div',{key:'p',style:{position:'absolute',inset:0,lineHeight:0}}, picture('paris',{fmt:'port'})),
+      h('div',{key:'sc',style:{position:'absolute',left:0,right:0,top:0,height:'24%',background:'linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))'}}),
+      h('div',{key:'i',style:{position:'absolute',inset:0,display:'flex',flexDirection:'column',padding:'12px 0 0'}},[
+        h('div',{key:1,style:{display:'flex',justifyContent:'center'}},cSw(1)),
+        h('div',{key:2,style:{display:'flex',alignItems:'center',gap:8,padding:'10px 24px 0'}},[cChip(1),h('div',{key:'f',style:{flex:1}}),cWhere(1,'Париж · Гарнье',true)]),
+        h('div',{key:3,style:{display:'flex',justifyContent:'center',marginTop:10}},cStatus(1,false,'Играйте…')),
+        h('div',{key:4,style:{flex:1,display:'flex',alignItems:'center',justifyContent:'center',lineHeight:0}},ring(300,null,0)),
+        h('div',{key:5,style:{height:46}}),
+        h('div',{key:6,style:{display:'flex',justifyContent:'center',padding:'14px 0 10px'}},cRec('idle',1)),
+        h('div',{key:7,style:{height:14,background:'linear-gradient(rgba(19,19,24,0),rgba(19,19,24,.92))'}}),
+        h('div',{key:8,style:{height:66,background:'rgba(19,19,24,.92)',display:'flex',alignItems:'center',padding:'0 8px'}}, tabs.map((t,i)=>h('div',{key:i,style:{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:4,color:t.c}},[t.ic,h('div',{key:'n',style:{fontSize:11,fontWeight:600}},t.n)])))])]);
+    const f29k = [ { id:'29k1', label:'Подпись «где играю» на своей строке справа, чип занятия слева — зал Париж, тишина', el:capEl },
+      { id:'29k2', label:'Лист «Где играть» — комната, достигнутые залы, следующий силуэтом, дальние штампами', el:sheetEl },
+      { id:'29k3', label:'Экран остановки 26g2 — «Играть здесь» заполненной кнопкой под открыткой, рядом возврат домой', el:stopEl } ];
+    // ---------- 29l
+    const f29l = [
+      { id:'29l1', label:'Комната — кадр портрета 412 × 892 (−260 … 600)', capW:'412px', el: picture('rent',{fmt:'port',veil:false}) },
+      { id:'29l2', label:'Комната — landscape 892 × 412 (10 … 200)', capW:'892px', el: picture('rent',{fmt:'land',veil:false}) },
+      { id:'29l3', label:'Комната — 360 × 640 (−180 … 552), meet по ширине', capW:'360px', el: picture('rent',{fmt:'small',veil:false}) },
+      ...Object.keys(HALLS).map((k,i)=>({ id:'29l'+(i+4), label:`${HALLS[k].n} — «${HALLS[k].type}» со сцены, вся геометрия −220 … 460`, capW:'300px',
+        el: draw(HALLS[k].fn(), 'eve', { pal:{...HT,...HALLS[k].pal}, w:300, h:495, viewBox:'0 -220 412 680', par:'xMidYMid meet' }) })),
+      { id:'29l9', label:'Продолжение вверх и вниз — открытка 412 × 260 внутри полной сетки зала', capW:'300px',
+        el: h('div',{style:{position:'relative',lineHeight:0}},[ draw(HALLS.vienna.fn(),'eve',{pal:HT,w:300,h:495,viewBox:'0 -220 412 680',par:'xMidYMid meet'}),
+          h('div',{key:'b',style:{position:'absolute',left:0,right:0,top:160,height:189,border:'1.5px dashed '+PR,borderRadius:4}}),
+          h('div',{key:'l',style:{position:'absolute',left:6,top:166,fontSize:10,fontWeight:700,color:PR,lineHeight:1.2}},'412 × 260 — открытка')]) } ];
+    // ---------- dev
+    const swc = v => h('div',{style:{width:14,height:14,borderRadius:4,background:v,border:'1px solid rgba(255,255,255,.15)',flex:'none'}});
+    const tokens = [
+      { name:'venue.dim.mix', v:'0,76', sw:swc('#484847'), use:'доля `surface` в каждом цвете картины при погашенном свете' },
+      { name:'venue.dim.sat', v:'0,12', sw:swc('#4A443E'), use:'остаток насыщенности; вместе дают «угадывается, но не спорит»' },
+      { name:'venue.dim.lightDrop', v:'0,25', sw:swc('#3A3228'), use:'множитель α для светящихся слоёв (`GLOW`, пламя, окна, люстры) — свет убавили' },
+      { name:'venue.zone.tint', v:'0,18 · glow', sw:swc('#2A4238'), use:'сдвиг всей приглушённой картины к цвету зоны (приём «б»)' },
+      { name:'venue.zone.light', v:'0,22 · glow', sw:swc('#47C97E'), use:'радиальный свет зоны поверх картины, наложение `screen` (приём «а»); r = 1,35 × вуали' },
+      { name:'venue.zone.offScale', v:'0,70', sw:swc('#E8565C'), use:'множитель обоих приёмов для «мимо» — не самый драматичный кадр' },
+      { name:'venue.veil', v:'0,68 → 0', sw:swc('#131318'), use:'вуаль: радиальное затемнение под интерфейсом; только при горящем свете' },
+      { name:'venue.veil.stops', v:'0 / .42 / 1', sw:swc('#1C1C24'), use:'α 0,68 → 0,46 → 0; центр — центр кольца, r = 300 dp' },
+      { name:'venue.chrome.dim', v:'0,38', sw:swc('#57545E'), use:'непрозрачность приборов при погашенном свете; запись и нота — 1,0' },
+      { name:'ctrl.ebony', v:'#1C1A20', sw:swc('#1C1A20'), use:'колки в покое, тёмные корпуса' },
+      { name:'ctrl.maple', v:'#8B5E3C', sw:swc('#8B5E3C'), use:'планка переключателя, ближайшая струна, линейка шкалы' },
+      { name:'ctrl.bone', v:'#F1EEE6', sw:swc('#F1EEE6'), use:'бегунки, клавиша записи, ярлычок занятия, замок' },
+      { name:'ctrl.brass', v:'#C9A24A', sw:swc('#C9A24A'), use:'ободы и обжимы; не рядом с кольцом и словом статуса' },
+      { name:'ctrl.nickel', v:'#6B6C78', sw:swc('#6B6C78'), use:'колковые головки в покое' },
+      { name:'venue.hall.rail', v:'#E2B74E', sw:swc('#E2B74E'), use:'золото перил и ярусов — в темноте уходит в #3A352E, с янтарной зоной больше не спорит' },
+      { name:'venue.hall.seat', v:'#8E2F3F', sw:swc('#8E2F3F'), use:'кресла; Прага #3E5A8E, Сидней #7A3E8E, Лейпциг #6E5238' },
+      { name:'venue.hall.cream', v:'#F3EEE2', sw:swc('#F3EEE2'), use:'светлые стены и потолки — самый опасный цвет. Вуали одной НЕ хватает: у края её α уже 0,3, и строка состояния на потолке Вены давала 1,1 : 1. Держат два слоя — верхняя шторка и плашка' },
+      { name:'venue.scrim.top', v:'0,58 → 0', sw:swc('#1A1A22'), use:'вертикальная шторка `surface` на верхних 24 % кадра — под переключателем, ярлычком и строкой состояния; вуаль отвечает только за поле вокруг кольца' },
+      { name:'venue.plate', v:'0,68', sw:swc('#2E2E34'), use:'плашка строки состояния и подписи «где играю», радиус 13. Шторка + плашка над `#F3EEE2` дают 5,2 : 1 для `#A39FB5`' },
+      { name:'venue.hall.boards', v:'#8B5E3C', sw:swc('#8B5E3C'), use:'доски сцены под ногами, продолжение вниз' } ];
+    const sizes = [
+      { n:'Кадр комнаты · портрет', v:'viewBox 0 −260 412 860, slice; кольцо на y ≈ 97 (окно, пюпитр)' },
+      { n:'Кадр комнаты · landscape', v:'viewBox 0 10 412 190, slice — стена, окно, край стола' },
+      { n:'Кадр комнаты · 360 × 640', v:'viewBox 0 −180 412 732, meet — точно по ширине, ничего не режется' },
+      { n:'Кадр зала · портрет', v:'viewBox 0 −190 412 660, slice — потолок, ярусы, кресла, доски внизу' },
+      { n:'Кадр зала · landscape', v:'viewBox 0 −60 412 190, slice' },
+      { n:'Сетка зала', v:'412 × 260 открытка; вверх до −220, вниз до 460; точка схода (206, 150)' },
+      { n:'Вуаль', v:'центр = центр кольца, r 300 dp; в landscape центр 22 % / 50 %' },
+      { n:'Кольцо', v:'300 (260 в «Настройке» и landscape, 240 на 360 dp) — без изменений' },
+      { n:'Подпись «где играю»', v:'28 dp, радиус 14, значок 14 dp, отступ 24 dp от края; своя строка под переключателем' },
+      { n:'Ряд струн', v:'4 × 76 × 64, промежуток 14, радиус 12; колковая головка 26 × 9 выступает на 5' },
+      { n:'Кнопка записи', v:'72 dp, обод 3, ход 3 dp вниз при нажатии' },
+      { n:'Шкала', v:'высота 26, радиус 8; пилюля допуска 10 % ширины; бегунок 8 × 24' },
+      { n:'Градиент над панелью', v:'14 dp, прозрачный → surface 92 %' } ];
+    const anims = [
+      { n:'light.off', v:'задержка 100 мс от начала ноты, 420 мс, cubic-bezier(.3,0,.8,.15) — выключатель' },
+      { n:'light.on', v:'после 6,0 с тишины подряд, 1 600 мс, cubic-bezier(0,0,0,1) — реостат' },
+      { n:'light.rec', v:'нажатие записи → light.off немедленно (без 100 мс); light.on заблокирован до «стоп»' },
+      { n:'light.zone', v:'свет зоны нарастает той же кривой, что и гашение: полные краски и полный свет зоны не встречаются' },
+      { n:'light.freeze', v:'при погашенном свете все поля движения слоёв останавливаются на текущем кадре, не сбрасываются' },
+      { n:'chrome.dim', v:'приборы 1 → 0,38 вместе со светом, та же кривая; запись и нота не участвуют' },
+      { n:'picture.swap', v:'смена картины кроссфейдом 320 мс, standard; вуаль и свет зоны не мигают' },
+      { n:'where.sheet', v:'лист снизу 300 мс emphasized decelerate; затемнение 0 → 0,6' },
+      { n:'lesson.enter', v:'«Начать занятие» → Live: 400 мс, viewBox миниатюры → кадр Live; обвязка карточки −200 мс, приборы +200 мс' },
+      { n:'reduce.motion', v:'картина неподвижна всегда; свет — один кроссфейд 420 / 1 600 мс без кривых разгона' },
+      { n:'ring', v:'без изменений: нарастание 500 мс, спад 900 мс, ореол ±4 % от громкости, кроссфейд зоны 150 мс' } ];
+    const answers = [
+      { q:'1. Отвечает ли свет на возражение к A? Насколько тёмной?', a:'Отвечает — но только на половину. Пока звучит нота, приглушённая картина действительно чистое поле, и ряды под словом статуса исчезают. В тишине возражение возвращается целиком, поэтому добавляем три слоя, живущие только при горящем свете: вуаль вокруг кольца, шторку на верхних 24 % и плашку под строкой состояния. Одной вуали мало — она круг, а интерфейс идёт во всю высоту: на кремовом потолке Вены строка давала 1,1 : 1. Темнота: 76 % смеси с surface и 12 % насыщенности; ваши 85 / 20 — перебор, зал перестаёт быть залом.' },
+      { q:'2. Свет зоны — градиент, сдвиг цвета или оба?', a:'Оба, но с разным весом. Сдвиг всей картины к цвету зоны на 0,18 · glow — он делает «свет лёг на зал». Радиальный градиент поверх на 0,22 · glow наложением screen (безопасно на всех телефонах) — он делает «источник здесь». Для «мимо» оба × 0,7, как и ореол кольца.' },
+      { q:'3. Кнопки — материалы и что с ними во время ноты?', a:'Эбен, клён, кость и бумага, никель, латунь приглушённо, фиолетовый акцент. От Material уходим на один шаг: та же геометрия и те же размеры, другой материал — планка вместо таблетки, колки вместо чипов, клавиша магнитофона вместо круга. Во время ноты два уровня: переключатель, струны и подпись → 0,38 (их намеренно не читают), запись и всё о ноте → 1,0.' },
+      { q:'4. Кольцо — прежнее или перерисованное?', a:'Прежнее, ровно по модели 5.8. Ему нужно было не новое рисование, а чистое поле — его даёт вуаль. Перерисовка кольца под картину сломала бы единственное, что человек читает боковым зрением, ради вещи, которую он в этот момент не видит.' },
+      { q:'5. Залы со сцены — для всех типов?', a:'Для всех четырёх, плюс мастерская Кремоны. Это один построитель с общей основой (доски под ногами, кресла вверх от нас, ярусы, потолок) и четырьмя режимами; примета зала переносится на то, что видно со сцены. Орган, оказавшийся за спиной, заменяет задняя стена напротив: аркада галереи в Зальцбурге, задний балкон в Амстердаме, сами террасы в Токио. Тяжелее всех далась «коробка»: её потолок занимает треть портрета и плоской заливкой мёртв, поэтому у неё своё правило перспективы — сжимающиеся кессоны, сходящиеся рёбра и кариатиды вдоль стен с уменьшением по глубине. Если где-то придётся отступить — отступать здесь.' },
+      { q:'6. Где подпись и как устроен выбор?', a:'Своя строка под переключателем, справа; слева на той же строке — чип занятия. Уходит вместе с приборами, пока звучит нота. Лист: комната сверху, достигнутые залы миниатюрами того, как они выглядят на Live, следующий — силуэтом «откроется в Праге», дальние — штампами паспорта. «Играть здесь» на 26g2 — заполненной кнопкой под открыткой, до дополнений.' },
+      { q:'7. Нижняя панель над картиной', a:'Не трогаем. Добавляем только градиент 14 dp из прозрачного в surface над ней, чтобы картина не обрывалась ножом, и поднимаем фон панели до surface 92 % — пол комнаты чуть просвечивает, и панель читается как часть комнаты, а не как крышка.' },
+      { q:'8. Первая нота после паузы', a:'Приемлемо с одной поправкой: свет зоны нарастает той же кривой, что и гашение. На 200 мс картина потемнела наполовину и свет зоны поднялся наполовину; полные краски и полный свет зоны вместе не встречаются никогда.' },
+      { q:'9. Что получилось хуже', a:'Светлые залы (Лейпциг, светлые потолки) в тишине — единственное место, где картина заметна боковым зрением; вуаль это чинит, но не до нуля. Если придётся выбирать — комната получилась лучше залов, и её стоит выпускать первой. «Сыграть здесь» в конце прибытия — да, но текстовой кнопкой рядом с «Дальше»: прибытие про открытку.' } ];
+    const stageCode = `// ── общее для всех режимов «со сцены» ───────────────────────────
+row(y, hw, hh, rise)      // ряд-дуга: концы ниже центра на rise (мы на сцене)
+  = M(206-hw) y  q hw,(-2·rise) (2·hw),0  v(-hh)  q(-hw),(2·rise) (-2·hw),0  Z
+
+seats(rise, n=9) = rep(n, k => {           // кресла: ближний ряд внизу и крупный
+  t  = k/(n-1); y = 300-96t; hw = 214-74t; hh = 12-5.5t; rs = rise(1-.45t)
+  n_ = round(2·hw / (18-7t))               // спинок в ряду
+  → [ L(seatSh, row(y,hw,hh,rs)),          // тень ряда
+      L(seat,   row(y-.55hh, hw,.45hh, rs)),
+      repeat{ d: R(...,1.1,hh), count: n_, step:[2hw/n_,0] } ] })
+
+backWall() = [ L(wall, R(48,64,316,140)), L(wallLit, R(48,64,106,140), op .28),
+               L(wallSh, PG(0,-30 · 48,64 · 48,204 · 0,300)),      // боковые стены
+               L(wallSh, PG(412,-30 · 364,64 · 364,204 · 412,300)) ]  // к точке схода
+
+boards() = [ L(dark, R(-30,304,472,6)), L(board, R(-30,310,472,150)),
+             repeat{ доска: PG к зрителю ×2.5, count 11, step [41,0] },
+             L(rgba(255,255,255,.07), R(-30,310,472,3)) ]          // блик рампы
+
+STAGE({ceil, tiers, mark, rise, rows}) =
+  [ L(void, R(-30,-240,472,720)), ...ceil(), ...backWall(),
+    ...tiers(), ...seats(rise, rows), ...mark(), ...boards() ]
+
+tierArc(y, hw, hh, rise, boxes)            // ярус + ложи по дуге
+  = [ L(goldSh, row(y,hw,hh,rise)), L(gold, row(y-.62hh,hw,.4hh,rise), op .85),
+      repeat{ ложа RR(16,16,2) + барьер R(16,6), count: boxes, вдоль дуги } ]
+
+// ── режимы ──────────────────────────────────────────────────────
+коробка  (Вена, Зальцбург, Прага, Амстердам, СПб, Москва, Сидней)
+  rise 6 · один прямой ярус tierArc(150,176,11,6,0) · пилястры repeat 8
+  примета со сцены: кариатиды/колонны на боковых стенах + кессоны потолка
+  орган за спиной → его место берёт задняя стена напротив (аркада, балкон)
+
+подкова  (Париж, Лондон, Нью-Йорк, Буэнос-Айрес)
+  rise 16 · 4–6 ярусов tierArc(168→84, hw 196→154, boxes 13→10)
+  примета: плафон (Париж — пятна Шагала), купол и «грибы» (Лондон)
+
+виноградник (Берлин, Токио)
+  rise 4 · вместо ярусов — 6 террас-блоков по бокам на разной высоте
+  примета: подвесные «облака» E(34,11) под потолком (Берлин), тёплое дерево (Токио)
+
+неф (Лейпциг)
+  rise 0 · вместо ярусов — стрельчатые аркады ARCH ×3 на сторону,
+  своды: 4 стрельчатые дуги вглубь; примета: роза-окно C(206,86,40) в торце
+  кресла → скамьи: тот же seats() с токеном дерева
+
+мастерская (Кремона) — не зал: вид от верстака
+  верстак A9713F во всю ширину на y 266 под нашими руками (заготовка, стамески,
+  струбцина), окно слева, рейка со скрипками ×5 сверху, лампа на штанге
+
+// палитры — тем же INT_LOCPAL: prague{seat #3E5A8E} sydney{seat #7A3E8E}
+// berlin{wall #4A3E38} tokyo{wall #6E4A34} leipzig{wall #CFC6B4, seat #6E5238}`;
+    return { tabs, lockIco, f29a, f29b, f29c, f29d, f29e, f29g, f29h, f29i, ctrlRows, f29k, f29l, tokens, sizes, anims, answers, stageCode };
+  }
+}
+</script>
+</body>
+</html>
