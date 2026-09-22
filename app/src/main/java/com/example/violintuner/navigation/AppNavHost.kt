@@ -266,19 +266,12 @@ fun AppNavHost(
                 )
             }
         }
-        // The title cards between the home and the journey (spec 3.25): each gives its place in the stack to where it leads.
+        // The title cards between the home and the journey (spec 3.25, 3.27): the player moves from one to the other.
         composable(SPLASH_AWAY_ROUTE) {
-            SplashRoute(SplashKind.AWAY, onDone = {
-                // the player has left home for the road: the journey lies right on «Занятия», so «назад» leads
-                // there and not back into the home, whichever way the home was entered
-                navController.navigate(JOURNEY_ROUTE) { popUpTo(TopLevelDestination.START.route); launchSingleTop = true }
-            })
+            SplashRoute(SplashKind.AWAY, onDone = { navController.navigateWithinTheGame(JOURNEY_ROUTE) })
         }
         composable(SPLASH_HOME_ROUTE) {
-            SplashRoute(SplashKind.HOME, onDone = {
-                // the home the journey was entered from is under it: go back there rather than put a second one on top
-                if (!navController.popBackStack(HOME_ROUTE, inclusive = false)) navController.navigate(HOME_ROUTE) { popUpTo(SPLASH_HOME_ROUTE) { inclusive = true }; launchSingleTop = true }
-            })
+            SplashRoute(SplashKind.HOME, onDone = { navController.navigateWithinTheGame(HOME_ROUTE) })
         }
         // A copy of the data and its coming back (spec 3.20): above the tabs, without the bottom bar.
         composable(BACKUP_ROUTE) { BackupRoute(onClose = navController::popBackStack) }
@@ -301,6 +294,18 @@ fun NavHostController.navigateToTopLevel(destination: TopLevelDestination) {
         popUpTo(TopLevelDestination.START.route) { saveState = true }
         launchSingleTop = true
         restoreState = true
+    }
+}
+
+/**
+ * Between the home and the journey (spec 3.25, 3.27): a move, not a step deeper. Where the player goes lies
+ * right on «Занятия», in place of where the player left and of the title card, so «назад» from the home or
+ * the journey always leads to «Занятия», whichever way the player came.
+ */
+private fun NavHostController.navigateWithinTheGame(route: String) {
+    navigate(route) {
+        popUpTo(TopLevelDestination.START.route)
+        launchSingleTop = true
     }
 }
 
