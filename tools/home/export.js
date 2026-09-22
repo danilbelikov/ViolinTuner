@@ -2,9 +2,9 @@
 //
 //   node tools/home/export.js [previewDir]
 //
-// The handoff's catalogue is a runnable module (docs/design/project/home2/project/home-catalog.js):
+// The handoff's catalogue is a runnable module (docs/design/project/home3/project/home-catalog.js):
 // items, slots, houses and the function that composes a room. It is run here and written out as
-//   app/src/main/assets/home/<house>.<eve|day>.scene              — the art: base, hero, every item in its place
+//   app/src/main/assets/home/<house>.<eve|day>.scene              — the art: base, hero, every item in its place (and its framing on a shelf)
 //   core/domain/home/HomeCatalogData.kt                            — what the rules need: prices, slots, cities
 //   feature/home/art/HomeSilhouettes.kt, feature/home/HomeTexts.kt — silhouettes of the houses, ids → strings
 //   res/values/home_catalog.xml                                    — names and descriptions
@@ -14,8 +14,8 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '../..');
 global.window = {};
-// the second handoff of the home (spec 3.25) carries the whole catalogue again: it is the one that is run
-require(path.join(root, 'docs/design/project/home2/project/home-catalog.js'));
+// the third handoff of the home (spec 3.29) is the second one's catalogue with the things redrawn: it is the one that is run
+require(path.join(root, 'docs/design/project/home3/project/home-catalog.js'));
 const C = window.buildHomeCatalog({ createElement: () => null });
 const { ITEMS, SLOTS, SLOT, HOUSES, SIL, HP, HPD, L, hero, violin, pos, slotIn, bboxOf, compose, SPLASH_AWAY, SPLASH_HOME, ICONS } = C;
 
@@ -72,7 +72,9 @@ for (const H of drawn) {
       if (it.s === 'case') lines.push(`@caseviolin ${it.id}`, ...violin(p.x + 3, p.y - 12, .55, { body: 'varnishRaw' }).map(line));
       const layers = [...it.L(p.x, p.y, eve), ...(it.s === 'view' ? birds(p.x, p.y) : [])];
       const b = bboxOf(layers);
-      lines.push(`@item ${it.id} ${b.map(v => Math.round(v * 10) / 10).join(' ')}`, ...layers.map(line));
+      // a thing whose own box would make it a dot on a shelf (the chandelier on its long rod) brings the box it is framed by there
+      const shelf = it.tb ? [p.x + it.tb[0], p.y + it.tb[1], p.x + it.tb[2], p.y + it.tb[3]] : [];
+      lines.push(`@item ${it.id} ${[...b, ...shelf].map(v => Math.round(v * 10) / 10).join(' ')}`, ...layers.map(line));
       if (it.id.startsWith('cat_') && slotIn('oPorch', H.id)) { const q = pos(H.id, { s: 'oPorch' }); lines.push(`@porch ${it.id}`, ...it.L(q.x, q.y, eve).map(line)); }
     }
     fs.writeFileSync(path.join(out, `${H.id}.${eve ? 'eve' : 'day'}.scene`), lines.join('\n') + '\n');

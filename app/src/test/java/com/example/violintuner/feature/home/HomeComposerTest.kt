@@ -5,6 +5,7 @@ import com.example.violintuner.core.domain.home.HomeRules
 import com.example.violintuner.core.domain.home.HomeState
 import com.example.violintuner.feature.home.art.HomeComposer
 import com.example.violintuner.feature.home.art.HouseArt
+import com.example.violintuner.feature.journey.PathBounds
 import com.example.violintuner.feature.journey.art.SceneLayer
 import com.example.violintuner.feature.journey.art.SceneMode
 import com.example.violintuner.feature.journey.art.ScenePalette
@@ -13,6 +14,7 @@ import java.time.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -107,7 +109,9 @@ class HomeComposerTest {
         assertEquals(damask.palette.getValue("wallHome"), evening.overrides["wallHome"])
         assertTrue(day.overrides.getValue("wallHome") != evening.overrides.getValue("wallHome"))
         val plain = HomeComposer.compose(art("rent", SceneMode.EVENING), HomeRules.standing(loaded, "rent", false, today), false, SceneMode.EVENING).scene
-        assertTrue(evening.layers.size > plain.layers.size)
+        // the pattern lies in its mark — one layer since spec 3.29, where it was dozens
+        val lilies = art("rent", SceneMode.EVENING).wallPatterns.getValue("wp_damask")
+        assertTrue(evening.layers.containsAll(lilies) && plain.layers.none { it in lilies })
         assertTrue(plain.overrides["wallHome"] == null || plain.overrides["wallHome"] == HomeCatalog.byId.getValue("wp_plum").palette["wallHome"])
     }
 
@@ -148,5 +152,65 @@ class HomeComposerTest {
         val sky = layers.indexOfFirst { it === view.first() }
         val bars = layers.indexOfFirst { it === window.first() }
         assertTrue(backing in 0 until sky && sky < bars)
+    }
+
+    @Test
+    fun `a pattern covers the wall from the cornice to the floor and the floor to the viewer (spec 3 29)`() {
+        for (house in listOf("rent", "wood")) for (mode in SceneMode.entries) {
+            val art = art(house, mode)
+            HomeCatalog.items.filter { it.pattern }.forEach { item ->
+                val floor = item.slot == "floor"
+                val layers = (if (floor) art.floorPatterns else art.wallPatterns).getValue(item.id)
+                val reach = PathBounds.ofAll(layers.map { it.path })!!
+                if (floor) {
+                    assertTrue("${item.id} in $house: $reach", reach.top <= FLOOR_TOP + EDGE && reach.bottom >= FLOOR_BOTTOM - EDGE)
+                } else {
+                    assertTrue("${item.id} in $house: $reach", reach.bottom >= FLOOR_TOP - EDGE)
+                    // wooden panels go half way up the wall on purpose; a repeating pattern goes up to the cornice
+                    if (item.id != "wp_panels") assertTrue("${item.id} in $house: $reach", reach.top <= WALL_TOP + EDGE)
+                }
+            }
+        }
+    }
+
+    @Test
+    fun `a pet lives where no other thing stands - on the windowsill or on the floor (spec 3 29)`() {
+        val places = HomeCatalog.items.filter { it.slot != "pet" }.map { it.slot }.toSet()
+        HomeCatalog.items.filter { it.slot == "pet" }.forEach { pet ->
+            assertTrue("${pet.id} stands at ${pet.at}, where a thing of that place stands", (pet.at ?: pet.slot) !in places)
+        }
+        assertEquals(setOf("sillL", "pet"), HomeCatalog.items.filter { it.slot == "pet" }.map { it.at }.toSet())
+    }
+
+    @Test
+    fun `the chandelier hangs clear of the things of the walls in every home (spec 3 29)`() {
+        for (house in HomeCatalog.houses.filter { it.drawn }) {
+            val art = art(house.id, SceneMode.EVENING)
+            val chandelier = art.items.getValue("chandelier")
+            HomeCatalog.items.filter { it.drawn && (it.slot == "wallM" || it.slot == "wallL") && HomeRules.slotIn(it.slot, house.id) }.forEach { item ->
+                val thing = art.items.getValue(item.id)
+                val meet = chandelier.left < thing.right && thing.left < chandelier.right && chandelier.top < thing.bottom && thing.top < chandelier.bottom
+                assertFalse("the chandelier meets ${item.id} in ${house.id}", meet)
+            }
+        }
+    }
+
+    @Test
+    fun `the chandelier brings its own framing for a shelf - its rod would make it a dot there (spec 3 29)`() {
+        val art = art("rent", SceneMode.EVENING)
+        val chandelier = art.items.getValue("chandelier")
+        val shelf = chandelier.shelf!!
+        assertTrue(shelf.height < (chandelier.bottom - chandelier.top) / 2)
+        assertTrue(shelf.bottom <= chandelier.bottom + EDGE && shelf.left <= chandelier.left)
+        assertNull(art.items.getValue("metronome").shelf)
+    }
+
+    private companion object {
+        const val WALL_TOP = -120f
+        const val FLOOR_TOP = 200f
+        const val FLOOR_BOTTOM = 600f
+
+        /** How far short of an edge a pattern may stop: a motif is round, a row of the floor ends where the next begins. */
+        const val EDGE = 12f
     }
 }

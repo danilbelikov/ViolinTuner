@@ -1,5 +1,6 @@
 package com.example.violintuner.feature.home.art
 
+import androidx.compose.ui.geometry.Rect
 import com.example.violintuner.core.domain.home.HomeItem
 import com.example.violintuner.feature.journey.art.Scene
 import com.example.violintuner.feature.journey.art.SceneAnim
@@ -8,8 +9,11 @@ import com.example.violintuner.feature.journey.art.SceneMode
 import com.example.violintuner.feature.journey.art.ScenePalette
 import com.example.violintuner.feature.journey.art.SceneParser
 
-/** A thing as it is drawn in one home: its layers where it stands there, and the box they take (without glows and shadows). */
-class ItemArt(val layers: List<SceneLayer>, val left: Float, val top: Float, val right: Float, val bottom: Float)
+/**
+ * A thing as it is drawn in one home: its layers where it stands there, and the box they take (without glows and shadows).
+ * [shelf] — the box it is framed by on a shelf when its own would make it a dot there (the chandelier on its long rod, spec 3.29).
+ */
+class ItemArt(val layers: List<SceneLayer>, val left: Float, val top: Float, val right: Float, val bottom: Float, val shelf: Rect? = null)
 
 /**
  * Everything one home is drawn from at one time of day (`assets/home/<house>.<mode>.scene`,
@@ -36,6 +40,9 @@ class HouseArt(
         const val CURTAIN_MARK = "@curtain"
         const val DEFAULT_FLOOR = "default"
 
+        /** `@item <id> <box>` and, when the thing has one, `<its box on a shelf>`: four numbers each. */
+        private const val SHELF_FIELDS = 10
+
         fun parse(text: String): HouseArt {
             val room = ArrayList<SceneLayer>()
             val outside = ArrayList<SceneLayer>()
@@ -57,7 +64,11 @@ class HouseArt(
                         "@room" -> into = room
                         "@out" -> into = outside
                         "@hero" -> into = hero
-                        "@item" -> { items[f[1]] = ItemArt(fresh, f[2].toFloat(), f[3].toFloat(), f[4].toFloat(), f[5].toFloat()); into = fresh }
+                        "@item" -> {
+                            val shelf = if (f.size >= SHELF_FIELDS) Rect(f[6].toFloat(), f[7].toFloat(), f[8].toFloat(), f[9].toFloat()) else null
+                            items[f[1]] = ItemArt(fresh, f[2].toFloat(), f[3].toFloat(), f[4].toFloat(), f[5].toFloat(), shelf)
+                            into = fresh
+                        }
                         "@porch" -> { porch[f[1]] = fresh; into = fresh }
                         "@back" -> { backs[f[1]] = fresh; into = fresh }
                         "@caseviolin" -> { caseViolins[f[1]] = fresh; into = fresh }
