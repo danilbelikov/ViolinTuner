@@ -85,7 +85,7 @@ class SceneTest {
             assertTrue(file.name, scene.layers.size > 20)
             assertTrue("${file.name} holds the card in its frame", scene.frame.top <= 0f && scene.frame.bottom >= 260f)
             for (layer in scene.layers) {
-                if (layer.fill != SceneLayer.SKY && layer.fill != SceneLayer.GLOW && !layer.warmGlow && !layer.fillNone) {
+                if (layer.fill != SceneLayer.SKY && layer.fill != SceneLayer.SKY_HIGH && layer.fill != SceneLayer.GLOW && !layer.warmGlow && !layer.fillNone) {
                     assertNotNull("${file.name}: ${layer.fill}", ScenePalette.colorOf(layer.fill, layer.depth, scene, mode))
                 }
                 layer.stroke?.let { assertNotNull("${file.name}: stroke $it", ScenePalette.colorOf(it, layer.depth, scene, mode)) }

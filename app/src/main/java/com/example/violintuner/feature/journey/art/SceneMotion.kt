@@ -46,6 +46,19 @@ object SceneMotion {
     const val BIRD_FLAP_HZ = 2.6f
     const val FALL_FADE = 0.25f
 
+    /** A mote in a beam (handoff locations, `rise` with a way): at its brightest a fifth of the way up, gone at the top. */
+    const val MOTE_ALPHA = 0.8f
+    const val MOTE_SHOWN = 0.2f
+
+    /** A spark in crystal (handoff locations, their `flash`): dim, bright for a moment at the end of the period. */
+    const val GLINT_DIM = 0.55f
+    private const val GLINT_FROM = 0.92f
+    private const val GLINT_PEAK = 0.96f
+
+    /** A pigeon (handoff locations, `peck`): stands for most of the period, bends and straightens, steps aside and back. */
+    const val PECK_STEP = 4f
+    private val PECK_KEYS = floatArrayOf(0.58f, 0.66f, 0.74f, 0.82f)
+
     private val WINDOWS = setOf("window", "windowLit", "chandelier")
     private const val WATER = "waterLit"
 
@@ -99,10 +112,45 @@ object SceneMotion {
         // eyes: shut for a twentieth of the period, each pair in its own time
         anim.blinkPeriod?.let { period -> val at = ((seconds + (index % 4) * 0.7f) % period) / period; if (at in 0.92f..0.97f) alpha = 0f }
         anim.flick?.let { alpha *= 1f - 0.45f * wave(seconds + it.delay, it.period, phase = 0f) }
-        anim.rise?.let { val at = (((seconds + it.delay) % it.period) + it.period) % it.period / it.period; dy -= 10f * at; alpha *= 0.7f * (1f - at) }
+        anim.rise?.let {
+            val at = (((seconds + it.delay) % it.period) + it.period) % it.period / it.period
+            val way = it.distance
+            if (way == null) {
+                dy -= 10f * at
+                alpha *= 0.7f * (1f - at)
+            } else {
+                dy -= way * at
+                alpha *= MOTE_ALPHA * if (at < MOTE_SHOWN) at / MOTE_SHOWN else (1f - at) / (1f - MOTE_SHOWN)
+            }
+        }
+        anim.glintPeriod?.let { period ->
+            val at = (seconds % period) / period
+            val spark = when {
+                at < GLINT_FROM -> 0f
+                at < GLINT_PEAK -> (at - GLINT_FROM) / (GLINT_PEAK - GLINT_FROM)
+                else -> (1f - at) / (1f - GLINT_PEAK)
+            }
+            alpha *= GLINT_DIM + (1f - GLINT_DIM) * spark
+        }
         anim.sway?.let { dx += it.amplitude * sin(2 * PI.toFloat() * (seconds + it.delay) / it.period) }
         var degrees = 0f
+        var pivot = anim.swing
         anim.swing?.let { degrees = it.degrees * sin(2 * PI.toFloat() * seconds / it.period) }
+        anim.peck?.let { peck ->
+            val at = (seconds % peck.period) / peck.period
+            val (bend, bent, step, stepped) = PECK_KEYS
+            degrees += peck.degrees * when {
+                at < bend || at >= step -> 0f
+                at < bent -> ease((at - bend) / (bent - bend))
+                else -> ease((step - at) / (step - bent))
+            }
+            dx += PECK_STEP * when {
+                at < step -> 0f
+                at < stepped -> ease((at - step) / (stepped - step))
+                else -> ease((1f - at) / (1f - stepped))
+            }
+            pivot = peck
+        }
         anim.fall?.let { fall ->
             // where it is drawn is where it is when nothing moves: the fall starts from there
             val start = (baseY - fall.top).coerceIn(0f, fall.height)
@@ -112,8 +160,11 @@ object SceneMotion {
             val left = 1f - down / fall.height
             alpha *= (left / FALL_FADE).coerceIn(0f, 1f) * (down / (fall.height * 0.1f)).coerceIn(0f, 1f)
         }
-        return Moved(dx, dy, flap, alpha, degrees, anim.swing?.pivotX ?: 0f, anim.swing?.pivotY ?: 0f)
+        return Moved(dx, dy, flap, alpha, degrees, pivot?.pivotX ?: 0f, pivot?.pivotY ?: 0f)
     }
+
+    /** 0…1 slowly in, slowly out. */
+    private fun ease(t: Float): Float = t * t * (3f - 2f * t)
 
     /** A star: where it is on the grid, how large, and how bright at [seconds] — each twinkles at its own pace. */
     data class Star(val x: Float, val y: Float, val radius: Float, val alpha: Float)
@@ -126,6 +177,34 @@ object SceneMotion {
         val height = 1f - ((y - STAR_FADE_FROM) / (STAR_BOTTOM - STAR_FADE_FROM)).coerceIn(0f, 1f) * 0.7f
         val twinkle = 1f - STAR_DIP * wave(seconds, period = 1.6f + hash(index, 3) * 2.4f, phase = hash(index, 4) * 4f)
         return Star(x, y, 0.5f + hash(index, 5) * 0.7f, (height * twinkle).coerceIn(0f, 1f))
+    }
+
+    /** Stars of a high sky (spec 3.23): from the table the exporter writes, each twinkling at its own pace down to a fifth. */
+    val HIGH_STARS: Int get() = HighSky.stars.size / HIGH_STAR_NUMBERS
+    const val HIGH_STAR_DIP = 0.82f
+    private const val HIGH_STAR_NUMBERS = 5
+
+    fun highStar(index: Int, seconds: Float): Star {
+        val s = HighSky.stars
+        val at = index * HIGH_STAR_NUMBERS
+        val period = s[at + 4]
+        val twinkle = 1f - HIGH_STAR_DIP * wave(seconds, period, phase = hash(index, 4) * period)
+        return Star(s[at], s[at + 1], s[at + 2], s[at + 3] * twinkle)
+    }
+
+    /** A cloud of a high sky: where its centre is at [seconds], its half-width, how strong it is (0…1). */
+    data class HighCloud(val x: Float, val y: Float, val rx: Float, val k: Float)
+
+    const val HIGH_CLOUD_NUMBERS = 7
+
+    /** It rides to the right and comes back from the left, as a tram does: [table] is HighSky's, seven numbers a cloud. */
+    fun highCloud(table: FloatArray, index: Int, seconds: Float): HighCloud {
+        val at = index * HIGH_CLOUD_NUMBERS
+        val speed = table[at + 4]
+        val from = table[at + 5]
+        val span = table[at + 6] - from
+        val dx = from + (((-from + seconds * speed) % span) + span) % span
+        return HighCloud(table[at] + dx, table[at + 1], table[at + 2], table[at + 3])
     }
 
     /** A cloud: its centre and size at [seconds]; it sails to the right and comes back from the left. */

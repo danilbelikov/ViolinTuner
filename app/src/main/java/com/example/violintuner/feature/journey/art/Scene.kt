@@ -4,7 +4,7 @@ import com.example.violintuner.core.domain.home.HomeCatalogData
 
 /** One layer of a postcard (handoff `Путешествие`, «Сетка и формат слоя»): a path with how it is filled. Pure data — colours are resolved when it is drawn. */
 data class SceneLayer(
-    /** A token of the palette, a literal `#rrggbb` / `rgba(…)`, or one of the special fills [SKY] and [GLOW]. */
+    /** A token of the palette, a literal `#rrggbb` / `rgba(…)`, or one of the special fills [SKY], [SKY_HIGH] and [GLOW]. */
     val fill: String,
     /** 0 — far, 1 — middle, 2 — near: what the air between us and it does to its colour, and how far it moves with the parallax. */
     val depth: Int,
@@ -23,6 +23,9 @@ data class SceneLayer(
 ) {
     companion object {
         const val SKY = "SKY"
+
+        /** The high sky over the card of a place drawn for the whole screen: skyHigh at its top to sky at y 0, the twin of [SKY] (spec 3.23). */
+        const val SKY_HIGH = "SKYH"
         const val GLOW = "GLOW"
     }
 }
@@ -33,7 +36,10 @@ data class SceneLayer(
  * (far enough both ways for the thing to leave the frame); `bob:amplitude:period` — rises and falls;
  * `bird:left:span` — a bird crossing `span` units from `left`, flapping, fading at both ends;
  * `flash:period` — a light going on and off; `blink:period` — eyes: open but for a moment once a period;
- * `flick:period[:delay]` — a flame: dims to about a half and back; `rise:period[:delay]` — smoke: goes up ten units and fades;
+ * `flick:period[:delay]` — a flame: dims to about a half and back; `rise:period[:delay[:distance]]` — smoke: goes up ten units and fades;
+ * with a distance — a mote in a beam of light: goes up that far, showing itself on the way and fading at the top;
+ * `glint:period` — a spark in crystal: dim, and for a moment of the period bright; `peck:period:degrees:px:py` — a pigeon: stands,
+ * bends by `degrees` about the point and back, steps four units aside and back;
  * `sway:amount:period[:delay]` — leans sideways and back (`bob` takes a delay as well); `fly:distance:period` — goes `distance` to the right in `period`, again and again;
  * `dash:on:off` — not a movement: the stroke of the layer is dashed (the format has no field of its own for it); `swing:degrees:period:px:py` — turns to and fro about a point (a pendulum); `fall:speed:top:height` — falls through `height` units below `top` and starts again from the top, fading at both ends.
  */
@@ -50,11 +56,17 @@ data class SceneAnim(
     val fly: Bob? = null,
     val dash: Pair<Float, Float>? = null,
     val fall: Fall? = null,
+    val glintPeriod: Float? = null,
+    val peck: Swing? = null,
 ) {
+    /** It goes somewhere — not only brightens and dims where it stands: such a layer is drawn wherever the view is. */
+    val travels: Boolean
+        get() = ride != null || bob != null || bird != null || fly != null || fall != null || rise != null || sway != null || swing != null || peck != null
+
     data class Ride(val speed: Float, val from: Float, val to: Float)
     data class Bob(val amplitude: Float, val period: Float, val delay: Float = 0f)
     data class Way(val left: Float, val span: Float)
-    data class Timed(val period: Float, val delay: Float)
+    data class Timed(val period: Float, val delay: Float, val distance: Float? = null)
     data class Swing(val degrees: Float, val period: Float, val pivotX: Float, val pivotY: Float)
     data class Fall(val speed: Float, val top: Float, val height: Float)
 
@@ -74,10 +86,12 @@ data class SceneAnim(
                     "flash" -> anim.copy(flashPeriod = n[0])
                     "blink" -> anim.copy(blinkPeriod = n[0])
                     "flick" -> anim.copy(flick = Timed(n[0], n.getOrElse(1) { 0f }))
-                    "rise" -> anim.copy(rise = Timed(n[0], n.getOrElse(1) { 0f }))
+                    "rise" -> anim.copy(rise = Timed(n[0], n.getOrElse(1) { 0f }, n.getOrNull(2)))
                     "sway" -> anim.copy(sway = Bob(n[0], n[1], n.getOrElse(2) { 0f }))
                     "swing" -> anim.copy(swing = Swing(n[0], n[1], n.getOrElse(2) { 0f }, n.getOrElse(3) { 0f }))
                     "fall" -> anim.copy(fall = Fall(n[0], n[1], n[2]))
+                    "glint" -> anim.copy(glintPeriod = n[0])
+                    "peck" -> anim.copy(peck = Swing(n[1], n[0], n[2], n[3]))
                     else -> throw IllegalArgumentException("a movement this build does not know: ${f[0]}")
                 }
             }
@@ -157,12 +171,15 @@ object ScenePalette {
         "groundShade" to 0xFF6E6A66, "window" to 0xFF5B6E85, "windowLit" to 0xFF7F94AB, "lamp" to 0xFF3B3A45, "lampGlass" to 0xFFE4ECF2, "glow" to 0x00FFC46EL,
         "water" to 0xFF5F9AD0, "waterLit" to 0xFFB0DCF2, "foliage" to 0xFF4E9B57, "foliageLit" to 0xFF82C873, "foliageShade" to 0xFF357A42, "trunk" to 0xFF7A5539,
         "chandelier" to 0xFFFFE9B0, "hero" to 0xFF2A2430, "heroHair" to 0xFF4A3A32, "heroCase" to 0xFF5B43B8, "bird" to 0xFF3A3A4C,
+        // the high sky of the places drawn for the whole screen (handoff locations, `PAL_EXT`)
+        "skyHigh" to 0xFF3D7FD4, "star" to 0x00FFFFFFL, "cloud" to 0xFFFFFFFF, "cloudLit" to 0xFFFFFFFF, "birdSky" to 0xFF55627A, "moon" to 0x8CFFFFFFL,
     )
     private val evening: Map<String, Long> = mapOf(
         "sky" to 0xFF2A2857, "skyLow" to 0xFFE08A63, "far" to 0xFF4C4676, "farLit" to 0xFF6A5E8C, "ground" to 0xFF3F3A48, "groundLit" to 0xFF57506A,
         "groundShade" to 0xFF2C2834, "window" to 0xFFFFD98A, "windowLit" to 0xFFFFE9B0, "lamp" to 0xFF2A2830, "lampGlass" to 0xFFFFD98A, "glow" to 0x80FFC46EL,
         "water" to 0xFF2F3F7A, "waterLit" to 0xFFE0A070, "foliage" to 0xFF2F6B48, "foliageLit" to 0xFF4F8E5F, "foliageShade" to 0xFF214D34, "trunk" to 0xFF4A3A32,
         "chandelier" to 0xFFFFE9B0, "hero" to 0xFF1E1A24, "heroHair" to 0xFF3A2C28, "heroCase" to 0xFF5B43B8, "bird" to 0xFF1B1830,
+        "skyHigh" to 0xFF171436, "star" to 0xFFFFF6DC, "cloud" to 0xFF453E6E, "cloudLit" to 0xFF5B5286, "birdSky" to 0xFF6A5F94, "moon" to 0xFFF6EFD8,
     )
     private val locations: Map<String, Map<String, Long>> = mapOf(
         "vienna" to mapOf(

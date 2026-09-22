@@ -1,5 +1,6 @@
 package com.example.violintuner.feature.journey
 
+import com.example.violintuner.feature.journey.art.HighSky
 import com.example.violintuner.feature.journey.art.SceneAnim
 import com.example.violintuner.feature.journey.art.SceneCamera
 import com.example.violintuner.feature.journey.art.SceneFrame
@@ -280,6 +281,71 @@ class SceneMotionTest {
             assertTrue("a petal at ${180f + moved.dy} is out of its fall", 180f + moved.dy in 122f..248f)
             assertTrue(moved.alpha in 0f..1f)
         }
+    }
+
+    @Test
+    fun aPigeonStandsMostOfThePeriod_pecksHeadDownAboutItsFeet_andStepsAside() {
+        val pigeon = SceneAnim.parse("peck:3:-14:120:430")!!
+        assertTrue(pigeon.travels)
+        // most of the period it only stands
+        for (step in 0 until 17) assertEquals(SceneMotion.Moved(0f, 0f, 1f, 1f, 0f, 120f, 430f), SceneMotion.moved(pigeon, 118f, 424f, 5, step * 0.1f))
+        // bent at 66 %: the head goes down — the pigeons look left, so the turn is against the clock
+        val bent = SceneMotion.moved(pigeon, 118f, 424f, 5, 0.66f * 3f)
+        assertEquals(-14f, bent.degrees, 0.01f)
+        assertEquals(120f, bent.pivotX, 0f)
+        assertEquals(430f, bent.pivotY, 0f)
+        assertEquals(0f, bent.dx, 0f)
+        // then a step aside and back
+        val stepped = SceneMotion.moved(pigeon, 118f, 424f, 5, 0.82f * 3f)
+        assertEquals(SceneMotion.PECK_STEP, stepped.dx, 0.01f)
+        assertEquals(0f, stepped.degrees, 0f)
+        assertEquals(0f, SceneMotion.moved(pigeon, 118f, 424f, 5, 2.999f).dx, 0.01f)
+    }
+
+    @Test
+    fun aSparkInCrystalIsDim_andBrightForAMomentOfItsPeriod() {
+        val spark = SceneAnim.parse("glint:3")!!
+        assertFalse(spark.travels)
+        val seen = (0..300).map { SceneMotion.moved(spark, 0f, 0f, 1, it / 100f).alpha }
+        assertTrue(seen.all { it in SceneMotion.GLINT_DIM - 0.001f..1.001f })
+        // dim nearly all the time, bright only about the end of the period
+        assertTrue(seen.count { it > 0.9f } in 1..8)
+        assertEquals(SceneMotion.GLINT_DIM, SceneMotion.moved(spark, 0f, 0f, 1, 1.5f).alpha, 0.001f)
+        assertEquals(1f, SceneMotion.moved(spark, 0f, 0f, 1, 0.96f * 3f).alpha, 0.01f)
+    }
+
+    @Test
+    fun aMoteGoesItsWayUp_showingItselfOnTheWayAndFadingAtTheTop_theSmokeIsAsItWas() {
+        val mote = SceneAnim.parse("rise:5:0:30")!!
+        assertEquals(0f, SceneMotion.moved(mote, 0f, 0f, 1, 0f).alpha, 0.001f)
+        assertEquals(SceneMotion.MOTE_ALPHA, SceneMotion.moved(mote, 0f, 0f, 1, SceneMotion.MOTE_SHOWN * 5f).alpha, 0.001f)
+        assertEquals(-15f, SceneMotion.moved(mote, 0f, 0f, 1, 2.5f).dy, 0.001f)
+        assertTrue(SceneMotion.moved(mote, 0f, 0f, 1, 4.99f).alpha < 0.01f)
+        // the smoke of the home keeps its ten units and its fade from 0,7
+        val smoke = SceneAnim.parse("rise:3:1.2")!!
+        assertEquals(0.7f, SceneMotion.moved(smoke, 0f, 0f, 1, 1.8f).alpha, 0.001f)
+        assertEquals(-5f, SceneMotion.moved(smoke, 0f, 0f, 1, 0.3f).dy, 0.001f)
+    }
+
+    @Test
+    fun theHighSkyIsTheSameSkyEveryTime_starsOverTheCardCloudsRideAndComeBack() {
+        assertEquals(44, SceneMotion.HIGH_STARS)
+        for (index in 0 until SceneMotion.HIGH_STARS) {
+            val star = SceneMotion.highStar(index, 0f)
+            assertEquals(star.x, SceneMotion.highStar(index, 40f).x, 0f)
+            assertTrue("a star at ${star.y} is outside its band", star.y in -430f..40f)
+            val alphas = (0..120).map { SceneMotion.highStar(index, it / 10f).alpha }
+            assertTrue(alphas.max() > alphas.min())
+            assertTrue(alphas.all { it in 0f..1f })
+        }
+        assertEquals(5, HighSky.dayClouds.size / SceneMotion.HIGH_CLOUD_NUMBERS)
+        assertEquals(2, HighSky.eveningClouds.size / SceneMotion.HIGH_CLOUD_NUMBERS)
+        val start = SceneMotion.highCloud(HighSky.dayClouds, 0, 0f)
+        assertEquals(HighSky.dayClouds[0], start.x, 0.001f)
+        assertTrue(SceneMotion.highCloud(HighSky.dayClouds, 0, 5f).x > start.x)
+        // after the whole way it is where it began
+        val way = (HighSky.dayClouds[6] - HighSky.dayClouds[5]) / HighSky.dayClouds[4]
+        assertEquals(start.x, SceneMotion.highCloud(HighSky.dayClouds, 0, way).x, 0.05f)
     }
 
     @Test
