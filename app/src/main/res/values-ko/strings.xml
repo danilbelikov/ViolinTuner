@@ -938,4 +938,30 @@
         <item>산토리 홀</item>
         <item>오페라 하우스</item>
     </string-array>
+    <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
+    <string name="block_entry">레퍼토리</string>
+    <string name="block_entry_description">레퍼토리에서 연주할 곡 고르기</string>
+    <string name="block_left_one">%1$d분 남음</string>
+    <string name="block_left_few">%1$d분 남음</string>
+    <string name="block_left_many">%1$d분 남음</string>
+    <string name="block_done">완료</string>
+    <string name="block_running_description">%1$s, %2$s 남음</string>
+    <string name="block_done_description">%1$s — 완료</string>
+    <string name="block_sheet_title">무엇을 연주할까요</string>
+    <string name="block_now">지금: %1$s</string>
+    <string name="block_stop">멈추기</string>
+    <string name="block_start">시작 · %1$d분</string>
+    <string name="block_selected">선택함</string>
+    <string name="block_running">진행 중</string>
+    <string name="block_section_today">· 오늘 %1$d</string>
+    <string name="block_mark_done_description">오늘 연주함, %1$s</string>
+    <string name="block_mark_played_description">오늘 %1$s</string>
+    <string name="block_offer_title">먼저 연습을 시작하세요</string>
+    <string name="block_offer_text">곡, 음계, 연습곡에 쓰는 시간은 연습 안에서 흐릅니다. 연습을 시작하고 연주할 곡을 고르세요.</string>
+    <string name="block_offer_later">나중에</string>
+    <string name="block_empty">레퍼토리가 아직 비어 있습니다. 곡이나 음계를 추가한 뒤 여기서 연주할 곡을 고르세요.</string>
+    <string name="block_open_repertoire">레퍼토리 열기</string>
+    <string name="block_goal_minus">−%1$d</string>
+    <string name="block_goal_plus">+%1$d</string>
+    <string name="block_goal_option">%1$d분</string>
 </resources>

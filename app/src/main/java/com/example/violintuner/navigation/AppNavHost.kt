@@ -17,6 +17,8 @@ import com.example.violintuner.feature.backup.BackupRoute
 import com.example.violintuner.feature.backup.RestoreRoute
 import com.example.violintuner.feature.backup.RestoreViewModel
 import com.example.violintuner.feature.history.HistoryRoute
+import com.example.violintuner.feature.history.HistorySection
+import com.example.violintuner.feature.history.HistoryViewModel
 import com.example.violintuner.feature.home.HomeRoute
 import com.example.violintuner.feature.home.HomeView
 import com.example.violintuner.feature.home.SplashKind
@@ -88,6 +90,7 @@ fun AppNavHost(
             LiveRoute(
                 onOpenSession = navController::navigateToSession,
                 onOpenPractice = { navController.navigateToTopLevel(TopLevelDestination.PRACTICE) },
+                onOpenRepertoire = navController::navigateToRepertoire,
             )
         }
         composable(TopLevelDestination.PRACTICE.route) {
@@ -330,6 +333,15 @@ fun NavHostController.navigateToRestore(uri: String) {
 /** The tap on the notification of a running job. */
 fun NavHostController.navigateToRunningBackup(restoring: Boolean) {
     if (restoring) navigateToRestore("") else navigateToBackup()
+}
+
+/**
+ * «Открыть репертуар» from Live (spec 3.28): the tab «Записи», asked to show «Репертуар». The ask goes through the
+ * saved state of the tab's entry, so it reaches the view model of the tab whether it is new or kept from before.
+ */
+fun NavHostController.navigateToRepertoire() {
+    navigateToTopLevel(TopLevelDestination.HISTORY)
+    getBackStackEntry(TopLevelDestination.HISTORY.route).savedStateHandle[HistoryViewModel.OPEN_SECTION] = HistorySection.REPERTOIRE.name
 }
 
 fun NavHostController.navigateToSession(sessionId: Long) {

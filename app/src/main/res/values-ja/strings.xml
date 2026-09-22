@@ -938,4 +938,30 @@
         <item>サントリーホール</item>
         <item>オペラハウス</item>
     </string-array>
+    <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
+    <string name="block_entry">レパートリー</string>
+    <string name="block_entry_description">レパートリーから弾くものを選ぶ</string>
+    <string name="block_left_one">残り%1$d分</string>
+    <string name="block_left_few">残り%1$d分</string>
+    <string name="block_left_many">残り%1$d分</string>
+    <string name="block_done">完了</string>
+    <string name="block_running_description">%1$s、残り%2$s</string>
+    <string name="block_done_description">%1$s — 完了</string>
+    <string name="block_sheet_title">何を弾きますか</string>
+    <string name="block_now">今：%1$s</string>
+    <string name="block_stop">止める</string>
+    <string name="block_start">開始 · %1$d分</string>
+    <string name="block_selected">選択中</string>
+    <string name="block_running">進行中</string>
+    <string name="block_section_today">· 今日 %1$d</string>
+    <string name="block_mark_done_description">今日弾きました、%1$s</string>
+    <string name="block_mark_played_description">今日 %1$s</string>
+    <string name="block_offer_title">まず練習を始めましょう</string>
+    <string name="block_offer_text">曲・音階・練習曲の時間は練習の中で数えます。練習を始めて、弾くものを選んでください。</string>
+    <string name="block_offer_later">今はしない</string>
+    <string name="block_empty">レパートリーはまだ空です。曲か音階を追加すると、ここで弾くものを選べます。</string>
+    <string name="block_open_repertoire">レパートリーを開く</string>
+    <string name="block_goal_minus">−%1$d</string>
+    <string name="block_goal_plus">+%1$d</string>
+    <string name="block_goal_option">%1$d分</string>
 </resources>

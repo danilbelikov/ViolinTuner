@@ -1,5 +1,6 @@
 package com.example.violintuner.feature.history
 
+import androidx.lifecycle.SavedStateHandle
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.repertoire.FakeRepertoireRepository
 import com.example.violintuner.core.domain.repertoire.PieceDraft
@@ -59,8 +60,10 @@ class HistoryViewModelTest {
         )
     }
 
+    private val savedState = SavedStateHandle()
+
     private fun TestScope.viewModel(): HistoryViewModel {
-        val viewModel = HistoryViewModel(repository, repertoire, config, clock, NoFiles)
+        val viewModel = HistoryViewModel(savedState, repository, repertoire, config, clock, NoFiles)
         backgroundScope.launch { viewModel.state.collect {} }
         return viewModel
     }
@@ -240,5 +243,19 @@ class HistoryViewModelTest {
         viewModel.onIntent(HistoryIntent.BestToggled(free)) // not a take: nothing to mark
         runCurrent()
         assertEquals(emptyList<Long>(), best())
+    }
+
+    @Test
+    fun `a section asked for from Live opens once, and the tab stays free afterwards`() = runTest {
+        val viewModel = viewModel()
+        runCurrent()
+        assertEquals(HistorySection.SESSIONS, viewModel.state.value.section)
+        savedState[HistoryViewModel.OPEN_SECTION] = HistorySection.REPERTOIRE.name
+        runCurrent()
+        assertEquals(HistorySection.REPERTOIRE, viewModel.state.value.section)
+        assertEquals(null, savedState.get<String>(HistoryViewModel.OPEN_SECTION))
+        viewModel.onIntent(HistoryIntent.SectionSelected(HistorySection.SESSIONS))
+        runCurrent()
+        assertEquals(HistorySection.SESSIONS, viewModel.state.value.section)
     }
 }

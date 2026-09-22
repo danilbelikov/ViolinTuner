@@ -68,4 +68,15 @@ internal object LiveMotion {
 
     /** The practice chip appears and disappears without drawing the eye (handoff `anims`). */
     const val PRACTICE_CHIP_FADE_MS = 200
+
+    // The bookmark of blocks (spec 5.21, handoff 30 `anims`): the outline turns into paper and back; at the goal the
+    // brass line runs to the edge, then the rim closes and «готово» comes in. The minutes left change without motion.
+    const val BOOKMARK_SWAP_MS = 300
+    const val BOOKMARK_FILL_MS = 240
+    const val BOOKMARK_DONE_MS = 400
+    const val BOOKMARK_DONE_DELAY_MS = 80
+
+    // The sheets of blocks: «Сначала — занятие» gives way to «Что играем» in place — the content cross-fades, the sheet grows.
+    const val BLOCK_SHEET_SWAP_MS = 240
+    const val BLOCK_SHEET_GROW_MS = 320
 }

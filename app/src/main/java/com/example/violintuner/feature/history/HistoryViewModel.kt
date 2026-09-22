@@ -1,5 +1,6 @@
 package com.example.violintuner.feature.history
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
@@ -22,6 +23,7 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
+    private val savedState: SavedStateHandle,
     private val repository: SessionRepository,
     private val repertoire: RepertoireRepository,
     private val config: IntonationConfig,
@@ -36,6 +38,21 @@ class HistoryViewModel @Inject constructor(
     private val section = MutableStateFlow(HistorySection.SESSIONS)
 
     private val selection = MutableStateFlow(Selection())
+
+    init {
+        // «Открыть репертуар» from Live (spec 3.28) asks for a section through the saved state of this entry: it is
+        // taken once and forgotten, the tab stays wherever the player moves it afterwards
+        viewModelScope.launch {
+            savedState.getStateFlow<String?>(OPEN_SECTION, null).collect { name ->
+                if (name == null) return@collect
+                HistorySection.entries.firstOrNull { it.name == name }?.let {
+                    selection.value = Selection()
+                    section.value = it
+                }
+                savedState[OPEN_SECTION] = null
+            }
+        }
+    }
 
     // What the list shows now: only that can be picked. Written where the state is built, read by
     // the intents — both on the main thread; `state.value` would lag a frame behind.
@@ -91,7 +108,9 @@ class HistoryViewModel @Inject constructor(
         selection.value = SelectionRules.reduce(current, intent, visibleIds)
     }
 
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
+    companion object {
+        /** The key of a section asked for from elsewhere (spec 3.28): the name of a [HistorySection]. */
+        const val OPEN_SECTION = "openSection"
+        private const val STOP_TIMEOUT_MS = 5_000L
     }
 }

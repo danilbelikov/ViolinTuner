@@ -938,4 +938,30 @@
         <item>Suntory Hall</item>
         <item>Teatro dell\'Opera</item>
     </string-array>
+    <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
+    <string name="block_entry">Repertorio</string>
+    <string name="block_entry_description">Scegli cosa suonare dal repertorio</string>
+    <string name="block_left_one">ancora %1$d min</string>
+    <string name="block_left_few">ancora %1$d min</string>
+    <string name="block_left_many">ancora %1$d min</string>
+    <string name="block_done">fatto</string>
+    <string name="block_running_description">%1$s, ancora %2$s</string>
+    <string name="block_done_description">%1$s — fatto</string>
+    <string name="block_sheet_title">Cosa suoniamo</string>
+    <string name="block_now">Ora: %1$s</string>
+    <string name="block_stop">Ferma</string>
+    <string name="block_start">Inizia · %1$d min</string>
+    <string name="block_selected">Scelto</string>
+    <string name="block_running">in corso</string>
+    <string name="block_section_today">· oggi %1$d</string>
+    <string name="block_mark_done_description">suonato oggi, %1$s</string>
+    <string name="block_mark_played_description">oggi %1$s</string>
+    <string name="block_offer_title">Prima, una sessione</string>
+    <string name="block_offer_text">Il tempo per brani, scale e studi scorre dentro una sessione di studio. Avviala e scegli cosa suonare.</string>
+    <string name="block_offer_later">Non ora</string>
+    <string name="block_empty">Il repertorio è ancora vuoto. Aggiungi un brano o una scala e scegli qui cosa suonare.</string>
+    <string name="block_open_repertoire">Apri il repertorio</string>
+    <string name="block_goal_minus">−%1$d</string>
+    <string name="block_goal_plus">+%1$d</string>
+    <string name="block_goal_option">%1$d min</string>
 </resources>

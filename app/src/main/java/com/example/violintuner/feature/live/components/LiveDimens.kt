@@ -100,6 +100,32 @@ internal object LiveDimens {
     val RecordStopSize = 22.dp
     val RecordStopCorner = 3.dp
 
+    // The bookmark of blocks by the record key (spec 3.28, 5.21; handoff 30a2, `sizes`)
+    val BookmarkWidth = 150.dp
+    val BookmarkWidthLandscape = 170.dp
+    /** «Репертуар» is as wide as its word, never narrower than this. */
+    val BookmarkEntryMinWidth = 124.dp
+    val BookmarkHeight = 56.dp
+    /** Room under the paper for its shadow: the outline set down by [BookmarkShadow], without blur. */
+    val BookmarkShadowRoom = 4.dp
+    val BookmarkShadow = 3.dp
+    val BookmarkCorner = 6.dp
+    val BookmarkNotch = 15.dp
+    val BookmarkEdge = 1.6.dp
+    val BookmarkRim = 1.8.dp
+    val BookmarkLine = 3.dp
+    val BookmarkLineStart = 13.dp
+    val BookmarkLineEnd = 27.dp
+    val BookmarkLineFromBottom = 9.dp
+    val BookmarkTextStart = 13.dp
+    val BookmarkTextEnd = 30.dp
+    val BookmarkTextGap = 3.dp
+    val BookmarkTick = 15.dp
+    val BookmarkTickGap = 5.dp
+    /** Air between the bookmark and the record key; [BookmarkMargin] at the far side of its column. */
+    val BookmarkToKey = 16.dp
+    val BookmarkMargin = 4.dp
+
     val RecordingStripTopPadding = 8.dp
     val RecordingStripGap = 12.dp
     val RecordingDotSize = 10.dp

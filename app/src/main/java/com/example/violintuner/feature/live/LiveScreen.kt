@@ -48,6 +48,11 @@ import androidx.compose.ui.unit.dp
 import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.journey.LocalHomeLook
+import com.example.violintuner.feature.live.block.BlockBookmark
+import com.example.violintuner.feature.live.block.BlockIntent
+import com.example.violintuner.feature.live.block.BlockSheetHost
+import com.example.violintuner.feature.live.block.BlockState
+import com.example.violintuner.feature.live.block.Bookmark
 import com.example.violintuner.feature.live.components.CentsScale
 import com.example.violintuner.feature.live.components.GlowRing
 import com.example.violintuner.feature.live.components.LiveDimens
@@ -90,6 +95,9 @@ fun LiveScreen(
     /** System animations are switched off: the ring stands still and changes in steps (spec 3.14). */
     reduceMotion: Boolean = false,
     showVenue: Boolean = true,
+    /** The bookmark by the record key and its sheets (spec 3.28): a state of their own, changing once a second. */
+    block: BlockState = BlockState.NONE,
+    onBlockIntent: (BlockIntent) -> Unit = {},
 ) {
     val zoneColors = ViolinTheme.zoneColors
     val sounding = state.signal as? LiveSignal.Sounding
@@ -150,11 +158,23 @@ fun LiveScreen(
                     fadeInto = if (landscape) null else MaterialTheme.colorScheme.surfaceContainer,
                 )
             }
-            if (landscape) {
-                LandscapeLayout(state, zoneColor, glow, chrome, showVenue, onIntent, ringModifier, reduceMotion)
-            } else {
-                PortraitLayout(state, zoneColor, glow, chrome, showVenue, onIntent, ringModifier, reduceMotion)
+            val bookmark: @Composable (Dp) -> Unit = { width ->
+                BlockBookmark(
+                    bookmark = block.bookmark,
+                    width = width,
+                    onClick = { onBlockIntent(BlockIntent.BookmarkClicked) },
+                    // it fades with the light like the practice tag — but «готово» stays whole: the end of a block
+                    // comes while the violin sounds, and it is the one thing left for the corner of the eye (handoff 30c2)
+                    modifier = Modifier.chrome(1f) { if (block.bookmark is Bookmark.Done) 1f else chrome() },
+                    reduceMotion = reduceMotion,
+                )
             }
+            if (landscape) {
+                LandscapeLayout(state, zoneColor, glow, chrome, showVenue, onIntent, ringModifier, reduceMotion, bookmark)
+            } else {
+                PortraitLayout(state, zoneColor, glow, chrome, showVenue, onIntent, ringModifier, reduceMotion, bookmark)
+            }
+            BlockSheetHost(block.sheet, landscape, onBlockIntent, reduceMotion)
         }
     }
 }
@@ -205,6 +225,7 @@ private fun PortraitLayout(
     onIntent: (LiveIntent) -> Unit,
     ringModifier: Modifier,
     reduceMotion: Boolean,
+    bookmark: @Composable (width: Dp) -> Unit,
 ) {
     val noMic = state.signal == LiveSignal.NoMicPermission
     val sounding = state.signal as? LiveSignal.Sounding
@@ -308,15 +329,41 @@ private fun PortraitLayout(
                 top = LiveDimens.RecordingStripTopPadding,
             ),
         )
-        RecordButton(
-            recording = recording != null,
-            enabled = state.canRecord || recording != null,
-            onClick = { onIntent(LiveIntent.RecordClicked) },
-            modifier = Modifier
-                .padding(vertical = LiveDimens.RecordPaddingVertical)
+        // The key stays in the middle; the bookmark of blocks lies to its left, in its row (spec 3.28, handoff 30a2):
+        // the ring gives up no height for it, and all that is touched in silence is down here, under the thumb.
+        KeyRow(
+            modifier = Modifier.padding(vertical = LiveDimens.RecordPaddingVertical),
+            maxBookmark = LiveDimens.BookmarkWidth,
+            bookmark = bookmark,
+        ) {
+            RecordButton(
+                recording = recording != null,
+                enabled = state.canRecord || recording != null,
+                onClick = { onIntent(LiveIntent.RecordClicked) },
                 // the key of a running recording stays whole in the dark: it is how the performance ends
-                .chrome(if (state.canRecord || recording != null) 1f else LiveDimens.DISABLED_ALPHA) { if (recording != null) 1f else chrome() },
-        )
+                modifier = Modifier.chrome(if (state.canRecord || recording != null) 1f else LiveDimens.DISABLED_ALPHA) { if (recording != null) 1f else chrome() },
+            )
+        }
+    }
+}
+
+/**
+ * The row of the record key: the key in the middle, the bookmark of blocks hugging it from the left, as wide as the
+ * half row allows but never wider than [maxBookmark].
+ */
+@Composable
+private fun KeyRow(modifier: Modifier, maxBookmark: Dp, bookmark: @Composable (Dp) -> Unit, key: @Composable () -> Unit) {
+    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .weight(1f)
+                .padding(end = LiveDimens.BookmarkToKey),
+            contentAlignment = Alignment.CenterEnd,
+        ) {
+            bookmark(minOf(maxBookmark, maxWidth - LiveDimens.BookmarkMargin))
+        }
+        key()
+        Spacer(Modifier.weight(1f))
     }
 }
 
@@ -331,6 +378,7 @@ private fun LandscapeLayout(
     onIntent: (LiveIntent) -> Unit,
     ringModifier: Modifier,
     reduceMotion: Boolean,
+    bookmark: @Composable (width: Dp) -> Unit,
 ) {
     val noMic = state.signal == LiveSignal.NoMicPermission
     val sounding = state.signal as? LiveSignal.Sounding
@@ -405,14 +453,18 @@ private fun LandscapeLayout(
             }
             ScaleSlot(state = state, zoneColor = zoneColor)
             RecordingStripSlot(recording = recording)
-            RecordButton(
-                recording = recording != null,
-                enabled = state.canRecord || recording != null,
-                onClick = { onIntent(LiveIntent.RecordClicked) },
-                modifier = Modifier
-                    .padding(top = LiveDimens.LandscapeRecordTopPadding)
-                    .chrome(if (state.canRecord || recording != null) 1f else LiveDimens.DISABLED_ALPHA) { if (recording != null) 1f else chrome() },
-            )
+            KeyRow(
+                modifier = Modifier.padding(top = LiveDimens.LandscapeRecordTopPadding),
+                maxBookmark = LiveDimens.BookmarkWidthLandscape,
+                bookmark = bookmark,
+            ) {
+                RecordButton(
+                    recording = recording != null,
+                    enabled = state.canRecord || recording != null,
+                    onClick = { onIntent(LiveIntent.RecordClicked) },
+                    modifier = Modifier.chrome(if (state.canRecord || recording != null) 1f else LiveDimens.DISABLED_ALPHA) { if (recording != null) 1f else chrome() },
+                )
+            }
         }
     }
 }

@@ -938,4 +938,30 @@
         <item>三得利音乐厅</item>
         <item>歌剧院</item>
     </string-array>
+    <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
+    <string name="block_entry">曲库</string>
+    <string name="block_entry_description">从曲库中选择要演奏的内容</string>
+    <string name="block_left_one">还剩 %1$d 分钟</string>
+    <string name="block_left_few">还剩 %1$d 分钟</string>
+    <string name="block_left_many">还剩 %1$d 分钟</string>
+    <string name="block_done">完成</string>
+    <string name="block_running_description">%1$s，还剩 %2$s</string>
+    <string name="block_done_description">%1$s — 完成</string>
+    <string name="block_sheet_title">演奏什么</string>
+    <string name="block_now">现在：%1$s</string>
+    <string name="block_stop">停止</string>
+    <string name="block_start">开始 · %1$d 分钟</string>
+    <string name="block_selected">已选</string>
+    <string name="block_running">进行中</string>
+    <string name="block_section_today">· 今天 %1$d</string>
+    <string name="block_mark_done_description">今天已练，%1$s</string>
+    <string name="block_mark_played_description">今天 %1$s</string>
+    <string name="block_offer_title">请先开始练习</string>
+    <string name="block_offer_text">曲目、音阶和练习曲的时间都计入练习。先开始练习，再选择要演奏的内容。</string>
+    <string name="block_offer_later">暂不</string>
+    <string name="block_empty">曲库还是空的。添加一首曲目或一条音阶，然后在这里选择要演奏的内容。</string>
+    <string name="block_open_repertoire">打开曲库</string>
+    <string name="block_goal_minus">−%1$d</string>
+    <string name="block_goal_plus">+%1$d</string>
+    <string name="block_goal_option">%1$d 分钟</string>
 </resources>

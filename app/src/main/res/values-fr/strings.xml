@@ -938,4 +938,30 @@
         <item>Suntory Hall</item>
         <item>Opéra</item>
     </string-array>
+    <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
+    <string name="block_entry">Répertoire</string>
+    <string name="block_entry_description">Choisir quoi jouer dans le répertoire</string>
+    <string name="block_left_one">encore %1$d min</string>
+    <string name="block_left_few">encore %1$d min</string>
+    <string name="block_left_many">encore %1$d min</string>
+    <string name="block_done">terminé</string>
+    <string name="block_running_description">%1$s, encore %2$s</string>
+    <string name="block_done_description">%1$s — terminé</string>
+    <string name="block_sheet_title">Que jouer</string>
+    <string name="block_now">En cours : %1$s</string>
+    <string name="block_stop">Arrêter</string>
+    <string name="block_start">Commencer · %1$d min</string>
+    <string name="block_selected">Choisi</string>
+    <string name="block_running">en cours</string>
+    <string name="block_section_today">· aujourd\'hui %1$d</string>
+    <string name="block_mark_done_description">joué aujourd\'hui, %1$s</string>
+    <string name="block_mark_played_description">aujourd\'hui %1$s</string>
+    <string name="block_offer_title">D\'abord, une séance</string>
+    <string name="block_offer_text">Le temps passé sur les morceaux, les gammes et les études compte dans une séance. Commencez-la, puis choisissez quoi jouer.</string>
+    <string name="block_offer_later">Pas maintenant</string>
+    <string name="block_empty">Le répertoire est encore vide. Ajoutez un morceau ou une gamme, puis choisissez ici quoi jouer.</string>
+    <string name="block_open_repertoire">Ouvrir le répertoire</string>
+    <string name="block_goal_minus">−%1$d</string>
+    <string name="block_goal_plus">+%1$d</string>
+    <string name="block_goal_option">%1$d min</string>
 </resources>

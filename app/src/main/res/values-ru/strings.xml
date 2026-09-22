@@ -938,4 +938,30 @@
         <item>Сантори-холл</item>
         <item>Оперный театр</item>
     </string-array>
+    <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
+    <string name="block_entry">Репертуар</string>
+    <string name="block_entry_description">Выбрать, что играть, из репертуара</string>
+    <string name="block_left_one">ещё %1$d мин</string>
+    <string name="block_left_few">ещё %1$d мин</string>
+    <string name="block_left_many">ещё %1$d мин</string>
+    <string name="block_done">готово</string>
+    <string name="block_running_description">%1$s, осталось %2$s</string>
+    <string name="block_done_description">%1$s — готово</string>
+    <string name="block_sheet_title">Что играем</string>
+    <string name="block_now">Сейчас: %1$s</string>
+    <string name="block_stop">Остановить</string>
+    <string name="block_start">Начать · %1$d мин</string>
+    <string name="block_selected">Выбрано</string>
+    <string name="block_running">идёт</string>
+    <string name="block_section_today">· сегодня %1$d</string>
+    <string name="block_mark_done_description">сыгран сегодня, %1$s</string>
+    <string name="block_mark_played_description">сегодня %1$s</string>
+    <string name="block_offer_title">Сначала — занятие</string>
+    <string name="block_offer_text">Время на произведения, гаммы и этюды идёт внутри занятия. Начните его — и выберите, что играть.</string>
+    <string name="block_offer_later">Не сейчас</string>
+    <string name="block_empty">В репертуаре пока пусто. Добавьте произведение или гамму — и выбирайте здесь, что играть.</string>
+    <string name="block_open_repertoire">Открыть репертуар</string>
+    <string name="block_goal_minus">−%1$d</string>
+    <string name="block_goal_plus">+%1$d</string>
+    <string name="block_goal_option">%1$d мин</string>
 </resources>

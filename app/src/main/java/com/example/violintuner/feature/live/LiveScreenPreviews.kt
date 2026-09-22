@@ -13,6 +13,8 @@ import com.example.violintuner.core.domain.session.RecordingBar
 import com.example.violintuner.core.domain.venue.Venue
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.journey.LocalHomeLook
+import com.example.violintuner.feature.live.block.BlockState
+import com.example.violintuner.feature.live.block.Bookmark
 
 // One preview per row of the state table in spec 3.4, mirroring handoff frames 8a–8f
 // (the area above the navigation bar of the 412 × 892 base screen).
@@ -30,6 +32,7 @@ private fun LivePreview(
     practiceMs: Long? = null,
     reduceMotion: Boolean = false,
     venue: Venue? = null,
+    bookmark: Bookmark = Bookmark.Entry,
 ) {
     val config = IntonationConfig()
     val target = LiveTarget(mode, lockedString)
@@ -53,6 +56,7 @@ private fun LivePreview(
             ),
             onIntent = {},
             reduceMotion = reduceMotion,
+            block = BlockState(bookmark, sheet = null),
         )
         }
     }
@@ -289,3 +293,66 @@ private fun RoomLandscapePreview() = LivePreview(
     LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 1.0, level = 0.7f),
     venue = Venue.Home,
 )
+
+// The bookmark of blocks by the record key (spec 3.28, handoff 30b, 30c): five states, in play, tuning, recording, landscape.
+
+private const val CONCERTO = "Концерт ля минор, I ч."
+
+@Preview(name = "30b1 Bookmark · no practice: «Репертуар»", widthDp = 412, heightDp = 788)
+@Composable
+private fun BookmarkEntryPreview() = LivePreview(LiveSignal.Silence)
+
+@Preview(name = "30b3 Bookmark · running, 7 min left", widthDp = 412, heightDp = 788)
+@Composable
+private fun BookmarkRunningPreview() = LivePreview(LiveSignal.Silence, practiceMs = 34 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 7, progress = 0.65f))
+
+@Preview(name = "30b4 Bookmark · the last minute", widthDp = 412, heightDp = 788)
+@Composable
+private fun BookmarkLastMinutePreview() = LivePreview(LiveSignal.Silence, practiceMs = 40 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 1, progress = 0.95f))
+
+@Preview(name = "30b5 Bookmark · done: the rim closed, «готово»", widthDp = 412, heightDp = 788)
+@Composable
+private fun BookmarkDonePreview() = LivePreview(LiveSignal.Silence, practiceMs = 41 * 60_000L, bookmark = Bookmark.Done(CONCERTO))
+
+@Preview(name = "30c2 Bookmark · done while a note sounds (stays whole)", widthDp = 412, heightDp = 788)
+@Composable
+private fun BookmarkDoneInPlayPreview() = LivePreview(
+    LiveSignal.Sounding(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.4, level = 0.5f),
+    practiceMs = 41 * 60_000L,
+    bookmark = Bookmark.Done(CONCERTO),
+)
+
+@Preview(name = "30c3 Bookmark · recording", widthDp = 412, heightDp = 788)
+@Composable
+private fun BookmarkRecordingPreview() = LivePreview(
+    LiveSignal.Silence,
+    recording = RecordingState(elapsedMs = 84_000, bars = emptyList()),
+    practiceMs = 34 * 60_000L,
+    bookmark = Bookmark.Running(CONCERTO, minutesLeft = 7, progress = 0.65f),
+)
+
+@Preview(name = "30c4 Bookmark · tuning", widthDp = 412, heightDp = 788)
+@Composable
+private fun BookmarkTuningPreview() = LivePreview(
+    LiveSignal.Silence,
+    mode = LiveMode.TUNING,
+    practiceMs = 34 * 60_000L,
+    bookmark = Bookmark.Running(CONCERTO, minutesLeft = 7, progress = 0.65f),
+)
+
+@Preview(name = "30c7 Bookmark · the longest name", widthDp = 412, heightDp = 788)
+@Composable
+private fun BookmarkLongNamePreview() = LivePreview(
+    LiveSignal.Silence,
+    practiceMs = 34 * 60_000L,
+    bookmark = Bookmark.Running("Концерт ми минор, соч. 64, I. Allegro molto appassionato", minutesLeft = 12, progress = 0.4f),
+)
+
+@Preview(name = "30c8 Bookmark · 360 x 640", widthDp = 360, heightDp = 576)
+@Composable
+private fun BookmarkSmallPreview() = LivePreview(LiveSignal.Silence, practiceMs = 34 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 7, progress = 0.65f))
+
+@Preview(name = "30c9 Bookmark · landscape", widthDp = 892, heightDp = 412)
+@Composable
+private fun BookmarkLandscapePreview() = LivePreview(LiveSignal.Silence, practiceMs = 34 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 7, progress = 0.65f))
+

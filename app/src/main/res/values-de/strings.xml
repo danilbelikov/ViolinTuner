@@ -938,4 +938,30 @@
         <item>Suntory Hall</item>
         <item>Opernhaus</item>
     </string-array>
+    <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
+    <string name="block_entry">Repertoire</string>
+    <string name="block_entry_description">Aus dem Repertoire wählen, was gespielt wird</string>
+    <string name="block_left_one">noch %1$d Min.</string>
+    <string name="block_left_few">noch %1$d Min.</string>
+    <string name="block_left_many">noch %1$d Min.</string>
+    <string name="block_done">fertig</string>
+    <string name="block_running_description">%1$s, noch %2$s</string>
+    <string name="block_done_description">%1$s — fertig</string>
+    <string name="block_sheet_title">Was spielen wir</string>
+    <string name="block_now">Jetzt: %1$s</string>
+    <string name="block_stop">Stoppen</string>
+    <string name="block_start">Starten · %1$d Min.</string>
+    <string name="block_selected">Ausgewählt</string>
+    <string name="block_running">läuft</string>
+    <string name="block_section_today">· heute %1$d</string>
+    <string name="block_mark_done_description">heute gespielt, %1$s</string>
+    <string name="block_mark_played_description">heute %1$s</string>
+    <string name="block_offer_title">Zuerst die Übezeit</string>
+    <string name="block_offer_text">Die Zeit für Stücke, Tonleitern und Etüden läuft innerhalb einer Übezeit. Starten Sie sie und wählen Sie, was Sie spielen.</string>
+    <string name="block_offer_later">Nicht jetzt</string>
+    <string name="block_empty">Das Repertoire ist noch leer. Fügen Sie ein Stück oder eine Tonleiter hinzu und wählen Sie dann hier, was Sie spielen.</string>
+    <string name="block_open_repertoire">Repertoire öffnen</string>
+    <string name="block_goal_minus">−%1$d</string>
+    <string name="block_goal_plus">+%1$d</string>
+    <string name="block_goal_option">%1$d Min.</string>
 </resources>

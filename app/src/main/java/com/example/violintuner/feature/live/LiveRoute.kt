@@ -29,16 +29,22 @@ import com.example.violintuner.core.ui.permission.isMicPermissionGranted
 import com.example.violintuner.core.ui.permission.rememberMicPermissionRequester
 import com.example.violintuner.feature.home.HomeLookViewModel
 import com.example.violintuner.feature.journey.LocalHomeLook
+import com.example.violintuner.feature.live.block.BlockEffect
+import com.example.violintuner.feature.live.block.BlockViewModel
 
 /** Entry point of the Live destination: owns the ViewModel, its effects and the mic permission. */
 @Composable
 fun LiveRoute(
     onOpenSession: (sessionId: Long) -> Unit,
     onOpenPractice: () -> Unit,
+    onOpenRepertoire: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LiveViewModel = hiltViewModel(),
+    blockViewModel: BlockViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val block by blockViewModel.state.collectAsStateWithLifecycle()
+    val currentOnOpenRepertoire by rememberUpdatedState(onOpenRepertoire)
     val context = LocalContext.current
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -78,10 +84,28 @@ fun LiveRoute(
         }
     }
 
+    LaunchedEffect(blockViewModel, lifecycleOwner) {
+        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+            blockViewModel.effects.collect { effect ->
+                when (effect) {
+                    BlockEffect.OpenRepertoire -> currentOnOpenRepertoire()
+                }
+            }
+        }
+    }
+
     // the room of Live is the home as it stands (spec 3.27): the same look the journey and «Занятия» draw
     val homeLook by hiltViewModel<HomeLookViewModel>().state.collectAsStateWithLifecycle()
     CompositionLocalProvider(LocalHomeLook provides homeLook, LocalReduceMotion provides reduceMotion) {
-        LiveScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier, reduceMotion = reduceMotion, showVenue = !BuildConfig.PLAIN_LIVE)
+        LiveScreen(
+            state = state,
+            onIntent = viewModel::onIntent,
+            modifier = modifier,
+            reduceMotion = reduceMotion,
+            showVenue = !BuildConfig.PLAIN_LIVE,
+            block = block,
+            onBlockIntent = blockViewModel::onIntent,
+        )
     }
 }
 
