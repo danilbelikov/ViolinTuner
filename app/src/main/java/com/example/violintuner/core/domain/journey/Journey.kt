@@ -81,6 +81,20 @@ data class BoughtExtra(val stopId: String, val extra: JourneyExtra)
  */
 data class TaktEarning(val atEpochMs: Long, val notesPlayed: Int, val notesInTune: Int, val durationMs: Long, val takts: Int, val piecesPaid: Int = 0)
 
+/** Where the takts of one practice came from (spec 3.31). */
+data class TaktSources(
+    val notesInTune: Int,
+    val notesTakts: Int,
+    /** Whole minutes of the saved length. */
+    val minutes: Int,
+    val timeTakts: Int,
+    /** Elements of the repertoire paid for (spec 3.28). */
+    val pieces: Int,
+    val piecesTakts: Int,
+) {
+    val total: Int get() = notesTakts + timeTakts + piecesTakts
+}
+
 /** Everything the journey remembers. The balance is never stored: it is what was earned minus what was spent. */
 data class JourneyProgress(
     val earned: Long,
@@ -102,9 +116,25 @@ data class JourneyProgress(
 /** Where the player stands on the route and what the next leg costs. Pure. */
 object JourneyRules {
     fun taktsFor(notesInTune: Int, durationMs: Long, config: JourneyConfig, piecesPaid: Int = 0): Int =
-        // the whole practice is divided once, not every portion of it: rounding up ten-second portions would add takts out of nothing
-        (notesInTune.coerceAtLeast(0) + config.notesPerTakt - 1) / config.notesPerTakt + (durationMs.coerceAtLeast(0) / MS_PER_MINUTE).toInt() * config.taktsPerMinute +
-            piecesPaid.coerceAtLeast(0) * config.taktsPerPiece
+        taktsBySource(notesInTune, durationMs, config, piecesPaid).total
+
+    /** The takts of a practice by where they came from — clean notes, time, elements played (spec 3.31): the sum is [taktsFor]. */
+    fun taktsBySource(notesInTune: Int, durationMs: Long, config: JourneyConfig, piecesPaid: Int = 0): TaktSources {
+        val minutes = (durationMs.coerceAtLeast(0) / MS_PER_MINUTE).toInt()
+        val pieces = piecesPaid.coerceAtLeast(0)
+        return TaktSources(
+            notesInTune = notesInTune.coerceAtLeast(0),
+            // the whole practice is divided once, not every portion of it: rounding up ten-second portions would add takts out of nothing
+            notesTakts = (notesInTune.coerceAtLeast(0) + config.notesPerTakt - 1) / config.notesPerTakt,
+            minutes = minutes,
+            timeTakts = minutes * config.taktsPerMinute,
+            pieces = pieces,
+            piecesTakts = pieces * config.taktsPerPiece,
+        )
+    }
+
+    fun taktsBySource(earning: TaktEarning, config: JourneyConfig): TaktSources =
+        taktsBySource(earning.notesInTune, earning.durationMs, config, earning.piecesPaid)
 
     /** The farthest stop reached; home before anything else. */
     fun currentIndex(progress: JourneyProgress): Int =

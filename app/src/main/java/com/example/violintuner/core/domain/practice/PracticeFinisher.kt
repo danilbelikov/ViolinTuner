@@ -28,10 +28,13 @@ class PracticeFinisher @Inject constructor(
     private val blockHistory: PieceBlockRepository = NoBlockHistory,
     private val config: PracticeConfig = PracticeConfig(),
 ) {
-    /** False when no practice with that start runs any more (already saved or discarded elsewhere). */
-    suspend fun save(startedAtEpochMs: Long, durationMs: Long): Boolean {
-        val running = store.running.first() ?: return false
-        if (running.startedAtEpochMs != startedAtEpochMs) return false
+    /**
+     * The earning of the practice as it was stored — what «Занятие сохранено» shows (spec 3.31); null when
+     * no practice with that start runs any more (already saved or discarded elsewhere).
+     */
+    suspend fun save(startedAtEpochMs: Long, durationMs: Long): TaktEarning? {
+        val running = store.running.first() ?: return null
+        if (running.startedAtEpochMs != startedAtEpochMs) return null
         val date = practiceDateOf(startedAtEpochMs, clock.zone)
         repository.add(
             PracticeEntry(
@@ -49,17 +52,16 @@ class PracticeFinisher @Inject constructor(
         // The journey is paid in clean notes, in time at the stand and in elements played for their goal
         // (spec 5.17, 5.19, 5.21). Only a practice that was really timed earns: a day typed in by hand would be takts for nothing.
         val notesPlayed = notes.countFor(startedAtEpochMs)
-        journey.earn(
-            TaktEarning(
-                atEpochMs = clock.millis(), notesPlayed = notesPlayed.played, notesInTune = notesPlayed.inTune, durationMs = durationMs,
-                takts = JourneyRules.taktsFor(notesPlayed.inTune, durationMs, journeyConfig, piecesPaid),
-                piecesPaid = piecesPaid,
-            ),
+        val earning = TaktEarning(
+            atEpochMs = clock.millis(), notesPlayed = notesPlayed.played, notesInTune = notesPlayed.inTune, durationMs = durationMs,
+            takts = JourneyRules.taktsFor(notesPlayed.inTune, durationMs, journeyConfig, piecesPaid),
+            piecesPaid = piecesPaid,
         )
+        journey.earn(earning)
         notes.clear()
         blocks.clear()
         store.clear()
-        return true
+        return earning
     }
 
     suspend fun discard() {
