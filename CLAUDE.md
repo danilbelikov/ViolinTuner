@@ -23,7 +23,7 @@ Android-приложение: интонационный тренажёр для
 - Имена файлов с кириллицей на macOS хранятся в NFD: в shell обращайся к ним через glob (`*.dc.html`), а не набранным именем.
 
 ## Скоуп и карта документов
-Сделано всё, что перечислено в таблице, кроме строк с пометкой «в работе» (этапы 1–69, spec 0.58); на эмуляторе проверено, **на телефоне и живом инструменте — ничего**; что именно не проверено по каждой фиче — в начале её файла заметок. Хроника (что за чем делалось, пути макетов, версии спеки) — `docs/notes/scope-history.md`.
+Сделано всё, что перечислено в таблице (этапы 1–73, spec 0.59); на эмуляторе проверено, **на телефоне и живом инструменте — ничего**; что именно не проверено по каждой фиче — в начале её файла заметок. Хроника (что за чем делалось, пути макетов, версии спеки) — `docs/notes/scope-history.md`.
 
 **Перед задачей прочитай файл спеки и файл заметок той фичи, которую трогаешь** — в контекст они сами не грузятся. Ядро спеки (`docs/spec.md`: принципы, Live 3.1–3.8, домен 5.1–5.4, «позже») загружено всегда. Новая фича = новый файл в `docs/spec/` и `docs/notes/` + строка в обоих оглавлениях, а не рост ядра и этого файла.
 
@@ -45,7 +45,7 @@ Android-приложение: интонационный тренажёр для
 | Дом (обе итерации) | `docs/spec/home.md` (3.24–3.25, 5.18–5.19) | `docs/notes/home.md` | `docs/plan-home.md` |
 | Языки (заметки — раздел «Языки» ниже) | `docs/spec/i18n.md` (3.26) | — | — |
 | Live в комнате и в залах, «где мы» | `docs/spec/venue.md` (3.27, 5.20) | `docs/notes/venue.md` | `docs/plan-venue.md` |
-| Подходы: элемент репертуара на время с Live (**в работе**) | `docs/spec/blocks.md` (3.28, 5.21) | — | `docs/plan-blocks.md` |
+| Подходы: элемент репертуара на время с Live | `docs/spec/blocks.md` (3.28, 5.21) | `docs/notes/blocks.md` | `docs/plan-blocks.md` |
 
 - Прогресс считается только из времени занятий, не из сессий и баллов. «Занятие» (время) и «сессия» (запись с анализом; в текстах — «запись», в коде — `Session`) — разные сущности, не смешивать ни в коде, ни в текстах.
 - Макеты фич — `docs/design/project/<фича>/project/*.dc.html`; точный путь, кадры и секция `dev` названы в шапке раздела спеки.
@@ -55,11 +55,11 @@ Android-приложение: интонационный тренажёр для
 - Kotlin, Jetpack Compose + Material 3 (Compose BOM), Gradle Kotlin DSL, version catalog `gradle/libs.versions.toml`
 - Hilt, Coroutines/Flow, Navigation Compose
 - minSdk 26, Java 17 (`compileOptions`; Gradle-демон работает на JDK 21), один модуль `app`
-- DataStore Preferences — пользовательские настройки и идущее занятие (`core/settings`); Room — сессии, занятия, трофеи, репертуар и настройки звука (`core/data`, база `violin.db` v11)
+- DataStore Preferences — пользовательские настройки и идущее занятие (`core/settings`); Room — сессии, занятия, трофеи, репертуар и настройки звука (`core/data`, база `violin.db` v12)
 - Никаких сторонних DSP-библиотек: детектор высоты тона свой (YIN и MPM), параметры — в спеке
 
 ## Архитектура
-- Clean + MVI. Пакеты: `feature/live`, `feature/onboarding`, `feature/settings`, `feature/session`, `feature/history` (вкладка «Записи»), `feature/practice`, `feature/repertoire` (список, `form`, `piece`, `stand`), `feature/sound` (экран «Звук»), `feature/backup` (копия и восстановление), `feature/journey` (путешествие; открытки — `art`), `feature/home` (дом, лавка, «Обставить», дома; сборка комнаты — `art`); общее — `core/audio`, `core/domain`, `core/data`, `core/settings`, `core/recording` (конвейер записи `TakePipeline`), `core/backup` (копия данных), `core/ui` (тема, токены, общие компоненты, форматы, запрос разрешения на микрофон).
+- Clean + MVI. Пакеты: `feature/live` (закладка и листы подходов — `block`), `feature/onboarding`, `feature/settings`, `feature/session`, `feature/history` (вкладка «Записи»), `feature/practice`, `feature/repertoire` (список, `form`, `piece`, `stand`), `feature/sound` (экран «Звук»), `feature/backup` (копия и восстановление), `feature/journey` (путешествие; открытки — `art`), `feature/home` (дом, лавка, «Обставить», дома; сборка комнаты — `art`); общее — `core/audio`, `core/domain`, `core/data`, `core/settings`, `core/recording` (конвейер записи `TakePipeline`), `core/backup` (копия данных), `core/ui` (тема, токены, общие компоненты, форматы, запрос разрешения на микрофон).
 - Экран: `LiveContract` (State / Intent / Effect), `LiveViewModel`, `LiveScreen` (stateless: принимает State и `(Intent) -> Unit`), `LiveRoute` (ViewModel + навигация).
 - Доменная логика (центы, зоны, сглаживание, гистерезис, снэп к струнам) — чистый Kotlin без Android-зависимостей в `core/domain`, покрыта unit-тестами.
 - Все числовые константы — в `IntonationConfig` со значениями из спеки; числа учёта занятий — в `PracticeConfig` (spec 5.6). Магических чисел в коде нет. Эталон A4 и допуск — выбор пользователя: готовый конфиг приходит потоком из `IntonationConfigSource`, синглтон `IntonationConfig` в Hilt — только значения по умолчанию.
