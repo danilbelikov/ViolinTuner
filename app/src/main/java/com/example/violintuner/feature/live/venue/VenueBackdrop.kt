@@ -10,6 +10,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.geometry.isSpecified
@@ -97,7 +98,8 @@ fun VenueBackdrop(
 ) {
     val surface = MaterialTheme.colorScheme.surface
     val kind = venue?.let(VenueScenes::kindOf) ?: PictureKind.ROOM
-    Box(modifier.fillMaxSize().background(surface)) {
+    // clipped: the light of the zone is a circle wider than the screen, and the status bar above Live keeps its own colour
+    Box(modifier.fillMaxSize().clipToBounds().background(surface)) {
         Crossfade(targetState = venue to picture, animationSpec = tween(VenueMotion.PICTURE_SWAP_MS), label = "venuePicture", modifier = Modifier.fillMaxSize()) { (_, shown) ->
             if (shown != null) PlacePicture(shown, kind, landscape, darkness, surface)
         }
