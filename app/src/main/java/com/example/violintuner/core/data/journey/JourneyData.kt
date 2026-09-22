@@ -1,5 +1,6 @@
 package com.example.violintuner.core.data.journey
 
+import androidx.room.ColumnInfo
 import androidx.room.Dao
 import androidx.room.Entity
 import androidx.room.Insert
@@ -32,6 +33,8 @@ data class EarningEntity(
     val notesInTune: Int,
     val durationMs: Long,
     val takts: Int,
+    /** Elements whose blocks were paid for (spec 3.28); earnings older than blocks paid for none. */
+    @ColumnInfo(defaultValue = "0") val piecesPaid: Int = 0,
 )
 
 /** A stop that has been reached, with what the leg cost then: a later change of prices does not rewrite the balance. */
@@ -128,7 +131,7 @@ class RoomJourneyRepository @Inject constructor(private val dao: JourneyDao) : J
                 arrivals = arrivals.map { Arrival(it.stopId, it.arrivedAtEpochMs) },
                 // an extra this build does not know (a row written by a newer one) is simply not shown
                 extras = extras.mapNotNull { row -> JourneyExtra.entries.firstOrNull { it.name == row.extra }?.let { BoughtExtra(row.stopId, it) } }.toSet(),
-                lastEarning = earnings.lastOrNull()?.let { TaktEarning(it.atEpochMs, it.notesPlayed, it.notesInTune, it.durationMs, it.takts) },
+                lastEarning = earnings.lastOrNull()?.let { TaktEarning(it.atEpochMs, it.notesPlayed, it.notesInTune, it.durationMs, it.takts, it.piecesPaid) },
             )
         }
 
@@ -145,7 +148,7 @@ class RoomJourneyRepository @Inject constructor(private val dao: JourneyDao) : J
 
     override suspend fun earn(earning: TaktEarning) {
         if (earning.takts <= 0) return
-        dao.insertEarning(EarningEntity(0, earning.atEpochMs, earning.notesPlayed, earning.notesInTune, earning.durationMs, earning.takts))
+        dao.insertEarning(EarningEntity(0, earning.atEpochMs, earning.notesPlayed, earning.notesInTune, earning.durationMs, earning.takts, earning.piecesPaid))
     }
 }
 

@@ -6,11 +6,13 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.example.violintuner.core.backup.BackupPrefs
+import com.example.violintuner.core.domain.practice.BlockStore
 import com.example.violintuner.core.domain.practice.RunningPracticeStore
 import com.example.violintuner.core.domain.progress.ProfileRepository
 import com.example.violintuner.core.domain.repertoire.StandHintStore
 import com.example.violintuner.core.domain.venue.VenueStore
 import com.example.violintuner.core.settings.DataStoreBackupPrefs
+import com.example.violintuner.core.settings.DataStoreBlockStore
 import com.example.violintuner.core.settings.DataStoreProfileRepository
 import com.example.violintuner.core.settings.DataStoreRunningPracticeStore
 import com.example.violintuner.core.settings.DataStoreSettingsRepository
@@ -41,6 +43,10 @@ abstract class SettingsModule {
     @Binds
     @Singleton
     abstract fun bindRunningPracticeStore(impl: DataStoreRunningPracticeStore): RunningPracticeStore
+
+    @Binds
+    @Singleton
+    abstract fun bindBlockStore(impl: DataStoreBlockStore): BlockStore
 
     @Binds
     @Singleton

@@ -2,6 +2,8 @@ package com.example.violintuner.core.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.example.violintuner.core.data.practice.PieceBlockDao
+import com.example.violintuner.core.data.practice.PieceBlockEntity
 import com.example.violintuner.core.data.practice.PracticeDao
 import com.example.violintuner.core.data.practice.PracticeEntity
 import com.example.violintuner.core.data.progress.TrophyDao
@@ -26,7 +28,8 @@ import com.example.violintuner.core.data.sound.SoundSettingsEntity
 /**
  * The one database of the app: sessions (recordings with analysis), practice entries (time),
  * the trophies given for that time, the repertoire (pieces with their sheet pages), and how
- * recordings are made to sound (settings of sound processing and the user's presets).
+ * recordings are made to sound (settings of sound processing and the user's presets); the journey
+ * and the home; the blocks of practices — time given to elements of the repertoire.
  * Every version's schema is exported to `app/schemas` and committed; a new version needs a
  * migration in [DatabaseMigrations] and a test that the old rows survive it.
  */
@@ -37,8 +40,9 @@ import com.example.violintuner.core.data.sound.SoundSettingsEntity
         EarningEntity::class, ArrivalEntity::class, ExtraEntity::class,
         HomePurchaseEntity::class,
         HomeChoiceEntity::class,
+        PieceBlockEntity::class,
     ],
-    version = 11,
+    version = 12,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -48,6 +52,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun repertoireDao(): RepertoireDao
     abstract fun soundDao(): SoundDao
     abstract fun journeyDao(): JourneyDao
+    abstract fun pieceBlockDao(): PieceBlockDao
 
     companion object {
         const val FILE_NAME = "violin.db"

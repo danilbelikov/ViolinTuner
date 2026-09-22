@@ -36,7 +36,7 @@ class DatabaseMigrationTest {
      * with one row; [version3] adds the trophies of version 3 with one row; [version4] adds the
      * repertoire of version 4: a piece with a page, and the session becomes its take.
      */
-    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false, version7: Boolean = false, version8: Boolean = false, version9: Boolean = false, version10: Boolean = false) {
+    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false, version7: Boolean = false, version8: Boolean = false, version9: Boolean = false, version10: Boolean = false, version11: Boolean = false) {
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
@@ -133,7 +133,12 @@ class DatabaseMigrationTest {
                 db.execSQL("CREATE TABLE IF NOT EXISTS `home_choices` (`slot` TEXT NOT NULL, `itemId` TEXT NOT NULL, PRIMARY KEY(`slot`))")
                 db.execSQL("INSERT INTO home_purchases (id, kind, price, boughtAtEpochMs) VALUES ('cat_ginger', 'ITEM', 800, 5)")
             }
-            db.execSQL("PRAGMA user_version = ${if (version10) 10 else if (version9) 9 else if (version8) 8 else if (version7) 7 else if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
+            // version 11 changed no table, only rows: the rug of the rented room, as its migration leaves it
+            if (version11) {
+                db.execSQL("INSERT OR IGNORE INTO home_purchases (id, kind, price, boughtAtEpochMs) VALUES ('rug_plum', 'ITEM', 0, 0)")
+                db.execSQL("INSERT OR IGNORE INTO home_choices (slot, itemId) VALUES ('rug', 'rug_plum')")
+            }
+            db.execSQL("PRAGMA user_version = ${if (version11) 11 else if (version10) 10 else if (version9) 9 else if (version8) 8 else if (version7) 7 else if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
         }
     }
 
@@ -335,5 +340,24 @@ class DatabaseMigrationTest {
         assertEquals(setOf("cat_ginger", "rug_plum"), purchases.keys)
         assertEquals(0, purchases.getValue("rug_plum").price)
         assertEquals("rug_plum", dao.observeHomeChoices().first().single { it.slot == "rug" }.itemId)
+    }
+
+    @Test
+    fun blocksStartEmpty_andOldEarningsPaidForNoElement() = runBlocking {
+        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true, version7 = true, version8 = true, version9 = true, version10 = true, version11 = true)
+        val db = openMigrated()
+
+        assertEquals(emptyList<Any>(), db.pieceBlockDao().observeAll().first())
+        val earning = db.journeyDao().observeEarnings().first().single()
+        assertEquals(1000, earning.takts)
+        assertEquals(0, earning.piecesPaid)
+        // a piece of the older versions takes a block now, and the block goes with it
+        val piece = db.repertoireDao().observePieces().first().first { it.id == 1L }
+        val stored = db.pieceBlockDao().insertWhereThePieceIs(
+            listOf(com.example.violintuner.core.data.practice.PieceBlockEntity(pieceId = piece.id, date = "2026-09-22", startedAtEpochMs = 1, durationMs = 600_000, goalMs = 600_000, done = true, paid = true)),
+        )
+        assertEquals(1, stored.size)
+        db.repertoireDao().deletePiece(piece.id)
+        assertEquals(emptyList<Any>(), db.pieceBlockDao().observeAll().first())
     }
 }

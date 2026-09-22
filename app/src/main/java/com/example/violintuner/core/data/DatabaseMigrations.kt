@@ -147,6 +147,24 @@ object DatabaseMigrations {
         }
     }
 
+    /**
+     * Blocks — «подходы» (spec 3.28): time a practice gave to one element of the repertoire, and what an
+     * earning paid for them. A new table and a column with a default: nothing that exists is rebuilt, older
+     * earnings paid for no element.
+     */
+    val MIGRATION_11_12 = object : Migration(11, 12) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `piece_blocks` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `pieceId` INTEGER NOT NULL, " +
+                    "`date` TEXT NOT NULL, `startedAtEpochMs` INTEGER NOT NULL, `durationMs` INTEGER NOT NULL, `goalMs` INTEGER NOT NULL, " +
+                    "`done` INTEGER NOT NULL, `paid` INTEGER NOT NULL, FOREIGN KEY(`pieceId`) REFERENCES `pieces`(`id`) " +
+                    "ON UPDATE NO ACTION ON DELETE CASCADE )",
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_piece_blocks_pieceId` ON `piece_blocks` (`pieceId`)")
+            db.execSQL("ALTER TABLE `journey_earnings` ADD COLUMN `piecesPaid` INTEGER NOT NULL DEFAULT 0")
+        }
+    }
+
     /** The columns of `SoundColumns`, as Room declares them: both sound tables embed the same set. Internal for the migration test, which lays out a version 5 file by hand. */
     internal const val SOUND_COLUMNS =
         "`eqEnabled` INTEGER NOT NULL, `lowCutEnabled` INTEGER NOT NULL, `lowCutHz` REAL NOT NULL, `lowHz` REAL NOT NULL, " +
@@ -158,5 +176,5 @@ object DatabaseMigrations {
             "`reverbPreDelayMs` REAL NOT NULL, `reverbBrightness` REAL NOT NULL, `reverbMix` REAL NOT NULL, " +
             "`outputEnabled` INTEGER NOT NULL, `outputGainDb` REAL NOT NULL"
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11)
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
 }

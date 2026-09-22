@@ -8,6 +8,8 @@ data class JourneyConfig(
     /** Notes in tune that make one takt, rounded up: one clean note is a takt already (spec 5.19). */
     val notesPerTakt: Int = 3,
     val taktsPerMinute: Int = 2,
+    /** Takts for an element of the repertoire played for its goal (spec 3.28): once a day an element. */
+    val taktsPerPiece: Int = 30,
     /** A note counts from this length on: the same threshold the analysis of a recording uses (spec 5.5). */
     val minNoteMs: Long = 200,
     /** Counted notes reach the disk this often, so a killed process loses seconds, not the whole practice. */
@@ -73,8 +75,11 @@ data class Arrival(val stopId: String, val arrivedAtEpochMs: Long)
 
 data class BoughtExtra(val stopId: String, val extra: JourneyExtra)
 
-/** What one practice earned: kept as it was counted, so the summary can say «264 ноты в строе + 76 за время». */
-data class TaktEarning(val atEpochMs: Long, val notesPlayed: Int, val notesInTune: Int, val durationMs: Long, val takts: Int)
+/**
+ * What one practice earned: kept as it was counted, so the summary can say «264 ноты в строе + 76 за время».
+ * [piecesPaid] — the elements whose blocks were paid for (spec 3.28); zero before them.
+ */
+data class TaktEarning(val atEpochMs: Long, val notesPlayed: Int, val notesInTune: Int, val durationMs: Long, val takts: Int, val piecesPaid: Int = 0)
 
 /** Everything the journey remembers. The balance is never stored: it is what was earned minus what was spent. */
 data class JourneyProgress(
@@ -96,9 +101,10 @@ data class JourneyProgress(
 
 /** Where the player stands on the route and what the next leg costs. Pure. */
 object JourneyRules {
-    fun taktsFor(notesInTune: Int, durationMs: Long, config: JourneyConfig): Int =
+    fun taktsFor(notesInTune: Int, durationMs: Long, config: JourneyConfig, piecesPaid: Int = 0): Int =
         // the whole practice is divided once, not every portion of it: rounding up ten-second portions would add takts out of nothing
-        (notesInTune.coerceAtLeast(0) + config.notesPerTakt - 1) / config.notesPerTakt + (durationMs.coerceAtLeast(0) / MS_PER_MINUTE).toInt() * config.taktsPerMinute
+        (notesInTune.coerceAtLeast(0) + config.notesPerTakt - 1) / config.notesPerTakt + (durationMs.coerceAtLeast(0) / MS_PER_MINUTE).toInt() * config.taktsPerMinute +
+            piecesPaid.coerceAtLeast(0) * config.taktsPerPiece
 
     /** The farthest stop reached; home before anything else. */
     fun currentIndex(progress: JourneyProgress): Int =

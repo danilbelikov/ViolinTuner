@@ -25,6 +25,18 @@ data class PracticeConfig(
     val soundMarkIntervalMs: Long = MS_PER_MINUTE,
     /** Lower bounds, in minutes, of fill levels 2, 3 and 4 of the calendar; level 1 is any time. */
     val fillLevelMinutes: List<Int> = listOf(20, 45, 90),
+    /** The goal of a block — «подход» (spec 5.21): from, to and by how much. */
+    val blockGoalMinMinutes: Int = 5,
+    val blockGoalMaxMinutes: Int = 60,
+    val blockGoalStepMinutes: Int = 5,
+    /** The quick goals of the panel in «Что играем». */
+    val blockQuickGoalsMinutes: List<Int> = listOf(5, 10, 15, 20, 30),
+    /** The goal offered before anything was ever played. */
+    val blockDefaultGoalMinutes: Int = 10,
+    /** A shorter block is not kept: a tap by mistake is not practice. */
+    val blockMinSavedMs: Long = MS_PER_MINUTE,
+    /** «Время по элементам» looks back this many days, today included. */
+    val pieceTimeDays: Int = 30,
 ) {
     companion object {
         const val MS_PER_MINUTE = 60_000L

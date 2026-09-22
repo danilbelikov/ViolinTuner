@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.first
  * Ends the running practice: a row in the repository, then the store is cleared. Both the
  * practice screen and the forgotten-practice prompt go through here, and [save] checks that the
  * practice it was asked about still runs, so two answers to the same practice cannot store it twice.
+ * The blocks of the practice (spec 3.28) are saved and paid for here too, and go with it when it is discarded.
  */
 class PracticeFinisher @Inject constructor(
     private val repository: PracticeRepository,
@@ -23,35 +24,47 @@ class PracticeFinisher @Inject constructor(
     private val notes: PracticeNotesStore = NoPracticeNotes,
     private val journey: JourneyRepository = NoJourney,
     private val journeyConfig: JourneyConfig = JourneyConfig(),
+    private val blocks: BlockStore = NoBlocks,
+    private val blockHistory: PieceBlockRepository = NoBlockHistory,
+    private val config: PracticeConfig = PracticeConfig(),
 ) {
     /** False when no practice with that start runs any more (already saved or discarded elsewhere). */
     suspend fun save(startedAtEpochMs: Long, durationMs: Long): Boolean {
         val running = store.running.first() ?: return false
         if (running.startedAtEpochMs != startedAtEpochMs) return false
+        val date = practiceDateOf(startedAtEpochMs, clock.zone)
         repository.add(
             PracticeEntry(
-                date = practiceDateOf(startedAtEpochMs, clock.zone),
+                date = date,
                 startedAtEpochMs = startedAtEpochMs,
                 durationMs = durationMs,
                 manual = false,
             ),
         )
-        // The journey is paid in clean notes and in time at the stand (spec 5.17). Only a practice
-        // that was really timed earns: a day typed in by hand would be takts for nothing.
-        val played = notes.countFor(startedAtEpochMs)
+        // Blocks are cut at the end of what is saved: the stepper and «Закончить в 18:42» cut them too (spec 5.21).
+        // An element is paid for once a day, so what was paid that day already counts.
+        val paidThatDay = blockHistory.blocks.first().filter { it.date == date && it.paid }.mapTo(mutableSetOf()) { it.pieceId }
+        val played = BlockRules.played(BlockRules.ofPractice(running, blocks.blocks.first()), startedAtEpochMs + durationMs, config)
+        val piecesPaid = blockHistory.add(BlockRules.settle(played, date, paidThatDay)).count { it.paid }
+        // The journey is paid in clean notes, in time at the stand and in elements played for their goal
+        // (spec 5.17, 5.19, 5.21). Only a practice that was really timed earns: a day typed in by hand would be takts for nothing.
+        val notesPlayed = notes.countFor(startedAtEpochMs)
         journey.earn(
             TaktEarning(
-                atEpochMs = clock.millis(), notesPlayed = played.played, notesInTune = played.inTune, durationMs = durationMs,
-                takts = JourneyRules.taktsFor(played.inTune, durationMs, journeyConfig),
+                atEpochMs = clock.millis(), notesPlayed = notesPlayed.played, notesInTune = notesPlayed.inTune, durationMs = durationMs,
+                takts = JourneyRules.taktsFor(notesPlayed.inTune, durationMs, journeyConfig, piecesPaid),
+                piecesPaid = piecesPaid,
             ),
         )
         notes.clear()
+        blocks.clear()
         store.clear()
         return true
     }
 
     suspend fun discard() {
         notes.clear()
+        blocks.clear()
         store.clear()
     }
 }
