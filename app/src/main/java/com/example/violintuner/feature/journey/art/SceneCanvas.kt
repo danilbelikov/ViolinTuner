@@ -23,10 +23,12 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.IntSize
 import com.example.violintuner.core.domain.journey.JourneyStop
 import com.example.violintuner.core.domain.journey.StopView
 import kotlinx.coroutines.Dispatchers
@@ -56,6 +58,13 @@ class PreparedScene(val scene: Scene, val mode: SceneMode, val paths: List<Path>
 
     /** The layer the sky's own life is drawn over: the high sky where there is one, the band's sky otherwise. */
     val skyLifeAt: Int = scene.layers.indexOfFirst { it.fill == if (highSky) SceneLayer.SKY_HIGH else SceneLayer.SKY }
+
+    /** The order to draw it in with what stands still baked (docs/plan-performance.md). */
+    val steps: List<SceneStep> = SceneStrata.plan(
+        scene.layers, bounds, paints.map { it.alive },
+        skyLifeAt = if (scene.aerial) skyLifeAt else -1,
+        skyLife = if (scene.aerial) SceneMotion.skyLifeReach(highSky) else null,
+    )
 }
 
 private object SceneCache {
@@ -102,6 +111,7 @@ fun ScenePicture(
     /** Seen whole, by its width, whatever the box: a title card is a picture, not a panorama. Ignored when there is a [camera]. */
     whole: Boolean = false,
 ) {
+    val baking = rememberSceneBaking(prepared)
     Canvas(modifier.clipToBounds().background(Color(NIGHT)).semantics { contentDescription = description }) {
         if (prepared == null) return@Canvas
         val (zoom, panX, panY) = camera?.invoke() ?: Triple(if (whole) SceneCamera.wholeZoom(size.width, size.height) else 1f, 0f, 0f)
@@ -109,10 +119,9 @@ fun ScenePicture(
         val t = seconds?.value
         val left = (size.width - SceneGrid.WIDTH * k) / 2
         val top = SceneCamera.top(zoom, size.width, size.height, outdoors = prepared.scene.aerial && !centred) + panY
-        translate(left, top) {
-            drawScene(prepared, k, panX, t, seen = seen(left, top, panX, k))
-            if (overlay != null) translate(panX, 0f) { scale(k, k, pivot = Offset.Zero) { overlay(t) } }
-        }
+        val seen = seen(left, top, panX, k)
+        if (baking != null && t != null && panX == 0f) drawBaked(baking, left, top, k, t, seen) else translate(left, top) { drawScene(prepared, k, panX, t, seen = seen) }
+        if (overlay != null) translate(left, top) { translate(panX, 0f) { scale(k, k, pivot = Offset.Zero) { overlay(t) } } }
     }
 }
 
@@ -170,6 +179,7 @@ fun Postcard(
 ) {
     val view = viewOf(stop, inside)
     val prepared = rememberScene(view?.scene, mode)
+    val baking = rememberSceneBaking(prepared)
     val silhouette = remember(stop.id) { JourneySilhouettes.paths[stop.id].orEmpty().map { PathParser().parsePathString(it).toPath() } }
     Canvas(
         modifier = modifier
@@ -186,12 +196,13 @@ fun Postcard(
         val t = seconds?.value
         val left = (size.width - SceneGrid.WIDTH * k) / 2
         val top = frame.originY(zoom, size.width, size.height) + panY
-        translate(left, top) {
-            when {
-                // the planes are shifted one by one — that is the parallax — in pixels, then scaled
-                prepared != null -> drawScene(prepared, k, panX, t, seen = seen(left, top, panX, k))
-                view == null -> translate(panX, 0f) { scale(k, k, pivot = Offset.Zero) { drawSketch(silhouette, mode) } }
-            }
+        val seen = seen(left, top, panX, k)
+        when {
+            // a living picture seen without a sideways pan keeps what stands still baked
+            prepared != null && baking != null && t != null && panX == 0f -> drawBaked(baking, left, top, k, t, seen)
+            // the planes are shifted one by one — that is the parallax — in pixels, then scaled
+            prepared != null -> translate(left, top) { drawScene(prepared, k, panX, t, seen = seen) }
+            view == null -> translate(left, top) { translate(panX, 0f) { scale(k, k, pivot = Offset.Zero) { drawSketch(silhouette, mode) } } }
         }
     }
 }
@@ -209,44 +220,96 @@ private fun DrawScope.seen(left: Float, top: Float, panX: Float, k: Float): Rect
 private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, seconds: Float?, lightAlpha: Float = 1f, seen: Rect? = null) {
     val scene = prepared.scene
     scene.layers.forEachIndexed { index, layer ->
-        val path = prepared.paths[index]
-        val bounds = prepared.bounds[index]
-        if (seen == null || !outOfSight(layer, bounds, seen, (SceneCamera.shift(panX, layer.depth) - panX) / k)) {
-            val paint = prepared.paints[index]
-            val alive = seconds != null && paint.alive
-            val own = if (layer.fill == SceneLayer.GLOW || layer.warmGlow) layer.opacity * lightAlpha else layer.opacity
-            val alpha = if (alive) own * SceneMotion.alpha(layer, index, prepared.mode, seconds!!) else own
-            val drift = if (alive) SceneMotion.drift(layer, index, seconds!!) else 0f
-            val moved = if (alive && layer.anim != null) SceneMotion.moved(layer.anim, bounds.center.x, bounds.center.y, index, seconds!!) else null
-            translate(SceneCamera.shift(panX, layer.depth) + drift * k, 0f) {
-                scale(k, k, pivot = Offset.Zero) {
-                    if (moved != null) {
-                        val fill = paint.fill
-                        if (moved.alpha <= 0f || fill == null) return@scale
-                        translate(moved.dx, moved.dy) {
-                            when {
-                                moved.flap != 1f -> scale(1f, moved.flap, pivot = bounds.center) { drawPath(path, fill, alpha = alpha * moved.alpha) }
-                                moved.degrees != 0f -> rotate(moved.degrees, pivot = Offset(moved.pivotX, moved.pivotY)) { drawPath(path, fill, alpha = alpha * moved.alpha) }
-                                else -> drawPath(path, fill, alpha = alpha * moved.alpha)
-                            }
-                        }
-                        return@scale
-                    }
-                    if (layer.tx != 0f || layer.ty != 0f || layer.scale != 1f) {
-                        translate(layer.tx, layer.ty) { scale(layer.scale, layer.scale, pivot = Offset.Zero) { drawLayer(path, paint, alpha) } }
-                    } else {
-                        drawLayer(path, paint, alpha)
+        if (seen == null || !outOfSight(layer, prepared.bounds[index], seen, (SceneCamera.shift(panX, layer.depth) - panX) / k)) {
+            drawOne(prepared, index, k, panX, seconds, lightAlpha)
+        }
+        if (index == prepared.skyLifeAt && seconds != null && scene.aerial) drawSkyOf(prepared, k, panX, seconds)
+    }
+}
+
+/**
+ * A still picture baked, a living one drawn (docs/plan-performance.md): while the view stands, the
+ * biggest still steps of the scene are pictures the GPU keeps, and a frame lays them down with the living
+ * layers between them; while it moves — the first frame, a pinch, a drag — everything is drawn directly.
+ * [left], [top] — where the grid's origin is in the box; the pan is none (a card, the full screen as it opens).
+ */
+private fun DrawScope.drawBaked(baking: SceneBaking, left: Float, top: Float, k: Float, seconds: Float, seen: Rect) {
+    val prepared = baking.prepared
+    val view = SceneBaking.View(size.width, size.height, left, top, k)
+    if (!baking.stands(view)) {
+        translate(left, top) { drawScene(prepared, k, 0f, seconds, seen = seen) }
+        return
+    }
+    baking.bake(view) { layer, step ->
+        // the picture is as large as what it holds, within the box: a row of lamps is not a screen of pixels
+        val shown = step.layers.filter { index -> !outOfSight(prepared.scene.layers[index], prepared.bounds[index], seen, 0f) }
+        val pixels = SceneStrata.reachOf(prepared.scene.layers, prepared.bounds, shown)?.let { SceneBaking.pixelsOf(it, view) }
+        if (pixels == null) {
+            layer.record(size = IntSize(1, 1)) { }
+            return@bake
+        }
+        layer.topLeft = pixels.topLeft
+        layer.record(size = pixels.size) {
+            translate(left - pixels.left, top - pixels.top) { shown.forEach { index -> drawOne(prepared, index, k, 0f, null) } }
+        }
+    }
+    prepared.steps.forEachIndexed { at, step ->
+        when (step) {
+            is SceneStep.Still -> {
+                val layer = baking.layerOf(at)
+                if (layer != null) {
+                    drawLayer(layer)
+                } else {
+                    translate(left, top) { step.layers.forEach { index -> if (!outOfSight(prepared.scene.layers[index], prepared.bounds[index], seen, 0f)) drawOne(prepared, index, k, 0f, null) } }
+                }
+            }
+            is SceneStep.Alive -> translate(left, top) {
+                step.layers.forEach { index -> if (!outOfSight(prepared.scene.layers[index], prepared.bounds[index], seen, 0f)) drawOne(prepared, index, k, 0f, seconds) }
+            }
+            SceneStep.SkyLife -> translate(left, top) { drawSkyOf(prepared, k, 0f, seconds) }
+        }
+    }
+}
+
+/** One layer of [prepared] at [k] pixels a unit, its plane shifted for a pan of [panX]; alive with [seconds] if it lives. */
+private fun DrawScope.drawOne(prepared: PreparedScene, index: Int, k: Float, panX: Float, seconds: Float?, lightAlpha: Float = 1f) {
+    val layer = prepared.scene.layers[index]
+    val path = prepared.paths[index]
+    val bounds = prepared.bounds[index]
+    val paint = prepared.paints[index]
+    val alive = seconds != null && paint.alive
+    val own = if (layer.fill == SceneLayer.GLOW || layer.warmGlow) layer.opacity * lightAlpha else layer.opacity
+    val alpha = if (alive) own * SceneMotion.alpha(layer, index, prepared.mode, seconds!!) else own
+    val drift = if (alive) SceneMotion.drift(layer, index, seconds!!) else 0f
+    val moved = if (alive && layer.anim != null) SceneMotion.moved(layer.anim, bounds.center.x, bounds.center.y, index, seconds!!) else null
+    translate(SceneCamera.shift(panX, layer.depth) + drift * k, 0f) {
+        scale(k, k, pivot = Offset.Zero) {
+            if (moved != null) {
+                val fill = paint.fill
+                if (moved.alpha <= 0f || fill == null) return@scale
+                translate(moved.dx, moved.dy) {
+                    when {
+                        moved.flap != 1f -> scale(1f, moved.flap, pivot = bounds.center) { drawPath(path, fill, alpha = alpha * moved.alpha) }
+                        moved.degrees != 0f -> rotate(moved.degrees, pivot = Offset(moved.pivotX, moved.pivotY)) { drawPath(path, fill, alpha = alpha * moved.alpha) }
+                        else -> drawPath(path, fill, alpha = alpha * moved.alpha)
                     }
                 }
+                return@scale
+            }
+            if (layer.tx != 0f || layer.ty != 0f || layer.scale != 1f) {
+                translate(layer.tx, layer.ty) { scale(layer.scale, layer.scale, pivot = Offset.Zero) { drawLayer(path, paint, alpha) } }
+            } else {
+                drawLayer(path, paint, alpha)
             }
         }
-        // the sky's own life goes right over the sky — the high one where there is one — under everything else
-        if (index == prepared.skyLifeAt && seconds != null && scene.aerial) {
-            translate(SceneCamera.shift(panX, 0), 0f) {
-                scale(k, k, pivot = Offset.Zero) {
-                    if (prepared.highSky) drawHighSkyLife(scene, prepared.mode, seconds) else drawSkyLife(prepared.mode, seconds)
-                }
-            }
+    }
+}
+
+/** The sky's own life of [prepared] — over the high sky where there is one — its plane the far one. */
+private fun DrawScope.drawSkyOf(prepared: PreparedScene, k: Float, panX: Float, seconds: Float) {
+    translate(SceneCamera.shift(panX, 0), 0f) {
+        scale(k, k, pivot = Offset.Zero) {
+            if (prepared.highSky) drawHighSkyLife(prepared.scene, prepared.mode, seconds) else drawSkyLife(prepared.mode, seconds)
         }
     }
 }

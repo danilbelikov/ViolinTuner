@@ -9,6 +9,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.geometry.Rect
 import com.example.violintuner.core.ui.motion.LocalReduceMotion
 import kotlin.math.PI
 import kotlin.math.sin
@@ -207,6 +209,12 @@ object SceneMotion {
         return HighCloud(table[at] + dx, table[at + 1], table[at + 2], table[at + 3])
     }
 
+    /**
+     * All the ground the sky's life may cover, in units of the grid — the stars and the clouds as they sail:
+     * what is drawn over it keeps its place above it (SceneStrata). [high] — the life of a high sky.
+     */
+    fun skyLifeReach(high: Boolean): Rect = if (high) Rect(-240f, -440f, 650f, 145f) else Rect(-240f, -425f, 660f, 130f)
+
     /** A cloud: its centre and size at [seconds]; it sails to the right and comes back from the left. */
     data class Cloud(val x: Float, val y: Float, val width: Float)
 
@@ -367,24 +375,32 @@ data class SceneFrame(val top: Float, val bottom: Float) {
 @Composable
 fun rememberSceneSeconds(enabled: Boolean = true): State<Float>? {
     val reduce = LocalReduceMotion.current
+    val context = LocalContext.current
+    // debug builds may stop the time at a second, still ticking, so a baked frame can be compared with a drawn one
+    val frozen = remember { SceneDebug.frozenSeconds(context) }
     val seconds = remember { mutableFloatStateOf(0f) }
     val run = enabled && !reduce
     LaunchedEffect(run) {
         if (!run) return@LaunchedEffect
         var start = -1L
         var shown = 0L
+        var tick = false
         while (true) {
             withFrameNanos { now ->
                 if (start < 0) start = now
                 if (now - shown >= SceneMotion.FRAME_NANOS) {
                     shown = now
-                    seconds.floatValue = (now - start) / 1_000_000_000f
+                    tick = !tick
+                    seconds.floatValue = frozen?.let { if (tick) it else it + FROZEN_TICK } ?: ((now - start) / 1_000_000_000f)
                 }
             }
         }
     }
     return if (run) seconds else null
 }
+
+/** How far a stopped clock steps back and forth, so the picture keeps being drawn: nothing moves by that much. */
+private const val FROZEN_TICK = 1e-4f
 
 /**
  * Seconds for a picture that lives only while [running] says so, and stops where it is otherwise —
