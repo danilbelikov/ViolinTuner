@@ -95,6 +95,17 @@ class SceneTest {
     }
 
     @Test
+    fun `every view of a stop is drawn for the whole screen like the rooms of the home, outside under its high sky`() {
+        for (stop in JourneyRoute.stops.drop(1)) for (view in stop.views) for (mode in SceneMode.entries) {
+            val scene = SceneParser.parse(File(assets, "${view.scene}.${mode.suffix}.scene").readText())
+            assertEquals(view.scene, SceneFrame(-420f, 600f), scene.frame)
+            assertEquals("${view.scene} is outside: it has a high sky", scene.aerial, scene.layers.any { it.fill == SceneLayer.SKY_HIGH })
+        }
+        // home is drawn by the home; its postcard is still a card
+        assertEquals(SceneFrame.CARD, SceneParser.parse(File(assets, "home.eve.scene").readText()).frame)
+    }
+
+    @Test
     fun `every view of the route has its picture in both times of day, every stop its silhouette`() {
         for (stop in JourneyRoute.stops) {
             assertNotNull(stop.id, JourneySilhouettes.paths[stop.id])
