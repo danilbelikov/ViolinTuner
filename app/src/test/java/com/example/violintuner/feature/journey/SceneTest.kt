@@ -51,6 +51,17 @@ class SceneTest {
     }
 
     @Test
+    fun `every stop has its hall seen from the stage for Live - indoors, from the ceiling to the boards under our feet`() {
+        for (stop in JourneyRoute.stops.drop(1)) for (mode in SceneMode.entries) {
+            val file = File(assets, "${stop.id}Stage.${mode.suffix}.scene")
+            assertTrue("${file.name} is not exported (tools/journey/stage-scenes.js)", file.isFile)
+            val scene = SceneParser.parse(file.readText())
+            assertEquals("${stop.id}Stage", scene.location)
+            assertTrue("a hall has no air", !scene.aerial)
+        }
+    }
+
+    @Test
     fun `every exported scene parses, and every colour it names is known in both palettes`() {
         val files = assets.listFiles { file -> file.name.endsWith(".scene") }.orEmpty()
         assertTrue("the scenes are exported from the handoff into the assets", files.size >= 12)

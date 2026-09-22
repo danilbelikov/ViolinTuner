@@ -8,6 +8,7 @@
 //   app/src/main/assets/journey/<scene>.<eve|day>.scene   — a line per layer, tab-separated
 //   feature/journey/art/JourneySilhouettes.kt             — the stamps
 //   feature/journey/art/ExtraScenePalettes.kt             — the colours of the places drawn after the handoff
+// The halls seen from the stage, where Live takes place (spec 3.27), are stage-scenes.js: `<stop>Stage`.
 // With previewDir it also writes an SVG of every scene, drawn the way the handoff draws them.
 const fs = require('fs');
 const path = require('path');
@@ -28,8 +29,9 @@ const helpers = cut('const hex2 =', 'let gid = 0;');
 const scenes = cut('const SCENES =', 'const scene =');
 const silhouettes = cut('const SIL =', 'const LOC =');
 const extra = fs.readFileSync(path.join(__dirname, 'extra-scenes.js'), 'utf8');
+const stage = fs.readFileSync(path.join(__dirname, 'stage-scenes.js'), 'utf8');
 
-const result = new Function(`${helpers}\n${scenes}\n${silhouettes}\n${extra}\nreturn { EXTRA_INSERTS, SCENES: { ...SCENES, ...EXTRA_SCENES }, SIL, BASE, LOCPAL: { ...LOCPAL, ...EXTRA_LOCPAL }, EXTRA_LOCPAL, AER, mix };`)();
+const result = new Function(`${helpers}\n${scenes}\n${silhouettes}\n${extra}\n${stage}\nreturn { EXTRA_INSERTS, SCENES: { ...SCENES, ...EXTRA_SCENES }, SIL, BASE, LOCPAL: { ...LOCPAL, ...EXTRA_LOCPAL }, EXTRA_LOCPAL, AER, mix };`)();
 const { EXTRA_INSERTS, SCENES, SIL, BASE, LOCPAL, EXTRA_LOCPAL, AER, mix } = result;
 
 const out = path.join(root, 'app/src/main/assets/journey');
@@ -47,11 +49,12 @@ for (const [key, s] of Object.entries(SCENES)) {
     layers.forEach(l => lines.push([l.fill, l.depth, num(l.op), num(l.tx), num(l.ty), num(l.sc), l.glow ? 1 : '', l.stroke || '', num(l.sw), l.fillNone ? 1 : '', l.d, l.anim || ''].join('\t')));
     fs.writeFileSync(path.join(out, `${key}.${mode}.scene`), lines.join('\n') + '\n');
     console.log(`${key}.${mode}: ${layers.length} layers`);
-    if (previewDir) fs.writeFileSync(path.join(previewDir, `${key}.${mode}.svg`), svgOf(layers, { ...BASE[mode], ...(LOCPAL[s.loc] || {}) }, aerial));
+    if (previewDir) fs.writeFileSync(path.join(previewDir, `${key}.${mode}.svg`), svgOf(layers, { ...BASE[mode], ...(LOCPAL[s.loc] || {}) }, aerial, s.stage));
   }
 }
 
-function svgOf(layers, pal, aerial) {
+// a hall from the stage is seen whole, from its ceiling to the boards under our feet
+function svgOf(layers, pal, aerial, whole) {
   const col = (t, depth) => {
     const c = t.startsWith('#') || t.startsWith('rgba') ? t : (pal[t] ?? 'magenta');
     return aerial && depth < 2 && c.startsWith('#') ? mix(c, pal.skyLow, AER[depth]) : c;
@@ -65,7 +68,8 @@ function svgOf(layers, pal, aerial) {
     return `<path ${attrs.join(' ')}/>`;
   });
   const stop = (o, c) => { const m = c.match(/rgba\((\d+),(\d+),(\d+),([\d.]+)\)/); return m ? `<stop offset="${o}" stop-color="rgb(${m[1]},${m[2]},${m[3]})" stop-opacity="${m[4]}"/>` : `<stop offset="${o}" stop-color="${c}"/>`; };
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="824" height="520" viewBox="0 0 412 260"><defs>` +
+  const box = whole ? 'width="412" height="700" viewBox="0 -240 412 700"' : 'width="824" height="520" viewBox="0 0 412 260"';
+  return `<svg xmlns="http://www.w3.org/2000/svg" ${box}><defs>` +
     `<linearGradient id="s" x1="0" y1="0" x2="0" y2="1">${stop(0, pal.sky)}${stop(1, pal.skyLow)}</linearGradient>` +
     `<radialGradient id="g">${stop(0, pal.glow)}${stop(1, 'rgba(255,196,110,0)')}</radialGradient>` +
     `<radialGradient id="w">${stop(0, 'rgba(255,196,110,.55)')}${stop(1, 'rgba(255,196,110,0)')}</radialGradient></defs>${els.join('')}</svg>`;
