@@ -6,7 +6,10 @@
 // seats rising away from us, the boards under our feet. The grid is the postcard's 412 × 260 continued
 // up to −240 and down to 460. Vienna, Paris, Berlin, Leipzig and Cremona are the handoff's; the other
 // eleven are drawn with the same helpers, each with its own sign that can be seen from the stage.
-// A hall has no time of day: `eve` is not used. Three slips of the handoff's code are mended here:
+// A hall has no time of day: `eve` is not used. After the locations handoff the six flat ceilings of the
+// boxes are boxes too (`boxCeil`, the rule of the second Vienna) and the five halls where nothing moved have
+// dust in the working light (`dust`); in the handoff both lay under the old ceiling and were not seen.
+// Three slips of the venue handoff's code are mended here:
 // the upper edge of a row arched the wrong way (a row thinner than nothing at Paris), the rod of a
 // chandelier stopped short of it, and the rows were laid near first, so a far row covered a near one.
 
@@ -39,7 +42,7 @@ const backWall = () => [L('hwall', R(48, 64, 316, 140)), L('hwallLit', R(48, 64,
   L('hwallSh', PG([[0, -30], [48, 64], [48, 204], [0, 300]])), L('hwallSh', PG([[412, -30], [364, 64], [364, 204], [412, 300]]))];
 const STAGE = o => {
   const l = [L('hvoid', R(-30, -240, 472, 720))];
-  l.push(...(o.ceil ? o.ceil() : []), ...backWall(), ...(o.tiers ? o.tiers() : []), ...seats(o.rise ?? 0, o.rows, o.seat, o.seatShade), ...(o.mark ? o.mark() : []), ...boards(o.board, o.boardShade));
+  l.push(...(o.ceil ? o.ceil() : []), ...backWall(), ...(o.tiers ? o.tiers() : []), ...seats(o.rise ?? 0, o.rows, o.seat, o.seatShade), ...(o.mark ? o.mark() : []), ...(o.dust ? dust(o.dust) : []), ...boards(o.board, o.boardShade));
   return l;
 };
 // a tier with its boxes along the arc; [fill] and [rail] — gold by default, white in the concert halls
@@ -48,6 +51,27 @@ const tierArc = (y, hw, hh, rise, boxes, fill = 'hgoldSh', rail = 'hgold') => {
   rep(boxes, j => { const t = boxes > 1 ? j / (boxes - 1) : .5, x = 206 - hw + 2 * hw * t, dy = -4 * rise * t * (1 - t); l.push(L('hdark', RR(+(x - 8).toFixed(1), +(y + dy - hh - 16).toFixed(1), 16, 16, 2)), L('hseatSh', R(+(x - 8).toFixed(1), +(y + dy - hh - 6).toFixed(1), 16, 6))); });
   return l;
 };
+// The box of the second Vienna for a flat ceiling (handoff locations, `stageCeil`): the ceiling runs from the
+// frame's top to the back wall, its beams narrowing and crowding towards it, its ribs running to its corners,
+// coffers between the nearest beams. [fill] backs the whole top, so no corner is left to the void.
+const boxCeil = (fill = 'hcream', shade = 'hcreamSh') => {
+  const hwAt = y => 158 + (64 - y) * (78 / 304);
+  const l = [L(fill, R(-30, -240, 472, 304)), L(fill, PG([[-30, -240], [442, -240], [364, 64], [48, 64]]), 1)];
+  let y = 58, g = 24; const ys = [];
+  while (y > -246) { ys.push(y); y -= g; g *= 1.36; }
+  ys.forEach((yy, i) => { const w = hwAt(yy), t = 2 + i * 1.4; l.push(L(shade, R(+(206 - w).toFixed(1), +(yy - t).toFixed(1), +(2 * w).toFixed(1), +t.toFixed(1)), 1, { op: .5 })); });
+  l.push(...rep(5, i => { const X = -30 + i * 118, x1 = 48 + i * 79; return L(shade, PG([[X, -240], [X + 16, -240], [x1 + 2.2, 64], [x1 - 2.2, 64]]), 1, { op: .34 }); }));
+  ys.slice(0, 4).forEach((yy, i) => { const w = hwAt(yy) * .9, n = 4 + i, y2 = ys[i + 1] ?? -246; rep(n, c => l.push(L(shade, R(+(206 - w + c * (2 * w / n) + 5).toFixed(1), +(yy - (yy - y2) * .8).toFixed(1), +(2 * w / n - 10).toFixed(1), +((yy - y2) * .58).toFixed(1)), 1, { op: .2 }))); });
+  l.push(L('rgba(20,16,30,.14)', PG([[-30, -240], [442, -240], [400, -60], [12, -60]]), 1));
+  return l;
+};
+// The one thing a rehearsal hall always has: dust in the working light (handoff locations, `stageQuiet`) —
+// a beam from the flies and motes rising in it, each from its own moment. It lives while the light is on.
+const stageRnd = s => () => (s = (s * 1103515245 + 12345) & 0x7fffffff) / 0x7fffffff;
+const dust = seed => { const r = stageRnd(seed);
+  return [L('rgba(255,244,214,.10)', PG([[128 - 13.2, -240], [128 + 13.2, -240], [178 + 44, 200], [178 - 44, 200]]), 1),
+    ...rep(18, i => { const x = 96 + r() * 190, y = -200 + r() * 380, rad = .7 + r() * 1.1, op = .25 + .5 * r(), period = 3 + 5 * r(), way = 14 + 26 * r();
+      return L('rgba(255,244,214,.55)', C(+x.toFixed(1), +y.toFixed(1), +rad.toFixed(2)), 1, { op: +op.toFixed(2), anim: `rise:${period.toFixed(1)}:${((i * .618 % 1) * period).toFixed(1)}:${way.toFixed(0)}` }); })]; };
 // a ceiling of coffers: a grid of sunk squares
 const coffers = (y0, y1, fill = 'hcreamSh') => rep(4, r => rep(8, c => L(fill, R(-10 + c * 54, y0 + r * (y1 - y0) / 4 + 6, 42, (y1 - y0) / 4 - 12), 1, { op: .55 })));
 // columns standing on the back wall
@@ -79,37 +103,37 @@ stageOf('vienna', {}, () => STAGE({ rise: 6,
 
 // Salzburg — the Great Hall of the Mozarteum, white and gold: the organ is behind us now, opposite is the arcade of the gallery
 stageOf('salzburg', { hwall: '#E8E0CE', hwallLit: '#F3EEE2', hwallSh: '#CFC6B1', hdark: '#5A4E44' }, () => STAGE({ rise: 6,
-  ceil: () => [L('hcream', R(-30, -240, 472, 300)), ...coffers(-230, 50), ...chand(112, 30, 8), ...chand(300, 30, 8), ...chand(206, 8, 8)],
+  ceil: () => [...boxCeil(), ...chand(112, 30, 8), ...chand(300, 30, 8), ...chand(206, 8, 8)],
   tiers: () => [...rep(7, i => [L('hwallSh', ARCH(62 + i * 42, 74, 26, 62)), L('hdark', ARCH(65 + i * 42, 80, 20, 56), 1, { op: .75 })]), ...tierArc(152, 176, 10, 5, 0)],
   mark: () => [L('hgold', R(48, 64, 316, 4))] }));
 
 // Prague — the Dvořák Hall of the Rudolfinum: a colonnade round the hall, blue seats
 stageOf('prague', { hwall: '#C9B78F', hwallLit: '#E3D6B6', hwallSh: '#A89468', hseat: '#3E5A8E', hseatLit: '#4E6EA8', hseatSh: '#27395C' }, () => STAGE({ rise: 5,
-  ceil: () => [L('hcream', R(-30, -240, 472, 300)), L('hgoldSh', R(-30, 52, 472, 8)), ...rep(3, i => L('hcreamSh', R(-30, -200 + i * 80, 472, 3))), ...chand(140, 26, 9), ...chand(272, 26, 9)],
+  ceil: () => [...boxCeil(), ...chand(140, 26, 9), ...chand(272, 26, 9)],
   tiers: () => [...columns(9, 60, 352, 70, 192), ...tierArc(152, 176, 8, 4, 0)],
   mark: () => [L('hgold', R(48, 64, 316, 5))] }));
 
 // Amsterdam — the Grote Zaal of the Concertgebouw: the great organ is behind us, opposite is the balcony with its gold rail
 stageOf('amsterdam', { hwall: '#E6DDC9', hwallLit: '#EFE8D8', hwallSh: '#CCC3AE' }, () => STAGE({ rise: 5,
-  ceil: () => [L('hcream', R(-30, -240, 472, 300)), ...rep(6, i => L('hcreamSh', R(-30 + i * 80, -240, 3, 300), 1, { op: .6 })), ...crystal(96, 36, 10), ...crystal(316, 36, 10), ...crystal(160, 10, 9), ...crystal(252, 10, 9)],
+  ceil: () => [...boxCeil(), ...crystal(96, 36, 10), ...crystal(316, 36, 10), ...crystal(160, 10, 9), ...crystal(252, 10, 9)],
   tiers: () => [...tierArc(148, 178, 16, 5, 0, 'hwallSh', 'hgold'), ...rep(7, i => L('hseatSh', R(64 + i * 42, 118, 30, 12))), ...rep(8, i => L('hgoldLit', C(64 + i * 40, 84, 3)))],
   mark: () => [L('hgold', R(48, 132, 316, 3))] }));
 
 // St Petersburg — the Grand Hall of the Philharmonia: white columns and crystal chandeliers
 stageOf('spb', { hwall: '#EDE8DC', hwallLit: '#F7F4EC', hwallSh: '#D2CCBE', hcream: '#FFFFFF', hcreamSh: '#D2CCBE' }, () => STAGE({ rise: 5,
-  ceil: () => [L('hcream', R(-30, -240, 472, 300)), ...coffers(-230, 40), ...[92, 164, 248, 320].flatMap(x => crystal(x, 40, 10)), ...[120, 292].flatMap(x => crystal(x, 4, 9))],
+  ceil: () => [...boxCeil(), ...[92, 164, 248, 320].flatMap(x => crystal(x, 40, 10)), ...[120, 292].flatMap(x => crystal(x, 4, 9))],
   tiers: () => [...columns(8, 62, 350, 68, 190), ...tierArc(154, 176, 8, 4, 0, 'hcreamSh', 'hgold')],
   mark: () => [L('hcreamSh', R(48, 62, 316, 6))] }));
 
 // Moscow — the Great Hall of the Conservatory: the oval portraits of composers along the wall
 stageOf('moscow', { hwall: '#E4DAC2', hwallLit: '#EFE7D2', hwallSh: '#CBC1A8', hseat: '#A98B5A', hseatLit: '#BFA06E', hseatSh: '#7A6340', hportrait: '#4E4438' }, () => STAGE({ rise: 5,
-  ceil: () => [L('hcream', R(-30, -240, 472, 300)), L('hcreamSh', R(-30, 48, 472, 8)), ...chand(146, 24, 10), ...chand(266, 24, 10)],
+  ceil: () => [...boxCeil(), ...chand(146, 24, 10), ...chand(266, 24, 10)],
   tiers: () => [...rep(7, i => { const x = 76 + i * 43.3; return [L('hcream', E(x, 100, 12, 15)), L('hportrait', E(x, 100, 9, 12)), L('hgold', E(x, 100, 12, 15), 1, { fillNone: true, stroke: 'hgold', sw: 1.4 })]; }), ...tierArc(160, 176, 10, 5, 0, 'hwallSh', 'hcream')],
   mark: () => [L('hcream', R(48, 64, 316, 5))] }));
 
 // Sydney — the Concert Hall of the Opera House: ribs of white birch overhead, the magenta «petals» over the hall
-stageOf('sydney', { hwall: '#D9C49A', hwallLit: '#E2CFA6', hwallSh: '#BFA97C', hseat: '#7A3E8E', hseatLit: '#9A5AAE', hseatSh: '#4E2458', hpetal: '#C2307E', hpetalLit: '#E66AAE', hrib: '#C9B48A' }, () => STAGE({ rise: 6,
-  ceil: () => [L('hwall', R(-30, -240, 472, 300)), ...rep(11, i => { const x = -20 + i * 45; return L('hrib', PG([[x, -240], [x + 10, -240], [206 + (x + 5 - 206) * .3 + 1.5, 60], [206 + (x + 5 - 206) * .3 - 1.5, 60]])); }),
+stageOf('sydney', { hwall: '#D9C49A', hwallLit: '#E2CFA6', hwallSh: '#BFA97C', hseat: '#7A3E8E', hseatLit: '#9A5AAE', hseatSh: '#4E2458', hpetal: '#C2307E', hpetalLit: '#E66AAE', hrib: '#C9B48A' }, () => STAGE({ rise: 6, dust: 14,
+  ceil: () => [...boxCeil('hwall', 'hwallSh'), ...rep(11, i => { const x = -20 + i * 45; return L('hrib', PG([[x, -240], [x + 10, -240], [206 + (x + 5 - 206) * .3 + 1.5, 60], [206 + (x + 5 - 206) * .3 - 1.5, 60]])); }),
     ...rep(7, i => { const x = 104 + i * 34, y = 22 - Math.abs(i - 3) * 6; return [L('hgoldSh', R(x - .4, -240, .8, y + 240), 1, { op: .5 }), L('hpetal', E(x, y, 15, 4.4)), L('hpetalLit', E(x - 3, y - 1.2, 8, 2))]; })],
   tiers: () => [...tierArc(150, 178, 12, 6, 0, 'hwallSh', 'hrib')],
   mark: () => [L('hrib', R(48, 64, 316, 4))] }));
@@ -127,14 +151,14 @@ stageOf('milan', { hwall: '#4A1622', hwallLit: '#6E2333', hwallSh: '#3A1220', hs
   tiers: () => [...tierArc(176, 198, 10, 16, 13), ...tierArc(150, 186, 9, 14, 12), ...tierArc(124, 172, 8, 12, 11), ...tierArc(100, 158, 7, 10, 10), ...tierArc(78, 144, 6, 8, 9)] }));
 
 // London — the Royal Albert Hall: the round hall under its dome, the acoustic «mushrooms» hanging over the arena
-stageOf('london', { hwall: '#3A1820', hwallLit: '#5A2A30', hwallSh: '#2A1016', hseat: '#A8323F', hcream: '#C9CFD6', hcreamSh: '#9FA8B2', hmush: '#F2EFE6', hmushSh: '#9A9488' }, () => STAGE({ rise: 14, rows: 8,
+stageOf('london', { hwall: '#3A1820', hwallLit: '#5A2A30', hwallSh: '#2A1016', hseat: '#A8323F', hcream: '#C9CFD6', hcreamSh: '#9FA8B2', hmush: '#F2EFE6', hmushSh: '#9A9488' }, () => STAGE({ rise: 14, rows: 8, dust: 14,
   ceil: () => [L('hdark', R(-30, -240, 472, 300)), L('hcreamSh', E(206, -60, 220, 150)), L('hcream', E(206, -64, 200, 132)),
     ...rep(12, i => { const a = Math.PI * i / 12; return L('hcreamSh', PG([[206, -64], [206 + Math.cos(a) * 200 - 1, -64 + Math.sin(a) * 132], [206 + Math.cos(a) * 200 + 1, -64 + Math.sin(a) * 132]]), 1, { op: .6 }); }),
     ...rep(9, i => { const x = 96 + i * 27.5, y = 30 + ((i * 7) % 3) * 8 - Math.abs(i - 4) * 3; return [L('hcreamSh', R(x - .4, -200, .8, y + 200), 1, { op: .6 }), L('hmushSh', E(x, y + 1.6, 13, 4)), L('hmush', E(x, y, 13, 3.6))]; })],
   tiers: () => [...tierArc(170, 198, 10, 14, 14), ...tierArc(140, 184, 9, 12, 13), ...tierArc(112, 170, 8, 10, 12), ...tierArc(86, 156, 7, 8, 11)] }));
 
 // New York — Carnegie Hall: white and gold balconies, no boxes, a ring of lights in the oval of the ceiling
-stageOf('newyork', { hwall: '#3A2A24', hwallLit: '#5A443A', hwallSh: '#2A1E1A', hseat: '#A8323F', hcream: '#F5F0E4', hcreamSh: '#DDD5C2', htier: '#F3EEE2', htierSh: '#DAD2BF' }, () => STAGE({ rise: 12, rows: 8,
+stageOf('newyork', { hwall: '#3A2A24', hwallLit: '#5A443A', hwallSh: '#2A1E1A', hseat: '#A8323F', hcream: '#F5F0E4', hcreamSh: '#DDD5C2', htier: '#F3EEE2', htierSh: '#DAD2BF' }, () => STAGE({ rise: 12, rows: 8, dust: 15,
   ceil: () => [L('hcream', R(-30, -240, 472, 300)), L('hcreamSh', E(206, -30, 190, 84)), L('hcream', E(206, -34, 172, 72)), L('hgold', E(206, -34, 176, 76), 1, { fillNone: true, stroke: 'hgold', sw: 2.4 }),
     ...rep(16, i => { const a = Math.PI * 2 * i / 16; return L('hchand', C(206 + Math.cos(a) * 176, -34 + Math.sin(a) * 76, 2.4)); })],
   tiers: () => [...tierArc(166, 196, 11, 12, 0, 'htierSh', 'htier'), ...tierArc(134, 180, 10, 10, 0, 'htierSh', 'htier'), ...tierArc(104, 166, 9, 8, 0, 'htierSh', 'htier'), ...tierArc(78, 152, 8, 7, 0, 'htierSh', 'htier'),
@@ -146,7 +170,7 @@ stageOf('buenosaires', { hwall: '#3F1A22', hwallLit: '#5A2A34', hwallSh: '#2A0E1
   tiers: () => rep(6, k => tierArc(182 - k * 21, 200 - k * 11, 9 - k * .6, 16 - k * 1.6, 14 - k)) }));
 
 // ── виноградник — the vineyard: terraces of seats on every side, the stage in the middle ───────
-stageOf('berlin', { hwall: '#4A3E38', hwallLit: '#5C4E44', hseat: '#3E6E7A', hseatLit: '#4E8899', hseatSh: '#284A54' }, () => STAGE({ rise: 4, rows: 6,
+stageOf('berlin', { hwall: '#4A3E38', hwallLit: '#5C4E44', hseat: '#3E6E7A', hseatLit: '#4E8899', hseatSh: '#284A54' }, () => STAGE({ rise: 4, rows: 6, dust: 14,
   ceil: () => [L('hdark', R(-30, -240, 472, 300)), ...rep(7, i => { const x = 32 + i * 58, y = -30 - ((i % 3) * 26); return [L('hcreamSh', E(x, y, 34, 11)), L('hcream', E(x, y - 3, 30, 8)), L('hgoldSh', R(x - .5, -240, 1, y - 8 + 240))]; })],
   tiers: () => rep(6, i => { const sg = i < 3 ? -1 : 1, k = i % 3, x = 206 + sg * (96 + k * 62), y = 176 - k * 30, w = 78 - k * 8;
     return [L('hwoodSh', PG([[x - w / 2, y], [x + w / 2, y], [x + w / 2 - 5, y - 16], [x - w / 2 + 5, y - 16]])), L('hwood', R(x - w / 2 + 5, y - 19, w - 10, 4)), ...rep(5, j => L('hseatSh', R(x - w / 2 + 9 + j * ((w - 20) / 5), y - 14, 7, 8)))]; }) }));
@@ -158,7 +182,7 @@ stageOf('tokyo', { hwall: '#6E4A34', hwallLit: '#8A5E42', hwallSh: '#4E3424', hs
     return [L('hwoodSh', PG([[x - w / 2, y], [x + w / 2, y], [x + w / 2 - 5, y - 16], [x - w / 2 + 5, y - 16]])), L('hwood', R(x - w / 2 + 5, y - 19, w - 10, 4)), ...rep(4, j => L('hseatSh', R(x - w / 2 + 9 + j * ((w - 18) / 4), y - 14, 7, 8)))]; }) }));
 
 // ── неф — the Gothic nave: pointed arcades instead of tiers, pews instead of seats, the rose window ─
-stageOf('leipzig', { hwall: '#CFC6B4', hwallLit: '#E2DACA', hwallSh: '#A89E8C', hseat: '#6E5238', hseatLit: '#8B6A48', hseatSh: '#4E3A28' }, () => STAGE({ rise: 0, rows: 7,
+stageOf('leipzig', { hwall: '#CFC6B4', hwallLit: '#E2DACA', hwallSh: '#A89E8C', hseat: '#6E5238', hseatLit: '#8B6A48', hseatSh: '#4E3A28' }, () => STAGE({ rise: 0, rows: 7, dust: 15,
   ceil: () => [L('hdark', R(-30, -240, 472, 220)), ...rep(4, i => { const t = i / 3, hw = 200 - 56 * t, y = -10 - t * 52; return L('hstoneSh', `M${206 - hw} ${y + 70}L${206 - hw} ${y}Q206 ${y - 78} ${206 + hw} ${y}L${206 + hw} ${y + 70}Z`, 1, { op: .5 + .12 * i }); })],
   tiers: () => [...rep(2, s => { const sg = s ? 1 : -1; return rep(3, i => { const t = i / 2, x = 206 + sg * (150 - 36 * t), y = 190 - t * 30, hh = 126 - 40 * t, w = 30 - 8 * t;
     return [L('hstoneSh', ARCH(x - w / 2, y - hh, w, hh)), L('hstone', ARCH(x - w / 2 + 3, y - hh + 4, w - 6, hh - 6), 1, { op: .35 })]; }); }),
