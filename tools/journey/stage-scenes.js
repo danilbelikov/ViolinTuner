@@ -57,12 +57,25 @@ const dome = (r, colours, op = .55) => [L('hcreamSh', C(206, -6, r + 16)), L('hc
   ...rep(colours.length, i => { const a = Math.PI * (1.06 + .88 * i / (colours.length - 1)); return L(colours[i], E(206 + Math.cos(a) * r * .64, -6 + Math.sin(a) * r * .47, r * .22, r * .16), 1, { op }); }),
   L('hgold', C(206, -6, r + 4), 1, { fillNone: true, stroke: 'hgold', sw: 3 })];
 
+// a caryatid seen in perspective: [s] shrinks it with the depth, [yb] is where it stands (the grammar of VIENNA_INT)
+const cary = (x, yb, s, tok) => [L('hgoldSh', R(x - 4 * s, yb - 62 * s, 8 * s, 62 * s)), L(tok, R(x - 3 * s, yb - 60 * s, 6 * s, 60 * s)), L(tok, E(x, yb - 58 * s, 7 * s, 3 * s)), L(tok, C(x, yb - 66 * s, 4 * s)), L(tok, E(x, yb - 70 * s, 5 * s, 2 * s)), L(tok, R(x - 6 * s, yb - 4 * s, 12 * s, 4 * s))];
+
 // ── коробка — the shoebox: one straight tier along the back wall, pilasters, the ceiling ───────
+// Vienna is the handoff's second version (blocks/…/live-scene.js): the ceiling of a box is a third of the
+// portrait and dead as a flat fill, so its coffers narrow towards the back wall and its ribs run to the
+// vanishing point; the caryatids stand along the walls going away from us and shrink with the depth.
 stageOf('vienna', {}, () => STAGE({ rise: 6,
-  ceil: () => [L('hcream', R(-30, -240, 472, 300)), ...rep(5, i => L('hgoldSh', R(-30, -230 + i * 54, 472, 5), 1, { op: .5 })), ...rep(4, i => L('hgold', R(20 + i * 98, -224, 72, 4))), ...chand(112, 34, 9), ...chand(300, 34, 9), ...chand(206, 14, 7)],
+  ceil: () => [L('hcream', R(-30, -240, 472, 304)),
+    ...rep(6, k => { const t = Math.pow(k / 5, .8), y = -240 + 300 * t, hw = 240 - 84 * t;
+      return [L('hgoldSh', PG([[206 - hw, y], [206 + hw, y], [206 + hw - 3, y + 7], [206 - hw + 3, y + 7]]), 1, { op: .42 }),
+        L('hcreamSh', PG([[206 - hw + 3, y + 7], [206 + hw - 3, y + 7], [206 + hw - 6, y + 16], [206 - hw + 6, y + 16]]), 1, { op: .22 })]; }),
+    ...[-.66, -.24, .24, .66].map(f => L('hgoldSh', PG([[206 + f * 240, -240], [206 + f * 240 + 9, -240], [206 + f * 152 + 6, 64], [206 + f * 152, 64]]), 1, { op: .34 })),
+    L('hcreamSh', PG([[-30, -240], [26, -240], [78, 64], [-30, 64]]), 1, { op: .3 }), L('hcreamSh', PG([[442, -240], [386, -240], [334, 64], [442, 64]]), 1, { op: .3 }),
+    ...chand(118, -52, 10), ...chand(294, -52, 10), ...chand(206, 4, 7)],
   // the caryatids of the Golden Hall carry the gallery
-  tiers: () => [...tierArc(150, 176, 11, 6, 0), ...rep(8, i => L('hgold', R(56 + i * 38, 66, 9, 84))), ...rep(8, i => [L('hgoldLit', C(60.5 + i * 38, 60, 5)), L('hgoldLit', R(57.5 + i * 38, 62, 7, 14))])],
-  mark: () => [L('hgoldSh', R(48, 60, 316, 5))] }));
+  tiers: () => [...rep(5, k => { const t = k / 4, s = .98 - .54 * t, yb = 202 - 40 * t;
+    return [-1, 1].flatMap(sg => cary(206 + sg * (202 - 156 * t), yb, s, sg < 0 ? 'hgoldLit' : 'hgold')); }), ...tierArc(156, 180, 11, 6, 0)],
+  mark: () => [L('hgold', R(48, 58, 316, 6)), L('hgoldSh', R(48, 64, 316, 2))] }));
 
 // Salzburg — the Great Hall of the Mozarteum, white and gold: the organ is behind us now, opposite is the arcade of the gallery
 stageOf('salzburg', { hwall: '#E8E0CE', hwallLit: '#F3EEE2', hwallSh: '#CFC6B1', hdark: '#5A4E44' }, () => STAGE({ rise: 6,
