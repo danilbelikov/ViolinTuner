@@ -48,23 +48,6 @@ class VenueRulesTest {
     }
 
     @Test
-    fun `the menu opens what is reached, marks the next stop and keeps the rest ahead`() {
-        val menu = VenueRules.menu(inVienna)
-        assertEquals(JourneyRoute.stops.size, menu.size)
-        assertEquals(List(5) { VenueAccess.OPEN }, menu.take(5).map { it.access })
-        assertEquals(VenueEntry(Venue.Hall("prague"), VenueAccess.NEXT), menu[5])
-        assertEquals(List(JourneyRoute.stops.size - 6) { VenueAccess.AHEAD }, menu.drop(6).map { it.access })
-        assertEquals(JourneyRoute.stops.map { it.id }, menu.map { if (it.venue is Venue.Hall) it.venue.stopId else JourneyRoute.HOME })
-    }
-
-    @Test
-    fun `before the trip the room is open and the first city is next`() {
-        val menu = VenueRules.menu(notStarted)
-        assertEquals(VenueEntry(Venue.Home, VenueAccess.OPEN), menu.first())
-        assertEquals(VenueEntry(Venue.Hall("cremona"), VenueAccess.NEXT), menu[1])
-    }
-
-    @Test
     fun `a hall knows its stop on the route`() {
         assertEquals(0, Venue.Home.stopIndex)
         assertEquals(JourneyRoute.indexOf("vienna"), Venue.Hall("vienna").stopIndex)

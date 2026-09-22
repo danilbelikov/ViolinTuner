@@ -26,7 +26,6 @@ internal object LiveDimens {
     val PlaceLabelPadding = 11.dp
     val PlaceLabelIcon = 14.dp
     val PlaceLabelGap = 7.dp
-    val PlaceLabelEdge = 1.dp
     /** «занятие · 12:34» under the mode switcher (handoff 10h). */
     val PracticeChipHeight = 28.dp
     /** A paper tag (handoff venue 29j). */

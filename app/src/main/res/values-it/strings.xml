@@ -917,11 +917,6 @@
     <!-- Live in the room and in the halls (spec 3.27): where the player is and plays -->
     <string name="venue_home">A casa</string>
     <string name="venue_pair">%1$s · %2$s</string>
-    <string name="venue_sheet_title">Dove suonare</string>
-    <string name="venue_here">qui</string>
-    <string name="venue_next">si apre all\'arrivo a %1$s</string>
-    <string name="venue_ahead">non ancora aperto</string>
-    <string name="venue_choose">Scegli dove suonare</string>
     <string name="venue_play_here">Suona qui</string>
     <string name="venue_play_here_hint">Live si aprirà qui; la scelta resta salvata.</string>
     <string-array name="venue_halls">

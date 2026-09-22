@@ -917,11 +917,6 @@
     <!-- Live in the room and in the halls (spec 3.27): where the player is and plays -->
     <string name="venue_home">집</string>
     <string name="venue_pair">%1$s · %2$s</string>
-    <string name="venue_sheet_title">연주할 곳</string>
-    <string name="venue_here">여기</string>
-    <string name="venue_next">%1$s에 도착하면 열려요</string>
-    <string name="venue_ahead">아직 열리지 않았어요</string>
-    <string name="venue_choose">연주할 곳 고르기</string>
     <string name="venue_play_here">여기서 연주</string>
     <string name="venue_play_here_hint">Live가 여기서 열려요. 선택은 기억돼요.</string>
     <string-array name="venue_halls">

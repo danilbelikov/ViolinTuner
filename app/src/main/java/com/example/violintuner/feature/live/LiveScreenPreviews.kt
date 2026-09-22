@@ -9,10 +9,8 @@ import com.example.violintuner.core.domain.Note
 import com.example.violintuner.core.domain.ViolinString
 import com.example.violintuner.core.domain.Zone
 import com.example.violintuner.core.domain.home.HomeState
-import com.example.violintuner.core.domain.journey.JourneyProgress
 import com.example.violintuner.core.domain.session.RecordingBar
 import com.example.violintuner.core.domain.venue.Venue
-import com.example.violintuner.core.domain.venue.VenueRules
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.journey.LocalHomeLook
 
@@ -52,7 +50,6 @@ private fun LivePreview(
                 statusLine = LiveReducer.statusLineOf(target, signal),
                 practiceMs = practiceMs,
                 venue = venue,
-                venueMenu = VenueRules.menu(JourneyProgress.EMPTY),
             ),
             onIntent = {},
             reduceMotion = reduceMotion,

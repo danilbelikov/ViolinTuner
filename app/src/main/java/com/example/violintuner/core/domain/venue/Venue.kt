@@ -9,7 +9,6 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.map
 
 /**
  * Where the player is (spec 3.27): at home, or in a city the road has reached. Live takes place
@@ -45,11 +44,6 @@ object FollowTheRoad : VenueStore {
     override suspend fun store(value: String?) = Unit
 }
 
-/** What a place looks like in the list «Где играть»: open to play in, the next one on the road, or still ahead. */
-enum class VenueAccess { OPEN, NEXT, AHEAD }
-
-data class VenueEntry(val venue: Venue, val access: VenueAccess)
-
 /** Pure: the stored choice and the journey → where the player is and where they may go. */
 object VenueRules {
     const val HOME = JourneyRoute.HOME
@@ -82,16 +76,6 @@ object VenueRules {
         choice is Venue.Hall -> choice.stopId
         else -> HOME
     }
-
-    /** The list «Где играть»: home and the reached stops open, the next drawn stop, the rest of the drawn route ahead. */
-    fun menu(progress: JourneyProgress): List<VenueEntry> {
-        val open = reached(progress)
-        val next = JourneyRules.next(progress)
-        val ahead = JourneyRoute.stops.drop(1).filter { stop -> stop.available && open.none { it is Venue.Hall && it.stopId == stop.id } && stop.id != next?.id }
-        return open.map { VenueEntry(it, VenueAccess.OPEN) } +
-            listOfNotNull(next?.let { VenueEntry(Venue.Hall(it.id), VenueAccess.NEXT) }) +
-            ahead.map { VenueEntry(Venue.Hall(it.id), VenueAccess.AHEAD) }
-    }
 }
 
 /** Where the player is, and the three ways of moving (spec 3.27): home, back on the road, to a place of one's choice. */
@@ -101,16 +85,13 @@ class Venues @Inject constructor(
 ) {
     val current: Flow<Venue> = combine(store.stored, journey.progress, VenueRules::resolve).distinctUntilChanged()
 
-    /** The list «Где играть». */
-    val menu: Flow<List<VenueEntry>> = journey.progress.map(VenueRules::menu).distinctUntilChanged()
-
     /** «Войти в дом», the door home of a stop. */
     suspend fun goHome() = store.store(VenueRules.HOME)
 
     /** «В дорогу», an arrival: wherever the road stands, now and after the next leg. */
     suspend fun followRoad() = store.store(null)
 
-    /** «Играть здесь», the list «Где играть». A place that is not reached is not a choice: nothing changes. */
+    /** «Играть здесь» on a stop and after its stamp. A place that is not reached is not a choice: nothing changes. */
     suspend fun choose(venue: Venue) {
         val progress = journey.progress.first()
         if (venue in VenueRules.reached(progress)) store.store(VenueRules.storedFor(venue, progress))

@@ -68,7 +68,6 @@ import com.example.violintuner.feature.live.components.zoneBackground
 import com.example.violintuner.feature.live.venue.VenueBackdrop
 import com.example.violintuner.feature.live.venue.VenueLabel
 import com.example.violintuner.feature.live.venue.VenueLook
-import com.example.violintuner.feature.live.venue.VenueSheet
 import com.example.violintuner.feature.live.venue.rememberVenuePicture
 import kotlinx.coroutines.delay
 
@@ -77,7 +76,8 @@ import kotlinx.coroutines.delay
  * Stateless. Wider than tall gets the landscape layout (ring on the left, controls on the right),
  * anything else the portrait column.
  *
- * Behind it is the place the player is in: the room, or a hall seen from its stage. While the violin
+ * Behind it is the place the player is in: the room, or a hall seen from its stage — chosen on the
+ * journey, only named here. While the violin
  * is silent the light is on; as soon as a note is held it goes down, the picture sinks into the dusk
  * and freezes, the colour of the zone lights it, and the controls one does not touch fade with it.
  * [showVenue] false is the Live of before, on its plain dark field (a build for comparison).
@@ -112,13 +112,7 @@ fun LiveScreen(
         ringCenter = it.centerIn(rootPosition)
         ringDiameter.floatValue = it.size.width.toFloat()
     }
-    var choosing by rememberSaveable { mutableStateOf(false) }
     val home = LocalHomeLook.current
-    val place = PlaceUi(
-        shown = showVenue,
-        canChoose = state.recording == null,
-        onChoose = { choosing = true },
-    )
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val landscape = LiveLayoutMath.isLandscape(maxWidth.value, maxHeight.value)
@@ -157,29 +151,13 @@ fun LiveScreen(
                 )
             }
             if (landscape) {
-                LandscapeLayout(state, zoneColor, glow, chrome, place, onIntent, ringModifier, reduceMotion)
+                LandscapeLayout(state, zoneColor, glow, chrome, showVenue, onIntent, ringModifier, reduceMotion)
             } else {
-                PortraitLayout(state, zoneColor, glow, chrome, place, onIntent, ringModifier, reduceMotion)
+                PortraitLayout(state, zoneColor, glow, chrome, showVenue, onIntent, ringModifier, reduceMotion)
             }
         }
     }
-    val here = state.venue
-    if (choosing && showVenue && here != null) {
-        VenueSheet(
-            current = here,
-            menu = state.venueMenu,
-            home = home,
-            onChoose = { venue ->
-                onIntent(LiveIntent.VenueChosen(venue))
-                choosing = false
-            },
-            onDismiss = { choosing = false },
-        )
-    }
 }
-
-/** What the screen knows about choosing the place: the label is there only with a picture, and silent while recording. */
-private class PlaceUi(val shown: Boolean, val canChoose: Boolean, val onChoose: () -> Unit)
 
 /**
  * The light in the hall (spec 3.27, 5.20): 0 — on, 1 — out. It goes out as soon as a note is held or
@@ -223,7 +201,7 @@ private fun PortraitLayout(
     zoneColor: Color,
     glow: State<Float>,
     chrome: () -> Float,
-    place: PlaceUi,
+    showVenue: Boolean,
     onIntent: (LiveIntent) -> Unit,
     ringModifier: Modifier,
     reduceMotion: Boolean,
@@ -257,7 +235,7 @@ private fun PortraitLayout(
         ) {
             PracticeChipSlot(practiceMs = state.practiceMs, onClick = { onIntent(LiveIntent.PracticeChipClicked) })
             Spacer(Modifier.weight(1f))
-            if (place.shown) state.venue?.let { VenueLabel(it, enabled = place.canChoose, onClick = place.onChoose) }
+            if (showVenue) state.venue?.let { VenueLabel(it) }
         }
         AnimatedVisibility(
             visible = state.mode == LiveMode.TUNING,
@@ -349,7 +327,7 @@ private fun LandscapeLayout(
     zoneColor: Color,
     glow: State<Float>,
     chrome: () -> Float,
-    place: PlaceUi,
+    showVenue: Boolean,
     onIntent: (LiveIntent) -> Unit,
     ringModifier: Modifier,
     reduceMotion: Boolean,
@@ -393,7 +371,7 @@ private fun LandscapeLayout(
                     modifier = Modifier.chrome(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha, chrome),
                 )
                 Spacer(Modifier.weight(1f))
-                if (place.shown) state.venue?.let { VenueLabel(it, enabled = place.canChoose, onClick = place.onChoose, modifier = Modifier.chrome(1f, chrome)) }
+                if (showVenue) state.venue?.let { VenueLabel(it, modifier = Modifier.chrome(1f, chrome)) }
             }
             if (state.mode == LiveMode.TUNING) {
                 StringRow(

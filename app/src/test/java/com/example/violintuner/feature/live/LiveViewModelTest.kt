@@ -25,7 +25,7 @@ import com.example.violintuner.core.domain.practice.RunningPractice
 import com.example.violintuner.core.domain.session.FakeSessionRepository
 import com.example.violintuner.core.domain.venue.FakeVenueStore
 import com.example.violintuner.core.domain.venue.Venue
-import com.example.violintuner.core.domain.venue.VenueAccess
+import com.example.violintuner.core.domain.venue.VenueRules
 import com.example.violintuner.core.domain.venue.Venues
 import com.example.violintuner.core.recording.TakePipeline
 import com.example.violintuner.core.settings.FakeSettingsRepository
@@ -795,27 +795,14 @@ class LiveViewModelTest {
     }
 
     @Test
-    fun `Live takes place where the player is, and the list offers the reached places and the next stop`() = runTest {
+    fun `Live takes place where the player is, and follows when the player moves`() = runTest {
         inCremona()
         val viewModel = viewModel(FakeScenario.SILENCE)
         observe(viewModel, 300)
         assertEquals(Venue.Hall("cremona"), viewModel.state.value.venue)
-        assertEquals(listOf(VenueAccess.OPEN, VenueAccess.OPEN, VenueAccess.NEXT), viewModel.state.value.venueMenu.take(3).map { it.access })
-        viewModel.onIntent(LiveIntent.VenueChosen(Venue.Home))
+        // the place is chosen on the journey: going home there is seen here at once
+        venueStore.store(VenueRules.HOME)
         advance(100)
         assertEquals(Venue.Home, viewModel.state.value.venue)
-        assertEquals("home", venueStore.stored.value)
-    }
-
-    @Test
-    fun `the place is fixed while a recording runs, like the mode`() = runTest {
-        inCremona()
-        val viewModel = viewModel(FakeScenario.IN_TUNE)
-        observe(viewModel, 300)
-        viewModel.onIntent(LiveIntent.RecordClicked)
-        advance(300)
-        viewModel.onIntent(LiveIntent.VenueChosen(Venue.Home))
-        advance(300)
-        assertEquals(Venue.Hall("cremona"), viewModel.state.value.venue)
     }
 }
