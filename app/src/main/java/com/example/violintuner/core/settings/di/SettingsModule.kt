@@ -9,11 +9,13 @@ import com.example.violintuner.core.backup.BackupPrefs
 import com.example.violintuner.core.domain.practice.RunningPracticeStore
 import com.example.violintuner.core.domain.progress.ProfileRepository
 import com.example.violintuner.core.domain.repertoire.StandHintStore
+import com.example.violintuner.core.domain.venue.VenueStore
 import com.example.violintuner.core.settings.DataStoreBackupPrefs
 import com.example.violintuner.core.settings.DataStoreProfileRepository
 import com.example.violintuner.core.settings.DataStoreRunningPracticeStore
 import com.example.violintuner.core.settings.DataStoreSettingsRepository
 import com.example.violintuner.core.settings.DataStoreStandHintStore
+import com.example.violintuner.core.settings.DataStoreVenueStore
 import com.example.violintuner.core.settings.IntonationConfigSource
 import com.example.violintuner.core.settings.SettingsConfigSource
 import com.example.violintuner.core.settings.SettingsRepository
@@ -51,6 +53,10 @@ abstract class SettingsModule {
     @Binds
     @Singleton
     abstract fun bindBackupPrefs(impl: DataStoreBackupPrefs): BackupPrefs
+
+    @Binds
+    @Singleton
+    abstract fun bindVenueStore(impl: DataStoreVenueStore): VenueStore
 
     companion object {
         private const val FILE_NAME = "user_settings"
