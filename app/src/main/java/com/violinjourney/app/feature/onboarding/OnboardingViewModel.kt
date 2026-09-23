@@ -38,20 +38,20 @@ class OnboardingViewModel @Inject constructor(
     val effects: Flow<OnboardingEffect> = effectChannel.receiveAsFlow()
 
     fun onIntent(intent: OnboardingIntent) {
+        val step = currentStep()
         when (intent) {
-            OnboardingIntent.PrimaryClicked -> when (currentStep()) {
+            OnboardingIntent.PrimaryClicked -> when (step) {
                 OnboardingStep.MICROPHONE -> effectChannel.trySend(OnboardingEffect.RequestMicPermission)
-                OnboardingStep.REFERENCE_PITCH -> goTo(OnboardingStep.TOLERANCE)
                 OnboardingStep.TOLERANCE -> finish()
+                else -> OnboardingFlow.next(step)?.let(::goTo)
             }
+            OnboardingIntent.SkipClicked -> goTo(OnboardingFlow.skip(step))
+            is OnboardingIntent.PageShown -> goTo(OnboardingFlow.swipedTo(step, intent.page))
             OnboardingIntent.MicPermissionAnswered ->
-                if (currentStep() == OnboardingStep.MICROPHONE) goTo(OnboardingStep.REFERENCE_PITCH)
+                if (step == OnboardingStep.MICROPHONE) goTo(OnboardingStep.REFERENCE_PITCH)
             is OnboardingIntent.A4Selected -> viewModelScope.launch { repository.setA4(intent.hz) }
             is OnboardingIntent.ToleranceSelected -> viewModelScope.launch { repository.setTolerance(intent.preset) }
-            OnboardingIntent.BackPressed -> {
-                val previous = currentStep().ordinal - 1
-                if (previous >= 0) savedState[KEY_STEP] = previous
-            }
+            OnboardingIntent.BackPressed -> OnboardingFlow.back(step)?.let(::goTo)
         }
     }
 
@@ -62,18 +62,20 @@ class OnboardingViewModel @Inject constructor(
         }
     }
 
-    private fun currentStep(): OnboardingStep = OnboardingStep.entries[stepIndex.value]
+    private fun currentStep(): OnboardingStep = stepOf(stepIndex.value)
 
     private fun goTo(step: OnboardingStep) {
         savedState[KEY_STEP] = step.ordinal
     }
 
     private fun stateOf(stepIndex: Int, settings: UserSettings) = OnboardingState(
-        step = OnboardingStep.entries[stepIndex],
+        step = stepOf(stepIndex),
         a4Hz = settings.a4Hz,
         a4OptionsHz = UserSettings.A4_OPTIONS_HZ,
         tolerance = settings.tolerance,
     )
+
+    private fun stepOf(index: Int) = OnboardingStep.entries.getOrElse(index) { OnboardingStep.WELCOME }
 
     private companion object {
         const val KEY_STEP = "step"

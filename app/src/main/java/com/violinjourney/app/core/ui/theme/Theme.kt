@@ -84,6 +84,10 @@ object ViolinTheme {
     val accentGlow: Color
         get() = AccentGlow
 
+    /** The dots of «Знакомство»: a page not in view (spec 3.33). */
+    val onboardingDotIdle: Color
+        get() = OnboardingDotIdle
+
     /** Bin icons and the captions of actions that delete (spec 3.16). */
     val destructive: Color
         get() = Destructive

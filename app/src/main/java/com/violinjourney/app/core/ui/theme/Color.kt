@@ -141,3 +141,6 @@ internal val CtrlCaption = Color(0xFF8D8796)
 internal val CtrlMuted = Color(0xFF6E687A)
 internal val RecordingRim = Color(0xFFA8323F)
 internal val VenuePlate = Color(0xB3131318)
+
+// «Знакомство» (handoff new_onboarding, 36f): a page of the introduction not in view.
+internal val OnboardingDotIdle = Color(0xFF4A4760)

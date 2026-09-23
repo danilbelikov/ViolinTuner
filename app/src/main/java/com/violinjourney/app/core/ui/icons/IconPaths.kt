@@ -204,6 +204,12 @@ internal object IconPaths {
     /** A backing track: a note on three lines of a staff (spec 3.32). */
     val BACKING = listOf("M3 7h18M3 11h18M3 15h6", "M14 17.5V6.5", "M14 17.5a2.5 2 0 1 1-5 0a2.5 2 0 1 1 5 0z")
 
+    /** A cassette in outline — the tab «Записи» drawn with a stroke; rows of «Знакомство» (36c). */
+    val TAPE = listOf("M5 5.5h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z", "M8.5 8.9a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 1 0 0-3.8z", "M15.5 8.9a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 1 0 0-3.8z", "M7.6 18.5l1.2-2.8h6.4l1.2 2.8")
+
+    /** The sign of the takt: a note whose stem turns off like a road (36c). */
+    val TAKT = listOf("M15.5 15.5V9.5C15.5 6.5 18 5.5 19.5 4.2", "M18 3.2l2.2 1.4-1.4 2.2", "F M15.67 15.55C16.39 17.53 14.70 19.95 11.90 20.97C9.10 21.99 6.24 21.22 5.53 19.25C4.81 17.27 6.50 14.85 9.30 13.83C12.10 12.81 14.96 13.58 15.67 15.55Z")
+
     /** What a path of a tab icon does when its tab is selected. */
     enum class Selected { AS_IS, FILL, CUT }
 
