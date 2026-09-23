@@ -360,17 +360,21 @@ class SoundViewModelTest {
 
         viewModel.onIntent(SoundIntent.BackingRememberClicked)
         runCurrent()
-        // never calibrated: the guess of 200 ms, corrected by the 40 the player moved
+        // never set: the guess of 200 ms, corrected by the 40 the player moved
         assertEquals(240, latencies.latencies.value.of("Buds"))
         assertNull(viewModel.state.value.backing?.rememberFor)
     }
 
     @Test
-    fun `wired headphones have nothing to remember`() = runTest {
+    fun `wired headphones remember their latency too — the piece screen's slider sets it for any headphones`() = runTest {
         val under = recording("under.m4a")
         underBacking(under, com.example.violintuner.core.domain.backing.BackingOutput.WIRED)
         val (viewModel, _) = screen(under)
         viewModel.onIntent(SoundIntent.BackingOffsetStepped(up = true))
-        assertNull(viewModel.state.value.backing?.rememberFor)
+        assertEquals("Buds", viewModel.state.value.backing?.rememberFor)
+        viewModel.onIntent(SoundIntent.BackingRememberClicked)
+        runCurrent()
+        // made with 200 believed, moved by 5
+        assertEquals(205, latencies.latencies.value.of("Buds"))
     }
 }

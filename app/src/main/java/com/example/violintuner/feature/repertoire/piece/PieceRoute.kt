@@ -52,7 +52,6 @@ fun PieceRoute(
     val take by viewModel.takeState.collectAsStateWithLifecycle()
     val videoImport by viewModel.videoImport.collectAsStateWithLifecycle()
     val backing by viewModel.backing.collectAsStateWithLifecycle()
-    val calibration by viewModel.calibration.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -142,7 +141,6 @@ fun PieceRoute(
         videoImport = videoImport,
         onPickVideo = { videoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) },
         backing = backing,
-        calibration = calibration,
     )
     ShareHost(shareViewModel)
 }

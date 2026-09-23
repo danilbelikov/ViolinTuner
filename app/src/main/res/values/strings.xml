@@ -1019,10 +1019,7 @@
     <string name="backing_preview_stop">Stop the backing track</string>
     <string name="backing_headphones">Headphones</string>
     <string name="backing_no_headphones">No headphones connected</string>
-    <string name="backing_headphones_latency">Headphones · %1$s · %2$d ms</string>
-    <string name="backing_headphones_unmeasured">Headphones · %1$s · delay not measured</string>
     <string name="backing_headphones_wired">Headphones · %1$s</string>
-    <string name="backing_headphones_check">Check</string>
     <string name="backing_unreadable">This file can\'t be opened. mp3, m4a, aac, wav, flac and ogg will do.</string>
     <string name="backing_too_long">The backing is longer than an hour — too long to take.</string>
     <string name="backing_no_space">Not enough space: %1$d MB more is needed.</string>
@@ -1034,19 +1031,6 @@
     <string name="backing_chip_off">off</string>
     <string name="backing_needs_headphones">Connect headphones: through the speaker the backing would get into the recording.</string>
     <string name="backing_preparing">Preparing the backing…</string>
-    <string name="calibration_title">Let\'s set up your headphones</string>
-    <string name="calibration_text">Wireless headphones lag, each pair its own way. Play a short note on each click — an open A is best, plucked or with a short stroke.</string>
-    <string name="calibration_start">Start</string>
-    <string name="calibration_progress">click %1$d of %2$d · 90 beats a minute</string>
-    <string name="calibration_latency">Delay</string>
-    <string name="calibration_ms">%1$d ms</string>
-    <string name="calibration_hits">%1$d of %2$d on the beat</string>
-    <string name="calibration_done_text">Takes to the backing in these headphones will line up by themselves. If anything drifts, the shift can be set in the recording\'s Sound.</string>
-    <string name="calibration_done">Done</string>
-    <string name="calibration_again">Once more</string>
-    <string name="calibration_failed">Couldn\'t catch the beat. Once more?</string>
-    <string name="calibration_dot_heard">Click %1$d: note heard</string>
-    <string name="calibration_dot_waiting">Click %1$d: no note</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">with backing · %1$s</string>
@@ -1065,4 +1049,8 @@
     <string name="capture_low_space">Low on space: enough for about %1$d min</string>
     <string name="capture_saving">Putting the video together…</string>
     <string name="capture_video_failed">The video could not be put together — the take was kept as sound.</string>
+
+    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
+    <string name="backing_latency">Headphone delay</string>
+    <string name="backing_latency_hint">If the backing lags behind the violin in takes, move left; if it rushes, move right.</string>
 </resources>

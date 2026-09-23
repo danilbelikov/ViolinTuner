@@ -31,11 +31,14 @@ enum class BackingOutput {
     val isHeadphones: Boolean get() = this != SPEAKER
 
     /** Only wireless headphones lag behind what the system's clocks say; wired ones are counted by the system itself. */
-    val needsCalibration: Boolean get() = this == BLUETOOTH
+    val isWireless: Boolean get() = this == BLUETOOTH
 }
 
 /** The headphones the sound goes to now: their kind and the name they give themselves (the key of their latency). */
-data class AudioRoute(val output: BackingOutput, val deviceName: String?)
+data class AudioRoute(val output: BackingOutput, val deviceName: String?) {
+    /** Under what their latency is kept: their name, or their kind when they give none; null — the speaker has none. */
+    val latencyKey: String? get() = if (output.isHeadphones) deviceName ?: output.name else null
+}
 
 /**
  * The backing of a take: which file sounded, how far it is shifted against the violin and how loud it is
@@ -92,37 +95,17 @@ data class BackingConfig(
     val minGainDb: Float = -24f,
     val maxGainDb: Float = 6f,
     val gainStepDb: Float = 0.5f,
-    val minOffsetMs: Int = -500,
-    val maxOffsetMs: Int = 500,
+    val minOffsetMs: Int = -1_000,
+    val maxOffsetMs: Int = 1_000,
     val offsetStepMs: Int = 5,
-    /** Wireless headphones never calibrated: a guess in the middle of what they usually lag (150–300 ms). */
-    val uncalibratedBluetoothMs: Int = 200,
+    /** The headphones' latency, set by ear on the piece screen (spec 3.32): from none to a second. */
+    val maxLatencyMs: Int = 1_000,
+    /** Wireless headphones never set: a guess in the middle of what they usually lag (150–300 ms). */
+    val defaultWirelessLatencyMs: Int = 200,
     /** A shift changed while playing glides in over this much, without a click. */
     val shiftFadeMs: Int = 30,
     val maxRememberedHeadphones: Int = 20,
-    val calibration: CalibrationConfig = CalibrationConfig(),
 )
-
-data class CalibrationConfig(
-    val bpm: Int = 90,
-    val leadInClicks: Int = 2,
-    val clicks: Int = 8,
-    val clickHz: Double = 1_000.0,
-    val clickMs: Int = 20,
-    val clickDbfs: Double = -12.0,
-    /** A note counts for a click if it starts this long before it at the earliest… */
-    val windowBeforeMs: Int = 150,
-    /** …and this long after it at the latest: wireless headphones and the player's ear together. */
-    val windowAfterMs: Int = 450,
-    val minHits: Int = 5,
-    val maxSpreadMs: Int = 60,
-    /** The start of a note: the level grows by this much… */
-    val onsetRiseDb: Double = 12.0,
-    /** …within this long. */
-    val onsetWindowMs: Int = 30,
-) {
-    val beatMs: Long get() = 60_000L / bpm
-}
 
 /** The copies of backing files: `files/backings/<uuid>.<extension>`. Named, not located. */
 interface BackingFiles {

@@ -46,6 +46,9 @@ object SoundFormats {
     }
 
     /** A shift of the backing (spec 3.32): «+212 мс», «−40 мс», «0 мс» — it always says which way. */
+    /** A length of time that has no direction — the headphones' latency: «200 мс». */
+    fun ms(ms: Int): String = "$ms${NBSP}${units.ms}"
+
     fun signedMs(ms: Int): String {
         val sign = when {
             ms < 0 -> MINUS.toString()

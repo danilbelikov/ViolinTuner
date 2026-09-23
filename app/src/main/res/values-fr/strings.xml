@@ -1019,10 +1019,7 @@
     <string name="backing_preview_stop">Arrêter l\'accompagnement</string>
     <string name="backing_headphones">Casque</string>
     <string name="backing_no_headphones">Aucun casque connecté</string>
-    <string name="backing_headphones_latency">Casque · %1$s · %2$d ms</string>
-    <string name="backing_headphones_unmeasured">Casque · %1$s · retard non mesuré</string>
     <string name="backing_headphones_wired">Casque · %1$s</string>
-    <string name="backing_headphones_check">Vérifier</string>
     <string name="backing_unreadable">Impossible d\'ouvrir ce fichier. Formats possibles : mp3, m4a, aac, wav, flac, ogg.</string>
     <string name="backing_too_long">L\'accompagnement dure plus d\'une heure — trop long.</string>
     <string name="backing_no_space">Pas assez d\'espace : il faut encore %1$d Mo.</string>
@@ -1034,19 +1031,6 @@
     <string name="backing_chip_off">désactivé</string>
     <string name="backing_needs_headphones">Branchez un casque : par le haut-parleur, l\'accompagnement passerait dans l\'enregistrement.</string>
     <string name="backing_preparing">Préparation de l\'accompagnement…</string>
-    <string name="calibration_title">Réglons le casque</string>
-    <string name="calibration_text">Les casques sans fil ont un retard, chacun le sien. Jouez une note brève sur chaque clic — de préférence un la à vide, pincé ou d\'un coup d\'archet court.</string>
-    <string name="calibration_start">Commencer</string>
-    <string name="calibration_progress">clic %1$d sur %2$d · 90 battements par minute</string>
-    <string name="calibration_latency">Retard</string>
-    <string name="calibration_ms">%1$d ms</string>
-    <string name="calibration_hits">%1$d sur %2$d en mesure</string>
-    <string name="calibration_done_text">Les prises sur l\'accompagnement avec ce casque seront calées d\'elles-mêmes. Si quelque chose décale, réglez le décalage dans « Son » de l\'enregistrement.</string>
-    <string name="calibration_done">OK</string>
-    <string name="calibration_again">Encore une fois</string>
-    <string name="calibration_failed">Impossible de saisir la mesure. Encore une fois ?</string>
-    <string name="calibration_dot_heard">Clic %1$d : note entendue</string>
-    <string name="calibration_dot_waiting">Clic %1$d : pas de note</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">avec accomp. · %1$s</string>
@@ -1065,4 +1049,8 @@
     <string name="capture_low_space">Peu d\'espace : environ %1$d min</string>
     <string name="capture_saving">Assemblage de la vidéo…</string>
     <string name="capture_video_failed">Impossible d\'assembler la vidéo — la prise est gardée en son.</string>
+
+    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
+    <string name="backing_latency">Retard du casque</string>
+    <string name="backing_latency_hint">Si l\'accompagnement traîne derrière le violon dans les prises, à gauche ; s\'il se presse, à droite.</string>
 </resources>

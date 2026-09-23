@@ -231,17 +231,20 @@ private fun Player(state: SoundState, meters: State<SoundMeters?>, metrics: Mini
         }
         return
     }
-    MiniPlayer(
-        player = player,
-        waveform = state.waveform,
-        meters = meters,
-        metrics = metrics,
-        onPlayPause = { onIntent(SoundIntent.PlayPauseClicked) },
-        onSeek = { onIntent(SoundIntent.SeekRequested(it)) },
-        onOriginal = { original, held -> onIntent(SoundIntent.OriginalSelected(original, held)) },
-    )
-    if (player.hasBacking) {
-        BackingHeardSwitch(heard = player.backingHeard, onHeard = { onIntent(SoundIntent.BackingHeardSelected(it)) }, modifier = Modifier.padding(top = 8.dp))
+    // one column: in portrait the player sits in a Box, where the switch would lie over its top
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        MiniPlayer(
+            player = player,
+            waveform = state.waveform,
+            meters = meters,
+            metrics = metrics,
+            onPlayPause = { onIntent(SoundIntent.PlayPauseClicked) },
+            onSeek = { onIntent(SoundIntent.SeekRequested(it)) },
+            onOriginal = { original, held -> onIntent(SoundIntent.OriginalSelected(original, held)) },
+        )
+        if (player.hasBacking) {
+            BackingHeardSwitch(heard = player.backingHeard, onHeard = { onIntent(SoundIntent.BackingHeardSelected(it)) })
+        }
     }
 }
 

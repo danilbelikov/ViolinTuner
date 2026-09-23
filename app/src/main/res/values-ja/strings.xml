@@ -1019,10 +1019,7 @@
     <string name="backing_preview_stop">伴奏を止める</string>
     <string name="backing_headphones">ヘッドホン</string>
     <string name="backing_no_headphones">ヘッドホンが接続されていません</string>
-    <string name="backing_headphones_latency">ヘッドホン · %1$s · %2$d ミリ秒</string>
-    <string name="backing_headphones_unmeasured">ヘッドホン · %1$s · 遅延は未測定</string>
     <string name="backing_headphones_wired">ヘッドホン · %1$s</string>
-    <string name="backing_headphones_check">確認</string>
     <string name="backing_unreadable">このファイルは開けません。mp3、m4a、aac、wav、flac、ogg が使えます。</string>
     <string name="backing_too_long">伴奏が1時間を超えています — 追加できません。</string>
     <string name="backing_no_space">空き容量が足りません：あと %1$d MB 必要です。</string>
@@ -1034,19 +1031,6 @@
     <string name="backing_chip_off">オフ</string>
     <string name="backing_needs_headphones">ヘッドホンを接続してください：スピーカーだと伴奏が録音に入ります。</string>
     <string name="backing_preparing">伴奏を準備しています…</string>
-    <string name="calibration_title">ヘッドホンを合わせましょう</string>
-    <string name="calibration_text">ワイヤレスヘッドホンは遅れて聞こえ、その遅れは機種ごとに違います。クリックに合わせて短い音を弾いてください — 開放弦の A をピチカートか短い弓で。</string>
-    <string name="calibration_start">開始</string>
-    <string name="calibration_progress">クリック %1$d / %2$d · 毎分90拍</string>
-    <string name="calibration_latency">遅延</string>
-    <string name="calibration_ms">%1$d ミリ秒</string>
-    <string name="calibration_hits">%2$d回中%1$d回が拍どおり</string>
-    <string name="calibration_done_text">このヘッドホンで録る伴奏つきテイクは自動で揃います。ずれたら録音の「サウンド」でずらしを調整できます。</string>
-    <string name="calibration_done">完了</string>
-    <string name="calibration_again">もう一度</string>
-    <string name="calibration_failed">拍をつかめませんでした。もう一度？</string>
-    <string name="calibration_dot_heard">クリック %1$d：音が聞こえました</string>
-    <string name="calibration_dot_waiting">クリック %1$d：音なし</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">伴奏つき · %1$s</string>
@@ -1065,4 +1049,8 @@
     <string name="capture_low_space">空き容量が少なめ：あと約 %1$d 分</string>
     <string name="capture_saving">動画をまとめています…</string>
     <string name="capture_video_failed">動画をまとめられませんでした — テイクは音声として保存しました。</string>
+
+    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
+    <string name="backing_latency">ヘッドホンの遅延</string>
+    <string name="backing_latency_hint">テイクで伴奏がバイオリンより遅れるなら左へ、早いなら右へ。</string>
 </resources>

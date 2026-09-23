@@ -9,15 +9,14 @@ import com.example.violintuner.core.audio.backing.BackingFileImporter
 import com.example.violintuner.core.audio.backing.BackingImport
 import com.example.violintuner.core.audio.backing.BackingPcm
 import com.example.violintuner.core.audio.backing.BackingPreview
-import com.example.violintuner.core.audio.backing.CalibrationProgress
-import com.example.violintuner.core.audio.backing.HeadphoneCalibrator
 import com.example.violintuner.core.di.IoDispatcher
 import com.example.violintuner.core.domain.backing.AudioRoute
+import com.example.violintuner.core.domain.backing.BackingOffset
+import com.example.violintuner.core.domain.backing.BackingConfig
 import com.example.violintuner.core.domain.backing.Backing
 import com.example.violintuner.core.domain.backing.BackingFiles
 import com.example.violintuner.core.domain.backing.BackingOutput
 import com.example.violintuner.core.domain.backing.BackingRepository
-import com.example.violintuner.core.domain.backing.CalibrationResult
 import com.example.violintuner.core.domain.backing.HeadphoneLatencies
 import com.example.violintuner.core.domain.backing.HeadphoneLatencyStore
 import com.example.violintuner.core.domain.backing.NoBackings
@@ -52,6 +51,7 @@ import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -88,7 +88,6 @@ class PieceViewModel @Inject constructor(
     private val backingPreview: BackingPreview? = null,
     private val routes: AudioRoutes? = null,
     private val latencies: HeadphoneLatencyStore? = null,
-    private val calibrator: HeadphoneCalibrator? = null,
     @IoDispatcher private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
@@ -165,8 +164,10 @@ class PieceViewModel @Inject constructor(
         val problem: BackingProblem? = null,
         val preparing: Boolean = false,
         val askingRemove: Boolean = false,
+        val latencyDraft: LatencyDraft? = null,
     )
 
+    private val backingConfig = BackingConfig()
     private val backingEphemeral = MutableStateFlow(BackingEphemeral())
     private val route = routes?.changes ?: flowOf(AudioRoute(BackingOutput.SPEAKER, null))
     private val headphoneLatencies = latencies?.latencies ?: flowOf(HeadphoneLatencies.EMPTY)
@@ -186,15 +187,9 @@ class PieceViewModel @Inject constructor(
             route = currentRoute, latencies = known,
             fileExists = { backingFiles?.existing(it.fileName) != null },
             importing = ephemeral.importing, problem = ephemeral.problem, previewing = playing, preparing = ephemeral.preparing,
-            askingRemove = ephemeral.askingRemove,
+            askingRemove = ephemeral.askingRemove, latencyDraft = ephemeral.latencyDraft, config = backingConfig,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
-
-    private val mutableCalibration = MutableStateFlow<CalibrationUi?>(null)
-
-    /** «Настроим наушники»; null while the sheet is closed. */
-    val calibration: StateFlow<CalibrationUi?> = mutableCalibration.asStateFlow()
-    private var calibrationJob: Job? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
     private val blindTake: Flow<TakeState> = combine(listening, micPermission, configSource.config, ::Triple)
@@ -320,13 +315,9 @@ class PieceViewModel @Inject constructor(
                 savedState[KEY_VIDEO_FILE] = file.path
                 effectChannel.trySend(PieceEffect.LaunchVideoCamera(file.path))
             }
-            // the same rules as a take under the backing: headphones, and wireless ones measured once (spec 3.32)
-            PieceIntent.VideoUnderBackingClicked -> backing.value?.takeIf { it.present && videoAllowed() }?.let { block ->
-                when {
-                    !block.route.output.isHeadphones -> Unit
-                    block.route.output.needsCalibration && block.latencyMs == null -> mutableCalibration.value = CalibrationUi.Intro
-                    else -> effectChannel.trySend(PieceEffect.OpenCapture(pieceId))
-                }
+            // the same rule as a take under the backing: headphones only (spec 3.32)
+            PieceIntent.VideoUnderBackingClicked -> backing.value?.takeIf { it.present && videoAllowed() && it.route.output.isHeadphones }?.let {
+                effectChannel.trySend(PieceEffect.OpenCapture(pieceId))
             }
             is PieceIntent.VideoShotFinished -> {
                 val file = savedState.remove<String>(KEY_VIDEO_FILE)?.let(::File) ?: return
@@ -355,12 +346,9 @@ class PieceViewModel @Inject constructor(
                 viewModelScope.launch { backings.setEnabled(pieceId, !block.enabled) }
             }
             PieceIntent.BackingProblemDismissed -> backingEphemeral.update { it.copy(problem = null) }
-            PieceIntent.HeadphonesCheckClicked -> if (!takes.recordingRequested.value) mutableCalibration.value = CalibrationUi.Intro
-            PieceIntent.CalibrationStartClicked -> startCalibration()
-            PieceIntent.CalibrationClosed -> {
-                calibrationJob?.cancel()
-                mutableCalibration.value = null
-            }
+            is PieceIntent.HeadphoneLatencyChanged -> setLatency { (intent.fraction * backingConfig.maxLatencyMs).roundToInt() }
+            is PieceIntent.HeadphoneLatencyStepped -> setLatency { it + if (intent.up) backingConfig.offsetStepMs else -backingConfig.offsetStepMs }
+            PieceIntent.HeadphoneLatencyReset -> setLatency { _ -> backing.value?.route?.let { if (it.output.isWireless) backingConfig.defaultWirelessLatencyMs else 0 } ?: 0 }
             is PieceIntent.CameraFinished -> {
                 val file = savedState.remove<String>(KEY_CAMERA_FILE)?.let(::File) ?: return
                 if (intent.saved) import(listOf(file.toURI().toString()), temporary = listOf(file)) else file.delete()
@@ -368,18 +356,11 @@ class PieceViewModel @Inject constructor(
         }
     }
 
-    /**
-     * A take, under the backing when the chip is on (spec 3.32): never through the speaker, and not before wireless
-     * headphones have been measured once.
-     */
+    /** A take, under the backing when the chip is on (spec 3.32): never through the speaker. */
     private fun startTake(underBacking: Boolean = true) {
         val block = backing.value
         if (underBacking && block != null && block.wanted) {
             if (block.blocksRecording) return
-            if (block.needsCalibration) {
-                mutableCalibration.value = CalibrationUi.Intro
-                return
-            }
             val found = backingOf() ?: return
             val pcm = backingPcm ?: return
             backingPreview?.stop()
@@ -387,7 +368,7 @@ class PieceViewModel @Inject constructor(
                 backing = found,
                 pcm = { rate -> pcm.cached(found, rate) ?: pcm.prepare(found, rate) },
                 route = block.route,
-                latencyMs = block.latencyMs ?: if (block.route.output.needsCalibration) backingConfig.uncalibratedBluetoothMs else 0,
+                latencyMs = block.latencyMs,
             )
         } else {
             takes.backingPlan = null
@@ -396,7 +377,6 @@ class PieceViewModel @Inject constructor(
         listening.value = true
     }
 
-    private val backingConfig = com.example.violintuner.core.domain.backing.BackingConfig()
 
     private var knownBacking: Backing? = null
 
@@ -445,30 +425,25 @@ class PieceViewModel @Inject constructor(
         viewModelScope.launch { backings.setForPiece(pieceId, null) }
     }
 
-    /** «Настроим наушники»: clicks into the headphones, notes played to them; the median is remembered for these headphones. */
-    private fun startCalibration() {
-        val run = calibrator ?: return
-        if (micPermission.value != true) {
-            effectChannel.trySend(PieceEffect.RequestMicPermission)
-            return
-        }
-        val name = backing.value?.route?.deviceName
-        calibrationJob?.cancel()
-        calibrationJob = viewModelScope.launch {
-            run.run(configSource.config.first()).collect { progress ->
-                when (progress) {
-                    is CalibrationProgress.Listening -> mutableCalibration.value = CalibrationUi.Listening(progress.answered, progress.clicksDone)
-                    is CalibrationProgress.Done -> when (val result = progress.result) {
-                        is CalibrationResult.Measured -> {
-                            if (name != null) latencies?.set(name, result.latencyMs)
-                            mutableCalibration.value = CalibrationUi.Done(result.latencyMs, result.hits, result.of)
-                        }
-                        is CalibrationResult.Failed -> mutableCalibration.value = CalibrationUi.Failed
-                    }
-                }
-            }
+    /**
+     * «Задержка наушников» (spec 3.32): what the slider shows follows the finger at once; it is written for these
+     * headphones a moment after it stops, not on every step of a drag.
+     */
+    private fun setLatency(change: (Int) -> Int) {
+        if (takes.recordingRequested.value) return
+        val block = backing.value ?: return
+        val key = block.route.latencyKey ?: return
+        val next = BackingOffset.snapLatency(change(block.latencyMs), backingConfig)
+        if (next == block.latencyMs) return
+        backingEphemeral.update { it.copy(latencyDraft = LatencyDraft(key, next)) }
+        latencyJob?.cancel()
+        latencyJob = viewModelScope.launch {
+            delay(LATENCY_WRITE_AFTER_MS)
+            latencies?.set(key, next)
         }
     }
+
+    private var latencyJob: Job? = null
 
     override fun onCleared() {
         backingPreview?.stop()
@@ -518,6 +493,9 @@ class PieceViewModel @Inject constructor(
         private const val KEY_VIDEO_FILE = "videoFile"
         private const val RESCUE_FILE_NAME = "video.mp4"
         private const val STOP_TIMEOUT_MS = 5_000L
+
+        /** The slider of the headphones' latency stopped this long: its number is written down. */
+        private const val LATENCY_WRITE_AFTER_MS = 400L
         private const val BYTES_PER_MB = 1024L * 1024
 
         /** The rates a take is recorded at (spec 5.1): the backing is made ready for both. */

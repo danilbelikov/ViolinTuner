@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -16,18 +15,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,24 +32,24 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
-import com.example.violintuner.core.domain.backing.BackingOutput
+import com.example.violintuner.core.domain.backing.BackingConfig
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
+import com.example.violintuner.feature.sound.SoundFormats
+import com.example.violintuner.feature.sound.components.ParamSlider
+import com.example.violintuner.feature.sound.components.SliderModel
 
 private val CardCorner = 16.dp
 private val PlayButton = 44.dp
 private val ChipHeight = 36.dp
-private val Dot = 24.dp
 private const val TABULAR_FIGURES = "tnum"
 
 /**
@@ -157,25 +151,50 @@ fun BackingCard(backing: BackingUi, recording: Boolean, onIntent: (PieceIntent) 
     }
 }
 
-/** «Наушники · Pixel Buds · 212 мс · Проверить», or that there are none. */
+/**
+ * Which headphones the backing goes to and what they lag — a slider set by ear (spec 3.32): if the violin in takes
+ * comes after the backing, more; if before, less. Without headphones — only that there are none.
+ */
 @Composable
 private fun HeadphonesRow(backing: BackingUi, recording: Boolean, onIntent: (PieceIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val route = backing.route
     val headphones = route.output.isHeadphones
-    Row(modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        AppIcon(AppIcons.Headphones, contentDescription = null, tint = if (headphones) colors.primary else colors.onSurfaceVariant, size = 20.dp)
-        val text = when {
-            !headphones -> stringResource(R.string.backing_no_headphones)
-            backing.latencyMs != null -> stringResource(R.string.backing_headphones_latency, route.deviceName ?: stringResource(R.string.backing_headphones), backing.latencyMs)
-            route.output == BackingOutput.BLUETOOTH -> stringResource(R.string.backing_headphones_unmeasured, route.deviceName ?: stringResource(R.string.backing_headphones))
-            else -> stringResource(R.string.backing_headphones_wired, route.deviceName ?: stringResource(R.string.backing_headphones))
+    Column(modifier = Modifier.padding(end = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            AppIcon(AppIcons.Headphones, contentDescription = null, tint = if (headphones) colors.primary else colors.onSurfaceVariant, size = 20.dp)
+            Text(
+                if (headphones) stringResource(R.string.backing_headphones_wired, route.deviceName ?: stringResource(R.string.backing_headphones)) else stringResource(R.string.backing_no_headphones),
+                color = if (headphones) colors.onSurface else colors.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                modifier = Modifier.weight(1f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+            )
         }
-        Text(text, color = if (headphones) colors.onSurface else colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES), modifier = Modifier.weight(1f), maxLines = 2, overflow = TextOverflow.Ellipsis)
         if (headphones) {
-            TextButton(onClick = { onIntent(PieceIntent.HeadphonesCheckClicked) }, enabled = !recording) {
-                Text(stringResource(R.string.backing_headphones_check), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold))
-            }
+            val config = remember { BackingConfig() }
+            val guess = if (route.output.isWireless) config.defaultWirelessLatencyMs else 0
+            ParamSlider(
+                model = SliderModel(
+                    label = stringResource(R.string.backing_latency),
+                    hint = null,
+                    valueText = SoundFormats.ms(backing.latencyMs),
+                    fraction = backing.latencyMs.toFloat() / config.maxLatencyMs,
+                    defaultFraction = guess.toFloat() / config.maxLatencyMs,
+                    bipolar = false,
+                ),
+                enabled = !recording,
+                onFraction = { onIntent(PieceIntent.HeadphoneLatencyChanged(it)) },
+                onStep = { onIntent(PieceIntent.HeadphoneLatencyStepped(it)) },
+                onReset = { onIntent(PieceIntent.HeadphoneLatencyReset) },
+            )
+            Text(
+                stringResource(R.string.backing_latency_hint),
+                color = colors.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp),
+                modifier = Modifier.padding(bottom = 6.dp),
+            )
         }
     }
 }
@@ -253,115 +272,5 @@ fun BackingProgressLine(playedMs: Long, durationMs: Long) {
         Box(Modifier.fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(colors.surfaceContainerHigh)) {
             Box(Modifier.fillMaxWidth(fraction).height(3.dp).background(colors.onSurfaceVariant))
         }
-    }
-}
-
-/**
- * «Настроим наушники» (spec 3.32): a sheet that a tap beside it does not close — the player is holding a violin.
- * Eight dots light up as notes answer the clicks.
- */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun CalibrationSheet(calibration: CalibrationUi, headphones: String?, onIntent: (PieceIntent) -> Unit) {
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { it != androidx.compose.material3.SheetValue.Hidden || calibration !is CalibrationUi.Listening })
-    ModalBottomSheet(
-        onDismissRequest = { onIntent(PieceIntent.CalibrationClosed) },
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-    ) {
-        CalibrationContent(calibration, headphones, onIntent)
-    }
-}
-
-@Composable
-internal fun CalibrationContent(calibration: CalibrationUi, headphones: String?, onIntent: (PieceIntent) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Column(
-        modifier = Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 28.dp),
-        verticalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Text(stringResource(R.string.calibration_title), color = colors.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, fontWeight = FontWeight.ExtraBold))
-        headphones?.let {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                AppIcon(AppIcons.Headphones, contentDescription = null, tint = colors.primary, size = 18.dp)
-                Text(it, color = colors.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp))
-            }
-        }
-        when (calibration) {
-            CalibrationUi.Intro -> {
-                Text(stringResource(R.string.calibration_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 22.sp))
-                Spacer(Modifier.height(4.dp))
-                PrimaryButton(stringResource(R.string.calibration_start)) { onIntent(PieceIntent.CalibrationStartClicked) }
-                TextButton(onClick = { onIntent(PieceIntent.CalibrationClosed) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.dialog_cancel)) }
-            }
-            is CalibrationUi.Listening -> {
-                Text(stringResource(R.string.calibration_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 22.sp))
-                Dots(calibration)
-                Text(
-                    stringResource(R.string.calibration_progress, calibration.clicksDone.coerceAtMost(calibration.answered.size), calibration.answered.size),
-                    color = colors.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES),
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                TextButton(onClick = { onIntent(PieceIntent.CalibrationClosed) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.dialog_cancel)) }
-            }
-            is CalibrationUi.Done -> {
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(stringResource(R.string.calibration_latency), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp))
-                    Text(
-                        stringResource(R.string.calibration_ms, calibration.latencyMs),
-                        color = colors.onSurface,
-                        style = MaterialTheme.typography.displaySmall.copy(fontSize = 44.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES),
-                    )
-                    Text(stringResource(R.string.calibration_hits, calibration.hits, calibration.of), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES))
-                }
-                Text(stringResource(R.string.calibration_done_text), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp), modifier = Modifier.fillMaxWidth())
-                PrimaryButton(stringResource(R.string.calibration_done)) { onIntent(PieceIntent.CalibrationClosed) }
-                TextButton(onClick = { onIntent(PieceIntent.CalibrationStartClicked) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.calibration_again)) }
-            }
-            CalibrationUi.Failed -> {
-                Text(stringResource(R.string.calibration_failed), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp))
-                PrimaryButton(stringResource(R.string.calibration_again)) { onIntent(PieceIntent.CalibrationStartClicked) }
-                TextButton(onClick = { onIntent(PieceIntent.CalibrationClosed) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.dialog_cancel)) }
-            }
-        }
-    }
-}
-
-@Composable
-private fun Dots(calibration: CalibrationUi.Listening) {
-    val colors = MaterialTheme.colorScheme
-    Row(modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-        calibration.answered.forEachIndexed { i, answered ->
-            val current = i == calibration.clicksDone
-            val description = stringResource(if (answered) R.string.calibration_dot_heard else R.string.calibration_dot_waiting, i + 1)
-            Box(
-                modifier = Modifier
-                    .size(Dot)
-                    .semantics { contentDescription = description }
-                    .clip(CircleShape)
-                    .then(
-                        when {
-                            answered -> Modifier.background(colors.primary)
-                            current -> Modifier.border(3.dp, colors.primary, CircleShape)
-                            else -> Modifier.border(1.5.dp, colors.outline, CircleShape)
-                        },
-                    ),
-            )
-        }
-    }
-}
-
-@Composable
-private fun PrimaryButton(text: String, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Button(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth().height(56.dp),
-        shape = RoundedCornerShape(28.dp),
-        colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
-    ) {
-        Text(text, style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold))
     }
 }

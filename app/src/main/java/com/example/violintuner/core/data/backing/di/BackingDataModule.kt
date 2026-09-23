@@ -7,8 +7,6 @@ import com.example.violintuner.core.audio.backing.AudioRoutes
 import com.example.violintuner.core.audio.backing.BackingFileImporter
 import com.example.violintuner.core.audio.backing.BackingImporter
 import com.example.violintuner.core.audio.backing.BackingPreview
-import com.example.violintuner.core.audio.backing.DeviceHeadphoneCalibrator
-import com.example.violintuner.core.audio.backing.HeadphoneCalibrator
 import com.example.violintuner.core.audio.backing.MediaBackingPreview
 import com.example.violintuner.core.audio.backing.BackingPlaybackFactory
 import com.example.violintuner.core.audio.backing.FakeHeadphoneRoutes
@@ -48,9 +46,6 @@ abstract class BackingDataModule {
 
     @Binds
     abstract fun bindBackingPreview(impl: MediaBackingPreview): BackingPreview
-
-    @Binds
-    abstract fun bindHeadphoneCalibrator(impl: DeviceHeadphoneCalibrator): HeadphoneCalibrator
 
     @Binds
     @Singleton

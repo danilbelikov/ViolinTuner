@@ -154,7 +154,6 @@ class PieceViewModelTest {
     }
     private var importResult: com.example.violintuner.core.audio.backing.BackingImport =
         com.example.violintuner.core.audio.backing.BackingImport.Unreadable
-    private val calibrationRuns = mutableListOf<kotlinx.coroutines.flow.MutableSharedFlow<com.example.violintuner.core.audio.backing.CalibrationProgress>>()
 
     private fun TestScope.screen(pieceId: Long, saved: SavedStateHandle = SavedStateHandle(mapOf(PieceViewModel.ARG_PIECE_ID to pieceId))):
         Pair<PieceViewModel, MutableList<PieceEffect>> {
@@ -173,7 +172,6 @@ class PieceViewModelTest {
             videoFiles, importer(), NoShareFiles,
             backings = backings, backingFiles = backingFiles, backingPcm = backingPcm,
             backingImporter = { importResult }, backingPreview = null, routes = routes, latencies = latencies,
-            calibrator = { kotlinx.coroutines.flow.MutableSharedFlow<com.example.violintuner.core.audio.backing.CalibrationProgress>(replay = 8).also { calibrationRuns += it } },
             io = StandardTestDispatcher(testScheduler),
         )
         backgroundScope.launch { viewModel.backing.collect {} }
@@ -722,48 +720,53 @@ class PieceViewModelTest {
     }
 
     @Test
-    fun `wireless headphones never measured are measured before the first take, and the result is remembered`() = runTest {
+    fun `wireless headphones never set start from the guess, and the slider sets what the next takes are made with`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
         withBacking(id)
         route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.BLUETOOTH, "Buds")
         val (viewModel, _) = screen(id)
-        viewModel.onIntent(PieceIntent.RecordClicked)
         runCurrent()
-        assertEquals(com.example.violintuner.feature.repertoire.piece.CalibrationUi.Intro, viewModel.calibration.value)
-        assertFalse(viewModel.takeState.value.recording)
+        assertEquals(200, viewModel.backing.value!!.latencyMs)
 
-        viewModel.onIntent(PieceIntent.CalibrationStartClicked)
+        // the slider shows the finger at once and writes the number down once it stops
+        viewModel.onIntent(PieceIntent.HeadphoneLatencyChanged(0.452f))
         runCurrent()
-        calibrationRuns.single().emit(com.example.violintuner.core.audio.backing.CalibrationProgress.Listening(List(8) { it < 3 }, 3))
+        assertEquals(450, viewModel.backing.value!!.latencyMs)
+        assertNull(latencies.latencies.value.of("Buds"))
+        advanceTimeBy(500)
         runCurrent()
-        assertEquals(com.example.violintuner.feature.repertoire.piece.CalibrationUi.Listening(List(8) { it < 3 }, 3), viewModel.calibration.value)
-        calibrationRuns.single().emit(com.example.violintuner.core.audio.backing.CalibrationProgress.Done(com.example.violintuner.core.domain.backing.CalibrationResult.Measured(211, 8, 8)))
+        assertEquals(450, latencies.latencies.value.of("Buds"))
+        viewModel.onIntent(PieceIntent.HeadphoneLatencyStepped(up = true))
+        advanceTimeBy(500)
         runCurrent()
-        assertEquals(com.example.violintuner.feature.repertoire.piece.CalibrationUi.Done(211, 8, 8), viewModel.calibration.value)
-        assertEquals(211, latencies.latencies.value.of("Buds"))
-        assertEquals(211, viewModel.backing.value!!.latencyMs)
+        assertEquals(455, latencies.latencies.value.of("Buds"))
 
-        viewModel.onIntent(PieceIntent.CalibrationClosed)
+        // no sheet before the take: it is made under the backing at once, with the number set
         viewModel.onIntent(PieceIntent.RecordClicked)
-        advance(1_000)
+        advance(3_000)
         assertTrue(viewModel.takeState.value.recording)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(300)
+        assertEquals(455, backings.takeBackings.value.single().latencyMs)
+
+        viewModel.onIntent(PieceIntent.HeadphoneLatencyReset)
+        advanceTimeBy(500)
+        runCurrent()
+        assertEquals(200, latencies.latencies.value.of("Buds"))
     }
 
     @Test
-    fun `filming to the backing opens the app's camera, with wireless headphones measured first`() = runTest {
+    fun `filming to the backing opens the app's camera at once with headphones, never without`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
         withBacking(id)
-        route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.BLUETOOTH, "Buds")
+        route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.SPEAKER, null)
         val (viewModel, effects) = screen(id)
         viewModel.onIntent(PieceIntent.VideoUnderBackingClicked)
         runCurrent()
-        assertEquals(com.example.violintuner.feature.repertoire.piece.CalibrationUi.Intro, viewModel.calibration.value)
         assertTrue(effects.none { it is PieceEffect.OpenCapture })
 
-        latencies.set("Buds", 180)
+        route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.BLUETOOTH, "Buds")
         runCurrent()
-        assertEquals(180, viewModel.backing.value!!.latencyMs)
-        viewModel.onIntent(PieceIntent.CalibrationClosed)
         viewModel.onIntent(PieceIntent.VideoUnderBackingClicked)
         runCurrent()
         assertEquals(PieceEffect.OpenCapture(id), effects.last())

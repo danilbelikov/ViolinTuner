@@ -137,7 +137,6 @@ fun PieceScreen(
     videoImport: VideoImport = VideoImport.Idle,
     onPickVideo: () -> Unit = {},
     backing: BackingUi? = null,
-    calibration: CalibrationUi? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     BoxWithConstraints(
@@ -161,7 +160,6 @@ fun PieceScreen(
         }
     }
     VideoImportSheet(videoImport, onIntent)
-    calibration?.let { CalibrationSheet(it, backing?.route?.deviceName, onIntent) }
 }
 
 @Composable

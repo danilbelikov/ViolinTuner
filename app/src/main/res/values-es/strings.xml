@@ -1019,10 +1019,7 @@
     <string name="backing_preview_stop">Detener el acompañamiento</string>
     <string name="backing_headphones">Auriculares</string>
     <string name="backing_no_headphones">No hay auriculares conectados</string>
-    <string name="backing_headphones_latency">Auriculares · %1$s · %2$d ms</string>
-    <string name="backing_headphones_unmeasured">Auriculares · %1$s · retardo sin medir</string>
     <string name="backing_headphones_wired">Auriculares · %1$s</string>
-    <string name="backing_headphones_check">Comprobar</string>
     <string name="backing_unreadable">No se puede abrir este archivo. Sirven mp3, m4a, aac, wav, flac y ogg.</string>
     <string name="backing_too_long">El acompañamiento dura más de una hora — demasiado largo.</string>
     <string name="backing_no_space">No hay espacio: faltan %1$d MB.</string>
@@ -1034,19 +1031,6 @@
     <string name="backing_chip_off">desactivado</string>
     <string name="backing_needs_headphones">Conecta auriculares: por el altavoz el acompañamiento entraría en la grabación.</string>
     <string name="backing_preparing">Preparando el acompañamiento…</string>
-    <string name="calibration_title">Ajustemos los auriculares</string>
-    <string name="calibration_text">Los auriculares inalámbricos van con retraso, cada par a su manera. Toca una nota corta con cada clic — mejor el La al aire, en pizzicato o con un golpe corto.</string>
-    <string name="calibration_start">Empezar</string>
-    <string name="calibration_progress">clic %1$d de %2$d · 90 pulsos por minuto</string>
-    <string name="calibration_latency">Retraso</string>
-    <string name="calibration_ms">%1$d ms</string>
-    <string name="calibration_hits">%1$d de %2$d a tiempo</string>
-    <string name="calibration_done_text">Las tomas con acompañamiento en estos auriculares encajarán solas. Si algo se desfasa, ajusta el desfase en «Sonido» de la grabación.</string>
-    <string name="calibration_done">Listo</string>
-    <string name="calibration_again">Otra vez</string>
-    <string name="calibration_failed">No se pudo captar el pulso. ¿Otra vez?</string>
-    <string name="calibration_dot_heard">Clic %1$d: nota oída</string>
-    <string name="calibration_dot_waiting">Clic %1$d: sin nota</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">con acompañamiento · %1$s</string>
@@ -1065,4 +1049,8 @@
     <string name="capture_low_space">Poco espacio: da para unos %1$d min</string>
     <string name="capture_saving">Montando el vídeo…</string>
     <string name="capture_video_failed">No se pudo montar el vídeo — la toma se guardó como sonido.</string>
+
+    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
+    <string name="backing_latency">Retraso de los auriculares</string>
+    <string name="backing_latency_hint">Si el acompañamiento va detrás del violín en las tomas, a la izquierda; si se adelanta, a la derecha.</string>
 </resources>

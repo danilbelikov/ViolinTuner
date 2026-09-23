@@ -10,6 +10,7 @@ import com.example.violintuner.core.audio.playback.PlayerBacking
 import com.example.violintuner.core.audio.backing.BackingPcm
 import com.example.violintuner.core.domain.backing.Backing
 import com.example.violintuner.core.domain.backing.BackingConfig
+import com.example.violintuner.core.domain.backing.AudioRoute
 import com.example.violintuner.core.domain.backing.BackingOffset
 import com.example.violintuner.core.domain.backing.BackingRepository
 import com.example.violintuner.core.domain.backing.HeadphoneLatencies
@@ -208,14 +209,15 @@ class SoundViewModel @Inject constructor(
     }
 
     /**
-     * «Запомнить для …» is there while this take's shift, moved by ear, would change what the wireless headphones it
-     * was heard through are believed to lag (spec 3.32); once remembered, it is not.
+     * «Запомнить для …» is there while this take's shift, moved by ear, would change what the headphones it was heard
+     * through are believed to lag (spec 3.32) — the number the piece screen's slider shows; once remembered, it is not.
      */
     private fun withRemember(block: BackingBlockState): BackingBlockState {
         val base = take ?: return block.copy(rememberFor = null)
-        val heardOn = base.takeIf { it.output.needsCalibration }?.deviceName ?: return block.copy(rememberFor = null)
-        val current = headphoneLatencies.of(heardOn) ?: backingConfig.uncalibratedBluetoothMs
-        val corrected = BackingOffset.correctedLatencyMs(base.copy(offsetMs = block.offsetMs))
+        val route = AudioRoute(base.output, base.deviceName)
+        val heardOn = route.latencyKey ?: return block.copy(rememberFor = null)
+        val current = BackingOffset.latencyMs(route, headphoneLatencies, backingConfig)
+        val corrected = BackingOffset.correctedLatencyMs(base.copy(offsetMs = block.offsetMs), backingConfig)
         val moved = block.offsetMs - block.recordedOffsetMs
         return if (moved != 0 && corrected != current) block.copy(rememberFor = heardOn, rememberDeltaMs = moved) else block.copy(rememberFor = null)
     }
@@ -247,7 +249,7 @@ class SoundViewModel @Inject constructor(
         val block = state.value.backing ?: return
         val name = block.rememberFor ?: return
         val base = take ?: return
-        val corrected = BackingOffset.correctedLatencyMs(base.copy(offsetMs = block.offsetMs))
+        val corrected = BackingOffset.correctedLatencyMs(base.copy(offsetMs = block.offsetMs), backingConfig)
         viewModelScope.launch { latencies?.set(name, corrected) }
     }
 

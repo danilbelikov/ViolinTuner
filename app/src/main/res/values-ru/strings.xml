@@ -1019,10 +1019,7 @@
     <string name="backing_preview_stop">Остановить минусовку</string>
     <string name="backing_headphones">Наушники</string>
     <string name="backing_no_headphones">Наушники не подключены</string>
-    <string name="backing_headphones_latency">Наушники · %1$s · %2$d мс</string>
-    <string name="backing_headphones_unmeasured">Наушники · %1$s · задержка не измерена</string>
     <string name="backing_headphones_wired">Наушники · %1$s</string>
-    <string name="backing_headphones_check">Проверить</string>
     <string name="backing_unreadable">Этот файл не открыть. Подойдут mp3, m4a, aac, wav, flac, ogg.</string>
     <string name="backing_too_long">Минусовка длиннее часа — такую не взять.</string>
     <string name="backing_no_space">Не хватает места: нужно ещё %1$d МБ.</string>
@@ -1034,19 +1031,6 @@
     <string name="backing_chip_off">выключено</string>
     <string name="backing_needs_headphones">Подключите наушники: минусовка через динамик попадёт в запись.</string>
     <string name="backing_preparing">Готовим минусовку…</string>
-    <string name="calibration_title">Настроим наушники</string>
-    <string name="calibration_text">Беспроводные наушники запаздывают, и каждые по-своему. Сыграйте в такт щелчкам короткую ноту — лучше открытую ля, щипком или коротким штрихом.</string>
-    <string name="calibration_start">Начать</string>
-    <string name="calibration_progress">щелчок %1$d из %2$d · 90 ударов в минуту</string>
-    <string name="calibration_latency">Задержка</string>
-    <string name="calibration_ms">%1$d мс</string>
-    <string name="calibration_hits">%1$d из %2$d в такт</string>
-    <string name="calibration_done_text">Дубли под минусовку в этих наушниках будут совпадать сами. Если что-то разъедется — сдвиг правится в «Звуке» записи.</string>
-    <string name="calibration_done">Готово</string>
-    <string name="calibration_again">Ещё раз</string>
-    <string name="calibration_failed">Не получилось поймать такт. Ещё раз?</string>
-    <string name="calibration_dot_heard">Щелчок %1$d: нота услышана</string>
-    <string name="calibration_dot_waiting">Щелчок %1$d: ноты нет</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">под минусовку · %1$s</string>
@@ -1065,4 +1049,8 @@
     <string name="capture_low_space">Мало места: хватит примерно на %1$d мин</string>
     <string name="capture_saving">Собираем видео…</string>
     <string name="capture_video_failed">Видео не получилось собрать — дубль сохранён как звук.</string>
+
+    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
+    <string name="backing_latency">Задержка наушников</string>
+    <string name="backing_latency_hint">Минусовка в дублях отстаёт от скрипки — двигайте влево, спешит — вправо.</string>
 </resources>

@@ -1019,10 +1019,7 @@
     <string name="backing_preview_stop">Parar o playback</string>
     <string name="backing_headphones">Fones</string>
     <string name="backing_no_headphones">Nenhum fone conectado</string>
-    <string name="backing_headphones_latency">Fones · %1$s · %2$d ms</string>
-    <string name="backing_headphones_unmeasured">Fones · %1$s · atraso não medido</string>
     <string name="backing_headphones_wired">Fones · %1$s</string>
-    <string name="backing_headphones_check">Verificar</string>
     <string name="backing_unreadable">Não dá para abrir este arquivo. Servem mp3, m4a, aac, wav, flac e ogg.</string>
     <string name="backing_too_long">O playback passa de uma hora — longo demais.</string>
     <string name="backing_no_space">Falta espaço: são necessários mais %1$d MB.</string>
@@ -1034,19 +1031,6 @@
     <string name="backing_chip_off">desligado</string>
     <string name="backing_needs_headphones">Conecte fones: pelo alto-falante o playback entraria na gravação.</string>
     <string name="backing_preparing">Preparando o playback…</string>
-    <string name="calibration_title">Vamos ajustar os fones</string>
-    <string name="calibration_text">Fones sem fio atrasam, cada par do seu jeito. Toque uma nota curta a cada clique — de preferência o Lá solto, em pizzicato ou com um golpe curto.</string>
-    <string name="calibration_start">Começar</string>
-    <string name="calibration_progress">clique %1$d de %2$d · 90 batidas por minuto</string>
-    <string name="calibration_latency">Atraso</string>
-    <string name="calibration_ms">%1$d ms</string>
-    <string name="calibration_hits">%1$d de %2$d no tempo</string>
-    <string name="calibration_done_text">Os takes com playback nestes fones vão se alinhar sozinhos. Se algo sair do lugar, ajuste o deslocamento em «Som» da gravação.</string>
-    <string name="calibration_done">Pronto</string>
-    <string name="calibration_again">De novo</string>
-    <string name="calibration_failed">Não deu para pegar o tempo. De novo?</string>
-    <string name="calibration_dot_heard">Clique %1$d: nota ouvida</string>
-    <string name="calibration_dot_waiting">Clique %1$d: sem nota</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">com playback · %1$s</string>
@@ -1065,4 +1049,8 @@
     <string name="capture_low_space">Pouco espaço: dá para cerca de %1$d min</string>
     <string name="capture_saving">Montando o vídeo…</string>
     <string name="capture_video_failed">Não deu para montar o vídeo — o take foi salvo como som.</string>
+
+    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
+    <string name="backing_latency">Atraso dos fones</string>
+    <string name="backing_latency_hint">Se o playback fica atrás do violino nos takes, para a esquerda; se adianta, para a direita.</string>
 </resources>

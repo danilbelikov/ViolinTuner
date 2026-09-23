@@ -175,12 +175,13 @@ sealed interface PieceIntent {
     data object BackingProblemDismissed : PieceIntent
 
     /** «Проверить»: the sheet «Настроим наушники». */
-    data object HeadphonesCheckClicked : PieceIntent
+    /** The slider «Задержка наушников» moved (spec 3.32): a fraction of 0…max. */
+    data class HeadphoneLatencyChanged(val fraction: Float) : PieceIntent
 
-    data object CalibrationStartClicked : PieceIntent
+    data class HeadphoneLatencyStepped(val up: Boolean) : PieceIntent
 
-    /** «Готово», «Отмена» and a sheet closed any other way. */
-    data object CalibrationClosed : PieceIntent
+    /** Back to the guess for these headphones' kind. */
+    data object HeadphoneLatencyReset : PieceIntent
 }
 
 sealed interface PieceEffect {
