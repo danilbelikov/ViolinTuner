@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.audio.di
 
 import com.violinjourney.app.BuildConfig
+import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.audio.AndroidRecordingRate
 import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
@@ -38,7 +39,8 @@ object AudioModule {
     // MPM over YIN by DetectorComparisonTest: same accuracy on clean tones, slightly smaller
     // error under noise, negligible extra cost.
     @Provides
-    fun providePcmEncoderFactory(): PcmEncoderFactory = PcmEncoderFactory(::AacFileEncoder)
+    fun providePcmEncoderFactory(analytics: Analytics): PcmEncoderFactory =
+        PcmEncoderFactory { file, rate -> AacFileEncoder(file, rate, analytics) }
 
     @Provides
     fun provideSessionAudioFiles(impl: AppSessionAudioFiles): SessionAudioFiles = impl

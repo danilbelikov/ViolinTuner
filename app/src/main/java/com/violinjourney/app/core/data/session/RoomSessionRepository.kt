@@ -10,6 +10,9 @@ import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.domain.session.forSession
 import java.time.Clock
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.NoOpAnalytics
+import com.violinjourney.app.core.analytics.TakeDeleted
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -19,6 +22,7 @@ class RoomSessionRepository @Inject constructor(
     private val defaultConfig: IntonationConfig,
     private val audioFiles: SessionAudioFiles,
     private val clock: Clock,
+    private val analytics: Analytics = NoOpAnalytics(),
 ) : SessionRepository {
 
     override val sessions: Flow<List<SessionSummary>> =
@@ -50,6 +54,7 @@ class RoomSessionRepository @Inject constructor(
     override suspend fun delete(ids: Collection<Long>) {
         if (ids.isEmpty()) return
         dao.delete(ids).forEach(audioFiles::delete)
+        analytics.track(TakeDeleted(ids.size))
     }
 
     override suspend fun deleteOrphanAudio() = audioFiles.deleteOrphans(

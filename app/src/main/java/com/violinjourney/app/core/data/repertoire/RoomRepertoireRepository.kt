@@ -16,6 +16,9 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.SheetPage
 import com.violinjourney.app.core.domain.repertoire.Tonic
 import java.time.Clock
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.NoOpAnalytics
+import com.violinjourney.app.core.analytics.PieceAdded
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -25,6 +28,7 @@ class RoomRepertoireRepository @Inject constructor(
     private val files: SheetFiles,
     private val config: RepertoireConfig,
     private val clock: Clock,
+    private val analytics: Analytics = NoOpAnalytics(),
 ) : RepertoireRepository {
     override val pieces: Flow<List<Piece>> = dao.observePieces().map { rows -> rows.map(RepertoireMapper::toPiece) }
 
@@ -37,6 +41,7 @@ class RoomRepertoireRepository @Inject constructor(
 
     override suspend fun add(draft: PieceDraft, nowEpochMs: Long): Long {
         val clean = requireNotNull(PieceRules.clean(draft, config)) { "a piece needs a title" }
+        analytics.track(PieceAdded(section = clean.section.name, ownSection = clean.groupId != null, scale = clean.scale != null))
         return dao.insertPiece(RepertoireMapper.toEntity(clean, createdAt = nowEpochMs))
     }
 

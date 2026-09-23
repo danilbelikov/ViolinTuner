@@ -20,6 +20,10 @@ import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.core.domain.journey.JourneyStop
 import com.violinjourney.app.core.domain.journey.TaktEarning
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.CityReached
+import com.violinjourney.app.core.analytics.ItemBought
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
@@ -121,7 +125,10 @@ abstract class JourneyDao {
     }
 }
 
-class RoomJourneyRepository @Inject constructor(private val dao: JourneyDao) : JourneyRepository {
+class RoomJourneyRepository @Inject constructor(
+    private val dao: JourneyDao,
+    private val analytics: Analytics = NoOpAnalytics(),
+) : JourneyRepository {
     override val progress: Flow<JourneyProgress> =
         combine(dao.observeEarnings(), dao.observeArrivals(), dao.observeExtras(), dao.observeHomePurchases()) { earnings, arrivals, extras, home ->
             JourneyProgress(
@@ -141,6 +148,7 @@ class RoomJourneyRepository @Inject constructor(private val dao: JourneyDao) : J
         val index = JourneyRoute.indexOf(stop.id)
         if (index <= 0 || !stop.available) return false
         return dao.arrive(stop.id, JourneyRoute.stops[index - 1].id, stop.price, nowEpochMs)
+            .also { arrived -> if (arrived) analytics.track(CityReached(index)) }
     }
 
     override suspend fun buy(stop: JourneyStop, extra: JourneyExtra, price: Int, nowEpochMs: Long): Boolean =
@@ -152,7 +160,10 @@ class RoomJourneyRepository @Inject constructor(private val dao: JourneyDao) : J
     }
 }
 
-class RoomHomeRepository @Inject constructor(private val dao: JourneyDao) : HomeRepository {
+class RoomHomeRepository @Inject constructor(
+    private val dao: JourneyDao,
+    private val analytics: Analytics = NoOpAnalytics(),
+) : HomeRepository {
     override val state: Flow<HomeState> = combine(dao.observeHomePurchases(), dao.observeHomeChoices()) { purchases, choices ->
         HomeState(
             loaded = true,
@@ -163,10 +174,13 @@ class RoomHomeRepository @Inject constructor(private val dao: JourneyDao) : Home
         )
     }
 
-    override suspend fun buy(item: HomeItem, nowEpochMs: Long): Boolean = dao.buyForHome(item.id, ITEM, item.price, item.slot, nowEpochMs)
+    override suspend fun buy(item: HomeItem, nowEpochMs: Long): Boolean =
+        dao.buyForHome(item.id, ITEM, item.price, item.slot, nowEpochMs)
+            .also { bought -> if (bought) analytics.track(ItemBought(item.id, house = false)) }
 
     override suspend fun buy(house: HomeHouse, nowEpochMs: Long): Boolean =
-        house.drawn && dao.buyForHome(house.id, HOUSE, house.price, HomeState.HOUSE_KEY, nowEpochMs)
+        (house.drawn && dao.buyForHome(house.id, HOUSE, house.price, HomeState.HOUSE_KEY, nowEpochMs))
+            .also { bought -> if (bought) analytics.track(ItemBought(house.id, house = true)) }
 
     override suspend fun place(slot: String, itemId: String) = dao.putHomeChoice(HomeChoiceEntity(slot, itemId))
 

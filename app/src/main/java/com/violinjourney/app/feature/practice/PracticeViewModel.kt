@@ -37,6 +37,9 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import java.time.LocalDate
 import java.time.YearMonth
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.LevelUp
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -70,6 +73,7 @@ class PracticeViewModel @Inject constructor(
     private val blocks: BlockStore = NoBlocks,
     private val journeyConfig: JourneyConfig = JourneyConfig(),
     private val finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
+    private val analytics: Analytics = NoOpAnalytics(),
 ) : ViewModel() {
 
     /** Takts of the practice saved a moment ago, as the pill on the card; null the rest of the time. */
@@ -251,6 +255,9 @@ class PracticeViewModel @Inject constructor(
         if (earning == recapped) return
         recapped = earning
         val recap = RecapRules.of(earning, repository.entries.first(), progress ?: journey.progress.first(), today(), journeyConfig, progressConfig)
+        // The level is not stored anywhere — it is worked out from the time, and this is the one
+        // place that knows it has just grown (spec 3.13, 5.24).
+        if (recap.levelUp) analytics.track(LevelUp(recap.levelAfter.level))
         var opened = false
         ui.update {
             opened = it.sheet == null || it.sheet is PracticeSheet.Summary

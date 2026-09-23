@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.domain.journey
 
+import com.violinjourney.app.core.analytics.FakeAnalytics
 import com.violinjourney.app.core.domain.practice.BlockRules
 import com.violinjourney.app.core.domain.practice.FakeBlockStore
 import com.violinjourney.app.core.domain.practice.FakePieceBlockRepository
@@ -26,7 +27,8 @@ class PracticeEarnsTaktsTest {
     private val journey = FakeJourneyRepository()
     private val blocks = FakeBlockStore()
     private val history = FakePieceBlockRepository()
-    private val finisher = PracticeFinisher(practice, store, clock, notes, journey, JourneyConfig(), blocks, history, PracticeConfig())
+    private val analytics = FakeAnalytics()
+    private val finisher = PracticeFinisher(practice, store, clock, notes, journey, JourneyConfig(), blocks, history, PracticeConfig(), analytics)
     private val min = 60_000L
 
     @Test
@@ -38,9 +40,12 @@ class PracticeEarnsTaktsTest {
         // what the save hands back is the row it stored: «Занятие сохранено» shows exactly that (spec 3.31)
         assertEquals(journey.earnings.single(), saved)
         assertEquals(NoteCount.ZERO, notes.count)
+        // the statistics learn the shape of the practice and nothing about what was played (spec 3.34)
+        assertEquals(listOf("practice_finished {minutes=38, blocks=0, bars=164}"), analytics.sent())
         // a second answer to the same practice stores and earns nothing
         assertTrue(finisher.save(1_000, 38 * 60_000L) == null)
         assertEquals(1, journey.earnings.size)
+        assertEquals("a practice already saved is not counted twice", 1, analytics.sent().size)
     }
 
     @Test

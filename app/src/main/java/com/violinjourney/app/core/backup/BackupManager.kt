@@ -5,6 +5,11 @@ import com.violinjourney.app.core.di.IoDispatcher
 import java.io.File
 import java.io.IOException
 import java.time.Clock
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.BackupCreated
+import com.violinjourney.app.core.analytics.BackupRestored
+import com.violinjourney.app.core.analytics.ErrorGroup
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CancellationException
@@ -121,6 +126,7 @@ class BackupManager @Inject constructor(
     private val clock: Clock,
     private val elapsed: ElapsedClock,
     @IoDispatcher private val io: CoroutineDispatcher,
+    private val analytics: Analytics = NoOpAnalytics(),
 ) {
     private val scope = CoroutineScope(SupervisorJob() + io)
     private var work: Job? = null
@@ -192,6 +198,7 @@ class BackupManager @Inject constructor(
                     if (stillToShow > 0) delay(stillToShow)
                 }
                 finished = true
+                analytics.track(BackupCreated(megabytes = (total / BYTES_PER_MB).toInt(), parts = parts.size))
                 mutableJob.value = BackupJob.Saved(
                     fileName = uri?.let(documents::nameOf) ?: fileName,
                     bytes = uri?.let(documents::sizeOf) ?: shareFile?.length() ?: total,
@@ -202,8 +209,10 @@ class BackupManager @Inject constructor(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: BackupFileException) {
+                analytics.error(ErrorGroup.BACKUP, "the copy could not be written", e)
                 mutableJob.value = BackupJob.SaveFailed(SaveFailure.FAILED)
             } catch (e: IOException) {
+                analytics.error(ErrorGroup.BACKUP, "the copy failed", e)
                 mutableJob.value = BackupJob.SaveFailed(failureOf(e))
             } finally {
                 store.cleanUp()
@@ -274,11 +283,15 @@ class BackupManager @Inject constructor(
                 // From here on there is no way back, and no need for one: the rest is renames at the next start.
                 mutableJob.update { if (it is BackupJob.Restoring) it.copy(phase = RestorePhase.FINISHING, remainingSec = null) else it }
                 withContext(kotlinx.coroutines.NonCancellable) { store.markStagingReady() }
+                analytics.track(BackupRestored(ok = true))
                 mutableJob.value = BackupJob.Restored(manifest)
             } catch (e: CancellationException) {
                 withContext(kotlinx.coroutines.NonCancellable) { store.discardStaging() }
                 throw e
             } catch (e: IOException) {
+                // The one place where a person can lose everything; until now nobody but them knew.
+                analytics.track(BackupRestored(ok = false))
+                analytics.error(ErrorGroup.BACKUP, "the copy could not be restored", e)
                 store.discardStaging()
                 mutableJob.value = BackupJob.RestoreFailed(dataIntact, copy.uri, manifest)
             }

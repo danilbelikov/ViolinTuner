@@ -8,6 +8,9 @@ import com.violinjourney.app.core.domain.journey.NoPracticeNotes
 import com.violinjourney.app.core.domain.journey.PracticeNotesStore
 import com.violinjourney.app.core.domain.journey.TaktEarning
 import java.time.Clock
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.NoOpAnalytics
+import com.violinjourney.app.core.analytics.PracticeFinished
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
@@ -27,6 +30,7 @@ class PracticeFinisher @Inject constructor(
     private val blocks: BlockStore = NoBlocks,
     private val blockHistory: PieceBlockRepository = NoBlockHistory,
     private val config: PracticeConfig = PracticeConfig(),
+    private val analytics: Analytics = NoOpAnalytics(),
 ) {
     /**
      * The earning of the practice as it was stored — what «Занятие сохранено» shows (spec 3.31); null when
@@ -58,6 +62,7 @@ class PracticeFinisher @Inject constructor(
             piecesPaid = piecesPaid,
         )
         journey.earn(earning)
+        analytics.track(PracticeFinished(minutes = (durationMs / MS_PER_MINUTE).toInt(), blocks = played.size, bars = earning.takts))
         notes.clear()
         blocks.clear()
         store.clear()
@@ -68,5 +73,9 @@ class PracticeFinisher @Inject constructor(
         notes.clear()
         blocks.clear()
         store.clear()
+    }
+
+    private companion object {
+        const val MS_PER_MINUTE = 60_000L
     }
 }

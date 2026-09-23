@@ -8,6 +8,7 @@ import com.violinjourney.app.core.domain.journey.PracticeNotesStore
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.MicUnavailable
 import com.violinjourney.app.core.analytics.NoOpAnalytics
+import com.violinjourney.app.core.analytics.TakeRecorded
 import com.violinjourney.app.core.audio.MicUnavailableException
 import com.violinjourney.app.core.audio.PitchSource
 import com.violinjourney.app.core.audio.recording.AudioTap
@@ -239,6 +240,13 @@ class TakePipeline @Inject constructor(
                             ),
                         )
                     }
+                    analytics.track(
+                        TakeRecorded(
+                            seconds = (result.session.durationMs / MS_PER_SECOND).toInt(),
+                            video = video != null,
+                            backing = plan != null,
+                        ),
+                    )
                     if (stoppedByPlayer) eventChannel.send(Event.Saved(id))
                 }
             }
@@ -345,6 +353,7 @@ class TakePipeline @Inject constructor(
     companion object {
         // Pause before reopening a microphone that failed (busy with a call, hardware hiccup).
         private const val MIC_RETRY_DELAY_MS = 3_000L
+        private const val MS_PER_SECOND = 1_000L
 
         /** A source without sound (the fake one) records no file: the backing plays at the usual rate, and is made ready at it. */
         const val DEFAULT_RATE = 48_000

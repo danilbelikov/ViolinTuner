@@ -5,6 +5,9 @@ import android.media.MediaCodecInfo
 import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.util.Log
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.ErrorGroup
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import java.io.File
 import java.nio.ByteOrder
 import java.util.concurrent.ArrayBlockingQueue
@@ -15,7 +18,11 @@ import java.util.concurrent.TimeUnit
  * queue: the microphone loop only copies a hop into the queue and never waits for the codec.
  * A full queue means the device cannot keep up; the take is then given up, not the frames.
  */
-class AacFileEncoder(private val file: File, private val sampleRateHz: Int) : PcmEncoder {
+class AacFileEncoder(
+    private val file: File,
+    private val sampleRateHz: Int,
+    private val analytics: Analytics = NoOpAnalytics(),
+) : PcmEncoder {
     private class Chunk(val samples: ShortArray, val count: Int)
 
     private val queue = ArrayBlockingQueue<Chunk>(QUEUE_HOPS)
@@ -111,6 +118,7 @@ class AacFileEncoder(private val file: File, private val sampleRateHz: Int) : Pc
             // MediaCodec and MediaMuxer report every failure as a runtime exception. The take
             // is lost, the session is not: it is saved without sound (spec 3.9).
             Log.w(TAG, "encoding failed, the session will have no audio", e)
+            analytics.error(ErrorGroup.MEDIA, "encoding failed, the take has no sound", e)
             failed = true
         } finally {
             runCatching { if (muxing) muxer.stop() }.onFailure { failed = true }
