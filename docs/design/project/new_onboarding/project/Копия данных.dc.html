@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics><meta name="design_doc_mode" content="canvas"><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}.dv-turn{padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px}.dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 20px}.dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none}.dv-tname{font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE}.dv-opts{display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start}.dv-opt{flex:none;display:flex;flex-direction:column;gap:9px;scroll-margin-top:16px}.dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none}.dv-olabel{display:flex;align-items:baseline;gap:8px;font:400 11px/1.3 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.6);max-width:412px}.dv-card{max-width:100%}.dv-opt:target .dv-oid{background:#C4ADFF;color:#2E1A6E}.dv-next{margin:22px 0 0;font:12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.5);max-width:900px}.dv-tbl{display:grid;gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px}.dv-tbl > div{background:#15151B;padding:8px 12px;min-width:0;overflow-wrap:anywhere}.dv-tbl .h{color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.04em}.mono{font-family:ui-monospace,Menlo,monospace;font-size:11.5px}.tn{font-variant-numeric:tabular-nums}.phone{height:100%;display:flex;flex-direction:column;background:#131318;color:#E6E4EE;font-family:Manrope,system-ui,sans-serif}.box{width:892px;height:412px;border-radius:14px;border:4px solid rgba(116,119,117,.5);box-sizing:border-box;background:#131318;color:#E6E4EE;overflow:hidden;position:relative;display:flex;flex-direction:column;font-family:Manrope,system-ui,sans-serif}.frag{width:412px;background:#131318;border-radius:16px;padding:16px;box-sizing:border-box;display:flex;flex-direction:column;gap:14px;color:#E6E4EE}.cap{font-size:11px;color:rgba(230,228,238,.5);line-height:1.4}.dlg{width:312px;border-radius:28px;background:#292833;padding:24px;box-sizing:border-box;display:flex;flex-direction:column;gap:16px;color:#E6E4EE;box-shadow:0 16px 48px rgba(0,0,0,.5)}.row{height:56px;display:flex;align-items:center;gap:16px}.rt{font-size:15px;font-weight:600}.rs{font-size:13px;color:#A39FB5;margin-top:1px}.card{background:#1E1D25;border-radius:16px;padding:14px 16px;display:flex;flex-direction:column;gap:10px}.btn{height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;gap:8px;font-size:16px;font-weight:700;flex:none}.btn-o{height:48px;border-radius:24px;border:1px solid #3A3846;display:flex;align-items:center;justify-content:center;gap:8px;font-size:14px;font-weight:600;box-sizing:border-box}.btn-t{height:44px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:#C4ADFF}.tabs{height:80px;display:flex;background:#1E1D25;flex:none}.tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;color:#A39FB5}.tab > div{width:64px;height:32px;display:flex;align-items:center;justify-content:center;border-radius:16px}.mini{width:206px;height:446px;border-radius:14px;overflow:hidden;background:#131318;color:#E6E4EE;display:flex;flex-direction:column;border:4px solid rgba(116,119,117,.5);box-sizing:border-box;font-family:Manrope,system-ui,sans-serif}
+@keyframes indet{0%{transform:translateX(-100%)}100%{transform:translateX(300%)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}</style></helmet>
+
+<section class="dv-turn" id="s21a">
+<div class="dv-thd"><a class="dv-tid" href="#s21a">21a</a><span class="dv-tname">Вход · блок «Данные» в «Настройках» — четыре состояния, landscape; ссылка в онбординге</span></div>
+<div class="dv-opts">
+<sc-for list="{{ settingsFrames }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone">
+  <div style="padding:16px 16px 0;font-size:28px;font-weight:700;flex:none">Настройки</div>
+  <div style="flex:1;overflow:hidden;padding:12px 16px 0;display:flex;flex-direction:column">
+    <div class="row">{{ icFork }}<div style="flex:1"><div class="rt">Эталон A4</div><div class="rs tn">440 Гц</div></div>{{ icChevRV }}</div>
+    <div class="row">{{ icTarget }}<div style="flex:1"><div class="rt">Допуск</div><div class="rs tn">± 5 центов</div></div>{{ icChevRV }}</div>
+    <div class="row">{{ icMic }}<div style="flex:1"><div class="rt">Микрофон</div><div class="rs">разрешение выдано</div></div></div>
+    <div class="row">{{ icSound }}<div style="flex:1"><div class="rt">Звук записей</div><div class="rs">Камерный зал · для всех записей</div></div>{{ icChevRV }}</div>
+    <div style="height:1px;background:#292833;margin:8px 0"></div>
+    <div class="row" style="background:{{ s.hl }};margin:0 -16px;padding:0 16px">{{ icSaveCopy }}<div style="flex:1;min-width:0"><div class="rt">Сохранить копию</div><div class="rs tn" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ s.sub }}</div><sc-if value="{{ s.progress }}" hint-placeholder-val="{{ false }}"><div style="height:4px;border-radius:2px;background:#292833;margin-top:8px;overflow:hidden"><div style="width:56%;height:100%;border-radius:2px;background:#C4ADFF"></div></div></sc-if></div>{{ icChevRV }}</div>
+    <div class="row">{{ icRestore }}<div style="flex:1"><div class="rt">Восстановить из копии</div></div>{{ icChevRV }}</div>
+    <div style="height:40px;display:flex;align-items:center;padding-left:40px;font-size:13px;color:#A39FB5" class="tn">В приложении сейчас: 3,4 ГБ</div>
+    <div style="height:1px;background:#292833;margin:8px 0"></div>
+    <div class="row">{{ icRepeat }}<div style="flex:1"><div class="rt">Пройти онбординг снова</div></div></div>
+  </div>
+  <div class="tabs"><div class="tab"><div>{{ tabLive }}</div>Live</div><div class="tab"><div>{{ tabPractice }}</div>Занятия</div><div class="tab"><div>{{ tabRecords }}</div>Записи</div><div class="tab" style="color:#E6E4EE;font-weight:600"><div style="background:#5B43B8">{{ tabSettings }}</div>Настройки</div></div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="21a3"><div class="dv-olabel"><a class="dv-oid" href="#21a3">21a3</a>Блок «Данные» крупно — подпись «Сохранить копию» в четырёх состояниях. Намёк на устаревшую копию — только словами в подписи, тем же цветом: «с тех пор 9 новых записей»</div><div class="dv-card">
+<div class="frag" style="gap:0">
+  <sc-for list="{{ dataStates }}" as="d" hint-placeholder-count="4">
+  <div class="cap" style="padding:10px 0 2px">{{ d.cap }}</div>
+  <div class="row">{{ icSaveCopy }}<div style="flex:1;min-width:0"><div class="rt">Сохранить копию</div><div class="rs tn" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ d.sub }}</div><sc-if value="{{ d.progress }}" hint-placeholder-val="{{ false }}"><div style="height:4px;border-radius:2px;background:#292833;margin-top:8px;overflow:hidden"><div style="width:56%;height:100%;border-radius:2px;background:#C4ADFF"></div></div></sc-if></div>{{ icChevRV }}</div>
+  </sc-for>
+</div>
+</div></div>
+<div class="dv-opt" id="21a4"><div class="dv-olabel"><a class="dv-oid" href="#21a4">21a4</a>Landscape 892 × 412 — две колонки строк: слева звук и допуск, справа «Данные» и онбординг; вкладки внизу как в портрете</div><div class="dv-card">
+<div class="box">
+  <div style="padding:10px 20px 0;font-size:24px;font-weight:700;flex:none">Настройки</div>
+  <div style="flex:1;display:flex;gap:32px;padding:4px 20px 0;min-height:0">
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div class="row" style="height:52px">{{ icFork }}<div style="flex:1"><div class="rt">Эталон A4</div><div class="rs tn">440 Гц</div></div>{{ icChevRV }}</div>
+      <div class="row" style="height:52px">{{ icTarget }}<div style="flex:1"><div class="rt">Допуск</div><div class="rs tn">± 5 центов</div></div>{{ icChevRV }}</div>
+      <div class="row" style="height:52px">{{ icMic }}<div style="flex:1"><div class="rt">Микрофон</div><div class="rs">разрешение выдано</div></div></div>
+      <div class="row" style="height:52px">{{ icSound }}<div style="flex:1"><div class="rt">Звук записей</div><div class="rs">Камерный зал · для всех записей</div></div>{{ icChevRV }}</div>
+    </div>
+    <div style="width:1px;background:#292833;margin:6px 0"></div>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div class="row" style="height:52px">{{ icSaveCopy }}<div style="flex:1;min-width:0"><div class="rt">Сохранить копию</div><div class="rs tn">последняя — 12 сентября</div></div>{{ icChevRV }}</div>
+      <div class="row" style="height:52px">{{ icRestore }}<div style="flex:1"><div class="rt">Восстановить из копии</div></div>{{ icChevRV }}</div>
+      <div style="height:36px;display:flex;align-items:center;padding-left:40px;font-size:13px;color:#A39FB5" class="tn">В приложении сейчас: 3,4 ГБ</div>
+      <div style="height:1px;background:#292833;margin:6px 0"></div>
+      <div class="row" style="height:52px">{{ icRepeat }}<div style="flex:1"><div class="rt">Пройти онбординг снова</div></div></div>
+    </div>
+  </div>
+  <div class="tabs" style="height:64px"><div class="tab"><div>{{ tabLive }}</div>Live</div><div class="tab"><div>{{ tabPractice }}</div>Занятия</div><div class="tab"><div>{{ tabRecords }}</div>Записи</div><div class="tab" style="color:#E6E4EE;font-weight:600"><div style="background:#5B43B8">{{ tabSettings }}</div>Настройки</div></div>
+</div>
+</div></div>
+<div class="dv-opt" id="21a5"><div class="dv-olabel"><a class="dv-oid" href="#21a5">21a5</a>Онбординг, шаг 1 — под главной кнопкой текстовая ссылка «У меня есть копия данных» (44, primary, без контура). Только на первом шаге</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone" style="padding:24px">
+  <div style="display:flex;gap:6px"><div style="flex:1;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="flex:1;height:4px;border-radius:2px;background:#292833"></div><div style="flex:1;height:4px;border-radius:2px;background:#292833"></div></div>
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px">
+    <div style="width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#2A2352 0%,#131318 70%);align-self:center;display:flex;align-items:center;justify-content:center"><div style="width:44px;height:76px;border-radius:22px;background:#C4ADFF"></div></div>
+    <div style="font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-.5px">Дайте мне услышать скрипку</div>
+    <div style="font-size:16px;line-height:1.5;color:#A39FB5;text-wrap:pretty">Тренажёр слушает через микрофон и показывает, насколько точно взята нота. Звук никуда не отправляется.</div>
+  </div>
+  <div class="btn">Разрешить микрофон</div>
+  <div class="btn-t" style="margin-top:4px">У меня есть копия данных</div>
+</div>
+</x-import>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 3 — намёк на устаревшую копию.</b> Нужен, но только как факт в подписи (<a href="#21a3">21a3</a>): «последняя — 12 августа · с тех пор 9 новых записей». Ни цвета, ни бейджа, ни точки на вкладке: это та же строка, что и всегда, просто она договаривает, что изменилось. Человек, который зашёл в настройки за допуском, увидит её боковым зрением и решит сам; приложение по-прежнему ничего не просит. Условие показа: копии больше 30 дней и есть новые записи/дубли/произведения; счётчик — только записи (самое понятное). Идёт копия — та же строка с полосой 4 dp и «идёт · 56 %», тап ведёт на экран прогресса. <b>Вопрос 4 — ссылка в онбординге</b> только на первом шаге (<a href="#21a5">21a5</a>): на втором и третьем человек уже выбирает настройки, а копия их перезапишет — предлагать восстановление там значит спорить с тем, что он делает. Текстовая кнопка 44 под главной 56, тем же primary без контура: читается как «второй вход», не как альтернатива микрофону.</p>
+</section>
+
+<section class="dv-turn" id="s21b">
+<div class="dv-thd"><a class="dv-tid" href="#s21b">21b</a><span class="dv-tname">Сохранение · состав с весом, итог и полоса долей; без видео; два состояния-запрета</span></div>
+<div class="dv-opts">
+<sc-for list="{{ saveFrames }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div></div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:20px;padding:4px 16px 0">
+    <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:28px;font-weight:700;line-height:1.15">Копия данных</div><div style="font-size:14px;line-height:1.45;color:#A39FB5;text-wrap:pretty">Один файл со всем, что есть в приложении. Лучше положить его не на этот телефон — на компьютер, флешку или в облачную папку.</div></div>
+    <div style="display:flex;flex-direction:column">
+      <sc-for list="{{ s.rows }}" as="r" hint-placeholder-count="4">
+      <div style="min-height:64px;display:flex;align-items:center;gap:14px;padding:8px 0;border-bottom:1px solid #292833;opacity:{{ r.op }}">
+        <div style="flex:1;min-width:0"><div class="rt">{{ r.title }}</div><div class="rs tn">{{ r.sub }}</div></div>
+        <div style="display:flex;align-items:center;gap:8px;flex:none"><div style="width:8px;height:8px;border-radius:50%;background:{{ r.dot }}"></div><div class="tn" style="font-size:14px;font-weight:600;min-width:58px;text-align:right">{{ r.size }}</div></div>
+        <sc-if value="{{ r.always }}" hint-placeholder-val="{{ false }}"><div style="width:52px;font-size:12px;color:#A39FB5;text-align:right;flex:none">всегда</div></sc-if>
+        <sc-if value="{{ r.on }}" hint-placeholder-val="{{ true }}"><div style="width:52px;height:32px;border-radius:16px;background:#C4ADFF;position:relative;flex:none"><div style="position:absolute;right:4px;top:4px;width:24px;height:24px;border-radius:50%;background:#2E1A6E;display:flex;align-items:center;justify-content:center">{{ icCheckXS }}</div></div></sc-if>
+        <sc-if value="{{ r.off }}" hint-placeholder-val="{{ false }}"><div style="width:52px;height:32px;border-radius:16px;border:2px solid #6B6880;box-sizing:border-box;position:relative;flex:none"><div style="position:absolute;left:6px;top:6px;width:16px;height:16px;border-radius:50%;background:#A39FB5"></div></div></sc-if>
+      </div>
+      </sc-for>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:10px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:17px;font-weight:700">Копия займёт</div><div class="tn" style="font-size:22px;font-weight:800">≈ {{ s.total }}</div></div>
+      <div style="height:8px;border-radius:4px;background:#292833;display:flex;gap:2px;overflow:hidden"><sc-for list="{{ s.segs }}" as="g" hint-placeholder-count="4"><div style="width:{{ g.w }};height:100%;background:{{ g.bg }};flex:none"></div></sc-for></div>
+      <sc-if value="{{ s.hasNote }}" hint-placeholder-val="{{ false }}"><div style="font-size:13px;line-height:1.45;color:#A39FB5;text-wrap:pretty">{{ s.note }}</div></sc-if>
+    </div>
+  </div>
+  <div style="padding:12px 16px 16px;display:flex;flex-direction:column;gap:4px;flex:none">
+    <div class="btn">{{ icSaveCopyD }}Сохранить в…</div>
+    <sc-if value="{{ s.canSend }}" hint-placeholder-val="{{ false }}"><div class="btn-t">{{ icShareP }}Отправить…</div></sc-if>
+    <sc-if value="{{ s.tooBig }}" hint-placeholder-val="{{ true }}"><div style="min-height:44px;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1.4;color:#A39FB5;text-align:center;text-wrap:pretty;padding:0 12px">Такую копию мессенджер или почта не примут — сохраните её в папку или на флешку</div></sc-if>
+  </div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="21b3"><div class="dv-olabel"><a class="dv-oid" href="#21b3">21b3</a>Для сравнения — два готовых варианта вместо выключателей: проще, но «Без звука» и «только ноты» пропадают, а состав всё равно надо объяснить</div><div class="dv-card">
+<div class="frag">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="border-radius:16px;background:#2A2540;border:2px solid #C4ADFF;padding:14px 16px;display:flex;align-items:center;gap:14px"><div style="flex:1"><div style="font-size:15px;font-weight:700">Всё</div><div class="rs">23 записи со звуком, 6 видео, ноты, занятия</div></div><div class="tn" style="font-size:17px;font-weight:800">3,4 ГБ</div></div>
+    <div style="border-radius:16px;background:#1E1D25;padding:14px 16px;display:flex;align-items:center;gap:14px"><div style="flex:1"><div style="font-size:15px;font-weight:700">Без видео</div><div class="rs">то же, у видео-дублей останется разбор · поместится в мессенджер</div></div><div class="tn" style="font-size:17px;font-weight:800">145 МБ</div></div>
+  </div>
+</div>
+</div></div>
+<div class="dv-opt" id="21b4"><div class="dv-olabel"><a class="dv-oid" href="#21b4">21b4</a>Запреты — вместо кнопки строка причины; состав остаётся видимым, экран не пустой. Идёт запись / нечего сохранять</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+<div class="frag" style="gap:4px">
+  <div class="btn" style="background:#292833;color:#6B6880">{{ icSaveCopyDim }}Сохранить в…</div>
+  <div style="min-height:44px;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;color:#A39FB5">{{ icRecDot }}Сначала закончите запись</div>
+</div>
+<div class="frag" style="gap:16px">
+  <div style="display:flex;flex-direction:column;gap:8px"><div style="font-size:28px;font-weight:700;line-height:1.15">Копия данных</div><div style="font-size:14px;line-height:1.45;color:#A39FB5;text-wrap:pretty">Один файл со всем, что есть в приложении.</div></div>
+  <div class="card" style="align-items:center;padding:28px 16px;gap:6px">{{ icArchiveV }}<div style="font-size:15px;font-weight:600;margin-top:6px">Пока нечего сохранять</div><div class="rs" style="text-align:center;text-wrap:pretty">Запишите первый дубль или добавьте произведение — копия появится здесь</div></div>
+  <div class="btn" style="background:#292833;color:#6B6880">Сохранить в…</div>
+</div>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 1 — выключатели, не пресеты</b> (<a href="#21b1">21b1</a>). Человек не думает мегабайтами — но он думает «видео» и «звук», и именно они и стоят в строках: каждая говорит человеческими словами, что это, сколько штук и сколько весит. Два пресета (<a href="#21b3">21b3</a>) короче, но всё равно вынуждены пересказать состав в подписи, а «без звука» или «без фото нот» теряются. Первая строка — без выключателя, справа «всегда»: это сами данные, копия без них бессмысленна. <b>Вопрос 2 — полоса и числа вместе.</b> Полоса 8 dp под итогом собирается из долей строк — у каждой своя точка 8 dp перед весом, и цвета совпадают; при 3,2 ГБ видео из 3,4 полоса почти вся одного цвета, и это правда, которую цифры не показывают так быстро. Выключенная доля не исчезает — становится `backup.off`: видно, что оставили за бортом. Минимальная ширина доли 4 dp (1,2 МБ иначе не видно). Порог «Отправить…» — 200 МБ: без видео копия 145 МБ, и под главной кнопкой появляется вторая; с видео вместо неё строка о мессенджерах. Строка-последствие появляется только когда что-то выключено (<a href="#21b2">21b2</a>). Запреты (<a href="#21b4">21b4</a>) — приглушённая кнопка и причина строкой под ней, а не исчезновение кнопки: человек видит, что функция есть, и почему сейчас нельзя.</p>
+</section>
+
+<section class="dv-turn" id="s21c">
+<div class="dv-thd"><a class="dv-tid" href="#s21c">21c</a><span class="dv-tname">Сохранение · прогресс — начало, середина, последняя фаза; отмена; готово; ошибки; landscape</span></div>
+<div class="dv-opts">
+<sc-for list="{{ progFrames }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone">
+  <div style="height:56px;flex:none"></div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:24px;padding:4px 16px 0">
+    <div style="font-size:28px;font-weight:700;line-height:1.15">{{ s.title }}</div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:17px;font-weight:600">{{ s.phase }}</div><div class="tn" style="font-size:40px;font-weight:800;line-height:1;color:#C4ADFF">{{ s.pct }}</div></div>
+      <div style="height:8px;border-radius:4px;background:#292833;overflow:hidden;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:{{ s.pctW }};border-radius:4px;background:#C4ADFF"></div></div>
+      <div class="tn" style="font-size:14px;color:#A39FB5">{{ s.meta }}</div>
+    </div>
+    <div class="card" style="gap:6px"><div style="font-size:15px;font-weight:600;line-height:1.4">Можно свернуть приложение — копия дойдёт сама.</div><div style="font-size:14px;line-height:1.45;color:#A39FB5">Не выключайте телефон и не вынимайте флешку, пока не закончится.</div></div>
+    <sc-if value="{{ s.fileRow }}" hint-placeholder-val="{{ true }}"><div style="display:flex;align-items:center;gap:12px;padding:0 4px">{{ icFileV }}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Интонация · копия · 20 сентября 2026.zip</div><div class="rs">Загрузки</div></div></div></sc-if>
+  </div>
+  <div style="padding:12px 16px 16px;flex:none"><div class="btn-o" style="opacity:{{ s.cancelOp }}">{{ icCloseS }}Отмена</div></div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="21c4"><div class="dv-olabel"><a class="dv-oid" href="#21c4">21c4</a>Подтверждение отмены — диалог 312, вторая кнопка error</div><div class="dv-card">
+<div class="dlg"><div style="font-size:20px;font-weight:700;line-height:1.3">Остановить?</div><div style="font-size:14px;line-height:1.5;color:#A39FB5">Недописанный файл будет удалён. Записанные 1,9 ГБ пропадут.</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px"><div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Продолжить</div><div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#E8565C">Остановить</div></div></div>
+</div></div>
+<div class="dv-opt" id="21c5"><div class="dv-olabel"><a class="dv-oid" href="#21c5">21c5</a>Готово — тот же экран сменяется итогом (crossfade 250): кружок 64, имя файла, вес и место, состав одной строкой, совет</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone">
+  <div style="height:56px;flex:none"></div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:24px;padding:4px 16px 0">
+    <div style="width:64px;height:64px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center">{{ icCheckD }}</div>
+    <div style="font-size:28px;font-weight:700;line-height:1.15">Копия сохранена</div>
+    <div class="card" style="gap:12px">
+      <div style="display:flex;align-items:center;gap:12px">{{ icFileV }}<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.35;text-wrap:pretty">Интонация · копия · 20 сентября 2026.zip</div><div class="rs tn">3,4 ГБ · Загрузки</div></div></div>
+      <div style="height:1px;background:#292833"></div>
+      <div class="tn" style="font-size:14px;line-height:1.5;color:#A39FB5">23 записи · 5 произведений · 41 день занятий · 19 записей со звуком · 6 видео</div>
+    </div>
+    <div style="font-size:14px;line-height:1.5;color:#A39FB5;text-wrap:pretty;padding:0 4px">Скопируйте файл с телефона: копия на том же телефоне не спасёт, если с ним что-то случится.</div>
+  </div>
+  <div style="padding:12px 16px 16px;flex:none"><div class="btn">Готово</div></div>
+</div>
+</x-import>
+</div></div>
+<div class="dv-opt" id="21c6"><div class="dv-olabel"><a class="dv-oid" href="#21c6">21c6</a>Не получилось — строкой на том же экране, не тостом: alert 24 error, заголовок 17, «Ещё раз» снова открывает выбор места. Три причины</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+  <sc-for list="{{ saveErrors }}" as="e" hint-placeholder-count="3">
+  <div class="frag" style="gap:12px">
+    <div style="display:flex;align-items:flex-start;gap:12px">{{ icAlert }}<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:700;line-height:1.3;text-wrap:pretty">{{ e.title }}</div><div style="font-size:14px;color:#A39FB5;line-height:1.4;margin-top:4px;text-wrap:pretty">{{ e.sub }}</div></div></div>
+    <div style="display:flex;gap:8px"><div class="btn-o" style="flex:1">Закрыть</div><div class="btn-o" style="flex:1;background:#C4ADFF;color:#2E1A6E;border:none;font-weight:700">Ещё раз</div></div>
+  </div>
+  </sc-for>
+</div></div>
+<div class="dv-opt" id="21c7"><div class="dv-olabel"><a class="dv-oid" href="#21c7">21c7</a>Landscape 892 × 412 — слева заголовок, фаза, процент и полоса; справа карточка «можно свернуть», файл и «Отмена»</div><div class="dv-card">
+<div class="box">
+  <div style="flex:1;display:flex;gap:32px;padding:28px 24px 20px;min-height:0">
+    <div style="flex:1.1;min-width:0;display:flex;flex-direction:column;gap:22px">
+      <div style="font-size:24px;font-weight:700;line-height:1.15">Сохраняем копию</div>
+      <div style="display:flex;flex-direction:column;gap:12px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:16px;font-weight:600">Видео · 4 из 6</div><div class="tn" style="font-size:40px;font-weight:800;line-height:1;color:#C4ADFF">56 %</div></div>
+        <div style="height:8px;border-radius:4px;background:#292833;overflow:hidden;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:56%;border-radius:4px;background:#C4ADFF"></div></div>
+        <div class="tn" style="font-size:14px;color:#A39FB5">1,9 из 3,4 ГБ · осталось около 3 мин</div>
+      </div>
+    </div>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;justify-content:space-between">
+      <div style="display:flex;flex-direction:column;gap:14px">
+        <div class="card" style="gap:6px"><div style="font-size:14px;font-weight:600;line-height:1.4">Можно свернуть приложение — копия дойдёт сама.</div><div style="font-size:13px;line-height:1.45;color:#A39FB5">Не выключайте телефон и не вынимайте флешку, пока не закончится.</div></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:0 4px">{{ icFileV }}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Интонация · копия · 20 сентября 2026.zip</div><div class="rs">Загрузки</div></div></div>
+      </div>
+      <div style="display:flex;justify-content:flex-end"><div class="btn-o" style="padding:0 20px 0 14px">{{ icCloseS }}Отмена</div></div>
+    </div>
+  </div>
+</div>
+</div></div>
+</div>
+<p class="dv-next">Прогресс — экран, не лист: это надолго, и с него уходят и возвращаются. Процент 40/800 primary справа от фазы, полоса 8 — та же геометрия, что у долей веса выше, только одноцветная; фаза словами («Видео · 4 из 6»), под полосой «сколько из скольких» и оценка времени — она появляется после первых 5 % или 10 с, до того только проценты (<a href="#21c1">21c1</a>). Карточка «Можно свернуть приложение» стоит на всех фазах — это главная фраза экрана, без неё человек будет держать телефон в руке пять минут. Последняя фаза — «Проверяем файл» на 99 % (<a href="#21c3">21c3</a>): архив читается обратно, «Отмена» приглушена — файл уже почти есть, отменять нечего. Короткая копия (без видео обычно 2–5 с) экрана прогресса не показывает: кнопка «Сохранить в…» говорит «Сохраняем…» и сразу сменяется «Готово»; показанный прогресс живёт ≥ 1 200 мс. Ошибки (<a href="#21c6">21c6</a>) — тем же шаблоном, что в листе разбора видео: «Ещё раз» снова открывает системное окно с тем же именем файла.</p>
+</section>
+
+<section class="dv-turn" id="s21d">
+<div class="dv-thd"><a class="dv-tid" href="#s21d">21d</a><span class="dv-tname">Восстановление · паспорт копии поверх данных и в пустое приложение; «без видео»; ошибки файла; второе подтверждение</span></div>
+<div class="dv-opts">
+<sc-for list="{{ restoreFrames }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone">
+  <div style="display:flex;align-items:center;gap:4px;padding:4px 4px 0;height:56px;flex:none"><div style="width:48px;height:48px;display:flex;align-items:center;justify-content:center">{{ icBack }}</div></div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:16px;padding:4px 16px 0">
+    <div style="font-size:28px;font-weight:700;line-height:1.15">Восстановить из копии</div>
+    <div class="card" style="gap:12px">
+      <div style="display:flex;align-items:center;gap:12px">{{ icFileV }}<div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600;line-height:1.35;text-wrap:pretty">{{ s.file }}</div><div class="rs tn">{{ s.fileMeta }}</div></div></div>
+      <div style="height:1px;background:#292833"></div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <sc-for list="{{ s.inside }}" as="r" hint-placeholder-count="4"><div style="display:flex;align-items:center;gap:10px;font-size:14px;line-height:1.4;color:{{ r.color }}">{{ r.icon }}<div class="tn" style="flex:1">{{ r.text }}</div></div></sc-for>
+      </div>
+    </div>
+    <sc-if value="{{ s.hasNow }}" hint-placeholder-val="{{ true }}">
+    <div style="display:flex;flex-direction:column;gap:8px;padding:0 4px"><div class="rs" style="font-weight:600">Сейчас в приложении</div><div class="tn" style="font-size:14px;line-height:1.5;color:#A39FB5">31 запись · 6 произведений · 58 дней занятий · уровень 5 · 24 записи со звуком · 8 видео · 4,1 ГБ</div></div>
+    <div style="border-radius:16px;background:rgba(232,86,92,.12);padding:14px 16px;display:flex;flex-direction:column;gap:12px">
+      <div style="display:flex;align-items:flex-start;gap:12px">{{ icTrashErr }}<div style="font-size:14px;line-height:1.45;text-wrap:pretty">Всё, что сейчас в приложении, будет заменено данными из копии. Это нельзя отменить.</div></div>
+      <div class="btn-o" style="height:44px;border-color:rgba(232,86,92,.45)">{{ icSaveCopyS }}Сначала сохранить текущие данные</div>
+    </div>
+    </sc-if>
+    <sc-if value="{{ s.empty }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;line-height:1.5;color:#A39FB5;text-wrap:pretty;padding:0 4px">В приложении пока пусто — после восстановления здесь будет всё из копии, и онбординг не понадобится.</div></sc-if>
+  </div>
+  <div style="padding:12px 16px 16px;flex:none"><div class="btn" style="background:{{ s.btnBg }};color:{{ s.btnFg }}">{{ s.btnIcon }}Восстановить</div></div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="21d3"><div class="dv-olabel"><a class="dv-oid" href="#21d3">21d3</a>Второе подтверждение поверх данных — диалог с тем же трёхсловным именем действия, что на кнопке; отмена слева</div><div class="dv-card">
+<div class="dlg"><div style="font-size:20px;font-weight:700;line-height:1.3">Заменить данные?</div><div style="font-size:14px;line-height:1.5;color:#A39FB5;text-wrap:pretty">31 запись, 6 произведений и 58 дней занятий на этом телефоне будут удалены. Вместо них — копия от 20 сентября.</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px"><div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Отмена</div><div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#E8565C">Заменить</div></div></div>
+</div></div>
+<div class="dv-opt" id="21d4"><div class="dv-olabel"><a class="dv-oid" href="#21d4">21d4</a>Файл не подошёл — тот же экран без паспорта: alert, причина, «Выбрать другой файл» снова открывает системное окно</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+  <sc-for list="{{ fileErrors }}" as="e" hint-placeholder-count="3">
+  <div class="frag" style="gap:12px">
+    <div style="display:flex;align-items:flex-start;gap:12px">{{ icAlert }}<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:700;line-height:1.3;text-wrap:pretty">{{ e.title }}</div><div style="font-size:14px;color:#A39FB5;line-height:1.4;margin-top:4px;text-wrap:pretty">{{ e.sub }}</div></div></div>
+    <div class="btn-o" style="background:#C4ADFF;color:#2E1A6E;border:none;font-weight:700">Выбрать другой файл</div>
+  </div>
+  </sc-for>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 5 — диалог нужен.</b> Экран (<a href="#21d1">21d1</a>) уже честен: паспорт копии, «Сейчас в приложении» теми же словами и предупреждение на `error` α .12 с корзиной — человек видит, что меняет *это* на *то*. Но это единственное действие в приложении, которое стирает месяцы занятий одним касанием, экран прокручивается, и кнопка внизу могла быть нажата не читая. Диалог (<a href="#21d3">21d3</a>) стоит секунду и повторяет числа, которые пропадут — не «вы уверены?», а «31 запись … будут удалены». В пустое приложение (<a href="#21d2">21d2</a>) диалога нет и кнопка обычная primary: терять нечего, тон спокойный. Страховка «Сначала сохранить текущие данные» живёт внутри предупреждения — это ответ на него; ведёт на 21b1, после сохранения возвращает сюда с тем же файлом. «Без видео» в паспорте — строка видео тем же `video-off` и цветом onSurfaceVariant, что «видео не найдено» на экране сессии: одно понятие, один знак.</p>
+</section>
+
+<section class="dv-turn" id="s21e">
+<div class="dv-thd"><a class="dv-tid" href="#s21e">21e</a><span class="dv-tname">Восстановление · не хватает места; прогресс с проверкой; готово → перезапуск; две неудачи</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="21e1"><div class="dv-olabel"><a class="dv-oid" href="#21e1">21e1</a>Места не хватает — вместо кнопки «Восстановить»: сколько не хватает, два пути; опасный — текстом в error, не залитой кнопкой</div><div class="dv-card">
+<div class="frag" style="gap:12px">
+  <div style="display:flex;align-items:flex-start;gap:12px">{{ icAlert }}<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:700;line-height:1.3;text-wrap:pretty">Не хватает 1,8 ГБ, чтобы восстановить безопасно</div><div style="font-size:14px;color:#A39FB5;line-height:1.45;margin-top:4px;text-wrap:pretty">Копия сначала распаковывается рядом с текущими данными и только потом заменяет их. Освободите место на телефоне — или восстановите без страховки.</div></div></div>
+  <div class="btn-o" style="background:#C4ADFF;color:#2E1A6E;border:none;font-weight:700">Понятно</div>
+  <div class="btn-t" style="color:#E8565C">Удалить текущие данные и восстановить</div>
+</div>
+</div></div>
+<div class="dv-opt" id="21e2"><div class="dv-olabel"><a class="dv-oid" href="#21e2">21e2</a>Его подтверждение — диалог объясняет порядок: сначала проверка копии, потом удаление, и что назад дороги нет</div><div class="dv-card">
+<div class="dlg"><div style="font-size:20px;font-weight:700;line-height:1.3">Удалить всё и восстановить?</div><div style="font-size:14px;line-height:1.5;color:#A39FB5;text-wrap:pretty">Сначала проверим копию целиком. Потом 31 запись, 6 произведений и 58 дней занятий будут удалены с телефона — если восстановление сорвётся, вернуть их будет нельзя.</div><div style="display:flex;justify-content:flex-end;gap:8px;margin-top:4px"><div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF">Отмена</div><div style="height:40px;padding:0 12px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#E8565C">Удалить и восстановить</div></div></div>
+</div></div>
+<sc-for list="{{ restProg }}" as="s" hint-placeholder-count="2">
+<div class="dv-opt" id="{{ s.id }}"><div class="dv-olabel"><a class="dv-oid" href="#{{ s.id }}">{{ s.id }}</a>{{ s.label }}</div><div class="dv-card">
+<x-import component-from-global-scope="AndroidDevice" from="./android-frame.jsx" dark="{{ true }}" hint-size="412px,892px">
+<div class="phone">
+  <div style="height:56px;flex:none"></div>
+  <div style="flex:1;overflow:hidden;display:flex;flex-direction:column;gap:24px;padding:4px 16px 0">
+    <div style="font-size:28px;font-weight:700;line-height:1.15">Восстанавливаем данные</div>
+    <div style="display:flex;gap:6px"><sc-for list="{{ s.steps }}" as="st" hint-placeholder-count="3"><div style="flex:1;display:flex;flex-direction:column;gap:6px"><div style="height:4px;border-radius:2px;background:{{ st.bar }}"></div><div style="font-size:12px;font-weight:600;color:{{ st.fg }}">{{ st.name }}</div></div></sc-for></div>
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div style="display:flex;align-items:baseline;justify-content:space-between"><div style="font-size:17px;font-weight:600">{{ s.phase }}</div><div class="tn" style="font-size:40px;font-weight:800;line-height:1;color:#C4ADFF">{{ s.pct }}</div></div>
+      <div style="height:8px;border-radius:4px;background:#292833;overflow:hidden;position:relative"><div style="position:absolute;left:0;top:0;bottom:0;width:{{ s.pctW }};border-radius:4px;background:#C4ADFF"></div></div>
+      <div class="tn" style="font-size:14px;color:#A39FB5">{{ s.meta }}</div>
+    </div>
+    <div class="card" style="gap:6px"><div style="font-size:15px;font-weight:600;line-height:1.4">Можно свернуть приложение — восстановление дойдёт само.</div><div style="font-size:14px;line-height:1.45;color:#A39FB5">{{ s.safe }}</div></div>
+  </div>
+  <div style="padding:12px 16px 16px;flex:none"><div class="btn-o" style="opacity:{{ s.cancelOp }}">{{ icCloseS }}Отмена</div></div>
+</div>
+</x-import>
+</div></div>
+</sc-for>
+<div class="dv-opt" id="21e5"><div class="dv-olabel"><a class="dv-oid" href="#21e5">21e5</a>Готово → перезапуск как одно движение: «Данные восстановлены» 1,5 с → тот же экран, что при холодном старте, но с подписью «Открываем ваши данные…» → «Занятия». Ни одного чёрного кадра</div><div class="dv-card" style="display:flex;gap:12px;align-items:flex-start">
+  <div class="mini" style="padding:24px 16px;gap:14px;justify-content:center;align-items:flex-start"><div style="width:48px;height:48px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center">{{ icCheckDS }}</div><div style="font-size:20px;font-weight:700;line-height:1.2">Данные восстановлены</div><div class="tn" style="font-size:12px;line-height:1.5;color:#A39FB5">23 записи · 5 произведений · 41 день занятий</div></div>
+  <div class="mini" style="align-items:center;justify-content:center;gap:18px"><div style="width:56px;height:56px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#2A2352 0%,#131318 80%);display:flex;align-items:center;justify-content:center"><div style="width:14px;height:24px;border-radius:7px;background:#C4ADFF"></div></div><div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#A39FB5">{{ spinnerS }}Открываем ваши данные…</div></div>
+  <div class="mini"><div style="padding:14px 12px 0;font-size:18px;font-weight:700">Занятия</div><div style="flex:1;padding:12px;display:flex;flex-direction:column;gap:8px"><div style="height:64px;border-radius:12px;background:#1E1D25"></div><div style="height:40px;border-radius:10px;background:#1E1D25"></div><div style="height:40px;border-radius:10px;background:#1E1D25"></div><div style="height:40px;border-radius:10px;background:#1E1D25"></div></div><div class="tabs" style="height:52px"><div class="tab" style="font-size:9px"><div style="width:40px;height:22px">{{ tabLiveS }}</div>Live</div><div class="tab" style="font-size:9px;color:#E6E4EE;font-weight:600"><div style="width:40px;height:22px;background:#5B43B8">{{ tabPracticeS }}</div>Занятия</div><div class="tab" style="font-size:9px"><div style="width:40px;height:22px">{{ tabRecordsS }}</div>Записи</div><div class="tab" style="font-size:9px"><div style="width:40px;height:22px">{{ tabSettingsS }}</div>Настройки</div></div></div>
+</div></div>
+<div class="dv-opt" id="21e6"><div class="dv-olabel"><a class="dv-oid" href="#21e6">21e6</a>Не получилось — безопасный путь (данные целы) и худший кадр после 21e2: данных уже нет, «Ещё раз» с тем же файлом главная</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+  <div class="frag" style="gap:12px">
+    <div style="display:flex;align-items:flex-start;gap:12px">{{ icAlert }}<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:700;line-height:1.3">Не получилось восстановить</div><div style="font-size:14px;color:#A39FB5;line-height:1.4;margin-top:4px;text-wrap:pretty">Ваши данные на месте — ничего не изменилось.</div></div></div>
+    <div style="display:flex;gap:8px"><div class="btn-o" style="flex:1">Закрыть</div><div class="btn-o" style="flex:1;background:#C4ADFF;color:#2E1A6E;border:none;font-weight:700">Ещё раз</div></div>
+  </div>
+  <div class="frag" style="gap:12px">
+    <div style="display:flex;align-items:flex-start;gap:12px">{{ icAlert }}<div style="flex:1;min-width:0"><div style="font-size:17px;font-weight:700;line-height:1.3;text-wrap:pretty">Не получилось восстановить, и прежних данных уже нет</div><div style="font-size:14px;color:#A39FB5;line-height:1.4;margin-top:4px;text-wrap:pretty">Копия проверена и цела — попробуйте ещё раз с этим же файлом. Если снова не выйдет, начните с чистого приложения.</div></div></div>
+    <div style="display:flex;align-items:center;gap:12px;padding:0 4px">{{ icFileV }}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Интонация · копия · 20 сентября 2026.zip</div><div class="rs tn">3,4 ГБ</div></div></div>
+    <div class="btn-o" style="background:#C4ADFF;color:#2E1A6E;border:none;font-weight:700">Ещё раз с этим файлом</div>
+    <div class="btn-t" style="color:#A39FB5">Начать с чистого приложения</div>
+  </div>
+</div></div>
+</div>
+<p class="dv-next"><b>Вопрос 6 — перезапуск не должен выглядеть как падение,</b> и главное здесь — непрерывность (<a href="#21e5">21e5</a>). «Данные восстановлены» держится 1 500 мс с кружком-галкой; затем экран не гаснет, а crossfade 300 переходит в стартовый экран приложения (тот же знак, что при холодном старте) с одной подписью «Открываем ваши данные…» и спиннером 16; процесс перезапускается под этим экраном, и новая копия приложения показывает тот же стартовый экран — человек видит одну сцену, не две. Дальше — «Занятия», не Live: там сразу видны восстановленные дни. Прогресс восстановления (<a href="#21e3">21e3</a>) получает строку фаз над процентом — три шага (две, когда проверки нет): человек видит, что «Проверяем копию» — не само восстановление и его текущие данные ещё целы; в карточке под полосой об этом сказано словами. На последней фазе «Отмена» приглушена, подпись меняется на «уже нельзя остановить». Худший кадр (<a href="#21e6">21e6</a>) честный: сказано, что данных нет, но и что копия целиком проверена (мы удаляли только после проверки) — поэтому «Ещё раз с этим файлом» главная, а «Начать с чистого приложения» — тихая текстовая.</p>
+</section>
+
+<section class="dv-turn" id="s21f">
+<div class="dv-thd"><a class="dv-tid" href="#s21f">21f</a><span class="dv-tname">Системное уведомление · текст двух фаз (рисует Android)</span></div>
+<div class="dv-opts">
+<div class="dv-opt" id="21f1"><div class="dv-olabel"><a class="dv-oid" href="#21f1">21f1</a>Сохранение и восстановление — заголовок с процентом, строка фазы, полоса; тап открывает экран прогресса. Ongoing, без звука</div><div class="dv-card" style="display:flex;flex-direction:column;gap:12px">
+  <sc-for list="{{ notifs }}" as="n" hint-placeholder-count="2">
+  <div style="width:412px;border-radius:24px;background:#292833;padding:14px 16px;box-sizing:border-box;display:flex;flex-direction:column;gap:8px">
+    <div style="display:flex;align-items:center;gap:8px;font-size:12px;color:#A39FB5"><div style="width:16px;height:16px;border-radius:50%;background:#C4ADFF;display:flex;align-items:center;justify-content:center"><div style="width:5px;height:8px;border-radius:3px;background:#2E1A6E"></div></div>Интонация · сейчас</div>
+    <div style="display:flex;align-items:flex-start;gap:12px"><div style="flex:1;min-width:0"><div style="font-size:14px;font-weight:600" class="tn">{{ n.title }}</div><div style="font-size:13px;color:#A39FB5;margin-top:2px" class="tn">{{ n.sub }}</div></div></div>
+    <div style="height:4px;border-radius:2px;background:#3A3846;overflow:hidden"><div style="width:{{ n.w }};height:100%;border-radius:2px;background:#C4ADFF"></div></div>
+  </div>
+  </sc-for>
+</div></div>
+</div>
+</section>
+
+<section class="dv-turn" id="dev" style="max-width:1280px">
+<div class="dv-thd"><a class="dv-tid" href="#dev">dev</a><span class="dv-tname">Для разработчика · дополнение ICONS, tokens, sizes, anims, тексты</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(560px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Дополнение ICONS (viewBox 24, stroke 1.8, round, fill none; `F ` — заливка)</div>
+  <div class="dv-tbl" style="grid-template-columns:36px minmax(0,.7fr) minmax(0,1fr) minmax(0,2fr)">
+    <div class="h"></div><div class="h">name</div><div class="h">use</div><div class="h">paths</div>
+    <sc-for list="{{ iconRows }}" as="r" hint-placeholder-count="6"><div style="padding:6px 8px;display:flex;align-items:center">{{ r.el }}</div><div class="mono">{{ r.name }}</div><div style="color:#A39FB5">{{ r.use }}</div><div class="mono" style="color:#A39FB5;font-size:10.5px">{{ r.paths }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Новые токены</div>
+  <div class="dv-tbl" style="grid-template-columns:28px minmax(0,1fr) minmax(0,1fr) minmax(0,1.6fr)">
+    <div class="h"></div><div class="h">Токен</div><div class="h">Значение</div><div class="h">Где</div>
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="7"><div style="padding:6px 8px"><div style="width:16px;height:16px;border-radius:4px;background:{{ t.hex }};border:1px solid rgba(255,255,255,.15)"></div></div><div class="mono">{{ t.name }}</div><div class="mono">{{ t.hex }}</div><div style="color:#A39FB5">{{ t.use }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Тексты</div>
+  <div style="color:#A39FB5;display:flex;flex-direction:column;gap:6px"><sc-for list="{{ texts }}" as="x" hint-placeholder-count="8"><div><b style="color:#E6E4EE">{{ x.k }}</b> — {{ x.v }}</div></sc-for></div></div>
+</div>
+<div style="display:flex;flex-direction:column;gap:18px">
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Размеры (dp)</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Где</div><div class="h">Значение</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="10"><div style="font-weight:600">{{ z.name }}</div><div style="color:#A39FB5">{{ z.v }}</div></sc-for>
+  </div></div>
+  <div><div style="font-weight:700;font-size:14px;margin-bottom:8px">Анимации и правила</div>
+  <div class="dv-tbl" style="grid-template-columns:minmax(0,1fr) minmax(0,1.8fr)">
+    <div class="h">Что</div><div class="h">Параметры</div>
+    <sc-for list="{{ anims }}" as="a" hint-placeholder-count="9"><div style="font-weight:600">{{ a.name }}</div><div style="color:#A39FB5">{{ a.v }}</div></sc-for>
+  </div></div>
+</div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  renderVals() {
+    const h = React.createElement;
+    const P = '#C4ADFF', ON = '#E6E4EE', OV = '#A39FB5', ONP = '#2E1A6E', ERR = '#E8565C', SCH = '#292833', DIM = '#6B6880';
+    const SHARE = { data: '#E9DDFF', sheets: '#B7ACD9', audio: '#8A78C9', video: '#5B43B8', off: '#3A3846' };
+    const ICONS = [
+      { name: 'save-copy', use: 'строка «Сохранить копию», кнопка «Сохранить в…» (20), «Сначала сохранить текущие данные» (18)', paths: ['M12 3v10', 'M8.5 9.5 12 13l3.5-3.5', 'M4 14v3.5A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V14', 'M4 16h4.2l1.3 2h5l1.3-2H20'] },
+      { name: 'restore', use: 'строка «Восстановить из копии», кнопка «Восстановить» (20)', paths: ['M12 20V10', 'M8.5 13.5 12 10l3.5 3.5', 'M4 14v3.5A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V14', 'M7 4h10'] },
+      { name: 'archive', use: 'пустое состояние «Пока нечего сохранять» (32); запас для блока «Данные»', paths: ['M3.5 5.5A1.5 1.5 0 0 1 5 4h14a1.5 1.5 0 0 1 1.5 1.5V8H3.5z', 'M5 8v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8', 'M10 12h4'] },
+      { name: 'device', use: 'паспорт копии — «с какого устройства» (16)', paths: ['M7 3.5h10A1.5 1.5 0 0 1 18.5 5v14a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z', 'M10.5 17.5h3'] },
+      { name: 'calendar', use: 'паспорт копии — «когда сделана» (16); строка «дни занятий»', paths: ['M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z', 'M4 10h16', 'M8 4v4M16 4v4'] },
+      { name: 'check-circle', use: 'итог «Копия сохранена» / «Данные восстановлены» — галка 32 в круге primary 64 (48 в 21e5)', paths: ['M6 12.5 10 16.5 18.5 8'] },
+    ];
+    const OLD = [
+      { name: 'back', paths: ['M15 5 8 12l7 7'] }, { name: 'close', paths: ['M6 6l12 12M18 6 6 18'] }, { name: 'check', paths: ['M5 12.5 9.5 17 19 7.5'] },
+      { name: 'chevron-right', paths: ['M9.5 6l6 6-6 6'] },
+      { name: 'share', paths: ['M17 3.5a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z', 'M7 9.7a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z', 'M17 15.9a2.3 2.3 0 1 0 0 4.6 2.3 2.3 0 1 0 0-4.6z', 'M9 11l6-3M9 13l6 3'] },
+      { name: 'trash', paths: ['M4 7h16', 'M9 7V4.8a.8.8 0 0 1 .8-.8h4.4a.8.8 0 0 1 .8.8V7', 'M6 7l.9 12.2a1 1 0 0 0 1 .8h8.2a1 1 0 0 0 1-.8L18 7', 'M10 11v5M14 11v5'] },
+      { name: 'file', paths: ['M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z', 'M14 3v5h5'] },
+      { name: 'alert', paths: ['M12 4.5 20.5 19.5H3.5z', 'M12 10v4.5', 'F M12 16.6a.9.9 0 1 0 0 1.8.9.9 0 1 0 0-1.8z'] },
+      { name: 'fork', paths: ['M9 3v7a3 3 0 0 0 6 0V3', 'M12 13v8M9.5 21h5'] },
+      { name: 'target', paths: ['M12 4a8 8 0 1 0 0 16 8 8 0 1 0 0-16z', 'M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8z', 'F M12 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z'] },
+      { name: 'mic', paths: ['M9 6a3 3 0 0 1 6 0v5a3 3 0 0 1-6 0V6z', 'M5.5 11.5a6.5 6.5 0 0 0 13 0', 'M12 18v3M9 21h6'] },
+      { name: 'repeat', paths: ['M4 12a8 8 0 0 1 14.5-4.5', 'M20 4v4h-4', 'M20 12a8 8 0 0 1-14.5 4.5', 'M4 20v-4h4'] },
+      { name: 'sound', paths: ['M6 4v4.5M6 12.5v7.5M12 4v9.5M12 17.5v2.5M18 4v2.5M18 10.5V20', 'M4 10.5h4M10 15.5h4M16 8.5h4'] },
+      { name: 'video', paths: ['M3.5 7.5A1.5 1.5 0 0 1 5 6h9a1.5 1.5 0 0 1 1.5 1.5v9A1.5 1.5 0 0 1 14 18H5a1.5 1.5 0 0 1-1.5-1.5z', 'M15.5 10.3l4.2-2.5a.5.5 0 0 1 .8.4v7.6a.5.5 0 0 1-.8.4l-4.2-2.5'] },
+      { name: 'video-off', paths: ['M3.5 7.5A1.5 1.5 0 0 1 5 6h6.5M14.5 9V7.5', 'M14.5 13v3.5A1.5 1.5 0 0 1 13 18H5a1.5 1.5 0 0 1-1.5-1.5v-6', 'M15.5 10.3l4.2-2.5a.5.5 0 0 1 .8.4v7.6', 'M3.5 3.5l17 17'] },
+      { name: 'sheet', paths: ['M6 3h8l5 5v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z', 'M14 3v5h5', 'M8 12h8M8 16h5'] },
+      { name: 'note-one', paths: ['M12.2 17.5V4.5', 'M12.2 4.5c3.6 1.4 5.6 3.9 4.4 7.6', 'F M9.2 15.4a3.2 2.5 0 1 0 0 5 3.2 2.5 0 1 0 0-5z'] },
+      { name: 'star', paths: ['F M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z'] },
+    ];
+    const byName = Object.fromEntries([...ICONS, ...OLD].map(i => [i.name, i]));
+    const ico = (name, size = 24, color = ON, sw = 1.8) => {
+      const ic = byName[name];
+      const paths = ic.paths.map((p, i) => { const f = p.startsWith('F '); return h('path', { key: i, d: f ? p.slice(2) : p, fill: f ? color : 'none', stroke: f ? 'none' : color }); });
+      return h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', strokeWidth: sw, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none', display: 'block' } }, paths);
+    };
+    const tabIco = (paths, size, color) => h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', style: { display: 'block' } }, paths.map((d, i) => h('path', { key: i, d })));
+    const TAB = {
+      live: ['M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8z', 'M17.7 6.3a8 8 0 0 1 0 11.4', 'M6.3 6.3a8 8 0 0 0 0 11.4'],
+      practice: ['M12 6.5a7 7 0 1 0 0 14 7 7 0 1 0 0-14z', 'M12 13.5V10', 'M10 3h4M12 3v3.5'],
+      records: ['M4 6h8M4 12h6M4 18h5', 'M15 17V7.5l5-1.5v3', 'M13 15a2 2 0 1 0 0 4 2 2 0 1 0 0-4z'],
+      settings: ['M4 7h9M18.5 7H20M4 17h6M14.5 17H20', 'M15.5 4.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z', 'M10.5 14.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z'],
+    };
+    const iconRows = ICONS.map(i => ({ name: i.name, use: i.use, el: ico(i.name, 20, ON), paths: i.paths.join('  ·  ') }));
+    const spinner = size => h('div', { style: { width: size, height: size, borderRadius: '50%', border: `2px solid rgba(196,173,255,.25)`, borderTopColor: P, animation: 'spin .9s linear infinite', flex: 'none' } });
+    // ---- 21a
+    const settingsFrames = [
+      { id: '21a1', label: 'Копий ещё не было — подпись «ещё не сохраняли»; итог «В приложении сейчас: 3,4 ГБ» тихой строкой без иконки', sub: 'ещё не сохраняли', hl: 'transparent', progress: false },
+      { id: '21a2', label: 'Идёт копия — та же строка с полосой 4 dp и «идёт · 56 %»; фон surfaceContainer; тап возвращает на экран прогресса', sub: 'идёт · 56 % · Видео 4 из 6', hl: '#1E1D25', progress: true },
+    ];
+    const dataStates = [
+      { cap: 'копий не было', sub: 'ещё не сохраняли', progress: false },
+      { cap: 'последняя недавно', sub: 'последняя — 12 сентября', progress: false },
+      { cap: 'последняя давно и есть новое (> 30 дней) — тихий намёк словами', sub: 'последняя — 12 августа · с тех пор 9 новых записей', progress: false },
+      { cap: 'идёт копия', sub: 'идёт · 56 % · Видео 4 из 6', progress: true },
+    ];
+    // ---- 21b
+    const MB = { data: 1.2, sheets: 48, audio: 96, video: 3200 };
+    const segs = (on) => {
+      const total = Object.keys(MB).reduce((s, k) => s + MB[k], 0);
+      return Object.keys(MB).map(k => ({ w: Math.max(4, Math.round(MB[k] / total * 372)) + 'px', bg: on[k] ? SHARE[k] : SHARE.off }));
+    };
+    const rows = (on) => [
+      { title: 'Разбор, занятия, прогресс, настройки', sub: '23 записи · 41 день занятий · 2 трофея', size: '1,2 МБ', dot: SHARE.data, always: true, on: false, off: false, op: 1 },
+      { title: 'Фото нот', sub: '5 произведений · 31 страница', size: '48 МБ', dot: on.sheets ? SHARE.sheets : SHARE.off, always: false, on: on.sheets, off: !on.sheets, op: 1 },
+      { title: 'Звук записей', sub: '19 записей', size: '96 МБ', dot: on.audio ? SHARE.audio : SHARE.off, always: false, on: on.audio, off: !on.audio, op: 1 },
+      { title: 'Видео', sub: '6 дублей', size: '3,2 ГБ', dot: on.video ? SHARE.video : SHARE.off, always: false, on: on.video, off: !on.video, op: on.video ? 1 : .7 },
+    ];
+    const all = { data: true, sheets: true, audio: true, video: true }, noVideo = { ...all, video: false };
+    const saveFrames = [
+      { id: '21b1', label: 'Всё включено — 3,4 ГБ; полоса долей почти вся видео; «Отправить…» нет — вместо неё строка о мессенджерах', rows: rows(all), segs: segs(all), total: '3,4 ГБ', hasNote: false, note: '', canSend: false, tooBig: true },
+      { id: '21b2', label: 'Без видео — 145 МБ; доля видео стала backup.off, строка-последствие; копия небольшая — появляется «Отправить…»', rows: rows(noVideo), segs: segs(noVideo), total: '145 МБ', hasNote: true, note: 'Без видео: после восстановления у видео-дублей останется разбор, картинки и звука не будет.', canSend: true, tooBig: false },
+    ];
+    // ---- 21c
+    const progFrames = [
+      { id: '21c1', label: 'Начало — оценки времени ещё нет, только фаза и проценты; «Отмена» доступна', title: 'Сохраняем копию', phase: 'Разбор, занятия, прогресс', pct: '2 %', pctW: '2%', meta: '0 из 3,4 ГБ', fileRow: true, cancelOp: 1 },
+      { id: '21c2', label: 'Середина — «Видео · 4 из 6», 56 %, «1,9 из 3,4 ГБ · осталось около 3 мин»', title: 'Сохраняем копию', phase: 'Видео · 4 из 6', pct: '56 %', pctW: '56%', meta: '1,9 из 3,4 ГБ · осталось около 3 мин', fileRow: true, cancelOp: 1 },
+      { id: '21c3', label: 'Последняя фаза — «Проверяем файл», 99 %; «Отмена» приглушена (α .38): файл уже почти есть', title: 'Сохраняем копию', phase: 'Проверяем файл', pct: '99 %', pctW: '99%', meta: '3,4 из 3,4 ГБ · несколько секунд', fileRow: true, cancelOp: .38 },
+    ];
+    const saveErrors = [
+      { title: 'Не хватило места там, куда сохраняли', sub: 'Нужно ещё около 1,5 ГБ. Недописанный файл удалён. Выберите другое место или сохраните копию без видео.' },
+      { title: 'Место сохранения стало недоступно', sub: 'Флешку вынули или папка пропала. Недописанный файл удалён — вставьте носитель и попробуйте снова.' },
+      { title: 'Не получилось сохранить копию', sub: 'Недописанный файл удалён. Данные в приложении на месте.' },
+    ];
+    // ---- 21d
+    const line = (icon, text, color = ON) => ({ icon: ico(icon, 16, color === ON ? OV : color), text, color });
+    const insideFull = [line('calendar', '20 сентября 2026, 14:32 · Pixel 7'), line('note-one', '23 записи · 41 день занятий · уровень 4'), line('sheet', '5 произведений · 31 страница нот'), line('sound', '19 записей со звуком'), line('video', '6 видео-дублей')];
+    const insideNoVideo = [line('calendar', '20 сентября 2026, 14:32 · Pixel 7'), line('note-one', '23 записи · 41 день занятий · уровень 4'), line('sheet', '5 произведений · 31 страница нот'), line('sound', '19 записей со звуком'), line('video-off', 'без видео — у 6 дублей останется только разбор', OV)];
+    const restoreFrames = [
+      { id: '21d1', label: 'Поверх данных — паспорт копии, «Сейчас в приложении» теми же словами, предупреждение на error α .12 с корзиной и страховкой; кнопка деструктивная', file: 'Интонация · копия · 20 сентября 2026.zip', fileMeta: '3,4 ГБ', inside: insideFull, hasNow: true, empty: false, btnBg: ERR, btnFg: '#FFFFFF', btnIcon: ico('restore', 20, '#FFFFFF') },
+      { id: '21d2', label: 'В пустое приложение (новый телефон, из онбординга) — без блока «сейчас» и предупреждения; копия «без видео»; кнопка обычная', file: 'Интонация · копия · 20 сентября 2026.zip', fileMeta: '145 МБ · без видео', inside: insideNoVideo, hasNow: false, empty: true, btnBg: P, btnFg: ONP, btnIcon: ico('restore', 20, ONP) },
+    ];
+    const fileErrors = [
+      { title: 'Это не копия «Интонации»', sub: 'Файл другого приложения или обычный архив. Копия называется «Интонация · копия · дата.zip».' },
+      { title: 'Копия сделана более новой версией приложения', sub: 'Обновите приложение и откройте файл снова.' },
+      { title: 'Файл повреждён или недокачан', sub: 'Скопируйте его ещё раз с того места, где он хранится, и попробуйте снова.' },
+    ];
+    // ---- 21e
+    const step = (name, state) => ({ name, bar: state === 'done' ? P : state === 'now' ? P : SCH, fg: state === 'todo' ? DIM : state === 'now' ? ON : OV });
+    const restProg = [
+      { id: '21e3', label: 'Ветка 4.2 — фаза «Проверяем копию»: три шага над процентом, текущие данные ещё целы; «Отмена» доступна', steps: [step('Проверяем', 'now'), step('Восстанавливаем', 'todo'), step('Почти готово', 'todo')], phase: 'Проверяем копию', pct: '34 %', pctW: '34%', meta: '1,2 из 3,4 ГБ · осталось около 2 мин', safe: 'Ваши данные ещё на месте: пока идёт проверка и распаковка, можно остановить.', cancelOp: 1 },
+      { id: '21e4', label: 'Последняя фаза «Почти готово» — подмена данных (секунды); «Отмена» приглушена, подпись «уже нельзя остановить»', steps: [step('Проверяем', 'done'), step('Восстанавливаем', 'done'), step('Почти готово', 'now')], phase: 'Почти готово', pct: '100 %', pctW: '100%', meta: '3,4 из 3,4 ГБ · несколько секунд', safe: 'Открываем восстановленные данные — это уже нельзя остановить.', cancelOp: .38 },
+    ];
+    const notifs = [
+      { title: 'Сохраняем копию · 56 %', sub: 'Видео · 4 из 6 · осталось около 3 мин', w: '56%' },
+      { title: 'Восстанавливаем данные · 34 %', sub: 'Проверяем копию · осталось около 2 мин', w: '34%' },
+    ];
+    // ---- dev
+    const tokens = [
+      { name: 'backup.data', hex: SHARE.data, use: 'доля «Разбор, занятия, прогресс, настройки» в полосе веса и точка перед весом (= primaryFixed)' },
+      { name: 'backup.sheets', hex: SHARE.sheets, use: 'доля «Фото нот»' },
+      { name: 'backup.audio', hex: SHARE.audio, use: 'доля «Звук записей»' },
+      { name: 'backup.video', hex: SHARE.video, use: 'доля «Видео» (= primaryContainer). Ряд светлое → тёмное по весу; не цвета зон' },
+      { name: 'backup.off', hex: SHARE.off, use: 'выключенная доля и её точка (= outlineVariant); строка при этом α .7' },
+      { name: 'warn.bg', hex: 'rgba(232,86,92,.12)', use: 'подложка предупреждения «будет заменено» на экране восстановления; контур страховки error α .45' },
+      { name: 'btn.destructive', hex: ERR, use: 'залитая кнопка «Восстановить» поверх данных — error / текст #FFFFFF; в диалогах деструктивное действие — текстом error' },
+    ];
+    const sizes = [
+      { name: 'Блок «Данные» в настройках', v: 'разделитель 1 surfaceContainerHigh с отступами 8; строки 56 как остальные (иконка 24, gap 16, 15/600 + 13); подпись nowrap + ellipsis; полоса прогресса 4 r2 под подписью, фон строки surfaceContainer пока идёт; итог «В приложении сейчас» 40 dp, 13 onSurfaceVariant, отступ 40 (под текст). Landscape — две колонки, строки 52, разделитель 1 вертикальный' },
+      { name: 'Ссылка в онбординге', v: 'текстовая кнопка 44, 14/600 primary, под главной 56 с зазором 4; только шаг 1' },
+      { name: 'Экран «Копия данных»', v: 'поверх вкладок, шапка 56 с «назад» 48; заголовок 28/700, пояснение 14/1.45 onSurfaceVariant; строки состава min 64 (padding 8 0), разделитель 1 surfaceContainerHigh; вес 14/600 tabular min-width 58 справа + точка 8 доли (gap 8); выключатель 52×32 (вкл: primary, бегунок 24 onPrimary с check 14; выкл: контур 2 outline, бегунок 16 onSurfaceVariant); у первой строки вместо выключателя «всегда» 12 onSurfaceVariant шириной 52' },
+      { name: 'Итог и полоса', v: '«Копия займёт» 17/700 + число 22/800 tabular; полоса 8 r4, доли через gap 2, min 4 dp каждая, фон surfaceContainerHigh; строка-последствие 13/1.45 onSurfaceVariant под полосой (gap 10)' },
+      { name: 'Кнопки внизу', v: 'padding 12 16 16; «Сохранить в…» filled 56 с save-copy 20; под ней либо текстовая «Отправить…» 44 с share 18, либо строка 13 по центру (min 44); запрет: кнопка surfaceContainerHigh / текст #6B6880 + причина 13 с иконкой 14 (точка записи error)' },
+      { name: 'Экран прогресса', v: 'без «назад» (шапка 56 пустая); заголовок 28; фаза 17/600 + процент 40/800 primary tabular по baseline; полоса 8 r4; строка 14 onSurfaceVariant; карточка surfaceContainer r16 14 16: 15/600 + 14 onSurfaceVariant; строка файла file 24 + 13/600 ellipsis + 13; «Отмена» outlined 48 во всю ширину; приглушение α .38 на последней фазе. Восстановление: строка фаз над процентом — три колонки, полоса 4 r2 (primary — пройдено и текущее, surfaceContainerHigh — впереди), подпись 12/600 (onSurface текущее, onSurfaceVariant пройденное, #6B6880 впереди)' },
+      { name: 'Итог', v: 'круг 64 primary с check-circle 32 onPrimary; заголовок 28; карточка файла (file 24, имя 14/600, «3,4 ГБ · Загрузки» 13, разделитель, состав 14/1.5 onSurfaceVariant); совет 14/1.5; «Готово» filled 56' },
+      { name: 'Ошибка строкой', v: 'как в листе разбора: alert 24 error + 17/700 + 14 onSurfaceVariant; кнопки 48 по flex 1: «Закрыть» outlined / «Ещё раз» filled; для файла — одна filled «Выбрать другой файл»' },
+      { name: 'Экран восстановления', v: 'паспорт — карточка surfaceContainer: file 24 + имя 14/600 + «3,4 ГБ» 13; разделитель; строки 14 с иконкой 16 onSurfaceVariant (calendar, note-one, sheet, sound, video / video-off), gap 6; «Сейчас в приложении» — подпись 13/600 + строка 14/1.5 onSurfaceVariant, без карточки; предупреждение warn.bg r16 14 16: trash 24 error + 14/1.45, внутри outlined 44 «Сначала сохранить текущие данные» с save-copy 18; кнопка 56 destructive с restore 20 белым; в пустое приложение — primary' },
+      { name: 'Диалоги', v: '312, r28, surfaceContainerHigh, padding 24; заголовок 20/700, текст 14/1.5 onSurfaceVariant; кнопки текстовые 40: слева безопасная primary, справа деструктивная error. «Остановить?», «Заменить данные?», «Удалить всё и восстановить?»' },
+      { name: 'Перезапуск', v: '«Данные восстановлены» — круг 48 primary + 20/700 + состав 12; стартовый экран — знак приложения 56 по центру + спиннер 16 + «Открываем ваши данные…» 12 onSurfaceVariant' },
+      { name: 'Уведомление', v: 'заголовок «Сохраняем копию · N %» / «Восстанавливаем данные · N %», текст — фаза и «осталось около…»; прогресс-бар системный; ongoing, канал без звука; тап → экран прогресса; иконка — save-copy / restore монохром' },
+    ];
+    const anims = [
+      { name: 'Открытие экрана', v: '«Копия данных» и «Восстановить из копии» — как «Звук»: сдвиг снизу 300 FastOutSlowIn поверх вкладок; системное окно «Сохранить как…» / «Открыть» — системное' },
+      { name: 'Выключатель состава', v: 'M3 Switch 150; итог перелистывается (число animateContentSize 200, текст crossfade 150); доля в полосе меняет цвет 200 без изменения ширины; строка-последствие и «Отправить…» ↔ строка о мессенджерах — expandVertically 200 + fade' },
+      { name: 'Кнопка → прогресс', v: 'после выбора места: оценка = вес × (1 мин / ГБ) + 2 с; если ≤ 700 мс — экран прогресса не показывается, кнопка «Сохраняем…» с индикатором 20, затем crossfade 250 в «Готово»; иначе экран сменяется прогрессом crossfade 250; показанный прогресс ≥ 1 200 мс' },
+      { name: 'Прогресс', v: 'полоса — animateFloat 300 Linear, шаг ≤ 4 раза/с; процент — число без анимации; фаза — crossfade 150; «осталось около» появляется после 5 % или 10 с (fade 200), округление до минут (> 1 мин) / «несколько секунд»; последняя фаза — «Отмена» α 1 → .38 за 200' },
+      { name: 'Свернули приложение', v: 'WorkManager foreground, уведомление ongoing обновляется ≤ 1 раз/с; возврат в приложение — на экран прогресса, если он был открыт, иначе строка в «Настройках»' },
+      { name: 'Отмена', v: 'диалог 150 fade+scale .95; «Остановить» → недописанный файл удаляется, экран уходит вниз 250 к «Настройкам»; «Продолжить» — ничего не мигает, прогресс не прерывался' },
+      { name: 'Готово / ошибка', v: 'содержимое экрана — crossfade 250 (полоса и процент уходят, кружок scale .8 → 1 за 250 Overshoot лёгкий); ошибка — строка встаёт на место карточки «можно свернуть» expandVertically 200, полоса замирает' },
+      { name: 'Восстановление — фазы', v: 'строка фаз: подпись меняет цвет 200, полоса заливается 200; между фазами crossfade фазы 150; на «Почти готово» «Отмена» α .38, карточка меняет текст crossfade 150' },
+      { name: 'Перезапуск', v: '«Данные восстановлены» держится 1 500 мс → crossfade 300 в стартовый экран с «Открываем ваши данные…» (спиннер 16 появляется через 300) → процесс перезапускается под ним; новый процесс показывает тот же стартовый экран (без подписи) → «Занятия» fade 250. Онбординг пропускается: флаг из копии' },
+      { name: '«Убрать анимации»', v: 'crossfade → мгновенно; полоса прогресса — без animateFloat; спиннер остаётся (это состояние, не украшение); кружок «готово» без scale' },
+    ];
+    const texts = [
+      { k: 'Настройки', v: '«Сохранить копию» / «ещё не сохраняли» / «последняя — 12 сентября» / «последняя — 12 августа · с тех пор 9 новых записей» / «идёт · 56 % · Видео 4 из 6» · «Восстановить из копии» · «В приложении сейчас: 3,4 ГБ» · онбординг: «У меня есть копия данных»' },
+      { k: 'Копия данных', v: '«Копия данных» · «Один файл со всем, что есть в приложении. Лучше положить его не на этот телефон — на компьютер, флешку или в облачную папку.» · «Разбор, занятия, прогресс, настройки» / «23 записи · 41 день занятий · 2 трофея» / «всегда» · «Фото нот» / «5 произведений · 31 страница» · «Звук записей» / «19 записей» · «Видео» / «6 дублей» · «Копия займёт ≈ 3,4 ГБ» · «Без видео: после восстановления у видео-дублей останется разбор, картинки и звука не будет.» · «Без звука: записи после восстановления будут без звука — останется разбор.» · «Сохранить в…» · «Отправить…» · «Такую копию мессенджер или почта не примут — сохраните её в папку или на флешку» · «Сначала закончите запись» · «Пока нечего сохранять» / «Запишите первый дубль или добавьте произведение — копия появится здесь» · имя файла «Интонация · копия · 20 сентября 2026.zip»' },
+      { k: 'Прогресс сохранения', v: '«Сохраняем копию» · «Сохраняем…» (на кнопке) · фазы: «Разбор, занятия, прогресс» / «Фото нот · 12 из 31» / «Звук · 7 из 19» / «Видео · 4 из 6» / «Проверяем файл» · «N %» · «1,9 из 3,4 ГБ» · «осталось около 3 мин» / «несколько секунд» · «Можно свернуть приложение — копия дойдёт сама.» · «Не выключайте телефон и не вынимайте флешку, пока не закончится.» · «Отмена» · «Остановить?» / «Недописанный файл будет удалён. Записанные 1,9 ГБ пропадут.» / «Продолжить» / «Остановить»' },
+      { k: 'Итог сохранения', v: '«Копия сохранена» · «3,4 ГБ · Загрузки» · «23 записи · 5 произведений · 41 день занятий · 19 записей со звуком · 6 видео» · «Скопируйте файл с телефона: копия на том же телефоне не спасёт, если с ним что-то случится.» · «Готово»' },
+      { k: 'Ошибки сохранения', v: '«Не хватило места там, куда сохраняли» / «Нужно ещё около 1,5 ГБ. Недописанный файл удалён. Выберите другое место или сохраните копию без видео.» · «Место сохранения стало недоступно» / «Флешку вынули или папка пропала. Недописанный файл удалён — вставьте носитель и попробуйте снова.» · «Не получилось сохранить копию» / «Недописанный файл удалён. Данные в приложении на месте.» · «Ещё раз» / «Закрыть»' },
+      { k: 'Восстановление', v: '«Восстановить из копии» · «20 сентября 2026, 14:32 · Pixel 7» · «23 записи · 41 день занятий · уровень 4» · «5 произведений · 31 страница нот» · «19 записей со звуком» · «6 видео-дублей» / «без видео — у 6 дублей останется только разбор» · «Сейчас в приложении» · «Всё, что сейчас в приложении, будет заменено данными из копии. Это нельзя отменить.» · «Сначала сохранить текущие данные» · «В приложении пока пусто — после восстановления здесь будет всё из копии, и онбординг не понадобится.» · «Восстановить» · «Заменить данные?» / «31 запись, 6 произведений и 58 дней занятий на этом телефоне будут удалены. Вместо них — копия от 20 сентября.» / «Отмена» / «Заменить»' },
+      { k: 'Ошибки файла', v: '«Это не копия „Интонации“» / «Файл другого приложения или обычный архив. Копия называется „Интонация · копия · дата.zip“.» · «Копия сделана более новой версией приложения» / «Обновите приложение и откройте файл снова.» · «Файл повреждён или недокачан» / «Скопируйте его ещё раз с того места, где он хранится, и попробуйте снова.» · «Выбрать другой файл»' },
+      { k: 'Места не хватает', v: '«Не хватает 1,8 ГБ, чтобы восстановить безопасно» / «Копия сначала распаковывается рядом с текущими данными и только потом заменяет их. Освободите место на телефоне — или восстановите без страховки.» · «Понятно» · «Удалить текущие данные и восстановить» · «Удалить всё и восстановить?» / «Сначала проверим копию целиком. Потом 31 запись, 6 произведений и 58 дней занятий будут удалены с телефона — если восстановление сорвётся, вернуть их будет нельзя.» / «Отмена» / «Удалить и восстановить»' },
+      { k: 'Прогресс и итог восстановления', v: '«Восстанавливаем данные» · фазы «Проверяем» / «Восстанавливаем» / «Почти готово» · «Проверяем копию» / «Восстанавливаем · Видео 4 из 6» / «Почти готово» · «Можно свернуть приложение — восстановление дойдёт само.» · «Ваши данные ещё на месте: пока идёт проверка и распаковка, можно остановить.» / «Открываем восстановленные данные — это уже нельзя остановить.» · «Данные восстановлены» · «Открываем ваши данные…» · «Не получилось восстановить» / «Ваши данные на месте — ничего не изменилось.» · «Не получилось восстановить, и прежних данных уже нет» / «Копия проверена и цела — попробуйте ещё раз с этим же файлом. Если снова не выйдет, начните с чистого приложения.» / «Ещё раз с этим файлом» / «Начать с чистого приложения»' },
+      { k: 'Уведомление', v: '«Сохраняем копию · 56 %» / «Видео · 4 из 6 · осталось около 3 мин» · «Восстанавливаем данные · 34 %» / «Проверяем копию · осталось около 2 мин» · TalkBack на строке состава: «Видео, 6 дублей, 3,2 гигабайта, включено, переключатель»' },
+    ];
+    return { settingsFrames, dataStates, saveFrames, progFrames, saveErrors, restoreFrames, fileErrors, restProg, notifs, iconRows, tokens, sizes, anims, texts,
+      spinnerS: spinner(16),
+      tabLive: tabIco(TAB.live, 24, OV), tabPractice: tabIco(TAB.practice, 24, OV), tabRecords: tabIco(TAB.records, 24, OV), tabSettings: tabIco(TAB.settings, 24, '#E9DDFF'),
+      tabLiveS: tabIco(TAB.live, 16, OV), tabPracticeS: tabIco(TAB.practice, 16, '#E9DDFF'), tabRecordsS: tabIco(TAB.records, 16, OV), tabSettingsS: tabIco(TAB.settings, 16, OV),
+      icBack: ico('back', 24, ON), icChevRV: ico('chevron-right', 20, OV), icFork: ico('fork'), icTarget: ico('target'), icMic: ico('mic'), icSound: ico('sound'), icRepeat: ico('repeat'),
+      icSaveCopy: ico('save-copy'), icSaveCopyD: ico('save-copy', 20, ONP), icSaveCopyDim: ico('save-copy', 20, DIM), icSaveCopyS: ico('save-copy', 18, ON), icRestore: ico('restore'),
+      icShareP: ico('share', 18, P), icCloseS: ico('close', 18, ON), icCheckXS: ico('check', 14, P, 2.4), icCheckD: ico('check-circle', 32, ONP, 2.4), icCheckDS: ico('check-circle', 24, ONP, 2.4),
+      icAlert: ico('alert', 24, ERR), icTrashErr: ico('trash', 24, ERR), icFileV: ico('file', 24, OV), icArchiveV: ico('archive', 32, OV),
+      icRecDot: h('div', { style: { width: 10, height: 10, borderRadius: 5, background: ERR, animation: 'pulse 1.2s ease-in-out infinite', flex: 'none' } }),
+    };
+  }
+}
+</script>
+</body>
+</html>

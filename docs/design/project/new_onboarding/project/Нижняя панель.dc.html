@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><script src="home-catalog.js"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>html,body{background:#0E0E12 !important;height:auto !important;min-height:100%}body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}
+@keyframes vjTwang{0%{transform:scaleX(1)}12%{transform:scaleX(1.5)}26%{transform:scaleX(.62)}40%{transform:scaleX(1.28)}54%{transform:scaleX(.84)}68%{transform:scaleX(1.1)}84%{transform:scaleX(.96)}100%{transform:scaleX(1)}}
+@keyframes vjSweep{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+@keyframes vjPress{0%,100%{transform:translateY(0)}40%{transform:translateY(1.4px)}}
+@keyframes vjGear{0%{transform:rotate(0)}70%{transform:rotate(52deg)}100%{transform:rotate(45deg)}}
+@keyframes vjGrow{0%,100%{transform:scale(1)}45%{transform:scale(1.32)}}
+@keyframes vjShrink{0%,100%{transform:scale(1)}45%{transform:scale(.66)}}
+@keyframes vjEq{0%,100%{transform:scaleY(1)}30%{transform:scaleY(.35)}65%{transform:scaleY(1.2)}}
+@keyframes vjTilt{0%,100%{transform:rotate(0)}30%{transform:rotate(-8deg)}65%{transform:rotate(3deg)}}
+@keyframes vjPop{0%{transform:scale(1)}35%{transform:scale(1.6)}100%{transform:scale(1)}}
+@keyframes vjHop{0%,100%{transform:translateY(0)}40%{transform:translateY(-2px)}}
+@keyframes vjShift{0%,100%{transform:translate(0,0)}40%{transform:translate(-1.5px,-1.5px)}}
+@keyframes vjRipple{0%{transform:scale(1);opacity:1}45%{transform:scale(1.25);opacity:0}46%{transform:scale(.8);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(var(--a))}}
+@keyframes sway{0%,100%{transform:translateX(0)}50%{transform:translateX(var(--a))}}
+@keyframes swing{0%,100%{transform:rotate(var(--n))}50%{transform:rotate(var(--a))}}
+@keyframes blink{0%,96%,100%{transform:scaleY(1)}98%{transform:scaleY(.1)}}
+@keyframes rise{0%{transform:translateY(0);opacity:.5}100%{transform:translateY(-14px);opacity:0}}
+@keyframes flick{0%,100%{opacity:1}50%{opacity:.82}}
+@keyframes fly{0%{transform:translate(0,0)}100%{transform:translate(var(--a),-90px)}}
+</style></helmet>
+
+<section id="s35" style="padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 20px"><a href="#s35" style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none">35</a><span style="font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE">Live с новой панелью · кнопка занятия и шестерёнка</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+<sc-for list="{{ f35 }}" as="f" hint-placeholder-count="2">
+<div id="{{ f.id }}" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px;max-width:412px;font:400 11.5px/1.4 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.62);text-wrap:pretty"><a href="#{{ f.id }}" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:#C4ADFF;color:#2E1A6E;border-radius:5px;text-decoration:none;flex:none">{{ f.id }}</a><span>{{ f.label }}</span></div>
+  <div style="width:412px;height:892px;border-radius:20px;overflow:hidden;background:#131318;position:relative;color:#E6E4EE;flex:none;box-shadow:0 24px 60px rgba(0,0,0,.4)">
+    <div style="position:absolute;inset:0;line-height:0">{{ f.pic }}</div>
+    <div style="position:absolute;left:0;right:0;top:0;height:24%;background:linear-gradient(rgba(19,19,24,.58),rgba(19,19,24,0))"></div>
+    <div style="position:absolute;inset:0;display:flex;flex-direction:column;padding:12px 0 0">
+      <div style="position:relative;display:flex;justify-content:center;flex:none;opacity:{{ f.chromeOp }}">
+        <div style="display:flex;height:40px;padding:3px;border-radius:21px;background:#8B5E3C;border:1px solid #4E3424"><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;background:#F1EEE6;color:#2A2430;font-size:14px;font-weight:700">Игра</div><div style="display:flex;align-items:center;padding:0 20px;border-radius:18px;color:#D8D0BE;font-size:14px;font-weight:700">Настройка</div></div>
+        <div style="position:absolute;right:16px;top:6px;width:36px;height:36px;border-radius:18px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);box-sizing:border-box;display:flex;align-items:center;justify-content:center">{{ f.gear }}</div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:flex-end;padding:10px 16px 0;min-height:28px;flex:none;opacity:{{ f.chromeOp }}">
+        <div style="height:28px;padding:0 11px;border-radius:14px;background:rgba(19,19,24,.7);border:1px solid rgba(230,228,238,.22);display:flex;align-items:center;gap:7px;font-size:12px;font-weight:600;color:#E6E4EE;white-space:nowrap">{{ f.whereIco }}Дома</div>
+      </div>
+      <div style="display:flex;justify-content:center;margin-top:10px;flex:none;opacity:{{ f.statusOp }}"><div style="display:flex;align-items:center;gap:9px;height:26px;padding:0 13px;border-radius:13px;background:rgba(19,19,24,.7);font-size:14px;color:#A39FB5"><div style="width:8px;height:8px;border-radius:4px;background:#7CB99A;flex:none"></div><span>Играйте…</span></div></div>
+      <div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;line-height:0;position:relative">{{ f.ring }}
+        <div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-weight:700;letter-spacing:-5px;line-height:1;font-size:174px;font-variant-numeric:tabular-nums;opacity:{{ f.noteOp }}">A<span style="font-size:52px;font-weight:600;color:#A39FB5;letter-spacing:0">4</span></div>
+      </div>
+      <div style="display:flex;align-items:center;justify-content:center;gap:14px;height:46px;flex:none;color:#47C97E;opacity:{{ f.noteOp }}"><div style="width:18px;height:18px;border-radius:9px;background:#47C97E"></div><div style="font-size:28px;font-weight:700">в строе</div><div style="font-size:24px;font-weight:600;color:#A39FB5;font-variant-numeric:tabular-nums">+3</div></div>
+      <div style="display:flex;align-items:center;padding:12px 0 10px;flex:none">
+        <div style="flex:1;display:flex;justify-content:flex-end;padding-right:16px;min-width:0;opacity:{{ f.chromeOp }}">
+          <div style="position:relative;flex:none;line-height:0">{{ f.bmSvg }}
+            <div style="position:absolute;left:13px;right:30px;top:0;bottom:4px;display:flex;flex-direction:column;justify-content:center;gap:3px;line-height:1.15">
+              <div style="font-size:{{ f.bmNameFs }};font-weight:600;color:{{ f.bmInk }};white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ f.bmName }}</div>
+              <sc-if value="{{ f.bmHasTime }}" hint-placeholder-val="{{ false }}"><div style="font-size:15px;font-weight:700;color:#2A2430;white-space:nowrap;font-variant-numeric:tabular-nums">{{ f.bmTime }}</div></sc-if>
+            </div>
+          </div>
+        </div>
+        <div style="width:72px;height:72px;border-radius:36px;background:#F1EEE6;border:3px solid #C9A24A;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 0 rgba(0,0,0,.35);flex:none"><div style="width:20px;height:20px;border-radius:10px;background:#C4ADFF"></div></div>
+        <div style="flex:1;display:flex;justify-content:flex-start;padding-left:16px;min-width:0;opacity:{{ f.chromeOp }}">
+          <div onClick="{{ f.prTap }}" style="position:relative;flex:none;line-height:0;cursor:pointer;user-select:none">{{ f.prSvg }}
+            <div style="position:absolute;left:25px;right:10px;top:0;bottom:4px;display:flex;align-items:center;gap:8px;line-height:1.15">
+              <sc-if value="{{ f.prIdle }}" hint-placeholder-val="{{ true }}">{{ f.prIcon }}<div style="display:flex;flex-direction:column;font-size:13.5px;font-weight:600;color:#F1EEE6"><div>Начать</div><div>занятие</div></div></sc-if>
+              <sc-if value="{{ f.prRun }}" hint-placeholder-val="{{ false }}"><div style="display:flex;flex-direction:column;gap:3px"><div style="display:flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:#2A2430"><div style="width:7px;height:7px;border-radius:50%;background:#8E2F3F;flex:none"></div>занятие</div><div style="font-size:15px;font-weight:700;color:#2A2430;font-variant-numeric:tabular-nums">{{ f.prTime }}</div></div></sc-if>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="height:14px;background:linear-gradient(rgba(30,29,37,0),rgba(30,29,37,.96));flex:none"></div>
+      <div style="height:80px;display:flex;background:rgba(30,29,37,.96);flex:none">
+        <sc-for list="{{ f.nav }}" as="n" hint-placeholder-count="3">
+        <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+          <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}<sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:3px;right:15px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px {{ n.markRing }}"></div></sc-if></div>
+          <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+        </div>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-for>
+</div>
+<p style="margin:24px 0 0;font:400 12.5px/1.6 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.55);max-width:920px;text-wrap:pretty"><b style="color:#E6E4EE">Кнопка занятия — ярлык справа от клавиши записи, зеркало закладки.</b> Низ экрана читается одной фразой: слева «что играю», в центре «записать», справа «сколько занимаюсь». Всё, что трогают в тишине, по-прежнему под большим пальцем, кольцо не теряет ни пикселя. Три состояния одного места: контур «Начать занятие» → нажали — ярлык заливается бумагой от выреза (300 мс), время пошло с 0:00 → тап по идущему открывает лист итога, как «Закончить занятие» на «Занятиях». Бумажный ярлычок «занятие · 34:12» из второй строки уходит сюда же: у занятия одно место на экране. Во второй строке остаётся только «где играю». Лист «Сначала — занятие» (тап по пустой закладке) остаётся — только кнопка теперь и так рядом.</p>
+<p style="margin:10px 0 0;font:400 12.5px/1.6 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.55);max-width:920px;text-wrap:pretty"><b style="color:#E6E4EE">Шестерёнка — в ряду переключателя, в правом углу.</b> Там её ищут во всех тюнерах. Кружок 36 dp (касание 48), та же подложка и обводка, что у «Дома», иконка 20 dp. Правый край совпадает с «Дома» под ней — два служебных знака стоят столбиком. Когда звучит нота, гаснет до 0,38 вместе с остальным. Ведёт на экран «Настройки» поверх вкладок, со стрелкой «назад» и без нижней панели. <b style="color:#E6E4EE">Стрелка секундомера на вкладке «Занятия» на Live стоит</b> — время и так видно на ярлыке, а на этом экране движется только то, что про звук. Идёт только на других экранах. Landscape (не рисовал): ярлык встаёт под закладку в правой колонке.</p>
+</section>
+
+<section id="s32" style="padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px">
+<div style="max-width:920px;margin:0 0 32px;display:flex;flex-direction:column;gap:10px">
+  <div style="font:800 24px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE">Нижняя панель · порядок, иконки, жизнь</div>
+  <p style="margin:0;font:400 14px/1.6 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty">Рекомендую: три вкладки <a href="#32c">32c</a> «Занятия · Live · Записи», «Настройки» — шестерёнкой на Live. Иконки <a href="#33d">33d</a>: струна · секундомер · кассета. Жизнь: жест при выборе <a href="#34a">34a</a> и «вкладка знает» <a href="#34c">34c</a>; панель-струна <a href="#34b">34b</a> — по желанию. Все панели нажимаются.</p>
+</div>
+<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 20px"><a href="#s32" style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none">32</a><span style="font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE">Порядок и состав · иконки везде из 33d, чтобы сравнивать только порядок</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+
+<div id="32a" style="flex:none;width:412px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#32a" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none">32a</a><span style="font:700 14px Manrope,system-ui,sans-serif">Как сейчас</span></div>
+  <div style="width:412px;height:80px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ bar30a }}" as="n" hint-placeholder-count="4">
+  <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+    <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}<sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:3px;right:15px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px {{ n.markRing }}"></div></sc-if></div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <p style="margin:0;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty">Работает. Два минуса. «Настройки» — экран, куда заходят раз в месяц, — занимают четверть панели. И слово: на Live есть режим «Настройка», на панели — «Настройки». Одно слово, два смысла: кто ищет, «где настроить скрипку», уходит не туда.</p>
+</div>
+
+<div id="32b" style="flex:none;width:412px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#32b" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none">32b</a><span style="font:700 14px Manrope,system-ui,sans-serif">Три вкладки, Live первой</span></div>
+  <div style="width:412px;height:80px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ bar30b }}" as="n" hint-placeholder-count="3">
+  <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+    <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}<sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:3px;right:15px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px {{ n.markRing }}"></div></sc-if></div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <p style="margin:0;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty">Безопасный шаг: «Настройки» уходят с панели, порядок прежний — по частоте. Вкладки шире: 137 dp вместо 103, в них проще попасть, когда телефон стоит на пюпитре.</p>
+</div>
+
+<div id="32c" style="flex:none;width:412px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#32c" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:#C4ADFF;color:#2E1A6E;border-radius:5px;text-decoration:none">32c</a><span style="font:700 14px Manrope,system-ui,sans-serif">Три вкладки, Live в центре</span><span style="font:600 10.5px Manrope,system-ui,sans-serif;padding:3px 9px;border-radius:11px;background:rgba(196,173,255,.16);color:#C4ADFF">рекомендую</span></div>
+  <div style="width:412px;height:80px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ bar30c }}" as="n" hint-placeholder-count="3">
+  <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+    <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}<sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:3px;right:15px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px {{ n.markRing }}"></div></sc-if></div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <p style="margin:0;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty">Слева направо — ход занятия: <b style="color:#E6E4EE">начал → играю → слушаю</b>. Live — середина и старт: до обеих соседок один шаг, большой палец и так ложится на центр. Точка «занятие идёт» у крайней левой вкладки видна лучше всего. Минус: стартовая вкладка не первая — непривычно, но на второй день уже нет.</p>
+</div>
+
+<div id="32d" style="flex:none;width:412px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#32d" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none">32d</a><span style="font:700 14px Manrope,system-ui,sans-serif">Дом вместо «Настроек»</span><span style="font:600 10.5px Manrope,system-ui,sans-serif;padding:3px 9px;border-radius:11px;background:rgba(255,255,255,.08);color:#A39FB5">вопрос к вам</span></div>
+  <div style="width:412px;height:80px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ bar30d }}" as="n" hint-placeholder-count="4">
+  <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+    <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}<sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:3px;right:15px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px {{ n.markRing }}"></div></sc-if></div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <p style="margin:0;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty">Если игра вырастет: у дома своя дверь, «Занятия» снова только про время. Против: рвётся связка «позанимался → такты → дом» на одном экране (вы недавно её собрали), а домик в панели Android читается как «Главная». Показываю, не предлагаю.</p>
+</div>
+</div>
+<p style="margin:24px 0 0;font:400 12.5px/1.6 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.55);max-width:920px;text-wrap:pretty"><b style="color:#E6E4EE">Куда уходят «Настройки» в 32b и 32c.</b> Шестерёнка 40 dp в правом верхнем углу Live: там её ищут во всех тюнерах, рядом с тем, что она меняет (эталон A4, допуск). Второй вход — строка «Настройки» в листе «Профиль» (тап по аватару на «Занятиях»). Слово «Настройки» с панели уходит, путаница с режимом «Настройка» — вместе с ним.</p>
+</section>
+
+<section id="s33" style="padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 20px"><a href="#s33" style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none">33</a><span style="font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE">Иконки · три семьи и конструктор · сетка 24, обводка 1.8, выбранная — заливка тела. Нажмите на иконку — покажет свой жест</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+
+<div id="33a" style="flex:none;width:412px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#33a" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none">33a</a><span style="font:700 14px Manrope,system-ui,sans-serif">Понятные без подписи</span></div>
+  <div style="width:412px;height:80px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ bar31a }}" as="n" hint-placeholder-count="4">
+  <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+    <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}</div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
+  <sc-for list="{{ g31a }}" as="g" hint-placeholder-count="4">
+  <div onClick="{{ g.onClick }}" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 4px 10px;border-radius:12px;background:#1E1D25;cursor:pointer;user-select:none">
+    <div style="display:flex;gap:8px;align-items:center">{{ g.out }}<div style="width:48px;height:36px;border-radius:18px;background:#5B43B8;display:flex;align-items:center;justify-content:center">{{ g.sel }}</div></div>
+    <div style="font-size:12px;font-weight:600;color:#E6E4EE">{{ g.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <p style="margin:0;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty">Волна · секундомер · кассета · шестерня. Каждую поймёт человек, впервые открывший приложение: волна — «здесь слушают звук», кассета — «здесь записи», слово в слово. Слабое: волна — знак любого диктофона, характера у набора нет.</p>
+</div>
+
+<div id="33b" style="flex:none;width:412px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#33b" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none">33b</a><span style="font:700 14px Manrope,system-ui,sans-serif">Из мира скрипача</span></div>
+  <div style="width:412px;height:80px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ bar31b }}" as="n" hint-placeholder-count="4">
+  <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+    <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}</div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
+  <sc-for list="{{ g31b }}" as="g" hint-placeholder-count="4">
+  <div onClick="{{ g.onClick }}" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 4px 10px;border-radius:12px;background:#1E1D25;cursor:pointer;user-select:none">
+    <div style="display:flex;gap:8px;align-items:center">{{ g.out }}<div style="width:48px;height:36px;border-radius:18px;background:#5B43B8;display:flex;align-items:center;justify-content:center">{{ g.sel }}</div></div>
+    <div style="font-size:12px;font-weight:600;color:#E6E4EE">{{ g.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <p style="margin:0;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty">Струна · пюпитр · ноты · шестерня. Струна — звучащая струна между порожком и подставкой: огибающая колебания и сама струна. Слабое: пюпитр уже значит «режим пюпитра», ноты — заглушку фото нот; двойные смыслы. Струну без подписи поймёт скрипач, но не всякий.</p>
+</div>
+
+<div id="33c" style="flex:none;width:412px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#33c" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none">33c</a><span style="font:700 14px Manrope,system-ui,sans-serif">Как на экране</span></div>
+  <div style="width:412px;height:80px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ bar31c }}" as="n" hint-placeholder-count="4">
+  <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+    <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}</div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px">
+  <sc-for list="{{ g31c }}" as="g" hint-placeholder-count="4">
+  <div onClick="{{ g.onClick }}" style="display:flex;flex-direction:column;align-items:center;gap:8px;padding:12px 4px 10px;border-radius:12px;background:#1E1D25;cursor:pointer;user-select:none">
+    <div style="display:flex;gap:8px;align-items:center">{{ g.out }}<div style="width:48px;height:36px;border-radius:18px;background:#5B43B8;display:flex;align-items:center;justify-content:center">{{ g.sel }}</div></div>
+    <div style="font-size:12px;font-weight:600;color:#E6E4EE">{{ g.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <p style="margin:0;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty">Кольцо · календарь · стопка · ползунки. Иконка — главный предмет своего экрана: кольцо Live, календарь занятий, стопка записей. Слабое: кольцо и ползунки — сегодняшние; календарь и стопка — стандартные «календарь» и «медиатека», в панели читаются как чужое приложение.</p>
+</div>
+
+<div id="33d" style="flex:none;width:540px;display:flex;flex-direction:column;gap:12px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#33d" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:#C4ADFF;color:#2E1A6E;border-radius:5px;text-decoration:none">33d</a><span style="font:700 14px Manrope,system-ui,sans-serif">Конструктор</span><span style="font:600 10.5px Manrope,system-ui,sans-serif;padding:3px 9px;border-radius:11px;background:rgba(196,173,255,.16);color:#C4ADFF">собрано то, что рекомендую</span></div>
+  <div style="background:#15151B;border-radius:16px;padding:20px 20px 18px;display:flex;flex-direction:column;gap:16px">
+    <div style="width:412px;align-self:center;display:flex;flex-direction:column;border-radius:12px;overflow:hidden">
+      <div style="height:48px;background:#131318"></div>
+      <div style="position:relative;height:80px;display:flex;background:#1E1D25">{{ strBld }}
+      <sc-for list="{{ barBld }}" as="n" hint-placeholder-count="3">
+      <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+        <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}<sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:3px;right:15px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px {{ n.markRing }}"></div></sc-if></div>
+        <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+      </div>
+      </sc-for>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;font-weight:600;color:#A39FB5;text-transform:uppercase;letter-spacing:.05em">Порядок</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <sc-for list="{{ orderChips }}" as="c" hint-placeholder-count="4">
+        <div onClick="{{ c.onClick }}" style="height:32px;padding:0 12px;border-radius:8px;display:flex;align-items:center;font-size:13px;font-weight:600;cursor:pointer;user-select:none;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.name }}</div>
+      </sc-for>
+      </div>
+    </div>
+    <sc-for list="{{ bldRows }}" as="r" hint-placeholder-count="3">
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;font-weight:600;color:#A39FB5;text-transform:uppercase;letter-spacing:.05em">{{ r.label }}</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <sc-for list="{{ r.chips }}" as="c" hint-placeholder-count="3">
+        <div onClick="{{ c.onClick }}" style="height:40px;padding:0 14px 0 10px;border-radius:20px;display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;cursor:pointer;user-select:none;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.icon }}{{ c.name }}</div>
+      </sc-for>
+      </div>
+    </div>
+    </sc-for>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <div style="font-size:11px;font-weight:600;color:#A39FB5;text-transform:uppercase;letter-spacing:.05em">Жизнь</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+      <sc-for list="{{ lifeChips }}" as="c" hint-placeholder-count="3">
+        <div onClick="{{ c.onClick }}" style="height:32px;padding:0 12px;border-radius:8px;display:flex;align-items:center;gap:6px;font-size:13px;font-weight:600;cursor:pointer;user-select:none;border:1px solid {{ c.bd }};background:{{ c.bg }};color:{{ c.fg }}">{{ c.name }}</div>
+      </sc-for>
+      </div>
+    </div>
+  </div>
+  <p style="margin:0;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty">Струна · секундомер · кассета · шестерня. <b style="color:#E6E4EE">Одна скрипичная иконка — у главной вкладки</b>, остальные ясные. Секундомер остаётся: он же на «Начать занятие», связка «занятие = время» уже выучена. У каждой иконки есть тело, которое заливается при выборе, и одна подвижная деталь — для жеста.</p>
+</div>
+</div>
+<p style="margin:24px 0 0;font:400 12.5px/1.6 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.55);max-width:920px;text-wrap:pretty"><b style="color:#E6E4EE">Отклонил, не рисуя в наборы.</b> Колок для «Настроек» — в 24 dp это ключ, и снова «настройка» вместо «параметров». Эф для Live — ƒ читается как формула. Метроном для «Занятий» — обещает метроном, которого в приложении нет. Камертон оставил в конструкторе: самый понятный «тюнер», но он уже отдан эталону A4; если берём — у строки A4 будет другая иконка.</p>
+</section>
+
+<section id="s34" style="padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 20px"><a href="#s34" style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none">34</a><span style="font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE">Как ещё обыграть · нажимайте вкладки</span></div>
+<div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+
+<div id="34a" style="flex:none;width:412px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#34a" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:#C4ADFF;color:#2E1A6E;border-radius:5px;text-decoration:none">34a</a><span style="font:700 14px Manrope,system-ui,sans-serif">Жест при выборе</span><span style="font:600 10.5px Manrope,system-ui,sans-serif;padding:3px 9px;border-radius:11px;background:rgba(196,173,255,.16);color:#C4ADFF">рекомендую</span></div>
+  <div style="width:412px;height:80px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ bar32a }}" as="n" hint-placeholder-count="4">
+  <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+    <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}</div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <p style="margin:0;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty">Каждая иконка один раз делает то, что умеет её предмет: <b style="color:#E6E4EE">струна</b> дрожит и затухает (щипок), у <b style="color:#E6E4EE">секундомера</b> нажимается головка и стрелка обходит круг, у <b style="color:#E6E4EE">кассеты</b> перематываются катушки, <b style="color:#E6E4EE">шестерня</b> поворачивается на один зуб. 0,5–0,7 с, только по нажатию; при «убрать анимации» — нет.</p>
+</div>
+
+<div id="34b" style="flex:none;width:412px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#34b" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(255,255,255,.1);color:#E6E4EE;border-radius:5px;text-decoration:none">34b</a><span style="font:700 14px Manrope,system-ui,sans-serif">Панель-струна</span><span style="font:600 10.5px Manrope,system-ui,sans-serif;padding:3px 9px;border-radius:11px;background:rgba(255,255,255,.08);color:#A39FB5">по желанию</span></div>
+  <div style="width:412px;display:flex;flex-direction:column;border-radius:12px;overflow:hidden">
+    <div style="height:48px;background:#131318"></div>
+    <div style="position:relative;height:80px;display:flex;background:#1E1D25">{{ str32b }}
+    <sc-for list="{{ bar32b }}" as="n" hint-placeholder-count="4">
+    <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+      <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}</div>
+      <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+    </div>
+    </sc-for>
+    </div>
+  </div>
+  <p style="margin:0;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty">Верхний край панели — струна. Нажатие дёргает её в точке касания. Четыре вкладки — четыре струны: слева соль колеблется медленно, справа ми — быстро (в трёх вкладках — соль, ре, ля). Смысла не несёт, только отклик, поэтому тихо: 5 dp, 0,8 с, сиреневый гаснет вместе с размахом.</p>
+</div>
+
+<div id="34c" style="flex:none;width:412px;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px"><a href="#34c" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:#C4ADFF;color:#2E1A6E;border-radius:5px;text-decoration:none">34c</a><span style="font:700 14px Manrope,system-ui,sans-serif">Вкладка знает, что происходит</span><span style="font:600 10.5px Manrope,system-ui,sans-serif;padding:3px 9px;border-radius:11px;background:rgba(196,173,255,.16);color:#C4ADFF">рекомендую</span></div>
+  <div style="width:412px;height:80px;display:flex;background:#1E1D25;border-radius:12px;overflow:hidden">
+  <sc-for list="{{ bar32c }}" as="n" hint-placeholder-count="3">
+  <div onClick="{{ n.onClick }}" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;cursor:pointer;user-select:none">
+    <div style="position:relative;width:64px;height:32px;border-radius:16px;background:{{ n.pill }};display:flex;align-items:center;justify-content:center;transition:background-color .2s">{{ n.icon }}<sc-if value="{{ n.mark }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:3px;right:15px;width:8px;height:8px;border-radius:50%;background:#C4ADFF;box-shadow:0 0 0 2px {{ n.markRing }}"></div></sc-if></div>
+    <div style="font-size:12px;font-weight:{{ n.fw }};color:{{ n.fg }}">{{ n.name }}</div>
+  </div>
+  </sc-for>
+  </div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div onClick="{{ toggleRun }}" style="height:40px;padding:0 16px 0 12px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;gap:8px;font-size:14px;font-weight:600;color:#C4ADFF;cursor:pointer;user-select:none">{{ runIcon }}{{ runLabel }}</div>
+    <div onClick="{{ saveTake }}" style="height:40px;padding:0 16px;border-radius:20px;border:1px solid #3A3846;display:flex;align-items:center;font-size:14px;font-weight:600;color:#C4ADFF;cursor:pointer;user-select:none">Сохранить дубль</div>
+    <div style="margin-left:auto;width:56px;height:56px;border-radius:16px;background:#1E1D25;display:flex;align-items:center;justify-content:center">{{ bigTimer }}</div>
+  </div>
+  <p style="margin:0;font:400 13px/1.55 Manrope,system-ui,sans-serif;color:#C7C4D4;text-wrap:pretty"><b style="color:#E6E4EE">Занятие идёт</b> — стрелка секундомера на вкладке идёт по кругу за минуту, как кольцо у таймера (<a href="Иконки%20и%20жизнь.dc.html#17b">17b</a>); точка остаётся — она для тех, кто выключил анимации. <b style="color:#E6E4EE">Дубль сохранён</b> — «Записи» один раз проигрывают свой жест: видно, куда ушла запись. Больше ничего: ни счётчиков, ни значков «новое».</p>
+</div>
+</div>
+<p style="margin:24px 0 0;font:400 12.5px/1.6 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.55);max-width:920px;text-wrap:pretty"><b style="color:#E6E4EE">Правило то же, что на Live: движение что-то значит.</b> Жест — ответ на нажатие, один раз. Стрелка «занятие идёт» — единственное постоянное движение панели, 6° в секунду: заметно, только если смотреть. Панель-струна — чистое удовольствие; если хочется характера — берите, если тишины — нет, без неё ничего не теряется.</p>
+</section>
+
+<section id="dev" style="padding:40px 44px 48px;scroll-margin-top:16px;max-width:1280px">
+<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 20px"><a href="#dev" style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none">dev</a><span style="font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE">Для разработчика · TAB_ICONS, жесты</span></div>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(560px,100%),1fr));gap:28px;font-size:13px;line-height:1.5">
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="font-weight:700;font-size:14px">TAB_ICONS — viewBox 24, stroke 1.8, round cap/join</div>
+    <div style="color:#A39FB5">Метки: <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">body</span> — в выбранной заливается цветом иконки; <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">cut</span> — в выбранной обводка цветом пилюли (прорезь); <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">dot</span> — заливка без обводки; <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">dotcut</span> — заливка, в выбранной цветом пилюли; <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">thick</span> — в выбранной обводка 3.0; <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">selonly</span> — только в выбранной. <span style="font-family:ui-monospace,Menlo,monospace;font-size:11.5px">[g]</span> — группа с жестом.</div>
+    <div style="display:grid;grid-template-columns:36px minmax(0,.6fr) minmax(0,.7fr) minmax(0,2.2fr);gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px">
+      <div style="background:#15151B;padding:8px 12px"></div><div style="background:#15151B;padding:8px 12px;color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase">name</div><div style="background:#15151B;padding:8px 12px;color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase">вкладка</div><div style="background:#15151B;padding:8px 12px;color:#A39FB5;font-weight:600;font-size:11px;text-transform:uppercase">paths</div>
+      <sc-for list="{{ devIcons }}" as="r" hint-placeholder-count="14">
+      <div style="background:#15151B;padding:6px 8px;display:flex;align-items:center">{{ r.el }}</div><div style="background:#15151B;padding:8px 12px;font-family:ui-monospace,Menlo,monospace;font-size:11.5px;color:{{ r.nameFg }}">{{ r.name }}</div><div style="background:#15151B;padding:8px 12px;color:#A39FB5">{{ r.tab }}</div><div style="background:#15151B;padding:8px 12px;font-family:ui-monospace,Menlo,monospace;font-size:10.5px;color:#A39FB5;overflow-wrap:anywhere">{{ r.paths }}</div>
+      </sc-for>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px">
+    <div style="font-weight:700;font-size:14px">Жесты и состояния</div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.9fr);gap:1px;background:rgba(255,255,255,.08);border-radius:12px;overflow:hidden;font-size:12px">
+      <sc-for list="{{ anims }}" as="a" hint-placeholder-count="9">
+      <div style="background:#15151B;padding:8px 12px;font-weight:600">{{ a.name }}</div><div style="background:#15151B;padding:8px 12px;color:#A39FB5">{{ a.v }}</div>
+      </sc-for>
+    </div>
+  </div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;reduceMotion&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:false,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Движение&quot;},&quot;speed&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:1,&quot;min&quot;:0.25,&quot;max&quot;:2,&quot;step&quot;:0.25,&quot;unit&quot;:&quot;×&quot;,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Движение&quot;}}">
+class Component extends DCLogic {
+  state = { act: {}, gk: {}, pluck: {}, gal: {}, b: { order: 'c', pick: { live: 'string', practice: 'timer', records: 'tape', settings: 'gear', home: 'door' }, gest: true, str: false, run: false }, run32: true, pr35: 0, tick: 0 };
+
+  componentDidMount() {
+    import('./live-scene.js').then(m => { this.mk = m.buildLiveScene; this.forceUpdate(); });
+    this.poll = setInterval(() => { if (window.buildHomeCatalog && this.mk) { clearInterval(this.poll); this.forceUpdate(); } }, 100);
+    this.clock = setInterval(() => { if (this.state.pr35) this.setState({ tick: Date.now() }); }, 1000);
+  }
+  componentWillUnmount() { clearInterval(this.poll); clearInterval(this.clock); }
+
+  bump(demo, tab) { this.setState(s => { const g = { ...(s.gk[demo] || {}) }; g[tab] = (g[tab] || 0) + 1; return { gk: { ...s.gk, [demo]: g } }; }); }
+
+  tap(demo, t, i, n) {
+    const FREQ = [5.5, 8, 11, 15];
+    this.setState(s => {
+      const prev = s.act[demo] || 'live'; const g = { ...(s.gk[demo] || {}) };
+      if (prev !== t) g[t] = (g[t] || 0) + 1;
+      const pk = ((s.pluck[demo] || {}).k || 0) + 1;
+      return { act: { ...s.act, [demo]: t }, gk: { ...s.gk, [demo]: g }, pluck: { ...s.pluck, [demo]: { k: pk, x: (i + .5) / n, f: FREQ[i] } } };
+    });
+  }
+
+  renderVals() {
+    const h = React.createElement;
+    const P = '#C4ADFF', PC = '#5B43B8', ONPC = '#E9DDFF', ON = '#E6E4EE', OV = '#A39FB5', SC = '#1E1D25';
+    const sp = this.props.speed ?? 1, rm = this.props.reduceMotion ?? false;
+    const gearD = (() => { const n = 8, ro = 8.6, ri = 6.3, th = 6.5, rh = 12.5; const p = (a, r) => { const t = a * Math.PI / 180; return (12 + r * Math.cos(t)).toFixed(2) + ' ' + (12 + r * Math.sin(t)).toFixed(2); }; let d = ''; for (let k = 0; k < n; k++) { const c = k * 360 / n - 90; d += (k === 0 ? 'M' + p(c - rh, ri) : 'A' + ri + ' ' + ri + ' 0 0 1 ' + p(c - rh, ri)) + 'L' + p(c - th, ro) + 'A' + ro + ' ' + ro + ' 0 0 1 ' + p(c + th, ro) + 'L' + p(c + rh, ri); } return d + 'A' + ri + ' ' + ri + ' 0 0 1 ' + p(-90 - rh, ri) + 'Z'; })();
+    const TW = ['vjTwang', 620, 'cubic-bezier(.2,.7,.3,1)'], HOP = ['vjHop', 460, 'ease-out'];
+    const LIB = {
+      string: { tab: 'live', name: 'Струна', parts: [
+        { p: [['s', 'M7.5 3.5h9'], ['s', 'M7.5 20.5h9']] },
+        { a: TW, o: '12px 12px', p: [['body', 'M12 3.5Q4 12 12 20.5Q20 12 12 3.5z']] },
+        { p: [['cut', 'M12 3.5v17']] }] },
+      wave: { tab: 'live', name: 'Волна', parts: [['M4 10v4', 80], ['M8 6.5v11', 30], ['M12 4v16', 0], ['M16 7.5v9', 50], ['M20 10v4', 110]].map(([d, dl]) => ({ a: ['vjEq', 520, 'ease-in-out', dl], o: '12px 12px', p: [['thick', d]] })) },
+      fork: { tab: 'live', name: 'Камертон', parts: [
+        { a: TW, o: '12px 7px', p: [['s', 'M8.8 3v7a3.2 3.2 0 0 0 6.4 0V3']] },
+        { p: [['s', 'M12 13.2v4.4'], ['dot', 'M12 17.4a1.7 1.7 0 1 0 0 3.4 1.7 1.7 0 1 0 0-3.4z']] },
+        { p: [['selonly', 'M18.6 4.2a5.5 5.5 0 0 1 0 6.2'], ['selonly', 'M5.4 4.2a5.5 5.5 0 0 0 0 6.2']] }] },
+      ring: { tab: 'live', name: 'Кольцо', parts: [
+        { p: [['body', 'M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8z']] },
+        { a: ['vjRipple', 600, 'ease-out'], o: '12px 12px', p: [['s', 'M17.7 6.3a8 8 0 0 1 0 11.4'], ['s', 'M6.3 6.3a8 8 0 0 0 0 11.4']] }] },
+      timer: { tab: 'practice', name: 'Секундомер', parts: [
+        { p: [['body', 'M12 6.5a7 7 0 1 0 0 14 7 7 0 1 0 0-14z'], ['s', 'M17.5 7.7l1.4-1.4']] },
+        { a: ['vjPress', 180, 'ease-out'], o: '12px 4px', p: [['s', 'M10 3h4M12 3v3.5']] },
+        { a: ['vjSweep', 720, 'cubic-bezier(.4,0,.2,1)', 120], run: true, o: '12px 13.5px', p: [['cut', 'M12 13.5V9.6']] }] },
+      stand: { tab: 'practice', name: 'Пюпитр', parts: [
+        { a: ['vjTilt', 560, 'ease-out'], o: '12px 12.5px', p: [['body', 'M5 4h14a1 1 0 0 1 1 1v6.5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z'], ['cut', 'M8 7.2h8M8 9.6h5']] },
+        { p: [['s', 'M12 12.5V21'], ['s', 'M12 17.4 7.6 21M12 17.4l4.4 3.6']] }] },
+      cal: { tab: 'practice', name: 'Календарь', parts: [
+        { p: [['body', 'M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z'], ['s', 'M8.5 3v3.2M15.5 3v3.2'], ['cut', 'M4 8.8h16']] },
+        { p: [['dotcut', 'M7 11.2h2.6v2.6H7z'], ['dotcut', 'M10.7 11.2h2.6v2.6h-2.6z'], ['dotcut', 'M14.4 11.2H17v2.6h-2.6z'], ['dotcut', 'M7 15h2.6v2.6H7z'], ['dotcut', 'M10.7 15h2.6v2.6h-2.6z']] },
+        { a: ['vjPop', 460, 'ease-out'], o: '15.7px 16.3px', p: [['dotcut', 'M14.4 15H17v2.6h-2.6z']] }] },
+      tape: { tab: 'records', name: 'Кассета', parts: [
+        { p: [['body', 'M5 5.5h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z'], ['cut', 'M7.6 18.5l1.2-2.8h6.4l1.2 2.8']] },
+        { a: ['vjGrow', 520, 'ease-in-out'], o: '8.5px 10.8px', p: [['cut', 'M8.5 8.9a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 1 0 0-3.8z']] },
+        { a: ['vjShrink', 520, 'ease-in-out'], o: '15.5px 10.8px', p: [['cut', 'M15.5 8.9a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 1 0 0-3.8z']] }] },
+      sheet: { tab: 'records', name: 'Ноты', parts: [
+        { p: [['body', 'M6.5 3h7.5l4.5 4.5V20a1 1 0 0 1-1 1h-11a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z'], ['cut', 'M14 3v4.5h4.5']] },
+        { a: HOP, p: [['cut', 'M12.6 10.6v6.1'], ['cut', 'M12.6 10.6c1 .3 2.2 1.1 2.2 2.5'], ['dotcut', 'M9.2 16.7a1.7 1.4 0 1 0 3.4 0 1.7 1.4 0 1 0-3.4 0z']] }] },
+      lib: { tab: 'records', name: 'Стопка', parts: [
+        { p: [['s', 'M4 16.5V5a1 1 0 0 1 1-1h11.5']] },
+        { a: ['vjShift', 480, 'ease-out'], p: [['body', 'M8 7.5h11a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H8a1 1 0 0 1-1-1v-11a1 1 0 0 1 1-1z'], ['cut', 'M14.9 10.6v5.9'], ['cut', 'M14.9 10.6c1 .3 2 1 2 2.3'], ['dotcut', 'M11.5 16.5a1.7 1.4 0 1 0 3.4 0 1.7 1.4 0 1 0-3.4 0z']] }] },
+      list: { tab: 'records', name: 'Список', parts: [
+        { p: [['s', 'M4 6h8M4 12h6M4 18h5']] },
+        { a: HOP, p: [['s', 'M15 17V7.5l5-1.5v3'], ['body', 'M13 15a2 2 0 1 0 0 4 2 2 0 1 0 0-4z']] }] },
+      gear: { tab: 'settings', name: 'Шестерня', parts: [
+        { a: ['vjGear', 560, 'cubic-bezier(.3,.7,.4,1)'], o: '12px 12px', p: [['body', gearD], ['cut', 'M12 9.4a2.6 2.6 0 1 0 0 5.2 2.6 2.6 0 1 0 0-5.2z']] }] },
+      sliders: { tab: 'settings', name: 'Ползунки', parts: [
+        { p: [['s', 'M4 7h9M18.5 7H20M4 17h6M14.5 17H20']] },
+        { a: ['vjPop', 460, 'ease-out'], o: '15.5px 7px', p: [['body', 'M15.5 4.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z']] },
+        { a: ['vjPop', 460, 'ease-out', 90], o: '10.5px 17px', p: [['body', 'M10.5 14.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z']] }] },
+      door: { tab: 'home', name: 'Дом', parts: [
+        { p: [['s', 'M4 20.5h16']] },
+        { a: HOP, p: [['body', 'M6 20.5V6l6-3 6 3v14.5z'], ['cut', 'M9 20.5v-7a3 3 0 0 1 6 0v7'], ['dotcut', 'M14.2 15.2a.9.9 0 1 0 0 1.8.9.9 0 1 0 0-1.8z']] }] },
+    };
+    const A = a => `${a[0]} ${Math.round(a[1] / sp)}ms ${a[2]} ${Math.round((a[3] || 0) / sp)}ms both`;
+    const ico = (id, o = {}) => {
+      const ic = LIB[id], size = o.size || 24, c = o.color || ON, pill = o.pill || PC, sel = !!o.sel;
+      const el = (t, d, k) => {
+        if (t === 'selonly' && !sel) return null;
+        if (t === 'body') return h('path', { key: k, d, fill: sel ? c : 'none', stroke: c });
+        if (t === 'cut') return h('path', { key: k, d, fill: 'none', stroke: sel ? pill : c });
+        if (t === 'dot') return h('path', { key: k, d, fill: c, stroke: 'none' });
+        if (t === 'dotcut') return h('path', { key: k, d, fill: sel ? pill : c, stroke: 'none' });
+        if (t === 'thick') return h('path', { key: k, d, fill: 'none', stroke: c, strokeWidth: sel ? 3 : 1.8 });
+        return h('path', { key: k, d, fill: 'none', stroke: c });
+      };
+      return h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', style: { flex: 'none', display: 'block', overflow: 'visible' } },
+        ic.parts.map((pt, i) => {
+          let anim = null, tag = '';
+          if (!rm && o.run && pt.run) { anim = 'vjSweep 60000ms linear 0ms infinite'; tag = 'run'; }
+          else if (!rm && o.gk && pt.a) { anim = A(pt.a); tag = 'g' + o.gk; }
+          return h('g', { key: i + tag, style: anim ? { animation: anim, transformOrigin: pt.o || '12px 12px', transformBox: 'view-box' } : undefined }, pt.p.map(([t, d], j) => el(t, d, j)));
+        }));
+    };
+    const LABEL = { live: 'Live', practice: 'Занятия', records: 'Записи', settings: 'Настройки', home: 'Дом' };
+    const REC = this.state.b.pick;
+    const SET_A = { live: 'wave', practice: 'timer', records: 'tape', settings: 'gear' };
+    const SET_B = { live: 'string', practice: 'stand', records: 'sheet', settings: 'gear' };
+    const SET_C = { live: 'ring', practice: 'cal', records: 'lib', settings: 'sliders' };
+    const RECF = { live: 'string', practice: 'timer', records: 'tape', settings: 'gear', home: 'door' };
+    const ORD = { a: ['live', 'practice', 'records', 'settings'], b: ['live', 'practice', 'records'], c: ['practice', 'live', 'records'], d: ['live', 'practice', 'home', 'records'] };
+    const bar = (demo, tabs, pick, opt = {}) => {
+      const active = this.state.act[demo] || 'live', gks = this.state.gk[demo] || {};
+      return tabs.map((t, i) => {
+        const a = t === active, running = !!opt.run && t === 'practice', marked = !!(opt.mark || opt.run) && t === 'practice';
+        return { name: LABEL[t], icon: ico(pick[t], { sel: a, color: a ? ONPC : OV, gk: opt.gest === false ? null : gks[t], run: running }), pill: a ? PC : 'transparent', fg: a ? ON : OV, fw: a ? 600 : 400, mark: marked, markRing: a ? PC : SC, onClick: () => this.tap(demo, t, i, tabs.length) };
+      });
+    };
+    const strEl = (demo, key) => { const pl = this.state.pluck[demo] || {}; return h(StringBar, { key, k: rm ? 0 : pl.k, x: pl.x, f: pl.f }); };
+    const gal = (set, tabs) => tabs.map(t => { const id = set[t], k = this.state.gal[id]; return { name: LIB[id].name, out: ico(id, { size: 28, color: ON, gk: k }), sel: ico(id, { size: 28, sel: true, color: ONPC, pill: PC, gk: k }), onClick: () => this.setState(s => ({ gal: { ...s.gal, [id]: (s.gal[id] || 0) + 1 } })) }; });
+    const four = ORD.a;
+    // builder
+    const B = this.state.b, bTabs = ORD[B.order];
+    const setB = (patch, after) => this.setState(s => ({ b: { ...s.b, ...patch(s.b) } }), after);
+    const ORDER_NAMES = [['a', '32a · как сейчас'], ['b', '32b · Live первой'], ['c', '32c · Live в центре'], ['d', '32d · Дом']];
+    const chipSt = on => ({ bd: on ? P : '#3A3846', bg: on ? 'rgba(196,173,255,.12)' : 'transparent', fg: on ? ON : OV });
+    const orderChips = ORDER_NAMES.map(([id, name]) => ({ name, ...chipSt(B.order === id), onClick: () => { setB(() => ({ order: id })); if (!ORD[id].includes(this.state.act.bld || 'live')) this.setState(s => ({ act: { ...s.act, bld: 'live' } })); } }));
+    const CANDS = { live: ['string', 'wave', 'fork', 'ring'], practice: ['timer', 'stand', 'cal'], records: ['tape', 'sheet', 'lib', 'list'], settings: ['gear', 'sliders'], home: ['door'] };
+    const bldRows = bTabs.map(t => ({ label: LABEL[t], chips: CANDS[t].map(id => ({ name: LIB[id].name, icon: ico(id, { size: 20, color: B.pick[t] === id ? ON : OV }), ...chipSt(B.pick[t] === id), onClick: () => { setB(b => ({ pick: { ...b.pick, [t]: id } })); this.setState(s => ({ act: { ...s.act, bld: t } })); this.bump('bld', t); } })) }));
+    const lifeChips = [['gest', 'Жест при выборе'], ['str', 'Панель-струна'], ['run', 'Занятие идёт']].map(([k, name]) => ({ name: (B[k] ? '✓ ' : '') + name, ...chipSt(B[k]), onClick: () => setB(b => ({ [k]: !b[k] })) }));
+    const devOrder = ['string', 'timer', 'tape', 'gear', 'door', 'wave', 'fork', 'ring', 'stand', 'cal', 'sheet', 'lib', 'list', 'sliders'];
+    const recSet = new Set(['string', 'timer', 'tape', 'gear']);
+    const devIcons = devOrder.map(id => ({ el: ico(id, { size: 20, color: ON }), name: id + (recSet.has(id) ? ' ★' : ''), nameFg: recSet.has(id) ? P : ON, tab: LABEL[LIB[id].tab] + ' · ' + LIB[id].name, paths: LIB[id].parts.map(pt => (pt.a ? '[g] ' : '') + pt.p.map(([t, d]) => t + ' ' + d).join(' · ')).join('  |  ') }));
+    const anims = [
+      { name: 'Когда играет жест', v: 'только когда вкладку выбрали нажатием (не при запуске, не по «назад», не при повторном нажатии на уже выбранную); один раз; reduce-motion — нет. Пилюля появляется как в M3, жест идёт поверх смены контур → заливка (crossfade 150).' },
+      { name: 'Струна', v: 'группа body-линзы: scaleX 1 → 1.5 → .62 → 1.28 → .84 → 1.1 → .96 → 1, 620 мс, pivot (12, 12); порожек, подставка и сама струна неподвижны.' },
+      { name: 'Секундомер', v: 'головка: translateY 0 → 1.4 → 0, 180 мс; стрелка: rotate 0 → 360°, 720 мс FastOutSlowIn, задержка 120, pivot (12, 13.5).' },
+      { name: 'Кассета', v: 'левая катушка scale 1 → 1.32 → 1, правая 1 → .66 → 1, 520 мс EaseInOut, pivot в центрах катушек (8.5, 10.8) и (15.5, 10.8).' },
+      { name: 'Шестерня', v: 'rotate 0 → 52° → 45° (на один зуб, с перелётом), 560 мс; конечный кадр совпадает с начальным.' },
+      { name: 'Занятие идёт', v: 'стрелка секундомера на вкладке: rotate 360° за 60 000 мс LinearEasing, фаза = секунды таймера занятия; в выбранной и в обычной; точка 8 dp — как было (14b), при reduce-motion остаётся только она.' },
+      { name: 'Дубль сохранён', v: 'жест «Записей» один раз, через 300 мс после закрытия листа сохранения; вкладка не выбирается.' },
+      { name: 'Панель-струна (по желанию)', v: 'линия outlineVariant 1 dp по верхнему краю панели; нажатие: квадратичная кривая с вершиной у точки касания, смещение 5·e^(−t/0.2)·cos(2πft) dp, 800 мс; f = 5.5 / 8 / 11 / 15 Гц слева направо (G D A E); поверх — primary 1.5 dp с α = огибающей. Canvas, drawWithContent панели.' },
+      { name: 'Как собрать', v: 'AnimatedVectorDrawable на каждую иконку: подвижная деталь — <group> с pivotX/Y, objectAnimator по rotation/scale/translate; в Compose — AnimatedImageVector + rememberAnimatedVectorPainter(atEnd), atEnd переключается при выборе. Выбранное/обычное — два ImageVector, crossfade.' },
+    ];
+    // 35 · Live
+    if (!this.pics && window.buildHomeCatalog && this.mk) { const K = window.buildHomeCatalog(React), S = this.mk(React, K, {});
+      this.pics = { a: S.picture('rent', { fmt: 'port', mode: 'eve' }), b: S.picture('rent', { fmt: 'port', mode: 'eve', dark: true, zone: 'in', glow: .9 }), ra: S.ring(300, null, 0, { level: .5 }), rb: S.ring(300, 'in', .9, { level: .6 }) }; }
+    const PX = this.pics || {}, BONE = '#F1EEE6', INK = '#2A2430', BRASS = '#C9A24A';
+    const bmk = (w, ht, o = {}) => { const d = `M6 0H${w}L${w - 15} ${ht / 2}L${w} ${ht}H6Q0 ${ht} 0 ${ht - 6}V6Q0 0 6 0Z`;
+      const els = [h('path', { key: 'sh', d, fill: 'rgba(0,0,0,.30)', transform: 'translate(0 3)' }), h('path', { key: 'p', d, fill: o.fill || 'none', stroke: o.stroke || 'none', strokeWidth: 1.6 })];
+      if (o.prog != null) { const x0 = 13, x1 = w - 27; els.push(h('path', { key: 't', d: `M${x0} ${ht - 9}H${x1}`, stroke: 'rgba(42,36,48,.15)', strokeWidth: 3, strokeLinecap: 'round' }), h('path', { key: 'f', d: `M${x0} ${ht - 9}H${(x0 + (x1 - x0) * o.prog).toFixed(1)}`, stroke: BRASS, strokeWidth: 3, strokeLinecap: 'round' })); }
+      return h('svg', { width: w, height: ht + 4, viewBox: `0 0 ${w} ${ht + 4}`, style: { display: 'block', overflow: 'visible' } }, els); };
+    const prk = (w, ht, o = {}) => { const d = `M0 0H${w - 6}Q${w} 0 ${w} 6V${ht - 6}Q${w} ${ht} ${w - 6} ${ht}H0L15 ${ht / 2}Z`;
+      return h('svg', { width: w, height: ht + 4, viewBox: `0 0 ${w} ${ht + 4}`, style: { display: 'block', overflow: 'visible' } }, [h('path', { key: 'sh', d, fill: 'rgba(0,0,0,.30)', transform: 'translate(0 3)' }), h('path', { key: 'p', d, fill: o.fill || 'none', stroke: o.stroke || 'none', strokeWidth: 1.6 })]); };
+    const on = !!this.state.pr35, el = on ? Math.max(0, Math.floor((Date.now() - this.state.pr35) / 1000)) : 0;
+    const clock = s => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+    const houseIco = h('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: ON, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', style: { display: 'block', flex: 'none' } }, [h('path', { key: 1, d: 'M4 11l8-6 8 6' }), h('path', { key: 2, d: 'M6 10v9h12v-9' })]);
+    const bmEntry = { bmSvg: bmk(124, 56, { stroke: 'rgba(241,238,230,.5)' }), bmName: 'Репертуар', bmNameFs: '13.5px', bmInk: BONE, bmHasTime: false, bmTime: '' };
+    const bmRun = { bmSvg: bmk(150, 56, { fill: BONE, prog: .65 }), bmName: 'Концерт ля минор', bmNameFs: '12.5px', bmInk: INK, bmHasTime: true, bmTime: 'ещё 7 мин' };
+    const LVF = (id, label, o) => ({ id, label, pic: o.pic || null, ring: o.ring || null, gear: ico('gear', { size: 20, color: ON }), whereIco: houseIco,
+      chromeOp: o.dim ? .38 : 1, statusOp: o.sound ? 0 : 1, noteOp: o.sound ? 1 : 0, ...o.bm,
+      prIdle: !o.run, prRun: !!o.run, prTime: o.time || '', prSvg: prk(124, 56, o.run ? { fill: BONE } : { stroke: 'rgba(241,238,230,.5)' }), prIcon: ico('timer', { size: 18, color: BONE }), prTap: o.tap || (() => {}),
+      nav: bar(id, ORD.c, RECF, { mark: !!o.run }) });
+    const f35 = [
+      LVF('35a', on ? 'Нажали — занятие идёт с 0:00, точка на «Занятиях». Нажмите ещё раз — здесь открылся бы лист итога' : 'Тишина, занятия нет: справа от клавиши — «Начать занятие», шестерёнка в углу, панель из трёх вкладок. Нажмите ярлык', { pic: PX.a, ring: PX.ra, bm: bmEntry, run: on, time: clock(el), tap: () => this.setState(s => ({ pr35: s.pr35 ? 0 : Date.now() })) }),
+      LVF('35b', 'Занятие идёт, звучит ля в строе: свет погашен, ярлык, закладка, шестерёнка и «Дома» гаснут до 0,38. Стрелка на вкладке стоит', { pic: PX.b, ring: PX.rb, bm: bmRun, run: true, time: '34:12', dim: true, sound: true }),
+    ];
+    return {
+      f35,
+      bar30a: bar('32a', ORD.a, RECF), bar30b: bar('32b', ORD.b, RECF), bar30c: bar('32c', ORD.c, RECF, { run: true }), bar30d: bar('32d', ORD.d, RECF),
+      bar31a: bar('33a', four, SET_A), bar31b: bar('33b', four, SET_B), bar31c: bar('33c', four, SET_C),
+      g31a: gal(SET_A, four), g31b: gal(SET_B, four), g31c: gal(SET_C, four),
+      barBld: bar('bld', bTabs, REC, { gest: B.gest, run: B.run }), strBld: B.str ? strEl('bld', 'sbB') : null,
+      orderChips, bldRows, lifeChips,
+      bar32a: bar('34a', four, RECF), bar32b: bar('34b', four, RECF, { gest: false }), str32b: strEl('34b', 'sb32'),
+      bar32c: bar('34c', ORD.c, RECF, { run: this.state.run32 }),
+      toggleRun: () => this.setState(s => ({ run32: !s.run32 })), runLabel: this.state.run32 ? 'Закончить занятие' : 'Начать занятие',
+      runIcon: ico('timer', { size: 18, color: P }), saveTake: () => this.bump('34c', 'records'),
+      bigTimer: ico('timer', { size: 36, color: ON, run: this.state.run32 }),
+      devIcons, anims,
+    };
+  }
+}
+
+class StringBar extends React.Component {
+  constructor(p) { super(p); this.state = { a: 0, e: 0 }; }
+  componentDidUpdate(pp) { if (this.props.k && pp.k !== this.props.k) this.go(); }
+  componentWillUnmount() { cancelAnimationFrame(this.r); }
+  go() {
+    cancelAnimationFrame(this.r);
+    const t0 = performance.now(), f = this.props.f || 9;
+    const step = now => { const t = (now - t0) / 1000; if (t > .8) { this.setState({ a: 0, e: 0 }); return; } const e = Math.exp(-t / .2); this.setState({ a: 5 * e * Math.cos(2 * Math.PI * f * t), e }); this.r = requestAnimationFrame(step); };
+    this.r = requestAnimationFrame(step);
+  }
+  render() {
+    const w = 412, px = (this.props.x ?? .5) * w, y = 8, { a, e } = this.state;
+    const d = `M0 ${y}Q${px.toFixed(1)} ${(y + 2 * a).toFixed(2)} ${w} ${y}`;
+    return React.createElement('svg', { width: w, height: 16, style: { position: 'absolute', left: 0, top: -8, overflow: 'visible', pointerEvents: 'none', zIndex: 1 } },
+      React.createElement('path', { d, fill: 'none', stroke: '#3A3846', strokeWidth: 1 }),
+      React.createElement('path', { d, fill: 'none', stroke: '#C4ADFF', strokeWidth: 1.5, strokeOpacity: e }));
+  }
+}
+</script>
+</body>
+</html>

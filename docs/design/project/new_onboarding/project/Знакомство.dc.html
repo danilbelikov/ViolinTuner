@@ -1,0 +1,406 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet><meta name="design_doc_mode" content="canvas"><script src="onboarding-art.js"></script><link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet"><style>html,body{background:#0E0E12 !important;height:auto !important;min-height:100%}body{margin:0;background:#0E0E12;font-family:Manrope,system-ui,sans-serif;color:#E6E4EE}a{color:#C4ADFF}a:hover{color:#E9DDFF}
+@keyframes obTwinkle{0%,100%{opacity:1}50%{opacity:.3}}
+@keyframes obSink{from{transform:translateY(0)}to{transform:translateY(var(--a))}}
+@keyframes obZoneF{0%,22%{fill:#47C97E}25%,47%{fill:#E5B03C}50%,72%{fill:#47C97E}75%,97%{fill:#E8565C}100%{fill:#47C97E}}
+@keyframes obZoneS{0%,22%{stop-color:#47C97E}25%,47%{stop-color:#E5B03C}50%,72%{stop-color:#47C97E}75%,97%{stop-color:#E8565C}100%{stop-color:#47C97E}}
+@keyframes obMarkDot{0%,22%{opacity:1}25%,47%{opacity:0}50%,72%{opacity:1}75%,97%{opacity:0}100%{opacity:1}}
+@keyframes obMarkDown{0%,22%{opacity:0}25%,47%{opacity:1}50%,100%{opacity:0}}
+@keyframes obMarkUp{0%,72%{opacity:0}75%,97%{opacity:1}100%{opacity:0}}
+@keyframes obWalk{0%{transform:translate(0,0);opacity:1}30%,86%{transform:translate(22px,-11px);opacity:1}93%{transform:translate(22px,-11px);opacity:0}94%{transform:translate(0,0);opacity:0}100%{transform:translate(0,0);opacity:1}}
+@keyframes obAppear{0%{opacity:0}8%,86%{opacity:1}93%,100%{opacity:0}}
+@keyframes obCopy{0%,8%{transform:translate(-120px,-100px);opacity:0}12%{transform:translate(-120px,-100px);opacity:1}28%{transform:translate(-50px,-130px)}44%,88%{transform:translate(0,0);opacity:1}95%,100%{transform:translate(0,0);opacity:0}}
+</style></helmet>
+
+<section id="s36" style="padding:40px 44px 28px;border-bottom:1px solid rgba(255,255,255,.08)">
+<div style="font:800 28px/1.15 Manrope,system-ui,sans-serif;letter-spacing:-.5px;color:#E6E4EE">Знакомство · серия 36</div>
+<p style="margin:10px 0 0;max-width:860px;font:400 14px/1.6 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.72);text-wrap:pretty">Семь экранов: четыре страницы знакомства и три шага настройки. Все иллюстрации — одна сцена, один вечер: гриф-дорога значка 1b, те же холмы и звёзды; от страницы к странице солнце садится ниже. Иллюстрации — только пути, заливки и градиенты (<span style="font-family:ui-monospace,Menlo,monospace">onboarding-art.js</span>, объект <span style="font-family:ui-monospace,Menlo,monospace">ONBOARDING_ART</span> в секции <a href="#sdev">dev</a>). Решения: индикатор — две части (<a href="#36f3">36f3</a>, <a href="#36f4">36f4</a>); строки — списком (<a href="#36c1">36c1</a>); на 36d — две строки (<a href="#36d1">36d1</a>); настройка — в новом стиле, но с короткой картинкой (<a href="#36e2">36e2</a>).</p>
+</section>
+
+<sc-for list="{{ sections }}" as="s" hint-placeholder-count="2">
+<section id="{{ s.id }}" style="padding:40px 44px 32px;border-bottom:1px solid rgba(255,255,255,.08);scroll-margin-top:16px">
+<div style="display:flex;align-items:baseline;gap:10px;margin:0 0 10px"><a href="#{{ s.id }}" style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none">{{ s.num }}</a><span style="font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE">{{ s.name }}</span></div>
+<p style="margin:0 0 22px;max-width:900px;font:400 12.5px/1.55 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.66);text-wrap:pretty">{{ s.note }}</p>
+<sc-if value="{{ s.hasLand }}" hint-placeholder-val="{{ false }}">
+<div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start;margin:0 0 28px">
+<sc-for list="{{ s.land }}" as="l" hint-placeholder-count="2">
+<div id="{{ l.id }}" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px;max-width:892px;font:400 11.5px/1.4 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.62);text-wrap:pretty"><a href="#{{ l.id }}" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:#C4ADFF;color:#2E1A6E;border-radius:5px;text-decoration:none;flex:none">{{ l.id }}</a><span>{{ l.label }}</span></div>
+  <div style="width:892px;height:412px;border-radius:20px;overflow:hidden;background:#131318;display:flex;flex:none;color:#E6E4EE;box-shadow:0 24px 60px rgba(0,0,0,.4)">
+    <div style="width:446px;flex:none;position:relative;line-height:0;overflow:hidden">{{ l.pic }}<div style="position:absolute;top:0;bottom:0;right:0;width:120px;background:linear-gradient(90deg,rgba(19,19,24,0),#131318)"></div></div>
+    <div style="flex:1;min-width:0;display:flex;flex-direction:column;gap:10px;padding:8px 32px 20px 8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;height:44px">
+        <div style="display:flex;align-items:center;gap:6px"><sc-for list="{{ l.ind }}" as="d" hint-placeholder-count="4"><div style="width:{{ d.w }};height:{{ d.h }};border-radius:3px;background:{{ d.bg }}"></div></sc-for></div>
+        <sc-if value="{{ l.skip }}" hint-placeholder-val="{{ false }}"><div style="height:48px;padding:0 4px 0 16px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#E6E4EE">Пропустить</div></sc-if>
+      </div>
+      <div style="font-size:24px;font-weight:800;line-height:1.15;letter-spacing:-.4px;text-wrap:pretty">{{ l.title }}</div>
+      <div style="font-size:15px;line-height:22px;color:#A39FB5;text-wrap:pretty">{{ l.body }}</div>
+      <sc-if value="{{ l.hasRows }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ l.rows }}" as="r" hint-placeholder-count="2"><div style="display:flex;gap:14px;align-items:flex-start"><div style="width:36px;height:36px;border-radius:18px;background:#292833;display:flex;align-items:center;justify-content:center;flex:none">{{ r.ico }}</div><div style="font-size:13.5px;line-height:19px;color:#A39FB5;text-wrap:pretty"><span style="font-weight:700;color:#E6E4EE">{{ r.lead }}</span> {{ r.text }}</div></div></sc-for>
+        </div>
+      </sc-if>
+      <div style="flex:1"></div>
+      <div style="display:flex;align-items:center;gap:12px">
+        <div style="height:56px;padding:0 40px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">{{ l.cta }}</div>
+        <sc-if value="{{ l.hasLink }}" hint-placeholder-val="{{ false }}"><div style="height:48px;padding:0 16px;display:flex;align-items:center;font-size:15px;font-weight:600;color:#C4ADFF;white-space:nowrap">{{ l.link }}</div></sc-if>
+      </div>
+    </div>
+  </div>
+</div>
+</sc-for>
+</div>
+</sc-if>
+<div style="display:flex;flex-wrap:wrap;gap:28px;align-items:flex-start">
+<sc-for list="{{ s.frames }}" as="f" hint-placeholder-count="2">
+<div id="{{ f.id }}" style="flex:none;display:flex;flex-direction:column;gap:10px;scroll-margin-top:16px">
+  <div style="display:flex;align-items:baseline;gap:8px;max-width:{{ f.capW }};font:400 11.5px/1.4 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.62);text-wrap:pretty"><a href="#{{ f.id }}" style="font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:#C4ADFF;color:#2E1A6E;border-radius:5px;text-decoration:none;flex:none">{{ f.id }}</a><span>{{ f.label }}</span></div>
+
+  <sc-if value="{{ f.isStory }}" hint-placeholder-val="{{ false }}">
+  <div style="display:flex;gap:16px;flex-wrap:wrap;max-width:900px">
+    <sc-for list="{{ f.tiles }}" as="t" hint-placeholder-count="4">
+    <div style="width:206px;display:flex;flex-direction:column;gap:8px">
+      <div style="width:206px;height:240px;border-radius:14px;overflow:hidden;line-height:0;background:#131318;position:relative">{{ t.pic }}<sc-if value="{{ t.tap }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:10px;right:8px;height:24px;padding:0 10px;border-radius:12px;background:rgba(196,173,255,.28);border:1px solid rgba(233,221,255,.7);display:flex;align-items:center;font:600 11px/1 Manrope,system-ui,sans-serif;color:#FFFFFF">Пропустить</div></sc-if></div>
+      <div style="font:400 11.5px/1.45 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.7);text-wrap:pretty"><span style="font-family:ui-monospace,Menlo,monospace;color:#C4ADFF">{{ t.t }}</span> {{ t.cap }}</div>
+    </div>
+    </sc-for>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ f.isOld }}" hint-placeholder-val="{{ false }}">
+  <div style="width:412px;height:892px;border-radius:20px;overflow:hidden;background:#131318;display:flex;flex-direction:column;padding:24px;box-sizing:border-box;color:#E6E4EE;flex:none;box-shadow:0 24px 60px rgba(0,0,0,.4)">
+    <div style="display:flex;gap:6px"><div style="flex:1;height:4px;border-radius:2px;background:#C4ADFF"></div><div style="flex:1;height:4px;border-radius:2px;background:#292833"></div><div style="flex:1;height:4px;border-radius:2px;background:#292833"></div></div>
+    <div style="flex:1;display:flex;flex-direction:column;justify-content:center;gap:20px">
+      <div style="width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#2A2352 0%,#131318 70%);align-self:center;display:flex;align-items:center;justify-content:center"><div style="width:44px;height:76px;border-radius:22px;background:#C4ADFF"></div></div>
+      <div style="font-size:32px;font-weight:700;line-height:1.15;letter-spacing:-.5px">Дайте мне услышать скрипку</div>
+      <div style="font-size:16px;line-height:1.5;color:#A39FB5">Тренажёр слушает через микрофон и ничего не отправляет в интернет.</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">Разрешить микрофон</div>
+      <div style="height:36px;display:flex;align-items:center;justify-content:center;font-size:13px;color:#A39FB5">У меня есть копия данных</div>
+    </div>
+  </div>
+  </sc-if>
+
+  <sc-if value="{{ f.isScreen }}" hint-placeholder-val="{{ true }}">
+  <div style="width:{{ f.w }};height:{{ f.h }};border-radius:20px;overflow:hidden;background:#131318;position:relative;display:flex;flex-direction:column;flex:none;color:#E6E4EE;box-shadow:0 24px 60px rgba(0,0,0,.4)">
+    <div style="flex:{{ f.artFlex }};min-height:0;position:relative;line-height:0;overflow:hidden">{{ f.pic }}</div>
+    <sc-if value="{{ f.skip }}" hint-placeholder-val="{{ false }}"><div style="position:absolute;top:8px;right:8px;height:48px;padding:0 16px;display:flex;align-items:center;font-size:14px;font-weight:600;color:#E6E4EE">{{ f.skipText }}</div></sc-if>
+    <div style="flex:none;display:flex;flex-direction:column;gap:{{ f.gap }};padding:0 {{ f.pad }} {{ f.pad }}">
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;gap:6px;min-height:6px"><sc-for list="{{ f.ind }}" as="d" hint-placeholder-count="4"><div style="width:{{ d.w }};flex:{{ d.fl }};height:{{ d.h }};border-radius:3px;background:{{ d.bg }}"></div></sc-for></div>
+        <sc-if value="{{ f.hasIndLabel }}" hint-placeholder-val="{{ false }}"><div style="font-size:12px;font-weight:600;letter-spacing:.4px;color:#A39FB5">{{ f.indLabel }}</div></sc-if>
+      </div>
+      <div style="font-size:{{ f.ts }};line-height:{{ f.tl }};font-weight:800;letter-spacing:-.5px;text-wrap:pretty">{{ f.title }}</div>
+      <sc-if value="{{ f.hasBody }}" hint-placeholder-val="{{ true }}"><div style="font-size:{{ f.bs }};line-height:{{ f.bl }};color:#A39FB5;text-wrap:pretty;margin-top:-6px">{{ f.body }}</div></sc-if>
+      <sc-if value="{{ f.hasRows }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:14px">
+          <sc-for list="{{ f.rows }}" as="r" hint-placeholder-count="3"><div style="display:flex;gap:14px;align-items:flex-start"><div style="width:40px;height:40px;border-radius:20px;background:#292833;display:flex;align-items:center;justify-content:center;flex:none">{{ r.ico }}</div><div style="font-size:{{ f.rs }};line-height:{{ f.rl }};color:#A39FB5;text-wrap:pretty;padding-top:9px"><span style="font-weight:700;color:#E6E4EE">{{ r.lead }}</span> {{ r.text }}</div></div></sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ f.hasCards }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:8px">
+          <sc-for list="{{ f.rows }}" as="r" hint-placeholder-count="3"><div style="display:flex;gap:14px;align-items:flex-start;background:#1E1D25;border-radius:16px;padding:14px 16px"><div style="flex:none;padding-top:1px">{{ r.ico }}</div><div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:15px;line-height:20px;font-weight:700;color:#E6E4EE">{{ r.lead }}</div><div style="font-size:14px;line-height:20px;color:#A39FB5;text-wrap:pretty">{{ r.text }}</div></div></div></sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{ f.hasConsent }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;gap:14px;align-items:flex-start;border-top:1px solid #292833;padding-top:14px">
+          <div style="width:40px;height:40px;display:flex;align-items:center;justify-content:center;flex:none;margin-top:-8px"><div style="width:20px;height:20px;border-radius:5px;border:2px solid {{ f.boxBorder }};background:{{ f.boxBg }};display:flex;align-items:center;justify-content:center">{{ f.boxCheck }}</div></div>
+          <div style="display:flex;flex-direction:column;gap:2px"><div style="font-size:15px;line-height:22px;font-weight:700;color:#E6E4EE">{{ f.consentTitle }}</div><div style="font-size:14px;line-height:20px;color:#A39FB5;text-wrap:pretty">{{ f.consentText }}</div></div>
+        </div>
+      </sc-if>
+      <sc-if value="{{ f.hasFoot }}" hint-placeholder-val="{{ false }}"><div style="font-size:14px;line-height:20px;color:#A39FB5;text-align:center;padding-top:4px">{{ f.foot }}</div></sc-if>
+      <sc-if value="{{ f.hasA4 }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;border:1px solid #3A3846;border-radius:24px;overflow:hidden;height:48px"><sc-for list="{{ f.a4 }}" as="o" hint-placeholder-count="4"><div style="flex:1;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;background:{{ o.bg }};color:{{ o.fg }}">{{ o.v }}</div></sc-for></div>
+      </sc-if>
+      <sc-if value="{{ f.hasTol }}" hint-placeholder-val="{{ false }}">
+        <div style="display:flex;flex-direction:column;gap:8px"><sc-for list="{{ f.tol }}" as="p" hint-placeholder-count="3"><div style="display:flex;align-items:center;justify-content:space-between;border:2px solid {{ p.border }};background:{{ p.bg }};border-radius:16px;padding:11px 15px"><div><div style="font-size:16px;font-weight:600">{{ p.name }}</div><div style="font-size:13px;color:#A39FB5">{{ p.desc }}</div></div><div style="font-size:18px;font-weight:700;font-variant-numeric:tabular-nums">{{ p.label }}</div></div></sc-for></div>
+      </sc-if>
+      <div style="display:flex;flex-direction:column;gap:0;margin-top:6px">
+        <div style="height:56px;border-radius:28px;background:#C4ADFF;color:#2E1A6E;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700">{{ f.cta }}</div>
+        <sc-if value="{{ f.hasLink }}" hint-placeholder-val="{{ false }}"><div style="height:48px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:600;color:#C4ADFF;margin-bottom:-12px">{{ f.link }}</div></sc-if>
+      </div>
+    </div>
+  </div>
+  </sc-if>
+</div>
+</sc-for>
+</div>
+</section>
+</sc-for>
+
+<section id="sdev" style="padding:40px 44px 60px;scroll-margin-top:16px;display:flex;flex-direction:column;gap:36px;max-width:1240px">
+<div style="display:flex;align-items:baseline;gap:10px"><a href="#sdev" style="font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#E6E4EE;color:#0E0E12;border-radius:4px;text-decoration:none">dev</a><span style="font:600 13px/1.2 Manrope,system-ui,sans-serif;color:#E6E4EE">tokens · sizes · anims · ICONS · ONBOARDING_ART · тексты · ответы</span></div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+  <div style="font:700 15px/1.2 Manrope,system-ui,sans-serif">tokens — новые, только для иллюстраций знакомства</div>
+  <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:8px">
+    <sc-for list="{{ tokens }}" as="t" hint-placeholder-count="8"><div style="display:flex;gap:12px;align-items:center;background:#1A1A20;border-radius:12px;padding:10px 12px"><div style="width:36px;height:36px;border-radius:8px;background:{{ t.hex }};flex:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08)"></div><div style="display:flex;flex-direction:column;gap:2px;min-width:0"><div style="font:600 12px ui-monospace,Menlo,monospace;color:#E6E4EE">{{ t.name }} · {{ t.hex }}</div><div style="font:400 11.5px/1.4 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.62)">{{ t.note }}</div></div></div></sc-for>
+  </div>
+  <div style="font:400 12.5px/1.55 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.66);max-width:900px">Интерфейс поверх — прежние токены: surface #131318, onSurface #E6E4EE, onSurfaceVariant #A39FB5, primary #C4ADFF, onPrimary #2E1A6E, surfaceContainer #1E1D25, surfaceContainerHigh #292833, outline #3A3846. Цвета зон #47C97E / #E5B03C / #E8565C — только на 36b.</div>
+</div>
+
+<div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px">
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="font:700 15px/1.2 Manrope,system-ui,sans-serif">sizes — dp / sp, база 412 × 892</div>
+    <sc-for list="{{ sizes }}" as="z" hint-placeholder-count="8"><div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:8px 0;border-top:1px solid rgba(255,255,255,.07);font:400 12.5px/1.5 Manrope,system-ui,sans-serif"><div style="color:#E6E4EE;font-weight:600">{{ z.name }}</div><div style="color:rgba(230,228,238,.72);text-wrap:pretty">{{ z.v }}</div></div></sc-for>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <div style="font:700 15px/1.2 Manrope,system-ui,sans-serif">anims</div>
+    <sc-for list="{{ anims }}" as="z" hint-placeholder-count="8"><div style="display:grid;grid-template-columns:150px minmax(0,1fr);gap:12px;padding:8px 0;border-top:1px solid rgba(255,255,255,.07);font:400 12.5px/1.5 Manrope,system-ui,sans-serif"><div style="color:#E6E4EE;font-weight:600">{{ z.name }}</div><div style="color:rgba(230,228,238,.72);text-wrap:pretty">{{ z.v }}</div></div></sc-for>
+  </div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+  <div style="font:700 15px/1.2 Manrope,system-ui,sans-serif">ICONS — что берём и что дорисовано</div>
+  <div style="display:flex;flex-wrap:wrap;gap:10px">
+    <sc-for list="{{ icons }}" as="i" hint-placeholder-count="7"><div style="width:170px;display:flex;flex-direction:column;gap:8px;background:#1A1A20;border-radius:12px;padding:12px"><div style="display:flex;align-items:center;gap:12px"><div style="width:40px;height:40px;border-radius:20px;background:#292833;display:flex;align-items:center;justify-content:center">{{ i.s22 }}</div>{{ i.s48 }}</div><div style="font:600 12px ui-monospace,Menlo,monospace;color:#E6E4EE">{{ i.name }} <span style="color:{{ i.tagC }}">{{ i.tag }}</span></div><div style="font:400 11.5px/1.4 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.62)">{{ i.use }}</div></div></sc-for>
+  </div>
+  <div style="font:400 12.5px/1.55 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.66);max-width:900px">Сетка 24, штрих 1.8, скругления round; в строках — 22 dp primary в круге 40 dp surfaceContainerHigh. Кассета — штриховая версия значка вкладки «Записи» (у вкладки — заливка с вырезами).</div>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px">
+  <div style="font:700 15px/1.2 Manrope,system-ui,sans-serif">ONBOARDING_ART — поле, обрезка, безопасная область</div>
+  <div style="display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start">
+    <div style="width:412px;height:480px;border-radius:14px;overflow:hidden;line-height:0;flex:none;position:relative">{{ guides }}</div>
+    <div style="flex:1;min-width:320px;display:flex;flex-direction:column;gap:10px;font:400 12.5px/1.6 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.75);text-wrap:pretty">
+      <div>Поле сцены — <b>412 × 480</b>, горизонт <b>y = 300</b>. Слой: <span style="font-family:ui-monospace,Menlo,monospace">{ d, fill | stroke + sw, op?, depth, anim?, evenOdd? }</span>; <span style="font-family:ui-monospace,Menlo,monospace">fill</span> — hex, <span style="font-family:ui-monospace,Menlo,monospace">g:имя</span> (градиент сцены, userSpace) или <span style="font-family:ui-monospace,Menlo,monospace">zone</span> (цвет зоны, 36b). <span style="font-family:ui-monospace,Menlo,monospace">op</span> — прозрачность заливки; анимации меняют прозрачность слоя отдельно.</div>
+      <div><b>depth</b>: 0 — небо и звёзды (общие для всех страниц), 1 — солнце, свечение, холмы, силуэты залов, земля, 2 — передний план. При листании: 0 × 0.3, 1 × 0.6, 2 × 1.0 от сдвига страницы.</div>
+      <div><span style="color:#C4ADFF">Фиолетовая рамка</span> — безопасная область x 60…352, y 150…430: видна в портрете (кадр прижат к низу, по ширине — центр) и в landscape (центр). <span style="color:#FFFFFF">Белая</span> — что видно в landscape 446 × 412. <span style="color:#F2B57A">Охра</span> — маленький экран 360 × 640: картинке остаётся ~200 dp, кадр прижат к низу — проверено только для <span style="font-family:ui-monospace,Menlo,monospace">road</span> (36c).</div>
+      <div>Нижние 100 единиц поля — слой <span style="font-family:ui-monospace,Menlo,monospace">fade</span> (surface α 0 → 1): переход неба в фон без линии. В landscape добавляется такой же горизонтальный на правых 120 dp картинки — это уже UI, не сцена.</div>
+    </div>
+  </div>
+  <div style="font:400 12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.62)">Сводка сцен</div>
+  <pre style="margin:0;padding:14px 16px;background:#1A1A20;border-radius:12px;font:400 11.5px/1.6 ui-monospace,Menlo,monospace;color:#E6E4EE;white-space:pre-wrap">{{ artSummary }}</pre>
+  <div style="font:400 12px/1.5 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.62)">Полная сцена <span style="font-family:ui-monospace,Menlo,monospace">data</span> (остальные — тем же форматом, исходник — <span style="font-family:ui-monospace,Menlo,monospace">onboarding-art.js</span>, выгружается скриптом, как <span style="font-family:ui-monospace,Menlo,monospace">extra-scenes.js</span>)</div>
+  <pre style="margin:0;padding:14px 16px;background:#1A1A20;border-radius:12px;font:400 11px/1.55 ui-monospace,Menlo,monospace;color:rgba(230,228,238,.85);white-space:pre-wrap;word-break:break-all;max-height:420px;overflow:auto">{{ artCode }}</pre>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:10px">
+  <div style="font:700 15px/1.2 Manrope,system-ui,sans-serif">Тексты — итог (русский — источник)</div>
+  <sc-for list="{{ texts }}" as="x" hint-placeholder-count="8"><div style="display:grid;grid-template-columns:90px minmax(0,1fr) minmax(0,.8fr);gap:14px;padding:9px 0;border-top:1px solid rgba(255,255,255,.07);font:400 12.5px/1.5 Manrope,system-ui,sans-serif"><div style="font:600 11px ui-monospace,Menlo,monospace;color:#C4ADFF;padding-top:2px">{{ x.k }}</div><div style="color:#E6E4EE;text-wrap:pretty">{{ x.v }}</div><div style="color:rgba(230,228,238,.55);text-wrap:pretty">{{ x.n }}</div></div></sc-for>
+</div>
+
+<div style="display:flex;flex-direction:column;gap:12px;max-width:900px">
+  <div style="font:700 15px/1.2 Manrope,system-ui,sans-serif">Ответы на раздел 9</div>
+  <div style="display:flex;flex-direction:column;gap:12px;font:400 13px/1.6 Manrope,system-ui,sans-serif;color:rgba(230,228,238,.8);text-wrap:pretty">
+    <div><b style="color:#E6E4EE">Порядок.</b> Оставить «что это → Live → путь → данные». Live сразу после приветствия отвечает на вопрос, который у человека уже в голове («как этим пользоваться»), а страница данных последней стоит прямо перед кнопкой — её читают все: и кто долистал, и кто нажал «Пропустить». Если поставить данные второй, первое впечатление после значка — предупреждение.</div>
+    <div><b style="color:#E6E4EE">Длина.</b> Семь экранов — много. Предлагаю слить «Эталон» и «Допуск» в один шаг «Как слушать»: у обоих есть значение по умолчанию, и большинство нажмёт «Дальше» не глядя. Получится шесть экранов, из них три — чтение на 5–8 секунд. Знакомство резать не стоит: 36c — единственное место, где человек узнаёт о занятиях, записях и дороге.</div>
+    <div><b style="color:#E6E4EE">Тон страницы данных.</b> Не пугает: ни красного, ни треугольника, картинка — тёплый дом, кнопка «Понятно». Поправил одну фразу: «Удалите приложение или смените телефон — пропадут» читается как совет удалить; стало «Если удалить приложение или сменить телефон, …». Третью строку («Сколько занимает…») убрал — она повторяет вторую и отбирает внимание у копии (<a href="#36d1">36d1</a> против <a href="#36d2">36d2</a>).</div>
+  </div>
+</div>
+</section>
+</x-dc>
+<script type="text/x-dc" data-dc-script>
+class Component extends DCLogic {
+  componentDidMount() {
+    this.poll = setInterval(() => { if (window.OnboardingArt) { clearInterval(this.poll); this.forceUpdate(); } }, 60);
+  }
+  componentWillUnmount() { clearInterval(this.poll); }
+
+  art(parts, o = {}) {
+    const h = React.createElement, A = window.OnboardingArt, still = !!o.still;
+    const uid = 'ob' + (++this.n) + '-';
+    const scs = parts.map(p => A.scene(p.key, p.opt));
+    const defs = [];
+    scs.forEach((sc, pi) => Object.entries(sc.grads).forEach(([n, g]) => {
+      const id = uid + pi + n;
+      const stops = g.stops.map(([of, c, a], i) => h('stop', { key: i, offset: of, stopColor: c === 'zone' ? '#47C97E' : c, stopOpacity: a == null ? 1 : a, style: c === 'zone' && !still ? { animation: 'obZoneS 16s linear infinite' } : undefined }));
+      defs.push(g.type === 'linear' ? h('linearGradient', { key: id, id, gradientUnits: 'userSpaceOnUse', x1: g.x1, y1: g.y1, x2: g.x2, y2: g.y2 }, stops) : h('radialGradient', { key: id, id, gradientUnits: 'userSpaceOnUse', cx: g.cx, cy: g.cy, r: g.r }, stops));
+    }));
+    const anim = a => {
+      if (!a || still) return undefined;
+      const [k, x, y] = a.split(':');
+      if (k === 'twinkle') return { animation: `obTwinkle ${x}s ease-in-out ${y}s infinite` };
+      if (k === 'sink') return { animation: `obSink ${x}s ease-in-out forwards`, '--a': y + 'px' };
+      if (k === 'mark') return { animation: `ob${x === 'dot' ? 'MarkDot' : x === 'up' ? 'MarkUp' : 'MarkDown'} 16s linear infinite` };
+      if (k === 'appear') return { animation: `obAppear 10s ease-out ${x}s infinite backwards` };
+      if (k === 'walk') return { animation: 'obWalk 10s ease-in-out infinite' };
+      if (k === 'copy') return { animation: 'obCopy 8s ease-in-out .4s infinite backwards' };
+    };
+    const el = (l, pi, k) => {
+      let st = anim(l.anim) || {};
+      let fill = 'none';
+      if (l.fill) { fill = l.fill.startsWith('g:') ? `url(#${uid}${pi}${l.fill.slice(2)})` : l.fill === 'zone' ? '#47C97E' : l.fill; if (l.fill === 'zone' && !still) st = { ...st, animation: [st.animation, 'obZoneF 16s linear infinite'].filter(Boolean).join(', ') }; }
+      if (l.anim === 'mark:dot' || l.anim === 'mark:up' || l.anim === 'mark:down') { if (still) st = { opacity: l.anim === 'mark:dot' ? 1 : 0 }; }
+      return h('path', { key: k, d: l.d, fill, fillRule: l.evenOdd ? 'evenodd' : undefined, stroke: l.stroke, strokeWidth: l.sw, strokeLinecap: l.stroke ? 'round' : undefined, strokeLinejoin: l.stroke ? 'round' : undefined, fillOpacity: l.fill ? l.op : undefined, strokeOpacity: l.stroke ? l.op : undefined, style: Object.keys(st).length ? st : undefined });
+    };
+    const F = { 1: 0.6, 2: 1 };
+    const kids = [h('g', { key: 'sky', transform: `translate(${o.skyDx || 0} 0)` }, scs[0].layers.filter(l => l.depth === 0).map((l, k) => el(l, 0, k)))];
+    scs.forEach((sc, pi) => {
+      const p = parts[pi], dx = p.dx || 0;
+      kids.push(h('g', { key: 'p' + pi, opacity: p.op == null ? 1 : p.op }, [1, 2].map(dp => h('g', { key: dp, transform: `translate(${Math.round(dx * F[dp] * 10) / 10} 0)` }, sc.layers.filter(l => l.depth === dp && !l.fade).map((l, k) => el(l, pi, k))))));
+    });
+    kids.push(h('g', { key: 'fade' }, scs[0].layers.filter(l => l.fade).map((l, k) => el(l, 0, k))));
+    if (o.guides) {
+      const S = A.SAFE;
+      kids.push(h('g', { key: 'gd', fill: 'none', strokeWidth: 2 }, [
+        h('rect', { key: 'l', x: 1, y: 50, width: 410, height: 380, stroke: '#FFFFFF', strokeDasharray: '6 5', opacity: 0.8 }),
+        h('rect', { key: 's', x: 3, y: 272, width: 406, height: 205, stroke: '#F2B57A', strokeDasharray: '3 4' }),
+        h('rect', { key: 'a', x: S.x, y: S.y, width: S.w, height: S.h, stroke: '#C4ADFF', strokeDasharray: '8 5' }),
+        h('path', { key: 'hz', d: 'M0 300H412', stroke: '#FFFFFF', opacity: 0.35, strokeDasharray: '2 4' })]));
+    }
+    return h('svg', { viewBox: `0 0 ${A.W} ${A.H}`, preserveAspectRatio: o.par || 'xMidYMax slice', width: '100%', height: '100%', style: { display: 'block', position: 'absolute', inset: 0 } }, h('defs', null, defs), kids);
+  }
+
+  renderVals() {
+    const h = React.createElement, A = window.OnboardingArt;
+    const PR = '#C4ADFF', ON = '#E6E4EE';
+    this.n = 0;
+    const ellipseRot = (cx, cy, a, b) => { const th = -20 * Math.PI / 180, c = Math.cos(th), s = Math.sin(th), k = .5523; const T = (x, y) => `${(cx + x * c - y * s).toFixed(2)} ${(cy + x * s + y * c).toFixed(2)}`; return `M${T(a, 0)}C${T(a, k * b)} ${T(k * a, b)} ${T(0, b)}C${T(-k * a, b)} ${T(-a, k * b)} ${T(-a, 0)}C${T(-a, -k * b)} ${T(-k * a, -b)} ${T(0, -b)}C${T(k * a, -b)} ${T(a, -k * b)} ${T(a, 0)}Z`; };
+    const ICO = {
+      timer: ['M12 6.5a7 7 0 1 0 0 14 7 7 0 1 0 0-14z', 'M12 13.5V10', 'M10 3h4M12 3v3.5'],
+      tape: ['M5 5.5h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z', 'M8.5 8.9a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 1 0 0-3.8z', 'M15.5 8.9a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 1 0 0-3.8z', 'M7.6 18.5l1.2-2.8h6.4l1.2 2.8'],
+      takt: ['M15.5 15.5V9.5C15.5 6.5 18 5.5 19.5 4.2', 'M18 3.2l2.2 1.4-1.4 2.2', 'F ' + ellipseRot(10.6, 17.4, 5.4, 3.8)],
+      'save-copy': ['M12 3v10', 'M8.5 9.5 12 13l3.5-3.5', 'M4 14v3.5A2.5 2.5 0 0 0 6.5 20h11a2.5 2.5 0 0 0 2.5-2.5V14', 'M4 16h4.2l1.3 2h5l1.3-2H20'],
+      trash: ['M4 7h16', 'M9 7V4.8a.8.8 0 0 1 .8-.8h4.4a.8.8 0 0 1 .8.8V7', 'M6 7l.9 12.2a1 1 0 0 0 1 .8h8.2a1 1 0 0 0 1-.8L18 7', 'M10 11v5M14 11v5'],
+      star: ['M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1.1 5.9L12 16.9l-5.3 2.8 1.1-5.9-4.3-4.1 5.9-.8L12 3.5z'],
+      storage: ['M7 3.5h10A1.5 1.5 0 0 1 18.5 5v14a1.5 1.5 0 0 1-1.5 1.5H7A1.5 1.5 0 0 1 5.5 19V5A1.5 1.5 0 0 1 7 3.5z', 'F M8.6 11.5h6.8v5.6H8.6z', 'M8.6 8.2h6.8'],
+    };
+    const ico = (name, size = 22, color = PR) => h('svg', { width: size, height: size, viewBox: '0 0 24 24', fill: 'none', stroke: color, strokeWidth: 1.8, strokeLinecap: 'round', strokeLinejoin: 'round', style: { display: 'block', flex: 'none' } }, ICO[name].map((d, i) => d.startsWith('F ') ? h('path', { key: i, d: d.slice(2), fill: color, stroke: 'none' }) : h('path', { key: i, d })));
+
+    const empty = { sections: [], tokens: [], sizes: [], anims: [], icons: [], texts: [], guides: null, artSummary: '', artCode: '' };
+    if (!A) return empty;
+    const art = (parts, o) => this.art(parts, o);
+
+    const dots = i => [0, 1, 2, 3].map(k => ({ w: k === i ? '20px' : '6px', fl: 'none', h: '6px', bg: k === i ? PR : '#4A4760' }));
+    const bars = i => [0, 1, 2].map(k => ({ w: 'auto', fl: '1', h: '4px', bg: k <= i ? PR : '#292833' }));
+    const seven = i => [0, 1, 2, 3, 4, 5, 6].map(k => ({ w: 'auto', fl: '1', h: '4px', bg: k <= i ? PR : '#292833' }));
+    const F = (id, label, o) => ({ id, label, capW: '412px', isScreen: true, isStory: false, isOld: false, w: '412px', h: '892px', artFlex: '1 1 0', pic: null, skip: false, skipText: 'Пропустить', ind: [], hasIndLabel: false, indLabel: '', title: '', ts: '30px', tl: '36px', hasBody: false, body: '', bs: '16px', bl: '24px', hasRows: false, hasCards: false, rows: [], rs: '15px', rl: '22px', hasFoot: false, foot: '', hasConsent: false, consentTitle: '', consentText: '', boxBorder: '#A39FB5', boxBg: 'transparent', boxCheck: null, hasA4: false, a4: [], hasTol: false, tol: [], cta: 'Дальше', hasLink: false, link: '', pad: '24px', gap: '16px', tiles: [], ...o });
+    const Story = (id, label, tiles) => ({ ...F(id, label, {}), isScreen: false, isStory: true, capW: '880px', tiles });
+
+    const T = {
+      a: { title: 'Violin Journey', body: 'Слышит, как вы играете, и сразу показывает, чисто ли. А занятия складываются в дорогу — от своей комнаты до концертных залов мира.', cta: 'Начать', link: 'У меня есть копия данных' },
+      b: { title: 'Видно краем глаза', body: 'Поставьте телефон на пюпитр. Цветом подскажет весь экран: зелёный — в строе, янтарный — чуть мимо, красный — мимо. Стрелка покажет, куда тянуть.', foot: 'Пока играете, ничего нажимать не нужно' },
+      c: { title: 'Занятия складываются в путь', rows: [
+        { ico: ico('timer'), lead: 'Занятие.', text: 'Включите таймер — время за скрипкой растит уровень и серию дней.' },
+        { ico: ico('tape'), lead: 'Записи и дубли.', text: 'Запишите себя и послушайте со стороны. Дубли лежат рядом с нотами произведения.' },
+        { ico: ico('takt'), lead: 'Такты.', text: 'Чистые ноты и минуты занятий превращаются в такты: на них едут от города к городу и обставляют дом.' }] },
+      d: { title: 'Всё хранится на этом телефоне', body: 'Без аккаунта и облака — записи, видео и ноты не уходят с телефона.', cta: 'Понятно', rows: [
+        { ico: ico('save-copy'), lead: 'Сделайте копию.', text: 'Если удалить приложение или сменить телефон, записи, видео и фото нот пропадут. Копия — в «Настройках», раздел «Данные».' },
+        { ico: ico('trash'), lead: 'Удаляйте неудачные дубли.', text: 'Видео весит в сотню раз больше звука, и место кончается быстро. Удачный дубль отметьте звездой — его легко найти.' }] },
+      d3: { ico: ico('storage'), lead: '', text: 'Сколько занимает приложение, видно там же, в «Данных».' },
+      de: { title: 'Alles bleibt auf diesem Telefon', body: 'Kein Konto, keine Cloud – Aufnahmen, Videos und Noten verlassen das Telefon nie.', cta: 'Verstanden', rows: [
+        { ico: ico('save-copy'), lead: 'Legen Sie eine Sicherung an.', text: 'Wenn Sie die App löschen oder das Telefon wechseln, gehen Aufnahmen, Videos und Notenfotos verloren. Die Sicherung finden Sie unter „Einstellungen“ → „Daten“.' },
+        { ico: ico('trash'), lead: 'Löschen Sie misslungene Takes.', text: 'Ein Video ist hundertmal größer als eine Tonaufnahme, der Speicher wird schnell knapp. Markieren Sie gelungene Takes mit einem Stern – so finden Sie sie leicht.' }] },
+      m: { title: 'Дайте мне услышать скрипку', body: 'Чтобы слышать ноты, нужен микрофон. Звук разбирается прямо на телефоне и не записывается, пока вы сами не нажмёте запись.', cta: 'Разрешить микрофон' },
+      r: { title: 'К чему настраиваетесь?', body: 'Дома и в школе обычно 440 Гц. Оркестры часто берут 442.' },
+      t: { title: 'Насколько строго судить?', body: 'Это ширина зелёной зоны. Начните мягче — сузить всегда можно.', cta: 'Начать играть' },
+    };
+    const a4 = [440, 441, 442, 443].map(v => ({ v: String(v), bg: v === 440 ? PR : 'transparent', fg: v === 440 ? '#2E1A6E' : ON }));
+    const tol = [['Новичок', 'широкая зелёная зона', 12], ['Средний', 'чувствуется вибрато', 8], ['Профи', 'строго', 3]].map(([name, desc, v]) => ({ name, desc, label: `±${v} ц`, border: v === 12 ? PR : '#3A3846', bg: v === 12 ? '#1E1D25' : 'transparent' }));
+
+    const pA = o => F(o.id, o.label, { pic: art([{ key: 'welcome' }], o.art), skip: true, ind: o.ind || dots(0), title: T.a.title, ts: '36px', tl: '40px', hasBody: true, body: T.a.body, cta: T.a.cta, hasLink: true, link: T.a.link, ...o.x });
+    const pB = o => F(o.id, o.label, { pic: art([{ key: 'live', opt: o.opt }], o.art), skip: true, ind: o.ind || dots(1), title: T.b.title, hasBody: true, body: T.b.body, hasFoot: true, foot: T.b.foot, ...o.x });
+    const pC = o => F(o.id, o.label, { pic: art([{ key: 'road' }], o.art), skip: true, ind: dots(2), title: T.c.title, hasRows: !o.cards, hasCards: !!o.cards, rows: T.c.rows, ...o.x });
+    const pD = o => F(o.id, o.label, { pic: art([{ key: 'data' }], o.art), ind: dots(3), title: T.d.title, hasBody: true, body: T.d.body, hasRows: true, rows: o.three ? [...T.d.rows, T.d3] : T.d.rows, cta: T.d.cta, ...o.x });
+    const setup = (st, o = {}) => F(o.id, o.label, { pic: art([{ key: 'setup', opt: { step: st } }]), artFlex: '0 0 300px', ind: o.ind || bars(st - 1), hasIndLabel: !!o.indLabel, indLabel: o.indLabel || '', ...(st === 1 ? { title: T.m.title, hasBody: true, body: T.m.body, cta: T.m.cta } : st === 2 ? { title: T.r.title, hasBody: true, body: T.r.body, hasA4: true, a4 } : { title: T.t.title, hasBody: true, body: T.t.body, hasTol: true, tol, cta: T.t.cta }), ...(o.x || {}) });
+
+    const consent = on => ({ hasConsent: true, consentTitle: 'Помогать улучшать приложение', consentText: 'Отправлять обезличенную статистику: какие экраны открываются и где случаются сбои. Записи, видео и ноты не уходят никогда. Изменить — в «Настройках».', boxBorder: on ? PR : '#A39FB5', boxBg: on ? PR : 'transparent', boxCheck: on ? h('svg', { width: 14, height: 14, viewBox: '0 0 24 24', fill: 'none', stroke: '#2E1A6E', strokeWidth: 3.2, strokeLinecap: 'round', strokeLinejoin: 'round' }, h('path', { d: 'M5 12.5 9.5 17 19 7.5' })) : null });
+    const tile = (parts, t, cap, o = {}) => ({ pic: art(parts, { par: 'xMidYMid slice', still: true, skyDx: o.skyDx }), t, cap, tap: !!o.tap });
+    const zones = [['#47C97E', 'dot', '0–4 с', 'в строе — зелёный, точка в кольце'], ['#E5B03C', 'down', '4–8 с', 'чуть выше — янтарный, стрелка вниз: «отпустите»'], ['#47C97E', 'dot', '8–12 с', 'снова в строе'], ['#E8565C', 'up', '12–16 с', 'ниже — красный, стрелка вверх; и по кругу']];
+    const pg = [0, 0.3, 0.65, 1];
+
+    const sections = [
+      { id: 's36a', num: '36a', name: 'Приветствие — значок, развёрнутый в пейзаж', note: 'Человек только что нажал плитку с закатом над грифом — и видит её же во весь экран: гриф-дорога, четыре струны-разметки, завиток на фоне солнца, первые звёзды. «Пропустить» ведёт на 36d. Ссылка на копию данных переехала сюда с шага «Микрофон»: с новым телефоном всё восстанавливается сразу, без знакомства.', hasLand: false, land: [],
+        frames: [pA({ id: '36a', label: 'Портрет 412 × 892. Звёзды мерцают; солнце за 20 с опускается за завиток на 14 dp и остаётся там.' })] },
+      { id: 's36b', num: '36b', name: 'Как читать Live — телефон на пюпитре', note: 'Тот же вечер, солнце ниже и спряталось за пюпитром. Экран телефона — единственное яркое пятно: он светится цветом зоны и подсвечивает ноты и воздух вокруг. Один телефон, который меняет цвет, — три телефона рядом превращали картинку в схему. Цвета зон живут только на этой странице и всегда вместе с формой: точка, стрелка вниз, стрелка вверх.', hasLand: false, land: [],
+        frames: [pB({ id: '36b1', label: 'Портрет. Экран на пюпитре по кругу «в строе → выше → в строе → ниже», 4 с на цвет, кроссфейд 400 мс, как на Live.' }),
+          Story('36b2', 'Раскадровка смены цвета — стоп-кадры одинаково читаются и без движения («Убрать анимации» — кадр 1).', zones.map(([z, m, t, cap]) => tile([{ key: 'live', opt: { zone: z, mark: m } }], t, cap)))] },
+      { id: 's36c', num: '36c', name: 'Занятия, записи, дорога', note: 'От тёплого окна своей комнаты — дорога к силуэтам Милана и Вены на горизонте; на дороге знаки тактов и маленький герой с футляром из открыток. Выбрали список: три строки читаются одним взглядом, карточки добавляют три рамки и съедают 60 dp картинки.', hasLand: false, land: [],
+        frames: [pC({ id: '36c1', label: 'Выбрано: список. Герой делает несколько шагов по дороге (2,4 с), знаки тактов появляются по одному с шагом 0,7 с. В приложении — один раз при появлении страницы.' }),
+          pC({ id: '36c2', label: 'Запас: три карточки surfaceContainer. Тяжелее и уже не «листание», а экран настроек.', cards: true })] },
+      { id: 's36d', num: '36d', name: 'Данные — только на этом телефоне', note: 'Телефон — маленький освещённый дом: внутри лежит всё своё — ноты, кассета, видео. При появлении страницы копия один раз бережно уходит в папку. Никакого облака и замка, никакого красного: это забота, а не запрет. Кнопка «Понятно», «Пропустить» здесь нет.', hasLand: false, land: [],
+        frames: [pD({ id: '36d1', label: 'Выбрано: две строки. Копия вылетает из телефона и ложится в папку, 1,6 с, один раз.' }),
+          pD({ id: '36d2', label: 'Три строки: третья — про место — повторяет вторую, и страница перестаёт помещаться без сжатия картинки.', three: true }),
+          pD({ id: '36d3', label: 'Вариант «по согласию»: статистика выключена, галочка под строками. Не нажал — ничего не уходит. «Понятно» сохраняет выбор.', x: consent(false) }),
+          pD({ id: '36d4', label: 'То же, галочка поставлена.', x: consent(true) })] },
+      { id: 's36e', num: '36e', name: 'Настройка в новом стиле', note: 'Берём новый стиль, но картинка короче — 300 dp вместо половины экрана, и индикатор — полоски шагов: разница «читаю / выбираю» видна сразу, а вечер не обрывается на первой кнопке. Солнце садится ниже с каждым шагом; к «Начать играть» — почти ночь и больше звёзд. Контролы и поведение прежние; ссылки на копию на шаге микрофона больше нет — она на 36a.', hasLand: false, land: [],
+        frames: [F('36e1', 'Было: 5a — плоский экран с миниатюрой.', { isScreen: false, isOld: true }),
+          setup(1, { id: '36e2', label: '5a в новом стиле. Новый текст про микрофон.' }),
+          setup(2, { id: '36e3', label: '5b — эталон A4.' }),
+          setup(3, { id: '36e4', label: '5c — допуск.' })] },
+      { id: 's36f', num: '36f', name: 'Индикатор: одна строка из семи или две части', note: 'Одна строка из семи на первой же странице говорит «впереди семь экранов» — это отпугивает, а на шагах настройки сегменты знакомства уже бессмысленны. Выбрали две части: точки знакомства (листание) и полоски настройки (шаги) с подписью «Настройка · 2 из 3».', hasLand: false, land: [],
+        frames: [pB({ id: '36f1', label: 'Одна строка из семи — на 36b.', ind: seven(1), opt: { zone: '#47C97E', mark: 'dot' }, art: { still: true } }),
+          setup(2, { id: '36f2', label: 'Одна строка из семи — на 5b.', ind: seven(5) }),
+          pB({ id: '36f3', label: 'Выбрано: две части — точки на 36b.', opt: { zone: '#47C97E', mark: 'dot' }, art: { still: true } }),
+          setup(2, { id: '36f4', label: 'Выбрано: две части — полоски на 5b с подписью.', indLabel: 'НАСТРОЙКА · 2 ИЗ 3' })] },
+      { id: 's36g', num: '36g', name: 'Landscape, маленький экран, немецкий', note: 'Landscape: картинка слева на половину ширины, переход в фон — вправо; текст и кнопки справа. Маленький экран 360 × 640 (36c): картинке остаётся ~200 dp, кадр прижат к низу; текст 14/20. Немецкий на 36d — самые длинные строки, помещается без сжатия.', hasLand: true,
+        land: [
+          { id: '36g1', label: '36a, 892 × 412.', pic: art([{ key: 'welcome' }], { par: 'xMidYMid slice' }), ind: dots(0), skip: true, title: T.a.title, body: T.a.body, hasRows: false, rows: [], cta: T.a.cta, hasLink: true, link: T.a.link },
+          { id: '36g2', label: '36d, 892 × 412.', pic: art([{ key: 'data' }], { par: 'xMidYMid slice' }), ind: dots(3), skip: false, title: T.d.title, body: T.d.body, hasRows: true, rows: T.d.rows, cta: T.d.cta, hasLink: false, link: '' }],
+        frames: [pC({ id: '36g3', label: '36c на 360 × 640.', x: { w: '360px', h: '640px', capW: '360px', ts: '22px', tl: '28px', rs: '13px', rl: '18px', pad: '20px', gap: '12px', skip: true } }),
+          pD({ id: '36g4', label: '36d по-немецки — самые длинные строки.', x: { title: T.de.title, body: T.de.body, rows: T.de.rows, cta: T.de.cta, ts: '28px', tl: '34px' } })] },
+      { id: 's36h', num: '36h', name: 'Листание и «Пропустить»', note: 'Листание — HorizontalPager: текст и кнопки уезжают с шагом страницы, сцена — слоями. Небо сдвигается на 0,3 шага, солнце, холмы и силуэты — на 0,6, передний план — на 1. Небо общее у всех страниц, поэтому шва между ними нет. «Пропустить» с 36b не листает через 36c, а растворяет передний план и текст в 36d за 450 мс; небо стоит.', hasLand: false, land: [],
+        frames: [Story('36h1', 'Листание 36a → 36b (свайп или «Начать»).', pg.map((p, i) => tile([{ key: 'welcome', dx: -p * 412 }, { key: 'live', opt: { zone: '#47C97E', mark: 'dot' }, dx: (1 - p) * 412 }], ['0', '0,3', '0,65', '1'][i] + ' шага', ['36a на месте.', 'гриф уходит влево быстрее неба; пюпитр въезжает справа.', 'солнце и холмы отстают от переднего плана — глубина.', '36b; точки индикатора переехали на вторую.'][i], { skyDx: -p * 412 * 0.3 }))),
+          Story('36h2', '«Пропустить» с 36b → 36d.', [
+            tile([{ key: 'live', opt: { zone: '#47C97E', mark: 'dot' } }], '0 мс', 'нажатие «Пропустить».', { tap: true }),
+            tile([{ key: 'live', opt: { zone: '#47C97E', mark: 'dot' }, op: 0.5 }, { key: 'data', op: 0.5 }], '220 мс', 'передний план и текст растворяются друг в друга; небо стоит, солнце опускается к 36d.'),
+            tile([{ key: 'data' }], '450 мс', '36d; копия уходит в папку уже после перехода.')])] },
+    ];
+
+    const tokens = [
+      ['ob.sky.top', '#2A2857', 'верх неба'], ['ob.sky.mid', '#6E4A78', 'середина неба, 55 %'], ['ob.sky.horizon', '#E08A63', 'небо у горизонта'],
+      ['ob.sun.core', '#FFF1CC', 'солнце, центр'], ['ob.sun.mid', '#FFD98A', 'солнце; свечение α .55; окна'], ['ob.sun.rim', '#F6BC76', 'край солнца; открытая дверь'],
+      ['ob.glow.edge', '#F2A070', 'хвост свечения, α .18 → 0'], ['ob.star', '#FFF1D6', 'звёзды и искры'], ['ob.hill', '#5A4A7E', 'холмы по краям'],
+      ['ob.ground.top', '#4E3D6C', 'земля у горизонта'], ['ob.ground.bottom', '#1B1627', 'земля, 60 % → surface'], ['ob.board.top', '#2C2248', 'гриф у горизонта'],
+      ['ob.board.bottom', '#0E0D13', 'гриф у зрителя; корпус телефона'], ['ob.string.top', '#FFE3AA', 'струны у горизонта; дорога'], ['ob.string.bottom', '#E9DDFF', 'струны у зрителя; такты; копия'],
+      ['ob.head', '#241B3A', 'головка, колки, завиток'], ['ob.scroll.vein', '#F2B57A', 'прожилка завитка, штрих 4.2'], ['ob.silhouette', '#3B2F5E', 'силуэты залов на горизонте'],
+      ['ob.house', '#1E1830', 'свой дом (36c)'], ['ob.stand', '#3A2F5A', 'пюпитр — свет; телефон-дом — светлая грань'], ['ob.stand.shade', '#1E1830', 'пюпитр — тень'],
+      ['ob.paper', '#D8CCE0', 'ноты в сумерках → #A99BC0'], ['ob.case.shade', '#221A3A', 'телефон-дом — тёмная грань'], ['ob.folder', '#8A78C9', 'папка — передняя грань; #4A3A86 — задняя'],
+    ].map(([name, hex, note]) => ({ name, hex, note }));
+    const sizes = [
+      ['Картинка', 'портрет: weight(1f) над текстом, не меньше 280 dp; настройка — 300 dp; landscape — 50 % ширины'],
+      ['Блок текста', 'padding 0 / 24 / 24, промежутки 16; на 360 dp — 20 и 14'],
+      ['Заголовок', '36a — 36/40 sp ExtraBold; остальные — 30/36 sp ExtraBold, −0.5; на 360 dp — 24/30'],
+      ['Текст', '16/24 sp onSurfaceVariant, подпись на 36b — 14/20 по центру'],
+      ['Строка с иконкой', 'круг 40 dp surfaceContainerHigh, иконка 22 dp primary, зазор 14; текст 15/22, начало — Bold onSurface; между строками 14'],
+      ['Индикатор', 'точки 6 dp, активная 20 × 6, зазор 6; полоски настройки 4 dp во всю ширину; подпись 12 sp SemiBold +0.4'],
+      ['Кнопка', '56 dp, r 28, primary / onPrimary 16 sp Bold, во всю ширину; в landscape — по содержимому, поля 40'],
+      ['Ссылка', '48 dp, 15 sp SemiBold primary, под кнопкой'],
+      ['«Пропустить»', 'текст 14 sp SemiBold onSurface, цель 48 dp, top 8 / end 8 поверх картинки'],
+    ].map(([name, v]) => ({ name, v }));
+    const anims = [
+      ['36a звёзды', 'прозрачность 1 → 0.3 → 1, 3.2–4 с, ease-in-out, у трёх звёзд со сдвигом 0 / 1.2 / 2.1 с'],
+      ['36a солнце', 'солнце и свечение вниз на 14 dp за 20 с, ease-in-out, один раз'],
+      ['36b экран', 'цвет зоны по кругу G → Y → G → R, 4 с на цвет, кроссфейд 400 мс linear; точка / стрелки — той же прозрачностью'],
+      ['36c герой', 'сдвиг (+22, −11) dp за 2.4 с, ease-in-out, один раз'],
+      ['36c такты', 'прозрачность 0 → 1 за 0.8 с, задержки 0.4 / 1.1 / 1.8 с'],
+      ['36d копия', 'из экрана телефона в папку по дуге (−120,−100) → (−50,−130) → (0,0), 1.6 с, emphasized, задержка 0.4 с, один раз'],
+      ['Листание', 'Pager: 0 × 0.3, 1 × 0.6, 2 × 1.0 от сдвига страницы; текст — × 1.0'],
+      ['Пропустить', 'передний план и текст — кроссфейд 450 мс emphasized; небо стоит, солнце переезжает к положению 36d'],
+      ['Убрать анимации', 'всё неподвижно: солнце на конечном месте, экран на 36b — зелёный с точкой, копия лежит в папке'],
+    ].map(([name, v]) => ({ name, v }));
+    const icons = [
+      ['timer', 'есть', '36c «Занятие» (= Начать занятие)'], ['tape', 'штрих', '36c «Записи и дубли»; штриховая версия вкладки'], ['takt', 'есть', '36c «Такты» — знак валюты'],
+      ['save-copy', 'есть', '36d «Сделайте копию» (из «Копии данных»)'], ['trash', 'есть', '36d «Удаляйте неудачные дубли»'], ['star', 'есть', 'запас: «отметьте звездой»'], ['storage', 'новая', '«Сколько занимает» — телефон с уровнем; в «Данных»'],
+    ].map(([name, tag, use]) => ({ name, tag, use, tagC: tag === 'новая' || tag === 'штрих' ? PR : 'rgba(230,228,238,.45)', s22: ico(name, 22, PR), s48: ico(name, 40, ON) }));
+    const texts = [
+      ['36a', 'Violin Journey · Слышит, как вы играете, и сразу показывает, чисто ли. А занятия складываются в дорогу — от своей комнаты до концертных залов мира. · [Начать] · У меня есть копия данных', 'без изменений'],
+      ['36b', 'Видно краем глаза · Поставьте телефон на пюпитр. Цветом подскажет весь экран: зелёный — в строе, янтарный — чуть мимо, красный — мимо. Стрелка покажет, куда тянуть. · Пока играете, ничего нажимать не нужно · [Дальше]', 'без изменений'],
+      ['36c', 'Занятия складываются в путь · Занятие. … · Записи и дубли. … · Такты. … · [Дальше]', 'без изменений; уровень — только от времени, как в строке «Занятие»'],
+      ['36d', 'Всё хранится на этом телефоне · Без аккаунта и облака — приложению даже не нужен интернет. · Сделайте копию. Если удалить приложение или сменить телефон, записи, видео и фото нот пропадут. Копия — в «Настройках», раздел «Данные». · Удаляйте неудачные дубли. Видео весит в сотню раз больше звука, и место кончается быстро. Удачный дубль отметьте звездой — его легко найти. · [Понятно]', '«Удалите приложение или смените телефон —» → «Если удалить…»: повелительное читалось как совет удалить. Третья строка убрана'],
+      ['36d · согласие', '☐ Помогать улучшать приложение · Отправлять обезличенную статистику: какие экраны открываются и где случаются сбои. Записи, видео и ноты не уходят никогда. Изменить — в «Настройках».', 'вариант «по согласию» (36d3): по умолчанию выключено, выбор сохраняет «Понятно». Подзаголовок 36d больше не обещает «не нужен интернет»'],
+      ['5a', 'Дайте мне услышать скрипку · Чтобы слышать ноты, нужен микрофон. Звук разбирается прямо на телефоне и не записывается, пока вы сами не нажмёте запись. · [Разрешить микрофон]', 'новый текст из брифа; ссылки на копию нет'],
+      ['5b · 5c', 'без изменений', ''],
+      ['Пропустить', 'Пропустить', 'на 36a–36c; ведёт на 36d'],
+    ].map(([k, v, n]) => ({ k, v, n }));
+
+    const sum = ['welcome', 'live', 'road', 'data', 'setup'].map(k => { const s = A.scene(k, k === 'setup' ? { step: 1 } : {}); const mv = [...new Set(s.layers.filter(l => l.anim).map(l => l.anim.split(':')[0] + (l.anim.startsWith('mark') ? ':' + l.anim.split(':')[1] : '')))]; return `${k.padEnd(8)} ${String(s.layers.length).padStart(3)} слоёв · ${Object.keys(s.grads).length} градиентов · движется: ${mv.join(', ') || '—'}`; });
+    const ds = A.scene('data');
+    const artCode = 'ONBOARDING_ART.data = {\n  grads: {\n' + Object.entries(ds.grads).map(([n, g]) => `    ${n}: ${JSON.stringify(g)}`).join(',\n') + '\n  },\n  layers: [\n' + ds.layers.map(l => '    ' + JSON.stringify(l)).join(',\n') + '\n  ]\n}';
+
+    return { sections, tokens, sizes, anims, icons, texts, guides: art([{ key: 'welcome' }], { guides: true, still: true, par: 'xMidYMid meet' }), artSummary: 'ONBOARDING_ART = { welcome, live, road, data } + setup(step 1–3)\n' + sum.join('\n'), artCode };
+  }
+}
+</script>
+</body>
+</html>
