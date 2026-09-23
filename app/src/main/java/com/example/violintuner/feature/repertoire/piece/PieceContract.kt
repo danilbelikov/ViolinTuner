@@ -32,6 +32,8 @@ data class TakeItem(
     val best: Boolean,
     /** Recorded a moment ago: highlighted until it settles into the list. */
     val isNew: Boolean,
+    /** Made under the backing (spec 3.32): the card says so. */
+    val underBacking: Boolean = false,
 )
 
 /** «последний 82 % · максимум 88 % · 6 дублей» and the little chart; there from two takes on. */
@@ -54,6 +56,9 @@ data class TakeState(
     val problem: TakeProblem?,
     /** False = the permission was refused: the row explains and offers to grant it. Null = not known yet. */
     val micPermission: Boolean?,
+    /** Under a backing (spec 3.32): how far it has played and how long it is, for the thin bar under the timer. */
+    val backingPlayedMs: Long? = null,
+    val backingDurationMs: Long? = null,
 ) {
     companion object {
         fun idle(micPermission: Boolean?, bars: Int) =
@@ -114,6 +119,9 @@ sealed interface PieceIntent {
     /** Starts a take, or stops the running one. */
     data object RecordClicked : PieceIntent
 
+    /** The same from the music stand: never under the backing — that is the piece screen's (spec 3.32). */
+    data object StandRecordClicked : PieceIntent
+
     data object GrantMicClicked : PieceIntent
 
     /** Reported by the route on every resume and after the system dialog. */
@@ -144,6 +152,32 @@ sealed interface PieceIntent {
 
     /** «Удалить» of a shot that did not become a take, and «Понятно» of any other failure. */
     data object VideoImportDismissed : PieceIntent
+
+    /** «Добавить минусовку» and «Заменить»: the system picker of files (spec 3.32). */
+    data object BackingAddClicked : PieceIntent
+
+    /** The picker came back; null — nothing was picked. */
+    data class BackingPicked(val uri: String?) : PieceIntent
+
+    data object BackingPreviewClicked : PieceIntent
+
+    data object BackingRemoveClicked : PieceIntent
+
+    data object BackingRemoveConfirmed : PieceIntent
+
+    data object BackingRemoveDismissed : PieceIntent
+
+    data object BackingChipToggled : PieceIntent
+
+    data object BackingProblemDismissed : PieceIntent
+
+    /** «Проверить»: the sheet «Настроим наушники». */
+    data object HeadphonesCheckClicked : PieceIntent
+
+    data object CalibrationStartClicked : PieceIntent
+
+    /** «Готово», «Отмена» and a sheet closed any other way. */
+    data object CalibrationClosed : PieceIntent
 }
 
 sealed interface PieceEffect {
@@ -171,6 +205,9 @@ sealed interface PieceEffect {
 
     /** A shot that did not become a take, on its way to the system share sheet; [filePath] is under `cache/share/`. */
     data class ShareVideo(val filePath: String) : PieceEffect
+
+    /** The system picker of audio files, for a backing (spec 3.32). */
+    data object PickBackingFile : PieceEffect
 }
 
 /** What the chain hands the screen for a frame of a blind take: how loud, and what is wrong, if anything. */

@@ -192,6 +192,12 @@ internal object IconPaths {
     /** паспорт копии — «когда сделана» (16) */
     val CALENDAR = listOf("M5 6h14a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1z", "M4 10h16", "M8 4v4M16 4v4")
 
+    /** Headphones: the band and two cups (spec 3.32). */
+    val HEADPHONES = listOf("M4.5 14v-2a7.5 7.5 0 0 1 15 0v2", "M4.5 13.5h2.5a1 1 0 0 1 1 1v4a1 1 0 0 1-1 1H6a1.5 1.5 0 0 1-1.5-1.5z", "M19.5 13.5H17a1 1 0 0 0-1 1v4a1 1 0 0 0 1 1h1a1.5 1.5 0 0 0 1.5-1.5z")
+
+    /** A backing track: a note on three lines of a staff (spec 3.32). */
+    val BACKING = listOf("M3 7h18M3 11h18M3 15h6", "M14 17.5V6.5", "M14 17.5a2.5 2 0 1 1-5 0a2.5 2 0 1 1 5 0z")
+
     /** What a path of a tab icon does when its tab is selected. */
     enum class Selected { AS_IS, FILL, CUT }
 

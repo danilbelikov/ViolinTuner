@@ -1007,4 +1007,47 @@
     <string name="backing_offset_hint">en retard — à gauche</string>
     <string name="backing_offset_recorded">Comme enregistré · %1$s</string>
     <string name="backing_remember">Retenir pour %1$s</string>
+
+    <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
+    <string name="backing_add">Ajouter un accompagnement</string>
+    <string name="backing_add_hint">un accompagnement pour enregistrer dessus — mp3, m4a, wav…</string>
+    <string name="backing_menu">Accompagnement : plus</string>
+    <string name="backing_replace">Remplacer</string>
+    <string name="backing_remove">Retirer</string>
+    <string name="backing_missing">Le fichier de l\'accompagnement est introuvable — ajoutez-le à nouveau.</string>
+    <string name="backing_preview">Écouter l\'accompagnement</string>
+    <string name="backing_preview_stop">Arrêter l\'accompagnement</string>
+    <string name="backing_headphones">Casque</string>
+    <string name="backing_no_headphones">Aucun casque connecté</string>
+    <string name="backing_headphones_latency">Casque · %1$s · %2$d ms</string>
+    <string name="backing_headphones_unmeasured">Casque · %1$s · retard non mesuré</string>
+    <string name="backing_headphones_wired">Casque · %1$s</string>
+    <string name="backing_headphones_check">Vérifier</string>
+    <string name="backing_unreadable">Impossible d\'ouvrir ce fichier. Formats possibles : mp3, m4a, aac, wav, flac, ogg.</string>
+    <string name="backing_too_long">L\'accompagnement dure plus d\'une heure — trop long.</string>
+    <string name="backing_no_space">Pas assez d\'espace : il faut encore %1$d Mo.</string>
+    <string name="backing_understood">OK</string>
+    <string name="backing_remove_title">Retirer l\'accompagnement ?</string>
+    <string name="backing_remove_text">Les prises faites dessus gardent leur propre copie.</string>
+    <string name="backing_chip">Avec accomp.</string>
+    <string name="backing_chip_on">activé</string>
+    <string name="backing_chip_off">désactivé</string>
+    <string name="backing_needs_headphones">Branchez un casque : par le haut-parleur, l\'accompagnement passerait dans l\'enregistrement.</string>
+    <string name="backing_preparing">Préparation de l\'accompagnement…</string>
+    <string name="calibration_title">Réglons le casque</string>
+    <string name="calibration_text">Les casques sans fil ont un retard, chacun le sien. Jouez une note brève sur chaque clic — de préférence un la à vide, pincé ou d\'un coup d\'archet court.</string>
+    <string name="calibration_start">Commencer</string>
+    <string name="calibration_progress">clic %1$d sur %2$d · 90 battements par minute</string>
+    <string name="calibration_latency">Retard</string>
+    <string name="calibration_ms">%1$d ms</string>
+    <string name="calibration_hits">%1$d sur %2$d en mesure</string>
+    <string name="calibration_done_text">Les prises sur l\'accompagnement avec ce casque seront calées d\'elles-mêmes. Si quelque chose décale, réglez le décalage dans « Son » de l\'enregistrement.</string>
+    <string name="calibration_done">OK</string>
+    <string name="calibration_again">Encore une fois</string>
+    <string name="calibration_failed">Impossible de saisir la mesure. Encore une fois ?</string>
+    <string name="calibration_dot_heard">Clic %1$d : note entendue</string>
+    <string name="calibration_dot_waiting">Clic %1$d : pas de note</string>
+
+    <!-- A take made under the backing, on its card (spec 3.32). -->
+    <string name="backing_take_meta">avec accomp. · %1$s</string>
 </resources>

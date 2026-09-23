@@ -1007,4 +1007,47 @@
     <string name="backing_offset_hint">늦으면 왼쪽으로</string>
     <string name="backing_offset_recorded">녹음한 그대로 · %1$s</string>
     <string name="backing_remember">%1$s에 기억하기</string>
+
+    <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
+    <string name="backing_add">반주 추가</string>
+    <string name="backing_add_hint">함께 녹음할 반주 — mp3, m4a, wav…</string>
+    <string name="backing_menu">반주: 더보기</string>
+    <string name="backing_replace">바꾸기</string>
+    <string name="backing_remove">제거</string>
+    <string name="backing_missing">반주 파일을 찾을 수 없어요 — 다시 추가해 주세요.</string>
+    <string name="backing_preview">반주 듣기</string>
+    <string name="backing_preview_stop">반주 멈추기</string>
+    <string name="backing_headphones">헤드폰</string>
+    <string name="backing_no_headphones">헤드폰이 연결되지 않았어요</string>
+    <string name="backing_headphones_latency">헤드폰 · %1$s · %2$d ms</string>
+    <string name="backing_headphones_unmeasured">헤드폰 · %1$s · 지연 미측정</string>
+    <string name="backing_headphones_wired">헤드폰 · %1$s</string>
+    <string name="backing_headphones_check">확인</string>
+    <string name="backing_unreadable">이 파일은 열 수 없어요. mp3, m4a, aac, wav, flac, ogg를 사용하세요.</string>
+    <string name="backing_too_long">반주가 1시간보다 길어서 추가할 수 없어요.</string>
+    <string name="backing_no_space">공간이 부족해요: %1$d MB가 더 필요해요.</string>
+    <string name="backing_understood">확인</string>
+    <string name="backing_remove_title">반주를 제거할까요?</string>
+    <string name="backing_remove_text">이 반주로 녹음한 테이크에는 사본이 남아요.</string>
+    <string name="backing_chip">반주와 함께</string>
+    <string name="backing_chip_on">켜짐</string>
+    <string name="backing_chip_off">꺼짐</string>
+    <string name="backing_needs_headphones">헤드폰을 연결하세요: 스피커로 틀면 반주가 녹음에 들어가요.</string>
+    <string name="backing_preparing">반주 준비 중…</string>
+    <string name="calibration_title">헤드폰 맞추기</string>
+    <string name="calibration_text">무선 헤드폰은 제각각 늦게 들려요. 클릭마다 짧은 음을 연주하세요 — 개방현 A를 피치카토나 짧은 활로 켜면 좋아요.</string>
+    <string name="calibration_start">시작</string>
+    <string name="calibration_progress">클릭 %1$d/%2$d · 분당 90</string>
+    <string name="calibration_latency">지연</string>
+    <string name="calibration_ms">%1$d ms</string>
+    <string name="calibration_hits">%2$d번 중 %1$d번 박자에 맞음</string>
+    <string name="calibration_done_text">이 헤드폰으로 녹음한 반주 테이크는 저절로 맞아요. 어긋나면 녹음의 「사운드」에서 이동을 조정하세요.</string>
+    <string name="calibration_done">완료</string>
+    <string name="calibration_again">다시</string>
+    <string name="calibration_failed">박자를 잡지 못했어요. 다시 할까요?</string>
+    <string name="calibration_dot_heard">클릭 %1$d: 음이 들렸어요</string>
+    <string name="calibration_dot_waiting">클릭 %1$d: 음 없음</string>
+
+    <!-- A take made under the backing, on its card (spec 3.32). -->
+    <string name="backing_take_meta">반주와 함께 · %1$s</string>
 </resources>

@@ -8,6 +8,15 @@ import com.example.violintuner.core.domain.journey.PracticeNotesStore
 import com.example.violintuner.core.audio.MicUnavailableException
 import com.example.violintuner.core.audio.PitchSource
 import com.example.violintuner.core.audio.recording.AudioTap
+import com.example.violintuner.core.audio.backing.BackingPlayback
+import com.example.violintuner.core.audio.backing.BackingPlaybackFactory
+import com.example.violintuner.core.domain.backing.AudioRoute
+import com.example.violintuner.core.domain.backing.Backing
+import com.example.violintuner.core.domain.backing.BackingConfig
+import com.example.violintuner.core.domain.backing.BackingOffset
+import com.example.violintuner.core.domain.backing.BackingRepository
+import com.example.violintuner.core.domain.backing.NoBackings
+import com.example.violintuner.core.domain.backing.TakeBacking
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.di.DefaultDispatcher
 import com.example.violintuner.core.domain.IntonationConfig
@@ -30,6 +39,7 @@ import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -61,7 +71,25 @@ class TakePipeline @Inject constructor(
     private val watch: RecordingWatch = RecordingWatch(),
     private val practiceNotes: PracticeNotesStore = NoPracticeNotes,
     private val journeyConfig: JourneyConfig = JourneyConfig(),
+    private val backings: BackingRepository = NoBackings,
+    private val backingPlaybackFactory: BackingPlaybackFactory? = null,
+    private val backingConfig: BackingConfig = BackingConfig(),
 ) {
+    /**
+     * A take to be made under a backing (spec 3.32): which one, its sound at the take's rate, and the headphones it
+     * goes to with what they are believed to lag. Set by the screen before it asks for the recording; read when
+     * the recording starts.
+     */
+    class BackingPlan(val backing: Backing, val pcm: (sampleRate: Int) -> File?, val route: AudioRoute, val latencyMs: Int)
+
+    @Volatile
+    var backingPlan: BackingPlan? = null
+
+    private val playback: BackingPlayback? by lazy { backingPlaybackFactory?.create() }
+
+    /** How far the backing of the running take has played, in ms; null while none plays. */
+    val backingPosition: StateFlow<Long?> get() = playback?.position ?: NO_POSITION
+
     /** What one frame came to: what the screen shows, and how the recording stands, if one runs. */
     class Output<T>(val shown: T, val recording: RecordingProgress? = null)
 
@@ -126,6 +154,9 @@ class TakePipeline @Inject constructor(
         val tap = pitchSource.audioTap
         var recorder: SessionRecorder? = null
         var audioFile: File? = null
+        // the backing of the running take: what played, and from which moment of the take's clock
+        var backingStarted: BackingPlan? = null
+        var recordStartNanos: Long? = null
         // After a microphone failure the reopened input is trusted only once it delivers
         // something: a dead input (emulator bridge off, capture silenced by the system) reads as
         // exact zeros, and showing "play…" for the two seconds before the watchdog gives up
@@ -150,6 +181,10 @@ class TakePipeline @Inject constructor(
             recorder = null
             watch.set(false)
             recordingRequested.value = false
+            val plan = backingStarted
+            backingStarted = null
+            val playedMs = if (plan != null) playback?.stop() ?: 0 else 0
+            val backingStartNanos = playback?.startNanos
             if (finished == null) {
                 closeAudio(keep = false) // stopped while still waiting for the sound to start
                 return
@@ -162,6 +197,16 @@ class TakePipeline @Inject constructor(
                 }
                 is RecordingResult.Recorded -> {
                     val id = sessionRepository.save(result.session.copy(audioPath = closeAudio(keep = true), pieceId = pieceId))
+                    if (plan != null) {
+                        val offset = BackingOffset.offsetMs(backingStartNanos, recordStartNanos, plan.latencyMs, backingConfig)
+                        backings.saveTake(
+                            TakeBacking(
+                                sessionId = id, backingId = plan.backing.id, offsetMs = offset, recordedOffsetMs = offset,
+                                gainDb = backingConfig.defaultGainDb, playedMs = playedMs, output = plan.route.output,
+                                deviceName = plan.route.deviceName, latencyMs = plan.latencyMs,
+                            ),
+                        )
+                    }
                     if (stoppedByPlayer) eventChannel.send(Event.Saved(id))
                 }
             }
@@ -216,6 +261,10 @@ class TakePipeline @Inject constructor(
                 if (recordingRequested.value && recorder == null && mayStartRecorder(frame.tMs)) {
                     recorder = SessionRecorder(config, clock.millis())
                     watch.set(true)
+                    startBacking(frame.tMs)?.let { (plan, startNanos) ->
+                        backingStarted = plan
+                        recordStartNanos = startNanos
+                    }
                 }
                 val running = recorder
                 if (running != null) {
@@ -248,8 +297,27 @@ class TakePipeline @Inject constructor(
             .flowOn(dispatcher)
     }
 
+    /**
+     * Starts the backing with the take (spec 3.32), at the rate the take is recorded at; the take's first sample on
+     * `CLOCK_MONOTONIC` goes with it — the shift is the difference of the two. Null when there is no backing to play.
+     */
+    private fun startBacking(frameTMs: Long): Pair<BackingPlan, Long?>? {
+        val plan = backingPlan ?: return null
+        val player = playback ?: return null
+        val tap = pitchSource.audioTap
+        val rate = tap?.sampleRateHz ?: DEFAULT_RATE
+        val pcm = plan.pcm(rate) ?: return null
+        player.start(pcm, rate)
+        val takeStartTMs = (tap?.state as? AudioTap.State.Running)?.startTMs ?: frameTMs
+        return plan to pitchSource.clock?.nanosAt(takeStartTMs)
+    }
+
     private companion object {
         // Pause before reopening a microphone that failed (busy with a call, hardware hiccup).
         const val MIC_RETRY_DELAY_MS = 3_000L
+
+        /** A source without sound (the fake one) records no file: the backing plays at the usual rate. */
+        const val DEFAULT_RATE = 48_000
+        val NO_POSITION: StateFlow<Long?> = MutableStateFlow(null)
     }
 }

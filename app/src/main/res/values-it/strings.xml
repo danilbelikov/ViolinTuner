@@ -1007,4 +1007,47 @@
     <string name="backing_offset_hint">in ritardo — a sinistra</string>
     <string name="backing_offset_recorded">Come registrato · %1$s</string>
     <string name="backing_remember">Ricorda per %1$s</string>
+
+    <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
+    <string name="backing_add">Aggiungi una base</string>
+    <string name="backing_add_hint">un accompagnamento su cui registrare — mp3, m4a, wav…</string>
+    <string name="backing_menu">Base: altro</string>
+    <string name="backing_replace">Sostituisci</string>
+    <string name="backing_remove">Rimuovi</string>
+    <string name="backing_missing">Il file della base non si trova — aggiungila di nuovo.</string>
+    <string name="backing_preview">Ascolta la base</string>
+    <string name="backing_preview_stop">Ferma la base</string>
+    <string name="backing_headphones">Cuffie</string>
+    <string name="backing_no_headphones">Nessuna cuffia collegata</string>
+    <string name="backing_headphones_latency">Cuffie · %1$s · %2$d ms</string>
+    <string name="backing_headphones_unmeasured">Cuffie · %1$s · ritardo non misurato</string>
+    <string name="backing_headphones_wired">Cuffie · %1$s</string>
+    <string name="backing_headphones_check">Verifica</string>
+    <string name="backing_unreadable">Impossibile aprire il file. Vanno bene mp3, m4a, aac, wav, flac, ogg.</string>
+    <string name="backing_too_long">La base dura più di un\'ora — troppo lunga.</string>
+    <string name="backing_no_space">Spazio insufficiente: servono altri %1$d MB.</string>
+    <string name="backing_understood">Ok</string>
+    <string name="backing_remove_title">Rimuovere la base?</string>
+    <string name="backing_remove_text">I take registrati su di essa ne conservano una copia.</string>
+    <string name="backing_chip">Con la base</string>
+    <string name="backing_chip_on">attivo</string>
+    <string name="backing_chip_off">disattivo</string>
+    <string name="backing_needs_headphones">Collega le cuffie: dall\'altoparlante la base finirebbe nella registrazione.</string>
+    <string name="backing_preparing">Preparazione della base…</string>
+    <string name="calibration_title">Regoliamo le cuffie</string>
+    <string name="calibration_text">Le cuffie wireless sono in ritardo, ognuna a modo suo. Suona una nota breve a ogni clic — meglio il La a vuoto, pizzicato o con un colpo d\'arco breve.</string>
+    <string name="calibration_start">Inizia</string>
+    <string name="calibration_progress">clic %1$d di %2$d · 90 battiti al minuto</string>
+    <string name="calibration_latency">Ritardo</string>
+    <string name="calibration_ms">%1$d ms</string>
+    <string name="calibration_hits">%1$d su %2$d a tempo</string>
+    <string name="calibration_done_text">I take sulla base con queste cuffie andranno a tempo da soli. Se qualcosa si sposta, regola lo spostamento in «Suono» della registrazione.</string>
+    <string name="calibration_done">Fatto</string>
+    <string name="calibration_again">Ancora</string>
+    <string name="calibration_failed">Non sono riuscito a cogliere il tempo. Ancora?</string>
+    <string name="calibration_dot_heard">Clic %1$d: nota sentita</string>
+    <string name="calibration_dot_waiting">Clic %1$d: nessuna nota</string>
+
+    <!-- A take made under the backing, on its card (spec 3.32). -->
+    <string name="backing_take_meta">con la base · %1$s</string>
 </resources>

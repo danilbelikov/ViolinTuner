@@ -1007,4 +1007,47 @@
     <string name="backing_offset_hint">滞后就向左</string>
     <string name="backing_offset_recorded">按录制时 · %1$s</string>
     <string name="backing_remember">为 %1$s 记住</string>
+
+    <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
+    <string name="backing_add">添加伴奏</string>
+    <string name="backing_add_hint">录音时的伴奏 — mp3、m4a、wav…</string>
+    <string name="backing_menu">伴奏：更多</string>
+    <string name="backing_replace">替换</string>
+    <string name="backing_remove">移除</string>
+    <string name="backing_missing">找不到伴奏文件——请重新添加。</string>
+    <string name="backing_preview">试听伴奏</string>
+    <string name="backing_preview_stop">停止伴奏</string>
+    <string name="backing_headphones">耳机</string>
+    <string name="backing_no_headphones">未连接耳机</string>
+    <string name="backing_headphones_latency">耳机 · %1$s · %2$d 毫秒</string>
+    <string name="backing_headphones_unmeasured">耳机 · %1$s · 未测延迟</string>
+    <string name="backing_headphones_wired">耳机 · %1$s</string>
+    <string name="backing_headphones_check">检测</string>
+    <string name="backing_unreadable">无法打开此文件。可用 mp3、m4a、aac、wav、flac、ogg。</string>
+    <string name="backing_too_long">伴奏超过一小时——无法添加。</string>
+    <string name="backing_no_space">空间不足：还需要 %1$d MB。</string>
+    <string name="backing_understood">知道了</string>
+    <string name="backing_remove_title">移除伴奏？</string>
+    <string name="backing_remove_text">用它录制的录音会保留自己的副本。</string>
+    <string name="backing_chip">带伴奏</string>
+    <string name="backing_chip_on">已开启</string>
+    <string name="backing_chip_off">已关闭</string>
+    <string name="backing_needs_headphones">请连接耳机：用扬声器播放，伴奏会录进去。</string>
+    <string name="backing_preparing">正在准备伴奏…</string>
+    <string name="calibration_title">校准耳机</string>
+    <string name="calibration_text">无线耳机会延迟，每副都不一样。每听到一声咔嗒就拉一个短音——最好是空弦A，拨弦或短弓。</string>
+    <string name="calibration_start">开始</string>
+    <string name="calibration_progress">第 %1$d / %2$d 声 · 每分钟 90 拍</string>
+    <string name="calibration_latency">延迟</string>
+    <string name="calibration_ms">%1$d 毫秒</string>
+    <string name="calibration_hits">%2$d 次中 %1$d 次合拍</string>
+    <string name="calibration_done_text">用这副耳机录的伴奏录音会自动对齐。如有偏差，可在录音的“声音”中调整偏移。</string>
+    <string name="calibration_done">完成</string>
+    <string name="calibration_again">再来一次</string>
+    <string name="calibration_failed">没能跟上节拍。再来一次？</string>
+    <string name="calibration_dot_heard">第 %1$d 声：听到音了</string>
+    <string name="calibration_dot_waiting">第 %1$d 声：没有音</string>
+
+    <!-- A take made under the backing, on its card (spec 3.32). -->
+    <string name="backing_take_meta">带伴奏 · %1$s</string>
 </resources>

@@ -136,6 +136,8 @@ fun PieceScreen(
     takeActions: CardActions? = null,
     videoImport: VideoImport = VideoImport.Idle,
     onPickVideo: () -> Unit = {},
+    backing: BackingUi? = null,
+    calibration: CalibrationUi? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     BoxWithConstraints(
@@ -151,14 +153,15 @@ fun PieceScreen(
             // «Выучено» for a scale, an étude, a stroke; «В репертуаре» for a piece (spec 3.22)
             CompositionLocalProvider(LocalExerciseWords provides state.exercise) {
                 if (landscape) {
-                    LandscapeLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo)
+                    LandscapeLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo, backing)
                 } else {
-                    PortraitLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo)
+                    PortraitLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo, backing)
                 }
             }
         }
     }
     VideoImportSheet(videoImport, onIntent)
+    calibration?.let { CalibrationSheet(it, backing?.route?.deviceName, onIntent) }
 }
 
 @Composable
@@ -172,6 +175,7 @@ private fun PortraitLayout(
     takeActions: CardActions?,
     videoImport: VideoImport,
     onPickVideo: () -> Unit,
+    backing: BackingUi?,
 ) {
     val scroll = rememberScrollState()
     val selecting = state.selection.active
@@ -193,7 +197,12 @@ private fun PortraitLayout(
                 SheetsBlock(state, onIntent, addPhoto, Metrics.Portrait)
                 Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(BlockGap)) {
                     // Recording stands above the notes: the notes are read once before playing, a take is recorded every time.
-                    RecordTakeRow(take, onIntent) { VideoEntry(take, videoImport, onIntent, onPickVideo) }
+                    // The backing goes right over it: it is what the next take is played to (spec 3.32).
+                    backing?.let {
+                        BackingCard(it, take.recording, onIntent)
+                        BackingChipRow(it, take.recording, onIntent)
+                    }
+                    RecordTakeRow(take, onIntent, blocked = backing?.blocksRecording == true) { VideoEntry(take, videoImport, onIntent, onPickVideo) }
                     NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
                     state.progress?.let { TakeProgressCard(it) }
                 }
@@ -218,6 +227,7 @@ private fun LandscapeLayout(
     takeActions: CardActions?,
     videoImport: VideoImport,
     onPickVideo: () -> Unit,
+    backing: BackingUi?,
 ) {
     val selecting = state.selection.active
     Column {
@@ -235,7 +245,11 @@ private fun LandscapeLayout(
                 verticalArrangement = Arrangement.spacedBy(ScreenPadding),
             ) {
                 HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Landscape, scale = state.scale)
-                RecordTakeRow(take, onIntent, buttonSize = LandscapeRecordButton) { VideoEntry(take, videoImport, onIntent, onPickVideo) }
+                backing?.let {
+                    BackingCard(it, take.recording, onIntent)
+                    BackingChipRow(it, take.recording, onIntent)
+                }
+                RecordTakeRow(take, onIntent, buttonSize = LandscapeRecordButton, blocked = backing?.blocksRecording == true) { VideoEntry(take, videoImport, onIntent, onPickVideo) }
                 state.progress?.let { TakeProgressCard(it) }
             }
             Column(

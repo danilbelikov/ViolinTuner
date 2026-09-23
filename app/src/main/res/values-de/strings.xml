@@ -1007,4 +1007,47 @@
     <string name="backing_offset_hint">hinkt nach — links</string>
     <string name="backing_offset_recorded">Wie aufgenommen · %1$s</string>
     <string name="backing_remember">Für %1$s merken</string>
+
+    <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
+    <string name="backing_add">Begleitspur hinzufügen</string>
+    <string name="backing_add_hint">Begleitung zum Aufnehmen — mp3, m4a, wav…</string>
+    <string name="backing_menu">Begleitspur: mehr</string>
+    <string name="backing_replace">Ersetzen</string>
+    <string name="backing_remove">Entfernen</string>
+    <string name="backing_missing">Die Datei der Begleitspur fehlt — bitte neu hinzufügen.</string>
+    <string name="backing_preview">Begleitspur anhören</string>
+    <string name="backing_preview_stop">Begleitspur anhalten</string>
+    <string name="backing_headphones">Kopfhörer</string>
+    <string name="backing_no_headphones">Keine Kopfhörer verbunden</string>
+    <string name="backing_headphones_latency">Kopfhörer · %1$s · %2$d ms</string>
+    <string name="backing_headphones_unmeasured">Kopfhörer · %1$s · Verzögerung nicht gemessen</string>
+    <string name="backing_headphones_wired">Kopfhörer · %1$s</string>
+    <string name="backing_headphones_check">Prüfen</string>
+    <string name="backing_unreadable">Diese Datei lässt sich nicht öffnen. Geeignet sind mp3, m4a, aac, wav, flac, ogg.</string>
+    <string name="backing_too_long">Die Begleitspur ist länger als eine Stunde — zu lang.</string>
+    <string name="backing_no_space">Zu wenig Speicher: noch %1$d MB nötig.</string>
+    <string name="backing_understood">OK</string>
+    <string name="backing_remove_title">Begleitspur entfernen?</string>
+    <string name="backing_remove_text">Takes dazu behalten ihre eigene Kopie.</string>
+    <string name="backing_chip">Mit Begleitung</string>
+    <string name="backing_chip_on">an</string>
+    <string name="backing_chip_off">aus</string>
+    <string name="backing_needs_headphones">Bitte Kopfhörer anschließen: über den Lautsprecher gerät die Begleitung in die Aufnahme.</string>
+    <string name="backing_preparing">Begleitspur wird vorbereitet…</string>
+    <string name="calibration_title">Kopfhörer einrichten</string>
+    <string name="calibration_text">Kabellose Kopfhörer hinken nach, jedes Paar anders. Spielen Sie zu jedem Klick einen kurzen Ton — am besten die leere A-Saite, gezupft oder kurz gestrichen.</string>
+    <string name="calibration_start">Starten</string>
+    <string name="calibration_progress">Klick %1$d von %2$d · 90 Schläge pro Minute</string>
+    <string name="calibration_latency">Verzögerung</string>
+    <string name="calibration_ms">%1$d ms</string>
+    <string name="calibration_hits">%1$d von %2$d im Takt</string>
+    <string name="calibration_done_text">Takes zur Begleitung mit diesen Kopfhörern passen von selbst. Falls etwas auseinanderläuft: Versatz im „Klang“ der Aufnahme einstellen.</string>
+    <string name="calibration_done">Fertig</string>
+    <string name="calibration_again">Noch einmal</string>
+    <string name="calibration_failed">Der Takt ließ sich nicht erfassen. Noch einmal?</string>
+    <string name="calibration_dot_heard">Klick %1$d: Ton gehört</string>
+    <string name="calibration_dot_waiting">Klick %1$d: kein Ton</string>
+
+    <!-- A take made under the backing, on its card (spec 3.32). -->
+    <string name="backing_take_meta">mit Begleitung · %1$s</string>
 </resources>

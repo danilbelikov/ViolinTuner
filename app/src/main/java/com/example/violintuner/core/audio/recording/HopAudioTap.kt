@@ -23,6 +23,10 @@ class HopAudioTap(
     override var state: AudioTap.State = AudioTap.State.Idle
         private set
 
+    @Volatile
+    override var sampleRateHz: Int? = null
+        private set
+
     override fun start(file: File) = synchronized(lock) {
         if (state != AudioTap.State.Idle) return
         pendingFile = file
@@ -43,6 +47,7 @@ class HopAudioTap(
                     return
                 }
                 encoder = created
+                this.sampleRateHz = sampleRateHz
                 state = AudioTap.State.Running(hopStartTMs)
             }
             val running = encoder ?: return

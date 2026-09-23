@@ -1007,4 +1007,47 @@
     <string name="backing_offset_hint">lags — move left</string>
     <string name="backing_offset_recorded">As recorded · %1$s</string>
     <string name="backing_remember">Remember for %1$s</string>
+
+    <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
+    <string name="backing_add">Add a backing track</string>
+    <string name="backing_add_hint">an accompaniment to record takes to — mp3, m4a, wav…</string>
+    <string name="backing_menu">Backing track: more</string>
+    <string name="backing_replace">Replace</string>
+    <string name="backing_remove">Remove</string>
+    <string name="backing_missing">The backing file is missing — add it again.</string>
+    <string name="backing_preview">Play the backing track</string>
+    <string name="backing_preview_stop">Stop the backing track</string>
+    <string name="backing_headphones">Headphones</string>
+    <string name="backing_no_headphones">No headphones connected</string>
+    <string name="backing_headphones_latency">Headphones · %1$s · %2$d ms</string>
+    <string name="backing_headphones_unmeasured">Headphones · %1$s · delay not measured</string>
+    <string name="backing_headphones_wired">Headphones · %1$s</string>
+    <string name="backing_headphones_check">Check</string>
+    <string name="backing_unreadable">This file can\'t be opened. mp3, m4a, aac, wav, flac and ogg will do.</string>
+    <string name="backing_too_long">The backing is longer than an hour — too long to take.</string>
+    <string name="backing_no_space">Not enough space: %1$d MB more is needed.</string>
+    <string name="backing_understood">OK</string>
+    <string name="backing_remove_title">Remove the backing track?</string>
+    <string name="backing_remove_text">Takes made to it keep their own copy.</string>
+    <string name="backing_chip">With backing</string>
+    <string name="backing_chip_on">on</string>
+    <string name="backing_chip_off">off</string>
+    <string name="backing_needs_headphones">Connect headphones: through the speaker the backing would get into the recording.</string>
+    <string name="backing_preparing">Preparing the backing…</string>
+    <string name="calibration_title">Let\'s set up your headphones</string>
+    <string name="calibration_text">Wireless headphones lag, each pair its own way. Play a short note on each click — an open A is best, plucked or with a short stroke.</string>
+    <string name="calibration_start">Start</string>
+    <string name="calibration_progress">click %1$d of %2$d · 90 beats a minute</string>
+    <string name="calibration_latency">Delay</string>
+    <string name="calibration_ms">%1$d ms</string>
+    <string name="calibration_hits">%1$d of %2$d on the beat</string>
+    <string name="calibration_done_text">Takes to the backing in these headphones will line up by themselves. If anything drifts, the shift can be set in the recording\'s Sound.</string>
+    <string name="calibration_done">Done</string>
+    <string name="calibration_again">Once more</string>
+    <string name="calibration_failed">Couldn\'t catch the beat. Once more?</string>
+    <string name="calibration_dot_heard">Click %1$d: note heard</string>
+    <string name="calibration_dot_waiting">Click %1$d: no note</string>
+
+    <!-- A take made under the backing, on its card (spec 3.32). -->
+    <string name="backing_take_meta">with backing · %1$s</string>
 </resources>

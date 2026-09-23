@@ -114,15 +114,69 @@ class PieceViewModelTest {
         override suspend fun sweep(nowEpochMs: Long) = Unit
     }
 
+    // The backing (spec 3.32): a file that is there, a playback that remembers what it was given, headphones that come and go.
+    private val backings = com.example.violintuner.core.domain.backing.FakeBackingRepository()
+    private val latencies = com.example.violintuner.core.domain.backing.FakeHeadphoneLatencyStore()
+    private val route = kotlinx.coroutines.flow.MutableStateFlow(
+        com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.WIRED, "USB-C headphones"),
+    )
+
+    private class FakePlayback : com.example.violintuner.core.audio.backing.BackingPlayback {
+        override val position = kotlinx.coroutines.flow.MutableStateFlow<Long?>(null)
+        override var startNanos: Long? = null
+        var started: Pair<File, Int>? = null
+        var stops = 0
+        override fun start(pcm: File, sampleRate: Int) {
+            started = pcm to sampleRate
+            position.value = 1_234
+        }
+        override fun stop(): Long {
+            stops++
+            position.value = null
+            return 3_210
+        }
+    }
+
+    private val playback = FakePlayback()
+    private val pcmRates = mutableListOf<Int>()
+    private val backingPcm = object : com.example.violintuner.core.audio.backing.BackingPcm {
+        override fun cached(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): File? = null
+        override fun prepare(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): File {
+            pcmRates += sampleRate
+            return File("pcm-$sampleRate")
+        }
+    }
+    private val backingFiles = object : com.example.violintuner.core.domain.backing.BackingFiles {
+        override fun newFile(extension: String): File = File("new.$extension")
+        override fun existing(name: String): File? = File(name).takeIf { !name.startsWith("gone") }
+        override fun delete(name: String) = Unit
+        override fun deleteOrphans(kept: Set<String>) = Unit
+    }
+    private var importResult: com.example.violintuner.core.audio.backing.BackingImport =
+        com.example.violintuner.core.audio.backing.BackingImport.Unreadable
+    private val calibrationRuns = mutableListOf<kotlinx.coroutines.flow.MutableSharedFlow<com.example.violintuner.core.audio.backing.CalibrationProgress>>()
+
     private fun TestScope.screen(pieceId: Long, saved: SavedStateHandle = SavedStateHandle(mapOf(PieceViewModel.ARG_PIECE_ID to pieceId))):
         Pair<PieceViewModel, MutableList<PieceEffect>> {
         val pitch = source ?: CountingSource(FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource)).also { source = it }
-        val takes = TakePipeline(pitch, sessions, NoAudioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler))
+        val takes = TakePipeline(
+            pitch, sessions, NoAudioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
+            backings = backings, backingPlaybackFactory = { playback },
+        )
+        val routes = object : com.example.violintuner.core.audio.backing.AudioRoutes {
+            override fun current() = route.value
+            override val changes = route
+        }
         val viewModel = PieceViewModel(
             saved, repertoire, files, RepertoireConfig(), clock, takes,
             SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), sessions,
             videoFiles, importer(), NoShareFiles,
+            backings = backings, backingFiles = backingFiles, backingPcm = backingPcm,
+            backingImporter = { importResult }, backingPreview = null, routes = routes, latencies = latencies,
+            calibrator = { kotlinx.coroutines.flow.MutableSharedFlow<com.example.violintuner.core.audio.backing.CalibrationProgress>(replay = 8).also { calibrationRuns += it } },
+            io = StandardTestDispatcher(testScheduler),
         )
+        backgroundScope.launch { viewModel.backing.collect {} }
         val effects = mutableListOf<PieceEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
         backgroundScope.launch { viewModel.takeState.collect {} }
@@ -582,5 +636,127 @@ class PieceViewModelTest {
         assertEquals(PieceEffect.ShareVideo("/cache/share/video.mp4"), effects.last())
         viewModel.onIntent(PieceIntent.VideoImportDismissed)
         assertEquals(1, videoFiles.discarded.size)
+    }
+
+    private suspend fun withBacking(pieceId: Long) {
+        val backingId = backings.add(backings.backing(title = "Piano"))
+        backings.setForPiece(pieceId, backingId)
+    }
+
+    @Test
+    fun `a picked file becomes the piece's backing with the chip on, one that does not open says why`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        val (viewModel, effects) = screen(id)
+        assertNull(viewModel.backing.value!!.title)
+        viewModel.onIntent(PieceIntent.BackingAddClicked)
+        runCurrent()
+        assertEquals(PieceEffect.PickBackingFile, effects.last())
+
+        viewModel.onIntent(PieceIntent.BackingPicked("content://broken"))
+        runCurrent()
+        assertEquals(com.example.violintuner.feature.repertoire.piece.BackingProblem.Unreadable, viewModel.backing.value!!.problem)
+
+        importResult = com.example.violintuner.core.audio.backing.BackingImport.Added(backings.backing(title = "Vivaldi — piano"))
+        viewModel.onIntent(PieceIntent.BackingPicked("content://piano.m4a"))
+        runCurrent()
+        val block = viewModel.backing.value!!
+        assertEquals("Vivaldi — piano", block.title)
+        assertTrue(block.enabled)
+        assertNull(block.problem)
+        // its sound is made ready for both rates a take may be recorded at
+        assertEquals(listOf(48_000, 44_100), pcmRates)
+    }
+
+    @Test
+    fun `a take under the backing plays it and keeps the shift, the headphones' latency and how far it played`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        latencies.set("USB-C headphones", 12)
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        assertEquals(File("pcm-48000") to 48_000, playback.started)
+        assertEquals(1_234L, viewModel.takeState.value.backingPlayedMs)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(300)
+
+        val take = backings.takeBackings.value.single()
+        assertEquals(1L, take.sessionId) // the first session the fake stores
+        // the fake source has no clock: the shift is what the headphones add
+        assertEquals(12, take.offsetMs)
+        assertEquals(12, take.recordedOffsetMs)
+        assertEquals(12, take.latencyMs)
+        assertEquals(3_210L, take.playedMs)
+        assertEquals(com.example.violintuner.core.domain.backing.BackingOutput.WIRED, take.output)
+        assertTrue(viewModel.state.value.takes.single().underBacking)
+    }
+
+    @Test
+    fun `with the chip off the take is made as before`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(PieceIntent.BackingChipToggled)
+        runCurrent()
+        assertFalse(viewModel.backing.value!!.enabled)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(300)
+        assertNull(playback.started)
+        assertTrue(backings.takeBackings.value.isEmpty())
+        assertEquals(1, sessions.saved.size)
+    }
+
+    @Test
+    fun `without headphones there is no take under the backing, the button sleeps`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.SPEAKER, null)
+        val (viewModel, _) = screen(id)
+        assertTrue(viewModel.backing.value!!.blocksRecording)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        assertFalse(viewModel.takeState.value.recording)
+        assertNull(playback.started)
+    }
+
+    @Test
+    fun `wireless headphones never measured are measured before the first take, and the result is remembered`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.BLUETOOTH, "Buds")
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        runCurrent()
+        assertEquals(com.example.violintuner.feature.repertoire.piece.CalibrationUi.Intro, viewModel.calibration.value)
+        assertFalse(viewModel.takeState.value.recording)
+
+        viewModel.onIntent(PieceIntent.CalibrationStartClicked)
+        runCurrent()
+        calibrationRuns.single().emit(com.example.violintuner.core.audio.backing.CalibrationProgress.Listening(List(8) { it < 3 }, 3))
+        runCurrent()
+        assertEquals(com.example.violintuner.feature.repertoire.piece.CalibrationUi.Listening(List(8) { it < 3 }, 3), viewModel.calibration.value)
+        calibrationRuns.single().emit(com.example.violintuner.core.audio.backing.CalibrationProgress.Done(com.example.violintuner.core.domain.backing.CalibrationResult.Measured(211, 8, 8)))
+        runCurrent()
+        assertEquals(com.example.violintuner.feature.repertoire.piece.CalibrationUi.Done(211, 8, 8), viewModel.calibration.value)
+        assertEquals(211, latencies.latencies.value.of("Buds"))
+        assertEquals(211, viewModel.backing.value!!.latencyMs)
+
+        viewModel.onIntent(PieceIntent.CalibrationClosed)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        assertTrue(viewModel.takeState.value.recording)
+    }
+
+    @Test
+    fun `from the music stand the take is never under the backing`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(PieceIntent.StandRecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.takeState.value.recording)
+        assertNull(playback.started)
     }
 }

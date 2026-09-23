@@ -23,6 +23,9 @@ interface AudioTap {
 
     val state: State
 
+    /** The rate of the take being recorded; null before its first hop. */
+    val sampleRateHz: Int? get() = null
+
     /** Thread-safe. Does nothing unless idle. */
     fun start(file: File)
 

@@ -78,6 +78,8 @@ fun StandRoute(
                     PieceEffect.Close, is PieceEffect.OpenForm, is PieceEffect.OpenStand, is PieceEffect.LaunchCamera, is PieceEffect.OpenSession,
                     // and there is no video take from the stand: the camera takes the screen the music is on (spec 3.19)
                     is PieceEffect.LaunchVideoCamera, is PieceEffect.ShareVideo,
+                    // nor a backing: it is the piece screen's (spec 3.32)
+                    PieceEffect.PickBackingFile,
                     -> Unit
                 }
             }
@@ -88,7 +90,7 @@ fun StandRoute(
         state = state,
         take = take,
         onIntent = viewModel::onIntent,
-        onRecordClick = { pieceViewModel.onIntent(PieceIntent.RecordClicked) },
+        onRecordClick = { pieceViewModel.onIntent(PieceIntent.StandRecordClicked) },
         modifier = modifier,
     )
 }

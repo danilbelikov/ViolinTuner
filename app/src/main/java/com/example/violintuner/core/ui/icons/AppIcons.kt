@@ -79,6 +79,8 @@ object AppIcons {
     val Archive: ImageVector by lazy { icon("Archive", IconPaths.ARCHIVE) }
     val Device: ImageVector by lazy { icon("Device", IconPaths.DEVICE) }
     val Calendar: ImageVector by lazy { icon("Calendar", IconPaths.CALENDAR) }
+    val Headphones: ImageVector by lazy { icon("Headphones", IconPaths.HEADPHONES) }
+    val Backing: ImageVector by lazy { icon("Backing", IconPaths.BACKING) }
 
     val TabLive: TabIcon by lazy { tab("TabLive", IconPaths.TAB_LIVE) }
     val TabPractice: TabIcon by lazy { tab("TabPractice", IconPaths.TAB_PRACTICE) }

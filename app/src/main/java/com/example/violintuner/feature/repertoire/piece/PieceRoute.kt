@@ -50,6 +50,8 @@ fun PieceRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val take by viewModel.takeState.collectAsStateWithLifecycle()
     val videoImport by viewModel.videoImport.collectAsStateWithLifecycle()
+    val backing by viewModel.backing.collectAsStateWithLifecycle()
+    val calibration by viewModel.calibration.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -90,6 +92,10 @@ fun PieceRoute(
     val videoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         viewModel.onIntent(PieceIntent.VideoPicked(uri?.toString()))
     }
+    // A backing (spec 3.32): any sound file the system can hand over; no permission, the pick is the permission.
+    val backingPicker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        viewModel.onIntent(PieceIntent.BackingPicked(uri?.toString()))
+    }
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -109,6 +115,7 @@ fun PieceRoute(
                         FileProvider.getUriForFile(context, "${context.packageName}$FILES_AUTHORITY_SUFFIX", File(effect.filePath)),
                     )
                     is PieceEffect.ShareVideo -> context.shareVideo(File(effect.filePath))
+                    PieceEffect.PickBackingFile -> backingPicker.launch(arrayOf(AUDIO_TYPES))
                 }
             }
         }
@@ -131,6 +138,8 @@ fun PieceRoute(
         takeActions = remember(shareViewModel, onOpenSound, viewModel) { CardActions(onShare = shareViewModel::start, onSound = onOpenSound, onBest = { viewModel.onIntent(PieceIntent.BestToggled(it)) }) },
         videoImport = videoImport,
         onPickVideo = { videoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.VideoOnly)) },
+        backing = backing,
+        calibration = calibration,
     )
     ShareHost(shareViewModel)
 }
@@ -155,3 +164,4 @@ private fun Context.shareVideo(file: File) {
 }
 
 private const val VIDEO_TYPE = "video/mp4"
+private const val AUDIO_TYPES = "audio/*"

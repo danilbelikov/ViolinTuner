@@ -90,11 +90,13 @@ fun RecordTakeRow(
     onIntent: (PieceIntent) -> Unit,
     modifier: Modifier = Modifier,
     buttonSize: androidx.compose.ui.unit.Dp = 72.dp,
+    /** Under the backing without headphones (spec 3.32): the button sleeps, the chip above says why. */
+    blocked: Boolean = false,
     /** Stands under the words, in their column: the quiet second way to a take (spec 3.19). */
     below: (@Composable () -> Unit)? = null,
 ) {
     val colors = MaterialTheme.colorScheme
-    val refused = take.micPermission == false
+    val refused = take.micPermission == false || (blocked && !take.recording)
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         RecordButton(
             recording = take.recording,
@@ -107,6 +109,9 @@ fun RecordTakeRow(
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             when {
                 take.recording -> RecordingWords(take)
+                blocked && take.micPermission != false -> {
+                    Text(stringResource(R.string.take_record), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold))
+                }
                 refused -> {
                     Text(stringResource(R.string.take_no_permission), color = colors.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp))
                     TextButton(onClick = { onIntent(PieceIntent.GrantMicClicked) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
@@ -146,6 +151,7 @@ private fun RecordingWords(take: TakeState) {
         )
     }
     LevelBars(take.levels, quiet = take.problem != null)
+    take.backingPlayedMs?.let { played -> take.backingDurationMs?.let { duration -> BackingProgressLine(played, duration) } }
     take.problem?.let { problem ->
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             // The hollow "may not" dot of the Live status line: nothing like the pulsing red dot of the recording above it.
@@ -305,10 +311,12 @@ private fun TakeCard(take: TakeItem, zone: ZoneId, actions: CardActions?, select
     val card = take.card
     val date = Formats.recordDate(card.date, card.otherYear)
     val duration = Formats.duration(card.durationMs)
+    val meta = stringResource(R.string.record_meta, if (card.title == null) Formats.timeOfDay(card.startedAtEpochMs, zone) else date, duration)
     RecordCard(
         card = card,
         title = card.title ?: date,
-        meta = stringResource(R.string.record_meta, if (card.title == null) Formats.timeOfDay(card.startedAtEpochMs, zone) else date, duration),
+        // made under the backing: said in words beside the time — the card already carries its note (spec 3.32)
+        meta = if (take.underBacking) stringResource(R.string.backing_take_meta, meta) else meta,
         onClick = onClick,
         actions = actions,
         highlighted = take.isNew,

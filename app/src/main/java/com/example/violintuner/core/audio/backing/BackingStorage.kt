@@ -5,6 +5,7 @@ import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.net.Uri
+import androidx.core.net.toUri
 import android.provider.OpenableColumns
 import android.util.Log
 import com.example.violintuner.core.backup.BackupPaths
@@ -62,6 +63,11 @@ interface BackingPcm {
     fun prepare(backing: Backing, sampleRate: Int): File?
 }
 
+/** Takes a picked file in as a backing. Blocking. */
+fun interface BackingFileImporter {
+    fun import(uri: String): BackingImport
+}
+
 /** What adding a backing came to (spec 3.32): the sheet says why it did not. */
 sealed interface BackingImport {
     data class Added(val backing: Backing) : BackingImport
@@ -83,9 +89,9 @@ class BackingImporter @Inject constructor(
     private val files: BackingFiles,
     private val config: BackingConfig,
     private val clock: Clock,
-) {
-    fun import(uri: String): BackingImport {
-        val source = Uri.parse(uri)
+) : BackingFileImporter {
+    override fun import(uri: String): BackingImport {
+        val source = uri.toUri()
         val resolver = context.contentResolver
         val (displayName, size) = describe(source)
         val probe = probe(source) ?: return BackingImport.Unreadable

@@ -4,6 +4,30 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.audio.share.ShareFiles
+import com.example.violintuner.core.audio.backing.AudioRoutes
+import com.example.violintuner.core.audio.backing.BackingFileImporter
+import com.example.violintuner.core.audio.backing.BackingImport
+import com.example.violintuner.core.audio.backing.BackingPcm
+import com.example.violintuner.core.audio.backing.BackingPreview
+import com.example.violintuner.core.audio.backing.CalibrationProgress
+import com.example.violintuner.core.audio.backing.HeadphoneCalibrator
+import com.example.violintuner.core.di.IoDispatcher
+import com.example.violintuner.core.domain.backing.AudioRoute
+import com.example.violintuner.core.domain.backing.Backing
+import com.example.violintuner.core.domain.backing.BackingFiles
+import com.example.violintuner.core.domain.backing.BackingOutput
+import com.example.violintuner.core.domain.backing.BackingRepository
+import com.example.violintuner.core.domain.backing.CalibrationResult
+import com.example.violintuner.core.domain.backing.HeadphoneLatencies
+import com.example.violintuner.core.domain.backing.HeadphoneLatencyStore
+import com.example.violintuner.core.domain.backing.NoBackings
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import com.example.violintuner.core.data.repertoire.SheetFiles
 import com.example.violintuner.core.domain.IntonationConfig
 import com.example.violintuner.core.domain.IntonationReading
@@ -57,6 +81,15 @@ class PieceViewModel @Inject constructor(
     private val videos: VideoFiles,
     private val importer: VideoTakeImporter,
     private val shareFiles: ShareFiles,
+    private val backings: BackingRepository = NoBackings,
+    private val backingFiles: BackingFiles? = null,
+    private val backingPcm: BackingPcm? = null,
+    private val backingImporter: BackingFileImporter? = null,
+    private val backingPreview: BackingPreview? = null,
+    private val routes: AudioRoutes? = null,
+    private val latencies: HeadphoneLatencyStore? = null,
+    private val calibrator: HeadphoneCalibrator? = null,
+    @IoDispatcher private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
 
@@ -91,8 +124,9 @@ class PieceViewModel @Inject constructor(
     private val newTakeId = MutableStateFlow<Long?>(null)
 
     val state: StateFlow<PieceState> = combine(
-        repertoire.pieces, repertoire.pages, ui, sessions.sessions, newTakeId,
-    ) { pieces, pages, ui, sessions, newTakeId ->
+        repertoire.pieces, repertoire.pages, ui, combine(sessions.sessions, backings.takeBackings, ::Pair), newTakeId,
+    ) { pieces, pages, ui, (sessions, underBacking), newTakeId ->
+        val underBackingIds = underBacking.mapTo(HashSet()) { it.sessionId }
         val piece = pieces.firstOrNull { it.id == pieceId }
         if (piece == null) {
             // Deleted from its form, or an id from nowhere: there is nothing to show. Said once:
@@ -110,7 +144,8 @@ class PieceViewModel @Inject constructor(
             val videoNames = sessions.mapNotNull { session -> session.videoPath?.let { session.id to it } }.toMap()
             shown.copy(
                 takes = shown.takes.map { take ->
-                    videoNames[take.card.id]?.let { take.copy(card = take.card.copy(videoBytes = videos.existing(it)?.length() ?: 0)) } ?: take
+                    val withVideo = videoNames[take.card.id]?.let { take.copy(card = take.card.copy(videoBytes = videos.existing(it)?.length() ?: 0)) } ?: take
+                    if (take.card.id in underBackingIds) withVideo.copy(underBacking = true) else withVideo
                 },
                 selection = SelectionRules.prune(ui.selection, takeIds),
             )
@@ -124,8 +159,45 @@ class PieceViewModel @Inject constructor(
     // collected only in between: a piece's screen has no business holding the microphone.
     private val listening = MutableStateFlow(false)
 
+    /** What only the screen knows of the backing: a file on its way in, one that did not open, its sound being prepared. */
+    private data class BackingEphemeral(
+        val importing: Boolean = false,
+        val problem: BackingProblem? = null,
+        val preparing: Boolean = false,
+        val askingRemove: Boolean = false,
+    )
+
+    private val backingEphemeral = MutableStateFlow(BackingEphemeral())
+    private val route = routes?.changes ?: flowOf(AudioRoute(BackingOutput.SPEAKER, null))
+    private val headphoneLatencies = latencies?.latencies ?: flowOf(HeadphoneLatencies.EMPTY)
+    private val previewing = backingPreview?.playing ?: flowOf(false)
+
+    /** The block «Минусовка» (spec 3.32); apart from [state], as the take is: it follows the headphones, which come and go. */
+    val backing: StateFlow<BackingUi?> = combine(
+        combine(backings.pieceBackings, backings.backings, backings.takeBackings, ::Triple),
+        sessions.sessions,
+        combine(route, headphoneLatencies, ::Pair),
+        backingEphemeral,
+        previewing,
+    ) { (pieceRows, all, takeRows), allSessions, (currentRoute, known), ephemeral, playing ->
+        PieceBackingReducer.uiOf(
+            pieceId = pieceId, pieceBackings = pieceRows, backings = all, takeBackings = takeRows,
+            takeIds = allSessions.filter { it.pieceId == pieceId }.mapTo(HashSet()) { it.id },
+            route = currentRoute, latencies = known,
+            fileExists = { backingFiles?.existing(it.fileName) != null },
+            importing = ephemeral.importing, problem = ephemeral.problem, previewing = playing, preparing = ephemeral.preparing,
+            askingRemove = ephemeral.askingRemove,
+        )
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
+
+    private val mutableCalibration = MutableStateFlow<CalibrationUi?>(null)
+
+    /** «Настроим наушники»; null while the sheet is closed. */
+    val calibration: StateFlow<CalibrationUi?> = mutableCalibration.asStateFlow()
+    private var calibrationJob: Job? = null
+
     @OptIn(ExperimentalCoroutinesApi::class)
-    val takeState: StateFlow<TakeState> = combine(listening, micPermission, configSource.config, ::Triple)
+    private val blindTake: Flow<TakeState> = combine(listening, micPermission, configSource.config, ::Triple)
         .flatMapLatest { (wanted, granted, intonation) ->
             if (!wanted || granted != true) {
                 flowOf(TakeState.idle(granted, config.levelBars))
@@ -143,7 +215,12 @@ class PieceViewModel @Inject constructor(
                     .onCompletion { listening.value = false }
             }
         }
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(TAKE_STOP_TIMEOUT_MS), TakeState.idle(micPermission.value, config.levelBars))
+
+
+    /** The blind take, and — under a backing — how far the backing has played (spec 3.32). */
+    val takeState: StateFlow<TakeState> = combine(blindTake, takes.backingPosition, backing) { take, played, block ->
+        if (take.recording && played != null) take.copy(backingPlayedMs = played, backingDurationMs = block?.durationMs) else take
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(TAKE_STOP_TIMEOUT_MS), TakeState.idle(micPermission.value, config.levelBars))
 
     /** Blind on purpose (spec 3.15): of all the engine reads, only "too noisy" reaches the screen, beside how loud it is. */
     private fun blindChain(intonation: IntonationConfig): Flow<TakePipeline.Output<BlindShown>> {
@@ -169,6 +246,12 @@ class PieceViewModel @Inject constructor(
 
     init {
         viewModelScope.launch { takes.watchPractice() }
+        // The backing's sound is made ready for the mix as soon as the piece has one (spec 5.25): a take must not wait for a decoder.
+        viewModelScope.launch {
+            combine(backings.pieceBackings, backings.backings) { rows, all ->
+                rows.firstOrNull { it.pieceId == pieceId }?.let { row -> all.firstOrNull { it.id == row.backingId } }
+            }.distinctUntilChanged().collect { found -> if (found != null) prepare(found) }
+        }
         // A video take lands in the list the way a recorded one does: on top, highlighted, the session screen shut.
         viewModelScope.launch { importer.saved.collect { if (it.pieceId == pieceId) highlight(it.sessionId) } }
         viewModelScope.launch {
@@ -218,10 +301,12 @@ class PieceViewModel @Inject constructor(
                 ui.value.selection.active -> Unit
                 takes.recordingRequested.value -> takes.recordingRequested.value = false
                 micPermission.value != true -> effectChannel.trySend(PieceEffect.RequestMicPermission)
-                else -> {
-                    takes.recordingRequested.value = true
-                    listening.value = true
-                }
+                else -> startTake()
+            }
+            PieceIntent.StandRecordClicked -> when {
+                takes.recordingRequested.value -> takes.recordingRequested.value = false
+                micPermission.value != true -> effectChannel.trySend(PieceEffect.RequestMicPermission)
+                else -> startTake(underBacking = false)
             }
             PieceIntent.GrantMicClicked -> effectChannel.trySend(PieceEffect.RequestMicPermission)
             is PieceIntent.MicPermissionChanged -> if (takes.requiresMicPermission) micPermission.value = intent.granted
@@ -249,11 +334,136 @@ class PieceViewModel @Inject constructor(
                     shareFiles.original(File(path), RESCUE_FILE_NAME)?.let { effectChannel.send(PieceEffect.ShareVideo(it.path)) }
                 }
             }
+            PieceIntent.BackingAddClicked -> if (!takes.recordingRequested.value) effectChannel.trySend(PieceEffect.PickBackingFile)
+            is PieceIntent.BackingPicked -> intent.uri?.let(::importBacking)
+            PieceIntent.BackingPreviewClicked -> previewBacking()
+            PieceIntent.BackingRemoveClicked -> {
+                val block = backing.value
+                if (block?.takesUnder ?: 0 > 0) backingEphemeral.update { it.copy(askingRemove = true) } else removeBacking()
+            }
+            PieceIntent.BackingRemoveConfirmed -> removeBacking()
+            PieceIntent.BackingRemoveDismissed -> backingEphemeral.update { it.copy(askingRemove = false) }
+            PieceIntent.BackingChipToggled -> backing.value?.takeIf { it.present && !takes.recordingRequested.value }?.let { block ->
+                viewModelScope.launch { backings.setEnabled(pieceId, !block.enabled) }
+            }
+            PieceIntent.BackingProblemDismissed -> backingEphemeral.update { it.copy(problem = null) }
+            PieceIntent.HeadphonesCheckClicked -> if (!takes.recordingRequested.value) mutableCalibration.value = CalibrationUi.Intro
+            PieceIntent.CalibrationStartClicked -> startCalibration()
+            PieceIntent.CalibrationClosed -> {
+                calibrationJob?.cancel()
+                mutableCalibration.value = null
+            }
             is PieceIntent.CameraFinished -> {
                 val file = savedState.remove<String>(KEY_CAMERA_FILE)?.let(::File) ?: return
                 if (intent.saved) import(listOf(file.toURI().toString()), temporary = listOf(file)) else file.delete()
             }
         }
+    }
+
+    /**
+     * A take, under the backing when the chip is on (spec 3.32): never through the speaker, and not before wireless
+     * headphones have been measured once.
+     */
+    private fun startTake(underBacking: Boolean = true) {
+        val block = backing.value
+        if (underBacking && block != null && block.wanted) {
+            if (block.blocksRecording) return
+            if (block.needsCalibration) {
+                mutableCalibration.value = CalibrationUi.Intro
+                return
+            }
+            val found = backingOf() ?: return
+            val pcm = backingPcm ?: return
+            backingPreview?.stop()
+            takes.backingPlan = TakePipeline.BackingPlan(
+                backing = found,
+                pcm = { rate -> pcm.cached(found, rate) ?: pcm.prepare(found, rate) },
+                route = block.route,
+                latencyMs = block.latencyMs ?: if (block.route.output.needsCalibration) backingConfig.uncalibratedBluetoothMs else 0,
+            )
+        } else {
+            takes.backingPlan = null
+        }
+        takes.recordingRequested.value = true
+        listening.value = true
+    }
+
+    private val backingConfig = com.example.violintuner.core.domain.backing.BackingConfig()
+
+    private var knownBacking: Backing? = null
+
+    private fun backingOf(): Backing? = knownBacking
+
+    private fun prepare(found: Backing) {
+        knownBacking = found
+        val pcm = backingPcm ?: return
+        viewModelScope.launch {
+            backingEphemeral.update { it.copy(preparing = true) }
+            withContext(io) { PREPARED_RATES.forEach { rate -> pcm.cached(found, rate) ?: pcm.prepare(found, rate) } }
+            backingEphemeral.update { it.copy(preparing = false) }
+        }
+    }
+
+    private fun importBacking(uri: String) {
+        val importer = backingImporter ?: return
+        backingEphemeral.update { it.copy(importing = true, problem = null) }
+        viewModelScope.launch {
+            val result = withContext(io) { importer.import(uri) }
+            val problem = when (result) {
+                is BackingImport.Added -> {
+                    val id = backings.add(result.backing)
+                    backings.setForPiece(pieceId, id)
+                    null
+                }
+                BackingImport.Unreadable -> BackingProblem.Unreadable
+                BackingImport.TooLong -> BackingProblem.TooLong
+                is BackingImport.NoSpace -> BackingProblem.NoSpace((result.neededBytes + BYTES_PER_MB - 1) / BYTES_PER_MB)
+            }
+            backingEphemeral.update { it.copy(importing = false, problem = problem) }
+        }
+    }
+
+    private fun previewBacking() {
+        val found = backingOf() ?: return
+        if (takes.recordingRequested.value) return
+        val file = backingFiles?.existing(found.fileName) ?: return
+        backingPreview?.toggle(file)
+    }
+
+    private fun removeBacking() {
+        backingEphemeral.update { it.copy(askingRemove = false) }
+        backingPreview?.stop()
+        knownBacking = null
+        viewModelScope.launch { backings.setForPiece(pieceId, null) }
+    }
+
+    /** «Настроим наушники»: clicks into the headphones, notes played to them; the median is remembered for these headphones. */
+    private fun startCalibration() {
+        val run = calibrator ?: return
+        if (micPermission.value != true) {
+            effectChannel.trySend(PieceEffect.RequestMicPermission)
+            return
+        }
+        val name = backing.value?.route?.deviceName
+        calibrationJob?.cancel()
+        calibrationJob = viewModelScope.launch {
+            run.run(configSource.config.first()).collect { progress ->
+                when (progress) {
+                    is CalibrationProgress.Listening -> mutableCalibration.value = CalibrationUi.Listening(progress.answered, progress.clicksDone)
+                    is CalibrationProgress.Done -> when (val result = progress.result) {
+                        is CalibrationResult.Measured -> {
+                            if (name != null) latencies?.set(name, result.latencyMs)
+                            mutableCalibration.value = CalibrationUi.Done(result.latencyMs, result.hits, result.of)
+                        }
+                        is CalibrationResult.Failed -> mutableCalibration.value = CalibrationUi.Failed
+                    }
+                }
+            }
+        }
+    }
+
+    override fun onCleared() {
+        backingPreview?.stop()
     }
 
     // Two takes are not made at once, and takes are not made while others are being picked for deletion.
@@ -300,6 +510,10 @@ class PieceViewModel @Inject constructor(
         private const val KEY_VIDEO_FILE = "videoFile"
         private const val RESCUE_FILE_NAME = "video.mp4"
         private const val STOP_TIMEOUT_MS = 5_000L
+        private const val BYTES_PER_MB = 1024L * 1024
+
+        /** The rates a take is recorded at (spec 5.1): the backing is made ready for both. */
+        private val PREPARED_RATES = listOf(48_000, 44_100)
 
         // Long enough to survive a rotation, short enough that the microphone goes soon after the screen does (as on Live).
         private const val TAKE_STOP_TIMEOUT_MS = 2_000L

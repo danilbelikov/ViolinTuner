@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioManager
+import android.media.AudioTimestamp
 import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
@@ -42,6 +43,15 @@ class MicPitchSource @Inject constructor(
     private val tap = HopAudioTap(encoderFactory, ioDispatcher)
     override val audioTap: AudioTap get() = tap
 
+    /** The last word of the input on its time: a frame it had captured, and when (spec 5.25). */
+    private class Anchor(val frame: Long, val nanos: Long, val rate: Int)
+
+    @Volatile private var anchor: Anchor? = null
+
+    override val clock: SampleClock = SampleClock { tMs ->
+        anchor?.let { at -> at.nanos + ((tMs * at.rate / MS_PER_SECOND) - at.frame) * NANOS_PER_SECOND / at.rate }
+    }
+
     override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
         val (recorder, sampleRateHz) = openRecorder(config)
         try {
@@ -54,6 +64,8 @@ class MicPitchSource @Inject constructor(
             val watchdog = DigitalSilenceWatchdog(config, sampleRateHz)
             val stats = if (BuildConfig.DEBUG) FrameStats(config, sampleRateHz, recorder.audioSource) else null
             var samplesRead = 0L
+            val timestamp = AudioTimestamp()
+            anchor = null
             while (coroutineContext.isActive) {
                 val read = recorder.read(hop, 0, hop.size, AudioRecord.READ_BLOCKING)
                 if (read < 0) throw unavailable("AudioRecord.read failed with code $read")
@@ -62,6 +74,10 @@ class MicPitchSource @Inject constructor(
                 // hop that follows a frame starts exactly at that frame's time.
                 tap.onHop(hop, read, hopStartTMs = samplesRead * MS_PER_SECOND / sampleRateHz, sampleRateHz)
                 samplesRead += read
+                // counted from the same start as the samples read: frame N of the input is sample N of the take
+                if (recorder.getTimestamp(timestamp, AudioTimestamp.TIMEBASE_MONOTONIC) == AudioRecord.SUCCESS) {
+                    anchor = Anchor(timestamp.framePosition, timestamp.nanoTime, sampleRateHz)
+                }
                 analyzer.push(hop, read)?.let { frame ->
                     stats?.add(frame)
                     emit(frame)
@@ -169,6 +185,7 @@ class MicPitchSource @Inject constructor(
     private companion object {
         const val TAG = "MicPitchSource"
         const val MS_PER_SECOND = 1_000L
+        const val NANOS_PER_SECOND = 1_000_000_000L
         const val CHANNEL = AudioFormat.CHANNEL_IN_MONO
         const val ENCODING = AudioFormat.ENCODING_PCM_16BIT
         const val BYTES_PER_SAMPLE = 2
