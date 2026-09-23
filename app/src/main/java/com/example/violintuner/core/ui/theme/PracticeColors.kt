@@ -22,6 +22,9 @@ data class PracticeColors(
     val flameOuter: Color,
     val flameCore: Color,
     val flameHot: Color,
+    /** The lights inside «Начать занятие» (spec 3.16), back to front, and the glow under it. */
+    val startLights: List<Color>,
+    val startGlow: Color,
 ) {
     /** [level] 1–4; 0 has no fill and is not asked for. */
     fun fillFor(level: Int): Color = fills[level - 1]
@@ -36,6 +39,8 @@ internal val DarkPracticeColors = PracticeColors(
     flameOuter = FlameOuter,
     flameCore = FlameCore,
     flameHot = FlameHot,
+    startLights = listOf(StartLightPeriwinkle, StartLightRose, StartLightPearl),
+    startGlow = StartGlow,
 )
 
 internal val LocalPracticeColors = staticCompositionLocalOf<PracticeColors> {

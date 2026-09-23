@@ -41,6 +41,15 @@ internal object PracticeMotion {
     const val RECAP_GROW_MS = 600
     const val RECAP_LEVEL_HALF_MS = 400
 
-    /** The fallback of the handoff, to be decided on a phone: false — the flame comes alive only when the streak grows. */
-    const val FLAME_SWAY_ON_OPEN = true
+    /**
+     * The fallback of the handoff: false — the flame comes alive only when the streak grows. Taken in
+     * 0.66 (spec 3.18): the opening of the screen belongs to the living «Начать занятие».
+     */
+    const val FLAME_SWAY_ON_OPEN = false
+
+    // «Начать занятие» (spec 5.10): under a finger its glow flares and spreads, and settles back.
+    const val START_PRESS_IN_MS = 120
+    const val START_PRESS_OUT_MS = 240
+    const val START_GLOW_ALPHA = 0.5f
+    const val START_GLOW_PRESSED_ALPHA = 0.85f
 }

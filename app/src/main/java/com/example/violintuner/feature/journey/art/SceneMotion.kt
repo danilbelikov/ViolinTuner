@@ -49,6 +49,14 @@ object SceneMotion {
     /** The least time between two frames of a living postcard: thirty a second is plenty for something this slow. */
     const val FRAME_NANOS = 33_000_000L
 
+    /**
+     * Whether a living picture shows a new frame at [now] after the one it showed at [shown] (frame
+     * times, in nanoseconds). Every picture keeps to one grid of [FRAME_NANOS], so two on a screen —
+     * a postcard and the living «Начать занятие» (spec 3.16) — change on the same frames: by turns
+     * they would have the screen drawn twice as often.
+     */
+    fun frameDue(now: Long, shown: Long): Boolean = now / FRAME_NANOS != shown / FRAME_NANOS
+
     /** The same for the picture behind Live: it lives only while the violin is silent, and a pause is not a picture to watch (docs/plan-performance.md). */
     const val LIVE_FRAME_NANOS = 66_000_000L
 
@@ -431,7 +439,7 @@ fun rememberSceneSeconds(enabled: Boolean = true): State<Float>? {
             while (clock.seen) {
                 withFrameNanos { now ->
                     if (start < 0) start = now
-                    if (now - shown >= SceneMotion.FRAME_NANOS) {
+                    if (SceneMotion.frameDue(now, shown)) {
                         shown = now
                         tick = !tick
                         clock.set(frozen?.let { if (tick) it else it + FROZEN_TICK } ?: ((now - start) / 1_000_000_000f))

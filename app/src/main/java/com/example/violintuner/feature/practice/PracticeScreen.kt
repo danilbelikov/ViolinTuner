@@ -1,6 +1,7 @@
 package com.example.violintuner.feature.practice
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -24,13 +25,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -62,6 +65,7 @@ import com.example.violintuner.feature.practice.components.ProfileHeader
 import com.example.violintuner.feature.practice.components.ProfileHeaderMetrics
 import com.example.violintuner.feature.practice.components.ProfileSheet
 import com.example.violintuner.feature.practice.components.RunningDot
+import com.example.violintuner.feature.practice.components.StartPracticeButton
 import com.example.violintuner.feature.practice.components.StreakFlame
 import com.example.violintuner.feature.practice.components.StreakFlameSize
 import com.example.violintuner.feature.practice.components.SummarySheet
@@ -132,15 +136,17 @@ fun PracticeScreen(
     // The window into the journey (spec 3.23) comes as a slot: it lives on its own flow, not in PracticeState.
     journeyCard: @Composable (compact: Boolean) -> Unit = {},
 ) {
+    // Two movements at most (spec 3.16): while the streak flame sways, the start button rests. Drawing only.
+    val flameSways = remember { mutableStateOf(false) }
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
     ) {
         if (maxWidth > maxHeight) {
-            LandscapeLayout(state, onIntent, zone, journeyCard)
+            LandscapeLayout(state, onIntent, zone, journeyCard, flameSways)
         } else {
-            PortraitLayout(state, onIntent, zone, journeyCard)
+            PortraitLayout(state, onIntent, zone, journeyCard, flameSways)
         }
     }
     when (val sheet = state.sheet) {
@@ -155,7 +161,13 @@ fun PracticeScreen(
 }
 
 @Composable
-private fun PortraitLayout(state: PracticeState, onIntent: (PracticeIntent) -> Unit, zone: ZoneId, journeyCard: @Composable (Boolean) -> Unit) {
+private fun PortraitLayout(
+    state: PracticeState,
+    onIntent: (PracticeIntent) -> Unit,
+    zone: ZoneId,
+    journeyCard: @Composable (Boolean) -> Unit,
+    flameSways: MutableState<Boolean>,
+) {
     val metrics = Metrics.Portrait
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         Column(
@@ -169,8 +181,8 @@ private fun PortraitLayout(state: PracticeState, onIntent: (PracticeIntent) -> U
             Header(state, onIntent, metrics)
             if (!state.loading) {
                 journeyCard(false)
-                MainAction(state, onIntent, metrics)
-                SummaryCards(state, metrics)
+                MainAction(state, onIntent, metrics, flameSways)
+                SummaryCards(state, metrics, flameSways)
                 PracticeCalendar(
                     month = state.month,
                     cells = state.cells,
@@ -187,7 +199,13 @@ private fun PortraitLayout(state: PracticeState, onIntent: (PracticeIntent) -> U
 }
 
 @Composable
-private fun LandscapeLayout(state: PracticeState, onIntent: (PracticeIntent) -> Unit, zone: ZoneId, journeyCard: @Composable (Boolean) -> Unit) {
+private fun LandscapeLayout(
+    state: PracticeState,
+    onIntent: (PracticeIntent) -> Unit,
+    zone: ZoneId,
+    journeyCard: @Composable (Boolean) -> Unit,
+    flameSways: MutableState<Boolean>,
+) {
     val metrics = Metrics.Landscape
     Row(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -200,8 +218,8 @@ private fun LandscapeLayout(state: PracticeState, onIntent: (PracticeIntent) -> 
         ) {
             Header(state, onIntent, metrics)
             if (!state.loading) {
-                MainAction(state, onIntent, metrics)
-                SummaryCards(state, metrics)
+                MainAction(state, onIntent, metrics, flameSways)
+                SummaryCards(state, metrics, flameSways)
                 journeyCard(true)
             }
         }
@@ -246,13 +264,17 @@ private fun Header(state: PracticeState, onIntent: (PracticeIntent) -> Unit, met
 }
 
 @Composable
-private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit, metrics: Metrics) {
+private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit, metrics: Metrics, flameSways: MutableState<Boolean>) {
     val colors = MaterialTheme.colorScheme
+    // A sheet over the screen has the eye: the start button rests under it.
+    val sheetOpen = state.sheet != null || state.gift != null
     AnimatedContent(
         targetState = state.runningMs != null,
         transitionSpec = {
+            // unclipped: the glow of the start button lies past its bounds and must not be cut while it fades
             (fadeIn(tween(ACTION_SWITCH_MS)) + scaleIn(tween(ACTION_SWITCH_MS), initialScale = ACTION_SWITCH_SCALE))
                 .togetherWith(fadeOut(tween(ACTION_SWITCH_MS)))
+                .using(SizeTransform(clip = false))
         },
         label = "mainAction",
     ) { running ->
@@ -323,22 +345,14 @@ private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit,
                     )
                 }
             } else {
-                Button(
+                // Alive (spec 3.16): the first thing seen when the app opens, and the one that asks to be pressed.
+                StartPracticeButton(
                     onClick = { onIntent(PracticeIntent.StartClicked) },
+                    calm = { sheetOpen || flameSways.value },
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(ButtonHeight),
-                    shape = RoundedCornerShape(ButtonCorner),
-                    colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
-                ) {
-                    // The stopwatch of the tab: a practice is time. The one filled button that carries an icon.
-                    IconLabel(
-                        icon = AppIcons.Timer,
-                        text = stringResource(R.string.practice_start),
-                        iconSize = IconSizes.InFilledButton,
-                        style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
-                    )
-                }
+                )
                 Text(
                     text = when {
                         !state.hasHistory -> stringResource(R.string.practice_empty)
@@ -356,7 +370,7 @@ private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit,
 }
 
 @Composable
-private fun SummaryCards(state: PracticeState, metrics: Metrics) {
+private fun SummaryCards(state: PracticeState, metrics: Metrics, flameSways: MutableState<Boolean>) {
     val none = stringResource(R.string.practice_no_value)
     // Another month, or the first numbers after loading, are other numbers — not these ones grown.
     val scope = state.month to state.loading
@@ -389,6 +403,7 @@ private fun SummaryCards(state: PracticeState, metrics: Metrics) {
                 running = state.runningMs != null,
                 scope = scope,
                 maxSize = metrics.flameSize,
+                onSway = { flameSways.value = it },
             )
         }
     }

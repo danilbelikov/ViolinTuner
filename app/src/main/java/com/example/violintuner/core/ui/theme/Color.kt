@@ -89,6 +89,14 @@ internal val FlameOuter = Color(0xFFF28C3B)
 internal val FlameCore = Color(0xFFFFE29A)
 internal val FlameHot = Color(0xFFFFF6DC)
 
+// The living «Начать занятие» (spec 3.16, 5.10; the prototype start-button.html): lights drifting over
+// primary as light plays on mother-of-pearl, back to front, and the lilac glow under the button.
+// None is a zone colour, and onPrimary reads over every one of them.
+internal val StartLightPeriwinkle = Color(0xFFA6B5FF)
+internal val StartLightRose = Color(0xFFEBB6F4)
+internal val StartLightPearl = Color(0xFFF4EEFF)
+internal val StartGlow = Color(0xFFB79BFF)
+
 // The «Звук» screen (handoff sound, `tokens`). Not zone colors on purpose.
 internal val MeterLevel = Color(0xFF6FA0C4)
 internal val MeterReduce = Color(0xFF8FD0C9)

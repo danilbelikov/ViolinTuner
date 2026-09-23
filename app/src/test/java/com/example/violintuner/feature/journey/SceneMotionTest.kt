@@ -367,4 +367,20 @@ class SceneMotionTest {
         assertEquals(SceneAnim.Bob(0.8f, 3.2f), both.bob)
         assertEquals(6f, both.ride!!.speed, 0f)
     }
+
+    @Test
+    fun twoLivingPicturesStartedOnDifferentFrames_changeOnTheSameFrames_thirtyTimesASecond() {
+        val vsync = 16_666_667L
+        val frames = (1_000L..1_240L).map { it * vsync }
+        // the one starts a frame after the other: each keeps what it last showed
+        fun changes(from: Int): List<Long> {
+            var shown = 0L
+            return frames.drop(from).filter { now -> SceneMotion.frameDue(now, shown).also { if (it) shown = now } }
+        }
+        val postcard = changes(from = 0).drop(1)
+        val button = changes(from = 1).drop(1)
+        assertEquals(postcard.filter { it >= button.first() }, button)
+        val perSecond = postcard.size / ((frames.last() - frames.first()) / 1e9)
+        assertTrue("$perSecond", perSecond in 29.0..31.0)
+    }
 }

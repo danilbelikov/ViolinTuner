@@ -35,9 +35,10 @@ private class Wake(val flare: Boolean, val appearing: Boolean)
 
 /**
  * The flame of «Дней подряд» (spec 3.18, handoff 19g): a candle, not a bonfire. It sways for a
- * few seconds after the screen opens and after it flares — a streak that grew before the eyes —
- * and then comes to rest; while a practice runs it stands still, the timer is what lives there.
- * All three movements at once read as a shop window (handoff 19h), so there are never three.
+ * few seconds after it flares — a streak that grew before the eyes — and then comes to rest; the
+ * opening of the screen belongs to the living «Начать занятие» (0.66). While a practice runs it
+ * stands still, the timer is what lives there. All three movements at once read as a shop window
+ * (handoff 19h), so there are never three: [onSway] tells the start button to rest while it sways.
  *
  * [scope] is what makes numbers "other numbers, not these ones grown" — the same as for
  * `rolledValue`: loading and another month do not flare. Draws nothing below three days, but
@@ -45,7 +46,14 @@ private class Wake(val flare: Boolean, val appearing: Boolean)
  * at rest no frames are spent.
  */
 @Composable
-fun StreakFlame(streakDays: Int, running: Boolean, scope: Any?, modifier: Modifier = Modifier, maxSize: Dp = StreakFlameSize.Full) {
+fun StreakFlame(
+    streakDays: Int,
+    running: Boolean,
+    scope: Any?,
+    modifier: Modifier = Modifier,
+    maxSize: Dp = StreakFlameSize.Full,
+    onSway: (Boolean) -> Unit = {},
+) {
     val still = LocalReduceMotion.current
     val stage = FlameMath.stageOf(streakDays)
     val colors = ViolinTheme.practiceColors
@@ -57,6 +65,7 @@ fun StreakFlame(streakDays: Int, running: Boolean, scope: Any?, modifier: Modifi
     val alpha = remember { mutableFloatStateOf(1f) }
     val wakes = remember { Channel<Wake>(Channel.CONFLATED) }
     val runningNow by rememberUpdatedState(running)
+    val swaying by rememberUpdatedState(onSway)
 
     val known = remember(scope) { mutableIntStateOf(streakDays) }
     // A flame that has just been earned must not flash at full strength for the frame it takes the
@@ -75,41 +84,47 @@ fun StreakFlame(streakDays: Int, running: Boolean, scope: Any?, modifier: Modifi
     LaunchedEffect(still) {
         if (still) return@LaunchedEffect
         var next: Wake? = Wake(flare = false, appearing = false).takeIf { PracticeMotion.FLAME_SWAY_ON_OPEN && !runningNow }
-        while (true) {
-            val wake = next ?: wakes.receive()
-            next = null
-            val appearMs = if (wake.appearing) PracticeMotion.FLAME_APPEAR_MS else 0L
-            val flareMs = if (wake.flare) PracticeMotion.FLAME_FLARE_MS.toLong() else 0L
-            var start = -1L
-            var cutAt = -1L
-            var done = false
-            while (!done) {
-                withFrameMillis { now ->
-                    if (start < 0) start = now
-                    val t = now - start
-                    alpha.floatValue = if (wake.appearing) FlameMath.appearAlphaAt(t) else 1f
-                    flare.floatValue = FlameMath.flareScaleAt(t - appearMs)
-                    val sway = t - appearMs - flareMs
-                    if (sway >= 0) {
-                        // A practice that started meanwhile takes the floor: the sway dies down at once, just as softly.
-                        if (runningNow && cutAt < 0) cutAt = sway
-                        val amplitude = if (cutAt < 0) {
-                            FlameMath.amplitudeAt(sway)
-                        } else {
-                            min(FlameMath.amplitudeAt(sway), FlameMath.amplitudeAt(PracticeMotion.FLAME_ALIVE_MS + (sway - cutAt)))
+        try {
+            while (true) {
+                val wake = next ?: wakes.receive()
+                next = null
+                swaying(true)
+                val appearMs = if (wake.appearing) PracticeMotion.FLAME_APPEAR_MS else 0L
+                val flareMs = if (wake.flare) PracticeMotion.FLAME_FLARE_MS.toLong() else 0L
+                var start = -1L
+                var cutAt = -1L
+                var done = false
+                while (!done) {
+                    withFrameMillis { now ->
+                        if (start < 0) start = now
+                        val t = now - start
+                        alpha.floatValue = if (wake.appearing) FlameMath.appearAlphaAt(t) else 1f
+                        flare.floatValue = FlameMath.flareScaleAt(t - appearMs)
+                        val sway = t - appearMs - flareMs
+                        if (sway >= 0) {
+                            // A practice that started meanwhile takes the floor: the sway dies down at once, just as softly.
+                            if (runningNow && cutAt < 0) cutAt = sway
+                            val amplitude = if (cutAt < 0) {
+                                FlameMath.amplitudeAt(sway)
+                            } else {
+                                min(FlameMath.amplitudeAt(sway), FlameMath.amplitudeAt(PracticeMotion.FLAME_ALIVE_MS + (sway - cutAt)))
+                            }
+                            pose.value = FlameMath.poseAt(FlameMath.phaseAt(sway), amplitude)
+                            if (amplitude <= 0f) done = true
                         }
-                        pose.value = FlameMath.poseAt(FlameMath.phaseAt(sway), amplitude)
-                        if (amplitude <= 0f) done = true
+                    }
+                    wakes.tryReceive().getOrNull()?.let {
+                        next = it
+                        done = true
                     }
                 }
-                wakes.tryReceive().getOrNull()?.let {
-                    next = it
-                    done = true
-                }
+                pose.value = FlameMath.Pose.REST
+                flare.floatValue = 1f
+                alpha.floatValue = 1f
+                swaying(false)
             }
-            pose.value = FlameMath.Pose.REST
-            flare.floatValue = 1f
-            alpha.floatValue = 1f
+        } finally {
+            swaying(false)
         }
     }
 
