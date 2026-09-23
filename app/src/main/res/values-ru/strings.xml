@@ -62,6 +62,8 @@
     <string name="onboarding_data_copy_text">Если удалить приложение или сменить телефон, записи, видео и фото нот пропадут. Копия — в «Настройках», раздел «Данные».</string>
     <string name="onboarding_data_takes_lead">Удаляйте неудачные дубли.</string>
     <string name="onboarding_data_takes_text">Видео весит в сотню раз больше звука, и место кончается быстро. Удачный дубль отметьте звездой — его легко найти.</string>
+    <string name="onboarding_data_analytics_lead">Помогать улучшать приложение.</string>
+    <string name="onboarding_data_analytics_text">Отправлять обезличенную статистику: какие экраны открываются и где случаются сбои. Записи, видео и ноты не уходят никогда. Изменить — в «Настройках».</string>
     <string name="onboarding_data_cta">Понятно</string>
 
     <string name="tolerance_beginner_name">Новичок</string>

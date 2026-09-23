@@ -62,6 +62,8 @@
     <string name="onboarding_data_copy_text">Al borrar la aplicación o cambiar de teléfono, se pierden grabaciones, vídeos y fotos de partituras. La copia está en «Ajustes», sección «Datos».</string>
     <string name="onboarding_data_takes_lead">Borrar las tomas fallidas.</string>
     <string name="onboarding_data_takes_text">Un vídeo pesa cien veces más que el sonido y el espacio se acaba rápido. La toma buena, con una estrella: así es fácil de encontrar.</string>
+    <string name="onboarding_data_analytics_lead">Ayudar a mejorar la aplicación.</string>
+    <string name="onboarding_data_analytics_text">Se envían estadísticas anónimas: qué pantallas se abren y dónde se producen los fallos. Las grabaciones, los vídeos y las partituras nunca salen. Para cambiarlo, vaya a «Ajustes».</string>
     <string name="onboarding_data_cta">Entendido</string>
 
     <string name="tolerance_beginner_name">Principiante</string>

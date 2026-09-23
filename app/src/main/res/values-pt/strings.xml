@@ -62,6 +62,8 @@
     <string name="onboarding_data_copy_text">Se você apagar o app ou trocar de telefone, gravações, vídeos e fotos de partituras serão perdidos. A cópia fica em “Ajustes”, seção “Dados”.</string>
     <string name="onboarding_data_takes_lead">Apague os takes que não deram certo.</string>
     <string name="onboarding_data_takes_text">Um vídeo pesa cem vezes mais que o som, e o espaço acaba rápido. Marque um bom take com uma estrela — assim fica fácil de achar.</string>
+    <string name="onboarding_data_analytics_lead">Ajudar a melhorar o aplicativo.</string>
+    <string name="onboarding_data_analytics_text">São enviadas estatísticas anônimas: quais telas são abertas e onde ocorrem as falhas. Gravações, vídeos e partituras nunca saem daqui. Para mudar, veja “Ajustes”.</string>
     <string name="onboarding_data_cta">Entendi</string>
 
     <string name="tolerance_beginner_name">Iniciante</string>

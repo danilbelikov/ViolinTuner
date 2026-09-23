@@ -125,6 +125,9 @@ internal val JourneyRows = listOf(
 internal val DataRows = listOf(
     IntroRow(AppIcons.SaveCopy, R.string.onboarding_data_copy_lead, R.string.onboarding_data_copy_text),
     IntroRow(AppIcons.Trash, R.string.onboarding_data_takes_lead, R.string.onboarding_data_takes_text),
+    // The row the page waited for (spec 3.33): it may only promise what the app actually does,
+    // and the switch it points at exists since spec 3.34.
+    IntroRow(AppIcons.Device, R.string.onboarding_data_analytics_lead, R.string.onboarding_data_analytics_text),
 )
 
 /** Four dots of the introduction; the page in view is a longer pill. */

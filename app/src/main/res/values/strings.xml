@@ -62,6 +62,8 @@
     <string name="onboarding_data_copy_text">If you delete the app or change phones, recordings, videos and sheet-music photos will be lost. The backup is in “Settings”, under “Data”.</string>
     <string name="onboarding_data_takes_lead">Delete failed takes.</string>
     <string name="onboarding_data_takes_text">A video weighs a hundred times more than sound, and space runs out fast. Mark a good take with a star — it\'s easy to find.</string>
+    <string name="onboarding_data_analytics_lead">Help improve the app.</string>
+    <string name="onboarding_data_analytics_text">Anonymous statistics are sent: which screens get opened and where the app fails. Recordings, video and sheet music never leave. To change it, see “Settings”.</string>
     <string name="onboarding_data_cta">Got it</string>
 
     <string name="tolerance_beginner_name">Beginner</string>

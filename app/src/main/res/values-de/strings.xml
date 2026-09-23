@@ -62,6 +62,8 @@
     <string name="onboarding_data_copy_text">Wenn Sie die App löschen oder das Telefon wechseln, gehen Aufnahmen, Videos und Notenfotos verloren. Die Sicherung finden Sie unter „Einstellungen“ → „Daten“.</string>
     <string name="onboarding_data_takes_lead">Löschen Sie misslungene Takes.</string>
     <string name="onboarding_data_takes_text">Ein Video ist hundertmal größer als eine Tonaufnahme, der Speicher wird schnell knapp. Markieren Sie gelungene Takes mit einem Stern – so finden Sie sie leicht.</string>
+    <string name="onboarding_data_analytics_lead">Hilf, die App zu verbessern.</string>
+    <string name="onboarding_data_analytics_text">Anonyme Statistik wird gesendet: welche Bildschirme geöffnet werden und wo Fehler auftreten. Aufnahmen, Videos und Noten verlassen das Telefon nie. Ändern können Sie das unter „Einstellungen“.</string>
     <string name="onboarding_data_cta">Verstanden</string>
 
     <string name="tolerance_beginner_name">Anfänger</string>

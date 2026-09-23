@@ -62,6 +62,8 @@
     <string name="onboarding_data_copy_text">Se si elimina l\'app o si cambia telefono, registrazioni, video e foto degli spartiti vanno persi. La copia è in «Impostazioni», sezione «Dati».</string>
     <string name="onboarding_data_takes_lead">Eliminare i take non riusciti.</string>
     <string name="onboarding_data_takes_text">Un video pesa cento volte più del suono e lo spazio finisce presto. Il take riuscito si segna con una stella: così si ritrova subito.</string>
+    <string name="onboarding_data_analytics_lead">Aiutare a migliorare l\'app.</string>
+    <string name="onboarding_data_analytics_text">Vengono inviate statistiche anonime: quali schermate vengono aperte e dove si verificano gli errori. Registrazioni, video e spartiti non escono mai. Per cambiare, vedi «Impostazioni».</string>
     <string name="onboarding_data_cta">Ho capito</string>
 
     <string name="tolerance_beginner_name">Principiante</string>

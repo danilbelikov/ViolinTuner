@@ -62,6 +62,8 @@
     <string name="onboarding_data_copy_text">Si vous supprimez l\'application ou changez de téléphone, enregistrements, vidéos et photos de partitions seront perdus. La sauvegarde se trouve dans « Réglages », section « Données ».</string>
     <string name="onboarding_data_takes_lead">Supprimez les prises ratées.</string>
     <string name="onboarding_data_takes_text">Une vidéo pèse cent fois plus que le son, et la place s\'épuise vite. Marquez une bonne prise d\'une étoile — elle sera facile à retrouver.</string>
+    <string name="onboarding_data_analytics_lead">Aider à améliorer l\'application.</string>
+    <string name="onboarding_data_analytics_text">Des statistiques anonymes sont envoyées : quels écrans sont ouverts et où surviennent les erreurs. Enregistrements, vidéos et partitions ne partent jamais. Pour changer, voir « Réglages ».</string>
     <string name="onboarding_data_cta">Compris</string>
 
     <string name="tolerance_beginner_name">Débutant</string>
