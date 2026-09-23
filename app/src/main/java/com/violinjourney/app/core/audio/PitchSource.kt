@@ -32,5 +32,17 @@ fun interface SampleClock {
     fun nanosAt(tMs: Long): Long?
 }
 
+/** Why the input went away (spec 3.34); the message says the rest, the reason is what is counted. */
+enum class MicUnavailableReason(val key: String) {
+    /** The recorder would not open or would not start: the microphone is busy, or the rates are refused. */
+    OPEN_FAILED("open_failed"),
+
+    /** A read came back with an error code: the input broke while it was being listened to. */
+    READ_FAILED("read_failed"),
+
+    /** Exact zeros for longer than the watchdog allows — muted by the system, or a dead bridge (spec 3.4). */
+    DIGITAL_SILENCE("digital_silence"),
+}
+
 /** The microphone could not be opened or stopped delivering audio; retrying later may help. */
-class MicUnavailableException(message: String) : Exception(message)
+class MicUnavailableException(val reason: MicUnavailableReason, message: String) : Exception(message)

@@ -57,7 +57,7 @@ class MicPitchSource @Inject constructor(
         try {
             recorder.startRecording()
             if (recorder.recordingState != AudioRecord.RECORDSTATE_RECORDING) {
-                throw unavailable("AudioRecord did not start, the microphone may be in use")
+                throw unavailable(MicUnavailableReason.OPEN_FAILED, "AudioRecord did not start, the microphone may be in use")
             }
             val analyzer = FrameAnalyzer(detectorFactory.create(config), config, sampleRateHz)
             val hop = ShortArray(config.hopSizeSamples)
@@ -68,8 +68,8 @@ class MicPitchSource @Inject constructor(
             anchor = null
             while (coroutineContext.isActive) {
                 val read = recorder.read(hop, 0, hop.size, AudioRecord.READ_BLOCKING)
-                if (read < 0) throw unavailable("AudioRecord.read failed with code $read")
-                if (watchdog.isDead(hop, read)) throw unavailable("input is digitally silent, reopening")
+                if (read < 0) throw unavailable(MicUnavailableReason.READ_FAILED, "AudioRecord.read failed with code $read")
+                if (watchdog.isDead(hop, read)) throw unavailable(MicUnavailableReason.DIGITAL_SILENCE, "input is digitally silent, reopening")
                 // Same sample clock as FrameAnalyzer: a frame's tMs is the end of its hop, so the
                 // hop that follows a frame starts exactly at that frame's time.
                 tap.onHop(hop, read, hopStartTMs = samplesRead * MS_PER_SECOND / sampleRateHz, sampleRateHz)
@@ -115,13 +115,13 @@ class MicPitchSource @Inject constructor(
             if (recorder.state == AudioRecord.STATE_INITIALIZED) return recorder to rate
             recorder.release()
         }
-        throw unavailable("AudioRecord could not be initialized at any of $rates Hz")
+        throw unavailable(MicUnavailableReason.OPEN_FAILED, "AudioRecord could not be initialized at any of $rates Hz")
     }
 
     /** Logged here because the view model turns the exception into a screen state and retries. */
-    private fun unavailable(message: String): MicUnavailableException {
+    private fun unavailable(reason: MicUnavailableReason, message: String): MicUnavailableException {
         Log.w(TAG, message)
-        return MicUnavailableException(message)
+        return MicUnavailableException(reason, message)
     }
 
     /**

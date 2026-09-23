@@ -2,6 +2,9 @@ package com.violinjourney.app.feature.live
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.FramePicture
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.FinishPracticeAsk
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
@@ -13,6 +16,7 @@ import com.violinjourney.app.core.settings.IntonationConfigSource
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import javax.inject.Inject
+import kotlin.math.roundToInt
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -23,6 +27,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -35,6 +40,7 @@ class LiveViewModel @Inject constructor(
     private val runningPractice: RunningPracticeStore,
     private val clock: Clock,
     private val venues: Venues,
+    private val analytics: Analytics = NoOpAnalytics(),
     private val finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
 ) : ViewModel() {
 
@@ -69,14 +75,20 @@ class LiveViewModel @Inject constructor(
      */
     private fun pipeline(config: IntonationConfig): Flow<TakePipeline.Output<LiveSignal>> {
         val readout = LiveReadout(config)
+        // One picture per visit (spec 3.34): the flow ends when the screen goes away or the config
+        // changes, and that is exactly when the picture is whole.
+        val picture = FramePicture(config.toleranceCents.roundToInt(), config.a4Hz.roundToInt())
         return takes.run(
             config = config,
             pieceId = null,
             targetMode = { LiveReducer.targetModeOf(target.value) },
             unavailable = LiveSignal.MicUnavailable,
             onRestart = readout::reset,
-            present = readout::signalOf,
-        )
+            present = { frame, reading ->
+                picture.add(frame, reading)
+                readout.signalOf(frame, reading)
+            },
+        ).onCompletion { picture.finish()?.let(analytics::track) }
     }
 
     // null = not reported yet: stay silent instead of flashing the permission prompt at users

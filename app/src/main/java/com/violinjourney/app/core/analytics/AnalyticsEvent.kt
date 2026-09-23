@@ -1,5 +1,7 @@
 package com.violinjourney.app.core.analytics
 
+import com.violinjourney.app.core.audio.MicUnavailableReason
+
 /**
  * Every event the app can send, with its parameters — one list, the way `IntonationConfig` holds
  * the numbers of the domain (spec 3.34). A new event is a new line in the spec first and a class
@@ -14,6 +16,36 @@ class ScreenOpen(screen: String) : AnalyticsEvent(NAME, mapOf(PARAM to screen)) 
         const val PARAM = "screen"
     }
 }
+
+/** Why the microphone went away (spec 3.34): on the emulator it is the bridge, on a phone — unknown. */
+class MicUnavailable(reason: MicUnavailableReason) : AnalyticsEvent("mic_unavailable", mapOf("reason" to reason.key))
+
+/**
+ * One visit to Live, folded by [FramePicture]: the picture the thresholds get tuned by. The
+ * tolerance and the reference pitch ride along because both change what «active» means.
+ */
+class LiveFrames(
+    seconds: Int,
+    silencePct: Int,
+    noisyPct: Int,
+    activePct: Int,
+    clarityMedian: Double,
+    peakRmsDbfs: Int,
+    toleranceCents: Int,
+    a4Hz: Int,
+) : AnalyticsEvent(
+    "live_frames",
+    mapOf(
+        "seconds" to seconds,
+        "silence_pct" to silencePct,
+        "noisy_pct" to noisyPct,
+        "active_pct" to activePct,
+        "clarity_median" to clarityMedian,
+        "rms_peak_dbfs" to peakRmsDbfs,
+        "tolerance" to toleranceCents,
+        "a4" to a4Hz,
+    ),
+)
 
 /**
  * A navigation route reduced to the screen it names: `piece/{pieceId}` becomes `piece`. Ids and

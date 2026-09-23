@@ -5,6 +5,9 @@ import com.violinjourney.app.core.domain.journey.NoPracticeNotes
 import com.violinjourney.app.core.domain.journey.NoteCount
 import com.violinjourney.app.core.domain.journey.NoteCounter
 import com.violinjourney.app.core.domain.journey.PracticeNotesStore
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.MicUnavailable
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.MicUnavailableException
 import com.violinjourney.app.core.audio.PitchSource
 import com.violinjourney.app.core.audio.recording.AudioTap
@@ -74,6 +77,7 @@ class TakePipeline @Inject constructor(
     private val backings: BackingRepository = NoBackings,
     private val backingPlaybackFactory: BackingPlaybackFactory? = null,
     private val backingConfig: BackingConfig = BackingConfig(),
+    private val analytics: Analytics = NoOpAnalytics(),
 ) {
     /**
      * A take to be made under a backing (spec 3.32): which one, its sound at the take's rate, and the headphones it
@@ -316,6 +320,9 @@ class TakePipeline @Inject constructor(
             .retryWhen { cause, _ ->
                 // Anything else is a bug and must crash rather than be retried forever.
                 if (cause !is MicUnavailableException) return@retryWhen false
+                // Counted once per failure, not once per retry: while the input stays dead the
+                // retry runs every few seconds, and the event is about losing it, not about waiting.
+                if (!awaitingSignal) analytics.track(MicUnavailable(cause.reason))
                 awaitingSignal = true
                 emit(Output(unavailable))
                 delay(MIC_RETRY_DELAY_MS)

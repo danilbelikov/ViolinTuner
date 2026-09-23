@@ -3,6 +3,7 @@ package com.violinjourney.app.feature.live
 import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.MicUnavailableException
+import com.violinjourney.app.core.audio.MicUnavailableReason
 import com.violinjourney.app.core.audio.PitchSource
 import com.violinjourney.app.core.audio.recording.AudioTap
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
@@ -128,7 +129,7 @@ class LiveViewModelTest {
             source, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
             practiceNotes = practiceNotes, journeyConfig = JourneyConfig(notesFlushMs = 1_000),
         )
-        return LiveViewModel(takes, SettingsConfigSource(base, settings), practice, clock, Venues(venueStore, journey), finishAsk)
+        return LiveViewModel(takes, SettingsConfigSource(base, settings), practice, clock, Venues(venueStore, journey), finishAsk = finishAsk)
     }
 
     private fun TestScope.advance(millis: Long) {
@@ -397,7 +398,7 @@ class LiveViewModelTest {
             override val audioTap: AudioTap? = null
             override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
                 working.frames(config).collect { frame ->
-                    if (frame.tMs > 4_000) throw MicUnavailableException("unplugged")
+                    if (frame.tMs > 4_000) throw MicUnavailableException(MicUnavailableReason.READ_FAILED, "unplugged")
                     emit(frame)
                 }
             }
@@ -632,7 +633,7 @@ class LiveViewModelTest {
             override val requiresMicPermission = false
             override val audioTap: AudioTap? = null
             override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
-                if (++attempts <= 2) throw MicUnavailableException("busy")
+                if (++attempts <= 2) throw MicUnavailableException(MicUnavailableReason.OPEN_FAILED, "busy")
                 emitAll(working.frames(config))
             }
         }
@@ -669,7 +670,7 @@ class LiveViewModelTest {
                         delay(10)
                         t += 10
                     }
-                    throw MicUnavailableException("input is digitally silent")
+                    throw MicUnavailableException(MicUnavailableReason.DIGITAL_SILENCE, "input is digitally silent")
                 }
                 emitAll(alive.frames(config))
             }
