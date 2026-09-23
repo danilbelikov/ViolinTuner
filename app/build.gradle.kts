@@ -14,12 +14,15 @@ val fakePitch = providers.gradleProperty("fakePitch").map(String::toBoolean).get
 val plainLive = providers.gradleProperty("plainLive").map(String::toBoolean).getOrElse(false)
 
 android {
-    namespace = "com.example.violintuner"
+    namespace = "com.violinjourney.app"
     compileSdk {
         version = release(37)
     }
 
     defaultConfig {
+        // Kept from the template on purpose: a new id is a new app for Android, and the owner's phone
+        // holds real data under this one. Set it to "com.violinjourney.app" before publishing
+        // (Play refuses com.example.*); data moves over through «Копия данных».
         applicationId = "com.example.violintuner"
         minSdk = 26
         targetSdk = 36

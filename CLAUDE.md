@@ -54,6 +54,7 @@ Android-приложение: интонационный тренажёр для
 - Комментарии, фоновую запись, прочие настройки, светлую тему не делать, даже если удобно «заодно» (spec, раздел 7).
 
 ## Стек
+- Название — Violin Journey, пакет кода — `com.violinjourney.app`. `applicationId` пока прежний, `com.example.violintuner`: смена — это другое приложение, а на телефоне владельца живые данные. Перед публикацией его ставят в `com.violinjourney.app`, данные переносят через «Копию данных». Все `adb`-команды с `run-as` / `pm` / `am start` — по `applicationId`.
 - Kotlin, Jetpack Compose + Material 3 (Compose BOM), Gradle Kotlin DSL, version catalog `gradle/libs.versions.toml`
 - Hilt, Coroutines/Flow, Navigation Compose
 - minSdk 26, Java 17 (`compileOptions`; Gradle-демон работает на JDK 21), один модуль `app`
@@ -81,6 +82,7 @@ Android-приложение: интонационный тренажёр для
 - Один класс / один тест: `./gradlew :app:testDebugUnitTest --tests "*.ZoneClassifierTest"` / `--tests "*.ZoneClassifierTest.methodName"`
 - Сборка на фейковом источнике вместо микрофона (эмулятор, проверка всех состояний без инструмента): `./gradlew :app:assembleDebug -PfakePitch=true`
 - Отчёт сравнения детекторов: `./gradlew :app:testDebugUnitTest --tests "*.DetectorComparisonTest"`, таблица — в `<system-out>` файла `app/build/test-results/testDebugUnitTest/TEST-*DetectorComparisonTest.xml`
+- Значок приложения (вариант 1b «Гриф-дорога», `docs/design/project/icon_app/project/`) — векторные слои `ic_launcher_background / foreground / monochrome`, их пишет `node tools/icon/export.js` из генератора хэндоффа `icon-v2-gen.js`; руками не править.
 - Каждая вещь дома после покупки — в обоих домах, в комнате и снаружи, с картой движения: `python3 tools/home/rounds.py <папка>` (только эмулятор; база приложения меняется насовсем). Лист «было — стало» всех вещей — `docs/design/project/home3/project/shop-review.html`.
 - Замер живой картины на открытом экране: `python3 tools/perf/measure.py <подпись> [секунды] [серийный номер]`; попиксельная сверка снимков — `tools/perf/snap.py`. Как поднять эмулятор с настоящей видеокартой и чем выключать запекание и часы картин — `docs/plan-performance.md`.
 - Lint: `./gradlew :app:lintDebug`. Инструментальные тесты (нужен девайс/эмулятор): `./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true` — тесты Room и кодера звука. **Без этого флага Gradle после прогона удаляет приложение с устройства вместе с данными** (настройки, сессии): верни сборку через `adb install` и предупреди владельца.

@@ -1,0 +1,77 @@
+package com.violinjourney.app.feature.repertoire.piece
+
+import com.violinjourney.app.core.domain.repertoire.Piece
+import com.violinjourney.app.core.domain.repertoire.PieceSection
+import com.violinjourney.app.core.domain.repertoire.PieceStats
+import com.violinjourney.app.core.domain.repertoire.scale.Scales
+import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.domain.repertoire.SheetPage
+import com.violinjourney.app.core.domain.session.RecordingProgress
+import com.violinjourney.app.core.domain.session.SessionSummary
+import com.violinjourney.app.feature.history.HistoryReducer
+import java.time.LocalDate
+import java.time.ZoneId
+
+/** A piece and its pages → the piece screen (spec 3.15). Pure: file paths come from outside. */
+object PieceReducer {
+    fun stateOf(
+        piece: Piece,
+        pages: List<SheetPage>,
+        importing: Int,
+        statusMenuOpen: Boolean,
+        config: RepertoireConfig,
+        takes: List<TakeItem> = emptyList(),
+        progress: TakeProgress? = null,
+        thumbPathOf: (fileName: String) -> String?,
+    ) = PieceState(
+        loading = false,
+        header = PieceHeader(piece.title, piece.composer, piece.key?.germanName, piece.tempoBpm, piece.status),
+        pages = pagesOf(piece.id, pages).mapIndexed { index, page -> SheetTile(page.id, index + 1, thumbPathOf(page.thumbFileName)) },
+        importing = importing,
+        notes = piece.notes,
+        takes = takes,
+        progress = progress,
+        statusMenuOpen = statusMenuOpen,
+        notesCollapsedLines = config.notesCollapsedLines,
+        scale = piece.scale?.let { Scales.build(it, config.scaleLowestMidi, config.scaleHighestMidi) },
+        exercise = piece.groupId == null && piece.section != PieceSection.PIECES,
+    )
+
+    fun loading(config: RepertoireConfig) = PieceState(
+        loading = true, header = null, pages = emptyList(), importing = 0, notes = "", takes = emptyList(), progress = null,
+        statusMenuOpen = false,
+        notesCollapsedLines = config.notesCollapsedLines,
+    )
+
+    /** The takes of the piece as cards: the one marked as the best first, the rest newest first; the fresh one is marked too (spec 3.21). */
+    fun takesOf(piece: Piece, sessions: List<SessionSummary>, newTakeId: Long?, today: LocalDate, zone: ZoneId): List<TakeItem> {
+        val takes = PieceStats.takesOf(piece.id, sessions)
+        val bestId = PieceStats.bestOf(piece, takes)?.id
+        return PieceStats.listed(piece, takes).map {
+            TakeItem(HistoryReducer.cardOf(it, today, zone, best = it.id == bestId), best = it.id == bestId, isNew = it.id == newTakeId)
+        }
+    }
+
+    fun progressOf(pieceId: Long, sessions: List<SessionSummary>, config: RepertoireConfig): TakeProgress? =
+        PieceStats.progress(PieceStats.takesOf(pieceId, sessions), config)?.let { TakeProgress(it.lastScore, it.maxScore, it.scores) }
+
+    /** What the recording row shows for one frame of the chain. */
+    fun takeStateOf(shown: BlindShown, recording: RecordingProgress?, requested: Boolean, micPermission: Boolean?, bars: Int): TakeState =
+        if (!requested) {
+            TakeState.idle(micPermission, bars)
+        } else {
+            TakeState(
+                recording = true,
+                elapsedSeconds = (recording?.elapsedMs ?: 0L) / MS_PER_SECOND,
+                levels = shown.levels,
+                problem = shown.problem,
+                micPermission = micPermission,
+            )
+        }
+
+    private const val MS_PER_SECOND = 1_000L
+
+    /** Pages of one piece in their order. Numbers on screen follow this order, not the stored positions, which have gaps after a removal. */
+    fun pagesOf(pieceId: Long, pages: List<SheetPage>): List<SheetPage> =
+        pages.filter { it.pieceId == pieceId }.sortedWith(compareBy<SheetPage> { it.position }.thenBy { it.id })
+}

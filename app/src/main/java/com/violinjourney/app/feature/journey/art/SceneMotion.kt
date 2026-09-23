@@ -1,0 +1,486 @@
+package com.violinjourney.app.feature.journey.art
+
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.Stable
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.layout.onLayoutRectChanged
+import androidx.compose.ui.platform.LocalContext
+import com.violinjourney.app.core.ui.motion.LocalReduceMotion
+import kotlin.math.PI
+import kotlin.math.sin
+import kotlinx.coroutines.flow.first
+
+/**
+ * How a postcard lives (spec 3.23): nothing is marked in the scenes for it — a layer moves by what
+ * it is filled with. Lit windows waver a little, each at its own pace (the handoff's `flick`),
+ * the glow of the lamps breathes, the glints on the water drift. Slow and of low contrast: a
+ * postcard, not a screensaver. Pure; time comes from outside, in seconds.
+ */
+object SceneMotion {
+    const val WINDOW_DIP = 0.32f
+    const val GLOW_DIP = 0.4f
+    const val GLOW_PERIOD_S = 3.5f
+    const val WATER_DRIFT = 14f
+    const val WATER_PERIOD_S = 6f
+
+    /** Stars of the evening sky and clouds of the day one: not layers of a scene, drawn by rule behind everything but the sky — outdoors only. */
+    const val STARS = 70
+    const val STAR_DIP = 0.75f
+    const val CLOUDS = 3
+    const val CLOUD_SPEED = 5f
+    private const val SKY_SPAN = 760f
+    private const val STAR_TOP = -420f
+    private const val STAR_BOTTOM = 100f
+    private const val STAR_FADE_FROM = -40f
+    private const val SKY_LEFT = -170f
+
+    /** The least time between two frames of a living postcard: thirty a second is plenty for something this slow. */
+    const val FRAME_NANOS = 33_000_000L
+
+    /**
+     * Whether a living picture shows a new frame at [now] after the one it showed at [shown] (frame
+     * times, in nanoseconds). Every picture keeps to one grid of [FRAME_NANOS], so two on a screen —
+     * a postcard and the living «Начать занятие» (spec 3.16) — change on the same frames: by turns
+     * they would have the screen drawn twice as often.
+     */
+    fun frameDue(now: Long, shown: Long): Boolean = now / FRAME_NANOS != shown / FRAME_NANOS
+
+    /** The same for the picture behind Live: it lives only while the violin is silent, and a pause is not a picture to watch (docs/plan-performance.md). */
+    const val LIVE_FRAME_NANOS = 66_000_000L
+
+    const val BIRD_FADE = 12f
+    const val BIRD_BOB = 3f
+    const val BIRD_FLAP_HZ = 2.6f
+    const val FALL_FADE = 0.25f
+
+    /** A mote in a beam (handoff locations, `rise` with a way): at its brightest a fifth of the way up, gone at the top. */
+    const val MOTE_ALPHA = 0.8f
+    const val MOTE_SHOWN = 0.2f
+
+    /** A spark in crystal (handoff locations, their `flash`): dim, bright for a moment at the end of the period. */
+    const val GLINT_DIM = 0.55f
+    private const val GLINT_FROM = 0.92f
+    private const val GLINT_PEAK = 0.96f
+
+    /** A pigeon (handoff locations, `peck`): stands for most of the period, bends and straightens, steps aside and back. */
+    const val PECK_STEP = 4f
+    private val PECK_KEYS = floatArrayOf(0.58f, 0.66f, 0.74f, 0.82f)
+
+    private val WINDOWS = setOf("window", "windowLit", "chandelier")
+    private const val WATER = "waterLit"
+
+    fun moves(layer: SceneLayer, mode: SceneMode): Boolean =
+        layer.anim?.lives == true || layer.fill == WATER || (mode == SceneMode.EVENING && (layer.fill in WINDOWS || layer.fill == SceneLayer.GLOW || layer.warmGlow))
+
+    /** What the layer's own opacity is multiplied by at [seconds]; 1 for a layer that does not flicker. */
+    fun alpha(layer: SceneLayer, index: Int, mode: SceneMode, seconds: Float): Float = when {
+        mode != SceneMode.EVENING -> 1f
+        layer.fill in WINDOWS -> 1f - WINDOW_DIP * wave(seconds, period = 4f + index % 3, phase = (index % 5) * 0.6f)
+        layer.fill == SceneLayer.GLOW || layer.warmGlow -> 1f - GLOW_DIP * wave(seconds, GLOW_PERIOD_S, phase = index % 4 * 0.9f)
+        else -> 1f
+    }
+
+    /** How far, in units of the grid, the layer has drifted sideways at [seconds]. */
+    fun drift(layer: SceneLayer, index: Int, seconds: Float): Float =
+        if (layer.fill == WATER) WATER_DRIFT * sin(2 * PI.toFloat() * seconds / WATER_PERIOD_S + index * 1.7f) else 0f
+
+    /** What a moving thing is at [seconds]: shifted by [dx], [dy] from where it is drawn, flattened to [flap] of its height (a bird's wings), seen at [alpha]. */
+    data class Moved(val dx: Float, val dy: Float, val flap: Float, val alpha: Float, val degrees: Float = 0f, val pivotX: Float = 0f, val pivotY: Float = 0f) {
+        companion object {
+            val STILL = Moved(0f, 0f, 1f, 1f)
+        }
+    }
+
+    /**
+     * Where [anim] has taken a layer at [seconds]. A ride and a bob depend on the time alone, so
+     * every layer of one tram moves as one; birds and falling petals are single layers and take
+     * their own pace from [index]. [baseX], [baseY] is where the layer is drawn — where it is when nothing moves.
+     */
+    fun moved(anim: SceneAnim, baseX: Float, baseY: Float, index: Int, seconds: Float): Moved {
+        var dx = 0f
+        var dy = 0f
+        var flap = 1f
+        var alpha = 1f
+        anim.ride?.let { ride ->
+            val span = ride.to - ride.from
+            if (span > 0f) dx += ride.from + (((-ride.from + seconds * ride.speed) % span) + span) % span
+        }
+        anim.bob?.let { bob -> dy += bob.amplitude * sin(2 * PI.toFloat() * (seconds + bob.delay) / bob.period) }
+        anim.fly?.let { fly -> dx += fly.amplitude * ((seconds % fly.period) / fly.period) }
+        anim.bird?.let { way ->
+            val speed = 8f + hash(index, 11) * 7f
+            val along = (((baseX - way.left) + seconds * speed) % way.span + way.span) % way.span
+            dx += way.left + along - baseX
+            dy += BIRD_BOB * sin(2 * PI.toFloat() * seconds / (3f + hash(index, 12) * 2f) + index)
+            flap = 0.35f + 0.65f * wave(seconds, 1f / BIRD_FLAP_HZ, phase = hash(index, 13))
+            alpha *= (minOf(along, way.span - along) / BIRD_FADE).coerceIn(0f, 1f)
+        }
+        anim.flashPeriod?.let { period -> if ((seconds % period) / period > 0.35f) alpha = 0f }
+        // eyes: shut for a twentieth of the period, each pair in its own time
+        anim.blinkPeriod?.let { period -> val at = ((seconds + (index % 4) * 0.7f) % period) / period; if (at in 0.92f..0.97f) alpha = 0f }
+        anim.flick?.let { alpha *= 1f - 0.45f * wave(seconds + it.delay, it.period, phase = 0f) }
+        anim.rise?.let {
+            val at = (((seconds + it.delay) % it.period) + it.period) % it.period / it.period
+            val way = it.distance
+            if (way == null) {
+                dy -= 10f * at
+                alpha *= 0.7f * (1f - at)
+            } else {
+                dy -= way * at
+                alpha *= MOTE_ALPHA * if (at < MOTE_SHOWN) at / MOTE_SHOWN else (1f - at) / (1f - MOTE_SHOWN)
+            }
+        }
+        anim.glintPeriod?.let { period ->
+            val at = (seconds % period) / period
+            val spark = when {
+                at < GLINT_FROM -> 0f
+                at < GLINT_PEAK -> (at - GLINT_FROM) / (GLINT_PEAK - GLINT_FROM)
+                else -> (1f - at) / (1f - GLINT_PEAK)
+            }
+            alpha *= GLINT_DIM + (1f - GLINT_DIM) * spark
+        }
+        anim.sway?.let { dx += it.amplitude * sin(2 * PI.toFloat() * (seconds + it.delay) / it.period) }
+        var degrees = 0f
+        var pivot = anim.swing
+        anim.swing?.let { degrees = it.degrees * sin(2 * PI.toFloat() * seconds / it.period) }
+        anim.peck?.let { peck ->
+            val at = (seconds % peck.period) / peck.period
+            val (bend, bent, step, stepped) = PECK_KEYS
+            degrees += peck.degrees * when {
+                at < bend || at >= step -> 0f
+                at < bent -> ease((at - bend) / (bent - bend))
+                else -> ease((step - at) / (step - bent))
+            }
+            dx += PECK_STEP * when {
+                at < step -> 0f
+                at < stepped -> ease((at - step) / (stepped - step))
+                else -> ease((1f - at) / (1f - stepped))
+            }
+            pivot = peck
+        }
+        anim.fall?.let { fall ->
+            // where it is drawn is where it is when nothing moves: the fall starts from there
+            val start = (baseY - fall.top).coerceIn(0f, fall.height)
+            val down = (start + seconds * fall.speed * (0.7f + hash(index, 15) * 0.6f)) % fall.height
+            dy += down - start
+            dx += 5f * (sin(down / 9f + index) - sin(start / 9f + index))
+            val left = 1f - down / fall.height
+            alpha *= (left / FALL_FADE).coerceIn(0f, 1f) * (down / (fall.height * 0.1f)).coerceIn(0f, 1f)
+        }
+        return Moved(dx, dy, flap, alpha, degrees, pivot?.pivotX ?: 0f, pivot?.pivotY ?: 0f)
+    }
+
+    /** 0…1 slowly in, slowly out. */
+    private fun ease(t: Float): Float = t * t * (3f - 2f * t)
+
+    /** A star: where it is on the grid, how large, and how bright at [seconds] — each twinkles at its own pace. */
+    data class Star(val x: Float, val y: Float, val radius: Float, val alpha: Float)
+
+    fun star(index: Int, seconds: Float): Star {
+        val x = SKY_LEFT + hash(index, 1) * SKY_SPAN
+        // far above the frame as well: the whole card seen upright has a tall sky over it
+        val y = STAR_TOP + hash(index, 2) * (STAR_BOTTOM - STAR_TOP)
+        // fainter towards the glow of the horizon
+        val height = 1f - ((y - STAR_FADE_FROM) / (STAR_BOTTOM - STAR_FADE_FROM)).coerceIn(0f, 1f) * 0.7f
+        val twinkle = 1f - STAR_DIP * wave(seconds, period = 1.6f + hash(index, 3) * 2.4f, phase = hash(index, 4) * 4f)
+        return Star(x, y, 0.5f + hash(index, 5) * 0.7f, (height * twinkle).coerceIn(0f, 1f))
+    }
+
+    /** Stars of a high sky (spec 3.23): from the table the exporter writes, each twinkling at its own pace down to a fifth. */
+    val HIGH_STARS: Int get() = HighSky.stars.size / HIGH_STAR_NUMBERS
+    const val HIGH_STAR_DIP = 0.82f
+    private const val HIGH_STAR_NUMBERS = 5
+
+    fun highStar(index: Int, seconds: Float): Star {
+        val s = HighSky.stars
+        val at = index * HIGH_STAR_NUMBERS
+        val period = s[at + 4]
+        val twinkle = 1f - HIGH_STAR_DIP * wave(seconds, period, phase = hash(index, 4) * period)
+        return Star(s[at], s[at + 1], s[at + 2], s[at + 3] * twinkle)
+    }
+
+    /** A cloud of a high sky: where its centre is at [seconds], its half-width, how strong it is (0…1). */
+    data class HighCloud(val x: Float, val y: Float, val rx: Float, val k: Float)
+
+    const val HIGH_CLOUD_NUMBERS = 7
+
+    /** It rides to the right and comes back from the left, as a tram does: [table] is HighSky's, seven numbers a cloud. */
+    fun highCloud(table: FloatArray, index: Int, seconds: Float): HighCloud {
+        val at = index * HIGH_CLOUD_NUMBERS
+        val speed = table[at + 4]
+        val from = table[at + 5]
+        val span = table[at + 6] - from
+        val dx = from + (((-from + seconds * speed) % span) + span) % span
+        return HighCloud(table[at] + dx, table[at + 1], table[at + 2], table[at + 3])
+    }
+
+    /**
+     * All the ground the sky's life may cover, in units of the grid — the stars and the clouds as they sail:
+     * what is drawn over it keeps its place above it (SceneStrata). [high] — the life of a high sky.
+     */
+    fun skyLifeReach(high: Boolean): Rect = if (high) Rect(-240f, -440f, 650f, 145f) else Rect(-240f, -425f, 660f, 130f)
+
+    /** A cloud: its centre and size at [seconds]; it sails to the right and comes back from the left. */
+    data class Cloud(val x: Float, val y: Float, val width: Float)
+
+    fun cloud(index: Int, seconds: Float): Cloud {
+        val width = 70f + hash(index, 6) * 50f
+        val start = hash(index, 7) * SKY_SPAN
+        val speed = CLOUD_SPEED * (0.6f + hash(index, 8) * 0.8f)
+        return Cloud(SKY_LEFT + (start + seconds * speed) % SKY_SPAN, 20f + index * 26f + hash(index, 9) * 10f, width)
+    }
+
+    /** A number in 0…1 that is always the same for the same [index] and [salt]: the sky is the same sky every time. */
+    private fun hash(index: Int, salt: Int): Float {
+        var h = index * 374_761_393 + salt * 668_265_263
+        h = (h xor (h ushr 13)) * 1_274_126_177
+        return ((h xor (h ushr 16)) and 0xFFFF) / 65_535f
+    }
+
+    /** 0…1…0, a sine. */
+    private fun wave(seconds: Float, period: Float, phase: Float): Float = 0.5f + 0.5f * sin(2 * PI.toFloat() * (seconds + phase) / period)
+}
+
+/**
+ * Where the eye stands before a postcard shown larger than its frame: a zoom and a pan in pixels.
+ * The planes answer the pan by their depth — the far one lags, which is all the parallax there is.
+ * Pure geometry, with tests. The home on the whole screen goes by [wholeZoom], [top] and [clamp];
+ * the full screen of a stop is kept within what its scene has drawn — [SceneFrame].
+ */
+object SceneCamera {
+    /** 1 is the zoom at which the picture covers the box. */
+    const val COVER_ZOOM = 1f
+    const val MAX_ZOOM = 2.5f
+    const val DOUBLE_TAP_ZOOM = 2f
+
+    /** How much of the pan each plane takes: far, middle, near. */
+    private val FOLLOW = floatArrayOf(0.6f, 0.85f, 1f)
+
+    /** The scale at which the grid covers the box: cropped, never stretched. */
+    fun cover(width: Float, height: Float): Float = maxOf(width / SceneGrid.WIDTH, height / SceneGrid.HEIGHT)
+
+    /** The zoom at which the whole card is seen by its width: below 1 upright, 1 where the card already fits. */
+    fun wholeZoom(width: Float, height: Float): Float = ((width / SceneGrid.WIDTH) / cover(width, height)).coerceAtMost(COVER_ZOOM)
+
+    fun zoom(current: Float, change: Float, width: Float, height: Float): Float = (current * change).coerceIn(wholeZoom(width, height), MAX_ZOOM)
+
+    /** A double tap walks round: covering → closer → the whole card → covering. */
+    fun nextZoom(current: Float, width: Float, height: Float): Float {
+        val whole = wholeZoom(width, height)
+        return when {
+            current > COVER_ZOOM + EPSILON -> if (whole < COVER_ZOOM - EPSILON) whole else COVER_ZOOM
+            current < COVER_ZOOM - EPSILON -> COVER_ZOOM
+            else -> DOUBLE_TAP_ZOOM
+        }
+    }
+
+    /**
+     * Where the top of the picture stands when it is lower than the box. Outdoors it stands on the
+     * bottom edge and the sky — which the scenes have plenty of — fills the rest; a room has no sky,
+     * so it is centred, like a photograph on a dark table.
+     */
+    fun top(zoom: Float, width: Float, height: Float, outdoors: Boolean): Float {
+        val tall = SceneGrid.HEIGHT * cover(width, height) * zoom
+        return if (tall < height && outdoors) height - tall else (height - tall) / 2
+    }
+
+    private const val EPSILON = 0.01f
+
+    /** The pan kept within what the picture has beyond the box: the near plane never shows its edge, and the others lag inside it. */
+    fun clamp(panX: Float, panY: Float, zoom: Float, width: Float, height: Float): Pair<Float, Float> {
+        val k = cover(width, height) * zoom
+        val overX = ((SceneGrid.WIDTH * k - width) / 2).coerceAtLeast(0f)
+        val overY = ((SceneGrid.HEIGHT * k - height) / 2).coerceAtLeast(0f)
+        return panX.coerceIn(-overX, overX) to panY.coerceIn(-overY, overY)
+    }
+
+    /** The sideways shift of a plane, in pixels, for a pan of [panX]. */
+    fun shift(panX: Float, depth: Int): Float = panX * FOLLOW[depth.coerceIn(0, 2)]
+}
+
+/**
+ * How far up and down a scene is drawn, in units of the grid (spec 3.23): a card alone is just its
+ * band 0…260, a hall from the stage −240…480, a view drawn for the whole screen −420…600 like the
+ * rooms of the home. The full screen of a stop is kept within it: it opens at the widest view the
+ * frame still covers, and no pinch or drag goes past it — what is not drawn is never shown. Zooms
+ * are the camera's: 1 covers the box with the card's band. Pure geometry, with tests.
+ */
+data class SceneFrame(val top: Float, val bottom: Float) {
+    /** How tall the drawing is. */
+    val span: Float get() = bottom - top
+
+    /** Drawn beyond the card: the full screen opens whole by its width, the way the home does. */
+    val beyondTheCard: Boolean get() = span > SceneGrid.HEIGHT + EPSILON
+
+    /** The least zoom at which the frame covers the box: where the full screen opens and where the way out ends. */
+    fun openZoom(width: Float, height: Float): Float = maxOf(width / SceneGrid.WIDTH, height / span) / SceneCamera.cover(width, height)
+
+    /** [current] below [openZoom] — 0 before the box is known — counts as the view it opened at. */
+    fun zoom(current: Float, change: Float, width: Float, height: Float): Float {
+        val open = openZoom(width, height)
+        return (current.coerceAtLeast(open) * change).coerceIn(open, SceneCamera.MAX_ZOOM)
+    }
+
+    /** A double tap walks round: where it opened → the card by its height → closer → where it opened. */
+    fun nextZoom(current: Float, width: Float, height: Float): Float {
+        val open = openZoom(width, height)
+        val now = current.coerceAtLeast(open)
+        val next = when {
+            now > SceneCamera.COVER_ZOOM + ZOOM_EPSILON -> open
+            now < SceneCamera.COVER_ZOOM - ZOOM_EPSILON -> SceneCamera.COVER_ZOOM
+            else -> SceneCamera.DOUBLE_TAP_ZOOM
+        }
+        return next.coerceAtLeast(open)
+    }
+
+    /**
+     * Where the grid's y 0 stands in the box, in pixels, at [zoom]: the card's band in the middle of
+     * the box, moved only as far as the frame asks — its top never below the top of the box, its
+     * bottom never above the bottom. A frame lower than the box (a zoom below [openZoom]) is centred.
+     */
+    fun originY(zoom: Float, width: Float, height: Float): Float {
+        val k = SceneCamera.cover(width, height) * zoom
+        val middle = height / 2 - SceneGrid.HEIGHT / 2 * k
+        val lowest = -top * k
+        val highest = height - bottom * k
+        return if (highest <= lowest) middle.coerceIn(highest, lowest) else (lowest + highest) / 2
+    }
+
+    /** The pan kept within the frame: the near plane never shows its side edge, and nothing above or below the frame comes in. */
+    fun clamp(panX: Float, panY: Float, zoom: Float, width: Float, height: Float): Pair<Float, Float> {
+        val k = SceneCamera.cover(width, height) * zoom
+        val overX = ((SceneGrid.WIDTH * k - width) / 2).coerceAtLeast(0f)
+        val origin = originY(zoom, width, height)
+        val down = (-top * k - origin).coerceAtLeast(0f)
+        val up = (height - bottom * k - origin).coerceAtMost(0f)
+        return panX.coerceIn(-overX, overX) to panY.coerceIn(up, down)
+    }
+
+    companion object {
+        /** A card alone: its band and nothing more. */
+        val CARD = SceneFrame(0f, SceneGrid.HEIGHT)
+
+        /** `frame=top,bottom` in the header of a scene; a frame always holds the card's band, so a slip widens it instead of breaking the camera. */
+        fun parse(text: String): SceneFrame? {
+            val numbers = text.split(',').mapNotNull { it.trim().toFloatOrNull() }
+            if (numbers.size != 2) return null
+            return SceneFrame(minOf(numbers[0], 0f), maxOf(numbers[1], SceneGrid.HEIGHT))
+        }
+
+        private const val EPSILON = 0.5f
+        private const val ZOOM_EPSILON = 0.01f
+    }
+}
+
+/**
+ * The clock of a living picture: seconds stepped by frames. It runs only while a picture that reads
+ * it is on the screen — a card scrolled off the screen asks for no frames (docs/plan-performance.md);
+ * the picture tells the clock where its box is with [watchedBy].
+ */
+@Stable
+class SceneClock internal constructor() : State<Float> {
+    private val seconds = mutableFloatStateOf(0f)
+
+    override val value: Float get() = seconds.floatValue
+
+    /** True until a picture says its box has left the screen: the first frames come before the first word of it. */
+    internal var seen by mutableStateOf(true)
+
+    internal fun set(at: Float) {
+        seconds.floatValue = at
+    }
+}
+
+/**
+ * Tells the clock of a living picture whether its box is on the screen; a still picture (null clock)
+ * is left alone. The box is heard with the small delay `onLayoutRectChanged` keeps by itself, so a
+ * picture flying past under a finger does not start and stop the clock every frame.
+ */
+@Composable
+fun Modifier.watchedBy(seconds: State<Float>?): Modifier {
+    val clock = seconds as? SceneClock ?: return this
+    DisposableEffect(clock) { onDispose { clock.seen = false } }
+    return onLayoutRectChanged { clock.seen = it.fractionVisibleInWindow() > 0f }
+}
+
+/**
+ * Seconds for a living postcard, stepped by frames while [enabled] and while «убрать анимации» is
+ * off; it is read where the scene is drawn, so the postcard is redrawn, never recomposed. Null
+ * when nothing should move.
+ */
+@Composable
+fun rememberSceneSeconds(enabled: Boolean = true): State<Float>? {
+    val reduce = LocalReduceMotion.current
+    val context = LocalContext.current
+    // debug builds may stop the time at a second, still ticking, so a baked frame can be compared with a drawn one
+    val frozen = remember { SceneDebug.frozenSeconds(context) }
+    val clock = remember { SceneClock() }
+    val run = enabled && !reduce
+    LaunchedEffect(run) {
+        if (!run) return@LaunchedEffect
+        var start = -1L
+        var shown = 0L
+        var tick = false
+        while (true) {
+            // asleep while the picture is off the screen: it costs nothing until it comes back
+            snapshotFlow { clock.seen }.first { it }
+            while (clock.seen) {
+                withFrameNanos { now ->
+                    if (start < 0) start = now
+                    if (SceneMotion.frameDue(now, shown)) {
+                        shown = now
+                        tick = !tick
+                        clock.set(frozen?.let { if (tick) it else it + FROZEN_TICK } ?: ((now - start) / 1_000_000_000f))
+                    }
+                }
+            }
+        }
+    }
+    return if (run) clock else null
+}
+
+/** How far a stopped clock steps back and forth, so the picture keeps being drawn: nothing moves by that much. */
+private const val FROZEN_TICK = 1e-4f
+
+/**
+ * Seconds for a picture that lives only while [running] says so, and stops where it is otherwise —
+ * not back at the start: the picture behind Live freezes when the light goes out and goes on from
+ * the same frame when it comes back (spec 3.27, handoff `light.freeze`). Asleep while stopped: no
+ * frames are spent on a dark picture. Null with «убрать анимации»: the picture is still.
+ */
+@Composable
+fun rememberPausableSceneSeconds(frameNanos: Long = SceneMotion.FRAME_NANOS, running: () -> Boolean): State<Float>? {
+    val reduce = LocalReduceMotion.current
+    val seconds = remember { mutableFloatStateOf(0f) }
+    val live by rememberUpdatedState(running)
+    LaunchedEffect(reduce) {
+        if (reduce) return@LaunchedEffect
+        while (true) {
+            snapshotFlow { live() }.first { it }
+            var last = withFrameNanos { it }
+            while (live()) {
+                val now = withFrameNanos { it }
+                if (now - last >= frameNanos) {
+                    seconds.floatValue += (now - last) / NANOS_PER_SECOND
+                    last = now
+                }
+            }
+        }
+    }
+    return if (reduce) null else seconds
+}
+
+private const val NANOS_PER_SECOND = 1_000_000_000f
+

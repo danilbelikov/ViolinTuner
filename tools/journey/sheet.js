@@ -19,7 +19,7 @@ const dir = process.argv[2];
 if (!dir) throw new Error('usage: node tools/journey/sheet.js <dir with the SVGs of export.js>');
 
 // the views in the order of the route, from the route itself; home is drawn by the home, not here
-const route = fs.readFileSync(path.join(root, 'app/src/main/java/com/example/violintuner/core/domain/journey/Journey.kt'), 'utf8');
+const route = fs.readFileSync(path.join(root, 'app/src/main/java/com/violinjourney/app/core/domain/journey/Journey.kt'), 'utf8');
 const views = [...route.matchAll(/StopView\("(\w+)", inside = (true|false)\)/g)].map(m => m[1]).filter(key => key !== 'home');
 
 const tried = process.argv[3] ? process.argv[3].split(',').map(Number) : null;

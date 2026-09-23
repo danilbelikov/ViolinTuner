@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ViolinTuner</string>
+    <string name="app_name">Violin Journey</string>
 
     <string name="nav_live">Live</string>
     <string name="nav_practice">练习</string>

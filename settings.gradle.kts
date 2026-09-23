@@ -22,6 +22,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "ViolinTuner"
+rootProject.name = "ViolinJourney"
 include(":app")
  
