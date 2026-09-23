@@ -141,7 +141,7 @@ class ShareViewModelTest {
     private val backingPcm = object : com.example.violintuner.core.audio.backing.BackingPcm {
         override fun cached(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): File? = null
         override fun prepare(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): File? = null
-        override fun clear(minAgeMs: Long) = Unit
+        override fun deleteOrphans(keptFiles: Set<String>) = Unit
     }
 
     private fun TestScope.share(renderer: SoundRenderer): Pair<ShareViewModel, MutableList<ShareEffect>> {

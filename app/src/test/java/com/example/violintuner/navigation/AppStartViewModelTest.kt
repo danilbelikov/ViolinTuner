@@ -64,12 +64,12 @@ class AppStartViewModelTest {
     private val repertoire = FakeRepertoireRepository()
     private val blocks = FakeBlockStore()
     private val shareFiles = FakeShareFiles()
-    private val clearedPcm = mutableListOf<Long>()
+    private val keptPcm = mutableListOf<Set<String>>()
     private val backingPcm = object : com.example.violintuner.core.audio.backing.BackingPcm {
         override fun cached(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): java.io.File? = null
         override fun prepare(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): java.io.File? = null
-        override fun clear(minAgeMs: Long) {
-            clearedPcm += minAgeMs
+        override fun deleteOrphans(keptFiles: Set<String>) {
+            keptPcm += keptFiles
         }
     }
 
@@ -97,18 +97,13 @@ class AppStartViewModelTest {
     }
 
     @Test
-    fun `the backings made ready for the mix go when the app goes, not on a turn of the phone, and at the start only what a killed run left`() = runTest {
+    fun `the prepared sound of backings is kept while the backing is and swept with it, at the start and when the app goes`() = runTest {
         val viewModel = viewModel()
         runCurrent()
-        assertEquals(listOf(60 * 60_000L), clearedPcm)
-
-        viewModel.onAppStopped(changingConfigurations = true)
-        runCurrent()
-        assertEquals(1, clearedPcm.size)
-
+        assertEquals(1, keptPcm.size)
         viewModel.onAppStopped()
         runCurrent()
-        assertEquals(listOf(60 * 60_000L, 0L), clearedPcm)
+        assertEquals(2, keptPcm.size)
     }
 
     @Test

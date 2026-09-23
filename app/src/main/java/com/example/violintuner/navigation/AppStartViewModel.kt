@@ -44,6 +44,7 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /**
  * Decides where the app starts. Only the first stored value counts: a start destination that
@@ -78,8 +79,6 @@ class AppStartViewModel @Inject constructor(
         viewModelScope.launch { waveforms.deleteOrphans(sessions.sessions.first().mapNotNull { it.audioPath }.toSet()) }
         viewModelScope.launch { avatarFiles.deleteOrphans(referenced = profile.profile.first().avatarFile) }
         sweepTemporaries()
-        // what an earlier run could not throw away itself (it was killed); an hour old — not one a screen is making now
-        viewModelScope.launch(io) { backingPcm?.clear(minAgeMs = PCM_LEFT_BEHIND_MS) }
         // Trophies are given here rather than where a practice is saved: the entries change
         // from the practice screen, its sheets and the forgotten-practice prompt alike, and
         // this view model lives as long as the app is open. Giving is idempotent, so the
@@ -128,19 +127,18 @@ class AppStartViewModel @Inject constructor(
      * (spec 5.11): a phone that is not restarted for days would otherwise keep every video
      * prepared for sending — a second copy of a take each — until the next cold start.
      */
-    fun onAppStopped(changingConfigurations: Boolean = false) {
-        sweepTemporaries()
-        // The backings made ready for the mix are the heaviest thing in the cache and made again in seconds (spec 5.25):
-        // they go the moment the app does. Not on a turn of the phone — the screen is still there and wants them.
-        if (!changingConfigurations) viewModelScope.launch(io) { backingPcm?.clear(minAgeMs = 0) }
-    }
+    fun onAppStopped() = sweepTemporaries()
 
     /** What no one will read again: files made to be handed to other apps, shots of the camera nobody imported. */
     private fun sweepTemporaries() {
         viewModelScope.launch { shareFiles.sweep(clock.millis()) }
         viewModelScope.launch { repertoire.deleteOrphanFiles() }
         // backings nobody points at any more — a replaced one whose takes are gone too (spec 3.32)
-        viewModelScope.launch { backings.deleteUnused() }
+        // and their prepared sound with them: kept while the backing is, as a take under it is listened to again (spec 5.25)
+        viewModelScope.launch {
+            val kept = backings.deleteUnused()
+            withContext(io) { backingPcm?.deleteOrphans(kept) }
+        }
     }
 
     fun onPromptIntent(intent: PracticePromptIntent) {
@@ -198,8 +196,5 @@ class AppStartViewModel @Inject constructor(
 
     private companion object {
         const val STOP_TIMEOUT_MS = 5_000L
-
-        /** A prepared backing this old at a cold start was left by a run that was killed, not made by a screen now. */
-        const val PCM_LEFT_BEHIND_MS = 60 * 60_000L
     }
 }

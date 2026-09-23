@@ -145,7 +145,7 @@ class PieceViewModelTest {
             pcmRates += sampleRate
             return File("pcm-$sampleRate")
         }
-        override fun clear(minAgeMs: Long) = pcmRates.clear()
+        override fun deleteOrphans(keptFiles: Set<String>) = pcmRates.clear()
     }
     private val backingFiles = object : com.example.violintuner.core.domain.backing.BackingFiles {
         override fun newFile(extension: String): File = File("new.$extension")
@@ -691,7 +691,7 @@ class PieceViewModelTest {
     }
 
     @Test
-    fun `a backing thrown away while the app was away is made ready again on return, and a take never decodes it itself`() = runTest {
+    fun `a backing's sound cleared from the cache (by the system) is made ready again on return, and a take never decodes it itself`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
         withBacking(id)
         route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.WIRED, "Jack")
@@ -699,14 +699,14 @@ class PieceViewModelTest {
         advance(100)
         assertEquals(listOf(48_000), pcmRates)
 
-        // the app went away: the cache is cleared; the screen is back
-        backingPcm.clear(0)
+        // the system cleared the cache while the app was away; the screen is back
+        backingPcm.deleteOrphans(emptySet())
         viewModel.onIntent(PieceIntent.ScreenResumed)
         advance(100)
         assertEquals(listOf(48_000), pcmRates)
 
         // gone again, and the button pressed before the screen noticed: it prepares instead of recording
-        backingPcm.clear(0)
+        backingPcm.deleteOrphans(emptySet())
         viewModel.onIntent(PieceIntent.RecordClicked)
         advance(1_000)
         assertFalse(viewModel.takeState.value.recording)

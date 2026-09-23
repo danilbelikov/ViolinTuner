@@ -63,10 +63,10 @@ interface BackingPcm {
     fun prepare(backing: Backing, sampleRate: Int): File?
 
     /**
-     * Throws away every prepared backing older than [minAgeMs] (spec 5.25): each is made again from its copy when it
-     * is needed, and a backing is heavy — some 45 MB for four minutes. One being made just now is left alone.
+     * Throws away the prepared sound of every backing whose copy is not among [keptFiles] (spec 5.25): a backing is
+     * heavy — some 45 MB for four minutes — and kept only while a piece or a take still has it. One being made is left.
      */
-    fun clear(minAgeMs: Long)
+    fun deleteOrphans(keptFiles: Set<String>)
 }
 
 /** Takes a picked file in as a backing. Blocking. */
@@ -193,23 +193,17 @@ class BackingImporter @Inject constructor(
  * file in the cache — decoded once, resampled once, then read at any position without a codec. A mono backing
  * is doubled to both sides. Rebuilt from the copy whenever the cache has been cleared.
  */
-class BackingPcmCache @Inject constructor(
-    @ApplicationContext context: Context,
-    private val files: BackingFiles,
-    private val clock: Clock,
-) : BackingPcm {
+class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, private val files: BackingFiles) : BackingPcm {
     private val directory = File(context.cacheDir, DIRECTORY)
 
-    override fun clear(minAgeMs: Long) {
-        val now = clock.millis()
+    override fun deleteOrphans(keptFiles: Set<String>) {
+        val kept = keptFiles.mapTo(HashSet()) { it.substringBeforeLast('.') }
         directory.listFiles().orEmpty()
-            .filter { !it.name.endsWith(PARTIAL) && now - it.lastModified() >= minAgeMs }
+            .filter { !it.name.endsWith(PARTIAL) && it.name.substringBeforeLast(RATE_SEPARATOR) !in kept }
             .forEach { it.delete() }
     }
 
-    // used now: touched, so the sweep of a cold start (older than an hour — left by a killed run) does not take it
-    override fun cached(backing: Backing, sampleRate: Int): File? =
-        fileOf(backing, sampleRate).takeIf { it.isFile }?.also { it.setLastModified(clock.millis()) }
+    override fun cached(backing: Backing, sampleRate: Int): File? = fileOf(backing, sampleRate).takeIf { it.isFile }
 
     override fun prepare(backing: Backing, sampleRate: Int): File? {
         cached(backing, sampleRate)?.let { return it }
@@ -234,7 +228,7 @@ class BackingPcmCache @Inject constructor(
         }
     }
 
-    private fun fileOf(backing: Backing, sampleRate: Int) = File(directory, "${backing.fileName.substringBeforeLast('.')}-$sampleRate.pcm")
+    private fun fileOf(backing: Backing, sampleRate: Int) = File(directory, "${backing.fileName.substringBeforeLast('.')}$RATE_SEPARATOR$sampleRate.pcm")
 
     private fun decode(source: File, target: File, outRate: Int) {
         val extractor = MediaExtractor()
@@ -364,6 +358,7 @@ class BackingPcmCache @Inject constructor(
         private const val TAG = "BackingPcmCache"
         private const val DIRECTORY = "backing-pcm"
         private const val PARTIAL = ".partial"
+        private const val RATE_SEPARATOR = '-'
         private const val TIMEOUT_US = 10_000L
         const val FULL_SCALE = 32_768f
         const val BYTES_PER_FRAME = 4
