@@ -12,6 +12,8 @@ data class UserSettings(
     val a4Hz: Int = DEFAULT_A4_HZ,
     val tolerance: TolerancePreset = TolerancePreset.INTERMEDIATE,
     val onboardingDone: Boolean = false,
+    /** «Помогать улучшать приложение» (spec 3.34): on until the player turns it off. */
+    val analyticsEnabled: Boolean = true,
 ) {
     companion object {
         const val DEFAULT_A4_HZ = 440

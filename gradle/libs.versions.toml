@@ -17,8 +17,11 @@ datastore = "1.2.1"
 room = "2.8.5"
 # the camera of «Снять под минусовку» (spec 3.32); agreed by the owner
 camerax = "1.6.2"
+# anonymous statistics (spec 3.34); agreed by the owner
+appmetrica = "8.5.1"
 
 [libraries]
+appmetrica-analytics = { group = "io.appmetrica.analytics", name = "analytics", version.ref = "appmetrica" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

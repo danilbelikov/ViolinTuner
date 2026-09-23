@@ -17,4 +17,6 @@ class FakeSettingsRepository(initial: UserSettings = UserSettings()) : SettingsR
     override suspend fun setTolerance(preset: TolerancePreset) = settings.update { it.copy(tolerance = preset) }
 
     override suspend fun setOnboardingDone(done: Boolean) = settings.update { it.copy(onboardingDone = done) }
+
+    override suspend fun setAnalyticsEnabled(enabled: Boolean) = settings.update { it.copy(analyticsEnabled = enabled) }
 }

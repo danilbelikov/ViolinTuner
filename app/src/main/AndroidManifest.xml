@@ -13,6 +13,14 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+    <!-- Anonymous statistics (spec 3.34). The analytics library declares these two in its own
+         manifest; they are repeated here because this is where the app's permissions are read. -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Its identifiers module also asks for the advertising id. The app shows no ads and measures
+         no campaigns, and without this permission what it collects cannot be tied to a person
+         across apps — that is what makes the statistics anonymous rather than merely called so. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID" tools:node="remove" />
 
     <application
         android:name=".ViolinTunerApp"
@@ -52,6 +60,13 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+        <!-- The analytics library brings an exported provider for tracking preinstallations. The app
+             is installed from a store and never preinstalled, so the provider is dropped rather
+             than left exported (spec 5.27). -->
+        <provider
+            android:name="io.appmetrica.analytics.internal.PreloadInfoContentProvider"
+            android:authorities="${applicationId}.appmetrica.preloadinfo.retail"
+            tools:node="remove" />
     </application>
 
 </manifest>

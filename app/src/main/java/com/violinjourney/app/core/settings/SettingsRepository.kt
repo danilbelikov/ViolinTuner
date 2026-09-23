@@ -14,4 +14,7 @@ interface SettingsRepository {
     suspend fun setTolerance(preset: TolerancePreset)
 
     suspend fun setOnboardingDone(done: Boolean)
+
+    /** The switch of «Помогать улучшать приложение» (spec 3.34); takes effect at once. */
+    suspend fun setAnalyticsEnabled(enabled: Boolean)
 }

@@ -27,6 +27,9 @@ class DataStoreSettingsRepository @Inject constructor(
                 tolerance = TolerancePreset.entries.firstOrNull { it.name == preferences[TOLERANCE] }
                     ?: UserSettings().tolerance,
                 onboardingDone = preferences[ONBOARDING_DONE] ?: false,
+                // Absent means on: the fourth page of the onboarding says so, and a file written
+                // by an older version has nothing stored here (spec 3.34).
+                analyticsEnabled = preferences[ANALYTICS_ENABLED] ?: true,
             )
         }
         .distinctUntilChanged()
@@ -44,9 +47,14 @@ class DataStoreSettingsRepository @Inject constructor(
         dataStore.edit { it[ONBOARDING_DONE] = done }
     }
 
+    override suspend fun setAnalyticsEnabled(enabled: Boolean) {
+        dataStore.edit { it[ANALYTICS_ENABLED] = enabled }
+    }
+
     private companion object {
         val A4_HZ = intPreferencesKey("a4_hz")
         val TOLERANCE = stringPreferencesKey("tolerance_preset")
         val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
+        val ANALYTICS_ENABLED = booleanPreferencesKey("analytics_enabled")
     }
 }

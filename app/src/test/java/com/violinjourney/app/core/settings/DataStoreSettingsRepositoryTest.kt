@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -48,6 +49,14 @@ class DataStoreSettingsRepositoryTest {
         val error = runCatching { repository.setA4(415) }.exceptionOrNull()
         assertTrue("was $error", error is IllegalArgumentException)
         assertEquals(440, repository.settings.first().a4Hz)
+    }
+
+    @Test
+    fun `statistics are on until they are turned off`() = runTest {
+        val repository = DataStoreSettingsRepository(dataStore())
+        assertTrue(repository.settings.first().analyticsEnabled)
+        repository.setAnalyticsEnabled(false)
+        assertFalse(repository.settings.first().analyticsEnabled)
     }
 
     @Test

@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -12,6 +14,18 @@ val fakePitch = providers.gradleProperty("fakePitch").map(String::toBoolean).get
 // `-PplainLive=true` builds Live without the room and the halls behind it (spec 3.27): the plain dark
 // field of before, to compare the two from a music stand until one of them is chosen.
 val plainLive = providers.gradleProperty("plainLive").map(String::toBoolean).getOrElse(false)
+
+// `-PanalyticsDebug=true` lets a debug build send statistics (spec 5.27). Normally it does not:
+// checks on the emulator must not mix into the numbers the real phones send.
+val analyticsDebug = providers.gradleProperty("analyticsDebug").map(String::toBoolean).getOrElse(false)
+
+// The AppMetrica key comes from local.properties (git-ignored) or from `-PappMetricaKey=…`; the
+// repository never holds it. Without a key the app builds and runs on NoOpAnalytics — a fresh
+// clone, another machine and CI need no secret to work (spec 5.27).
+val appMetricaKey = providers.gradleProperty("appMetricaKey").orNull
+    ?: Properties().apply {
+        rootProject.file("local.properties").takeIf(File::exists)?.inputStream()?.use(::load)
+    }.getProperty("appMetricaKey", "")
 
 android {
     namespace = "com.violinjourney.app"
@@ -32,6 +46,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "FAKE_PITCH_SOURCE", fakePitch.toString())
         buildConfigField("boolean", "PLAIN_LIVE", plainLive.toString())
+        buildConfigField("String", "APPMETRICA_KEY", "\"$appMetricaKey\"")
+        buildConfigField("boolean", "ANALYTICS_IN_DEBUG", analyticsDebug.toString())
     }
 
     buildTypes {
@@ -78,6 +94,14 @@ dependencies {
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.room.runtime)
+    // Anonymous statistics (spec 3.34). The modules that collect a location, screenshots, purchases
+    // and ad revenue are dropped: nothing here needs them, and what is absent cannot start.
+    implementation(libs.appmetrica.analytics) {
+        exclude(group = "io.appmetrica.analytics", module = "analytics-location")
+        exclude(group = "io.appmetrica.analytics", module = "analytics-screenshot")
+        exclude(group = "io.appmetrica.analytics", module = "analytics-billing")
+        exclude(group = "io.appmetrica.analytics", module = "analytics-ad-revenue")
+    }
     implementation(libs.hilt.android)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
