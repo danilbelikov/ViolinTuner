@@ -125,8 +125,12 @@ fs.unlinkSync(page);
 console.log('store icon docs/store/icon-512.png');
 
 // Google Play's feature graphic: 1024 × 500, the icon's scene widened — the sun and the road on the
-// right, the name on the evening sky at the left. No tagline: the banner serves every language of the
-// listing. The sky, the ground and both hills are carried out past the icon's square to fill the width.
+// right, the name and the tagline on the evening sky at the left; one banner per listing language.
+// The sky, the ground and both hills are carried out past the icon's square to fill the width.
+const taglines = {
+  en: 'Intonation trainer for violin',
+  ru: 'Интонационный тренажёр для\u00A0скрипки', // «для скрипки» stays together on the second line
+};
 const wide = storeFg
   .split('M-18 -18H126V126H-18Z').join('M-200 -18H300V126H-200Z')
   .split('M-18 62H126V126H-18Z').join('M-200 62H300V126H-200Z')
@@ -135,19 +139,23 @@ const wide = storeFg
 const [bw, bh] = [1024, 500];
 const vy = 19, vh = 70, vw = vh * bw / bh, vx = -45; // the sun at about seven tenths of the width
 const font = path.join(root, 'app/src/main/res/font/manrope_variable.ttf');
-const banner = `<!doctype html><html><head><style>
+const banner = tagline => `<!doctype html><html><head><style>
 @font-face { font-family: Manrope; src: url('file://${font}'); font-weight: 200 800; }
 body { margin: 0; width: ${bw}px; height: ${bh}px; overflow: hidden; position: relative; }
 svg { position: absolute; inset: 0; }
-h1 { position: absolute; left: 72px; top: 92px; margin: 0; font: 800 84px/0.98 Manrope; letter-spacing: -1.5px;
-     color: #FFF1D6; text-shadow: 0 2px 24px rgba(42, 40, 87, 0.45); }
+.words { position: absolute; left: 72px; top: 64px; width: 420px; color: #FFF1D6; text-shadow: 0 2px 24px rgba(42, 40, 87, 0.5); }
+h1 { margin: 0; font: 800 80px/0.98 Manrope; letter-spacing: -1.5px; }
+p { margin: 22px 0 0; font: 600 27px/1.3 Manrope; opacity: 0.88; }
 </style></head><body>
 <svg xmlns="http://www.w3.org/2000/svg" width="${bw}" height="${bh}" viewBox="${vx} ${vy} ${vw} ${vh}" preserveAspectRatio="xMidYMid slice"><defs>${kebab(icon.defs)}</defs>${kebab(wide)}</svg>
-<h1>Violin<br>Journey</h1>
+<div class="words"><h1>Violin<br>Journey</h1><p>${tagline}</p></div>
 </body></html>`;
-const bannerPage = path.join(store, 'feature-graphic.html');
-fs.writeFileSync(bannerPage, banner);
-execFileSync(chrome, ['--headless', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1', `--window-size=${bw},${bh}`,
-  '--virtual-time-budget=2000', `--screenshot=${path.join(store, 'feature-graphic.png')}`, 'file://' + bannerPage], { stdio: 'ignore' });
-fs.unlinkSync(bannerPage);
-console.log('feature graphic docs/store/feature-graphic.png');
+for (const [lang, tagline] of Object.entries(taglines)) {
+  const page = path.join(store, `feature-graphic-${lang}.html`);
+  const png = `feature-graphic-${lang}.png`;
+  fs.writeFileSync(page, banner(tagline));
+  execFileSync(chrome, ['--headless', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1', `--window-size=${bw},${bh}`,
+    '--virtual-time-budget=2000', `--screenshot=${path.join(store, png)}`, 'file://' + page], { stdio: 'ignore' });
+  fs.unlinkSync(page);
+  console.log(`feature graphic docs/store/${png}`);
+}
