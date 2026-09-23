@@ -202,7 +202,7 @@ private fun PortraitLayout(
                         BackingCard(it, take.recording, onIntent)
                         BackingChipRow(it, take.recording, onIntent)
                     }
-                    RecordTakeRow(take, onIntent, blocked = backing?.blocksRecording == true) { VideoEntry(take, videoImport, onIntent, onPickVideo) }
+                    RecordTakeRow(take, onIntent, blocked = backing?.blocksRecording == true) { VideoEntry(take, videoImport, onIntent, onPickVideo, backing) }
                     NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
                     state.progress?.let { TakeProgressCard(it) }
                 }
@@ -249,7 +249,7 @@ private fun LandscapeLayout(
                     BackingCard(it, take.recording, onIntent)
                     BackingChipRow(it, take.recording, onIntent)
                 }
-                RecordTakeRow(take, onIntent, buttonSize = LandscapeRecordButton, blocked = backing?.blocksRecording == true) { VideoEntry(take, videoImport, onIntent, onPickVideo) }
+                RecordTakeRow(take, onIntent, buttonSize = LandscapeRecordButton, blocked = backing?.blocksRecording == true) { VideoEntry(take, videoImport, onIntent, onPickVideo, backing) }
                 state.progress?.let { TakeProgressCard(it) }
             }
             Column(
@@ -275,13 +275,14 @@ private fun LandscapeLayout(
 
 /** «Видео-дубль» under the words of the record button; asleep while a take is recorded or another video is on its way in. */
 @Composable
-private fun VideoEntry(take: TakeState, videoImport: VideoImport, onIntent: (PieceIntent) -> Unit, onPickVideo: () -> Unit) {
+private fun VideoEntry(take: TakeState, videoImport: VideoImport, onIntent: (PieceIntent) -> Unit, onPickVideo: () -> Unit, backing: BackingUi?) {
     VideoTakeButton(
         enabled = !take.recording && videoImport == VideoImport.Idle,
         // a short analysis shows no sheet — the button says what is going on instead
         busy = videoImport is VideoImport.Working && !videoImport.visible,
         onShoot = { onIntent(PieceIntent.VideoShootClicked) },
         onPick = onPickVideo,
+        onShootUnderBacking = if (backing?.present == true) ({ onIntent(PieceIntent.VideoUnderBackingClicked) }) else null,
     )
 }
 

@@ -1050,4 +1050,19 @@
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">with backing · %1$s</string>
+
+    <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
+    <string name="video_shoot_backing">Film to the backing</string>
+    <string name="video_shoot_backing_hint">the accompaniment in your headphones</string>
+    <string name="capture_close">Close</string>
+    <string name="capture_switch_camera">Switch camera</string>
+    <string name="capture_record">Start filming</string>
+    <string name="capture_stop">Stop filming</string>
+    <string name="capture_no_permission">Without the camera and the microphone there is nothing to film with.</string>
+    <string name="capture_grant">Allow access</string>
+    <string name="capture_open_settings">Open settings</string>
+    <string name="capture_camera_failed">The camera could not be opened.</string>
+    <string name="capture_low_space">Low on space: enough for about %1$d min</string>
+    <string name="capture_saving">Putting the video together…</string>
+    <string name="capture_video_failed">The video could not be put together — the take was kept as sound.</string>
 </resources>

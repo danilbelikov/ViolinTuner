@@ -85,6 +85,24 @@ class TakePipeline @Inject constructor(
     @Volatile
     var backingPlan: BackingPlan? = null
 
+    /**
+     * A take shot by the app's own camera (spec 3.32): the camera is started with the sound and told when the sound is
+     * whole; what it gives back — an `.mp4` of its picture and this sound — becomes the take's file.
+     */
+    interface VideoHook {
+        /** The take's sound has begun; its first sample is at [recordStartNanos] on `CLOCK_MONOTONIC`, when known. */
+        fun onRecordingStarted(recordStartNanos: Long?)
+
+        /** The sound is whole in [audio]; the name of the video made of it and the picture, or null — the take stays sound only. */
+        suspend fun onRecordingFinished(audio: File, recordStartNanos: Long?): String?
+
+        /** The take came to nothing (too short, no notes): the picture goes too. */
+        suspend fun onRecordingDiscarded()
+    }
+
+    @Volatile
+    var videoHook: VideoHook? = null
+
     private val playback: BackingPlayback? by lazy { backingPlaybackFactory?.create() }
 
     /** How far the backing of the running take has played, in ms; null while none plays. */
@@ -189,14 +207,24 @@ class TakePipeline @Inject constructor(
                 closeAudio(keep = false) // stopped while still waiting for the sound to start
                 return
             }
+            val hook = videoHook
             when (val result = finished.finish()) {
-                RecordingResult.TooShort -> closeAudio(keep = false)
+                RecordingResult.TooShort -> {
+                    closeAudio(keep = false)
+                    hook?.onRecordingDiscarded()
+                }
                 RecordingResult.NoNotes -> {
                     closeAudio(keep = false)
+                    hook?.onRecordingDiscarded()
                     if (stoppedByPlayer) eventChannel.send(Event.NoNotes)
                 }
                 is RecordingResult.Recorded -> {
-                    val id = sessionRepository.save(result.session.copy(audioPath = closeAudio(keep = true), pieceId = pieceId))
+                    val audioName = closeAudio(keep = true)
+                    // shot by the app's camera: the file of the take is the video made of this sound and the picture
+                    val video = if (hook != null && audioName != null) audioFiles.existing(audioName)?.let { hook.onRecordingFinished(it, recordStartNanos) } else null
+                    if (video != null) audioName?.let(audioFiles::delete) else if (hook != null) hook.onRecordingDiscarded()
+                    val session = result.session.copy(audioPath = video ?: audioName, videoPath = video, pieceId = pieceId)
+                    val id = sessionRepository.save(session)
                     if (plan != null) {
                         val offset = BackingOffset.offsetMs(backingStartNanos, recordStartNanos, plan.latencyMs, backingConfig)
                         backings.saveTake(
@@ -261,10 +289,10 @@ class TakePipeline @Inject constructor(
                 if (recordingRequested.value && recorder == null && mayStartRecorder(frame.tMs)) {
                     recorder = SessionRecorder(config, clock.millis())
                     watch.set(true)
-                    startBacking(frame.tMs)?.let { (plan, startNanos) ->
-                        backingStarted = plan
-                        recordStartNanos = startNanos
-                    }
+                    val takeStartTMs = (tap?.state as? AudioTap.State.Running)?.startTMs ?: frame.tMs
+                    recordStartNanos = pitchSource.clock?.nanosAt(takeStartTMs)
+                    startBacking()?.let { plan -> backingStarted = plan }
+                    videoHook?.onRecordingStarted(recordStartNanos)
                 }
                 val running = recorder
                 if (running != null) {
@@ -297,19 +325,14 @@ class TakePipeline @Inject constructor(
             .flowOn(dispatcher)
     }
 
-    /**
-     * Starts the backing with the take (spec 3.32), at the rate the take is recorded at; the take's first sample on
-     * `CLOCK_MONOTONIC` goes with it — the shift is the difference of the two. Null when there is no backing to play.
-     */
-    private fun startBacking(frameTMs: Long): Pair<BackingPlan, Long?>? {
+    /** Starts the backing with the take (spec 3.32), at the rate the take is recorded at. Null when there is no backing to play. */
+    private fun startBacking(): BackingPlan? {
         val plan = backingPlan ?: return null
         val player = playback ?: return null
-        val tap = pitchSource.audioTap
-        val rate = tap?.sampleRateHz ?: DEFAULT_RATE
+        val rate = pitchSource.audioTap?.sampleRateHz ?: DEFAULT_RATE
         val pcm = plan.pcm(rate) ?: return null
         player.start(pcm, rate)
-        val takeStartTMs = (tap?.state as? AudioTap.State.Running)?.startTMs ?: frameTMs
-        return plan to pitchSource.clock?.nanosAt(takeStartTMs)
+        return plan
     }
 
     private companion object {

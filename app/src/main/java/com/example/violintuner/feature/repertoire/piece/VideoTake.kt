@@ -77,7 +77,15 @@ private const val TABULAR_FIGURES = "tnum"
  * things about this that are not obvious. [busy] is a short analysis that shows no sheet.
  */
 @Composable
-fun VideoTakeButton(enabled: Boolean, busy: Boolean, onShoot: () -> Unit, onPick: () -> Unit, modifier: Modifier = Modifier) {
+fun VideoTakeButton(
+    enabled: Boolean,
+    busy: Boolean,
+    onShoot: () -> Unit,
+    onPick: () -> Unit,
+    modifier: Modifier = Modifier,
+    /** Null — the piece has no backing, the item is not there; otherwise the app's own camera under it (spec 3.32). */
+    onShootUnderBacking: (() -> Unit)? = null,
+) {
     val colors = MaterialTheme.colorScheme
     var menuOpen by remember { mutableStateOf(false) }
     val shape = RoundedCornerShape(ButtonHeight / 2)
@@ -104,6 +112,7 @@ fun VideoTakeButton(enabled: Boolean, busy: Boolean, onShoot: () -> Unit, onPick
         }
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, modifier = Modifier.width(MenuWidth), containerColor = colors.surfaceContainerHigh) {
             MenuItem(AppIcons.Video, R.string.video_shoot, R.string.video_shoot_hint) { menuOpen = false; onShoot() }
+            onShootUnderBacking?.let { shoot -> MenuItem(AppIcons.Backing, R.string.video_shoot_backing, R.string.video_shoot_backing_hint) { menuOpen = false; shoot() } }
             MenuItem(AppIcons.VideoGallery, R.string.video_pick, R.string.video_pick_hint) { menuOpen = false; onPick() }
         }
     }

@@ -1,5 +1,7 @@
 package com.example.violintuner.navigation
 
+import com.example.violintuner.feature.camera.CaptureRoute
+import com.example.violintuner.feature.camera.CaptureViewModel
 import android.net.Uri
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -52,6 +54,7 @@ private const val SESSION_ROUTE = "session"
 private const val PIECE_ROUTE = "piece"
 private const val PIECE_PATTERN = "$PIECE_ROUTE/{${PieceViewModel.ARG_PIECE_ID}}"
 private const val STAND_ROUTE = "stand"
+private const val CAPTURE_ROUTE = "capture"
 private const val SOUND_ROUTE = "sound"
 private const val PIECE_FORM_ROUTE = "pieceForm"
 private const val SCALE_FORM_ROUTE = "scaleForm"
@@ -155,7 +158,15 @@ fun AppNavHost(
                 onOpenStand = navController::navigateToStand,
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
+                onOpenCapture = { pieceId -> navController.navigate("$CAPTURE_ROUTE/$pieceId") { launchSingleTop = true } },
             )
+        }
+        // «Снять под минусовку» (spec 3.32): the app's own camera, over everything
+        composable(
+            route = "$CAPTURE_ROUTE/{${CaptureViewModel.ARG_PIECE_ID}}",
+            arguments = listOf(navArgument(CaptureViewModel.ARG_PIECE_ID) { type = NavType.LongType }),
+        ) {
+            CaptureRoute(onClose = navController::popBackStack)
         }
         composable(
             route = "$STAND_ROUTE/{${StandViewModel.ARG_PIECE_ID}}?${StandViewModel.ARG_PAGE}={${StandViewModel.ARG_PAGE}}",

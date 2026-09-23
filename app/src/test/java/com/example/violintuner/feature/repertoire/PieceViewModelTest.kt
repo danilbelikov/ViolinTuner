@@ -750,6 +750,26 @@ class PieceViewModelTest {
     }
 
     @Test
+    fun `filming to the backing opens the app's camera, with wireless headphones measured first`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.BLUETOOTH, "Buds")
+        val (viewModel, effects) = screen(id)
+        viewModel.onIntent(PieceIntent.VideoUnderBackingClicked)
+        runCurrent()
+        assertEquals(com.example.violintuner.feature.repertoire.piece.CalibrationUi.Intro, viewModel.calibration.value)
+        assertTrue(effects.none { it is PieceEffect.OpenCapture })
+
+        latencies.set("Buds", 180)
+        runCurrent()
+        assertEquals(180, viewModel.backing.value!!.latencyMs)
+        viewModel.onIntent(PieceIntent.CalibrationClosed)
+        viewModel.onIntent(PieceIntent.VideoUnderBackingClicked)
+        runCurrent()
+        assertEquals(PieceEffect.OpenCapture(id), effects.last())
+    }
+
+    @Test
     fun `from the music stand the take is never under the backing`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
         withBacking(id)

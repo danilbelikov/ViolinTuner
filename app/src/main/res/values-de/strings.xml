@@ -1050,4 +1050,19 @@
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">mit Begleitung · %1$s</string>
+
+    <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
+    <string name="video_shoot_backing">Mit Begleitung filmen</string>
+    <string name="video_shoot_backing_hint">die Begleitung im Kopfhörer</string>
+    <string name="capture_close">Schließen</string>
+    <string name="capture_switch_camera">Kamera wechseln</string>
+    <string name="capture_record">Aufnahme starten</string>
+    <string name="capture_stop">Aufnahme beenden</string>
+    <string name="capture_no_permission">Ohne Zugriff auf Kamera und Mikrofon kann nicht gefilmt werden.</string>
+    <string name="capture_grant">Zugriff erlauben</string>
+    <string name="capture_open_settings">Einstellungen öffnen</string>
+    <string name="capture_camera_failed">Die Kamera ließ sich nicht öffnen.</string>
+    <string name="capture_low_space">Wenig Speicher: reicht für etwa %1$d Min.</string>
+    <string name="capture_saving">Video wird zusammengesetzt…</string>
+    <string name="capture_video_failed">Das Video ließ sich nicht zusammensetzen — der Take wurde als Ton gespeichert.</string>
 </resources>

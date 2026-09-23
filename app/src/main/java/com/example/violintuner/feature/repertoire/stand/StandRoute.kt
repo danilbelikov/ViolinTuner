@@ -79,7 +79,7 @@ fun StandRoute(
                     // and there is no video take from the stand: the camera takes the screen the music is on (spec 3.19)
                     is PieceEffect.LaunchVideoCamera, is PieceEffect.ShareVideo,
                     // nor a backing: it is the piece screen's (spec 3.32)
-                    PieceEffect.PickBackingFile,
+                    PieceEffect.PickBackingFile, is PieceEffect.OpenCapture,
                     -> Unit
                 }
             }

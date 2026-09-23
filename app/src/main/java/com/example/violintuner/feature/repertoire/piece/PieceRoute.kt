@@ -44,6 +44,7 @@ fun PieceRoute(
     onOpenSession: (sessionId: Long) -> Unit,
     onOpenSound: (sessionId: Long) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenCapture: (pieceId: Long) -> Unit = {},
     viewModel: PieceViewModel = hiltViewModel(),
     shareViewModel: ShareViewModel = hiltViewModel(),
 ) {
@@ -59,6 +60,7 @@ fun PieceRoute(
     val currentOnOpenForm by rememberUpdatedState(onOpenForm)
     val currentOnOpenStand by rememberUpdatedState(onOpenStand)
     val currentOnOpenSession by rememberUpdatedState(onOpenSession)
+    val currentOnOpenCapture by rememberUpdatedState(onOpenCapture)
 
     val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = true) { granted ->
         viewModel.onIntent(PieceIntent.MicPermissionChanged(granted))
@@ -116,6 +118,7 @@ fun PieceRoute(
                     )
                     is PieceEffect.ShareVideo -> context.shareVideo(File(effect.filePath))
                     PieceEffect.PickBackingFile -> backingPicker.launch(arrayOf(AUDIO_TYPES))
+                    is PieceEffect.OpenCapture -> currentOnOpenCapture(effect.pieceId)
                 }
             }
         }

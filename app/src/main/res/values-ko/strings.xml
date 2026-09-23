@@ -1050,4 +1050,19 @@
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">반주와 함께 · %1$s</string>
+
+    <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
+    <string name="video_shoot_backing">반주에 맞춰 촬영</string>
+    <string name="video_shoot_backing_hint">헤드폰으로 반주가 나와요</string>
+    <string name="capture_close">닫기</string>
+    <string name="capture_switch_camera">카메라 전환</string>
+    <string name="capture_record">촬영 시작</string>
+    <string name="capture_stop">촬영 중지</string>
+    <string name="capture_no_permission">카메라와 마이크 권한이 없으면 촬영할 수 없어요.</string>
+    <string name="capture_grant">접근 허용</string>
+    <string name="capture_open_settings">설정 열기</string>
+    <string name="capture_camera_failed">카메라를 열 수 없어요.</string>
+    <string name="capture_low_space">저장 공간 부족: 약 %1$d분 분량</string>
+    <string name="capture_saving">영상을 만드는 중…</string>
+    <string name="capture_video_failed">영상을 만들지 못했어요 — 테이크는 소리로 저장했어요.</string>
 </resources>

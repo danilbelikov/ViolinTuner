@@ -320,6 +320,14 @@ class PieceViewModel @Inject constructor(
                 savedState[KEY_VIDEO_FILE] = file.path
                 effectChannel.trySend(PieceEffect.LaunchVideoCamera(file.path))
             }
+            // the same rules as a take under the backing: headphones, and wireless ones measured once (spec 3.32)
+            PieceIntent.VideoUnderBackingClicked -> backing.value?.takeIf { it.present && videoAllowed() }?.let { block ->
+                when {
+                    !block.route.output.isHeadphones -> Unit
+                    block.route.output.needsCalibration && block.latencyMs == null -> mutableCalibration.value = CalibrationUi.Intro
+                    else -> effectChannel.trySend(PieceEffect.OpenCapture(pieceId))
+                }
+            }
             is PieceIntent.VideoShotFinished -> {
                 val file = savedState.remove<String>(KEY_VIDEO_FILE)?.let(::File) ?: return
                 if (intent.saved) importer.shot(pieceId, file) else file.delete()

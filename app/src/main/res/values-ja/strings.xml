@@ -1050,4 +1050,19 @@
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">伴奏つき · %1$s</string>
+
+    <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
+    <string name="video_shoot_backing">伴奏で撮影</string>
+    <string name="video_shoot_backing_hint">伴奏はヘッドホンで</string>
+    <string name="capture_close">閉じる</string>
+    <string name="capture_switch_camera">カメラを切り替え</string>
+    <string name="capture_record">撮影を開始</string>
+    <string name="capture_stop">撮影を停止</string>
+    <string name="capture_no_permission">カメラとマイクへのアクセスがないと撮影できません。</string>
+    <string name="capture_grant">アクセスを許可</string>
+    <string name="capture_open_settings">設定を開く</string>
+    <string name="capture_camera_failed">カメラを開けませんでした。</string>
+    <string name="capture_low_space">空き容量が少なめ：あと約 %1$d 分</string>
+    <string name="capture_saving">動画をまとめています…</string>
+    <string name="capture_video_failed">動画をまとめられませんでした — テイクは音声として保存しました。</string>
 </resources>

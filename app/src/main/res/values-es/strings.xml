@@ -1050,4 +1050,19 @@
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">con acompañamiento · %1$s</string>
+
+    <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
+    <string name="video_shoot_backing">Grabar con acompañamiento</string>
+    <string name="video_shoot_backing_hint">el acompañamiento en los auriculares</string>
+    <string name="capture_close">Cerrar</string>
+    <string name="capture_switch_camera">Cambiar de cámara</string>
+    <string name="capture_record">Empezar a grabar</string>
+    <string name="capture_stop">Detener la grabación</string>
+    <string name="capture_no_permission">Sin acceso a la cámara y al micrófono no se puede grabar.</string>
+    <string name="capture_grant">Permitir acceso</string>
+    <string name="capture_open_settings">Abrir ajustes</string>
+    <string name="capture_camera_failed">No se pudo abrir la cámara.</string>
+    <string name="capture_low_space">Poco espacio: da para unos %1$d min</string>
+    <string name="capture_saving">Montando el vídeo…</string>
+    <string name="capture_video_failed">No se pudo montar el vídeo — la toma se guardó como sonido.</string>
 </resources>

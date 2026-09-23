@@ -138,6 +138,9 @@ sealed interface PieceIntent {
     /** «Снять видео»: the system camera (spec 3.19). */
     data object VideoShootClicked : PieceIntent
 
+    /** «Снять под минусовку»: the app's own camera (spec 3.32). */
+    data object VideoUnderBackingClicked : PieceIntent
+
     /** The system camera came back; [saved] is false when the player backed out. */
     data class VideoShotFinished(val saved: Boolean) : PieceIntent
 
@@ -208,6 +211,9 @@ sealed interface PieceEffect {
 
     /** The system picker of audio files, for a backing (spec 3.32). */
     data object PickBackingFile : PieceEffect
+
+    /** «Снять под минусовку»: the app's own camera (spec 3.32). */
+    data class OpenCapture(val pieceId: Long) : PieceEffect
 }
 
 /** What the chain hands the screen for a frame of a blind take: how loud, and what is wrong, if anything. */

@@ -1050,4 +1050,19 @@
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">带伴奏 · %1$s</string>
+
+    <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
+    <string name="video_shoot_backing">伴奏下拍摄</string>
+    <string name="video_shoot_backing_hint">伴奏在耳机里播放</string>
+    <string name="capture_close">关闭</string>
+    <string name="capture_switch_camera">切换摄像头</string>
+    <string name="capture_record">开始拍摄</string>
+    <string name="capture_stop">停止拍摄</string>
+    <string name="capture_no_permission">没有摄像头和麦克风权限就无法拍摄。</string>
+    <string name="capture_grant">允许访问</string>
+    <string name="capture_open_settings">打开设置</string>
+    <string name="capture_camera_failed">无法打开摄像头。</string>
+    <string name="capture_low_space">空间不足：大约还够 %1$d 分钟</string>
+    <string name="capture_saving">正在合成视频…</string>
+    <string name="capture_video_failed">视频合成失败——已保存为音频录音。</string>
 </resources>
