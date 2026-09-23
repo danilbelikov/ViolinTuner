@@ -18,9 +18,9 @@ class BackingRulesTest {
         // no clocks (the fake source of the emulator): the headphones alone
         assertEquals(180, BackingOffset.offsetMs(null, 1_000 * ms, 180, config))
         // never past the slider's ends
-        assertEquals(1_000, BackingOffset.offsetMs(3_000 * ms, 1_000 * ms, 0, config))
-        assertEquals(-1_000, BackingOffset.offsetMs(0, 2_000 * ms, 0, config))
-        // a second each way: wireless headphones and a late ear together go past half a second
+        assertEquals(2_000, BackingOffset.offsetMs(4_000 * ms, 1_000 * ms, 0, config))
+        assertEquals(-2_000, BackingOffset.offsetMs(0, 3_000 * ms, 0, config))
+        // two seconds each way: on the owner's phone a take in wireless headphones needed the whole second of 0.69
         assertEquals(740, BackingOffset.offsetMs(1_100 * ms, 1_000 * ms, 640, config))
     }
 
@@ -40,16 +40,17 @@ class BackingRulesTest {
     fun `the shift snaps to whole steps and the level to half decibels`() {
         assertEquals(215, BackingOffset.snap(213, config))
         assertEquals(-775, BackingOffset.snap(-777, config))
-        assertEquals(-1_000, BackingOffset.snap(-1_777, config))
+        assertEquals(-2_000, BackingOffset.snap(-2_777, config))
         assertEquals(-6.5f, BackingOffset.snapGain(-6.4f, config))
         assertEquals(6f, BackingOffset.snapGain(9f, config))
     }
 
     @Test
-    fun `the headphones' latency snaps to whole steps, from none to a second`() {
+    fun `the headphones' latency snaps to whole steps, from none to two seconds`() {
         assertEquals(215, BackingOffset.snapLatency(213, config))
         assertEquals(0, BackingOffset.snapLatency(-40, config))
-        assertEquals(1_000, BackingOffset.snapLatency(1_400, config))
+        assertEquals(1_400, BackingOffset.snapLatency(1_400, config))
+        assertEquals(2_000, BackingOffset.snapLatency(2_400, config))
     }
 
     @Test
@@ -57,7 +58,7 @@ class BackingRulesTest {
         val take = TakeBacking(1, 1, offsetMs = 250, recordedOffsetMs = 210, gainDb = -6f, playedMs = 0, output = BackingOutput.BLUETOOTH, deviceName = "Buds", latencyMs = 200)
         assertEquals(240, BackingOffset.correctedLatencyMs(take, config))
         assertEquals(0, BackingOffset.correctedLatencyMs(take.copy(offsetMs = -300, latencyMs = 100), config))
-        assertEquals(1_000, BackingOffset.correctedLatencyMs(take.copy(offsetMs = 1_000, latencyMs = 900), config))
+        assertEquals(2_000, BackingOffset.correctedLatencyMs(take.copy(offsetMs = 2_000, latencyMs = 1_900), config))
     }
 
     @Test

@@ -729,7 +729,7 @@ class PieceViewModelTest {
         assertEquals(200, viewModel.backing.value!!.latencyMs)
 
         // the slider shows the finger at once and writes the number down once it stops
-        viewModel.onIntent(PieceIntent.HeadphoneLatencyChanged(0.452f))
+        viewModel.onIntent(PieceIntent.HeadphoneLatencyChanged(0.226f))
         runCurrent()
         assertEquals(450, viewModel.backing.value!!.latencyMs)
         assertNull(latencies.latencies.value.of("Buds"))

@@ -219,7 +219,11 @@ class SoundViewModel @Inject constructor(
         val current = BackingOffset.latencyMs(route, headphoneLatencies, backingConfig)
         val corrected = BackingOffset.correctedLatencyMs(base.copy(offsetMs = block.offsetMs), backingConfig)
         val moved = block.offsetMs - block.recordedOffsetMs
-        return if (moved != 0 && corrected != current) block.copy(rememberFor = heardOn, rememberDeltaMs = moved) else block.copy(rememberFor = null)
+        return when {
+            moved != 0 && corrected != current -> block.copy(rememberFor = heardOn, rememberFromMs = current, rememberToMs = corrected, remembered = false)
+            justRemembered && corrected == current -> block.copy(rememberFor = heardOn, rememberFromMs = current, rememberToMs = current, remembered = true)
+            else -> block.copy(rememberFor = null, remembered = false)
+        }
     }
 
     private fun editBacking(change: (BackingBlockState) -> BackingBlockState) {
@@ -227,6 +231,7 @@ class SoundViewModel @Inject constructor(
         val changed = change(before)
         val clean = changed.copy(gainDb = BackingOffset.snapGain(changed.gainDb, backingConfig), offsetMs = BackingOffset.clamp(changed.offsetMs, backingConfig))
         if (clean.gainDb == before.gainDb && clean.offsetMs == before.offsetMs) return
+        if (clean.offsetMs != before.offsetMs) justRemembered = false
         mutableState.update { it.copy(backing = withRemember(clean)) }
         player?.setBackingMix(clean.offsetMs, clean.gainDb)
         backingUnsaved = true
@@ -245,11 +250,16 @@ class SoundViewModel @Inject constructor(
         backings.setTakeMix(id, block.offsetMs, block.gainDb)
     }
 
+    /** «Запомнить для …» was pressed and the shift has not moved since: the row confirms it. */
+    private var justRemembered = false
+
     private fun remember() {
         val block = state.value.backing ?: return
         val name = block.rememberFor ?: return
         val base = take ?: return
+        if (block.remembered) return
         val corrected = BackingOffset.correctedLatencyMs(base.copy(offsetMs = block.offsetMs), backingConfig)
+        justRemembered = true
         viewModelScope.launch { latencies?.set(name, corrected) }
     }
 

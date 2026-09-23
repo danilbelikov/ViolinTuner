@@ -1053,4 +1053,7 @@
     <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
     <string name="backing_latency">耳机延迟</string>
     <string name="backing_latency_hint">录音中伴奏落后于小提琴就向左调，抢先就向右调。</string>
+
+    <!-- «Запомнить для …» pressed: the row confirms it (spec 3.32). -->
+    <string name="backing_remembered">已为 %1$s 保存</string>
 </resources>

@@ -1053,4 +1053,7 @@
     <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
     <string name="backing_latency">Kopfhörer-Verzögerung</string>
     <string name="backing_latency_hint">Hinkt die Begleitung in den Takes der Geige hinterher, nach links; eilt sie voraus, nach rechts.</string>
+
+    <!-- «Запомнить для …» pressed: the row confirms it (spec 3.32). -->
+    <string name="backing_remembered">Gespeichert für %1$s</string>
 </resources>

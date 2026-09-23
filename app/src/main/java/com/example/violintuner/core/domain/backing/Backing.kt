@@ -95,11 +95,11 @@ data class BackingConfig(
     val minGainDb: Float = -24f,
     val maxGainDb: Float = 6f,
     val gainStepDb: Float = 0.5f,
-    val minOffsetMs: Int = -1_000,
-    val maxOffsetMs: Int = 1_000,
+    val minOffsetMs: Int = -2_000,
+    val maxOffsetMs: Int = 2_000,
     val offsetStepMs: Int = 5,
-    /** The headphones' latency, set by ear on the piece screen (spec 3.32): from none to a second. */
-    val maxLatencyMs: Int = 1_000,
+    /** The headphones' latency, set by ear on the piece screen (spec 3.32): from none to two seconds. */
+    val maxLatencyMs: Int = 2_000,
     /** Wireless headphones never set: a guess in the middle of what they usually lag (150–300 ms). */
     val defaultWirelessLatencyMs: Int = 200,
     /** A shift changed while playing glides in over this much, without a click. */

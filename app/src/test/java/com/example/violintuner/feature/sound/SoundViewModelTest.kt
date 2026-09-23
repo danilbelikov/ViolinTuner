@@ -356,13 +356,25 @@ class SoundViewModelTest {
         repeat(8) { viewModel.onIntent(SoundIntent.BackingOffsetStepped(up = true)) }
         val block = viewModel.state.value.backing!!
         assertEquals("Buds", block.rememberFor)
-        assertEquals(40, block.rememberDeltaMs)
+        // the row says what the headphones' latency is and what it becomes
+        assertEquals(200, block.rememberFromMs)
+        assertEquals(240, block.rememberToMs)
 
         viewModel.onIntent(SoundIntent.BackingRememberClicked)
         runCurrent()
         // never set: the guess of 200 ms, corrected by the 40 the player moved
         assertEquals(240, latencies.latencies.value.of("Buds"))
-        assertNull(viewModel.state.value.backing?.rememberFor)
+        // it confirms instead of vanishing, and a second press changes nothing
+        val done = viewModel.state.value.backing!!
+        assertTrue(done.remembered)
+        assertEquals(240, done.rememberToMs)
+        viewModel.onIntent(SoundIntent.BackingRememberClicked)
+        runCurrent()
+        assertEquals(240, latencies.latencies.value.of("Buds"))
+        // the shift moves again: the confirmation goes, an offer comes back
+        viewModel.onIntent(SoundIntent.BackingOffsetStepped(up = true))
+        assertFalse(viewModel.state.value.backing!!.remembered)
+        assertEquals(245, viewModel.state.value.backing!!.rememberToMs)
     }
 
     @Test

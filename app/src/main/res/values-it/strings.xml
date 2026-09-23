@@ -1053,4 +1053,7 @@
     <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
     <string name="backing_latency">Ritardo delle cuffie</string>
     <string name="backing_latency_hint">Se nei take la base è in ritardo sul violino, a sinistra; se corre, a destra.</string>
+
+    <!-- «Запомнить для …» pressed: the row confirms it (spec 3.32). -->
+    <string name="backing_remembered">Salvato per %1$s</string>
 </resources>

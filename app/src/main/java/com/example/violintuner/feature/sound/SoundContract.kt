@@ -93,10 +93,13 @@ data class BackingBlockState(
     val offsetMs: Int,
     /** The shift worked out while recording: «Как записано». */
     val recordedOffsetMs: Int,
-    /** Wireless headphones whose latency this take's shift would correct: «Запомнить для …»; null — nothing to remember. */
+    /** Headphones whose latency this take's shift would correct: «Запомнить для …»; null — nothing to remember. */
     val rememberFor: String? = null,
-    /** How much that correction is, for the row: «+40 мс». */
-    val rememberDeltaMs: Int = 0,
+    /** Their latency now and what it becomes: «200 → 1000 мс». */
+    val rememberFromMs: Int = 0,
+    val rememberToMs: Int = 0,
+    /** Just remembered: the row says so instead of vanishing, until the shift moves again. */
+    val remembered: Boolean = false,
 )
 
 sealed interface SoundIntent {
