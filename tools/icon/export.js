@@ -123,3 +123,31 @@ execFileSync(chrome, ['--headless', '--disable-gpu', '--hide-scrollbars', '--for
   `--screenshot=${path.join(store, 'icon-512.png')}`, 'file://' + page], { stdio: 'ignore' });
 fs.unlinkSync(page);
 console.log('store icon docs/store/icon-512.png');
+
+// Google Play's feature graphic: 1024 × 500, the icon's scene widened — the sun and the road on the
+// right, the name on the evening sky at the left. No tagline: the banner serves every language of the
+// listing. The sky, the ground and both hills are carried out past the icon's square to fill the width.
+const wide = storeFg
+  .split('M-18 -18H126V126H-18Z').join('M-200 -18H300V126H-200Z')
+  .split('M-18 62H126V126H-18Z').join('M-200 62H300V126H-200Z')
+  .replace('M-18 62V56C', 'M-200 62V57.5C-120 57 -60 56.2 -18 56C')
+  .replace('M126 62V54.6C', 'M300 62V56C220 55.6 160 54.8 126 54.6C');
+const [bw, bh] = [1024, 500];
+const vy = 19, vh = 70, vw = vh * bw / bh, vx = -45; // the sun at about seven tenths of the width
+const font = path.join(root, 'app/src/main/res/font/manrope_variable.ttf');
+const banner = `<!doctype html><html><head><style>
+@font-face { font-family: Manrope; src: url('file://${font}'); font-weight: 200 800; }
+body { margin: 0; width: ${bw}px; height: ${bh}px; overflow: hidden; position: relative; }
+svg { position: absolute; inset: 0; }
+h1 { position: absolute; left: 72px; top: 92px; margin: 0; font: 800 84px/0.98 Manrope; letter-spacing: -1.5px;
+     color: #FFF1D6; text-shadow: 0 2px 24px rgba(42, 40, 87, 0.45); }
+</style></head><body>
+<svg xmlns="http://www.w3.org/2000/svg" width="${bw}" height="${bh}" viewBox="${vx} ${vy} ${vw} ${vh}" preserveAspectRatio="xMidYMid slice"><defs>${kebab(icon.defs)}</defs>${kebab(wide)}</svg>
+<h1>Violin<br>Journey</h1>
+</body></html>`;
+const bannerPage = path.join(store, 'feature-graphic.html');
+fs.writeFileSync(bannerPage, banner);
+execFileSync(chrome, ['--headless', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1', `--window-size=${bw},${bh}`,
+  '--virtual-time-budget=2000', `--screenshot=${path.join(store, 'feature-graphic.png')}`, 'file://' + bannerPage], { stdio: 'ignore' });
+fs.unlinkSync(bannerPage);
+console.log('feature graphic docs/store/feature-graphic.png');
