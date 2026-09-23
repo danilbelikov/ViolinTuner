@@ -22,6 +22,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import com.violinjourney.app.feature.history.HistorySection
+import com.violinjourney.app.feature.history.HistorySectionAsk
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -32,6 +34,7 @@ import org.junit.Test
 /** Blocks on Live (spec 3.28): the offer, the choice, the bookmark following the clock, stop, change, a deleted element. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class BlockViewModelTest {
+    private val sectionAsk = HistorySectionAsk()
     private val zone: ZoneId = ZoneId.of("Europe/Moscow")
     private val min = 60_000L
 
@@ -55,7 +58,7 @@ class BlockViewModelTest {
     fun tearDown() = Dispatchers.resetMain()
 
     private fun TestScope.viewModel(): Pair<BlockViewModel, MutableList<BlockEffect>> {
-        val viewModel = BlockViewModel(practice, blocks, history, repertoire, FakeSessionRepository(), PracticeConfig(), clock)
+        val viewModel = BlockViewModel(practice, blocks, history, repertoire, FakeSessionRepository(), PracticeConfig(), clock, sectionAsk)
         val effects = mutableListOf<BlockEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -183,6 +186,7 @@ class BlockViewModelTest {
         viewModel.onIntent(BlockIntent.OpenRepertoireClicked)
         runCurrent()
         assertEquals(listOf(BlockEffect.OpenRepertoire), effects)
+        assertEquals("«Записи» are asked for «Репертуар»", HistorySection.REPERTOIRE, sectionAsk.asked.value)
         assertNull(viewModel.state.value.sheet)
     }
 }

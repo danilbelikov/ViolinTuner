@@ -1,6 +1,5 @@
 package com.violinjourney.app.feature.history
 
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
@@ -23,12 +22,12 @@ import kotlinx.coroutines.launch
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
-    private val savedState: SavedStateHandle,
     private val repository: SessionRepository,
     private val repertoire: RepertoireRepository,
     private val config: IntonationConfig,
     private val clock: Clock,
     private val audioFiles: SessionAudioFiles,
+    private val sectionAsk: HistorySectionAsk = HistorySectionAsk(),
 ) : ViewModel() {
 
     private val filter = MutableStateFlow(HistoryFilter.ALL)
@@ -40,16 +39,14 @@ class HistoryViewModel @Inject constructor(
     private val selection = MutableStateFlow(Selection())
 
     init {
-        // «Открыть репертуар» from Live (spec 3.28) asks for a section through the saved state of this entry: it is
-        // taken once and forgotten, the tab stays wherever the player moves it afterwards
+        // «Открыть репертуар» from Live (spec 3.28) asks for a section: it is taken once and forgotten, the tab stays
+        // wherever the player moves it afterwards
         viewModelScope.launch {
-            savedState.getStateFlow<String?>(OPEN_SECTION, null).collect { name ->
-                if (name == null) return@collect
-                HistorySection.entries.firstOrNull { it.name == name }?.let {
+            sectionAsk.asked.collect {
+                sectionAsk.take()?.let { wanted ->
                     selection.value = Selection()
-                    section.value = it
+                    section.value = wanted
                 }
-                savedState[OPEN_SECTION] = null
             }
         }
     }
@@ -109,8 +106,6 @@ class HistoryViewModel @Inject constructor(
     }
 
     companion object {
-        /** The key of a section asked for from elsewhere (spec 3.28): the name of a [HistorySection]. */
-        const val OPEN_SECTION = "openSection"
         private const val STOP_TIMEOUT_MS = 5_000L
     }
 }

@@ -20,7 +20,6 @@ import com.violinjourney.app.feature.backup.RestoreRoute
 import com.violinjourney.app.feature.backup.RestoreViewModel
 import com.violinjourney.app.feature.history.HistoryRoute
 import com.violinjourney.app.feature.history.HistorySection
-import com.violinjourney.app.feature.history.HistoryViewModel
 import com.violinjourney.app.feature.home.HomeRoute
 import com.violinjourney.app.feature.home.HomeView
 import com.violinjourney.app.feature.home.SplashKind
@@ -352,13 +351,9 @@ fun NavHostController.navigateToRunningBackup(restoring: Boolean) {
     if (restoring) navigateToRestore("") else navigateToBackup()
 }
 
-/**
- * «Открыть репертуар» from Live (spec 3.28): the tab «Записи», asked to show «Репертуар». The ask goes through the
- * saved state of the tab's entry, so it reaches the view model of the tab whether it is new or kept from before.
- */
+/** «Открыть репертуар» from Live (spec 3.28): the tab «Записи»; «Репертуар» was asked for already (`HistorySectionAsk`). */
 fun NavHostController.navigateToRepertoire() {
     navigateToTopLevel(TopLevelDestination.HISTORY)
-    getBackStackEntry(TopLevelDestination.HISTORY.route).savedStateHandle[HistoryViewModel.OPEN_SECTION] = HistorySection.REPERTOIRE.name
 }
 
 /**

@@ -1,6 +1,5 @@
 package com.violinjourney.app.feature.history
 
-import androidx.lifecycle.SavedStateHandle
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
@@ -60,10 +59,10 @@ class HistoryViewModelTest {
         )
     }
 
-    private val savedState = SavedStateHandle()
+    private val sectionAsk = HistorySectionAsk()
 
     private fun TestScope.viewModel(): HistoryViewModel {
-        val viewModel = HistoryViewModel(savedState, repository, repertoire, config, clock, NoFiles)
+        val viewModel = HistoryViewModel(repository, repertoire, config, clock, NoFiles, sectionAsk)
         backgroundScope.launch { viewModel.state.collect {} }
         return viewModel
     }
@@ -250,10 +249,10 @@ class HistoryViewModelTest {
         val viewModel = viewModel()
         runCurrent()
         assertEquals(HistorySection.SESSIONS, viewModel.state.value.section)
-        savedState[HistoryViewModel.OPEN_SECTION] = HistorySection.REPERTOIRE.name
+        sectionAsk.ask(HistorySection.REPERTOIRE)
         runCurrent()
         assertEquals(HistorySection.REPERTOIRE, viewModel.state.value.section)
-        assertEquals(null, savedState.get<String>(HistoryViewModel.OPEN_SECTION))
+        assertEquals(null, sectionAsk.asked.value)
         viewModel.onIntent(HistoryIntent.SectionSelected(HistorySection.SESSIONS))
         runCurrent()
         assertEquals(HistorySection.SESSIONS, viewModel.state.value.section)

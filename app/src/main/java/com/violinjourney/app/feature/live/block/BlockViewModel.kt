@@ -13,6 +13,8 @@ import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.practice.SavedBlock
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.feature.history.HistorySection
+import com.violinjourney.app.feature.history.HistorySectionAsk
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import javax.inject.Inject
@@ -46,6 +48,7 @@ class BlockViewModel @Inject constructor(
     sessions: SessionRepository,
     private val config: PracticeConfig,
     private val clock: Clock,
+    private val sectionAsk: HistorySectionAsk = HistorySectionAsk(),
 ) : ViewModel() {
 
     private val ui = MutableStateFlow(BlockReducer.Ui())
@@ -108,6 +111,8 @@ class BlockViewModel @Inject constructor(
             BlockIntent.StopClicked -> stop()
             BlockIntent.OpenRepertoireClicked -> {
                 ui.value = BlockReducer.Ui()
+                // the tab «Записи» opens on «Репертуар»: asked here, taken there
+                sectionAsk.ask(HistorySection.REPERTOIRE)
                 effectChannel.trySend(BlockEffect.OpenRepertoire)
             }
         }
