@@ -1,8 +1,5 @@
 package com.example.violintuner.feature.sound
 
-import com.example.violintuner.core.domain.backing.BackingConfig
-import com.example.violintuner.feature.sound.components.BackingBlock
-import com.example.violintuner.feature.sound.components.BackingHeardSwitch
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -52,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.audio.fx.SoundMeters
+import com.example.violintuner.core.domain.backing.BackingConfig
 import com.example.violintuner.core.domain.sound.SoundConfig
 import com.example.violintuner.core.ui.components.SegmentedSwitch
 import com.example.violintuner.core.ui.format.Formats
@@ -61,6 +59,9 @@ import com.example.violintuner.core.ui.icons.IconLabel
 import com.example.violintuner.core.ui.icons.IconSizes
 import com.example.violintuner.core.ui.theme.ViolinTheme
 import com.example.violintuner.feature.history.components.sessionTitle
+import com.example.violintuner.feature.sound.components.BackingBlock
+import com.example.violintuner.feature.sound.components.BackingHeardSwitch
+import com.example.violintuner.feature.sound.components.BackingPreparingRow
 import com.example.violintuner.feature.sound.components.MiniPlayer
 import com.example.violintuner.feature.sound.components.MiniPlayerMetrics
 import com.example.violintuner.feature.sound.components.SoundBlocks
@@ -221,6 +222,10 @@ internal fun captionName(caption: SoundCaption): String = when (caption) {
 @Composable
 private fun Player(state: SoundState, meters: State<SoundMeters?>, metrics: MiniPlayerMetrics, onIntent: (SoundIntent) -> Unit) {
     val player = state.player
+    if (player == null && state.preparingBacking) {
+        BackingPreparingRow()
+        return
+    }
     if (player == null) {
         if (state.mode == SoundMode.EVERYONE && state.recordings.isEmpty()) {
             Text(

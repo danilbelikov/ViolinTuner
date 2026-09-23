@@ -76,6 +76,8 @@ data class SoundState(
     val details: Boolean,
     /** Null — there is nothing to listen to (no recording with sound), or the file cannot be played. */
     val player: PlayerState?,
+    /** The player waits for the backing's sound to be made (spec 5.25): «Готовим минусовку…» where it will be. */
+    val preparingBacking: Boolean = false,
     /** Null until reckoned: the mini player then shows a plain slider. */
     val waveform: List<Float>?,
     /** [SoundMode.EVERYONE]: recordings the default can be tried on, newest first. */

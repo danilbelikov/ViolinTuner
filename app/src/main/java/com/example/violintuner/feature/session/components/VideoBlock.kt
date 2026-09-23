@@ -8,6 +8,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -39,6 +40,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -117,6 +119,11 @@ fun VideoFrame(
     /** Null inside the full screen, where the panel has «свернуть». */
     onFullscreen: (() -> Unit)? = null,
     cornerButtonAlpha: Float = 1f,
+    /**
+     * The sound cannot be played yet — a take under a backing whose sound is being made (spec 5.25): the picture is
+     * greyed, says why, and takes no tap; «на весь экран» waits too.
+     */
+    waiting: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val videoColors = ViolinTheme.videoColors
@@ -127,7 +134,7 @@ fun VideoFrame(
         modifier = modifier
             .clip(RoundedCornerShape(corner))
             .background(colors.surfaceContainer)
-            .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.Button) {
+            .clickable(enabled = !waiting, interactionSource = remember { MutableInteractionSource() }, indication = null, role = Role.Button) {
                 taps++
                 onTap()
             }
@@ -149,7 +156,23 @@ fun VideoFrame(
             }
         }
         TapGlyph(taps, playing)
-        if (onFullscreen != null) {
+        if (waiting) {
+            Column(
+                modifier = Modifier.fillMaxSize().background(videoColors.scrim),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(28.dp), color = Color.White, strokeWidth = 2.5.dp)
+                Text(
+                    stringResource(R.string.backing_preparing),
+                    color = Color.White,
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                    modifier = Modifier.padding(horizontal = 16.dp),
+                )
+            }
+        }
+        if (onFullscreen != null && !waiting) {
             val label = stringResource(R.string.video_fullscreen)
             Box(
                 modifier = Modifier

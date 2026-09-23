@@ -137,7 +137,14 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
             }
             var track: AudioTrack? = null
             // the backing's sound at this recording's rate, prepared here, off the main thread; gone — the violin alone
-            val pcm = backing?.let { runCatching { it.pcm(decoder.sampleRate) }.getOrNull() }
+            val pcm = backing?.let { given ->
+                runCatching {
+                    given.cached(decoder.sampleRate) ?: run {
+                        if (!released) mutableState.update { it.copy(preparingBacking = true) }
+                        given.pcm(decoder.sampleRate)
+                    }
+                }.getOrNull()
+            }
             val reader = pcm?.let { runCatching { BackingPcmReader(it) }.getOrNull() }
             try {
                 track = newTrack(decoder.sampleRate, stereo = reader != null)
@@ -190,7 +197,7 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
             var running = false
             var sinceMeters = 0
 
-            mutableState.update { it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = backingMix != null) }
+            mutableState.update { it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = backingMix != null, preparingBacking = false) }
 
             while (!released) {
                 // — wishes —

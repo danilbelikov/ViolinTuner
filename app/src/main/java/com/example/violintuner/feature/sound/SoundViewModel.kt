@@ -245,7 +245,7 @@ class SoundViewModel @Inject constructor(
         val current = player ?: playerFactory.create(viewModelScope).also { created ->
             player = created
             created.setSound(state.value.settings)
-            viewModelScope.launch { created.state.collect { playerState -> mutableState.update { it.copy(player = playerState.takeIf { p -> p.ready && !p.failed }) } } }
+            viewModelScope.launch { created.state.collect { playerState -> mutableState.update { it.copy(player = playerState.takeIf { p -> p.ready && !p.failed }, preparingBacking = playerState.preparingBacking && !playerState.failed) } } }
             viewModelScope.launch { created.meters.collect { mutableMeters.value = it } }
         }
         val under = take?.takeIf { session.id == sessionId }
@@ -253,7 +253,7 @@ class SoundViewModel @Inject constructor(
         val pcm = backingPcm
         if (under != null && file0 != null && pcm != null) {
             val block = state.value.backing
-            current.loadWithBacking(file, PlayerBacking(pcm = { rate -> pcm.prepare(file0, rate) }, offsetMs = block?.offsetMs ?: under.offsetMs, gainDb = block?.gainDb ?: under.gainDb))
+            current.loadWithBacking(file, PlayerBacking(pcm = { rate -> pcm.prepare(file0, rate) }, offsetMs = block?.offsetMs ?: under.offsetMs, gainDb = block?.gainDb ?: under.gainDb, cached = { rate -> pcm.cached(file0, rate) }))
         } else {
             current.load(file)
         }

@@ -70,6 +70,8 @@ sealed interface SessionState {
         val dialog: SessionDialog? = null,
         /** Null when the session has no sound, its file is gone or cannot be played. */
         val player: PlayerState? = null,
+        /** The player waits for the backing's sound to be made (spec 5.25): «Готовим минусовку…», and the picture waits too. */
+        val preparingBacking: Boolean = false,
         /** What the row «Звук» under the player says; there with the player only. */
         val sound: SoundRow? = null,
         /** Null for a recording that is sound only (spec 3.19). */

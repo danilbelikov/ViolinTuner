@@ -1,10 +1,7 @@
 package com.example.violintuner.feature.session
 
-import com.example.violintuner.feature.sound.components.BackingHeardSwitch
-import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.foundation.selection.toggleable
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -39,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -71,6 +70,8 @@ import com.example.violintuner.feature.session.components.VideoMissingRow
 import com.example.violintuner.feature.session.components.VideoSurfaceCallbacks
 import com.example.violintuner.feature.sound.SoundCaption
 import com.example.violintuner.feature.sound.captionName
+import com.example.violintuner.feature.sound.components.BackingHeardSwitch
+import com.example.violintuner.feature.sound.components.BackingPreparingRow
 import java.time.ZoneId
 import kotlin.math.roundToInt
 
@@ -201,7 +202,7 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
                     val room = left - ContentPadding * 3 / 2
                     val frame = VideoLayoutMath.fit(VideoLayoutMath.aspectOf(picture.width, picture.height), room.value, screenHeight.value * LANDSCAPE_VIDEO_SHARE)
                     Box(Modifier.fillMaxWidth().background(ViolinTheme.videoColors.field, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
-                        VideoFrame(picture, state.player?.playing == true, videoSurface, onTap, Modifier.size(frame.width.dp, frame.height.dp), corner = 14.dp, onFullscreen = onFullscreen)
+                        VideoFrame(picture, state.player?.playing == true, videoSurface, onTap, Modifier.size(frame.width.dp, frame.height.dp), corner = 14.dp, onFullscreen = onFullscreen, waiting = state.preparingBacking)
                     }
                     PlayerAndSound(state, onIntent)
                 }
@@ -236,6 +237,7 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
                     callbacks = videoSurface,
                     onTap = onTap,
                     onFullscreen = onFullscreen,
+                    waiting = state.preparingBacking,
                     modifier = Modifier
                         .widthIn(max = MaxContentWidth)
                         .background(MaterialTheme.colorScheme.surface)
@@ -424,6 +426,7 @@ private fun Summary(content: SessionContent) {
 /** The player and the way to «Звук» under it: in the scroll when the phone is upright, beside the picture when it lies on its side. */
 @Composable
 private fun PlayerAndSound(state: SessionState.Loaded, onIntent: (SessionIntent) -> Unit) {
+    if (state.player == null && state.preparingBacking) BackingPreparingRow()
     state.player?.let { player ->
         PlayerBar(
             player = player,

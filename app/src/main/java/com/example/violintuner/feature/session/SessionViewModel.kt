@@ -193,7 +193,7 @@ class SessionViewModel @Inject constructor(
                 created.load(file)
                 return@launch
             }
-            created.loadWithBacking(file, PlayerBacking(pcm = { rate -> pcm.prepare(backing, rate) }, offsetMs = take.offsetMs, gainDb = take.gainDb))
+            created.loadWithBacking(file, PlayerBacking(pcm = { rate -> pcm.prepare(backing, rate) }, offsetMs = take.offsetMs, gainDb = take.gainDb, cached = { rate -> pcm.cached(backing, rate) }))
             // the shift or the level changed on «Звук» and came back here: heard at once
             backings.takeBackings.collect { all -> all.firstOrNull { it.sessionId == sessionId }?.let { created.setBackingMix(it.offsetMs, it.gainDb) } }
         }
@@ -209,7 +209,7 @@ class SessionViewModel @Inject constructor(
         }
         viewModelScope.launch {
             created.state.collect { playerState ->
-                updateLoaded { it.copy(player = playerState.takeIf { state -> state.ready && !state.failed }) }
+                updateLoaded { it.copy(player = playerState.takeIf { state -> state.ready && !state.failed }, preparingBacking = playerState.preparingBacking && !playerState.failed) }
             }
         }
     }

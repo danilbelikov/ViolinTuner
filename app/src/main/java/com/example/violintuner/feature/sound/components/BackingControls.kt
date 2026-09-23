@@ -10,9 +10,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -28,8 +30,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.backing.BackingConfig
-import com.example.violintuner.feature.sound.SoundFormats
 import com.example.violintuner.feature.sound.BackingBlockState
+import com.example.violintuner.feature.sound.SoundFormats
 import com.example.violintuner.feature.sound.SoundIntent
 
 private val SwitchHeight = 36.dp
@@ -72,6 +74,23 @@ fun BackingHeardSwitch(heard: Boolean, onHeard: (Boolean) -> Unit, modifier: Mod
                 )
             }
         }
+    }
+}
+
+/**
+ * Where the player will be, while the backing's sound is made for it (spec 5.25): a take under a backing cannot be
+ * listened to before — the screen says so instead of showing nothing.
+ */
+@Composable
+fun BackingPreparingRow(modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        modifier = modifier.fillMaxWidth().heightIn(min = 48.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = colors.primary, strokeWidth = 2.dp)
+        Text(stringResource(R.string.backing_preparing), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp))
     }
 }
 

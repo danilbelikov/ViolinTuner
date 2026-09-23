@@ -85,6 +85,8 @@ fun StickyVideo(
     onTap: () -> Unit,
     onFullscreen: () -> Unit,
     modifier: Modifier = Modifier,
+    /** The sound is not ready (the backing is being made): the picture waits with it. */
+    waiting: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val aspect = VideoLayoutMath.aspectOf(video.width, video.height)
@@ -122,6 +124,7 @@ fun StickyVideo(
             // in the row the button stands beside the words, not on a frame a finger wide
             onFullscreen = onFullscreen.takeIf { collapse < 1f },
             cornerButtonAlpha = 1f - frame.wordsAlpha,
+            waiting = waiting,
         )
         if (frame.wordsAlpha > 0f) {
             Row(
