@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.analytics
 
 import com.violinjourney.app.core.audio.MicUnavailableReason
+import com.violinjourney.app.core.ui.permission.MicPermissionAnswer
 
 /**
  * Every event the app can send, with its parameters — one list, the way `IntonationConfig` holds
@@ -16,6 +17,9 @@ class ScreenOpen(screen: String) : AnalyticsEvent(NAME, mapOf(PARAM to screen)) 
         const val PARAM = "screen"
     }
 }
+
+/** What the system answered about the microphone, once per request (spec 3.34). */
+class MicPermission(answer: MicPermissionAnswer) : AnalyticsEvent("mic_permission", mapOf("result" to answer.key))
 
 /** Why the microphone went away (spec 3.34): on the emulator it is the bridge, on a phone — unknown. */
 class MicUnavailable(reason: MicUnavailableReason) : AnalyticsEvent("mic_unavailable", mapOf("reason" to reason.key))

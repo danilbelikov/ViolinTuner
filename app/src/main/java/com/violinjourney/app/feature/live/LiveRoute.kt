@@ -26,6 +26,7 @@ import com.violinjourney.app.BuildConfig
 import com.violinjourney.app.R
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.permission.isMicPermissionGranted
+import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
 import com.violinjourney.app.core.ui.permission.rememberMicPermissionRequester
 import com.violinjourney.app.feature.home.HomeLookViewModel
 import com.violinjourney.app.feature.journey.LocalHomeLook
@@ -53,7 +54,8 @@ fun LiveRoute(
     val currentOnFinishPractice by rememberUpdatedState(onFinishPractice)
     val currentOnOpenSettings by rememberUpdatedState(onOpenSettings)
 
-    val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = true) { granted ->
+    val tracking = hiltViewModel<AnalyticsViewModel>()
+    val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = true, onAnswer = tracking::onMicPermissionAnswered) { granted ->
         viewModel.onIntent(LiveIntent.MicPermissionChanged(granted))
     }
 

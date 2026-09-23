@@ -18,6 +18,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.violinjourney.app.R
 import com.violinjourney.app.core.ui.permission.isMicPermissionGranted
+import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
 import com.violinjourney.app.core.ui.permission.rememberMicPermissionRequester
 import com.violinjourney.app.feature.repertoire.piece.PieceEffect
 import com.violinjourney.app.feature.repertoire.piece.PieceIntent
@@ -43,7 +44,8 @@ fun StandRoute(
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnClose by rememberUpdatedState(onClose)
 
-    val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = true) { granted ->
+    val tracking = hiltViewModel<AnalyticsViewModel>()
+    val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = true, onAnswer = tracking::onMicPermissionAnswered) { granted ->
         pieceViewModel.onIntent(PieceIntent.MicPermissionChanged(granted))
     }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {

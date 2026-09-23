@@ -26,6 +26,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.violinjourney.app.core.backup.RestoreSwap
 import com.violinjourney.app.core.domain.practice.PracticeConfig
+import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.practice.components.PracticePromptHost
@@ -33,7 +34,6 @@ import com.violinjourney.app.navigation.AppBottomBar
 import com.violinjourney.app.navigation.AppNavHost
 import com.violinjourney.app.navigation.AppStartViewModel
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
-import com.violinjourney.app.navigation.ScreenTrackingViewModel
 import com.violinjourney.app.navigation.TopLevelDestination
 import com.violinjourney.app.navigation.navigateToRunningBackup
 import com.violinjourney.app.navigation.navigateToTopLevel
@@ -80,9 +80,9 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
     // And every time it goes away: the temporary files of sending are swept then too (spec 5.11).
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { startViewModel.onAppStopped() }
     val navController = rememberNavController()
-    val screenTracking = hiltViewModel<ScreenTrackingViewModel>()
+    val tracking = hiltViewModel<AnalyticsViewModel>()
     LaunchedEffect(navController) {
-        navController.currentBackStackEntryFlow.collect { entry -> screenTracking.onScreenOpened(entry.destination.route) }
+        navController.currentBackStackEntryFlow.collect { entry -> tracking.onScreenOpened(entry.destination.route) }
     }
     val backStackEntry by navController.currentBackStackEntryAsState()
     // null outside the tabs: on the onboarding there is no bottom bar

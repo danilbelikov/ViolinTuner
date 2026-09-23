@@ -33,6 +33,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.violinjourney.app.R
 import com.violinjourney.app.core.ui.permission.isMicPermissionGranted
+import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
 import com.violinjourney.app.core.ui.permission.rememberMicPermissionRequester
 import com.violinjourney.app.feature.history.SelectionIntent
 import com.violinjourney.app.feature.history.components.CardActions
@@ -66,7 +67,8 @@ fun PieceRoute(
     val currentOnOpenSession by rememberUpdatedState(onOpenSession)
     val currentOnOpenCapture by rememberUpdatedState(onOpenCapture)
 
-    val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = true) { granted ->
+    val tracking = hiltViewModel<AnalyticsViewModel>()
+    val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = true, onAnswer = tracking::onMicPermissionAnswered) { granted ->
         viewModel.onIntent(PieceIntent.MicPermissionChanged(granted))
     }
     // Also catches a permission revoked or granted in the system settings while we were away.

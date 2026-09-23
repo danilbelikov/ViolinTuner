@@ -16,6 +16,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.motion.rememberAnimationsRemoved
+import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
 import com.violinjourney.app.core.ui.permission.rememberMicPermissionRequester
 import com.violinjourney.app.feature.backup.BACKUP_FILE_TYPES
 
@@ -32,7 +33,8 @@ fun OnboardingRoute(
 
     // A refusal does not stop the onboarding and must not throw the player into the system
     // settings: Live explains and offers the permission again (spec 3.4).
-    val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = false) {
+    val tracking = hiltViewModel<AnalyticsViewModel>()
+    val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = false, onAnswer = tracking::onMicPermissionAnswered) {
         viewModel.onIntent(OnboardingIntent.MicPermissionAnswered)
     }
 
