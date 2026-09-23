@@ -110,7 +110,10 @@ console.log(`background ${background.length} paths, foreground ${foreground.leng
 // Rendered by headless Chrome, the one SVG renderer every Mac here has.
 const kebab = s => s.replace(/\b(stopColor|stopOpacity|strokeWidth|strokeLinecap|strokeLinejoin|strokeOpacity|fillOpacity|fillRule)=/g,
   (_, a) => a.replace(/[A-Z]/g, c => '-' + c.toLowerCase()) + '=');
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="18 18 72 72"><defs>${kebab(icon.defs)}</defs>${kebab(icon.fg)}</svg>`;
+// The four-pointed star in the upper left corner would be half cut by the store's rounding: left out here.
+const storeFg = icon.fg.replace(/<path d="[^"]*Q[^"]*" fill="#FFF1D6"><\/path>/, '');
+if (storeFg === icon.fg) throw new Error('the star is not in the handoff any more');
+const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="18 18 72 72"><defs>${kebab(icon.defs)}</defs>${kebab(storeFg)}</svg>`;
 const store = path.join(root, 'docs/store');
 fs.mkdirSync(store, { recursive: true });
 const page = path.join(store, 'icon-512.html');
