@@ -33,6 +33,9 @@ class AppMetricaAnalytics @Inject constructor(
             application,
             AppMetricaConfig.newConfigBuilder(BuildConfig.APPMETRICA_KEY)
                 .withDataSendingEnabled(false)
+                // Only in the build that exists to be watched (`-PanalyticsDebug=true`): the
+                // library then says what it took and what it sent, in `adb logcat -s AppMetrica`.
+                .apply { if (BuildConfig.ANALYTICS_IN_DEBUG) withLogs() }
                 .build(),
         )
         // Lives as long as the process does, on purpose: the consent has to be followed until the

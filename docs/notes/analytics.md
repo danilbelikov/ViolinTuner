@@ -2,10 +2,18 @@
 
 Спека — `docs/spec/analytics.md` (3.34, 5.27), этапы 93–95.
 
+## Что проверено с настоящим ключом (эмулятор, 23.09.2026)
+
+- Ключ из `local.properties` доходит до сборки, SDK активируется.
+- **Цепочка согласия работает от начала до конца.** В логе подряд: `Update config with value {…"data_sending_enabled":false…}` — то есть библиотека стартует немой, — и сразу `Updated data sending enabled: true` от потока из DataStore. Значит, ни первая сессия не теряется, ни отправка не идёт до согласия.
+- События приходят с правильными именами и значениями: `Event received: screen_open. With value: {screen=onboarding}`, `mic_permission. With value: {result=granted}`, `screen_open {screen=practice}`.
+- **Доставка подтверждена**: `Event sent: screen_open with value {"screen":"practice"}` и следом `Event removed from db` — из своей очереди SDK удаляет событие только после того, как сервер его принял.
+
 ## Что не проверено
 
-- **Ключа у меня не было.** Всё, что касается доставки, проверялось на выдуманном UUID: SDK активируется, пишет в logcat `Activate AppMetrica with APIKey …`, приложение не падает. **Долетают ли события до консоли — не проверено никем.** Первое, что стоит сделать с настоящим ключом: положить его в `local.properties`, собрать `-PanalyticsDebug=true`, добавить эмулятор в «тестовые устройства» и посмотреть поток событий.
-- **Выключенное согласие подтверждено только изнутри**: юнит-тестом на репозиторий и тем, что ключ `analytics_enabled` появляется в `user_settings.preferences_pb` после тапа. Что после `setDataSendingEnabled(false)` SDK действительно молчит, глазами не подтверждено — в logcat AppMetrica этого не пишет.
+- **В консоль AppMetrica никто не заходил** — что события видно в отчётах, подтверждено только со стороны телефона.
+- `live_frames` на устройстве не вызывался ни разу: нужно провести на Live больше 30 секунд с живыми кадрами. `mic_unavailable`, события занятия, дубля, репертуара, дороги, лавки и копии на устройстве тоже не вызывались — они закрыты юнит-тестами, а вставки однострочные.
+- Что после выключения переключателя SDK замолкает, глазами не подтверждено: в logcat он пишет только про включение.
 - **На телефоне владельца не проверено ничего.**
 - Исключение четырёх модулей (`location`, `screenshot`, `billing`, `ad-revenue`) проверено запуском: приложение живёт, SDK стартует. Что от этого не сломались дальние углы — минусовка, видео, импорт — не проверялось.
 - Удаление экспортированного `PreloadInfoContentProvider` проверено сборкой и запуском на эмуляторе.
@@ -36,6 +44,17 @@ adb shell run-as com.example.violintuner cat files/datastore/user_settings.prefe
 ```
 
 Последняя строка показывает, появился ли ключ `analytics_enabled` после тапа по переключателю в «Настройках» → «Данные».
+
+**У эмулятора бывает мёртвая сеть, и это выглядит как молчащая аналитика.** Признак — `adb shell ping -c 1 report.appmetrica.yandex.net` отвечает `unknown host`. Перезагрузка (`adb reboot`) не помогает; помогает перезапуск AVD со своим DNS:
+
+```
+adb -s emulator-5554 emu kill
+~/Library/Android/sdk/emulator/emulator -avd Pixel_7 -dns-server 8.8.8.8 -no-boot-anim &
+```
+
+Пока сеть мертва, события копятся в базе SDK и никуда не уходят — в логе видно `Event saved to db`, но нет `Event sent`. Это не код.
+
+Порядок строк в логе, по которым читается вся цепочка: `Event received: <имя>` (SDK принял) → `Event saved to db` (лежит в очереди) → `Event sent` и `Event removed from db` (сервер принял, из очереди удалено). Шлёт пачками, не сразу: своей очереди приходится ждать минуты.
 
 Итоговый список разрешений приложения — в слитом манифесте:
 `app/build/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml`. Там должны быть `INTERNET` и `ACCESS_NETWORK_STATE` и не должно быть `AD_ID` и `preloadinfo`.
