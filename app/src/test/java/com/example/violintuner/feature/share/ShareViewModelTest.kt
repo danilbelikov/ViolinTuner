@@ -71,6 +71,20 @@ class ShareViewModelTest {
             }
         }
 
+        var backingRenders = 0
+        var backingOffset: Int? = null
+        override suspend fun renderWithBacking(
+            source: File,
+            settings: SoundSettings,
+            backing: com.example.violintuner.core.audio.share.RenderBacking,
+            target: File,
+            onProgress: (Float) -> Unit,
+        ): Boolean {
+            backingRenders++
+            backingOffset = backing.offsetMs
+            return render(source, settings, target, onProgress).also { renders-- }
+        }
+
         var videoRenders = 0
         override suspend fun renderVideo(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean {
             videoRenders++
@@ -123,8 +137,14 @@ class ShareViewModelTest {
         )
     }
 
+    private val backings = com.example.violintuner.core.domain.backing.FakeBackingRepository()
+    private val backingPcm = object : com.example.violintuner.core.audio.backing.BackingPcm {
+        override fun cached(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): File? = null
+        override fun prepare(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): File? = null
+    }
+
     private fun TestScope.share(renderer: SoundRenderer): Pair<ShareViewModel, MutableList<ShareEffect>> {
-        val viewModel = ShareViewModel(sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, { testScheduler.currentTime }, config, videoFiles)
+        val viewModel = ShareViewModel(sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, { testScheduler.currentTime }, config, videoFiles, backings, backingPcm)
         val effects = mutableListOf<ShareEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
         return viewModel to effects
@@ -401,5 +421,54 @@ class ShareViewModelTest {
         viewModel.onIntent(ShareIntent.SendOriginalClicked)
         runCurrent()
         assertEquals("Менуэт · 18 сентября.mp4", (effects.single() as ShareEffect.Send).file.name)
+    }
+
+    @Test
+    fun `a take under a backing offers the mix first even without processing, and renders it with the take's shift`() = runTest {
+        val sessionId = recording()
+        val backingId = backings.add(backings.backing())
+        backings.saveTake(
+            com.example.violintuner.core.domain.backing.TakeBacking(
+                sessionId, backingId, offsetMs = 215, recordedOffsetMs = 200, gainDb = -6f, playedMs = 10_000,
+                output = com.example.violintuner.core.domain.backing.BackingOutput.BLUETOOTH, deviceName = "Buds",
+            ),
+        )
+        val renderer = Renderer(tookMs = 100)
+        val (viewModel, effects) = share(renderer)
+        viewModel.start(sessionId)
+        runCurrent()
+        val sheet = viewModel.sheet.value as ShareSheet.Choose
+        assertEquals("the sheet is not skipped: there is the mix to choose", ShareVariant.BACKING, sheet.variant)
+        assertTrue(sheet.info.backing)
+        assertEquals("ten seconds at 192 kbps, no hall", 10L * 24_000, sheet.info.bytesOf(ShareVariant.BACKING))
+
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(2_000)
+        runCurrent()
+        assertEquals(1, renderer.backingRenders)
+        assertEquals(0, renderer.renders)
+        assertEquals(215, renderer.backingOffset)
+        assertEquals("Сессия · 18 сентября.m4a", (effects.single() as ShareEffect.Send).file.name)
+    }
+
+    @Test
+    fun `a take under a backing can still go as recorded`() = runTest {
+        val sessionId = recording()
+        val backingId = backings.add(backings.backing())
+        backings.saveTake(
+            com.example.violintuner.core.domain.backing.TakeBacking(
+                sessionId, backingId, 200, 200, -6f, 10_000, com.example.violintuner.core.domain.backing.BackingOutput.WIRED, null,
+            ),
+        )
+        val renderer = Renderer(tookMs = 100)
+        val (viewModel, effects) = share(renderer)
+        viewModel.start(sessionId)
+        runCurrent()
+        viewModel.onIntent(ShareIntent.VariantSelected(ShareVariant.ORIGINAL))
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(2_000)
+        runCurrent()
+        assertEquals(0, renderer.backingRenders)
+        assertEquals("original sound", (effects.single() as ShareEffect.Send).file.readText())
     }
 }

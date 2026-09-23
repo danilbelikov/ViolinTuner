@@ -7,6 +7,12 @@ import com.example.violintuner.core.audio.share.ShareFiles
 import com.example.violintuner.core.audio.share.ShareNames
 import com.example.violintuner.core.audio.share.SoundFileRenderer
 import com.example.violintuner.core.audio.share.SoundRenderer
+import com.example.violintuner.core.audio.share.RenderBacking
+import com.example.violintuner.core.audio.backing.BackingPcm
+import com.example.violintuner.core.domain.backing.Backing
+import com.example.violintuner.core.domain.backing.BackingRepository
+import com.example.violintuner.core.domain.backing.NoBackings
+import com.example.violintuner.core.domain.backing.TakeBacking
 import com.example.violintuner.core.di.ElapsedClock
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.domain.session.SessionRepository
@@ -79,6 +85,8 @@ class ShareViewModel @Inject constructor(
     private val clock: ElapsedClock,
     private val config: SoundConfig,
     private val videos: VideoFiles,
+    private val backings: BackingRepository = NoBackings,
+    private val backingPcm: BackingPcm? = null,
 ) : ViewModel() {
 
     private val mutableSheet = MutableStateFlow<ShareSheet?>(null)
@@ -89,6 +97,7 @@ class ShareViewModel @Inject constructor(
 
     private var audio: File? = null
     private var settings: SoundSettings? = null
+    private var takeBacking: Pair<Backing, TakeBacking>? = null
     private var job: Job? = null
 
     /** A recording without sound has nothing to share; the entry points do not offer it, and a stray call is ignored. */
@@ -100,6 +109,10 @@ class ShareViewModel @Inject constructor(
             val pieceTitle = session.pieceId?.let { repertoire.piece(it) }?.title
             val effective = sound.effective(sessionId).first().settings
             val title = texts.title(session.title, pieceTitle, session.startedAtEpochMs)
+            // the backing the take was made under, if its copy is still there (spec 3.32)
+            val under = backings.takeBackings.first().firstOrNull { it.sessionId == sessionId }
+                ?.let { take -> backings.backing(take.backingId)?.takeIf { backingPcm != null }?.let { it to take } }
+            takeBacking = under
             val info = ShareInfo(
                 sessionId = sessionId,
                 fileName = ShareNames.fileName(title),
@@ -111,10 +124,14 @@ class ShareViewModel @Inject constructor(
                 videoFileName = session.videoPath?.let { ShareNames.videoFileName(title) },
                 resolution = session.videoPath?.let { videos.info(file) }?.let { minOf(it.width, it.height) } ?: 0,
                 processed = !SoundRules.isNeutral(effective),
+                backing = under != null,
+                backingBytes = ((session.durationMs + SoundRules.tailSec(effective, config) * MS_PER_SECOND) / MS_PER_SECOND * SoundFileRenderer.STEREO_BIT_RATE / BITS_PER_BYTE).toLong(),
             )
             audio = file
             settings = effective
             when {
+                // Under a backing there is always a choice, and the backing comes first (spec 3.32).
+                info.backing -> mutableSheet.value = ShareSheet.Choose(info, ShareVariant.BACKING, withText = true, busy = false)
                 // A video take always has a choice to make — the video or its sound alone (spec 3.19).
                 info.video -> mutableSheet.value = ShareSheet.Choose(info, if (info.processed) ShareVariant.PROCESSED else ShareVariant.ORIGINAL, withText = true, busy = false)
                 // Nothing to choose from: the sheet is skipped (spec 3.17).
@@ -131,6 +148,7 @@ class ShareViewModel @Inject constructor(
                 val choice = (sheet as? ShareSheet.Choose)?.takeIf { !it.busy } ?: return@update sheet
                 // only what the sheet offers: «Только звук» is a video take's, a processed file needs a processing
                 val offered = when (intent.variant) {
+                    ShareVariant.BACKING -> choice.info.backing
                     ShareVariant.SOUND -> choice.info.video
                     ShareVariant.PROCESSED -> choice.info.processed
                     ShareVariant.ORIGINAL -> true
@@ -178,7 +196,10 @@ class ShareViewModel @Inject constructor(
         val source = audio ?: return
         val current = settings ?: return
         val info = choice.info
-        val target = files.processed(source.name, current, info.fileNameOf(choice.variant))
+        val under = takeBacking?.takeIf { choice.variant == ShareVariant.BACKING }
+        // the mix is a file of its own: another shift or level is another file
+        val key = under?.let { (backing, take) -> "${source.name}-backing-${backing.id}-${take.offsetMs}-${take.gainDb}" } ?: source.name
+        val target = files.processed(key, current, info.fileNameOf(choice.variant))
         if (!target.isFile || target.length() == 0L) {
             if (!prepare(choice, source, current, target)) {
                 mutableSheet.value = ShareSheet.Failed(info)
@@ -210,8 +231,17 @@ class ShareViewModel @Inject constructor(
         var lastShown = 0L
         val whole = try {
             // the picture of a video take is copied as it is; only the sound is rendered, so the estimate of the sound holds
-            val video = info.video && choice.variant == ShareVariant.PROCESSED
-            val render: suspend (File, SoundSettings, File, (Float) -> Unit) -> Boolean = if (video) renderer::renderVideo else renderer::render
+            val video = info.video && (choice.variant == ShareVariant.PROCESSED || choice.variant == ShareVariant.BACKING)
+            val under = takeBacking?.takeIf { choice.variant == ShareVariant.BACKING }?.let { (backing, take) ->
+                val pcm = backingPcm
+                RenderBacking(pcm = { rate -> pcm?.prepare(backing, rate) }, offsetMs = take.offsetMs, gainDb = take.gainDb)
+            }
+            val render: suspend (File, SoundSettings, File, (Float) -> Unit) -> Boolean = when {
+                under != null && video -> { from, with, to, progress -> renderer.renderVideoWithBacking(from, with, under, to, progress) }
+                under != null -> { from, with, to, progress -> renderer.renderWithBacking(from, with, under, to, progress) }
+                video -> renderer::renderVideo
+                else -> renderer::render
+            }
             render(source, settings, part) { fraction ->
                 // from the rendering thread; a StateFlow takes that, and ten updates a second are plenty
                 val now = clock.nowMs()

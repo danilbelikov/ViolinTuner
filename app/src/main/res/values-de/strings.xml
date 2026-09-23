@@ -994,4 +994,17 @@
     <string name="recap_road_not_started">Die Takte sammeln sich – die Reise beginnt zu Hause</string>
     <string name="recap_level_up">Neue Stufe</string>
     <string name="recap_streak_up">+1 Tag</string>
+
+    <!-- The backing track: listening and sending (spec 3.32). -->
+    <string name="share_backing">Mit Begleitspur</string>
+    <string name="share_backing_caption">bearbeitete Geige und Begleitung</string>
+    <string name="share_file_details_stereo">%1$s · ≈ %2$s · Stereo</string>
+    <string name="backing_heard_with">mit Begleitung</string>
+    <string name="backing_heard_violin">nur Geige</string>
+    <string name="backing_block_title">Begleitspur</string>
+    <string name="backing_gain">Lautstärke der Begleitung</string>
+    <string name="backing_offset">Versatz</string>
+    <string name="backing_offset_hint">hinkt nach — links</string>
+    <string name="backing_offset_recorded">Wie aufgenommen · %1$s</string>
+    <string name="backing_remember">Für %1$s merken</string>
 </resources>

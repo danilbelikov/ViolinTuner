@@ -66,6 +66,7 @@ data class TakeBackingEntity(
     /** [BackingOutput] by name. */
     val output: String,
     val deviceName: String?,
+    val latencyMs: Int,
 )
 
 @Dao
@@ -144,7 +145,7 @@ class RoomBackingRepository @Inject constructor(
     override suspend fun setEnabled(pieceId: Long, enabled: Boolean) = dao.setEnabled(pieceId, enabled)
 
     override suspend fun saveTake(take: TakeBacking) = dao.insertTake(
-        TakeBackingEntity(take.sessionId, take.backingId, take.offsetMs, take.recordedOffsetMs, take.gainDb, take.playedMs, take.output.name, take.deviceName),
+        TakeBackingEntity(take.sessionId, take.backingId, take.offsetMs, take.recordedOffsetMs, take.gainDb, take.playedMs, take.output.name, take.deviceName, take.latencyMs),
     )
 
     override suspend fun setTakeMix(sessionId: Long, offsetMs: Int, gainDb: Float) = dao.setTakeMix(sessionId, offsetMs, gainDb)
@@ -170,5 +171,6 @@ class RoomBackingRepository @Inject constructor(
         playedMs = playedMs,
         output = BackingOutput.entries.firstOrNull { it.name == output } ?: BackingOutput.WIRED,
         deviceName = deviceName,
+        latencyMs = latencyMs,
     )
 }

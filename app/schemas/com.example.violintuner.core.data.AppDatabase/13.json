@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 13,
-    "identityHash": "8658a39b256cdd6ad06f720200597854",
+    "identityHash": "11f2b1710ef4be1983e10e5a2e43de07",
     "entities": [
       {
         "tableName": "sessions",
@@ -1220,7 +1220,7 @@
       },
       {
         "tableName": "take_backings",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sessionId` INTEGER NOT NULL, `backingId` INTEGER NOT NULL, `offsetMs` INTEGER NOT NULL, `recordedOffsetMs` INTEGER NOT NULL, `gainDb` REAL NOT NULL, `playedMs` INTEGER NOT NULL, `output` TEXT NOT NULL, `deviceName` TEXT, PRIMARY KEY(`sessionId`), FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`sessionId` INTEGER NOT NULL, `backingId` INTEGER NOT NULL, `offsetMs` INTEGER NOT NULL, `recordedOffsetMs` INTEGER NOT NULL, `gainDb` REAL NOT NULL, `playedMs` INTEGER NOT NULL, `output` TEXT NOT NULL, `deviceName` TEXT, `latencyMs` INTEGER NOT NULL, PRIMARY KEY(`sessionId`), FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
         "fields": [
           {
             "fieldPath": "sessionId",
@@ -1268,6 +1268,12 @@
             "fieldPath": "deviceName",
             "columnName": "deviceName",
             "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "latencyMs",
+            "columnName": "latencyMs",
+            "affinity": "INTEGER",
+            "notNull": true
           }
         ],
         "primaryKey": {
@@ -1304,7 +1310,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '8658a39b256cdd6ad06f720200597854')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '11f2b1710ef4be1983e10e5a2e43de07')"
     ]
   }
 }

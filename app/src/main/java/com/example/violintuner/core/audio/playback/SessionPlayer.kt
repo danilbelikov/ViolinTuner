@@ -18,7 +18,17 @@ data class PlayerState(
     val processed: Boolean = false,
     /** A/B stands at A: the recording is heard as it was recorded, whatever the settings. */
     val original: Boolean = false,
+    /** A take under a backing whose sound could be prepared: the switch «с минусовкой / только скрипка» is there (spec 3.32). */
+    val hasBacking: Boolean = false,
+    /** The backing is heard with the violin; false — «только скрипка». */
+    val backingHeard: Boolean = true,
 )
+
+/**
+ * The backing of a take made under one (spec 3.32): [pcm] gives its sound prepared at the recording's rate
+ * (it runs on the player's thread and may take a moment the first time), [offsetMs] and [gainDb] mix it.
+ */
+class PlayerBacking(val pcm: (sampleRate: Int) -> File?, val offsetMs: Int, val gainDb: Float)
 
 /**
  * Plays the sound of one session (spec 3.10, item 3) the way its settings make it sound
@@ -32,6 +42,15 @@ interface SessionPlayer {
     val meters: StateFlow<SoundMeters?>
 
     fun load(file: File)
+
+    /** [load] with the backing the take was made under, mixed in; a player without backings just loads the file. */
+    fun loadWithBacking(file: File, backing: PlayerBacking?) = load(file)
+
+    /** A new shift or level of the backing, heard at once and gliding in. */
+    fun setBackingMix(offsetMs: Int, gainDb: Float) = Unit
+
+    /** «с минусовкой / только скрипка». */
+    fun setBackingHeard(heard: Boolean) = Unit
 
     fun play()
 

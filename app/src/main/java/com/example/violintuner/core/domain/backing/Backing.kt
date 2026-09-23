@@ -51,6 +51,8 @@ data class TakeBacking(
     val playedMs: Long,
     val output: BackingOutput,
     val deviceName: String?,
+    /** What the headphones were believed to lag when the take was made — the part of [recordedOffsetMs] they gave. */
+    val latencyMs: Int = 0,
 )
 
 /** A piece's backing and whether takes are to be made under it (the chip «С минусовкой», remembered per piece). */

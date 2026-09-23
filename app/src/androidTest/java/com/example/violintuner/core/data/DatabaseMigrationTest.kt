@@ -386,7 +386,7 @@ class DatabaseMigrationTest {
 
         val backing = dao.insert(com.example.violintuner.core.data.backing.BackingEntity(fileName = "a.m4a", title = "Piano", durationMs = 1, sampleRate = 44_100, channels = 2, sizeBytes = 1, addedAtEpochMs = 1))
         dao.upsertPiece(com.example.violintuner.core.data.backing.PieceBackingEntity(piece.id, backing, enabled = true))
-        dao.insertTake(com.example.violintuner.core.data.backing.TakeBackingEntity(session.id, backing, 200, 200, -6f, 1_000, "BLUETOOTH", "Buds"))
+        dao.insertTake(com.example.violintuner.core.data.backing.TakeBackingEntity(session.id, backing, 200, 200, -6f, 1_000, "BLUETOOTH", "Buds", 180))
         assertEquals(emptyList<String>(), dao.deleteUnused())
 
         // the piece goes, its row with it; the take still holds the file

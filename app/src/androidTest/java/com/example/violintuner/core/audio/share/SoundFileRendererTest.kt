@@ -151,4 +151,39 @@ class SoundFileRendererTest {
         assertFalse(renderer.render(junk, hall, File(directory, "never.m4a")) { })
         assertFalse(File(directory, "never.m4a").exists())
     }
+
+    @Test
+    fun theMixWithTheBackingIsStereo_asLongAsTheTake_andTheBackingStartsWhereItsShiftSays() = runBlocking {
+        val take = recording("take.m4a", seconds = 3, level = 3_000)
+        // a backing prepared as the cache prepares it: two seconds of silence, then a steady tone on the left only
+        val pcm = File(directory, "backing.pcm")
+        val frames = rate * 5
+        val bytes = java.nio.ByteBuffer.allocate(frames * 4).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        for (i in 0 until frames) {
+            bytes.putShort(if (i < rate * 2) 0 else (sin(2 * PI * 220.0 * i / rate) * 12_000).toInt().toShort())
+            bytes.putShort(0)
+        }
+        pcm.writeBytes(bytes.array())
+        val target = File(directory, "mix.m4a")
+        // shifted by half a second: the tone of the backing's second two comes in at 2.5 s of the take
+        assertTrue(renderer.renderWithBacking(take, SoundRules.off(config), RenderBacking({ pcm }, offsetMs = 500, gainDb = 0f), target) {})
+
+        val extractor = android.media.MediaExtractor().apply { setDataSource(target.absolutePath) }
+        val format = extractor.getTrackFormat(0)
+        extractor.release()
+        assertEquals(2, format.getInteger(android.media.MediaFormat.KEY_CHANNEL_COUNT))
+        assertEquals(3.0, format.getLong(android.media.MediaFormat.KEY_DURATION) / 1e6, 0.1)
+        // folded to mono by the decoder: the violin alone before 2.5 s, the violin and the backing after
+        val before = measure(target, 1.0, 2.3).second
+        val after = measure(target, 2.7, 2.95).second
+        assertTrue("the backing came in: $before → $after", after > before * 1.8)
+    }
+
+    @Test
+    fun aBackingThatCannotBePreparedMakesNoFile() = runBlocking {
+        val take = recording("take.m4a", seconds = 1)
+        val target = File(directory, "mix.m4a")
+        assertFalse(renderer.renderWithBacking(take, SoundRules.off(config), RenderBacking({ null }, offsetMs = 0, gainDb = 0f), target) {})
+        assertFalse(target.exists())
+    }
 }

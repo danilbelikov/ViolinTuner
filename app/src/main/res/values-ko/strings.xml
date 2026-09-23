@@ -994,4 +994,17 @@
     <string name="recap_road_not_started">마디가 모이고 있어요 — 길은 집에서 시작돼요</string>
     <string name="recap_level_up">새 레벨</string>
     <string name="recap_streak_up">+1일</string>
+
+    <!-- The backing track: listening and sending (spec 3.32). -->
+    <string name="share_backing">반주와 함께</string>
+    <string name="share_backing_caption">처리된 바이올린과 반주</string>
+    <string name="share_file_details_stereo">%1$s · ≈ %2$s · 스테레오</string>
+    <string name="backing_heard_with">반주와 함께</string>
+    <string name="backing_heard_violin">바이올린만</string>
+    <string name="backing_block_title">반주</string>
+    <string name="backing_gain">반주 음량</string>
+    <string name="backing_offset">이동</string>
+    <string name="backing_offset_hint">늦으면 왼쪽으로</string>
+    <string name="backing_offset_recorded">녹음한 그대로 · %1$s</string>
+    <string name="backing_remember">%1$s에 기억하기</string>
 </resources>

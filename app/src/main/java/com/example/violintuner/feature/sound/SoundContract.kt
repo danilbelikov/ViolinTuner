@@ -83,6 +83,20 @@ data class SoundState(
     /** [SoundMode.EVERYONE]: how many recordings follow the default — «для 23 записей». */
     val affected: Int,
     val dialog: SoundDialog?,
+    /** A take under a backing (spec 3.32): its block «Минусовка», last. Null for anything else. */
+    val backing: BackingBlockState? = null,
+)
+
+/** The block «Минусовка» of a take: how loud and how far shifted the backing is mixed, and what the headphones could learn. */
+data class BackingBlockState(
+    val gainDb: Float,
+    val offsetMs: Int,
+    /** The shift worked out while recording: «Как записано». */
+    val recordedOffsetMs: Int,
+    /** Wireless headphones whose latency this take's shift would correct: «Запомнить для …»; null — nothing to remember. */
+    val rememberFor: String? = null,
+    /** How much that correction is, for the row: «+40 мс». */
+    val rememberDeltaMs: Int = 0,
 )
 
 sealed interface SoundIntent {
@@ -141,6 +155,26 @@ sealed interface SoundIntent {
     data class RecordingPicked(val sessionId: Long) : SoundIntent
 
     data object ShareClicked : SoundIntent
+
+    /** «с минусовкой / только скрипка» (spec 3.32). */
+    data class BackingHeardSelected(val heard: Boolean) : SoundIntent
+
+    data class BackingGainChanged(val fraction: Float) : SoundIntent
+
+    data class BackingGainStepped(val up: Boolean) : SoundIntent
+
+    data object BackingGainReset : SoundIntent
+
+    data class BackingOffsetChanged(val fraction: Float) : SoundIntent
+
+    /** «−5 / +5». */
+    data class BackingOffsetStepped(val up: Boolean) : SoundIntent
+
+    /** «Как записано», and a double tap on the slider. */
+    data object BackingOffsetRecorded : SoundIntent
+
+    /** «Запомнить для …»: the difference goes into the latency of these headphones. */
+    data object BackingRememberClicked : SoundIntent
 }
 
 sealed interface SoundEffect {

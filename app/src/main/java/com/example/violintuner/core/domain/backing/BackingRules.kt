@@ -35,8 +35,8 @@ object BackingOffset {
      * «Запомнить для …» (spec 3.32): the player moved the shift of a take by ear; the difference is what the
      * headphones' latency was wrong by, and the next takes should start from the corrected one.
      */
-    fun correctedLatencyMs(take: TakeBacking, currentLatencyMs: Int): Int =
-        (currentLatencyMs + (take.offsetMs - take.recordedOffsetMs)).coerceAtLeast(0)
+    fun correctedLatencyMs(take: TakeBacking): Int =
+        (take.latencyMs + (take.offsetMs - take.recordedOffsetMs)).coerceAtLeast(0)
 
     /** Where in the backing, in samples at [sampleRate], the violin's sample [violinSample] falls: negative — the backing has not begun. */
     fun backingSampleAt(violinSample: Long, offsetMs: Int, sampleRate: Int): Long =

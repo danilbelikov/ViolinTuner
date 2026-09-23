@@ -994,4 +994,17 @@
     <string name="recap_road_not_started">小節がたまっています — 旅は家から始まります</string>
     <string name="recap_level_up">新しいレベル</string>
     <string name="recap_streak_up">+1日</string>
+
+    <!-- The backing track: listening and sending (spec 3.32). -->
+    <string name="share_backing">伴奏つき</string>
+    <string name="share_backing_caption">加工したヴァイオリンと伴奏</string>
+    <string name="share_file_details_stereo">%1$s · ≈ %2$s · ステレオ</string>
+    <string name="backing_heard_with">伴奏つき</string>
+    <string name="backing_heard_violin">ヴァイオリンのみ</string>
+    <string name="backing_block_title">伴奏</string>
+    <string name="backing_gain">伴奏の音量</string>
+    <string name="backing_offset">ずらし</string>
+    <string name="backing_offset_hint">遅れたら左へ</string>
+    <string name="backing_offset_recorded">録音時のまま · %1$s</string>
+    <string name="backing_remember">%1$s用に記憶</string>
 </resources>

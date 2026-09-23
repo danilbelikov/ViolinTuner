@@ -4,7 +4,11 @@ import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
 import android.util.Log
+import com.example.violintuner.core.audio.backing.BackingMixer
+import com.example.violintuner.core.audio.backing.BackingPcmReader
+import com.example.violintuner.core.audio.backing.PcmBackingSource
 import com.example.violintuner.core.audio.fx.SoundChain
+import com.example.violintuner.core.domain.backing.BackingConfig
 import com.example.violintuner.core.audio.fx.SoundMeters
 import com.example.violintuner.core.domain.sound.SoundConfig
 import com.example.violintuner.core.domain.sound.SoundRules
@@ -23,7 +27,7 @@ import kotlinx.coroutines.flow.update
  * The calls of the interface only leave wishes (play, seek, settings, A/B) for the thread, which
  * picks them up between two chunks of sound — about every 40 ms.
  */
-class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
+class ChainSessionPlayer(private val config: SoundConfig, private val backingConfig: BackingConfig = BackingConfig()) : SessionPlayer {
     private val mutableState = MutableStateFlow(PlayerState())
     override val state: StateFlow<PlayerState> = mutableState.asStateFlow()
 
@@ -39,10 +43,35 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
     private var settings: SoundSettings = SoundRules.off(config)
     private var settingsChanged = true
     private var original = false
+    private var backingOffsetMs = 0
+    private var backingGainDb = 0f
+    private var backingHeard = true
+    private var backingChanged = false
 
-    override fun load(file: File) {
+    override fun load(file: File) = loadWithBacking(file, null)
+
+    override fun loadWithBacking(file: File, backing: PlayerBacking?) {
         release()
-        worker = Worker(file).also { it.start() }
+        synchronized(lock) {
+            backingOffsetMs = backing?.offsetMs ?: 0
+            backingGainDb = backing?.gainDb ?: 0f
+            backingChanged = false
+        }
+        worker = Worker(file, backing).also { it.start() }
+    }
+
+    override fun setBackingMix(offsetMs: Int, gainDb: Float) = wish {
+        backingOffsetMs = offsetMs
+        backingGainDb = gainDb
+        backingChanged = true
+    }
+
+    override fun setBackingHeard(heard: Boolean) {
+        wish {
+            backingHeard = heard
+            backingChanged = true
+        }
+        mutableState.update { it.copy(backingHeard = heard) }
     }
 
     override fun play() {
@@ -89,7 +118,7 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
             seekToMs = NO_SEEK
         }
         mutableMeters.value = null
-        mutableState.update { PlayerState(processed = it.processed, original = it.original) }
+        mutableState.update { PlayerState(processed = it.processed, original = it.original, backingHeard = it.backingHeard) }
     }
 
     private inline fun wish(change: () -> Unit) = synchronized(lock) {
@@ -97,7 +126,7 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
         lock.notifyAll()
     }
 
-    private inner class Worker(private val file: File) : Thread("session-player") {
+    private inner class Worker(private val file: File, private val backing: PlayerBacking?) : Thread("session-player") {
         @Volatile var released = false
 
         override fun run() {
@@ -107,9 +136,12 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
                 return
             }
             var track: AudioTrack? = null
+            // the backing's sound at this recording's rate, prepared here, off the main thread; gone — the violin alone
+            val pcm = backing?.let { runCatching { it.pcm(decoder.sampleRate) }.getOrNull() }
+            val reader = pcm?.let { runCatching { BackingPcmReader(it) }.getOrNull() }
             try {
-                track = newTrack(decoder.sampleRate)
-                play(decoder, track)
+                track = newTrack(decoder.sampleRate, stereo = reader != null)
+                play(decoder, track, reader)
             } catch (e: IllegalStateException) {
                 Log.w(TAG, "playback of ${file.name} broke down", e)
                 fail()
@@ -122,6 +154,7 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
             } finally {
                 track?.release()
                 decoder.release()
+                reader?.close()
             }
         }
 
@@ -129,9 +162,16 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
             if (!released) mutableState.update { PlayerState(failed = true, processed = it.processed, original = it.original) }
         }
 
-        private fun play(decoder: PcmDecoder, track: AudioTrack) {
+        private fun play(decoder: PcmDecoder, track: AudioTrack, reader: BackingPcmReader?) {
             val rate = decoder.sampleRate
             val chain = SoundChain(rate, config)
+            val backingMix = reader?.let {
+                val (offset, gain, heard) = synchronized(lock) { backingChanged = false; Triple(backingOffsetMs, backingGainDb, backingHeard) }
+                BackingMixer(rate, PcmBackingSource(it), offset, gain, heard, fadeSamples = (backingConfig.shiftFadeMs * rate / MS_PER_SECOND).toInt(), soundConfig = config)
+            }
+            val stereo = FloatArray(if (backingMix != null) CHUNK * 2 else 0)
+            /** The violin's sample the next chunk starts at: where the backing is read from. */
+            var violinPosition = 0L
             val mixer = AbMixer(chain.latencySamples, fadeSamples = (AB_FADE_MS * rate / MS_PER_SECOND).toInt())
             val durationMs = decoder.durationUs / US_PER_MS
             val pcm = ShortArray(CHUNK)
@@ -150,7 +190,7 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
             var running = false
             var sinceMeters = 0
 
-            mutableState.update { it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false) }
+            mutableState.update { it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = backingMix != null) }
 
             while (!released) {
                 // — wishes —
@@ -158,8 +198,9 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
                 var playing: Boolean
                 var wantOriginal: Boolean
                 var newSettings: SoundSettings? = null
+                var newBacking: Triple<Int, Float, Boolean>? = null
                 synchronized(lock) {
-                    if (!wantPlaying && seekToMs == NO_SEEK && !settingsChanged && !released) {
+                    if (!wantPlaying && seekToMs == NO_SEEK && !settingsChanged && !backingChanged && !released) {
                         if (running) {
                             track.pause()
                             running = false
@@ -175,8 +216,13 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
                         newSettings = settings
                         settingsChanged = false
                     }
+                    if (backingChanged) {
+                        newBacking = Triple(backingOffsetMs, backingGainDb, backingHeard)
+                        backingChanged = false
+                    }
                 }
                 if (released) break
+                newBacking?.let { (offset, gain, heard) -> backingMix?.set(offset, gain, heard) }
 
                 newSettings?.let { fresh ->
                     val wasProcessing = processing
@@ -193,6 +239,8 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
                     decoder.seekTo(seek * US_PER_MS)
                     chain.reset()
                     mixer.reset()
+                    backingMix?.reset()
+                    violinPosition = seek * rate / MS_PER_SECOND
                     baseMs = seek
                     headBase = head(track)
                     tailLeft = NO_TAIL
@@ -206,7 +254,7 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
                 // — a chunk of sound —
                 var count = if (tailLeft == NO_TAIL) decoder.read(pcm) else PcmDecoder.END
                 if (count == PcmDecoder.END) {
-                    if (tailLeft == NO_TAIL) tailLeft = chain.latencySamples + if (mixer.originalOnly) 0 else chain.tailSamples(current)
+                    if (tailLeft == NO_TAIL) tailLeft = chain.latencySamples + (backingMix?.latencySamples ?: 0) + if (mixer.originalOnly) 0 else chain.tailSamples(current)
                     count = minOf(tailLeft, CHUNK)
                     tailLeft -= count
                     dry.fill(0f, 0, count)
@@ -224,7 +272,14 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
                     mixer.mix(dry, wet, count)
                     wet
                 }
-                if (!write(track, out, count)) continue // a wish came in mid-chunk: it goes first
+                val written = if (backingMix != null) {
+                    backingMix.mix(out, count, violinPosition, stereo)
+                    write(track, stereo, count * 2)
+                } else {
+                    write(track, out, count)
+                }
+                violinPosition += count
+                if (!written) continue // a wish came in mid-chunk: it goes first
 
                 val positionMs = (baseMs + (head(track) - headBase) * MS_PER_SECOND / rate).coerceIn(0, durationMs)
                 mutableState.update { if (it.playing) it.copy(positionMs = positionMs) else it }
@@ -243,6 +298,8 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
                     decoder.seekTo(0)
                     chain.reset()
                     mixer.reset()
+                    backingMix?.reset()
+                    violinPosition = 0
                     baseMs = 0
                     headBase = head(track)
                     tailLeft = NO_TAIL
@@ -299,8 +356,10 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
         /** The head position is an unsigned 32-bit counter in a signed int. */
         private fun head(track: AudioTrack): Long = track.playbackHeadPosition.toLong() and UNSIGNED_INT
 
-        private fun newTrack(rate: Int): AudioTrack {
-            val minimum = AudioTrack.getMinBufferSize(rate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_FLOAT)
+        private fun newTrack(rate: Int, stereo: Boolean): AudioTrack {
+            val mask = if (stereo) AudioFormat.CHANNEL_OUT_STEREO else AudioFormat.CHANNEL_OUT_MONO
+            val channels = if (stereo) 2 else 1
+            val minimum = AudioTrack.getMinBufferSize(rate, mask, AudioFormat.ENCODING_PCM_FLOAT)
             return AudioTrack.Builder()
                 .setAudioAttributes(
                     AudioAttributes.Builder()
@@ -311,13 +370,13 @@ class ChainSessionPlayer(private val config: SoundConfig) : SessionPlayer {
                 .setAudioFormat(
                     AudioFormat.Builder()
                         .setSampleRate(rate)
-                        .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
+                        .setChannelMask(mask)
                         .setEncoding(AudioFormat.ENCODING_PCM_FLOAT)
                         .build(),
                 )
                 .setTransferMode(AudioTrack.MODE_STREAM)
                 // Twice the minimum: room for a hiccup, and still only ~0.1 s between a turned knob and the ear.
-                .setBufferSizeInBytes(minimum.coerceAtLeast(CHUNK * BYTES_PER_FLOAT) * 2)
+                .setBufferSizeInBytes(minimum.coerceAtLeast(CHUNK * BYTES_PER_FLOAT * channels) * 2)
                 .build()
         }
     }

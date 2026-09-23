@@ -1,5 +1,6 @@
 package com.example.violintuner.feature.session
 
+import com.example.violintuner.feature.sound.components.BackingHeardSwitch
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.animation.core.tween
@@ -430,6 +431,9 @@ private fun PlayerAndSound(state: SessionState.Loaded, onIntent: (SessionIntent)
             onSeek = { onIntent(SessionIntent.SeekRequested(it)) },
             onOriginal = { onIntent(SessionIntent.OriginalSelected(it)) },
         )
+        if (player.hasBacking) {
+            BackingHeardSwitch(heard = player.backingHeard, onHeard = { onIntent(SessionIntent.BackingHeardSelected(it)) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+        }
         state.sound?.let { SoundEntry(it, processed = player.processed) { onIntent(SessionIntent.SoundClicked) } }
     }
 }

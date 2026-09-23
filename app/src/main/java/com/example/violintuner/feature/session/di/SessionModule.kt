@@ -5,6 +5,7 @@ import com.example.violintuner.core.audio.playback.SessionPlayerFactory
 import com.example.violintuner.core.audio.playback.VideoPictureFactory
 import com.example.violintuner.core.audio.playback.VideoTrackRenderer
 import com.example.violintuner.core.domain.sound.SoundConfig
+import com.example.violintuner.core.domain.backing.BackingConfig
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,7 +15,7 @@ import dagger.hilt.components.SingletonComponent
 @InstallIn(SingletonComponent::class)
 object SessionModule {
     @Provides
-    fun provideSessionPlayerFactory(config: SoundConfig): SessionPlayerFactory = SessionPlayerFactory { ChainSessionPlayer(config) }
+    fun provideSessionPlayerFactory(config: SoundConfig, backing: BackingConfig): SessionPlayerFactory = SessionPlayerFactory { ChainSessionPlayer(config, backing) }
 
     @Provides
     fun provideVideoPictureFactory(): VideoPictureFactory = VideoPictureFactory { VideoTrackRenderer(it) }

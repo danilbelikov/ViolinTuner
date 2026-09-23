@@ -42,9 +42,9 @@ class BackingRulesTest {
 
     @Test
     fun `a shift moved by ear corrects the headphones' latency by the same amount`() {
-        val take = TakeBacking(1, 1, offsetMs = 250, recordedOffsetMs = 210, gainDb = -6f, playedMs = 0, output = BackingOutput.BLUETOOTH, deviceName = "Buds")
-        assertEquals(240, BackingOffset.correctedLatencyMs(take, currentLatencyMs = 200))
-        assertEquals(0, BackingOffset.correctedLatencyMs(take.copy(offsetMs = -300), currentLatencyMs = 100))
+        val take = TakeBacking(1, 1, offsetMs = 250, recordedOffsetMs = 210, gainDb = -6f, playedMs = 0, output = BackingOutput.BLUETOOTH, deviceName = "Buds", latencyMs = 200)
+        assertEquals(240, BackingOffset.correctedLatencyMs(take))
+        assertEquals(0, BackingOffset.correctedLatencyMs(take.copy(offsetMs = -300, latencyMs = 100)))
     }
 
     @Test

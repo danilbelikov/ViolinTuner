@@ -994,4 +994,17 @@
     <string name="recap_road_not_started">Такты копятся — дорога начнётся из дома</string>
     <string name="recap_level_up">Новый уровень</string>
     <string name="recap_streak_up">+1 день</string>
+
+    <!-- The backing track: listening and sending (spec 3.32). -->
+    <string name="share_backing">С минусовкой</string>
+    <string name="share_backing_caption">скрипка с обработкой и аккомпанемент</string>
+    <string name="share_file_details_stereo">%1$s · ≈ %2$s · стерео</string>
+    <string name="backing_heard_with">с минусовкой</string>
+    <string name="backing_heard_violin">только скрипка</string>
+    <string name="backing_block_title">Минусовка</string>
+    <string name="backing_gain">Громкость минусовки</string>
+    <string name="backing_offset">Сдвиг</string>
+    <string name="backing_offset_hint">отстаёт — влево</string>
+    <string name="backing_offset_recorded">Как записано · %1$s</string>
+    <string name="backing_remember">Запомнить для %1$s</string>
 </resources>

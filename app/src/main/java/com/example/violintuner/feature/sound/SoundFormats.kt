@@ -45,6 +45,16 @@ object SoundFormats {
         return "$sign${trimmed(abs(rounded))}${NBSP}${units.db}"
     }
 
+    /** A shift of the backing (spec 3.32): «+212 мс», «−40 мс», «0 мс» — it always says which way. */
+    fun signedMs(ms: Int): String {
+        val sign = when {
+            ms < 0 -> MINUS.toString()
+            ms > 0 -> "+"
+            else -> ""
+        }
+        return "$sign${abs(ms)}${NBSP}${units.ms}"
+    }
+
     /** «3:1», «3,5:1». */
     fun ratio(ratio: Double): String = "${trimmed(ratio)}:1"
 

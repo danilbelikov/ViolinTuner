@@ -994,4 +994,17 @@
     <string name="recap_road_not_started">Bars are adding up — the road begins at home</string>
     <string name="recap_level_up">New level</string>
     <string name="recap_streak_up">+1 day</string>
+
+    <!-- The backing track: listening and sending (spec 3.32). -->
+    <string name="share_backing">With the backing track</string>
+    <string name="share_backing_caption">the processed violin and the accompaniment</string>
+    <string name="share_file_details_stereo">%1$s · ≈ %2$s · stereo</string>
+    <string name="backing_heard_with">with backing</string>
+    <string name="backing_heard_violin">violin only</string>
+    <string name="backing_block_title">Backing track</string>
+    <string name="backing_gain">Backing level</string>
+    <string name="backing_offset">Shift</string>
+    <string name="backing_offset_hint">lags — move left</string>
+    <string name="backing_offset_recorded">As recorded · %1$s</string>
+    <string name="backing_remember">Remember for %1$s</string>
 </resources>

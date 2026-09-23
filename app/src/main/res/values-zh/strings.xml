@@ -994,4 +994,17 @@
     <string name="recap_road_not_started">小节正在积攒——旅程从家出发</string>
     <string name="recap_level_up">新等级</string>
     <string name="recap_streak_up">+1 天</string>
+
+    <!-- The backing track: listening and sending (spec 3.32). -->
+    <string name="share_backing">带伴奏</string>
+    <string name="share_backing_caption">处理后的小提琴与伴奏</string>
+    <string name="share_file_details_stereo">%1$s · ≈ %2$s · 立体声</string>
+    <string name="backing_heard_with">带伴奏</string>
+    <string name="backing_heard_violin">仅小提琴</string>
+    <string name="backing_block_title">伴奏</string>
+    <string name="backing_gain">伴奏音量</string>
+    <string name="backing_offset">偏移</string>
+    <string name="backing_offset_hint">滞后就向左</string>
+    <string name="backing_offset_recorded">按录制时 · %1$s</string>
+    <string name="backing_remember">为 %1$s 记住</string>
 </resources>

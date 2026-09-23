@@ -1,5 +1,9 @@
 package com.example.violintuner.feature.session
 
+import com.example.violintuner.core.audio.backing.BackingPcm
+import com.example.violintuner.core.audio.playback.PlayerBacking
+import com.example.violintuner.core.domain.backing.BackingRepository
+import com.example.violintuner.core.domain.backing.NoBackings
 import android.view.Surface
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
@@ -24,6 +28,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -39,6 +44,8 @@ class SessionViewModel @Inject constructor(
     private val soundConfig: SoundConfig,
     private val pictureFactory: VideoPictureFactory,
     savedState: SavedStateHandle,
+    private val backings: BackingRepository = NoBackings,
+    private val backingPcm: BackingPcm? = null,
 ) : ViewModel() {
 
     private val sessionId: Long = checkNotNull(savedState[ARG_SESSION_ID]) { "session id is required" }
@@ -62,6 +69,7 @@ class SessionViewModel @Inject constructor(
             SessionIntent.PlayPauseClicked -> player?.let { if (it.state.value.playing) it.pause() else it.play() }
             is SessionIntent.SeekRequested -> player?.seekTo(intent.positionMs)
             is SessionIntent.OriginalSelected -> player?.setOriginal(intent.original)
+            is SessionIntent.BackingHeardSelected -> player?.setBackingHeard(intent.heard)
             SessionIntent.SoundClicked -> effectChannel.trySend(SessionEffect.OpenSound(sessionId))
             SessionIntent.BestClicked -> toggleBest()
             SessionIntent.ShareClicked -> {
@@ -176,7 +184,19 @@ class SessionViewModel @Inject constructor(
     private fun startPlayer(file: File) {
         val created = playerFactory.create(viewModelScope)
         player = created
-        created.load(file)
+        viewModelScope.launch {
+            // a take under a backing plays with it, mixed as its «Звук» sets it (spec 3.32)
+            val take = backings.takeBackings.first().firstOrNull { it.sessionId == sessionId }
+            val backing = take?.let { backings.backing(it.backingId) }
+            val pcm = backingPcm
+            if (take == null || backing == null || pcm == null) {
+                created.load(file)
+                return@launch
+            }
+            created.loadWithBacking(file, PlayerBacking(pcm = { rate -> pcm.prepare(backing, rate) }, offsetMs = take.offsetMs, gainDb = take.gainDb))
+            // the shift or the level changed on «Звук» and came back here: heard at once
+            backings.takeBackings.collect { all -> all.firstOrNull { it.sessionId == sessionId }?.let { created.setBackingMix(it.offsetMs, it.gainDb) } }
+        }
         // The recording plays the way its settings make it sound — its own, or those of all (spec 3.17);
         // change either while it plays, and it is heard at once.
         viewModelScope.launch {

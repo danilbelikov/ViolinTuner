@@ -142,6 +142,14 @@ private fun Choose(sheet: ShareSheet.Choose, onIntent: (ShareIntent) -> Unit) {
     val info = sheet.info
     Text(stringResource(R.string.share_title), color = colors.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold))
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // a take under a backing: the mix first — it is what the take was made for (spec 3.32)
+        if (info.backing) {
+            Variant(
+                title = stringResource(R.string.share_backing),
+                caption = stringResource(R.string.share_backing_caption),
+                selected = sheet.variant == ShareVariant.BACKING, enabled = !sheet.busy, chip = if (info.video) MP4 else null,
+            ) { onIntent(ShareIntent.VariantSelected(ShareVariant.BACKING)) }
+        }
         if (info.video) {
             // From "what is heard" to "what was" (spec 3.19); the chip answers "and what file will that be?" before it is asked.
             if (info.processed) {
@@ -162,11 +170,14 @@ private fun Choose(sheet: ShareSheet.Choose, onIntent: (ShareIntent) -> Unit) {
                 selected = sheet.variant == ShareVariant.SOUND, enabled = !sheet.busy, chip = M4A,
             ) { onIntent(ShareIntent.VariantSelected(ShareVariant.SOUND)) }
         } else {
-            Variant(
-                title = stringResource(R.string.share_processed),
-                caption = stringResource(R.string.share_processed_caption, captionName(info.caption)),
-                selected = sheet.variant == ShareVariant.PROCESSED, enabled = !sheet.busy,
-            ) { onIntent(ShareIntent.VariantSelected(ShareVariant.PROCESSED)) }
+            // without processing «Обработанный звук» would be the original twice; only a backing brings this sheet up then
+            if (info.processed) {
+                Variant(
+                    title = stringResource(R.string.share_processed),
+                    caption = stringResource(R.string.share_processed_caption, captionName(info.caption)),
+                    selected = sheet.variant == ShareVariant.PROCESSED, enabled = !sheet.busy,
+                ) { onIntent(ShareIntent.VariantSelected(ShareVariant.PROCESSED)) }
+            }
             Variant(
                 title = stringResource(R.string.share_original),
                 caption = stringResource(R.string.share_original_caption),
@@ -184,7 +195,10 @@ private fun Choose(sheet: ShareSheet.Choose, onIntent: (ShareIntent) -> Unit) {
             val details = if (asVideo) {
                 stringResource(R.string.share_video_details, Formats.duration(info.durationMs), info.resolution, Formats.fileSize(bytes))
             } else {
-                stringResource(R.string.share_file_details, Formats.duration(info.durationMs), sizeText(bytes))
+                stringResource(
+                    if (sheet.variant == ShareVariant.BACKING) R.string.share_file_details_stereo else R.string.share_file_details,
+                    Formats.duration(info.durationMs), sizeText(bytes),
+                )
             }
             Text(
                 text = details,

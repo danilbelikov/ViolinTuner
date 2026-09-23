@@ -15,6 +15,22 @@ class FakeSessionPlayer : SessionPlayer {
     val sounds = mutableListOf<SoundSettings>()
     var released = 0
 
+    /** What the backing was loaded with, and every mix it was told since (spec 3.32). */
+    var backing: PlayerBacking? = null
+    val mixes = mutableListOf<Pair<Int, Float>>()
+
+    override fun loadWithBacking(file: File, backing: PlayerBacking?) {
+        load(file)
+        this.backing = backing
+        state.update { it.copy(hasBacking = backing != null) }
+    }
+
+    override fun setBackingMix(offsetMs: Int, gainDb: Float) {
+        mixes += offsetMs to gainDb
+    }
+
+    override fun setBackingHeard(heard: Boolean) = state.update { it.copy(backingHeard = heard) }
+
     override fun load(file: File) {
         loaded += file
         state.update { PlayerState(ready = true, durationMs = 4_100, processed = it.processed, original = it.original) }

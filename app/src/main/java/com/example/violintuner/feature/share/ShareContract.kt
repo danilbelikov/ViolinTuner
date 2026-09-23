@@ -4,6 +4,9 @@ import com.example.violintuner.feature.sound.SoundCaption
 import java.io.File
 
 enum class ShareVariant {
+    /** A take under a backing (spec 3.32): the processed violin and the backing mixed — the video with that sound, for a video take. */
+    BACKING,
+
     /** What is heard in the app: the processed sound — with the picture, when the recording is a video take. */
     PROCESSED,
 
@@ -33,6 +36,10 @@ data class ShareInfo(
     val resolution: Int = 0,
     /** The processing does something. A video take shows its sheet even when it does not: there is still a choice to make. */
     val processed: Boolean = true,
+    /** Made under a backing that is still there: «С минусовкой» is offered, and first. */
+    val backing: Boolean = false,
+    /** Of the file «С минусовкой» — an estimate; a video weighs what its picture does. */
+    val backingBytes: Long = 0,
 ) {
     val video: Boolean get() = videoFileName != null
 
@@ -40,7 +47,8 @@ data class ShareInfo(
 
     /** An estimate for what is rendered, the real size for what is sent as it is. A processed video weighs what its picture does. */
     fun bytesOf(variant: ShareVariant): Long = when {
-        video && variant == ShareVariant.PROCESSED -> originalBytes
+        video && (variant == ShareVariant.PROCESSED || variant == ShareVariant.BACKING) -> originalBytes
+        variant == ShareVariant.BACKING -> backingBytes
         variant == ShareVariant.ORIGINAL -> originalBytes
         else -> processedBytes
     }

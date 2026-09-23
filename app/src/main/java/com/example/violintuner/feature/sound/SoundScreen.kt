@@ -1,5 +1,8 @@
 package com.example.violintuner.feature.sound
 
+import com.example.violintuner.core.domain.backing.BackingConfig
+import com.example.violintuner.feature.sound.components.BackingBlock
+import com.example.violintuner.feature.sound.components.BackingHeardSwitch
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -237,6 +240,9 @@ private fun Player(state: SoundState, meters: State<SoundMeters?>, metrics: Mini
         onSeek = { onIntent(SoundIntent.SeekRequested(it)) },
         onOriginal = { original, held -> onIntent(SoundIntent.OriginalSelected(original, held)) },
     )
+    if (player.hasBacking) {
+        BackingHeardSwitch(heard = player.backingHeard, onHeard = { onIntent(SoundIntent.BackingHeardSelected(it)) }, modifier = Modifier.padding(top = 8.dp))
+    }
 }
 
 /** Whose sound this is: the mode of a recording with what it means, or — for everyone — what it is listened on and whom it touches. */
@@ -367,6 +373,8 @@ private fun Blocks(state: SoundState, meters: State<SoundMeters?>, config: Sound
         style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
     )
     SoundBlocks(state.settings, state.expanded, state.band, state.details, meters, config, onIntent)
+    // last, after «Громкость»: it is not the violin's (spec 3.32)
+    state.backing?.let { BackingBlock(it, BackingConfig(), onIntent) }
 }
 
 @Composable

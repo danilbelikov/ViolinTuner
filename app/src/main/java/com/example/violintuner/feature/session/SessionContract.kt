@@ -90,6 +90,9 @@ sealed interface SessionIntent {
     /** A/B of the player: true — the recording as recorded, false — with its processing. */
     data class OriginalSelected(val original: Boolean) : SessionIntent
 
+    /** «с минусовкой / только скрипка» of a take under a backing (spec 3.32). */
+    data class BackingHeardSelected(val heard: Boolean) : SessionIntent
+
     /** The row «Звук» under the player. */
     data object SoundClicked : SessionIntent
 

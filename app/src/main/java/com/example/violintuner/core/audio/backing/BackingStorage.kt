@@ -54,6 +54,14 @@ class AppBackingFiles @Inject constructor(@ApplicationContext context: Context, 
     }
 }
 
+/** The backing's sound as the mix reads it, prepared at a rate (spec 5.25). */
+interface BackingPcm {
+    fun cached(backing: Backing, sampleRate: Int): File?
+
+    /** The PCM of [backing] at [sampleRate], made if need be; null when its copy is gone or cannot be decoded. Blocking. */
+    fun prepare(backing: Backing, sampleRate: Int): File?
+}
+
 /** What adding a backing came to (spec 3.32): the sheet says why it did not. */
 sealed interface BackingImport {
     data class Added(val backing: Backing) : BackingImport
@@ -173,13 +181,12 @@ class BackingImporter @Inject constructor(
  * file in the cache — decoded once, resampled once, then read at any position without a codec. A mono backing
  * is doubled to both sides. Rebuilt from the copy whenever the cache has been cleared.
  */
-class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, private val files: BackingFiles) {
+class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, private val files: BackingFiles) : BackingPcm {
     private val directory = File(context.cacheDir, DIRECTORY)
 
-    fun cached(backing: Backing, sampleRate: Int): File? = fileOf(backing, sampleRate).takeIf { it.isFile }
+    override fun cached(backing: Backing, sampleRate: Int): File? = fileOf(backing, sampleRate).takeIf { it.isFile }
 
-    /** The PCM of [backing] at [sampleRate], made if need be; null when its copy is gone or cannot be decoded. Blocking. */
-    fun prepare(backing: Backing, sampleRate: Int): File? {
+    override fun prepare(backing: Backing, sampleRate: Int): File? {
         cached(backing, sampleRate)?.let { return it }
         val source = files.existing(backing.fileName) ?: return null
         directory.mkdirs()

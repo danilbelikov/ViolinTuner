@@ -6,6 +6,17 @@ import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.audio.fx.SoundMeters
 import com.example.violintuner.core.audio.playback.SessionPlayer
 import com.example.violintuner.core.audio.playback.SessionPlayerFactory
+import com.example.violintuner.core.audio.playback.PlayerBacking
+import com.example.violintuner.core.audio.backing.BackingPcm
+import com.example.violintuner.core.domain.backing.Backing
+import com.example.violintuner.core.domain.backing.BackingConfig
+import com.example.violintuner.core.domain.backing.BackingOffset
+import com.example.violintuner.core.domain.backing.BackingRepository
+import com.example.violintuner.core.domain.backing.HeadphoneLatencies
+import com.example.violintuner.core.domain.backing.HeadphoneLatencyStore
+import com.example.violintuner.core.domain.backing.NoBackings
+import com.example.violintuner.core.domain.backing.TakeBacking
+import kotlin.math.roundToInt
 import com.example.violintuner.core.audio.playback.SessionWaveforms
 import com.example.violintuner.core.audio.recording.SessionAudioFiles
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
@@ -51,6 +62,10 @@ class SoundViewModel @Inject constructor(
     private val playerFactory: SessionPlayerFactory,
     private val waveforms: SessionWaveforms,
     private val config: SoundConfig,
+    private val backings: BackingRepository = NoBackings,
+    private val backingPcm: BackingPcm? = null,
+    private val latencies: HeadphoneLatencyStore? = null,
+    private val backingConfig: BackingConfig = BackingConfig(),
 ) : ViewModel() {
 
     private val sessionId: Long? = savedState.get<Long>(ARG_SESSION_ID)?.takeIf { it != EVERYONE }
@@ -82,11 +97,19 @@ class SoundViewModel @Inject constructor(
     private var unsaved = false
     private var heldOriginal = false
 
+    // The backing of this take (spec 3.32), read once: the block is a draft like the settings, saved a moment after a touch.
+    private var take: TakeBacking? = null
+    private var backing: Backing? = null
+    private var headphoneLatencies = HeadphoneLatencies.EMPTY
+    private var backingJob: Job? = null
+    private var backingUnsaved = false
+
     init {
         viewModelScope.launch {
             val own = sessionId?.let { sound.own.first()[it] }
             val settings = own ?: sound.default.first()
             userPresets = sound.presets.first()
+            loadBacking()
             show(settings, own = own != null, loading = false)
             launch { sound.presets.collect { userPresets = it; show(state.value.settings) } }
             launch { follow() }
@@ -153,7 +176,79 @@ class SoundViewModel @Inject constructor(
                 flush()
                 effectChannel.trySend(SoundEffect.Share(it))
             }
+            is SoundIntent.BackingHeardSelected -> player?.setBackingHeard(intent.heard)
+            is SoundIntent.BackingGainChanged -> editBacking { it.copy(gainDb = backingConfig.minGainDb + intent.fraction * (backingConfig.maxGainDb - backingConfig.minGainDb)) }
+            is SoundIntent.BackingGainStepped -> editBacking { it.copy(gainDb = it.gainDb + if (intent.up) backingConfig.gainStepDb else -backingConfig.gainStepDb) }
+            SoundIntent.BackingGainReset -> editBacking { it.copy(gainDb = backingConfig.defaultGainDb) }
+            is SoundIntent.BackingOffsetChanged -> editBacking {
+                it.copy(offsetMs = (backingConfig.minOffsetMs + intent.fraction * (backingConfig.maxOffsetMs - backingConfig.minOffsetMs)).roundToInt())
+            }
+            is SoundIntent.BackingOffsetStepped -> editBacking { it.copy(offsetMs = it.offsetMs + if (intent.up) backingConfig.offsetStepMs else -backingConfig.offsetStepMs) }
+            SoundIntent.BackingOffsetRecorded -> editBacking { it.copy(offsetMs = it.recordedOffsetMs) }
+            SoundIntent.BackingRememberClicked -> remember()
         }
+    }
+
+    /** The take's backing and the headphones it was heard through; nothing for a take without one, or for the screen of everyone. */
+    private suspend fun loadBacking() {
+        val id = sessionId ?: return
+        val found = backings.takeBackings.first().firstOrNull { it.sessionId == id } ?: return
+        take = found
+        backing = backings.backing(found.backingId)
+        latencies?.let { store ->
+            headphoneLatencies = store.latencies.first()
+            viewModelScope.launch {
+                store.latencies.collect {
+                    headphoneLatencies = it
+                    mutableState.update { state -> state.copy(backing = state.backing?.let(::withRemember)) }
+                }
+            }
+        }
+        mutableState.update { it.copy(backing = withRemember(BackingBlockState(found.gainDb, found.offsetMs, found.recordedOffsetMs))) }
+    }
+
+    /**
+     * «Запомнить для …» is there while this take's shift, moved by ear, would change what the wireless headphones it
+     * was heard through are believed to lag (spec 3.32); once remembered, it is not.
+     */
+    private fun withRemember(block: BackingBlockState): BackingBlockState {
+        val base = take ?: return block.copy(rememberFor = null)
+        val heardOn = base.takeIf { it.output.needsCalibration }?.deviceName ?: return block.copy(rememberFor = null)
+        val current = headphoneLatencies.of(heardOn) ?: backingConfig.uncalibratedBluetoothMs
+        val corrected = BackingOffset.correctedLatencyMs(base.copy(offsetMs = block.offsetMs))
+        val moved = block.offsetMs - block.recordedOffsetMs
+        return if (moved != 0 && corrected != current) block.copy(rememberFor = heardOn, rememberDeltaMs = moved) else block.copy(rememberFor = null)
+    }
+
+    private fun editBacking(change: (BackingBlockState) -> BackingBlockState) {
+        val before = state.value.backing ?: return
+        val changed = change(before)
+        val clean = changed.copy(gainDb = BackingOffset.snapGain(changed.gainDb, backingConfig), offsetMs = BackingOffset.clamp(changed.offsetMs, backingConfig))
+        if (clean.gainDb == before.gainDb && clean.offsetMs == before.offsetMs) return
+        mutableState.update { it.copy(backing = withRemember(clean)) }
+        player?.setBackingMix(clean.offsetMs, clean.gainDb)
+        backingUnsaved = true
+        backingJob?.cancel()
+        backingJob = viewModelScope.launch {
+            delay(PERSIST_AFTER_MS)
+            persistBacking()
+        }
+    }
+
+    private suspend fun persistBacking() = withContext(NonCancellable) {
+        if (!backingUnsaved) return@withContext
+        backingUnsaved = false
+        val id = sessionId ?: return@withContext
+        val block = state.value.backing ?: return@withContext
+        backings.setTakeMix(id, block.offsetMs, block.gainDb)
+    }
+
+    private fun remember() {
+        val block = state.value.backing ?: return
+        val name = block.rememberFor ?: return
+        val base = take ?: return
+        val corrected = BackingOffset.correctedLatencyMs(base.copy(offsetMs = block.offsetMs))
+        viewModelScope.launch { latencies?.set(name, corrected) }
     }
 
     /** The recordings: whose screen this is, what the default can be listened on, how many it touches. */
@@ -188,7 +283,15 @@ class SoundViewModel @Inject constructor(
             viewModelScope.launch { created.state.collect { playerState -> mutableState.update { it.copy(player = playerState.takeIf { p -> p.ready && !p.failed }) } } }
             viewModelScope.launch { created.meters.collect { mutableMeters.value = it } }
         }
-        current.load(file)
+        val under = take?.takeIf { session.id == sessionId }
+        val file0 = backing
+        val pcm = backingPcm
+        if (under != null && file0 != null && pcm != null) {
+            val block = state.value.backing
+            current.loadWithBacking(file, PlayerBacking(pcm = { rate -> pcm.prepare(file0, rate) }, offsetMs = block?.offsetMs ?: under.offsetMs, gainDb = block?.gainDb ?: under.gainDb))
+        } else {
+            current.load(file)
+        }
         mutableState.update { it.copy(waveform = null, recording = if (mode == SoundMode.EVERYONE) it.recordings.firstOrNull { r -> r.sessionId == session.id } ?: it.recording else it.recording) }
         waveformJob?.cancel()
         waveformJob = viewModelScope.launch {
@@ -288,6 +391,10 @@ class SoundViewModel @Inject constructor(
 
     /** Leaving the screen does not wait for the delay. */
     private fun flush() {
+        if (backingUnsaved) {
+            backingJob?.cancel()
+            backingJob = viewModelScope.launch { persistBacking() }
+        }
         if (!unsaved) return
         persistJob?.cancel()
         persistJob = viewModelScope.launch { persist() }

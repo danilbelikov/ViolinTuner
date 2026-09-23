@@ -15,9 +15,9 @@ import java.nio.ByteOrder
  * Every failure of `MediaCodec` or `MediaMuxer` surfaces as a runtime exception from [write] or
  * [finish]; [abort] never throws.
  */
-internal class OfflineAacWriter(file: File, private val sampleRate: Int, bitRate: Int) {
+internal class OfflineAacWriter(file: File, private val sampleRate: Int, bitRate: Int, private val channels: Int = 1) {
     private val codec: MediaCodec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC).apply {
-        val format = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, 1).apply {
+        val format = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channels).apply {
             setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
             setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
             setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, MAX_INPUT_BYTES)
@@ -33,6 +33,7 @@ internal class OfflineAacWriter(file: File, private val sampleRate: Int, bitRate
     private var samplesIn = 0L
     private var released = false
 
+    /** [count] samples — interleaved frames of [channels] each. */
     fun write(samples: ShortArray, count: Int) {
         var offset = 0
         while (offset < count) {
@@ -41,10 +42,11 @@ internal class OfflineAacWriter(file: File, private val sampleRate: Int, bitRate
                 val buffer = codec.getInputBuffer(index) ?: throw IllegalStateException("no codec input buffer")
                 buffer.clear()
                 val shorts = buffer.order(ByteOrder.nativeOrder()).asShortBuffer()
-                val portion = minOf(count - offset, shorts.remaining())
+                // whole frames only: a frame split between two buffers would swap the sides
+                val portion = minOf(count - offset, shorts.remaining() / channels * channels)
                 shorts.put(samples, offset, portion)
                 codec.queueInputBuffer(index, 0, portion * BYTES_PER_SAMPLE, samplesIn * MICROS / sampleRate, 0)
-                samplesIn += portion
+                samplesIn += portion / channels
                 offset += portion
             }
             drain(untilEnd = false)

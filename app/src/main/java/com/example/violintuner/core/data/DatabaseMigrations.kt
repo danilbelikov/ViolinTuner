@@ -183,7 +183,7 @@ object DatabaseMigrations {
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_piece_backings_backingId` ON `piece_backings` (`backingId`)")
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `take_backings` (`sessionId` INTEGER NOT NULL, `backingId` INTEGER NOT NULL, `offsetMs` INTEGER NOT NULL, " +
-                    "`recordedOffsetMs` INTEGER NOT NULL, `gainDb` REAL NOT NULL, `playedMs` INTEGER NOT NULL, `output` TEXT NOT NULL, `deviceName` TEXT, " +
+                    "`recordedOffsetMs` INTEGER NOT NULL, `gainDb` REAL NOT NULL, `playedMs` INTEGER NOT NULL, `output` TEXT NOT NULL, `deviceName` TEXT, `latencyMs` INTEGER NOT NULL, " +
                     "PRIMARY KEY(`sessionId`), FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
             )
             db.execSQL("CREATE INDEX IF NOT EXISTS `index_take_backings_backingId` ON `take_backings` (`backingId`)")

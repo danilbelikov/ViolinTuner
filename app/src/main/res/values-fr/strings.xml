@@ -994,4 +994,17 @@
     <string name="recap_road_not_started">Les mesures s\'accumulent — la route commence à la maison</string>
     <string name="recap_level_up">Nouveau niveau</string>
     <string name="recap_streak_up">+1 jour</string>
+
+    <!-- The backing track: listening and sending (spec 3.32). -->
+    <string name="share_backing">Avec l\'accompagnement</string>
+    <string name="share_backing_caption">violon traité et accompagnement</string>
+    <string name="share_file_details_stereo">%1$s · ≈ %2$s · stéréo</string>
+    <string name="backing_heard_with">avec accomp.</string>
+    <string name="backing_heard_violin">violon seul</string>
+    <string name="backing_block_title">Accompagnement</string>
+    <string name="backing_gain">Volume de l\'accomp.</string>
+    <string name="backing_offset">Décalage</string>
+    <string name="backing_offset_hint">en retard — à gauche</string>
+    <string name="backing_offset_recorded">Comme enregistré · %1$s</string>
+    <string name="backing_remember">Retenir pour %1$s</string>
 </resources>

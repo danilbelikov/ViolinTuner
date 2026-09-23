@@ -5,6 +5,9 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
 import android.util.Log
+import com.example.violintuner.core.audio.backing.BackingMixer
+import com.example.violintuner.core.audio.backing.BackingPcmReader
+import com.example.violintuner.core.audio.backing.PcmBackingSource
 import com.example.violintuner.core.audio.fx.SoundChain
 import com.example.violintuner.core.audio.playback.PcmDecoder
 import com.example.violintuner.core.di.IoDispatcher
@@ -35,7 +38,16 @@ interface SoundRenderer {
      * copied as it is — not re-encoded, its turn kept — beside the sound rendered through the chain.
      */
     suspend fun renderVideo(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean
+
+    /** [render] with the backing the take was made under mixed in (spec 3.32): a stereo `.m4a`. */
+    suspend fun renderWithBacking(source: File, settings: SoundSettings, backing: RenderBacking, target: File, onProgress: (Float) -> Unit): Boolean = false
+
+    /** [renderVideo] with the backing mixed into its sound. */
+    suspend fun renderVideoWithBacking(source: File, settings: SoundSettings, backing: RenderBacking, target: File, onProgress: (Float) -> Unit): Boolean = false
 }
+
+/** A backing for the file that is sent: its sound prepared at the recording's rate, and how it is mixed. */
+class RenderBacking(val pcm: (sampleRate: Int) -> File?, val offsetMs: Int, val gainDb: Float)
 
 /**
  * The very chain the player plays through, without the clock: decoder → [SoundChain] → AAC. What
@@ -48,13 +60,34 @@ class SoundFileRenderer @Inject constructor(
     @IoDispatcher private val io: CoroutineDispatcher,
 ) : SoundRenderer {
 
-    override suspend fun render(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean = withContext(io) {
+    override suspend fun render(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean =
+        renderSound(source, settings, null, target, onProgress)
+
+    override suspend fun renderWithBacking(source: File, settings: SoundSettings, backing: RenderBacking, target: File, onProgress: (Float) -> Unit): Boolean =
+        renderSound(source, settings, backing, target, onProgress)
+
+    override suspend fun renderVideo(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean =
+        renderVideoSound(source, target, onProgress) { sound, progress -> render(source, settings, sound, progress) }
+
+    override suspend fun renderVideoWithBacking(source: File, settings: SoundSettings, backing: RenderBacking, target: File, onProgress: (Float) -> Unit): Boolean =
+        renderVideoSound(source, target, onProgress) { sound, progress -> renderWithBacking(source, settings, backing, sound, progress) }
+
+    private suspend fun renderSound(source: File, settings: SoundSettings, backing: RenderBacking?, target: File, onProgress: (Float) -> Unit): Boolean = withContext(io) {
         val decoder = PcmDecoder.open(source) ?: return@withContext false
         var writer: OfflineAacWriter? = null
+        var reader: BackingPcmReader? = null
         var whole = false
         try {
             target.parentFile?.mkdirs()
-            writer = OfflineAacWriter(target, decoder.sampleRate, BIT_RATE)
+            // the backing at this recording's rate; gone or undecodable — the file cannot be what was asked for
+            val backingPcm = backing?.let { it.pcm(decoder.sampleRate) ?: return@withContext false }
+            reader = backingPcm?.let(::BackingPcmReader)
+            val mixer = if (backing != null && reader != null) {
+                BackingMixer(decoder.sampleRate, PcmBackingSource(reader), backing.offsetMs, backing.gainDb, heard = true, fadeSamples = 0, soundConfig = config)
+            } else {
+                null
+            }
+            writer = if (mixer != null) OfflineAacWriter(target, decoder.sampleRate, STEREO_BIT_RATE, channels = 2) else OfflineAacWriter(target, decoder.sampleRate, BIT_RATE)
             val chain = SoundChain(decoder.sampleRate, config).apply { set(settings, immediate = true) }
             // Everything off — the chain is not called at all (its limiter would still delay the sound): the
             // sound of a video sent as «Только звук» without processing is the sound as recorded.
@@ -62,7 +95,13 @@ class SoundFileRenderer @Inject constructor(
             val pcm = ShortArray(CHUNK)
             val samples = FloatArray(CHUNK)
             var toDrop = if (neutral) 0 else chain.latencySamples
-            val tail = if (neutral) 0 else chain.tailSamples(settings) + chain.latencySamples
+            val tail = (if (neutral) 0 else chain.tailSamples(settings) + chain.latencySamples) + (mixer?.latencySamples ?: 0)
+            // the mix is late by its limiter's look-ahead, like the chain by its own: those first frames go too
+            var mixToDrop = mixer?.latencySamples ?: 0
+            var violinPosition = 0L
+            val violin = FloatArray(CHUNK)
+            val stereo = FloatArray(if (mixer != null) CHUNK * 2 else 0)
+            val interleaved = ShortArray(if (mixer != null) CHUNK * 2 else 0)
             val total = (decoder.totalSamples + tail).coerceAtLeast(1)
             var done = 0L
             var tailLeft = tail
@@ -81,8 +120,22 @@ class SoundFileRenderer @Inject constructor(
                 if (!neutral) chain.process(samples, count)
                 val from = minOf(toDrop, count)
                 toDrop -= from
-                for (i in from until count) pcm[i - from] = (samples[i] * FULL_SCALE).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
-                if (count > from) writer.write(pcm, count - from)
+                if (mixer == null) {
+                    for (i in from until count) pcm[i - from] = toShort(samples[i])
+                    if (count > from) writer.write(pcm, count - from)
+                } else if (count > from) {
+                    val kept = count - from
+                    samples.copyInto(violin, 0, from, count)
+                    mixer.mix(violin, kept, violinPosition, stereo)
+                    violinPosition += kept
+                    val skip = minOf(mixToDrop, kept)
+                    mixToDrop -= skip
+                    for (i in skip until kept) {
+                        interleaved[2 * (i - skip)] = toShort(stereo[2 * i])
+                        interleaved[2 * (i - skip) + 1] = toShort(stereo[2 * i + 1])
+                    }
+                    if (kept > skip) writer.write(interleaved, (kept - skip) * 2)
+                }
                 done += count
                 onProgress((done.toFloat() / total).coerceIn(0f, 1f))
             }
@@ -101,19 +154,22 @@ class SoundFileRenderer @Inject constructor(
                 target.delete()
             }
             decoder.release()
+            reader?.close()
         }
     }
+
+    private fun toShort(sample: Float): Short = (sample * FULL_SCALE).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
 
     /**
      * Two passes: the sound into a temporary `.m4a` by [render] — the tested way — and then one
      * muxer takes the video samples of the source as they are and the new sound beside them.
      * No picture is decoded, so this takes hardly longer than the sound alone.
      */
-    override suspend fun renderVideo(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean = withContext(io) {
+    private suspend fun renderVideoSound(source: File, target: File, onProgress: (Float) -> Unit, renderSound: suspend (File, (Float) -> Unit) -> Boolean): Boolean = withContext(io) {
         val sound = File(target.parentFile, target.name + SOUND_SUFFIX)
         var whole = false
         try {
-            if (!render(source, settings, sound) { onProgress(it * SOUND_SHARE) }) return@withContext false
+            if (!renderSound(sound) { onProgress(it * SOUND_SHARE) }) return@withContext false
             whole = mux(source, sound, target) { onProgress(SOUND_SHARE + it * (1f - SOUND_SHARE)) }
             whole
         } catch (e: CancellationException) {
@@ -190,6 +246,9 @@ class SoundFileRenderer @Inject constructor(
 
         /** AAC-LC mono for the file that is sent (spec 5.11). */
         const val BIT_RATE = 128_000
+
+        /** With the backing: stereo, and a bit rate to carry both sides (spec 5.25). */
+        const val STEREO_BIT_RATE = 192_000
         private const val TAG = "SoundFileRenderer"
         private const val CHUNK = 4_096
         private const val FULL_SCALE = 32_768f
