@@ -124,7 +124,7 @@ class CameraXShotCamera @Inject constructor(@ApplicationContext private val cont
         if (recording == null) videoCapture.targetRotation = rotation
     }
 
-    @OptIn(ExperimentalPersistentRecording::class)
+    @androidx.annotation.OptIn(markerClass = [ExperimentalPersistentRecording::class])
     override fun startRecording(file: File) {
         startNanos = null
         val done = CompletableDeferred<Boolean>()
