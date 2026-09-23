@@ -61,6 +61,12 @@ interface BackingPcm {
 
     /** The PCM of [backing] at [sampleRate], made if need be; null when its copy is gone or cannot be decoded. Blocking. */
     fun prepare(backing: Backing, sampleRate: Int): File?
+
+    /**
+     * Throws away every prepared backing older than [minAgeMs] (spec 5.25): each is made again from its copy when it
+     * is needed, and a backing is heavy — some 45 MB for four minutes. One being made just now is left alone.
+     */
+    fun clear(minAgeMs: Long)
 }
 
 /** Takes a picked file in as a backing. Blocking. */
@@ -187,10 +193,23 @@ class BackingImporter @Inject constructor(
  * file in the cache — decoded once, resampled once, then read at any position without a codec. A mono backing
  * is doubled to both sides. Rebuilt from the copy whenever the cache has been cleared.
  */
-class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, private val files: BackingFiles) : BackingPcm {
+class BackingPcmCache @Inject constructor(
+    @ApplicationContext context: Context,
+    private val files: BackingFiles,
+    private val clock: Clock,
+) : BackingPcm {
     private val directory = File(context.cacheDir, DIRECTORY)
 
-    override fun cached(backing: Backing, sampleRate: Int): File? = fileOf(backing, sampleRate).takeIf { it.isFile }
+    override fun clear(minAgeMs: Long) {
+        val now = clock.millis()
+        directory.listFiles().orEmpty()
+            .filter { !it.name.endsWith(PARTIAL) && now - it.lastModified() >= minAgeMs }
+            .forEach { it.delete() }
+    }
+
+    // used now: touched, so the sweep of a cold start (older than an hour — left by a killed run) does not take it
+    override fun cached(backing: Backing, sampleRate: Int): File? =
+        fileOf(backing, sampleRate).takeIf { it.isFile }?.also { it.setLastModified(clock.millis()) }
 
     override fun prepare(backing: Backing, sampleRate: Int): File? {
         cached(backing, sampleRate)?.let { return it }

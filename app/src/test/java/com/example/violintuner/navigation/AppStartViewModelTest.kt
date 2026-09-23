@@ -64,11 +64,19 @@ class AppStartViewModelTest {
     private val repertoire = FakeRepertoireRepository()
     private val blocks = FakeBlockStore()
     private val shareFiles = FakeShareFiles()
+    private val clearedPcm = mutableListOf<Long>()
+    private val backingPcm = object : com.example.violintuner.core.audio.backing.BackingPcm {
+        override fun cached(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): java.io.File? = null
+        override fun prepare(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): java.io.File? = null
+        override fun clear(minAgeMs: Long) {
+            clearedPcm += minAgeMs
+        }
+    }
 
     private fun viewModel() = AppStartViewModel(
         FakeSettingsRepository(), FakeSessionRepository(), store, PracticeFinisher(repository, store, clock), config, clock,
         repository, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), profile, avatarFiles, repertoire, FakeSessionWaveforms(), shareFiles,
-        blocks,
+        blocks, backingPcm = backingPcm, io = kotlinx.coroutines.Dispatchers.Main,
     )
 
     private suspend fun running(elapsedMs: Long, lastSoundAgoMs: Long?) {
@@ -86,6 +94,21 @@ class AppStartViewModelTest {
         runCurrent()
         assertEquals(2, shareFiles.sweeps)
         assertEquals(now, shareFiles.sweptAtMs)
+    }
+
+    @Test
+    fun `the backings made ready for the mix go when the app goes, not on a turn of the phone, and at the start only what a killed run left`() = runTest {
+        val viewModel = viewModel()
+        runCurrent()
+        assertEquals(listOf(60 * 60_000L), clearedPcm)
+
+        viewModel.onAppStopped(changingConfigurations = true)
+        runCurrent()
+        assertEquals(1, clearedPcm.size)
+
+        viewModel.onAppStopped()
+        runCurrent()
+        assertEquals(listOf(60 * 60_000L, 0L), clearedPcm)
     }
 
     @Test

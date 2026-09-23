@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.audio.share.ShareFiles
+import com.example.violintuner.core.audio.RecordingRate
 import com.example.violintuner.core.audio.backing.AudioRoutes
 import com.example.violintuner.core.audio.backing.BackingFileImporter
 import com.example.violintuner.core.audio.backing.BackingImport
@@ -81,6 +82,7 @@ class PieceViewModel @Inject constructor(
     private val backings: BackingRepository = NoBackings,
     private val backingFiles: BackingFiles? = null,
     private val backingPcm: BackingPcm? = null,
+    private val recordingRate: RecordingRate = RecordingRate { TakePipeline.DEFAULT_RATE },
     private val backingImporter: BackingFileImporter? = null,
     private val backingPreview: BackingPreview? = null,
     private val routes: AudioRoutes? = null,
@@ -299,6 +301,8 @@ class PieceViewModel @Inject constructor(
             }
             PieceIntent.GrantMicClicked -> effectChannel.trySend(PieceEffect.RequestMicPermission)
             is PieceIntent.MicPermissionChanged -> if (takes.requiresMicPermission) micPermission.value = intent.granted
+            // the prepared backing goes when the app goes away (spec 5.25): back on screen, it is made ready again
+            PieceIntent.ScreenResumed -> knownBacking?.let { found -> if (backingPcm?.cached(found, recordingRate.likelyHz()) == null) prepare(found) }
             is PieceIntent.TakeClicked ->
                 if (ui.value.selection.active) select(SelectionIntent.CardToggled(intent.sessionId)) else effectChannel.trySend(PieceEffect.OpenSession(intent.sessionId))
             is PieceIntent.Select -> select(intent.intent)
@@ -354,6 +358,12 @@ class PieceViewModel @Inject constructor(
             if (block.blocksRecording) return
             val found = backingOf() ?: return
             val pcm = backingPcm ?: return
+            // thrown away while the app was away (spec 5.25): made again first — the button sleeps meanwhile,
+            // rather than the take decoding on the thread that reads the microphone
+            if (pcm.cached(found, recordingRate.likelyHz()) == null) {
+                prepare(found)
+                return
+            }
             backingPreview?.stop()
             takes.backingPlan = TakePipeline.BackingPlan(
                 backing = found,
@@ -378,7 +388,7 @@ class PieceViewModel @Inject constructor(
         val pcm = backingPcm ?: return
         viewModelScope.launch {
             backingEphemeral.update { it.copy(preparing = true) }
-            withContext(io) { PREPARED_RATES.forEach { rate -> pcm.cached(found, rate) ?: pcm.prepare(found, rate) } }
+            withContext(io) { recordingRate.likelyHz().let { rate -> pcm.cached(found, rate) ?: pcm.prepare(found, rate) } }
             backingEphemeral.update { it.copy(preparing = false) }
         }
     }
@@ -468,7 +478,6 @@ class PieceViewModel @Inject constructor(
         private const val BYTES_PER_MB = 1024L * 1024
 
         /** The rates a take is recorded at (spec 5.1): the backing is made ready for both. */
-        private val PREPARED_RATES = listOf(48_000, 44_100)
 
         // Long enough to survive a rotation, short enough that the microphone goes soon after the screen does (as on Live).
         private const val TAKE_STOP_TIMEOUT_MS = 2_000L

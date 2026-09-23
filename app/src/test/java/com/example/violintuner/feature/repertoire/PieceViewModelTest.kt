@@ -139,11 +139,13 @@ class PieceViewModelTest {
     private val playback = FakePlayback()
     private val pcmRates = mutableListOf<Int>()
     private val backingPcm = object : com.example.violintuner.core.audio.backing.BackingPcm {
-        override fun cached(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): File? = null
+        override fun cached(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): File? =
+            File("pcm-$sampleRate").takeIf { sampleRate in pcmRates }
         override fun prepare(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): File {
             pcmRates += sampleRate
             return File("pcm-$sampleRate")
         }
+        override fun clear(minAgeMs: Long) = pcmRates.clear()
     }
     private val backingFiles = object : com.example.violintuner.core.domain.backing.BackingFiles {
         override fun newFile(extension: String): File = File("new.$extension")
@@ -660,8 +662,8 @@ class PieceViewModelTest {
         assertEquals("Vivaldi — piano", block.title)
         assertTrue(block.enabled)
         assertNull(block.problem)
-        // its sound is made ready for both rates a take may be recorded at
-        assertEquals(listOf(48_000, 44_100), pcmRates)
+        // its sound is made ready at the one rate this phone records at
+        assertEquals(listOf(48_000), pcmRates)
     }
 
     @Test
@@ -686,6 +688,33 @@ class PieceViewModelTest {
         assertEquals(3_210L, take.playedMs)
         assertEquals(com.example.violintuner.core.domain.backing.BackingOutput.BLUETOOTH, take.output)
         assertTrue(viewModel.state.value.takes.single().underBacking)
+    }
+
+    @Test
+    fun `a backing thrown away while the app was away is made ready again on return, and a take never decodes it itself`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.WIRED, "Jack")
+        val (viewModel, _) = screen(id)
+        advance(100)
+        assertEquals(listOf(48_000), pcmRates)
+
+        // the app went away: the cache is cleared; the screen is back
+        backingPcm.clear(0)
+        viewModel.onIntent(PieceIntent.ScreenResumed)
+        advance(100)
+        assertEquals(listOf(48_000), pcmRates)
+
+        // gone again, and the button pressed before the screen noticed: it prepares instead of recording
+        backingPcm.clear(0)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        assertFalse(viewModel.takeState.value.recording)
+        assertEquals(listOf(48_000), pcmRates)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.takeState.value.recording)
+        assertEquals(File("pcm-48000") to 48_000, playback.started)
     }
 
     @Test

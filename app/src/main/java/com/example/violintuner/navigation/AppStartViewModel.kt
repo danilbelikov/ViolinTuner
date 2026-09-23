@@ -1,12 +1,14 @@
 package com.example.violintuner.navigation
 
-import com.example.violintuner.core.domain.backing.BackingRepository
-import com.example.violintuner.core.domain.backing.NoBackings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.violintuner.core.audio.backing.BackingPcm
 import com.example.violintuner.core.audio.playback.SessionWaveforms
 import com.example.violintuner.core.audio.share.ShareFiles
 import com.example.violintuner.core.data.profile.AvatarFiles
+import com.example.violintuner.core.di.IoDispatcher
+import com.example.violintuner.core.domain.backing.BackingRepository
+import com.example.violintuner.core.domain.backing.NoBackings
 import com.example.violintuner.core.domain.practice.BlockStore
 import com.example.violintuner.core.domain.practice.ForgottenPractice
 import com.example.violintuner.core.domain.practice.NoBlocks
@@ -29,6 +31,8 @@ import com.example.violintuner.feature.practice.PracticeReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.time.Clock
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -65,6 +69,8 @@ class AppStartViewModel @Inject constructor(
     private val shareFiles: ShareFiles,
     private val blocks: BlockStore = NoBlocks,
     private val backings: BackingRepository = NoBackings,
+    private val backingPcm: BackingPcm? = null,
+    @IoDispatcher private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     init {
         viewModelScope.launch { sessions.deleteOrphanAudio() }
@@ -72,6 +78,8 @@ class AppStartViewModel @Inject constructor(
         viewModelScope.launch { waveforms.deleteOrphans(sessions.sessions.first().mapNotNull { it.audioPath }.toSet()) }
         viewModelScope.launch { avatarFiles.deleteOrphans(referenced = profile.profile.first().avatarFile) }
         sweepTemporaries()
+        // what an earlier run could not throw away itself (it was killed); an hour old — not one a screen is making now
+        viewModelScope.launch(io) { backingPcm?.clear(minAgeMs = PCM_LEFT_BEHIND_MS) }
         // Trophies are given here rather than where a practice is saved: the entries change
         // from the practice screen, its sheets and the forgotten-practice prompt alike, and
         // this view model lives as long as the app is open. Giving is idempotent, so the
@@ -120,7 +128,12 @@ class AppStartViewModel @Inject constructor(
      * (spec 5.11): a phone that is not restarted for days would otherwise keep every video
      * prepared for sending — a second copy of a take each — until the next cold start.
      */
-    fun onAppStopped() = sweepTemporaries()
+    fun onAppStopped(changingConfigurations: Boolean = false) {
+        sweepTemporaries()
+        // The backings made ready for the mix are the heaviest thing in the cache and made again in seconds (spec 5.25):
+        // they go the moment the app does. Not on a turn of the phone — the screen is still there and wants them.
+        if (!changingConfigurations) viewModelScope.launch(io) { backingPcm?.clear(minAgeMs = 0) }
+    }
 
     /** What no one will read again: files made to be handed to other apps, shots of the camera nobody imported. */
     private fun sweepTemporaries() {
@@ -185,5 +198,8 @@ class AppStartViewModel @Inject constructor(
 
     private companion object {
         const val STOP_TIMEOUT_MS = 5_000L
+
+        /** A prepared backing this old at a cold start was left by a run that was killed, not made by a screen now. */
+        const val PCM_LEFT_BEHIND_MS = 60 * 60_000L
     }
 }

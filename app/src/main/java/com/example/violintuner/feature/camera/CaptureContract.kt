@@ -22,9 +22,11 @@ data class CaptureState(
     val spaceMinutes: Int? = null,
     /** The picture and the sound are being made into one file. */
     val saving: Boolean = false,
+    /** The backing is being made ready for the mix: the button waits (spec 5.25). */
+    val preparing: Boolean = false,
     val micUnavailable: Boolean = false,
 ) {
-    val canRecord: Boolean get() = cameraPermission == true && micPermission == true && !cameraFailed && !(underBacking && noHeadphones) && !saving
+    val canRecord: Boolean get() = cameraPermission == true && micPermission == true && !cameraFailed && !(underBacking && (noHeadphones || preparing)) && !saving
 }
 
 sealed interface CaptureIntent {

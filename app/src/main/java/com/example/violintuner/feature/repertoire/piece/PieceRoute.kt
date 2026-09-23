@@ -1,14 +1,11 @@
 package com.example.violintuner.feature.repertoire.piece
 
-import androidx.compose.runtime.setValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.core.content.ContextCompat
-import android.content.pm.PackageManager
 import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
@@ -20,10 +17,13 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
@@ -72,6 +72,7 @@ fun PieceRoute(
     // Also catches a permission revoked or granted in the system settings while we were away.
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
         viewModel.onIntent(PieceIntent.MicPermissionChanged(context.isMicPermissionGranted()))
+        viewModel.onIntent(PieceIntent.ScreenResumed)
     }
     // A take is played with the hands on the violin: the screen must not dim under it.
     if (take.recording) {

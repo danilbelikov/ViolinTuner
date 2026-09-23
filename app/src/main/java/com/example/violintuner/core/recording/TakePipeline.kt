@@ -335,12 +335,12 @@ class TakePipeline @Inject constructor(
         return plan
     }
 
-    private companion object {
+    companion object {
         // Pause before reopening a microphone that failed (busy with a call, hardware hiccup).
-        const val MIC_RETRY_DELAY_MS = 3_000L
+        private const val MIC_RETRY_DELAY_MS = 3_000L
 
-        /** A source without sound (the fake one) records no file: the backing plays at the usual rate. */
+        /** A source without sound (the fake one) records no file: the backing plays at the usual rate, and is made ready at it. */
         const val DEFAULT_RATE = 48_000
-        val NO_POSITION: StateFlow<Long?> = MutableStateFlow(null)
+        private val NO_POSITION: StateFlow<Long?> = MutableStateFlow(null)
     }
 }

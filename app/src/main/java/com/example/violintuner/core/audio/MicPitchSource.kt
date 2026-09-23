@@ -101,9 +101,7 @@ class MicPitchSource @Inject constructor(
             MediaRecorder.AudioSource.MIC
         }
         val nativeRate = audioManager.getProperty(AudioManager.PROPERTY_OUTPUT_SAMPLE_RATE)?.toIntOrNull()
-        val rates = (listOfNotNull(nativeRate) + config.supportedSampleRatesHz)
-            .filter { it in config.supportedSampleRatesHz }
-            .distinct()
+        val rates = SampleRates.candidates(nativeRate, config.supportedSampleRatesHz)
         for (rate in rates) {
             val minBytes = AudioRecord.getMinBufferSize(rate, CHANNEL, ENCODING)
             if (minBytes <= 0) continue

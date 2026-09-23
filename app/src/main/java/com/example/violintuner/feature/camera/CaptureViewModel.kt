@@ -3,10 +3,12 @@ package com.example.violintuner.feature.camera
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.violintuner.core.audio.RecordingRate
 import com.example.violintuner.core.audio.backing.AudioRoutes
 import com.example.violintuner.core.audio.backing.BackingPcm
 import com.example.violintuner.core.di.IoDispatcher
 import com.example.violintuner.core.domain.TargetMode
+import com.example.violintuner.core.domain.backing.Backing
 import com.example.violintuner.core.domain.backing.BackingConfig
 import com.example.violintuner.core.domain.backing.BackingOffset
 import com.example.violintuner.core.domain.backing.BackingRepository
@@ -55,6 +57,7 @@ class CaptureViewModel @Inject constructor(
     private val videos: VideoFiles,
     private val backingConfig: BackingConfig,
     private val cameraFactory: ShotCameraFactory,
+    private val recordingRate: RecordingRate,
     @IoDispatcher private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
@@ -129,6 +132,7 @@ class CaptureViewModel @Inject constructor(
                 val backing = row?.takeIf { it.enabled }?.let { r -> all.firstOrNull { it.id == r.backingId } }
                 backing to route.output.isHeadphones
             }.collect { (backing, headphones) ->
+                backing?.let(::prepare)
                 mutableState.update {
                     it.copy(backingTitle = backing?.title, backingDurationMs = backing?.durationMs ?: 0, underBacking = backing != null, noHeadphones = !headphones)
                 }
@@ -187,6 +191,19 @@ class CaptureViewModel @Inject constructor(
             CaptureIntent.CameraBindFailed -> mutableState.update { it.copy(cameraFailed = true) }
         }
     }
+
+    /** The backing made ready for the mix at the rate the take will be recorded at, before the button is pressed. */
+    private fun prepare(backing: Backing) {
+        if (prepared == backing.id) return
+        prepared = backing.id
+        viewModelScope.launch {
+            mutableState.update { it.copy(preparing = true) }
+            withContext(io) { backingPcm.cached(backing, recordingRate.likelyHz()) ?: backingPcm.prepare(backing, recordingRate.likelyHz()) }
+            mutableState.update { it.copy(preparing = false) }
+        }
+    }
+
+    private var prepared: Long? = null
 
     /** The take under the backing if the chip is on — as on the piece screen (spec 3.32) — or a plain video. */
     private suspend fun start() {

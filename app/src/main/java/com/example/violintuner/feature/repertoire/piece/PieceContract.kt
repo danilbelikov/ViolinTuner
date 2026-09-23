@@ -127,6 +127,9 @@ sealed interface PieceIntent {
     /** Reported by the route on every resume and after the system dialog. */
     data class MicPermissionChanged(val granted: Boolean) : PieceIntent
 
+    /** Back on screen: what was thrown away while the app was away is made ready again. */
+    data object ScreenResumed : PieceIntent
+
     data class TakeClicked(val sessionId: Long) : PieceIntent
 
     /** «Отметить лучшим» / «Снять отметку „лучший“» of the take's «⋯»: marks it, or clears the mark it has. */
