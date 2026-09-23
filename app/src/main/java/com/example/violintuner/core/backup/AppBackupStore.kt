@@ -73,7 +73,8 @@ class AppBackupStore @Inject constructor(
     private fun mediaOf(part: BackupPart): List<File> = when (part) {
         BackupPart.DATA -> listing(BackupPaths.PROFILE)
         BackupPart.SHEETS -> listing(BackupPaths.SHEETS)
-        BackupPart.AUDIO -> listing(BackupPaths.SESSIONS).filter { it.name.endsWith(BackupPaths.AUDIO_EXTENSION) }
+        // the sound of takes and the backings they were made under (spec 3.32): both are sound
+        BackupPart.AUDIO -> listing(BackupPaths.SESSIONS).filter { it.name.endsWith(BackupPaths.AUDIO_EXTENSION) } + listing(BackupPaths.BACKINGS)
         // the video and the thumbnail that stands beside it
         BackupPart.VIDEO -> listing(BackupPaths.SESSIONS).filterNot { it.name.endsWith(BackupPaths.AUDIO_EXTENSION) }
     }
@@ -91,12 +92,8 @@ class AppBackupStore @Inject constructor(
             }
             // data first, then by weight: what matters most is in the archive soonest
             listOf(BackupPart.DATA, BackupPart.SHEETS, BackupPart.AUDIO, BackupPart.VIDEO).filter { it in parts || it == BackupPart.DATA }.forEach { part ->
-                val folder = when (part) {
-                    BackupPart.DATA -> BackupPaths.PROFILE
-                    BackupPart.SHEETS -> BackupPaths.SHEETS
-                    else -> BackupPaths.SESSIONS
-                }
-                mediaOf(part).forEach { file -> add(BackupEntry("$folder/${file.name}", part, file.length()) { file.inputStreamOrNull() }) }
+                // the folder a file lies in under `files/` is the folder it goes into in the copy
+                mediaOf(part).forEach { file -> add(BackupEntry("${file.parentFile?.name}/${file.name}", part, file.length()) { file.inputStreamOrNull() }) }
             }
         }
         val manifest = BackupManifest(
@@ -168,7 +165,7 @@ class AppBackupStore @Inject constructor(
     }
 
     override fun deleteMedia() {
-        listOf(BackupPaths.SESSIONS, BackupPaths.SHEETS, WAVEFORMS_DIR).forEach { File(files, it).deleteRecursively() }
+        listOf(BackupPaths.SESSIONS, BackupPaths.SHEETS, BackupPaths.BACKINGS, WAVEFORMS_DIR).forEach { File(files, it).deleteRecursively() }
     }
 
     override fun markWipe() {

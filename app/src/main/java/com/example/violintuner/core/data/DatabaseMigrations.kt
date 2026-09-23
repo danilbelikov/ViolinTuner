@@ -165,6 +165,31 @@ object DatabaseMigrations {
         }
     }
 
+    /**
+     * Backings — «минусовки» (spec 3.32): accompaniment files, the one a piece has and the one each take was
+     * made under. Three new tables, nothing that exists is touched: no piece has a backing yet.
+     */
+    val MIGRATION_12_13 = object : Migration(12, 13) {
+        override fun migrate(db: SupportSQLiteDatabase) {
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `backings` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `fileName` TEXT NOT NULL, " +
+                    "`title` TEXT NOT NULL, `durationMs` INTEGER NOT NULL, `sampleRate` INTEGER NOT NULL, `channels` INTEGER NOT NULL, " +
+                    "`sizeBytes` INTEGER NOT NULL, `addedAtEpochMs` INTEGER NOT NULL)",
+            )
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `piece_backings` (`pieceId` INTEGER NOT NULL, `backingId` INTEGER NOT NULL, `enabled` INTEGER NOT NULL, " +
+                    "PRIMARY KEY(`pieceId`), FOREIGN KEY(`pieceId`) REFERENCES `pieces`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_piece_backings_backingId` ON `piece_backings` (`backingId`)")
+            db.execSQL(
+                "CREATE TABLE IF NOT EXISTS `take_backings` (`sessionId` INTEGER NOT NULL, `backingId` INTEGER NOT NULL, `offsetMs` INTEGER NOT NULL, " +
+                    "`recordedOffsetMs` INTEGER NOT NULL, `gainDb` REAL NOT NULL, `playedMs` INTEGER NOT NULL, `output` TEXT NOT NULL, `deviceName` TEXT, " +
+                    "PRIMARY KEY(`sessionId`), FOREIGN KEY(`sessionId`) REFERENCES `sessions`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE )",
+            )
+            db.execSQL("CREATE INDEX IF NOT EXISTS `index_take_backings_backingId` ON `take_backings` (`backingId`)")
+        }
+    }
+
     /** The columns of `SoundColumns`, as Room declares them: both sound tables embed the same set. Internal for the migration test, which lays out a version 5 file by hand. */
     internal const val SOUND_COLUMNS =
         "`eqEnabled` INTEGER NOT NULL, `lowCutEnabled` INTEGER NOT NULL, `lowCutHz` REAL NOT NULL, `lowHz` REAL NOT NULL, " +
@@ -176,5 +201,5 @@ object DatabaseMigrations {
             "`reverbPreDelayMs` REAL NOT NULL, `reverbBrightness` REAL NOT NULL, `reverbMix` REAL NOT NULL, " +
             "`outputEnabled` INTEGER NOT NULL, `outputGainDb` REAL NOT NULL"
 
-    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12)
+    val ALL: Array<Migration> = arrayOf(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6, MIGRATION_6_7, MIGRATION_7_8, MIGRATION_8_9, MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13)
 }

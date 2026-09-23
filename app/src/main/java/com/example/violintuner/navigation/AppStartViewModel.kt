@@ -1,5 +1,7 @@
 package com.example.violintuner.navigation
 
+import com.example.violintuner.core.domain.backing.BackingRepository
+import com.example.violintuner.core.domain.backing.NoBackings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.violintuner.core.audio.playback.SessionWaveforms
@@ -62,6 +64,7 @@ class AppStartViewModel @Inject constructor(
     waveforms: SessionWaveforms,
     private val shareFiles: ShareFiles,
     private val blocks: BlockStore = NoBlocks,
+    private val backings: BackingRepository = NoBackings,
 ) : ViewModel() {
     init {
         viewModelScope.launch { sessions.deleteOrphanAudio() }
@@ -123,6 +126,8 @@ class AppStartViewModel @Inject constructor(
     private fun sweepTemporaries() {
         viewModelScope.launch { shareFiles.sweep(clock.millis()) }
         viewModelScope.launch { repertoire.deleteOrphanFiles() }
+        // backings nobody points at any more — a replaced one whose takes are gone too (spec 3.32)
+        viewModelScope.launch { backings.deleteUnused() }
     }
 
     fun onPromptIntent(intent: PracticePromptIntent) {

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.example.violintuner.core.data.AppDatabase
 import com.example.violintuner.core.data.DatabaseMigrations
+import com.example.violintuner.core.data.backing.BackingDao
 import com.example.violintuner.core.data.practice.PieceBlockDao
 import com.example.violintuner.core.data.practice.PracticeDao
 import com.example.violintuner.core.data.progress.TrophyDao
@@ -35,6 +36,9 @@ object DatabaseModule {
 
     @Provides
     fun providePieceBlockDao(database: AppDatabase): PieceBlockDao = database.pieceBlockDao()
+
+    @Provides
+    fun provideBackingDao(database: AppDatabase): BackingDao = database.backingDao()
 
     @Provides
     fun provideTrophyDao(database: AppDatabase): TrophyDao = database.trophyDao()

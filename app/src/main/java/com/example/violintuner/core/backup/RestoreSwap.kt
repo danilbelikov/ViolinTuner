@@ -23,7 +23,7 @@ object RestoreSwap {
     private const val WAVEFORMS_DIR = "waveforms"
 
     /** Folders of `files/` that a copy replaces whole. Unpacking creates every one of them in the staging folder, empty if need be. */
-    val MEDIA_DIRS = listOf(BackupPaths.PROFILE, BackupPaths.SHEETS, BackupPaths.SESSIONS)
+    val MEDIA_DIRS = listOf(BackupPaths.PROFILE, BackupPaths.SHEETS, BackupPaths.SESSIONS, BackupPaths.BACKINGS)
 
     enum class Outcome { NOTHING, RESTORED, WIPED }
 

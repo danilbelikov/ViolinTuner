@@ -36,7 +36,7 @@ class DatabaseMigrationTest {
      * with one row; [version3] adds the trophies of version 3 with one row; [version4] adds the
      * repertoire of version 4: a piece with a page, and the session becomes its take.
      */
-    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false, version7: Boolean = false, version8: Boolean = false, version9: Boolean = false, version10: Boolean = false, version11: Boolean = false) {
+    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false, version7: Boolean = false, version8: Boolean = false, version9: Boolean = false, version10: Boolean = false, version11: Boolean = false, version12: Boolean = false) {
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
@@ -138,7 +138,18 @@ class DatabaseMigrationTest {
                 db.execSQL("INSERT OR IGNORE INTO home_purchases (id, kind, price, boughtAtEpochMs) VALUES ('rug_plum', 'ITEM', 0, 0)")
                 db.execSQL("INSERT OR IGNORE INTO home_choices (slot, itemId) VALUES ('rug', 'rug_plum')")
             }
-            db.execSQL("PRAGMA user_version = ${if (version11) 11 else if (version10) 10 else if (version9) 9 else if (version8) 8 else if (version7) 7 else if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
+            // version 12: the blocks, laid out as its migration leaves them
+            if (version12) {
+                db.execSQL(
+                    "CREATE TABLE IF NOT EXISTS `piece_blocks` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `pieceId` INTEGER NOT NULL, " +
+                        "`date` TEXT NOT NULL, `startedAtEpochMs` INTEGER NOT NULL, `durationMs` INTEGER NOT NULL, `goalMs` INTEGER NOT NULL, " +
+                        "`done` INTEGER NOT NULL, `paid` INTEGER NOT NULL, FOREIGN KEY(`pieceId`) REFERENCES `pieces`(`id`) " +
+                        "ON UPDATE NO ACTION ON DELETE CASCADE )",
+                )
+                db.execSQL("CREATE INDEX IF NOT EXISTS `index_piece_blocks_pieceId` ON `piece_blocks` (`pieceId`)")
+                db.execSQL("ALTER TABLE `journey_earnings` ADD COLUMN `piecesPaid` INTEGER NOT NULL DEFAULT 0")
+            }
+            db.execSQL("PRAGMA user_version = ${if (version12) 12 else if (version11) 11 else if (version10) 10 else if (version9) 9 else if (version8) 8 else if (version7) 7 else if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
         }
     }
 
@@ -359,5 +370,32 @@ class DatabaseMigrationTest {
         assertEquals(1, stored.size)
         db.repertoireDao().deletePiece(piece.id)
         assertEquals(emptyList<Any>(), db.pieceBlockDao().observeAll().first())
+    }
+
+    @Test
+    fun backingsStartEmpty_andGoWhenNothingPointsAtThem() = runBlocking {
+        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true, version7 = true, version8 = true, version9 = true, version10 = true, version11 = true, version12 = true)
+        val db = openMigrated()
+        val dao = db.backingDao()
+
+        assertEquals(emptyList<Any>(), dao.backings().first())
+        assertEquals(emptyList<Any>(), dao.pieceBackings().first())
+        assertEquals(1, db.journeyDao().observeEarnings().first().size) // everything of before is there
+        val piece = db.repertoireDao().observePieces().first().first()
+        val session = db.sessionDao().observeAll().first().first()
+
+        val backing = dao.insert(com.example.violintuner.core.data.backing.BackingEntity(fileName = "a.m4a", title = "Piano", durationMs = 1, sampleRate = 44_100, channels = 2, sizeBytes = 1, addedAtEpochMs = 1))
+        dao.upsertPiece(com.example.violintuner.core.data.backing.PieceBackingEntity(piece.id, backing, enabled = true))
+        dao.insertTake(com.example.violintuner.core.data.backing.TakeBackingEntity(session.id, backing, 200, 200, -6f, 1_000, "BLUETOOTH", "Buds"))
+        assertEquals(emptyList<String>(), dao.deleteUnused())
+
+        // the piece goes, its row with it; the take still holds the file
+        db.repertoireDao().deletePiece(piece.id)
+        assertEquals(emptyList<Any>(), dao.pieceBackings().first())
+        assertEquals(emptyList<String>(), dao.deleteUnused())
+        // the take goes too: now nothing points at the backing
+        db.sessionDao().delete(listOf(session.id))
+        assertEquals(listOf("a.m4a"), dao.deleteUnused())
+        assertEquals(emptyList<Any>(), dao.backings().first())
     }
 }

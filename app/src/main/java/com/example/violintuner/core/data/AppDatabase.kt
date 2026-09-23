@@ -2,6 +2,10 @@ package com.example.violintuner.core.data
 
 import androidx.room.Database
 import androidx.room.RoomDatabase
+import com.example.violintuner.core.data.backing.BackingDao
+import com.example.violintuner.core.data.backing.BackingEntity
+import com.example.violintuner.core.data.backing.PieceBackingEntity
+import com.example.violintuner.core.data.backing.TakeBackingEntity
 import com.example.violintuner.core.data.practice.PieceBlockDao
 import com.example.violintuner.core.data.practice.PieceBlockEntity
 import com.example.violintuner.core.data.practice.PracticeDao
@@ -29,7 +33,7 @@ import com.example.violintuner.core.data.sound.SoundSettingsEntity
  * The one database of the app: sessions (recordings with analysis), practice entries (time),
  * the trophies given for that time, the repertoire (pieces with their sheet pages), and how
  * recordings are made to sound (settings of sound processing and the user's presets); the journey
- * and the home; the blocks of practices — time given to elements of the repertoire.
+ * and the home; the blocks of practices — time given to elements of the repertoire; the backings of pieces and takes.
  * Every version's schema is exported to `app/schemas` and committed; a new version needs a
  * migration in [DatabaseMigrations] and a test that the old rows survive it.
  */
@@ -41,8 +45,9 @@ import com.example.violintuner.core.data.sound.SoundSettingsEntity
         HomePurchaseEntity::class,
         HomeChoiceEntity::class,
         PieceBlockEntity::class,
+        BackingEntity::class, PieceBackingEntity::class, TakeBackingEntity::class,
     ],
-    version = 12,
+    version = 13,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -53,6 +58,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun soundDao(): SoundDao
     abstract fun journeyDao(): JourneyDao
     abstract fun pieceBlockDao(): PieceBlockDao
+    abstract fun backingDao(): BackingDao
 
     companion object {
         const val FILE_NAME = "violin.db"

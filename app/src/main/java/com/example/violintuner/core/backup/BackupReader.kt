@@ -103,6 +103,7 @@ object BackupReader {
     fun partOf(path: String): BackupPart = when (path.substringBefore('/')) {
         BackupPaths.SHEETS -> BackupPart.SHEETS
         BackupPaths.SESSIONS -> if (path.endsWith(BackupPaths.AUDIO_EXTENSION)) BackupPart.AUDIO else BackupPart.VIDEO
+        BackupPaths.BACKINGS -> BackupPart.AUDIO
         else -> BackupPart.DATA
     }
 }
@@ -114,5 +115,8 @@ object BackupPaths {
     const val PROFILE = "profile"
     const val SHEETS = "repertoire"
     const val SESSIONS = "sessions"
+
+    /** Accompaniment files (spec 3.32); a part of the sound. */
+    const val BACKINGS = "backings"
     const val AUDIO_EXTENSION = ".m4a"
 }
