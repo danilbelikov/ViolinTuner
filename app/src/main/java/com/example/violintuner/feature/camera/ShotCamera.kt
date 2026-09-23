@@ -10,6 +10,7 @@ import androidx.camera.core.SurfaceOrientedMeteringPointFactory
 import androidx.camera.core.SurfaceRequest
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.lifecycle.awaitInstance
+import androidx.camera.video.ExperimentalPersistentRecording
 import androidx.camera.video.FallbackStrategy
 import androidx.camera.video.FileOutputOptions
 import androidx.camera.video.Quality
@@ -40,7 +41,11 @@ interface ShotCamera {
     /** Binds the camera to [owner]; false when there is none to bind (no such camera, or it refused). */
     suspend fun bind(owner: LifecycleOwner, front: Boolean): Boolean
 
+    /** Lets the camera go; a recording under way goes on and picks up the next [bind] (a turn of the phone). */
     fun unbind()
+
+    /** Stops whatever is recorded, keeping nothing, and lets the camera go: the screen is gone for good. */
+    fun release()
 
     /** Focus and exposure at a point of the viewfinder, 0…1 each way. */
     fun focus(x: Float, y: Float)
@@ -103,6 +108,12 @@ class CameraXShotCamera @Inject constructor(@ApplicationContext private val cont
         mutableSurface.value = null
     }
 
+    override fun release() {
+        recording?.close()
+        recording = null
+        unbind()
+    }
+
     override fun focus(x: Float, y: Float) {
         val control = camera?.cameraControl ?: return
         val point = SurfaceOrientedMeteringPointFactory(1f, 1f).createPoint(x, y)
@@ -113,6 +124,7 @@ class CameraXShotCamera @Inject constructor(@ApplicationContext private val cont
         if (recording == null) videoCapture.targetRotation = rotation
     }
 
+    @OptIn(ExperimentalPersistentRecording::class)
     override fun startRecording(file: File) {
         startNanos = null
         val done = CompletableDeferred<Boolean>()
@@ -120,6 +132,8 @@ class CameraXShotCamera @Inject constructor(@ApplicationContext private val cont
         // no audio on purpose: the sound is the take's own, from the microphone the pitch is read from
         recording = videoCapture.output
             .prepareRecording(context, FileOutputOptions.Builder(file).build())
+            // a turn of the phone recreates the screen and binds the camera anew: the shot must survive it (spec 3.32)
+            .asPersistentRecording()
             .start(ContextCompat.getMainExecutor(context)) { event ->
                 when (event) {
                     is VideoRecordEvent.Start -> startNanos = System.nanoTime()

@@ -166,13 +166,29 @@ class TrackBackingPlayback(private val routes: AudioRoutes) : BackingPlayback {
                             startNanos = timestamp.nanoTime - timestamp.framePosition * NANOS_PER_SECOND / rate
                         }
                     }
-                    // the end of the file: let what is in the track play out, the take goes on
+                    // the end of the file: let what is in the track play out, the take goes on. A stream track
+                    // holds back a tail shorter than its start threshold until it is told there is no more.
+                    if (!stopped) newTrack.stop()
+                    var lastHead = -1L
+                    var stillSince = System.nanoTime()
                     while (!stopped) {
                         val head = newTrack.playbackHeadPosition.toLong() and UNSIGNED_INT
                         playedMs = head * MS_PER_SECOND / rate
                         mutablePosition.value = playedMs
                         if (head >= written) break
+                        // an output that stopped moving will not finish: do not wait for it forever
+                        if (head != lastHead) {
+                            lastHead = head
+                            stillSince = System.nanoTime()
+                        } else if (System.nanoTime() - stillSince > STALL_NANOS) {
+                            break
+                        }
                         sleep(POLL_MS)
+                    }
+                    // played to its end: the bar stands full (spec 3.32)
+                    if (!stopped) {
+                        playedMs = written * MS_PER_SECOND / rate
+                        mutablePosition.value = playedMs
                     }
                 }
             } catch (e: IOException) {
@@ -209,6 +225,9 @@ class TrackBackingPlayback(private val routes: AudioRoutes) : BackingPlayback {
         const val NANOS_PER_SECOND = 1_000_000_000L
         const val UNSIGNED_INT = 0xFFFFFFFFL
         const val POLL_MS = 20L
+
+        // longer than any output buffer: a head still for this long has stopped for good
+        const val STALL_NANOS = 1_000_000_000L
         const val JOIN_TIMEOUT_MS = 1_000L
     }
 }

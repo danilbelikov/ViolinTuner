@@ -8,6 +8,7 @@ import android.net.Uri
 import android.provider.Settings
 import android.view.WindowManager
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -67,6 +68,9 @@ fun CaptureRoute(onClose: () -> Unit, modifier: Modifier = Modifier, viewModel: 
     DisposableEffect(viewModel) { onDispose { viewModel.camera.unbind() } }
     // the picture is written the way the phone is held when the shot starts
     view.display?.rotation?.let { viewModel.camera.setRotation(it) }
+
+    // «назад» during a shot stops it and keeps the take, like the button: leaving must not lose what was played
+    BackHandler(enabled = state.recording) { viewModel.onIntent(CaptureIntent.RecordClicked) }
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

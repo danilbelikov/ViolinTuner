@@ -208,7 +208,7 @@ class CaptureViewModel @Inject constructor(
 
     override fun onCleared() {
         takes.videoHook = null
-        camera.unbind()
+        camera.release()
     }
 
     companion object {

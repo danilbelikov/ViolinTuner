@@ -88,7 +88,7 @@ fun CaptureScreen(
                 modifier = Modifier
                     .align(Alignment.CenterEnd)
                     .fillMaxHeight()
-                    .width(170.dp)
+                    .width(210.dp)
                     .background(Brush.horizontalGradient(listOf(Color.Transparent, Scrim)))
                     .navigationBarsPadding(),
                 horizontalAlignment = Alignment.CenterHorizontally,
@@ -168,7 +168,7 @@ private fun Controls(state: CaptureState, onIntent: (CaptureIntent) -> Unit, com
         Column(modifier = Modifier.fillMaxWidth(if (compact) 0.9f else 1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AppIcon(AppIcons.Backing, contentDescription = null, tint = OnPicture.copy(alpha = DIM), size = 14.dp)
-                Text(stringResource(R.string.backing_block_title), color = OnPicture.copy(alpha = DIM), style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp), modifier = Modifier.weight(1f))
+                Text(stringResource(R.string.backing_block_title), color = OnPicture.copy(alpha = DIM), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp), modifier = Modifier.weight(1f))
                 Text(
                     "${Formats.duration(played.coerceAtMost(state.backingDurationMs))} / ${Formats.duration(state.backingDurationMs)}",
                     color = OnPicture.copy(alpha = DIM),
