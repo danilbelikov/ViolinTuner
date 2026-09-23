@@ -27,6 +27,7 @@ fun PracticeRoute(
     onOpenSession: (sessionId: Long) -> Unit,
     onOpenJourney: () -> Unit,
     onOpenHome: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: PracticeViewModel = hiltViewModel(),
 ) {
@@ -38,6 +39,7 @@ fun PracticeRoute(
     val currentOnOpenSession by rememberUpdatedState(onOpenSession)
     val currentOnOpenJourney by rememberUpdatedState(onOpenJourney)
     val currentOnOpenHome by rememberUpdatedState(onOpenHome)
+    val currentOnOpenSettings by rememberUpdatedState(onOpenSettings)
     val homeLook by hiltViewModel<HomeLookViewModel>().state.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel, lifecycleOwner) {
@@ -48,6 +50,7 @@ fun PracticeRoute(
                     is PracticeEffect.OpenSession -> currentOnOpenSession(effect.id)
                     PracticeEffect.OpenJourney -> currentOnOpenJourney()
                     PracticeEffect.OpenHome -> currentOnOpenHome()
+                    PracticeEffect.OpenSettings -> currentOnOpenSettings()
                     PracticeEffect.ShowTooShort ->
                         Toast.makeText(context, R.string.practice_too_short, Toast.LENGTH_SHORT).show()
                     PracticeEffect.ShowPhotoFailed ->

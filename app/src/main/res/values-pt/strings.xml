@@ -30,7 +30,7 @@
     <string name="record_no_notes">Nenhuma nota encontrada na gravação</string>
     <string name="recording_elapsed_description">Gravando, %1$s</string>
     <string name="recording_strip_label">gravação ·</string>
-    <string name="practice_chip_label">prática ·</string>
+    <string name="practice_chip_label">prática</string>
 
     <string name="onboarding_mic_title">Deixe-me ouvir o violino</string>
     <string name="onboarding_mic_text">O app ouve pelo microfone e não envia nada para a internet. O som é processado no telefone.</string>

@@ -23,6 +23,7 @@ fun SettingsRoute(
     onOpenSound: () -> Unit,
     onOpenBackup: () -> Unit,
     onOpenRestore: (uri: String) -> Unit,
+    onClose: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -53,6 +54,7 @@ fun SettingsRoute(
         state = state,
         onIntent = viewModel::onIntent,
         modifier = modifier,
+        onBack = onClose,
         dataBlock = { DataBlock(onOpenBackup = onOpenBackup, onOpenRestore = onOpenRestore) },
         onLanguageClick = openLanguage,
     )

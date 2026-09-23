@@ -167,6 +167,7 @@ class AppStartViewModel @Inject constructor(
                 finisher.save(sheet.startedAtEpochMs, PracticeReducer.durationToSave(sheet))
                 prompt.value = null
             }
+            PracticePromptIntent.SummaryHidden -> prompt.update { if (it is PracticePrompt.Summary) null else it }
             PracticePromptIntent.SummaryDiscarded -> viewModelScope.launch {
                 finisher.discard()
                 prompt.value = null

@@ -158,7 +158,6 @@ private fun TopLevelDestination.tabIcon(): TabIcon = when (this) {
     TopLevelDestination.LIVE -> AppIcons.TabLive
     TopLevelDestination.PRACTICE -> AppIcons.TabPractice
     TopLevelDestination.HISTORY -> AppIcons.TabRecords
-    TopLevelDestination.SETTINGS -> AppIcons.TabSettings
 }
 
 /**

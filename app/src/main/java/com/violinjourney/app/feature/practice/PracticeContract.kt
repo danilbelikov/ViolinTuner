@@ -174,6 +174,9 @@ sealed interface PracticeIntent {
 
     data object SummaryDiscarded : PracticeIntent
 
+    /** A swipe down, a tap beside it or «назад»: the sheet goes, the practice runs on — never a «Не сохранять». */
+    data object SummaryHidden : PracticeIntent
+
     data class DaySelected(val date: LocalDate) : PracticeIntent
 
     data object MonthBack : PracticeIntent
@@ -209,6 +212,9 @@ sealed interface PracticeIntent {
     /** «Готово» and a swipe down alike: the name is stored either way (spec 3.13). */
     data object ProfileClosed : PracticeIntent
 
+    /** «Настройки» under «Готово» of the profile: the name is stored, the sheet closes, the settings open. */
+    data object ProfileSettingsClicked : PracticeIntent
+
     /** The trophy row tapped. */
     data object TrophiesClicked : PracticeIntent
 
@@ -233,6 +239,8 @@ sealed interface PracticeEffect {
     data object OpenJourney : PracticeEffect
 
     data object OpenHome : PracticeEffect
+
+    data object OpenSettings : PracticeEffect
 
     data object ShowTooShort : PracticeEffect
 

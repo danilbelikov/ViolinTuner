@@ -37,6 +37,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -207,6 +208,25 @@ class AppStartViewModelTest {
         assertTrue(repository.entries.value.isEmpty())
         assertNull(store.running.value)
         assertNull(viewModel.practicePrompt.value)
+    }
+
+    @Test
+    fun `swiping the summary away only hides it - the practice stays and the question comes back`() = runTest {
+        running(elapsedMs = 14 * MS_PER_HOUR, lastSoundAgoMs = 9 * MS_PER_HOUR)
+        val viewModel = viewModel()
+        viewModel.onAppOpened()
+        runCurrent()
+        assertTrue(viewModel.practicePrompt.value is PracticePrompt.Summary)
+
+        viewModel.onPromptIntent(PracticePromptIntent.SummaryHidden)
+        runCurrent()
+        assertNull(viewModel.practicePrompt.value)
+        assertNotNull(store.running.value)
+        assertTrue(repository.entries.value.isEmpty())
+
+        viewModel.onAppOpened()
+        runCurrent()
+        assertTrue(viewModel.practicePrompt.value is PracticePrompt.Summary)
     }
 
     @Test

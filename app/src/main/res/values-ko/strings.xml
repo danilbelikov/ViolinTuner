@@ -30,7 +30,7 @@
     <string name="record_no_notes">녹음에서 음을 찾지 못했어요</string>
     <string name="recording_elapsed_description">녹음 중, %1$s</string>
     <string name="recording_strip_label">녹음 ·</string>
-    <string name="practice_chip_label">연습 ·</string>
+    <string name="practice_chip_label">연습</string>
 
     <string name="onboarding_mic_title">바이올린 소리를 들려주세요</string>
     <string name="onboarding_mic_text">앱은 마이크로 소리를 듣고, 인터넷으로 아무것도 보내지 않습니다. 소리는 휴대폰에서만 처리됩니다.</string>

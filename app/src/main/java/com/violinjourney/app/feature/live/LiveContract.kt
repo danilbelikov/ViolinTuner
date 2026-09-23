@@ -93,9 +93,9 @@ data class LiveState(
     val glowStep: Float = 0f,
     /** Null while a note sounds and without the permission: the line is hidden, its place stays. */
     val statusLine: StatusLine? = null,
-    /** How long the running practice has been going; null when none runs (the chip, spec 3.12). */
+    /** How long the running practice has been going; null when none runs (the tag by the record key, spec 3.12). */
     val practiceMs: Long? = null,
-    /** Where the player is, and so where Live takes place: the room or a hall (spec 3.27); null until it is read. */
+    /** Where the player is, and so what picture Live takes place in: the room or a hall (spec 3.27); null until it is read. */
     val venue: Venue? = null,
 )
 
@@ -113,8 +113,11 @@ sealed interface LiveIntent {
     /** Reported by the route on every resume and after the system dialog. */
     data class MicPermissionChanged(val granted: Boolean) : LiveIntent
 
-    /** The «занятие · 12:34» chip leads to the practice tab. */
-    data object PracticeChipClicked : LiveIntent
+    /** The practice tag by the record key (spec 3.12): starts a practice, or leads to «Закончить занятие» of the running one. */
+    data object PracticeTagClicked : LiveIntent
+
+    /** The gear in the row of the switcher (spec 3.8, 4). */
+    data object SettingsClicked : LiveIntent
 }
 
 sealed interface LiveEffect {
@@ -126,5 +129,8 @@ sealed interface LiveEffect {
 
     data object RequestMicPermission : LiveEffect
 
-    data object OpenPractice : LiveEffect
+    /** «Закончить занятие»: its sheet lives on «Занятия», with the recap after it (spec 3.12, 3.31). */
+    data object FinishPractice : LiveEffect
+
+    data object OpenSettings : LiveEffect
 }

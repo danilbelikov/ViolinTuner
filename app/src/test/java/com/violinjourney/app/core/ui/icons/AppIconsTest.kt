@@ -12,7 +12,7 @@ import org.junit.Test
 class AppIconsTest {
     @Test
     fun `every icon of the handoff builds on the 24 grid`() {
-        assertEquals(63, AppIcons.all.size)
+        assertEquals(64, AppIcons.all.size)
         AppIcons.all.forEach { (name, build) ->
             val icon = build()
             assertEquals(name, 24.dp, icon.defaultWidth)
@@ -49,9 +49,13 @@ class AppIconsTest {
         assertTrue(practice.selected.root.filterIsInstance<VectorPath>().any { it.fill != null })
         assertNotNull("the hand of the stopwatch", practice.selectedCut)
         assertEquals(1, practice.selectedCut!!.root.size)
-        assertEquals(2, practice.selected.root.size)
+        assertEquals(3, practice.selected.root.size)
 
-        assertNull(AppIcons.TabLive.selectedCut)
+        // the string runs through the filled lens of its swing, the nut and the bridge stay lines
+        assertEquals(1, AppIcons.TabLive.selectedCut!!.root.size)
         assertEquals(3, AppIcons.TabLive.selected.root.size)
+        // the reels and the window of the cassette are cut out of its body
+        assertEquals(3, AppIcons.TabRecords.selectedCut!!.root.size)
+        assertEquals(1, AppIcons.TabRecords.selected.root.size)
     }
 }

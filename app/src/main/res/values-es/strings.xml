@@ -30,7 +30,7 @@
     <string name="record_no_notes">No se encontraron notas en la grabación</string>
     <string name="recording_elapsed_description">Grabando, %1$s</string>
     <string name="recording_strip_label">grabando ·</string>
-    <string name="practice_chip_label">práctica ·</string>
+    <string name="practice_chip_label">práctica</string>
 
     <string name="onboarding_mic_title">Déjame oír tu violín</string>
     <string name="onboarding_mic_text">La aplicación escucha por el micrófono y no envía nada a internet. El sonido se procesa en el teléfono.</string>

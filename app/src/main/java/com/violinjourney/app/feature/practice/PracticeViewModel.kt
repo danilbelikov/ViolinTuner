@@ -13,6 +13,7 @@ import com.violinjourney.app.core.domain.practice.NoBlocks
 import com.violinjourney.app.core.domain.practice.PracticeBlocks
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
+import com.violinjourney.app.core.domain.practice.FinishPracticeAsk
 import com.violinjourney.app.core.domain.practice.PracticeFinisher
 import com.violinjourney.app.core.domain.practice.PracticeRepository
 import com.violinjourney.app.core.domain.practice.PracticeStats
@@ -68,6 +69,7 @@ class PracticeViewModel @Inject constructor(
     venues: Venues = Venues(FollowTheRoad, journey),
     private val blocks: BlockStore = NoBlocks,
     private val journeyConfig: JourneyConfig = JourneyConfig(),
+    private val finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
 ) : ViewModel() {
 
     /** Takts of the practice saved a moment ago, as the pill on the card; null the rest of the time. */
@@ -131,6 +133,8 @@ class PracticeViewModel @Inject constructor(
             is PracticeIntent.SummaryStepped -> updateSummary { PracticeReducer.step(it, intent.steps, config) }
             PracticeIntent.SummarySaved -> saveSummary()
             PracticeIntent.SummaryDiscarded -> discardSummary()
+            // hidden is only hidden: the practice runs on, saved or thrown away by a button of the sheet alone
+            PracticeIntent.SummaryHidden -> ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it }
             is PracticeIntent.DaySelected -> selectDay(intent.date)
             PracticeIntent.MonthBack -> ui.update { it.copy(month = it.month.minusMonths(1)) }
             PracticeIntent.MonthForward -> ui.update {
@@ -151,6 +155,10 @@ class PracticeViewModel @Inject constructor(
             is PracticeIntent.ProfilePhotoPicked -> importPhoto(intent.uri)
             PracticeIntent.ProfilePhotoRemoved -> replaceAvatar(null)
             PracticeIntent.ProfileClosed -> closeProfile()
+            PracticeIntent.ProfileSettingsClicked -> {
+                closeProfile()
+                effectChannel.trySend(PracticeEffect.OpenSettings)
+            }
             PracticeIntent.TrophiesClicked -> openSheet(PracticeSheet.Trophies)
             PracticeIntent.TrophiesClosed -> ui.update { if (it.sheet == PracticeSheet.Trophies) it.copy(sheet = null) else it }
             // The next trophy not seen, if any, becomes the gift by itself: the state follows the table.
@@ -170,8 +178,8 @@ class PracticeViewModel @Inject constructor(
         }
     }
 
-    private fun stop() {
-        val running = latestRunning ?: return
+    private fun stop(running: RunningPractice? = latestRunning) {
+        running ?: return
         val elapsed = running.elapsedMs(clock.millis()).coerceAtMost(config.maxPracticeMs)
         if (elapsed < config.minPracticeMs) {
             viewModelScope.launch {
@@ -198,6 +206,13 @@ class PracticeViewModel @Inject constructor(
         viewModelScope.launch { repertoire.pieces.collect { pieces -> latestTitles = pieces.associate { it.id to it.title } } }
         viewModelScope.launch { runningStore.running.collect { latestRunning = it } }
         viewModelScope.launch { repository.entries.collect { latestTotals = PracticeStats.dayTotals(it) } }
+        // «Закончить занятие» asked for from Live (spec 3.12, handoff nav_bar 35): taken once and forgotten. The store is read
+        // rather than [latestRunning]: a view model made just now for this ask has not heard from it yet.
+        viewModelScope.launch {
+            finishAsk.asked.collect { asked ->
+                if (asked && finishAsk.take()) runningStore.running.first()?.let(::stop)
+            }
+        }
         // A practice saved elsewhere — the forgotten-practice prompt over this screen — is recapped here all the
         // same. The first value read is history, not news.
         viewModelScope.launch {

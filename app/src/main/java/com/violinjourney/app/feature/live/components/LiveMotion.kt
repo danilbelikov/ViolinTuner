@@ -66,8 +66,8 @@ internal object LiveMotion {
     const val MARKER_DAMPING = 0.8f
     const val MARKER_STIFFNESS = 600f
 
-    /** The practice chip appears and disappears without drawing the eye (handoff `anims`). */
-    const val PRACTICE_CHIP_FADE_MS = 200
+    /** The practice tag: the paper pours in from the notch when a practice starts (handoff nav_bar 35). */
+    const val PRACTICE_TAG_FILL_MS = 300
 
     // The bookmark of blocks (spec 5.21, handoff 30 `anims`): the outline turns into paper and back; at the goal the
     // brass line runs to the edge, then the rim closes and «готово» comes in. The minutes left change without motion.

@@ -61,6 +61,7 @@ fun PracticePromptHost(
                     is PracticeIntent.SummaryStepped -> onIntent(PracticePromptIntent.SummaryStepped(intent.steps))
                     PracticeIntent.SummarySaved -> onIntent(PracticePromptIntent.SummarySaved)
                     PracticeIntent.SummaryDiscarded -> onIntent(PracticePromptIntent.SummaryDiscarded)
+                    PracticeIntent.SummaryHidden -> onIntent(PracticePromptIntent.SummaryHidden)
                     else -> Unit
                 }
             },

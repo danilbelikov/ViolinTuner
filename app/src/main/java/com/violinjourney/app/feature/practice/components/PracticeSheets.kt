@@ -65,7 +65,8 @@ private const val CHIP_HOUR = 60
 @Composable
 fun SummarySheet(sheet: PracticeSheet.Summary, stepMinutes: Int, onIntent: (PracticeIntent) -> Unit) {
     ModalBottomSheet(
-        onDismissRequest = { onIntent(PracticeIntent.SummaryDiscarded) },
+        // hiding the sheet is not an answer: saving and throwing away are its two buttons alone
+        onDismissRequest = { onIntent(PracticeIntent.SummaryHidden) },
         // with «Что играли» the sheet is taller than half a screen: it opens whole, «Не сохранять» never under the fold
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,

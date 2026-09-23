@@ -8,6 +8,7 @@ import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_HOUR
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.violinjourney.app.core.domain.practice.PracticeEntry
+import com.violinjourney.app.core.domain.practice.FinishPracticeAsk
 import com.violinjourney.app.core.domain.practice.PracticeFinisher
 import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.domain.progress.FakeProfileRepository
@@ -35,6 +36,7 @@ import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -69,10 +71,10 @@ class PracticeViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun TestScope.viewModel(): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
+    private fun TestScope.viewModel(finishAsk: FinishPracticeAsk = FinishPracticeAsk()): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
         val viewModel = PracticeViewModel(
             repository, store, PracticeFinisher(repository, store, clock, journey = journey), sessions, config, FakeRepertoireRepository(), clock,
-            trophies, profiles, avatarFiles, ProgressConfig(), journey,
+            trophies, profiles, avatarFiles, ProgressConfig(), journey, finishAsk = finishAsk,
         )
         val effects = mutableListOf<PracticeEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
@@ -210,6 +212,50 @@ class PracticeViewModelTest {
         assertNull(store.running.value)
         assertNull(viewModel.state.value.sheet)
         assertTrue(repository.entries.value.isEmpty())
+    }
+
+    @Test
+    fun `hiding the summary is not an answer - the practice runs on and nothing is saved`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        pass(10 * MS_PER_MINUTE)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        runCurrent()
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.Summary)
+
+        viewModel.onIntent(PracticeIntent.SummaryHidden)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+        assertNotNull("still running", store.running.value)
+        assertTrue(repository.entries.value.isEmpty())
+    }
+
+    @Test
+    fun `finishing asked for from Live opens the summary once, even in a view model made for the ask`() = runTest {
+        store.start(clock.millis() - 20 * MS_PER_MINUTE)
+        val ask = FinishPracticeAsk().apply { ask() }
+        val (viewModel, _) = viewModel(ask)
+        runCurrent()
+        val sheet = viewModel.state.value.sheet as PracticeSheet.Summary
+        assertEquals(20, sheet.minutes)
+        assertEquals(false, ask.asked.value)
+
+        viewModel.onIntent(PracticeIntent.SummaryHidden)
+        runCurrent()
+        assertNull("the ask is forgotten, not repeated", viewModel.state.value.sheet)
+    }
+
+    @Test
+    fun `the settings row of the profile stores the name and opens the settings`() = runTest {
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(PracticeIntent.ProfileClicked)
+        runCurrent()
+        viewModel.onIntent(PracticeIntent.ProfileNameChanged("Аня"))
+        viewModel.onIntent(PracticeIntent.ProfileSettingsClicked)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+        assertEquals("Аня", profiles.profile.value.name)
+        assertTrue(PracticeEffect.OpenSettings in effects)
     }
 
     @Test

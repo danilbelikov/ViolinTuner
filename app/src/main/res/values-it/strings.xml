@@ -30,7 +30,7 @@
     <string name="record_no_notes">Nella registrazione non ci sono note</string>
     <string name="recording_elapsed_description">Registrazione in corso, %1$s</string>
     <string name="recording_strip_label">rec ·</string>
-    <string name="practice_chip_label">studio ·</string>
+    <string name="practice_chip_label">studio</string>
 
     <string name="onboarding_mic_title">Fammi sentire il violino</string>
     <string name="onboarding_mic_text">L\'app ascolta dal microfono e non invia nulla a internet. Il suono viene elaborato sul telefono.</string>

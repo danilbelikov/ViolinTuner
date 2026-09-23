@@ -31,6 +31,7 @@ object AppIcons {
     val Play: ImageVector by lazy { icon("Play", IconPaths.PLAY) }
     val Pause: ImageVector by lazy { icon("Pause", IconPaths.PAUSE) }
     val Lock: ImageVector by lazy { icon("Lock", IconPaths.LOCK) }
+    val Gear: ImageVector by lazy { icon("Gear", IconPaths.GEAR) }
     val Timer: ImageVector by lazy { icon("Timer", IconPaths.TIMER) }
     val Flag: ImageVector by lazy { icon("Flag", IconPaths.FLAG) }
     val Clock: ImageVector by lazy { icon("Clock", IconPaths.CLOCK) }
@@ -85,7 +86,6 @@ object AppIcons {
     val TabLive: TabIcon by lazy { tab("TabLive", IconPaths.TAB_LIVE) }
     val TabPractice: TabIcon by lazy { tab("TabPractice", IconPaths.TAB_PRACTICE) }
     val TabRecords: TabIcon by lazy { tab("TabRecords", IconPaths.TAB_RECORDS) }
-    val TabSettings: TabIcon by lazy { tab("TabSettings", IconPaths.TAB_SETTINGS) }
 
     /** Every plain icon by name: for the test that builds them all, and for a gallery preview. */
     val all: List<Pair<String, () -> ImageVector>> = listOf(
@@ -106,6 +106,7 @@ object AppIcons {
         "Play" to { Play },
         "Pause" to { Pause },
         "Lock" to { Lock },
+        "Gear" to { Gear },
         "Timer" to { Timer },
         "Flag" to { Flag },
         "Clock" to { Clock },
@@ -154,7 +155,7 @@ object AppIcons {
         "Calendar" to { Calendar },
     )
 
-    val tabs: List<() -> TabIcon> = listOf({ TabLive }, { TabPractice }, { TabRecords }, { TabSettings })
+    val tabs: List<() -> TabIcon> = listOf({ TabLive }, { TabPractice }, { TabRecords })
 
     const val GRID = 24f
     const val STROKE = 1.8f

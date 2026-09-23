@@ -63,6 +63,12 @@ internal object IconPaths {
     /** зафиксированная струна («Настройка») */
     val LOCK = listOf("M5 13a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-6z", "M8 11V8a4 4 0 0 1 8 0v3", "F M12 15a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z")
 
+    /** шестерня — «Настройки» с Live (nav_bar 35): восемь зубьев и ось */
+    val GEAR = listOf(
+        "M10.64 5.85L11.03 3.46A8.6 8.6 0 0 1 12.97 3.46L13.36 5.85A6.3 6.3 0 0 1 15.38 6.69L17.35 5.27A8.6 8.6 0 0 1 18.73 6.65L17.31 8.62A6.3 6.3 0 0 1 18.15 10.64L20.54 11.03A8.6 8.6 0 0 1 20.54 12.97L18.15 13.36A6.3 6.3 0 0 1 17.31 15.38L18.73 17.35A8.6 8.6 0 0 1 17.35 18.73L15.38 17.31A6.3 6.3 0 0 1 13.36 18.15L12.97 20.54A8.6 8.6 0 0 1 11.03 20.54L10.64 18.15A6.3 6.3 0 0 1 8.62 17.31L6.65 18.73A8.6 8.6 0 0 1 5.27 17.35L6.69 15.38A6.3 6.3 0 0 1 5.85 13.36L3.46 12.97A8.6 8.6 0 0 1 3.46 11.03L5.85 10.64A6.3 6.3 0 0 1 6.69 8.62L5.27 6.65A8.6 8.6 0 0 1 6.65 5.27L8.62 6.69A6.3 6.3 0 0 1 10.64 5.85Z",
+        "M12 9.4a2.6 2.6 0 1 0 0 5.2 2.6 2.6 0 1 0 0-5.2z",
+    )
+
     /** Начать занятие */
     val TIMER = listOf("M12 6.5a7 7 0 1 0 0 14 7 7 0 1 0 0-14z", "M12 13.5V10", "M10 3h4M12 3v3.5")
 
@@ -203,31 +209,27 @@ internal object IconPaths {
 
     class TabPath(val d: String, val selected: Selected = Selected.AS_IS)
 
-    /** вкладка Live */
+    /** вкладка Live: звучащая струна между порожком и подставкой (nav_bar 33d) */
     val TAB_LIVE = listOf(
-        TabPath("M12 8a4 4 0 1 0 0 8 4 4 0 1 0 0-8z", Selected.FILL),
-        TabPath("M17.7 6.3a8 8 0 0 1 0 11.4"),
-        TabPath("M6.3 6.3a8 8 0 0 0 0 11.4"),
+        TabPath("M7.5 3.5h9"),
+        TabPath("M7.5 20.5h9"),
+        TabPath("M12 3.5Q4 12 12 20.5Q20 12 12 3.5z", Selected.FILL),
+        TabPath("M12 3.5v17", Selected.CUT),
     )
 
-    /** вкладка Занятия */
+    /** вкладка Занятия: секундомер (nav_bar 33d) */
     val TAB_PRACTICE = listOf(
         TabPath("M12 6.5a7 7 0 1 0 0 14 7 7 0 1 0 0-14z", Selected.FILL),
-        TabPath("M12 13.5V10", Selected.CUT),
+        TabPath("M17.5 7.7l1.4-1.4"),
         TabPath("M10 3h4M12 3v3.5"),
+        TabPath("M12 13.5V9.6", Selected.CUT),
     )
 
-    /** вкладка Записи */
+    /** вкладка Записи: кассета (nav_bar 33d) */
     val TAB_RECORDS = listOf(
-        TabPath("M4 6h8M4 12h6M4 18h5"),
-        TabPath("M15 17V7.5l5-1.5v3"),
-        TabPath("F M13 15a2 2 0 1 0 0 4 2 2 0 1 0 0-4z", Selected.FILL),
-    )
-
-    /** вкладка Настройки */
-    val TAB_SETTINGS = listOf(
-        TabPath("M4 7h9M18.5 7H20M4 17h6M14.5 17H20"),
-        TabPath("M15.5 4.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z", Selected.FILL),
-        TabPath("M10.5 14.8a2.2 2.2 0 1 0 0 4.4 2.2 2.2 0 1 0 0-4.4z", Selected.FILL),
+        TabPath("M5 5.5h14a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z", Selected.FILL),
+        TabPath("M7.6 18.5l1.2-2.8h6.4l1.2 2.8", Selected.CUT),
+        TabPath("M8.5 8.9a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 1 0 0-3.8z", Selected.CUT),
+        TabPath("M15.5 8.9a1.9 1.9 0 1 0 0 3.8 1.9 1.9 0 1 0 0-3.8z", Selected.CUT),
     )
 }

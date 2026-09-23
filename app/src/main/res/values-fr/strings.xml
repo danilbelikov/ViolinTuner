@@ -30,7 +30,7 @@
     <string name="record_no_notes">Aucune note trouvée dans l\'enregistrement</string>
     <string name="recording_elapsed_description">Enregistrement en cours, %1$s</string>
     <string name="recording_strip_label">enreg. ·</string>
-    <string name="practice_chip_label">séance ·</string>
+    <string name="practice_chip_label">séance</string>
 
     <string name="onboarding_mic_title">Laissez-moi entendre le violon</string>
     <string name="onboarding_mic_text">L\'application écoute par le micro et n\'envoie rien sur Internet. Le son est traité sur le téléphone.</string>

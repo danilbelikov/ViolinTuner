@@ -20,6 +20,7 @@ import com.violinjourney.app.core.domain.journey.JourneyProgress
 import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.core.domain.journey.NoteCount
 import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
+import com.violinjourney.app.core.domain.practice.FinishPracticeAsk
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
@@ -77,6 +78,7 @@ class LiveViewModelTest {
     private val startedAt = Instant.parse("2026-09-17T09:00:00Z")
     private val audioFiles = FakeAudioFiles()
     private val practice = FakeRunningPracticeStore()
+    private val finishAsk = FinishPracticeAsk()
     private val practiceNotes = FakePracticeNotesStore()
     private val journey = FakeJourneyRepository()
     private val venueStore = FakeVenueStore()
@@ -126,7 +128,7 @@ class LiveViewModelTest {
             source, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
             practiceNotes = practiceNotes, journeyConfig = JourneyConfig(notesFlushMs = 1_000),
         )
-        return LiveViewModel(takes, SettingsConfigSource(base, settings), practice, clock, Venues(venueStore, journey))
+        return LiveViewModel(takes, SettingsConfigSource(base, settings), practice, clock, Venues(venueStore, journey), finishAsk)
     }
 
     private fun TestScope.advance(millis: Long) {
@@ -705,7 +707,7 @@ class LiveViewModelTest {
     // Practice tracking on Live (spec 3.12, 5.6)
 
     @Test
-    fun `the chip shows the running practice and leads to the practice tab`() = runTest {
+    fun `the tag shows the running practice, and a tap on it leads to finishing it`() = runTest {
         val viewModel = viewModel(FakeScenario.SILENCE)
         val effects = mutableListOf<LiveEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -716,13 +718,38 @@ class LiveViewModelTest {
         advance(100)
         assertEquals(754_000L, viewModel.state.value.practiceMs)
 
-        viewModel.onIntent(LiveIntent.PracticeChipClicked)
+        viewModel.onIntent(LiveIntent.PracticeTagClicked)
         runCurrent()
-        assertEquals(listOf<LiveEffect>(LiveEffect.OpenPractice), effects)
+        assertEquals(listOf<LiveEffect>(LiveEffect.FinishPractice), effects)
+        assertTrue("«Занятия» are asked for the sheet", finishAsk.asked.value)
 
         practice.clear()
         advance(100)
         assertEquals(null, viewModel.state.value.practiceMs)
+    }
+
+    @Test
+    fun `without a practice a tap on the tag starts one here, and Live stays`() = runTest {
+        val viewModel = viewModel(FakeScenario.SILENCE)
+        val effects = mutableListOf<LiveEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        observe(viewModel, 300)
+
+        viewModel.onIntent(LiveIntent.PracticeTagClicked)
+        advance(100)
+        assertEquals(0L, viewModel.state.value.practiceMs)
+        assertTrue("no screen opens", effects.isEmpty())
+        assertFalse(finishAsk.asked.value)
+    }
+
+    @Test
+    fun `the gear opens the settings`() = runTest {
+        val viewModel = viewModel(FakeScenario.SILENCE)
+        val effects = mutableListOf<LiveEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        viewModel.onIntent(LiveIntent.SettingsClicked)
+        runCurrent()
+        assertEquals(listOf<LiveEffect>(LiveEffect.OpenSettings), effects)
     }
 
     @Test

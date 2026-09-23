@@ -3,6 +3,7 @@ package com.violinjourney.app.feature.live
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.domain.IntonationConfig
+import com.violinjourney.app.core.domain.practice.FinishPracticeAsk
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.practice.elapsedTicker
 import com.violinjourney.app.core.domain.venue.Venue
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -33,6 +35,7 @@ class LiveViewModel @Inject constructor(
     private val runningPractice: RunningPracticeStore,
     private val clock: Clock,
     private val venues: Venues,
+    private val finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
 ) : ViewModel() {
 
     init {
@@ -117,7 +120,17 @@ class LiveViewModel @Inject constructor(
             LiveIntent.GrantMicClicked -> effectChannel.trySend(LiveEffect.RequestMicPermission)
             is LiveIntent.MicPermissionChanged ->
                 if (takes.requiresMicPermission) micPermissionGranted.value = intent.granted
-            LiveIntent.PracticeChipClicked -> effectChannel.trySend(LiveEffect.OpenPractice)
+            LiveIntent.PracticeTagClicked -> viewModelScope.launch {
+                // the store, not the state on screen: a tap in the second the practice starts or ends must not do both
+                if (runningPractice.running.first() == null) {
+                    // the same start as on «Занятия» (spec 3.12), but Live stays: here one is already where one plays
+                    runningPractice.start(clock.millis())
+                } else {
+                    finishAsk.ask()
+                    effectChannel.send(LiveEffect.FinishPractice)
+                }
+            }
+            LiveIntent.SettingsClicked -> effectChannel.trySend(LiveEffect.OpenSettings)
         }
     }
 

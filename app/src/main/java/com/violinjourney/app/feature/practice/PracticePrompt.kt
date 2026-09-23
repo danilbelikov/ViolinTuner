@@ -30,4 +30,7 @@ sealed interface PracticePromptIntent {
     data object SummarySaved : PracticePromptIntent
 
     data object SummaryDiscarded : PracticePromptIntent
+
+    /** The sheet swiped away: only hidden, the practice stays — the question comes back the next time the app opens. */
+    data object SummaryHidden : PracticePromptIntent
 }

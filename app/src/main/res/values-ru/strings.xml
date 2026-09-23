@@ -30,7 +30,7 @@
     <string name="record_no_notes">В записи не нашлось нот</string>
     <string name="recording_elapsed_description">Идёт запись, %1$s</string>
     <string name="recording_strip_label">запись ·</string>
-    <string name="practice_chip_label">занятие ·</string>
+    <string name="practice_chip_label">занятие</string>
 
     <string name="onboarding_mic_title">Дайте мне услышать скрипку</string>
     <string name="onboarding_mic_text">Тренажёр слушает через микрофон и ничего не отправляет в интернет. Звук обрабатывается на телефоне.</string>

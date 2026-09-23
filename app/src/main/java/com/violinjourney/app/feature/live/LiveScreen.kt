@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -61,9 +61,10 @@ import com.violinjourney.app.feature.live.components.MicGlyph
 import com.violinjourney.app.feature.live.components.MicPermissionPrompt
 import com.violinjourney.app.feature.live.components.ModeSwitcher
 import com.violinjourney.app.feature.live.components.NoteLabel
-import com.violinjourney.app.feature.live.components.PracticeChipSlot
+import com.violinjourney.app.feature.live.components.PracticeTag
 import com.violinjourney.app.feature.live.components.RecordButton
 import com.violinjourney.app.feature.live.components.RecordingStrip
+import com.violinjourney.app.feature.live.components.SettingsGear
 import com.violinjourney.app.feature.live.components.StatusLineRow
 import com.violinjourney.app.feature.live.components.StatusRow
 import com.violinjourney.app.feature.live.components.StringRow
@@ -71,7 +72,6 @@ import com.violinjourney.app.feature.live.components.ZoneEllipse
 import com.violinjourney.app.feature.live.components.rememberRingGlow
 import com.violinjourney.app.feature.live.components.zoneBackground
 import com.violinjourney.app.feature.live.venue.VenueBackdrop
-import com.violinjourney.app.feature.live.venue.VenueLabel
 import com.violinjourney.app.feature.live.venue.VenueLook
 import com.violinjourney.app.feature.live.venue.rememberVenuePicture
 import kotlinx.coroutines.delay
@@ -233,30 +233,24 @@ private fun PortraitLayout(
     val recording = state.recording
 
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        ModeSwitcher(
-            mode = state.mode,
-            onSelect = { onIntent(LiveIntent.SelectMode(it)) },
-            enabled = recording == null,
-            modifier = Modifier
-                .padding(
-                    start = LiveDimens.ScreenPadding,
-                    end = LiveDimens.ScreenPadding,
-                    top = LiveDimens.SwitcherTopPadding,
-                )
-                .chrome(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha, chrome),
-        )
-        // the practice tag on the left, the place on the right (handoff 29k)
+        // the switcher in the middle, the gear in the right corner of its row (handoff nav_bar 35); the place is not named
+        // on Live any more — its picture says it
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = LiveDimens.ScreenPadding, end = LiveDimens.ScreenPadding, top = LiveDimens.PlaceRowTopPadding)
-                .height(LiveDimens.PlaceRowHeight)
-                .chrome(1f, chrome),
+                .padding(top = LiveDimens.SwitcherTopPadding),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            PracticeChipSlot(practiceMs = state.practiceMs, onClick = { onIntent(LiveIntent.PracticeChipClicked) })
             Spacer(Modifier.weight(1f))
-            if (showVenue) state.venue?.let { VenueLabel(it) }
+            ModeSwitcher(
+                mode = state.mode,
+                onSelect = { onIntent(LiveIntent.SelectMode(it)) },
+                enabled = recording == null,
+                modifier = Modifier.chrome(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha, chrome),
+            )
+            Box(modifier = Modifier.weight(1f), contentAlignment = Alignment.CenterEnd) {
+                Gear(recording, onIntent, chrome, Modifier.padding(end = LiveDimens.GearEnd - (LiveDimens.GearTouch - LiveDimens.GearSize) / 2))
+            }
         }
         AnimatedVisibility(
             visible = state.mode == LiveMode.TUNING,
@@ -330,12 +324,14 @@ private fun PortraitLayout(
                 top = LiveDimens.RecordingStripTopPadding,
             ),
         )
-        // The key stays in the middle; the bookmark of blocks lies to its left, in its row (spec 3.28, handoff 30a2):
-        // the ring gives up no height for it, and all that is touched in silence is down here, under the thumb.
+        // The key stays in the middle; the bookmark of blocks lies to its left, the practice tag to its right (spec 3.28,
+        // 3.12; handoff 30a2, nav_bar 35) — «what I play · record · how long I practise». The ring gives up no height
+        // for them, and all that is touched in silence is down here, under the thumb.
         KeyRow(
             modifier = Modifier.padding(vertical = LiveDimens.RecordPaddingVertical),
             maxBookmark = LiveDimens.BookmarkWidth,
             bookmark = bookmark,
+            tag = { width -> Tag(state, width, onIntent, chrome, reduceMotion) },
         ) {
             RecordButton(
                 recording = recording != null,
@@ -350,10 +346,16 @@ private fun PortraitLayout(
 
 /**
  * The row of the record key: the key in the middle, the bookmark of blocks hugging it from the left, as wide as the
- * half row allows but never wider than [maxBookmark].
+ * half row allows but never wider than [maxBookmark]; the practice tag hugging it from the right, its mirror.
  */
 @Composable
-private fun KeyRow(modifier: Modifier, maxBookmark: Dp, bookmark: @Composable (Dp) -> Unit, key: @Composable () -> Unit) {
+private fun KeyRow(
+    modifier: Modifier,
+    maxBookmark: Dp,
+    bookmark: @Composable (Dp) -> Unit,
+    tag: @Composable (Dp) -> Unit,
+    key: @Composable () -> Unit,
+) {
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
         BoxWithConstraints(
             modifier = Modifier
@@ -364,8 +366,37 @@ private fun KeyRow(modifier: Modifier, maxBookmark: Dp, bookmark: @Composable (D
             bookmark(minOf(maxBookmark, maxWidth - LiveDimens.BookmarkMargin))
         }
         key()
-        Spacer(Modifier.weight(1f))
+        BoxWithConstraints(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = LiveDimens.BookmarkToKey),
+            contentAlignment = Alignment.CenterStart,
+        ) {
+            tag(maxWidth - LiveDimens.BookmarkMargin)
+        }
     }
+}
+
+/** The practice tag (spec 3.12): it fades with the light like the bookmark — the time is for a look in silence. */
+@Composable
+private fun Tag(state: LiveState, width: Dp, onIntent: (LiveIntent) -> Unit, chrome: () -> Float, reduceMotion: Boolean) {
+    PracticeTag(
+        practiceMs = state.practiceMs,
+        maxWidth = width,
+        onClick = { onIntent(LiveIntent.PracticeTagClicked) },
+        modifier = Modifier.chrome(1f, chrome),
+        reduceMotion = reduceMotion,
+    )
+}
+
+/** The gear to «Настройки» (spec 3.8): it fades with the light, and with the switcher while a take is recorded. */
+@Composable
+private fun Gear(recording: RecordingState?, onIntent: (LiveIntent) -> Unit, chrome: () -> Float, modifier: Modifier = Modifier) {
+    SettingsGear(
+        onClick = { onIntent(LiveIntent.SettingsClicked) },
+        enabled = recording == null,
+        modifier = modifier.chrome(if (recording != null) LiveDimens.DISABLED_ALPHA else 1f, chrome),
+    )
 }
 
 /** Handoff `v1-land`: ring panel on the left; switcher, status, scale and record on the right. */
@@ -409,9 +440,7 @@ private fun LandscapeLayout(
             verticalArrangement = Arrangement.spacedBy(LiveDimens.LandscapeSpacing),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // The only sign of a running practice here: there is no tab bar in landscape.
-            PracticeChipSlot(practiceMs = state.practiceMs, onClick = { onIntent(LiveIntent.PracticeChipClicked) }, modifier = Modifier.chrome(1f, chrome))
-            // the switcher, and the place to its right (handoff 29g)
+            // the switcher, and the gear to its right (handoff 29g, nav_bar 35)
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 ModeSwitcher(
                     mode = state.mode,
@@ -420,7 +449,8 @@ private fun LandscapeLayout(
                     modifier = Modifier.chrome(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha, chrome),
                 )
                 Spacer(Modifier.weight(1f))
-                if (showVenue) state.venue?.let { VenueLabel(it, modifier = Modifier.chrome(1f, chrome)) }
+                // the edge of the disc on the edge of the column, like the edge of the plank under it
+                Gear(recording, onIntent, chrome, Modifier.offset(x = (LiveDimens.GearTouch - LiveDimens.GearSize) / 2))
             }
             if (state.mode == LiveMode.TUNING) {
                 StringRow(
@@ -454,10 +484,12 @@ private fun LandscapeLayout(
             }
             ScaleSlot(state = state, zoneColor = zoneColor)
             RecordingStripSlot(recording = recording)
+            // the tag beside the key, as upright: the row is wide enough for both (the handoff would put it under the bookmark)
             KeyRow(
                 modifier = Modifier.padding(top = LiveDimens.LandscapeRecordTopPadding),
                 maxBookmark = LiveDimens.BookmarkWidthLandscape,
                 bookmark = bookmark,
+                tag = { width -> Tag(state, width, onIntent, chrome, reduceMotion) },
             ) {
                 RecordButton(
                     recording = recording != null,

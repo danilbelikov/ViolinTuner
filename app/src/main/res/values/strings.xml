@@ -30,7 +30,7 @@
     <string name="record_no_notes">No notes found in the recording</string>
     <string name="recording_elapsed_description">Recording, %1$s</string>
     <string name="recording_strip_label">rec ·</string>
-    <string name="practice_chip_label">practice ·</string>
+    <string name="practice_chip_label">practice</string>
 
     <string name="onboarding_mic_title">Let me hear your violin</string>
     <string name="onboarding_mic_text">The app listens through the microphone and sends nothing to the internet. Sound is processed on the phone.</string>

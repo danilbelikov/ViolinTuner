@@ -30,7 +30,7 @@
     <string name="record_no_notes">录音中没有找到音符</string>
     <string name="recording_elapsed_description">正在录音，%1$s</string>
     <string name="recording_strip_label">录音 ·</string>
-    <string name="practice_chip_label">练习 ·</string>
+    <string name="practice_chip_label">练习</string>
 
     <string name="onboarding_mic_title">让我听听你的小提琴</string>
     <string name="onboarding_mic_text">应用通过麦克风聆听，不会向网络发送任何内容。声音只在手机上处理。</string>

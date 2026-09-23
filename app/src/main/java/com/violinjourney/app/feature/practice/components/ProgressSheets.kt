@@ -155,13 +155,17 @@ internal fun ProfileSheetContent(
             ),
         )
         PrimaryButton(text = stringResource(R.string.profile_done), onClick = { onIntent(PracticeIntent.ProfileClosed) })
+        // the second way into «Настройки» besides the gear of Live (handoff nav_bar 32): who looks for them from the profile finds them
+        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+            SheetTextButton(stringResource(R.string.nav_settings), AppIcons.Gear, enabled = true) { onIntent(PracticeIntent.ProfileSettingsClicked) }
+        }
     }
 }
 
 @Composable
-private fun SheetTextButton(text: String, icon: ImageVector, enabled: Boolean, destructive: Boolean = false, onClick: () -> Unit) {
+private fun SheetTextButton(text: String, icon: ImageVector, enabled: Boolean, destructive: Boolean = false, modifier: Modifier = Modifier, onClick: () -> Unit) {
     val colors = if (destructive) ButtonDefaults.textButtonColors(contentColor = ViolinTheme.destructive) else ButtonDefaults.textButtonColors()
-    TextButton(onClick = onClick, enabled = enabled, colors = colors, modifier = Modifier.height(TextButtonHeight)) {
+    TextButton(onClick = onClick, enabled = enabled, colors = colors, modifier = modifier.height(TextButtonHeight)) {
         IconLabel(icon, text, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
     }
 }

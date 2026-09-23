@@ -6,18 +6,17 @@ import org.junit.Test
 class TopLevelDestinationTest {
 
     @Test
-    fun `the app opens on Practice - the second tab`() {
+    fun `the app opens on Practice - the first tab`() {
         assertEquals(TopLevelDestination.PRACTICE, TopLevelDestination.START)
     }
 
     @Test
-    fun `bottom bar order is Live, Practice, History, Settings`() {
+    fun `bottom bar order is Practice, Live, History - Settings are not a tab`() {
         assertEquals(
             listOf(
-                TopLevelDestination.LIVE,
                 TopLevelDestination.PRACTICE,
+                TopLevelDestination.LIVE,
                 TopLevelDestination.HISTORY,
-                TopLevelDestination.SETTINGS,
             ),
             TopLevelDestination.entries.toList(),
         )

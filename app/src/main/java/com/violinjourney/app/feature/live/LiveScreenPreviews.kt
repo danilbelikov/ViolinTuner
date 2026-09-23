@@ -204,36 +204,44 @@ private fun RecordingLandscapePreview() = LivePreview(
     recording = SampleRecording,
 )
 
-// A practice is running, handoff frames 10h1–10h3 and 10h-land.
+// The practice tag by the record key, handoff nav_bar 35a (none yet: «Начать занятие») and 35b (running).
 
 private const val PRACTICE_MS = 754_000L
 
-@Preview(name = "Practice chip · play", widthDp = 412, heightDp = 788)
+@Preview(name = "Practice tag · none, silence", widthDp = 412, heightDp = 788)
 @Composable
-private fun PracticeChipPreview() = LivePreview(
+private fun PracticeTagIdlePreview() = LivePreview(LiveSignal.Silence)
+
+@Preview(name = "Practice tag · running, silence", widthDp = 412, heightDp = 788)
+@Composable
+private fun PracticeTagSilencePreview() = LivePreview(LiveSignal.Silence, practiceMs = PRACTICE_MS)
+
+@Preview(name = "Practice tag · play", widthDp = 412, heightDp = 788)
+@Composable
+private fun PracticeTagPreview() = LivePreview(
     LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
     practiceMs = PRACTICE_MS,
 )
 
-@Preview(name = "Practice chip · recording", widthDp = 412, heightDp = 788)
+@Preview(name = "Practice tag · recording", widthDp = 412, heightDp = 788)
 @Composable
-private fun PracticeChipRecordingPreview() = LivePreview(
+private fun PracticeTagRecordingPreview() = LivePreview(
     LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
     recording = RecordingState(elapsedMs = 84_000, bars = listOf(RecordingBar(0.5f, Zone.IN_TUNE), RecordingBar(0.2f, Zone.NEAR))),
     practiceMs = PRACTICE_MS,
 )
 
-@Preview(name = "Practice chip · tuning", widthDp = 412, heightDp = 788)
+@Preview(name = "Practice tag · tuning", widthDp = 412, heightDp = 788)
 @Composable
-private fun PracticeChipTuningPreview() = LivePreview(
+private fun PracticeTagTuningPreview() = LivePreview(
     LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
     mode = LiveMode.TUNING,
     practiceMs = PRACTICE_MS,
 )
 
-@Preview(name = "Practice chip · landscape", widthDp = 892, heightDp = 412)
+@Preview(name = "Practice tag · landscape", widthDp = 892, heightDp = 412)
 @Composable
-private fun PracticeChipLandscapePreview() = LivePreview(
+private fun PracticeTagLandscapePreview() = LivePreview(
     LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
     practiceMs = PRACTICE_MS,
 )

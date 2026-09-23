@@ -19,20 +19,21 @@ internal object LiveDimens {
     val SwitcherTuningIconWidth = 4.dp
     val SwitcherIconGap = 8.dp
 
-    /** The row under the switcher: the practice tag on the left, the label of the place on the right (handoff venue 29k). */
-    val PlaceRowTopPadding = 10.dp
-    val PlaceRowHeight = 28.dp
-    val PlaceLabelCorner = 14.dp
-    val PlaceLabelPadding = 11.dp
-    val PlaceLabelIcon = 14.dp
-    val PlaceLabelGap = 7.dp
-    /** «занятие · 12:34» under the mode switcher (handoff 10h). */
-    val PracticeChipHeight = 28.dp
-    /** A paper tag (handoff venue 29j). */
-    val PracticeChipCorner = 5.dp
-    val PracticeChipPaddingHorizontal = 12.dp
-    val PracticeChipDotSize = 7.dp
-    val PracticeChipGap = 6.dp
+    /** The gear in the row of the switcher, at its right edge (handoff nav_bar 35): a disc of smoked glass. */
+    val GearSize = 36.dp
+    val GearTouch = 48.dp
+    val GearIcon = 20.dp
+    val GearEnd = 16.dp
+    val GearBorder = 1.dp
+
+    /** The practice tag to the right of the record key (handoff nav_bar 35): the bookmark's size, turned round. */
+    val PracticeTagMinWidth = 124.dp
+    val PracticeTagTextStart = 25.dp
+    val PracticeTagTextEnd = 10.dp
+    val PracticeTagIcon = 18.dp
+    val PracticeTagIconGap = 8.dp
+    val PracticeTagDot = 7.dp
+    val PracticeTagDotGap = 6.dp
 
     val StringRowTopPadding = 12.dp
     val StringButtonWidth = 76.dp
@@ -126,7 +127,7 @@ internal object LiveDimens {
     val BookmarkTextGap = 3.dp
     val BookmarkTick = 15.dp
     val BookmarkTickGap = 5.dp
-    /** Air between the bookmark and the record key; [BookmarkMargin] at the far side of its column. */
+    /** Air between the bookmark (and the practice tag) and the record key; [BookmarkMargin] at the far side of its column. */
     val BookmarkToKey = 16.dp
     val BookmarkMargin = 4.dp
 
@@ -142,8 +143,7 @@ internal object LiveDimens {
     val LandscapePaddingStart = 8.dp
     val LandscapePaddingEnd = 24.dp
     val LandscapePaddingVertical = 16.dp
-    // 8, not the handoff's 12: with the practice chip in the column a tuning-mode landscape
-    // ran out of height for the status word.
+    // 8, not the handoff's 12: a tuning-mode landscape runs out of height for the status word.
     val LandscapeSpacing = 8.dp
     /** Below this height the landscape status word and cents go compact. */
     val LandscapeStatusCompactHeight = 48.dp

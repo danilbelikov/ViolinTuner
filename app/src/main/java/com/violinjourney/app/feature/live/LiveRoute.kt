@@ -36,8 +36,9 @@ import com.violinjourney.app.feature.live.block.BlockViewModel
 @Composable
 fun LiveRoute(
     onOpenSession: (sessionId: Long) -> Unit,
-    onOpenPractice: () -> Unit,
+    onFinishPractice: () -> Unit,
     onOpenRepertoire: () -> Unit,
+    onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LiveViewModel = hiltViewModel(),
     blockViewModel: BlockViewModel = hiltViewModel(),
@@ -49,7 +50,8 @@ fun LiveRoute(
     val activity = LocalActivity.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnOpenSession by rememberUpdatedState(onOpenSession)
-    val currentOnOpenPractice by rememberUpdatedState(onOpenPractice)
+    val currentOnFinishPractice by rememberUpdatedState(onFinishPractice)
+    val currentOnOpenSettings by rememberUpdatedState(onOpenSettings)
 
     val requestMicPermission = rememberMicPermissionRequester(openSettingsWhenBlocked = true) { granted ->
         viewModel.onIntent(LiveIntent.MicPermissionChanged(granted))
@@ -78,7 +80,8 @@ fun LiveRoute(
                     LiveEffect.ShowNoNotesRecorded ->
                         Toast.makeText(context, R.string.record_no_notes, Toast.LENGTH_SHORT).show()
                     LiveEffect.RequestMicPermission -> requestMicPermission()
-                    LiveEffect.OpenPractice -> currentOnOpenPractice()
+                    LiveEffect.FinishPractice -> currentOnFinishPractice()
+                    LiveEffect.OpenSettings -> currentOnOpenSettings()
                 }
             }
         }

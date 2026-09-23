@@ -71,6 +71,7 @@ private const val HOME_ARRANGE_ROUTE = "homeArrange"
 private const val HOME_HOUSES_ROUTE = "homeHouses"
 private const val SPLASH_AWAY_ROUTE = "splashAway"
 private const val SPLASH_HOME_ROUTE = "splashHome"
+private const val SETTINGS_ROUTE = "settings"
 private const val BACKUP_ROUTE = "backup"
 private const val RESTORE_ROUTE = "restore"
 private const val RESTORE_PATTERN = "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}={${RestoreViewModel.ARG_URI}}"
@@ -92,8 +93,9 @@ fun AppNavHost(
         composable(TopLevelDestination.LIVE.route) {
             LiveRoute(
                 onOpenSession = navController::navigateToSession,
-                onOpenPractice = { navController.navigateToTopLevel(TopLevelDestination.PRACTICE) },
+                onFinishPractice = navController::navigateToFinishPractice,
                 onOpenRepertoire = navController::navigateToRepertoire,
+                onOpenSettings = navController::navigateToSettings,
             )
         }
         composable(TopLevelDestination.PRACTICE.route) {
@@ -102,6 +104,7 @@ fun AppNavHost(
                 onOpenSession = navController::navigateToSession,
                 onOpenJourney = { navController.navigate(JOURNEY_ROUTE) { launchSingleTop = true } },
                 onOpenHome = { navController.navigate(HOME_ROUTE) { launchSingleTop = true } },
+                onOpenSettings = navController::navigateToSettings,
             )
         }
         composable(TopLevelDestination.HISTORY.route) {
@@ -232,12 +235,14 @@ fun AppNavHost(
                 onCloseDeleted = { navController.popUpToSection() },
             )
         }
-        composable(TopLevelDestination.SETTINGS.route) {
+        // «Настройки» (spec 3.8, 4): not a tab any more — the gear of Live opens them above the tabs, without the bottom bar.
+        composable(SETTINGS_ROUTE) {
             SettingsRoute(
                 onOpenOnboarding = navController::navigateToOnboarding,
                 onOpenSound = { navController.navigateToSound(sessionId = null) },
                 onOpenBackup = navController::navigateToBackup,
                 onOpenRestore = navController::navigateToRestore,
+                onClose = navController::popBackStack,
             )
         }
         // The journey (spec 3.23): above the tabs, without the bottom bar. The map and the passport are views of the same state.
@@ -354,6 +359,18 @@ fun NavHostController.navigateToRunningBackup(restoring: Boolean) {
 fun NavHostController.navigateToRepertoire() {
     navigateToTopLevel(TopLevelDestination.HISTORY)
     getBackStackEntry(TopLevelDestination.HISTORY.route).savedStateHandle[HistoryViewModel.OPEN_SECTION] = HistorySection.REPERTOIRE.name
+}
+
+/**
+ * The tag of a running practice on Live (spec 3.12, handoff nav_bar 35): «Закончить занятие» is the sheet of «Занятия»,
+ * with the recap after it — the tab is opened, the sheet was asked for already (`FinishPracticeAsk`).
+ */
+fun NavHostController.navigateToFinishPractice() {
+    navigateToTopLevel(TopLevelDestination.PRACTICE)
+}
+
+fun NavHostController.navigateToSettings() {
+    navigate(SETTINGS_ROUTE) { launchSingleTop = true }
 }
 
 fun NavHostController.navigateToSession(sessionId: Long) {

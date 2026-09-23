@@ -30,7 +30,7 @@
     <string name="record_no_notes">録音に音が見つかりませんでした</string>
     <string name="recording_elapsed_description">録音中、%1$s</string>
     <string name="recording_strip_label">録音 ·</string>
-    <string name="practice_chip_label">練習 ·</string>
+    <string name="practice_chip_label">練習</string>
 
     <string name="onboarding_mic_title">ヴァイオリンの音を聴かせてください</string>
     <string name="onboarding_mic_text">マイクで音を聴き取りますが、インターネットには何も送信しません。音はこの端末内で処理されます。</string>

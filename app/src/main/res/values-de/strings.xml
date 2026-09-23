@@ -30,7 +30,7 @@
     <string name="record_no_notes">In der Aufnahme waren keine Töne</string>
     <string name="recording_elapsed_description">Aufnahme läuft, %1$s</string>
     <string name="recording_strip_label">Aufnahme ·</string>
-    <string name="practice_chip_label">Üben ·</string>
+    <string name="practice_chip_label">Üben</string>
 
     <string name="onboarding_mic_title">Lassen Sie mich die Geige hören</string>
     <string name="onboarding_mic_text">Die App hört über das Mikrofon zu und sendet nichts ins Internet. Der Klang wird auf dem Telefon verarbeitet.</string>
