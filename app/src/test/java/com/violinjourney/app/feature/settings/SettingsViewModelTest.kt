@@ -38,6 +38,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
@@ -56,13 +57,29 @@ class SettingsViewModelTest {
         val viewModel = SettingsViewModel(repository, FakeSoundRepository(), SoundConfig())
         backgroundScope.launch { viewModel.state.collect {} }
         runCurrent()
-        assertEquals(SettingsState(442, UserSettings.A4_OPTIONS_HZ, TolerancePreset.BEGINNER, SoundCaption.BuiltIn(BuiltInPreset.OFF)), viewModel.state.value)
+        assertEquals(
+            SettingsState(442, UserSettings.A4_OPTIONS_HZ, TolerancePreset.BEGINNER, SoundCaption.BuiltIn(BuiltInPreset.OFF), analyticsEnabled = true),
+            viewModel.state.value,
+        )
 
         viewModel.onIntent(SettingsIntent.A4Selected(440))
         viewModel.onIntent(SettingsIntent.ToleranceSelected(TolerancePreset.PRO))
         runCurrent()
         assertEquals(UserSettings(440, TolerancePreset.PRO, onboardingDone = true), repository.settings.value)
         assertEquals(440, viewModel.state.value.a4Hz)
+    }
+
+    @Test
+    fun `the statistics switch is stored at once`() = runTest {
+        val viewModel = SettingsViewModel(repository, FakeSoundRepository(), SoundConfig())
+        backgroundScope.launch { viewModel.state.collect {} }
+        runCurrent()
+        assertTrue(viewModel.state.value.analyticsEnabled)
+
+        viewModel.onIntent(SettingsIntent.AnalyticsToggled(false))
+        runCurrent()
+        assertFalse(repository.settings.value.analyticsEnabled)
+        assertFalse(viewModel.state.value.analyticsEnabled)
     }
 
     @Test

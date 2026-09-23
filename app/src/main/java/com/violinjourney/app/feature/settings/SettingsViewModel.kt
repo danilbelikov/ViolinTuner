@@ -49,6 +49,7 @@ class SettingsViewModel @Inject constructor(
                     effectChannel.send(SettingsEffect.OpenOnboarding)
                 }
                 SettingsIntent.SoundClicked -> effectChannel.send(SettingsEffect.OpenSound)
+                is SettingsIntent.AnalyticsToggled -> repository.setAnalyticsEnabled(intent.enabled)
             }
         }
     }
@@ -58,6 +59,7 @@ class SettingsViewModel @Inject constructor(
         a4OptionsHz = UserSettings.A4_OPTIONS_HZ,
         tolerance = settings.tolerance,
         sound = sound,
+        analyticsEnabled = settings.analyticsEnabled,
     )
 
     private companion object {

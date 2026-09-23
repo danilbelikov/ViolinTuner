@@ -205,7 +205,7 @@ private fun Section(icon: ImageVector, title: String, text: String, content: @Co
 private fun SettingsScreenPreview() {
     ViolinTheme {
         SettingsScreen(
-            state = SettingsState(442, UserSettings.A4_OPTIONS_HZ, TolerancePreset.BEGINNER, SoundCaption.BuiltIn(BuiltInPreset.CHAMBER_HALL)),
+            state = SettingsState(442, UserSettings.A4_OPTIONS_HZ, TolerancePreset.BEGINNER, SoundCaption.BuiltIn(BuiltInPreset.CHAMBER_HALL), analyticsEnabled = true),
             onIntent = {},
             onBack = {},
         )

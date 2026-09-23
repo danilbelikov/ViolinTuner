@@ -159,6 +159,8 @@
     <string name="backup_row_running">en curso · %1$d %%</string>
     <string name="backup_row_restore">Restaurar desde una copia</string>
     <string name="backup_row_total">Ahora en la aplicación: %1$s</string>
+    <string name="analytics_row">Ayudar a mejorar la aplicación</string>
+    <string name="analytics_row_caption">Estadísticas anónimas: qué pantallas se abren y dónde se producen los fallos</string>
     <string name="backup_onboarding_link">Tengo una copia de datos</string>
     <string name="backup_title">Copia de datos</string>
     <string name="backup_text">Un solo archivo con todo lo que hay en la aplicación. Mejor guardarlo fuera de este teléfono: en un ordenador, una memoria USB o una carpeta en la nube.</string>

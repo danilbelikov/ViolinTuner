@@ -159,6 +159,8 @@
     <string name="backup_row_running">идёт · %1$d\u00A0%%</string>
     <string name="backup_row_restore">Восстановить из копии</string>
     <string name="backup_row_total">В приложении сейчас: %1$s</string>
+    <string name="analytics_row">Помогать улучшать приложение</string>
+    <string name="analytics_row_caption">Обезличенная статистика: какие экраны открываются и где случаются сбои</string>
     <string name="backup_onboarding_link">У меня есть копия данных</string>
     <string name="backup_title">Копия данных</string>
     <string name="backup_text">Один файл со всем, что есть в приложении. Лучше положить его не на этот телефон — на компьютер, флешку или в облачную папку.</string>

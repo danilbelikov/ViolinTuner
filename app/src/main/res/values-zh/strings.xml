@@ -159,6 +159,8 @@
     <string name="backup_row_running">进行中 · %1$d\u00A0%%</string>
     <string name="backup_row_restore">从副本恢复</string>
     <string name="backup_row_total">应用内现有：%1$s</string>
+    <string name="analytics_row">帮助改进应用</string>
+    <string name="analytics_row_caption">匿名统计：打开了哪些屏幕、在哪里出现故障</string>
     <string name="backup_onboarding_link">我有数据副本</string>
     <string name="backup_title">数据备份</string>
     <string name="backup_text">一个文件，装下应用里的一切。最好不要放在这部手机上——放到电脑、U 盘或云端文件夹。</string>

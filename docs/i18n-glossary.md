@@ -26,6 +26,8 @@ A practice companion for violinists. **Live** shows the note being played and wh
 | Занятия / занятие | the tab and one practice session (timed by the user) | Practice / practice | Üben / Übezeit | Pratique / séance | Práctica / práctica | Studio / sessione | Prática / prática | 연습 | 练习 | 練習 |
 | Записи / запись | the tab; a recording with intonation analysis | Recordings / recording | Aufnahmen / Aufnahme | Enregistrements / enregistrement | Grabaciones / grabación | Registrazioni / registrazione | Gravações / gravação | 녹음 | 录音 | 録音 |
 | Настройки | settings tab | Settings | Einstellungen | Réglages | Ajustes | Impostazioni | Ajustes | 설정 | 设置 | 設定 |
+| обезличенная статистика | what the app sends about itself, tied to no person (spec 3.34) | anonymous statistics | anonyme Statistik | statistiques anonymes | estadísticas anónimas | statistiche anonime | estatísticas anônimas | 익명 통계 | 匿名统计 | 匿名の統計 |
+| сбой | a crash or a failure of the app, not a mistake of the player | failure | Fehler | erreur | fallo | errore | falha | 오류 | 故障 | 不具合 |
 | Игра / Настройка (режимы Live) | Live modes: playing / tuning the open strings | Play / Tune | Spielen / Stimmen | Jeu / Accord | Tocar / Afinar | Suona / Accorda | Tocar / Afinar | 연주 / 조율 | 演奏 / 调音 | 演奏 / 調弦 |
 | в строе · выше · ниже | in tune · sharp · flat | in tune · sharp · flat | sauber · zu hoch · zu tief | juste · trop haut · trop bas | afinado · alto · bajo | intonato · crescente · calante | afinado · alto · baixo | 정확 · 높음 · 낮음 | 准 · 偏高 · 偏低 | 合っています · 高い · 低い |
 | допуск | tolerance: width of the green zone in cents | tolerance | Toleranz | tolérance | tolerancia | tolleranza | tolerância | 허용 범위 | 容差 | 許容範囲 |

@@ -9,6 +9,8 @@ data class SettingsState(
     val tolerance: TolerancePreset,
     /** What the default sound of all recordings is set to: the second line of the row «Звук записей». */
     val sound: SoundCaption,
+    /** The switch of «Помогать улучшать приложение» in the block «Данные» (spec 3.34). */
+    val analyticsEnabled: Boolean,
 )
 
 sealed interface SettingsIntent {
@@ -19,6 +21,8 @@ sealed interface SettingsIntent {
     data object RestartOnboardingClicked : SettingsIntent
 
     data object SoundClicked : SettingsIntent
+
+    data class AnalyticsToggled(val enabled: Boolean) : SettingsIntent
 }
 
 sealed interface SettingsEffect {

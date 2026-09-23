@@ -159,6 +159,8 @@
     <string name="backup_row_running">保存中 · %1$d %%</string>
     <string name="backup_row_restore">コピーから復元</string>
     <string name="backup_row_total">アプリ内のデータ：%1$s</string>
+    <string name="analytics_row">アプリの改善に協力する</string>
+    <string name="analytics_row_caption">匿名の統計: どの画面が開かれ、どこで不具合が起きたか</string>
     <string name="backup_onboarding_link">データのコピーがあります</string>
     <string name="backup_title">データのバックアップ</string>
     <string name="backup_text">アプリ内のすべてを1つのファイルにまとめます。このスマートフォン以外の場所 — パソコン、USBメモリ、クラウドのフォルダ — に置くのがおすすめです。</string>

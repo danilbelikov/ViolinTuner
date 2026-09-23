@@ -55,7 +55,14 @@ fun SettingsRoute(
         onIntent = viewModel::onIntent,
         modifier = modifier,
         onBack = onClose,
-        dataBlock = { DataBlock(onOpenBackup = onOpenBackup, onOpenRestore = onOpenRestore) },
+        dataBlock = {
+            DataBlock(
+                onOpenBackup = onOpenBackup,
+                onOpenRestore = onOpenRestore,
+                analyticsEnabled = state.analyticsEnabled,
+                onAnalyticsChange = { viewModel.onIntent(SettingsIntent.AnalyticsToggled(it)) },
+            )
+        },
         onLanguageClick = openLanguage,
     )
 }

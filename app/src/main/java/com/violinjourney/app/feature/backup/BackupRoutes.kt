@@ -10,6 +10,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,6 +22,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -148,7 +150,15 @@ private fun Context.shareBackup(file: File) {
  * copy says so in words, in the same colour — no badge, no dot on the tab: the app asks for nothing.
  */
 @Composable
-fun DataBlock(onOpenBackup: () -> Unit, onOpenRestore: (uri: String) -> Unit, modifier: Modifier = Modifier, viewModel: DataBlockViewModel = hiltViewModel()) {
+fun DataBlock(
+    onOpenBackup: () -> Unit,
+    onOpenRestore: (uri: String) -> Unit,
+    modifier: Modifier = Modifier,
+    /** «Помогать улучшать приложение» (spec 3.34): the state belongs to the settings, the line belongs here. */
+    analyticsEnabled: Boolean = true,
+    onAnalyticsChange: (Boolean) -> Unit = {},
+    viewModel: DataBlockViewModel = hiltViewModel(),
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val colors = MaterialTheme.colorScheme
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.refresh() }
@@ -183,6 +193,30 @@ fun DataBlock(onOpenBackup: () -> Unit, onOpenRestore: (uri: String) -> Unit, mo
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
             )
         }
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.surfaceContainerHigh)
+        AnalyticsRow(enabled = analyticsEnabled, onChange = onAnalyticsChange)
+    }
+}
+
+/**
+ * The last line of the block (spec 3.34): what leaves the phone stands next to what stays on it,
+ * and one line does not deserve a section of its own. The icon is a stand-in until the set gets
+ * the chart of the handoff.
+ */
+@Composable
+private fun AnalyticsRow(enabled: Boolean, onChange: (Boolean) -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    Row(
+        modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).toggleable(value = enabled, role = Role.Switch, onValueChange = onChange).heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        AppIcon(AppIcons.Device, contentDescription = null, tint = colors.onSurfaceVariant)
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            Text(stringResource(R.string.analytics_row), color = colors.onSurface, style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.analytics_row_caption), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        }
+        Switch(checked = enabled, onCheckedChange = null)
     }
 }
 
