@@ -71,6 +71,9 @@ private val StripCursor = 2.dp
 private const val SWAP_MS = 200
 private const val TABULAR_FIGURES = "tnum"
 
+/** Which of the app's own camera's items «Видео-дубль» offers (spec 3.32). */
+enum class OwnCamera { UNDER_BACKING, PLAIN }
+
 /**
  * The quiet second way to a take (spec 3.19, handoff 20a1): a small outlined button under the
  * words of the loud round one, with a menu of two. The second lines of the menu warn of the two
@@ -83,8 +86,11 @@ fun VideoTakeButton(
     onShoot: () -> Unit,
     onPick: () -> Unit,
     modifier: Modifier = Modifier,
-    /** Null — the piece has no backing, the item is not there; otherwise the app's own camera under it (spec 3.32). */
-    onShootUnderBacking: (() -> Unit)? = null,
+    /**
+     * Null — the system camera (spec 3.19); otherwise the app's own, the only one for a piece with a backing (spec 3.32):
+     * under it while the chip is on, a plain video while it is off.
+     */
+    ownCamera: OwnCamera? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     var menuOpen by remember { mutableStateOf(false) }
@@ -111,8 +117,11 @@ fun VideoTakeButton(
             AppIcon(AppIcons.ChevronDown, contentDescription = null, tint = colors.onSurfaceVariant, size = 16.dp)
         }
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, modifier = Modifier.width(MenuWidth), containerColor = colors.surfaceContainerHigh) {
-            MenuItem(AppIcons.Video, R.string.video_shoot, R.string.video_shoot_hint) { menuOpen = false; onShoot() }
-            onShootUnderBacking?.let { shoot -> MenuItem(AppIcons.Backing, R.string.video_shoot_backing, R.string.video_shoot_backing_hint) { menuOpen = false; shoot() } }
+            when (ownCamera) {
+                null -> MenuItem(AppIcons.Video, R.string.video_shoot, R.string.video_shoot_hint) { menuOpen = false; onShoot() }
+                OwnCamera.UNDER_BACKING -> MenuItem(AppIcons.Backing, R.string.video_shoot_backing, R.string.video_shoot_backing_hint) { menuOpen = false; onShoot() }
+                OwnCamera.PLAIN -> MenuItem(AppIcons.Video, R.string.video_shoot, R.string.video_shoot_own_hint) { menuOpen = false; onShoot() }
+            }
             MenuItem(AppIcons.VideoGallery, R.string.video_pick, R.string.video_pick_hint) { menuOpen = false; onPick() }
         }
     }

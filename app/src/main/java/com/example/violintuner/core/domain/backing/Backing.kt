@@ -35,10 +35,7 @@ enum class BackingOutput {
 }
 
 /** The headphones the sound goes to now: their kind and the name they give themselves (the key of their latency). */
-data class AudioRoute(val output: BackingOutput, val deviceName: String?) {
-    /** Under what their latency is kept: their name, or their kind when they give none; null — the speaker has none. */
-    val latencyKey: String? get() = if (output.isHeadphones) deviceName ?: output.name else null
-}
+data class AudioRoute(val output: BackingOutput, val deviceName: String?)
 
 /**
  * The backing of a take: which file sounded, how far it is shifted against the violin and how loud it is
@@ -98,13 +95,10 @@ data class BackingConfig(
     val minOffsetMs: Int = -2_000,
     val maxOffsetMs: Int = 2_000,
     val offsetStepMs: Int = 5,
-    /** The headphones' latency, set by ear on the piece screen (spec 3.32): from none to two seconds. */
-    val maxLatencyMs: Int = 2_000,
     /** Wireless headphones never set: a guess in the middle of what they usually lag (150–300 ms). */
     val defaultWirelessLatencyMs: Int = 200,
     /** A shift changed while playing glides in over this much, without a click. */
     val shiftFadeMs: Int = 30,
-    val maxRememberedHeadphones: Int = 20,
 )
 
 /** The copies of backing files: `files/backings/<uuid>.<extension>`. Named, not located. */

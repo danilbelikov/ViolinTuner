@@ -1006,7 +1006,6 @@
     <string name="backing_offset">Décalage</string>
     <string name="backing_offset_hint">en retard — à gauche</string>
     <string name="backing_offset_recorded">Comme enregistré · %1$s</string>
-    <string name="backing_remember">Retenir pour %1$s</string>
 
     <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
     <string name="backing_add">Ajouter un accompagnement</string>
@@ -1050,10 +1049,7 @@
     <string name="capture_saving">Assemblage de la vidéo…</string>
     <string name="capture_video_failed">Impossible d\'assembler la vidéo — la prise est gardée en son.</string>
 
-    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
-    <string name="backing_latency">Retard du casque</string>
-    <string name="backing_latency_hint">Si l\'accompagnement traîne derrière le violon dans les prises, à gauche ; s\'il se presse, à droite.</string>
-
-    <!-- «Запомнить для …» pressed: the row confirms it (spec 3.32). -->
-    <string name="backing_remembered">Enregistré pour %1$s</string>
+    <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
+    <string name="video_shoot_own_hint">avec la caméra de l\'app — analyse immédiate</string>
+    <string name="camera_no_permission">Sans accès à la caméra, impossible de filmer — on peut l\'accorder dans les réglages de l\'app.</string>
 </resources>

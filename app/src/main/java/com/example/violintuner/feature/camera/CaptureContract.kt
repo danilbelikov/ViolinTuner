@@ -14,7 +14,9 @@ data class CaptureState(
     val backingTitle: String? = null,
     val backingPlayedMs: Long? = null,
     val backingDurationMs: Long = 0,
-    /** No headphones: the backing would reach the microphone, the button sleeps (spec 3.32). */
+    /** The piece's backing is on (the chip): the take is made under it, in headphones. Off — a plain video. */
+    val underBacking: Boolean = false,
+    /** No headphones: under the backing it would reach the microphone, the button sleeps (spec 3.32). */
     val noHeadphones: Boolean = false,
     /** Free space for fewer than ten minutes of picture: «Мало места: хватит примерно на N мин». */
     val spaceMinutes: Int? = null,
@@ -22,7 +24,7 @@ data class CaptureState(
     val saving: Boolean = false,
     val micUnavailable: Boolean = false,
 ) {
-    val canRecord: Boolean get() = cameraPermission == true && micPermission == true && !cameraFailed && !noHeadphones && !saving
+    val canRecord: Boolean get() = cameraPermission == true && micPermission == true && !cameraFailed && !(underBacking && noHeadphones) && !saving
 }
 
 sealed interface CaptureIntent {

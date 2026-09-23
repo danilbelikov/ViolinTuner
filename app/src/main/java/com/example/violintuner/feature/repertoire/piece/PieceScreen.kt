@@ -278,9 +278,10 @@ private fun VideoEntry(take: TakeState, videoImport: VideoImport, onIntent: (Pie
         enabled = !take.recording && videoImport == VideoImport.Idle,
         // a short analysis shows no sheet — the button says what is going on instead
         busy = videoImport is VideoImport.Working && !videoImport.visible,
-        onShoot = { onIntent(PieceIntent.VideoShootClicked) },
+        // a piece with a backing is filmed by the app's own camera only: the system one knows nothing of the backing
+        onShoot = { onIntent(if (backing?.present == true) PieceIntent.OwnCameraClicked else PieceIntent.VideoShootClicked) },
         onPick = onPickVideo,
-        onShootUnderBacking = if (backing?.present == true) ({ onIntent(PieceIntent.VideoUnderBackingClicked) }) else null,
+        ownCamera = backing?.takeIf { it.present }?.let { if (it.enabled) OwnCamera.UNDER_BACKING else OwnCamera.PLAIN },
     )
 }
 

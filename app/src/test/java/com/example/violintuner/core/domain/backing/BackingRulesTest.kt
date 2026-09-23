@@ -6,7 +6,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** The shift and the remembered latencies of spec 5.25. */
+/** The shift of spec 5.25. */
 class BackingRulesTest {
     private val config = BackingConfig()
     private val ms = 1_000_000L
@@ -25,15 +25,10 @@ class BackingRulesTest {
     }
 
     @Test
-    fun `wired headphones add nothing unless set, wireless ones a guess until they are`() {
-        val latencies = HeadphoneLatencies.EMPTY.with("Pixel Buds Pro", 212, config)
-        assertEquals(212, BackingOffset.latencyMs(AudioRoute(BackingOutput.BLUETOOTH, "Pixel Buds Pro"), latencies, config))
-        assertEquals(config.defaultWirelessLatencyMs, BackingOffset.latencyMs(AudioRoute(BackingOutput.BLUETOOTH, "Other"), latencies, config))
-        assertEquals(0, BackingOffset.latencyMs(AudioRoute(BackingOutput.WIRED, "USB-C to 3.5mm"), latencies, config))
-        assertEquals(212, BackingOffset.latencyMs(AudioRoute(BackingOutput.WIRED, "Pixel Buds Pro"), latencies, config))
-        // headphones without a name keep theirs under their kind
-        assertEquals(90, BackingOffset.latencyMs(AudioRoute(BackingOutput.BLUETOOTH, null), HeadphoneLatencies.EMPTY.with("BLUETOOTH", 90, config), config))
-        assertNull(AudioRoute(BackingOutput.SPEAKER, "Speaker").latencyKey)
+    fun `wired headphones add nothing, wireless ones a guess — the rest is set by ear on each take`() {
+        assertEquals(config.defaultWirelessLatencyMs, BackingOffset.latencyMs(AudioRoute(BackingOutput.BLUETOOTH, "Pixel Buds Pro"), config))
+        assertEquals(0, BackingOffset.latencyMs(AudioRoute(BackingOutput.WIRED, "USB-C to 3.5mm"), config))
+        assertEquals(0, BackingOffset.latencyMs(AudioRoute(BackingOutput.USB, null), config))
     }
 
     @Test
@@ -46,45 +41,9 @@ class BackingRulesTest {
     }
 
     @Test
-    fun `the headphones' latency snaps to whole steps, from none to two seconds`() {
-        assertEquals(215, BackingOffset.snapLatency(213, config))
-        assertEquals(0, BackingOffset.snapLatency(-40, config))
-        assertEquals(1_400, BackingOffset.snapLatency(1_400, config))
-        assertEquals(2_000, BackingOffset.snapLatency(2_400, config))
-    }
-
-    @Test
-    fun `a shift moved by ear corrects the headphones' latency by the same amount`() {
-        val take = TakeBacking(1, 1, offsetMs = 250, recordedOffsetMs = 210, gainDb = -6f, playedMs = 0, output = BackingOutput.BLUETOOTH, deviceName = "Buds", latencyMs = 200)
-        assertEquals(240, BackingOffset.correctedLatencyMs(take, config))
-        assertEquals(0, BackingOffset.correctedLatencyMs(take.copy(offsetMs = -300, latencyMs = 100), config))
-        assertEquals(2_000, BackingOffset.correctedLatencyMs(take.copy(offsetMs = 2_000, latencyMs = 1_900), config))
-    }
-
-    @Test
     fun `a positive shift delays the backing against the violin`() {
         assertEquals(48_000 - 9_600, BackingOffset.backingSampleAt(48_000, offsetMs = 200, sampleRate = 48_000))
         assertEquals(-9_600, BackingOffset.backingSampleAt(0, offsetMs = 200, sampleRate = 48_000))
         assertEquals(4_410, BackingOffset.backingSampleAt(0, offsetMs = -100, sampleRate = 44_100))
-    }
-
-    @Test
-    fun `latencies are remembered by name, the last used first, at most twenty`() {
-        var latencies = HeadphoneLatencies.EMPTY
-        repeat(25) { latencies = latencies.with("Buds $it", it, config) }
-        assertEquals(20, latencies.entries.size)
-        assertEquals("Buds 24", latencies.entries.first().first)
-        assertNull(latencies.of("Buds 0"))
-        latencies = latencies.with("Buds 10", 99, config)
-        assertEquals("Buds 10" to 99, latencies.entries.first())
-        assertEquals(20, latencies.entries.size)
-    }
-
-    @Test
-    fun `the codec keeps names with anything but a line break, and reads garbage as nothing`() {
-        val latencies = HeadphoneLatencies(listOf("WH-1000XM5 = mine" to 180, "Galaxy Buds2" to 240))
-        assertEquals(latencies, HeadphoneLatencyCodec.decode(HeadphoneLatencyCodec.encode(latencies)))
-        assertEquals(HeadphoneLatencies.EMPTY, HeadphoneLatencyCodec.decode(null))
-        assertEquals(HeadphoneLatencies(listOf("ok" to 5)), HeadphoneLatencyCodec.decode("garbage\n=12\nok=5\nbad=x"))
     }
 }

@@ -55,7 +55,7 @@ interface ShotCamera {
 
     fun startRecording(file: File)
 
-    /** When the recording's first frame came, on `CLOCK_MONOTONIC`; null until it has. */
+    /** When the recording's first frame was taken, on `CLOCK_MONOTONIC`; known once [stopRecording] has returned. */
     val startNanos: Long?
 
     /** Stops; true when the file holds a picture worth keeping. */
@@ -84,6 +84,10 @@ class CameraXShotCamera @Inject constructor(@ApplicationContext private val cont
 
     override var startNanos: Long? = null
         private set
+
+    /** When CameraX said the recording began — before the first frame, often by far: a lower bound, not the start. */
+    private var startEventNanos: Long? = null
+    private var recordedNanos: Long = 0
 
     override suspend fun bind(owner: LifecycleOwner, front: Boolean): Boolean {
         val cameras = provider ?: ProcessCameraProvider.awaitInstance(context).also { provider = it }
@@ -127,6 +131,8 @@ class CameraXShotCamera @Inject constructor(@ApplicationContext private val cont
     @androidx.annotation.OptIn(markerClass = [ExperimentalPersistentRecording::class])
     override fun startRecording(file: File) {
         startNanos = null
+        startEventNanos = null
+        recordedNanos = 0
         val done = CompletableDeferred<Boolean>()
         finalized = done
         // no audio on purpose: the sound is the take's own, from the microphone the pitch is read from
@@ -136,8 +142,9 @@ class CameraXShotCamera @Inject constructor(@ApplicationContext private val cont
             .asPersistentRecording()
             .start(ContextCompat.getMainExecutor(context)) { event ->
                 when (event) {
-                    is VideoRecordEvent.Start -> startNanos = System.nanoTime()
+                    is VideoRecordEvent.Start -> startEventNanos = System.nanoTime()
                     is VideoRecordEvent.Finalize -> {
+                        recordedNanos = event.recordingStats.recordedDurationNanos
                         val usable = event.error in USABLE && file.isFile && file.length() > 0
                         if (!usable) Log.w(TAG, "the shot ended with error ${event.error}", event.cause)
                         done.complete(usable)
@@ -146,11 +153,21 @@ class CameraXShotCamera @Inject constructor(@ApplicationContext private val cont
             }
     }
 
+    /**
+     * The picture's start is counted back from its end (spec 5.25): frames stop being taken the moment the recording is
+     * stopped, and the file says how long it is. «Start» comes before the encoder has its first key frame — on the
+     * emulator 1.4 s before — so the picture set by it began too early and ran ahead of the sound.
+     */
     override suspend fun stopRecording(): Boolean {
         val running = recording ?: return false
         recording = null
+        val stoppedAt = System.nanoTime()
         running.stop()
-        return finalized?.await() ?: false
+        val usable = finalized?.await() ?: false
+        // no length told (the recording broke off): the event is all there is
+        val counted = (stoppedAt - recordedNanos).takeIf { recordedNanos > 0 }
+        startNanos = listOfNotNull(startEventNanos, counted).maxOrNull()
+        return usable
     }
 
     private companion object {

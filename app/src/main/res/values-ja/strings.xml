@@ -1006,7 +1006,6 @@
     <string name="backing_offset">ずらし</string>
     <string name="backing_offset_hint">遅れたら左へ</string>
     <string name="backing_offset_recorded">録音時のまま · %1$s</string>
-    <string name="backing_remember">%1$s用に記憶</string>
 
     <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
     <string name="backing_add">伴奏を追加</string>
@@ -1050,10 +1049,7 @@
     <string name="capture_saving">動画をまとめています…</string>
     <string name="capture_video_failed">動画をまとめられませんでした — テイクは音声として保存しました。</string>
 
-    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
-    <string name="backing_latency">ヘッドホンの遅延</string>
-    <string name="backing_latency_hint">テイクで伴奏がバイオリンより遅れるなら左へ、早いなら右へ。</string>
-
-    <!-- «Запомнить для …» pressed: the row confirms it (spec 3.32). -->
-    <string name="backing_remembered">%1$s に保存しました</string>
+    <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
+    <string name="video_shoot_own_hint">アプリのカメラで — すぐに分析</string>
+    <string name="camera_no_permission">カメラへのアクセスがないと撮影できません — アプリの設定で許可できます。</string>
 </resources>

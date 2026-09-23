@@ -10,8 +10,6 @@ import com.example.violintuner.core.domain.TargetMode
 import com.example.violintuner.core.domain.backing.BackingConfig
 import com.example.violintuner.core.domain.backing.BackingOffset
 import com.example.violintuner.core.domain.backing.BackingRepository
-import com.example.violintuner.core.domain.backing.HeadphoneLatencies
-import com.example.violintuner.core.domain.backing.HeadphoneLatencyStore
 import com.example.violintuner.core.domain.repertoire.RepertoireRepository
 import com.example.violintuner.core.recording.TakePipeline
 import com.example.violintuner.core.recording.video.VideoFiles
@@ -54,7 +52,6 @@ class CaptureViewModel @Inject constructor(
     private val backings: BackingRepository,
     private val backingPcm: BackingPcm,
     private val routes: AudioRoutes,
-    private val latencies: HeadphoneLatencyStore,
     private val videos: VideoFiles,
     private val backingConfig: BackingConfig,
     private val cameraFactory: ShotCameraFactory,
@@ -128,10 +125,13 @@ class CaptureViewModel @Inject constructor(
         }
         viewModelScope.launch {
             combine(backings.pieceBackings, backings.backings, routes.changes) { rows, all, route ->
-                val backing = rows.firstOrNull { it.pieceId == pieceId }?.let { row -> all.firstOrNull { it.id == row.backingId } }
-                Triple(backing, route, route.output.isHeadphones)
-            }.collect { (backing, _, headphones) ->
-                mutableState.update { it.copy(backingTitle = backing?.title, backingDurationMs = backing?.durationMs ?: 0, noHeadphones = !headphones) }
+                val row = rows.firstOrNull { it.pieceId == pieceId }
+                val backing = row?.takeIf { it.enabled }?.let { r -> all.firstOrNull { it.id == r.backingId } }
+                backing to route.output.isHeadphones
+            }.collect { (backing, headphones) ->
+                mutableState.update {
+                    it.copy(backingTitle = backing?.title, backingDurationMs = backing?.durationMs ?: 0, underBacking = backing != null, noHeadphones = !headphones)
+                }
             }
         }
         viewModelScope.launch { takes.backingPosition.collect { played -> mutableState.update { it.copy(backingPlayedMs = played) } } }
@@ -188,18 +188,17 @@ class CaptureViewModel @Inject constructor(
         }
     }
 
-    /** The take under the backing, if the piece has one and the chip is on — as on the piece screen (spec 3.32). */
+    /** The take under the backing if the chip is on — as on the piece screen (spec 3.32) — or a plain video. */
     private suspend fun start() {
         val row = backings.pieceBackings.first().firstOrNull { it.pieceId == pieceId }
         val backing = row?.takeIf { it.enabled }?.let { backings.backing(it.backingId) }
         val route = routes.current()
         takes.backingPlan = backing?.let {
-            val known: HeadphoneLatencies = latencies.latencies.first()
             TakePipeline.BackingPlan(
                 backing = it,
                 pcm = { rate -> backingPcm.cached(it, rate) ?: backingPcm.prepare(it, rate) },
                 route = route,
-                latencyMs = BackingOffset.latencyMs(route, known, backingConfig),
+                latencyMs = BackingOffset.latencyMs(route, backingConfig),
             )
         }
         takes.recordingRequested.value = true

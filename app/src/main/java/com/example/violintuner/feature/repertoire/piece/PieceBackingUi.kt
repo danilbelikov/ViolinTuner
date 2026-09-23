@@ -39,13 +39,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
-import com.example.violintuner.core.domain.backing.BackingConfig
 import com.example.violintuner.core.ui.format.Formats
 import com.example.violintuner.core.ui.icons.AppIcon
 import com.example.violintuner.core.ui.icons.AppIcons
-import com.example.violintuner.feature.sound.SoundFormats
-import com.example.violintuner.feature.sound.components.ParamSlider
-import com.example.violintuner.feature.sound.components.SliderModel
 
 private val CardCorner = 16.dp
 private val PlayButton = 44.dp
@@ -136,7 +132,7 @@ fun BackingCard(backing: BackingUi, recording: Boolean, onIntent: (PieceIntent) 
                 }
             }
             Box(Modifier.fillMaxWidth().height(1.dp).background(colors.surfaceContainerHigh))
-            HeadphonesRow(backing, recording, onIntent)
+            HeadphonesRow(backing)
         }
         backing.problem?.takeIf { it != BackingProblem.Missing }?.let { ProblemLine(it, onIntent) }
     }
@@ -151,51 +147,22 @@ fun BackingCard(backing: BackingUi, recording: Boolean, onIntent: (PieceIntent) 
     }
 }
 
-/**
- * Which headphones the backing goes to and what they lag — a slider set by ear (spec 3.32): if the violin in takes
- * comes after the backing, more; if before, less. Without headphones — only that there are none.
- */
+/** Which headphones the backing goes to, or that there are none (spec 3.32). What they lag is set per take on «Звук». */
 @Composable
-private fun HeadphonesRow(backing: BackingUi, recording: Boolean, onIntent: (PieceIntent) -> Unit) {
+private fun HeadphonesRow(backing: BackingUi) {
     val colors = MaterialTheme.colorScheme
     val route = backing.route
     val headphones = route.output.isHeadphones
-    Column(modifier = Modifier.padding(end = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
-        Row(modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            AppIcon(AppIcons.Headphones, contentDescription = null, tint = if (headphones) colors.primary else colors.onSurfaceVariant, size = 20.dp)
-            Text(
-                if (headphones) stringResource(R.string.backing_headphones_wired, route.deviceName ?: stringResource(R.string.backing_headphones)) else stringResource(R.string.backing_no_headphones),
-                color = if (headphones) colors.onSurface else colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                modifier = Modifier.weight(1f),
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-            )
-        }
-        if (headphones) {
-            val config = remember { BackingConfig() }
-            val guess = if (route.output.isWireless) config.defaultWirelessLatencyMs else 0
-            ParamSlider(
-                model = SliderModel(
-                    label = stringResource(R.string.backing_latency),
-                    hint = null,
-                    valueText = SoundFormats.ms(backing.latencyMs),
-                    fraction = backing.latencyMs.toFloat() / config.maxLatencyMs,
-                    defaultFraction = guess.toFloat() / config.maxLatencyMs,
-                    bipolar = false,
-                ),
-                enabled = !recording,
-                onFraction = { onIntent(PieceIntent.HeadphoneLatencyChanged(it)) },
-                onStep = { onIntent(PieceIntent.HeadphoneLatencyStepped(it)) },
-                onReset = { onIntent(PieceIntent.HeadphoneLatencyReset) },
-            )
-            Text(
-                stringResource(R.string.backing_latency_hint),
-                color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp),
-                modifier = Modifier.padding(bottom = 6.dp),
-            )
-        }
+    Row(modifier = Modifier.fillMaxWidth().heightIn(min = 40.dp).padding(end = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+        AppIcon(AppIcons.Headphones, contentDescription = null, tint = if (headphones) colors.primary else colors.onSurfaceVariant, size = 20.dp)
+        Text(
+            if (headphones) stringResource(R.string.backing_headphones_wired, route.deviceName ?: stringResource(R.string.backing_headphones)) else stringResource(R.string.backing_no_headphones),
+            color = if (headphones) colors.onSurface else colors.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+            modifier = Modifier.weight(1f),
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
 }
 

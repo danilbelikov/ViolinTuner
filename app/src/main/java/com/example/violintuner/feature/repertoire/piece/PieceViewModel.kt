@@ -17,8 +17,6 @@ import com.example.violintuner.core.domain.backing.Backing
 import com.example.violintuner.core.domain.backing.BackingFiles
 import com.example.violintuner.core.domain.backing.BackingOutput
 import com.example.violintuner.core.domain.backing.BackingRepository
-import com.example.violintuner.core.domain.backing.HeadphoneLatencies
-import com.example.violintuner.core.domain.backing.HeadphoneLatencyStore
 import com.example.violintuner.core.domain.backing.NoBackings
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -51,7 +49,6 @@ import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
-import kotlin.math.roundToInt
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -87,7 +84,6 @@ class PieceViewModel @Inject constructor(
     private val backingImporter: BackingFileImporter? = null,
     private val backingPreview: BackingPreview? = null,
     private val routes: AudioRoutes? = null,
-    private val latencies: HeadphoneLatencyStore? = null,
     @IoDispatcher private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
@@ -164,30 +160,28 @@ class PieceViewModel @Inject constructor(
         val problem: BackingProblem? = null,
         val preparing: Boolean = false,
         val askingRemove: Boolean = false,
-        val latencyDraft: LatencyDraft? = null,
     )
 
     private val backingConfig = BackingConfig()
     private val backingEphemeral = MutableStateFlow(BackingEphemeral())
     private val route = routes?.changes ?: flowOf(AudioRoute(BackingOutput.SPEAKER, null))
-    private val headphoneLatencies = latencies?.latencies ?: flowOf(HeadphoneLatencies.EMPTY)
     private val previewing = backingPreview?.playing ?: flowOf(false)
 
     /** The block «Минусовка» (spec 3.32); apart from [state], as the take is: it follows the headphones, which come and go. */
     val backing: StateFlow<BackingUi?> = combine(
         combine(backings.pieceBackings, backings.backings, backings.takeBackings, ::Triple),
         sessions.sessions,
-        combine(route, headphoneLatencies, ::Pair),
+        route,
         backingEphemeral,
         previewing,
-    ) { (pieceRows, all, takeRows), allSessions, (currentRoute, known), ephemeral, playing ->
+    ) { (pieceRows, all, takeRows), allSessions, currentRoute, ephemeral, playing ->
         PieceBackingReducer.uiOf(
             pieceId = pieceId, pieceBackings = pieceRows, backings = all, takeBackings = takeRows,
             takeIds = allSessions.filter { it.pieceId == pieceId }.mapTo(HashSet()) { it.id },
-            route = currentRoute, latencies = known,
+            route = currentRoute,
             fileExists = { backingFiles?.existing(it.fileName) != null },
             importing = ephemeral.importing, problem = ephemeral.problem, previewing = playing, preparing = ephemeral.preparing,
-            askingRemove = ephemeral.askingRemove, latencyDraft = ephemeral.latencyDraft, config = backingConfig,
+            askingRemove = ephemeral.askingRemove,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
@@ -315,8 +309,8 @@ class PieceViewModel @Inject constructor(
                 savedState[KEY_VIDEO_FILE] = file.path
                 effectChannel.trySend(PieceEffect.LaunchVideoCamera(file.path))
             }
-            // the same rule as a take under the backing: headphones only (spec 3.32)
-            PieceIntent.VideoUnderBackingClicked -> backing.value?.takeIf { it.present && videoAllowed() && it.route.output.isHeadphones }?.let {
+            // under the backing, the same rule as a take: headphones only (spec 3.32); a plain video needs none
+            PieceIntent.OwnCameraClicked -> backing.value?.takeIf { it.present && videoAllowed() && (!it.wanted || it.route.output.isHeadphones) }?.let {
                 effectChannel.trySend(PieceEffect.OpenCapture(pieceId))
             }
             is PieceIntent.VideoShotFinished -> {
@@ -346,9 +340,6 @@ class PieceViewModel @Inject constructor(
                 viewModelScope.launch { backings.setEnabled(pieceId, !block.enabled) }
             }
             PieceIntent.BackingProblemDismissed -> backingEphemeral.update { it.copy(problem = null) }
-            is PieceIntent.HeadphoneLatencyChanged -> setLatency { (intent.fraction * backingConfig.maxLatencyMs).roundToInt() }
-            is PieceIntent.HeadphoneLatencyStepped -> setLatency { it + if (intent.up) backingConfig.offsetStepMs else -backingConfig.offsetStepMs }
-            PieceIntent.HeadphoneLatencyReset -> setLatency { _ -> backing.value?.route?.let { if (it.output.isWireless) backingConfig.defaultWirelessLatencyMs else 0 } ?: 0 }
             is PieceIntent.CameraFinished -> {
                 val file = savedState.remove<String>(KEY_CAMERA_FILE)?.let(::File) ?: return
                 if (intent.saved) import(listOf(file.toURI().toString()), temporary = listOf(file)) else file.delete()
@@ -368,7 +359,7 @@ class PieceViewModel @Inject constructor(
                 backing = found,
                 pcm = { rate -> pcm.cached(found, rate) ?: pcm.prepare(found, rate) },
                 route = block.route,
-                latencyMs = block.latencyMs,
+                latencyMs = BackingOffset.latencyMs(block.route, backingConfig),
             )
         } else {
             takes.backingPlan = null
@@ -425,26 +416,6 @@ class PieceViewModel @Inject constructor(
         viewModelScope.launch { backings.setForPiece(pieceId, null) }
     }
 
-    /**
-     * «Задержка наушников» (spec 3.32): what the slider shows follows the finger at once; it is written for these
-     * headphones a moment after it stops, not on every step of a drag.
-     */
-    private fun setLatency(change: (Int) -> Int) {
-        if (takes.recordingRequested.value) return
-        val block = backing.value ?: return
-        val key = block.route.latencyKey ?: return
-        val next = BackingOffset.snapLatency(change(block.latencyMs), backingConfig)
-        if (next == block.latencyMs) return
-        backingEphemeral.update { it.copy(latencyDraft = LatencyDraft(key, next)) }
-        latencyJob?.cancel()
-        latencyJob = viewModelScope.launch {
-            delay(LATENCY_WRITE_AFTER_MS)
-            latencies?.set(key, next)
-        }
-    }
-
-    private var latencyJob: Job? = null
-
     override fun onCleared() {
         backingPreview?.stop()
     }
@@ -494,8 +465,6 @@ class PieceViewModel @Inject constructor(
         private const val RESCUE_FILE_NAME = "video.mp4"
         private const val STOP_TIMEOUT_MS = 5_000L
 
-        /** The slider of the headphones' latency stopped this long: its number is written down. */
-        private const val LATENCY_WRITE_AFTER_MS = 400L
         private const val BYTES_PER_MB = 1024L * 1024
 
         /** The rates a take is recorded at (spec 5.1): the backing is made ready for both. */

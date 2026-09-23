@@ -1,5 +1,10 @@
 package com.example.violintuner.feature.repertoire.piece
 
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.core.content.ContextCompat
+import android.content.pm.PackageManager
+import android.Manifest
 import android.content.ActivityNotFoundException
 import android.content.ClipData
 import android.content.Context
@@ -77,8 +82,22 @@ fun PieceRoute(
         }
     }
 
-    // Neither needs a permission: the picker hands over only what was picked, and the system
-    // camera is another app writing into a file lent to it for the occasion.
+    // The picker needs no permission: it hands over only what was picked. The system camera does since the app has a
+    // camera of its own (spec 3.32): an app that declares CAMERA may not start another's camera without it granted.
+    var afterCameraPermission by remember { mutableStateOf<((Boolean) -> Unit)?>(null) }
+    val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        afterCameraPermission?.invoke(granted)
+        afterCameraPermission = null
+        if (!granted) Toast.makeText(context, R.string.camera_no_permission, Toast.LENGTH_LONG).show()
+    }
+    fun withCamera(launch: () -> Unit, refused: () -> Unit) {
+        if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            launch()
+        } else {
+            afterCameraPermission = { granted -> if (granted) launch() else refused() }
+            cameraPermission.launch(Manifest.permission.CAMERA)
+        }
+    }
     val gallery = rememberLauncherForActivityResult(ActivityResultContracts.PickMultipleVisualMedia()) { uris ->
         viewModel.onIntent(PieceIntent.PhotosPicked(uris.map { it.toString() }))
     }
@@ -86,7 +105,7 @@ fun PieceRoute(
         viewModel.onIntent(PieceIntent.CameraFinished(saved))
     }
 
-    // A video take (spec 3.19): the system camera and the system picker, no permission for either.
+    // A video take (spec 3.19): the system camera (the permission above) and the system picker.
     val videoCamera = rememberLauncherForActivityResult(ActivityResultContracts.CaptureVideo()) { saved ->
         viewModel.onIntent(PieceIntent.VideoShotFinished(saved))
     }
@@ -105,15 +124,17 @@ fun PieceRoute(
                     PieceEffect.Close -> currentOnClose()
                     is PieceEffect.OpenForm -> currentOnOpenForm(effect.pieceId, effect.focusNotes, effect.scale)
                     is PieceEffect.OpenStand -> currentOnOpenStand(effect.pieceId, effect.pageIndex)
-                    is PieceEffect.LaunchCamera -> camera.launch(
-                        FileProvider.getUriForFile(context, "${context.packageName}$FILES_AUTHORITY_SUFFIX", File(effect.filePath)),
+                    is PieceEffect.LaunchCamera -> withCamera(
+                        launch = { camera.launch(FileProvider.getUriForFile(context, "${context.packageName}$FILES_AUTHORITY_SUFFIX", File(effect.filePath))) },
+                        refused = { viewModel.onIntent(PieceIntent.CameraFinished(saved = false)) },
                     )
                     PieceEffect.ShowPhotoFailed -> Toast.makeText(context, R.string.profile_photo_failed, Toast.LENGTH_SHORT).show()
                     PieceEffect.RequestMicPermission -> requestMicPermission()
                     PieceEffect.ShowNoNotesRecorded -> Toast.makeText(context, R.string.record_no_notes, Toast.LENGTH_SHORT).show()
                     is PieceEffect.OpenSession -> currentOnOpenSession(effect.sessionId)
-                    is PieceEffect.LaunchVideoCamera -> videoCamera.launch(
-                        FileProvider.getUriForFile(context, "${context.packageName}$FILES_AUTHORITY_SUFFIX", File(effect.filePath)),
+                    is PieceEffect.LaunchVideoCamera -> withCamera(
+                        launch = { videoCamera.launch(FileProvider.getUriForFile(context, "${context.packageName}$FILES_AUTHORITY_SUFFIX", File(effect.filePath))) },
+                        refused = { viewModel.onIntent(PieceIntent.VideoShotFinished(saved = false)) },
                     )
                     is PieceEffect.ShareVideo -> context.shareVideo(File(effect.filePath))
                     PieceEffect.PickBackingFile -> backingPicker.launch(arrayOf(AUDIO_TYPES))

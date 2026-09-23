@@ -1006,7 +1006,6 @@
     <string name="backing_offset">Сдвиг</string>
     <string name="backing_offset_hint">отстаёт — влево</string>
     <string name="backing_offset_recorded">Как записано · %1$s</string>
-    <string name="backing_remember">Запомнить для %1$s</string>
 
     <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
     <string name="backing_add">Добавить минусовку</string>
@@ -1050,10 +1049,7 @@
     <string name="capture_saving">Собираем видео…</string>
     <string name="capture_video_failed">Видео не получилось собрать — дубль сохранён как звук.</string>
 
-    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
-    <string name="backing_latency">Задержка наушников</string>
-    <string name="backing_latency_hint">Минусовка в дублях отстаёт от скрипки — двигайте влево, спешит — вправо.</string>
-
-    <!-- «Запомнить для …» pressed: the row confirms it (spec 3.32). -->
-    <string name="backing_remembered">Запомнено для %1$s</string>
+    <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
+    <string name="video_shoot_own_hint">камерой приложения — разбор сразу</string>
+    <string name="camera_no_permission">Без доступа к камере снять не получится — его можно дать в настройках приложения.</string>
 </resources>

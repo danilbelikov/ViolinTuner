@@ -145,7 +145,7 @@ private fun TopRow(state: CaptureState, onIntent: (CaptureIntent) -> Unit, modif
 @Composable
 private fun Controls(state: CaptureState, onIntent: (CaptureIntent) -> Unit, compact: Boolean) {
     val hint = when {
-        state.noHeadphones && !state.recording -> stringResource(R.string.backing_needs_headphones)
+        state.underBacking && state.noHeadphones && !state.recording -> stringResource(R.string.backing_needs_headphones)
         state.micUnavailable -> stringResource(R.string.live_mic_unavailable)
         state.spaceMinutes != null && !state.recording -> stringResource(R.string.capture_low_space, state.spaceMinutes)
         else -> null

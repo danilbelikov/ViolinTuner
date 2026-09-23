@@ -1006,7 +1006,6 @@
     <string name="backing_offset">Deslocamento</string>
     <string name="backing_offset_hint">atrasado — à esquerda</string>
     <string name="backing_offset_recorded">Como gravado · %1$s</string>
-    <string name="backing_remember">Lembrar para %1$s</string>
 
     <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
     <string name="backing_add">Adicionar playback</string>
@@ -1050,10 +1049,7 @@
     <string name="capture_saving">Montando o vídeo…</string>
     <string name="capture_video_failed">Não deu para montar o vídeo — o take foi salvo como som.</string>
 
-    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
-    <string name="backing_latency">Atraso dos fones</string>
-    <string name="backing_latency_hint">Se o playback fica atrás do violino nos takes, para a esquerda; se adianta, para a direita.</string>
-
-    <!-- «Запомнить для …» pressed: the row confirms it (spec 3.32). -->
-    <string name="backing_remembered">Salvo para %1$s</string>
+    <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
+    <string name="video_shoot_own_hint">com a câmera do app — análise na hora</string>
+    <string name="camera_no_permission">Sem acesso à câmera não dá para filmar — dá para permitir nos ajustes do app.</string>
 </resources>

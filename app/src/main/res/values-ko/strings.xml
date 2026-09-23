@@ -1006,7 +1006,6 @@
     <string name="backing_offset">이동</string>
     <string name="backing_offset_hint">늦으면 왼쪽으로</string>
     <string name="backing_offset_recorded">녹음한 그대로 · %1$s</string>
-    <string name="backing_remember">%1$s에 기억하기</string>
 
     <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
     <string name="backing_add">반주 추가</string>
@@ -1050,10 +1049,7 @@
     <string name="capture_saving">영상을 만드는 중…</string>
     <string name="capture_video_failed">영상을 만들지 못했어요 — 테이크는 소리로 저장했어요.</string>
 
-    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
-    <string name="backing_latency">헤드폰 지연</string>
-    <string name="backing_latency_hint">테이크에서 반주가 바이올린보다 늦으면 왼쪽으로, 빠르면 오른쪽으로 옮기세요.</string>
-
-    <!-- «Запомнить для …» pressed: the row confirms it (spec 3.32). -->
-    <string name="backing_remembered">%1$s에 저장됨</string>
+    <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
+    <string name="video_shoot_own_hint">앱 카메라로 — 바로 분석</string>
+    <string name="camera_no_permission">카메라 권한이 없으면 촬영할 수 없어요 — 앱 설정에서 허용할 수 있어요.</string>
 </resources>

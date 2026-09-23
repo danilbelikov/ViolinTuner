@@ -76,7 +76,6 @@ class SoundViewModelTest {
     }
 
     private val backings = com.example.violintuner.core.domain.backing.FakeBackingRepository()
-    private val latencies = com.example.violintuner.core.domain.backing.FakeHeadphoneLatencyStore()
     private val backingPcm = object : com.example.violintuner.core.audio.backing.BackingPcm {
         override fun cached(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): File? = null
         override fun prepare(backing: com.example.violintuner.core.domain.backing.Backing, sampleRate: Int): File? = File("pcm-$sampleRate")
@@ -85,7 +84,7 @@ class SoundViewModelTest {
     private fun TestScope.screen(sessionId: Long?): Pair<SoundViewModel, MutableList<SoundEffect>> {
         val viewModel = SoundViewModel(
             SavedStateHandle(mapOf(SoundViewModel.ARG_SESSION_ID to (sessionId ?: SoundViewModel.EVERYONE))),
-            sound, sessions, repertoire, AudioFiles, { player }, waveforms, config, backings, backingPcm, latencies,
+            sound, sessions, repertoire, AudioFiles, { player }, waveforms, config, backings, backingPcm,
         )
         val effects = mutableListOf<SoundEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -345,48 +344,5 @@ class SoundViewModelTest {
         assertEquals(200, viewModel.state.value.backing?.offsetMs)
         viewModel.onIntent(SoundIntent.BackingGainChanged(1f))
         assertEquals(6f, viewModel.state.value.backing?.gainDb)
-    }
-
-    @Test
-    fun `a shift moved for wireless headphones offers to remember it, and once remembered no longer does`() = runTest {
-        val under = recording("under.m4a")
-        underBacking(under)
-        val (viewModel, _) = screen(under)
-        assertNull(viewModel.state.value.backing?.rememberFor)
-        repeat(8) { viewModel.onIntent(SoundIntent.BackingOffsetStepped(up = true)) }
-        val block = viewModel.state.value.backing!!
-        assertEquals("Buds", block.rememberFor)
-        // the row says what the headphones' latency is and what it becomes
-        assertEquals(200, block.rememberFromMs)
-        assertEquals(240, block.rememberToMs)
-
-        viewModel.onIntent(SoundIntent.BackingRememberClicked)
-        runCurrent()
-        // never set: the guess of 200 ms, corrected by the 40 the player moved
-        assertEquals(240, latencies.latencies.value.of("Buds"))
-        // it confirms instead of vanishing, and a second press changes nothing
-        val done = viewModel.state.value.backing!!
-        assertTrue(done.remembered)
-        assertEquals(240, done.rememberToMs)
-        viewModel.onIntent(SoundIntent.BackingRememberClicked)
-        runCurrent()
-        assertEquals(240, latencies.latencies.value.of("Buds"))
-        // the shift moves again: the confirmation goes, an offer comes back
-        viewModel.onIntent(SoundIntent.BackingOffsetStepped(up = true))
-        assertFalse(viewModel.state.value.backing!!.remembered)
-        assertEquals(245, viewModel.state.value.backing!!.rememberToMs)
-    }
-
-    @Test
-    fun `wired headphones remember their latency too — the piece screen's slider sets it for any headphones`() = runTest {
-        val under = recording("under.m4a")
-        underBacking(under, com.example.violintuner.core.domain.backing.BackingOutput.WIRED)
-        val (viewModel, _) = screen(under)
-        viewModel.onIntent(SoundIntent.BackingOffsetStepped(up = true))
-        assertEquals("Buds", viewModel.state.value.backing?.rememberFor)
-        viewModel.onIntent(SoundIntent.BackingRememberClicked)
-        runCurrent()
-        // made with 200 believed, moved by 5
-        assertEquals(205, latencies.latencies.value.of("Buds"))
     }
 }

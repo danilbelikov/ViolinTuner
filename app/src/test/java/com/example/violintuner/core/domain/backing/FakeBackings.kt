@@ -38,9 +38,3 @@ class FakeBackingRepository : BackingRepository {
     fun backing(title: String = "Piano", fileName: String = "piano.m4a") =
         Backing(fileName = fileName, title = title, durationMs = 220_000, sampleRate = 44_100, channels = 2, sizeBytes = 5_000_000, addedAtEpochMs = 1)
 }
-
-class FakeHeadphoneLatencyStore(private val config: BackingConfig = BackingConfig()) : HeadphoneLatencyStore {
-    override val latencies = MutableStateFlow(HeadphoneLatencies.EMPTY)
-
-    override suspend fun set(name: String, latencyMs: Int) = latencies.update { it.with(name, latencyMs, config) }
-}

@@ -10,11 +10,8 @@ import com.example.violintuner.core.audio.playback.PlayerBacking
 import com.example.violintuner.core.audio.backing.BackingPcm
 import com.example.violintuner.core.domain.backing.Backing
 import com.example.violintuner.core.domain.backing.BackingConfig
-import com.example.violintuner.core.domain.backing.AudioRoute
 import com.example.violintuner.core.domain.backing.BackingOffset
 import com.example.violintuner.core.domain.backing.BackingRepository
-import com.example.violintuner.core.domain.backing.HeadphoneLatencies
-import com.example.violintuner.core.domain.backing.HeadphoneLatencyStore
 import com.example.violintuner.core.domain.backing.NoBackings
 import com.example.violintuner.core.domain.backing.TakeBacking
 import kotlin.math.roundToInt
@@ -65,7 +62,6 @@ class SoundViewModel @Inject constructor(
     private val config: SoundConfig,
     private val backings: BackingRepository = NoBackings,
     private val backingPcm: BackingPcm? = null,
-    private val latencies: HeadphoneLatencyStore? = null,
     private val backingConfig: BackingConfig = BackingConfig(),
 ) : ViewModel() {
 
@@ -101,7 +97,6 @@ class SoundViewModel @Inject constructor(
     // The backing of this take (spec 3.32), read once: the block is a draft like the settings, saved a moment after a touch.
     private var take: TakeBacking? = null
     private var backing: Backing? = null
-    private var headphoneLatencies = HeadphoneLatencies.EMPTY
     private var backingJob: Job? = null
     private var backingUnsaved = false
 
@@ -186,44 +181,16 @@ class SoundViewModel @Inject constructor(
             }
             is SoundIntent.BackingOffsetStepped -> editBacking { it.copy(offsetMs = it.offsetMs + if (intent.up) backingConfig.offsetStepMs else -backingConfig.offsetStepMs) }
             SoundIntent.BackingOffsetRecorded -> editBacking { it.copy(offsetMs = it.recordedOffsetMs) }
-            SoundIntent.BackingRememberClicked -> remember()
         }
     }
 
-    /** The take's backing and the headphones it was heard through; nothing for a take without one, or for the screen of everyone. */
+    /** The take's backing; nothing for a take without one, or for the screen of everyone. */
     private suspend fun loadBacking() {
         val id = sessionId ?: return
         val found = backings.takeBackings.first().firstOrNull { it.sessionId == id } ?: return
         take = found
         backing = backings.backing(found.backingId)
-        latencies?.let { store ->
-            headphoneLatencies = store.latencies.first()
-            viewModelScope.launch {
-                store.latencies.collect {
-                    headphoneLatencies = it
-                    mutableState.update { state -> state.copy(backing = state.backing?.let(::withRemember)) }
-                }
-            }
-        }
-        mutableState.update { it.copy(backing = withRemember(BackingBlockState(found.gainDb, found.offsetMs, found.recordedOffsetMs))) }
-    }
-
-    /**
-     * «Запомнить для …» is there while this take's shift, moved by ear, would change what the headphones it was heard
-     * through are believed to lag (spec 3.32) — the number the piece screen's slider shows; once remembered, it is not.
-     */
-    private fun withRemember(block: BackingBlockState): BackingBlockState {
-        val base = take ?: return block.copy(rememberFor = null)
-        val route = AudioRoute(base.output, base.deviceName)
-        val heardOn = route.latencyKey ?: return block.copy(rememberFor = null)
-        val current = BackingOffset.latencyMs(route, headphoneLatencies, backingConfig)
-        val corrected = BackingOffset.correctedLatencyMs(base.copy(offsetMs = block.offsetMs), backingConfig)
-        val moved = block.offsetMs - block.recordedOffsetMs
-        return when {
-            moved != 0 && corrected != current -> block.copy(rememberFor = heardOn, rememberFromMs = current, rememberToMs = corrected, remembered = false)
-            justRemembered && corrected == current -> block.copy(rememberFor = heardOn, rememberFromMs = current, rememberToMs = current, remembered = true)
-            else -> block.copy(rememberFor = null, remembered = false)
-        }
+        mutableState.update { it.copy(backing = BackingBlockState(found.gainDb, found.offsetMs, found.recordedOffsetMs)) }
     }
 
     private fun editBacking(change: (BackingBlockState) -> BackingBlockState) {
@@ -231,8 +198,7 @@ class SoundViewModel @Inject constructor(
         val changed = change(before)
         val clean = changed.copy(gainDb = BackingOffset.snapGain(changed.gainDb, backingConfig), offsetMs = BackingOffset.clamp(changed.offsetMs, backingConfig))
         if (clean.gainDb == before.gainDb && clean.offsetMs == before.offsetMs) return
-        if (clean.offsetMs != before.offsetMs) justRemembered = false
-        mutableState.update { it.copy(backing = withRemember(clean)) }
+        mutableState.update { it.copy(backing = clean) }
         player?.setBackingMix(clean.offsetMs, clean.gainDb)
         backingUnsaved = true
         backingJob?.cancel()
@@ -248,19 +214,6 @@ class SoundViewModel @Inject constructor(
         val id = sessionId ?: return@withContext
         val block = state.value.backing ?: return@withContext
         backings.setTakeMix(id, block.offsetMs, block.gainDb)
-    }
-
-    /** «Запомнить для …» was pressed and the shift has not moved since: the row confirms it. */
-    private var justRemembered = false
-
-    private fun remember() {
-        val block = state.value.backing ?: return
-        val name = block.rememberFor ?: return
-        val base = take ?: return
-        if (block.remembered) return
-        val corrected = BackingOffset.correctedLatencyMs(base.copy(offsetMs = block.offsetMs), backingConfig)
-        justRemembered = true
-        viewModelScope.launch { latencies?.set(name, corrected) }
     }
 
     /** The recordings: whose screen this is, what the default can be listened on, how many it touches. */

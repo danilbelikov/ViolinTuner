@@ -2,9 +2,6 @@ package com.example.violintuner.feature.repertoire.piece
 
 import com.example.violintuner.core.domain.backing.AudioRoute
 import com.example.violintuner.core.domain.backing.Backing
-import com.example.violintuner.core.domain.backing.BackingConfig
-import com.example.violintuner.core.domain.backing.BackingOffset
-import com.example.violintuner.core.domain.backing.HeadphoneLatencies
 import com.example.violintuner.core.domain.backing.PieceBacking
 import com.example.violintuner.core.domain.backing.TakeBacking
 
@@ -28,8 +25,6 @@ data class BackingUi(
     /** The chip «С минусовкой». */
     val enabled: Boolean,
     val route: AudioRoute,
-    /** What the headphones the sound goes to lag: set on the slider, or the guess for their kind; 0 without headphones. */
-    val latencyMs: Int,
     val importing: Boolean = false,
     val problem: BackingProblem? = null,
     val previewing: Boolean = false,
@@ -49,8 +44,6 @@ data class BackingUi(
     val blocksRecording: Boolean get() = wanted && (!route.output.isHeadphones || preparing)
 }
 
-/** The headphones' latency while its slider moves, before it is written down: it belongs to the headphones it was set for. */
-data class LatencyDraft(val key: String, val latencyMs: Int)
 
 object PieceBackingReducer {
     /** The block, from what is stored and what only the screen knows (an import on its way, a file that did not open…). */
@@ -61,26 +54,20 @@ object PieceBackingReducer {
         takeBackings: List<TakeBacking>,
         takeIds: Set<Long>,
         route: AudioRoute,
-        latencies: HeadphoneLatencies,
         fileExists: (Backing) -> Boolean,
         importing: Boolean,
         problem: BackingProblem?,
         previewing: Boolean,
         preparing: Boolean,
         askingRemove: Boolean = false,
-        latencyDraft: LatencyDraft? = null,
-        config: BackingConfig = BackingConfig(),
     ): BackingUi {
         val row = pieceBackings.firstOrNull { it.pieceId == pieceId }
         val backing = row?.let { r -> backings.firstOrNull { it.id == r.backingId } }
-        val latency = latencyDraft?.takeIf { it.key == route.latencyKey }?.latencyMs
-            ?: if (route.output.isHeadphones) BackingOffset.latencyMs(route, latencies, config) else 0
         return BackingUi(
             title = backing?.title,
             durationMs = backing?.durationMs ?: 0,
             enabled = row?.enabled ?: false,
             route = route,
-            latencyMs = latency,
             importing = importing,
             problem = problem ?: if (backing != null && !fileExists(backing)) BackingProblem.Missing else null,
             previewing = previewing,

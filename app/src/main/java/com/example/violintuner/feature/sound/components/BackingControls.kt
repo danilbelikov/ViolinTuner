@@ -28,8 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.violintuner.R
 import com.example.violintuner.core.domain.backing.BackingConfig
-import com.example.violintuner.core.ui.icons.AppIcon
-import com.example.violintuner.core.ui.icons.AppIcons
 import com.example.violintuner.feature.sound.SoundFormats
 import com.example.violintuner.feature.sound.BackingBlockState
 import com.example.violintuner.feature.sound.SoundIntent
@@ -125,33 +123,6 @@ fun BackingBlock(state: BackingBlockState, config: BackingConfig, onIntent: (Sou
                 Text(
                     stringResource(R.string.backing_offset_recorded, SoundFormats.signedMs(state.recordedOffsetMs)),
                     style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
-                )
-            }
-        }
-        state.rememberFor?.let { name ->
-            // what the headphones' latency is and what it becomes — the number of the piece screen's slider
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp)
-                    .clip(RoundedCornerShape(12.dp))
-                    .background(colors.surfaceContainerHigh)
-                    .clickable(enabled = !state.remembered, role = Role.Button) { onIntent(SoundIntent.BackingRememberClicked) }
-                    .padding(horizontal = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                if (state.remembered) AppIcon(AppIcons.Check, contentDescription = null, tint = colors.primary, size = 18.dp)
-                Text(
-                    stringResource(if (state.remembered) R.string.backing_remembered else R.string.backing_remember, name),
-                    color = colors.onSurface,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp),
-                    modifier = Modifier.weight(1f),
-                )
-                Text(
-                    if (state.remembered) SoundFormats.ms(state.rememberToMs) else "${state.rememberFromMs} → ${SoundFormats.ms(state.rememberToMs)}",
-                    color = colors.primary,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
                 )
             }
         }

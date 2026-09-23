@@ -138,8 +138,8 @@ sealed interface PieceIntent {
     /** «Снять видео»: the system camera (spec 3.19). */
     data object VideoShootClicked : PieceIntent
 
-    /** «Снять под минусовку»: the app's own camera (spec 3.32). */
-    data object VideoUnderBackingClicked : PieceIntent
+    /** The app's own camera — for a piece with a backing, under it while the chip is on (spec 3.32). */
+    data object OwnCameraClicked : PieceIntent
 
     /** The system camera came back; [saved] is false when the player backed out. */
     data class VideoShotFinished(val saved: Boolean) : PieceIntent
@@ -175,13 +175,6 @@ sealed interface PieceIntent {
     data object BackingProblemDismissed : PieceIntent
 
     /** «Проверить»: the sheet «Настроим наушники». */
-    /** The slider «Задержка наушников» moved (spec 3.32): a fraction of 0…max. */
-    data class HeadphoneLatencyChanged(val fraction: Float) : PieceIntent
-
-    data class HeadphoneLatencyStepped(val up: Boolean) : PieceIntent
-
-    /** Back to the guess for these headphones' kind. */
-    data object HeadphoneLatencyReset : PieceIntent
 }
 
 sealed interface PieceEffect {

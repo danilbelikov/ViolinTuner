@@ -116,7 +116,6 @@ class PieceViewModelTest {
 
     // The backing (spec 3.32): a file that is there, a playback that remembers what it was given, headphones that come and go.
     private val backings = com.example.violintuner.core.domain.backing.FakeBackingRepository()
-    private val latencies = com.example.violintuner.core.domain.backing.FakeHeadphoneLatencyStore()
     private val route = kotlinx.coroutines.flow.MutableStateFlow(
         com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.WIRED, "USB-C headphones"),
     )
@@ -171,7 +170,7 @@ class PieceViewModelTest {
             SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), sessions,
             videoFiles, importer(), NoShareFiles,
             backings = backings, backingFiles = backingFiles, backingPcm = backingPcm,
-            backingImporter = { importResult }, backingPreview = null, routes = routes, latencies = latencies,
+            backingImporter = { importResult }, backingPreview = null, routes = routes,
             io = StandardTestDispatcher(testScheduler),
         )
         backgroundScope.launch { viewModel.backing.collect {} }
@@ -669,7 +668,7 @@ class PieceViewModelTest {
     fun `a take under the backing plays it and keeps the shift, the headphones' latency and how far it played`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
         withBacking(id)
-        latencies.set("USB-C headphones", 12)
+        route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.BLUETOOTH, "Buds")
         val (viewModel, _) = screen(id)
         viewModel.onIntent(PieceIntent.RecordClicked)
         advance(3_000)
@@ -680,12 +679,12 @@ class PieceViewModelTest {
 
         val take = backings.takeBackings.value.single()
         assertEquals(1L, take.sessionId) // the first session the fake stores
-        // the fake source has no clock: the shift is what the headphones add
-        assertEquals(12, take.offsetMs)
-        assertEquals(12, take.recordedOffsetMs)
-        assertEquals(12, take.latencyMs)
+        // the fake source has no clock: the shift is the guess for wireless headphones, set by ear later on «Звук»
+        assertEquals(200, take.offsetMs)
+        assertEquals(200, take.recordedOffsetMs)
+        assertEquals(200, take.latencyMs)
         assertEquals(3_210L, take.playedMs)
-        assertEquals(com.example.violintuner.core.domain.backing.BackingOutput.WIRED, take.output)
+        assertEquals(com.example.violintuner.core.domain.backing.BackingOutput.BLUETOOTH, take.output)
         assertTrue(viewModel.state.value.takes.single().underBacking)
     }
 
@@ -720,54 +719,27 @@ class PieceViewModelTest {
     }
 
     @Test
-    fun `wireless headphones never set start from the guess, and the slider sets what the next takes are made with`() = runTest {
-        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
-        withBacking(id)
-        route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.BLUETOOTH, "Buds")
-        val (viewModel, _) = screen(id)
-        runCurrent()
-        assertEquals(200, viewModel.backing.value!!.latencyMs)
-
-        // the slider shows the finger at once and writes the number down once it stops
-        viewModel.onIntent(PieceIntent.HeadphoneLatencyChanged(0.226f))
-        runCurrent()
-        assertEquals(450, viewModel.backing.value!!.latencyMs)
-        assertNull(latencies.latencies.value.of("Buds"))
-        advanceTimeBy(500)
-        runCurrent()
-        assertEquals(450, latencies.latencies.value.of("Buds"))
-        viewModel.onIntent(PieceIntent.HeadphoneLatencyStepped(up = true))
-        advanceTimeBy(500)
-        runCurrent()
-        assertEquals(455, latencies.latencies.value.of("Buds"))
-
-        // no sheet before the take: it is made under the backing at once, with the number set
-        viewModel.onIntent(PieceIntent.RecordClicked)
-        advance(3_000)
-        assertTrue(viewModel.takeState.value.recording)
-        viewModel.onIntent(PieceIntent.RecordClicked)
-        advance(300)
-        assertEquals(455, backings.takeBackings.value.single().latencyMs)
-
-        viewModel.onIntent(PieceIntent.HeadphoneLatencyReset)
-        advanceTimeBy(500)
-        runCurrent()
-        assertEquals(200, latencies.latencies.value.of("Buds"))
-    }
-
-    @Test
-    fun `filming to the backing opens the app's camera at once with headphones, never without`() = runTest {
+    fun `a piece with a backing is filmed by the app's camera — under it only with headphones, a plain video without the chip`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
         withBacking(id)
         route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.SPEAKER, null)
         val (viewModel, effects) = screen(id)
-        viewModel.onIntent(PieceIntent.VideoUnderBackingClicked)
+        viewModel.onIntent(PieceIntent.OwnCameraClicked)
         runCurrent()
         assertTrue(effects.none { it is PieceEffect.OpenCapture })
 
         route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.BLUETOOTH, "Buds")
         runCurrent()
-        viewModel.onIntent(PieceIntent.VideoUnderBackingClicked)
+        viewModel.onIntent(PieceIntent.OwnCameraClicked)
+        runCurrent()
+        assertEquals(PieceEffect.OpenCapture(id), effects.last())
+
+        // the chip off: no headphones asked for
+        route.value = com.example.violintuner.core.domain.backing.AudioRoute(com.example.violintuner.core.domain.backing.BackingOutput.SPEAKER, null)
+        viewModel.onIntent(PieceIntent.BackingChipToggled)
+        runCurrent()
+        effects.clear()
+        viewModel.onIntent(PieceIntent.OwnCameraClicked)
         runCurrent()
         assertEquals(PieceEffect.OpenCapture(id), effects.last())
     }

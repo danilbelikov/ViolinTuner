@@ -17,8 +17,6 @@ import com.example.violintuner.core.data.backing.RoomBackingRepository
 import com.example.violintuner.core.domain.backing.BackingConfig
 import com.example.violintuner.core.domain.backing.BackingFiles
 import com.example.violintuner.core.domain.backing.BackingRepository
-import com.example.violintuner.core.domain.backing.HeadphoneLatencyStore
-import com.example.violintuner.core.settings.DataStoreHeadphoneLatencyStore
 import dagger.Binds
 import dagger.Module
 import dagger.Provides
@@ -47,9 +45,6 @@ abstract class BackingDataModule {
     @Binds
     abstract fun bindBackingPreview(impl: MediaBackingPreview): BackingPreview
 
-    @Binds
-    @Singleton
-    abstract fun bindHeadphoneLatencyStore(impl: DataStoreHeadphoneLatencyStore): HeadphoneLatencyStore
 
     companion object {
         @Provides

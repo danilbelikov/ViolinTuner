@@ -1006,7 +1006,6 @@
     <string name="backing_offset">偏移</string>
     <string name="backing_offset_hint">滞后就向左</string>
     <string name="backing_offset_recorded">按录制时 · %1$s</string>
-    <string name="backing_remember">为 %1$s 记住</string>
 
     <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
     <string name="backing_add">添加伴奏</string>
@@ -1050,10 +1049,7 @@
     <string name="capture_saving">正在合成视频…</string>
     <string name="capture_video_failed">视频合成失败——已保存为音频录音。</string>
 
-    <!-- The headphones' latency, set by ear on the piece screen (spec 3.32). -->
-    <string name="backing_latency">耳机延迟</string>
-    <string name="backing_latency_hint">录音中伴奏落后于小提琴就向左调，抢先就向右调。</string>
-
-    <!-- «Запомнить для …» pressed: the row confirms it (spec 3.32). -->
-    <string name="backing_remembered">已为 %1$s 保存</string>
+    <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
+    <string name="video_shoot_own_hint">用应用相机 — 立即分析</string>
+    <string name="camera_no_permission">没有摄像头权限就无法拍摄——可以在应用设置中开启。</string>
 </resources>
