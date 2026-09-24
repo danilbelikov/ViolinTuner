@@ -25,7 +25,7 @@ fun SettingsRoute(
     onOpenRestore: (uri: String) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: SettingsViewModel = hiltViewModel(),
+    viewModel: SettingsViewModel = hiltViewModel<HiltSettingsViewModel>(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current

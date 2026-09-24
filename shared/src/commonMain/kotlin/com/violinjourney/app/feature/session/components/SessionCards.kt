@@ -20,18 +20,31 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.session.ProblemNoteUi
 import com.violinjourney.app.feature.session.SessionContent
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.session_bias_small_down
+import com.violinjourney.app.shared.resources.session_bias_small_none
+import com.violinjourney.app.shared.resources.session_bias_small_up
+import com.violinjourney.app.shared.resources.session_card_distribution
+import com.violinjourney.app.shared.resources.session_card_mean_error
+import com.violinjourney.app.shared.resources.session_card_per_string
+import com.violinjourney.app.shared.resources.session_cents_unit
+import com.violinjourney.app.shared.resources.session_cents_value
+import com.violinjourney.app.shared.resources.session_no_problem_notes
+import com.violinjourney.app.shared.resources.session_percent
+import com.violinjourney.app.shared.resources.session_problem_note
+import com.violinjourney.app.shared.resources.session_problem_notes
+import com.violinjourney.app.shared.resources.session_string_not_played
+import org.jetbrains.compose.resources.stringResource
 
 private val CardCorner = 16.dp
 private val CardPadding = 14.dp
@@ -69,7 +82,7 @@ fun SessionStatCards(content: SessionContent, modifier: Modifier = Modifier) {
             horizontalArrangement = Arrangement.spacedBy(CardGap),
         ) {
             StatCard(
-                title = stringResource(R.string.session_card_distribution),
+                title = stringResource(Res.string.session_card_distribution),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
@@ -98,7 +111,7 @@ fun SessionStatCards(content: SessionContent, modifier: Modifier = Modifier) {
                 Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     shares.forEach { (percent, color) ->
                         Text(
-                            text = stringResource(R.string.session_percent, percent),
+                            text = stringResource(Res.string.session_percent, percent),
                             color = color,
                             style = MaterialTheme.typography.bodySmall.merge(NumberSmall),
                         )
@@ -106,7 +119,7 @@ fun SessionStatCards(content: SessionContent, modifier: Modifier = Modifier) {
                 }
             }
             StatCard(
-                title = stringResource(R.string.session_card_mean_error),
+                title = stringResource(Res.string.session_card_mean_error),
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxHeight(),
@@ -119,7 +132,7 @@ fun SessionStatCards(content: SessionContent, modifier: Modifier = Modifier) {
                         style = MaterialTheme.typography.headlineMedium.merge(NumberLarge),
                     )
                     Text(
-                        text = " " + stringResource(R.string.session_cents_unit),
+                        text = " " + stringResource(Res.string.session_cents_unit),
                         modifier = Modifier.alignByBaseline(),
                         color = colors.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium,
@@ -127,17 +140,17 @@ fun SessionStatCards(content: SessionContent, modifier: Modifier = Modifier) {
                 }
                 Text(
                     text = when {
-                        content.biasZone == null -> stringResource(R.string.session_bias_small_none)
+                        content.biasZone == null -> stringResource(Res.string.session_bias_small_none)
                         content.biasCents < 0 ->
-                            stringResource(R.string.session_bias_small_down, Formats.signedCents(content.biasCents))
-                        else -> stringResource(R.string.session_bias_small_up, Formats.signedCents(content.biasCents))
+                            stringResource(Res.string.session_bias_small_down, Formats.signedCents(content.biasCents))
+                        else -> stringResource(Res.string.session_bias_small_up, Formats.signedCents(content.biasCents))
                     },
                     color = colors.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall.merge(CardTitle),
                 )
             }
         }
-        StatCard(title = stringResource(R.string.session_card_per_string), modifier = Modifier.fillMaxWidth()) {
+        StatCard(title = stringResource(Res.string.session_card_per_string), modifier = Modifier.fillMaxWidth()) {
             Row(modifier = Modifier.padding(top = 10.dp)) {
                 ViolinString.entries.forEach { string ->
                     val score = content.perString[string]
@@ -148,8 +161,8 @@ fun SessionStatCards(content: SessionContent, modifier: Modifier = Modifier) {
                             style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp, fontWeight = FontWeight.Bold),
                         )
                         Text(
-                            text = score?.let { stringResource(R.string.session_percent, it.first) }
-                                ?: stringResource(R.string.session_string_not_played),
+                            text = score?.let { stringResource(Res.string.session_percent, it.first) }
+                                ?: stringResource(Res.string.session_string_not_played),
                             color = score?.let { zoneColors.colorFor(it.second) } ?: colors.onSurfaceVariant,
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
@@ -167,14 +180,14 @@ fun ProblemNotes(notes: List<ProblemNoteUi>, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
-            text = stringResource(R.string.session_problem_notes),
+            text = stringResource(Res.string.session_problem_notes),
             modifier = Modifier.padding(bottom = 2.dp),
             color = colors.onSurface,
             style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
         )
         if (notes.isEmpty()) {
             Text(
-                text = stringResource(R.string.session_no_problem_notes),
+                text = stringResource(Res.string.session_no_problem_notes),
                 modifier = Modifier.padding(vertical = 6.dp),
                 color = colors.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium,
@@ -201,13 +214,13 @@ private fun ProblemNoteRow(note: ProblemNoteUi, color: Color) {
                 .background(color, CircleShape),
         )
         Text(
-            text = stringResource(R.string.session_problem_note, note.note.name, note.string.note.letter.toString()),
+            text = stringResource(Res.string.session_problem_note, note.note.name, note.string.note.letter.toString()),
             modifier = Modifier.weight(1f),
             color = colors.onSurface,
             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
         )
         Text(
-            text = stringResource(R.string.session_cents_value, Formats.signedCents(note.meanCents)),
+            text = stringResource(Res.string.session_cents_value, Formats.signedCents(note.meanCents)),
             color = color,
             style = MaterialTheme.typography.bodyLarge.copy(
                 fontSize = 15.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES,

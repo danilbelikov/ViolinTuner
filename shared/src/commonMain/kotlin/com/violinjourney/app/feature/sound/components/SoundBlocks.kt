@@ -49,8 +49,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -58,7 +56,6 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.domain.sound.CompressorAmount
 import com.violinjourney.app.core.domain.sound.EqBand
@@ -74,7 +71,55 @@ import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.sound.SoundFormats
 import com.violinjourney.app.feature.sound.SoundIntent
 import com.violinjourney.app.feature.sound.SoundReducer
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.sound_amount_little
+import com.violinjourney.app.shared.resources.sound_amount_lot
+import com.violinjourney.app.shared.resources.sound_amount_noticeable
+import com.violinjourney.app.shared.resources.sound_band_low_cut_switch
+import com.violinjourney.app.shared.resources.sound_band_names
+import com.violinjourney.app.shared.resources.sound_block_collapse
+import com.violinjourney.app.shared.resources.sound_block_compressor
+import com.violinjourney.app.shared.resources.sound_block_compressor_sub
+import com.violinjourney.app.shared.resources.sound_block_eq
+import com.violinjourney.app.shared.resources.sound_block_expand
+import com.violinjourney.app.shared.resources.sound_block_off
+import com.violinjourney.app.shared.resources.sound_block_output
+import com.violinjourney.app.shared.resources.sound_block_reverb
+import com.violinjourney.app.shared.resources.sound_block_reverb_sub
+import com.violinjourney.app.shared.resources.sound_block_switch
+import com.violinjourney.app.shared.resources.sound_comp_details
+import com.violinjourney.app.shared.resources.sound_comp_now
+import com.violinjourney.app.shared.resources.sound_comp_text
+import com.violinjourney.app.shared.resources.sound_eq_flat
+import com.violinjourney.app.shared.resources.sound_limiter_hot
+import com.violinjourney.app.shared.resources.sound_limiter_note
+import com.violinjourney.app.shared.resources.sound_param_amount
+import com.violinjourney.app.shared.resources.sound_param_amount_own
+import com.violinjourney.app.shared.resources.sound_param_attack
+import com.violinjourney.app.shared.resources.sound_param_attack_hint
+import com.violinjourney.app.shared.resources.sound_param_brightness
+import com.violinjourney.app.shared.resources.sound_param_brightness_hint
+import com.violinjourney.app.shared.resources.sound_param_decay
+import com.violinjourney.app.shared.resources.sound_param_decay_hint
+import com.violinjourney.app.shared.resources.sound_param_frequency
+import com.violinjourney.app.shared.resources.sound_param_gain
+import com.violinjourney.app.shared.resources.sound_param_makeup
+import com.violinjourney.app.shared.resources.sound_param_mix
+import com.violinjourney.app.shared.resources.sound_param_mix_hint
+import com.violinjourney.app.shared.resources.sound_param_output
+import com.violinjourney.app.shared.resources.sound_param_pre_delay
+import com.violinjourney.app.shared.resources.sound_param_pre_delay_hint
+import com.violinjourney.app.shared.resources.sound_param_ratio
+import com.violinjourney.app.shared.resources.sound_param_release
+import com.violinjourney.app.shared.resources.sound_param_release_hint
+import com.violinjourney.app.shared.resources.sound_param_threshold
+import com.violinjourney.app.shared.resources.sound_param_threshold_hint
+import com.violinjourney.app.shared.resources.sound_param_width
+import com.violinjourney.app.shared.resources.sound_param_width_hint
+import com.violinjourney.app.shared.resources.sound_space_names
 import kotlin.math.exp
+import org.jetbrains.compose.resources.stringArrayResource
+import org.jetbrains.compose.resources.stringResource
 
 private val CardCorner = 20.dp
 private val HeaderHeight = 60.dp
@@ -97,26 +142,26 @@ fun SoundBlocks(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-        val bands = stringArrayResource(R.array.sound_band_names)
+        val bands = stringArrayResource(Res.array.sound_band_names)
         BlockCard(
-            block = SoundBlock.EQ, icon = AppIcons.Eq, title = stringResource(R.string.sound_block_eq), subtitle = null,
+            block = SoundBlock.EQ, icon = AppIcons.Eq, title = stringResource(Res.string.sound_block_eq), subtitle = null,
             summary = eqSummary(settings, bands), settings = settings, expanded = expanded, onIntent = onIntent,
         ) { on -> EqContent(settings, band, on, config, onIntent) }
         BlockCard(
-            block = SoundBlock.COMPRESSOR, icon = AppIcons.Compressor, title = stringResource(R.string.sound_block_compressor),
-            subtitle = stringResource(R.string.sound_block_compressor_sub),
+            block = SoundBlock.COMPRESSOR, icon = AppIcons.Compressor, title = stringResource(Res.string.sound_block_compressor),
+            subtitle = stringResource(Res.string.sound_block_compressor_sub),
             summary = settings.compressor.amount?.let { amountWord(it) } ?: SoundFormats.ratio(settings.compressor.ratio),
             settings = settings, expanded = expanded, onIntent = onIntent,
         ) { on -> CompressorContent(settings, details, on, meters, config, onIntent) }
         BlockCard(
-            block = SoundBlock.REVERB, icon = AppIcons.Hall, title = stringResource(R.string.sound_block_reverb),
-            subtitle = stringResource(R.string.sound_block_reverb_sub),
-            summary = "${stringArrayResource(R.array.sound_space_names)[settings.reverb.space.ordinal]} · ${SoundFormats.value(SoundParam.REVERB_DECAY.unit, settings.reverb.decaySec)} · " +
+            block = SoundBlock.REVERB, icon = AppIcons.Hall, title = stringResource(Res.string.sound_block_reverb),
+            subtitle = stringResource(Res.string.sound_block_reverb_sub),
+            summary = "${stringArrayResource(Res.array.sound_space_names)[settings.reverb.space.ordinal]} · ${SoundFormats.value(SoundParam.REVERB_DECAY.unit, settings.reverb.decaySec)} · " +
                 SoundFormats.value(SoundParam.REVERB_MIX.unit, settings.reverb.mix),
             settings = settings, expanded = expanded, onIntent = onIntent,
         ) { on -> ReverbContent(settings, on, config, onIntent) }
         BlockCard(
-            block = SoundBlock.OUTPUT, icon = AppIcons.Volume, title = stringResource(R.string.sound_block_output), subtitle = null,
+            block = SoundBlock.OUTPUT, icon = AppIcons.Volume, title = stringResource(Res.string.sound_block_output), subtitle = null,
             summary = SoundFormats.decibels(settings.output.gainDb, signed = true), settings = settings, expanded = expanded, onIntent = onIntent,
         ) { on -> OutputContent(settings, on, meters, config, onIntent) }
     }
@@ -125,15 +170,15 @@ fun SoundBlocks(
 @Composable
 private fun amountWord(amount: Double): String = stringResource(
     when {
-        amount < (CompressorAmount.A_LITTLE + CompressorAmount.NOTICEABLY) / 2 -> R.string.sound_amount_little
-        amount < (CompressorAmount.NOTICEABLY + CompressorAmount.A_LOT) / 2 -> R.string.sound_amount_noticeable
-        else -> R.string.sound_amount_lot
+        amount < (CompressorAmount.A_LITTLE + CompressorAmount.NOTICEABLY) / 2 -> Res.string.sound_amount_little
+        amount < (CompressorAmount.NOTICEABLY + CompressorAmount.A_LOT) / 2 -> Res.string.sound_amount_noticeable
+        else -> Res.string.sound_amount_lot
     },
 )
 
 /** What the equalizer does, in a line: the bands that are off zero, by name. */
 @Composable
-private fun eqSummary(settings: SoundSettings, bands: Array<String>): String {
+private fun eqSummary(settings: SoundSettings, bands: List<String>): String {
     val eq = settings.eq
     val moved = buildList {
         if (eq.lowCut.enabled) add("${bands[EqBand.LOW_CUT.ordinal]} ${SoundFormats.hertz(eq.lowCut.hz)}")
@@ -141,7 +186,7 @@ private fun eqSummary(settings: SoundSettings, bands: Array<String>): String {
             .filter { it.second != 0.0 }
             .forEach { (band, db) -> add("${bands[band.ordinal]} ${SoundFormats.decibels(db, signed = true)}") }
     }
-    return if (moved.isEmpty()) stringResource(R.string.sound_eq_flat) else moved.joinToString(" · ")
+    return if (moved.isEmpty()) stringResource(Res.string.sound_eq_flat) else moved.joinToString(" · ")
 }
 
 /**
@@ -167,8 +212,8 @@ private fun BlockCard(
     val bring = remember { BringIntoViewRequester() }
     LaunchedEffect(open) { if (open) bring.bringIntoView() }
     val turn by animateFloatAsState(if (open) 180f else 0f, tween(EXPAND_MS, easing = FastOutSlowInEasing), label = "blockChevron")
-    val switchLabel = stringResource(R.string.sound_block_switch, title)
-    val foldLabel = stringResource(if (open) R.string.sound_block_collapse else R.string.sound_block_expand)
+    val switchLabel = stringResource(Res.string.sound_block_switch, title)
+    val foldLabel = stringResource(if (open) Res.string.sound_block_collapse else Res.string.sound_block_expand)
 
     Column(
         modifier = Modifier
@@ -196,7 +241,7 @@ private fun BlockCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(title, color = colors.onSurface, style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
                 // What the block is for goes before what it is set to — beside the title it did not fit («выравнивает громкость»).
-                val state = if (on) summary else stringResource(R.string.sound_block_off)
+                val state = if (on) summary else stringResource(Res.string.sound_block_off)
                 Text(
                     text = if (subtitle != null) "$subtitle · $state" else state,
                     color = colors.onSurfaceVariant,
@@ -224,7 +269,7 @@ private fun BlockCard(
 
 @Composable
 private fun EqContent(settings: SoundSettings, band: EqBand, on: Boolean, config: SoundConfig, onIntent: (SoundIntent) -> Unit) {
-    val names = stringArrayResource(R.array.sound_band_names)
+    val names = stringArrayResource(Res.array.sound_band_names)
     EqCurveView(
         eq = settings.eq,
         points = EqBand.entries.map { SoundReducer.pointOf(settings, it).let { (hz, db) -> Triple(it, hz, db) } },
@@ -237,7 +282,7 @@ private fun EqContent(settings: SoundSettings, band: EqBand, on: Boolean, config
     Chips(labels = names.toList(), selected = band.ordinal) { onIntent(SoundIntent.BandSelected(EqBand.entries[it])) }
     if (band == EqBand.LOW_CUT) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(stringResource(R.string.sound_band_low_cut_switch), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp), modifier = Modifier.weight(1f))
+            Text(stringResource(Res.string.sound_band_low_cut_switch), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp), modifier = Modifier.weight(1f))
             Switch(checked = settings.eq.lowCut.enabled, enabled = on, onCheckedChange = { onIntent(SoundIntent.LowCutSwitched(it)) })
         }
     }
@@ -271,7 +316,7 @@ private fun CompressorContent(settings: SoundSettings, details: Boolean, on: Boo
             columns(before, 0f, colors.onSurfaceVariant)
             columns(after, size.width - 6 * (bar + gap) + gap, sound.meterReduce)
         }
-        Text(stringResource(R.string.sound_comp_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp))
+        Text(stringResource(Res.string.sound_comp_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp))
     }
     Slider(SoundParam.COMP_AMOUNT, settings, on, config, onIntent)
     ReductionMeter(meters, on)
@@ -283,7 +328,7 @@ private fun CompressorContent(settings: SoundSettings, details: Boolean, on: Boo
             .padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(stringResource(R.string.sound_comp_details), color = colors.primary, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp), modifier = Modifier.weight(1f))
+        Text(stringResource(Res.string.sound_comp_details), color = colors.primary, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp), modifier = Modifier.weight(1f))
         AppIcon(AppIcons.ChevronDown, contentDescription = null, tint = colors.primary, modifier = Modifier.rotate(if (details) 180f else 0f))
     }
     AnimatedVisibility(visible = details) {
@@ -307,7 +352,7 @@ private fun ReductionMeter(meters: State<SoundMeters?>, on: Boolean) {
         }
     }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.alpha(if (on) 1f else DISABLED_ALPHA)) {
-        Text(stringResource(R.string.sound_comp_now), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
+        Text(stringResource(Res.string.sound_comp_now), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
         Box(
             Modifier
                 .weight(1f)
@@ -331,7 +376,7 @@ private fun ReductionMeter(meters: State<SoundMeters?>, on: Boolean) {
 private fun ReverbContent(settings: SoundSettings, on: Boolean, config: SoundConfig, onIntent: (SoundIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val tint = ViolinTheme.soundColors.meterReduce
-    Chips(labels = stringArrayResource(R.array.sound_space_names).toList(), selected = settings.reverb.space.ordinal) { onIntent(SoundIntent.SpaceSelected(ReverbSpace.entries[it])) }
+    Chips(labels = stringArrayResource(Res.array.sound_space_names).toList(), selected = settings.reverb.space.ordinal) { onIntent(SoundIntent.SpaceSelected(ReverbSpace.entries[it])) }
     // How the tail falls away: the longer it is asked to be, the slower the columns sink.
     val reach = (settings.reverb.decaySec / config.cathedralDecaySec.max).toFloat()
     Canvas(
@@ -371,7 +416,7 @@ private fun OutputContent(settings: SoundSettings, on: Boolean, meters: State<So
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {
         AppIcon(AppIcons.Limiter, contentDescription = null, tint = if (hot) ViolinTheme.soundColors.meterLimit else colors.onSurfaceVariant, size = 18.dp)
         Text(
-            text = stringResource(if (hot) R.string.sound_limiter_hot else R.string.sound_limiter_note),
+            text = stringResource(if (hot) Res.string.sound_limiter_hot else Res.string.sound_limiter_note),
             color = if (hot) ViolinTheme.soundColors.meterLimit else colors.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp),
         )
@@ -386,15 +431,15 @@ private fun Slider(param: SoundParam, settings: SoundSettings, enabled: Boolean,
     val (label, hint) = wordsOf(param)
     val marks = if (param == SoundParam.COMP_AMOUNT) {
         listOf(
-            CompressorAmount.A_LITTLE.toFloat() to stringResource(R.string.sound_amount_little),
-            CompressorAmount.NOTICEABLY.toFloat() to stringResource(R.string.sound_amount_noticeable),
-            CompressorAmount.A_LOT.toFloat() to stringResource(R.string.sound_amount_lot),
+            CompressorAmount.A_LITTLE.toFloat() to stringResource(Res.string.sound_amount_little),
+            CompressorAmount.NOTICEABLY.toFloat() to stringResource(Res.string.sound_amount_noticeable),
+            CompressorAmount.A_LOT.toFloat() to stringResource(Res.string.sound_amount_lot),
         )
     } else {
         emptyList()
     }
     val text = when {
-        value == null -> stringResource(R.string.sound_param_amount_own)
+        value == null -> stringResource(Res.string.sound_param_amount_own)
         // «Сколько» is read as what it does: the ratio it has led to
         param == SoundParam.COMP_AMOUNT -> SoundFormats.ratio(settings.compressor.ratio)
         else -> SoundFormats.value(param.unit, value)
@@ -417,20 +462,20 @@ private fun Slider(param: SoundParam, settings: SoundSettings, enabled: Boolean,
 
 @Composable
 private fun wordsOf(param: SoundParam): Pair<String, String?> = when (param) {
-    SoundParam.LOW_CUT_HZ, SoundParam.LOW_HZ, SoundParam.BODY_HZ, SoundParam.PRESENCE_HZ, SoundParam.AIR_HZ -> stringResource(R.string.sound_param_frequency) to null
-    SoundParam.LOW_GAIN, SoundParam.BODY_GAIN, SoundParam.PRESENCE_GAIN, SoundParam.AIR_GAIN -> stringResource(R.string.sound_param_gain) to null
-    SoundParam.BODY_Q, SoundParam.PRESENCE_Q -> stringResource(R.string.sound_param_width) to stringResource(R.string.sound_param_width_hint)
-    SoundParam.COMP_AMOUNT -> stringResource(R.string.sound_param_amount) to null
-    SoundParam.COMP_THRESHOLD -> stringResource(R.string.sound_param_threshold) to stringResource(R.string.sound_param_threshold_hint)
-    SoundParam.COMP_RATIO -> stringResource(R.string.sound_param_ratio) to null
-    SoundParam.COMP_ATTACK -> stringResource(R.string.sound_param_attack) to stringResource(R.string.sound_param_attack_hint)
-    SoundParam.COMP_RELEASE -> stringResource(R.string.sound_param_release) to stringResource(R.string.sound_param_release_hint)
-    SoundParam.COMP_MAKEUP -> stringResource(R.string.sound_param_makeup) to null
-    SoundParam.REVERB_DECAY -> stringResource(R.string.sound_param_decay) to stringResource(R.string.sound_param_decay_hint)
-    SoundParam.REVERB_PRE_DELAY -> stringResource(R.string.sound_param_pre_delay) to stringResource(R.string.sound_param_pre_delay_hint)
-    SoundParam.REVERB_BRIGHTNESS -> stringResource(R.string.sound_param_brightness) to stringResource(R.string.sound_param_brightness_hint)
-    SoundParam.REVERB_MIX -> stringResource(R.string.sound_param_mix) to stringResource(R.string.sound_param_mix_hint)
-    SoundParam.OUTPUT_GAIN -> stringResource(R.string.sound_param_output) to null
+    SoundParam.LOW_CUT_HZ, SoundParam.LOW_HZ, SoundParam.BODY_HZ, SoundParam.PRESENCE_HZ, SoundParam.AIR_HZ -> stringResource(Res.string.sound_param_frequency) to null
+    SoundParam.LOW_GAIN, SoundParam.BODY_GAIN, SoundParam.PRESENCE_GAIN, SoundParam.AIR_GAIN -> stringResource(Res.string.sound_param_gain) to null
+    SoundParam.BODY_Q, SoundParam.PRESENCE_Q -> stringResource(Res.string.sound_param_width) to stringResource(Res.string.sound_param_width_hint)
+    SoundParam.COMP_AMOUNT -> stringResource(Res.string.sound_param_amount) to null
+    SoundParam.COMP_THRESHOLD -> stringResource(Res.string.sound_param_threshold) to stringResource(Res.string.sound_param_threshold_hint)
+    SoundParam.COMP_RATIO -> stringResource(Res.string.sound_param_ratio) to null
+    SoundParam.COMP_ATTACK -> stringResource(Res.string.sound_param_attack) to stringResource(Res.string.sound_param_attack_hint)
+    SoundParam.COMP_RELEASE -> stringResource(Res.string.sound_param_release) to stringResource(Res.string.sound_param_release_hint)
+    SoundParam.COMP_MAKEUP -> stringResource(Res.string.sound_param_makeup) to null
+    SoundParam.REVERB_DECAY -> stringResource(Res.string.sound_param_decay) to stringResource(Res.string.sound_param_decay_hint)
+    SoundParam.REVERB_PRE_DELAY -> stringResource(Res.string.sound_param_pre_delay) to stringResource(Res.string.sound_param_pre_delay_hint)
+    SoundParam.REVERB_BRIGHTNESS -> stringResource(Res.string.sound_param_brightness) to stringResource(Res.string.sound_param_brightness_hint)
+    SoundParam.REVERB_MIX -> stringResource(Res.string.sound_param_mix) to stringResource(Res.string.sound_param_mix_hint)
+    SoundParam.OUTPUT_GAIN -> stringResource(Res.string.sound_param_output) to null
 }
 
 /** A row of chips where one is chosen: the bands of the equalizer, the spaces of the hall. */

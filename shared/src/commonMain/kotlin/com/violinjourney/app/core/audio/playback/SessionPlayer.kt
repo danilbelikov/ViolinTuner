@@ -2,7 +2,7 @@ package com.violinjourney.app.core.audio.playback
 
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.domain.sound.SoundSettings
-import java.io.File
+import com.violinjourney.app.core.io.PlatformFile
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.StateFlow
 
@@ -34,11 +34,11 @@ data class PlayerState(
  * (it runs on the player's thread and may take a moment the first time), [offsetMs] and [gainDb] mix it.
  */
 class PlayerBacking(
-    val pcm: (sampleRate: Int) -> File?,
+    val pcm: (sampleRate: Int) -> PlatformFile?,
     val offsetMs: Int,
     val gainDb: Float,
     /** The sound already made at a rate, without making it: null — [pcm] has work to do, and the screen is told. */
-    val cached: (sampleRate: Int) -> File? = { null },
+    val cached: (sampleRate: Int) -> PlatformFile? = { null },
 )
 
 /**
@@ -52,10 +52,10 @@ interface SessionPlayer {
     /** Level at the output and what the compressor and the limiter are doing; null while nothing plays through the chain. */
     val meters: StateFlow<SoundMeters?>
 
-    fun load(file: File)
+    fun load(file: PlatformFile)
 
     /** [load] with the backing the take was made under, mixed in; a player without backings just loads the file. */
-    fun loadWithBacking(file: File, backing: PlayerBacking?) = load(file)
+    fun loadWithBacking(file: PlatformFile, backing: PlayerBacking?) = load(file)
 
     /** A new shift or level of the backing, heard at once and gliding in. */
     fun setBackingMix(offsetMs: Int, gainDb: Float) = Unit

@@ -1,12 +1,11 @@
 package com.violinjourney.app.feature.repertoire.form
 
-import androidx.activity.compose.BackHandler
+import androidx.compose.ui.backhandler.BackHandler
 import com.violinjourney.app.feature.repertoire.components.LocalExerciseWords
 import com.violinjourney.app.feature.repertoire.SectionKeys
 import com.violinjourney.app.feature.repertoire.sections.sectionName
 import com.violinjourney.app.core.ui.icons.IconSizes
 import com.violinjourney.app.core.domain.repertoire.SectionRef
-import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.graphics.Color
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.DropdownMenu
@@ -60,7 +59,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -68,7 +66,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.repertoire.Accidental
 import com.violinjourney.app.core.domain.repertoire.KeyMode
 import com.violinjourney.app.core.domain.repertoire.MusicalKey
@@ -81,6 +78,42 @@ import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.repertoire.components.TempoStepper
 import com.violinjourney.app.feature.repertoire.components.statusLabel
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.dialog_cancel
+import com.violinjourney.app.shared.resources.form_author
+import com.violinjourney.app.shared.resources.form_new_element
+import com.violinjourney.app.shared.resources.form_new_etude
+import com.violinjourney.app.shared.resources.form_new_stroke
+import com.violinjourney.app.shared.resources.form_section
+import com.violinjourney.app.shared.resources.piece_delete
+import com.violinjourney.app.shared.resources.piece_delete_confirm
+import com.violinjourney.app.shared.resources.piece_delete_text
+import com.violinjourney.app.shared.resources.piece_delete_title
+import com.violinjourney.app.shared.resources.piece_field_composer
+import com.violinjourney.app.shared.resources.piece_field_key
+import com.violinjourney.app.shared.resources.piece_field_notes
+import com.violinjourney.app.shared.resources.piece_field_status
+import com.violinjourney.app.shared.resources.piece_field_tempo
+import com.violinjourney.app.shared.resources.piece_field_title
+import com.violinjourney.app.shared.resources.piece_form_close
+import com.violinjourney.app.shared.resources.piece_form_discard_confirm
+import com.violinjourney.app.shared.resources.piece_form_discard_title
+import com.violinjourney.app.shared.resources.piece_form_title_edit
+import com.violinjourney.app.shared.resources.piece_form_title_new
+import com.violinjourney.app.shared.resources.piece_key_major
+import com.violinjourney.app.shared.resources.piece_key_minor
+import com.violinjourney.app.shared.resources.piece_tempo_clear
+import com.violinjourney.app.shared.resources.piece_tempo_empty
+import com.violinjourney.app.shared.resources.piece_tempo_faster
+import com.violinjourney.app.shared.resources.piece_tempo_slower
+import com.violinjourney.app.shared.resources.piece_tempo_value
+import com.violinjourney.app.shared.resources.piece_title_error
+import com.violinjourney.app.shared.resources.practice_no_value
+import com.violinjourney.app.shared.resources.practice_save
+import com.violinjourney.app.shared.resources.profile_name_counter
+import com.violinjourney.app.shared.resources.stroke_suggestions
+import org.jetbrains.compose.resources.stringArrayResource
+import org.jetbrains.compose.resources.stringResource
 
 private val ScreenPadding = 16.dp
 private val MaxContentWidth = 560.dp
@@ -127,16 +160,16 @@ fun PieceFormScreen(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit, 
     }
     when (state.dialog) {
         PieceFormDialog.DISCARD -> ConfirmDialog(
-            title = stringResource(R.string.piece_form_discard_title),
+            title = stringResource(Res.string.piece_form_discard_title),
             text = null,
-            confirm = stringResource(R.string.piece_form_discard_confirm),
+            confirm = stringResource(Res.string.piece_form_discard_confirm),
             destructive = false,
             onIntent = onIntent,
         )
         PieceFormDialog.DELETE -> ConfirmDialog(
-            title = stringResource(R.string.piece_delete_title, state.draft.title.trim()),
-            text = stringResource(R.string.piece_delete_text),
-            confirm = stringResource(R.string.piece_delete_confirm),
+            title = stringResource(Res.string.piece_delete_title, state.draft.title.trim()),
+            text = stringResource(Res.string.piece_delete_text),
+            confirm = stringResource(Res.string.piece_delete_confirm),
             destructive = true,
             onIntent = onIntent,
         )
@@ -154,7 +187,7 @@ private fun TopBar(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val close = stringResource(R.string.piece_form_close)
+        val close = stringResource(Res.string.piece_form_close)
         Box(
             modifier = Modifier
                 .size(TopBarButton)
@@ -168,10 +201,10 @@ private fun TopBar(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
         Text(
             text = when {
                 !state.isNew -> sectionElementTitle(state)
-                state.stroke -> stringResource(R.string.form_new_stroke)
-                state.etude -> stringResource(R.string.form_new_etude)
-                state.section is SectionRef.Custom -> stringResource(R.string.form_new_element)
-                else -> stringResource(R.string.piece_form_title_new)
+                state.stroke -> stringResource(Res.string.form_new_stroke)
+                state.etude -> stringResource(Res.string.form_new_etude)
+                state.section is SectionRef.Custom -> stringResource(Res.string.form_new_element)
+                else -> stringResource(Res.string.piece_form_title_new)
             },
             modifier = Modifier
                 .weight(1f)
@@ -182,7 +215,7 @@ private fun TopBar(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
         )
         // Stays tappable without a title: the tap is what makes the field say why it cannot be saved.
         TextButton(onClick = { onIntent(PieceFormIntent.SaveClicked) }, modifier = Modifier.alpha(if (state.canSave) 1f else DISABLED_ALPHA)) {
-            Text(stringResource(R.string.practice_save), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold))
+            Text(stringResource(Res.string.practice_save), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold))
         }
     }
 }
@@ -211,13 +244,13 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
                 title = it.take(state.maxTitleLength)
                 onIntent(PieceFormIntent.TitleChanged(title))
             },
-            label = stringResource(R.string.piece_field_title),
+            label = stringResource(Res.string.piece_field_title),
             isError = state.titleError,
             capitalization = KeyboardCapitalization.Sentences,
         )
         if (state.titleError) {
             Text(
-                text = stringResource(R.string.piece_title_error),
+                text = stringResource(Res.string.piece_title_error),
                 modifier = Modifier.padding(start = 16.dp),
                 color = ViolinTheme.repertoireColors.formError,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
@@ -233,13 +266,13 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
                 onIntent(PieceFormIntent.ComposerChanged(composer))
             },
             // an étude has an author — Kayser, Kreutzer, Mazas — rather than a composer
-            label = stringResource(if (state.etude) R.string.form_author else R.string.piece_field_composer),
+            label = stringResource(if (state.etude) Res.string.form_author else Res.string.piece_field_composer),
             capitalization = KeyboardCapitalization.Words,
         )
         KeyPicker(draft.key, onIntent)
     }
     TempoPicker(draft.tempoBpm, onIntent)
-    Labeled(stringResource(R.string.piece_field_status)) {
+    Labeled(stringResource(Res.string.piece_field_status)) {
         val statuses = PieceStatus.entries
         SegmentedSwitch(
             labels = statuses.map { statusLabel(it) },
@@ -255,13 +288,13 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
             notes = it.take(state.maxNotesLength)
             onIntent(PieceFormIntent.NotesChanged(notes))
         },
-        label = stringResource(R.string.piece_field_notes),
+        label = stringResource(Res.string.piece_field_notes),
         singleLine = false,
         capitalization = KeyboardCapitalization.Sentences,
         modifier = Modifier
             .heightIn(min = NotesMinHeight)
             .focusRequester(notesFocus),
-        supporting = stringResource(R.string.profile_name_counter, notes.length, state.maxNotesLength),
+        supporting = stringResource(Res.string.profile_name_counter, notes.length, state.maxNotesLength),
     )
     if (!state.isNew) {
         val error = ViolinTheme.repertoireColors.formError
@@ -274,7 +307,7 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
             border = BorderStroke(1.dp, SolidColor(colors.outlineVariant)),
         ) {
             CompositionLocalProvider(LocalContentColor provides error) {
-                IconLabel(AppIcons.Trash, stringResource(R.string.piece_delete), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
+                IconLabel(AppIcons.Trash, stringResource(Res.string.piece_delete), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
             }
         }
     }
@@ -336,7 +369,7 @@ internal fun Labeled(label: String, value: String? = null, content: @Composable 
 @Composable
 private fun KeyPicker(key: MusicalKey?, onIntent: (PieceFormIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
-    Labeled(stringResource(R.string.piece_field_key), value = key?.germanName ?: stringResource(R.string.practice_no_value)) {
+    Labeled(stringResource(Res.string.piece_field_key), value = key?.germanName ?: stringResource(Res.string.practice_no_value)) {
         Row(modifier = Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(TonicGap)) {
             Tonic.entries.forEach { tonic ->
                 val selected = key?.tonic == tonic
@@ -371,7 +404,7 @@ private fun KeyPicker(key: MusicalKey?, onIntent: (PieceFormIntent) -> Unit) {
         )
         val modes = KeyMode.entries
         SegmentedSwitch(
-            labels = listOf(stringResource(R.string.piece_key_major), stringResource(R.string.piece_key_minor)),
+            labels = listOf(stringResource(Res.string.piece_key_major), stringResource(Res.string.piece_key_minor)),
             selectedIndex = key?.let { modes.indexOf(it.mode) },
             onSelect = { onIntent(PieceFormIntent.ModeSelected(modes[it])) },
             modifier = dependent,
@@ -387,20 +420,20 @@ internal fun TempoPicker(tempoBpm: Int?, onIntent: (PieceFormIntent) -> Unit) =
 /** The tempo of any form of the repertoire; a scale offers slower quick values than a piece (handoff 24d). */
 @Composable
 internal fun TempoPicker(tempoBpm: Int?, quick: List<Int>, onStep: (Int) -> Unit, onPick: (Int?) -> Unit) {
-    Labeled(stringResource(R.string.piece_field_tempo)) {
+    Labeled(stringResource(Res.string.piece_field_tempo)) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             TempoStepper(
-                value = tempoBpm?.let { stringResource(R.string.piece_tempo_value, it) } ?: stringResource(R.string.piece_tempo_empty),
+                value = tempoBpm?.let { stringResource(Res.string.piece_tempo_value, it) } ?: stringResource(Res.string.piece_tempo_empty),
                 onStep = onStep,
-                downDescription = stringResource(R.string.piece_tempo_slower),
-                upDescription = stringResource(R.string.piece_tempo_faster),
+                downDescription = stringResource(Res.string.piece_tempo_slower),
+                upDescription = stringResource(Res.string.piece_tempo_faster),
             )
             Box(Modifier.weight(1f))
             (listOf<Int?>(null) + quick).forEach { bpm ->
                 TempoChip(
-                    text = bpm?.toString() ?: stringResource(R.string.practice_no_value),
+                    text = bpm?.toString() ?: stringResource(Res.string.practice_no_value),
                     selected = bpm == tempoBpm,
-                    description = bpm?.let { stringResource(R.string.piece_tempo_value, it) } ?: stringResource(R.string.piece_tempo_clear),
+                    description = bpm?.let { stringResource(Res.string.piece_tempo_value, it) } ?: stringResource(Res.string.piece_tempo_clear),
                 ) { onPick(bpm) }
             }
         }
@@ -442,7 +475,7 @@ private fun ConfirmDialog(title: String, text: String?, confirm: String, destruc
                 Text(confirm, color = if (destructive) ViolinTheme.repertoireColors.formError else colors.primary)
             }
         },
-        dismissButton = { TextButton(onClick = { onIntent(PieceFormIntent.DialogDismissed) }) { Text(stringResource(R.string.dialog_cancel)) } },
+        dismissButton = { TextButton(onClick = { onIntent(PieceFormIntent.DialogDismissed) }) { Text(stringResource(Res.string.dialog_cancel)) } },
         containerColor = colors.surfaceContainerHigh,
     )
 }
@@ -450,7 +483,7 @@ private fun ConfirmDialog(title: String, text: String?, confirm: String, destruc
 @Composable
 private fun sectionElementTitle(state: PieceFormState): String = when {
     state.stroke || state.etude || state.section is SectionRef.Custom -> sectionName(state.section, state.sections.firstOrNull { it.ref == state.section }?.name)
-    else -> stringResource(R.string.piece_form_title_edit)
+    else -> stringResource(Res.string.piece_form_title_edit)
 }
 
 /** «Раздел» of an edit (spec 3.22, handoff 24e): an outlined field with a chevron and the list of sections under it; «Гаммы» is there, dimmed — it is for scales alone. */
@@ -465,7 +498,7 @@ private fun SectionField(state: PieceFormState, onIntent: (PieceFormIntent) -> U
             onValueChange = {},
             modifier = Modifier.fillMaxWidth(),
             readOnly = true,
-            label = { Text(stringResource(R.string.form_section)) },
+            label = { Text(stringResource(Res.string.form_section)) },
             trailingIcon = { AppIcon(AppIcons.ChevronDown, contentDescription = null, tint = colors.onSurfaceVariant, size = IconSizes.InButton) },
             shape = RoundedCornerShape(FieldCorner),
             colors = OutlinedTextFieldDefaults.colors(unfocusedBorderColor = colors.outlineVariant, unfocusedLabelColor = colors.onSurfaceVariant),
@@ -497,7 +530,7 @@ private fun SectionField(state: PieceFormState, onIntent: (PieceFormIntent) -> U
 private fun StrokeSuggestions(selected: String, onPick: (String) -> Unit) {
     val colors = MaterialTheme.colorScheme
     FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        stringArrayResource(R.array.stroke_suggestions).forEach { word ->
+        stringArrayResource(Res.array.stroke_suggestions).forEach { word ->
             val picked = word.equals(selected, ignoreCase = true)
             val background by animateColorAsState(if (picked) colors.primaryContainer else Color.Transparent, tween(CHIP_MS), label = "strokeChip")
             val shape = RoundedCornerShape(8.dp)

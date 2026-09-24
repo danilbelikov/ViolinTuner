@@ -1,6 +1,6 @@
 package com.violinjourney.app.feature.repertoire.scale
 
-import androidx.activity.compose.BackHandler
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -49,7 +49,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -58,7 +57,6 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.repertoire.Accidental
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.Tonic
@@ -74,6 +72,28 @@ import com.violinjourney.app.feature.repertoire.components.statusLabel
 import com.violinjourney.app.feature.repertoire.form.FormField
 import com.violinjourney.app.feature.repertoire.form.Labeled
 import com.violinjourney.app.feature.repertoire.form.TempoPicker
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.dialog_cancel
+import com.violinjourney.app.shared.resources.piece_delete
+import com.violinjourney.app.shared.resources.piece_delete_confirm
+import com.violinjourney.app.shared.resources.piece_delete_text
+import com.violinjourney.app.shared.resources.piece_delete_title
+import com.violinjourney.app.shared.resources.piece_field_notes
+import com.violinjourney.app.shared.resources.piece_field_status
+import com.violinjourney.app.shared.resources.piece_form_close
+import com.violinjourney.app.shared.resources.piece_form_discard_confirm
+import com.violinjourney.app.shared.resources.piece_form_discard_title
+import com.violinjourney.app.shared.resources.profile_name_counter
+import com.violinjourney.app.shared.resources.scale_edit
+import com.violinjourney.app.shared.resources.scale_exists
+import com.violinjourney.app.shared.resources.scale_key
+import com.violinjourney.app.shared.resources.scale_kind
+import com.violinjourney.app.shared.resources.scale_new
+import com.violinjourney.app.shared.resources.scale_octaves
+import com.violinjourney.app.shared.resources.scale_open
+import com.violinjourney.app.shared.resources.scale_preview_empty
+import com.violinjourney.app.shared.resources.section_save
+import org.jetbrains.compose.resources.stringResource
 
 private val TopBarHeight = 56.dp
 private val TopBarButton = 48.dp
@@ -122,13 +142,13 @@ fun ScaleFormScreen(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit, 
     }
     when (state.dialog) {
         ScaleFormDialog.DISCARD -> Confirm(
-            title = stringResource(R.string.piece_form_discard_title), text = null,
-            confirm = stringResource(R.string.piece_form_discard_confirm), destructive = false, onIntent = onIntent,
+            title = stringResource(Res.string.piece_form_discard_title), text = null,
+            confirm = stringResource(Res.string.piece_form_discard_confirm), destructive = false, onIntent = onIntent,
         )
         ScaleFormDialog.DELETE -> Confirm(
-            title = stringResource(R.string.piece_delete_title, state.scale?.let { scaleTitle(it.spec) }.orEmpty()),
-            text = stringResource(R.string.piece_delete_text),
-            confirm = stringResource(R.string.piece_delete_confirm), destructive = true, onIntent = onIntent,
+            title = stringResource(Res.string.piece_delete_title, state.scale?.let { scaleTitle(it.spec) }.orEmpty()),
+            text = stringResource(Res.string.piece_delete_text),
+            confirm = stringResource(Res.string.piece_delete_confirm), destructive = true, onIntent = onIntent,
         )
         null -> Unit
     }
@@ -144,7 +164,7 @@ private fun TopBar(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val close = stringResource(R.string.piece_form_close)
+        val close = stringResource(Res.string.piece_form_close)
         Box(
             modifier = Modifier
                 .size(TopBarButton)
@@ -154,7 +174,7 @@ private fun TopBar(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
             contentAlignment = Alignment.Center,
         ) { AppIcon(AppIcons.Close, contentDescription = null, tint = colors.onSurface) }
         Text(
-            text = stringResource(if (state.isNew) R.string.scale_new else R.string.scale_edit),
+            text = stringResource(if (state.isNew) Res.string.scale_new else Res.string.scale_edit),
             modifier = Modifier
                 .weight(1f)
                 .padding(start = 4.dp),
@@ -163,7 +183,7 @@ private fun TopBar(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
             style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.SemiBold),
         )
         TextButton(onClick = { onIntent(ScaleFormIntent.SaveClicked) }, enabled = state.canSave) {
-            Text(stringResource(R.string.section_save), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
+            Text(stringResource(Res.string.section_save), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
         }
     }
 }
@@ -176,7 +196,7 @@ private fun Fields(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
     // The key and the kind of a scale that exists are locked: they look it, and a tap says why.
     val keyAlpha = if (state.isNew) 1f else LOCKED
 
-    Labeled(stringResource(R.string.scale_key)) {
+    Labeled(stringResource(Res.string.scale_key)) {
         Column(modifier = Modifier.alpha(keyAlpha), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 Tonic.entries.forEach { tonic ->
@@ -212,7 +232,7 @@ private fun Fields(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
             )
         }
     }
-    Labeled(stringResource(R.string.scale_kind)) {
+    Labeled(stringResource(Res.string.scale_kind)) {
         FlowRow(modifier = Modifier.alpha(keyAlpha), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             ScaleKind.entries.forEach { kind ->
                 val picked = kind == draft.kind
@@ -231,7 +251,7 @@ private fun Fields(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
         }
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Text(stringResource(R.string.scale_octaves), modifier = Modifier.weight(1f), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
+        Text(stringResource(Res.string.scale_octaves), modifier = Modifier.weight(1f), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
         OctavePicker(draft.octaves, state.octavesAllowed, Modifier.width(OctavesWidth)) { onIntent(ScaleFormIntent.OctavesSelected(it)) }
     }
 
@@ -257,14 +277,14 @@ private fun Fields(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
                 .padding(start = 16.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(stringResource(R.string.scale_exists), modifier = Modifier.weight(1f), color = colors.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp))
-            TextButton(onClick = { onIntent(ScaleFormIntent.OpenExistingClicked) }) { Text(stringResource(R.string.scale_open)) }
+            Text(stringResource(Res.string.scale_exists), modifier = Modifier.weight(1f), color = colors.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp))
+            TextButton(onClick = { onIntent(ScaleFormIntent.OpenExistingClicked) }) { Text(stringResource(Res.string.scale_open)) }
         }
     }
     Preview(state)
 
     TempoPicker(draft.tempoBpm, SCALE_TEMPOS, onStep = { onIntent(ScaleFormIntent.TempoStepped(it)) }, onPick = { onIntent(ScaleFormIntent.TempoPicked(it)) })
-    Labeled(stringResource(R.string.piece_field_status)) {
+    Labeled(stringResource(Res.string.piece_field_status)) {
         val statuses = PieceStatus.entries
         SegmentedSwitch(
             labels = statuses.map { statusLabel(it) },
@@ -280,11 +300,11 @@ private fun Fields(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
             notes = it.take(state.maxNotesLength)
             onIntent(ScaleFormIntent.NotesChanged(notes))
         },
-        label = stringResource(R.string.piece_field_notes),
+        label = stringResource(Res.string.piece_field_notes),
         singleLine = false,
         capitalization = KeyboardCapitalization.Sentences,
         modifier = Modifier.heightIn(min = NotesMinHeight),
-        supporting = stringResource(R.string.profile_name_counter, notes.length, state.maxNotesLength),
+        supporting = stringResource(Res.string.profile_name_counter, notes.length, state.maxNotesLength),
     )
     if (!state.isNew) {
         OutlinedButton(
@@ -296,7 +316,7 @@ private fun Fields(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
             border = BorderStroke(1.dp, SolidColor(colors.outlineVariant)),
         ) {
             CompositionLocalProvider(LocalContentColor provides ViolinTheme.repertoireColors.formError) {
-                IconLabel(AppIcons.Trash, stringResource(R.string.piece_delete), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
+                IconLabel(AppIcons.Trash, stringResource(Res.string.piece_delete), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
             }
         }
     }
@@ -351,7 +371,7 @@ private fun Preview(state: ScaleFormState) {
             contentAlignment = Alignment.Center,
         ) {
             Text(
-                stringResource(R.string.scale_preview_empty),
+                stringResource(Res.string.scale_preview_empty),
                 modifier = Modifier.padding(horizontal = 24.dp),
                 color = colors.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -381,6 +401,6 @@ private fun Confirm(title: String, text: String?, confirm: String, destructive: 
                 Text(confirm, color = if (destructive) ViolinTheme.destructive else MaterialTheme.colorScheme.primary)
             }
         },
-        dismissButton = { TextButton(onClick = { onIntent(ScaleFormIntent.DialogDismissed) }) { Text(stringResource(R.string.dialog_cancel)) } },
+        dismissButton = { TextButton(onClick = { onIntent(ScaleFormIntent.DialogDismissed) }) { Text(stringResource(Res.string.dialog_cancel)) } },
     )
 }

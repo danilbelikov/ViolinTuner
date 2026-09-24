@@ -9,8 +9,6 @@ import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.core.settings.SettingsRepository
 import com.violinjourney.app.feature.sound.SoundCaption
 import com.violinjourney.app.feature.sound.SoundReducer
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,8 +18,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-@HiltViewModel
-class SettingsViewModel @Inject constructor(
+open class SettingsViewModel(
     private val repository: SettingsRepository,
     sound: SoundRepository,
     private val soundConfig: SoundConfig,

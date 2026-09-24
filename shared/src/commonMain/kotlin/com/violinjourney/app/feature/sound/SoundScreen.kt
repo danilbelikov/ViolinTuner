@@ -38,8 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringArrayResource
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -47,7 +45,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.sound.SoundConfig
@@ -65,7 +62,47 @@ import com.violinjourney.app.feature.sound.components.BackingPreparingRow
 import com.violinjourney.app.feature.sound.components.MiniPlayer
 import com.violinjourney.app.feature.sound.components.MiniPlayerMetrics
 import com.violinjourney.app.feature.sound.components.SoundBlocks
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.dialog_cancel
+import com.violinjourney.app.shared.resources.piece_delete_confirm
+import com.violinjourney.app.shared.resources.record_tile_video
+import com.violinjourney.app.shared.resources.session_back
+import com.violinjourney.app.shared.resources.sound_affected_many
+import com.violinjourney.app.shared.resources.sound_affected_one
+import com.violinjourney.app.shared.resources.sound_caption_custom
+import com.violinjourney.app.shared.resources.sound_caption_everyone
+import com.violinjourney.app.shared.resources.sound_caption_off
+import com.violinjourney.app.shared.resources.sound_caption_own
+import com.violinjourney.app.shared.resources.sound_caption_saved_hint
+import com.violinjourney.app.shared.resources.sound_dialog_delete_title
+import com.violinjourney.app.shared.resources.sound_dialog_everyone_confirm
+import com.violinjourney.app.shared.resources.sound_dialog_everyone_text
+import com.violinjourney.app.shared.resources.sound_dialog_everyone_title
+import com.violinjourney.app.shared.resources.sound_dialog_pick_title
+import com.violinjourney.app.shared.resources.sound_dialog_preset_hint
+import com.violinjourney.app.shared.resources.sound_dialog_preset_save
+import com.violinjourney.app.shared.resources.sound_dialog_preset_title
+import com.violinjourney.app.shared.resources.sound_dialog_reset_text
+import com.violinjourney.app.shared.resources.sound_dialog_reset_title
+import com.violinjourney.app.shared.resources.sound_everyone_subtitle
+import com.violinjourney.app.shared.resources.sound_everyone_title
+import com.violinjourney.app.shared.resources.sound_listen_latest
+import com.violinjourney.app.shared.resources.sound_listen_none
+import com.violinjourney.app.shared.resources.sound_listen_on
+import com.violinjourney.app.shared.resources.sound_mode_everyone
+import com.violinjourney.app.shared.resources.sound_mode_everyone_text
+import com.violinjourney.app.shared.resources.sound_mode_own
+import com.violinjourney.app.shared.resources.sound_mode_own_text
+import com.violinjourney.app.shared.resources.sound_order
+import com.violinjourney.app.shared.resources.sound_preset_custom
+import com.violinjourney.app.shared.resources.sound_preset_names
+import com.violinjourney.app.shared.resources.sound_preset_remove_hint
+import com.violinjourney.app.shared.resources.sound_preset_save
+import com.violinjourney.app.shared.resources.sound_reset
+import com.violinjourney.app.shared.resources.sound_share
 import kotlinx.datetime.TimeZone
+import org.jetbrains.compose.resources.stringArrayResource
+import org.jetbrains.compose.resources.stringResource
 
 private val ScreenPadding = 16.dp
 private val TopBarHeight = 56.dp
@@ -163,7 +200,7 @@ private fun TopBar(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) ->
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val back = stringResource(R.string.session_back)
+        val back = stringResource(Res.string.session_back)
         Box(
             modifier = Modifier
                 .size(TopBarButton)
@@ -175,7 +212,7 @@ private fun TopBar(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) ->
         Column(modifier = Modifier.weight(1f)) {
             Text(
                 text = when (state.mode) {
-                    SoundMode.EVERYONE -> stringResource(R.string.sound_everyone_title)
+                    SoundMode.EVERYONE -> stringResource(Res.string.sound_everyone_title)
                     SoundMode.RECORDING -> state.recording?.let { sessionTitle(it.title, it.pieceTitle, it.startedAtEpochMs, zone) }.orEmpty()
                 },
                 color = colors.onSurface,
@@ -186,15 +223,15 @@ private fun TopBar(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                 // Whose sound is being set: that of a video. The screen itself stays without a picture — it is listened to with the ears.
                 if (state.mode == SoundMode.RECORDING && state.recording?.hasVideo == true) {
-                    AppIcon(AppIcons.Video, contentDescription = stringResource(R.string.record_tile_video), tint = colors.onSurfaceVariant, size = IconSizes.InText)
+                    AppIcon(AppIcons.Video, contentDescription = stringResource(Res.string.record_tile_video), tint = colors.onSurfaceVariant, size = IconSizes.InText)
                 }
                 Text(
                     text = when {
-                        state.mode == SoundMode.EVERYONE -> stringResource(R.string.sound_everyone_subtitle, presetName)
-                        state.savedHint -> stringResource(R.string.sound_caption_saved_hint)
-                        !state.own -> stringResource(R.string.sound_caption_everyone, presetName)
+                        state.mode == SoundMode.EVERYONE -> stringResource(Res.string.sound_everyone_subtitle, presetName)
+                        state.savedHint -> stringResource(Res.string.sound_caption_saved_hint)
+                        !state.own -> stringResource(Res.string.sound_caption_everyone, presetName)
                         state.caption == SoundCaption.Custom -> presetName
-                        else -> stringResource(R.string.sound_caption_own, presetName)
+                        else -> stringResource(Res.string.sound_caption_own, presetName)
                     },
                     color = colors.onSurfaceVariant,
                     maxLines = 1,
@@ -204,19 +241,19 @@ private fun TopBar(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) ->
             }
         }
         TextButton(onClick = { onIntent(SoundIntent.ResetClicked) }, enabled = state.canReset, modifier = Modifier.alpha(if (state.canReset) 1f else DISABLED_ALPHA)) {
-            IconLabel(AppIcons.Reset, stringResource(R.string.sound_reset), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
+            IconLabel(AppIcons.Reset, stringResource(Res.string.sound_reset), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
         }
     }
 }
 
 /** A preset by its name, «свои настройки» for what is none, «без обработки» for the one that does nothing. */
 @Composable
-internal fun captionName(caption: SoundCaption): String = when (caption) {
-    is SoundCaption.BuiltIn -> stringArrayResource(R.array.sound_preset_names)[caption.preset.ordinal].let { name ->
-        if (caption.preset.ordinal == 0) stringResource(R.string.sound_caption_off) else name
+fun captionName(caption: SoundCaption): String = when (caption) {
+    is SoundCaption.BuiltIn -> stringArrayResource(Res.array.sound_preset_names)[caption.preset.ordinal].let { name ->
+        if (caption.preset.ordinal == 0) stringResource(Res.string.sound_caption_off) else name
     }
     is SoundCaption.User -> caption.name
-    SoundCaption.Custom -> stringResource(R.string.sound_caption_custom)
+    SoundCaption.Custom -> stringResource(Res.string.sound_caption_custom)
 }
 
 @Composable
@@ -229,7 +266,7 @@ private fun Player(state: SoundState, meters: State<SoundMeters?>, metrics: Mini
     if (player == null) {
         if (state.mode == SoundMode.EVERYONE && state.recordings.isEmpty()) {
             Text(
-                text = stringResource(R.string.sound_listen_none),
+                text = stringResource(Res.string.sound_listen_none),
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
             )
@@ -260,14 +297,14 @@ private fun Scope(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> 
     when (state.mode) {
         SoundMode.RECORDING -> {
             SegmentedSwitch(
-                labels = listOf(stringResource(R.string.sound_mode_everyone), stringResource(R.string.sound_mode_own)),
+                labels = listOf(stringResource(Res.string.sound_mode_everyone), stringResource(Res.string.sound_mode_own)),
                 selectedIndex = if (state.own) 1 else 0,
                 onSelect = { onIntent(SoundIntent.ModeSelected(own = it == 1)) },
                 height = 36.dp,
                 fontSize = 13,
             )
             Text(
-                text = if (state.own) stringResource(R.string.sound_mode_own_text) else stringResource(R.string.sound_mode_everyone_text, captionName(state.caption)),
+                text = if (state.own) stringResource(Res.string.sound_mode_own_text) else stringResource(Res.string.sound_mode_everyone_text, captionName(state.caption)),
                 color = colors.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp),
             )
@@ -286,7 +323,7 @@ private fun Scope(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> 
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Text(stringResource(R.string.sound_listen_on), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
+                    Text(stringResource(Res.string.sound_listen_on), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
                     Text(
                         text = sessionTitle(recording.title, recording.pieceTitle, recording.startedAtEpochMs, zone),
                         color = colors.onSurface,
@@ -296,7 +333,7 @@ private fun Scope(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> 
                         modifier = Modifier.weight(1f),
                     )
                     if (state.recordings.firstOrNull()?.sessionId == recording.sessionId) {
-                        Text(stringResource(R.string.sound_listen_latest), color = colors.onSurfaceVariant, maxLines = 1, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
+                        Text(stringResource(Res.string.sound_listen_latest), color = colors.onSurfaceVariant, maxLines = 1, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
                     }
                     if (state.recordings.size > 1) AppIcon(AppIcons.ChevronDown, contentDescription = null, tint = colors.onSurfaceVariant)
                 }
@@ -304,7 +341,7 @@ private fun Scope(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> 
             if (state.affected > 0) {
                 val one = state.affected % 10 == 1 && state.affected % 100 != 11
                 Text(
-                    text = stringResource(if (one) R.string.sound_affected_one else R.string.sound_affected_many, state.affected),
+                    text = stringResource(if (one) Res.string.sound_affected_one else Res.string.sound_affected_many, state.affected),
                     color = colors.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 )
@@ -318,8 +355,8 @@ private fun Scope(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> 
 @Composable
 private fun Presets(state: SoundState, onIntent: (SoundIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val names = stringArrayResource(R.array.sound_preset_names)
-    val removeHint = stringResource(R.string.sound_preset_remove_hint)
+    val names = stringArrayResource(Res.array.sound_preset_names)
+    val removeHint = stringResource(Res.string.sound_preset_remove_hint)
     Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (state.custom) {
             Row(
@@ -332,7 +369,7 @@ private fun Presets(state: SoundState, onIntent: (SoundIntent) -> Unit) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Box(Modifier.size(8.dp).background(colors.primary, CircleShape))
-                Text(stringResource(R.string.sound_preset_custom), color = colors.onSurface, style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold))
+                Text(stringResource(Res.string.sound_preset_custom), color = colors.onSurface, style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold))
             }
         }
         state.chips.forEach { chip ->
@@ -368,7 +405,7 @@ private fun Presets(state: SoundState, onIntent: (SoundIntent) -> Unit) {
         ) {
             val tint = if (state.custom) colors.primary else colors.onSurfaceVariant
             AppIcon(AppIcons.Preset, contentDescription = null, tint = tint, size = 16.dp)
-            Text(stringResource(R.string.sound_preset_save), color = tint, maxLines = 1, style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold))
+            Text(stringResource(Res.string.sound_preset_save), color = tint, maxLines = 1, style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold))
         }
     }
 }
@@ -376,7 +413,7 @@ private fun Presets(state: SoundState, onIntent: (SoundIntent) -> Unit) {
 @Composable
 private fun Blocks(state: SoundState, meters: State<SoundMeters?>, config: SoundConfig, onIntent: (SoundIntent) -> Unit) {
     Text(
-        text = stringResource(R.string.sound_order),
+        text = stringResource(Res.string.sound_order),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
     )
@@ -398,7 +435,7 @@ private fun ShareButton(onIntent: (SoundIntent) -> Unit) {
         contentAlignment = Alignment.Center,
     ) {
         androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides colors.onPrimary) {
-            IconLabel(AppIcons.Share, stringResource(R.string.sound_share), iconSize = 20.dp, style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold))
+            IconLabel(AppIcons.Share, stringResource(Res.string.sound_share), iconSize = 20.dp, style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold))
         }
     }
 }
@@ -409,39 +446,39 @@ private fun Dialogs(dialog: SoundDialog, state: SoundState, zone: TimeZone, onIn
     val dismiss = { onIntent(SoundIntent.DialogDismissed) }
     when (dialog) {
         SoundDialog.BackToEveryone -> Confirm(
-            stringResource(R.string.sound_dialog_everyone_title), stringResource(R.string.sound_dialog_everyone_text),
-            stringResource(R.string.sound_dialog_everyone_confirm), destructive = false, onIntent,
+            stringResource(Res.string.sound_dialog_everyone_title), stringResource(Res.string.sound_dialog_everyone_text),
+            stringResource(Res.string.sound_dialog_everyone_confirm), destructive = false, onIntent,
         )
         SoundDialog.ResetEveryone -> Confirm(
-            stringResource(R.string.sound_dialog_reset_title), stringResource(R.string.sound_dialog_reset_text),
-            stringResource(R.string.sound_reset), destructive = false, onIntent,
+            stringResource(Res.string.sound_dialog_reset_title), stringResource(Res.string.sound_dialog_reset_text),
+            stringResource(Res.string.sound_reset), destructive = false, onIntent,
         )
         is SoundDialog.DeletePreset -> Confirm(
-            stringResource(R.string.sound_dialog_delete_title, dialog.name), null, stringResource(R.string.piece_delete_confirm), destructive = true, onIntent,
+            stringResource(Res.string.sound_dialog_delete_title, dialog.name), null, stringResource(Res.string.piece_delete_confirm), destructive = true, onIntent,
         )
         SoundDialog.SavePreset -> {
             var name by rememberSaveable { mutableStateOf("") }
             AlertDialog(
                 onDismissRequest = dismiss,
-                title = { Text(stringResource(R.string.sound_dialog_preset_title)) },
+                title = { Text(stringResource(Res.string.sound_dialog_preset_title)) },
                 text = {
                     OutlinedTextField(
                         value = name,
                         onValueChange = { name = it.take(PRESET_NAME_LENGTH) },
                         singleLine = true,
-                        placeholder = { Text(stringResource(R.string.sound_dialog_preset_hint)) },
+                        placeholder = { Text(stringResource(Res.string.sound_dialog_preset_hint)) },
                     )
                 },
                 confirmButton = {
-                    TextButton(onClick = { onIntent(SoundIntent.PresetNameConfirmed(name)) }, enabled = name.isNotBlank()) { Text(stringResource(R.string.sound_dialog_preset_save)) }
+                    TextButton(onClick = { onIntent(SoundIntent.PresetNameConfirmed(name)) }, enabled = name.isNotBlank()) { Text(stringResource(Res.string.sound_dialog_preset_save)) }
                 },
-                dismissButton = { TextButton(onClick = dismiss) { Text(stringResource(R.string.dialog_cancel)) } },
+                dismissButton = { TextButton(onClick = dismiss) { Text(stringResource(Res.string.dialog_cancel)) } },
                 containerColor = colors.surfaceContainerHigh,
             )
         }
         SoundDialog.PickRecording -> AlertDialog(
             onDismissRequest = dismiss,
-            title = { Text(stringResource(R.string.sound_dialog_pick_title)) },
+            title = { Text(stringResource(Res.string.sound_dialog_pick_title)) },
             text = {
                 Column(Modifier.verticalScroll(rememberScrollState())) {
                     state.recordings.forEach { recording ->
@@ -463,7 +500,7 @@ private fun Dialogs(dialog: SoundDialog, state: SoundState, zone: TimeZone, onIn
                     }
                 }
             },
-            confirmButton = { TextButton(onClick = dismiss) { Text(stringResource(R.string.dialog_cancel)) } },
+            confirmButton = { TextButton(onClick = dismiss) { Text(stringResource(Res.string.dialog_cancel)) } },
             containerColor = colors.surfaceContainerHigh,
         )
     }
@@ -479,7 +516,7 @@ private fun Confirm(title: String, text: String?, confirm: String, destructive: 
         confirmButton = {
             TextButton(onClick = { onIntent(SoundIntent.DialogConfirmed) }) { Text(confirm, color = if (destructive) ViolinTheme.destructive else colors.primary) }
         },
-        dismissButton = { TextButton(onClick = { onIntent(SoundIntent.DialogDismissed) }) { Text(stringResource(R.string.dialog_cancel)) } },
+        dismissButton = { TextButton(onClick = { onIntent(SoundIntent.DialogDismissed) }) { Text(stringResource(Res.string.dialog_cancel)) } },
         containerColor = colors.surfaceContainerHigh,
     )
 }

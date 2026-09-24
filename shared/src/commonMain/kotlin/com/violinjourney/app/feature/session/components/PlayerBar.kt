@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -35,10 +34,16 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.audio.playback.PlayerState
 import com.violinjourney.app.core.ui.components.PlayPauseGlyph
 import com.violinjourney.app.core.ui.format.Formats
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.session_player_pause
+import com.violinjourney.app.shared.resources.session_player_play
+import com.violinjourney.app.shared.resources.session_player_position
+import com.violinjourney.app.shared.resources.sound_ab_original
+import com.violinjourney.app.shared.resources.sound_ab_processed
+import org.jetbrains.compose.resources.stringResource
 
 private val ButtonSize = 48.dp
 private val GlyphSize = 20.dp
@@ -60,7 +65,7 @@ fun PlayerBar(
     val duration = player.durationMs.coerceAtLeast(1)
     val shownMs = dragged?.let { (it * duration).toLong() } ?: player.positionMs
     val timeStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES)
-    val positionDescription = stringResource(R.string.session_player_position)
+    val positionDescription = stringResource(Res.string.session_player_position)
 
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -74,7 +79,7 @@ fun PlayerBar(
                 .background(colors.primary)
                 .clickable(
                     onClickLabel = stringResource(
-                        if (player.playing) R.string.session_player_pause else R.string.session_player_play,
+                        if (player.playing) Res.string.session_player_pause else Res.string.session_player_play,
                     ),
                     role = Role.Button,
                     onClick = onPlayPause,
@@ -119,7 +124,7 @@ fun PlayerBar(
 @Composable
 fun AbSwitch(original: Boolean, onOriginal: (Boolean) -> Unit, modifier: Modifier = Modifier, height: Dp = AbHeight) {
     val colors = MaterialTheme.colorScheme
-    val labels = listOf(stringResource(R.string.sound_ab_original) to true, stringResource(R.string.sound_ab_processed) to false)
+    val labels = listOf(stringResource(Res.string.sound_ab_original) to true, stringResource(Res.string.sound_ab_processed) to false)
     Row(
         modifier = modifier
             .height(height)

@@ -39,7 +39,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
@@ -54,14 +53,23 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.audio.playback.PlayerState
 import com.violinjourney.app.core.ui.components.PlayPauseGlyph
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.sound.SoundFormats
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.session_player_pause
+import com.violinjourney.app.shared.resources.session_player_play
+import com.violinjourney.app.shared.resources.session_player_position
+import com.violinjourney.app.shared.resources.sound_ab_original
+import com.violinjourney.app.shared.resources.sound_ab_processed
+import com.violinjourney.app.shared.resources.sound_meter_limiter
+import com.violinjourney.app.shared.resources.sound_meter_none
+import com.violinjourney.app.shared.resources.sound_meter_output
 import kotlinx.coroutines.flow.first
+import org.jetbrains.compose.resources.stringResource
 
 private val MeterHeight = 4.dp
 private val LimiterMark = 8.dp
@@ -110,7 +118,7 @@ fun MiniPlayer(
                     .clip(CircleShape)
                     .background(colors.primary)
                     .clickable(
-                        onClickLabel = stringResource(if (player.playing) R.string.session_player_pause else R.string.session_player_play),
+                        onClickLabel = stringResource(if (player.playing) Res.string.session_player_pause else Res.string.session_player_play),
                         role = Role.Button,
                         onClick = onPlayPause,
                     ),
@@ -126,7 +134,7 @@ fun MiniPlayer(
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontFeatureSettings = TABULAR_FIGURES),
                 modifier = Modifier.widthIn(min = 76.dp),
             )
-            Text(stringResource(R.string.sound_meter_output), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
+            Text(stringResource(Res.string.sound_meter_output), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
             OutputMeter(meters, Modifier.weight(1f))
         }
     }
@@ -140,7 +148,7 @@ private fun SeekWave(player: PlayerState, waveform: List<Float>?, height: Dp, on
     val duration = player.durationMs.coerceAtLeast(1)
     var dragged by remember { mutableStateOf<Float?>(null) }
     val currentOnSeek by rememberUpdatedState(onSeek)
-    val description = stringResource(R.string.session_player_position)
+    val description = stringResource(Res.string.session_player_position)
     val played = dragged ?: (player.positionMs.toFloat() / duration)
     Box(
         modifier = modifier
@@ -199,7 +207,7 @@ private fun SeekWave(player: PlayerState, waveform: List<Float>?, height: Dp, on
 private fun HoldableAb(original: Boolean, enabled: Boolean, height: Dp, onOriginal: (Boolean, Boolean) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val currentOnOriginal by rememberUpdatedState(onOriginal)
-    val labels = listOf(stringResource(R.string.sound_ab_original), stringResource(R.string.sound_ab_processed))
+    val labels = listOf(stringResource(Res.string.sound_ab_original), stringResource(Res.string.sound_ab_processed))
     Row(
         modifier = Modifier
             .height(height)
@@ -301,8 +309,8 @@ private fun OutputMeter(meters: State<SoundMeters?>, modifier: Modifier) {
         val shown by remember { derivedStateOf { number } }
         Text(
             text = when {
-                lit -> stringResource(R.string.sound_meter_limiter)
-                else -> shown?.takeIf { it > METER_FLOOR_DB }?.let { SoundFormats.decibels(it, signed = true) } ?: stringResource(R.string.sound_meter_none)
+                lit -> stringResource(Res.string.sound_meter_limiter)
+                else -> shown?.takeIf { it > METER_FLOOR_DB }?.let { SoundFormats.decibels(it, signed = true) } ?: stringResource(Res.string.sound_meter_none)
             },
             color = if (lit) sound.meterLimit else colors.onSurfaceVariant,
             textAlign = TextAlign.End,

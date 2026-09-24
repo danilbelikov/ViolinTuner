@@ -24,15 +24,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.TolerancePreset
 import com.violinjourney.app.core.domain.UserSettings
 import com.violinjourney.app.core.domain.sound.BuiltInPreset
@@ -46,6 +43,18 @@ import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.sound.SoundCaption
 import com.violinjourney.app.feature.sound.captionName
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.nav_settings
+import com.violinjourney.app.shared.resources.session_back
+import com.violinjourney.app.shared.resources.settings_a4_text
+import com.violinjourney.app.shared.resources.settings_a4_title
+import com.violinjourney.app.shared.resources.settings_language
+import com.violinjourney.app.shared.resources.settings_restart_onboarding
+import com.violinjourney.app.shared.resources.settings_tolerance_text
+import com.violinjourney.app.shared.resources.settings_tolerance_title
+import com.violinjourney.app.shared.resources.sound_settings_row
+import com.violinjourney.app.shared.resources.sound_settings_row_caption
+import org.jetbrains.compose.resources.stringResource
 
 private val ScreenPaddingHorizontal = 20.dp
 private val TitlePaddingTop = 28.dp
@@ -93,7 +102,7 @@ fun SettingsScreen(
                 verticalArrangement = Arrangement.spacedBy(SectionSpacing),
             ) {
                 Text(
-                    text = stringResource(R.string.nav_settings),
+                    text = stringResource(Res.string.nav_settings),
                     color = colors.onSurface,
                     style = MaterialTheme.typography.headlineLarge.copy(
                         fontSize = TitleFontSize,
@@ -102,8 +111,8 @@ fun SettingsScreen(
                 )
                 Section(
                     icon = AppIcons.Fork,
-                    title = stringResource(R.string.settings_a4_title),
-                    text = stringResource(R.string.settings_a4_text),
+                    title = stringResource(Res.string.settings_a4_title),
+                    text = stringResource(Res.string.settings_a4_text),
                 ) {
                     A4Selector(
                         optionsHz = state.a4OptionsHz,
@@ -113,8 +122,8 @@ fun SettingsScreen(
                 }
                 Section(
                     icon = AppIcons.Target,
-                    title = stringResource(R.string.settings_tolerance_title),
-                    text = stringResource(R.string.settings_tolerance_text),
+                    title = stringResource(Res.string.settings_tolerance_title),
+                    text = stringResource(Res.string.settings_tolerance_text),
                 ) {
                     TolerancePresetList(
                         selected = state.tolerance,
@@ -134,9 +143,9 @@ fun SettingsScreen(
                 ) {
                     AppIcon(AppIcons.Sound, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(stringResource(R.string.sound_settings_row), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
+                        Text(stringResource(Res.string.sound_settings_row), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
                         Text(
-                            text = stringResource(R.string.sound_settings_row_caption, captionName(state.sound)),
+                            text = stringResource(Res.string.sound_settings_row_caption, captionName(state.sound)),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             style = MaterialTheme.typography.bodyMedium,
                         )
@@ -156,7 +165,7 @@ fun SettingsScreen(
                     ) {
                         AppIcon(AppIcons.Globe, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(stringResource(R.string.settings_language), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
+                            Text(stringResource(Res.string.settings_language), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
                             Text(
                                 // the language names itself in itself: «Deutsch», «한국어» — whoever looks for theirs finds it
                                 text = languageName(Formats.language.tag),
@@ -169,7 +178,7 @@ fun SettingsScreen(
                 }
                 dataBlock()
                 OutlinedButton(onClick = { onIntent(SettingsIntent.RestartOnboardingClicked) }) {
-                    IconLabel(AppIcons.Repeat, stringResource(R.string.settings_restart_onboarding))
+                    IconLabel(AppIcons.Repeat, stringResource(Res.string.settings_restart_onboarding))
                 }
             }
         }
@@ -179,7 +188,7 @@ fun SettingsScreen(
 /** The arrow back of a screen above the tabs, as on «Копия данных» and «Звук». */
 @Composable
 private fun BackBar(onBack: () -> Unit) {
-    val label = stringResource(R.string.session_back)
+    val label = stringResource(Res.string.session_back)
     Box(modifier = Modifier.fillMaxWidth().height(BackBarHeight).padding(horizontal = 4.dp), contentAlignment = Alignment.CenterStart) {
         Box(
             modifier = Modifier.size(BackTouch).clip(CircleShape).clickable(role = Role.Button, onClick = onBack).semantics { contentDescription = label },
@@ -198,17 +207,5 @@ private fun Section(icon: ImageVector, title: String, text: String, content: @Co
         }
         Text(text = text, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         content()
-    }
-}
-
-@Preview(widthDp = 412, heightDp = 812)
-@Composable
-private fun SettingsScreenPreview() {
-    ViolinTheme {
-        SettingsScreen(
-            state = SettingsState(442, UserSettings.A4_OPTIONS_HZ, TolerancePreset.BEGINNER, SoundCaption.BuiltIn(BuiltInPreset.CHAMBER_HALL), analyticsEnabled = true),
-            onIntent = {},
-            onBack = {},
-        )
     }
 }

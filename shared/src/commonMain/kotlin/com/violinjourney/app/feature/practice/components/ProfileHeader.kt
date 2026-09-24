@@ -414,5 +414,5 @@ private fun trophyWords(header: ProfileHeader): String {
 internal fun levelName(level: Int): String = stringArrayResource(Res.array.progress_level_names).getOrElse(level - 1) { "" }
 
 /** First character of the name as the avatar shows it; a surrogate pair (an emoji) stays whole. */
-internal fun initialOf(name: String): String =
+fun initialOf(name: String): String =
     if (name.isEmpty()) "" else name.substring(0, if (name[0].isHighSurrogate() && name.length > 1) 2 else 1).uppercase()

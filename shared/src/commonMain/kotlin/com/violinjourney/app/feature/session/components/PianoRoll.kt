@@ -33,7 +33,6 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -41,11 +40,13 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.session.PianoRollMath
 import com.violinjourney.app.feature.session.SessionContent
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.session_roll_description
+import org.jetbrains.compose.resources.stringResource
 
 private val CardCorner = 20.dp
 private val CardPaddingHorizontal = 12.dp
@@ -87,7 +88,7 @@ fun PianoRoll(
         fontFamily = MaterialTheme.typography.labelSmall.fontFamily,
         fontFeatureSettings = TABULAR_FIGURES,
     )
-    val description = stringResource(R.string.session_roll_description)
+    val description = stringResource(Res.string.session_roll_description)
     val rowOf = remember(content.rollNotes) { content.rollNotes.withIndex().associate { (row, note) -> note to row } }
     val bars = remember(content.segments, rowOf) {
         content.segments.map { Triple(rowOf.getValue(it.note), it.startMs, it.endMs) }

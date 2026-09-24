@@ -22,17 +22,25 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.feature.sound.BackingBlockState
 import com.violinjourney.app.feature.sound.SoundFormats
 import com.violinjourney.app.feature.sound.SoundIntent
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.backing_block_title
+import com.violinjourney.app.shared.resources.backing_gain
+import com.violinjourney.app.shared.resources.backing_heard_violin
+import com.violinjourney.app.shared.resources.backing_heard_with
+import com.violinjourney.app.shared.resources.backing_offset
+import com.violinjourney.app.shared.resources.backing_offset_hint
+import com.violinjourney.app.shared.resources.backing_offset_recorded
+import com.violinjourney.app.shared.resources.backing_preparing
+import org.jetbrains.compose.resources.stringResource
 
 private val SwitchHeight = 36.dp
 private val CardCorner = 16.dp
@@ -54,7 +62,7 @@ fun BackingHeardSwitch(heard: Boolean, onHeard: (Boolean) -> Unit, modifier: Mod
             .selectableGroup(),
         horizontalArrangement = Arrangement.spacedBy(3.dp),
     ) {
-        listOf(true to R.string.backing_heard_with, false to R.string.backing_heard_violin).forEach { (value, label) ->
+        listOf(true to Res.string.backing_heard_with, false to Res.string.backing_heard_violin).forEach { (value, label) ->
             val selected = heard == value
             Box(
                 modifier = Modifier
@@ -90,7 +98,7 @@ fun BackingPreparingRow(modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         CircularProgressIndicator(modifier = Modifier.size(20.dp), color = colors.primary, strokeWidth = 2.dp)
-        Text(stringResource(R.string.backing_preparing), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp))
+        Text(stringResource(Res.string.backing_preparing), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp))
     }
 }
 
@@ -106,10 +114,10 @@ fun BackingBlock(state: BackingBlockState, config: BackingConfig, onIntent: (Sou
             .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
-        Text(stringResource(R.string.backing_block_title), color = colors.onSurface, style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
+        Text(stringResource(Res.string.backing_block_title), color = colors.onSurface, style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
         ParamSlider(
             model = SliderModel(
-                label = stringResource(R.string.backing_gain),
+                label = stringResource(Res.string.backing_gain),
                 hint = null,
                 valueText = SoundFormats.decibels(state.gainDb.toDouble(), signed = true),
                 fraction = gainFraction(state.gainDb, config),
@@ -123,8 +131,8 @@ fun BackingBlock(state: BackingBlockState, config: BackingConfig, onIntent: (Sou
         )
         ParamSlider(
             model = SliderModel(
-                label = stringResource(R.string.backing_offset),
-                hint = stringResource(R.string.backing_offset_hint),
+                label = stringResource(Res.string.backing_offset),
+                hint = stringResource(Res.string.backing_offset_hint),
                 valueText = SoundFormats.signedMs(state.offsetMs),
                 fraction = offsetFraction(state.offsetMs, config),
                 // the scale's zero, where the fill starts; «Как записано» is the button under it
@@ -140,7 +148,7 @@ fun BackingBlock(state: BackingBlockState, config: BackingConfig, onIntent: (Sou
             Box(Modifier.weight(1f))
             TextButton(onClick = { onIntent(SoundIntent.BackingOffsetRecorded) }, enabled = state.offsetMs != state.recordedOffsetMs) {
                 Text(
-                    stringResource(R.string.backing_offset_recorded, SoundFormats.signedMs(state.recordedOffsetMs)),
+                    stringResource(Res.string.backing_offset_recorded, SoundFormats.signedMs(state.recordedOffsetMs)),
                     style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
                 )
             }

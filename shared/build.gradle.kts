@@ -30,6 +30,8 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
         // kotlin.time.Instant and Clock, which kotlinx-datetime is built on, are still marked experimental in Kotlin 2.2.
         optIn.add("kotlin.time.ExperimentalTime")
+        // the multiplatform BackHandler of the shared screens
+        optIn.add("androidx.compose.ui.ExperimentalComposeUiApi")
     }
     listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
         // The iOS app (iosApp) links this framework; Xcode builds it through Gradle.
@@ -49,6 +51,8 @@ kotlin {
             implementation(libs.compose.mp.ui)
             implementation(libs.compose.mp.animation)
             implementation(libs.compose.mp.material3)
+            // the system «back» in shared screens (androidx.activity on Android)
+            implementation(libs.compose.mp.ui.backhandler)
             // api: the app reads the shared strings too (Res.string), so their types are part of this module's face
             api(libs.compose.mp.resources)
             // the one database and the settings of the app (Room and DataStore are multiplatform)
