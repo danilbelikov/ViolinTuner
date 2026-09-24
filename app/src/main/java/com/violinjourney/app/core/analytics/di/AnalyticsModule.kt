@@ -21,9 +21,9 @@ object AnalyticsModule {
      */
     @Provides
     @Singleton
-    fun provideAnalytics(appMetrica: Provider<AppMetricaAnalytics>, noOp: Provider<NoOpAnalytics>): Analytics {
+    fun provideAnalytics(appMetrica: Provider<AppMetricaAnalytics>): Analytics {
         val sends = BuildConfig.APPMETRICA_KEY.isNotBlank() &&
             (!BuildConfig.DEBUG || BuildConfig.ANALYTICS_IN_DEBUG)
-        return if (sends) appMetrica.get() else noOp.get()
+        return if (sends) appMetrica.get() else NoOpAnalytics()
     }
 }

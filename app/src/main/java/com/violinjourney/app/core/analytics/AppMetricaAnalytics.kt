@@ -25,7 +25,11 @@ class AppMetricaAnalytics @Inject constructor(
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
 ) : Analytics {
 
-    override fun start(application: Application) {
+    /**
+     * Called once from Application.onCreate. Nothing is sent until the stored consent allows it,
+     * so this is safe to call before the consent has been read from the disk.
+     */
+    fun start(application: Application) {
         // Activation has to be synchronous here, while the consent is read from a flow. So the
         // library starts muted and the flow unmutes it: no runBlocking, and no first session lost
         // to waiting for the disk.

@@ -4,6 +4,7 @@ import android.app.Application
 import android.content.Context
 import android.content.res.Configuration
 import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.AppMetricaAnalytics
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.backup.RestoreSwap
 import com.violinjourney.app.core.ui.format.use
@@ -28,8 +29,8 @@ class ViolinTunerApp : Application() {
         super.onCreate()
         Formats.use(resources.configuration.locales[0])
         // Starts muted and follows the stored consent from there (spec 3.34); a build without a
-        // key does nothing at all here.
-        analytics.start(this)
+        // key has no AppMetrica to start.
+        (analytics as? AppMetricaAnalytics)?.start(this)
     }
 
     /** Numbers and dates speak the language the words were resolved in (the device's, or the one chosen for the app in the system settings). */

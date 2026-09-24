@@ -316,7 +316,7 @@ private fun ItemCard(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit)
         itemNote(item.id).takeIf { it.isNotEmpty() }?.let { Text(it, color = colors.onSurface, style = MaterialTheme.typography.bodyLarge) }
         Text(stringResource(R.string.shop_place, slotName(item.at ?: item.slot)), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         // a thing whose place this home lacks stays on sale: it will move with its owner (handoff 27b4)
-        val here = HomeRules.slotIn(item.slot, ui.house) && (item.at == null || HomeRules.slotIn(item.at, ui.house))
+        val here = HomeRules.slotIn(item.slot, ui.house) && item.at.let { at -> at == null || HomeRules.slotIn(at, ui.house) }
         when {
             !here -> Text(stringResource(if (item.slot == "fire") R.string.shop_needs_chimney else R.string.shop_no_place), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
             !HomeRules.inSeason(item, SystemWallClock.today()) -> Text(stringResource(R.string.shop_waits_season), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)

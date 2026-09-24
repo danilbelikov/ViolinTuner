@@ -29,14 +29,6 @@ private const val DIALOG_NOT_SHOWN_MS = 400L
 fun Context.isMicPermissionGranted(): Boolean =
     ContextCompat.checkSelfPermission(this, MIC_PERMISSION) == PackageManager.PERMISSION_GRANTED
 
-/** What the system answered, once, to a request that was actually made (spec 3.34). */
-enum class MicPermissionAnswer(val key: String) {
-    GRANTED("granted"),
-    DENIED("denied"),
-
-    /** «Denied for good»: the system will not show its dialog again, and only its settings can help. */
-    BLOCKED("blocked"),
-}
 
 /**
  * Returns a function that asks for RECORD_AUDIO and reports the answer to [onResult].

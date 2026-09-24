@@ -35,7 +35,7 @@ object ItemThumbs {
 
     /** The home a thing is shown in: the rented room, or the first home that has a place for it — the fireplace needs a chimney. */
     fun houseOf(item: HomeItem): String =
-        HomeCatalog.houses.firstOrNull { it.drawn && HomeRules.slotIn(item.slot, it.id) && (item.at == null || HomeRules.slotIn(item.at, it.id)) }?.id
+        HomeCatalog.houses.firstOrNull { it.drawn && HomeRules.slotIn(item.slot, it.id) && item.at.let { at -> at == null || HomeRules.slotIn(at, it.id) } }?.id
             ?: HomeCatalog.START_HOUSE
 
     /**
