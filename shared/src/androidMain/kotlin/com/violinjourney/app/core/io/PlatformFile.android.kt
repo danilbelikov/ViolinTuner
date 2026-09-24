@@ -5,3 +5,7 @@ actual typealias PlatformFile = java.io.File
 actual val PlatformFile.filePath: String get() = path
 
 actual fun PlatformFile.sizeBytes(): Long = length()
+
+actual val PlatformFile.fileName: String get() = name
+
+actual fun PlatformFile.deleteFile(): Boolean = delete()

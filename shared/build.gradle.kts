@@ -71,6 +71,8 @@ kotlin {
         iosMain.dependencies {
             // Android keeps its system SQLite (the database is opened as before); iOS brings its own
             implementation(libs.androidx.sqlite.bundled)
+            // the app's graph of screens; Android keeps its androidx navigation in app
+            implementation(libs.jb.navigation.compose)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -89,6 +91,9 @@ val composeStrings = tasks.register<Sync>("syncComposeStrings") {
         include("values*/strings.xml", "values*/strings_home.xml", "values*/home_catalog.xml")
         filter { line -> line.replace("\\'", "'").replace("\\\"", "\"").replace("\\?", "?").replace("\\@", "@") }
     }
+    // the rest of the shared resources — the pictures of the journey and the home — lie in the usual place; the
+    // custom directory below replaces it, so they are copied along
+    from(layout.projectDirectory.dir("src/commonMain/composeResources"))
     into(layout.buildDirectory.dir("generated/composeStrings"))
 }
 

@@ -7,6 +7,7 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import com.violinjourney.app.core.concurrent.PlatformLock
+import com.violinjourney.app.core.concurrent.withLock
 import com.violinjourney.app.core.domain.home.HomeItem
 import com.violinjourney.app.core.domain.home.HomeRules
 import com.violinjourney.app.core.domain.home.HomeState

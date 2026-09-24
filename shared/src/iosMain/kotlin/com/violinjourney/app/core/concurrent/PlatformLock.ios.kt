@@ -5,12 +5,7 @@ import platform.Foundation.NSRecursiveLock
 actual class PlatformLock actual constructor() {
     private val lock = NSRecursiveLock()
 
-    actual fun <T> withLock(block: () -> T): T {
-        lock.lock()
-        try {
-            return block()
-        } finally {
-            lock.unlock()
-        }
-    }
+    actual fun lock() = lock.lock()
+
+    actual fun unlock() = lock.unlock()
 }

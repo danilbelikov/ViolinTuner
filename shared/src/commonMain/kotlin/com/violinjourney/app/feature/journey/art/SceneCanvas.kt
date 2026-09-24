@@ -29,6 +29,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.IntSize
 import com.violinjourney.app.core.concurrent.PlatformLock
+import com.violinjourney.app.core.concurrent.withLock
 import com.violinjourney.app.core.domain.journey.JourneyStop
 import com.violinjourney.app.core.domain.journey.StopView
 import kotlinx.coroutines.Dispatchers

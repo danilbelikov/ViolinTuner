@@ -1,5 +1,14 @@
 package com.violinjourney.app.core.di
 
+import com.violinjourney.app.core.audio.PitchSource
+import com.violinjourney.app.core.audio.backing.BackingPlaybackFactory
+import com.violinjourney.app.core.audio.recording.SessionAudioFiles
+import com.violinjourney.app.core.domain.backing.BackingConfig
+import com.violinjourney.app.core.domain.backing.BackingRepository
+import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.recording.RecordingWatch
+import com.violinjourney.app.core.recording.TakePipeline
+import kotlinx.coroutines.CoroutineDispatcher
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyRepository
@@ -61,4 +70,31 @@ object SharedModule {
         config: PracticeConfig,
         analytics: Analytics,
     ) = PracticeFinisher(repository, store, clock, notes, journey, journeyConfig, blocks, blockHistory, config, analytics)
+
+    /** One per app: whoever must not start under a recording asks it (spec 3.20). */
+    @Provides
+    @Singleton
+    fun provideRecordingWatch() = RecordingWatch()
+
+    /** One per screen, not a singleton: it holds that screen's wish to record. */
+    @Provides
+    fun provideTakePipeline(
+        pitchSource: PitchSource,
+        sessionRepository: SessionRepository,
+        audioFiles: SessionAudioFiles,
+        runningPractice: RunningPracticeStore,
+        practiceConfig: PracticeConfig,
+        clock: WallClock,
+        @DefaultDispatcher dispatcher: CoroutineDispatcher,
+        watch: RecordingWatch,
+        practiceNotes: PracticeNotesStore,
+        journeyConfig: JourneyConfig,
+        backings: BackingRepository,
+        backingPlaybackFactory: BackingPlaybackFactory,
+        backingConfig: BackingConfig,
+        analytics: Analytics,
+    ) = TakePipeline(
+        pitchSource, sessionRepository, audioFiles, runningPractice, practiceConfig, clock, dispatcher, watch,
+        practiceNotes, journeyConfig, backings, backingPlaybackFactory, backingConfig, analytics,
+    )
 }

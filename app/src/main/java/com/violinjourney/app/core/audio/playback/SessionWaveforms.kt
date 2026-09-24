@@ -12,20 +12,6 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
-/** The waveform of a recording for the mini player (spec 3.17, 5.11): [BARS] columns, 0…1, the loudest is 1. */
-interface SessionWaveforms {
-    /** Null when the sound cannot be decoded. Cancellable: leaving the screen stops the reckoning. */
-    suspend fun of(audio: File): FloatArray?
-
-    /** [audioNames] — the sound files that still belong to a session; every waveform of another name goes. */
-    suspend fun deleteOrphans(audioNames: Set<String>)
-
-    companion object {
-        /** Columns 2 dp wide every 3 dp across the mini player of a 412-dp screen (handoff `sizes`). */
-        const val BARS = 120
-    }
-}
-
 /**
  * [SessionWaveforms] in the app's storage. Reckoned once — the whole
  * file has to be decoded for it, which for an hour of sound takes a good while — and kept as

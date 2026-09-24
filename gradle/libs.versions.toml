@@ -32,6 +32,7 @@ sqlite = "2.6.2"
 # ViewModel, SavedStateHandle and lifecycle-aware collection in the shared code (JetBrains builds of androidx
 # lifecycle): on Android they resolve to the androidx lifecycle the app already has (2.11.0) — agreed by the owner
 jbLifecycle = "2.9.6"
+jbNavigation = "2.9.2"
 
 [libraries]
 appmetrica-analytics = { group = "io.appmetrica.analytics", name = "analytics", version.ref = "appmetrica" }
@@ -69,6 +70,7 @@ jb-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "l
 jb-lifecycle-viewmodel-savedstate = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-savedstate", version.ref = "jbLifecycle" }
 jb-lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "jbLifecycle" }
 jb-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "jbLifecycle" }
+jb-navigation-compose = { group = "org.jetbrains.androidx.navigation", name = "navigation-compose", version.ref = "jbNavigation" }
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
 androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }

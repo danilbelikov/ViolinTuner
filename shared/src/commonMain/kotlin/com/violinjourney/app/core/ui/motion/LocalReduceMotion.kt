@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.ui.motion
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 
 /**
@@ -8,3 +9,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
  * provides it, screens and components stay free of `Context`.
  */
 val LocalReduceMotion = staticCompositionLocalOf { false }
+
+/** The system asks for less motion («убрать анимации» on Android, «Уменьшение движения» on iOS); read again on every return to the app. Goes into [LocalReduceMotion]. */
+@Composable
+expect fun rememberAnimationsRemoved(): Boolean

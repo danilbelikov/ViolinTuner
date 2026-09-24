@@ -72,7 +72,8 @@ object ScaleWords {
     } + note.octave
 }
 
-private fun resourceOf(word: ScaleWord): StringResource = when (word) {
+/** The string resource a [ScaleWord] is said by. */
+fun resourceOf(word: ScaleWord): StringResource = when (word) {
     ScaleWord.TITLE -> Res.string.scale_title
     ScaleWord.SUFFIX_HARMONIC -> Res.string.scale_suffix_harmonic
     ScaleWord.SUFFIX_MELODIC -> Res.string.scale_suffix_melodic

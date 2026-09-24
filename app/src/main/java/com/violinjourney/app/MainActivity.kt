@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.graphics.Color
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
@@ -14,9 +15,11 @@ import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -28,14 +31,16 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.violinjourney.app.core.backup.RestoreSwap
 import com.violinjourney.app.core.domain.practice.PracticeConfig
-import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
+import com.violinjourney.app.core.ui.analytics.HiltAnalyticsViewModel
+import com.violinjourney.app.core.ui.components.LocalMessages
+import com.violinjourney.app.core.ui.components.Messages
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.format.use
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.practice.components.PracticePromptHost
 import com.violinjourney.app.navigation.AppBottomBar
 import com.violinjourney.app.navigation.AppNavHost
-import com.violinjourney.app.navigation.AppStartViewModel
+import com.violinjourney.app.navigation.HiltAppStartViewModel
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
 import com.violinjourney.app.navigation.TopLevelDestination
 import com.violinjourney.app.navigation.navigateToRunningBackup
@@ -59,7 +64,11 @@ class MainActivity : ComponentActivity() {
         Formats.use(resources.configuration.locales[0])
         if (savedInstanceState == null) openBackup.value = intent?.getStringExtra(EXTRA_OPEN_BACKUP)
         setContent {
-            ViolinTheme { ViolinTunerRoot(openBackup = openBackup.value, onBackupOpened = { openBackup.value = null }) }
+            // the short words of the screens are toasts here, as they always were
+            val messages = remember { Messages { text -> Toast.makeText(this, text, Toast.LENGTH_SHORT).show() } }
+            CompositionLocalProvider(LocalMessages provides messages) {
+                ViolinTheme { ViolinTunerRoot(openBackup = openBackup.value, onBackupOpened = { openBackup.value = null }) }
+            }
         }
     }
 
@@ -78,7 +87,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
-    val startViewModel = hiltViewModel<AppStartViewModel>()
+    val startViewModel = hiltViewModel<HiltAppStartViewModel>()
     val startRoute by startViewModel.startRoute.collectAsStateWithLifecycle()
     val practiceRunning by startViewModel.practiceRunning.collectAsStateWithLifecycle()
     val practicePrompt by startViewModel.practicePrompt.collectAsStateWithLifecycle()
@@ -88,7 +97,7 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
     // And every time it goes away: the temporary files of sending are swept then too (spec 5.11).
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { startViewModel.onAppStopped() }
     val navController = rememberNavController()
-    val tracking = hiltViewModel<AnalyticsViewModel>()
+    val tracking = hiltViewModel<HiltAnalyticsViewModel>()
     LaunchedEffect(navController) {
         navController.currentBackStackEntryFlow.collect { entry -> tracking.onScreenOpened(entry.destination.route) }
     }

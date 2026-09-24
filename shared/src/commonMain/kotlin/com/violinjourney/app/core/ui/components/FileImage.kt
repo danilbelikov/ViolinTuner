@@ -44,3 +44,10 @@ fun rememberSmallFileImage(path: String?): ImageBitmap? {
 
 /** The picture in the file at [path]; null for a file that is gone or is not a picture. Blocking: call off the main thread. */
 expect fun decodeImageFile(path: String): ImageBitmap?
+
+/**
+ * The picture at [path] decoded no wider than about [wantedWidthPx] (a power-of-two sample of its pixels) with the
+ * sample it took; null when that sample is not finer than [loadedSample], and for a file that is gone or is not a picture.
+ * Blocking: call off the main thread.
+ */
+expect fun decodeImageFileSampled(path: String, wantedWidthPx: Int, loadedSample: Int): Pair<ImageBitmap, Int>?

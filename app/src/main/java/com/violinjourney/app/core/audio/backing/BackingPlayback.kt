@@ -26,12 +26,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 
-/** Where the sound goes now, and when that changes (spec 3.32: no headphones — no take under the backing). */
-interface AudioRoutes {
-    fun current(): AudioRoute
-
-    val changes: Flow<AudioRoute>
-}
 
 /** The kinds of outputs, as the platform names them, into the few that matter here. Pure. */
 object AudioRouteRules {
@@ -82,28 +76,6 @@ class AndroidAudioRoutes @Inject constructor(@ApplicationContext context: Contex
     }.distinctUntilChanged()
 }
 
-/**
- * The backing played into the headphones while a take is recorded (spec 3.32). It reports the moment its first
- * frame left the output on `CLOCK_MONOTONIC` — what the shift of the take is measured from — and stops by itself,
- * rather than fall through to the speaker, when the headphones go.
- */
-interface BackingPlayback {
-    /** How far it has played, in ms; null while it does not play. */
-    val position: StateFlow<Long?>
-
-    /** Plays [pcm] — 16-bit stereo at [sampleRate], as [BackingPcmCache] makes it — from its start. Returns at once. */
-    fun start(pcm: File, sampleRate: Int)
-
-    /** When the first frame left the output; null until the output has said so. */
-    val startNanos: Long?
-
-    /** Stops; how far it had played, in ms. */
-    fun stop(): Long
-}
-
-fun interface BackingPlaybackFactory {
-    fun create(): BackingPlayback
-}
 
 class TrackBackingPlayback(private val routes: AudioRoutes) : BackingPlayback {
     private val mutablePosition = MutableStateFlow<Long?>(null)
@@ -230,13 +202,4 @@ class TrackBackingPlayback(private val routes: AudioRoutes) : BackingPlayback {
         const val STALL_NANOS = 1_000_000_000L
         const val JOIN_TIMEOUT_MS = 1_000L
     }
-}
-
-/** The fake build (`-PfakePitch=true`, the emulator): pretend wireless headphones, so a take under the backing can be tried without any. */
-class FakeHeadphoneRoutes : AudioRoutes {
-    private val route = AudioRoute(BackingOutput.BLUETOOTH, "Emulator headphones")
-
-    override fun current(): AudioRoute = route
-
-    override val changes: Flow<AudioRoute> = kotlinx.coroutines.flow.flowOf(route)
 }

@@ -21,3 +21,9 @@ actual fun decodeImageFile(path: String): ImageBitmap? {
         null // not a picture: what BitmapFactory answers with null on Android
     }
 }
+
+/** Skia decodes the whole picture: one decode at full size, never again. */
+actual fun decodeImageFileSampled(path: String, wantedWidthPx: Int, loadedSample: Int): Pair<ImageBitmap, Int>? =
+    if (loadedSample <= FULL_SIZE) null else decodeImageFile(path)?.let { it to FULL_SIZE }
+
+private const val FULL_SIZE = 1

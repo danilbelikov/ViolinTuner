@@ -8,3 +8,9 @@ expect val PlatformFile.filePath: String
 
 /** The size of the file in bytes; 0 for a file that is not there. */
 expect fun PlatformFile.sizeBytes(): Long
+
+/** The last part of the path: what the database keeps. */
+expect val PlatformFile.fileName: String
+
+/** Deletes the file; true when it is gone now. */
+expect fun PlatformFile.deleteFile(): Boolean

@@ -1,54 +1,80 @@
 package com.violinjourney.app.navigation
 
-import com.violinjourney.app.feature.camera.CaptureRoute
-import com.violinjourney.app.feature.camera.CaptureViewModel
+import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.compose.LocalActivity
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.violinjourney.app.BuildConfig
 import com.violinjourney.app.core.domain.journey.JourneyRoute as JourneyStops
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
+import com.violinjourney.app.core.ui.analytics.HiltAnalyticsViewModel
+import com.violinjourney.app.feature.backup.BACKUP_FILE_TYPES
 import com.violinjourney.app.feature.backup.BackupRoute
+import com.violinjourney.app.feature.backup.DataBlock
 import com.violinjourney.app.feature.backup.RestoreRoute
 import com.violinjourney.app.feature.backup.RestoreViewModel
+import com.violinjourney.app.feature.camera.CaptureRoute
+import com.violinjourney.app.feature.camera.CaptureViewModel
+import com.violinjourney.app.feature.history.HiltHistoryViewModel
 import com.violinjourney.app.feature.history.HistoryRoute
 import com.violinjourney.app.feature.history.HistorySection
+import com.violinjourney.app.feature.home.HiltHomeLookViewModel
+import com.violinjourney.app.feature.home.HiltHomeViewModel
 import com.violinjourney.app.feature.home.HomeRoute
 import com.violinjourney.app.feature.home.HomeView
 import com.violinjourney.app.feature.home.SplashKind
 import com.violinjourney.app.feature.home.SplashRoute
+import com.violinjourney.app.feature.journey.HiltJourneyViewModel
+import com.violinjourney.app.feature.journey.HiltStopViewModel
 import com.violinjourney.app.feature.journey.JourneyRoute
 import com.violinjourney.app.feature.journey.JourneyView
 import com.violinjourney.app.feature.journey.StopRoute
 import com.violinjourney.app.feature.journey.StopViewModel
+import com.violinjourney.app.feature.live.HiltLiveViewModel
 import com.violinjourney.app.feature.live.LiveRoute
+import com.violinjourney.app.feature.live.block.HiltBlockViewModel
+import com.violinjourney.app.feature.onboarding.HiltOnboardingViewModel
 import com.violinjourney.app.feature.onboarding.OnboardingRoute
+import com.violinjourney.app.feature.practice.HiltPracticeViewModel
 import com.violinjourney.app.feature.practice.PracticeRoute
+import com.violinjourney.app.feature.repertoire.HiltRepertoireViewModel
 import com.violinjourney.app.feature.repertoire.RepertoireViewModel
 import com.violinjourney.app.feature.repertoire.SectionKeys
 import com.violinjourney.app.feature.repertoire.SectionRoute
+import com.violinjourney.app.feature.repertoire.form.HiltPieceFormViewModel
 import com.violinjourney.app.feature.repertoire.form.PieceFormRoute
 import com.violinjourney.app.feature.repertoire.form.PieceFormViewModel
 import com.violinjourney.app.feature.repertoire.piece.PieceRoute
 import com.violinjourney.app.feature.repertoire.piece.PieceViewModel
+import com.violinjourney.app.feature.repertoire.scale.HiltScaleFormViewModel
 import com.violinjourney.app.feature.repertoire.scale.ScaleFormRoute
 import com.violinjourney.app.feature.repertoire.scale.ScaleFormViewModel
+import com.violinjourney.app.feature.repertoire.sections.HiltSectionsViewModel
 import com.violinjourney.app.feature.repertoire.stand.StandRoute
 import com.violinjourney.app.feature.repertoire.stand.StandViewModel
 import com.violinjourney.app.feature.session.SessionRoute
 import com.violinjourney.app.feature.session.SessionViewModel
+import com.violinjourney.app.feature.settings.HiltSettingsViewModel
 import com.violinjourney.app.feature.settings.SettingsRoute
+import com.violinjourney.app.feature.share.ShareHost
+import com.violinjourney.app.feature.share.ShareViewModel
 import com.violinjourney.app.feature.sound.SoundRoute
 import com.violinjourney.app.feature.sound.SoundViewModel
 
-const val ONBOARDING_ROUTE = "onboarding"
 private const val SESSION_ROUTE = "session"
 private const val PIECE_ROUTE = "piece"
 private const val PIECE_PATTERN = "$PIECE_ROUTE/{${PieceViewModel.ARG_PIECE_ID}}"
@@ -87,7 +113,14 @@ fun AppNavHost(
         modifier = modifier,
     ) {
         composable(ONBOARDING_ROUTE) {
-            OnboardingRoute(onFinished = navController::navigateFromOnboardingToLive, onRestore = navController::navigateToRestore)
+            // On a new phone a copy is the first thing a person with one needs (spec 3.20): the system's «Открыть», then the restore screen.
+            val copy = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri -> uri?.let { navController.navigateToRestore(it.toString()) } }
+            OnboardingRoute(
+                onFinished = navController::navigateFromOnboardingToLive,
+                onHaveBackup = { copy.launch(BACKUP_FILE_TYPES) },
+                viewModel = hiltViewModel<HiltOnboardingViewModel>(),
+                tracking = hiltViewModel<HiltAnalyticsViewModel>(),
+            )
         }
         composable(TopLevelDestination.LIVE.route) {
             LiveRoute(
@@ -95,6 +128,11 @@ fun AppNavHost(
                 onFinishPractice = navController::navigateToFinishPractice,
                 onOpenRepertoire = navController::navigateToRepertoire,
                 onOpenSettings = navController::navigateToSettings,
+                viewModel = hiltViewModel<HiltLiveViewModel>(),
+                blockViewModel = hiltViewModel<HiltBlockViewModel>(),
+                homeLookViewModel = hiltViewModel<HiltHomeLookViewModel>(),
+                tracking = hiltViewModel<HiltAnalyticsViewModel>(),
+                showVenue = !BuildConfig.PLAIN_LIVE,
             )
         }
         composable(TopLevelDestination.PRACTICE.route) {
@@ -104,14 +142,23 @@ fun AppNavHost(
                 onOpenJourney = { navController.navigate(JOURNEY_ROUTE) { launchSingleTop = true } },
                 onOpenHome = { navController.navigate(HOME_ROUTE) { launchSingleTop = true } },
                 onOpenSettings = navController::navigateToSettings,
+                viewModel = hiltViewModel<HiltPracticeViewModel>(),
+                homeLookViewModel = hiltViewModel<HiltHomeLookViewModel>(),
             )
         }
         composable(TopLevelDestination.HISTORY.route) {
+            val shareViewModel = hiltViewModel<ShareViewModel>()
+            val activity = LocalActivity.current
             HistoryRoute(
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
                 onOpenSection = navController::navigateToSection,
                 onOpenPiece = navController::navigateToPiece,
+                viewModel = hiltViewModel<HiltHistoryViewModel>(),
+                sectionsViewModel = hiltViewModel<HiltSectionsViewModel>(),
+                onShare = shareViewModel::start,
+                shareHost = { ShareHost(shareViewModel) },
+                changingConfigurations = { activity?.isChangingConfigurations == true },
             )
         }
         // Above the tabs and without the bottom bar; back returns to where it was opened from.
@@ -145,6 +192,7 @@ fun AppNavHost(
                     else navController.navigateToPieceForm(pieceId = null, section = section)
                 },
                 onClose = navController::popBackStack,
+                viewModel = hiltViewModel<HiltRepertoireViewModel>(),
             )
         }
         // The repertoire (spec 3.15): a piece, its form and its music stand, all above the tabs.
@@ -213,6 +261,7 @@ fun AppNavHost(
                 },
                 // The form of a piece lies on that piece's screen: both go.
                 onCloseDeleted = { navController.popUpToSection() },
+                viewModel = hiltViewModel<HiltPieceFormViewModel>(),
             )
         }
         composable(
@@ -232,6 +281,7 @@ fun AppNavHost(
                     navController.navigateToPiece(pieceId)
                 },
                 onCloseDeleted = { navController.popUpToSection() },
+                viewModel = hiltViewModel<HiltScaleFormViewModel>(),
             )
         }
         // «Настройки» (spec 3.8, 4): not a tab any more — the gear of Live opens them above the tabs, without the bottom bar.
@@ -239,9 +289,17 @@ fun AppNavHost(
             SettingsRoute(
                 onOpenOnboarding = navController::navigateToOnboarding,
                 onOpenSound = { navController.navigateToSound(sessionId = null) },
-                onOpenBackup = navController::navigateToBackup,
-                onOpenRestore = navController::navigateToRestore,
                 onClose = navController::popBackStack,
+                onLanguageClick = rememberAppLanguageSettings(),
+                dataBlock = { analyticsEnabled, onAnalyticsChange ->
+                    DataBlock(
+                        onOpenBackup = navController::navigateToBackup,
+                        onOpenRestore = navController::navigateToRestore,
+                        analyticsEnabled = analyticsEnabled,
+                        onAnalyticsChange = onAnalyticsChange,
+                    )
+                },
+                viewModel = hiltViewModel<HiltSettingsViewModel>(),
             )
         }
         // The journey (spec 3.23): above the tabs, without the bottom bar. The map and the passport are views of the same state.
@@ -257,6 +315,8 @@ fun AppNavHost(
                     // «Сыграть здесь» after an arrival: the tabs come back, on Live (spec 3.27)
                     onOpenLive = navController::navigateToLiveLeavingTheGame,
                     onClose = navController::popBackStack,
+                    viewModel = hiltViewModel<HiltJourneyViewModel>(),
+                    homeLookViewModel = hiltViewModel<HiltHomeLookViewModel>(),
                 )
             }
         }
@@ -269,6 +329,7 @@ fun AppNavHost(
                 // «Играть здесь»: the tabs come back, on Live, in this city (spec 3.27)
                 onOpenLive = navController::navigateToLiveLeavingTheGame,
                 onOpenHome = { navController.navigate(SPLASH_HOME_ROUTE) { launchSingleTop = true } },
+                viewModel = hiltViewModel<HiltStopViewModel>(),
             )
         }
         // The home (spec 3.24): four views of one state, above the tabs.
@@ -282,15 +343,16 @@ fun AppNavHost(
                     onOpenHome = { if (!navController.popBackStack(HOME_ROUTE, inclusive = false)) navController.navigate(HOME_ROUTE) { launchSingleTop = true } },
                     onOpenJourney = { navController.navigate(SPLASH_AWAY_ROUTE) { launchSingleTop = true } },
                     onClose = navController::popBackStack,
+                    viewModel = hiltViewModel<HiltHomeViewModel>(),
                 )
             }
         }
         // The title cards between the home and the journey (spec 3.25, 3.27): the player moves from one to the other.
         composable(SPLASH_AWAY_ROUTE) {
-            SplashRoute(SplashKind.AWAY, onDone = { navController.navigateWithinTheGame(JOURNEY_ROUTE) })
+            SplashRoute(SplashKind.AWAY, onDone = { navController.navigateWithinTheGame(JOURNEY_ROUTE) }, viewModel = hiltViewModel<HiltHomeViewModel>())
         }
         composable(SPLASH_HOME_ROUTE) {
-            SplashRoute(SplashKind.HOME, onDone = { navController.navigateWithinTheGame(HOME_ROUTE) })
+            SplashRoute(SplashKind.HOME, onDone = { navController.navigateWithinTheGame(HOME_ROUTE) }, viewModel = hiltViewModel<HiltHomeViewModel>())
         }
         // A copy of the data and its coming back (spec 3.20): above the tabs, without the bottom bar.
         composable(BACKUP_ROUTE) { BackupRoute(onClose = navController::popBackStack) }
@@ -422,4 +484,12 @@ fun NavHostController.navigateToSection(section: SectionRef) {
 /** An element is gone with its form and its screen: back to the list of its section, or to the tab if it was opened from elsewhere. */
 private fun NavHostController.popUpToSection() {
     if (!popBackStack(SECTION_PATTERN, inclusive = false)) popBackStack(TopLevelDestination.HISTORY.route, inclusive = false)
+}
+
+/** Android 13 lets a person choose the language of one app; before it the app follows the device and there is nothing to open. */
+@Composable
+private fun rememberAppLanguageSettings(): (() -> Unit)? {
+    val context = LocalContext.current
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
+    return { context.startActivity(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", context.packageName, null))) }
 }
