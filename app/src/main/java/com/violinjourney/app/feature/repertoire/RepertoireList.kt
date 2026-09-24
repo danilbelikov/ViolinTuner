@@ -95,9 +95,10 @@ fun LazyListScope.repertoireItems(state: RepertoireState, onIntent: (RepertoireI
             items(state.cards, key = { "piece-${it.id}" }) { card ->
                 PieceCardRow(card, onClick = { onIntent(RepertoireIntent.PieceClicked(card.id)) }, modifier = Modifier.padding(top = CardSpacing))
             }
-            if (state.cards.isEmpty() && state.filter != null) {
+            val filter = state.filter
+            if (state.cards.isEmpty() && filter != null) {
                 item(key = "repertoireEmptyFilter") {
-                    EmptyFilter(state.filter, onShowAll = { onIntent(RepertoireIntent.FilterSelected(null)) })
+                    EmptyFilter(filter, onShowAll = { onIntent(RepertoireIntent.FilterSelected(null)) })
                 }
             }
         }
@@ -173,9 +174,10 @@ private fun PieceCardRow(card: PieceCard, onClick: () -> Unit, modifier: Modifie
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        val scale = card.scale
         when {
             // a drawn scale has notes of its own: the clef with its key signature is known from afar, a first bar in miniature is not
-            card.scale != null && card.thumbPath == null -> KeySignatureTile(card.scale, Modifier.size(ThumbWidth, ThumbHeight), ThumbCorner)
+            scale != null && card.thumbPath == null -> KeySignatureTile(scale, Modifier.size(ThumbWidth, ThumbHeight), ThumbCorner)
             // a row of strokes looks even, not "without a photo"
             card.stroke && card.thumbPath == null -> StrokeTile(Modifier.size(ThumbWidth, ThumbHeight), ThumbCorner)
             else -> SheetThumb(card.thumbPath, ThumbWidth, ThumbHeight, ThumbCorner, dim = THUMB_DIM)

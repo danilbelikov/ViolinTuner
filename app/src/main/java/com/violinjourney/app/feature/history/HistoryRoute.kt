@@ -19,6 +19,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.motion.rememberAnimationsRemoved
 import com.violinjourney.app.feature.history.components.CardActions
+import com.violinjourney.app.feature.repertoire.sections.HiltSectionsViewModel
 import com.violinjourney.app.feature.share.ShareHost
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.feature.repertoire.sections.SectionsEffect
@@ -33,7 +34,7 @@ fun HistoryRoute(
     onOpenPiece: (pieceId: Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel = hiltViewModel(),
-    sectionsViewModel: SectionsViewModel = hiltViewModel(),
+    sectionsViewModel: SectionsViewModel = hiltViewModel<HiltSectionsViewModel>(),
     shareViewModel: ShareViewModel = hiltViewModel(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()

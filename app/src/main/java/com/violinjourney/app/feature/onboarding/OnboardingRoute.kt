@@ -25,7 +25,7 @@ fun OnboardingRoute(
     onFinished: () -> Unit,
     onRestore: (uri: String) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: OnboardingViewModel = hiltViewModel(),
+    viewModel: OnboardingViewModel = hiltViewModel<HiltOnboardingViewModel>(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current

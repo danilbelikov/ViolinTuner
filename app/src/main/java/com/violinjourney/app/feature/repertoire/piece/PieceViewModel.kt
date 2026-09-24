@@ -322,7 +322,7 @@ class PieceViewModel @Inject constructor(
                 val file = savedState.remove<String>(KEY_VIDEO_FILE)?.let(::File) ?: return
                 if (intent.saved) importer.shot(pieceId, file) else file.delete()
             }
-            is PieceIntent.VideoPicked -> if (intent.uri != null && videoAllowed()) importer.picked(pieceId, intent.uri)
+            is PieceIntent.VideoPicked -> intent.uri.let { uri -> if (uri != null && videoAllowed()) importer.picked(pieceId, uri) }
             PieceIntent.VideoImportCancelClicked -> importer.cancelClicked()
             PieceIntent.VideoImportContinueClicked -> importer.continueClicked()
             PieceIntent.VideoImportDismissed -> importer.dismiss()

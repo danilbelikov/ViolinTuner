@@ -17,7 +17,7 @@ fun PieceFormRoute(
     onOpenCreated: (pieceId: Long) -> Unit,
     onCloseDeleted: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: PieceFormViewModel = hiltViewModel(),
+    viewModel: PieceFormViewModel = hiltViewModel<HiltPieceFormViewModel>(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current

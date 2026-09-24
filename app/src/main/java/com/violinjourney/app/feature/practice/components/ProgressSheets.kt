@@ -250,16 +250,18 @@ private fun FarDivider() {
 @Composable
 private fun TrophyLineRow(line: TrophyLine, name: String) {
     val colors = MaterialTheme.colorScheme
-    val given = line.awardedDate != null
+    val awardedDate = line.awardedDate
+    val remainingMs = line.remainingMs
+    val given = awardedDate != null
     val hours = Formats.hoursMark(line.hours)
     val status = when {
-        line.awardedDate != null -> stringResource(R.string.trophies_awarded, Formats.dayAndMonth(line.awardedDate))
-        line.remainingMs != null -> stringResource(R.string.trophies_remaining, Formats.remainingTime(line.remainingMs))
+        awardedDate != null -> stringResource(R.string.trophies_awarded, Formats.dayAndMonth(awardedDate))
+        remainingMs != null -> stringResource(R.string.trophies_remaining, Formats.remainingTime(remainingMs))
         else -> ""
     }
     val description = when {
-        line.awardedDate != null -> stringResource(R.string.trophies_line_given, name, hours, Formats.dayAndMonth(line.awardedDate))
-        line.remainingMs != null -> stringResource(R.string.trophies_line_remaining, name, hours, Formats.remainingTime(line.remainingMs))
+        awardedDate != null -> stringResource(R.string.trophies_line_given, name, hours, Formats.dayAndMonth(awardedDate))
+        remainingMs != null -> stringResource(R.string.trophies_line_remaining, name, hours, Formats.remainingTime(remainingMs))
         else -> stringResource(R.string.trophies_line_far, name, hours)
     }
     Row(

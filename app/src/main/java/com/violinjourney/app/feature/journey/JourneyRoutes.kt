@@ -28,7 +28,7 @@ fun JourneyRoute(
     onOpenLive: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: JourneyViewModel = hiltViewModel(),
+    viewModel: JourneyViewModel = hiltViewModel<HiltJourneyViewModel>(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -66,7 +66,7 @@ fun JourneyRoute(
 }
 
 @Composable
-fun StopRoute(onClose: () -> Unit, onOpenLive: () -> Unit, onOpenHome: () -> Unit, modifier: Modifier = Modifier, viewModel: StopViewModel = hiltViewModel()) {
+fun StopRoute(onClose: () -> Unit, onOpenLive: () -> Unit, onOpenHome: () -> Unit, modifier: Modifier = Modifier, viewModel: StopViewModel = hiltViewModel<HiltStopViewModel>()) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnClose by rememberUpdatedState(onClose)
