@@ -5,12 +5,12 @@ import com.violinjourney.app.core.domain.PitchMath
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sin
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 /** Behaviour every detector has to show on synthetic signals (spec 5.1, step 4 of section 8). */
 abstract class PitchDetectorContractTest {
@@ -21,7 +21,7 @@ abstract class PitchDetectorContractTest {
 
     private fun errorCents(estimate: PitchEstimate, expectedHz: Double): Double {
         val freq = estimate.freqHz
-        assertNotNull("no pitch for $expectedHz Hz", freq)
+        assertNotNull(freq, "no pitch for $expectedHz Hz")
         return PitchMath.centsBetween(freq!!, expectedHz)
     }
 
@@ -34,8 +34,8 @@ abstract class PitchDetectorContractTest {
             val estimate = detector.detect(SignalSynth.tone(hz, rate, window, partials), rate)
             val limit = if (midi <= E6) 1.5 else 3.0
             val error = abs(errorCents(estimate, hz))
-            assertTrue("midi $midi ${cents}c @ $rate: off by $error cents", error <= limit)
-            assertTrue("midi $midi @ $rate: clarity ${estimate.clarity}", estimate.clarity >= config.clarityThreshold)
+            assertTrue(error <= limit, "midi $midi ${cents}c @ $rate: off by $error cents")
+            assertTrue(estimate.clarity >= config.clarityThreshold, "midi $midi @ $rate: clarity ${estimate.clarity}")
         }
     }
 
@@ -60,7 +60,7 @@ abstract class PitchDetectorContractTest {
         for (rate in RATES) for (midi in listOf(62, 69, 76, 88, 95, 100)) for (partials in listOf(SignalSynth.SINE, SignalSynth.SAW)) {
             val hz = SignalSynth.hz(midi)
             val estimate = detector.detect(SignalSynth.tone(hz, rate, window, partials), rate)
-            assertEquals("midi $midi @ $rate", 0.0, errorCents(estimate, hz), 3.0)
+            assertEquals(0.0, errorCents(estimate, hz), 3.0, "midi $midi @ $rate")
         }
     }
 
@@ -78,11 +78,11 @@ abstract class PitchDetectorContractTest {
             val estimate = detector.detect(signal.copyOfRange(start, start + window), rate)
             val measured = errorCents(estimate, center)
             val expected = vibrato((start + window / 2.0) / rate)
-            assertEquals("frame at $start", expected, measured, 5.0)
+            assertEquals(expected, measured, 5.0, "frame at $start")
             deviations += measured
             start += config.hopSizeSamples
         }
-        assertTrue("vibrato is visible", deviations.max() > 12 && deviations.min() < -12)
+        assertTrue(deviations.max() > 12 && deviations.min() < -12, "vibrato is visible")
     }
 
     @Test
@@ -91,7 +91,7 @@ abstract class PitchDetectorContractTest {
         for (rate in RATES) for (seed in 1..10) {
             val estimate = detector.detect(SignalSynth.whiteNoise(window, seed), rate)
             val confident = estimate.freqHz != null && estimate.clarity >= config.clarityThreshold
-            assertFalse("seed $seed @ $rate: $estimate", confident)
+            assertFalse(confident, "seed $seed @ $rate: $estimate")
         }
     }
 
@@ -117,7 +117,7 @@ abstract class PitchDetectorContractTest {
             val hz = SignalSynth.hz(midi, 7.0)
             val clean = SignalSynth.tone(hz, 44_100, window, SignalSynth.VIOLIN)
             val estimate = detector.detect(SignalSynth.withNoise(clean, snrDb = 20.0, seed = seed), 44_100)
-            assertEquals("midi $midi seed $seed", 0.0, errorCents(estimate, hz), 3.0)
+            assertEquals(0.0, errorCents(estimate, hz), 3.0, "midi $midi seed $seed")
             assertTrue(estimate.clarity >= config.clarityThreshold)
         }
     }
@@ -131,7 +131,7 @@ abstract class PitchDetectorContractTest {
             val estimate = detector.detect(SignalSynth.withNoise(clean, snrDb = 0.0, seed = seed), 44_100)
             val freq = estimate.freqHz
             if (freq != null && estimate.clarity >= config.clarityThreshold) {
-                assertEquals("midi $midi seed $seed", 0.0, PitchMath.centsBetween(freq, hz), 50.0)
+                assertEquals(0.0, PitchMath.centsBetween(freq, hz), 50.0, "midi $midi seed $seed")
             }
         }
     }

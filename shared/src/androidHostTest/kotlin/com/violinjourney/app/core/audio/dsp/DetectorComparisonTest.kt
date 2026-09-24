@@ -4,8 +4,8 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.PitchMath
 import kotlin.math.abs
 import kotlin.system.measureNanoTime
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 /**
  * "Choice by tests" (spec 5.1): prints accuracy, noise robustness and cost of both detectors.
@@ -64,7 +64,7 @@ class DetectorComparisonTest {
                         score.rejected, score.confidentlyWrong,
                     ),
                 )
-                assertTrue("$name is confidently wrong at $snr dB", score.confidentlyWrong == 0)
+                assertTrue(score.confidentlyWrong == 0, "$name is confidently wrong at $snr dB")
             }
             // Note onset: amplitude grows across the window, as in a bow attack.
             for (startLevel in listOf(0.5, 0.2, 0.05)) {

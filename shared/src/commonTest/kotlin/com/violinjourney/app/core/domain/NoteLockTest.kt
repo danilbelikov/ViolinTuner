@@ -1,8 +1,8 @@
 package com.violinjourney.app.core.domain
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.Test
 
 class NoteLockTest {
     private val lock = NoteLock(IntonationConfig())

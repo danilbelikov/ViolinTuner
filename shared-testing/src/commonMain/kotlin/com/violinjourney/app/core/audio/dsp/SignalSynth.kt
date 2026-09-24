@@ -7,7 +7,7 @@ import kotlin.math.sqrt
 import kotlin.random.Random
 
 /** Synthetic test signals, amplitude roughly within -1..1. */
-internal object SignalSynth {
+object SignalSynth {
     val SINE = doubleArrayOf(1.0)
 
     /** Bright bowed-string-like spectrum. */

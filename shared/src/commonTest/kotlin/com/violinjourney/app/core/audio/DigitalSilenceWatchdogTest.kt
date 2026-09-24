@@ -1,9 +1,9 @@
 package com.violinjourney.app.core.audio
 
 import com.violinjourney.app.core.domain.IntonationConfig
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class DigitalSilenceWatchdogTest {
     private val rate = 48_000

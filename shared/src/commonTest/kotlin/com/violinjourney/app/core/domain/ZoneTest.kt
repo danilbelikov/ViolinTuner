@@ -1,8 +1,8 @@
 package com.violinjourney.app.core.domain
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.Test
 
 class ZoneTest {
     private val config = IntonationConfig()
@@ -37,7 +37,7 @@ class ZoneTest {
     }
 
     @Test
-    fun `leaving in-tune needs 1_5 cents past the boundary, returning 1_5 inside`() {
+    fun `leaving in-tune needs 1_5 cents past the boundary — returning 1_5 inside`() {
         val zones = ZoneHysteresis(config)
         assertEquals(Zone.IN_TUNE, zones.update(0.0))
         assertEquals(Zone.IN_TUNE, zones.update(9.5))

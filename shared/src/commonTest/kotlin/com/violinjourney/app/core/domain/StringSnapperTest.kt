@@ -1,8 +1,8 @@
 package com.violinjourney.app.core.domain
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.Test
 
 class StringSnapperTest {
     private val config = IntonationConfig()
@@ -27,7 +27,7 @@ class StringSnapperTest {
     }
 
     @Test
-    fun `midpoint between strings is measured in cents, not hertz`() {
+    fun `midpoint between strings is measured in cents — not hertz`() {
         assertEquals(ViolinString.D4, snap(65.4))
         assertEquals(ViolinString.A4, snap(65.6))
     }

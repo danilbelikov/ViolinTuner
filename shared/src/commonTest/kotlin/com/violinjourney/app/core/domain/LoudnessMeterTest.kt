@@ -1,9 +1,9 @@
 package com.violinjourney.app.core.domain
 
 import kotlin.math.pow
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class LoudnessMeterTest {
     private val config = IntonationConfig()
@@ -20,7 +20,7 @@ class LoudnessMeterTest {
     }
 
     @Test
-    fun `exact zeros of a dead input read as nothing, not as a number`() {
+    fun `exact zeros of a dead input read as nothing — not as a number`() {
         assertEquals(0.0, LoudnessMeter.rawLevel(0.0, config), 0.0)
         assertEquals(0f, LoudnessMeter(config).process(0, 0.0), 0f)
     }

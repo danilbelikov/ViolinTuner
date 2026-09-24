@@ -10,10 +10,10 @@ import com.violinjourney.app.core.domain.TestFrames.times
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.sin
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class IntonationEngineTest {
     private val engine = IntonationEngine()
@@ -26,7 +26,7 @@ class IntonationEngineTest {
         times(fromMs, untilMs).map { feed(played(it, midi, cents)) }.last()
 
     private fun IntonationReading.active(): Active {
-        assertTrue("expected Active but was $this", this is Active)
+        assertTrue(this is Active, "expected Active but was $this")
         return this as Active
     }
 
@@ -69,8 +69,8 @@ class IntonationEngineTest {
         assertEquals(listOf(Zone.IN_TUNE, Zone.NEAR, Zone.OFF), zones.map { it.first }.distinct())
         val firstNear = zones.first { it.first == Zone.NEAR }.second
         val firstOff = zones.first { it.first == Zone.OFF }.second
-        assertTrue("left in-tune at $firstNear", firstNear > 9.5 && firstNear < 9.8)
-        assertTrue("left near at $firstOff", firstOff > 21.5 && firstOff < 21.8)
+        assertTrue(firstNear > 9.5 && firstNear < 9.8, "left in-tune at $firstNear")
+        assertTrue(firstOff > 21.5 && firstOff < 21.8, "left near at $firstOff")
     }
 
     @Test
@@ -85,7 +85,7 @@ class IntonationEngineTest {
     }
 
     @Test
-    fun `gap up to 100 ms keeps the hold ring, a longer one resets it`() {
+    fun `gap up to 100 ms keeps the hold ring — a longer one resets it`() {
         play(0, 1_100, midi = 69) // locked at 100, last frame 1090
         times(1_100, 1_190).forEach { feed(quiet(it)) }
         val resumed = feed(played(1_190, 69)).active()
@@ -114,7 +114,7 @@ class IntonationEngineTest {
     }
 
     @Test
-    fun `note change keeps the old reading until the new note locks, then starts clean`() {
+    fun `note change keeps the old reading until the new note locks — then starts clean`() {
         val a4 = play(0, 1_000, midi = 69, cents = 5.0).active()
         val pending = play(1_000, 1_100, midi = 71, cents = -12.0).active()
         assertEquals("A4", pending.note.name)

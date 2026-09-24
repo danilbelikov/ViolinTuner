@@ -1,14 +1,14 @@
 package com.violinjourney.app.core.domain
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class CentsReadoutTest {
     private val config = IntonationConfig()
     private val a4 = 69
 
     @Test
-    fun `the first value shows at once, rounded`() {
+    fun `the first value shows at once — rounded`() {
         assertEquals(12, CentsReadout(config).update(0, a4, 12.4))
         assertEquals(-7, CentsReadout(config).update(0, a4, -6.6))
         assertEquals(0, CentsReadout(config).update(0, a4, -0.3))
@@ -36,14 +36,14 @@ class CentsReadoutTest {
     }
 
     @Test
-    fun `a new note shows at once, whatever the clock says`() {
+    fun `a new note shows at once — whatever the clock says`() {
         val readout = CentsReadout(config)
         assertEquals(10, readout.update(0, a4, 10.0))
         assertEquals(-20, readout.update(10, a4 + 2, -20.0))
     }
 
     @Test
-    fun `the shown range is two digits, as in tuning mode where cents go far`() {
+    fun `the shown range is two digits — as in tuning mode where cents go far`() {
         assertEquals(99, CentsReadout(config).update(0, a4, 340.0))
         assertEquals(-99, CentsReadout(config).update(0, a4, -99.6))
     }

@@ -1,7 +1,7 @@
 package com.violinjourney.app.core.domain
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class SignalGateTest {
     private val gate = SignalGate(IntonationConfig())

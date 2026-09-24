@@ -10,10 +10,10 @@ import com.violinjourney.app.core.domain.IntonationReading.Active
 import com.violinjourney.app.core.domain.PitchFrame
 import com.violinjourney.app.core.domain.TargetMode
 import com.violinjourney.app.core.domain.Zone
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class FrameAnalyzerTest {
     private val config = IntonationConfig()
@@ -56,7 +56,7 @@ class FrameAnalyzerTest {
     }
 
     @Test
-    fun `pitched frame carries note and cents, silent frame carries nulls`() {
+    fun `pitched frame carries note and cents — silent frame carries nulls`() {
         val frame = analyze(SignalSynth.tone(SignalSynth.hz(69, 12.0), rate, 8_192, SignalSynth.VIOLIN)).last()
         assertEquals(69, frame.midi)
         assertEquals(12.0, frame.cents!!, 0.5)
@@ -73,7 +73,7 @@ class FrameAnalyzerTest {
     }
 
     @Test
-    fun `flat G string with strong even harmonics reads as G3, flat, in tuning mode`() {
+    fun `flat G string with strong even harmonics reads as G3 — flat — in tuning mode`() {
         val signal = SignalSynth.tone(SignalSynth.hz(55, -60.0), rate, rate, SignalSynth.STRONG_EVEN_HARMONICS)
         val last = readings(signal, TargetMode.Strings()).last() as Active
         assertEquals("G3", last.note.name)
@@ -83,7 +83,7 @@ class FrameAnalyzerTest {
     }
 
     @Test
-    fun `loud noise ends up as too noisy, quiet noise as silence`() {
+    fun `loud noise ends up as too noisy — quiet noise as silence`() {
         val loud = SignalSynth.whiteNoise(rate * 2, seed = 7, amplitude = 0.3)
         assertEquals(IntonationReading.TooNoisy, readings(loud).last())
         val quiet = SignalSynth.whiteNoise(rate * 2, seed = 7, amplitude = 0.002)
@@ -97,6 +97,6 @@ class FrameAnalyzerTest {
         val frames = analyze(a4 + b4)
         val engine = IntonationEngine(config)
         val firstB4 = frames.firstOrNull { (engine.process(it, TargetMode.Chromatic) as? Active)?.note?.name == "B4" }
-        assertTrue("B4 shown at ${firstB4?.tMs} ms", firstB4 != null && firstB4.tMs < 750)
+        assertTrue(firstB4 != null && firstB4.tMs < 750, "B4 shown at ${firstB4?.tMs} ms")
     }
 }
