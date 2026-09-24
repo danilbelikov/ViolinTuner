@@ -56,7 +56,8 @@ Android-приложение: интонационный тренажёр для
 - Комментарии, фоновую запись, прочие настройки, светлую тему не делать, даже если удобно «заодно» (spec, раздел 7).
 
 ## Стек
-- Название — Violin Journey, пакет кода — `com.violinjourney.app`. `applicationId` пока прежний, `com.example.violintuner`: смена — это другое приложение, а на телефоне владельца живые данные. Перед публикацией его ставят в `com.violinjourney.app`, данные переносят через «Копию данных». Все `adb`-команды с `run-as` / `pm` / `am start` — по `applicationId`.
+- Название — Violin Journey, пакет кода и `applicationId` магазинов — `com.violinjourney.app` (до 24.09.2026 был шаблонный `com.example.violintuner`; на телефоне владельца данные живут под ним, пока их не перенесут «Копией данных»). **Debug-сборка — `com.violinjourney.app.debug`**: отдельное приложение рядом с магазинным, его данных не касается. Все `adb`-команды с `run-as` / `pm` / `am start` на эмуляторе — по debug-id, `am start -n com.violinjourney.app.debug/com.violinjourney.app.MainActivity`.
+- Release подписывается ключом магазинов (один для RuStore и Google Play): файл и пароли — в `local.properties` (`releaseStoreFile`, `releaseStorePassword`, `releaseKeyAlias`, `releaseKeyPassword`), сам ключ — `~/keys/violin-journey/release.jks`, вне репозитория. Без них release собирается неподписанным. Потеря ключа = невозможность обновлять приложение. Шаги публикации — `docs/release.md`.
 - Kotlin, Jetpack Compose + Material 3 (Compose BOM), Gradle Kotlin DSL, version catalog `gradle/libs.versions.toml`
 - Hilt, Coroutines/Flow, Navigation Compose
 - minSdk 26, Java 17 (`compileOptions`; Gradle-демон работает на JDK 21), один модуль `app`
@@ -115,7 +116,7 @@ Android-приложение: интонационный тренажёр для
 - Выбор в онбординге пишется в репозиторий сразу; во `OnboardingViewModel` живёт только шаг (в `SavedStateHandle`). Отказ в микрофоне онбординг не останавливает: `rememberMicPermissionRequester(openSettingsWhenBlocked = false)`; в Live тот же помощник вызывается с `true`.
 - Старт: `AppStartViewModel` берёт только первое значение `onboardingDone` — стартовый маршрут под живым `NavHost` менять нельзя; до чтения `MainActivity` показывает пустую поверхность. Переходы «онбординг → Live» и «Настройки → онбординг» — явная навигация с очисткой стека.
 - `navigateToTopLevel` делает `popUpTo(Live)`, а не `findStartDestination()`: при первом запуске стартовая вершина графа — онбординг, которого в стеке уже нет, и вкладки начали бы копиться.
-- Проверить первый запуск на эмуляторе: `adb shell pm clear com.example.violintuner`; координаты и тексты для `input tap` удобно брать из `adb shell uiautomator dump`.
+- Проверить первый запуск на эмуляторе: `adb shell pm clear com.violinjourney.app.debug`; координаты и тексты для `input tap` удобно брать из `adb shell uiautomator dump`.
 
 ## Раскладки и движение Live
 - Раскладку выбирает форма доступной области (`BoxWithConstraints`: шире, чем выше → landscape), а не `Configuration`; только скрытие нижней панели в `MainActivity` смотрит на ориентацию. Landscape — отдельный `LandscapeLayout`, не растянутый портрет.
