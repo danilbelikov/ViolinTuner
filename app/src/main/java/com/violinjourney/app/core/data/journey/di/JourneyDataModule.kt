@@ -1,5 +1,8 @@
 package com.violinjourney.app.core.data.journey.di
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
+import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.data.journey.JourneyDao
 import com.violinjourney.app.core.data.journey.RoomHomeRepository
@@ -9,7 +12,6 @@ import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.journey.PracticeNotesStore
 import com.violinjourney.app.core.settings.DataStorePracticeNotesStore
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -19,19 +21,22 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class JourneyDataModule {
-    @Binds
-    @Singleton
-    abstract fun bindJourneyRepository(impl: RoomJourneyRepository): JourneyRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindHomeRepository(impl: RoomHomeRepository): HomeRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindPracticeNotesStore(impl: DataStorePracticeNotesStore): PracticeNotesStore
-
     companion object {
+        @Provides
+        @Singleton
+        fun provideJourneyRepository(
+            dao: JourneyDao,
+            analytics: Analytics,
+        ): JourneyRepository = RoomJourneyRepository(dao, analytics)
+
+        @Provides
+        @Singleton
+        fun provideHomeRepository(dao: JourneyDao, analytics: Analytics): HomeRepository = RoomHomeRepository(dao, analytics)
+
+        @Provides
+        @Singleton
+        fun providePracticeNotesStore(store: DataStore<Preferences>): PracticeNotesStore = DataStorePracticeNotesStore(store)
+
         @Provides
         fun provideJourneyDao(database: AppDatabase): JourneyDao = database.journeyDao()
 

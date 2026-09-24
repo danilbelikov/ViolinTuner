@@ -83,13 +83,6 @@ sealed interface BackupCandidate {
     data class Unfit(val problem: BackupFileProblem) : BackupCandidate
 }
 
-/** Remembers when the last copy was made. */
-interface BackupPrefs {
-    val lastBackupAtEpochMs: Flow<Long?>
-
-    suspend fun setLastBackupAt(epochMs: Long)
-}
-
 /** Keeps the process alive while a copy is on its way — a foreground service in the app, nothing in tests. */
 fun interface BackupKeepAlive {
     fun start()

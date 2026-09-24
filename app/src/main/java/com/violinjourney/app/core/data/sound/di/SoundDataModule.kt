@@ -1,9 +1,10 @@
 package com.violinjourney.app.core.data.sound.di
 
 import com.violinjourney.app.core.data.sound.RoomSoundRepository
+import com.violinjourney.app.core.data.sound.SoundDao
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRepository
-import dagger.Binds
+import com.violinjourney.app.core.time.WallClock
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -13,11 +14,15 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SoundDataModule {
-    @Binds
-    @Singleton
-    abstract fun bindSoundRepository(impl: RoomSoundRepository): SoundRepository
-
     companion object {
+        @Provides
+        @Singleton
+        fun provideSoundRepository(
+            dao: SoundDao,
+            config: SoundConfig,
+            clock: WallClock,
+        ): SoundRepository = RoomSoundRepository(dao, config, clock)
+
         /** The numbers of spec 5.11. Nothing here is the user's to change, so one instance serves everyone. */
         @Provides
         @Singleton

@@ -7,6 +7,7 @@ plugins {
     alias(libs.plugins.android.kotlin.multiplatform.library)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.ksp)
 }
 
 kotlin {
@@ -50,6 +51,13 @@ kotlin {
             implementation(libs.compose.mp.material3)
             // api: the app reads the shared strings too (Res.string), so their types are part of this module's face
             api(libs.compose.mp.resources)
+            // the one database and the settings of the app (Room and DataStore are multiplatform)
+            implementation(libs.androidx.room.runtime)
+            implementation(libs.androidx.datastore.preferences)
+        }
+        iosMain.dependencies {
+            // Android keeps its system SQLite (the database is opened as before); iOS brings its own
+            implementation(libs.androidx.sqlite.bundled)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -63,4 +71,16 @@ kotlin {
 compose.resources {
     publicResClass = true
     packageOfResClass = "com.violinjourney.app.shared.resources"
+}
+
+// Room writes the database code for each platform; the schemas of all versions stay in app/schemas, where the
+// migration tests read them.
+dependencies {
+    add("kspAndroid", libs.androidx.room.compiler)
+    add("kspIosArm64", libs.androidx.room.compiler)
+    add("kspIosSimulatorArm64", libs.androidx.room.compiler)
+}
+
+ksp {
+    arg("room.schemaLocation", "${rootDir}/app/schemas")
 }

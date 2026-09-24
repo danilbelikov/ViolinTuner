@@ -102,12 +102,6 @@ kotlin {
     }
 }
 
-// Room writes the schema of every database version here; the files are committed so that
-// migrations can be written and tested against them.
-ksp {
-    arg("room.schemaLocation", "$projectDir/schemas")
-}
-
 dependencies {
     implementation(project(":shared"))
     implementation(platform(libs.androidx.compose.bom))
@@ -141,7 +135,6 @@ dependencies {
     implementation(libs.hilt.android)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.core)
-    ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)
     testImplementation(project(":shared-testing"))
     testImplementation(libs.junit)

@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.violinjourney.app.core.backup.BackupPrefs
+import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.BlockStore
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.progress.ProfileRepository
@@ -21,7 +22,6 @@ import com.violinjourney.app.core.settings.DataStoreVenueStore
 import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.core.settings.SettingsConfigSource
 import com.violinjourney.app.core.settings.SettingsRepository
-import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -32,39 +32,48 @@ import javax.inject.Singleton
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class SettingsModule {
-    @Binds
-    @Singleton
-    abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindConfigSource(impl: SettingsConfigSource): IntonationConfigSource
-
-    @Binds
-    @Singleton
-    abstract fun bindRunningPracticeStore(impl: DataStoreRunningPracticeStore): RunningPracticeStore
-
-    @Binds
-    @Singleton
-    abstract fun bindBlockStore(impl: DataStoreBlockStore): BlockStore
-
-    @Binds
-    @Singleton
-    abstract fun bindProfileRepository(impl: DataStoreProfileRepository): ProfileRepository
-
-    @Binds
-    @Singleton
-    abstract fun bindStandHintStore(impl: DataStoreStandHintStore): StandHintStore
-
-    @Binds
-    @Singleton
-    abstract fun bindBackupPrefs(impl: DataStoreBackupPrefs): BackupPrefs
-
-    @Binds
-    @Singleton
-    abstract fun bindVenueStore(impl: DataStoreVenueStore): VenueStore
-
     companion object {
+        @Provides
+        @Singleton
+        fun provideSettingsRepository(
+            dataStore: DataStore<Preferences>,
+        ): SettingsRepository = DataStoreSettingsRepository(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideConfigSource(
+            default: IntonationConfig,
+            repository: SettingsRepository,
+        ): IntonationConfigSource = SettingsConfigSource(default, repository)
+
+        @Provides
+        @Singleton
+        fun provideRunningPracticeStore(
+            dataStore: DataStore<Preferences>,
+        ): RunningPracticeStore = DataStoreRunningPracticeStore(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideBlockStore(store: DataStore<Preferences>): BlockStore = DataStoreBlockStore(store)
+
+        @Provides
+        @Singleton
+        fun provideProfileRepository(
+            dataStore: DataStore<Preferences>,
+        ): ProfileRepository = DataStoreProfileRepository(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideStandHintStore(dataStore: DataStore<Preferences>): StandHintStore = DataStoreStandHintStore(dataStore)
+
+        @Provides
+        @Singleton
+        fun provideBackupPrefs(store: DataStore<Preferences>): BackupPrefs = DataStoreBackupPrefs(store)
+
+        @Provides
+        @Singleton
+        fun provideVenueStore(dataStore: DataStore<Preferences>): VenueStore = DataStoreVenueStore(dataStore)
+
         private const val FILE_NAME = "user_settings"
 
         // DataStore allows one instance per file: keep it a singleton.

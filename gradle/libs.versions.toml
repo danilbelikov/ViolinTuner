@@ -26,6 +26,9 @@ composeMultiplatform = "1.10.2"
 composeMultiplatformMaterial3 = "1.9.0"
 # dates in the shared code, where java.time does not exist (iOS); agreed by the owner
 kotlinxDatetime = "0.8.0"
+# SQLite built into the app for Room on iOS (Android keeps the system one); the version of androidx.sqlite Room
+# already resolves to on Android — agreed by the owner
+sqlite = "2.6.2"
 
 [libraries]
 appmetrica-analytics = { group = "io.appmetrica.analytics", name = "analytics", version.ref = "appmetrica" }
@@ -58,6 +61,7 @@ androidx-datastore-preferences = { group = "androidx.datastore", name = "datasto
 androidx-room-runtime = { group = "androidx.room", name = "room-runtime", version.ref = "room" }
 androidx-room-ktx = { group = "androidx.room", name = "room-ktx", version.ref = "room" }
 androidx-room-compiler = { group = "androidx.room", name = "room-compiler", version.ref = "room" }
+androidx-sqlite-bundled = { group = "androidx.sqlite", name = "sqlite-bundled", version.ref = "sqlite" }
 androidx-camera-core = { group = "androidx.camera", name = "camera-core", version.ref = "camerax" }
 androidx-camera-camera2 = { group = "androidx.camera", name = "camera-camera2", version.ref = "camerax" }
 androidx-camera-lifecycle = { group = "androidx.camera", name = "camera-lifecycle", version.ref = "camerax" }

@@ -13,7 +13,9 @@ import com.violinjourney.app.core.audio.backing.FakeHeadphoneRoutes
 import com.violinjourney.app.core.audio.backing.TrackBackingPlayback
 import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.backing.BackingPcmCache
+import com.violinjourney.app.core.data.backing.BackingDao
 import com.violinjourney.app.core.data.backing.RoomBackingRepository
+import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingFiles
 import com.violinjourney.app.core.domain.backing.BackingRepository
@@ -23,14 +25,11 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineDispatcher
 
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class BackingDataModule {
-    @Binds
-    @Singleton
-    abstract fun bindBackingRepository(impl: RoomBackingRepository): BackingRepository
-
     @Binds
     @Singleton
     abstract fun bindBackingFiles(impl: AppBackingFiles): BackingFiles
@@ -47,6 +46,14 @@ abstract class BackingDataModule {
 
 
     companion object {
+        @Provides
+        @Singleton
+        fun provideBackingRepository(
+            dao: BackingDao,
+            files: BackingFiles,
+            @IoDispatcher io: CoroutineDispatcher,
+        ): BackingRepository = RoomBackingRepository(dao, files, io)
+
         @Provides
         @Singleton
         fun provideBackingConfig(): BackingConfig = BackingConfig()
