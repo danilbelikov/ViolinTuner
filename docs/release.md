@@ -18,7 +18,7 @@
 
 - Сайт — `docs/store/site/`: главная (что за приложение, два языка, значок) и политика `privacy/index.html` (русский и английский, без сторонних запросов). Единственная копия политики — здесь; репозиторий `violin-journey` — её копия, не наоборот.
 - Выкладка сайта:
-  1. Вписать в `docs/store/site/index.html` и `privacy/index.html` email, имя разработчика и дату публикации (заглушки в квадратных скобках).
+  1. Вписать в `docs/store/site/index.html` и `privacy/index.html` email и имя разработчика (заглушки в квадратных скобках); дата — дата редакции текста, при каждой правке политики её обновлять.
   2. На GitHub — новый **публичный** репозиторий `violin-journey` (пустой, без README).
   3. `git clone git@github.com:danilbelikov/violin-journey.git ~/violin-journey`
   4. `python3 tools/store/site.py ~/violin-journey` — копирует папку; откажется, пока в страницах остались заглушки.
