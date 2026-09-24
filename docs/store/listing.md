@@ -66,16 +66,27 @@ Ten languages: English, Russian, German, French, Spanish, Italian, Portuguese, K
 
 **What's new (1.0)** — `First release. Play, listen to yourself and set off on the journey.`
 
-## Скриншоты (план, 6 штук, в обоих языках)
+## Скриншоты — готовы 24.09.2026
 
-Снимаются на эмуляторе со сборкой `-PfakePitch=true` (Live сам проходит все состояния), язык — `cmd locale set-app-locales`. Подписи — сверху кадра, коротко.
+`docs/store/screenshots/<ru|en>/` — 7 кадров 1080 × 2160 (Google Play берёт не длиннее 2:1) с подписью сверху, загружать по порядку номеров. Исходные снимки без подписей — `screenshots/raw/`.
 
-1. Live «в строе», зелёный — «Попадание видно цветом» / «See your pitch by colour»
-2. Live «выше», янтарный, со стрелкой — «Выше или ниже — с одного взгляда» / «Sharp or flat at a glance»
-3. «Настройка», зафиксирована струна — «Настройте четыре струны» / «Tune the four strings»
-4. Запись с разбором по нотам — «Услышьте, где ушли» / «Hear where you drifted»
-5. Репертуар / режим пюпитра — «Ноты, заметки и дубли» / «Sheets, notes and takes»
-6. Путешествие или дом — «Занятия ведут в путь» / «Practice becomes a journey»
+1. Live «в строе» — «Попадание видно цветом» / «See your pitch by colour»
+2. Live «ниже», красный, со стрелкой — «Выше или ниже — с одного взгляда» / «Sharp or flat at a glance»
+3. «Настройка», зафиксирована A — «Настройте четыре струны» / «Tune the four strings»
+4. «Занятия» с идущим занятием, уровнем и серией — «Каждая минута занятий на счету» / «Every practice minute counts»
+5. Гамма G-dur, ноты нарисованы приложением — «Ноты гамм приложение рисует само» / «Scales come with their notes drawn»
+6. Путешествие, Вена — «Занятия ведут по залам мира» / «Practice takes you to the world's concert halls»
+7. Дом — «Такты обставляют ваш дом» / «Bars furnish your home»
+
+Как переснять (только эмулятор, база `.debug` заменяется):
+1. `./gradlew :app:assembleDebug -PfakePitch=true`, поставить, пройти онбординг; `adb shell cmd locale set-app-locales com.violinjourney.app.debug --locales ru-RU` (или `en-US`).
+2. `python3 tools/store/seed.py ru` (или `en`) — 64 дня занятий, серия 27 дней, уровень 5, дорога до Вены, 15 вещей в доме, репертуар; в доме нажать «Забрать» у первого подарка.
+3. `adb shell wm size 1080x2160` и демо-режим строки состояния (`am broadcast -a com.android.systemui.demo -e command enter`, часы `clock -e hhmm 0900`, `battery -e level 100`, `network -e wifi show -e level 4 -e fully true`, `notifications -e visible false`).
+4. Снимки — `adb exec-out screencap -p` в `screenshots/raw/<язык>/NN-имя.png`; Live проходит «в строе → выше → ниже → вибрато → тишина → шум» за 24 с — снимать серией и выбирать.
+5. `python3 tools/store/frames.py ru` (или `en`) — подписи (они в самом скрипте).
+6. Вернуть: `wm size reset`, `am broadcast … -e command exit`.
+
+Кадра с разбором записи нет: сборка с фейковым звуком играет только A4 и пишет «Запись без звука» — в магазин это не годится. Настоящий разбор снимается на телефоне со скрипкой.
 
 Иконка 512 и баннер 1024×500 — `docs/store/icon-512.png`, `feature-graphic-ru.png`, `feature-graphic-en.png`.
 
