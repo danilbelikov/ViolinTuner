@@ -18,7 +18,7 @@ label = sys.argv[1]
 secs = int(sys.argv[2]) if len(sys.argv) > 2 else 10
 serial = sys.argv[3] if len(sys.argv) > 3 else 'emulator-5554'
 ADB = [os.path.expanduser('~/Library/Android/sdk/platform-tools/adb'), '-s', serial]
-PKG = 'com.example.violintuner'
+PKG = 'com.violinjourney.app.debug'
 
 
 def sh(*args):

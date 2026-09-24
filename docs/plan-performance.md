@@ -22,11 +22,11 @@
 
 Там `GLES: Google (Apple), Android Emulator OpenGL ES Translator (Apple M4)` — рисует видеокарта Mac. `-read-only` держит файлы AVD открытыми только на чтение: всё, что меняется внутри, уходит во временные копии в `/private/tmp/android-danil/*.qcow2` и пропадает на `adb -s emulator-5560 emu kill`. Рабочий `Pixel_7` вторым экземпляром не поднять — первый запущен без `-read-only`. Данные приложения переносятся с рабочего эмулятора (на нём — только чтение):
 
-    adb -s emulator-5554 exec-out run-as com.example.violintuner \
-        tar -cf - -C /data/data/com.example.violintuner databases files/datastore > appdata.tar
+    adb -s emulator-5554 exec-out run-as com.violinjourney.app.debug \
+        tar -cf - -C /data/data/com.violinjourney.app.debug databases files/datastore > appdata.tar
     adb -s emulator-5560 push appdata.tar /data/local/tmp/ && adb -s emulator-5560 shell \
-        run-as com.example.violintuner tar -xf /data/local/tmp/appdata.tar -C /data/data/com.example.violintuner
-    adb -s emulator-5560 shell cmd locale set-app-locales com.example.violintuner --locales ru-RU
+        run-as com.violinjourney.app.debug tar -xf /data/local/tmp/appdata.tar -C /data/data/com.violinjourney.app.debug
+    adb -s emulator-5560 shell cmd locale set-app-locales com.violinjourney.app.debug --locales ru-RU
 
 Там всё идёт на потолке живой картины (30 кадров/с), поэтому сравнивается не частота, а загрузка процессора и время записи кадра. Разброс между прогонами — около десятой части, так что верить стоит разам, а не процентам.
 
@@ -85,7 +85,7 @@
 
 Вена изнутри — вдвое дешевле, чем была; Live не изменился (он в П4).
 
-На программном рендере (эмулятор владельца) П2 снял то же самое в главном потоке — запись кадра у Вены изнутри 55,7 → 5,4 мс, у полного экрана дома 19,7 → 1,5, — а П3 довёл её до 3,1 и 1,0. Поток рендера там не изменился ни на шаг: он упирается в хост. **Запекание там не окупается**: наложить готовую картинку программному рендеру стоит столько же, сколько нарисовать её заново (снято вплотную друг за другом: Буэнос-Айрес снаружи 6,5 → 5,1 кадра/с с запеканием, Вена изнутри 5,3 → 6,2; кадры там гуляют и так — см. «Итог»). Трасса `atrace -t 4 gfx view -a com.example.violintuner` показывает то же: время уходит в `flush commands` и `OpsTask::onPrepare`, то есть в ожидание хоста. На видеокарте запекание снимает 10–25 % с обоих потоков, а телефоны — с видеокартой, поэтому оно включено. Выключатель для проверки (только debug-сборка): `adb shell settings put global violintuner_no_bake 1`.
+На программном рендере (эмулятор владельца) П2 снял то же самое в главном потоке — запись кадра у Вены изнутри 55,7 → 5,4 мс, у полного экрана дома 19,7 → 1,5, — а П3 довёл её до 3,1 и 1,0. Поток рендера там не изменился ни на шаг: он упирается в хост. **Запекание там не окупается**: наложить готовую картинку программному рендеру стоит столько же, сколько нарисовать её заново (снято вплотную друг за другом: Буэнос-Айрес снаружи 6,5 → 5,1 кадра/с с запеканием, Вена изнутри 5,3 → 6,2; кадры там гуляют и так — см. «Итог»). Трасса `atrace -t 4 gfx view -a com.violinjourney.app.debug` показывает то же: время уходит в `flush commands` и `OpsTask::onPrepare`, то есть в ожидание хоста. На видеокарте запекание снимает 10–25 % с обоих потоков, а телефоны — с видеокартой, поэтому оно включено. Выключатель для проверки (только debug-сборка): `adb shell settings put global violintuner_no_bake 1`.
 
 **Проверка «ничего не изменилось».** Часы живой картины останавливаются на заданной секунде: `adb shell settings put global violintuner_scene_seconds 12.5` (только debug-сборка), и семь экранов снимаются дважды — с запеканием и без (`tools/perf/snap.py`). Отличий не больше 0,014 % пикселей, и это одиночные пиксели на швах, где две фигуры делят край: видеокарта сглаживает такой край в отдельной картинке чуть иначе, чем на экране (наибольшее отличие 60 из 765 на пиксель — глазом не видно). П2 против 0.62 сходился попиксельно.
 

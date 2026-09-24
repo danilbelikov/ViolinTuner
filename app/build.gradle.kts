@@ -22,10 +22,17 @@ val analyticsDebug = providers.gradleProperty("analyticsDebug").map(String::toBo
 // The AppMetrica key comes from local.properties (git-ignored) or from `-PappMetricaKey=…`; the
 // repository never holds it. Without a key the app builds and runs on NoOpAnalytics — a fresh
 // clone, another machine and CI need no secret to work (spec 5.27).
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").takeIf(File::exists)?.inputStream()?.use(::load)
+}
 val appMetricaKey = providers.gradleProperty("appMetricaKey").orNull
-    ?: Properties().apply {
-        rootProject.file("local.properties").takeIf(File::exists)?.inputStream()?.use(::load)
-    }.getProperty("appMetricaKey", "")
+    ?: localProperties.getProperty("appMetricaKey", "")
+
+// The upload key of the stores lives outside the repository, and so do its passwords: local.properties
+// names the file. Without them a release still builds — unsigned, not for a store — so a fresh clone
+// and CI need no secret. RuStore and Google Play get the same key: then either store's update installs
+// over the other's app (Play App Signing is set up with this key, not with one Google makes).
+val releaseStoreFile = localProperties.getProperty("releaseStoreFile")?.let(::file)?.takeIf(File::exists)
 
 android {
     namespace = "com.violinjourney.app"
@@ -34,10 +41,9 @@ android {
     }
 
     defaultConfig {
-        // Kept from the template on purpose: a new id is a new app for Android, and the owner's phone
-        // holds real data under this one. Set it to "com.violinjourney.app" before publishing
-        // (Play refuses com.example.*); data moves over through «Копия данных».
-        applicationId = "com.example.violintuner"
+        // The id of the stores; never changes again. Until 1.0 it was the template's
+        // com.example.violintuner, and the owner's data moved over through «Копия данных».
+        applicationId = "com.violinjourney.app"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -50,8 +56,25 @@ android {
         buildConfigField("boolean", "ANALYTICS_IN_DEBUG", analyticsDebug.toString())
     }
 
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = releaseStoreFile
+                storePassword = localProperties.getProperty("releaseStorePassword")
+                keyAlias = localProperties.getProperty("releaseKeyAlias")
+                keyPassword = localProperties.getProperty("releaseKeyPassword")
+            }
+        }
+    }
+
     buildTypes {
+        debug {
+            // A debug build is another app beside the one from the store: a check on a real phone
+            // never touches its data, and the two keys never meet on one id.
+            applicationIdSuffix = ".debug"
+        }
         release {
+            signingConfig = signingConfigs.findByName("release")
             optimization {
                 enable = false
             }

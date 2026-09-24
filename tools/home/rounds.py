@@ -21,7 +21,7 @@ SERIAL = ARGS[3] if len(ARGS) > 3 else 'emulator-5554'
 if not SERIAL.startswith('emulator-'):
     sys.exit(f'{SERIAL} is not an emulator: this script rewrites the database of the app')
 ADB = [os.path.expanduser('~/Library/Android/sdk/platform-tools/adb'), '-s', SERIAL]
-PKG = 'com.example.violintuner'
+PKG = 'com.violinjourney.app.debug'
 DB = os.path.join(OUT, 'db')
 os.makedirs(DB, exist_ok=True)
 PLAN = json.loads(subprocess.run(['node', '-e', """

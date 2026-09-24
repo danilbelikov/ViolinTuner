@@ -49,8 +49,8 @@
             android:name=".core.backup.BackupService"
             android:exported="false"
             android:foregroundServiceType="dataSync" />
-        <!-- Lends the system camera a file to write a photo of sheet music into (spec 3.15). The app
-             itself never opens the camera and declares no CAMERA permission. -->
+        <!-- Lends the system camera a file to write a photo of sheet music or a video into (spec 3.15,
+             3.19), and other apps a file to receive through «Поделиться». -->
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.files"
