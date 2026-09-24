@@ -47,7 +47,7 @@ import com.violinjourney.app.core.data.sound.SoundSettingsEntity
         PieceBlockEntity::class,
         BackingEntity::class, PieceBackingEntity::class, TakeBackingEntity::class,
     ],
-    version = 13,
+    version = AppDatabase.VERSION,
     exportSchema = true,
 )
 abstract class AppDatabase : RoomDatabase() {
@@ -62,5 +62,8 @@ abstract class AppDatabase : RoomDatabase() {
 
     companion object {
         const val FILE_NAME = "violin.db"
+
+        /** The schema version. Raising it needs a migration from the previous one in [DatabaseMigrations.ALL] — `DatabaseMigrationChainTest` fails the build without it. */
+        const val VERSION = 13
     }
 }
