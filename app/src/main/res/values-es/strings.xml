@@ -8,6 +8,22 @@
     <string name="nav_history">Grabaciones</string>
     <string name="nav_settings">Ajustes</string>
 
+    <string name="mode_play">Tocar</string>
+    <string name="mode_tuning">Afinar</string>
+    <string name="tuning_string_hz">%1$d Hz</string>
+    <string name="tuning_hint_auto">auto · toca una cuerda al aire</string>
+    <string name="tuning_hint_locked">objetivo fijado: %1$s · %2$d Hz · toca para soltar</string>
+    <string name="tuning_string_locked">fijada</string>
+    <string name="tuning_string_auto">auto</string>
+    <string name="status_in_tune">afinado</string>
+    <string name="status_sharp">alto</string>
+    <string name="status_flat">bajo</string>
+    <string name="live_silence">Toca…</string>
+    <string name="live_too_noisy">Demasiado ruido</string>
+    <string name="live_mic_unavailable">Micrófono no disponible</string>
+    <string name="mic_permission_title">Hace falta acceso al micrófono</string>
+    <string name="mic_permission_text">Sin micrófono la aplicación no oye el violín. El sonido se procesa en el teléfono y no se envía a ninguna parte.</string>
+    <string name="mic_permission_grant">Permitir acceso</string>
     <string name="record_button">Grabación</string>
     <string name="record_start">Empezar a grabar</string>
     <string name="record_stop">Detener la grabación</string>

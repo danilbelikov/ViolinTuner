@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""Writes iosApp/iosApp/InfoPlist.xcstrings — the texts iOS itself shows for the app — from the shared words of Live:
+"""Writes iosApp/iosApp/InfoPlist.xcstrings — the texts iOS itself shows for the app — from the words of the app:
 python3 tools/ios/infoplist.py
 
-The request for the microphone (NSMicrophoneUsageDescription) is the text of the prompt on Live, mic_permission_text,
+The request for the microphone (NSMicrophoneUsageDescription) is the text of the prompt on Live, mic_permission_text of app/src/main/res,
 in every language the app speaks (spec 3.26); so the two never say different things. Not to be edited by hand."""
 import json
 import os
 import xml.etree.ElementTree as ET
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SHARED = os.path.join(HERE, '..', '..', 'shared', 'src', 'commonMain', 'composeResources')
+RES = os.path.join(HERE, '..', '..', 'app', 'src', 'main', 'res')
 OUT = os.path.join(HERE, '..', '..', 'iosApp', 'iosApp', 'InfoPlist.xcstrings')
 
 # the folders of the Android-style resources → the language codes of iOS
@@ -21,10 +21,11 @@ KEYS = {'NSMicrophoneUsageDescription': 'mic_permission_text'}
 
 
 def text(folder, name):
-    root = ET.parse(os.path.join(SHARED, folder, 'strings_live.xml')).getroot()
+    root = ET.parse(os.path.join(RES, folder, 'strings.xml')).getroot()
     for node in root.findall('string'):
         if node.get('name') == name:
-            return ''.join(node.itertext())
+            # Android's escapes undone: iOS shows the text as it is
+            return ''.join(node.itertext()).replace("\\'", "'").replace('\\"', '"').replace('\\?', '?').replace('\\@', '@')
     raise SystemExit(f'no «{name}» in {folder}')
 
 

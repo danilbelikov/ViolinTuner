@@ -67,10 +67,26 @@ kotlin {
     }
 }
 
+// The words of the app live in app/src/main/res — Russian the source, values/ the English fallback, eight more
+// (spec 3.26) — where Android reads them and LocalizationTest checks them. The shared code and iOS read the same
+// files as compose resources: copied here at build time, with the escapes Android needs undone (compose resources
+// unescape only \n, \t and \u, and would show \' as it is). Never edit the copy.
+val composeStrings = tasks.register<Sync>("syncComposeStrings") {
+    from(rootProject.layout.projectDirectory.dir("app/src/main/res")) {
+        include("values*/strings.xml", "values*/strings_home.xml", "values*/home_catalog.xml")
+        filter { line -> line.replace("\\'", "'").replace("\\\"", "\"").replace("\\?", "?").replace("\\@", "@") }
+    }
+    into(layout.buildDirectory.dir("generated/composeStrings"))
+}
+
 // Res.string / Res.font of the shared strings and font, in the package of the shared UI.
 compose.resources {
     publicResClass = true
     packageOfResClass = "com.violinjourney.app.shared.resources"
+    customDirectory(
+        sourceSetName = "commonMain",
+        directoryProvider = layout.dir(composeStrings.map { it.destinationDir }),
+    )
 }
 
 // Room writes the database code for each platform; the schemas of all versions stay in app/schemas, where the

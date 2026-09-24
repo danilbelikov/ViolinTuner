@@ -8,6 +8,22 @@
     <string name="nav_history">Aufnahmen</string>
     <string name="nav_settings">Einstellungen</string>
 
+    <string name="mode_play">Spielen</string>
+    <string name="mode_tuning">Stimmen</string>
+    <string name="tuning_string_hz">%1$d Hz</string>
+    <string name="tuning_hint_auto">auto · leere Saite anspielen</string>
+    <string name="tuning_hint_locked">Ziel fixiert: %1$s · %2$d Hz · tippen – lösen</string>
+    <string name="tuning_string_locked">fixiert</string>
+    <string name="tuning_string_auto">auto</string>
+    <string name="status_in_tune">sauber</string>
+    <string name="status_sharp">zu hoch</string>
+    <string name="status_flat">zu tief</string>
+    <string name="live_silence">Spielen Sie…</string>
+    <string name="live_too_noisy">Zu laut im Raum</string>
+    <string name="live_mic_unavailable">Mikrofon nicht verfügbar</string>
+    <string name="mic_permission_title">Zugriff auf das Mikrofon nötig</string>
+    <string name="mic_permission_text">Ohne Mikrofon hört die App die Geige nicht. Der Klang wird auf dem Telefon verarbeitet und nirgendwohin gesendet.</string>
+    <string name="mic_permission_grant">Zugriff erlauben</string>
     <string name="record_button">Aufnahme</string>
     <string name="record_start">Aufnahme starten</string>
     <string name="record_stop">Aufnahme beenden</string>

@@ -8,6 +8,22 @@
     <string name="nav_history">録音</string>
     <string name="nav_settings">設定</string>
 
+    <string name="mode_play">演奏</string>
+    <string name="mode_tuning">調弦</string>
+    <string name="tuning_string_hz">%1$d Hz</string>
+    <string name="tuning_hint_auto">自動 · 開放弦を弾いてください</string>
+    <string name="tuning_hint_locked">目標を固定中：%1$s · %2$d Hz · タップで解除</string>
+    <string name="tuning_string_locked">固定中</string>
+    <string name="tuning_string_auto">自動</string>
+    <string name="status_in_tune">合っています</string>
+    <string name="status_sharp">高い</string>
+    <string name="status_flat">低い</string>
+    <string name="live_silence">弾いてください…</string>
+    <string name="live_too_noisy">周りの音が大きすぎます</string>
+    <string name="live_mic_unavailable">マイクを使用できません</string>
+    <string name="mic_permission_title">マイクへのアクセスが必要です</string>
+    <string name="mic_permission_text">マイクがないと、ヴァイオリンの音を聴き取れません。音はこの端末内で処理され、どこにも送信されません。</string>
+    <string name="mic_permission_grant">アクセスを許可</string>
     <string name="record_button">録音</string>
     <string name="record_start">録音を開始</string>
     <string name="record_stop">録音を停止</string>
