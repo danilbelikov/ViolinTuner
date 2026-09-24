@@ -67,7 +67,7 @@ class LivePresenterMicTest {
     }
 
     @Test
-    fun `without the permission — the prompt, and its button asks the platform`() = runTest {
+    fun `without the permission — the prompt — and its button asks the platform`() = runTest {
         val mic = Mic(listOf(Mic.Opening.PLAYS))
         val presenter = presenter(mic)
         presenter.onIntent(LiveIntent.MicPermissionChanged(false))

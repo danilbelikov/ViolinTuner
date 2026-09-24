@@ -28,7 +28,7 @@ class HopSplitterTest {
     }
 
     @Test
-    fun `beyond full scale is clipped, not wrapped`() {
+    fun `beyond full scale is clipped — not wrapped`() {
         val splitter = HopSplitter(2)
         var hop = emptyList<Short>()
         splitter.push(floatArrayOf(1.7f, -3f), onHop = { hop = it.toList() })
