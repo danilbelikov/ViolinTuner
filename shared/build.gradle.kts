@@ -39,6 +39,8 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(libs.kotlinx.coroutines.core)
+            // api: dates are in the types the app reads from shared (LocalDate of a practice day, …)
+            api(libs.kotlinx.datetime)
             implementation(libs.compose.mp.runtime)
             implementation(libs.compose.mp.foundation)
             implementation(libs.compose.mp.ui)
