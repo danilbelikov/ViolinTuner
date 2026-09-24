@@ -13,7 +13,7 @@ import org.junit.Test
 
 /** What stands on a shelf of the shop and in the card of a thing (spec 3.29, 5.22). */
 class ItemThumbsTest {
-    private val arts = listOf("rent", "wood").associateWith { HouseArt.parse(File("src/main/assets/home/$it.eve.scene").readText()) }
+    private val arts = listOf("rent", "wood").associateWith { HouseArt.parse(File("../shared/src/commonMain/composeResources/files/home/$it.eve.scene").readText()) }
     private fun item(id: String) = HomeCatalog.byId.getValue(id)
     private fun thumb(id: String, glows: Boolean = false) = ItemThumbs.of(item(id), arts.getValue(ItemThumbs.houseOf(item(id))), glows)!!
 

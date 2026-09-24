@@ -5,7 +5,7 @@
 // The scenes of the design handoff are JS functions that return layers; this script cuts that part
 // out of `Путешествие.dc.html`, runs it together with the scenes drawn after the handoff
 // (extra-scenes.js, same helpers, same tokens) and writes
-//   app/src/main/assets/journey/<scene>.<eve|day>.scene   — a line per layer, tab-separated
+//   shared/src/commonMain/composeResources/files/journey/<scene>.<eve|day>.scene   — a line per layer, tab-separated
 //   feature/journey/art/JourneySilhouettes.kt             — the stamps
 //   feature/journey/art/ExtraScenePalettes.kt             — the colours of the places drawn after the handoff
 // The halls seen from the stage, where Live takes place (spec 3.27), are stage-scenes.js: `<stop>Stage`.
@@ -43,7 +43,7 @@ const LOC = new Function(`${locations}\nreturn LOCATIONS;`)()({ ...result, LOCPA
 
 const CARD_FRAME = [0, 260];
 const STAGE_FRAME = [-240, 480];
-const out = path.join(root, 'app/src/main/assets/journey');
+const out = path.join(root, 'shared/src/commonMain/composeResources/files/journey');
 fs.mkdirSync(out, { recursive: true });
 const num = v => (v === undefined ? '' : String(v));
 const previewDir = process.argv[2];

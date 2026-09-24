@@ -25,7 +25,7 @@ const views = [...route.matchAll(/StopView\("(\w+)", inside = (true|false)\)/g)]
 const tried = process.argv[3] ? process.argv[3].split(',').map(Number) : null;
 const frameOf = key => {
   if (tried) return tried;
-  const header = fs.readFileSync(path.join(root, `app/src/main/assets/journey/${key}.eve.scene`), 'utf8').split('\n')[1];
+  const header = fs.readFileSync(path.join(root, `shared/src/commonMain/composeResources/files/journey/${key}.eve.scene`), 'utf8').split('\n')[1];
   const found = /frame=(-?[\d.]+),(-?[\d.]+)/.exec(header);
   return found ? [+found[1], +found[2]] : [0, 260];
 };

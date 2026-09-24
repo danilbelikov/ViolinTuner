@@ -39,7 +39,7 @@ import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.ui.components.A4Selector
 import com.violinjourney.app.core.ui.components.TolerancePresetList
 import com.violinjourney.app.core.ui.format.Formats
-import com.violinjourney.app.core.ui.format.LOCALE
+import com.violinjourney.app.core.ui.format.languageName
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconLabel
@@ -159,7 +159,7 @@ fun SettingsScreen(
                             Text(stringResource(R.string.settings_language), color = MaterialTheme.colorScheme.onSurface, style = MaterialTheme.typography.titleMedium)
                             Text(
                                 // the language names itself in itself: «Deutsch», «한국어» — whoever looks for theirs finds it
-                                text = Formats.LOCALE.getDisplayLanguage(Formats.LOCALE).replaceFirstChar { it.titlecase(Formats.LOCALE) },
+                                text = languageName(Formats.language.tag),
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 style = MaterialTheme.typography.bodyMedium,
                             )

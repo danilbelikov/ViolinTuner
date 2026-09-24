@@ -43,4 +43,4 @@ fun rememberSmallFileImage(path: String?): ImageBitmap? {
 }
 
 /** The picture in the file at [path]; null for a file that is gone or is not a picture. Blocking: call off the main thread. */
-internal expect fun decodeImageFile(path: String): ImageBitmap?
+expect fun decodeImageFile(path: String): ImageBitmap?

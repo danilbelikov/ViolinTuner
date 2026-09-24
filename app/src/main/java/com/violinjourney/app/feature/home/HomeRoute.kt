@@ -18,6 +18,7 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.violinjourney.app.R
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.motion.rememberAnimationsRemoved
+import org.jetbrains.compose.resources.getString
 
 @Composable
 fun HomeRoute(
@@ -55,7 +56,7 @@ fun HomeRoute(
                     HomeEffect.OpenHome -> home()
                     HomeEffect.OpenJourney -> journey()
                     is HomeEffect.ShowBought -> HomeTexts.itemNames[effect.itemId]?.let { name ->
-                        Toast.makeText(context, resources.getString(R.string.shop_bought, resources.getString(name)), Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, resources.getString(R.string.shop_bought, getString(name)), Toast.LENGTH_SHORT).show()
                     }
                 }
             }

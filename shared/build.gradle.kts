@@ -60,6 +60,10 @@ kotlin {
             implementation(libs.jb.lifecycle.viewmodel.compose)
             implementation(libs.jb.lifecycle.runtime.compose)
         }
+        androidMain.dependencies {
+            // the system pickers (a photo for the profile) behind the shared calls
+            implementation(libs.androidx.activity.compose)
+        }
         iosMain.dependencies {
             // Android keeps its system SQLite (the database is opened as before); iOS brings its own
             implementation(libs.androidx.sqlite.bundled)

@@ -11,7 +11,7 @@ import platform.Foundation.dataWithContentsOfFile
 import platform.posix.memcpy
 
 @OptIn(ExperimentalForeignApi::class)
-internal actual fun decodeImageFile(path: String): ImageBitmap? {
+actual fun decodeImageFile(path: String): ImageBitmap? {
     val data = NSData.dataWithContentsOfFile(path) ?: return null
     val bytes = ByteArray(data.length.toInt())
     if (bytes.isNotEmpty()) bytes.usePinned { memcpy(it.addressOf(0), data.bytes, data.length) }

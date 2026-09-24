@@ -8,6 +8,7 @@ import com.violinjourney.app.core.analytics.AppMetricaAnalytics
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.backup.RestoreSwap
 import com.violinjourney.app.core.ui.format.use
+import com.violinjourney.app.feature.journey.art.SceneDebug
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -27,6 +28,7 @@ class ViolinTunerApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        SceneDebug.debugBuild = BuildConfig.DEBUG
         Formats.use(resources.configuration.locales[0])
         // Starts muted and follows the stored consent from there (spec 3.34); a build without a
         // key has no AppMetrica to start.

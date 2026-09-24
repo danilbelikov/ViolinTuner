@@ -83,7 +83,7 @@ class SceneStrataTest {
 
     @Test
     fun everySceneKeepsEveryLayerOnce_andNoTwoLayersThatMeetChangePlaces() {
-        val assets = File("src/main/assets")
+        val assets = File("../shared/src/commonMain/composeResources/files")
         // the rooms of the home are a catalogue the home puts together; its title cards are scenes like the postcards
         val files = File(assets, "journey").listFiles { f -> f.name.endsWith(".scene") }.orEmpty().toList() +
             File(assets, "home").listFiles { f -> f.name.startsWith("splash") }.orEmpty().toList()

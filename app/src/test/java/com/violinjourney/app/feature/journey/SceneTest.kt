@@ -17,7 +17,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class SceneTest {
-    private val assets = File("src/main/assets/journey")
+    private val assets = File("../shared/src/commonMain/composeResources/files/journey")
 
     @Test
     fun `a scene reads its header and its layers, absent fields fall back`() {

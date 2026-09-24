@@ -20,7 +20,7 @@ fun ScaleFormRoute(
     onOpenScale: (pieceId: Long) -> Unit,
     onCloseDeleted: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: ScaleFormViewModel = hiltViewModel(),
+    viewModel: ScaleFormViewModel = hiltViewModel<HiltScaleFormViewModel>(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current

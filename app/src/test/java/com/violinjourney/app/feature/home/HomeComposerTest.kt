@@ -20,7 +20,7 @@ import org.junit.Test
 
 class HomeComposerTest {
     private val today = LocalDate(2026, 9, 21)
-    private fun art(house: String, mode: SceneMode) = HouseArt.parse(File("src/main/assets/home/$house.${mode.suffix}.scene").readText())
+    private fun art(house: String, mode: SceneMode) = HouseArt.parse(File("../shared/src/commonMain/composeResources/files/home/$house.${mode.suffix}.scene").readText())
     private val loaded = HomeState.EMPTY.copy(loaded = true)
     private fun everything() = loaded.copy(purchased = HomeCatalog.items.map { it.id }.toSet())
 
