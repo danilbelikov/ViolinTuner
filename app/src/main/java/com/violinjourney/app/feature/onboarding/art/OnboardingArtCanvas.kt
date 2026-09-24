@@ -9,8 +9,10 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.SolidColor
@@ -80,6 +82,7 @@ internal fun OnboardingArtCanvas(
                 scale(s, Offset.Zero) {
                     val sky = prepared.first()
                     drawSky(sky, now, still, shift = -pos * pageWidth * SKY_DEPTH)
+                    val view = Rect(-ox / s, -oy / s, (w - ox) / s, (h - oy) / s)
                     val first = floor(pos).toInt()
                     for (page in first..first + 1) {
                         val art = prepared.getOrNull(page) ?: continue
@@ -87,7 +90,11 @@ internal fun OnboardingArtCanvas(
                         if (abs(page - pos) >= 1f) continue
                         val t = now - (starts[page] ?: now)
                         val zone = demoZone(LiveDemo.at(t, still), zoneColors)
-                        drawDepth(art, 1, offset * FAR_DEPTH, t, still, zone, alpha)
+                        // The far land lags behind the page, so it would still be half in view when its page
+                        // is gone and would vanish at once: it melts away as its page leaves instead.
+                        withAlpha(alpha * (1f - abs(page - pos)), view) {
+                            drawDepth(art, 1, offset * FAR_DEPTH, t, still, zone, 1f)
+                        }
                         drawDepth(art, 2, offset, t, still, zone, alpha)
                     }
                     drawFade(sky)
@@ -138,6 +145,16 @@ private fun DrawScope.drawDepth(art: PreparedArt, depth: Int, dx: Float, t: Floa
             if (layer.depth == depth && !layer.fade) art.draw(this, i, t, still, zone, alpha)
         }
     }
+}
+
+/** Draws [block] as one layer at [alpha], so shapes of the same page never show through each other. */
+private inline fun DrawScope.withAlpha(alpha: Float, bounds: Rect, block: DrawScope.() -> Unit) {
+    if (alpha <= 0f) return
+    if (alpha >= 1f) return block()
+    val canvas = drawContext.canvas
+    canvas.saveLayer(bounds, Paint().apply { this.alpha = alpha })
+    block()
+    canvas.restore()
 }
 
 private fun DrawScope.drawFade(art: PreparedArt) {

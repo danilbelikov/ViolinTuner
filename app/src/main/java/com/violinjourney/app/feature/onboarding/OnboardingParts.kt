@@ -1,7 +1,9 @@
 package com.violinjourney.app.feature.onboarding
 
 import androidx.annotation.StringRes
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +26,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -163,7 +166,7 @@ internal fun SetupProgress(current: Int, count: Int, modifier: Modifier = Modifi
                     Modifier
                         .weight(1f)
                         .height(OnboardingDimens.Bar)
-                        .background(if (step <= current) colors.primary else colors.surfaceContainerHigh, CircleShape),
+                        .background(setupBarColor(done = step <= current), CircleShape),
                 )
             }
         }
@@ -174,6 +177,20 @@ internal fun SetupProgress(current: Int, count: Int, modifier: Modifier = Modifi
         )
     }
 }
+
+/** A bar of the setup fills in with the step instead of changing at once. */
+@Composable
+private fun setupBarColor(done: Boolean): Color {
+    val colors = MaterialTheme.colorScheme
+    val still = LocalReduceMotion.current
+    return animateColorAsState(
+        targetValue = if (done) colors.primary else colors.surfaceContainerHigh,
+        animationSpec = tween(if (still) 0 else BAR_FILL_MS),
+        label = "setup bar",
+    ).value
+}
+
+private const val BAR_FILL_MS = 200
 
 @Composable
 internal fun IntroRows(rows: List<IntroRow>, layout: OnboardingLayout, modifier: Modifier = Modifier) {

@@ -1,7 +1,12 @@
 package com.violinjourney.app.feature.onboarding
 
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -26,6 +31,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.R
@@ -38,8 +44,22 @@ import com.violinjourney.app.feature.onboarding.art.ArtScene
 import com.violinjourney.app.feature.onboarding.art.OnboardingArtCanvas
 import com.violinjourney.app.feature.onboarding.art.OnboardingArtData
 
-/** The introduction gives way to the setup, and back, by a crossfade: the same evening in both. */
+/** The picture of the setup changes by a crossfade: the same evening, the sun lower with every step. */
 private const val PART_CROSSFADE_MS = 300
+
+/** Words give way through the background — the old ones are gone before the new come — so they never lie over each other. */
+private const val WORDS_OUT_MS = 120
+private const val WORDS_IN_MS = 180
+
+/** Keeps the value where it started until the very end, then jumps: the leaving picture stays whole under the new one. */
+private val HoldToEnd = Easing { fraction -> if (fraction < 1f) 0f else 1f }
+
+private fun <S> AnimatedContentTransitionScope<S>.fadeThrough(still: Boolean): ContentTransform =
+    if (still) {
+        EnterTransition.None togetherWith ExitTransition.None
+    } else {
+        fadeIn(tween(WORDS_IN_MS, delayMillis = WORDS_OUT_MS)) togetherWith fadeOut(tween(WORDS_OUT_MS))
+    } using SizeTransform(clip = false)
 
 /**
  * The onboarding (spec 3.7, 3.33, handoff series 36): four pages of the introduction, then three steps
@@ -66,10 +86,7 @@ fun OnboardingScreen(
         val still = LocalReduceMotion.current
         AnimatedContent(
             targetState = state.step.part,
-            transitionSpec = {
-                val duration = if (still) 0 else PART_CROSSFADE_MS
-                fadeIn(tween(duration)) togetherWith fadeOut(tween(duration))
-            },
+            transitionSpec = { fadeThrough(still) },
             label = "part",
         ) { part ->
             when (part) {
@@ -106,7 +123,7 @@ private fun OnboardingSetup(state: OnboardingState, layout: OnboardingLayout, on
                         .verticalScroll(rememberScrollState()),
                     verticalArrangement = Arrangement.spacedBy(OnboardingDimens.GapCompact),
                 ) {
-                    SetupWords(state, step, layout, onIntent)
+                    SetupWords(state, step, layout, OnboardingDimens.GapCompact, onIntent)
                 }
                 Spacer(Modifier.height(OnboardingDimens.GapCompact))
                 OnboardingCta(ctaOf(step), wide = false, onClick = { onIntent(OnboardingIntent.PrimaryClicked) })
@@ -141,7 +158,7 @@ private fun OnboardingSetup(state: OnboardingState, layout: OnboardingLayout, on
                             .verticalScroll(rememberScrollState()),
                         verticalArrangement = Arrangement.spacedBy(gap),
                     ) {
-                        SetupWords(state, step, layout, onIntent)
+                        SetupWords(state, step, layout, gap, onIntent)
                     }
                     Spacer(Modifier.height(gap))
                     OnboardingCta(ctaOf(step), wide = true, onClick = { onIntent(OnboardingIntent.PrimaryClicked) })
@@ -155,7 +172,17 @@ private fun OnboardingSetup(state: OnboardingState, layout: OnboardingLayout, on
 private fun SetupArt(step: OnboardingStep, fit: ArtFit, fadeEnd: Dp, modifier: Modifier = Modifier) {
     val still = LocalReduceMotion.current
     val fadePx = with(LocalDensity.current) { fadeEnd.toPx() }
-    Crossfade(targetState = step, animationSpec = tween(if (still) 0 else PART_CROSSFADE_MS), modifier = modifier, label = "setup art") { shown ->
+    // The new picture comes in over the old one, which stays whole under it until the end: a plain
+    // crossfade would let the dark background through at the half and show two suns on it.
+    AnimatedContent(
+        targetState = step,
+        transitionSpec = {
+            val duration = if (still) 0 else PART_CROSSFADE_MS
+            fadeIn(tween(duration)) togetherWith fadeOut(tween(duration, easing = HoldToEnd))
+        },
+        modifier = modifier,
+        label = "setup art",
+    ) { shown ->
         OnboardingArtCanvas(
             scenes = listOf(sceneOf(shown)),
             position = { 0f },
@@ -171,7 +198,7 @@ private fun SetupArt(step: OnboardingStep, fit: ArtFit, fadeEnd: Dp, modifier: M
 }
 
 @Composable
-private fun SetupWords(state: OnboardingState, step: OnboardingStep, layout: OnboardingLayout, onIntent: (OnboardingIntent) -> Unit) {
+private fun SetupWords(state: OnboardingState, step: OnboardingStep, layout: OnboardingLayout, gap: Dp, onIntent: (OnboardingIntent) -> Unit) {
     val titleStyle = when (layout) {
         OnboardingLayout.PORTRAIT -> OnboardingType.Title
         OnboardingLayout.COMPACT -> OnboardingType.TitleCompact
@@ -183,6 +210,22 @@ private fun SetupWords(state: OnboardingState, step: OnboardingStep, layout: Onb
         OnboardingLayout.LANDSCAPE -> OnboardingType.BodyLandscape
     }
     SetupProgress(step.indexInPart, OnboardingStep.setup.size)
+    val still = LocalReduceMotion.current
+    AnimatedContent(targetState = step, transitionSpec = { fadeThrough(still) }, label = "setup words") { shown ->
+        Column(verticalArrangement = Arrangement.spacedBy(gap)) {
+            SetupStepWords(state, shown, titleStyle, bodyStyle, onIntent)
+        }
+    }
+}
+
+@Composable
+private fun SetupStepWords(
+    state: OnboardingState,
+    step: OnboardingStep,
+    titleStyle: TextStyle,
+    bodyStyle: TextStyle,
+    onIntent: (OnboardingIntent) -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(OnboardingDimens.TitleToBody)) {
         when (step) {
             OnboardingStep.MICROPHONE -> {
