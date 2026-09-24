@@ -1,8 +1,8 @@
 package com.violinjourney.app.feature.live.venue
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class VenueFramingTest {
     private fun unitAt(f: Framing, y: Float) = f.top + y / f.scale
@@ -35,7 +35,7 @@ class VenueFramingTest {
     }
 
     @Test
-    fun `lying down the room covers the screen with the wall, the window and the edge of the desk`() {
+    fun `lying down the room covers the screen with the wall — the window and the edge of the desk`() {
         val f = VenueFraming.of(PictureKind.ROOM, 892f, 412f, landscape = true)
         assertEquals(412f / 190f, f.scale, 1e-3f)
         assertEquals(10f, f.top, 0.5f)

@@ -1,10 +1,10 @@
 package com.violinjourney.app.feature.live.venue
 
 import com.violinjourney.app.core.domain.Zone
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.math.abs
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class VenueLookTest {
     private val surface = rgb(0x13, 0x13, 0x18)
@@ -21,7 +21,7 @@ class VenueLookTest {
     }
 
     @Test
-    fun `with the light out every colour is what the handoff makes of it - 12 percent of the saturation, 76 of the surface`() {
+    fun `with the light out every colour is what the handoff makes of it - 12 percent of the saturation — 76 of the surface`() {
         for (colour in listOf(rgb(0xE2, 0xB7, 0x4E), rgb(0x8E, 0x2F, 0x3F), rgb(0xF3, 0xEE, 0xE2), rgb(0x4E, 0x8E, 0x57))) {
             val expected = handoff(colour, keep = 0.12f, mix = 0.76f)
             assertArrayEquals(expected, VenueLook.dim(colour, 1f, surface), 1e-4f)
@@ -30,7 +30,7 @@ class VenueLookTest {
     }
 
     @Test
-    fun `with the light on nothing changes, and halfway it is halfway`() {
+    fun `with the light on nothing changes — and halfway it is halfway`() {
         val gold = rgb(0xE2, 0xB7, 0x4E)
         assertArrayEquals(gold, applied(VenueLook.dimMatrix(0f, surface), gold), 1e-4f)
         assertArrayEquals(handoff(gold, keep = 1f - 0.5f * 0.88f, mix = 0.38f), VenueLook.dim(gold, 0.5f, surface), 1e-4f)
@@ -47,7 +47,7 @@ class VenueLookTest {
     }
 
     @Test
-    fun `the veil lives only while the light is on, the zone light only while it is out, a miss lights less`() {
+    fun `the veil lives only while the light is on — the zone light only while it is out — a miss lights less`() {
         assertEquals(0.68f to 0.4624f, VenueLook.veilAlphas(0f))
         assertEquals(0f to 0f, VenueLook.veilAlphas(1f))
         assertEquals(0f to 0f, VenueLook.zoneLightAlphas(glow = 1f, darkness = 0f, zoneScale = 1f))
@@ -60,17 +60,25 @@ class VenueLookTest {
     }
 
     @Test
-    fun `the curtain over the top lives only while the light is on, like the veil`() {
+    fun `the curtain over the top lives only while the light is on — like the veil`() {
         assertEquals(0.58f, VenueLook.curtainAlpha(0f), 1e-6f)
         assertEquals(0.29f, VenueLook.curtainAlpha(0.5f), 1e-6f)
         assertEquals(0f, VenueLook.curtainAlpha(1f))
     }
 
     @Test
-    fun `the glowing layers go down to a quarter and the untouched controls to 0,38`() {
+    fun `the glowing layers go down to a quarter and the untouched controls to 0_38`() {
         assertEquals(1f, VenueLook.lightAlpha(0f))
         assertEquals(0.25f, VenueLook.lightAlpha(1f))
         assertEquals(1f, VenueLook.chromeAlpha(0f))
         assertEquals(0.38f, VenueLook.chromeAlpha(1f), 1e-6f)
+    }
+
+    /** As JUnit's: the same length, and every value within [delta] — kotlin.test has no such check for arrays. */
+    private fun assertArrayEquals(expected: FloatArray, actual: FloatArray, delta: Float) {
+        assertEquals(expected.size, actual.size, "sizes")
+        expected.indices.forEach { i ->
+            assertTrue(abs(expected[i] - actual[i]) <= delta, "[$i]: expected ${expected[i]}, was ${actual[i]}")
+        }
     }
 }
