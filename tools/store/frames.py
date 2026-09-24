@@ -17,14 +17,16 @@ FONT = os.path.abspath(os.path.join(ROOT, 'app/src/main/res/font/manrope_variabl
 W, H = 1080, 2160
 
 CAPTIONS = {
+    # (caption, the line under it); the order is the story: hear the note, the game, the music kept
     'ru': {
-        '01-live-intune': 'Попадание видно цветом',
-        '02-live-flat': 'Выше или ниже —<br>с одного взгляда',
-        '03-tune': 'Настройте<br>четыре струны',
-        '04-practice': 'Каждая минута<br>занятий на счету',
-        '05-scale': 'Ноты гамм приложение<br>рисует само',
-        '06-journey': 'Занятия ведут<br>по залам мира',
-        '07-home': 'Такты обставляют<br>ваш дом',
+        '01-live': ('Улучшайте точность', 'проверяйте каждую ноту — цвет виден издалека'),
+        '02-recap': ('Занятия — это игра', 'за минуты и чистые ноты — такты'),
+        '03-journey': ('Путешествуйте<br>по залам мира', 'такты везут вас из города в город'),
+        '04-home': ('Обставляйте<br>свой дом', 'вещи из лавки и из поездок'),
+        '05-repertoire': ('Весь репертуар<br>под рукой', 'произведения, гаммы, этюды —<br>и время на каждое'),
+        '06-takes': ('Записывайте дубли', 'и смотрите, как растёт чистота'),
+        '07-sound': ('Обрабатывайте звук', 'эквалайзер, компрессор, зал —<br>и сразу «Поделиться»'),
+        '08-tune': ('Настраивайте скрипку', 'четыре струны, авто или с фиксацией'),
     },
     'en': {
         '01-live-intune': 'See your pitch<br>by colour',
@@ -45,11 +47,14 @@ body {{
   font-family: Manrope, sans-serif; color: #f1eefb;
 }}
 body {{ display: flex; flex-direction: column; align-items: center; justify-content: center; }}
-h1 {{ margin: 0 0 70px; padding: 0 60px; text-align: center; font-size: 76px; line-height: 1.15;
+h1 {{ margin: 0; padding: 0 60px; text-align: center; font-size: 76px; line-height: 1.15;
   font-weight: 750; letter-spacing: -0.5px; }}
+p {{ margin: 20px 0 0; padding: 0 60px; text-align: center; font-size: 40px; line-height: 1.3; font-weight: 500;
+  color: #c9c2e8; }}
+.caption {{ margin-bottom: 64px; }}
 img {{ width: 800px; border-radius: 56px;
   box-shadow: 0 30px 90px rgba(0,0,0,.55), 0 0 0 3px rgba(255,255,255,.08); }}
-</style></head><body><h1>{caption}</h1><img src="file://{shot}"></body></html>"""
+</style></head><body><div class="caption"><h1>{caption}</h1>{sub}</div><img src="file://{shot}"></body></html>"""
 
 
 def main():
@@ -59,13 +64,14 @@ def main():
     os.makedirs(out, exist_ok=True)
     with tempfile.TemporaryDirectory() as tmp:
         for name, caption in CAPTIONS[lang].items():
+            caption, sub = caption if isinstance(caption, tuple) else (caption, None)
             shot = os.path.join(raw, name + '.png')
             if not os.path.exists(shot):
                 print('no shot', shot)
                 continue
             page = os.path.join(tmp, name + '.html')
             with open(page, 'w', encoding='utf-8') as f:
-                f.write(PAGE.format(font=FONT, w=W, h=H, caption=caption, shot=shot))
+                f.write(PAGE.format(font=FONT, w=W, h=H, caption=caption, sub=f'<p>{sub}</p>' if sub else '', shot=shot))
             subprocess.run([CHROME, '--headless', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1',
                             f'--window-size={W},{H}', '--allow-file-access-from-files',
                             f'--screenshot={os.path.join(out, name + ".png")}', 'file://' + page],

@@ -5,8 +5,8 @@
 
 Only the emulator and only com.violinjourney.app.debug: the app's database is replaced by a copy with
 ~70 days of practice ending today, the road up to Vienna, a furnished room and a repertoire in the
-chosen language. Recordings are not seeded — record them on Live of a -PfakePitch=true build, which
-analyses the scripted notes as it would a violin. Go through the onboarding once before running this:
+chosen language. The takes of the first piece are cloned from a session recorded on Live of a
+-PfakePitch=true build (its analysis is real, of the scripted notes), each given a synthesized sound. Go through the onboarding once before running this:
 Room creates the database on the first start."""
 import datetime as dt
 import os
@@ -14,12 +14,17 @@ import random
 import sqlite3
 import subprocess
 import sys
+import math
+import struct
 import tempfile
+import uuid
+import wave
 
 ADB = os.path.expanduser('~/Library/Android/sdk/platform-tools/adb')
 SERIAL = 'emulator-5554'
 PKG = 'com.violinjourney.app.debug'
 DB = f'/data/data/{PKG}/databases/violin.db'
+SESSIONS = f'/data/data/{PKG}/files/sessions'
 
 PIECES = {
     'ru': [
@@ -67,7 +72,7 @@ def seed(con, lang):
     now = dt.datetime.now().replace(second=0, microsecond=0)
     today = now.date()
     c = con.cursor()
-    for table in ['practice_entries', 'journey_earnings', 'journey_arrivals', 'home_purchases', 'home_choices', 'pieces', 'trophies']:
+    for table in ['piece_blocks', 'practice_entries', 'journey_earnings', 'journey_arrivals', 'home_purchases', 'home_choices', 'pieces', 'trophies']:
         c.execute(f'DELETE FROM {table}')
 
     # practice: 70 days back, a few gaps long ago, an unbroken streak of the last 23 days, today included
@@ -121,8 +126,83 @@ def seed(con, lang):
     for title, composer in ETUDES[lang]:
         c.execute('INSERT INTO pieces(title, composer, keyTonic, keyAccidental, keyMode, tempoBpm, status, notes, createdAtEpochMs, updatedAtEpochMs, section) '
                   "VALUES (?,?,NULL,NULL,NULL,NULL,'LEARNING','',?,?,'ETUDES')", (title, composer, created, created))
+
+    # blocks of the last 30 days, for «Время по элементам»: (piece index in insertion order, minutes a day, every n-th day)
+    ids = [row[0] for row in c.execute('SELECT id FROM pieces ORDER BY id')]
+    for index, minutes, every in [(0, 20, 1), (1, 15, 2), (5, 10, 1), (8, 15, 3), (2, 10, 4)]:
+        for back in range(0, 30, every):
+            day = today - dt.timedelta(days=back)
+            start = dt.datetime.combine(day, dt.time(hour=18, minute=index * 5))
+            c.execute('INSERT INTO piece_blocks(pieceId, date, startedAtEpochMs, durationMs, goalMs, done, paid) VALUES (?,?,?,?,?,1,1)',
+                      (ids[index], day.isoformat(), ms(start), minutes * 60_000, minutes * 60_000))
     con.commit()
     return len(days), sum(m for _, _, m in days)
+
+
+# The takes of the first piece: (days ago, score, near, off, mean error, the best one)
+TAKES = [(9, 64, 20, 16, 11.8, False), (4, 73, 17, 10, 9.1, False), (1, 81, 13, 6, 7.2, True)]
+# Vivaldi's A minor concerto, the opening bars: (midi note, beats) at 100 bpm
+MELODY = [(69, 1), (69, 1), (69, 1), (69, 1), (76, 1), (76, 1), (76, 1), (76, 1), (72, .5), (71, .5), (69, .5), (71, .5),
+          (72, .5), (74, .5), (76, 1), (74, .5), (72, .5), (71, .5), (69, .5), (68, 1), (64, 1), (69, 2)]
+
+
+def violin_wav(path, seconds, seed):
+    """A bowed, vibrating sawtooth: not a violin, but a waveform and a sound that pass for one on a screenshot."""
+    rate, rnd = 44_100, random.Random(seed)
+    notes, t = [], 0.0
+    while t < seconds:
+        for midi, beats in MELODY:
+            notes.append((t, beats * 0.6, 440 * 2 ** ((midi - 69) / 12)))
+            t += beats * 0.6
+    frames = bytearray()
+    phase = 0.0
+    for i in range(int(seconds * rate)):
+        now = i / rate
+        start, length, freq = next((n for n in notes if n[0] <= now < n[0] + n[1]), notes[-1])
+        into = now - start
+        vibrato = 1 + (0.004 * math.sin(2 * math.pi * 5.5 * into) if into > 0.15 else 0)
+        phase += 2 * math.pi * freq * vibrato / rate
+        tone = sum(math.sin(k * phase) / k ** 1.3 for k in range(1, 9))
+        envelope = min(1, into / 0.04) * min(1, (length - into) / 0.06) * (0.8 + 0.2 * math.sin(math.pi * into / length))
+        sample = 0.22 * envelope * tone + 0.004 * (rnd.random() - 0.5)
+        frames += struct.pack('<h', int(max(-1, min(1, sample)) * 32767))
+    with wave.open(path, 'wb') as w:
+        w.setnchannels(1)
+        w.setsampwidth(2)
+        w.setframerate(rate)
+        w.writeframes(bytes(frames))
+
+
+def seed_takes(con, tmp):
+    """Clones the first recorded session into takes of the first piece, each with a sound of its own."""
+    c = con.cursor()
+    template = c.execute('SELECT id, durationMs, a4Hz, toleranceCents, nearCents, previewZones, biasCents FROM sessions WHERE pieceId IS NULL ORDER BY id LIMIT 1').fetchone()
+    if template is None:
+        print('no recorded session to make takes from: record one on Live of a -PfakePitch=true build')
+        return []
+    tid, duration, a4, tol, near, zones, bias = template
+    samples = c.execute('SELECT bucketMs, data FROM session_samples WHERE sessionId = ?', (tid,)).fetchone()
+    piece = c.execute("SELECT id FROM pieces WHERE section = 'PIECES' ORDER BY id LIMIT 1").fetchone()[0]
+    c.execute('DELETE FROM sessions WHERE pieceId IS NOT NULL')
+    now = dt.datetime.now().replace(second=0, microsecond=0)
+    files = []
+    for n, (back, score, near_pct, off_pct, mae, best) in enumerate(TAKES):
+        name = f'{uuid.uuid4()}.m4a'
+        wav = os.path.join(tmp, f'take{n}.wav')
+        violin_wav(wav, duration / 1000, n)
+        subprocess.run(['afconvert', '-f', 'm4af', '-d', 'aac', '-b', '128000', wav, os.path.join(tmp, name)], check=True)
+        started = now - dt.timedelta(days=back, hours=2)
+        c.execute('INSERT INTO sessions(title, startedAtEpochMs, durationMs, a4Hz, toleranceCents, nearCents, scorePercent, nearPercent, offPercent, '
+                  'maeCents, biasCents, previewZones, audioPath, pieceId, videoPath) VALUES (NULL,?,?,?,?,?,?,?,?,?,?,?,?,?,NULL)',
+                  (ms(started), duration, a4, tol, near, score, near_pct, off_pct, mae, bias, zones, name, piece))
+        take = c.lastrowid
+        if samples:
+            c.execute('INSERT INTO session_samples VALUES (?,?,?)', (take, samples[0], samples[1]))
+        if best:
+            c.execute('UPDATE pieces SET bestTakeId = ? WHERE id = ?', (take, piece))
+        files.append(name)
+    con.commit()
+    return files
 
 
 def main():
@@ -136,13 +216,18 @@ def main():
         con = sqlite3.connect(local)
         con.execute('PRAGMA wal_checkpoint(TRUNCATE)')
         count, minutes = seed(con, lang)
+        takes = seed_takes(con, tmp)
         con.execute('PRAGMA journal_mode=DELETE')
         con.close()
         # adb joins its arguments into one line for the device shell: the quotes keep the redirect inside run-as
         with open(local, 'rb') as db:
             adb('exec-in', f"run-as {PKG} sh -c 'cat > {DB}'", stdin=db)
+        adb('shell', f"run-as {PKG} mkdir -p {SESSIONS}")
+        for name in takes:
+            with open(os.path.join(tmp, name), 'rb') as audio:
+                adb('exec-in', f"run-as {PKG} sh -c 'cat > {SESSIONS}/{name}'", stdin=audio)
     adb('shell', f"run-as {PKG} rm -f {DB}-wal {DB}-shm")
-    print(f'{lang}: {count} practice days, {minutes // 60} h {minutes % 60} min')
+    print(f'{lang}: {count} practice days, {minutes // 60} h {minutes % 60} min, {len(takes)} takes')
 
 
 if __name__ == '__main__':
