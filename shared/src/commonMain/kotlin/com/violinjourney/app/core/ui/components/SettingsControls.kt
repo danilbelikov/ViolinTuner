@@ -21,7 +21,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -29,8 +28,17 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.TolerancePreset
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.a4_option_description
+import com.violinjourney.app.shared.resources.tolerance_beginner_name
+import com.violinjourney.app.shared.resources.tolerance_beginner_text
+import com.violinjourney.app.shared.resources.tolerance_cents
+import com.violinjourney.app.shared.resources.tolerance_intermediate_name
+import com.violinjourney.app.shared.resources.tolerance_intermediate_text
+import com.violinjourney.app.shared.resources.tolerance_pro_name
+import com.violinjourney.app.shared.resources.tolerance_pro_text
+import org.jetbrains.compose.resources.stringResource
 
 // Handoff prototype: onboarding steps 2 and 3, reused by the settings screen.
 private val SelectorHeight = 48.dp
@@ -71,7 +79,7 @@ fun A4Selector(
                 )
             }
             val selected = hz == selectedHz
-            val description = stringResource(R.string.a4_option_description, hz)
+            val description = stringResource(Res.string.a4_option_description, hz)
             Box(
                 modifier = Modifier
                     .weight(1f)
@@ -118,9 +126,9 @@ private fun PresetCard(preset: TolerancePreset, selected: Boolean, onClick: () -
     val colors = MaterialTheme.colorScheme
     val shape = RoundedCornerShape(PresetCorner)
     val (nameRes, textRes) = when (preset) {
-        TolerancePreset.BEGINNER -> R.string.tolerance_beginner_name to R.string.tolerance_beginner_text
-        TolerancePreset.INTERMEDIATE -> R.string.tolerance_intermediate_name to R.string.tolerance_intermediate_text
-        TolerancePreset.PRO -> R.string.tolerance_pro_name to R.string.tolerance_pro_text
+        TolerancePreset.BEGINNER -> Res.string.tolerance_beginner_name to Res.string.tolerance_beginner_text
+        TolerancePreset.INTERMEDIATE -> Res.string.tolerance_intermediate_name to Res.string.tolerance_intermediate_text
+        TolerancePreset.PRO -> Res.string.tolerance_pro_name to Res.string.tolerance_pro_text
     }
     Row(
         modifier = Modifier
@@ -146,7 +154,7 @@ private fun PresetCard(preset: TolerancePreset, selected: Boolean, onClick: () -
             )
         }
         Text(
-            text = stringResource(R.string.tolerance_cents, preset.cents),
+            text = stringResource(Res.string.tolerance_cents, preset.cents),
             color = colors.onSurface,
             style = TextStyle(
                 fontFamily = MaterialTheme.typography.titleLarge.fontFamily,

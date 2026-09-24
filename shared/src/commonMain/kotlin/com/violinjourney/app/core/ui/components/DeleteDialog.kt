@@ -14,13 +14,15 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.dialog_cancel
+import com.violinjourney.app.shared.resources.session_delete_confirm
+import org.jetbrains.compose.resources.stringResource
 
 private val IconCircle = 44.dp
 private const val ICON_CIRCLE_ALPHA = 0.16f
@@ -43,9 +45,9 @@ fun DeleteDialog(title: String, text: String, onConfirm: () -> Unit, onDismiss: 
         text = { Text(text) },
         confirmButton = {
             Button(onClick = onConfirm, colors = ButtonDefaults.buttonColors(containerColor = destructive, contentColor = Color.White)) {
-                IconLabel(AppIcons.Trash, stringResource(R.string.session_delete_confirm))
+                IconLabel(AppIcons.Trash, stringResource(Res.string.session_delete_confirm))
             }
         },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.dialog_cancel)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.dialog_cancel)) } },
     )
 }
