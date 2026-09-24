@@ -24,4 +24,6 @@ dependencyResolutionManagement {
 
 rootProject.name = "ViolinJourney"
 include(":app")
+include(":shared")
+include(":shared-testing")
  

@@ -97,6 +97,7 @@ ksp {
 }
 
 dependencies {
+    implementation(project(":shared"))
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.camera.camera2)
@@ -130,6 +131,7 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     ksp(libs.androidx.room.compiler)
     ksp(libs.hilt.compiler)
+    testImplementation(project(":shared-testing"))
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(platform(libs.androidx.compose.bom))
