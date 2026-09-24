@@ -13,10 +13,10 @@ import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.practice.SavedBlock
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.history.HistorySection
 import com.violinjourney.app.feature.history.HistorySectionAsk
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -47,7 +47,7 @@ class BlockViewModel @Inject constructor(
     repertoire: RepertoireRepository,
     sessions: SessionRepository,
     private val config: PracticeConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val sectionAsk: HistorySectionAsk = HistorySectionAsk(),
 ) : ViewModel() {
 

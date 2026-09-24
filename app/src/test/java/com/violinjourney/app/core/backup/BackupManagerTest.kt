@@ -1,14 +1,15 @@
 package com.violinjourney.app.core.backup
 
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.ZonedSystemWallClock
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
+import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -17,6 +18,7 @@ import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.TimeZone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -42,7 +44,7 @@ class BackupManagerTest {
         override val databaseVersion = 6
         override suspend fun contents() = BackupContents(counts, mapOf(BackupPart.DATA to 1_000L, BackupPart.VIDEO to video.size.toLong()))
         override suspend fun prepare(parts: Set<BackupPart>) = PreparedBackup(
-            BackupManifest(1, "1.0", 6, now.toEpochMilli(), "Pixel 7", parts + BackupPart.DATA, counts, mapOf(BackupPart.DATA to 1_000L, BackupPart.VIDEO to video.size.toLong())),
+            BackupManifest(1, "1.0", 6, now.toEpochMilliseconds(), "Pixel 7", parts + BackupPart.DATA, counts, mapOf(BackupPart.DATA to 1_000L, BackupPart.VIDEO to video.size.toLong())),
             listOfNotNull(
                 BackupEntry("db/violin.db", BackupPart.DATA, 1_000) { ByteArrayInputStream(ByteArray(1_000) { 7 }) },
                 BackupEntry("sessions/a.mp4", BackupPart.VIDEO, video.size.toLong()) { ByteArrayInputStream(video) }.takeIf { BackupPart.VIDEO in parts },
@@ -95,7 +97,7 @@ class BackupManagerTest {
 
     private fun TestScope.manager() = BackupManager(
         store, documents, prefs, { keptAlive++ }, BackupConfig(), BackupSpeed(BackupConfig()),
-        Clock.fixed(now, ZoneId.of("Europe/Moscow")), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler),
+        FixedWallClock(now, TimeZone.of("Europe/Moscow")), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler),
     )
 
     @Test
@@ -109,7 +111,7 @@ class BackupManagerTest {
         assertEquals(documents.written.getValue("content://downloads/1").size().toLong(), saved.bytes)
         assertEquals(counts, saved.manifest.counts)
         assertNull(saved.shareFile)
-        assertEquals(now.toEpochMilli(), prefs.lastBackupAtEpochMs.value)
+        assertEquals(now.toEpochMilliseconds(), prefs.lastBackupAtEpochMs.value)
         assertEquals(1 to 1, keptAlive to store.cleaned)
         assertTrue(documents.deleted.isEmpty())
         // and it really is a copy
@@ -162,7 +164,7 @@ class BackupManagerTest {
         val closed = object : BackupDocuments by documents {
             override fun openOutput(uri: String): OutputStream? = null
         }
-        val other = BackupManager(store, closed, prefs, {}, BackupConfig(), BackupSpeed(BackupConfig()), Clock.systemUTC(), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler))
+        val other = BackupManager(store, closed, prefs, {}, BackupConfig(), BackupSpeed(BackupConfig()), ZonedSystemWallClock(TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler))
         other.saveTo("content://gone/1", all, "копия.zip")
         advanceUntilIdle()
         assertEquals(SaveFailure.UNAVAILABLE, (other.job.value as BackupJob.SaveFailed).reason)
@@ -313,7 +315,7 @@ class BackupManagerTest {
                 override fun write(b: ByteArray, off: Int, len: Int) = Unit
             }
         }
-        val other = BackupManager(store, slow, prefs, {}, BackupConfig(), BackupSpeed(BackupConfig()), Clock.systemUTC(), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler))
+        val other = BackupManager(store, slow, prefs, {}, BackupConfig(), BackupSpeed(BackupConfig()), ZonedSystemWallClock(TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler))
         other.saveTo("content://slow/1", all, "копия.zip")
         advanceTimeBy(800)
         runCurrent()

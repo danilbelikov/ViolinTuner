@@ -21,13 +21,12 @@ import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.settings.FakeSettingsRepository
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.practice.PlayedLine
 import com.violinjourney.app.feature.practice.PracticePrompt
 import com.violinjourney.app.feature.practice.PracticePromptIntent
-import java.time.Clock
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -35,6 +34,10 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -45,10 +48,10 @@ import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class AppStartViewModelTest {
-    private val zone: ZoneId = ZoneId.of("Europe/Moscow")
+    private val zone: TimeZone = TimeZone.of("Europe/Moscow")
     // 2026-09-17 21:00 Moscow
-    private val now = Instant.parse("2026-09-17T18:00:00Z").toEpochMilli()
-    private val clock = Clock.fixed(Instant.ofEpochMilli(now), zone)
+    private val now = Instant.parse("2026-09-17T18:00:00Z").toEpochMilliseconds()
+    private val clock = FixedWallClock(Instant.fromEpochMilliseconds(now), zone)
     private val store = FakeRunningPracticeStore()
     private val repository = FakePracticeRepository()
     private val config = PracticeConfig()
@@ -137,7 +140,7 @@ class AppStartViewModelTest {
         runCurrent()
         val entry = repository.entries.value.single()
         assertEquals(MS_PER_HOUR + 12 * MS_PER_MINUTE, entry.durationMs)
-        assertEquals(LocalDate.of(2026, 9, 17), entry.date)
+        assertEquals(LocalDate(2026, 9, 17), entry.date)
         assertNull(store.running.value)
         assertNull(viewModel.practicePrompt.value)
     }
@@ -249,7 +252,7 @@ class AppStartViewModelTest {
 
     @Test
     fun `hours already practised before the update bring their trophies at once`() = runTest {
-        setDay(today.minusDays(3), hours = 12)
+        setDay(today.minus(3, DateTimeUnit.DAY), hours = 12)
         viewModel()
         runCurrent()
         assertEquals(listOf(Trophy(1, today, shown = false), Trophy(10, today, shown = false)), trophies.trophies.value)
@@ -273,16 +276,16 @@ class AppStartViewModelTest {
         viewModel()
         runCurrent()
         setDay(today, hours = 12)
-        setDay(today.minusDays(1), hours = 12)
-        setDay(today.minusDays(2), hours = 12)
-        setDay(today.minusDays(3), hours = 12)
-        setDay(today.minusDays(4), hours = 12)
+        setDay(today.minus(1, DateTimeUnit.DAY), hours = 12)
+        setDay(today.minus(2, DateTimeUnit.DAY), hours = 12)
+        setDay(today.minus(3, DateTimeUnit.DAY), hours = 12)
+        setDay(today.minus(4, DateTimeUnit.DAY), hours = 12)
         runCurrent()
         assertEquals(listOf(1, 10, 50), trophies.trophies.value.map { it.hours })
 
         trophies.markShown(1)
         setDay(today, hours = 0)
-        setDay(today.minusDays(1), hours = 0)
+        setDay(today.minus(1, DateTimeUnit.DAY), hours = 0)
         runCurrent()
         assertEquals(listOf(1, 10, 50), trophies.trophies.value.map { it.hours })
         assertEquals(listOf(true, false, false), trophies.trophies.value.map { it.shown })

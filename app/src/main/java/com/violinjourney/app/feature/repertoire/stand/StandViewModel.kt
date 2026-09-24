@@ -8,8 +8,8 @@ import com.violinjourney.app.core.data.repertoire.SheetFiles
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.StandHintStore
+import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
@@ -31,7 +31,7 @@ class StandViewModel @Inject constructor(
     private val sheetFiles: SheetFiles,
     private val hints: StandHintStore,
     private val config: RepertoireConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
 ) : ViewModel() {
 
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "the stand needs a piece" }

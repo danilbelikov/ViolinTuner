@@ -17,6 +17,8 @@ import com.violinjourney.app.core.domain.repertoire.Tonic
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleKind
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleSpec
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.repertoire.form.PieceFormIntent
 import com.violinjourney.app.feature.repertoire.form.PieceFormViewModel
 import com.violinjourney.app.feature.repertoire.scale.ScaleFormEffect
@@ -27,10 +29,7 @@ import com.violinjourney.app.feature.repertoire.sections.PieceTimeRow
 import com.violinjourney.app.feature.repertoire.sections.SectionsEffect
 import com.violinjourney.app.feature.repertoire.sections.SectionsIntent
 import com.violinjourney.app.feature.repertoire.sections.SectionsViewModel
-import java.time.Clock
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneOffset
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -40,6 +39,10 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -53,7 +56,7 @@ import org.junit.Test
 class SectionsTest {
     private val config = RepertoireConfig()
     private val repertoire = FakeRepertoireRepository()
-    private val clock: Clock = Clock.fixed(Instant.ofEpochMilli(7_000), ZoneOffset.UTC)
+    private val clock: WallClock = FixedWallClock(Instant.fromEpochMilliseconds(7_000), TimeZone.UTC)
     private val texts = object : ScaleTexts {
         override fun titleOf(spec: ScaleSpec) = "${spec.key.germanName} ${spec.kind} ${spec.octaves}"
     }
@@ -312,10 +315,10 @@ class SectionsTest {
         val minuet = repertoire.add(PieceDraft(title = "Менуэт соль мажор"), 0)
         val etude = repertoire.add(PieceDraft(title = "Кайзер № 3", section = PieceSection.ETUDES), 0)
         val stroke = repertoire.add(PieceDraft(title = "Деташе", section = PieceSection.STROKES), 0)
-        val today = LocalDate.of(1970, 1, 1)
+        val today = LocalDate(1970, 1, 1)
         blocks.blocks.value = listOf(
-            block(minuet, today, 7), block(minuet, today.minusDays(29), 30), block(minuet, today.minusDays(30), 60),
-            block(etude, today.minusDays(3), 37), block(stroke, today.minusDays(1), 20),
+            block(minuet, today, 7), block(minuet, today.minus(29, DateTimeUnit.DAY), 30), block(minuet, today.minus(30, DateTimeUnit.DAY), 60),
+            block(etude, today.minus(3, DateTimeUnit.DAY), 37), block(stroke, today.minus(1, DateTimeUnit.DAY), 20),
         )
         val (viewModel, effects) = sections()
         val time = viewModel.state.value.time!!

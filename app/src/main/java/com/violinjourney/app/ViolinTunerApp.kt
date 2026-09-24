@@ -6,6 +6,7 @@ import android.content.res.Configuration
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.backup.RestoreSwap
+import com.violinjourney.app.core.ui.format.use
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 

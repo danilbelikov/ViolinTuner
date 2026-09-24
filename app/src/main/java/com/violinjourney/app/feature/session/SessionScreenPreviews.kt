@@ -14,8 +14,8 @@ import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.session.components.NoteSheetContent
 import com.violinjourney.app.core.audio.playback.PlayerState
-import java.time.ZoneId
 import kotlin.math.sin
+import kotlinx.datetime.TimeZone
 
 // Handoff frame 4a and the cases it does not show.
 
@@ -48,7 +48,7 @@ private fun contentOf(samples: List<SessionSample?>, title: String? = "Гамм�
 
 @Composable
 private fun SessionPreview(state: SessionState) {
-    ViolinTheme { SessionScreen(state = state, onIntent = {}, zone = ZoneId.of("Europe/Moscow")) }
+    ViolinTheme { SessionScreen(state = state, onIntent = {}, zone = TimeZone.of("Europe/Moscow")) }
 }
 
 @Preview(name = "Session · scale, 14 s", widthDp = 412, heightDp = 1100)

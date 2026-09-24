@@ -9,7 +9,7 @@ import com.violinjourney.app.core.domain.journey.TaktSources
 import com.violinjourney.app.core.domain.progress.LevelProgress
 import com.violinjourney.app.core.domain.progress.Progress
 import com.violinjourney.app.core.domain.progress.ProgressConfig
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /** Where the road stands after the takts of the practice (spec 3.31). */
 sealed interface RecapRoad {

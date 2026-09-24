@@ -92,7 +92,7 @@ import com.violinjourney.app.feature.repertoire.components.THUMB_DIM
 import com.violinjourney.app.feature.repertoire.components.THUMB_DIM_FIRST
 import com.violinjourney.app.feature.repertoire.components.dashedBorder
 import com.violinjourney.app.feature.repertoire.components.statusLabel
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 
 private val ScreenPadding = 16.dp
 private val MaxContentWidth = 560.dp
@@ -132,7 +132,7 @@ fun PieceScreen(
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
     modifier: Modifier = Modifier,
-    zone: ZoneId = ZoneId.systemDefault(),
+    zone: TimeZone = TimeZone.currentSystemDefault(),
     takeActions: CardActions? = null,
     videoImport: VideoImport = VideoImport.Idle,
     onPickVideo: () -> Unit = {},
@@ -169,7 +169,7 @@ private fun PortraitLayout(
     header: PieceHeader,
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
-    zone: ZoneId,
+    zone: TimeZone,
     takeActions: CardActions?,
     videoImport: VideoImport,
     onPickVideo: () -> Unit,
@@ -221,7 +221,7 @@ private fun LandscapeLayout(
     header: PieceHeader,
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
-    zone: ZoneId,
+    zone: TimeZone,
     takeActions: CardActions?,
     videoImport: VideoImport,
     onPickVideo: () -> Unit,

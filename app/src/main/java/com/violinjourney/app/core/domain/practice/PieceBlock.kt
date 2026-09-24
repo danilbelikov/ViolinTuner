@@ -1,8 +1,8 @@
 package com.violinjourney.app.core.domain.practice
 
-import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.datetime.LocalDate
 
 /**
  * «Подход» (spec 3.28): a stretch of the running practice given to one element of the repertoire,

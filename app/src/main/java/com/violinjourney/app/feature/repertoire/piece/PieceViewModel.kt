@@ -19,6 +19,8 @@ import com.violinjourney.app.core.domain.backing.BackingFiles
 import com.violinjourney.app.core.domain.backing.BackingOutput
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.NoBackings
+import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.today
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -44,8 +46,6 @@ import com.violinjourney.app.feature.history.SelectionIntent
 import com.violinjourney.app.feature.history.SelectionRules
 import dagger.hilt.android.lifecycle.HiltViewModel
 import java.io.File
-import java.time.Clock
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
@@ -65,6 +65,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.datetime.LocalDate
 
 @HiltViewModel
 class PieceViewModel @Inject constructor(
@@ -72,7 +73,7 @@ class PieceViewModel @Inject constructor(
     private val repertoire: RepertoireRepository,
     private val sheetFiles: SheetFiles,
     private val config: RepertoireConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val takes: TakePipeline,
     private val configSource: IntonationConfigSource,
     private val sessions: SessionRepository,
@@ -134,7 +135,7 @@ class PieceViewModel @Inject constructor(
         } else {
             val shown = PieceReducer.stateOf(
                 piece, pages, ui.importing, ui.statusMenuOpen, config,
-                takes = PieceReducer.takesOf(piece, sessions, newTakeId, LocalDate.now(clock), clock.zone),
+                takes = PieceReducer.takesOf(piece, sessions, newTakeId, clock.today(), clock.zone),
                 progress = PieceReducer.progressOf(pieceId, sessions, config),
             ) { sheetFiles.existing(it)?.path }
             takeIds = shown.takes.map { it.card.id }

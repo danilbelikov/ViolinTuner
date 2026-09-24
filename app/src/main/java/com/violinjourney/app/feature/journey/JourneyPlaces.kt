@@ -53,7 +53,7 @@ import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.feature.journey.art.Postcard
 import com.violinjourney.app.feature.journey.art.SceneMode
 import com.violinjourney.app.feature.journey.art.rememberSceneSeconds
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 
 private val MaxContentWidth = 560.dp
 private val PostcardShape = RoundedCornerShape(20.dp)
@@ -161,7 +161,7 @@ private fun StopWords(state: StopState) {
         color = colors.onSurface, style = MaterialTheme.typography.titleMedium,
     )
     state.arrivedAtEpochMs?.takeIf { state.index > 0 }?.let {
-        Text(stringResource(R.string.journey_stop_meta, state.index, state.totalStops, Formats.dayAndMonth(it, ZoneId.systemDefault())), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+        Text(stringResource(R.string.journey_stop_meta, state.index, state.totalStops, Formats.dayAndMonth(it, TimeZone.currentSystemDefault())), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
     }
     Text(factOf(state.index), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge)
 }
@@ -230,7 +230,7 @@ fun PassportScreen(state: JourneyState, onIntent: (JourneyIntent) -> Unit, modif
                     Box {
                         StampView(
                             stopId = stop.id, index = index, visited = visit != null, city = city,
-                            date = visit?.let { Formats.dayAndMonth(it.arrivedAtEpochMs, ZoneId.systemDefault()) }.orEmpty(),
+                            date = visit?.let { Formats.dayAndMonth(it.arrivedAtEpochMs, TimeZone.currentSystemDefault()) }.orEmpty(),
                             modifier = Modifier.rotate(if (visit != null) STAMP_TILTS[index % STAMP_TILTS.size] else 0f),
                         )
                         if (visit?.souvenir == true) Sticker(Modifier.align(Alignment.BottomEnd).offset(x = 6.dp, y = 2.dp))

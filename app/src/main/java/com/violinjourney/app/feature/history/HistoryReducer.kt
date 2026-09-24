@@ -4,16 +4,21 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.session.HistoryWeeks
 import com.violinjourney.app.core.domain.session.RecordDays
 import com.violinjourney.app.core.domain.session.SessionSummary
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 
 /** Stored sessions → history screen (spec 3.11). Pure: "today" and the zone come from outside. */
 object HistoryReducer {
+    /** «Today» of a list still loading: never shown, only there to be a date. */
+    private val NOT_LOADED = LocalDate(1970, 1, 1)
+
     fun stateOf(
         sessions: List<SessionSummary>,
         filter: HistoryFilter,
         today: LocalDate,
-        zone: ZoneId,
+        zone: TimeZone,
         config: IntonationConfig,
         section: HistorySection = HistorySection.SESSIONS,
         /** Titles of the pieces by id: a take is named after its piece (spec 3.15). */
@@ -39,19 +44,19 @@ object HistoryReducer {
 
     fun loading(filter: HistoryFilter, section: HistorySection = HistorySection.SESSIONS): HistoryState =
         HistoryState(
-            section = section, loading = true, totalCount = 0, days = emptyList(), chartTop = 0, today = LocalDate.MIN,
+            section = section, loading = true, totalCount = 0, days = emptyList(), chartTop = 0, today = NOT_LOADED,
             filter = filter, cards = emptyList(),
         )
 
     private fun passes(filter: HistoryFilter, date: LocalDate, today: LocalDate, config: IntonationConfig): Boolean =
         when (filter) {
             HistoryFilter.ALL -> true
-            HistoryFilter.THIS_WEEK -> !date.isBefore(HistoryWeeks.weekStartOf(today))
-            HistoryFilter.MONTH -> date.isAfter(today.minusDays(config.historyMonthDays.toLong()))
+            HistoryFilter.THIS_WEEK -> date >= HistoryWeeks.weekStartOf(today)
+            HistoryFilter.MONTH -> date > today.minus(config.historyMonthDays.toLong(), DateTimeUnit.DAY)
         }
 
     /** Also the card of the "Записи этого дня" list on the practice screen and of a take on the screen of its piece. */
-    fun cardOf(session: SessionSummary, today: LocalDate, zone: ZoneId, pieceTitle: String? = null, best: Boolean = false): HistoryCard =
+    fun cardOf(session: SessionSummary, today: LocalDate, zone: TimeZone, pieceTitle: String? = null, best: Boolean = false): HistoryCard =
         HistoryCard(
             id = session.id,
             title = session.title,

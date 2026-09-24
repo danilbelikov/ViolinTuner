@@ -7,8 +7,8 @@ import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.SheetPage
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.domain.session.RecordDays
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 
 /** Pieces, pages and sessions → the repertoire list (spec 3.15). Pure: "today", the zone and file paths come from outside. */
 object RepertoireReducer {
@@ -18,7 +18,7 @@ object RepertoireReducer {
         sessions: List<SessionSummary>,
         filter: PieceStatus?,
         today: LocalDate,
-        zone: ZoneId,
+        zone: TimeZone,
         thumbPathOf: (fileName: String) -> String?,
     ): RepertoireState {
         val firstPages = pages.groupBy { it.pieceId }.mapValues { (_, own) -> own.minBy { it.position } }

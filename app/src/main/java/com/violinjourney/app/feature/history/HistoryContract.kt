@@ -1,7 +1,7 @@
 package com.violinjourney.app.feature.history
 
 import com.violinjourney.app.core.domain.session.DayCount
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 enum class HistoryFilter { ALL, THIS_WEEK, MONTH }
 

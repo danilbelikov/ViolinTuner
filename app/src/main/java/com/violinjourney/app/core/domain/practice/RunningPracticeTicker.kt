@@ -1,6 +1,6 @@
 package com.violinjourney.app.core.domain.practice
 
-import java.time.Clock
+import com.violinjourney.app.core.time.WallClock
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -16,11 +16,11 @@ private const val MS_PER_SECOND = 1_000L
  * stored start, so a restart of the app or the phone changes nothing (spec 3.12).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-fun RunningPracticeStore.elapsedTicker(clock: Clock): Flow<Long?> = running.flatMapLatest { running ->
+fun RunningPracticeStore.elapsedTicker(clock: WallClock): Flow<Long?> = running.flatMapLatest { running ->
     if (running == null) flowOf(null) else ticking(running, clock)
 }
 
-private fun ticking(running: RunningPractice, clock: Clock): Flow<Long> = flow {
+private fun ticking(running: RunningPractice, clock: WallClock): Flow<Long> = flow {
     while (true) {
         val now = clock.millis()
         emit(running.elapsedMs(now))

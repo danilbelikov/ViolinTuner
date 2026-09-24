@@ -27,6 +27,8 @@ kotlin {
     compilerOptions {
         // expect/actual classes (PlatformFile) are Beta in Kotlin 2.2.
         freeCompilerArgs.add("-Xexpect-actual-classes")
+        // kotlin.time.Instant and Clock, which kotlinx-datetime is built on, are still marked experimental in Kotlin 2.2.
+        optIn.add("kotlin.time.ExperimentalTime")
     }
     listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
         // The iOS app (iosApp) links this framework; Xcode builds it through Gradle.

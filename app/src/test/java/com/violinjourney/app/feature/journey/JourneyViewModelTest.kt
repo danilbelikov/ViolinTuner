@@ -10,9 +10,9 @@ import com.violinjourney.app.core.domain.venue.FakeVenueStore
 import com.violinjourney.app.core.domain.venue.Venue
 import com.violinjourney.app.core.domain.venue.VenueRules
 import com.violinjourney.app.core.domain.venue.Venues
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -24,6 +24,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -35,7 +36,7 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class JourneyViewModelTest {
     private val dispatcher = StandardTestDispatcher()
-    private val clock = Clock.fixed(Instant.parse("2026-09-20T10:00:00Z"), ZoneOffset.UTC)
+    private val clock = FixedWallClock(Instant.parse("2026-09-20T10:00:00Z"), TimeZone.UTC)
     private val journey = FakeJourneyRepository()
     private val venueStore = FakeVenueStore()
     private val venues = Venues(venueStore, journey)

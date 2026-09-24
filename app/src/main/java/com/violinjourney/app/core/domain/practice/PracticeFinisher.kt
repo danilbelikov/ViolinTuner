@@ -7,10 +7,10 @@ import com.violinjourney.app.core.domain.journey.JourneyRules
 import com.violinjourney.app.core.domain.journey.NoPracticeNotes
 import com.violinjourney.app.core.domain.journey.PracticeNotesStore
 import com.violinjourney.app.core.domain.journey.TaktEarning
-import java.time.Clock
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.analytics.PracticeFinished
+import com.violinjourney.app.core.time.WallClock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.first
 
@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.first
 class PracticeFinisher @Inject constructor(
     private val repository: PracticeRepository,
     private val store: RunningPracticeStore,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val notes: PracticeNotesStore = NoPracticeNotes,
     private val journey: JourneyRepository = NoJourney,
     private val journeyConfig: JourneyConfig = JourneyConfig(),

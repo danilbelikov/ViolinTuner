@@ -10,8 +10,8 @@ import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.recording.FileAnalysisResult
 import com.violinjourney.app.core.recording.FileTakeAnalyzer
 import com.violinjourney.app.core.settings.IntonationConfigSource
+import com.violinjourney.app.core.time.WallClock
 import java.io.File
-import java.time.Clock
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
@@ -96,7 +96,7 @@ class VideoTakeImporter @Inject constructor(
     private val practice: RunningPracticeStore,
     private val repertoireConfig: RepertoireConfig,
     private val intonationDefaults: IntonationConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val elapsed: ElapsedClock,
     private val speed: AnalysisSpeed,
     @DefaultDispatcher dispatcher: CoroutineDispatcher,

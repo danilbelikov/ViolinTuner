@@ -95,6 +95,13 @@ android {
     }
 }
 
+kotlin {
+    compilerOptions {
+        // kotlin.time.Instant and Clock, which kotlinx-datetime is built on, are still marked experimental in Kotlin 2.2.
+        optIn.add("kotlin.time.ExperimentalTime")
+    }
+}
+
 // Room writes the schema of every database version here; the files are committed so that
 // migrations can be written and tested against them.
 ksp {

@@ -71,7 +71,7 @@ import com.violinjourney.app.feature.practice.components.StreakFlameSize
 import com.violinjourney.app.feature.practice.components.SummarySheet
 import com.violinjourney.app.feature.practice.components.TrophiesSheet
 import com.violinjourney.app.feature.practice.components.rolledValue
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 
 private val ScreenPadding = 16.dp
 private val BlockGap = 20.dp
@@ -132,7 +132,7 @@ fun PracticeScreen(
     state: PracticeState,
     onIntent: (PracticeIntent) -> Unit,
     modifier: Modifier = Modifier,
-    zone: ZoneId = ZoneId.systemDefault(),
+    zone: TimeZone = TimeZone.currentSystemDefault(),
     // The window into the journey (spec 3.23) comes as a slot: it lives on its own flow, not in PracticeState.
     journeyCard: @Composable (compact: Boolean) -> Unit = {},
 ) {
@@ -164,7 +164,7 @@ fun PracticeScreen(
 private fun PortraitLayout(
     state: PracticeState,
     onIntent: (PracticeIntent) -> Unit,
-    zone: ZoneId,
+    zone: TimeZone,
     journeyCard: @Composable (Boolean) -> Unit,
     flameSways: MutableState<Boolean>,
 ) {
@@ -202,7 +202,7 @@ private fun PortraitLayout(
 private fun LandscapeLayout(
     state: PracticeState,
     onIntent: (PracticeIntent) -> Unit,
-    zone: ZoneId,
+    zone: TimeZone,
     journeyCard: @Composable (Boolean) -> Unit,
     flameSways: MutableState<Boolean>,
 ) {
@@ -446,7 +446,7 @@ private fun SummaryCard(label: String, value: String, metrics: Metrics, modifier
 
 /** Date, time and the day's records (handoff 10c1, 10c2). Cross-fades when another day is picked. */
 @Composable
-private fun SelectedDayBlock(selected: SelectedDay, onIntent: (PracticeIntent) -> Unit, metrics: Metrics, zone: ZoneId) {
+private fun SelectedDayBlock(selected: SelectedDay, onIntent: (PracticeIntent) -> Unit, metrics: Metrics, zone: TimeZone) {
     val colors = MaterialTheme.colorScheme
     AnimatedContent(
         targetState = selected,

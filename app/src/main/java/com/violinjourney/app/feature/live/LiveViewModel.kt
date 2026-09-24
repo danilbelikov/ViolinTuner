@@ -13,8 +13,8 @@ import com.violinjourney.app.core.domain.venue.Venue
 import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.settings.IntonationConfigSource
+import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
 import javax.inject.Inject
 import kotlin.math.roundToInt
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,7 +38,7 @@ class LiveViewModel @Inject constructor(
     private val takes: TakePipeline,
     private val configSource: IntonationConfigSource,
     private val runningPractice: RunningPracticeStore,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val venues: Venues,
     private val analytics: Analytics = NoOpAnalytics(),
     private val finishAsk: FinishPracticeAsk = FinishPracticeAsk(),

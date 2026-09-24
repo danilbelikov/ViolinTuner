@@ -1,6 +1,8 @@
 package com.violinjourney.app.core.domain.practice
 
-import java.time.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -12,7 +14,7 @@ class BlockRulesTest {
     private val config = PracticeConfig()
     private val min = 60_000L
     private val practice = 1_000_000_000L
-    private val day = LocalDate.of(2026, 9, 22)
+    private val day = LocalDate(2026, 9, 22)
 
     private fun at(minutes: Long) = practice + minutes * min
 
@@ -126,7 +128,7 @@ class BlockRulesTest {
     fun `marks of the day - done, played short of the goal, running - other days and taps by mistake are not counted`() {
         val saved = listOf(
             SavedBlock(1, day, at(-120), 10 * min, 10 * min, done = true, paid = true),
-            SavedBlock(1, day.minusDays(1), at(-2000), 20 * min, 20 * min, done = true, paid = true),
+            SavedBlock(1, day.minus(1, DateTimeUnit.DAY), at(-2000), 20 * min, 20 * min, done = true, paid = true),
             SavedBlock(2, day, at(-100), 7 * min, 10 * min, done = false, paid = false),
         )
         val blocks = PracticeBlocks(
@@ -174,9 +176,9 @@ class BlockRulesTest {
     fun `time by element is the last thirty days with today, today apart, the most first`() {
         val saved = listOf(
             SavedBlock(1, day, at(0), 7 * min, 10 * min, done = false, paid = false),
-            SavedBlock(1, day.minusDays(29), at(0), 30 * min, 30 * min, done = true, paid = true),
-            SavedBlock(1, day.minusDays(30), at(0), 60 * min, 60 * min, done = true, paid = true),
-            SavedBlock(2, day.minusDays(1), at(0), 50 * min, 50 * min, done = true, paid = true),
+            SavedBlock(1, day.minus(29, DateTimeUnit.DAY), at(0), 30 * min, 30 * min, done = true, paid = true),
+            SavedBlock(1, day.minus(30, DateTimeUnit.DAY), at(0), 60 * min, 60 * min, done = true, paid = true),
+            SavedBlock(2, day.minus(1, DateTimeUnit.DAY), at(0), 50 * min, 50 * min, done = true, paid = true),
         )
         assertEquals(
             listOf(BlockRules.PieceTime(2, 50 * min, 0), BlockRules.PieceTime(1, 37 * min, 7 * min)),

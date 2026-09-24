@@ -12,8 +12,8 @@ import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.core.domain.journey.JourneyRules
 import com.violinjourney.app.core.domain.venue.Venue
 import com.violinjourney.app.core.domain.venue.Venues
+import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -75,7 +75,7 @@ object JourneyReducer {
 @HiltViewModel
 class JourneyViewModel @Inject constructor(
     private val journey: JourneyRepository,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val venues: Venues,
 ) : ViewModel() {
     // The road, the arrival and the stamp are moments of the screen, not of the journey: the leg is
@@ -146,7 +146,7 @@ class StopViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val journey: JourneyRepository,
     private val config: JourneyConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val venues: Venues,
 ) : ViewModel() {
     private val stop = JourneyRoute.stops.firstOrNull { it.id == savedState.get<String>(ARG_STOP_ID) } ?: JourneyRoute.stops.first()

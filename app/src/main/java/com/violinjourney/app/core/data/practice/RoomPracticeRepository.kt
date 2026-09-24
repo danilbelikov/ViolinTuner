@@ -2,10 +2,10 @@ package com.violinjourney.app.core.data.practice
 
 import com.violinjourney.app.core.domain.practice.PracticeEntry
 import com.violinjourney.app.core.domain.practice.PracticeRepository
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalDate
 
 class RoomPracticeRepository @Inject constructor(private val dao: PracticeDao) : PracticeRepository {
     override val entries: Flow<List<PracticeEntry>> =

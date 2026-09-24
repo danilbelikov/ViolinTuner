@@ -1,8 +1,8 @@
 package com.violinjourney.app.core.domain.progress
 
-import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.datetime.LocalDate
 
 /** In-memory trophies for view model tests; behaves like the table: one trophy per mark, first date wins. */
 class FakeTrophyRepository : TrophyRepository {

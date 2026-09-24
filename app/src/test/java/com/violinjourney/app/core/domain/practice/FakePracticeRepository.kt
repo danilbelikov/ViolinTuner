@@ -1,8 +1,8 @@
 package com.violinjourney.app.core.domain.practice
 
-import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.datetime.LocalDate
 
 /** In-memory repository for view model tests; ids count up from 1. */
 class FakePracticeRepository : PracticeRepository {

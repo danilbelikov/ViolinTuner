@@ -11,10 +11,11 @@ import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.domain.progress.Profile
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.session.SessionSummary
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.YearMonth
-import java.time.ZoneId
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.YearMonth
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -24,14 +25,14 @@ import org.junit.Test
 class PracticeReducerTest {
     private val config = PracticeConfig()
     private val intonation = IntonationConfig()
-    private val zone: ZoneId = ZoneId.of("Europe/Moscow")
-    private val today: LocalDate = LocalDate.of(2026, 9, 17)
+    private val zone: TimeZone = TimeZone.of("Europe/Moscow")
+    private val today: LocalDate = LocalDate(2026, 9, 17)
 
     private fun entry(day: Int, minutes: Int) = PracticeEntry(
-        date = LocalDate.of(2026, 9, day), startedAtEpochMs = 0, durationMs = minutes * MS_PER_MINUTE, manual = false,
+        date = LocalDate(2026, 9, day), startedAtEpochMs = 0, durationMs = minutes * MS_PER_MINUTE, manual = false,
     )
 
-    private fun epoch(dateTime: String) = LocalDateTime.parse(dateTime).atZone(zone).toInstant().toEpochMilli()
+    private fun epoch(dateTime: String) = LocalDateTime.parse(dateTime).toInstant(zone).toEpochMilliseconds()
 
     private fun session(id: Long, startedAt: String) = SessionSummary(
         id = id, title = null, startedAtEpochMs = epoch(startedAt), durationMs = 60_000, a4Hz = 440.0,
@@ -43,7 +44,7 @@ class PracticeReducerTest {
         entries: List<PracticeEntry> = listOf(entry(1, 30), entry(4, 100), entry(16, 50), entry(17, 45)),
         sessions: List<SessionSummary> = emptyList(),
         runningMs: Long? = null,
-        month: YearMonth = YearMonth.of(2026, 9),
+        month: YearMonth = YearMonth(2026, 9),
         selected: LocalDate = today,
     ) = PracticeReducer.stateOf(
         entries, sessions, runningMs, month, selected, sheet = null, today, zone, config,
@@ -55,16 +56,16 @@ class PracticeReducerTest {
         val state = state()
         assertEquals(35, state.cells.size)
         assertNull(state.cells[0])
-        val day4 = state.cells.filterNotNull().single { it.date.dayOfMonth == 4 }
+        val day4 = state.cells.filterNotNull().single { it.date.day == 4 }
         assertEquals(4, day4.fillLevel)
         assertFalse(day4.isToday)
-        val day17 = state.cells.filterNotNull().single { it.date.dayOfMonth == 17 }
+        val day17 = state.cells.filterNotNull().single { it.date.day == 17 }
         assertEquals(3, day17.fillLevel)
         assertTrue(day17.isToday && day17.isSelected && !day17.isFuture)
-        val day18 = state.cells.filterNotNull().single { it.date.dayOfMonth == 18 }
+        val day18 = state.cells.filterNotNull().single { it.date.day == 18 }
         assertEquals(0, day18.fillLevel)
         assertTrue(day18.isFuture)
-        assertEquals(0, state.cells.filterNotNull().single { it.date.dayOfMonth == 3 }.fillLevel)
+        assertEquals(0, state.cells.filterNotNull().single { it.date.day == 3 }.fillLevel)
     }
 
     @Test
@@ -87,8 +88,8 @@ class PracticeReducerTest {
     @Test
     fun `the calendar cannot go past the current month`() {
         assertFalse(state().canGoForward)
-        assertTrue(state(month = YearMonth.of(2026, 8)).canGoForward)
-        assertEquals(0L, state(month = YearMonth.of(2026, 8)).summary.monthMs)
+        assertTrue(state(month = YearMonth(2026, 8)).canGoForward)
+        assertEquals(0L, state(month = YearMonth(2026, 8)).summary.monthMs)
     }
 
     @Test
@@ -96,7 +97,7 @@ class PracticeReducerTest {
         val sessions = listOf(
             session(1, "2026-09-16T10:00:00"), session(2, "2026-09-16T23:30:00"), session(3, "2026-09-17T09:00:00"),
         )
-        val state = state(sessions = sessions, selected = LocalDate.of(2026, 9, 16))
+        val state = state(sessions = sessions, selected = LocalDate(2026, 9, 16))
         assertEquals(listOf(2L, 1L), state.selected.sessions.map { it.id })
         assertEquals(50 * MS_PER_MINUTE, state.selected.totalMs)
         assertFalse(state.selected.isToday)

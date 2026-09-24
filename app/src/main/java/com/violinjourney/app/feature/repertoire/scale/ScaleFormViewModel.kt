@@ -13,8 +13,8 @@ import com.violinjourney.app.core.domain.repertoire.SectionStats
 import com.violinjourney.app.core.domain.repertoire.Tonic
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleSpec
 import com.violinjourney.app.core.domain.repertoire.scale.Scales
+import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -31,7 +31,7 @@ class ScaleFormViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val repertoire: RepertoireRepository,
     private val config: RepertoireConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val texts: ScaleTexts,
 ) : ViewModel() {
     /** Null = a new scale. */

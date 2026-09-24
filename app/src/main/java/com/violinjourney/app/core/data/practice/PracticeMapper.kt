@@ -1,7 +1,7 @@
 package com.violinjourney.app.core.data.practice
 
 import com.violinjourney.app.core.domain.practice.PracticeEntry
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 object PracticeMapper {
     fun toEntity(entry: PracticeEntry) = PracticeEntity(

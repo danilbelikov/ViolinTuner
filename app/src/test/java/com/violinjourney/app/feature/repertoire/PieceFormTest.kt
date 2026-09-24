@@ -9,14 +9,14 @@ import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.Tonic
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.repertoire.form.PieceFormDialog
 import com.violinjourney.app.feature.repertoire.form.PieceFormEffect
 import com.violinjourney.app.feature.repertoire.form.PieceFormIntent
 import com.violinjourney.app.feature.repertoire.form.PieceFormReducer
 import com.violinjourney.app.feature.repertoire.form.PieceFormViewModel
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -26,6 +26,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -38,7 +39,7 @@ import org.junit.Test
 class PieceFormTest {
     private val config = RepertoireConfig()
     private val repertoire = FakeRepertoireRepository()
-    private val clock: Clock = Clock.fixed(Instant.ofEpochMilli(7_000), ZoneOffset.UTC)
+    private val clock: WallClock = FixedWallClock(Instant.fromEpochMilliseconds(7_000), TimeZone.UTC)
 
     @Before
     fun setUp() = Dispatchers.setMain(StandardTestDispatcher())

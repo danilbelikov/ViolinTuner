@@ -1,10 +1,9 @@
 package com.violinjourney.app.core.recording.video
 
 import java.io.File
-import java.time.LocalDateTime
-import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
-import java.time.format.DateTimeParseException
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 
 /** What a video says about itself before anyone listens to it. */
 data class VideoInfo(
@@ -52,17 +51,23 @@ interface VideoFiles {
 
 /** `METADATA_KEY_DATE` of a video: «20260918T101500.000Z», always UTC. Pure, for the sake of a test. */
 object VideoDates {
-    private val format = DateTimeFormatter.ofPattern("yyyyMMdd'T'HHmmss[.SSS]'Z'")
+    private val format = Regex("""(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})(\d{2})(?:\.(\d{3}))?Z""")
 
     // Files that do not know their date say 1904-01-01 (the zero of the QuickTime epoch) — that is "no date", not a date.
     private const val EARLIEST_BELIEVABLE_EPOCH_MS = 946_684_800_000L // 2000-01-01
+    private const val NANOS_PER_MILLI = 1_000_000
+
+    private operator fun <T> List<T>.component6(): T = this[5]
 
     fun parse(text: String?): Long? {
         if (text.isNullOrBlank()) return null
+        val parts = format.matchEntire(text.trim())?.groupValues?.drop(1) ?: return null
         val millis = try {
-            LocalDateTime.parse(text.trim(), format).toInstant(ZoneOffset.UTC).toEpochMilli()
-        } catch (_: DateTimeParseException) {
-            return null
+            val (year, month, day, hour, minute, second) = parts.take(6).map(String::toInt)
+            LocalDateTime(year, month, day, hour, minute, second, (parts[6].ifEmpty { "0" }.toInt()) * NANOS_PER_MILLI)
+                .toInstant(TimeZone.UTC).toEpochMilliseconds()
+        } catch (_: IllegalArgumentException) {
+            return null // a month 13, a day 31 of April: not a date
         }
         return millis.takeIf { it >= EARLIEST_BELIEVABLE_EPOCH_MS }
     }

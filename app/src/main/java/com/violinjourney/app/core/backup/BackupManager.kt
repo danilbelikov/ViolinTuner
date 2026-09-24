@@ -2,9 +2,9 @@ package com.violinjourney.app.core.backup
 
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.di.IoDispatcher
+import com.violinjourney.app.core.time.WallClock
 import java.io.File
 import java.io.IOException
-import java.time.Clock
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.BackupCreated
 import com.violinjourney.app.core.analytics.BackupRestored
@@ -123,7 +123,7 @@ class BackupManager @Inject constructor(
     private val keepAlive: BackupKeepAlive,
     private val config: BackupConfig,
     private val speed: BackupSpeed,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val elapsed: ElapsedClock,
     @IoDispatcher private val io: CoroutineDispatcher,
     private val analytics: Analytics = NoOpAnalytics(),

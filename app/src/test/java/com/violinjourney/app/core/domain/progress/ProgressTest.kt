@@ -2,7 +2,9 @@ package com.violinjourney.app.core.domain.progress
 
 import com.violinjourney.app.core.domain.practice.PracticeEntry
 import com.violinjourney.app.core.domain.progress.ProgressConfig.Companion.MS_PER_HOUR
-import java.time.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -19,7 +21,7 @@ class ProgressTest {
         val entries = listOf(
             PracticeEntry(day, 0, 40 * minute, manual = false),
             PracticeEntry(day, 0, 20 * minute, manual = true),
-            PracticeEntry(day.minusDays(30), 0, 2 * MS_PER_HOUR, manual = true),
+            PracticeEntry(day.minus(30, DateTimeUnit.DAY), 0, 2 * MS_PER_HOUR, manual = true),
         )
         assertEquals(3 * MS_PER_HOUR, Progress.totalMs(entries))
         assertEquals(0L, Progress.totalMs(emptyList()))

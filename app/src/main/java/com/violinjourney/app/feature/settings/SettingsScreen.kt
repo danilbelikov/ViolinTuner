@@ -39,6 +39,7 @@ import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.ui.components.A4Selector
 import com.violinjourney.app.core.ui.components.TolerancePresetList
 import com.violinjourney.app.core.ui.format.Formats
+import com.violinjourney.app.core.ui.format.LOCALE
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconLabel

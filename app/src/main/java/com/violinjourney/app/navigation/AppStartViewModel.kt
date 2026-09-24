@@ -25,11 +25,11 @@ import com.violinjourney.app.core.domain.progress.TrophyRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.settings.SettingsRepository
+import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.practice.PracticePrompt
 import com.violinjourney.app.feature.practice.PracticePromptIntent
 import com.violinjourney.app.feature.practice.PracticeReducer
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -59,7 +59,7 @@ class AppStartViewModel @Inject constructor(
     private val runningPractice: RunningPracticeStore,
     private val finisher: PracticeFinisher,
     private val config: PracticeConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
     practice: PracticeRepository,
     trophies: TrophyRepository,
     awarder: TrophyAwarder,

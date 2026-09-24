@@ -1,9 +1,10 @@
 package com.violinjourney.app.core.domain.progress
 
 import com.violinjourney.app.core.domain.progress.ProgressConfig.Companion.MS_PER_HOUR
-import java.time.Clock
-import java.time.LocalDate
+import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.today
 import javax.inject.Inject
+import kotlinx.datetime.LocalDate
 
 /**
  * Gives the trophies the total time has earned. Safe to call on every change of the practice
@@ -13,10 +14,10 @@ import javax.inject.Inject
 class TrophyAwarder @Inject constructor(
     private val repository: TrophyRepository,
     private val config: ProgressConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
 ) {
     suspend fun award(totalMs: Long, awardedHours: Set<Int>) {
-        val today = LocalDate.now(clock)
+        val today = clock.today()
         due(totalMs, awardedHours, config).forEach { repository.award(it, today) }
     }
 

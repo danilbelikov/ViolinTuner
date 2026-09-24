@@ -6,12 +6,12 @@ import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.FakeStandHintStore
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.repertoire.stand.StandEffect
 import com.violinjourney.app.feature.repertoire.stand.StandIntent
 import com.violinjourney.app.feature.repertoire.stand.StandViewModel
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -22,6 +22,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -35,7 +36,7 @@ class StandViewModelTest {
     private val repertoire = FakeRepertoireRepository()
     private val files = FakeSheetFiles()
     private val hints = FakeStandHintStore()
-    private val clock: Clock = Clock.fixed(Instant.ofEpochMilli(50_000), ZoneOffset.UTC)
+    private val clock: WallClock = FixedWallClock(Instant.fromEpochMilliseconds(50_000), TimeZone.UTC)
 
     @Before
     fun setUp() = Dispatchers.setMain(StandardTestDispatcher())

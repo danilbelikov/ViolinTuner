@@ -7,10 +7,10 @@ import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.recording.FileAnalysisResult
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.settings.SettingsConfigSource
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
 import java.io.File
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
+import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -18,6 +18,7 @@ import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.TimeZone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -31,7 +32,7 @@ class VideoTakeImporterTest {
     private val sessions = FakeSessionRepository()
     private val practice = FakeRunningPracticeStore()
     private val now = Instant.parse("2026-09-20T10:00:00Z")
-    private val clock = Clock.fixed(now, ZoneId.of("Europe/Moscow"))
+    private val clock = FixedWallClock(now, TimeZone.of("Europe/Moscow"))
     private val shot = File("/cache/camera/shot.mp4")
 
     private fun TestScope.importer(speed: AnalysisSpeed = AnalysisSpeed()): Pair<VideoTakeImporter, MutableList<VideoTakeImporter.Saved>> {
@@ -68,7 +69,7 @@ class VideoTakeImporterTest {
         assertEquals(session.audioPath, session.videoPath)
         assertTrue(session.videoPath!!.endsWith(".mp4"))
         // the minute of video ended when the camera came back
-        assertEquals(now.toEpochMilli() - 60_000, session.startedAtEpochMs)
+        assertEquals(now.toEpochMilliseconds() - 60_000, session.startedAtEpochMs)
         assertEquals(listOf(VideoTakeImporter.Saved(7, session.id)), saved)
         assertTrue(files.discarded.isEmpty())
     }
@@ -101,7 +102,7 @@ class VideoTakeImporterTest {
         val (importer, _) = importer()
         importer.picked(7, "content://video/1")
         advance(6_000)
-        assertEquals(now.toEpochMilli(), sessions.sessions.value.single().startedAtEpochMs)
+        assertEquals(now.toEpochMilliseconds(), sessions.sessions.value.single().startedAtEpochMs)
     }
 
     @Test
@@ -248,7 +249,7 @@ class VideoTakeImporterTest {
 
     @Test
     fun `a shot with notes says the violin sounded when the camera came back, a picked video says nothing`() = runTest {
-        practice.start(now.toEpochMilli() - 600_000)
+        practice.start(now.toEpochMilliseconds() - 600_000)
         val (importer, _) = importer()
         importer.picked(7, "content://video/1")
         advance(6_000)
@@ -256,7 +257,7 @@ class VideoTakeImporterTest {
 
         importer.shot(7, shot)
         advance(6_000)
-        assertEquals(now.toEpochMilli(), practice.running.value!!.lastSoundEpochMs)
+        assertEquals(now.toEpochMilliseconds(), practice.running.value!!.lastSoundEpochMs)
     }
 
     @Test

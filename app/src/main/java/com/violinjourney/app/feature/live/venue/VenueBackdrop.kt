@@ -32,6 +32,8 @@ import androidx.compose.ui.unit.toIntSize
 import com.violinjourney.app.core.domain.home.HomeRules
 import com.violinjourney.app.core.domain.home.HomeState
 import com.violinjourney.app.core.domain.venue.Venue
+import com.violinjourney.app.core.time.SystemWallClock
+import com.violinjourney.app.core.time.today
 import com.violinjourney.app.feature.home.art.HomeComposer
 import com.violinjourney.app.feature.home.art.homeModeNow
 import com.violinjourney.app.feature.home.art.rememberHouseArt
@@ -42,7 +44,7 @@ import com.violinjourney.app.feature.journey.art.drawPrepared
 import com.violinjourney.app.feature.journey.art.prepare
 import com.violinjourney.app.feature.journey.art.rememberPausableSceneSeconds
 import com.violinjourney.app.feature.journey.art.rememberScene
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /** The scene a place is drawn from: the room is composed of what stands in it, a hall is read from its file (tools/journey/stage-scenes.js). */
 object VenueScenes {
@@ -71,7 +73,7 @@ private fun rememberRoomPicture(home: HomeState?): PreparedScene? {
     val art = rememberHouseArt(house ?: HomeRules.house(HomeState.EMPTY), mode)
     return remember(art, state, mode) {
         if (art == null || state == null || house == null) return@remember null
-        val composed = HomeComposer.compose(art, HomeRules.standing(state, house, false, LocalDate.now()), outside = false, mode = mode, withViolin = false)
+        val composed = HomeComposer.compose(art, HomeRules.standing(state, house, false, SystemWallClock.today()), outside = false, mode = mode, withViolin = false)
         prepare(composed.scene, mode)
     }
 }

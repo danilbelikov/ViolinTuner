@@ -14,9 +14,9 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.SectionCount
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.repertoire.SectionStats
+import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.today
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -27,13 +27,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 /** The sections of the repertoire with their counts, and the making of a new one (spec 3.22). */
 @HiltViewModel
 class SectionsViewModel @Inject constructor(
     private val repertoire: RepertoireRepository,
     private val config: RepertoireConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
     blocks: PieceBlockRepository = NoBlockHistory,
     private val practiceConfig: PracticeConfig = PracticeConfig(),
 ) : ViewModel() {
@@ -77,7 +78,7 @@ class SectionsViewModel @Inject constructor(
     private fun timeCardOf(pieces: List<Piece>, saved: List<SavedBlock>, expanded: Boolean): PieceTimeCard? {
         if (pieces.isEmpty()) return null
         val titles = pieces.associate { it.id to it.title }
-        val rows = BlockRules.timeByPiece(saved, LocalDate.now(clock), practiceConfig.pieceTimeDays)
+        val rows = BlockRules.timeByPiece(saved, clock.today(), practiceConfig.pieceTimeDays)
             .mapNotNull { time -> titles[time.pieceId]?.let { PieceTimeRow(time.pieceId, it, time.totalMs, time.todayMs) } }
             .sortedWith(compareByDescending<PieceTimeRow> { it.totalMs }.thenBy { it.title })
         return PieceTimeCard(rows, practiceConfig.pieceTimeDays, expanded)

@@ -1,7 +1,7 @@
 package com.violinjourney.app.core.domain.progress
 
-import java.time.LocalDate
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
 
 /** A trophy that has been given; it is never taken back (spec 3.13). */
 data class Trophy(

@@ -14,11 +14,13 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.Trophy
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.feature.history.HistoryReducer
-import java.time.Instant
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
 import kotlin.math.roundToInt
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.YearMonth
+import kotlinx.datetime.toLocalDateTime
+import kotlinx.datetime.yearMonth
 
 /** Entries and sessions → the practice screen (spec 3.12). Pure: "today" and the zone come from outside. */
 object PracticeReducer {
@@ -30,7 +32,7 @@ object PracticeReducer {
         selectedDate: LocalDate,
         sheet: PracticeSheet?,
         today: LocalDate,
-        zone: ZoneId,
+        zone: TimeZone,
         config: PracticeConfig,
         /** Takes among the day's recordings are named after their pieces and carry the «лучший» star (spec 3.21). */
         pieces: List<Piece> = emptyList(),
@@ -56,7 +58,7 @@ object PracticeReducer {
                 streakDays = PracticeStats.streak(totals, today),
             ),
             month = month,
-            canGoForward = month < YearMonth.from(today),
+            canGoForward = month < today.yearMonth,
             cells = PracticeStats.calendarCells(month).map { date ->
                 date?.let {
                     val total = totals[it] ?: 0L
@@ -75,7 +77,7 @@ object PracticeReducer {
                 isToday = selectedDate == today,
                 totalMs = totals[selectedDate] ?: 0L,
                 sessions = sessions
-                    .filter { Instant.ofEpochMilli(it.startedAtEpochMs).atZone(zone).toLocalDate() == selectedDate }
+                    .filter { Instant.fromEpochMilliseconds(it.startedAtEpochMs).toLocalDateTime(zone).date == selectedDate }
                     .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
                     .map { HistoryReducer.cardOf(it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds) },
             ),
@@ -101,7 +103,7 @@ object PracticeReducer {
         runningMs = null,
         todayMs = 0,
         summary = PracticeSummary(0, 0, 0),
-        month = YearMonth.from(today),
+        month = today.yearMonth,
         canGoForward = false,
         cells = emptyList(),
         selected = SelectedDay(today, isToday = true, totalMs = 0, sessions = emptyList()),

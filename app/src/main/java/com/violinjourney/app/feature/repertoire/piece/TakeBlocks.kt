@@ -62,7 +62,7 @@ import com.violinjourney.app.feature.repertoire.takesLabel
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.live_mic_unavailable
 import com.violinjourney.app.shared.resources.live_too_noisy
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
 
 private val CardCorner = 16.dp
@@ -252,7 +252,7 @@ private fun ScoreChart(scores: List<Int>) {
 @Composable
 fun TakesBlock(
     takes: List<TakeItem>,
-    zone: ZoneId,
+    zone: TimeZone,
     onIntent: (PieceIntent) -> Unit,
     modifier: Modifier = Modifier,
     actions: CardActions? = null,
@@ -311,7 +311,7 @@ fun TakesBlock(
  * a take with a name of its own keeps the name, and the date moves into the line. Once, either way.
  */
 @Composable
-private fun TakeCard(take: TakeItem, zone: ZoneId, actions: CardActions?, selected: Boolean?, onLongClick: (() -> Unit)?, onClick: () -> Unit) {
+private fun TakeCard(take: TakeItem, zone: TimeZone, actions: CardActions?, selected: Boolean?, onLongClick: (() -> Unit)?, onClick: () -> Unit) {
     val card = take.card
     val date = Formats.recordDate(card.date, card.otherYear)
     val duration = Formats.duration(card.durationMs)

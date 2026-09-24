@@ -1,7 +1,7 @@
 package com.violinjourney.app.core.data.practice
 
 import com.violinjourney.app.core.domain.practice.PracticeEntry
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
@@ -9,7 +9,7 @@ class PracticeMapperTest {
     @Test
     fun `entry survives the round trip and the date is stored as iso text`() {
         val entry = PracticeEntry(
-            date = LocalDate.of(2026, 9, 7),
+            date = LocalDate(2026, 9, 7),
             startedAtEpochMs = 1_789_000_000_000,
             durationMs = 47 * 60_000L,
             manual = true,

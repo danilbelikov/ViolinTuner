@@ -45,7 +45,7 @@ import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.history.HistoryCard
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 
 private val CardCorner = 16.dp
 private val CardRing = 1.5.dp
@@ -64,7 +64,7 @@ private const val TABULAR_FIGURES = "tnum"
 @Composable
 fun SessionCard(
     card: HistoryCard,
-    zone: ZoneId,
+    zone: TimeZone,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     actions: CardActions? = null,
@@ -201,7 +201,7 @@ fun RecordCard(
  * cards of the lists leave the date out: there it stands once, above them or in their line.
  */
 @Composable
-fun sessionTitle(title: String?, pieceTitle: String?, startedAtEpochMs: Long, zone: ZoneId): String {
+fun sessionTitle(title: String?, pieceTitle: String?, startedAtEpochMs: Long, zone: TimeZone): String {
     val date = Formats.dayAndMonth(startedAtEpochMs, zone)
     return title
         ?: pieceTitle?.let { stringResource(R.string.session_take_title, it, date) }

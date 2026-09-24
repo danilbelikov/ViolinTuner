@@ -10,19 +10,21 @@ import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.SheetPage
 import com.violinjourney.app.core.domain.repertoire.Tonic
 import com.violinjourney.app.core.domain.session.SessionSummary
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class RepertoireReducerTest {
-    private val zone: ZoneId = ZoneId.of("Europe/Moscow")
-    private val today: LocalDate = LocalDate.of(2026, 9, 19)
+    private val zone: TimeZone = TimeZone.of("Europe/Moscow")
+    private val today: LocalDate = LocalDate(2026, 9, 19)
     private val config = IntonationConfig()
 
-    private fun at(date: String, hour: Int = 12): Long = LocalDate.parse(date).atTime(hour, 0).atZone(zone).toInstant().toEpochMilli()
+    private fun at(date: String, hour: Int = 12): Long = LocalDate.parse(date).atTime(hour, 0).toInstant(zone).toEpochMilliseconds()
 
     private fun piece(id: Long, title: String, status: PieceStatus, updated: String, key: MusicalKey? = null, tempo: Int? = null) =
         Piece(id, title, "", key, tempo, status, "", createdAtEpochMs = at("2026-08-01"), updatedAtEpochMs = at(updated))
@@ -58,7 +60,7 @@ class RepertoireReducerTest {
     @Test
     fun `a card shows the day of the latest take and the number of takes, and nothing about the score`() {
         val minuet = state().cards.first()
-        assertEquals(LocalDate.of(2026, 9, 18), minuet.lastDate)
+        assertEquals(LocalDate(2026, 9, 18), minuet.lastDate)
         assertEquals(false, minuet.lastDateOtherYear)
         assertEquals(false, minuet.hasBest)
         assertEquals(2, minuet.takes)
@@ -66,7 +68,7 @@ class RepertoireReducerTest {
         assertEquals(96, minuet.tempoBpm)
 
         val concerto = state().cards.single { it.title == "Концерт" }
-        assertEquals(LocalDate.of(2026, 9, 14), concerto.lastDate)
+        assertEquals(LocalDate(2026, 9, 14), concerto.lastDate)
     }
 
     @Test

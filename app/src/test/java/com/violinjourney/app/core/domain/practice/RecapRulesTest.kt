@@ -7,7 +7,9 @@ import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.core.domain.journey.JourneyRules
 import com.violinjourney.app.core.domain.journey.TaktEarning
 import com.violinjourney.app.core.domain.progress.ProgressConfig
-import java.time.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -18,7 +20,7 @@ import org.junit.Test
 class RecapRulesTest {
     private val journeyConfig = JourneyConfig()
     private val progressConfig = ProgressConfig()
-    private val today = LocalDate.of(2026, 9, 23)
+    private val today = LocalDate(2026, 9, 23)
     private val min = 60_000L
     private val hour = 60 * min
 
@@ -55,7 +57,7 @@ class RecapRulesTest {
 
     @Test
     fun `the day's total is shown only when the day had other practice, and the streak grows only with the day's first`() {
-        val first = RecapRules.of(earning(), listOf(entry(today.minusDays(1), 0, hour), entry(today, 10, 47 * min)), JourneyProgress.EMPTY, today, journeyConfig, progressConfig)
+        val first = RecapRules.of(earning(), listOf(entry(today.minus(1, DateTimeUnit.DAY), 0, hour), entry(today, 10, 47 * min)), JourneyProgress.EMPTY, today, journeyConfig, progressConfig)
         assertNull(first.dayTotalMs)
         assertTrue(first.streakExtended)
         assertEquals(2, first.streakDays)
@@ -67,7 +69,7 @@ class RecapRulesTest {
 
     @Test
     fun `the practice's day is the latest timed entry, not a day typed in by hand`() {
-        val yesterday = today.minusDays(1)
+        val yesterday = today.minus(1, DateTimeUnit.DAY)
         // started before midnight: its day is yesterday, where there was nothing else
         val recap = RecapRules.of(
             earning(),
@@ -81,12 +83,12 @@ class RecapRulesTest {
     @Test
     fun `the level is taken before and after the practice, and a threshold crossed is a new level`() {
         // 1 h 50 min before, 2 h 37 min after: level 2 starts at 2 h
-        val recap = RecapRules.of(earning(), listOf(entry(today.minusDays(3), 0, 110 * min), entry(today, 10, 47 * min)), JourneyProgress.EMPTY, today, journeyConfig, progressConfig)
+        val recap = RecapRules.of(earning(), listOf(entry(today.minus(3, DateTimeUnit.DAY), 0, 110 * min), entry(today, 10, 47 * min)), JourneyProgress.EMPTY, today, journeyConfig, progressConfig)
         assertEquals(1, recap.levelBefore.level)
         assertEquals(2, recap.levelAfter.level)
         assertTrue(recap.levelUp)
 
-        val same = RecapRules.of(earning(), listOf(entry(today.minusDays(3), 0, 10 * min), entry(today, 10, 47 * min)), JourneyProgress.EMPTY, today, journeyConfig, progressConfig)
+        val same = RecapRules.of(earning(), listOf(entry(today.minus(3, DateTimeUnit.DAY), 0, 10 * min), entry(today, 10, 47 * min)), JourneyProgress.EMPTY, today, journeyConfig, progressConfig)
         assertFalse(same.levelUp)
         assertTrue(same.levelAfter.fraction > same.levelBefore.fraction)
     }

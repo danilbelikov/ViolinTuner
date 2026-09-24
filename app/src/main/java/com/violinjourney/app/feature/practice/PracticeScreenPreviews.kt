@@ -25,26 +25,28 @@ import com.violinjourney.app.feature.practice.components.ProfileSheetContent
 import com.violinjourney.app.feature.practice.components.RecapSheetContent
 import com.violinjourney.app.feature.practice.components.SummarySheetContent
 import com.violinjourney.app.feature.practice.components.TrophiesSheetContent
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.YearMonth
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
 
 /** The month of the design brief: September 2026, today Thursday the 17th. */
 private object Sample {
-    val zone: ZoneId = ZoneId.of("Europe/Moscow")
-    val today: LocalDate = LocalDate.of(2026, 9, 17)
+    val zone: TimeZone = TimeZone.of("Europe/Moscow")
+    val today: LocalDate = LocalDate(2026, 9, 17)
     private val minutes = mapOf(
         1 to 30, 2 to 50, 4 to 100, 5 to 15, 7 to 45, 8 to 70, 9 to 25, 11 to 125, 12 to 40, 13 to 55,
         14 to 35, 15 to 80, 16 to 50, 17 to 45,
     )
     val entries = minutes.map { (day, m) ->
-        PracticeEntry(LocalDate.of(2026, 9, day), startedAtEpochMs = 0, durationMs = m * MS_PER_MINUTE, manual = false)
+        PracticeEntry(LocalDate(2026, 9, day), startedAtEpochMs = 0, durationMs = m * MS_PER_MINUTE, manual = false)
     }
     val sessions = listOf(session(1, 15, 18, 84), session(2, 15, 19, 71))
 
     private fun session(id: Long, day: Int, hour: Int, score: Int) = SessionSummary(
         id = id, title = null,
-        startedAtEpochMs = LocalDate.of(2026, 9, day).atTime(hour, 0).atZone(zone).toInstant().toEpochMilli(),
+        startedAtEpochMs = LocalDate(2026, 9, day).atTime(hour, 0).toInstant(zone).toEpochMilliseconds(),
         durationMs = 8 * MS_PER_MINUTE + 15_000, a4Hz = 440.0, toleranceCents = 8.0, nearCents = 20.0,
         scorePercent = score, nearPercent = 100 - score, offPercent = 0, maeCents = 5.0, biasCents = -4.0,
         previewZones = listOf(Zone.IN_TUNE, Zone.NEAR, Zone.IN_TUNE, Zone.OFF, Zone.IN_TUNE, Zone.IN_TUNE, Zone.NEAR, Zone.IN_TUNE),
@@ -52,10 +54,10 @@ private object Sample {
     )
 
     /** Before September: brings the total to the 16 h 40 min of the progress brief. */
-    private val earlier = PracticeEntry(LocalDate.of(2026, 8, 30), startedAtEpochMs = 0, durationMs = 235 * MS_PER_MINUTE, manual = true)
+    private val earlier = PracticeEntry(LocalDate(2026, 8, 30), startedAtEpochMs = 0, durationMs = 235 * MS_PER_MINUTE, manual = true)
     val trophies = listOf(
-        Trophy(1, LocalDate.of(2026, 9, 2), shown = true),
-        Trophy(10, LocalDate.of(2026, 9, 13), shown = true),
+        Trophy(1, LocalDate(2026, 9, 2), shown = true),
+        Trophy(10, LocalDate(2026, 9, 13), shown = true),
     )
 
     fun state(
@@ -66,7 +68,7 @@ private object Sample {
         trophies: List<Trophy> = if (entries.isEmpty()) emptyList() else this.trophies,
         name: String = "Даня",
     ): PracticeState = PracticeReducer.stateOf(
-        entries = entries, sessions = sessions, runningMs = runningMs, month = YearMonth.of(2026, 9),
+        entries = entries, sessions = sessions, runningMs = runningMs, month = YearMonth(2026, 9),
         selectedDate = selected, sheet = sheet, today = today, zone = zone, config = PracticeConfig(),
         trophies = trophies, profile = Profile(name, avatarFile = null),
         avatarPath = null, progressConfig = ProgressConfig(),
@@ -88,13 +90,13 @@ private fun RunningPreview() {
 @Preview(name = "10c1 empty day", widthDp = 412, heightDp = 892)
 @Composable
 private fun EmptyDayPreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(selected = LocalDate.of(2026, 9, 3)), onIntent = {}, zone = Sample.zone) }
+    ViolinTheme { PracticeScreen(state = Sample.state(selected = LocalDate(2026, 9, 3)), onIntent = {}, zone = Sample.zone) }
 }
 
 @Preview(name = "10c2 day with records", widthDp = 412, heightDp = 892)
 @Composable
 private fun RecordsDayPreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(selected = LocalDate.of(2026, 9, 15)), onIntent = {}, zone = Sample.zone) }
+    ViolinTheme { PracticeScreen(state = Sample.state(selected = LocalDate(2026, 9, 15)), onIntent = {}, zone = Sample.zone) }
 }
 
 @Preview(name = "10g, 11c empty state", widthDp = 412, heightDp = 892)
@@ -112,8 +114,8 @@ private fun NoNamePreview() {
 @Preview(name = "11a2 many hours", widthDp = 412, heightDp = 892)
 @Composable
 private fun ManyHoursPreview() {
-    val years = PracticeEntry(LocalDate.of(2020, 1, 1), startedAtEpochMs = 0, durationMs = 1250 * 60 * MS_PER_MINUTE, manual = true)
-    val trophies = listOf(1, 10, 50, 100, 250, 500, 1000).map { Trophy(it, LocalDate.of(2026, 9, 2), shown = true) }
+    val years = PracticeEntry(LocalDate(2020, 1, 1), startedAtEpochMs = 0, durationMs = 1250 * 60 * MS_PER_MINUTE, manual = true)
+    val trophies = listOf(1, 10, 50, 100, 250, 500, 1000).map { Trophy(it, LocalDate(2026, 9, 2), shown = true) }
     ViolinTheme { PracticeScreen(state = Sample.state(entries = listOf(years), trophies = trophies), onIntent = {}, zone = Sample.zone) }
 }
 
@@ -142,7 +144,7 @@ private fun ProfileSheetPreview() {
 private fun GiftSheetPreview() {
     ViolinTheme {
         GiftSheetContent(
-            gift = Gift(hours = 10, index = 1, awardedDate = LocalDate.of(2026, 9, 13)),
+            gift = Gift(hours = 10, index = 1, awardedDate = LocalDate(2026, 9, 13)),
             onAccept = {},
             modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
             animated = false,
@@ -182,7 +184,7 @@ private fun SummarySheetPreview() {
 private fun EditTimeSheetPreview() {
     ViolinTheme {
         EditTimeSheetContent(
-            sheet = PracticeReducer.editSheet(LocalDate.of(2026, 9, 16), 50 * MS_PER_MINUTE, PracticeConfig()),
+            sheet = PracticeReducer.editSheet(LocalDate(2026, 9, 16), 50 * MS_PER_MINUTE, PracticeConfig()),
             stepMinutes = 5,
             onIntent = {},
         )

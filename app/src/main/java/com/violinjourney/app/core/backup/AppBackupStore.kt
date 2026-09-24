@@ -18,13 +18,13 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.TrophyRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
-import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
@@ -38,7 +38,7 @@ class AppBackupStore @Inject constructor(
     private val practice: PracticeRepository,
     private val trophies: TrophyRepository,
     private val progressConfig: ProgressConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
     @IoDispatcher private val io: CoroutineDispatcher,
 ) : BackupStore {
     private val files = context.filesDir

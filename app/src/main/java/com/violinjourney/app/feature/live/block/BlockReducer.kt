@@ -11,7 +11,7 @@ import com.violinjourney.app.core.domain.repertoire.PieceGroup
 import com.violinjourney.app.core.domain.repertoire.PieceStats
 import com.violinjourney.app.core.domain.repertoire.SectionStats
 import com.violinjourney.app.core.domain.session.SessionSummary
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 
 /**
  * The bookmark and the sheets of blocks on Live (spec 3.28). Pure: the clock, the zone and what is
@@ -30,7 +30,7 @@ object BlockReducer {
         sessions: List<SessionSummary>,
         ui: Ui,
         nowEpochMs: Long,
-        zone: ZoneId,
+        zone: TimeZone,
         config: PracticeConfig,
     ): BlockState {
         val own = BlockRules.ofPractice(running, blocks)
@@ -65,7 +65,7 @@ object BlockReducer {
         sessions: List<SessionSummary>,
         ui: Ui,
         nowEpochMs: Long,
-        zone: ZoneId,
+        zone: TimeZone,
         config: PracticeConfig,
     ): BlockSheet.Picker {
         // «today» is the day of the running practice: one that went past midnight keeps its day (spec 5.21)

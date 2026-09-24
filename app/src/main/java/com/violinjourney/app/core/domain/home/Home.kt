@@ -1,10 +1,10 @@
 package com.violinjourney.app.core.domain.home
 
 import com.violinjourney.app.core.domain.journey.JourneyProgress
-import java.time.LocalDate
-import java.time.MonthDay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.number
 
 /** The shelves of the shop (handoff 27b): what kind of thing it is, not where it stands. */
 enum class HomeGroup { INSTRUMENT, MUSIC, ROOM, LIGHT, FURNITURE, PLANT, LIFE, PET, OUTSIDE }
@@ -55,8 +55,10 @@ object HomeCatalog {
 
     /** A tree that stands from the first of December to the middle of January and waits in the wardrobe the rest of the year. */
     const val SEASONAL = "xmas"
-    val SEASON_FROM: MonthDay = MonthDay.of(12, 1)
-    val SEASON_TO: MonthDay = MonthDay.of(1, 15)
+    /** A day of the year as month × 100 + day: the season runs over New Year, from the 1st of December to the 15th of January. */
+    const val MONTH_DAY = 100
+    const val SEASON_FROM = 12 * MONTH_DAY + 1
+    const val SEASON_TO = 1 * MONTH_DAY + 15
 }
 
 /** Everything the home remembers. What stands where is [choices]: slot → item, an empty string — the place left bare on purpose. */
@@ -117,8 +119,8 @@ object HomeRules {
 
     fun inSeason(item: HomeItem, date: LocalDate): Boolean {
         if (item.id != HomeCatalog.SEASONAL) return true
-        val day = MonthDay.from(date)
-        return !day.isBefore(HomeCatalog.SEASON_FROM) || !day.isAfter(HomeCatalog.SEASON_TO)
+        val day = date.month.number * HomeCatalog.MONTH_DAY + date.day
+        return day >= HomeCatalog.SEASON_FROM || day <= HomeCatalog.SEASON_TO
     }
 
     /** The cat is on the porch when the home is seen from outside and has a porch (handoff 27e3). */

@@ -1,15 +1,19 @@
 package com.violinjourney.app.core.domain.practice
 
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
+import kotlin.time.Instant
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.YearMonth
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
+import kotlinx.datetime.toLocalDateTime
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class PracticeStatsTest {
     private val config = PracticeConfig()
-    private val zone: ZoneId = ZoneId.of("Europe/Moscow")
+    private val zone: TimeZone = TimeZone.of("Europe/Moscow")
 
     private fun entry(date: String, minutes: Int, manual: Boolean = false) = PracticeEntry(
         date = LocalDate.parse(date),
@@ -50,7 +54,7 @@ class PracticeStatsTest {
     @Test
     fun `month total takes the calendar month only`() {
         val totals = totals("2026-08-31" to 10, "2026-09-01" to 20, "2026-09-30" to 30, "2026-10-01" to 40)
-        assertEquals(50 * MS_PER_MINUTE, PracticeStats.monthTotal(totals, YearMonth.of(2026, 9)))
+        assertEquals(50 * MS_PER_MINUTE, PracticeStats.monthTotal(totals, YearMonth(2026, 9)))
     }
 
     @Test
@@ -59,10 +63,10 @@ class PracticeStatsTest {
             1 to 30, 2 to 50, 4 to 100, 5 to 15, 7 to 45, 8 to 70, 9 to 25, 11 to 125, 12 to 40, 13 to 55,
             14 to 35, 15 to 80, 16 to 50, 17 to 45,
         )
-        val totals = minutes.entries.associate { (day, m) -> LocalDate.of(2026, 9, day) to m * MS_PER_MINUTE }
-        val today = LocalDate.of(2026, 9, 17)
+        val totals = minutes.entries.associate { (day, m) -> LocalDate(2026, 9, day) to m * MS_PER_MINUTE }
+        val today = LocalDate(2026, 9, 17)
         assertEquals(210 * MS_PER_MINUTE, PracticeStats.weekTotal(totals, today))
-        assertEquals(765 * MS_PER_MINUTE, PracticeStats.monthTotal(totals, YearMonth.of(2026, 9)))
+        assertEquals(765 * MS_PER_MINUTE, PracticeStats.monthTotal(totals, YearMonth(2026, 9)))
         assertEquals(7, PracticeStats.streak(totals, today))
     }
 
@@ -107,31 +111,31 @@ class PracticeStatsTest {
     @Test
     fun `calendar grid starts on monday and is whole weeks`() {
         // September 2026 starts on a Tuesday and ends on a Wednesday.
-        val cells = PracticeStats.calendarCells(YearMonth.of(2026, 9))
+        val cells = PracticeStats.calendarCells(YearMonth(2026, 9))
         assertEquals(35, cells.size)
         assertEquals(null, cells[0])
-        assertEquals(LocalDate.of(2026, 9, 1), cells[1])
-        assertEquals(LocalDate.of(2026, 9, 30), cells[30])
+        assertEquals(LocalDate(2026, 9, 1), cells[1])
+        assertEquals(LocalDate(2026, 9, 30), cells[30])
         assertEquals(List(4) { null }, cells.takeLast(4))
         // June 2026 starts on a Monday: no leading cells.
-        assertEquals(LocalDate.of(2026, 6, 1), PracticeStats.calendarCells(YearMonth.of(2026, 6))[0])
+        assertEquals(LocalDate(2026, 6, 1), PracticeStats.calendarCells(YearMonth(2026, 6))[0])
         // February 2027 is exactly four weeks from Monday to Sunday.
-        assertEquals(28, PracticeStats.calendarCells(YearMonth.of(2027, 2)).size)
+        assertEquals(28, PracticeStats.calendarCells(YearMonth(2027, 2)).size)
     }
 
     @Test
     fun `practice date is the local date of the start`() {
         // 2026-09-17 23:30 in Moscow is 20:30 UTC.
-        val start = LocalDate.parse("2026-09-17").atTime(23, 30).atZone(zone).toInstant().toEpochMilli()
+        val start = LocalDate.parse("2026-09-17").atTime(23, 30).toInstant(zone).toEpochMilliseconds()
         assertEquals(LocalDate.parse("2026-09-17"), practiceDateOf(start, zone))
-        assertEquals(LocalDate.parse("2026-09-17"), practiceDateOf(start, ZoneId.of("UTC")))
-        assertEquals(LocalDate.parse("2026-09-18"), practiceDateOf(start, ZoneId.of("Asia/Tokyo")))
+        assertEquals(LocalDate.parse("2026-09-17"), practiceDateOf(start, TimeZone.of("UTC")))
+        assertEquals(LocalDate.parse("2026-09-18"), practiceDateOf(start, TimeZone.of("Asia/Tokyo")))
     }
 
     @Test
     fun `manual entries start at noon of their day`() {
         val start = PracticeStats.manualStartOf(LocalDate.parse("2026-09-16"), zone)
         assertEquals(LocalDate.parse("2026-09-16"), practiceDateOf(start, zone))
-        assertEquals(12, java.time.Instant.ofEpochMilli(start).atZone(zone).hour)
+        assertEquals(12, Instant.fromEpochMilliseconds(start).toLocalDateTime(zone).hour)
     }
 }

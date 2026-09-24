@@ -9,8 +9,8 @@ import com.violinjourney.app.core.domain.home.HomeState
 import com.violinjourney.app.core.domain.journey.JourneyProgress
 import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.venue.Venues
+import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -29,7 +29,7 @@ import kotlinx.coroutines.launch
 class HomeViewModel @Inject constructor(
     private val home: HomeRepository,
     journey: JourneyRepository,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val venues: Venues,
 ) : ViewModel() {
     /** What only the screen decides. */

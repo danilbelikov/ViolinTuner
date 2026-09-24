@@ -1,7 +1,9 @@
 package com.violinjourney.app.feature.history.components
 
 import com.violinjourney.app.core.domain.session.DayCount
-import java.time.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -9,9 +11,9 @@ import org.junit.Test
 
 class DailyChartMathTest {
     // 2026-09-17 is a Thursday: the fourteen days before it hold the Mondays of the 7th and the 14th.
-    private val today = LocalDate.of(2026, 9, 17)
+    private val today = LocalDate(2026, 9, 17)
 
-    private fun days(vararg counts: Int) = counts.mapIndexed { i, c -> DayCount(today.minusDays((counts.size - 1 - i).toLong()), c) }
+    private fun days(vararg counts: Int) = counts.mapIndexed { i, c -> DayCount(today.minus((counts.size - 1 - i).toLong(), DateTimeUnit.DAY), c) }
 
     @Test
     fun `an empty day has no bar, a busy one fills the plot, one recording is still seen`() {
@@ -32,7 +34,7 @@ class DailyChartMathTest {
     fun `Mondays are named under the axis, the last bar is today whatever its weekday`() {
         val fortnight = days(*IntArray(14))
         assertEquals(listOf("2026-09-07", "2026-09-14"), DailyChartMath.labelled(fortnight).map { fortnight[it].date.toString() })
-        val endingOnMonday = List(14) { DayCount(LocalDate.of(2026, 9, 14).minusDays((13 - it).toLong()), 0) }
+        val endingOnMonday = List(14) { DayCount(LocalDate(2026, 9, 14).minus((13 - it).toLong(), DateTimeUnit.DAY), 0) }
         assertEquals(listOf("2026-09-07"), DailyChartMath.labelled(endingOnMonday).map { endingOnMonday[it].date.toString() })
     }
 

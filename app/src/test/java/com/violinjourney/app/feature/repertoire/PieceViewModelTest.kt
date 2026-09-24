@@ -29,6 +29,8 @@ import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.settings.SettingsConfigSource
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.history.Selection
 import com.violinjourney.app.feature.history.SelectionIntent
 import com.violinjourney.app.feature.repertoire.piece.PieceEffect
@@ -37,9 +39,7 @@ import com.violinjourney.app.feature.repertoire.piece.PieceViewModel
 import com.violinjourney.app.feature.repertoire.piece.TakeProblem
 import com.violinjourney.app.feature.sound.SoundCaption
 import java.io.File
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -55,6 +55,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.test.testTimeSource
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -68,7 +69,7 @@ import org.junit.Test
 class PieceViewModelTest {
     private val repertoire = FakeRepertoireRepository()
     private val files = FakeSheetFiles()
-    private val clock: Clock = Clock.fixed(Instant.ofEpochMilli(9_000), ZoneOffset.UTC)
+    private val clock: WallClock = FixedWallClock(Instant.fromEpochMilliseconds(9_000), TimeZone.UTC)
     private val sessions = FakeSessionRepository()
     private val sound = FakeSoundRepository()
     private val practice = FakeRunningPracticeStore()

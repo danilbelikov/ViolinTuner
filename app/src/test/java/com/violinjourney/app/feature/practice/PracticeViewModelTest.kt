@@ -17,12 +17,9 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.domain.journey.FakeJourneyRepository
 import com.violinjourney.app.core.domain.journey.TaktEarning
+import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.journey.JourneyMotion
-import java.time.Clock
-import java.time.Instant
-import java.time.LocalDate
-import java.time.YearMonth
-import java.time.ZoneId
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -33,6 +30,11 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.YearMonth
+import kotlinx.datetime.atTime
+import kotlinx.datetime.toInstant
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -51,19 +53,17 @@ class PracticeViewModelTest {
     private val trophies = FakeTrophyRepository()
     private val profiles = FakeProfileRepository()
     private val avatarFiles = FakeAvatarFiles()
-    private val zone: ZoneId = ZoneId.of("Europe/Moscow")
+    private val zone: TimeZone = TimeZone.of("Europe/Moscow")
 
     /** A clock the test moves by hand; the ticker's delays run on the test scheduler. */
-    private class TestClock(var nowMs: Long, private val zone: ZoneId) : Clock() {
-        override fun getZone(): ZoneId = zone
-        override fun withZone(zone: ZoneId): Clock = TestClock(nowMs, zone)
-        override fun instant(): Instant = Instant.ofEpochMilli(nowMs)
+    private class TestClock(var nowMs: Long, override val zone: TimeZone) : WallClock {
+        override fun instant(): Instant = Instant.fromEpochMilliseconds(nowMs)
     }
 
     // 2026-09-17 18:00 Moscow
     private val journey = FakeJourneyRepository()
-    private val clock = TestClock(Instant.parse("2026-09-17T15:00:00Z").toEpochMilli(), zone)
-    private val today = LocalDate.of(2026, 9, 17)
+    private val clock = TestClock(Instant.parse("2026-09-17T15:00:00Z").toEpochMilliseconds(), zone)
+    private val today = LocalDate(2026, 9, 17)
 
     @Before
     fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
@@ -104,7 +104,7 @@ class PracticeViewModelTest {
         assertFalse(state.loading)
         assertFalse(state.hasHistory)
         assertNull(state.runningMs)
-        assertEquals(YearMonth.of(2026, 9), state.month)
+        assertEquals(YearMonth(2026, 9), state.month)
         assertEquals(today, state.selected.date)
     }
 
@@ -192,13 +192,13 @@ class PracticeViewModelTest {
     @Test
     fun `a practice started before midnight belongs to that day`() = runTest {
         val (viewModel, _) = viewModel()
-        clock.nowMs = Instant.parse("2026-09-17T20:50:00Z").toEpochMilli() // 23:50 Moscow
+        clock.nowMs = Instant.parse("2026-09-17T20:50:00Z").toEpochMilliseconds() // 23:50 Moscow
         viewModel.onIntent(PracticeIntent.StartClicked)
         pass(30 * MS_PER_MINUTE)
         viewModel.onIntent(PracticeIntent.StopClicked)
         viewModel.onIntent(PracticeIntent.SummarySaved)
         runCurrent()
-        assertEquals(LocalDate.of(2026, 9, 17), repository.entries.value.single().date)
+        assertEquals(LocalDate(2026, 9, 17), repository.entries.value.single().date)
     }
 
     @Test
@@ -263,33 +263,33 @@ class PracticeViewModelTest {
         val (viewModel, _) = viewModel()
         viewModel.onIntent(PracticeIntent.MonthForward)
         runCurrent()
-        assertEquals(YearMonth.of(2026, 9), viewModel.state.value.month)
+        assertEquals(YearMonth(2026, 9), viewModel.state.value.month)
         viewModel.onIntent(PracticeIntent.MonthBack)
         viewModel.onIntent(PracticeIntent.MonthBack)
         runCurrent()
-        assertEquals(YearMonth.of(2026, 7), viewModel.state.value.month)
+        assertEquals(YearMonth(2026, 7), viewModel.state.value.month)
         assertTrue(viewModel.state.value.canGoForward)
         viewModel.onIntent(PracticeIntent.MonthForward)
         runCurrent()
-        assertEquals(YearMonth.of(2026, 8), viewModel.state.value.month)
+        assertEquals(YearMonth(2026, 8), viewModel.state.value.month)
     }
 
     @Test
     fun `days are selectable up to today`() = runTest {
         val (viewModel, _) = viewModel()
-        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate.of(2026, 9, 3)))
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 3)))
         runCurrent()
-        assertEquals(LocalDate.of(2026, 9, 3), viewModel.state.value.selected.date)
-        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate.of(2026, 9, 18)))
+        assertEquals(LocalDate(2026, 9, 3), viewModel.state.value.selected.date)
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 18)))
         runCurrent()
-        assertEquals(LocalDate.of(2026, 9, 3), viewModel.state.value.selected.date)
+        assertEquals(LocalDate(2026, 9, 3), viewModel.state.value.selected.date)
     }
 
     @Test
     fun `editing a day replaces its time with a manual entry`() = runTest {
-        repository.add(PracticeEntry(LocalDate.of(2026, 9, 16), 1_000, 50 * MS_PER_MINUTE, manual = false))
+        repository.add(PracticeEntry(LocalDate(2026, 9, 16), 1_000, 50 * MS_PER_MINUTE, manual = false))
         val (viewModel, _) = viewModel()
-        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate.of(2026, 9, 16)))
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 16)))
         viewModel.onIntent(PracticeIntent.EditTimeClicked)
         runCurrent()
         assertEquals(50, (viewModel.state.value.sheet as PracticeSheet.EditTime).minutes)
@@ -298,9 +298,9 @@ class PracticeViewModelTest {
         viewModel.onIntent(PracticeIntent.EditTimeSaved)
         runCurrent()
         val (date, duration, start) = repository.replacedDays.single()
-        assertEquals(LocalDate.of(2026, 9, 16), date)
+        assertEquals(LocalDate(2026, 9, 16), date)
         assertEquals(85 * MS_PER_MINUTE, duration)
-        assertEquals(LocalDate.of(2026, 9, 16).atTime(12, 0).atZone(zone).toInstant().toEpochMilli(), start)
+        assertEquals(LocalDate(2026, 9, 16).atTime(12, 0).toInstant(zone).toEpochMilliseconds(), start)
         assertNull(viewModel.state.value.sheet)
         assertEquals(85 * MS_PER_MINUTE, viewModel.state.value.selected.totalMs)
     }

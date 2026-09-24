@@ -3,8 +3,8 @@ package com.violinjourney.app.feature.practice
 import com.violinjourney.app.core.domain.practice.PracticeBlocks
 import com.violinjourney.app.core.domain.practice.PracticeRecap
 import com.violinjourney.app.feature.history.HistoryCard
-import java.time.LocalDate
-import java.time.YearMonth
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.YearMonth
 
 /** The three figures above the calendar; null when there has never been a practice (dashes). */
 data class PracticeSummary(

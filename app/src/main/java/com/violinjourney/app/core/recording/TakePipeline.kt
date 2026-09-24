@@ -34,8 +34,8 @@ import com.violinjourney.app.core.domain.session.RecordingProgress
 import com.violinjourney.app.core.domain.session.RecordingResult
 import com.violinjourney.app.core.domain.session.SessionRecorder
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.time.WallClock
 import java.io.File
-import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.NonCancellable
@@ -70,7 +70,7 @@ class TakePipeline @Inject constructor(
     private val audioFiles: SessionAudioFiles,
     private val runningPractice: RunningPracticeStore,
     private val practiceConfig: PracticeConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
     private val watch: RecordingWatch = RecordingWatch(),
     private val practiceNotes: PracticeNotesStore = NoPracticeNotes,

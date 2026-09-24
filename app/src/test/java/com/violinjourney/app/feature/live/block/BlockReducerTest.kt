@@ -11,9 +11,11 @@ import com.violinjourney.app.core.domain.repertoire.PieceGroup
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.SectionRef
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlin.time.Instant
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.minus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -21,12 +23,12 @@ import org.junit.Test
 /** The bookmark and «Что играем» (spec 3.28, handoff 30b, 30e). */
 class BlockReducerTest {
     private val config = PracticeConfig()
-    private val zone: ZoneId = ZoneId.of("Europe/Moscow")
+    private val zone: TimeZone = TimeZone.of("Europe/Moscow")
     private val min = 60_000L
     // 2026-09-22 18:00 Moscow: the practice began at 17:26
-    private val practiceStart = Instant.parse("2026-09-22T14:26:00Z").toEpochMilli()
+    private val practiceStart = Instant.parse("2026-09-22T14:26:00Z").toEpochMilliseconds()
     private val running = RunningPractice(practiceStart, lastSoundEpochMs = null)
-    private val today = LocalDate.of(2026, 9, 22)
+    private val today = LocalDate(2026, 9, 22)
     private fun at(minutes: Long) = practiceStart + minutes * min
 
     private fun piece(id: Long, title: String, section: PieceSection, composer: String = "", updated: Long = id, groupId: Long? = null) =
@@ -44,7 +46,7 @@ class BlockReducerTest {
     /** Handoff 30e1: the scale and Kaiser done today, the minuet stopped at seven minutes, the concerto running. */
     private val saved = listOf(
         SavedBlock(3, today, at(-120), 10 * min, 10 * min, done = true, paid = true),
-        SavedBlock(1, today.minusDays(1), at(-2000), 20 * min, 20 * min, done = true, paid = true),
+        SavedBlock(1, today.minus(1, DateTimeUnit.DAY), at(-2000), 20 * min, 20 * min, done = true, paid = true),
     )
     private val blocks = PracticeBlocks(
         practiceStartedAtEpochMs = practiceStart,

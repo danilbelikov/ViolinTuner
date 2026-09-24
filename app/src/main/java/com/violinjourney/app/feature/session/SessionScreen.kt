@@ -72,8 +72,8 @@ import com.violinjourney.app.feature.sound.SoundCaption
 import com.violinjourney.app.feature.sound.captionName
 import com.violinjourney.app.feature.sound.components.BackingHeardSwitch
 import com.violinjourney.app.feature.sound.components.BackingPreparingRow
-import java.time.ZoneId
 import kotlin.math.roundToInt
+import kotlinx.datetime.TimeZone
 
 private val TopBarHeight = 56.dp
 private val BackTarget = 48.dp
@@ -98,7 +98,7 @@ fun SessionScreen(
     state: SessionState,
     onIntent: (SessionIntent) -> Unit,
     modifier: Modifier = Modifier,
-    zone: ZoneId = ZoneId.systemDefault(),
+    zone: TimeZone = TimeZone.currentSystemDefault(),
     videoSurface: VideoSurfaceCallbacks = NoVideoSurface,
 ) {
     val colors = MaterialTheme.colorScheme

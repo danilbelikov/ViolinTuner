@@ -9,10 +9,10 @@ import com.violinjourney.app.core.domain.session.SessionDetails
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.domain.session.forSession
-import java.time.Clock
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.analytics.TakeDeleted
+import com.violinjourney.app.core.time.WallClock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -21,7 +21,7 @@ class RoomSessionRepository @Inject constructor(
     private val dao: SessionDao,
     private val defaultConfig: IntonationConfig,
     private val audioFiles: SessionAudioFiles,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val analytics: Analytics = NoOpAnalytics(),
 ) : SessionRepository {
 

@@ -12,19 +12,19 @@ import com.violinjourney.app.core.backup.BackupPaths
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingFiles
+import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.IOException
 import java.io.RandomAccessFile
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
-import java.time.Clock
 import java.util.UUID
 import javax.inject.Inject
 import kotlin.math.roundToInt
 
 /** `files/backings/<uuid>.<extension>` — a folder of its own, so a copy of the data can take it whole (spec 3.20). */
-class AppBackingFiles @Inject constructor(@ApplicationContext context: Context, private val clock: Clock) : BackingFiles {
+class AppBackingFiles @Inject constructor(@ApplicationContext context: Context, private val clock: WallClock) : BackingFiles {
     private val directory = File(context.filesDir, DIRECTORY)
 
     override fun newFile(extension: String): File {
@@ -94,7 +94,7 @@ class BackingImporter @Inject constructor(
     @ApplicationContext private val context: Context,
     private val files: BackingFiles,
     private val config: BackingConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
 ) : BackingFileImporter {
     override fun import(uri: String): BackingImport {
         val source = uri.toUri()

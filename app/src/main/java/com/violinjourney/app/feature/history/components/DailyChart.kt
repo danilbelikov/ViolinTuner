@@ -30,7 +30,7 @@ import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.session.DayCount
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
-import java.time.DayOfWeek
+import kotlinx.datetime.DayOfWeek
 
 /** Geometry of the chart of recordings per day (handoff 22c, `sizes`), in dp. */
 internal object DailyChartMath {

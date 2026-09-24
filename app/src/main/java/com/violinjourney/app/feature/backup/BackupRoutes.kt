@@ -46,13 +46,15 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.violinjourney.app.R
+import com.violinjourney.app.core.time.SystemWallClock
+import com.violinjourney.app.core.time.today
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import java.io.File
-import java.time.LocalDate
-import java.time.ZoneId
 import kotlin.system.exitProcess
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 
 private const val ZIP_TYPE = "application/zip"
 private const val FILES_AUTHORITY_SUFFIX = ".files"
@@ -63,7 +65,7 @@ val BACKUP_FILE_TYPES = arrayOf(ZIP_TYPE, "application/x-zip-compressed", "appli
 /** «Интонация · копия · 20 сентября 2026.zip» — a name a person recognises in a folder a year later. */
 @Composable
 private fun backupFileName(): String {
-    val today = LocalDate.now(ZoneId.systemDefault())
+    val today = SystemWallClock.today()
     return stringResource(R.string.backup_file_name, Formats.dayAndMonth(today) + " " + today.year)
 }
 
@@ -171,10 +173,10 @@ fun DataBlock(
             state.lastBackupAtEpochMs == null -> stringResource(R.string.backup_row_never)
             state.newSinceStale > 0 -> stringResource(
                 R.string.backup_row_stale,
-                Formats.dayAndMonth(state.lastBackupAtEpochMs!!, ZoneId.systemDefault()),
+                Formats.dayAndMonth(state.lastBackupAtEpochMs!!, TimeZone.currentSystemDefault()),
                 plural(state.newSinceStale, R.string.backup_new_records_one, R.string.backup_new_records_few, R.string.backup_new_records_many),
             )
-            else -> stringResource(R.string.backup_row_last, Formats.dayAndMonth(state.lastBackupAtEpochMs!!, ZoneId.systemDefault()))
+            else -> stringResource(R.string.backup_row_last, Formats.dayAndMonth(state.lastBackupAtEpochMs!!, TimeZone.currentSystemDefault()))
         }
         DataRow(AppIcons.SaveCopy, stringResource(R.string.backup_row_save), caption, progress = running?.takeIf { !state.restoring }, onClick = onOpenBackup)
         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.surfaceContainerHigh)

@@ -30,13 +30,12 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.venue.FollowTheRoad
 import com.violinjourney.app.core.domain.venue.Venues
+import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.today
 import com.violinjourney.app.feature.journey.JourneyMotion
 import com.violinjourney.app.feature.journey.JourneyReducer
 import com.violinjourney.app.feature.journey.JourneyWindow
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
-import java.time.LocalDate
-import java.time.YearMonth
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.LevelUp
 import com.violinjourney.app.core.analytics.NoOpAnalytics
@@ -54,6 +53,12 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.YearMonth
+import kotlinx.datetime.minus
+import kotlinx.datetime.plus
+import kotlinx.datetime.yearMonth
 
 @HiltViewModel
 class PracticeViewModel @Inject constructor(
@@ -63,7 +68,7 @@ class PracticeViewModel @Inject constructor(
     sessions: SessionRepository,
     private val config: PracticeConfig,
     private val repertoire: RepertoireRepository,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val trophies: TrophyRepository,
     private val profiles: ProfileRepository,
     private val avatarFiles: AvatarFiles,
@@ -91,7 +96,7 @@ class PracticeViewModel @Inject constructor(
     /** What only the screen decides: the month shown, the day picked and the open sheet. */
     private data class Ui(val month: YearMonth, val selectedDate: LocalDate, val sheet: PracticeSheet?)
 
-    private val ui = MutableStateFlow(Ui(YearMonth.from(today()), today(), sheet = null))
+    private val ui = MutableStateFlow(Ui(today().yearMonth, today(), sheet = null))
 
     private val runningMs: Flow<Long?> = runningStore.elapsedTicker(clock)
 
@@ -140,9 +145,9 @@ class PracticeViewModel @Inject constructor(
             // hidden is only hidden: the practice runs on, saved or thrown away by a button of the sheet alone
             PracticeIntent.SummaryHidden -> ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it }
             is PracticeIntent.DaySelected -> selectDay(intent.date)
-            PracticeIntent.MonthBack -> ui.update { it.copy(month = it.month.minusMonths(1)) }
+            PracticeIntent.MonthBack -> ui.update { it.copy(month = it.month.minus(1, DateTimeUnit.MONTH)) }
             PracticeIntent.MonthForward -> ui.update {
-                if (it.month < YearMonth.from(today())) it.copy(month = it.month.plusMonths(1)) else it
+                if (it.month < today().yearMonth) it.copy(month = it.month.plus(1, DateTimeUnit.MONTH)) else it
             }
             PracticeIntent.EditTimeClicked -> openEditSheet()
             is PracticeIntent.EditTimeStepped -> updateEdit { PracticeReducer.step(it, intent.steps, config) }
@@ -354,7 +359,7 @@ class PracticeViewModel @Inject constructor(
         ui.update { state -> (state.sheet as? PracticeSheet.EditTime)?.let { state.copy(sheet = transform(it)) } ?: state }
     }
 
-    private fun today(): LocalDate = LocalDate.now(clock)
+    private fun today(): LocalDate = clock.today()
 
     private companion object {
         const val STOP_TIMEOUT_MS = 5_000L

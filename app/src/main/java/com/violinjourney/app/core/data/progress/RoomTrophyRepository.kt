@@ -2,10 +2,10 @@ package com.violinjourney.app.core.data.progress
 
 import com.violinjourney.app.core.domain.progress.Trophy
 import com.violinjourney.app.core.domain.progress.TrophyRepository
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalDate
 
 class RoomTrophyRepository @Inject constructor(private val dao: TrophyDao) : TrophyRepository {
     override val trophies: Flow<List<Trophy>> = dao.observeAll().map { rows ->

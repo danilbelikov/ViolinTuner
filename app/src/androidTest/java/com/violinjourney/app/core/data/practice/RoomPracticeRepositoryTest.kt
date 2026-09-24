@@ -5,9 +5,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.domain.practice.PracticeEntry
-import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before

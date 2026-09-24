@@ -3,7 +3,7 @@ package com.violinjourney.app.core.domain.home
 import com.violinjourney.app.core.domain.journey.Arrival
 import com.violinjourney.app.core.domain.journey.JourneyProgress
 import com.violinjourney.app.core.domain.journey.JourneyRoute
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -12,7 +12,7 @@ import org.junit.Test
 
 class HomeRulesTest {
     private val loaded = HomeState.EMPTY.copy(loaded = true)
-    private val september = LocalDate.of(2026, 9, 21)
+    private val september = LocalDate(2026, 9, 21)
     private fun item(id: String) = HomeCatalog.byId.getValue(id)
     private fun progress(balance: Long, vararg stops: String) = JourneyProgress(earned = balance, spent = 0, arrivals = stops.map { Arrival(it, 1) }, extras = emptySet())
 
@@ -98,9 +98,9 @@ class HomeRulesTest {
         val state = loaded.copy(purchased = setOf("xmas"), choices = mapOf("floorR" to "xmas"))
         fun stands(date: LocalDate) = "xmas" in HomeRules.standing(state, "rent", false, date).map { it.id }
         assertFalse(stands(september))
-        assertTrue(stands(LocalDate.of(2026, 12, 1)))
-        assertTrue(stands(LocalDate.of(2027, 1, 15)))
-        assertFalse(stands(LocalDate.of(2027, 1, 16)))
+        assertTrue(stands(LocalDate(2026, 12, 1)))
+        assertTrue(stands(LocalDate(2027, 1, 15)))
+        assertFalse(stands(LocalDate(2027, 1, 16)))
     }
 
     @Test

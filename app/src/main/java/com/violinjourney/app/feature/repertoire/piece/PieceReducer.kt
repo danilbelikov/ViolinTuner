@@ -9,8 +9,8 @@ import com.violinjourney.app.core.domain.repertoire.SheetPage
 import com.violinjourney.app.core.domain.session.RecordingProgress
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.feature.history.HistoryReducer
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 
 /** A piece and its pages → the piece screen (spec 3.15). Pure: file paths come from outside. */
 object PieceReducer {
@@ -44,7 +44,7 @@ object PieceReducer {
     )
 
     /** The takes of the piece as cards: the one marked as the best first, the rest newest first; the fresh one is marked too (spec 3.21). */
-    fun takesOf(piece: Piece, sessions: List<SessionSummary>, newTakeId: Long?, today: LocalDate, zone: ZoneId): List<TakeItem> {
+    fun takesOf(piece: Piece, sessions: List<SessionSummary>, newTakeId: Long?, today: LocalDate, zone: TimeZone): List<TakeItem> {
         val takes = PieceStats.takesOf(piece.id, sessions)
         val bestId = PieceStats.bestOf(piece, takes)?.id
         return PieceStats.listed(piece, takes).map {

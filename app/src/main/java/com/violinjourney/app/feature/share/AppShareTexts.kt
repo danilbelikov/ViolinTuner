@@ -2,15 +2,15 @@ package com.violinjourney.app.feature.share
 
 import android.content.Context
 import com.violinjourney.app.R
+import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.ui.format.Formats
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.time.Clock
 import javax.inject.Inject
 
 /** The same names the screens show: a take is called after its piece, a free session is «Сессия · …». */
 class AppShareTexts @Inject constructor(
     @ApplicationContext private val context: Context,
-    private val clock: Clock,
+    private val clock: WallClock,
 ) : ShareTexts {
 
     override fun title(title: String?, pieceTitle: String?, startedAtEpochMs: Long): String {

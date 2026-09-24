@@ -64,7 +64,7 @@ import com.violinjourney.app.feature.repertoire.sections.SectionsState
 import com.violinjourney.app.feature.repertoire.sections.PieceTimeCardView
 import com.violinjourney.app.feature.repertoire.sections.TIME_ROWS_LANDSCAPE
 import com.violinjourney.app.feature.repertoire.sections.sectionItems
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 
 private val ScreenPadding = 16.dp
 private val MaxContentWidth = 560.dp
@@ -87,7 +87,7 @@ fun HistoryScreen(
     state: HistoryState,
     onIntent: (HistoryIntent) -> Unit,
     modifier: Modifier = Modifier,
-    zone: ZoneId = ZoneId.systemDefault(),
+    zone: TimeZone = TimeZone.currentSystemDefault(),
     sections: SectionsState = SectionsState(loading = true, cards = emptyList(), total = SectionCount.EMPTY, maxNameLength = 0),
     onSectionsIntent: (SectionsIntent) -> Unit = {},
     cardActions: CardActions? = null,

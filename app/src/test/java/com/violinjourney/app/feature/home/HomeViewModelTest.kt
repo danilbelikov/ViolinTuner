@@ -12,10 +12,10 @@ import com.violinjourney.app.core.domain.journey.TaktEarning
 import com.violinjourney.app.core.domain.venue.FakeVenueStore
 import com.violinjourney.app.core.domain.venue.VenueRules
 import com.violinjourney.app.core.domain.venue.Venues
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.journey.art.SceneMode
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +28,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -67,7 +68,7 @@ class FakeHomeRepository(private val journey: FakeJourneyRepository) : HomeRepos
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModelTest {
     private val dispatcher = StandardTestDispatcher()
-    private val clock = Clock.fixed(Instant.parse("2026-09-21T10:00:00Z"), ZoneOffset.UTC)
+    private val clock = FixedWallClock(Instant.parse("2026-09-21T10:00:00Z"), TimeZone.UTC)
     private val journey = FakeJourneyRepository()
     private val home = FakeHomeRepository(journey)
     private val venueStore = FakeVenueStore(initial = VenueRules.HOME)

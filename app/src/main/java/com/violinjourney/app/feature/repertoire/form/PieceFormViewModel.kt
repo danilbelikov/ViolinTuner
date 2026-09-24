@@ -9,12 +9,12 @@ import com.violinjourney.app.core.domain.repertoire.PieceGroup
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.repertoire.SectionStats
+import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.repertoire.SectionKeys
 import com.violinjourney.app.core.domain.repertoire.PieceRules
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -30,7 +30,7 @@ class PieceFormViewModel @Inject constructor(
     savedState: SavedStateHandle,
     private val repertoire: RepertoireRepository,
     private val config: RepertoireConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
 ) : ViewModel() {
     /** Null = a new piece. */
     private val pieceId: Long? = savedState.get<Long>(ARG_PIECE_ID)?.takeIf { it != NEW_PIECE }

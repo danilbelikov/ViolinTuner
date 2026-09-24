@@ -5,7 +5,7 @@ import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.SectionCount
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleSpec
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 /** One piece in the list (spec 3.15, handoff 13b). Fields a piece does not have are null and simply not shown. */
 data class PieceCard(

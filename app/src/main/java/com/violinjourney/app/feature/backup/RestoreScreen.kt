@@ -48,18 +48,17 @@ import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.core.ui.theme.ViolinTheme
-import java.time.Instant
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
+import kotlin.time.Instant
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 private val MaxContentWidth = 560.dp
 private const val SWAP_MS = 250
 private const val WARNING_ALPHA = 0.12f
-private val TimeOfDay = DateTimeFormatter.ofPattern("HH:mm")
 
 /** «Восстановить из копии» (spec 3.20, handoff 21d, 21e): the passport of the copy, what it replaces, the bringing back, and how it ended. Stateless. */
 @Composable
-fun RestoreScreen(state: RestoreState, onIntent: (RestoreIntent) -> Unit, modifier: Modifier = Modifier, zone: ZoneId = ZoneId.systemDefault()) {
+fun RestoreScreen(state: RestoreState, onIntent: (RestoreIntent) -> Unit, modifier: Modifier = Modifier, zone: TimeZone = TimeZone.currentSystemDefault()) {
     val colors = MaterialTheme.colorScheme
     val job = state.job
     val face = when {
@@ -129,7 +128,7 @@ fun RestoreScreen(state: RestoreState, onIntent: (RestoreIntent) -> Unit, modifi
 }
 
 @Composable
-private fun Passport(state: RestoreState, zone: ZoneId, onIntent: (RestoreIntent) -> Unit) {
+private fun Passport(state: RestoreState, zone: TimeZone, onIntent: (RestoreIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     ScreenTitle(stringResource(R.string.restore_title))
     when (val stage = state.stage) {
@@ -150,7 +149,7 @@ private fun Passport(state: RestoreState, zone: ZoneId, onIntent: (RestoreIntent
 }
 
 @Composable
-private fun Ready(stage: RestoreStage.Ready, busy: Boolean, zone: ZoneId, onIntent: (RestoreIntent) -> Unit) {
+private fun Ready(stage: RestoreStage.Ready, busy: Boolean, zone: TimeZone, onIntent: (RestoreIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val copy = stage.copy
     val manifest = copy.manifest
@@ -200,7 +199,7 @@ private fun Ready(stage: RestoreStage.Ready, busy: Boolean, zone: ZoneId, onInte
 }
 
 @Composable
-private fun PassportCard(copy: BackupCandidate.Copy, manifest: BackupManifest, zone: ZoneId) {
+private fun PassportCard(copy: BackupCandidate.Copy, manifest: BackupManifest, zone: TimeZone) {
     val colors = MaterialTheme.colorScheme
     val counts = manifest.counts
     val dot = stringResource(R.string.dot_separator)
@@ -213,8 +212,8 @@ private fun PassportCard(copy: BackupCandidate.Copy, manifest: BackupManifest, z
             }
         }
         HorizontalDivider(color = colors.surfaceContainerHigh)
-        val made = Instant.ofEpochMilli(manifest.createdAtEpochMs).atZone(zone)
-        IconLine(AppIcons.Calendar, stringResource(R.string.restore_made, Formats.dayAndMonth(manifest.createdAtEpochMs, zone) + " " + made.year, TimeOfDay.format(made)))
+        val made = Instant.fromEpochMilliseconds(manifest.createdAtEpochMs).toLocalDateTime(zone)
+        IconLine(AppIcons.Calendar, stringResource(R.string.restore_made, Formats.dayAndMonth(manifest.createdAtEpochMs, zone) + " " + made.year, Formats.timeOfDay(manifest.createdAtEpochMs, zone)))
         if (manifest.device.isNotBlank()) IconLine(AppIcons.Device, manifest.device)
         IconLine(AppIcons.NoteOne, listOf(sessionsWord(counts.sessions), daysWord(counts.practiceDays), stringResource(R.string.backup_count_level, counts.level)).joinToString(dot))
         // what is not in the copy is said with the sign the app already has for "not there": one notion, one mark

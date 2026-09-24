@@ -31,7 +31,7 @@ import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.feature.practice.PracticeIntent
 import com.violinjourney.app.feature.practice.PracticePrompt
 import com.violinjourney.app.feature.practice.PracticePromptIntent
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 
 private val DialogCorner = 28.dp
 private val DialogPaddingTop = 28.dp
@@ -49,7 +49,7 @@ fun PracticePromptHost(
     prompt: PracticePrompt?,
     stepMinutes: Int,
     onIntent: (PracticePromptIntent) -> Unit,
-    zone: ZoneId = ZoneId.systemDefault(),
+    zone: TimeZone = TimeZone.currentSystemDefault(),
 ) {
     when (prompt) {
         is PracticePrompt.Forgotten -> ForgottenPracticeDialog(prompt, onIntent, zone)
@@ -72,7 +72,7 @@ fun PracticePromptHost(
 
 /** «Занятие не закончено» (handoff 10f1 with the last sound, 10f2 without). */
 @Composable
-fun ForgottenPracticeDialog(prompt: PracticePrompt.Forgotten, onIntent: (PracticePromptIntent) -> Unit, zone: ZoneId) {
+fun ForgottenPracticeDialog(prompt: PracticePrompt.Forgotten, onIntent: (PracticePromptIntent) -> Unit, zone: TimeZone) {
     val colors = MaterialTheme.colorScheme
     // Dismissing by a tap outside means "I am still practising": the safest of the answers.
     Dialog(

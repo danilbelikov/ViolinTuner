@@ -32,10 +32,10 @@ import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.settings.SettingsConfigSource
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
 import java.io.File
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
@@ -56,6 +56,7 @@ import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.test.testTimeSource
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -124,7 +125,7 @@ class LiveViewModelTest {
     }
 
     private fun TestScope.viewModel(source: PitchSource, base: IntonationConfig = IntonationConfig()): LiveViewModel {
-        val clock = Clock.fixed(startedAt, ZoneOffset.UTC)
+        val clock = FixedWallClock(startedAt, TimeZone.UTC)
         val takes = TakePipeline(
             source, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
             practiceNotes = practiceNotes, journeyConfig = JourneyConfig(notesFlushMs = 1_000),
@@ -314,7 +315,7 @@ class LiveViewModelTest {
 
         assertEquals(null, viewModel.state.value.recording)
         val saved = sessions.saved.single()
-        assertEquals(startedAt.toEpochMilli(), saved.startedAtEpochMs)
+        assertEquals(startedAt.toEpochMilliseconds(), saved.startedAtEpochMs)
         assertTrue("duration ${saved.durationMs}", saved.durationMs in 2_900..3_100)
         assertEquals(100, saved.metrics.scorePercent)
         assertEquals(LiveEffect.OpenSession(1), viewModel.effects.first())
@@ -715,7 +716,7 @@ class LiveViewModelTest {
         observe(viewModel, 300)
         assertEquals(null, viewModel.state.value.practiceMs)
 
-        practice.start(startedAt.toEpochMilli() - 754_000)
+        practice.start(startedAt.toEpochMilliseconds() - 754_000)
         advance(100)
         assertEquals(754_000L, viewModel.state.value.practiceMs)
 
@@ -755,7 +756,7 @@ class LiveViewModelTest {
 
     @Test
     fun `while a practice runs the notes are counted for the journey, and the last one is not lost when the screen leaves`() = runTest {
-        val practiceStart = startedAt.toEpochMilli() - 60_000
+        val practiceStart = startedAt.toEpochMilliseconds() - 60_000
         practice.start(practiceStart)
         val viewModel = viewModel(FakeScenario.IN_TUNE) // one long A4, in tune
         val job = observe(viewModel, 3_000)
@@ -776,16 +777,16 @@ class LiveViewModelTest {
 
     @Test
     fun `a sounding note marks the practice once per interval`() = runTest {
-        practice.start(startedAt.toEpochMilli() - 60_000)
+        practice.start(startedAt.toEpochMilliseconds() - 60_000)
         val viewModel = viewModel(FakeScenario.IN_TUNE)
         observe(viewModel, 1_500)
         // the clock is fixed, so every frame is "now": one mark, not one per frame
-        assertEquals(RunningPractice(startedAt.toEpochMilli() - 60_000, startedAt.toEpochMilli()), practice.running.value)
+        assertEquals(RunningPractice(startedAt.toEpochMilliseconds() - 60_000, startedAt.toEpochMilliseconds()), practice.running.value)
     }
 
     @Test
     fun `silence marks nothing, and nothing is marked without a practice`() = runTest {
-        practice.start(startedAt.toEpochMilli() - 60_000)
+        practice.start(startedAt.toEpochMilliseconds() - 60_000)
         val silent = viewModel(FakeScenario.SILENCE)
         observe(silent, 1_500)
         assertEquals(null, practice.running.value!!.lastSoundEpochMs)

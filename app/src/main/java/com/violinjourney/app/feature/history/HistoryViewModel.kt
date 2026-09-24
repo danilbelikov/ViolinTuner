@@ -6,9 +6,9 @@ import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.today
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -19,13 +19,14 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
+import kotlinx.datetime.LocalDate
 
 @HiltViewModel
 class HistoryViewModel @Inject constructor(
     private val repository: SessionRepository,
     private val repertoire: RepertoireRepository,
     private val config: IntonationConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val audioFiles: SessionAudioFiles,
     private val sectionAsk: HistorySectionAsk = HistorySectionAsk(),
 ) : ViewModel() {
@@ -61,7 +62,7 @@ class HistoryViewModel @Inject constructor(
     val state: StateFlow<HistoryState> =
         combine(repository.sessions, repertoire.pieces, filter, section, selection) { sessions, pieces, filter, section, selection ->
             val shown = HistoryReducer.stateOf(
-                sessions, filter, LocalDate.now(clock), clock.zone, config, section,
+                sessions, filter, clock.today(), clock.zone, config, section,
                 pieceTitles = pieces.associate { it.id to it.title },
                 bestTakeIds = pieces.mapNotNull { it.bestTakeId }.toSet(),
             )

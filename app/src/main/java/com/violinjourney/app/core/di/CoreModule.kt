@@ -4,11 +4,12 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.time.SystemWallClock
+import com.violinjourney.app.core.time.WallClock
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
-import java.time.Clock
 import javax.inject.Qualifier
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
@@ -45,7 +46,7 @@ object CoreModule {
 
     /** Wall clock for session start times and "today" in the history; tests pass a fixed one. */
     @Provides
-    fun provideClock(): Clock = Clock.systemDefaultZone()
+    fun provideClock(): WallClock = SystemWallClock
 
     @Provides
     @DefaultDispatcher

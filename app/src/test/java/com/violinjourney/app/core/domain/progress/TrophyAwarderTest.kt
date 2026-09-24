@@ -1,19 +1,20 @@
 package com.violinjourney.app.core.domain.progress
 
 import com.violinjourney.app.core.domain.progress.ProgressConfig.Companion.MS_PER_HOUR
-import java.time.Clock
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
+import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class TrophyAwarderTest {
     private val config = ProgressConfig()
-    private val zone = ZoneId.of("Europe/Moscow")
+    private val zone = TimeZone.of("Europe/Moscow")
     private val today = LocalDate.parse("2026-09-18")
-    private val clock = Clock.fixed(Instant.parse("2026-09-18T20:30:00Z"), zone)
+    private val clock = FixedWallClock(Instant.parse("2026-09-18T20:30:00Z"), zone)
 
     @Test
     fun `a mark is due from the very millisecond it is reached`() {

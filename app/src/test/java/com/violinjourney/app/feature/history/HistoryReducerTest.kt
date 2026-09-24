@@ -3,24 +3,25 @@ package com.violinjourney.app.feature.history
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Zone
 import com.violinjourney.app.core.domain.session.SessionSummary
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Test
 
 class HistoryReducerTest {
-    private val moscow = ZoneId.of("Europe/Moscow")
+    private val moscow = TimeZone.of("Europe/Moscow")
     private val config = IntonationConfig()
 
     // Thursday; the week started on Monday 2026-09-14.
-    private val today = LocalDate.of(2026, 9, 17)
+    private val today = LocalDate(2026, 9, 17)
 
     private fun session(id: Long, dateTime: String, score: Int, title: String? = null, bias: Double = -4.0) = SessionSummary(
         id = id, title = title,
-        startedAtEpochMs = LocalDateTime.parse(dateTime).atZone(moscow).toInstant().toEpochMilli(),
+        startedAtEpochMs = LocalDateTime.parse(dateTime).toInstant(moscow).toEpochMilliseconds(),
         durationMs = 495_000, a4Hz = 440.0, toleranceCents = 8.0, nearCents = 20.0,
         scorePercent = score, nearPercent = 0, offPercent = 100 - score, maeCents = 5.0, biasCents = bias,
         previewZones = listOf(Zone.IN_TUNE, Zone.NEAR), audioPath = null,
@@ -43,7 +44,7 @@ class HistoryReducerTest {
         val cards = state().cards
         assertEquals(listOf(6L, 5L, 4L, 3L, 2L, 1L), cards.map { it.id })
         assertEquals(today, cards[0].date)
-        assertEquals(LocalDate.of(2026, 9, 13), cards[2].date)
+        assertEquals(LocalDate(2026, 9, 13), cards[2].date)
         assertEquals("Гаммы D-dur", cards[1].title)
         assertNull(cards[0].title)
         assertEquals(495_000, cards[0].durationMs)

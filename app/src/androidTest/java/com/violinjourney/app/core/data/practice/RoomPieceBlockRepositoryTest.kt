@@ -5,9 +5,9 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.domain.practice.SavedBlock
-import java.time.LocalDate
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.LocalDate
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Before
@@ -19,7 +19,7 @@ import org.junit.runner.RunWith
 class RoomPieceBlockRepositoryTest {
     private lateinit var database: AppDatabase
     private lateinit var repository: RoomPieceBlockRepository
-    private val day = LocalDate.of(2026, 9, 22)
+    private val day = LocalDate(2026, 9, 22)
 
     @Before
     fun setUp() {

@@ -65,7 +65,7 @@ import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.feature.home.HomeTexts
 import com.violinjourney.app.feature.journey.art.Postcard
 import com.violinjourney.app.feature.journey.art.rememberSceneSeconds
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 
 private val TopBarHeight = 56.dp
 private val Target = 48.dp
@@ -170,7 +170,7 @@ private fun Place(state: JourneyState, postcardHeight: Dp, onIntent: (JourneyInt
     }
     Spacer(Modifier.height(14.dp))
     Text(city, color = colors.onSurface, style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold))
-    val since = state.arrivedAtEpochMs?.takeIf { state.currentIndex > 0 }?.let { stringResource(R.string.journey_since, Formats.dayAndMonth(it, ZoneId.systemDefault())) }
+    val since = state.arrivedAtEpochMs?.takeIf { state.currentIndex > 0 }?.let { stringResource(R.string.journey_since, Formats.dayAndMonth(it, TimeZone.currentSystemDefault())) }
     Text(
         text = listOfNotNull(placeOf(state.currentIndex), countryOf(state.currentIndex).takeIf { it.isNotEmpty() }, since).joinToString(" · "),
         color = colors.onSurfaceVariant,
@@ -360,7 +360,7 @@ private fun StampContent(stamp: JourneyPhase.Stamp, state: JourneyState, onInten
         Box(Modifier.size(220.dp).clip(CardShape).background(colors.surfaceContainer).border(1.dp, colors.outlineVariant, CardShape), contentAlignment = Alignment.Center) {
             StampView(
                 stopId = stamp.stop.id, index = stamp.index, visited = true, city = cityOf(stamp.index),
-                date = state.visited.lastOrNull { it.stop.id == stamp.stop.id }?.let { Formats.dayAndMonth(it.arrivedAtEpochMs, ZoneId.systemDefault()) }.orEmpty(),
+                date = state.visited.lastOrNull { it.stop.id == stamp.stop.id }?.let { Formats.dayAndMonth(it.arrivedAtEpochMs, TimeZone.currentSystemDefault()) }.orEmpty(),
                 size = 168.dp,
                 // the stamp comes down onto the page: larger and faint, then in place
                 modifier = Modifier.graphicsLayer {

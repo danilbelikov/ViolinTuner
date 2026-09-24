@@ -1,8 +1,10 @@
 package com.violinjourney.app.core.domain.practice
 
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
-import java.time.LocalDate
 import kotlin.math.ceil
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 
 /**
  * The rules of blocks — «подходы» (spec 3.28, 5.21). Pure: time is always given, never read. A block
@@ -143,7 +145,7 @@ object BlockRules {
 
     /** The time of every element played over the last [days] days, today included (spec 5.21), the most first. */
     fun timeByPiece(saved: List<SavedBlock>, today: LocalDate, days: Int): List<PieceTime> {
-        val from = today.minusDays(days - 1L)
+        val from = today.minus(days - 1L, DateTimeUnit.DAY)
         return saved.filter { it.date in from..today }
             .groupBy { it.pieceId }
             .map { (pieceId, blocks) -> PieceTime(pieceId, blocks.sumOf { it.durationMs }, blocks.filter { it.date == today }.sumOf { it.durationMs }) }

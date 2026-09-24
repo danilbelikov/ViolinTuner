@@ -10,10 +10,12 @@ import com.violinjourney.app.core.domain.Zone
 import com.violinjourney.app.core.domain.session.NewSession
 import com.violinjourney.app.core.domain.session.SessionAnalyzer
 import com.violinjourney.app.core.domain.session.SessionSample
+import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.ZonedSystemWallClock
 import java.io.File
-import java.time.Clock
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -43,7 +45,7 @@ class RoomSessionRepositoryTest {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java).build()
-        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig(), audioFiles, Clock.systemUTC())
+        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig(), audioFiles, ZonedSystemWallClock(TimeZone.UTC))
     }
 
     @After

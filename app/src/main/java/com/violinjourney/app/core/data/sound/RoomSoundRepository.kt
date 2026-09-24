@@ -5,7 +5,7 @@ import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.domain.sound.SoundSettings
 import com.violinjourney.app.core.domain.sound.UserPreset
-import java.time.Clock
+import com.violinjourney.app.core.time.WallClock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
@@ -14,7 +14,7 @@ import kotlinx.coroutines.flow.map
 class RoomSoundRepository @Inject constructor(
     private val dao: SoundDao,
     private val config: SoundConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
 ) : SoundRepository {
 
     override val default: Flow<SoundSettings> = dao.observeSettings()

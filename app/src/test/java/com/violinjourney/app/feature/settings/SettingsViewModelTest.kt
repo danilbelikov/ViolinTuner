@@ -20,11 +20,12 @@ import com.violinjourney.app.core.domain.sound.FakeSoundRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundPresets
 import com.violinjourney.app.core.settings.FakeSettingsRepository
+import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.ZonedSystemWallClock
 import com.violinjourney.app.feature.sound.SoundCaption
 import com.violinjourney.app.navigation.AppStartViewModel
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
 import com.violinjourney.app.navigation.TopLevelDestination
-import java.time.Clock
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -34,6 +35,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -111,7 +113,7 @@ class SettingsViewModelTest {
 
     private fun appStart(settings: FakeSettingsRepository, sessions: FakeSessionRepository): AppStartViewModel {
         val store = FakeRunningPracticeStore()
-        val clock = Clock.systemUTC()
+        val clock = ZonedSystemWallClock(TimeZone.UTC)
         val practice = FakePracticeRepository()
         val trophies = FakeTrophyRepository()
         return AppStartViewModel(

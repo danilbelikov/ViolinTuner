@@ -65,7 +65,7 @@ import com.violinjourney.app.feature.sound.components.BackingPreparingRow
 import com.violinjourney.app.feature.sound.components.MiniPlayer
 import com.violinjourney.app.feature.sound.components.MiniPlayerMetrics
 import com.violinjourney.app.feature.sound.components.SoundBlocks
-import java.time.ZoneId
+import kotlinx.datetime.TimeZone
 
 private val ScreenPadding = 16.dp
 private val TopBarHeight = 56.dp
@@ -86,7 +86,7 @@ fun SoundScreen(
     onIntent: (SoundIntent) -> Unit,
     modifier: Modifier = Modifier,
     config: SoundConfig = SoundConfig(),
-    zone: ZoneId = ZoneId.systemDefault(),
+    zone: TimeZone = TimeZone.currentSystemDefault(),
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -153,7 +153,7 @@ fun SoundScreen(
 }
 
 @Composable
-private fun TopBar(state: SoundState, zone: ZoneId, onIntent: (SoundIntent) -> Unit) {
+private fun TopBar(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val presetName = captionName(state.caption)
     Row(
@@ -255,7 +255,7 @@ private fun Player(state: SoundState, meters: State<SoundMeters?>, metrics: Mini
 
 /** Whose sound this is: the mode of a recording with what it means, or — for everyone — what it is listened on and whom it touches. */
 @Composable
-private fun Scope(state: SoundState, zone: ZoneId, onIntent: (SoundIntent) -> Unit) {
+private fun Scope(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     when (state.mode) {
         SoundMode.RECORDING -> {
@@ -404,7 +404,7 @@ private fun ShareButton(onIntent: (SoundIntent) -> Unit) {
 }
 
 @Composable
-private fun Dialogs(dialog: SoundDialog, state: SoundState, zone: ZoneId, onIntent: (SoundIntent) -> Unit) {
+private fun Dialogs(dialog: SoundDialog, state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val dismiss = { onIntent(SoundIntent.DialogDismissed) }
     when (dialog) {

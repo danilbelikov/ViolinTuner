@@ -11,10 +11,10 @@ import androidx.room.Transaction
 import com.violinjourney.app.core.data.repertoire.PieceEntity
 import com.violinjourney.app.core.domain.practice.PieceBlockRepository
 import com.violinjourney.app.core.domain.practice.SavedBlock
-import java.time.LocalDate
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.datetime.LocalDate
 
 /**
  * A block of a saved practice (spec 3.28, 5.21): time given to one element of the repertoire. A new

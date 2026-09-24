@@ -8,11 +8,12 @@ import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundPresets
 import com.violinjourney.app.core.domain.sound.SoundRules
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -34,7 +35,7 @@ class RoomSoundRepositoryTest {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java).build()
-        repository = RoomSoundRepository(database.soundDao(), config, Clock.fixed(Instant.ofEpochMilli(5_000), ZoneOffset.UTC))
+        repository = RoomSoundRepository(database.soundDao(), config, FixedWallClock(Instant.fromEpochMilliseconds(5_000), TimeZone.UTC))
     }
 
     @After

@@ -33,6 +33,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
+import com.violinjourney.app.core.time.SystemWallClock
+import com.violinjourney.app.core.time.today
 import com.violinjourney.app.feature.home.art.rememberHouseArt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -78,7 +80,7 @@ import com.violinjourney.app.feature.journey.art.rememberSceneCamera
 import com.violinjourney.app.feature.journey.art.rememberSceneSeconds
 import com.violinjourney.app.feature.journey.art.sceneCamera
 import com.violinjourney.app.feature.journey.cityToOf
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 
 private val TileShape = RoundedCornerShape(14.dp)
 
@@ -317,7 +319,7 @@ private fun ItemCard(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit)
         val here = HomeRules.slotIn(item.slot, ui.house) && (item.at == null || HomeRules.slotIn(item.at, ui.house))
         when {
             !here -> Text(stringResource(if (item.slot == "fire") R.string.shop_needs_chimney else R.string.shop_no_place), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            !HomeRules.inSeason(item, LocalDate.now()) -> Text(stringResource(R.string.shop_waits_season), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            !HomeRules.inSeason(item, SystemWallClock.today()) -> Text(stringResource(R.string.shop_waits_season), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         when (tag) {
             Tag.STANDING, Tag.LOCKED -> Unit

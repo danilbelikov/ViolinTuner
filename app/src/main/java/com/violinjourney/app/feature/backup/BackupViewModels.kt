@@ -14,8 +14,8 @@ import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.recording.RecordingWatch
 import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
+import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Clock
 import java.time.Duration
 import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
@@ -196,7 +196,7 @@ class DataBlockViewModel @Inject constructor(
     sessions: SessionRepository,
     private val store: BackupStore,
     private val config: BackupConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
 ) : ViewModel() {
     private val total = MutableStateFlow<Long?>(null)
 

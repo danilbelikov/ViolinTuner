@@ -3,7 +3,9 @@ package com.violinjourney.app.feature.practice
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.ProgressConfig.Companion.MS_PER_HOUR
 import com.violinjourney.app.core.domain.progress.Trophy
-import java.time.LocalDate
+import kotlinx.datetime.DateTimeUnit
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.minus
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -109,7 +111,7 @@ class ProgressReducerTest {
     fun `the gift is the lowest trophy not seen yet`() {
         assertNull(ProgressReducer.giftOf(emptyList(), config))
         assertNull(ProgressReducer.giftOf(given(1, 10), config))
-        val pending = listOf(Trophy(1, day, shown = true), Trophy(50, day, shown = false), Trophy(10, day.minusDays(1), shown = false))
-        assertEquals(Gift(hours = 10, index = 1, awardedDate = day.minusDays(1)), ProgressReducer.giftOf(pending, config))
+        val pending = listOf(Trophy(1, day, shown = true), Trophy(50, day, shown = false), Trophy(10, day.minus(1, DateTimeUnit.DAY), shown = false))
+        assertEquals(Gift(hours = 10, index = 1, awardedDate = day.minus(1, DateTimeUnit.DAY)), ProgressReducer.giftOf(pending, config))
     }
 }

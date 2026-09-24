@@ -9,9 +9,8 @@ import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
+import com.violinjourney.app.core.time.WallClock
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -24,6 +23,7 @@ import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
 import com.violinjourney.app.feature.history.HistorySection
 import com.violinjourney.app.feature.history.HistorySectionAsk
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -35,17 +35,15 @@ import org.junit.Test
 @OptIn(ExperimentalCoroutinesApi::class)
 class BlockViewModelTest {
     private val sectionAsk = HistorySectionAsk()
-    private val zone: ZoneId = ZoneId.of("Europe/Moscow")
+    private val zone: TimeZone = TimeZone.of("Europe/Moscow")
     private val min = 60_000L
 
     /** A clock the test moves by hand; the ticker's delays run on the test scheduler. */
-    private class TestClock(var nowMs: Long, private val zone: ZoneId) : Clock() {
-        override fun getZone(): ZoneId = zone
-        override fun withZone(zone: ZoneId): Clock = TestClock(nowMs, zone)
-        override fun instant(): Instant = Instant.ofEpochMilli(nowMs)
+    private class TestClock(var nowMs: Long, override val zone: TimeZone) : WallClock {
+        override fun instant(): Instant = Instant.fromEpochMilliseconds(nowMs)
     }
 
-    private val clock = TestClock(Instant.parse("2026-09-22T15:00:00Z").toEpochMilli(), zone)
+    private val clock = TestClock(Instant.parse("2026-09-22T15:00:00Z").toEpochMilliseconds(), zone)
     private val practice = FakeRunningPracticeStore()
     private val blocks = FakeBlockStore()
     private val history = FakePieceBlockRepository()

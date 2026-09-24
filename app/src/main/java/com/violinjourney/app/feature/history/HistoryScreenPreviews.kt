@@ -6,21 +6,22 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Zone
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.ui.theme.ViolinTheme
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 
 // Handoff frame 4c and the states it does not show.
 
-private val Moscow = ZoneId.of("Europe/Moscow")
-private val Today = LocalDate.of(2026, 9, 17)
+private val Moscow = TimeZone.of("Europe/Moscow")
+private val Today = LocalDate(2026, 9, 17)
 private val G = Zone.IN_TUNE
 private val Y = Zone.NEAR
 private val R = Zone.OFF
 
 private fun session(id: Long, dateTime: String, score: Int, title: String?, bias: Double, preview: List<Zone>) = SessionSummary(
     id = id, title = title,
-    startedAtEpochMs = LocalDateTime.parse(dateTime).atZone(Moscow).toInstant().toEpochMilli(),
+    startedAtEpochMs = LocalDateTime.parse(dateTime).toInstant(Moscow).toEpochMilliseconds(),
     durationMs = 495_000 + id * 61_000, a4Hz = 440.0, toleranceCents = 8.0, nearCents = 20.0,
     scorePercent = score, nearPercent = 0, offPercent = 100 - score, maeCents = 6.0, biasCents = bias,
     previewZones = preview, audioPath = null,

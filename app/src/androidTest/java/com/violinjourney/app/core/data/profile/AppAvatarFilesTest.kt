@@ -10,12 +10,12 @@ import android.media.ExifInterface
 import android.net.Uri
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.time.WallClock
 import java.io.File
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
@@ -36,10 +36,9 @@ class AppAvatarFilesTest {
     private val directory = File(context.filesDir, "profile")
     private val source = File(context.cacheDir, "avatar-source.jpg")
     private var now = 1_000L
-    private val clock = object : Clock() {
-        override fun getZone() = ZoneOffset.UTC
-        override fun withZone(zone: java.time.ZoneId?) = this
-        override fun instant(): Instant = Instant.ofEpochMilli(now)
+    private val clock = object : WallClock {
+        override val zone = TimeZone.UTC
+        override fun instant(): Instant = Instant.fromEpochMilliseconds(now)
     }
     private val files = AppAvatarFiles(context, Dispatchers.IO, clock)
 

@@ -1,9 +1,10 @@
 package com.violinjourney.app.core.domain.practice
 
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneId
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.Flow
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toLocalDateTime
 
 /**
  * A finished practice. [date] is the local date of its start, fixed when it was saved: it does
@@ -29,8 +30,8 @@ data class RunningPractice(
 }
 
 /** The day a practice started on belongs to, in the zone the device was in at that moment. */
-fun practiceDateOf(startedAtEpochMs: Long, zone: ZoneId): LocalDate =
-    Instant.ofEpochMilli(startedAtEpochMs).atZone(zone).toLocalDate()
+fun practiceDateOf(startedAtEpochMs: Long, zone: TimeZone): LocalDate =
+    Instant.fromEpochMilliseconds(startedAtEpochMs).toLocalDateTime(zone).date
 
 interface PracticeRepository {
     /** Every saved practice, oldest first. Sums are taken in memory: a year is a few hundred rows. */

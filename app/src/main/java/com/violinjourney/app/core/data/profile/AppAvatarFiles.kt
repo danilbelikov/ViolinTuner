@@ -5,10 +5,10 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.core.net.toUri
 import com.violinjourney.app.core.di.IoDispatcher
+import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
 import java.io.IOException
-import java.time.Clock
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -17,7 +17,7 @@ import kotlinx.coroutines.withContext
 class AppAvatarFiles @Inject constructor(
     @ApplicationContext private val context: Context,
     @IoDispatcher private val io: CoroutineDispatcher,
-    private val clock: Clock,
+    private val clock: WallClock,
 ) : AvatarFiles {
     private val directory = File(context.filesDir, DIRECTORY)
 

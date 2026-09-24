@@ -9,18 +9,19 @@ import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeFinisher
 import com.violinjourney.app.core.domain.practice.SavedBlock
-import java.time.Clock
-import java.time.Instant
-import java.time.LocalDate
-import java.time.ZoneOffset
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
+import kotlin.time.Instant
 import kotlinx.coroutines.test.runTest
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /** A saved practice pays for the road (spec 5.17): clean notes and minutes at the stand. */
 class PracticeEarnsTaktsTest {
-    private val clock: Clock = Clock.fixed(Instant.ofEpochMilli(9_000_000), ZoneOffset.UTC)
+    private val clock: WallClock = FixedWallClock(Instant.fromEpochMilliseconds(9_000_000), TimeZone.UTC)
     private val practice = FakePracticeRepository()
     private val store = FakeRunningPracticeStore()
     private val notes = FakePracticeNotesStore()
@@ -80,13 +81,13 @@ class PracticeEarnsTaktsTest {
         assertEquals(38 * 2 + 2 * 30, earning.takts)
         assertEquals(listOf(1L to true, 2L to true, 1L to false, 3L to false), history.blocks.value.map { it.pieceId to it.paid })
         assertEquals(listOf(true, true, true, false), history.blocks.value.map { it.done })
-        assertEquals(LocalDate.of(1970, 1, 1), history.blocks.value.first().date)
+        assertEquals(LocalDate(1970, 1, 1), history.blocks.value.first().date)
         assertEquals(null, blocks.blocks.value)
     }
 
     @Test
     fun `an element paid for earlier that day brings no second thirty`() = runTest {
-        history.blocks.value = listOf(SavedBlock(1, LocalDate.of(1970, 1, 1), 0, 10 * min, 10 * min, done = true, paid = true, id = 1))
+        history.blocks.value = listOf(SavedBlock(1, LocalDate(1970, 1, 1), 0, 10 * min, 10 * min, done = true, paid = true, id = 1))
         store.start(2_000_000)
         play(2_000_000, pieceId = 1, goalMinutes = 5, atMinute = 0)
         assertTrue(finisher.save(2_000_000, durationMs = 5 * min) != null)

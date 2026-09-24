@@ -15,10 +15,10 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.SheetPage
 import com.violinjourney.app.core.domain.repertoire.Tonic
-import java.time.Clock
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.analytics.PieceAdded
+import com.violinjourney.app.core.time.WallClock
 import javax.inject.Inject
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -27,7 +27,7 @@ class RoomRepertoireRepository @Inject constructor(
     private val dao: RepertoireDao,
     private val files: SheetFiles,
     private val config: RepertoireConfig,
-    private val clock: Clock,
+    private val clock: WallClock,
     private val analytics: Analytics = NoOpAnalytics(),
 ) : RepertoireRepository {
     override val pieces: Flow<List<Piece>> = dao.observePieces().map { rows -> rows.map(RepertoireMapper::toPiece) }

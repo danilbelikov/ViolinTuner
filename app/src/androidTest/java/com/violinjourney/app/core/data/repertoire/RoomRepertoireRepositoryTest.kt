@@ -12,12 +12,13 @@ import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.Tonic
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
 import java.io.File
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneOffset
+import kotlin.time.Instant
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -53,7 +54,7 @@ class RoomRepertoireRepositoryTest {
     private lateinit var repository: RoomRepertoireRepository
     private val files = RecordingSheetFiles()
     private val config = RepertoireConfig()
-    private val clock: Clock = Clock.fixed(Instant.ofEpochMilli(50_000), ZoneOffset.UTC)
+    private val clock: WallClock = FixedWallClock(Instant.fromEpochMilliseconds(50_000), TimeZone.UTC)
 
     @Before
     fun setUp() {

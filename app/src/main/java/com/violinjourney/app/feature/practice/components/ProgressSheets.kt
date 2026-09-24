@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.sp
 import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.progress.Profile
 import com.violinjourney.app.core.ui.format.Formats
+import com.violinjourney.app.core.ui.format.LOCALE
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconLabel

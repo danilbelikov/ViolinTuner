@@ -2,6 +2,7 @@ package com.violinjourney.app.feature.sound
 
 import com.violinjourney.app.core.domain.sound.SoundUnit
 import com.violinjourney.app.core.ui.format.Formats
+import com.violinjourney.app.core.ui.format.LOCALE
 import kotlin.math.abs
 import kotlin.math.roundToInt
 

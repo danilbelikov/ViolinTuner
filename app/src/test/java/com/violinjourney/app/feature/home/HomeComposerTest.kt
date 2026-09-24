@@ -10,7 +10,7 @@ import com.violinjourney.app.feature.journey.art.SceneLayer
 import com.violinjourney.app.feature.journey.art.SceneMode
 import com.violinjourney.app.feature.journey.art.ScenePalette
 import java.io.File
-import java.time.LocalDate
+import kotlinx.datetime.LocalDate
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
@@ -19,7 +19,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class HomeComposerTest {
-    private val today = LocalDate.of(2026, 9, 21)
+    private val today = LocalDate(2026, 9, 21)
     private fun art(house: String, mode: SceneMode) = HouseArt.parse(File("src/main/assets/home/$house.${mode.suffix}.scene").readText())
     private val loaded = HomeState.EMPTY.copy(loaded = true)
     private fun everything() = loaded.copy(purchased = HomeCatalog.items.map { it.id }.toSet())

@@ -7,9 +7,10 @@ import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.domain.session.NewSession
 import com.violinjourney.app.core.domain.session.SessionAnalyzer
 import com.violinjourney.app.core.domain.session.SessionSample
-import java.time.Clock
-import java.time.Instant
-import java.time.ZoneId
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
+import kotlin.time.Duration.Companion.seconds
+import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.first
@@ -20,6 +21,8 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -32,7 +35,7 @@ class HistoryViewModelTest {
     private val repertoire = FakeRepertoireRepository()
     private val config = IntonationConfig()
     private val now = Instant.parse("2026-09-17T09:00:00Z")
-    private val clock = Clock.fixed(now, ZoneId.of("Europe/Moscow"))
+    private val clock = FixedWallClock(now, TimeZone.of("Europe/Moscow"))
 
     private object NoFiles : com.violinjourney.app.core.audio.recording.SessionAudioFiles {
         override fun newFile(): java.io.File = error("not used")
@@ -52,7 +55,7 @@ class HistoryViewModelTest {
         val analysis = SessionAnalyzer.analyze(samples, config)
         return repository.save(
             NewSession(
-                startedAtEpochMs = now.minusSeconds(daysAgo * 86_400).toEpochMilli(), durationMs = 3_000, config = config,
+                startedAtEpochMs = (now - (daysAgo * 86_400).seconds).toEpochMilliseconds(), durationMs = 3_000, config = config,
                 samples = samples, metrics = analysis.metrics!!,
                 previewZones = SessionAnalyzer.previewZones(analysis.segments, config), audioPath = null, pieceId = pieceId,
             ),
@@ -76,7 +79,7 @@ class HistoryViewModelTest {
         runCurrent()
         val state = viewModel.state.value
         assertEquals(2, state.totalCount)
-        assertEquals(listOf(java.time.LocalDate.of(2026, 9, 17), java.time.LocalDate.of(2026, 9, 7)), state.cards.map { it.date })
+        assertEquals(listOf(LocalDate(2026, 9, 17), LocalDate(2026, 9, 7)), state.cards.map { it.date })
         assertEquals(1, state.days.last().count)
         assertEquals(2, state.days.sumOf { it.count })
     }

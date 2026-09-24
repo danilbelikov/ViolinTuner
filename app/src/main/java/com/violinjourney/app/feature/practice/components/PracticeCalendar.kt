@@ -56,8 +56,8 @@ import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.practice.CalendarCell
-import java.time.LocalDate
-import java.time.YearMonth
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.YearMonth
 
 /** Cell geometry of the two layouts (handoff `sizes`: «Клетка», «Landscape экрана»). */
 @Immutable
@@ -267,7 +267,7 @@ private fun DayCell(cell: CalendarCell, metrics: CalendarMetrics, onClick: () ->
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = cell.date.dayOfMonth.toString(),
+            text = cell.date.day.toString(),
             modifier = Modifier.offset(y = if (filled) -NumberLiftWithDot else 0.dp),
             color = numberColor,
             style = MaterialTheme.typography.bodyLarge.copy(
