@@ -1,9 +1,9 @@
 package com.violinjourney.app.feature.live
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class LiveLayoutMathTest {
     // status row 48 + the gap between it and the ring 20 (handoff Live 2)
@@ -36,7 +36,7 @@ class LiveLayoutMathTest {
     }
 
     @Test
-    fun `landscape ring leaves room for its halo inside the panel, and a note is never enlarged`() {
+    fun `landscape ring leaves room for its halo inside the panel — and a note is never enlarged`() {
         val ring = LiveLayoutMath.designRing(landscape = true, tuning = false, noMic = false)
         assertEquals(260f, ring, 0f)
         // Handoff 12f: the halo of a 260 ring is 380 across, the panel is 400.

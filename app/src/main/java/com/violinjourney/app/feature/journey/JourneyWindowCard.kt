@@ -29,6 +29,7 @@ import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.home.HomeRules
 import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.core.domain.venue.Venue
+import com.violinjourney.app.core.domain.venue.stopIndex
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.feature.home.HomeTexts
 import com.violinjourney.app.feature.journey.art.Postcard

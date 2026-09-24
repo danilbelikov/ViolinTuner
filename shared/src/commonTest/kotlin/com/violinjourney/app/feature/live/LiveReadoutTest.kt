@@ -6,9 +6,9 @@ import com.violinjourney.app.core.domain.IntonationReading
 import com.violinjourney.app.core.domain.Note
 import com.violinjourney.app.core.domain.PitchFrame
 import com.violinjourney.app.core.domain.Zone
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class LiveReadoutTest {
     private val readout = LiveReadout(IntonationConfig())
@@ -39,16 +39,16 @@ class LiveReadoutTest {
     }
 
     @Test
-    fun `the count moves on a note after silence and on a change of note, not while a note lasts`() {
+    fun `the count moves on a note after silence and on a change of note — not while a note lasts`() {
         val first = sounding(0, active(69)).noteSerial
         assertEquals(first, sounding(10, active(69, cents = 3.0)).noteSerial)
-        assertEquals("held through a pitch gap is the same note", first, sounding(20, active(69, held = true)).noteSerial)
+        assertEquals(first, sounding(20, active(69, held = true)).noteSerial, "held through a pitch gap is the same note")
 
         val second = sounding(30, active(71)).noteSerial
         assertEquals(first + 1, second)
 
         readout.signalOf(frame(40), IntonationReading.Silence)
-        assertEquals("the same note again, after a rest", second + 1, sounding(50, active(71)).noteSerial)
+        assertEquals(second + 1, sounding(50, active(71)).noteSerial, "the same note again, after a rest")
     }
 
     @Test
@@ -68,12 +68,12 @@ class LiveReadoutTest {
     }
 
     @Test
-    fun `the level follows the loudness of the frames, through silence too`() {
+    fun `the level follows the loudness of the frames — through silence too`() {
         val loud = sounding(0, active(69), rms = 0.3).level
         assertTrue(loud > 0.9f)
         readout.signalOf(frame(10, rms = 0.0005), IntonationReading.Silence)
         val after = sounding(20, active(69), rms = 0.3).level
-        assertTrue("one quiet frame barely dents it", after > 0.85f)
+        assertTrue(after > 0.85f, "one quiet frame barely dents it")
     }
 
     @Test

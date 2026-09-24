@@ -7,9 +7,9 @@ import com.violinjourney.app.core.domain.Note
 import com.violinjourney.app.core.domain.TargetMode
 import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.domain.Zone
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.Test
 
 class LiveReducerTest {
     @Test
@@ -23,7 +23,7 @@ class LiveReducerTest {
     }
 
     @Test
-    fun `tap pins a string, second tap on it returns to auto, tap on another moves the lock`() {
+    fun `tap pins a string — second tap on it returns to auto — tap on another moves the lock`() {
         val auto = LiveTarget(LiveMode.TUNING)
         val lockedD = LiveReducer.clickString(auto, ViolinString.D4)
         assertEquals(ViolinString.D4, lockedD.lockedString)
@@ -38,7 +38,7 @@ class LiveReducerTest {
     }
 
     @Test
-    fun `switching the mode drops the lock, reselecting the same mode keeps it`() {
+    fun `switching the mode drops the lock — reselecting the same mode keeps it`() {
         val lockedD = LiveTarget(LiveMode.TUNING, ViolinString.D4)
         assertEquals(LiveTarget(LiveMode.PLAY), LiveReducer.selectMode(lockedD, LiveMode.PLAY))
         assertEquals(lockedD, LiveReducer.selectMode(lockedD, LiveMode.TUNING))
@@ -85,7 +85,7 @@ class LiveReducerTest {
     }
 
     @Test
-    fun `a miss glows less than a near miss, and both less than a hit`() {
+    fun `a miss glows less than a near miss — and both less than a hit`() {
         assertEquals(0.25f, LiveReducer.glowTargetOf(sounding(Zone.OFF), config), 0f)
         assertEquals(0.4f, LiveReducer.glowTargetOf(sounding(Zone.NEAR), config), 0f)
         assertEquals(0.6f, LiveReducer.glowTargetOf(sounding(Zone.IN_TUNE), config), 0f)
@@ -99,7 +99,7 @@ class LiveReducerTest {
     }
 
     @Test
-    fun `the status line says whether one may play, and hides while a note sounds`() {
+    fun `the status line says whether one may play — and hides while a note sounds`() {
         val play = LiveTarget(LiveMode.PLAY)
         assertEquals(StatusLine(StatusDot.READY, StatusMessage.PLAY), LiveReducer.statusLineOf(play, LiveSignal.Silence))
         assertEquals(StatusLine(StatusDot.BLOCKED, StatusMessage.TOO_NOISY), LiveReducer.statusLineOf(play, LiveSignal.TooNoisy))
@@ -108,11 +108,11 @@ class LiveReducerTest {
             LiveReducer.statusLineOf(play, LiveSignal.MicUnavailable),
         )
         assertNull(LiveReducer.statusLineOf(play, sounding(Zone.NEAR)))
-        assertNull("the permission prompt speaks for itself", LiveReducer.statusLineOf(play, LiveSignal.NoMicPermission))
+        assertNull(LiveReducer.statusLineOf(play, LiveSignal.NoMicPermission), "the permission prompt speaks for itself")
     }
 
     @Test
-    fun `in tuning mode the line is the hint, and trouble replaces the hint`() {
+    fun `in tuning mode the line is the hint — and trouble replaces the hint`() {
         val auto = LiveTarget(LiveMode.TUNING)
         val locked = LiveTarget(LiveMode.TUNING, lockedString = ViolinString.D4)
         assertEquals(StatusLine(StatusDot.READY, StatusMessage.TUNE_AUTO), LiveReducer.statusLineOf(auto, LiveSignal.Silence))

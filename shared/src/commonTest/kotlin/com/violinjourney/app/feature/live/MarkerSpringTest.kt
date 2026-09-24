@@ -1,15 +1,15 @@
 package com.violinjourney.app.feature.live
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class MarkerSpringTest {
     private fun spring(start: Float = 0.5f) = MarkerSpring(dampingRatio = 0.8f, stiffness = 600f, start = start)
 
     @Test
-    fun `it reaches a target that stands still, quickly and without flying past it far`() {
+    fun `it reaches a target that stands still — quickly and without flying past it far`() {
         val spring = spring()
         var farthest = 0.5f
         repeat(30) {
@@ -17,7 +17,7 @@ class MarkerSpringTest {
             farthest = maxOf(farthest, spring.position)
         }
         assertEquals(0.8f, spring.position, 0.002f)
-        assertTrue("overshoot was ${farthest - 0.8f}", farthest < 0.8f + 0.3f * 0.03f)
+        assertTrue(farthest < 0.8f + 0.3f * 0.03f, "overshoot was ${farthest - 0.8f}")
         assertTrue(spring.isAtRest(0.8f))
     }
 
@@ -30,7 +30,7 @@ class MarkerSpringTest {
             target += 0.12f * 0.016f
             spring.advance(target, 16f)
         }
-        assertTrue("lag was ${target - spring.position}", target - spring.position < 0.02f)
+        assertTrue(target - spring.position < 0.02f, "lag was ${target - spring.position}")
         assertFalse(spring.isAtRest(target + 0.1f))
     }
 
@@ -54,7 +54,7 @@ class MarkerSpringTest {
     }
 
     @Test
-    fun `no time, no move`() {
+    fun `no time — no move`() {
         val spring = spring()
         spring.advance(1f, 0f)
         assertEquals(0.5f, spring.position, 0f)

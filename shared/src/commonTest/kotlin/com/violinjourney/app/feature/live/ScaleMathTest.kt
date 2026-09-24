@@ -1,8 +1,8 @@
 package com.violinjourney.app.feature.live
 
 import com.violinjourney.app.core.domain.IntonationConfig
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.Test
 
 class ScaleMathTest {
     private val scale = ScaleSpec(IntonationConfig())
@@ -13,7 +13,7 @@ class ScaleMathTest {
     }
 
     @Test
-    fun `marker moves linearly, sharp to the right`() {
+    fun `marker moves linearly — sharp to the right`() {
         assertEquals(0.75, ScaleMath.markerFraction(25.0, scale), EPS)
         assertEquals(0.25, ScaleMath.markerFraction(-25.0, scale), EPS)
         assertEquals(1.0, ScaleMath.markerFraction(50.0, scale), EPS)

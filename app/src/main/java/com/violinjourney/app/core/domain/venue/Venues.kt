@@ -10,22 +10,12 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 
-/**
- * Where the player is (spec 3.27): at home, or in a city the road has reached. Live takes place
- * there — in the room, or on the stage of the city's hall — and the window on «Занятия» shows it.
- */
-sealed interface Venue {
-    /** The index of the stop on the route; home is the stop 0. */
-    val stopIndex: Int
-
-    data object Home : Venue {
-        override val stopIndex: Int = 0
+/** The index of the stop on the route; home is the stop 0. */
+val Venue.stopIndex: Int
+    get() = when (this) {
+        Venue.Home -> 0
+        is Venue.Hall -> JourneyRoute.indexOf(stopId)
     }
-
-    data class Hall(val stopId: String) : Venue {
-        override val stopIndex: Int get() = JourneyRoute.indexOf(stopId)
-    }
-}
 
 /**
  * How «where we are» is kept: null — wherever the road stands; [VenueRules.HOME]; or the id of a

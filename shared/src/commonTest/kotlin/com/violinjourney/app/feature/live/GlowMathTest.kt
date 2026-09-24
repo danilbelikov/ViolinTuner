@@ -1,9 +1,9 @@
 package com.violinjourney.app.feature.live
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class GlowMathTest {
     @Test
@@ -33,7 +33,7 @@ class GlowMathTest {
     }
 
     @Test
-    fun `only the halo breathes, by four percent, and the layout knows how far it reaches`() {
+    fun `only the halo breathes — by four percent — and the layout knows how far it reaches`() {
         assertEquals(1.4f, GlowMath.haloRadius(0f), 0f)
         assertEquals(1.456f, GlowMath.haloRadius(1f), 1e-6f)
         assertEquals(1.456f, GlowMath.haloRadius(3f), 1e-6f)
@@ -55,14 +55,14 @@ class GlowMathTest {
     }
 
     @Test
-    fun `the inner halo is a rim, not a fill`() {
+    fun `the inner halo is a rim — not a fill`() {
         val stops = GlowMath.innerStops(1f)
         assertEquals(listOf(0f, 0.6f, 0.88f, 1f), stops.map { it.position })
         assertEquals(listOf(0f, 0f, 0.07f, 0.18f), stops.map { it.alpha })
     }
 
     @Test
-    fun `a wave leaves the ring, reaches a third beyond and is gone by then`() {
+    fun `a wave leaves the ring — reaches a third beyond and is gone by then`() {
         assertEquals(1f, GlowMath.waveRadius(0f), 0f)
         assertEquals(1.35f, GlowMath.waveRadius(1f), 1e-6f)
         assertEquals(0.25f, GlowMath.waveAlpha(GlowMath.WAVE_ALPHA_NEW_NOTE, 0f), 0f)
@@ -77,10 +77,10 @@ class GlowMathTest {
     }
 
     @Test
-    fun `the glow arrives within its time, up faster than down`() {
+    fun `the glow arrives within its time — up faster than down`() {
         assertEquals(0.6f, run(0f, 0.6f, 500), 0.6f * 0.06f)
         assertTrue(run(0f, 1f, 250) > 0.7f)
-        assertTrue("half a second is not enough on the way down", run(1f, 0f, 500) > 0.15f)
+        assertTrue(run(1f, 0f, 500) > 0.15f, "half a second is not enough on the way down")
         assertEquals(0f, run(1f, 0f, 900), 0.06f)
     }
 
@@ -88,7 +88,7 @@ class GlowMathTest {
     fun `a slip out of the zone for a fifth of a second leaves the ring lit`() {
         // Handoff 12h2: in tune and held, 200 ms of "near", back in tune.
         val dipped = run(1f, 0.4f, 200)
-        assertTrue("was $dipped", dipped > 0.65f)
+        assertTrue(dipped > 0.65f, "was $dipped")
         assertTrue(run(dipped, 0.6f, 100) > 0.6f)
     }
 
@@ -101,7 +101,7 @@ class GlowMathTest {
     }
 
     @Test
-    fun `no time, no change`() {
+    fun `no time — no change`() {
         assertEquals(0.3f, GlowMath.follow(0.3f, 1f, 0f, 500, 900), 0f)
         assertEquals(0.3f, GlowMath.follow(0.3f, 1f, -5f, 500, 900), 0f)
     }
@@ -113,7 +113,7 @@ class GlowMathTest {
         assertFalse(gate.tryStart(1_250))
         assertFalse(gate.tryStart(1_599))
         assertTrue(gate.tryStart(1_600))
-        assertFalse("a refused wave does not push the next one away", gate.tryStart(1_700))
+        assertFalse(gate.tryStart(1_700), "a refused wave does not push the next one away")
         assertTrue(gate.tryStart(2_200))
     }
 }
