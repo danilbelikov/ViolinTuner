@@ -11,6 +11,10 @@ plugins {
 // microphone: for emulators and for checking every Live state without an instrument.
 val fakePitch = providers.gradleProperty("fakePitch").map(String::toBoolean).getOrElse(false)
 
+// `-PfakeScenario=IN_TUNE` (with `-PfakePitch=true`) plays one steady scenario of FakeScenario instead of
+// the looping DEMO: a screen that stands still, to compare pixel by pixel before and after a change.
+val fakeScenario = providers.gradleProperty("fakeScenario").getOrElse("DEMO")
+
 // `-PplainLive=true` builds Live without the room and the halls behind it (spec 3.27): the plain dark
 // field of before, to compare the two from a music stand until one of them is chosen.
 val plainLive = providers.gradleProperty("plainLive").map(String::toBoolean).getOrElse(false)
@@ -51,6 +55,7 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("boolean", "FAKE_PITCH_SOURCE", fakePitch.toString())
+        buildConfigField("String", "FAKE_SCENARIO", "\"$fakeScenario\"")
         buildConfigField("boolean", "PLAIN_LIVE", plainLive.toString())
         buildConfigField("String", "APPMETRICA_KEY", "\"$appMetricaKey\"")
         buildConfigField("boolean", "ANALYTICS_IN_DEBUG", analyticsDebug.toString())

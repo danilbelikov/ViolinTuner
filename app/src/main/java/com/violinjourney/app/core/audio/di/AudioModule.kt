@@ -26,10 +26,13 @@ import javax.inject.Provider
 @Module
 @InstallIn(SingletonComponent::class)
 object AudioModule {
-    /** The microphone, or the looping demo script when built with `-PfakePitch=true`. */
+    /**
+     * The microphone, or the script when built with `-PfakePitch=true`: the looping demo, or one steady
+     * scenario chosen by `-PfakeScenario`.
+     */
     @Provides
     fun providePitchSource(mic: Provider<MicPitchSource>): PitchSource =
-        if (BuildConfig.FAKE_PITCH_SOURCE) FakePitchSource(FakeScenario.DEMO) else mic.get()
+        if (BuildConfig.FAKE_PITCH_SOURCE) FakePitchSource(FakeScenario.valueOf(BuildConfig.FAKE_SCENARIO)) else mic.get()
 
     /** The fake source has no microphone: its takes are mixed at the rate the take pipeline assumes then. */
     @Provides
