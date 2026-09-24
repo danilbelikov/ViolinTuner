@@ -88,6 +88,8 @@ data class IntonationConfig(
     val hopSizeSamples: Int = 512,
     /** Exact zeros for this long mean the input is cut off, not quiet (spec 3.4). */
     val digitalSilenceTimeoutMs: Long = 2_000,
+    /** A microphone that could not be opened or broke down is tried again after this long (spec 3.4). */
+    val micRetryDelayMs: Long = 3_000,
 
     // Pitch detectors (spec 5.1)
     val yinThreshold: Double = 0.15,

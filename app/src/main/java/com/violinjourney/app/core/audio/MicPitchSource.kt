@@ -19,7 +19,6 @@ import com.violinjourney.app.core.domain.PitchFrame
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.coroutines.coroutineContext
-import kotlin.math.log10
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -62,7 +61,7 @@ class MicPitchSource @Inject constructor(
             val analyzer = FrameAnalyzer(detectorFactory.create(config), config, sampleRateHz)
             val hop = ShortArray(config.hopSizeSamples)
             val watchdog = DigitalSilenceWatchdog(config, sampleRateHz)
-            val stats = if (BuildConfig.DEBUG) FrameStats(config, sampleRateHz, recorder.audioSource) else null
+            val stats = if (BuildConfig.DEBUG) FrameStats(config, "src=${recorder.audioSource} rate=$sampleRateHz") { Log.d(TAG, it) } else null
             var samplesRead = 0L
             val timestamp = AudioTimestamp()
             anchor = null
@@ -122,62 +121,6 @@ class MicPitchSource @Inject constructor(
     private fun unavailable(reason: MicUnavailableReason, message: String): MicUnavailableException {
         Log.w(TAG, message)
         return MicUnavailableException(reason, message)
-    }
-
-    /**
-     * Debug builds only: one logcat line per second with what the detector saw, for tuning the
-     * silence and clarity thresholds on a real instrument (`adb logcat -s MicPitchSource`).
-     */
-    private class FrameStats(
-        private val config: IntonationConfig,
-        sampleRateHz: Int,
-        audioSource: Int,
-    ) {
-        private val header = "src=$audioSource rate=$sampleRateHz"
-        private var windowStartMs = -1L
-        private var frames = 0
-        private var confident = 0
-        private var peakRms = 0.0
-        private var peakClarity = 0.0
-        private var lastConfidentHz = 0.0
-        private val notes = sortedMapOf<Int, Int>()
-        private var maxGapMs = 0L
-        private var lastFrameMs = -1L
-
-        fun add(frame: PitchFrame) {
-            if (windowStartMs < 0) windowStartMs = frame.tMs
-            if (lastFrameMs >= 0) maxGapMs = maxOf(maxGapMs, frame.tMs - lastFrameMs)
-            lastFrameMs = frame.tMs
-            frames++
-            peakRms = maxOf(peakRms, frame.rms)
-            peakClarity = maxOf(peakClarity, frame.clarity)
-            val freq = frame.freqHz
-            if (freq != null && frame.clarity >= config.clarityThreshold && frame.rms >= config.silenceRms) {
-                confident++
-                lastConfidentHz = freq
-                frame.midi?.let { notes[it] = (notes[it] ?: 0) + 1 }
-            }
-            if (frame.tMs - windowStartMs < LOG_PERIOD_MS) return
-            val peakDbfs = if (peakRms > 0) DB_PER_DECADE * log10(peakRms) else Double.NEGATIVE_INFINITY
-            Log.d(
-                TAG,
-                "$header t=${frame.tMs / LOG_PERIOD_MS}s frames=$frames confident=$confident " +
-                    "peakRms=%.1f dBFS peakClarity=%.2f lastHz=%.1f".format(peakDbfs, peakClarity, lastConfidentHz) +
-                    " midi=$notes maxStepMs=$maxGapMs",
-            )
-            notes.clear()
-            maxGapMs = 0
-            windowStartMs = frame.tMs
-            frames = 0
-            confident = 0
-            peakRms = 0.0
-            peakClarity = 0.0
-        }
-
-        private companion object {
-            const val LOG_PERIOD_MS = 1_000L
-            const val DB_PER_DECADE = 20.0
-        }
     }
 
     private companion object {
