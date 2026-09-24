@@ -28,10 +28,12 @@ import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.permission.isMicPermissionGranted
 import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
 import com.violinjourney.app.core.ui.permission.rememberMicPermissionRequester
+import com.violinjourney.app.feature.home.HiltHomeLookViewModel
 import com.violinjourney.app.feature.home.HomeLookViewModel
 import com.violinjourney.app.feature.journey.LocalHomeLook
 import com.violinjourney.app.feature.live.block.BlockEffect
 import com.violinjourney.app.feature.live.block.BlockViewModel
+import com.violinjourney.app.feature.live.block.HiltBlockViewModel
 
 /** Entry point of the Live destination: owns the ViewModel, its effects and the mic permission. */
 @Composable
@@ -42,7 +44,7 @@ fun LiveRoute(
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: LiveViewModel = hiltViewModel(),
-    blockViewModel: BlockViewModel = hiltViewModel(),
+    blockViewModel: BlockViewModel = hiltViewModel<HiltBlockViewModel>(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val block by blockViewModel.state.collectAsStateWithLifecycle()
@@ -100,7 +102,7 @@ fun LiveRoute(
     }
 
     // the room of Live is the home as it stands (spec 3.27): the same look the journey and «Занятия» draw
-    val homeLook by hiltViewModel<HomeLookViewModel>().state.collectAsStateWithLifecycle()
+    val homeLook by hiltViewModel<HiltHomeLookViewModel>().state.collectAsStateWithLifecycle()
     CompositionLocalProvider(LocalHomeLook provides homeLook, LocalReduceMotion provides reduceMotion) {
         LiveScreen(
             state = state,

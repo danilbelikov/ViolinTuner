@@ -8,9 +8,8 @@ import com.violinjourney.app.core.data.repertoire.SheetFiles
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.StandHintStore
+import com.violinjourney.app.core.io.filePath
 import com.violinjourney.app.core.time.WallClock
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -24,8 +23,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** The pages on the stand, the panel that hides by itself, the removal of a page and the one-time hint. */
-@HiltViewModel
-class StandViewModel @Inject constructor(
+open class StandViewModel(
     savedState: SavedStateHandle,
     private val repertoire: RepertoireRepository,
     private val sheetFiles: SheetFiles,
@@ -63,7 +61,7 @@ class StandViewModel @Inject constructor(
                     ?.let { StandPage(StandPage.DRAWN_ID, path = null, scale = it) }
                 listOfNotNull(drawn) + all.filter { it.pieceId == pieceId }
                     .sortedBy { it.position }
-                    .map { StandPage(it.id, sheetFiles.existing(it.fileName)?.path) }
+                    .map { StandPage(it.id, sheetFiles.existing(it.fileName)?.filePath) }
             }.collect { pages ->
                 // Nothing left to read from: the last page was removed, or the piece itself.
                 if (pages.isEmpty()) close()

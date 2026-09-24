@@ -33,7 +33,7 @@ fun HistoryRoute(
     onOpenSection: (SectionRef) -> Unit,
     onOpenPiece: (pieceId: Long) -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HistoryViewModel = hiltViewModel(),
+    viewModel: HistoryViewModel = hiltViewModel<HiltHistoryViewModel>(),
     sectionsViewModel: SectionsViewModel = hiltViewModel<HiltSectionsViewModel>(),
     shareViewModel: ShareViewModel = hiltViewModel(),
 ) {

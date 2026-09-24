@@ -17,6 +17,7 @@ import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.venue.Venue
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.motion.rememberAnimationsRemoved
+import com.violinjourney.app.feature.home.HiltHomeLookViewModel
 import com.violinjourney.app.feature.home.HomeLookViewModel
 import com.violinjourney.app.feature.journey.JourneyWindowCard
 import com.violinjourney.app.feature.journey.LocalHomeLook
@@ -29,7 +30,7 @@ fun PracticeRoute(
     onOpenHome: () -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: PracticeViewModel = hiltViewModel(),
+    viewModel: PracticeViewModel = hiltViewModel<HiltPracticeViewModel>(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val journey by viewModel.journeyWindow.collectAsStateWithLifecycle()
@@ -40,7 +41,7 @@ fun PracticeRoute(
     val currentOnOpenJourney by rememberUpdatedState(onOpenJourney)
     val currentOnOpenHome by rememberUpdatedState(onOpenHome)
     val currentOnOpenSettings by rememberUpdatedState(onOpenSettings)
-    val homeLook by hiltViewModel<HomeLookViewModel>().state.collectAsStateWithLifecycle()
+    val homeLook by hiltViewModel<HiltHomeLookViewModel>().state.collectAsStateWithLifecycle()
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

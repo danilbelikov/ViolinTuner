@@ -78,7 +78,7 @@ object SplashMotion {
  * home — a door ajar and the window with the lamp. No touches are needed; a tap skips it.
  */
 @Composable
-fun SplashRoute(kind: SplashKind, onDone: () -> Unit, modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel()) {
+fun SplashRoute(kind: SplashKind, onDone: () -> Unit, modifier: Modifier = Modifier, viewModel: HomeViewModel = hiltViewModel<HiltHomeViewModel>()) {
     val ui by viewModel.state.collectAsStateWithLifecycle()
     val reduce = rememberAnimationsRemoved()
     val done by rememberUpdatedState(onDone)

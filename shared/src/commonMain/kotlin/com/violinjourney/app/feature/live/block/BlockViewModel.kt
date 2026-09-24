@@ -16,8 +16,6 @@ import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.history.HistorySection
 import com.violinjourney.app.feature.history.HistorySectionAsk
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -39,8 +37,7 @@ import kotlinx.coroutines.launch
  * [com.violinjourney.app.feature.live.LiveViewModel]: Live changes twenty times a second, the
  * bookmark once a second, and none of this is about the sound.
  */
-@HiltViewModel
-class BlockViewModel @Inject constructor(
+open class BlockViewModel(
     private val runningPractice: RunningPracticeStore,
     private val blockStore: BlockStore,
     blockHistory: PieceBlockRepository,

@@ -35,7 +35,7 @@ fun StandRoute(
     pieceViewModel: PieceViewModel,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: StandViewModel = hiltViewModel(),
+    viewModel: StandViewModel = hiltViewModel<HiltStandViewModel>(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val take by pieceViewModel.takeState.collectAsStateWithLifecycle()

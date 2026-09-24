@@ -18,7 +18,7 @@ fun SectionRoute(
     onNew: (SectionRef) -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: RepertoireViewModel = hiltViewModel(),
+    viewModel: RepertoireViewModel = hiltViewModel<HiltRepertoireViewModel>(),
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current

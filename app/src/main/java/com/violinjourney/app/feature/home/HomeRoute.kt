@@ -30,7 +30,7 @@ fun HomeRoute(
     onOpenJourney: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
-    viewModel: HomeViewModel = hiltViewModel(),
+    viewModel: HomeViewModel = hiltViewModel<HiltHomeViewModel>(),
 ) {
     val ui by viewModel.state.collectAsStateWithLifecycle()
     val context = LocalContext.current

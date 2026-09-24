@@ -30,16 +30,15 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.venue.FollowTheRoad
 import com.violinjourney.app.core.domain.venue.Venues
+import com.violinjourney.app.core.io.filePath
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.today
 import com.violinjourney.app.feature.journey.JourneyMotion
 import com.violinjourney.app.feature.journey.JourneyReducer
 import com.violinjourney.app.feature.journey.JourneyWindow
-import dagger.hilt.android.lifecycle.HiltViewModel
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.LevelUp
 import com.violinjourney.app.core.analytics.NoOpAnalytics
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -60,8 +59,7 @@ import kotlinx.datetime.minus
 import kotlinx.datetime.plus
 import kotlinx.datetime.yearMonth
 
-@HiltViewModel
-class PracticeViewModel @Inject constructor(
+open class PracticeViewModel(
     private val repository: PracticeRepository,
     private val runningStore: RunningPracticeStore,
     private val finisher: PracticeFinisher,
@@ -122,7 +120,7 @@ class PracticeViewModel @Inject constructor(
                 trophies = trophies,
                 profile = profile,
                 // A name without its file (cleared storage) is no photo, not a broken one.
-                avatarPath = profile.avatarFile?.let(avatarFiles::existing)?.path,
+                avatarPath = profile.avatarFile?.let(avatarFiles::existing)?.filePath,
                 progressConfig = progressConfig,
                 runningBlock = PracticeReducer.runningBlockOf(running, blocks, pieces.associate { it.id to it.title }, clock.millis()),
             )

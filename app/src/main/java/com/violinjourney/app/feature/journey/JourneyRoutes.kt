@@ -14,6 +14,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.motion.rememberAnimationsRemoved
+import com.violinjourney.app.feature.home.HiltHomeLookViewModel
 import com.violinjourney.app.feature.home.HomeLookViewModel
 
 /** Which of the journey's three views of the same state a route shows. */
@@ -55,7 +56,7 @@ fun JourneyRoute(
     }
     // The road has no way out: it is two seconds, and the leg is already paid
     BackHandler(enabled = state.phase is JourneyPhase.Road) {}
-    val homeLook by hiltViewModel<HomeLookViewModel>().state.collectAsStateWithLifecycle()
+    val homeLook by hiltViewModel<HiltHomeLookViewModel>().state.collectAsStateWithLifecycle()
     CompositionLocalProvider(LocalReduceMotion provides reduce, LocalHomeLook provides homeLook) {
         when (view) {
             JourneyView.MAIN -> JourneyScreen(state, viewModel::onIntent, modifier)

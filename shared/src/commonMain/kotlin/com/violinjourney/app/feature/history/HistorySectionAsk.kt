@@ -1,7 +1,5 @@
 package com.violinjourney.app.feature.history
 
-import javax.inject.Inject
-import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,8 +10,7 @@ import kotlinx.coroutines.flow.getAndUpdate
  * taken once by the tab. Not the saved state of the tab's entry: the handle the navigation gives out is not the one the
  * tab's view model is made with, and the ask never reached it.
  */
-@Singleton
-class HistorySectionAsk @Inject constructor() {
+class HistorySectionAsk {
     private val section = MutableStateFlow<HistorySection?>(null)
     val asked: StateFlow<HistorySection?> = section.asStateFlow()
 

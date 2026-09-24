@@ -10,8 +10,6 @@ import com.violinjourney.app.core.domain.journey.JourneyProgress
 import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.time.WallClock
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -25,8 +23,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /** The home: what stands in it, the shop with its trying-on, the wardrobe, the homes (spec 3.24). */
-@HiltViewModel
-class HomeViewModel @Inject constructor(
+open class HomeViewModel(
     private val home: HomeRepository,
     journey: JourneyRepository,
     private val clock: WallClock,
@@ -123,7 +120,6 @@ class HomeViewModel @Inject constructor(
 }
 
 /** What the rest of the app needs of the home to draw it: the journey's screen, the window on «Занятия». */
-@HiltViewModel
-class HomeLookViewModel @Inject constructor(home: HomeRepository) : ViewModel() {
+open class HomeLookViewModel(home: HomeRepository) : ViewModel() {
     val state: StateFlow<HomeState> = home.state.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000L), HomeState.EMPTY)
 }

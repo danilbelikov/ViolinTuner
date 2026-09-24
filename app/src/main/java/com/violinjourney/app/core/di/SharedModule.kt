@@ -17,6 +17,7 @@ import com.violinjourney.app.core.domain.progress.TrophyRepository
 import com.violinjourney.app.core.domain.venue.VenueStore
 import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.feature.history.HistorySectionAsk
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -41,6 +42,11 @@ object SharedModule {
     @Provides
     @Singleton
     fun provideFinishPracticeAsk() = FinishPracticeAsk()
+
+    /** One per app: the section of «Записи» asked for from Live (spec 3.28). */
+    @Provides
+    @Singleton
+    fun provideHistorySectionAsk() = HistorySectionAsk()
 
     @Provides
     fun providePracticeFinisher(

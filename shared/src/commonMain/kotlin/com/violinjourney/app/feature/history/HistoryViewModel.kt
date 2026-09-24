@@ -6,10 +6,9 @@ import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.today
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,8 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
-@HiltViewModel
-class HistoryViewModel @Inject constructor(
+open class HistoryViewModel(
     private val repository: SessionRepository,
     private val repertoire: RepertoireRepository,
     private val config: IntonationConfig,
@@ -71,7 +69,7 @@ class HistoryViewModel @Inject constructor(
             // The dialog that deletes names the weight of what goes (spec 3.19): videos are few, and a length is cheap to ask.
             val videos = sessions.mapNotNull { session -> session.videoPath?.let { session.id to it } }.toMap()
             shown.copy(
-                cards = shown.cards.map { card -> videos[card.id]?.let { card.copy(videoBytes = audioFiles.existing(it)?.length() ?: 0) } ?: card },
+                cards = shown.cards.map { card -> videos[card.id]?.let { card.copy(videoBytes = audioFiles.existing(it)?.sizeBytes() ?: 0) } ?: card },
                 selection = SelectionRules.prune(selection, visibleIds),
             )
         }.stateIn(

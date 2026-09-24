@@ -11,10 +11,9 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.repertoire.SectionStats
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.io.filePath
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.today
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,8 +27,7 @@ import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
 /** The list of one section of the repertoire (spec 3.22): its elements, its count, and — for a section of the player's own — its name and its end. */
-@HiltViewModel
-class RepertoireViewModel @Inject constructor(
+open class RepertoireViewModel(
     savedState: SavedStateHandle,
     private val repertoire: RepertoireRepository,
     sessions: SessionRepository,
@@ -57,7 +55,7 @@ class RepertoireViewModel @Inject constructor(
             }
             currentName = group?.name
             val own = SectionStats.piecesOf(section, pieces, groups)
-            RepertoireReducer.stateOf(own, pages, sessions, ui.filter, clock.today(), clock.zone) { sheetFiles.existing(it)?.path }.copy(
+            RepertoireReducer.stateOf(own, pages, sessions, ui.filter, clock.today(), clock.zone) { sheetFiles.existing(it)?.filePath }.copy(
                 section = section,
                 sectionName = group?.name,
                 count = SectionStats.countOf(own),
