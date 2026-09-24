@@ -163,6 +163,9 @@
     <string name="backup_row_total">No app agora: %1$s</string>
     <string name="analytics_row">Ajudar a melhorar o aplicativo</string>
     <string name="analytics_row_caption">Estatísticas anônimas: quais telas são abertas e onde ocorrem as falhas</string>
+    <string name="privacy_row">Política de privacidade</string>
+    <string name="privacy_row_caption">O que fica no telefone e o que sai dele</string>
+    <string name="privacy_no_browser">Nenhum navegador para abrir a página</string>
     <string name="backup_onboarding_link">Tenho uma cópia dos dados</string>
     <string name="backup_title">Cópia dos dados</string>
     <string name="backup_text">Um único arquivo com tudo o que há no app. É melhor guardá-lo fora deste telefone — no computador, em um pen drive ou em uma pasta na nuvem.</string>

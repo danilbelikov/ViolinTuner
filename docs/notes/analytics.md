@@ -28,7 +28,7 @@
 ## Что осталось от спеки
 
 - **Скрипт выгрузки `tools/analytics/pull.py` не написан** (спека, этап 94). Его нельзя написать вслепую: нужен OAuth-токен, номер приложения в консоли и хотя бы один реальный ответ Logs API, чтобы знать форму данных. Без него картины кадров копятся в консоли, но в таблицу для подбора порогов не превращаются — это следующий шаг после того, как ключ заработает.
-- Политика конфиденциальности и раздел Data Safety в консоли магазина (спека, этап 95) — перед публикацией, не код.
+- Строка «Политика конфиденциальности» в блоке «Данные» сделана (24.09.2026); страницы по её ссылке и раздела Data Safety в консоли ещё нет — `docs/release.md`, этапы 2 и 4.
 - Иконка строки — временная (`AppIcons.Device`), и в «Настройках», и на странице 4 знакомства. Дизайн рисует график или щит в общем наборе (3.16).
 
 ## Как это собрано
@@ -46,7 +46,7 @@
 ./gradlew :app:assembleDebug -PanalyticsDebug=true -PappMetricaKey=<ключ>
 ANDROID_SERIAL=emulator-5554 adb install -r app/build/outputs/apk/debug/app-debug.apk
 adb logcat -s AppMetrica            # «Initializing», «Activate AppMetrica with APIKey …»
-adb shell run-as com.example.violintuner cat files/datastore/user_settings.preferences_pb | strings
+adb shell run-as com.violinjourney.app.debug cat files/datastore/user_settings.preferences_pb | strings
 ```
 
 Последняя строка показывает, появился ли ключ `analytics_enabled` после тапа по переключателю в «Настройках» → «Данные».

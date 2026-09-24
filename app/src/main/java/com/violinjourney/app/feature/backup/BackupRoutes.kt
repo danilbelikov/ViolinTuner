@@ -38,6 +38,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.FileProvider
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -195,6 +196,30 @@ fun DataBlock(
         }
         HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.surfaceContainerHigh)
         AnalyticsRow(enabled = analyticsEnabled, onChange = onAnalyticsChange)
+        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp), color = colors.surfaceContainerHigh)
+        val context = LocalContext.current
+        DataRow(
+            icon = AppIcons.Lock,
+            title = stringResource(R.string.privacy_row),
+            caption = stringResource(R.string.privacy_row_caption),
+            progress = null,
+            captionLines = 2,
+            onClick = { context.openPrivacyPolicy() },
+        )
+    }
+}
+
+/**
+ * The policy the stores link to (spec 3.34): Google Play wants it inside an app that hears the
+ * microphone and sends statistics, not only on the store's page. One page in both languages.
+ */
+private const val PRIVACY_POLICY_URL = "https://danilbelikov.github.io/violin-journey/privacy/"
+
+private fun Context.openPrivacyPolicy() {
+    try {
+        startActivity(Intent(Intent.ACTION_VIEW, PRIVACY_POLICY_URL.toUri()))
+    } catch (_: ActivityNotFoundException) {
+        Toast.makeText(this, R.string.privacy_no_browser, Toast.LENGTH_SHORT).show()
     }
 }
 
@@ -221,7 +246,7 @@ private fun AnalyticsRow(enabled: Boolean, onChange: (Boolean) -> Unit) {
 }
 
 @Composable
-private fun DataRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, caption: String?, progress: Int?, onClick: () -> Unit) {
+private fun DataRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, caption: String?, progress: Int?, captionLines: Int = 1, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable(role = Role.Button, onClick = onClick).heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 10.dp),
@@ -231,7 +256,7 @@ private fun DataRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title
         AppIcon(icon, contentDescription = null, tint = colors.onSurfaceVariant)
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(title, color = colors.onSurface, style = MaterialTheme.typography.titleMedium)
-            if (caption != null) Text(caption, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TABULAR_FIGURES))
+            if (caption != null) Text(caption, color = colors.onSurfaceVariant, maxLines = captionLines, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium.copy(fontFeatureSettings = TABULAR_FIGURES))
             if (progress != null) {
                 LinearProgressIndicator(progress = { progress / 100f }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp).height(4.dp).clip(RoundedCornerShape(2.dp)), color = colors.primary, trackColor = colors.surfaceContainerHigh, drawStopIndicator = {})
             }

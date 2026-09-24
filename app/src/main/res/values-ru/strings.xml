@@ -163,6 +163,9 @@
     <string name="backup_row_total">В приложении сейчас: %1$s</string>
     <string name="analytics_row">Помогать улучшать приложение</string>
     <string name="analytics_row_caption">Обезличенная статистика: какие экраны открываются и где случаются сбои</string>
+    <string name="privacy_row">Политика конфиденциальности</string>
+    <string name="privacy_row_caption">Что остаётся на телефоне и что уходит с него</string>
+    <string name="privacy_no_browser">Нет браузера, чтобы открыть страницу</string>
     <string name="backup_onboarding_link">У меня есть копия данных</string>
     <string name="backup_title">Копия данных</string>
     <string name="backup_text">Один файл со всем, что есть в приложении. Лучше положить его не на этот телефон — на компьютер, флешку или в облачную папку.</string>

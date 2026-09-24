@@ -163,6 +163,9 @@
     <string name="backup_row_total">In the app now: %1$s</string>
     <string name="analytics_row">Help improve the app</string>
     <string name="analytics_row_caption">Anonymous statistics: which screens get opened and where the app fails</string>
+    <string name="privacy_row">Privacy policy</string>
+    <string name="privacy_row_caption">What stays on the phone and what leaves it</string>
+    <string name="privacy_no_browser">No browser to open the page</string>
     <string name="backup_onboarding_link">I have a data backup</string>
     <string name="backup_title">Data backup</string>
     <string name="backup_text">One file with everything the app holds. Better keep it off this phone — on a computer, a flash drive or in a cloud folder.</string>
