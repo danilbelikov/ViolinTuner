@@ -1,6 +1,6 @@
 package com.violinjourney.app.core.audio.recording
 
-import java.io.File
+import com.violinjourney.app.core.io.PlatformFile
 
 /**
  * Lets a session recording take the sound of the stream the pitch frames come from (spec 3.9).
@@ -27,7 +27,7 @@ interface AudioTap {
     val sampleRateHz: Int? get() = null
 
     /** Thread-safe. Does nothing unless idle. */
-    fun start(file: File)
+    fun start(file: PlatformFile)
 
     /** Finishes the file. True when it holds a usable take; back to idle either way. */
     suspend fun stop(): Boolean
@@ -44,5 +44,5 @@ interface PcmEncoder {
 
 fun interface PcmEncoderFactory {
     /** May throw when the device cannot provide the encoder. */
-    fun create(file: File, sampleRateHz: Int): PcmEncoder
+    fun create(file: PlatformFile, sampleRateHz: Int): PcmEncoder
 }

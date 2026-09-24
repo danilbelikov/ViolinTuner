@@ -24,6 +24,10 @@ kotlin {
             enable = true
         }
     }
+    compilerOptions {
+        // expect/actual classes (PlatformFile) are Beta in Kotlin 2.2.
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
     listOf(iosArm64(), iosSimulatorArm64()).forEach { target ->
         // The iOS app (iosApp) links this framework; Xcode builds it through Gradle.
         target.binaries.framework {
@@ -44,6 +48,7 @@ kotlin {
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation(libs.kotlinx.coroutines.test)
             implementation(project(":shared-testing"))
         }
     }

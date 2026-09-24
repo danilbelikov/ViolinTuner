@@ -15,10 +15,10 @@ import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.test.currentTime
 import kotlinx.coroutines.test.testTimeSource
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.test.Test
 
 class FakePitchSourceTest {
 
@@ -56,7 +56,7 @@ class FakePitchSourceTest {
     }
 
     @Test
-    fun `pitched frames carry note and cents, unpitched carry nulls`() {
+    fun `pitched frames carry note and cents — unpitched carry nulls`() {
         val played = FakePitchSource(FakeScenario.IN_TUNE).frameAt(10)
         assertEquals(69, played.midi)
         assertEquals(2.0, played.cents!!, 1e-6)
@@ -76,7 +76,7 @@ class FakePitchSourceTest {
     }
 
     @Test
-    fun `drift sharp passes near and ends off, sharp`() {
+    fun `drift sharp passes near and ends off — sharp`() {
         val active = readings(FakeScenario.DRIFT_SHARP).filterIsInstance<Active>()
         assertEquals(listOf(Zone.IN_TUNE, Zone.NEAR, Zone.OFF), active.map { it.zone }.distinct())
         assertEquals(Direction.SHARP, active.last().direction)
@@ -118,7 +118,7 @@ class FakePitchSourceTest {
         assertEquals(setOf(Zone.IN_TUNE, Zone.NEAR, Zone.OFF), zones)
         assertTrue(IntonationReading.Silence in readings)
         assertTrue(IntonationReading.TooNoisy in readings)
-        assertTrue("second loop starts in tune again", readings.last() is Active)
+        assertTrue(readings.last() is Active, "second loop starts in tune again")
     }
 
     @Test
