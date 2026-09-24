@@ -1,10 +1,12 @@
 package com.violinjourney.app.core.domain
 
+import kotlin.jvm.JvmInline
+
 /** A chromatic note identified by its MIDI number. Names are Latin with sharps only (spec 3.6). */
 @JvmInline
 value class Note(val midi: Int) {
     private val pitchClass: Int
-        get() = Math.floorMod(midi, PitchMath.SEMITONES_PER_OCTAVE)
+        get() = midi.mod(PitchMath.SEMITONES_PER_OCTAVE)
 
     val letter: Char
         get() = LETTERS[pitchClass]
@@ -13,7 +15,7 @@ value class Note(val midi: Int) {
         get() = SHARPS[pitchClass]
 
     val octave: Int
-        get() = Math.floorDiv(midi, PitchMath.SEMITONES_PER_OCTAVE) + MIDI_OCTAVE_OFFSET
+        get() = midi.floorDiv(PitchMath.SEMITONES_PER_OCTAVE) + MIDI_OCTAVE_OFFSET
 
     /** E.g. "A4", "F#5". */
     val name: String
