@@ -16,7 +16,15 @@
 
 ## Этап 2. Материалы (общие) — черновики готовы 24.09.2026
 
-- Политика — `docs/store/privacy/index.html`: готовая страница (русский и английский, без сторонних запросов), вместо `[имя разработчика]`, `[email]` и `[дата публикации]` — настоящие значения. Выкладывается в публичный репозиторий `violin-journey` с GitHub Pages как `privacy/index.html`.
+- Сайт — `docs/store/site/`: главная (что за приложение, два языка, значок) и политика `privacy/index.html` (русский и английский, без сторонних запросов). Единственная копия политики — здесь; репозиторий `violin-journey` — её копия, не наоборот.
+- Выкладка сайта:
+  1. Вписать в `docs/store/site/index.html` и `privacy/index.html` email, имя разработчика и дату публикации (заглушки в квадратных скобках).
+  2. На GitHub — новый **публичный** репозиторий `violin-journey` (пустой, без README).
+  3. `git clone git@github.com:danilbelikov/violin-journey.git ~/violin-journey`
+  4. `python3 tools/store/site.py ~/violin-journey` — копирует папку; откажется, пока в страницах остались заглушки.
+  5. `cd ~/violin-journey && git add -A && git commit -m "The site and the privacy policy" && git push`
+  6. На GitHub: Settings → Pages → Build and deployment → Deploy from a branch → `main`, `/ (root)` → Save. Через минуту-две страница открывается по `https://danilbelikov.github.io/violin-journey/privacy/` — этот адрес зашит в приложение.
+  7. Проверить ссылку «Политика конфиденциальности» в «Настройках» приложения.
 - Тексты карточки, план скриншотов, черновики Data Safety и объяснения foreground service — `docs/store/listing.md`.
 - Заодно исправлено: минусовки (`files/backings/`) больше не уходят в системную автокопию — одна-две из них переполняли её лимит 25 МБ, и автокопия не проходила вся (spec 5.14).
 - Скриншоты — 7 кадров на русском и английском, `docs/store/screenshots/` (как переснять — `docs/store/listing.md`).
