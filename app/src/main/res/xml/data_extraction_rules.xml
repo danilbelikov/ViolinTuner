@@ -4,6 +4,7 @@
     <cloud-backup>
         <exclude domain="file" path="sessions/" />
         <exclude domain="file" path="repertoire/" />
+        <exclude domain="file" path="backings/" />
         <exclude domain="file" path="waveforms/" />
         <exclude domain="file" path="restore-staging/" />
     </cloud-backup>

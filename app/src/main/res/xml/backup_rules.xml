@@ -2,11 +2,12 @@
 <!--
   The system's own backup holds 25 MB an app and fails as a whole when there is more: with videos
   there are gigabytes (spec 5.14). So it takes what is small and matters most — the database and
-  the settings — and leaves the sound, the videos and the sheets to the copy the person makes.
+  the settings — and leaves the sound, the videos, the sheets and the backing tracks to the copy the person makes.
 -->
 <full-backup-content>
     <exclude domain="file" path="sessions/" />
     <exclude domain="file" path="repertoire/" />
+    <exclude domain="file" path="backings/" />
     <exclude domain="file" path="waveforms/" />
     <exclude domain="file" path="restore-staging/" />
 </full-backup-content>
