@@ -1,0 +1,72 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "NSMicrophoneUsageDescription": {
+      "comment": "The same words as mic_permission_text of the shared resources; written by tools/ios/infoplist.py.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ohne Mikrofon hört die App die Geige nicht. Der Klang wird auf dem Telefon verarbeitet und nirgendwohin gesendet."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without the microphone the app cannot hear the violin. Sound is processed on the phone and is never sent anywhere."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin micrófono la aplicación no oye el violín. El sonido se procesa en el teléfono y no se envía a ninguna parte."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sans micro, l'application n'entend pas le violon. Le son est traité sur le téléphone et n'est envoyé nulle part."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Senza microfono l'app non sente il violino. Il suono viene elaborato sul telefono e non viene inviato da nessuna parte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "マイクがないと、ヴァイオリンの音を聴き取れません。音はこの端末内で処理され、どこにも送信されません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "마이크가 없으면 바이올린 소리를 들을 수 없어요. 소리는 휴대폰에서만 처리되며 어디로도 전송되지 않습니다."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sem o microfone, o app não ouve o violino. O som é processado no telefone e não é enviado a lugar nenhum."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Без микрофона тренажёр не слышит скрипку. Звук обрабатывается на телефоне и никуда не отправляется."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "没有麦克风，应用就听不到小提琴。声音只在手机上处理，不会发送到任何地方。"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}
