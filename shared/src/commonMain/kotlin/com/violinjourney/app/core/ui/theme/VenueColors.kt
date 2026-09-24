@@ -33,12 +33,12 @@ data class VenueColors(
     val plate: Color,
 )
 
-internal val DarkVenueColors = VenueColors(
+val DarkVenueColors = VenueColors(
     ebony = CtrlEbony, ebonyEdge = CtrlEbonyEdge, maple = CtrlMaple, mapleLit = CtrlMapleLit, mapleDark = CtrlMapleDark, ruler = CtrlRuler,
     bone = CtrlBone, boneShade = CtrlBoneShade, nickel = CtrlNickel, brass = CtrlBrass, velvet = CtrlVelvet, ink = CtrlInk, inkSoft = CtrlInkSoft,
     caption = CtrlCaption, muted = CtrlMuted, recordingRim = RecordingRim, plate = VenuePlate,
 )
 
-internal val LocalVenueColors = staticCompositionLocalOf<VenueColors> {
+val LocalVenueColors = staticCompositionLocalOf<VenueColors> {
     error("VenueColors not provided: wrap content in ViolinTheme")
 }

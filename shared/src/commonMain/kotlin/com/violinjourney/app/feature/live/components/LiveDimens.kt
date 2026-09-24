@@ -3,7 +3,7 @@ package com.violinjourney.app.feature.live.components
 import androidx.compose.ui.unit.dp
 
 /** Sizes of the Live screen from the handoff `sizes` table (base screen 412 × 892 dp). */
-internal object LiveDimens {
+object LiveDimens {
     val ScreenPadding = 24.dp
 
     val SwitcherTopPadding = 12.dp

@@ -23,7 +23,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.unit.Dp
 import com.violinjourney.app.core.domain.Note
-import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.core.ui.theme.LiveTheme
 
 private const val SHARP_SIGN = "#"
 
@@ -34,7 +34,7 @@ private const val SHARP_SIGN = "#"
  */
 @Composable
 fun NoteLabel(note: Note, modifier: Modifier = Modifier, scale: Float = 1f) {
-    val base = ViolinTheme.liveTypography
+    val base = LiveTheme.liveTypography
     val fontScale = LocalDensity.current.fontScale
     val typography = remember(base, scale, fontScale) {
         val factor = scale / fontScale

@@ -82,9 +82,13 @@ import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.repertoire.piece.TakeProblem
 import com.violinjourney.app.feature.repertoire.piece.TakeState
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.live_mic_unavailable
+import com.violinjourney.app.shared.resources.live_too_noisy
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.stringResource
 
 private val TopField = 64.dp
 private val BottomField = 112.dp
@@ -478,7 +482,7 @@ private fun RecordPill(take: TakeState, onClick: () -> Unit) {
             )
             take.problem?.let { problem ->
                 Text(
-                    text = stringResource(if (problem == TakeProblem.TOO_NOISY) R.string.live_too_noisy else R.string.live_mic_unavailable),
+                    text = stringResource(if (problem == TakeProblem.TOO_NOISY) Res.string.live_too_noisy else Res.string.live_mic_unavailable),
                     color = colors.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 )

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The words of Live, shared with iOS (spec 3.26: Russian is the source, values/ is the English fallback). -->
+<resources>
+    <string name="mode_play">Tocar</string>
+    <string name="mode_tuning">Afinar</string>
+    <string name="tuning_string_hz">%1$d Hz</string>
+    <string name="tuning_hint_auto">auto · toque uma corda solta</string>
+    <string name="tuning_hint_locked">alvo fixado: %1$s · %2$d Hz · toque para soltar</string>
+    <string name="tuning_string_locked">fixada</string>
+    <string name="tuning_string_auto">auto</string>
+    <string name="status_in_tune">afinado</string>
+    <string name="status_sharp">alto</string>
+    <string name="status_flat">baixo</string>
+    <string name="live_silence">Toque…</string>
+    <string name="live_too_noisy">Muito ruído</string>
+    <string name="live_mic_unavailable">Microfone indisponível</string>
+    <string name="mic_permission_title">É preciso acesso ao microfone</string>
+    <string name="mic_permission_text">Sem o microfone, o app não ouve o violino. O som é processado no telefone e não é enviado a lugar nenhum.</string>
+    <string name="mic_permission_grant">Permitir acesso</string>
+</resources>

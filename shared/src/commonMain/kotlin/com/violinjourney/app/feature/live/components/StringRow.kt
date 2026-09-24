@@ -34,17 +34,20 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.scale
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.ViolinString
-import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.core.ui.theme.LiveTheme
 import com.violinjourney.app.feature.live.TuningState
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.tuning_string_auto
+import com.violinjourney.app.shared.resources.tuning_string_hz
+import com.violinjourney.app.shared.resources.tuning_string_locked
+import org.jetbrains.compose.resources.stringResource
 
 private val LetterSize = 22.sp
 private val CaptionSize = 11.sp
@@ -93,7 +96,7 @@ private fun StringButton(
     isLocked: Boolean,
     onClick: () -> Unit,
 ) {
-    val wood = ViolinTheme.venueColors
+    val wood = LiveTheme.venueColors
     val body = when {
         isLocked -> wood.bone
         isTarget -> wood.maple
@@ -112,8 +115,8 @@ private fun StringButton(
     val letterColor = if (isLocked) wood.ink else wood.bone
     val captionColor = if (isLocked) wood.inkSoft else wood.caption
     val shape = RoundedCornerShape(LiveDimens.StringButtonCorner)
-    val lockedDescription = stringResource(R.string.tuning_string_locked)
-    val autoDescription = stringResource(R.string.tuning_string_auto)
+    val lockedDescription = stringResource(Res.string.tuning_string_locked)
+    val autoDescription = stringResource(Res.string.tuning_string_auto)
     Box(contentAlignment = Alignment.TopCenter) {
         Column(
             modifier = Modifier
@@ -132,7 +135,7 @@ private fun StringButton(
                 style = MaterialTheme.typography.titleLarge.copy(fontSize = LetterSize, lineHeight = LetterSize, fontWeight = FontWeight.Bold),
             )
             Text(
-                text = stringResource(R.string.tuning_string_hz, hz),
+                text = stringResource(Res.string.tuning_string_hz, hz),
                 color = captionColor,
                 style = MaterialTheme.typography.labelSmall.copy(fontSize = CaptionSize, fontWeight = FontWeight.Medium),
             )
@@ -167,7 +170,7 @@ private const val LOCK_VIEWPORT = 12f
 
 @Composable
 private fun LockBadge(modifier: Modifier = Modifier) {
-    val wood = ViolinTheme.venueColors
+    val wood = LiveTheme.venueColors
     Box(
         modifier = modifier
             .size(LiveDimens.StringLockBadgeSize)

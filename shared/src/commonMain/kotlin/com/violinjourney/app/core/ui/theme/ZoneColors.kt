@@ -59,13 +59,13 @@ data class ZoneColors(
 @Immutable
 data class StatusColors(val ready: Color, val blocked: Color)
 
-internal val DarkStatusColors = StatusColors(ready = StatusReady, blocked = StatusBlocked)
+val DarkStatusColors = StatusColors(ready = StatusReady, blocked = StatusBlocked)
 
-internal val LocalStatusColors = staticCompositionLocalOf<StatusColors> {
+val LocalStatusColors = staticCompositionLocalOf<StatusColors> {
     error("StatusColors not provided: wrap content in ViolinTheme")
 }
 
-internal val DarkZoneColors = ZoneColors(
+val DarkZoneColors = ZoneColors(
     inTune = ZoneInTune,
     near = ZoneNear,
     off = ZoneOff,
@@ -77,6 +77,6 @@ internal val DarkZoneColors = ZoneColors(
     noneGradient = ZoneGradient(Surface, Surface, Surface),
 )
 
-internal val LocalZoneColors = staticCompositionLocalOf<ZoneColors> {
+val LocalZoneColors = staticCompositionLocalOf<ZoneColors> {
     error("ZoneColors not provided: wrap content in ViolinTheme")
 }

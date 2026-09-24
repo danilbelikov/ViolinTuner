@@ -1,21 +1,29 @@
 #!/usr/bin/env python3
 """Checks one translation against the Russian source: python3 tools/i18n/check.py <tag>   (tag «en» is res/values).
 
+Reads the app's res and the shared composeResources (the words of Live) together.
+
 The same rules as LocalizationTest, without Gradle: keys, placeholders, array lengths, leftovers of Russian,
 XML that parses, apostrophes and quotes that Android would choke on."""
 import os, re, sys
 import xml.etree.ElementTree as ET
 
-ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..', 'app', 'src', 'main', 'res')
+HERE = os.path.dirname(os.path.abspath(__file__))
+ROOT = os.path.join(HERE, '..', '..', 'app', 'src', 'main', 'res')
 FILES = ['strings.xml', 'strings_home.xml', 'home_catalog.xml']
+# The words of Live, shared with iOS: the same folders of languages in the shared module.
+SHARED = os.path.join(HERE, '..', '..', 'shared', 'src', 'commonMain', 'composeResources')
+SHARED_FILES = ['strings_live.xml']
+SHARED_KEYS = set()
 PLACEHOLDER = re.compile(r'%(\d+\$)?[sdf]|%%')
 CYRILLIC = re.compile('[А-Яа-яЁё]')
 
 
-def read(directory):
+def read(folder):
+    """Strings and arrays of one language; the keys of the shared files are remembered in SHARED_KEYS."""
     strings, arrays = {}, {}
-    for name in FILES:
-        path = os.path.join(directory, name)
+    paths = [os.path.join(ROOT, folder, name) for name in FILES] + [os.path.join(SHARED, folder, name) for name in SHARED_FILES]
+    for path in paths:
         if not os.path.exists(path):
             print(f'MISSING FILE {path}')
             continue
@@ -23,6 +31,8 @@ def read(directory):
         for node in root:
             if node.tag == 'string':
                 strings[node.get('name')] = ''.join(node.itertext())
+                if path.startswith(SHARED):
+                    SHARED_KEYS.add(node.get('name'))
             elif node.tag == 'string-array':
                 arrays[node.get('name')] = [''.join(i.itertext()) for i in node.findall('item')]
     return strings, arrays
@@ -30,8 +40,8 @@ def read(directory):
 
 def main():
     tag = sys.argv[1]
-    source_s, source_a = read(os.path.join(ROOT, 'values-ru'))
-    target_s, target_a = read(os.path.join(ROOT, 'values' if tag == 'en' else f'values-{tag}'))
+    source_s, source_a = read('values-ru')
+    target_s, target_a = read('values' if tag == 'en' else f'values-{tag}')
     problems = []
     for key in source_s:
         if key not in target_s:
@@ -50,10 +60,15 @@ def main():
             problems.append(f'«{key}» is still in Russian')
         if not text.strip() and source_s[key].strip():
             problems.append(f'«{key}» is empty')
-        if re.search(r"(?<!\\)'", text):
-            problems.append(f'«{key}»: an apostrophe that is not escaped as \\\'')
-        if re.search(r'(?<!\\)"', text):
-            problems.append(f'«{key}»: a double quote that is not escaped as \\"')
+        if key in SHARED_KEYS:
+            # compose resources show \' and \" as they are: in the shared files quotes are written plain
+            if re.search(r'\\[\'"]', text):
+                problems.append(f'«{key}»: an escaped quote in a shared file — write it plain')
+        else:
+            if re.search(r"(?<!\\)'", text):
+                problems.append(f'«{key}»: an apostrophe that is not escaped as \\\'')
+            if re.search(r'(?<!\\)"', text):
+                problems.append(f'«{key}»: a double quote that is not escaped as \\"')
     for key, items in source_a.items():
         if key not in target_a:
             problems.append(f'no array «{key}»')

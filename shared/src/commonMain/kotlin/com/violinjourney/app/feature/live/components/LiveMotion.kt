@@ -6,7 +6,7 @@ import androidx.compose.animation.core.CubicBezierEasing
  * Motion of the Live screen from the handoff `anims` table. The zone color cross-fade is not
  * here: it is a spec number (5.3) and arrives through LiveState.
  */
-internal object LiveMotion {
+object LiveMotion {
     /** `light.off`: cubic-bezier(.3, 0, .8, .15). */
     val LightOffEasing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)
 

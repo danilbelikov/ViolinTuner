@@ -23,7 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
-import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.core.ui.theme.LiveTheme
 import com.violinjourney.app.feature.live.MarkerSpring
 import kotlinx.coroutines.flow.first
 
@@ -39,8 +39,8 @@ fun CentsScale(
     haloColor: Color,
     modifier: Modifier = Modifier,
 ) {
-    val wood = ViolinTheme.venueColors
-    val pillColor = ViolinTheme.zoneColors.inTune
+    val wood = LiveTheme.venueColors
+    val pillColor = LiveTheme.zoneColors.inTune
     // After silence the marker shows up where the pitch is instead of travelling from its old
     // place; while sounding it rides a spring. It stays put while fading out. The spring is
     // stepped frame by frame ([MarkerSpring] says why) and read in the draw phase.

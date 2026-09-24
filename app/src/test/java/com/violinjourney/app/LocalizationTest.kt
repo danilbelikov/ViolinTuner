@@ -10,11 +10,16 @@ import org.w3c.dom.Element
 /**
  * Every language of the interface says the same things (spec 3.26): the same keys, the same
  * placeholders in each of them, arrays of the same length — and the languages offered to the
- * system are exactly those that have words. The Russian files are the source.
+ * system are exactly those that have words. The Russian files are the source — of the app and of
+ * the shared module alike.
  */
 class LocalizationTest {
     private val res = File("src/main/res")
     private val files = listOf("strings.xml", "strings_home.xml", "home_catalog.xml")
+
+    /** The words of Live live in the shared module, with iOS; the same folders of languages. */
+    private val shared = File("../shared/src/commonMain/composeResources")
+    private val sharedFiles = listOf("strings_live.xml")
     private val placeholder = Regex("%(\\d+\\$)?[sdf]|%%")
     private val cyrillic = Regex("[А-Яа-яЁё]")
 
@@ -23,9 +28,8 @@ class LocalizationTest {
     private fun read(dir: File): Texts {
         val strings = LinkedHashMap<String, String>()
         val arrays = LinkedHashMap<String, List<String>>()
-        for (name in files) {
-            val file = File(dir, name)
-            assertTrue("${dir.name} has no $name", file.exists())
+        for (file in files.map { File(dir, it) } + sharedFiles.map { File(File(shared, dir.name), it) }) {
+            assertTrue("${dir.name} has no ${file.path}", file.exists())
             val root = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).documentElement
             val nodes = root.childNodes
             for (i in 0 until nodes.length) {
@@ -70,6 +74,19 @@ class LocalizationTest {
             }
         }
         assertTrue(problems.take(60).joinToString("\n", prefix = "${problems.size} problems:\n"), problems.isEmpty())
+    }
+
+    /**
+     * Compose resources unescape only \n, \t and \u: an apostrophe or a quote escaped for Android would be shown with
+     * its backslash. In the shared files they are written plain.
+     */
+    @Test
+    fun `the shared words carry no Android escapes`() {
+        val escaped = Regex("""\\['"]""")
+        val problems = shared.listFiles { f -> f.isDirectory }!!.flatMap { dir ->
+            sharedFiles.map { File(dir, it) }.filter { it.exists() && escaped.containsMatchIn(it.readText()) }.map { it.path }
+        }
+        assertTrue("escaped quotes in $problems", problems.isEmpty())
     }
 
     @Test

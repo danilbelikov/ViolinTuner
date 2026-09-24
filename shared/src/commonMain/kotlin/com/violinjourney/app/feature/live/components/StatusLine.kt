@@ -25,14 +25,19 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
-import com.violinjourney.app.R
-import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.core.ui.theme.LiveTheme
 import com.violinjourney.app.feature.live.StatusDot
 import com.violinjourney.app.feature.live.StatusLine
 import com.violinjourney.app.feature.live.StatusMessage
 import com.violinjourney.app.feature.live.TuningState
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.live_mic_unavailable
+import com.violinjourney.app.shared.resources.live_silence
+import com.violinjourney.app.shared.resources.live_too_noisy
+import com.violinjourney.app.shared.resources.tuning_hint_auto
+import com.violinjourney.app.shared.resources.tuning_hint_locked
+import org.jetbrains.compose.resources.stringResource
 
 /**
  * The small line above the ring (spec 3.14, handoff 12a, 12b): a dot that says whether one may
@@ -61,7 +66,7 @@ fun StatusLineRow(line: StatusLine?, tuning: TuningState, modifier: Modifier = M
             if (shown != null) {
                 // over the picture the line stands on a plate of smoked glass, as the label of the place does
                 // (handoff venue, second version): on a cream ceiling bare grey words are lost
-                val glass = ViolinTheme.venueColors.plate
+                val glass = LiveTheme.venueColors.plate
                 Row(
                     modifier = if (plate) {
                         Modifier
@@ -78,7 +83,7 @@ fun StatusLineRow(line: StatusLine?, tuning: TuningState, modifier: Modifier = M
                     Text(
                         text = messageOf(shown.message, tuning),
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = ViolinTheme.liveTypography.statusLine,
+                        style = LiveTheme.liveTypography.statusLine,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
                     )
@@ -91,7 +96,7 @@ fun StatusLineRow(line: StatusLine?, tuning: TuningState, modifier: Modifier = M
 /** Two shapes as well as two colors: a filled dot may, a hollow one may not (spec 2, principle 5). */
 @Composable
 private fun Dot(dot: StatusDot) {
-    val colors = ViolinTheme.statusColors
+    val colors = LiveTheme.statusColors
     val shape = Modifier.size(LiveDimens.StatusLineDot)
     when (dot) {
         StatusDot.READY -> Box(shape.background(colors.ready, CircleShape))
@@ -101,11 +106,11 @@ private fun Dot(dot: StatusDot) {
 
 @Composable
 private fun messageOf(message: StatusMessage, tuning: TuningState): String = when (message) {
-    StatusMessage.PLAY -> stringResource(R.string.live_silence)
-    StatusMessage.TOO_NOISY -> stringResource(R.string.live_too_noisy)
-    StatusMessage.MIC_UNAVAILABLE -> stringResource(R.string.live_mic_unavailable)
-    StatusMessage.TUNE_AUTO -> stringResource(R.string.tuning_hint_auto)
+    StatusMessage.PLAY -> stringResource(Res.string.live_silence)
+    StatusMessage.TOO_NOISY -> stringResource(Res.string.live_too_noisy)
+    StatusMessage.MIC_UNAVAILABLE -> stringResource(Res.string.live_mic_unavailable)
+    StatusMessage.TUNE_AUTO -> stringResource(Res.string.tuning_hint_auto)
     StatusMessage.TUNE_LOCKED -> tuning.lockedString?.let { locked ->
-        stringResource(R.string.tuning_hint_locked, locked.note.letter.toString(), tuning.stringHz.getValue(locked))
-    } ?: stringResource(R.string.tuning_hint_auto)
+        stringResource(Res.string.tuning_hint_locked, locked.note.letter.toString(), tuning.stringHz.getValue(locked))
+    } ?: stringResource(Res.string.tuning_hint_auto)
 }

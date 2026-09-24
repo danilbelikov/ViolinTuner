@@ -59,7 +59,11 @@ import com.violinjourney.app.feature.history.components.RecordCard
 import com.violinjourney.app.feature.history.components.SelectAction
 import com.violinjourney.app.feature.live.components.RecordButton
 import com.violinjourney.app.feature.repertoire.takesLabel
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.live_mic_unavailable
+import com.violinjourney.app.shared.resources.live_too_noisy
 import java.time.ZoneId
+import org.jetbrains.compose.resources.stringResource
 
 private val CardCorner = 16.dp
 private val RecDot = 10.dp
@@ -161,7 +165,7 @@ private fun RecordingWords(take: TakeState) {
                     .border(2.dp, ViolinTheme.statusColors.blocked, CircleShape),
             )
             Text(
-                text = stringResource(if (problem == TakeProblem.TOO_NOISY) R.string.live_too_noisy else R.string.live_mic_unavailable),
+                text = stringResource(if (problem == TakeProblem.TOO_NOISY) Res.string.live_too_noisy else Res.string.live_mic_unavailable),
                 color = colors.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
             )

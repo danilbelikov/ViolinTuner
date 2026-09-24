@@ -18,11 +18,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import com.violinjourney.app.R
-import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.core.ui.theme.LiveTheme
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.mic_permission_grant
+import com.violinjourney.app.shared.resources.mic_permission_text
+import com.violinjourney.app.shared.resources.mic_permission_title
+import org.jetbrains.compose.resources.stringResource
 
 /** Microphone glyph shown inside the small ring of the NoMicPermission state. */
 @Composable
@@ -49,8 +52,8 @@ fun MicGlyph(modifier: Modifier = Modifier) {
  */
 @Composable
 fun MicPermissionPrompt(onGrantClick: () -> Unit, modifier: Modifier = Modifier) {
-    val paper = ViolinTheme.venueColors
-    val typography = ViolinTheme.liveTypography
+    val paper = LiveTheme.venueColors
+    val typography = LiveTheme.liveTypography
     val shape = RoundedCornerShape(LiveDimens.PromptCardCorner)
     Column(
         modifier = modifier
@@ -61,13 +64,13 @@ fun MicPermissionPrompt(onGrantClick: () -> Unit, modifier: Modifier = Modifier)
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(R.string.mic_permission_title),
+            text = stringResource(Res.string.mic_permission_title),
             color = paper.ink,
             textAlign = TextAlign.Center,
             style = typography.promptTitle,
         )
         Text(
-            text = stringResource(R.string.mic_permission_text),
+            text = stringResource(Res.string.mic_permission_text),
             color = paper.ink,
             textAlign = TextAlign.Center,
             style = typography.promptBody,
@@ -80,7 +83,7 @@ fun MicPermissionPrompt(onGrantClick: () -> Unit, modifier: Modifier = Modifier)
             contentPadding = PaddingValues(horizontal = LiveDimens.PromptButtonPaddingHorizontal),
         ) {
             Text(
-                text = stringResource(R.string.mic_permission_grant),
+                text = stringResource(Res.string.mic_permission_grant),
                 style = typography.promptBody.copy(fontWeight = FontWeight.Bold),
             )
         }

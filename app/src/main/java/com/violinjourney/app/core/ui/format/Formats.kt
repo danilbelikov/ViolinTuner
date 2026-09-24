@@ -152,14 +152,7 @@ object Formats {
     private const val MB_PER_GB = 1024.0
     private const val DECIMAL_BELOW = 10.0
 
-    fun signedCents(cents: Double): String {
-        val rounded = cents.roundToInt()
-        return when {
-            rounded > 0 -> "+$rounded"
-            rounded < 0 -> "$MINUS${abs(rounded)}"
-            else -> "0"
-        }
-    }
+    fun signedCents(cents: Double): String = CentsFormat.signed(cents)
 
     /** One decimal with a comma: 7,3. */
     fun oneDecimal(value: Double): String = "%.1f".format(LOCALE, value)

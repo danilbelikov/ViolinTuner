@@ -7,19 +7,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 
-/**
- * True when the system setting «убрать анимации» is on. Decorative motion — the shine of the
- * level bar, the breathing dot, rolling numbers (spec 3.16) — asks this before it starts; a route
- * provides it, screens and components stay free of `Context`.
- */
-val LocalReduceMotion = staticCompositionLocalOf { false }
-
-/** Read on every resume: the setting is changed in the system settings, while we are away. */
+/** Read on every resume: the setting is changed in the system settings, while we are away; goes into LocalReduceMotion. */
 @Composable
 fun rememberAnimationsRemoved(): Boolean {
     val context = LocalContext.current

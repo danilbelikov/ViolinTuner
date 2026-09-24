@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The words of Live, shared with iOS (spec 3.26: Russian is the source, values/ is the English fallback). -->
+<resources>
+    <string name="mode_play">Jeu</string>
+    <string name="mode_tuning">Accord</string>
+    <string name="tuning_string_hz">%1$d Hz</string>
+    <string name="tuning_hint_auto">auto · jouez une corde à vide</string>
+    <string name="tuning_hint_locked">cible verrouillée : %1$s · %2$d Hz · touchez pour libérer</string>
+    <string name="tuning_string_locked">verrouillée</string>
+    <string name="tuning_string_auto">auto</string>
+    <string name="status_in_tune">juste</string>
+    <string name="status_sharp">trop haut</string>
+    <string name="status_flat">trop bas</string>
+    <string name="live_silence">Jouez…</string>
+    <string name="live_too_noisy">Trop de bruit</string>
+    <string name="live_mic_unavailable">Micro indisponible</string>
+    <string name="mic_permission_title">L'accès au micro est nécessaire</string>
+    <string name="mic_permission_text">Sans micro, l'application n'entend pas le violon. Le son est traité sur le téléphone et n'est envoyé nulle part.</string>
+    <string name="mic_permission_grant">Autoriser l'accès</string>
+</resources>

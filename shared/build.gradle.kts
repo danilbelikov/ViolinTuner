@@ -44,7 +44,8 @@ kotlin {
             implementation(libs.compose.mp.ui)
             implementation(libs.compose.mp.animation)
             implementation(libs.compose.mp.material3)
-            implementation(libs.compose.mp.resources)
+            // api: the app reads the shared strings too (Res.string), so their types are part of this module's face
+            api(libs.compose.mp.resources)
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)

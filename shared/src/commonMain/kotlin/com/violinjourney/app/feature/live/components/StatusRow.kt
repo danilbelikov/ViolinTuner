@@ -31,13 +31,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.Direction
-import com.violinjourney.app.core.ui.format.Formats
-import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.core.ui.format.CentsFormat
+import com.violinjourney.app.core.ui.theme.LiveTheme
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.status_flat
+import com.violinjourney.app.shared.resources.status_in_tune
+import com.violinjourney.app.shared.resources.status_sharp
+import org.jetbrains.compose.resources.stringResource
 
 // Arrow outlines from the handoff SVGs, 56 × 56 viewport.
 private const val ARROW_VIEWPORT = 56f
@@ -90,7 +93,7 @@ fun StatusRow(
         }
     }
     val shown = if (visible) direction else lastShown
-    val typography = ViolinTheme.liveTypography
+    val typography = LiveTheme.liveTypography
     val wordStyle = if (compact) typography.statusCompact else typography.status
     val centsStyle = if (compact) typography.centsCompact else typography.cents
     val arrowSize = if (compact) LiveDimens.StatusArrowSizeCompact else LiveDimens.StatusArrowSize
@@ -127,9 +130,9 @@ fun StatusRow(
         Text(
             text = stringResource(
                 when (shown) {
-                    null -> R.string.status_in_tune
-                    Direction.SHARP -> R.string.status_sharp
-                    Direction.FLAT -> R.string.status_flat
+                    null -> Res.string.status_in_tune
+                    Direction.SHARP -> Res.string.status_sharp
+                    Direction.FLAT -> Res.string.status_flat
                 },
             ),
             color = color,
@@ -144,7 +147,7 @@ fun StatusRow(
             with(density) { measurer.measure(WIDEST_CENTS, centsStyle, maxLines = 1).size.width.toDp() }
         }
         Text(
-            text = Formats.signedCents((if (visible) cents else lastCents).toDouble()),
+            text = CentsFormat.signed((if (visible) cents else lastCents).toDouble()),
             modifier = Modifier.widthIn(min = reserved),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = centsStyle,

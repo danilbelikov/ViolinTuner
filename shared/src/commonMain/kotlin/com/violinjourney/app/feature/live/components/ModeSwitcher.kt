@@ -25,7 +25,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -34,9 +33,12 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
-import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.core.ui.theme.LiveTheme
 import com.violinjourney.app.feature.live.LiveMode
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.mode_play
+import com.violinjourney.app.shared.resources.mode_tuning
+import org.jetbrains.compose.resources.stringResource
 
 private val LabelStyle = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.Bold)
 
@@ -52,10 +54,10 @@ fun ModeSwitcher(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    val wood = ViolinTheme.venueColors
+    val wood = LiveTheme.venueColors
     val surface = MaterialTheme.colorScheme.surface
-    val play = stringResource(R.string.mode_play)
-    val tuning = stringResource(R.string.mode_tuning)
+    val play = stringResource(Res.string.mode_play)
+    val tuning = stringResource(Res.string.mode_tuning)
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     val half = remember(play, tuning, density) {

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The words of Live, shared with iOS (spec 3.26: Russian is the source, values/ is the English fallback). -->
+<resources>
+    <string name="mode_play">Игра</string>
+    <string name="mode_tuning">Настройка</string>
+    <string name="tuning_string_hz">%1$d Гц</string>
+    <string name="tuning_hint_auto">авто · сыграйте открытую струну</string>
+    <string name="tuning_hint_locked">цель зафиксирована: %1$s · %2$d Гц · тап — снять</string>
+    <string name="tuning_string_locked">зафиксирована</string>
+    <string name="tuning_string_auto">авто</string>
+    <string name="status_in_tune">в строе</string>
+    <string name="status_sharp">выше</string>
+    <string name="status_flat">ниже</string>
+    <string name="live_silence">Играйте…</string>
+    <string name="live_too_noisy">Слишком шумно</string>
+    <string name="live_mic_unavailable">Микрофон недоступен</string>
+    <string name="mic_permission_title">Нужен доступ к микрофону</string>
+    <string name="mic_permission_text">Без микрофона тренажёр не слышит скрипку. Звук обрабатывается на телефоне и никуда не отправляется.</string>
+    <string name="mic_permission_grant">Разрешить доступ</string>
+</resources>

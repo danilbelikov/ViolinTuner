@@ -46,6 +46,9 @@ import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.live_mic_unavailable
+import org.jetbrains.compose.resources.stringResource
 
 private val RecordButton = 76.dp
 private val Scrim = Color(0xB3000000)
@@ -147,7 +150,7 @@ private fun Controls(state: CaptureState, onIntent: (CaptureIntent) -> Unit, com
     val hint = when {
         state.underBacking && state.noHeadphones && !state.recording -> stringResource(R.string.backing_needs_headphones)
         state.underBacking && state.preparing && !state.recording -> stringResource(R.string.backing_preparing)
-        state.micUnavailable -> stringResource(R.string.live_mic_unavailable)
+        state.micUnavailable -> stringResource(Res.string.live_mic_unavailable)
         state.spaceMinutes != null && !state.recording -> stringResource(R.string.capture_low_space, state.spaceMinutes)
         else -> null
     }

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The words of Live, shared with iOS (spec 3.26: Russian is the source, values/ is the English fallback). -->
+<resources>
+    <string name="mode_play">演奏</string>
+    <string name="mode_tuning">调音</string>
+    <string name="tuning_string_hz">%1$d Hz</string>
+    <string name="tuning_hint_auto">自动 · 请拉一根空弦</string>
+    <string name="tuning_hint_locked">目标已锁定：%1$s · %2$d Hz · 轻触解除</string>
+    <string name="tuning_string_locked">已锁定</string>
+    <string name="tuning_string_auto">自动</string>
+    <string name="status_in_tune">准</string>
+    <string name="status_sharp">偏高</string>
+    <string name="status_flat">偏低</string>
+    <string name="live_silence">请演奏…</string>
+    <string name="live_too_noisy">环境太吵</string>
+    <string name="live_mic_unavailable">麦克风不可用</string>
+    <string name="mic_permission_title">需要使用麦克风</string>
+    <string name="mic_permission_text">没有麦克风，应用就听不到小提琴。声音只在手机上处理，不会发送到任何地方。</string>
+    <string name="mic_permission_grant">允许访问</string>
+</resources>

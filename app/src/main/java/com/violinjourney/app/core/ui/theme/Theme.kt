@@ -1,34 +1,13 @@
 package com.violinjourney.app.core.ui.theme
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
 
-// v1 is dark-only (spec 3.6). Dynamic color is off: zone colors are tuned against this palette.
-private val DarkColorScheme = darkColorScheme(
-    primary = Primary,
-    onPrimary = OnPrimary,
-    primaryContainer = PrimaryContainer,
-    onPrimaryContainer = OnPrimaryContainer,
-    background = Surface,
-    onBackground = OnSurface,
-    surface = Surface,
-    onSurface = OnSurface,
-    onSurfaceVariant = OnSurfaceVariant,
-    surfaceContainer = SurfaceContainer,
-    surfaceContainerHigh = SurfaceContainerHigh,
-    outlineVariant = OutlineVariant,
-)
-
 @Composable
 fun ViolinTheme(content: @Composable () -> Unit) {
     CompositionLocalProvider(
-        LocalZoneColors provides DarkZoneColors,
-        LocalStatusColors provides DarkStatusColors,
-        LocalLiveTypography provides DefaultLiveTypography,
         LocalPracticeColors provides DarkPracticeColors,
         LocalProgressColors provides DarkProgressColors,
         LocalRepertoireColors provides DarkRepertoireColors,
@@ -36,13 +15,8 @@ fun ViolinTheme(content: @Composable () -> Unit) {
         LocalVideoColors provides DarkVideoColors,
         LocalBackupColors provides DarkBackupColors,
         LocalExerciseColors provides DarkExerciseColors,
-        LocalVenueColors provides DarkVenueColors,
     ) {
-        MaterialTheme(
-            colorScheme = DarkColorScheme,
-            typography = ViolinTypography,
-            content = content,
-        )
+        ViolinBaseTheme(fontFamily = Manrope, content = content)
     }
 }
 
