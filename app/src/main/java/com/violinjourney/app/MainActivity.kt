@@ -2,8 +2,10 @@ package com.violinjourney.app
 
 import android.content.Intent
 import android.content.res.Configuration
+import android.graphics.Color
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.WindowInsets
@@ -46,7 +48,12 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // The app is dark whatever the system is (spec 3.6): light icons always. The default follows the
+        // system's mode and put dark icons over the dark app for everyone with a light system theme.
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+            navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
+        )
         // the language chosen for the app alone reaches the activity's resources, not the application's
         Formats.use(resources.configuration.locales[0])
         if (savedInstanceState == null) openBackup.value = intent?.getStringExtra(EXTRA_OPEN_BACKUP)
