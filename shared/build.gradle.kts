@@ -54,6 +54,11 @@ kotlin {
             // the one database and the settings of the app (Room and DataStore are multiplatform)
             implementation(libs.androidx.room.runtime)
             implementation(libs.androidx.datastore.preferences)
+            // view models of the screens and lifecycle-aware collection; api: the app's Hilt view models extend them
+            api(libs.jb.lifecycle.viewmodel)
+            api(libs.jb.lifecycle.viewmodel.savedstate)
+            implementation(libs.jb.lifecycle.viewmodel.compose)
+            implementation(libs.jb.lifecycle.runtime.compose)
         }
         iosMain.dependencies {
             // Android keeps its system SQLite (the database is opened as before); iOS brings its own
