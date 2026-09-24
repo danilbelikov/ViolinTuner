@@ -153,22 +153,16 @@ class LiveViewModel @Inject constructor(
         output: TakePipeline.Output<LiveSignal>,
         practiceMs: Long?,
         venue: Venue?,
-    ) = LiveState(
-        mode = target.mode,
+    ) = LiveReducer.stateOf(
+        target = target,
+        config = config,
         signal = output.shown,
-        tuning = LiveReducer.tuningStateOf(target, output.shown, config),
         // The wish shows at once; the numbers follow with the first recorded frame.
         recording = if (recordingRequested) {
             RecordingState(output.recording?.elapsedMs ?: 0, output.recording?.bars.orEmpty())
         } else {
             null
         },
-        canRecord = LiveReducer.canRecord(target, output.shown),
-        scale = ScaleSpec(config),
-        zoneCrossfadeMs = config.zoneCrossfadeMs,
-        glowTarget = LiveReducer.glowTargetOf(output.shown, config),
-        glowStep = LiveReducer.glowTargetOf(output.shown, config, stepped = true),
-        statusLine = LiveReducer.statusLineOf(target, output.shown),
         practiceMs = practiceMs,
         venue = venue,
     )

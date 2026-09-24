@@ -5,6 +5,7 @@ import com.violinjourney.app.core.domain.IntonationReading
 import com.violinjourney.app.core.domain.TargetMode
 import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.domain.Zone
+import com.violinjourney.app.core.domain.venue.Venue
 import kotlin.math.floor
 import kotlin.math.roundToInt
 
@@ -66,6 +67,32 @@ object LiveReducer {
     fun canRecord(target: LiveTarget, signal: LiveSignal): Boolean =
         target.mode == LiveMode.PLAY &&
             signal != LiveSignal.NoMicPermission && signal != LiveSignal.MicUnavailable
+
+    /**
+     * The whole screen from what was chosen and what sounds; the same on Android and iOS. [recording] — the strip of
+     * a running take, [practiceMs] — the running practice, [venue] — where Live takes place: what the platform knows.
+     */
+    fun stateOf(
+        target: LiveTarget,
+        config: IntonationConfig,
+        signal: LiveSignal,
+        recording: RecordingState? = null,
+        practiceMs: Long? = null,
+        venue: Venue? = null,
+    ) = LiveState(
+        mode = target.mode,
+        signal = signal,
+        tuning = tuningStateOf(target, signal, config),
+        recording = recording,
+        canRecord = canRecord(target, signal),
+        scale = ScaleSpec(config),
+        zoneCrossfadeMs = config.zoneCrossfadeMs,
+        glowTarget = glowTargetOf(signal, config),
+        glowStep = glowTargetOf(signal, config, stepped = true),
+        statusLine = statusLineOf(target, signal),
+        practiceMs = practiceMs,
+        venue = venue,
+    )
 
     fun tuningStateOf(target: LiveTarget, signal: LiveSignal, config: IntonationConfig): TuningState {
         val sounding = (signal as? LiveSignal.Sounding)?.takeIf { target.mode == LiveMode.TUNING }
