@@ -80,7 +80,15 @@ Ten languages: English, Russian, German, French, Spanish, Italian, Portuguese, K
 7. «Звук» дубля, «Камерный зал», эквалайзер — «Обрабатывайте звук» · эквалайзер, компрессор, зал — и сразу «Поделиться»
 8. «Настройка», зафиксирована A — «Настраивайте скрипку» · четыре струны, авто или с фиксацией
 
-**Английский, 7 кадров** — прежний набор (Live «в строе» и «ниже», «Tune», «Занятия», гамма, путешествие, дом); переснять по русской истории, когда понадобится.
+**Английский, 8 кадров** — та же история, те же экраны.
+1. Sharpen your intonation · check every note — the colour shows from afar
+2. Practice is a game · minutes and clean notes earn you bars
+3. Travel the world's concert halls · bars carry you from city to city
+4. Furnish your home · things from the shop and from your travels
+5. Your whole repertoire at hand · pieces, scales, études — and the time spent on each
+6. Record takes · and watch your intonation improve
+7. Polish the sound · equaliser, compressor, hall — then share it
+8. Tune your violin · four strings, automatic or locked
 
 Как переснять (только эмулятор, база `.debug` заменяется):
 1. `./gradlew :app:assembleDebug -PfakePitch=true`, поставить, пройти онбординг; `adb shell cmd locale set-app-locales com.violinjourney.app.debug --locales ru-RU` (или `en-US`).

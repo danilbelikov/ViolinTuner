@@ -29,13 +29,14 @@ CAPTIONS = {
         '08-tune': ('Настраивайте скрипку', 'четыре струны, авто или с фиксацией'),
     },
     'en': {
-        '01-live-intune': 'See your pitch<br>by colour',
-        '02-live-flat': 'Sharp or flat<br>at a glance',
-        '03-tune': 'Tune the<br>four strings',
-        '04-practice': 'Every practice<br>minute counts',
-        '05-scale': 'Scales come with<br>their notes drawn',
-        '06-journey': "Practice takes you to<br>the world's concert halls",
-        '07-home': 'Bars furnish<br>your home',
+        '01-live': ('Sharpen your intonation', 'check every note — the colour shows from afar'),
+        '02-recap': ('Practice is a game', 'minutes and clean notes earn you bars'),
+        '03-journey': ("Travel the world's<br>concert halls", 'bars carry you from city to city'),
+        '04-home': ('Furnish<br>your home', 'things from the shop and from your travels'),
+        '05-repertoire': ('Your whole repertoire<br>at hand', 'pieces, scales, études —<br>and the time spent on each'),
+        '06-takes': ('Record takes', 'and watch your intonation improve'),
+        '07-sound': ('Polish the sound', 'equaliser, compressor, hall —<br>then share it'),
+        '08-tune': ('Tune your violin', 'four strings, automatic or locked'),
     },
 }
 
