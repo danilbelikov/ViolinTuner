@@ -60,14 +60,14 @@ Android-приложение: интонационный тренажёр для
 - Release подписывается ключом магазинов (один для RuStore и Google Play): файл и пароли — в `local.properties` (`releaseStoreFile`, `releaseStorePassword`, `releaseKeyAlias`, `releaseKeyPassword`), сам ключ — `~/keys/violin-journey/release.jks`, вне репозитория. Без них release собирается неподписанным. Потеря ключа = невозможность обновлять приложение. Шаги публикации — `docs/release.md`.
 - Kotlin, Jetpack Compose + Material 3 (Compose BOM), Gradle Kotlin DSL, version catalog `gradle/libs.versions.toml`
 - Hilt, Coroutines/Flow, Navigation Compose
-- minSdk 26, Java 17 (`compileOptions`; Gradle-демон работает на JDK 21), один модуль `app`
+- minSdk 26, Java 17 (`compileOptions`; Gradle-демон работает на JDK 21). Модули: `app` (Android-приложение), `shared` (Kotlin Multiplatform — общий код Android и iOS), `shared-testing` (тестовые сигналы для тестов обоих) — раздел «Общий модуль и iOS»
 - DataStore Preferences — пользовательские настройки и идущее занятие (`core/settings`); Room — сессии, занятия, трофеи, репертуар, настройки звука и минусовки (`core/data`, база `violin.db` v13)
 - Никаких сторонних DSP-библиотек: детектор высоты тона свой (YIN и MPM), параметры — в спеке
 
 ## Архитектура
 - Clean + MVI. Пакеты: `feature/live` (закладка и листы подходов — `block`), `feature/onboarding`, `feature/settings`, `feature/session`, `feature/history` (вкладка «Записи»), `feature/practice`, `feature/repertoire` (список, `form`, `piece`, `stand`), `feature/sound` (экран «Звук»), `feature/backup` (копия и восстановление), `feature/journey` (путешествие; открытки — `art`), `feature/home` (дом, лавка, «Обставить», дома; сборка комнаты — `art`), `feature/camera` (своя камера на CameraX — только для видео под минусовку); общее — `core/audio`, `core/domain`, `core/data`, `core/settings`, `core/analytics` (обезличенная статистика, 3.34), `core/recording` (конвейер записи `TakePipeline`), `core/backup` (копия данных), `core/ui` (тема, токены, общие компоненты, форматы, запрос разрешения на микрофон).
 - Экран: `LiveContract` (State / Intent / Effect), `LiveViewModel`, `LiveScreen` (stateless: принимает State и `(Intent) -> Unit`), `LiveRoute` (ViewModel + навигация).
-- Доменная логика (центы, зоны, сглаживание, гистерезис, снэп к струнам) — чистый Kotlin без Android-зависимостей в `core/domain`, покрыта unit-тестами.
+- Доменная логика (центы, зоны, сглаживание, гистерезис, снэп к струнам) — чистый Kotlin без Android-зависимостей в `core/domain`, покрыта unit-тестами. Ядро Live (верхний уровень `core/domain`, детекторы `core/audio/dsp`, `FrameAnalyzer`, `DigitalSilenceWatchdog`) лежит в модуле `shared` с теми же пакетами; подпакеты `core/domain` пока в `app`.
 - Все числовые константы — в `IntonationConfig` со значениями из спеки; числа учёта занятий — в `PracticeConfig` (spec 5.6). Магических чисел в коде нет. Эталон A4 и допуск — выбор пользователя: готовый конфиг приходит потоком из `IntonationConfigSource`, синглтон `IntonationConfig` в Hilt — только значения по умолчанию.
 - Аудио: интерфейс `PitchSource`; `MicPitchSource` (AudioRecord, фоновый диспетчер) и `FakePitchSource` (превью, тесты, разработка без микрофона). ViewModel не знает про AudioRecord.
 - Кольцо, шкала, фоновый градиент — `Canvas` / `Modifier.drawBehind` в Compose, без View-интеропа.
@@ -81,16 +81,23 @@ Android-приложение: интонационный тренажёр для
 
 ## Команды
 - Сборка: `./gradlew :app:assembleDebug`
-- Unit-тесты: `./gradlew :app:testDebugUnitTest`
-- Один класс / один тест: `./gradlew :app:testDebugUnitTest --tests "*.ZoneClassifierTest"` / `--tests "*.ZoneClassifierTest.methodName"`
+- Unit-тесты: `./gradlew :app:testDebugUnitTest :shared:testAndroidHostTest` (тесты ядра Live — во втором)
+- Один класс / один тест: `./gradlew :app:testDebugUnitTest --tests "*.SessionAnalyzerTest"` / `--tests "*.SessionAnalyzerTest.methodName"`; для классов ядра — `./gradlew :shared:testAndroidHostTest --tests "*.ZoneTest"`
 - Сборка на фейковом источнике вместо микрофона (эмулятор, проверка всех состояний без инструмента): `./gradlew :app:assembleDebug -PfakePitch=true`
-- Отчёт сравнения детекторов: `./gradlew :app:testDebugUnitTest --tests "*.DetectorComparisonTest"`, таблица — в `<system-out>` файла `app/build/test-results/testDebugUnitTest/TEST-*DetectorComparisonTest.xml`
+- Отчёт сравнения детекторов: `./gradlew :shared:testAndroidHostTest --tests "*.DetectorComparisonTest"`, таблица — в `<system-out>` файла `shared/build/test-results/testAndroidHostTest/TEST-*DetectorComparisonTest.xml`
 - Значок приложения (вариант 1b «Гриф-дорога», `docs/design/project/icon_app/project/`) — векторные слои `ic_launcher_background / foreground / monochrome`, их пишет `node tools/icon/export.js` из генератора хэндоффа `icon-v2-gen.js`, он же рисует значок для магазинов `docs/store/icon-512.png` и баннеры Play `docs/store/feature-graphic-<язык>.png` (слоганы — `taglines` в скрипте) (через Chrome без окна); руками не править.
 - Каждая вещь дома после покупки — в обоих домах, в комнате и снаружи, с картой движения: `python3 tools/home/rounds.py <папка>` (только эмулятор; база приложения меняется насовсем). Лист «было — стало» всех вещей — `docs/design/project/home3/project/shop-review.html`.
 - Замер живой картины на открытом экране: `python3 tools/perf/measure.py <подпись> [секунды] [серийный номер]`; попиксельная сверка снимков — `tools/perf/snap.py`. Как поднять эмулятор с настоящей видеокартой и чем выключать запекание и часы картин — `docs/plan-performance.md`.
 - Lint: `./gradlew :app:lintDebug`. Инструментальные тесты (нужен девайс/эмулятор): `./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true` — тесты Room и кодера звука. **Без этого флага Gradle после прогона удаляет приложение с устройства вместе с данными** (настройки, сессии): верни сборку через `adb install` и предупреди владельца.
 - Инструментальные тесты и установку гоняй только на эмуляторе: `ANDROID_SERIAL=emulator-5554 ./gradlew …` — к машине бывает подключён телефон владельца. `adb` не в PATH: `~/Library/Android/sdk/platform-tools/adb`; рабочий AVD — `Pixel_7`. `adb shell input tap` по координатам теряется — находи элемент по тексту через `uiautomator dump`; после `adb install -r` — `am force-stop` + `am start`. Остальные приёмы проверки — в `docs/notes/<фича>.md`.
-- Задача готова только когда обе команды зелёные. Падающий тест чинится через причину, а не через правку теста.
+- Задача готова только когда сборка и unit-тесты (оба модуля) зелёные. Падающий тест чинится через причину, а не через правку теста.
+
+## Общий модуль и iOS
+Перенос на iOS идёт через Kotlin Multiplatform в ветке `kmp`; `main` остаётся чистым Android-проектом. Шаг 1 сделан: ядро Live в `shared`. Дальше — `PitchSource` / `FakePitchSource` (развязать `AudioTap` с `java.io.File`), Compose Multiplatform и Live на фейковом источнике в iOS-симуляторе.
+- `shared`: цели `android` (плагин `com.android.kotlin.multiplatform.library`), `iosArm64`, `iosSimulatorArm64`. В `commonMain` нет `java.*` и `android.*` — только стандартная библиотека Kotlin (`mod` / `floorDiv` вместо `Math.floorMod`, `import kotlin.jvm.JvmInline`).
+- Тесты общего кода — `commonTest` на `kotlin.test`: сообщение последним аргументом, допуск — третьим; в именах в обратных кавычках нет запятых (Kotlin/Native их не принимает, вместо них « — »). Тест, которому нужна JVM (замер времени, отчёт), — в `androidHostTest`.
+- `shared-testing` — `SignalSynth`; его подключают `commonTest` модуля `shared` и `testImplementation` модуля `app`. В прод-код не подключать.
+- iOS: `./gradlew :shared:compileKotlinIosSimulatorArm64` собирается без Xcode; тесты в симуляторе — `./gradlew :shared:iosSimulatorArm64Test`, нужен установленный Xcode (`xcode-select -s /Applications/Xcode.app`).
 
 ## Языки
 - Язык интерфейса — язык устройства или выбранный для приложения в системе (Android 13+: `res/xml/locales_config.xml`, строка «Язык» в «Настройках» открывает системный экран; своего переключателя нет). `Formats.use(locale)` зовут `ViolinTunerApp` (`onCreate`, `onConfigurationChanged`) и `MainActivity.onCreate` — язык, выбранный для одного приложения, доходит только до ресурсов активности.
