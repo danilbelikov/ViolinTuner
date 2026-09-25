@@ -1079,4 +1079,5 @@
     <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
     <string name="video_shoot_own_hint">con la fotocamera dell\'app — analisi subito</string>
     <string name="camera_no_permission">Senza accesso alla fotocamera non si può riprendere — si può concedere nelle impostazioni dell\'app.</string>
+    <string name="camera_permission_text">La fotocamera fotografa gli spartiti e riprende le prese video. Restano sul telefono e non vengono inviate da nessuna parte.</string>
 </resources>

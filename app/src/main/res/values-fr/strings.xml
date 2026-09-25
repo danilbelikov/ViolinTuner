@@ -1079,4 +1079,5 @@
     <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
     <string name="video_shoot_own_hint">avec la caméra de l\'app — analyse immédiate</string>
     <string name="camera_no_permission">Sans accès à la caméra, impossible de filmer — on peut l\'accorder dans les réglages de l\'app.</string>
+    <string name="camera_permission_text">La caméra photographie les partitions et filme les prises vidéo. Elles restent sur le téléphone et ne sont envoyées nulle part.</string>
 </resources>

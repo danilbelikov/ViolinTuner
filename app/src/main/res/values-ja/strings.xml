@@ -1079,4 +1079,5 @@
     <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
     <string name="video_shoot_own_hint">アプリのカメラで — すぐに分析</string>
     <string name="camera_no_permission">カメラへのアクセスがないと撮影できません — アプリの設定で許可できます。</string>
+    <string name="camera_permission_text">カメラで楽譜の写真とビデオテイクを撮影します。撮影したものは端末に残り、どこにも送信されません。</string>
 </resources>

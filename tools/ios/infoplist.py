@@ -3,7 +3,8 @@
 python3 tools/ios/infoplist.py
 
 The request for the microphone (NSMicrophoneUsageDescription) is the text of the prompt on Live, mic_permission_text of app/src/main/res,
-in every language the app speaks (spec 3.26); so the two never say different things. Not to be edited by hand."""
+and the request for the camera (NSCameraUsageDescription) is camera_permission_text, in every language the app speaks (spec 3.26);
+so the app and the system never say different things. Not to be edited by hand."""
 import json
 import os
 import xml.etree.ElementTree as ET
@@ -17,7 +18,7 @@ LANGUAGES = {
     'values': 'en', 'values-ru': 'ru', 'values-de': 'de', 'values-fr': 'fr', 'values-es': 'es',
     'values-it': 'it', 'values-pt': 'pt', 'values-ko': 'ko', 'values-zh': 'zh-Hans', 'values-ja': 'ja',
 }
-KEYS = {'NSMicrophoneUsageDescription': 'mic_permission_text'}
+KEYS = {'NSMicrophoneUsageDescription': 'mic_permission_text', 'NSCameraUsageDescription': 'camera_permission_text'}
 
 
 def text(folder, name):

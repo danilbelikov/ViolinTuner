@@ -1079,4 +1079,5 @@
     <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
     <string name="video_shoot_own_hint">앱 카메라로 — 바로 분석</string>
     <string name="camera_no_permission">카메라 권한이 없으면 촬영할 수 없어요 — 앱 설정에서 허용할 수 있어요.</string>
+    <string name="camera_permission_text">카메라로 악보 사진과 영상 테이크를 찍어요. 촬영한 것은 휴대폰에만 남고 어디로도 보내지지 않아요.</string>
 </resources>

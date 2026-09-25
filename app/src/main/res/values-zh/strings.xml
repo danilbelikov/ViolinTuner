@@ -1079,4 +1079,5 @@
     <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
     <string name="video_shoot_own_hint">用应用相机 — 立即分析</string>
     <string name="camera_no_permission">没有摄像头权限就无法拍摄——可以在应用设置中开启。</string>
+    <string name="camera_permission_text">相机用于拍摄乐谱照片和视频录制。拍摄内容只保存在手机上，不会发送到任何地方。</string>
 </resources>

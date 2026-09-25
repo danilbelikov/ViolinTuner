@@ -1079,4 +1079,5 @@
     <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
     <string name="video_shoot_own_hint">mit der App-Kamera — sofort ausgewertet</string>
     <string name="camera_no_permission">Ohne Kamerazugriff kann nicht gefilmt werden — er lässt sich in den App-Einstellungen erteilen.</string>
+    <string name="camera_permission_text">Die Kamera fotografiert Noten und filmt Video-Takes. Die Aufnahmen bleiben auf dem Telefon und werden nirgendwohin gesendet.</string>
 </resources>

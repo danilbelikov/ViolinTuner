@@ -1079,4 +1079,5 @@
     <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
     <string name="video_shoot_own_hint">камерой приложения — разбор сразу</string>
     <string name="camera_no_permission">Без доступа к камере снять не получится — его можно дать в настройках приложения.</string>
+    <string name="camera_permission_text">Камера снимает фото нот и видео-дубли. Снимки остаются на телефоне и никуда не отправляются.</string>
 </resources>

@@ -208,6 +208,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Violin Journey";
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera takes photos of sheet music and video takes. They stay on the phone and are not sent anywhere.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Without the microphone the app cannot hear the violin. Sound is processed on the phone and is never sent anywhere.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
@@ -239,6 +240,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Violin Journey";
+				INFOPLIST_KEY_NSCameraUsageDescription = "The camera takes photos of sheet music and video takes. They stay on the phone and are not sent anywhere.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Without the microphone the app cannot hear the violin. Sound is processed on the phone and is never sent anywhere.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;

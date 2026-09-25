@@ -1079,4 +1079,5 @@
     <!-- The app's own camera for a piece with a backing, the chip off; the system camera refused (spec 3.32). -->
     <string name="video_shoot_own_hint">com a câmera do app — análise na hora</string>
     <string name="camera_no_permission">Sem acesso à câmera não dá para filmar — dá para permitir nos ajustes do app.</string>
+    <string name="camera_permission_text">A câmera fotografa as partituras e grava os takes em vídeo. Eles ficam no telefone e não são enviados a lugar nenhum.</string>
 </resources>

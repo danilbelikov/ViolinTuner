@@ -1,6 +1,72 @@
 {
   "sourceLanguage": "en",
   "strings": {
+    "NSCameraUsageDescription": {
+      "comment": "The same words as camera_permission_text of the shared resources; written by tools/ios/infoplist.py.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Die Kamera fotografiert Noten und filmt Video-Takes. Die Aufnahmen bleiben auf dem Telefon und werden nirgendwohin gesendet."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The camera takes photos of sheet music and video takes. They stay on the phone and are not sent anywhere."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara fotografía las partituras y graba las tomas en vídeo. Se quedan en el teléfono y no se envían a ningún sitio."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La caméra photographie les partitions et filme les prises vidéo. Elles restent sur le téléphone et ne sont envoyées nulle part."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La fotocamera fotografa gli spartiti e riprende le prese video. Restano sul telefono e non vengono inviate da nessuna parte."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "カメラで楽譜の写真とビデオテイクを撮影します。撮影したものは端末に残り、どこにも送信されません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "카메라로 악보 사진과 영상 테이크를 찍어요. 촬영한 것은 휴대폰에만 남고 어디로도 보내지지 않아요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A câmera fotografa as partituras e grava os takes em vídeo. Eles ficam no telefone e não são enviados a lugar nenhum."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Камера снимает фото нот и видео-дубли. Снимки остаются на телефоне и никуда не отправляются."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "相机用于拍摄乐谱照片和视频录制。拍摄内容只保存在手机上，不会发送到任何地方。"
+          }
+        }
+      }
+    },
     "NSMicrophoneUsageDescription": {
       "comment": "The same words as mic_permission_text of the shared resources; written by tools/ios/infoplist.py.",
       "extractionState": "manual",
