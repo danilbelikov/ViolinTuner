@@ -40,9 +40,15 @@ import platform.Foundation.writeToFile
  */
 @OptIn(ExperimentalForeignApi::class)
 internal object SystemScreens {
-    /** The controller on top, one that is not on its way out. */
+    /**
+     * The app's own screen, set once by `MainViewController`. Compose shows its menus and dialogs in windows of their own,
+     * and one of them is the key window while it is up: a system screen put in front of it goes away with it.
+     */
+    var host: UIViewController? = null
+
+    /** The controller on top of the app's own window, one that is not on its way out. */
     fun topController(): UIViewController? {
-        var controller = UIApplication.sharedApplication.keyWindow?.rootViewController
+        var controller = host?.view?.window?.rootViewController ?: UIApplication.sharedApplication.keyWindow?.rootViewController
         while (true) {
             val next = controller?.presentedViewController ?: return controller
             if (next.isBeingDismissed()) return controller
@@ -51,9 +57,8 @@ internal object SystemScreens {
     }
 
     /**
-     * Puts [controller] in front. Compose shows its menus as controllers of their own, and a system screen asked for from
-     * a menu item came up on top of that menu — and went away with it a moment later. So the screen waits for a menu
-     * that is closing, and a moment more for one that is only about to close.
+     * Puts [controller] in front of the app's own window, never of a menu's (see [host]). It waits for a screen of the
+     * app's window that is on its way out: UIKit would not present on top of it.
      */
     fun present(controller: UIViewController) {
         presentWhenSettled(controller, attemptsLeft = SETTLE_ATTEMPTS)

@@ -20,6 +20,7 @@ import kotlin.experimental.ExperimentalNativeApi
 import kotlin.native.Platform
 import com.violinjourney.app.core.backup.IosRestoreSwap
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.ui.components.SystemScreens
 import com.violinjourney.app.feature.backup.LocalAppRestart
 import platform.Foundation.NSProcessInfo
 import platform.UIKit.UIViewController
@@ -44,7 +45,7 @@ fun MainViewController(analytics: AnalyticsService?): UIViewController {
     val data = PlatformFile(IosStorage.dataDirectory())
     IosRestoreSwap.applyIfPending(data)
     // the whole screen is not pushed up for a focused field: the insets of the keyboard do that where it is needed
-    return ComposeUIViewController(configure = { onFocusBehavior = OnFocusBehavior.DoNothing }) {
+    val controller = ComposeUIViewController(configure = { onFocusBehavior = OnFocusBehavior.DoNothing }) {
         var graph by remember { mutableStateOf(IosGraph(fakeScenario, statistics)) }
         val restart = remember {
             {
@@ -64,6 +65,8 @@ fun MainViewController(analytics: AnalyticsService?): UIViewController {
             }
         }
     }
+    SystemScreens.host = controller
+    return controller
 }
 
 private class GraphViewModels : ViewModelStoreOwner {
