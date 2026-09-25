@@ -6,6 +6,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.convert
 import kotlinx.cinterop.pointed
+import kotlinx.cinterop.readValue
 import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import platform.AVFoundation.AVAssetReader
@@ -21,6 +22,7 @@ import platform.AVFoundation.AVMediaTypeAudio
 import platform.AVFoundation.AVURLAsset
 import platform.AVFoundation.duration
 import platform.AVFoundation.formatDescriptions
+import platform.AVFoundation.timeRange
 import platform.AVFoundation.tracksWithMediaType
 import platform.CoreAudioTypes.kAudioFormatLinearPCM
 import platform.CoreMedia.CMAudioFormatDescriptionGetStreamBasicDescription
@@ -29,6 +31,9 @@ import platform.CoreMedia.CMBlockBufferCopyDataBytes
 import platform.CoreMedia.CMBlockBufferGetDataLength
 import platform.CoreMedia.CMSampleBufferGetDataBuffer
 import platform.CoreMedia.CMTimeGetSeconds
+import platform.CoreMedia.CMTimeMake
+import platform.CoreMedia.CMTimeRangeMake
+import platform.CoreMedia.kCMTimePositiveInfinity
 import platform.CoreFoundation.CFRelease
 import platform.Foundation.CFBridgingRetain
 import platform.Foundation.NSNumber
@@ -40,7 +45,13 @@ import platform.Foundation.NSURL
  */
 @OptIn(ExperimentalForeignApi::class)
 object IosPcmFileOpener : PcmFileOpener {
-    override fun open(file: PlatformFile): OpenedPcm? {
+    override fun open(file: PlatformFile): OpenedPcm? = openAt(file, fromSample = 0)
+
+    /**
+     * The sound from [fromSample] on (at the file's own rate) — how a player seeks: a reader cannot go back, a new one
+     * is opened where the sound is wanted. [OpenedPcm.totalSamples] stays the length of the whole file.
+     */
+    fun openAt(file: PlatformFile, fromSample: Long): OpenedPcm? {
         val asset = AVURLAsset(uRL = NSURL.fileURLWithPath(file.path), options = null)
         val track = asset.tracksWithMediaType(AVMediaTypeAudio).firstOrNull() as? AVAssetTrack ?: return null
         val description = track.formatDescriptions.firstOrNull() ?: return null
@@ -54,7 +65,13 @@ object IosPcmFileOpener : PcmFileOpener {
             CFRelease(ref)
         }
         if (rate <= 0) return null
-        val reader = AVAssetReader(asset = asset, error = null)
+        // a reader that cannot be made comes back as nil, which Kotlin/Native throws as an NPE
+        val reader = try {
+            AVAssetReader(asset = asset, error = null)
+        } catch (_: NullPointerException) {
+            return null
+        }
+        if (fromSample > 0) reader.timeRange = CMTimeRangeMake(CMTimeMake(fromSample, rate), kCMTimePositiveInfinity.readValue())
         val output = AVAssetReaderTrackOutput(
             track = track,
             outputSettings = mapOf<Any?, Any?>(

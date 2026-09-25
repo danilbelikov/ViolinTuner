@@ -11,7 +11,9 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertIs
+import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.Dispatchers
@@ -46,5 +48,36 @@ class IosFileAnalysisTest {
         val result = analyzer.analyze(PlatformFile(path), IntonationConfig(), startedAtEpochMs = 0, audioFileName = "take.m4a") {}
         val recorded = assertIs<FileAnalysisResult.Recorded>(result)
         assertTrue(recorded.session.durationMs in 2_500L..3_200L, "duration ${recorded.session.durationMs}")
+    }
+
+    @Test
+    fun `a file opened from its middle gives the rest of the sound`() {
+        val rate = 48_000
+        val encoder = IosAacEncoder(PlatformFile(path), rate)
+        val hop = ShortArray(512)
+        repeat(2 * rate / hop.size) { encoder.offer(hop, hop.size) }
+        assertTrue(encoder.finish())
+
+        val whole = assertNotNull(IosPcmFileOpener.open(PlatformFile(path)))
+        val rest = assertNotNull(IosPcmFileOpener.openAt(PlatformFile(path), fromSample = rate.toLong()))
+        try {
+            assertEquals(whole.totalSamples, rest.totalSamples, "the length stays the whole file's")
+            val all = count(whole)
+            val tail = count(rest)
+            assertTrue(tail in rate / 2..rate * 3 / 2, "from the middle: $tail of $all")
+        } finally {
+            whole.release()
+            rest.release()
+        }
+    }
+
+    private fun count(pcm: OpenedPcm): Int {
+        val chunk = ShortArray(4_096)
+        var total = 0
+        while (true) {
+            val read = pcm.read(chunk)
+            if (read == PcmSource.END) return total
+            total += read
+        }
     }
 }

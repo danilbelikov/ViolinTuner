@@ -11,6 +11,9 @@ import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.domain.sound.SoundSettings
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.recording.IosPcmFileOpener
+import com.violinjourney.app.core.recording.OpenedPcm
+import com.violinjourney.app.core.recording.PcmSource
 import kotlin.concurrent.AtomicInt
 import kotlin.concurrent.AtomicLong
 import kotlinx.cinterop.BetaInteropApi
@@ -151,13 +154,10 @@ class IosSessionPlayer(
     }
 
     private suspend fun run(file: PlatformFile, backing: PlayerBacking?) {
-        val source = memScoped {
-            val error = alloc<ObjCObjectVar<NSError?>>()
-            AVAudioFile(forReading = NSURL.fileURLWithPath(file.path), error = error.ptr).takeIf { error.value == null }
-                .also { if (it == null) log("cannot read ${file.path}: ${error.value?.localizedDescription}") }
-        }
-        val rate = source?.processingFormat?.sampleRate?.toInt() ?: 0
+        val source = openSound(file)
+        val rate = source?.rate ?: 0
         if (source == null || rate <= 0 || source.length <= 0) {
+            source?.close()
             mutableState.update { PlayerState(failed = true, processed = it.processed, original = it.original) }
             return
         }
@@ -180,12 +180,31 @@ class IosSessionPlayer(
             node.stop()
             engine.stop()
             reader?.close()
+            source.close()
+        }
+    }
+
+    private fun openSound(file: PlatformFile): SoundSource? {
+        val recording = memScoped {
+            val error = alloc<ObjCObjectVar<NSError?>>()
+            // a file AVAudioFile cannot read makes its init return nil, which Kotlin/Native throws as an NPE
+            try {
+                AVAudioFile(forReading = NSURL.fileURLWithPath(file.path), error = error.ptr)
+            } catch (_: NullPointerException) {
+                null
+            }?.takeIf { error.value == null }
+        }
+        if (recording != null) return FileSound(recording)
+        // a video: AVAudioFile on iOS opens no file with a picture in it
+        return IosPcmFileOpener.open(file)?.let { AssetSound(file, it) } ?: run {
+            log("cannot read ${file.path}")
+            null
         }
     }
 
     /** One file on one node: the state of the sound between two chunks. */
     private inner class Playback(
-        private val source: AVAudioFile,
+        private val source: SoundSource,
         private val rate: Int,
         private val node: AVAudioPlayerNode,
         private val format: AVAudioFormat,
@@ -203,7 +222,6 @@ class IosSessionPlayer(
         private val chain = SoundChain(rate, config)
         private val mixer = AbMixer(chain.latencySamples, fadeSamples = (AB_FADE_MS * rate / MS_PER_SECOND).toInt())
         private val durationMs = source.length * MS_PER_SECOND / rate
-        private val read = AVAudioPCMBuffer(pCMFormat = source.processingFormat, frameCapacity = CHUNK.toUInt())
         private val dry = FloatArray(CHUNK)
         private val wet = FloatArray(CHUNK)
 
@@ -317,14 +335,7 @@ class IosSessionPlayer(
             }
         }
 
-        private fun decode(): Int {
-            read.frameLength = 0u
-            if (!source.readIntoBuffer(read, CHUNK.toUInt(), null)) return 0
-            val count = read.frameLength.toInt()
-            val channel = read.floatChannelData?.get(0) ?: return 0
-            for (i in 0 until count) dry[i] = channel[i]
-            return count
-        }
+        private fun decode(): Int = source.read(dry, CHUNK)
 
         private fun schedule(samples: FloatArray, count: Int) {
             val buffer = AVAudioPCMBuffer(pCMFormat = format, frameCapacity = count.toUInt())
@@ -366,7 +377,7 @@ class IosSessionPlayer(
             running = false
             queued.value = 0
             played.value = 0
-            source.framePosition = positionMs * rate / MS_PER_SECOND
+            source.seek(positionMs * rate / MS_PER_SECOND)
             chain.reset()
             mixer.reset()
             backingMix?.reset()
@@ -396,6 +407,68 @@ class IosSessionPlayer(
     // NSLog takes Objective-C objects for its arguments: the line is made whole here, its percent signs doubled.
     private fun log(line: String) = NSLog("SessionPlayer: $line".replace("%", "%%"))
 
+    /** The sound of a take as the player reads it: from the start, a chunk at a time, anywhere after a seek. */
+    private interface SoundSource {
+        val rate: Int
+        val length: Long
+
+        /** Up to [max] samples, the first channel, into [into]; 0 at the end. */
+        fun read(into: FloatArray, max: Int): Int
+
+        fun seek(frame: Long)
+
+        fun close()
+    }
+
+    /** A recording, by AVAudioFile. */
+    private class FileSound(private val file: AVAudioFile) : SoundSource {
+        override val rate = file.processingFormat.sampleRate.toInt()
+        override val length = file.length
+        private val buffer = AVAudioPCMBuffer(pCMFormat = file.processingFormat, frameCapacity = CHUNK.toUInt())
+
+        override fun read(into: FloatArray, max: Int): Int {
+            buffer.frameLength = 0u
+            if (!file.readIntoBuffer(buffer, minOf(max, CHUNK).toUInt(), null)) return 0
+            val count = buffer.frameLength.toInt()
+            val channel = buffer.floatChannelData?.get(0) ?: return 0
+            for (i in 0 until count) into[i] = channel[i]
+            return count
+        }
+
+        override fun seek(frame: Long) {
+            file.framePosition = frame
+        }
+
+        override fun close() = Unit
+    }
+
+    /** The sound of a video, by AVAssetReader: it reads only forward, so a seek opens a new one where the sound is wanted. */
+    private class AssetSound(private val file: PlatformFile, first: OpenedPcm) : SoundSource {
+        private var pcm: OpenedPcm? = first
+        override val rate = first.sampleRate
+        override val length = first.totalSamples
+        private var samples = ShortArray(0)
+
+        override fun read(into: FloatArray, max: Int): Int {
+            val source = pcm ?: return 0
+            if (samples.size != max) samples = ShortArray(max)
+            val count = source.read(samples)
+            if (count == PcmSource.END) return 0
+            for (i in 0 until count) into[i] = samples[i] / FULL_SCALE
+            return count
+        }
+
+        override fun seek(frame: Long) {
+            pcm?.release()
+            pcm = IosPcmFileOpener.openAt(file, frame)
+        }
+
+        override fun close() {
+            pcm?.release()
+            pcm = null
+        }
+    }
+
     private data class Wishes(val seek: Long, val playing: Boolean, val original: Boolean, val settings: SoundSettings?)
 
     private companion object {
@@ -410,5 +483,6 @@ class IosSessionPlayer(
         const val MS_PER_SECOND = 1_000L
         const val AB_FADE_MS = 60L
         const val METERS_PER_SECOND = 30
+        const val FULL_SCALE = 32_768f
     }
 }

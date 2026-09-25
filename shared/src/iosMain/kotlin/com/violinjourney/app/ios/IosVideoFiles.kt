@@ -39,7 +39,8 @@ import platform.UIKit.UIImage
 /**
  * Videos of takes on iOS (spec 3.19), where Android keeps them: beside the sound of sessions, `sessions/<uuid>.<ext>`
  * with `<uuid>-thumb.jpg`. The camera writes into `camera/`; the pickers hand over copies in the temporary folder as
- * `file:` URIs. The container is kept as it came (`.mov` from the camera of an iPhone): AVFoundation reads both.
+ * `file:` URIs. The container is kept as it came (`.mov` from the camera of an iPhone). AVAudioFile on iOS opens no file
+ * with a picture in it: the sound of a video is read by AVAssetReader (`IosPcmFileOpener`).
  */
 @OptIn(ExperimentalForeignApi::class)
 internal class IosVideoFiles(private val config: RepertoireConfig, private val io: CoroutineDispatcher) : VideoFiles {

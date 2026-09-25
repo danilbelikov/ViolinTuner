@@ -2,6 +2,8 @@ package com.violinjourney.app.core.audio.playback
 
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.fileName
+import com.violinjourney.app.core.recording.IosPcmFileOpener
+import com.violinjourney.app.core.recording.PcmSource
 import kotlin.math.roundToInt
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
@@ -58,7 +60,9 @@ class IosSessionWaveforms(private val directory: () -> String, private val io: C
     }
 
     private inline fun reckon(audio: PlatformFile, checkpoint: () -> Unit): FloatArray? {
-        val file = runCatching { AVAudioFile(forReading = NSURL.fileURLWithPath(audio.path), error = null) }.getOrNull() ?: return null
+        // a video: AVAudioFile on iOS opens no file with a picture in it
+        val file = runCatching { AVAudioFile(forReading = NSURL.fileURLWithPath(audio.path), error = null) }.getOrNull()
+            ?: return reckonVideo(audio, checkpoint)
         if (file.length <= 0) return null
         val builder = WaveformBuilder(file.length, SessionWaveforms.BARS)
         val buffer = AVAudioPCMBuffer(pCMFormat = file.processingFormat, frameCapacity = CHUNK.toUInt())
@@ -76,6 +80,24 @@ class IosSessionWaveforms(private val directory: () -> String, private val io: C
             builder.add(chunk, count)
         }
         return builder.build()
+    }
+
+    private inline fun reckonVideo(video: PlatformFile, checkpoint: () -> Unit): FloatArray? {
+        val pcm = IosPcmFileOpener.open(video) ?: return null
+        try {
+            if (pcm.totalSamples <= 0) return null
+            val builder = WaveformBuilder(pcm.totalSamples, SessionWaveforms.BARS)
+            val chunk = ShortArray(CHUNK)
+            while (true) {
+                checkpoint()
+                val count = pcm.read(chunk)
+                if (count == PcmSource.END) break
+                builder.add(chunk, count)
+            }
+            return builder.build()
+        } finally {
+            pcm.release()
+        }
     }
 
     private companion object {
