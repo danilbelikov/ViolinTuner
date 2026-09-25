@@ -41,11 +41,11 @@ import platform.darwin.dispatch_sync
  * [QUEUE_HOPS] means the encoder fell behind: [offer] says so and the take goes on without sound, as on Android.
  */
 @OptIn(ExperimentalForeignApi::class)
-class IosAacEncoder(private val file: PlatformFile, private val sampleRateHz: Int) : PcmEncoder {
+class IosAacEncoder(private val file: PlatformFile, sampleRateHz: Int) : PcmEncoder {
     private val queue = dispatch_queue_create("aac-encoder", null)
     private val queued = AtomicInt(0)
     private val failed = AtomicInt(0)
-    private val ref = createFile()
+    private val aac = AacFile(file.path, sampleRateHz, channels = 1)
 
     override fun offer(hop: ShortArray, count: Int): Boolean {
         if (failed.value != 0) return false
@@ -55,7 +55,7 @@ class IosAacEncoder(private val file: PlatformFile, private val sampleRateHz: In
         }
         val samples = hop.copyOf(count)
         dispatch_async(queue) {
-            if (failed.value == 0 && !write(samples)) failed.value = 1
+            if (failed.value == 0 && !aac.write(samples, samples.size)) failed.value = 1
             queued.decrementAndGet()
         }
         return true
@@ -63,36 +63,59 @@ class IosAacEncoder(private val file: PlatformFile, private val sampleRateHz: In
 
     override fun finish(): Boolean {
         var complete = false
-        dispatch_sync(queue) {
-            // disposing is what writes the end of the file
-            complete = ExtAudioFileDispose(ref) == NO_ERROR && failed.value == 0
-        }
+        dispatch_sync(queue) { complete = aac.close() && failed.value == 0 }
         if (!complete) file.deleteFile()
         return complete
     }
 
-    private fun write(samples: ShortArray): Boolean = memScoped {
+    private companion object {
+        // about a second and a half of hops of 512 at 48 kHz, as on Android
+        const val QUEUE_HOPS = 200
+    }
+}
+
+/**
+ * An `.m4a` of AAC written by ExtAudioFile from PCM16, [channels] interleaved: the file of a take and the file that is
+ * sent. Not thread-safe: one writer at a time. [close] is what writes the end of the file.
+ */
+@OptIn(ExperimentalForeignApi::class)
+internal class AacFile(path: String, private val sampleRateHz: Int, private val channels: Int) {
+    private val ref = create(path)
+
+    /** [count] samples of [samples] — frames × [channels]; false when the encoder refused them. */
+    fun write(samples: ShortArray, count: Int): Boolean = memScoped {
+        if (count == 0) return true
         val list = alloc<AudioBufferList>()
         list.mNumberBuffers = 1u
         samples.usePinned { pinned ->
-            list.mBuffers[0].mNumberChannels = CHANNELS.convert()
-            list.mBuffers[0].mDataByteSize = (samples.size * BYTES_PER_SAMPLE).convert()
+            list.mBuffers[0].mNumberChannels = channels.convert()
+            list.mBuffers[0].mDataByteSize = (count * BYTES_PER_SAMPLE).convert()
             list.mBuffers[0].mData = pinned.addressOf(0)
-            ExtAudioFileWrite(ref, samples.size.convert(), list.ptr) == NO_ERROR
+            ExtAudioFileWrite(ref, (count / channels).convert(), list.ptr) == NO_ERROR
         }
     }
 
-    private fun createFile() = memScoped {
+    fun close(): Boolean = ExtAudioFileDispose(ref) == NO_ERROR
+
+    private fun create(path: String) = memScoped {
         val aac = alloc<AudioStreamBasicDescription>().apply {
             mSampleRate = sampleRateHz.toDouble()
             mFormatID = kAudioFormatMPEG4AAC
-            mChannelsPerFrame = CHANNELS.convert()
+            mChannelsPerFrame = channels.convert()
         }
-        val pcm = pcmFormat()
+        val pcm = alloc<AudioStreamBasicDescription>().apply {
+            mSampleRate = sampleRateHz.toDouble()
+            mFormatID = kAudioFormatLinearPCM
+            mFormatFlags = kAudioFormatFlagIsSignedInteger or kAudioFormatFlagIsPacked
+            mChannelsPerFrame = channels.convert()
+            mBitsPerChannel = (BYTES_PER_SAMPLE * BITS_PER_BYTE).convert()
+            mBytesPerFrame = (BYTES_PER_SAMPLE * channels).convert()
+            mFramesPerPacket = 1u
+            mBytesPerPacket = (BYTES_PER_SAMPLE * channels).convert()
+        }
         val out = alloc<ExtAudioFileRefVar>()
-        val url = NSURL.fileURLWithPath(file.path)
         @Suppress("UNCHECKED_CAST")
-        val cfUrl = CFBridgingRetain(url) as CFURLRef
+        val cfUrl = CFBridgingRetain(NSURL.fileURLWithPath(path)) as CFURLRef
         val created = ExtAudioFileCreateWithURL(cfUrl, kAudioFileM4AType, aac.ptr, null, kAudioFileFlags_EraseFile, out.ptr)
         CFRelease(cfUrl)
         check(created == NO_ERROR) { "ExtAudioFileCreateWithURL failed: $created" }
@@ -105,24 +128,9 @@ class IosAacEncoder(private val file: PlatformFile, private val sampleRateHz: In
         ref
     }
 
-    private fun kotlinx.cinterop.MemScope.pcmFormat() = alloc<AudioStreamBasicDescription>().apply {
-        mSampleRate = sampleRateHz.toDouble()
-        mFormatID = kAudioFormatLinearPCM
-        mFormatFlags = kAudioFormatFlagIsSignedInteger or kAudioFormatFlagIsPacked
-        mChannelsPerFrame = CHANNELS.convert()
-        mBitsPerChannel = (BYTES_PER_SAMPLE * BITS_PER_BYTE).convert()
-        mBytesPerFrame = (BYTES_PER_SAMPLE * CHANNELS).convert()
-        mFramesPerPacket = 1u
-        mBytesPerPacket = (BYTES_PER_SAMPLE * CHANNELS).convert()
-    }
-
     private companion object {
-        const val CHANNELS = 1
         const val NO_ERROR = 0
         const val BYTES_PER_SAMPLE = 2
         const val BITS_PER_BYTE = 8
-
-        // about a second and a half of hops of 512 at 48 kHz, as on Android
-        const val QUEUE_HOPS = 200
     }
 }

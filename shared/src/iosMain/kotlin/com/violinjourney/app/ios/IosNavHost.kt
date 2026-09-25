@@ -51,6 +51,8 @@ import com.violinjourney.app.feature.session.SessionRoute
 import com.violinjourney.app.feature.session.SessionViewModel
 import com.violinjourney.app.feature.settings.SettingsRoute
 import com.violinjourney.app.feature.settings.SettingsViewModel
+import com.violinjourney.app.feature.share.ShareHost
+import com.violinjourney.app.feature.share.ShareViewModel
 import com.violinjourney.app.feature.sound.SoundRoute
 import com.violinjourney.app.feature.sound.SoundViewModel
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
@@ -83,10 +85,10 @@ private const val SETTINGS_ROUTE = "settings"
 
 /**
  * The graph of screens, as `AppNavHost` on Android: the same routes and the same moves between them. What is not on
- * iOS yet — «Поделиться», the copy of the data, the own camera — is not in the graph, and the ways to it do nothing for now.
+ * iOS yet — the copy of the data, the own camera — is not in the graph, and the ways to it do nothing for now.
  */
 @Composable
-internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navController: NavHostController, startRoute: String, modifier: Modifier) {
+internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHostController, startRoute: String, modifier: Modifier) {
     val notYet: (Long) -> Unit = {}
     NavHost(navController = navController, startDestination = startRoute, modifier = modifier) {
         composable(ONBOARDING_ROUTE) {
@@ -134,6 +136,7 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
             )
         }
         composable(TopLevelDestination.HISTORY.route) {
+            val share = viewModel { shareViewModel(graph, texts) }
             HistoryRoute(
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
@@ -145,7 +148,8 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
                 sectionsViewModel = viewModel {
                     SectionsViewModel(graph.repertoire, graph.repertoireConfig, graph.clock, graph.blockHistory, graph.practiceConfig)
                 },
-                onShare = notYet,
+                onShare = share::start,
+                shareHost = { ShareHost(share) },
             )
         }
         // A recording (spec 3.10): above the tabs, without the bottom bar; back returns to where it was opened from.
@@ -153,6 +157,7 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
             route = "$SESSION_ROUTE/{${SessionViewModel.ARG_SESSION_ID}}",
             arguments = listOf(navArgument(SessionViewModel.ARG_SESSION_ID) { type = NavType.LongType }),
         ) {
+            val share = viewModel { shareViewModel(graph, texts) }
             SessionRoute(
                 onClose = navController::popBackStack,
                 onOpenSound = navController::navigateToSound,
@@ -162,7 +167,8 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
                         graph.soundConfig, graph.pictureFactory, createSavedStateHandle(), graph.backings, graph.backingPcm,
                     )
                 },
-                onShare = notYet,
+                onShare = share::start,
+                shareHost = { ShareHost(share) },
             )
         }
         // «Звук» (spec 3.17): of one recording, or — without an id — the default of all of them. Above the tabs.
@@ -175,6 +181,7 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
                 },
             ),
         ) {
+            val share = viewModel { shareViewModel(graph, texts) }
             SoundRoute(
                 onClose = navController::popBackStack,
                 viewModel = viewModel {
@@ -183,11 +190,13 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
                         graph.waveforms, graph.soundConfig, graph.backings, graph.backingPcm, graph.backingConfig,
                     )
                 },
-                onShare = notYet,
+                onShare = share::start,
+                shareHost = { ShareHost(share) },
             )
         }
         // The repertoire (spec 3.15): a piece and its music stand, above the tabs.
         composable(route = PIECE_PATTERN, arguments = listOf(navArgument(PieceViewModel.ARG_PIECE_ID) { type = NavType.LongType })) {
+            val share = viewModel { shareViewModel(graph, texts) }
             PieceRoute(
                 onClose = navController::popBackStack,
                 onOpenForm = { pieceId, focusNotes, scale ->
@@ -198,7 +207,8 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
                 onOpenSound = navController::navigateToSound,
                 viewModel = viewModel { pieceViewModel(graph, createSavedStateHandle()) },
                 tracking = viewModel { AnalyticsViewModel(graph.analytics) },
-                onShare = notYet,
+                onShare = share::start,
+                shareHost = { ShareHost(share) },
             )
         }
         composable(
@@ -284,7 +294,7 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
                 },
                 onCloseDeleted = { navController.popUpToSection() },
                 viewModel = viewModel {
-                    ScaleFormViewModel(createSavedStateHandle(), graph.repertoire, graph.repertoireConfig, graph.clock, scaleTexts)
+                    ScaleFormViewModel(createSavedStateHandle(), graph.repertoire, graph.repertoireConfig, graph.clock, texts.scale)
                 },
             )
         }
@@ -354,6 +364,11 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
 private fun pieceViewModel(graph: IosGraph, savedState: SavedStateHandle) = PieceViewModel(
     savedState, graph.repertoire, graph.sheetFiles, graph.repertoireConfig, graph.clock, graph.takes(), graph.configSource, graph.sessions,
     graph.videoFiles, graph.videoImporter, graph.shareFiles, graph.backings, recordingRate = graph.recordingRate, io = graph.io,
+)
+
+private fun shareViewModel(graph: IosGraph, texts: IosTexts) = ShareViewModel(
+    graph.sessions, graph.repertoire, graph.sound, graph.audioFiles, graph.shareFiles, graph.renderer, texts.share, graph.renderSpeed,
+    graph.elapsed, graph.soundConfig, graph.videoFiles, graph.backings, graph.backingPcm,
 )
 
 private fun homeViewModel(graph: IosGraph) = HomeViewModel(graph.home, graph.journey, graph.clock, graph.venues)

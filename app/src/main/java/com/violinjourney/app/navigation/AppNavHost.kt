@@ -75,7 +75,7 @@ import com.violinjourney.app.feature.settings.HiltSettingsViewModel
 import com.violinjourney.app.feature.sound.HiltSoundViewModel
 import com.violinjourney.app.feature.settings.SettingsRoute
 import com.violinjourney.app.feature.share.ShareHost
-import com.violinjourney.app.feature.share.ShareViewModel
+import com.violinjourney.app.feature.share.HiltShareViewModel
 import com.violinjourney.app.feature.sound.SoundRoute
 import com.violinjourney.app.feature.sound.SoundViewModel
 
@@ -151,7 +151,7 @@ fun AppNavHost(
             )
         }
         composable(TopLevelDestination.HISTORY.route) {
-            val shareViewModel = hiltViewModel<ShareViewModel>()
+            val shareViewModel = hiltViewModel<HiltShareViewModel>()
             val activity = LocalActivity.current
             HistoryRoute(
                 onOpenSession = navController::navigateToSession,
@@ -170,7 +170,7 @@ fun AppNavHost(
             route = "$SESSION_ROUTE/{${SessionViewModel.ARG_SESSION_ID}}",
             arguments = listOf(navArgument(SessionViewModel.ARG_SESSION_ID) { type = NavType.LongType }),
         ) {
-            val shareViewModel = hiltViewModel<ShareViewModel>()
+            val shareViewModel = hiltViewModel<HiltShareViewModel>()
             SessionRoute(
                 onClose = navController::popBackStack,
                 onOpenSound = navController::navigateToSound,
@@ -189,7 +189,7 @@ fun AppNavHost(
                 },
             ),
         ) {
-            val shareViewModel = hiltViewModel<ShareViewModel>()
+            val shareViewModel = hiltViewModel<HiltShareViewModel>()
             SoundRoute(
                 onClose = navController::popBackStack,
                 viewModel = hiltViewModel<HiltSoundViewModel>(),
@@ -217,7 +217,7 @@ fun AppNavHost(
             route = PIECE_PATTERN,
             arguments = listOf(navArgument(PieceViewModel.ARG_PIECE_ID) { type = NavType.LongType }),
         ) {
-            val shareViewModel = hiltViewModel<ShareViewModel>()
+            val shareViewModel = hiltViewModel<HiltShareViewModel>()
             val activity = LocalActivity.current
             PieceRoute(
                 onClose = navController::popBackStack,

@@ -1,7 +1,7 @@
 package com.violinjourney.app.feature.share
 
 import com.violinjourney.app.feature.sound.SoundCaption
-import java.io.File
+import com.violinjourney.app.core.io.PlatformFile
 
 enum class ShareVariant {
     /** A take under a backing (spec 3.32): the processed violin and the backing mixed — the video with that sound, for a video take. */
@@ -85,5 +85,5 @@ sealed interface ShareIntent {
 
 sealed interface ShareEffect {
     /** Hand [file] to the system share sheet, with [text] when there is one. */
-    data class Send(val file: File, val text: String?) : ShareEffect
+    data class Send(val file: PlatformFile, val text: String?) : ShareEffect
 }

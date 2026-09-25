@@ -58,7 +58,7 @@ import platform.Foundation.preferredLanguages
  * the forgotten-practice prompt over everything, the short words of the screens in a toast of its own.
  */
 @Composable
-internal fun IosApp(graph: IosGraph, scaleTexts: IosScaleTexts, openRoute: String? = null) {
+internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null) {
     val start = viewModel {
         AppStartViewModel(
             graph.settings, graph.sessions, graph.runningPractice, graph.finisher, graph.practiceConfig, graph.clock, graph.practice,
@@ -105,7 +105,7 @@ internal fun IosApp(graph: IosGraph, scaleTexts: IosScaleTexts, openRoute: Strin
                 ) { innerPadding ->
                     // Until the stored settings are read there is only the dark surface (spec 3.7).
                     startRoute?.let { route ->
-                        IosNavHost(graph, scaleTexts, navController, route, Modifier.padding(innerPadding))
+                        IosNavHost(graph, texts, navController, route, Modifier.padding(innerPadding))
                         // `-openRoute live` of the launch: straight to a screen, for checks by screenshot
                         LaunchedEffect(openRoute) {
                             if (openRoute == null || route == ONBOARDING_ROUTE) return@LaunchedEffect

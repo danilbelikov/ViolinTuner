@@ -28,6 +28,7 @@ import com.violinjourney.app.core.recording.FileTakeAnalyzer
 import com.violinjourney.app.core.recording.RecordingWatch
 import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.recording.video.AnalysisSpeed
+import com.violinjourney.app.feature.share.RenderSpeed
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.IntonationConfigSource
@@ -126,4 +127,9 @@ object SharedModule {
         speed: AnalysisSpeed,
         @DefaultDispatcher dispatcher: CoroutineDispatcher,
     ) = VideoTakeImporter(files, analyzer, sessions, configSource, practice, repertoireConfig, intonationDefaults, clock, elapsed, speed, dispatcher)
+
+    /** One per app: it measures how fast renders go on this phone (spec 5.11). */
+    @Provides
+    @Singleton
+    fun provideRenderSpeed() = RenderSpeed()
 }

@@ -30,6 +30,7 @@ import platform.CoreMedia.CMBlockBufferGetDataLength
 import platform.CoreMedia.CMSampleBufferGetDataBuffer
 import platform.CoreMedia.CMTimeGetSeconds
 import platform.CoreFoundation.CFRelease
+import platform.Foundation.CFBridgingRetain
 import platform.Foundation.NSNumber
 import platform.Foundation.NSURL
 
@@ -43,10 +44,15 @@ object IosPcmFileOpener : PcmFileOpener {
         val asset = AVURLAsset(uRL = NSURL.fileURLWithPath(file.path), options = null)
         val track = asset.tracksWithMediaType(AVMediaTypeAudio).firstOrNull() as? AVAssetTrack ?: return null
         val description = track.formatDescriptions.firstOrNull() ?: return null
+        // an Objective-C object on this side of the bridge: a Core Foundation reference for the call, let go right after
         @Suppress("UNCHECKED_CAST")
-        val format = CMAudioFormatDescriptionGetStreamBasicDescription(description as CMAudioFormatDescriptionRef)?.pointed ?: return null
-        val rate = format.mSampleRate.toInt()
-        val channels = format.mChannelsPerFrame.toInt().coerceAtLeast(1)
+        val ref = CFBridgingRetain(description) as CMAudioFormatDescriptionRef
+        val (rate, channels) = try {
+            val format = CMAudioFormatDescriptionGetStreamBasicDescription(ref)?.pointed ?: return null
+            format.mSampleRate.toInt() to format.mChannelsPerFrame.toInt().coerceAtLeast(1)
+        } finally {
+            CFRelease(ref)
+        }
         if (rate <= 0) return null
         val reader = AVAssetReader(asset = asset, error = null)
         val output = AVAssetReaderTrackOutput(

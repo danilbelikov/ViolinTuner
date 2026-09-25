@@ -23,3 +23,8 @@ actual fun PlatformFile.deleteFile(): Boolean =
 actual fun platformFile(path: String): PlatformFile = PlatformFile(path)
 
 actual val PlatformFile.fileUri: String get() = platform.Foundation.NSURL.fileURLWithPath(path).absoluteString.orEmpty()
+
+actual fun PlatformFile.sibling(name: String): PlatformFile = PlatformFile("${path.substringBeforeLast('/')}/$name")
+
+@OptIn(ExperimentalForeignApi::class)
+actual fun PlatformFile.moveTo(target: PlatformFile): Boolean = NSFileManager.defaultManager.moveItemAtPath(path, target.path, null)

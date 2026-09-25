@@ -17,9 +17,9 @@ fun MainViewController(): UIViewController {
     val graph = IosGraph(launchArgument<FakeScenario>("-fakeScenario"))
     val openRoute = launchText("-openRoute")
     return ComposeUIViewController {
-        // the words of a scale are read once, before the first screen; it takes a moment of the dark surface
-        val scaleTexts by produceState<IosScaleTexts?>(null) { value = IosScaleTexts.load() }
-        scaleTexts?.let { IosApp(graph, it, openRoute) }
+        // the words the view models need are read once, before the first screen; it takes a moment of the dark surface
+        val texts by produceState<IosTexts?>(null) { value = IosTexts.load(graph.clock) }
+        texts?.let { IosApp(graph, it, openRoute) }
     }
 }
 

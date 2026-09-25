@@ -16,11 +16,10 @@ import com.violinjourney.app.core.audio.playback.IosSessionPlayer
 import com.violinjourney.app.core.audio.playback.IosSessionWaveforms
 import com.violinjourney.app.core.audio.playback.IosVideoPicture
 import com.violinjourney.app.core.audio.playback.SessionPlayerFactory
-import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.audio.playback.VideoPictureFactory
 import com.violinjourney.app.core.audio.recording.IosAacEncoder
 import com.violinjourney.app.core.audio.recording.PcmEncoderFactory
-import com.violinjourney.app.core.audio.share.ShareFiles
+import com.violinjourney.app.core.audio.share.IosSoundRenderer
 import com.violinjourney.app.core.data.journey.RoomHomeRepository
 import com.violinjourney.app.core.data.journey.RoomJourneyRepository
 import com.violinjourney.app.core.data.practice.RoomPieceBlockRepository
@@ -42,7 +41,6 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.TrophyAwarder
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.sound.SoundConfig
-import com.violinjourney.app.core.domain.sound.SoundSettings
 import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.recording.DecodingFileTakeAnalyzer
@@ -63,6 +61,7 @@ import com.violinjourney.app.core.settings.SettingsRepository
 import com.violinjourney.app.core.time.SystemWallClock
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.history.HistorySectionAsk
+import com.violinjourney.app.feature.share.RenderSpeed
 import kotlin.experimental.ExperimentalNativeApi
 import kotlin.native.Platform
 import kotlinx.coroutines.Dispatchers
@@ -155,15 +154,11 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
     )
 
     val waveforms = IosSessionWaveforms({ IosFolders.folder(WAVEFORMS_FOLDER) }, io)
-    // The files for «Поделиться» and the prepared backings come later on iOS; until then there is nothing of theirs to sweep.
-    val shareFiles = object : ShareFiles {
-        override fun processed(audioName: String, settings: SoundSettings, fileName: String): PlatformFile =
-            PlatformFile("${IosFolders.folder(SHARE_FOLDER)}/$fileName")
+    // The prepared backings come with the backings on iOS; until then there is nothing of theirs to sweep.
+    val shareFiles = IosShareFiles(io)
+    val renderer = IosSoundRenderer(soundConfig, io)
+    val renderSpeed = RenderSpeed()
 
-        override suspend fun original(audio: PlatformFile, fileName: String): PlatformFile? = null
-
-        override suspend fun sweep(nowEpochMs: Long) = Unit
-    }
     val backingPcm = object : BackingPcm {
         override fun cached(backing: Backing, sampleRate: Int): PlatformFile? = null
 
@@ -173,7 +168,6 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
     }
 
     private companion object {
-        const val SHARE_FOLDER = "share"
         const val WAVEFORMS_FOLDER = "waveforms"
         const val MS_PER_SECOND = 1_000.0
     }

@@ -25,29 +25,6 @@ import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 
 /** Makes the file that is shared out of a recording and its sound settings. */
-interface SoundRenderer {
-    /**
-     * Renders [source] through the chain set to [settings] into [target]. True when the file is
-     * whole; false when it could not be made — [target] is then gone. Cancellable: a cancelled
-     * render leaves no file either. [onProgress] gets 0…1, from whatever thread renders.
-     */
-    suspend fun render(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean
-
-    /**
-     * The same for a video take (spec 3.19): [target] is an `.mp4` with the picture of [source]
-     * copied as it is — not re-encoded, its turn kept — beside the sound rendered through the chain.
-     */
-    suspend fun renderVideo(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean
-
-    /** [render] with the backing the take was made under mixed in (spec 3.32): a stereo `.m4a`. */
-    suspend fun renderWithBacking(source: File, settings: SoundSettings, backing: RenderBacking, target: File, onProgress: (Float) -> Unit): Boolean = false
-
-    /** [renderVideo] with the backing mixed into its sound. */
-    suspend fun renderVideoWithBacking(source: File, settings: SoundSettings, backing: RenderBacking, target: File, onProgress: (Float) -> Unit): Boolean = false
-}
-
-/** A backing for the file that is sent: its sound prepared at the recording's rate, and how it is mixed. */
-class RenderBacking(val pcm: (sampleRate: Int) -> File?, val offsetMs: Int, val gainDb: Float)
 
 /**
  * The very chain the player plays through, without the clock: decoder → [SoundChain] → AAC. What
@@ -244,11 +221,8 @@ class SoundFileRenderer @Inject constructor(
         private const val SOUND_SUFFIX = ".sound.m4a"
         private const val SAMPLE_BUFFER = 2 * 1024 * 1024
 
-        /** AAC-LC mono for the file that is sent (spec 5.11). */
-        const val BIT_RATE = 128_000
-
-        /** With the backing: stereo, and a bit rate to carry both sides (spec 5.25). */
-        const val STEREO_BIT_RATE = 192_000
+        private const val BIT_RATE = SoundRenderer.BIT_RATE
+        private const val STEREO_BIT_RATE = SoundRenderer.STEREO_BIT_RATE
         private const val TAG = "SoundFileRenderer"
         private const val CHUNK = 4_096
         private const val FULL_SCALE = 32_768f

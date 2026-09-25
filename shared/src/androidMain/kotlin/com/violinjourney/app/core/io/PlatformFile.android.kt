@@ -13,3 +13,7 @@ actual fun PlatformFile.deleteFile(): Boolean = delete()
 actual fun platformFile(path: String): PlatformFile = java.io.File(path)
 
 actual val PlatformFile.fileUri: String get() = toURI().toString()
+
+actual fun PlatformFile.sibling(name: String): PlatformFile = java.io.File(parentFile, name)
+
+actual fun PlatformFile.moveTo(target: PlatformFile): Boolean = renameTo(target)

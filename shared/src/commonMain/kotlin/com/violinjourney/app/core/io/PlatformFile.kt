@@ -20,3 +20,9 @@ expect fun platformFile(path: String): PlatformFile
 
 /** The file as a `file:` URI, the way pickers hand files over. */
 expect val PlatformFile.fileUri: String
+
+/** The file called [name] in the same folder. */
+expect fun PlatformFile.sibling(name: String): PlatformFile
+
+/** Renames the file to [target], replacing nothing: false when it could not. */
+expect fun PlatformFile.moveTo(target: PlatformFile): Boolean

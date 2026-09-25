@@ -2,30 +2,32 @@ package com.violinjourney.app.feature.share
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
+import com.violinjourney.app.core.audio.share.RenderBacking
 import com.violinjourney.app.core.audio.share.ShareFiles
 import com.violinjourney.app.core.audio.share.ShareNames
-import com.violinjourney.app.core.audio.share.SoundFileRenderer
 import com.violinjourney.app.core.audio.share.SoundRenderer
-import com.violinjourney.app.core.audio.share.RenderBacking
-import com.violinjourney.app.core.audio.backing.BackingPcm
+import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.backing.TakeBacking
-import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.domain.sound.SoundSettings
+import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.deleteFile
+import com.violinjourney.app.core.io.fileName
+import com.violinjourney.app.core.io.moveTo
+import com.violinjourney.app.core.io.sibling
+import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.feature.sound.SoundReducer
-import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.File
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlin.concurrent.Volatile
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -51,8 +53,7 @@ interface ShareTexts {
  * How long a render takes against the length of what is rendered — measured on this device, by
  * the renders themselves (spec 5.11). Decides whether a progress screen is worth showing.
  */
-@Singleton
-class RenderSpeed @Inject constructor() {
+class RenderSpeed {
     @Volatile var factor: Double = START_FACTOR
         private set
 
@@ -72,8 +73,7 @@ class RenderSpeed @Inject constructor() {
  * straight to the system sheet. Nothing blinks: a short preparation never shows a progress
  * screen, and one that was shown stays long enough to be read.
  */
-@HiltViewModel
-class ShareViewModel @Inject constructor(
+open class ShareViewModel(
     private val sessions: SessionRepository,
     private val repertoire: RepertoireRepository,
     private val sound: SoundRepository,
@@ -95,7 +95,7 @@ class ShareViewModel @Inject constructor(
     private val effectChannel = Channel<ShareEffect>(Channel.BUFFERED)
     val effects: Flow<ShareEffect> = effectChannel.receiveAsFlow()
 
-    private var audio: File? = null
+    private var audio: PlatformFile? = null
     private var settings: SoundSettings? = null
     private var takeBacking: Pair<Backing, TakeBacking>? = null
     private var job: Job? = null
@@ -117,15 +117,15 @@ class ShareViewModel @Inject constructor(
                 sessionId = sessionId,
                 fileName = ShareNames.fileName(title),
                 durationMs = session.durationMs,
-                processedBytes = ((session.durationMs + SoundRules.tailSec(effective, config) * MS_PER_SECOND) / MS_PER_SECOND * SoundFileRenderer.BIT_RATE / BITS_PER_BYTE).toLong(),
-                originalBytes = file.length(),
+                processedBytes = ((session.durationMs + SoundRules.tailSec(effective, config) * MS_PER_SECOND) / MS_PER_SECOND * SoundRenderer.BIT_RATE / BITS_PER_BYTE).toLong(),
+                originalBytes = file.sizeBytes(),
                 caption = SoundReducer.captionOf(effective, sound.presets.first(), config),
                 message = texts.message(session.title, pieceTitle, session.scorePercent, session.startedAtEpochMs),
                 videoFileName = session.videoPath?.let { ShareNames.videoFileName(title) },
                 resolution = session.videoPath?.let { videos.info(file) }?.let { minOf(it.width, it.height) } ?: 0,
                 processed = !SoundRules.isNeutral(effective),
                 backing = under != null,
-                backingBytes = ((session.durationMs + SoundRules.tailSec(effective, config) * MS_PER_SECOND) / MS_PER_SECOND * SoundFileRenderer.STEREO_BIT_RATE / BITS_PER_BYTE).toLong(),
+                backingBytes = ((session.durationMs + SoundRules.tailSec(effective, config) * MS_PER_SECOND) / MS_PER_SECOND * SoundRenderer.STEREO_BIT_RATE / BITS_PER_BYTE).toLong(),
             )
             audio = file
             settings = effective
@@ -198,9 +198,9 @@ class ShareViewModel @Inject constructor(
         val info = choice.info
         val under = takeBacking?.takeIf { choice.variant == ShareVariant.BACKING }
         // the mix is a file of its own: another shift or level is another file
-        val key = under?.let { (backing, take) -> "${source.name}-backing-${backing.id}-${take.offsetMs}-${take.gainDb}" } ?: source.name
+        val key = under?.let { (backing, take) -> "${source.fileName}-backing-${backing.id}-${take.offsetMs}-${take.gainDb}" } ?: source.fileName
         val target = files.processed(key, current, info.fileNameOf(choice.variant))
-        if (!target.isFile || target.length() == 0L) {
+        if (target.sizeBytes() == 0L) {
             if (!prepare(choice, source, current, target)) {
                 mutableSheet.value = ShareSheet.Failed(info)
                 return
@@ -211,7 +211,7 @@ class ShareViewModel @Inject constructor(
     }
 
     /** Renders into a `.part` beside [target] and renames: what lies under the final name is always whole. */
-    private suspend fun prepare(choice: ShareSheet.Choose, source: File, settings: SoundSettings, target: File): Boolean {
+    private suspend fun prepare(choice: ShareSheet.Choose, source: PlatformFile, settings: SoundSettings, target: PlatformFile): Boolean {
         val info = choice.info
         val soundMs = info.durationMs + (SoundRules.tailSec(settings, config) * MS_PER_SECOND).toLong()
         val started = clock.nowMs()
@@ -227,7 +227,7 @@ class ShareViewModel @Inject constructor(
             delay(SHOW_PROGRESS_FROM_MS)
             if (mutableSheet.value is ShareSheet.Choose) showProgress(lastPercent, null)
         }
-        val part = File(target.parentFile, target.name + PART)
+        val part = target.sibling(target.fileName + PART)
         var lastShown = 0L
         val whole = try {
             // the picture of a video take is copied as it is; only the sound is rendered, so the estimate of the sound holds
@@ -236,7 +236,7 @@ class ShareViewModel @Inject constructor(
                 val pcm = backingPcm
                 RenderBacking(pcm = { rate -> pcm?.prepare(backing, rate) }, offsetMs = take.offsetMs, gainDb = take.gainDb)
             }
-            val render: suspend (File, SoundSettings, File, (Float) -> Unit) -> Boolean = when {
+            val render: suspend (PlatformFile, SoundSettings, PlatformFile, (Float) -> Unit) -> Boolean = when {
                 under != null && video -> { from, with, to, progress -> renderer.renderVideoWithBacking(from, with, under, to, progress) }
                 under != null -> { from, with, to, progress -> renderer.renderWithBacking(from, with, under, to, progress) }
                 video -> renderer::renderVideo
@@ -256,8 +256,8 @@ class ShareViewModel @Inject constructor(
         } finally {
             late.cancel()
         }
-        if (!whole || !part.renameTo(target)) {
-            part.delete()
+        if (!whole || !part.moveTo(target)) {
+            part.deleteFile()
             return false
         }
         speed.measured(soundMs, clock.nowMs() - started)
