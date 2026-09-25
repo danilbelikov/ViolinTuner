@@ -9,7 +9,12 @@ import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.IosMicPitchSource
 import com.violinjourney.app.core.audio.PitchSource
 import com.violinjourney.app.core.audio.RecordingRate
-import com.violinjourney.app.core.audio.backing.BackingPcm
+import com.violinjourney.app.core.audio.backing.BackingPlaybackFactory
+import com.violinjourney.app.core.audio.backing.IosAudioRoutes
+import com.violinjourney.app.core.audio.backing.IosBackingFiles
+import com.violinjourney.app.core.audio.backing.IosBackingImporter
+import com.violinjourney.app.core.audio.backing.IosBackingPcm
+import com.violinjourney.app.core.audio.backing.IosBackingPlayback
 import com.violinjourney.app.core.audio.dsp.MpmDetector
 import com.violinjourney.app.core.audio.dsp.PitchDetectorFactory
 import com.violinjourney.app.core.audio.playback.IosSessionPlayer
@@ -25,6 +30,7 @@ import com.violinjourney.app.core.backup.BackupManager
 import com.violinjourney.app.core.backup.BackupSpeed
 import com.violinjourney.app.core.backup.IosBackupDocuments
 import com.violinjourney.app.core.backup.IosBackupStore
+import com.violinjourney.app.core.data.backing.RoomBackingRepository
 import com.violinjourney.app.core.data.journey.RoomHomeRepository
 import com.violinjourney.app.core.data.journey.RoomJourneyRepository
 import com.violinjourney.app.core.data.practice.RoomPieceBlockRepository
@@ -35,9 +41,7 @@ import com.violinjourney.app.core.data.session.RoomSessionRepository
 import com.violinjourney.app.core.data.sound.RoomSoundRepository
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.IntonationConfig
-import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
-import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.practice.FinishPracticeAsk
 import com.violinjourney.app.core.domain.practice.PracticeConfig
@@ -76,7 +80,10 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSProcessInfo
+import platform.Foundation.NSSearchPathForDirectoriesInDomains
+import platform.Foundation.NSUserDomainMask
 
 /**
  * What Hilt puts together on Android, by hand: one instance of everything that is one per app, in the order Hilt
@@ -128,8 +135,14 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
     val journey = RoomJourneyRepository(database.journeyDao(), analytics)
     val home = RoomHomeRepository(database.journeyDao(), analytics)
 
-    // The backing (spec 3.32) needs a player and a decoder of its own on iOS; until then a piece has none.
-    val backings = NoBackings
+    // The backing of a piece (spec 3.32): the same repository as on Android, over the files and the sound of iOS.
+    private val caches = PlatformFile(NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true).first() as String)
+    val backingFiles = IosBackingFiles(dataDirectory, clock)
+    val backings = RoomBackingRepository(database.backingDao(), backingFiles, io)
+    val backingPcm = IosBackingPcm(caches, backingFiles)
+    val backingImporter = IosBackingImporter(dataDirectory, backingFiles, backingConfig, clock)
+    val audioRoutes = IosAudioRoutes()
+    private val backingPlayback = BackingPlaybackFactory { IosBackingPlayback(audioRoutes) }
 
     val venues = Venues(venueStore, journey)
     val finishAsk = FinishPracticeAsk()
@@ -159,28 +172,19 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
     /** The measurement session of the microphone asks for 48 kHz, and the phones give it. */
     val recordingRate = RecordingRate { TakePipeline.DEFAULT_RATE }
 
-    val playerFactory = SessionPlayerFactory { scope -> IosSessionPlayer(scope, soundConfig) }
+    val playerFactory = SessionPlayerFactory { scope -> IosSessionPlayer(scope, soundConfig, backingConfig) }
     val pictureFactory = VideoPictureFactory(::IosVideoPicture)
 
     /** One per screen, as on Android: it holds that screen's wish to record. */
     fun takes() = TakePipeline(
         pitchSource, sessions, audioFiles, runningPractice, practiceConfig, clock, Dispatchers.Default, recordingWatch,
-        practiceNotes, journeyConfig, backings, null, backingConfig, analytics,
+        practiceNotes, journeyConfig, backings, backingPlayback, backingConfig, analytics,
     )
 
     val waveforms = IosSessionWaveforms({ IosFolders.folder(WAVEFORMS_FOLDER) }, io)
-    // The prepared backings come with the backings on iOS; until then there is nothing of theirs to sweep.
     val shareFiles = IosShareFiles(io)
     val renderer = IosSoundRenderer(soundConfig, io)
     val renderSpeed = RenderSpeed()
-
-    val backingPcm = object : BackingPcm {
-        override fun cached(backing: Backing, sampleRate: Int): PlatformFile? = null
-
-        override fun prepare(backing: Backing, sampleRate: Int): PlatformFile? = null
-
-        override fun deleteOrphans(keptFiles: Set<String>) = Unit
-    }
 
     // A copy of the data (spec 3.20): the same manager as on Android, over the files and the pickers of iOS.
     val backupConfig = BackupConfig()

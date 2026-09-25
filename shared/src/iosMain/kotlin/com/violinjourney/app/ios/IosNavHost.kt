@@ -11,6 +11,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.violinjourney.app.core.audio.backing.IosBackingPreview
 import com.violinjourney.app.core.domain.journey.JourneyRoute as JourneyStops
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
@@ -95,7 +96,7 @@ private const val RESTORE_PATTERN = "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}=
 
 /**
  * The graph of screens, as `AppNavHost` on Android: the same routes and the same moves between them. What is not on
- * iOS yet — the own camera, the backings — is not in the graph, and the ways to it do nothing for now.
+ * iOS yet — the own camera — is not in the graph, and the ways to it do nothing for now.
  */
 @Composable
 internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHostController, startRoute: String, modifier: Modifier) {
@@ -408,7 +409,8 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
 
 private fun pieceViewModel(graph: IosGraph, savedState: SavedStateHandle) = PieceViewModel(
     savedState, graph.repertoire, graph.sheetFiles, graph.repertoireConfig, graph.clock, graph.takes(), graph.configSource, graph.sessions,
-    graph.videoFiles, graph.videoImporter, graph.shareFiles, graph.backings, recordingRate = graph.recordingRate, io = graph.io,
+    graph.videoFiles, graph.videoImporter, graph.shareFiles, graph.backings, graph.backingFiles, graph.backingPcm, graph.recordingRate,
+    graph.backingImporter, IosBackingPreview(), graph.audioRoutes, graph.io,
 )
 
 private fun shareViewModel(graph: IosGraph, texts: IosTexts) = ShareViewModel(

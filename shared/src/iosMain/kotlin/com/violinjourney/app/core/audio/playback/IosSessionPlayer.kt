@@ -1,9 +1,12 @@
 package com.violinjourney.app.core.audio.playback
 
+import com.violinjourney.app.core.audio.backing.BackingMixer
+import com.violinjourney.app.core.audio.backing.IosBackingPcmReader
 import com.violinjourney.app.core.audio.fx.SoundChain
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.concurrent.PlatformLock
 import com.violinjourney.app.core.concurrent.withLock
+import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.domain.sound.SoundSettings
@@ -14,11 +17,11 @@ import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
+import kotlinx.cinterop.get
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
-import kotlinx.cinterop.value
-import kotlinx.cinterop.get
 import kotlinx.cinterop.set
+import kotlinx.cinterop.value
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -45,10 +48,14 @@ import platform.Foundation.NSURL
  * [SessionPlayer] of iOS, the same chain as `ChainSessionPlayer` on Android: the file is decoded by AVAudioFile, every
  * chunk passes through [SoundChain] and the A/B mixer — what is heard is what is sent (spec 3.17) — and goes to an
  * AVAudioPlayerNode, a few chunks ahead of the ear. One worker per loaded file; the calls leave wishes it picks up
- * between two chunks. Backings (spec 3.32) are not played on iOS yet: a take under one plays as the violin alone.
+ * between two chunks. A take under a backing (spec 3.32) is mixed with it by the same [BackingMixer] as on Android.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-class IosSessionPlayer(private val scope: CoroutineScope, private val config: SoundConfig) : SessionPlayer {
+class IosSessionPlayer(
+    private val scope: CoroutineScope,
+    private val config: SoundConfig,
+    private val backingConfig: BackingConfig = BackingConfig(),
+) : SessionPlayer {
     private val mutableState = MutableStateFlow(PlayerState())
     override val state: StateFlow<PlayerState> = mutableState.asStateFlow()
 
@@ -61,13 +68,38 @@ class IosSessionPlayer(private val scope: CoroutineScope, private val config: So
     private var settings: SoundSettings = SoundRules.off(config)
     private var settingsChanged = true
     private var original = false
+    private var backingOffsetMs = 0
+    private var backingGainDb = 0f
+    private var backingHeard = true
+    private var backingChanged = false
 
     private val wake = Channel<Unit>(Channel.CONFLATED)
     private var worker: Job? = null
 
-    override fun load(file: PlatformFile) {
+    override fun load(file: PlatformFile) = loadWithBacking(file, null)
+
+    override fun loadWithBacking(file: PlatformFile, backing: PlayerBacking?) {
         release()
-        worker = scope.launch(Dispatchers.Default) { run(file) }
+        lock.withLock {
+            backingOffsetMs = backing?.offsetMs ?: 0
+            backingGainDb = backing?.gainDb ?: 0f
+            backingChanged = false
+        }
+        worker = scope.launch(Dispatchers.Default) { run(file, backing) }
+    }
+
+    override fun setBackingMix(offsetMs: Int, gainDb: Float) = wish {
+        backingOffsetMs = offsetMs
+        backingGainDb = gainDb
+        backingChanged = true
+    }
+
+    override fun setBackingHeard(heard: Boolean) {
+        wish {
+            backingHeard = heard
+            backingChanged = true
+        }
+        mutableState.update { it.copy(backingHeard = heard) }
     }
 
     override fun play() {
@@ -110,7 +142,7 @@ class IosSessionPlayer(private val scope: CoroutineScope, private val config: So
             seekToMs = NO_SEEK
         }
         mutableMeters.value = null
-        mutableState.update { PlayerState(processed = it.processed, original = it.original) }
+        mutableState.update { PlayerState(processed = it.processed, original = it.original, backingHeard = it.backingHeard) }
     }
 
     private inline fun wish(change: () -> Unit) {
@@ -118,7 +150,7 @@ class IosSessionPlayer(private val scope: CoroutineScope, private val config: So
         wake.trySend(Unit)
     }
 
-    private suspend fun run(file: PlatformFile) {
+    private suspend fun run(file: PlatformFile, backing: PlayerBacking?) {
         val source = memScoped {
             val error = alloc<ObjCObjectVar<NSError?>>()
             AVAudioFile(forReading = NSURL.fileURLWithPath(file.path), error = error.ptr).takeIf { error.value == null }
@@ -129,16 +161,25 @@ class IosSessionPlayer(private val scope: CoroutineScope, private val config: So
             mutableState.update { PlayerState(failed = true, processed = it.processed, original = it.original) }
             return
         }
+        // the backing's sound at this recording's rate, prepared here, off the main thread; gone — the violin alone
+        val pcm = backing?.let { given ->
+            given.cached(rate) ?: run {
+                mutableState.update { it.copy(preparingBacking = true) }
+                given.pcm(rate)
+            }
+        }
+        val reader = pcm?.let { runCatching { IosBackingPcmReader(it) }.getOrNull() }
         val engine = AVAudioEngine()
         val node = AVAudioPlayerNode()
-        val mono = AVAudioFormat(standardFormatWithSampleRate = rate.toDouble(), channels = 1u)
+        val format = AVAudioFormat(standardFormatWithSampleRate = rate.toDouble(), channels = if (reader != null) 2u else 1u)
         engine.attachNode(node)
-        engine.connect(node, engine.mainMixerNode, mono)
+        engine.connect(node, engine.mainMixerNode, format)
         try {
-            Playback(source, rate, node, mono) { startOutput(engine) }.loop()
+            Playback(source, rate, node, format, reader) { startOutput(engine) }.loop()
         } finally {
             node.stop()
             engine.stop()
+            reader?.close()
         }
     }
 
@@ -147,9 +188,18 @@ class IosSessionPlayer(private val scope: CoroutineScope, private val config: So
         private val source: AVAudioFile,
         private val rate: Int,
         private val node: AVAudioPlayerNode,
-        private val mono: AVAudioFormat,
+        private val format: AVAudioFormat,
+        reader: IosBackingPcmReader?,
         private val startOutput: () -> Boolean,
     ) {
+        private val backingMix = reader?.let {
+            val (offset, gain, heard) = lock.withLock { backingChanged = false; Triple(backingOffsetMs, backingGainDb, backingHeard) }
+            BackingMixer(rate, it, offset, gain, heard, fadeSamples = (backingConfig.shiftFadeMs * rate / MS_PER_SECOND).toInt(), soundConfig = config)
+        }
+        private val stereo = FloatArray(if (backingMix != null) CHUNK * 2 else 0)
+
+        /** The violin's sample the next chunk starts at: where the backing is read from. */
+        private var violinPosition = 0L
         private val chain = SoundChain(rate, config)
         private val mixer = AbMixer(chain.latencySamples, fadeSamples = (AB_FADE_MS * rate / MS_PER_SECOND).toInt())
         private val durationMs = source.length * MS_PER_SECOND / rate
@@ -171,13 +221,19 @@ class IosSessionPlayer(private val scope: CoroutineScope, private val config: So
             chain.set(current, immediate = true)
             var processing = !SoundRules.isNeutral(current)
             mixer.jumpTo(if (processing && !lock.withLock { original }) 1f else 0f)
-            mutableState.update { it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false) }
+            mutableState.update {
+                it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = backingMix != null, preparingBacking = false)
+            }
 
             while (kotlin.coroutines.coroutineContext.isActive) {
                 val (seek, playing, wantOriginal, fresh) = lock.withLock {
                     val wishes = Wishes(seekToMs, wantPlaying, original, if (settingsChanged) settings else null)
                     seekToMs = NO_SEEK
                     settingsChanged = false
+                    if (backingChanged) {
+                        backingChanged = false
+                        backingMix?.set(backingOffsetMs, backingGainDb, backingHeard)
+                    }
                     wishes
                 }
                 fresh?.let {
@@ -228,7 +284,7 @@ class IosSessionPlayer(private val scope: CoroutineScope, private val config: So
                 // — a chunk of sound —
                 var count = if (tailLeft == NO_TAIL) decode() else 0
                 if (count == 0) {
-                    if (tailLeft == NO_TAIL) tailLeft = chain.latencySamples + if (mixer.originalOnly) 0 else chain.tailSamples(current)
+                    if (tailLeft == NO_TAIL) tailLeft = chain.latencySamples + (backingMix?.latencySamples ?: 0) + if (mixer.originalOnly) 0 else chain.tailSamples(current)
                     count = minOf(tailLeft, CHUNK)
                     tailLeft -= count
                     dry.fill(0f, 0, count)
@@ -243,7 +299,15 @@ class IosSessionPlayer(private val scope: CoroutineScope, private val config: So
                     mixer.mix(dry, wet, count)
                     wet
                 }
-                if (count > 0) schedule(out, count)
+                if (count > 0) {
+                    if (backingMix != null) {
+                        backingMix.mix(out, count, violinPosition, stereo)
+                        scheduleStereo(stereo, count)
+                    } else {
+                        schedule(out, count)
+                    }
+                }
+                violinPosition += count
                 sinceMeters += count
                 if (sinceMeters >= rate / METERS_PER_SECOND) {
                     sinceMeters = 0
@@ -263,10 +327,28 @@ class IosSessionPlayer(private val scope: CoroutineScope, private val config: So
         }
 
         private fun schedule(samples: FloatArray, count: Int) {
-            val buffer = AVAudioPCMBuffer(pCMFormat = mono, frameCapacity = count.toUInt())
+            val buffer = AVAudioPCMBuffer(pCMFormat = format, frameCapacity = count.toUInt())
             buffer.frameLength = count.toUInt()
             val channel = buffer.floatChannelData?.get(0) ?: return
             for (i in 0 until count) channel[i] = samples[i]
+            enqueue(buffer, count)
+        }
+
+        /** [samples] interleaved left and right, as the mix of the backing gives them. */
+        private fun scheduleStereo(samples: FloatArray, count: Int) {
+            val buffer = AVAudioPCMBuffer(pCMFormat = format, frameCapacity = count.toUInt())
+            buffer.frameLength = count.toUInt()
+            val channels = buffer.floatChannelData ?: return
+            val left = channels[0] ?: return
+            val right = channels[1] ?: return
+            for (i in 0 until count) {
+                left[i] = samples[2 * i]
+                right[i] = samples[2 * i + 1]
+            }
+            enqueue(buffer, count)
+        }
+
+        private fun enqueue(buffer: AVAudioPCMBuffer, count: Int) {
             val mine = generation.value
             queued.incrementAndGet()
             node.scheduleBuffer(buffer) {
@@ -287,6 +369,8 @@ class IosSessionPlayer(private val scope: CoroutineScope, private val config: So
             source.framePosition = positionMs * rate / MS_PER_SECOND
             chain.reset()
             mixer.reset()
+            backingMix?.reset()
+            violinPosition = positionMs * rate / MS_PER_SECOND
             baseMs = positionMs
             tailLeft = NO_TAIL
         }

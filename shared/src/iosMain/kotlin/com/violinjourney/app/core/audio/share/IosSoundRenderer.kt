@@ -1,5 +1,7 @@
 package com.violinjourney.app.core.audio.share
 
+import com.violinjourney.app.core.audio.backing.BackingMixer
+import com.violinjourney.app.core.audio.backing.IosBackingPcmReader
 import com.violinjourney.app.core.audio.fx.SoundChain
 import com.violinjourney.app.core.audio.recording.AacFile
 import com.violinjourney.app.core.domain.sound.SoundConfig
@@ -43,23 +45,51 @@ import platform.Foundation.NSURL
  * AVAssetReader → [SoundChain] → AAC, as `SoundFileRenderer` does on Android (spec 3.17). The chain is late by the
  * look-ahead of its limiter: those first samples are dropped, and the hall rings on after the last note. A video take
  * gets its picture back as it was — not re-encoded — beside the rendered sound, by AVAssetExportSession.
- * Backings are not rendered on iOS yet: those variants fail, and the sheet does not offer them without a backing.
+ * A take under a backing is mixed with it into a stereo file, as on Android (spec 3.32).
  */
 @OptIn(ExperimentalForeignApi::class)
 class IosSoundRenderer(private val config: SoundConfig, private val io: CoroutineDispatcher) : SoundRenderer {
     override suspend fun render(source: PlatformFile, settings: SoundSettings, target: PlatformFile, onProgress: (Float) -> Unit): Boolean =
+        renderSound(source, settings, null, target, onProgress)
+
+    override suspend fun renderWithBacking(source: PlatformFile, settings: SoundSettings, backing: RenderBacking, target: PlatformFile, onProgress: (Float) -> Unit): Boolean =
+        renderSound(source, settings, backing, target, onProgress)
+
+    override suspend fun renderVideoWithBacking(
+        source: PlatformFile,
+        settings: SoundSettings,
+        backing: RenderBacking,
+        target: PlatformFile,
+        onProgress: (Float) -> Unit,
+    ): Boolean = renderVideoSound(source, target, onProgress) { sound, progress -> renderWithBacking(source, settings, backing, sound, progress) }
+
+    private suspend fun renderSound(source: PlatformFile, settings: SoundSettings, backing: RenderBacking?, target: PlatformFile, onProgress: (Float) -> Unit): Boolean =
         withContext(io) {
             val decoder = IosPcmFileOpener.open(source) ?: return@withContext false
             var whole = false
+            var reader: IosBackingPcmReader? = null
             try {
-                val writer = AacFile(target.path, decoder.sampleRate, channels = 1)
+                // the backing at this recording's rate; gone or undecodable — the file cannot be what was asked for
+                reader = backing?.let { IosBackingPcmReader(it.pcm(decoder.sampleRate) ?: return@withContext false) }
+                val mixer = if (backing != null && reader != null) {
+                    BackingMixer(decoder.sampleRate, reader, backing.offsetMs, backing.gainDb, heard = true, fadeSamples = 0, soundConfig = config)
+                } else {
+                    null
+                }
+                val writer = AacFile(target.path, decoder.sampleRate, channels = if (mixer != null) 2 else 1)
                 val chain = SoundChain(decoder.sampleRate, config).apply { set(settings, immediate = true) }
                 // everything off — the chain is not called at all: its limiter would still delay the sound
                 val neutral = SoundRules.isNeutral(settings)
                 val pcm = ShortArray(CHUNK)
                 val samples = FloatArray(CHUNK)
                 var toDrop = if (neutral) 0 else chain.latencySamples
-                val tail = if (neutral) 0 else chain.tailSamples(settings) + chain.latencySamples
+                val tail = (if (neutral) 0 else chain.tailSamples(settings) + chain.latencySamples) + (mixer?.latencySamples ?: 0)
+                // the mix is late by its limiter's look-ahead, like the chain by its own: those first frames go too
+                var mixToDrop = mixer?.latencySamples ?: 0
+                var violinPosition = 0L
+                val violin = FloatArray(CHUNK)
+                val stereo = FloatArray(if (mixer != null) CHUNK * 2 else 0)
+                val interleaved = ShortArray(if (mixer != null) CHUNK * 2 else 0)
                 val total = (decoder.totalSamples + tail).coerceAtLeast(1)
                 var done = 0L
                 var tailLeft = tail
@@ -78,8 +108,22 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
                     if (!neutral) chain.process(samples, count)
                     val from = minOf(toDrop, count)
                     toDrop -= from
-                    for (i in from until count) pcm[i - from] = toShort(samples[i])
-                    written = writer.write(pcm, count - from)
+                    if (mixer == null) {
+                        for (i in from until count) pcm[i - from] = toShort(samples[i])
+                        written = writer.write(pcm, count - from)
+                    } else if (count > from) {
+                        val kept = count - from
+                        samples.copyInto(violin, 0, from, count)
+                        mixer.mix(violin, kept, violinPosition, stereo)
+                        violinPosition += kept
+                        val skip = minOf(mixToDrop, kept)
+                        mixToDrop -= skip
+                        for (i in skip until kept) {
+                            interleaved[2 * (i - skip)] = toShort(stereo[2 * i])
+                            interleaved[2 * (i - skip) + 1] = toShort(stereo[2 * i + 1])
+                        }
+                        written = writer.write(interleaved, (kept - skip) * 2)
+                    }
                     done += count
                     onProgress((done.toFloat() / total).coerceIn(0f, 1f))
                 }
@@ -87,6 +131,7 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
                 whole
             } finally {
                 decoder.release()
+                reader?.close()
                 if (!whole) target.deleteFile()
             }
         }
@@ -95,11 +140,19 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
      * Two passes, as on Android: the sound into a temporary `.m4a`, then the picture of the source taken as it is with
      * the new sound beside it. No picture is decoded, so this takes hardly longer than the sound alone.
      */
-    override suspend fun renderVideo(source: PlatformFile, settings: SoundSettings, target: PlatformFile, onProgress: (Float) -> Unit): Boolean {
+    override suspend fun renderVideo(source: PlatformFile, settings: SoundSettings, target: PlatformFile, onProgress: (Float) -> Unit): Boolean =
+        renderVideoSound(source, target, onProgress) { sound, progress -> render(source, settings, sound, progress) }
+
+    private suspend fun renderVideoSound(
+        source: PlatformFile,
+        target: PlatformFile,
+        onProgress: (Float) -> Unit,
+        renderSound: suspend (PlatformFile, (Float) -> Unit) -> Boolean,
+    ): Boolean {
         val sound = target.sibling("${target.path.substringAfterLast('/')}$SOUND_SUFFIX")
         var whole = false
         try {
-            if (!render(source, settings, sound) { onProgress(it * SOUND_SHARE) }) return false
+            if (!renderSound(sound) { onProgress(it * SOUND_SHARE) }) return false
             whole = mux(source, sound, target)
             onProgress(1f)
             return whole

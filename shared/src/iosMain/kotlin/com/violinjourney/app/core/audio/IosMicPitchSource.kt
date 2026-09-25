@@ -1,7 +1,9 @@
 package com.violinjourney.app.core.audio
 
 import com.violinjourney.app.core.audio.dsp.PitchDetectorFactory
+import com.violinjourney.app.core.audio.backing.HostClock
 import com.violinjourney.app.core.audio.recording.AudioTap
+import kotlin.concurrent.Volatile
 import com.violinjourney.app.core.audio.recording.HopAudioTap
 import com.violinjourney.app.core.audio.recording.PcmEncoderFactory
 import kotlinx.coroutines.Dispatchers
@@ -22,7 +24,9 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import platform.AVFAudio.AVAudioEngine
 import platform.AVFAudio.AVAudioSession
-import platform.AVFAudio.AVAudioSessionCategoryRecord
+import platform.AVFAudio.AVAudioSessionCategoryOptionAllowBluetoothA2DP
+import platform.AVFAudio.AVAudioSessionCategoryPlayAndRecord
+import platform.AVFAudio.inputLatency
 import platform.AVFAudio.AVAudioSessionInterruptionNotification
 import platform.AVFAudio.AVAudioSessionMediaServicesWereResetNotification
 import platform.AVFAudio.AVAudioSessionModeMeasurement
@@ -35,7 +39,8 @@ import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
 
 /**
- * The microphone of iOS (spec 6): AVAudioEngine on a session made for measuring — no automatic gain, no noise
+ * The microphone of iOS (spec 6): AVAudioEngine on a session made for measuring — play and record, so that a backing can
+ * sound in the headphones of a take (spec 3.32), wireless ones as output only — no automatic gain, no noise
  * suppression, the counterpart of the UNPROCESSED source on Android. The system hands over float blocks of its own
  * length on its audio thread; they are only copied there, and the rest — hops of 512, the digital-silence watchdog,
  * FrameAnalyzer and the detector — runs on the collector's thread, the same chain with the same numbers as on
@@ -58,6 +63,15 @@ class IosMicPitchSource(
     private val tap = HopAudioTap(encoderFactory, Dispatchers.IO)
     override val audioTap: AudioTap get() = tap
 
+    /** The last word of the input on its time: a frame it had captured, and when on the host clock. */
+    private class Anchor(val frame: Long, val nanos: Long, val rate: Int)
+
+    @Volatile private var anchor: Anchor? = null
+
+    override val clock: SampleClock = SampleClock { tMs ->
+        anchor?.let { at -> at.nanos + ((tMs * at.rate / MS_PER_SECOND) - at.frame) * NANOS_PER_SECOND.toLong() / at.rate }
+    }
+
     override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
         // The audio thread must never wait: a full queue means the analysis fell far behind, which is a failure,
         // not a reason to drop sound — the frame clock counts every sample.
@@ -78,9 +92,16 @@ class IosMicPitchSource(
             if (sampleRateHz <= 0 || format.channelCount == 0u) {
                 throw unavailable(MicUnavailableReason.OPEN_FAILED, "the input has no format ($sampleRateHz Hz, ${format.channelCount} channels)")
             }
-            input.installTapOnBus(0u, TAP_BUFFER_FRAMES, format) { buffer, _ ->
+            var delivered = 0L
+            anchor = null
+            input.installTapOnBus(0u, TAP_BUFFER_FRAMES, format) { buffer, time ->
                 val data = buffer?.floatChannelData ?: return@installTapOnBus
                 val count = buffer.frameLength.toInt()
+                // the host time the block was captured at, against the frames delivered before it: the clock of a take (spec 5.25)
+                if (time != null && time.hostTimeValid) {
+                    anchor = Anchor(delivered, HostClock.nanosOf(time.hostTime) - (session.inputLatency * NANOS_PER_SECOND).toLong(), sampleRateHz)
+                }
+                delivered += count
                 val channel = data[0] ?: return@installTapOnBus
                 // the first channel is the microphone; a second one, where there is one, is the same sound
                 val block = FloatArray(count) { channel[it] }
@@ -132,7 +153,7 @@ class IosMicPitchSource(
 
     private fun openSession(session: AVAudioSession) = memScoped {
         val error = alloc<ObjCObjectVar<NSError?>>()
-        val ok = session.setCategory(AVAudioSessionCategoryRecord, AVAudioSessionModeMeasurement, 0u, error.ptr) &&
+        val ok = session.setCategory(AVAudioSessionCategoryPlayAndRecord, AVAudioSessionModeMeasurement, AVAudioSessionCategoryOptionAllowBluetoothA2DP, error.ptr) &&
             session.setPreferredSampleRate(PREFERRED_RATE_HZ, error.ptr) &&
             session.setActive(true, error.ptr)
         if (!ok) throw unavailable(MicUnavailableReason.OPEN_FAILED, "the audio session would not open: ${error.value?.localizedDescription}")
@@ -151,6 +172,7 @@ class IosMicPitchSource(
     private companion object {
         const val TAG = "MicPitchSource"
         const val MS_PER_SECOND = 1_000L
+        const val NANOS_PER_SECOND = 1_000_000_000.0
         const val QUEUED_BLOCKS = 64
         const val TAP_BUFFER_FRAMES = 4096u
         const val PREFERRED_RATE_HZ = 48_000.0
