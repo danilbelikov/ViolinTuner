@@ -37,6 +37,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
 import com.violinjourney.app.core.ui.components.LocalMessages
 import com.violinjourney.app.core.ui.components.Messages
 import com.violinjourney.app.core.ui.format.Formats
@@ -77,6 +78,11 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
     val messages = remember { Messages { text -> message = Toast(text) } }
 
     val navController = rememberNavController()
+    // which screen was opened (spec 3.34), the route cut to its name as on Android
+    val tracking = viewModel { AnalyticsViewModel(graph.analytics) }
+    LaunchedEffect(navController) {
+        navController.currentBackStackEntryFlow.collect { opened -> tracking.onScreenOpened(opened.destination.route) }
+    }
     val entry by navController.currentBackStackEntryAsState()
     // null outside the tabs: the onboarding and the screens above the tabs have no bottom bar
     val currentTab = TopLevelDestination.entries.firstOrNull { destination ->

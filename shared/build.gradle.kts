@@ -1,3 +1,4 @@
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 // The code Android and iOS share: pure Kotlin and Compose, no Android and no Java in commonMain. The
@@ -87,6 +88,36 @@ kotlin {
         }
     }
 }
+
+// The AppMetrica key of the iOS app (spec 5.27), as Android has it: local.properties (git-ignored) or `-PappMetricaKey=…`;
+// a debug build stays silent unless `analyticsDebug=true` is given the same way. Written into build/, never into git.
+val iosSecrets = tasks.register("generateIosSecrets") {
+    val local = Properties().apply {
+        rootProject.file("local.properties").takeIf { it.isFile }?.inputStream()?.use(::load)
+    }
+    val key = providers.gradleProperty("appMetricaKey").orNull ?: local.getProperty("appMetricaKey", "")
+    val debug = (providers.gradleProperty("analyticsDebug").orNull ?: local.getProperty("analyticsDebug", "false")).toBoolean()
+    val out = layout.buildDirectory.dir("generated/iosSecrets")
+    inputs.property("key", key)
+    inputs.property("debug", debug)
+    outputs.dir(out)
+    doLast {
+        val file = out.get().file("com/violinjourney/app/ios/IosSecrets.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            """
+            |package com.violinjourney.app.ios
+            |
+            |/** Written by `generateIosSecrets` from local.properties; not in git. */
+            |internal object IosSecrets {
+            |    const val APPMETRICA_KEY = "$key"
+            |    const val ANALYTICS_IN_DEBUG = $debug
+            |}
+            |""".trimMargin(),
+        )
+    }
+}
+kotlin.sourceSets.named("iosMain") { kotlin.srcDir(iosSecrets) }
 
 // The words of the app live in app/src/main/res — Russian the source, values/ the English fallback, eight more
 // (spec 3.26) — where Android reads them and LocalizationTest checks them. The shared code and iOS read the same

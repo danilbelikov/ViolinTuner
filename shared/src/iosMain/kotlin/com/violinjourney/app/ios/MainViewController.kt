@@ -12,7 +12,11 @@ import androidx.compose.ui.window.ComposeUIViewController
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import com.violinjourney.app.core.analytics.AnalyticsService
+import com.violinjourney.app.core.analytics.IosAppMetricaAnalytics
 import com.violinjourney.app.core.audio.FakeScenario
+import kotlin.experimental.ExperimentalNativeApi
+import kotlin.native.Platform
 import com.violinjourney.app.core.backup.IosRestoreSwap
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.feature.backup.LocalAppRestart
@@ -28,19 +32,23 @@ import platform.UIKit.UIViewController
  * starting its process anew.
  */
 @Suppress("FunctionName", "unused") // called from Swift
-fun MainViewController(): UIViewController {
+@OptIn(ExperimentalNativeApi::class)
+fun MainViewController(analytics: AnalyticsService?): UIViewController {
     useInterfaceLanguage()
+    // statistics are sent by a build that has a key (spec 5.27); a debug build only when asked to (`analyticsDebug=true`)
+    val sends = IosSecrets.APPMETRICA_KEY.isNotBlank() && (!Platform.isDebugBinary || IosSecrets.ANALYTICS_IN_DEBUG)
+    val statistics = if (sends && analytics != null) IosAppMetricaAnalytics.activate(analytics, IosSecrets.APPMETRICA_KEY, logs = IosSecrets.ANALYTICS_IN_DEBUG) else null
     val fakeScenario = launchArgument<FakeScenario>("-fakeScenario")
     val openRoute = launchText("-openRoute")
     val data = PlatformFile(IosStorage.dataDirectory())
     IosRestoreSwap.applyIfPending(data)
     return ComposeUIViewController {
-        var graph by remember { mutableStateOf(IosGraph(fakeScenario)) }
+        var graph by remember { mutableStateOf(IosGraph(fakeScenario, statistics)) }
         val restart = remember {
             {
                 graph.close()
                 IosRestoreSwap.applyIfPending(data)
-                graph = IosGraph(fakeScenario)
+                graph = IosGraph(fakeScenario, statistics)
             }
         }
         key(graph) {

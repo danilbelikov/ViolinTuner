@@ -12,7 +12,7 @@ struct ContentView: View {
 
 private struct ComposeView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UIViewController {
-        MainViewControllerKt.MainViewController()
+        MainViewControllerKt.MainViewController(analytics: AppMetricaService())
     }
 
     func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}

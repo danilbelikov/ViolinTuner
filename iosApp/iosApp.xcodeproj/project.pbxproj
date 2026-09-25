@@ -10,6 +10,9 @@
 		A10000000000000000000001 /* iOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000001 /* iOSApp.swift */; };
 		A10000000000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000002 /* ContentView.swift */; };
 		A10000000000000000000003 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000005 /* InfoPlist.xcstrings */; };
+		A10000000000000000000004 /* AppMetricaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* AppMetricaService.swift */; };
+		A10000000000000000000005 /* AppMetricaCore in Frameworks */ = {isa = PBXBuildFile; productRef = AC0000000000000000000001 /* AppMetricaCore */; };
+		A10000000000000000000006 /* AppMetricaCrashes in Frameworks */ = {isa = PBXBuildFile; productRef = AC0000000000000000000002 /* AppMetricaCrashes */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,6 +21,7 @@
 		A20000000000000000000003 /* ViolinJourney.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = ViolinJourney.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A20000000000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20000000000000000000005 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
+		A20000000000000000000006 /* AppMetricaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMetricaService.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -25,6 +29,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000005 /* AppMetricaCore in Frameworks */,
+				A10000000000000000000006 /* AppMetricaCrashes in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -44,6 +50,7 @@
 			children = (
 				A20000000000000000000001 /* iOSApp.swift */,
 				A20000000000000000000002 /* ContentView.swift */,
+				A20000000000000000000006 /* AppMetricaService.swift */,
 				A20000000000000000000004 /* Info.plist */,
 				A20000000000000000000005 /* InfoPlist.xcstrings */,
 			);
@@ -75,6 +82,10 @@
 			dependencies = (
 			);
 			name = iosApp;
+			packageProductDependencies = (
+				AC0000000000000000000001 /* AppMetricaCore */,
+				AC0000000000000000000002 /* AppMetricaCrashes */,
+			);
 			productName = iosApp;
 			productReference = A20000000000000000000003 /* ViolinJourney.app */;
 			productType = "com.apple.product-type.application";
@@ -107,6 +118,9 @@
 				ja,
 			);
 			mainGroup = A40000000000000000000001;
+			packageReferences = (
+				AB0000000000000000000001 /* XCRemoteSwiftPackageReference "appmetrica-sdk-ios" */,
+			);
 			productRefGroup = A40000000000000000000003 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -154,6 +168,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A10000000000000000000004 /* AppMetricaService.swift in Sources */,
 				A10000000000000000000001 /* iOSApp.swift in Sources */,
 				A10000000000000000000002 /* ContentView.swift in Sources */,
 			);
@@ -285,6 +300,30 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AB0000000000000000000001 /* XCRemoteSwiftPackageReference "appmetrica-sdk-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/appmetrica/appmetrica-sdk-ios";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 6.7.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AC0000000000000000000001 /* AppMetricaCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB0000000000000000000001 /* XCRemoteSwiftPackageReference "appmetrica-sdk-ios" */;
+			productName = AppMetricaCore;
+		};
+		AC0000000000000000000002 /* AppMetricaCrashes */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AB0000000000000000000001 /* XCRemoteSwiftPackageReference "appmetrica-sdk-ios" */;
+			productName = AppMetricaCrashes;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A80000000000000000000001 /* Project object */;
 }

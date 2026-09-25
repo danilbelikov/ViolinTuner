@@ -3,6 +3,7 @@ package com.violinjourney.app.ios
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.IosAppMetricaAnalytics
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
@@ -90,7 +91,7 @@ import platform.Foundation.NSUserDomainMask
  * would make them. Screens take their view models from here (see [IosNavHost]); a new pipeline is made per screen.
  */
 @OptIn(ExperimentalNativeApi::class)
-internal class IosGraph(fakeScenario: FakeScenario?) {
+internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: IosAppMetricaAnalytics?) {
     val io = Dispatchers.IO
     val clock: WallClock = SystemWallClock
 
@@ -102,8 +103,8 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
     val soundConfig = SoundConfig()
     val backingConfig = BackingConfig()
 
-    // AppMetrica on iOS is a separate library: until it is agreed on, the iOS app sends nothing (spec 3.34).
-    val analytics: Analytics = NoOpAnalytics()
+    /** AppMetrica where the build has a key and may send (spec 5.27); silence otherwise. */
+    val analytics: Analytics = statistics ?: NoOpAnalytics()
 
     /** Where the data lie: Application Support of the app. */
     val dataDirectory = PlatformFile(IosStorage.dataDirectory())
@@ -197,6 +198,8 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
 
     init {
         storageScope.launch(Dispatchers.Main) { backupManager.job.collect { if (!backupManager.running) IosKeepAlive.stop() } }
+        // the consent lives in these settings: it is followed as long as they are this graph's
+        statistics?.followConsent(settings, storageScope)
     }
 
     /** Lets the database and the settings go, so that a copy can be put in their place and a new graph open them. */
