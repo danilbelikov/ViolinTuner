@@ -1,8 +1,6 @@
 package com.violinjourney.app.core.backup
 
-import java.io.InputStream
-import java.io.OutputStream
-import java.util.Properties
+import com.violinjourney.app.core.io.ByteInput
 
 /** Every number of the backup, with starting values from docs/spec.md 5.14. None of it is about intonation. */
 data class BackupConfig(
@@ -54,61 +52,18 @@ data class BackupManifest(
 ) {
     val totalBytes: Long get() = bytes.filterKeys { it in parts }.values.sum()
 
-    fun writeTo(out: OutputStream) {
-        val p = Properties()
-        p[MAGIC_KEY] = MAGIC
-        p["format"] = formatVersion.toString()
-        p["app"] = appVersion
-        p["database"] = databaseVersion.toString()
-        p["created"] = createdAtEpochMs.toString()
-        p["device"] = device
-        p["parts"] = parts.joinToString(",") { it.name }
-        with(counts) {
-            p["sessions"] = sessions.toString(); p["takes"] = takes.toString(); p["pieces"] = pieces.toString()
-            p["pages"] = pages.toString(); p["practiceDays"] = practiceDays.toString(); p["trophies"] = trophies.toString()
-            p["level"] = level.toString(); p["withSound"] = withSound.toString(); p["videos"] = videos.toString()
-        }
-        bytes.forEach { (part, size) -> p["bytes.${part.name}"] = size.toString() }
-        p.store(out, null)
-    }
-
     companion object {
         /** The version this code writes, and the newest it can read. */
         const val FORMAT_VERSION = 1
         const val ENTRY = "manifest.txt"
-        private const val MAGIC_KEY = "violin-intonation-backup"
-        private const val MAGIC = "1"
+        const val MAGIC_KEY = "violin-intonation-backup"
+        const val MAGIC = "1"
 
-        /** Null when [input] is not the passport of a copy of this app. */
-        fun readFrom(input: InputStream): BackupManifest? {
-            val p = Properties()
-            try {
-                p.load(input)
-            } catch (_: IllegalArgumentException) {
-                return null // a malformed \u escape: whatever this is, it is not ours
-            }
-            if (p.getProperty(MAGIC_KEY) != MAGIC) return null
-            fun int(key: String) = p.getProperty(key)?.toIntOrNull()
-            return BackupManifest(
-                formatVersion = int("format") ?: return null,
-                appVersion = p.getProperty("app").orEmpty(),
-                databaseVersion = int("database") ?: return null,
-                createdAtEpochMs = p.getProperty("created")?.toLongOrNull() ?: return null,
-                device = p.getProperty("device").orEmpty(),
-                parts = p.getProperty("parts").orEmpty().split(',').mapNotNull { name -> BackupPart.entries.firstOrNull { it.name == name } }.toSet() + BackupPart.DATA,
-                counts = BackupCounts(
-                    sessions = int("sessions") ?: 0, takes = int("takes") ?: 0, pieces = int("pieces") ?: 0, pages = int("pages") ?: 0,
-                    practiceDays = int("practiceDays") ?: 0, trophies = int("trophies") ?: 0, level = int("level") ?: 1,
-                    withSound = int("withSound") ?: 0, videos = int("videos") ?: 0,
-                ),
-                bytes = BackupPart.entries.mapNotNull { part -> p.getProperty("bytes.${part.name}")?.toLongOrNull()?.let { part to it } }.toMap(),
-            )
-        }
     }
 }
 
 /** One file on its way into a copy. [path] inside the archive says where it goes back to: `sessions/<name>`, `db/violin.db`. */
-class BackupEntry(val path: String, val part: BackupPart, val size: Long, val open: () -> InputStream?)
+class BackupEntry(val path: String, val part: BackupPart, val size: Long, val open: () -> ByteInput?)
 
 /** Where a copy is in its making, or in its coming back. */
 data class BackupProgress(

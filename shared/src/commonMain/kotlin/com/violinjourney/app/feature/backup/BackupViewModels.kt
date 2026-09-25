@@ -15,9 +15,8 @@ import com.violinjourney.app.core.recording.RecordingWatch
 import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.time.WallClock
-import dagger.hilt.android.lifecycle.HiltViewModel
-import java.time.Duration
-import javax.inject.Inject
+import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.filePath
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
@@ -35,8 +34,7 @@ import kotlinx.coroutines.launch
 private fun busyFlow(watch: RecordingWatch, importer: VideoTakeImporter): Flow<Boolean> =
     combine(watch.recording, importer.state) { recording, import -> recording || import != VideoImport.Idle }
 
-@HiltViewModel
-class BackupViewModel @Inject constructor(
+open class BackupViewModel(
     private val manager: BackupManager,
     private val store: BackupStore,
     private val config: BackupConfig,
@@ -53,14 +51,14 @@ class BackupViewModel @Inject constructor(
         viewModelScope.launch { mutableState.update { it.copy(contents = store.contents()) } }
         viewModelScope.launch { busyFlow(watch, importer).collect { busy -> mutableState.update { it.copy(busy = busy) } } }
         viewModelScope.launch {
-            var shared: java.io.File? = null
+            var shared: PlatformFile? = null
             manager.job.collect { job ->
                 mutableState.update { it.copy(job = job, stopDialog = it.stopDialog && job is BackupJob.Saving) }
                 // «Отправить…»: the archive is built, the system sheet takes it from here — once
                 val file = (job as? BackupJob.Saved)?.shareFile
                 if (file != null && file != shared) {
                     shared = file
-                    effectChannel.send(BackupEffect.ShareFile(file.path))
+                    effectChannel.send(BackupEffect.ShareFile(file.filePath))
                 }
             }
         }
@@ -97,8 +95,7 @@ class BackupViewModel @Inject constructor(
     private val BackupState.mayStart: Boolean get() = (job == BackupJob.Idle || job is BackupJob.SaveFailed) && !busy && contents != null && !nothingToSave
 }
 
-@HiltViewModel
-class RestoreViewModel @Inject constructor(
+open class RestoreViewModel(
     private val manager: BackupManager,
     private val store: BackupStore,
     watch: RecordingWatch,
@@ -189,8 +186,7 @@ class RestoreViewModel @Inject constructor(
 }
 
 /** The block «Данные» of the settings: when the last copy was made, whether it has grown old, and a copy on its way. */
-@HiltViewModel
-class DataBlockViewModel @Inject constructor(
+open class DataBlockViewModel(
     manager: BackupManager,
     prefs: BackupPrefs,
     sessions: SessionRepository,
@@ -201,7 +197,7 @@ class DataBlockViewModel @Inject constructor(
     private val total = MutableStateFlow<Long?>(null)
 
     val state: StateFlow<DataBlockState> = combine(manager.job, prefs.lastBackupAtEpochMs, sessions.sessions, total) { job, last, all, bytes ->
-        val stale = last != null && Duration.ofMillis(clock.millis() - last).toDays() > config.staleAfterDays
+        val stale = last != null && (clock.millis() - last) / MS_PER_DAY > config.staleAfterDays
         DataBlockState(
             lastBackupAtEpochMs = last,
             // a quiet word in the same line, never a badge: the app still asks for nothing (spec 3.20)
@@ -226,3 +222,5 @@ class DataBlockViewModel @Inject constructor(
         const val PERCENT = 100
     }
 }
+
+private const val MS_PER_DAY = 24 * 60 * 60 * 1_000L

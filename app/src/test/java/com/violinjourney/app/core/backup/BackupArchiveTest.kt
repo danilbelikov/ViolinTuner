@@ -168,12 +168,12 @@ class BackupArchiveTest {
 
     @Test
     fun `the top folder of a path says which part it is`() {
-        assertEquals(BackupPart.AUDIO, BackupReader.partOf("sessions/a.m4a"))
-        assertEquals(BackupPart.VIDEO, BackupReader.partOf("sessions/a.mp4"))
-        assertEquals(BackupPart.VIDEO, BackupReader.partOf("sessions/a-thumb.jpg"))
-        assertEquals(BackupPart.SHEETS, BackupReader.partOf("repertoire/p.jpg"))
-        assertEquals(BackupPart.DATA, BackupReader.partOf("db/violin.db"))
-        assertEquals(BackupPart.DATA, BackupReader.partOf("profile/avatar-1.jpg"))
+        assertEquals(BackupPart.AUDIO, BackupPaths.partOf("sessions/a.m4a"))
+        assertEquals(BackupPart.VIDEO, BackupPaths.partOf("sessions/a.mp4"))
+        assertEquals(BackupPart.VIDEO, BackupPaths.partOf("sessions/a-thumb.jpg"))
+        assertEquals(BackupPart.SHEETS, BackupPaths.partOf("repertoire/p.jpg"))
+        assertEquals(BackupPart.DATA, BackupPaths.partOf("db/violin.db"))
+        assertEquals(BackupPart.DATA, BackupPaths.partOf("profile/avatar-1.jpg"))
     }
 
     @Test

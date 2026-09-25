@@ -1,17 +1,18 @@
 package com.violinjourney.app.core.backup
 
-import com.violinjourney.app.core.di.ElapsedClock
-import com.violinjourney.app.core.di.IoDispatcher
-import com.violinjourney.app.core.time.WallClock
-import java.io.File
-import java.io.IOException
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.BackupCreated
 import com.violinjourney.app.core.analytics.BackupRestored
 import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.NoOpAnalytics
-import javax.inject.Inject
-import javax.inject.Singleton
+import com.violinjourney.app.core.di.ElapsedClock
+import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.deleteFile
+import com.violinjourney.app.core.io.openInput
+import com.violinjourney.app.core.io.openOutput
+import com.violinjourney.app.core.io.sizeBytes
+import com.violinjourney.app.core.time.WallClock
+import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
@@ -25,6 +26,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import okio.IOException
 
 enum class SaveFailure { NO_SPACE, UNAVAILABLE, FAILED }
 
@@ -52,7 +54,7 @@ sealed interface BackupJob {
         val place: String?,
         val manifest: BackupManifest,
         /** Set for «Отправить…»: the archive waits under `cache/share/` for the system sheet. */
-        val shareFile: File? = null,
+        val shareFile: PlatformFile? = null,
     ) : BackupJob
 
     data class SaveFailed(val reason: SaveFailure, val missingBytes: Long = 0) : BackupJob
@@ -89,8 +91,7 @@ fun interface BackupKeepAlive {
 }
 
 /** How long a copy takes against its size — measured on this device by the copies themselves (spec 5.14). */
-@Singleton
-class BackupSpeed @Inject constructor(config: BackupConfig) {
+class BackupSpeed(config: BackupConfig) {
     @Volatile var msPerMb: Double = config.startMsPerMb
         private set
 
@@ -108,8 +109,7 @@ class BackupSpeed @Inject constructor(config: BackupConfig) {
  * Saving a copy and bringing one back (spec 3.20, 5.14). A singleton with a scope of its own, as
  * the importer of videos is: minutes of work must not end because a screen did. One job at a time.
  */
-@Singleton
-class BackupManager @Inject constructor(
+class BackupManager(
     private val store: BackupStore,
     private val documents: BackupDocuments,
     private val prefs: BackupPrefs,
@@ -118,7 +118,7 @@ class BackupManager @Inject constructor(
     private val speed: BackupSpeed,
     private val clock: WallClock,
     private val elapsed: ElapsedClock,
-    @IoDispatcher private val io: CoroutineDispatcher,
+    private val io: CoroutineDispatcher,
     private val analytics: Analytics = NoOpAnalytics(),
 ) {
     private val scope = CoroutineScope(SupervisorJob() + io)
@@ -162,7 +162,7 @@ class BackupManager @Inject constructor(
                     delay(SHOW_FROM_MS)
                     show()
                 }
-                val out = if (shareFile != null) shareFile.outputStream() else documents.openOutput(checkNotNull(uri))
+                val out = if (shareFile != null) shareFile.openOutput() else documents.openOutput(checkNotNull(uri))
                 if (out == null) {
                     late.cancel()
                     mutableJob.value = BackupJob.SaveFailed(SaveFailure.UNAVAILABLE)
@@ -180,7 +180,7 @@ class BackupManager @Inject constructor(
                 }
                 // The archive is read back from where it went: a copy that cannot be opened is worse than a slow one.
                 mutableJob.update { if (it is BackupJob.Saving) it.copy(verifying = true, remainingSec = null) else it }
-                val readBack = if (shareFile != null) shareFile.inputStream() else documents.openInput(checkNotNull(uri))
+                val readBack = if (shareFile != null) shareFile.openInput() else documents.openInput(checkNotNull(uri))
                 // a provider that will not hand back what it has just taken is not a reason to fail a copy that was written whole
                 readBack?.use { BackupReader.verify(it, total) {} }
                 speed.measured(total, elapsed.nowMs() - started)
@@ -194,7 +194,7 @@ class BackupManager @Inject constructor(
                 analytics.track(BackupCreated(megabytes = (total / BYTES_PER_MB).toInt(), parts = parts.size))
                 mutableJob.value = BackupJob.Saved(
                     fileName = uri?.let(documents::nameOf) ?: fileName,
-                    bytes = uri?.let(documents::sizeOf) ?: shareFile?.length() ?: total,
+                    bytes = uri?.let(documents::sizeOf) ?: shareFile?.sizeBytes() ?: total,
                     place = uri?.let(documents::placeOf),
                     manifest = prepared.manifest,
                     shareFile = shareFile,
@@ -211,7 +211,7 @@ class BackupManager @Inject constructor(
                 store.cleanUp()
                 // an unfinished file is ours to remove — cancelled, failed, or cut short
                 if (!finished) withContext(kotlinx.coroutines.NonCancellable) {
-                    if (uri != null) documents.delete(uri) else shareFile?.delete()
+                    if (uri != null) documents.delete(uri) else shareFile?.deleteFile()
                 }
             }
         }

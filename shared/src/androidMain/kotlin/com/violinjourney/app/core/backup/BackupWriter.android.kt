@@ -14,8 +14,7 @@ import kotlinx.coroutines.ensureActive
  * completion mark last: an archive without the mark was cut short. Pure Kotlin; cancellable
  * between buffers.
  */
-object BackupWriter {
-    const val COMPLETE_ENTRY = "complete.txt"
+actual object BackupWriter {
     private const val BUFFER = 256 * 1024
 
     /**
@@ -23,7 +22,7 @@ object BackupWriter {
      * skipped: its recording comes back without its sound, which the app knows how to show.
      * Answers with the bytes written into entries.
      */
-    suspend fun write(out: OutputStream, manifest: BackupManifest, entries: List<BackupEntry>, onProgress: (BackupProgress) -> Unit): Long {
+    actual suspend fun write(out: OutputStream, manifest: BackupManifest, entries: List<BackupEntry>, onProgress: (BackupProgress) -> Unit): Long {
         val total = entries.sumOf { it.size }
         var done = 0L
         var written = 0
@@ -61,7 +60,7 @@ object BackupWriter {
                 written++
             }
             zip.setLevel(Deflater.DEFAULT_COMPRESSION)
-            zip.putNextEntry(ZipEntry(COMPLETE_ENTRY))
+            zip.putNextEntry(ZipEntry(BackupPaths.COMPLETE_ENTRY))
             zip.write("entries=$written\n".toByteArray())
             zip.closeEntry()
         }

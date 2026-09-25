@@ -25,6 +25,9 @@ import com.violinjourney.app.core.ui.analytics.HiltAnalyticsViewModel
 import com.violinjourney.app.feature.backup.BACKUP_FILE_TYPES
 import com.violinjourney.app.feature.backup.BackupRoute
 import com.violinjourney.app.feature.backup.DataBlock
+import com.violinjourney.app.feature.backup.HiltBackupViewModel
+import com.violinjourney.app.feature.backup.HiltDataBlockViewModel
+import com.violinjourney.app.feature.backup.HiltRestoreViewModel
 import com.violinjourney.app.feature.backup.RestoreRoute
 import com.violinjourney.app.feature.backup.RestoreViewModel
 import com.violinjourney.app.feature.camera.CaptureRoute
@@ -326,6 +329,7 @@ fun AppNavHost(
                         onOpenRestore = navController::navigateToRestore,
                         analyticsEnabled = analyticsEnabled,
                         onAnalyticsChange = onAnalyticsChange,
+                        viewModel = hiltViewModel<HiltDataBlockViewModel>(),
                     )
                 },
                 viewModel = hiltViewModel<HiltSettingsViewModel>(),
@@ -384,12 +388,12 @@ fun AppNavHost(
             SplashRoute(SplashKind.HOME, onDone = { navController.navigateWithinTheGame(HOME_ROUTE) }, viewModel = hiltViewModel<HiltHomeViewModel>())
         }
         // A copy of the data and its coming back (spec 3.20): above the tabs, without the bottom bar.
-        composable(BACKUP_ROUTE) { BackupRoute(onClose = navController::popBackStack) }
+        composable(BACKUP_ROUTE) { BackupRoute(onClose = navController::popBackStack, viewModel = hiltViewModel<HiltBackupViewModel>()) }
         composable(
             route = RESTORE_PATTERN,
             arguments = listOf(navArgument(RestoreViewModel.ARG_URI) { type = NavType.StringType; nullable = true; defaultValue = null }),
         ) {
-            RestoreRoute(onClose = navController::popBackStack, onOpenBackup = navController::navigateToBackup)
+            RestoreRoute(onClose = navController::popBackStack, onOpenBackup = navController::navigateToBackup, viewModel = hiltViewModel<HiltRestoreViewModel>())
         }
     }
 }

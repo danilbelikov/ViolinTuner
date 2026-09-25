@@ -17,3 +17,13 @@ actual val PlatformFile.fileUri: String get() = toURI().toString()
 actual fun PlatformFile.sibling(name: String): PlatformFile = java.io.File(parentFile, name)
 
 actual fun PlatformFile.moveTo(target: PlatformFile): Boolean = renameTo(target)
+
+actual fun PlatformFile.exists(): Boolean = exists()
+
+actual fun PlatformFile.child(name: String): PlatformFile = java.io.File(this, name)
+
+actual fun PlatformFile.makeDirectories(): Boolean = mkdirs() || isDirectory
+
+actual fun PlatformFile.listNames(): List<String> = list()?.toList().orEmpty()
+
+actual fun PlatformFile.deleteAll(): Boolean = deleteRecursively()

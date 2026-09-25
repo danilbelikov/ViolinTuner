@@ -32,14 +32,66 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.res.stringResource
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.backup_busy_recording
+import com.violinjourney.app.shared.resources.backup_can_leave_text
+import com.violinjourney.app.shared.resources.backup_can_leave_title
+import com.violinjourney.app.shared.resources.backup_close
+import com.violinjourney.app.shared.resources.backup_count_pages_few
+import com.violinjourney.app.shared.resources.backup_count_pages_many
+import com.violinjourney.app.shared.resources.backup_count_pages_one
+import com.violinjourney.app.shared.resources.backup_count_takes_few
+import com.violinjourney.app.shared.resources.backup_count_takes_many
+import com.violinjourney.app.shared.resources.backup_count_takes_one
+import com.violinjourney.app.shared.resources.backup_count_trophies_few
+import com.violinjourney.app.shared.resources.backup_count_trophies_many
+import com.violinjourney.app.shared.resources.backup_count_trophies_one
+import com.violinjourney.app.shared.resources.backup_done
+import com.violinjourney.app.shared.resources.backup_failed_gone_text
+import com.violinjourney.app.shared.resources.backup_failed_gone_title
+import com.violinjourney.app.shared.resources.backup_failed_space_inside
+import com.violinjourney.app.shared.resources.backup_failed_space_text
+import com.violinjourney.app.shared.resources.backup_failed_space_title
+import com.violinjourney.app.shared.resources.backup_failed_text
+import com.violinjourney.app.shared.resources.backup_failed_title
+import com.violinjourney.app.shared.resources.backup_nothing_text
+import com.violinjourney.app.shared.resources.backup_nothing_title
+import com.violinjourney.app.shared.resources.backup_part_always
+import com.violinjourney.app.shared.resources.backup_part_audio
+import com.violinjourney.app.shared.resources.backup_part_data
+import com.violinjourney.app.shared.resources.backup_part_sheets
+import com.violinjourney.app.shared.resources.backup_part_video
+import com.violinjourney.app.shared.resources.backup_phase_data
+import com.violinjourney.app.shared.resources.backup_phase_files
+import com.violinjourney.app.shared.resources.backup_phase_verifying_file
+import com.violinjourney.app.shared.resources.backup_retry
+import com.violinjourney.app.shared.resources.backup_save_to
+import com.violinjourney.app.shared.resources.backup_saved_advice
+import com.violinjourney.app.shared.resources.backup_saved_place
+import com.violinjourney.app.shared.resources.backup_saved_title
+import com.violinjourney.app.shared.resources.backup_saving_button
+import com.violinjourney.app.shared.resources.backup_saving_title
+import com.violinjourney.app.shared.resources.backup_share
+import com.violinjourney.app.shared.resources.backup_stop_confirm
+import com.violinjourney.app.shared.resources.backup_stop_continue
+import com.violinjourney.app.shared.resources.backup_stop_text
+import com.violinjourney.app.shared.resources.backup_stop_title
+import com.violinjourney.app.shared.resources.backup_text
+import com.violinjourney.app.shared.resources.backup_title
+import com.violinjourney.app.shared.resources.backup_too_big_to_share
+import com.violinjourney.app.shared.resources.backup_total
+import com.violinjourney.app.shared.resources.backup_total_value
+import com.violinjourney.app.shared.resources.backup_without_audio
+import com.violinjourney.app.shared.resources.backup_without_sheets
+import com.violinjourney.app.shared.resources.backup_without_video
+import com.violinjourney.app.shared.resources.dot_separator
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.backup.BackupContents
 import com.violinjourney.app.core.backup.BackupJob
 import com.violinjourney.app.core.backup.BackupPart
@@ -75,18 +127,18 @@ fun BackupScreen(state: BackupState, fileName: String, onIntent: (BackupIntent) 
             ) {
                 when {
                     target == "progress" && job is BackupJob.Saving -> {
-                        ScreenTitle(stringResource(R.string.backup_saving_title))
+                        ScreenTitle(stringResource(Res.string.backup_saving_title))
                         val progress = job.progress
                         JobProgress(
                             phase = when {
-                                job.verifying -> stringResource(R.string.backup_phase_verifying_file)
-                                progress == null || progress.part == BackupPart.DATA -> stringResource(R.string.backup_phase_data)
-                                else -> stringResource(R.string.backup_phase_files, partShortName(progress.part), progress.index, progress.count)
+                                job.verifying -> stringResource(Res.string.backup_phase_verifying_file)
+                                progress == null || progress.part == BackupPart.DATA -> stringResource(Res.string.backup_phase_data)
+                                else -> stringResource(Res.string.backup_phase_files, partShortName(progress.part), progress.index, progress.count)
                             },
                             progress = progress,
                             remainingSec = job.remainingSec,
-                            leaveTitle = stringResource(R.string.backup_can_leave_title),
-                            leaveText = stringResource(R.string.backup_can_leave_text),
+                            leaveTitle = stringResource(Res.string.backup_can_leave_title),
+                            leaveText = stringResource(Res.string.backup_can_leave_text),
                             cancellable = !job.verifying,
                             onCancel = { onIntent(BackupIntent.CancelClicked) },
                         )
@@ -100,10 +152,10 @@ fun BackupScreen(state: BackupState, fileName: String, onIntent: (BackupIntent) 
     }
     if (state.stopDialog) {
         ConfirmDialog(
-            title = stringResource(R.string.backup_stop_title),
-            text = stringResource(R.string.backup_stop_text),
-            safe = stringResource(R.string.backup_stop_continue),
-            destructive = stringResource(R.string.backup_stop_confirm),
+            title = stringResource(Res.string.backup_stop_title),
+            text = stringResource(Res.string.backup_stop_text),
+            safe = stringResource(Res.string.backup_stop_continue),
+            destructive = stringResource(Res.string.backup_stop_confirm),
             onSafe = { onIntent(BackupIntent.StopDismissed) },
             onDestructive = { onIntent(BackupIntent.StopConfirmed) },
         )
@@ -114,28 +166,28 @@ fun BackupScreen(state: BackupState, fileName: String, onIntent: (BackupIntent) 
 private fun Choose(state: BackupState, fileName: String, onIntent: (BackupIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val contents = state.contents
-    ScreenTitle(stringResource(R.string.backup_title))
-    Text(stringResource(R.string.backup_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
+    ScreenTitle(stringResource(Res.string.backup_title))
+    Text(stringResource(Res.string.backup_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
     if (contents == null) return
     if (state.nothingToSave) {
         Column(modifier = Modifier.fillMaxWidth().padding(vertical = 32.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
             AppIcon(AppIcons.Archive, contentDescription = null, tint = colors.onSurfaceVariant, size = 32.dp)
-            Text(stringResource(R.string.backup_nothing_title), color = colors.onSurface, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
-            Text(stringResource(R.string.backup_nothing_text), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
+            Text(stringResource(Res.string.backup_nothing_title), color = colors.onSurface, style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.SemiBold))
+            Text(stringResource(Res.string.backup_nothing_text), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
         }
         return
     }
     val saving = state.job is BackupJob.Saving
     Column {
-        PartRow(BackupPart.DATA, stringResource(R.string.backup_part_data), dataLine(contents), contents, state, onIntent)
-        PartRow(BackupPart.SHEETS, stringResource(R.string.backup_part_sheets), listOf(piecesWord(contents.counts.pieces), plural(contents.counts.pages, R.string.backup_count_pages_one, R.string.backup_count_pages_few, R.string.backup_count_pages_many)).joinToString(stringResource(R.string.dot_separator)), contents, state, onIntent)
-        PartRow(BackupPart.AUDIO, stringResource(R.string.backup_part_audio), sessionsWord(contents.counts.withSound), contents, state, onIntent)
-        PartRow(BackupPart.VIDEO, stringResource(R.string.backup_part_video), plural(contents.counts.videos, R.string.backup_count_takes_one, R.string.backup_count_takes_few, R.string.backup_count_takes_many), contents, state, onIntent)
+        PartRow(BackupPart.DATA, stringResource(Res.string.backup_part_data), dataLine(contents), contents, state, onIntent)
+        PartRow(BackupPart.SHEETS, stringResource(Res.string.backup_part_sheets), listOf(piecesWord(contents.counts.pieces), plural(contents.counts.pages, Res.string.backup_count_pages_one, Res.string.backup_count_pages_few, Res.string.backup_count_pages_many)).joinToString(stringResource(Res.string.dot_separator)), contents, state, onIntent)
+        PartRow(BackupPart.AUDIO, stringResource(Res.string.backup_part_audio), sessionsWord(contents.counts.withSound), contents, state, onIntent)
+        PartRow(BackupPart.VIDEO, stringResource(Res.string.backup_part_video), plural(contents.counts.videos, Res.string.backup_count_takes_one, Res.string.backup_count_takes_few, Res.string.backup_count_takes_many), contents, state, onIntent)
     }
     Row(verticalAlignment = Alignment.Bottom) {
-        Text(stringResource(R.string.backup_total), modifier = Modifier.weight(1f), color = colors.onSurface, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, fontWeight = FontWeight.Bold))
+        Text(stringResource(Res.string.backup_total), modifier = Modifier.weight(1f), color = colors.onSurface, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, fontWeight = FontWeight.Bold))
         Text(
-            text = stringResource(R.string.backup_total_value, Formats.fileSize(state.totalBytes)),
+            text = stringResource(Res.string.backup_total_value, Formats.fileSize(state.totalBytes)),
             color = colors.onSurface,
             style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES),
         )
@@ -149,9 +201,9 @@ private fun Choose(state: BackupState, fileName: String, onIntent: (BackupIntent
                 Text(
                     text = stringResource(
                         when (part) {
-                            BackupPart.VIDEO -> R.string.backup_without_video
-                            BackupPart.AUDIO -> R.string.backup_without_audio
-                            else -> R.string.backup_without_sheets
+                            BackupPart.VIDEO -> Res.string.backup_without_video
+                            BackupPart.AUDIO -> Res.string.backup_without_audio
+                            else -> Res.string.backup_without_sheets
                         },
                     ),
                     color = colors.onSurfaceVariant,
@@ -162,15 +214,15 @@ private fun Choose(state: BackupState, fileName: String, onIntent: (BackupIntent
     }
     val enabled = !state.busy && !saving
     Button(onClick = { onIntent(BackupIntent.SaveClicked) }, enabled = enabled, modifier = Modifier.fillMaxWidth().height(56.dp)) {
-        IconLabel(AppIcons.SaveCopy, stringResource(if (saving) R.string.backup_saving_button else R.string.backup_save_to), iconSize = 20.dp)
+        IconLabel(AppIcons.SaveCopy, stringResource(if (saving) Res.string.backup_saving_button else Res.string.backup_save_to), iconSize = 20.dp)
     }
     when {
         // the button stays where it is, and the reason stands under it: the function is there, only not now
-        state.busy -> Text(stringResource(R.string.backup_busy_recording), modifier = Modifier.fillMaxWidth(), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
+        state.busy -> Text(stringResource(Res.string.backup_busy_recording), modifier = Modifier.fillMaxWidth(), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
         state.canShare -> TextButton(onClick = { onIntent(BackupIntent.ShareClicked(fileName)) }, enabled = enabled, modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp)) {
-            IconLabel(AppIcons.Share, stringResource(R.string.backup_share))
+            IconLabel(AppIcons.Share, stringResource(Res.string.backup_share))
         }
-        else -> Text(stringResource(R.string.backup_too_big_to_share), modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp))
+        else -> Text(stringResource(Res.string.backup_too_big_to_share), modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp))
     }
 }
 
@@ -178,8 +230,8 @@ private fun Choose(state: BackupState, fileName: String, onIntent: (BackupIntent
 private fun dataLine(contents: BackupContents): String = listOf(
     sessionsWord(contents.counts.sessions),
     daysWord(contents.counts.practiceDays),
-    plural(contents.counts.trophies, R.string.backup_count_trophies_one, R.string.backup_count_trophies_few, R.string.backup_count_trophies_many),
-).joinToString(stringResource(R.string.dot_separator))
+    plural(contents.counts.trophies, Res.string.backup_count_trophies_one, Res.string.backup_count_trophies_few, Res.string.backup_count_trophies_many),
+).joinToString(stringResource(Res.string.dot_separator))
 
 /** A line of the contents in the words a person thinks in — «видео», «звук» — with how many and how heavy. */
 @Composable
@@ -210,7 +262,7 @@ private fun PartRow(part: BackupPart, title: String, caption: String, contents: 
             style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
         )
         if (fixed) {
-            Text(stringResource(R.string.backup_part_always), modifier = Modifier.width(52.dp), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp))
+            Text(stringResource(Res.string.backup_part_always), modifier = Modifier.width(52.dp), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp))
         } else {
             Switch(checked = included, onCheckedChange = null)
         }
@@ -237,34 +289,34 @@ private fun WeightBar(contents: BackupContents, parts: Set<BackupPart>) {
 private fun Saved(job: BackupJob.Saved, onIntent: (BackupIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     DoneMark()
-    ScreenTitle(stringResource(R.string.backup_saved_title))
+    ScreenTitle(stringResource(Res.string.backup_saved_title))
     Column(modifier = Modifier.fillMaxWidth().background(colors.surfaceContainer, RoundedCornerShape(16.dp)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             AppIcon(AppIcons.Archive, contentDescription = null, tint = colors.onSurfaceVariant)
             Column {
                 Text(job.fileName, color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
                 val size = Formats.fileSize(job.bytes)
-                Text(job.place?.let { stringResource(R.string.backup_saved_place, size, it) } ?: size, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES))
+                Text(job.place?.let { stringResource(Res.string.backup_saved_place, size, it) } ?: size, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES))
             }
         }
         HorizontalDivider(color = colors.surfaceContainerHigh)
         Text(countsLine(job.manifest.counts, withMedia = true), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 21.sp))
     }
-    Text(stringResource(R.string.backup_saved_advice), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 21.sp))
-    Button(onClick = { onIntent(BackupIntent.DoneClicked) }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text(stringResource(R.string.backup_done)) }
+    Text(stringResource(Res.string.backup_saved_advice), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 21.sp))
+    Button(onClick = { onIntent(BackupIntent.DoneClicked) }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text(stringResource(Res.string.backup_done)) }
 }
 
 @Composable
 private fun Failed(job: BackupJob.SaveFailed, onIntent: (BackupIntent) -> Unit) {
-    ScreenTitle(stringResource(R.string.backup_saving_title))
+    ScreenTitle(stringResource(Res.string.backup_saving_title))
     when (job.reason) {
         SaveFailure.NO_SPACE -> ProblemBlock(
-            stringResource(R.string.backup_failed_space_title),
+            stringResource(Res.string.backup_failed_space_title),
             // inside the phone — the archive for «Отправить…» did not fit; outside — the place that was picked is full
-            if (job.missingBytes > 0) stringResource(R.string.backup_failed_space_inside, Formats.fileSize(job.missingBytes)) else stringResource(R.string.backup_failed_space_text),
+            if (job.missingBytes > 0) stringResource(Res.string.backup_failed_space_inside, Formats.fileSize(job.missingBytes)) else stringResource(Res.string.backup_failed_space_text),
         )
-        SaveFailure.UNAVAILABLE -> ProblemBlock(stringResource(R.string.backup_failed_gone_title), stringResource(R.string.backup_failed_gone_text))
-        SaveFailure.FAILED -> ProblemBlock(stringResource(R.string.backup_failed_title), stringResource(R.string.backup_failed_text))
+        SaveFailure.UNAVAILABLE -> ProblemBlock(stringResource(Res.string.backup_failed_gone_title), stringResource(Res.string.backup_failed_gone_text))
+        SaveFailure.FAILED -> ProblemBlock(stringResource(Res.string.backup_failed_title), stringResource(Res.string.backup_failed_text))
     }
-    TwoButtons(stringResource(R.string.backup_close), { onIntent(BackupIntent.DoneClicked) }, stringResource(R.string.backup_retry), { onIntent(BackupIntent.RetryClicked) })
+    TwoButtons(stringResource(Res.string.backup_close), { onIntent(BackupIntent.DoneClicked) }, stringResource(Res.string.backup_retry), { onIntent(BackupIntent.RetryClicked) })
 }

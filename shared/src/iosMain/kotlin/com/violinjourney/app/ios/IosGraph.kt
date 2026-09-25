@@ -20,6 +20,11 @@ import com.violinjourney.app.core.audio.playback.VideoPictureFactory
 import com.violinjourney.app.core.audio.recording.IosAacEncoder
 import com.violinjourney.app.core.audio.recording.PcmEncoderFactory
 import com.violinjourney.app.core.audio.share.IosSoundRenderer
+import com.violinjourney.app.core.backup.BackupConfig
+import com.violinjourney.app.core.backup.BackupManager
+import com.violinjourney.app.core.backup.BackupSpeed
+import com.violinjourney.app.core.backup.IosBackupDocuments
+import com.violinjourney.app.core.backup.IosBackupStore
 import com.violinjourney.app.core.data.journey.RoomHomeRepository
 import com.violinjourney.app.core.data.journey.RoomJourneyRepository
 import com.violinjourney.app.core.data.practice.RoomPieceBlockRepository
@@ -49,6 +54,7 @@ import com.violinjourney.app.core.recording.RecordingWatch
 import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.recording.video.AnalysisSpeed
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
+import com.violinjourney.app.core.settings.DataStoreBackupPrefs
 import com.violinjourney.app.core.settings.DataStoreBlockStore
 import com.violinjourney.app.core.settings.DataStorePracticeNotesStore
 import com.violinjourney.app.core.settings.DataStoreProfileRepository
@@ -64,8 +70,12 @@ import com.violinjourney.app.feature.history.HistorySectionAsk
 import com.violinjourney.app.feature.share.RenderSpeed
 import kotlin.experimental.ExperimentalNativeApi
 import kotlin.native.Platform
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 import platform.Foundation.NSProcessInfo
 
 /**
@@ -88,8 +98,13 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
     // AppMetrica on iOS is a separate library: until it is agreed on, the iOS app sends nothing (spec 3.34).
     val analytics: Analytics = NoOpAnalytics()
 
+    /** Where the data lie: Application Support of the app. */
+    val dataDirectory = PlatformFile(IosStorage.dataDirectory())
+
+    // DataStore allows one instance per file: its scope ends with this graph, before a new one opens the file again
+    private val storageScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val database = IosStorage.database()
-    private val dataStore: DataStore<Preferences> = IosStorage.settings()
+    private val dataStore: DataStore<Preferences> = IosStorage.settings(scope = storageScope)
 
     val settings: SettingsRepository = DataStoreSettingsRepository(dataStore)
     val configSource = SettingsConfigSource(intonationConfig, settings)
@@ -165,6 +180,25 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
         override fun prepare(backing: Backing, sampleRate: Int): PlatformFile? = null
 
         override fun deleteOrphans(keptFiles: Set<String>) = Unit
+    }
+
+    // A copy of the data (spec 3.20): the same manager as on Android, over the files and the pickers of iOS.
+    val backupConfig = BackupConfig()
+    val backupPrefs = DataStoreBackupPrefs(dataStore)
+    val backupStore = IosBackupStore(dataDirectory, database, sessions, repertoire, practice, trophies, progressConfig, clock, io)
+    val backupManager = BackupManager(
+        backupStore, IosBackupDocuments(), backupPrefs, IosKeepAlive, backupConfig, BackupSpeed(backupConfig), clock, elapsed, io,
+        analytics,
+    )
+
+    init {
+        storageScope.launch(Dispatchers.Main) { backupManager.job.collect { if (!backupManager.running) IosKeepAlive.stop() } }
+    }
+
+    /** Lets the database and the settings go, so that a copy can be put in their place and a new graph open them. */
+    fun close() {
+        database.close()
+        storageScope.cancel()
     }
 
     private companion object {

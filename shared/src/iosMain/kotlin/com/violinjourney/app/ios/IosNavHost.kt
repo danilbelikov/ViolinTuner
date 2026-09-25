@@ -15,6 +15,13 @@ import com.violinjourney.app.core.domain.journey.JourneyRoute as JourneyStops
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
+import com.violinjourney.app.feature.backup.BackupRoute
+import com.violinjourney.app.feature.backup.BackupViewModel
+import com.violinjourney.app.feature.backup.DataBlock
+import com.violinjourney.app.feature.backup.DataBlockViewModel
+import com.violinjourney.app.feature.backup.RestoreRoute
+import com.violinjourney.app.feature.backup.RestoreViewModel
+import com.violinjourney.app.feature.backup.rememberBackupSystem
 import com.violinjourney.app.feature.history.HistoryRoute
 import com.violinjourney.app.feature.history.HistoryViewModel
 import com.violinjourney.app.feature.home.HomeLookViewModel
@@ -82,19 +89,24 @@ private const val HOME_HOUSES_ROUTE = "homeHouses"
 private const val SPLASH_AWAY_ROUTE = "splashAway"
 private const val SPLASH_HOME_ROUTE = "splashHome"
 private const val SETTINGS_ROUTE = "settings"
+private const val BACKUP_ROUTE = "backup"
+private const val RESTORE_ROUTE = "restore"
+private const val RESTORE_PATTERN = "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}={${RestoreViewModel.ARG_URI}}"
 
 /**
  * The graph of screens, as `AppNavHost` on Android: the same routes and the same moves between them. What is not on
- * iOS yet — the copy of the data, the own camera — is not in the graph, and the ways to it do nothing for now.
+ * iOS yet — the own camera, the backings — is not in the graph, and the ways to it do nothing for now.
  */
 @Composable
 internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHostController, startRoute: String, modifier: Modifier) {
     val notYet: (Long) -> Unit = {}
     NavHost(navController = navController, startDestination = startRoute, modifier = modifier) {
         composable(ONBOARDING_ROUTE) {
+            // on a new phone a copy is the first thing a person with one needs (spec 3.20): Files, then the restore screen
+            val copy = rememberBackupSystem(onCopyPicked = { uri -> uri?.let(navController::navigateToRestore) })
             OnboardingRoute(
                 onFinished = navController::navigateFromOnboarding,
-                onHaveBackup = null,
+                onHaveBackup = copy.pickCopy,
                 viewModel = viewModel { OnboardingViewModel(graph.settings, createSavedStateHandle()) },
                 tracking = viewModel { AnalyticsViewModel(graph.analytics) },
             )
@@ -307,8 +319,41 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 // iOS keeps the language of each app in its Settings, on the app's own page
                 onLanguageClick = ::openAppSettings,
                 // the copy of the data comes to iOS with its own step; the statistics switch has nothing to send yet
-                dataBlock = { _, _ -> },
+                dataBlock = { analyticsEnabled, onAnalyticsChange ->
+                    DataBlock(
+                        onOpenBackup = navController::navigateToBackup,
+                        onOpenRestore = navController::navigateToRestore,
+                        analyticsEnabled = analyticsEnabled,
+                        onAnalyticsChange = onAnalyticsChange,
+                        viewModel = viewModel { DataBlockViewModel(graph.backupManager, graph.backupPrefs, graph.sessions, graph.backupStore, graph.backupConfig, graph.clock) },
+                    )
+                },
                 viewModel = viewModel { SettingsViewModel(graph.settings, graph.sound, graph.soundConfig) },
+            )
+        }
+        // A copy of the data and its coming back (spec 3.20): above the tabs, without the bottom bar.
+        composable(BACKUP_ROUTE) {
+            BackupRoute(
+                onClose = navController::popBackStack,
+                viewModel = viewModel { BackupViewModel(graph.backupManager, graph.backupStore, graph.backupConfig, graph.recordingWatch, graph.videoImporter) },
+            )
+        }
+        composable(
+            route = RESTORE_PATTERN,
+            arguments = listOf(
+                navArgument(RestoreViewModel.ARG_URI) {
+                    type = NavType.StringType
+                    nullable = true
+                    defaultValue = null
+                },
+            ),
+        ) {
+            RestoreRoute(
+                onClose = navController::popBackStack,
+                onOpenBackup = navController::navigateToBackup,
+                viewModel = viewModel {
+                    RestoreViewModel(graph.backupManager, graph.backupStore, graph.recordingWatch, graph.videoImporter, createSavedStateHandle())
+                },
             )
         }
         // The journey (spec 3.23): above the tabs; the map and the passport are views of the same state.
@@ -418,6 +463,15 @@ private fun NavHostController.navigateToStand(pieceId: Long, pageIndex: Int) {
     navigate("$STAND_ROUTE/$pieceId?${StandViewModel.ARG_PAGE}=$pageIndex") { launchSingleTop = true }
 }
 
+private fun NavHostController.navigateToBackup() {
+    navigate(BACKUP_ROUTE) { launchSingleTop = true }
+}
+
+/** [uri] is the file Files came back with; blank — a restore that is on its way already is come back to. */
+private fun NavHostController.navigateToRestore(uri: String) {
+    navigate(if (uri.isBlank()) RESTORE_ROUTE else "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}=${encodeQuery(uri)}") { launchSingleTop = true }
+}
+
 private fun NavHostController.navigateToSettings() {
     navigate(SETTINGS_ROUTE) { launchSingleTop = true }
 }
@@ -457,3 +511,13 @@ private fun NavHostController.navigateToScaleForm(pieceId: Long?) {
 private fun NavHostController.popUpToSection() {
     if (!popBackStack(SECTION_PATTERN, inclusive = false)) popBackStack(TopLevelDestination.HISTORY.route, inclusive = false)
 }
+
+/** A value inside the query of a route: everything but the unreserved characters percent-encoded, as `Uri.encode` does. */
+private fun encodeQuery(value: String): String = buildString {
+    value.encodeToByteArray().forEach { byte ->
+        val c = byte.toInt().toChar()
+        if (byte >= 0 && (c.isLetterOrDigit() || c in UNRESERVED)) append(c) else append('%').append((byte.toInt() and 0xFF).toString(16).uppercase().padStart(2, '0'))
+    }
+}
+
+private const val UNRESERVED = "-_.~"

@@ -30,13 +30,74 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.res.stringResource
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.backup_cancel
+import com.violinjourney.app.shared.resources.backup_close
+import com.violinjourney.app.shared.resources.backup_count_level
+import com.violinjourney.app.shared.resources.backup_count_pages_few
+import com.violinjourney.app.shared.resources.backup_count_pages_many
+import com.violinjourney.app.shared.resources.backup_count_pages_one
+import com.violinjourney.app.shared.resources.backup_count_sound_few
+import com.violinjourney.app.shared.resources.backup_count_sound_many
+import com.violinjourney.app.shared.resources.backup_count_sound_one
+import com.violinjourney.app.shared.resources.backup_count_video
+import com.violinjourney.app.shared.resources.backup_retry
+import com.violinjourney.app.shared.resources.backup_stop_confirm
+import com.violinjourney.app.shared.resources.backup_stop_continue
+import com.violinjourney.app.shared.resources.backup_stop_title
+import com.violinjourney.app.shared.resources.dot_separator
+import com.violinjourney.app.shared.resources.restore_busy
+import com.violinjourney.app.shared.resources.restore_button
+import com.violinjourney.app.shared.resources.restore_can_leave_title
+import com.violinjourney.app.shared.resources.restore_can_stop
+import com.violinjourney.app.shared.resources.restore_cannot_stop
+import com.violinjourney.app.shared.resources.restore_confirm_button
+import com.violinjourney.app.shared.resources.restore_confirm_text
+import com.violinjourney.app.shared.resources.restore_confirm_title
+import com.violinjourney.app.shared.resources.restore_damaged_text
+import com.violinjourney.app.shared.resources.restore_damaged_title
+import com.violinjourney.app.shared.resources.restore_done_title
+import com.violinjourney.app.shared.resources.restore_empty_app
+import com.violinjourney.app.shared.resources.restore_failed_lost_text
+import com.violinjourney.app.shared.resources.restore_failed_lost_title
+import com.violinjourney.app.shared.resources.restore_failed_text
+import com.violinjourney.app.shared.resources.restore_failed_title
+import com.violinjourney.app.shared.resources.restore_made
+import com.violinjourney.app.shared.resources.restore_no_room_ok
+import com.violinjourney.app.shared.resources.restore_no_room_text
+import com.violinjourney.app.shared.resources.restore_no_room_title
+import com.violinjourney.app.shared.resources.restore_not_ours_text
+import com.violinjourney.app.shared.resources.restore_not_ours_title
+import com.violinjourney.app.shared.resources.restore_now_title
+import com.violinjourney.app.shared.resources.restore_opening
+import com.violinjourney.app.shared.resources.restore_phase_extracting
+import com.violinjourney.app.shared.resources.restore_phase_verifying
+import com.violinjourney.app.shared.resources.restore_pick_another
+import com.violinjourney.app.shared.resources.restore_progress_title
+import com.violinjourney.app.shared.resources.restore_reading
+import com.violinjourney.app.shared.resources.restore_retry_same
+import com.violinjourney.app.shared.resources.restore_save_first
+import com.violinjourney.app.shared.resources.restore_start_clean
+import com.violinjourney.app.shared.resources.restore_step_extracting
+import com.violinjourney.app.shared.resources.restore_step_finishing
+import com.violinjourney.app.shared.resources.restore_step_verifying
+import com.violinjourney.app.shared.resources.restore_title
+import com.violinjourney.app.shared.resources.restore_too_new_text
+import com.violinjourney.app.shared.resources.restore_too_new_title
+import com.violinjourney.app.shared.resources.restore_unsafe_button
+import com.violinjourney.app.shared.resources.restore_unsafe_confirm
+import com.violinjourney.app.shared.resources.restore_unsafe_text
+import com.violinjourney.app.shared.resources.restore_unsafe_title
+import com.violinjourney.app.shared.resources.restore_warning
+import com.violinjourney.app.shared.resources.restore_without_audio
+import com.violinjourney.app.shared.resources.restore_without_sheets
+import com.violinjourney.app.shared.resources.restore_without_video
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.backup.BackupCandidate
 import com.violinjourney.app.core.backup.BackupFileProblem
 import com.violinjourney.app.core.backup.BackupJob
@@ -72,7 +133,7 @@ fun RestoreScreen(state: RestoreState, onIntent: (RestoreIntent) -> Unit, modifi
         // The start screen of the app with one line under it: the process starts anew beneath, and the next one shows the same — one scene, not two.
         Column(modifier = modifier.fillMaxSize().background(colors.surface), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             CircularProgressIndicator(modifier = Modifier.size(16.dp), color = colors.onSurfaceVariant, strokeWidth = 2.dp)
-            Text(stringResource(R.string.restore_opening), modifier = Modifier.padding(top = 12.dp), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp))
+            Text(stringResource(Res.string.restore_opening), modifier = Modifier.padding(top = 12.dp), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp))
         }
         return
     }
@@ -87,7 +148,7 @@ fun RestoreScreen(state: RestoreState, onIntent: (RestoreIntent) -> Unit, modifi
                     target == "progress" && job is BackupJob.Restoring -> Progress(job, onIntent)
                     target == "done" && job is BackupJob.Restored -> {
                         DoneMark(size = 48)
-                        Text(stringResource(R.string.restore_done_title), color = colors.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold))
+                        Text(stringResource(Res.string.restore_done_title), color = colors.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold))
                         Text(countsLine(job.manifest.counts), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp))
                     }
                     target == "failed" && job is BackupJob.RestoreFailed -> Failed(job, onIntent)
@@ -100,26 +161,26 @@ fun RestoreScreen(state: RestoreState, onIntent: (RestoreIntent) -> Unit, modifi
     when (state.dialog) {
         // not "are you sure?" but what exactly goes: the numbers the person is about to lose
         RestoreDialog.REPLACE -> if (ready != null) ConfirmDialog(
-            title = stringResource(R.string.restore_confirm_title),
-            text = stringResource(R.string.restore_confirm_text, countsLine(ready.current.counts), Formats.dayAndMonth(ready.copy.manifest.createdAtEpochMs, zone)),
-            safe = stringResource(R.string.backup_cancel),
-            destructive = stringResource(R.string.restore_confirm_button),
+            title = stringResource(Res.string.restore_confirm_title),
+            text = stringResource(Res.string.restore_confirm_text, countsLine(ready.current.counts), Formats.dayAndMonth(ready.copy.manifest.createdAtEpochMs, zone)),
+            safe = stringResource(Res.string.backup_cancel),
+            destructive = stringResource(Res.string.restore_confirm_button),
             onSafe = { onIntent(RestoreIntent.DialogDismissed) },
             onDestructive = { onIntent(RestoreIntent.DialogConfirmed) },
         )
         RestoreDialog.UNSAFE -> if (ready != null) ConfirmDialog(
-            title = stringResource(R.string.restore_unsafe_title),
-            text = stringResource(R.string.restore_unsafe_text, countsLine(ready.current.counts)),
-            safe = stringResource(R.string.backup_cancel),
-            destructive = stringResource(R.string.restore_unsafe_confirm),
+            title = stringResource(Res.string.restore_unsafe_title),
+            text = stringResource(Res.string.restore_unsafe_text, countsLine(ready.current.counts)),
+            safe = stringResource(Res.string.backup_cancel),
+            destructive = stringResource(Res.string.restore_unsafe_confirm),
             onSafe = { onIntent(RestoreIntent.DialogDismissed) },
             onDestructive = { onIntent(RestoreIntent.DialogConfirmed) },
         )
         RestoreDialog.STOP -> ConfirmDialog(
-            title = stringResource(R.string.backup_stop_title),
-            text = stringResource(R.string.restore_failed_text),
-            safe = stringResource(R.string.backup_stop_continue),
-            destructive = stringResource(R.string.backup_stop_confirm),
+            title = stringResource(Res.string.backup_stop_title),
+            text = stringResource(Res.string.restore_failed_text),
+            safe = stringResource(Res.string.backup_stop_continue),
+            destructive = stringResource(Res.string.backup_stop_confirm),
             onSafe = { onIntent(RestoreIntent.DialogDismissed) },
             onDestructive = { onIntent(RestoreIntent.DialogConfirmed) },
         )
@@ -130,19 +191,19 @@ fun RestoreScreen(state: RestoreState, onIntent: (RestoreIntent) -> Unit, modifi
 @Composable
 private fun Passport(state: RestoreState, zone: TimeZone, onIntent: (RestoreIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
-    ScreenTitle(stringResource(R.string.restore_title))
+    ScreenTitle(stringResource(Res.string.restore_title))
     when (val stage = state.stage) {
         RestoreStage.Reading -> Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             CircularProgressIndicator(modifier = Modifier.size(20.dp), color = colors.onSurfaceVariant, strokeWidth = 2.dp)
-            Text(stringResource(R.string.restore_reading), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(Res.string.restore_reading), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
         }
         is RestoreStage.Unfit -> {
             when (stage.problem) {
-                BackupFileProblem.NotOurs -> ProblemBlock(stringResource(R.string.restore_not_ours_title), stringResource(R.string.restore_not_ours_text))
-                BackupFileProblem.TooNew -> ProblemBlock(stringResource(R.string.restore_too_new_title), stringResource(R.string.restore_too_new_text))
-                BackupFileProblem.Damaged -> ProblemBlock(stringResource(R.string.restore_damaged_title), stringResource(R.string.restore_damaged_text))
+                BackupFileProblem.NotOurs -> ProblemBlock(stringResource(Res.string.restore_not_ours_title), stringResource(Res.string.restore_not_ours_text))
+                BackupFileProblem.TooNew -> ProblemBlock(stringResource(Res.string.restore_too_new_title), stringResource(Res.string.restore_too_new_text))
+                BackupFileProblem.Damaged -> ProblemBlock(stringResource(Res.string.restore_damaged_title), stringResource(Res.string.restore_damaged_text))
             }
-            Button(onClick = { onIntent(RestoreIntent.PickAnotherClicked) }, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(stringResource(R.string.restore_pick_another)) }
+            Button(onClick = { onIntent(RestoreIntent.PickAnotherClicked) }, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(stringResource(Res.string.restore_pick_another)) }
         }
         is RestoreStage.Ready -> Ready(stage, state.busy, zone, onIntent)
     }
@@ -157,9 +218,9 @@ private fun Ready(stage: RestoreStage.Ready, busy: Boolean, zone: TimeZone, onIn
     PassportCard(copy, manifest, zone)
     if (overData) {
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(stringResource(R.string.restore_now_title), color = colors.onSurface, style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold))
+            Text(stringResource(Res.string.restore_now_title), color = colors.onSurface, style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold))
             Text(
-                text = countsLine(stage.current.counts, withLevel = true, withMedia = true) + stringResource(R.string.dot_separator) + Formats.fileSize(stage.current.totalBytes),
+                text = countsLine(stage.current.counts, withLevel = true, withMedia = true) + stringResource(Res.string.dot_separator) + Formats.fileSize(stage.current.totalBytes),
                 color = colors.onSurfaceVariant,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 21.sp),
             )
@@ -168,25 +229,25 @@ private fun Ready(stage: RestoreStage.Ready, busy: Boolean, zone: TimeZone, onIn
         Column(modifier = Modifier.fillMaxWidth().background(destructive.copy(alpha = WARNING_ALPHA), RoundedCornerShape(16.dp)).padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 AppIcon(AppIcons.Trash, contentDescription = null, tint = destructive)
-                Text(stringResource(R.string.restore_warning), color = colors.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
+                Text(stringResource(Res.string.restore_warning), color = colors.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
             }
             // the answer to the warning lives inside it
             OutlinedButton(onClick = { onIntent(RestoreIntent.SaveFirstClicked) }, modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp)) {
-                IconLabel(AppIcons.SaveCopy, stringResource(R.string.restore_save_first))
+                IconLabel(AppIcons.SaveCopy, stringResource(Res.string.restore_save_first))
             }
         }
     } else {
-        Text(stringResource(R.string.restore_empty_app), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 21.sp))
+        Text(stringResource(Res.string.restore_empty_app), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 21.sp))
     }
     if (busy) {
-        Text(stringResource(R.string.restore_busy), modifier = Modifier.fillMaxWidth(), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
+        Text(stringResource(Res.string.restore_busy), modifier = Modifier.fillMaxWidth(), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
     }
     if (copy.missingBytes > 0) {
-        ProblemBlock(stringResource(R.string.restore_no_room_title, Formats.fileSize(copy.missingBytes)), stringResource(R.string.restore_no_room_text))
-        Button(onClick = { onIntent(RestoreIntent.CloseClicked) }, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(stringResource(R.string.restore_no_room_ok)) }
+        ProblemBlock(stringResource(Res.string.restore_no_room_title, Formats.fileSize(copy.missingBytes)), stringResource(Res.string.restore_no_room_text))
+        Button(onClick = { onIntent(RestoreIntent.CloseClicked) }, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(stringResource(Res.string.restore_no_room_ok)) }
         // the dangerous way is a word in red, not a button that asks to be pressed
         TextButton(onClick = { onIntent(RestoreIntent.UnsafeClicked) }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp)) {
-            Text(stringResource(R.string.restore_unsafe_button), color = ViolinTheme.destructive, textAlign = TextAlign.Center)
+            Text(stringResource(Res.string.restore_unsafe_button), color = ViolinTheme.destructive, textAlign = TextAlign.Center)
         }
     } else {
         Button(
@@ -194,7 +255,7 @@ private fun Ready(stage: RestoreStage.Ready, busy: Boolean, zone: TimeZone, onIn
             enabled = !busy,
             modifier = Modifier.fillMaxWidth().height(56.dp),
             colors = if (overData) ButtonDefaults.buttonColors(containerColor = ViolinTheme.destructive, contentColor = Color.White) else ButtonDefaults.buttonColors(),
-        ) { IconLabel(AppIcons.Restore, stringResource(R.string.restore_button), iconSize = 20.dp) }
+        ) { IconLabel(AppIcons.Restore, stringResource(Res.string.restore_button), iconSize = 20.dp) }
     }
 }
 
@@ -202,7 +263,7 @@ private fun Ready(stage: RestoreStage.Ready, busy: Boolean, zone: TimeZone, onIn
 private fun PassportCard(copy: BackupCandidate.Copy, manifest: BackupManifest, zone: TimeZone) {
     val colors = MaterialTheme.colorScheme
     val counts = manifest.counts
-    val dot = stringResource(R.string.dot_separator)
+    val dot = stringResource(Res.string.dot_separator)
     Column(modifier = Modifier.fillMaxWidth().background(colors.surfaceContainer, RoundedCornerShape(16.dp)).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
             AppIcon(AppIcons.Archive, contentDescription = null, tint = colors.onSurfaceVariant)
@@ -213,43 +274,43 @@ private fun PassportCard(copy: BackupCandidate.Copy, manifest: BackupManifest, z
         }
         HorizontalDivider(color = colors.surfaceContainerHigh)
         val made = Instant.fromEpochMilliseconds(manifest.createdAtEpochMs).toLocalDateTime(zone)
-        IconLine(AppIcons.Calendar, stringResource(R.string.restore_made, Formats.dayAndMonth(manifest.createdAtEpochMs, zone) + " " + made.year, Formats.timeOfDay(manifest.createdAtEpochMs, zone)))
+        IconLine(AppIcons.Calendar, stringResource(Res.string.restore_made, Formats.dayAndMonth(manifest.createdAtEpochMs, zone) + " " + made.year, Formats.timeOfDay(manifest.createdAtEpochMs, zone)))
         if (manifest.device.isNotBlank()) IconLine(AppIcons.Device, manifest.device)
-        IconLine(AppIcons.NoteOne, listOf(sessionsWord(counts.sessions), daysWord(counts.practiceDays), stringResource(R.string.backup_count_level, counts.level)).joinToString(dot))
+        IconLine(AppIcons.NoteOne, listOf(sessionsWord(counts.sessions), daysWord(counts.practiceDays), stringResource(Res.string.backup_count_level, counts.level)).joinToString(dot))
         // what is not in the copy is said with the sign the app already has for "not there": one notion, one mark
         if (BackupPart.SHEETS in manifest.parts) {
-            IconLine(AppIcons.Sheet, listOf(piecesWord(counts.pieces), plural(counts.pages, R.string.backup_count_pages_one, R.string.backup_count_pages_few, R.string.backup_count_pages_many)).joinToString(dot))
+            IconLine(AppIcons.Sheet, listOf(piecesWord(counts.pieces), plural(counts.pages, Res.string.backup_count_pages_one, Res.string.backup_count_pages_few, Res.string.backup_count_pages_many)).joinToString(dot))
         } else {
-            IconLine(AppIcons.Sheet, piecesWord(counts.pieces) + dot + stringResource(R.string.restore_without_sheets))
+            IconLine(AppIcons.Sheet, piecesWord(counts.pieces) + dot + stringResource(Res.string.restore_without_sheets))
         }
         if (BackupPart.AUDIO in manifest.parts) {
-            IconLine(AppIcons.Sound, plural(counts.withSound, R.string.backup_count_sound_one, R.string.backup_count_sound_few, R.string.backup_count_sound_many))
+            IconLine(AppIcons.Sound, plural(counts.withSound, Res.string.backup_count_sound_one, Res.string.backup_count_sound_few, Res.string.backup_count_sound_many))
         } else if (counts.withSound > 0) {
-            IconLine(AppIcons.VolumeOff, stringResource(R.string.restore_without_audio))
+            IconLine(AppIcons.VolumeOff, stringResource(Res.string.restore_without_audio))
         }
         if (BackupPart.VIDEO in manifest.parts) {
-            if (counts.videos > 0) IconLine(AppIcons.Video, stringResource(R.string.backup_count_video, counts.videos))
+            if (counts.videos > 0) IconLine(AppIcons.Video, stringResource(Res.string.backup_count_video, counts.videos))
         } else if (counts.videos > 0) {
-            IconLine(AppIcons.VideoOff, stringResource(R.string.restore_without_video))
+            IconLine(AppIcons.VideoOff, stringResource(Res.string.restore_without_video))
         }
     }
 }
 
 @Composable
 private fun Progress(job: BackupJob.Restoring, onIntent: (RestoreIntent) -> Unit) {
-    ScreenTitle(stringResource(R.string.restore_progress_title))
+    ScreenTitle(stringResource(Res.string.restore_progress_title))
     val stoppable = if (job.checked) job.phase == RestorePhase.VERIFYING else job.phase != RestorePhase.FINISHING
     JobProgress(
         phase = when (job.phase) {
-            RestorePhase.VERIFYING -> stringResource(R.string.restore_phase_verifying)
-            RestorePhase.EXTRACTING -> job.progress?.let { stringResource(R.string.restore_phase_extracting, partShortName(it.part), it.index) } ?: stringResource(R.string.restore_step_extracting)
-            RestorePhase.FINISHING -> stringResource(R.string.restore_step_finishing)
+            RestorePhase.VERIFYING -> stringResource(Res.string.restore_phase_verifying)
+            RestorePhase.EXTRACTING -> job.progress?.let { stringResource(Res.string.restore_phase_extracting, partShortName(it.part), it.index) } ?: stringResource(Res.string.restore_step_extracting)
+            RestorePhase.FINISHING -> stringResource(Res.string.restore_step_finishing)
         },
         progress = job.progress,
         remainingSec = job.remainingSec,
-        leaveTitle = stringResource(R.string.restore_can_leave_title),
+        leaveTitle = stringResource(Res.string.restore_can_leave_title),
         // said in words: while this is only checking and unpacking, the person's data are still there
-        leaveText = stringResource(if (stoppable) R.string.restore_can_stop else R.string.restore_cannot_stop),
+        leaveText = stringResource(if (stoppable) Res.string.restore_can_stop else Res.string.restore_cannot_stop),
         cancellable = stoppable,
         onCancel = { onIntent(RestoreIntent.CancelClicked) },
         steps = { Steps(job) },
@@ -261,9 +322,9 @@ private fun Progress(job: BackupJob.Restoring, onIntent: (RestoreIntent) -> Unit
 private fun Steps(job: BackupJob.Restoring) {
     val colors = MaterialTheme.colorScheme
     val steps = listOfNotNull(
-        (RestorePhase.VERIFYING to R.string.restore_step_verifying).takeIf { job.checked },
-        RestorePhase.EXTRACTING to R.string.restore_step_extracting,
-        RestorePhase.FINISHING to R.string.restore_step_finishing,
+        (RestorePhase.VERIFYING to Res.string.restore_step_verifying).takeIf { job.checked },
+        RestorePhase.EXTRACTING to Res.string.restore_step_extracting,
+        RestorePhase.FINISHING to Res.string.restore_step_finishing,
     )
     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         steps.forEach { (phase, label) ->
@@ -287,14 +348,14 @@ private fun Steps(job: BackupJob.Restoring) {
 
 @Composable
 private fun Failed(job: BackupJob.RestoreFailed, onIntent: (RestoreIntent) -> Unit) {
-    ScreenTitle(stringResource(R.string.restore_progress_title))
+    ScreenTitle(stringResource(Res.string.restore_progress_title))
     if (job.dataIntact) {
-        ProblemBlock(stringResource(R.string.restore_failed_title), stringResource(R.string.restore_failed_text))
-        TwoButtons(stringResource(R.string.backup_close), { onIntent(RestoreIntent.CloseClicked) }, stringResource(R.string.backup_retry), { onIntent(RestoreIntent.RetryClicked) })
+        ProblemBlock(stringResource(Res.string.restore_failed_title), stringResource(Res.string.restore_failed_text))
+        TwoButtons(stringResource(Res.string.backup_close), { onIntent(RestoreIntent.CloseClicked) }, stringResource(Res.string.backup_retry), { onIntent(RestoreIntent.RetryClicked) })
     } else {
         // The worst frame, and an honest one: the data are gone — but the copy was checked whole before they went.
-        ProblemBlock(stringResource(R.string.restore_failed_lost_title), stringResource(R.string.restore_failed_lost_text))
-        Button(onClick = { onIntent(RestoreIntent.RetryClicked) }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text(stringResource(R.string.restore_retry_same)) }
-        TextButton(onClick = { onIntent(RestoreIntent.StartCleanClicked) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.restore_start_clean)) }
+        ProblemBlock(stringResource(Res.string.restore_failed_lost_title), stringResource(Res.string.restore_failed_lost_text))
+        Button(onClick = { onIntent(RestoreIntent.RetryClicked) }, modifier = Modifier.fillMaxWidth().height(56.dp)) { Text(stringResource(Res.string.restore_retry_same)) }
+        TextButton(onClick = { onIntent(RestoreIntent.StartCleanClicked) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.restore_start_clean)) }
     }
 }

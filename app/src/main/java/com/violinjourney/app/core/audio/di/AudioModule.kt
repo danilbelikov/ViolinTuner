@@ -11,7 +11,7 @@ import com.violinjourney.app.core.audio.RecordingRate
 import com.violinjourney.app.core.audio.dsp.MpmDetector
 import com.violinjourney.app.core.audio.dsp.PitchDetectorFactory
 import com.violinjourney.app.core.audio.playback.AppSessionWaveforms
-import com.violinjourney.app.core.audio.playback.PcmDecoder
+import com.violinjourney.app.core.audio.playback.AndroidPcmFileOpener
 import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.audio.recording.AacFileEncoder
 import com.violinjourney.app.core.audio.recording.AppSessionAudioFiles
@@ -21,7 +21,6 @@ import com.violinjourney.app.core.di.DefaultDispatcher
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.recording.DecodingFileTakeAnalyzer
 import com.violinjourney.app.core.recording.FileTakeAnalyzer
-import com.violinjourney.app.core.recording.OpenedPcm
 import com.violinjourney.app.core.recording.TakePipeline
 import dagger.Module
 import dagger.Provides
@@ -63,18 +62,7 @@ object AudioModule {
         detectorFactory: PitchDetectorFactory,
         repertoireConfig: RepertoireConfig,
         @DefaultDispatcher dispatcher: CoroutineDispatcher,
-    ): FileTakeAnalyzer = DecodingFileTakeAnalyzer(detectorFactory, repertoireConfig, dispatcher) { file ->
-        PcmDecoder.open(file)?.let { decoder ->
-            object : OpenedPcm {
-                override val sampleRate = decoder.sampleRate
-                override val totalSamples = decoder.totalSamples
-
-                override fun read(out: ShortArray): Int = decoder.read(out)
-
-                override fun release() = decoder.release()
-            }
-        }
-    }
+    ): FileTakeAnalyzer = DecodingFileTakeAnalyzer(detectorFactory, repertoireConfig, dispatcher, AndroidPcmFileOpener)
 
     @Provides
     fun provideSessionWaveforms(impl: AppSessionWaveforms): SessionWaveforms = impl

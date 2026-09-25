@@ -28,7 +28,35 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.backup_cancel
+import com.violinjourney.app.shared.resources.backup_count_days_few
+import com.violinjourney.app.shared.resources.backup_count_days_many
+import com.violinjourney.app.shared.resources.backup_count_days_one
+import com.violinjourney.app.shared.resources.backup_count_level
+import com.violinjourney.app.shared.resources.backup_count_pieces_few
+import com.violinjourney.app.shared.resources.backup_count_pieces_many
+import com.violinjourney.app.shared.resources.backup_count_pieces_one
+import com.violinjourney.app.shared.resources.backup_count_sessions_few
+import com.violinjourney.app.shared.resources.backup_count_sessions_many
+import com.violinjourney.app.shared.resources.backup_count_sessions_one
+import com.violinjourney.app.shared.resources.backup_count_sound_few
+import com.violinjourney.app.shared.resources.backup_count_sound_many
+import com.violinjourney.app.shared.resources.backup_count_sound_one
+import com.violinjourney.app.shared.resources.backup_count_video
+import com.violinjourney.app.shared.resources.backup_done_of
+import com.violinjourney.app.shared.resources.backup_part_audio_short
+import com.violinjourney.app.shared.resources.backup_part_data_short
+import com.violinjourney.app.shared.resources.backup_part_sheets
+import com.violinjourney.app.shared.resources.backup_part_video
+import com.violinjourney.app.shared.resources.backup_percent
+import com.violinjourney.app.shared.resources.backup_remaining
+import com.violinjourney.app.shared.resources.backup_remaining_minutes
+import com.violinjourney.app.shared.resources.backup_remaining_seconds
+import com.violinjourney.app.shared.resources.dot_separator
+import com.violinjourney.app.shared.resources.session_back
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -36,7 +64,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.backup.BackupCounts
 import com.violinjourney.app.core.backup.BackupPart
 import com.violinjourney.app.core.backup.BackupProgress
@@ -60,45 +87,45 @@ internal fun partColor(part: BackupPart): Color = with(ViolinTheme.backupColors)
 }
 
 @Composable
-internal fun plural(count: Int, one: Int, few: Int, many: Int): String = stringResource(Formats.plural(count, one, few, many), count)
+internal fun plural(count: Int, one: StringResource, few: StringResource, many: StringResource): String = stringResource(Formats.plural(count, one, few, many), count)
 
 @Composable
-internal fun sessionsWord(count: Int) = plural(count, R.string.backup_count_sessions_one, R.string.backup_count_sessions_few, R.string.backup_count_sessions_many)
+internal fun sessionsWord(count: Int) = plural(count, Res.string.backup_count_sessions_one, Res.string.backup_count_sessions_few, Res.string.backup_count_sessions_many)
 
 @Composable
-internal fun piecesWord(count: Int) = plural(count, R.string.backup_count_pieces_one, R.string.backup_count_pieces_few, R.string.backup_count_pieces_many)
+internal fun piecesWord(count: Int) = plural(count, Res.string.backup_count_pieces_one, Res.string.backup_count_pieces_few, Res.string.backup_count_pieces_many)
 
 @Composable
-internal fun daysWord(count: Int) = plural(count, R.string.backup_count_days_one, R.string.backup_count_days_few, R.string.backup_count_days_many)
+internal fun daysWord(count: Int) = plural(count, Res.string.backup_count_days_one, Res.string.backup_count_days_few, Res.string.backup_count_days_many)
 
 /** «23 записи · 5 произведений · 41 день занятий» — what would be lost, what is in a copy: the same words everywhere. */
 @Composable
 internal fun countsLine(counts: BackupCounts, withLevel: Boolean = false, withMedia: Boolean = false): String {
-    val dot = stringResource(R.string.dot_separator)
+    val dot = stringResource(Res.string.dot_separator)
     return listOfNotNull(
         sessionsWord(counts.sessions),
         piecesWord(counts.pieces),
         daysWord(counts.practiceDays),
-        stringResource(R.string.backup_count_level, counts.level).takeIf { withLevel },
-        plural(counts.withSound, R.string.backup_count_sound_one, R.string.backup_count_sound_few, R.string.backup_count_sound_many).takeIf { withMedia && counts.withSound > 0 },
-        stringResource(R.string.backup_count_video, counts.videos).takeIf { withMedia && counts.videos > 0 },
+        stringResource(Res.string.backup_count_level, counts.level).takeIf { withLevel },
+        plural(counts.withSound, Res.string.backup_count_sound_one, Res.string.backup_count_sound_few, Res.string.backup_count_sound_many).takeIf { withMedia && counts.withSound > 0 },
+        stringResource(Res.string.backup_count_video, counts.videos).takeIf { withMedia && counts.videos > 0 },
     ).joinToString(dot)
 }
 
 /** «около 3 мин» past a minute, «несколько секунд» below: an estimate is not a stopwatch. */
 @Composable
 internal fun remainingWords(seconds: Int): String = stringResource(
-    R.string.backup_remaining,
-    if (seconds < SECONDS_PER_MINUTE) stringResource(R.string.backup_remaining_seconds) else stringResource(R.string.backup_remaining_minutes, (seconds + SECONDS_PER_MINUTE / 2) / SECONDS_PER_MINUTE),
+    Res.string.backup_remaining,
+    if (seconds < SECONDS_PER_MINUTE) stringResource(Res.string.backup_remaining_seconds) else stringResource(Res.string.backup_remaining_minutes, (seconds + SECONDS_PER_MINUTE / 2) / SECONDS_PER_MINUTE),
 )
 
 @Composable
 internal fun partShortName(part: BackupPart): String = stringResource(
     when (part) {
-        BackupPart.DATA -> R.string.backup_part_data_short
-        BackupPart.SHEETS -> R.string.backup_part_sheets
-        BackupPart.AUDIO -> R.string.backup_part_audio_short
-        BackupPart.VIDEO -> R.string.backup_part_video
+        BackupPart.DATA -> Res.string.backup_part_data_short
+        BackupPart.SHEETS -> Res.string.backup_part_sheets
+        BackupPart.AUDIO -> Res.string.backup_part_audio_short
+        BackupPart.VIDEO -> Res.string.backup_part_video
     },
 )
 
@@ -106,7 +133,7 @@ internal fun partShortName(part: BackupPart): String = stringResource(
 internal fun ScreenTopBar(onBack: (() -> Unit)?) {
     Box(modifier = Modifier.fillMaxWidth().height(56.dp).padding(horizontal = 4.dp), contentAlignment = Alignment.CenterStart) {
         if (onBack != null) {
-            val label = stringResource(R.string.session_back)
+            val label = stringResource(Res.string.session_back)
             Box(
                 modifier = Modifier.size(48.dp).clip(CircleShape).clickable(role = Role.Button, onClick = onBack).semantics { contentDescription = label },
                 contentAlignment = Alignment.Center,
@@ -142,7 +169,7 @@ internal fun JobProgress(
     Row(verticalAlignment = Alignment.Bottom) {
         Text(phase, modifier = Modifier.weight(1f).padding(bottom = 6.dp), color = colors.onSurface, maxLines = 2, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, fontWeight = FontWeight.SemiBold))
         Text(
-            text = stringResource(R.string.backup_percent, (fraction * 100).toInt()),
+            text = stringResource(Res.string.backup_percent, (fraction * 100).toInt()),
             color = colors.primary,
             style = MaterialTheme.typography.displaySmall.copy(fontSize = 40.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES),
         )
@@ -155,9 +182,9 @@ internal fun JobProgress(
     Text(
         // the line keeps its height while the speed is still being measured
         text = listOfNotNull(
-            progress?.let { stringResource(R.string.backup_done_of, Formats.fileSize(it.doneBytes), Formats.fileSize(it.totalBytes)) },
+            progress?.let { stringResource(Res.string.backup_done_of, Formats.fileSize(it.doneBytes), Formats.fileSize(it.totalBytes)) },
             remainingSec?.let { remainingWords(it) },
-        ).joinToString(stringResource(R.string.dot_separator)),
+        ).joinToString(stringResource(Res.string.dot_separator)),
         color = colors.onSurfaceVariant,
         style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES),
     )
@@ -166,7 +193,7 @@ internal fun JobProgress(
         Text(leaveText, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
     }
     OutlinedButton(onClick = onCancel, enabled = cancellable, modifier = Modifier.fillMaxWidth().height(48.dp).alpha(if (cancellable) 1f else DISABLED_ALPHA)) {
-        Text(stringResource(R.string.backup_cancel))
+        Text(stringResource(Res.string.backup_cancel))
     }
 }
 

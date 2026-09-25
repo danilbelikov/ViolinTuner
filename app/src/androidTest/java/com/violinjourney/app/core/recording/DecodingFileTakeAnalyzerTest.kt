@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.recording
 
+import com.violinjourney.app.core.audio.playback.AndroidPcmFileOpener
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -23,7 +24,7 @@ class DecodingFileTakeAnalyzerTest {
     private val context = ApplicationProvider.getApplicationContext<android.content.Context>()
     private val directory = File(context.cacheDir, "video-analysis-test").apply { mkdirs() }
     private val config = IntonationConfig()
-    private val analyzer = DecodingFileTakeAnalyzer({ MpmDetector(it) }, RepertoireConfig(), Dispatchers.Default)
+    private val analyzer = DecodingFileTakeAnalyzer({ MpmDetector(it) }, RepertoireConfig(), Dispatchers.Default, AndroidPcmFileOpener)
 
     @After
     fun tearDown() {

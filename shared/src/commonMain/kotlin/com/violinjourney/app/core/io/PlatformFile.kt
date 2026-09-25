@@ -26,3 +26,17 @@ expect fun PlatformFile.sibling(name: String): PlatformFile
 
 /** Renames the file to [target], replacing nothing: false when it could not. */
 expect fun PlatformFile.moveTo(target: PlatformFile): Boolean
+
+expect fun PlatformFile.exists(): Boolean
+
+/** The file called [name] inside this folder. */
+expect fun PlatformFile.child(name: String): PlatformFile
+
+/** Makes the folder and those above it; true when it is there now. */
+expect fun PlatformFile.makeDirectories(): Boolean
+
+/** Names of what lies in this folder; empty for a file or nothing. */
+expect fun PlatformFile.listNames(): List<String>
+
+/** Deletes the file, or the folder with all it holds; true when nothing is left. */
+expect fun PlatformFile.deleteAll(): Boolean

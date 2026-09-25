@@ -1,8 +1,8 @@
 package com.violinjourney.app.core.backup
 
-import java.io.File
-import java.io.InputStream
-import java.io.OutputStream
+import com.violinjourney.app.core.io.ByteInput
+import com.violinjourney.app.core.io.ByteOutput
+import com.violinjourney.app.core.io.PlatformFile
 
 /** What there is in the app: how much of what, and what it weighs. */
 data class BackupContents(val counts: BackupCounts, val bytes: Map<BackupPart, Long>) {
@@ -14,7 +14,7 @@ data class BackupContents(val counts: BackupCounts, val bytes: Map<BackupPart, L
 /** A copy ready to be written: its passport and its files, the database among them as a snapshot taken just now. */
 class PreparedBackup(val manifest: BackupManifest, val entries: List<BackupEntry>)
 
-/** The data of the app as a copy sees them. The real one is [AppBackupStore]; tests have a fake. */
+/** The data of the app as a copy sees them. The real ones are the platforms'; tests have a fake. */
 interface BackupStore {
     suspend fun contents(): BackupContents
 
@@ -29,7 +29,7 @@ interface BackupStore {
     fun freeBytes(): Long
 
     /** A fresh, empty folder beside the data to unpack a copy into. */
-    fun newStaging(): File
+    fun newStaging(): PlatformFile
 
     fun discardStaging()
 
@@ -43,14 +43,14 @@ interface BackupStore {
     fun markWipe()
 
     /** Where an archive is built for «Отправить…»: under `cache/share/`, the only place the file provider hands out. */
-    fun shareFile(fileName: String): File
+    fun shareFile(fileName: String): PlatformFile
 }
 
 /** The place the person picked, as the system hands it out — a content uri. */
 interface BackupDocuments {
-    fun openOutput(uri: String): OutputStream?
+    fun openOutput(uri: String): ByteOutput?
 
-    fun openInput(uri: String): InputStream?
+    fun openInput(uri: String): ByteInput?
 
     /** An unfinished file is ours to remove. */
     fun delete(uri: String)
