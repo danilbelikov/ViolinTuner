@@ -15,16 +15,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
-data class VideoState(
-    /** As it is seen, the turn of the camera applied; zero until the file has been looked into. */
-    val width: Int = 0,
-    val height: Int = 0,
-    /** There is a frame on the surface: the placeholder may go. */
-    val showing: Boolean = false,
-    /** No picture this device can decode. The sound and the analysis do not depend on it (spec 3.19). */
-    val failed: Boolean = false,
-)
-
 /**
  * The picture of a video take (spec 3.19, 5.13): `MediaExtractor` + a `MediaCodec` decoder onto a
  * [Surface], led by the clock of the sound. It plays nothing by itself — [follow] tells it where
@@ -35,22 +25,6 @@ data class VideoState(
  * Calls only leave wishes under a lock; a thread of its own decodes. Without a surface there is
  * no decoder — a surface that comes back (a rotation) gets a new one at the same place.
  */
-/** The picture of one video take, as the screen's view model sees it; the real one is [VideoTrackRenderer]. */
-interface VideoPicture {
-    val state: StateFlow<VideoState>
-
-    /** Null takes the picture off the surface that is about to go. */
-    fun setSurface(next: Surface?)
-
-    /** Where the sound is, and whether it moves. */
-    fun follow(positionMs: Long, playing: Boolean)
-
-    fun release()
-}
-
-fun interface VideoPictureFactory {
-    fun create(file: File): VideoPicture
-}
 
 class VideoTrackRenderer(
     private val file: File,

@@ -85,11 +85,14 @@ kotlin {
 // The words of the app live in app/src/main/res — Russian the source, values/ the English fallback, eight more
 // (spec 3.26) — where Android reads them and LocalizationTest checks them. The shared code and iOS read the same
 // files as compose resources: copied here at build time, with the escapes Android needs undone (compose resources
-// unescape only \n, \t and \u, and would show \' as it is). Never edit the copy.
+// unescape only \n, \t and \u, and would show \' and the %% of a formatted string as they are). Never edit the copy.
 val composeStrings = tasks.register<Sync>("syncComposeStrings") {
+    val androidEscapes = listOf("\\'" to "'", "\\\"" to "\"", "\\?" to "?", "\\@" to "@", "%%" to "%")
+    // a new escape must make the copy again: the list is an input, the lambda below is not
+    inputs.property("androidEscapes", androidEscapes.toString())
     from(rootProject.layout.projectDirectory.dir("app/src/main/res")) {
         include("values*/strings.xml", "values*/strings_home.xml", "values*/home_catalog.xml")
-        filter { line -> line.replace("\\'", "'").replace("\\\"", "\"").replace("\\?", "?").replace("\\@", "@") }
+        filter { line -> androidEscapes.fold(line) { text, (escaped, plain) -> text.replace(escaped, plain) } }
     }
     // the rest of the shared resources — the pictures of the journey and the home — lie in the usual place; the
     // custom directory below replaces it, so they are copied along

@@ -1,6 +1,6 @@
 package com.violinjourney.app.feature.session.components
 
-import androidx.activity.compose.BackHandler
+import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -41,7 +41,12 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.stringResource
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.session_back
+import com.violinjourney.app.shared.resources.video_fullscreen
+import com.violinjourney.app.shared.resources.video_fullscreen_exit
+import com.violinjourney.app.shared.resources.video_row_time
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -49,7 +54,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.audio.playback.PlayerState
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
@@ -150,7 +154,7 @@ fun StickyVideo(
                     }
                     Text(
                         text = stringResource(
-                            R.string.video_row_time,
+                            Res.string.video_row_time,
                             Formats.duration(player?.positionMs ?: 0), Formats.duration(content.durationMs), Formats.signedCents(content.biasCents),
                         ),
                         color = colors.onSurfaceVariant,
@@ -159,7 +163,7 @@ fun StickyVideo(
                         style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
                     )
                 }
-                val label = stringResource(R.string.video_fullscreen)
+                val label = stringResource(Res.string.video_fullscreen)
                 Box(
                     modifier = Modifier
                         .size(40.dp)
@@ -238,7 +242,7 @@ fun FullscreenVideo(
                     .padding(horizontal = 4.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                PanelIcon(AppIcons.Back, stringResource(R.string.session_back), onExit)
+                PanelIcon(AppIcons.Back, stringResource(Res.string.session_back), onExit)
                 Text(
                     text = title,
                     modifier = Modifier
@@ -275,7 +279,7 @@ fun FullscreenVideo(
                             modifier = Modifier.weight(1f),
                         )
                     }
-                    PanelIcon(AppIcons.FullscreenExit, stringResource(R.string.video_fullscreen_exit), onExit)
+                    PanelIcon(AppIcons.FullscreenExit, stringResource(Res.string.video_fullscreen_exit), onExit)
                 }
             }
         }

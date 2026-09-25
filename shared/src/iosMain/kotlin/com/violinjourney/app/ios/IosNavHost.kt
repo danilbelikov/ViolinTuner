@@ -41,6 +41,8 @@ import com.violinjourney.app.feature.repertoire.form.PieceFormViewModel
 import com.violinjourney.app.feature.repertoire.scale.ScaleFormRoute
 import com.violinjourney.app.feature.repertoire.scale.ScaleFormViewModel
 import com.violinjourney.app.feature.repertoire.sections.SectionsViewModel
+import com.violinjourney.app.feature.session.SessionRoute
+import com.violinjourney.app.feature.session.SessionViewModel
 import com.violinjourney.app.feature.settings.SettingsRoute
 import com.violinjourney.app.feature.settings.SettingsViewModel
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
@@ -49,6 +51,7 @@ import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
 
+private const val SESSION_ROUTE = "session"
 private const val PIECE_FORM_ROUTE = "pieceForm"
 private const val SCALE_FORM_ROUTE = "scaleForm"
 private const val SECTION_ROUTE = "section"
@@ -85,7 +88,7 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
         }
         composable(TopLevelDestination.LIVE.route) {
             LiveRoute(
-                onOpenSession = notYet,
+                onOpenSession = navController::navigateToSession,
                 onFinishPractice = { navController.navigateToTopLevel(TopLevelDestination.PRACTICE) },
                 onOpenRepertoire = { navController.navigateToTopLevel(TopLevelDestination.HISTORY) },
                 onOpenSettings = navController::navigateToSettings,
@@ -105,7 +108,7 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
         composable(TopLevelDestination.PRACTICE.route) {
             PracticeRoute(
                 onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },
-                onOpenSession = notYet,
+                onOpenSession = navController::navigateToSession,
                 onOpenJourney = { navController.navigate(JOURNEY_ROUTE) { launchSingleTop = true } },
                 onOpenHome = { navController.navigate(HOME_ROUTE) { launchSingleTop = true } },
                 onOpenSettings = navController::navigateToSettings,
@@ -121,7 +124,7 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
         }
         composable(TopLevelDestination.HISTORY.route) {
             HistoryRoute(
-                onOpenSession = notYet,
+                onOpenSession = navController::navigateToSession,
                 onOpenSound = notYet,
                 onOpenSection = navController::navigateToSection,
                 onOpenPiece = notYet,
@@ -130,6 +133,23 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
                 },
                 sectionsViewModel = viewModel {
                     SectionsViewModel(graph.repertoire, graph.repertoireConfig, graph.clock, graph.blockHistory, graph.practiceConfig)
+                },
+                onShare = notYet,
+            )
+        }
+        // A recording (spec 3.10): above the tabs, without the bottom bar; back returns to where it was opened from.
+        composable(
+            route = "$SESSION_ROUTE/{${SessionViewModel.ARG_SESSION_ID}}",
+            arguments = listOf(navArgument(SessionViewModel.ARG_SESSION_ID) { type = NavType.LongType }),
+        ) {
+            SessionRoute(
+                onClose = navController::popBackStack,
+                onOpenSound = notYet,
+                viewModel = viewModel {
+                    SessionViewModel(
+                        graph.sessions, graph.intonationConfig, graph.audioFiles, graph.playerFactory, graph.repertoire, graph.sound,
+                        graph.soundConfig, graph.pictureFactory, createSavedStateHandle(), graph.backings, graph.backingPcm,
+                    )
                 },
                 onShare = notYet,
             )
@@ -283,6 +303,10 @@ private fun NavHostController.navigateWithinTheGame(route: String) {
 private fun NavHostController.navigateToLiveLeavingTheGame() {
     popBackStack(TopLevelDestination.START.route, inclusive = false)
     navigateToTopLevel(TopLevelDestination.LIVE)
+}
+
+private fun NavHostController.navigateToSession(sessionId: Long) {
+    navigate("$SESSION_ROUTE/$sessionId") { launchSingleTop = true }
 }
 
 private fun NavHostController.navigateToSettings() {

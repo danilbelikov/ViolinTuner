@@ -1,8 +1,5 @@
 package com.violinjourney.app.feature.session.components
 
-import android.graphics.SurfaceTexture
-import android.view.Surface
-import android.view.TextureView
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -34,7 +31,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.res.stringResource
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.backing_preparing
+import com.violinjourney.app.shared.resources.video_description
+import com.violinjourney.app.shared.resources.video_fullscreen
+import com.violinjourney.app.shared.resources.video_state_paused
+import com.violinjourney.app.shared.resources.video_state_playing
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -44,8 +47,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import com.violinjourney.app.R
 import com.violinjourney.app.core.ui.components.PlayPauseGlyph
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -54,8 +55,6 @@ import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.session.VideoUi
 import kotlinx.coroutines.delay
 
-/** Where a video's surface goes: to the view model, which hands it to the decoder. */
-class VideoSurfaceCallbacks(val onSurface: (Surface) -> Unit, val onSurfaceGone: (Surface) -> Unit)
 
 private val CornerButton = 40.dp
 private val PauseGlyphCircle = 64.dp
@@ -64,43 +63,6 @@ private const val GLYPH_IN_MS = 120
 private const val GLYPH_HOLD_MS = 300L
 private const val GLYPH_OUT_MS = 180
 
-/**
- * The one View of the app (spec 3.19): a decoder draws onto a surface, and a surface that lives
- * inside a scrolling, shrinking Compose layout is a `TextureView`. It is sized to the proportions
- * of the video from outside, so the picture is never stretched.
- */
-@Composable
-fun VideoSurface(callbacks: VideoSurfaceCallbacks, modifier: Modifier = Modifier) {
-    val current by rememberUpdatedState(callbacks)
-    AndroidView(
-        modifier = modifier,
-        factory = { context ->
-            TextureView(context).apply {
-                surfaceTextureListener = object : TextureView.SurfaceTextureListener {
-                    private var surface: Surface? = null
-
-                    override fun onSurfaceTextureAvailable(texture: SurfaceTexture, width: Int, height: Int) {
-                        surface = Surface(texture).also { current.onSurface(it) }
-                    }
-
-                    override fun onSurfaceTextureDestroyed(texture: SurfaceTexture): Boolean {
-                        // the decoder lets go first, then the surface may die
-                        surface?.let {
-                            current.onSurfaceGone(it)
-                            it.release()
-                        }
-                        surface = null
-                        return true
-                    }
-
-                    override fun onSurfaceTextureSizeChanged(texture: SurfaceTexture, width: Int, height: Int) = Unit
-
-                    override fun onSurfaceTextureUpdated(texture: SurfaceTexture) = Unit
-                }
-            }
-        },
-    )
-}
 
 /**
  * The picture with the two things that lie on it (handoff 20d1, 20d5, 20d6): a tap — pause or go
@@ -128,8 +90,8 @@ fun VideoFrame(
     val colors = MaterialTheme.colorScheme
     val videoColors = ViolinTheme.videoColors
     var taps by remember { mutableIntStateOf(0) }
-    val tapWords = stringResource(if (playing) R.string.video_state_playing else R.string.video_state_paused)
-    val description = stringResource(R.string.video_description)
+    val tapWords = stringResource(if (playing) Res.string.video_state_playing else Res.string.video_state_paused)
+    val description = stringResource(Res.string.video_description)
     Box(
         modifier = modifier
             .clip(RoundedCornerShape(corner))
@@ -164,7 +126,7 @@ fun VideoFrame(
             ) {
                 CircularProgressIndicator(modifier = Modifier.size(28.dp), color = Color.White, strokeWidth = 2.5.dp)
                 Text(
-                    stringResource(R.string.backing_preparing),
+                    stringResource(Res.string.backing_preparing),
                     color = Color.White,
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
@@ -173,7 +135,7 @@ fun VideoFrame(
             }
         }
         if (onFullscreen != null && !waiting) {
-            val label = stringResource(R.string.video_fullscreen)
+            val label = stringResource(Res.string.video_fullscreen)
             Box(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)

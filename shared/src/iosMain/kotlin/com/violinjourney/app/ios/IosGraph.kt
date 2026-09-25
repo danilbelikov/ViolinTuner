@@ -9,7 +9,14 @@ import com.violinjourney.app.core.audio.PitchSource
 import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.dsp.MpmDetector
 import com.violinjourney.app.core.audio.dsp.PitchDetectorFactory
+import com.violinjourney.app.core.audio.playback.IosSessionPlayer
+import com.violinjourney.app.core.audio.playback.IosSessionWaveforms
+import com.violinjourney.app.core.audio.playback.IosVideoPicture
+import com.violinjourney.app.core.audio.playback.SessionPlayerFactory
 import com.violinjourney.app.core.audio.playback.SessionWaveforms
+import com.violinjourney.app.core.audio.playback.VideoPictureFactory
+import com.violinjourney.app.core.audio.recording.IosAacEncoder
+import com.violinjourney.app.core.audio.recording.PcmEncoderFactory
 import com.violinjourney.app.core.audio.share.ShareFiles
 import com.violinjourney.app.core.data.journey.RoomHomeRepository
 import com.violinjourney.app.core.data.journey.RoomJourneyRepository
@@ -116,8 +123,11 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
         FakePitchSource(fakeScenario, intonationConfig)
     } else {
         // MPM, as on Android (DetectorComparisonTest)
-        IosMicPitchSource(PitchDetectorFactory(::MpmDetector), logStats = Platform.isDebugBinary)
+        IosMicPitchSource(PitchDetectorFactory(::MpmDetector), PcmEncoderFactory(::IosAacEncoder), logStats = Platform.isDebugBinary)
     }
+
+    val playerFactory = SessionPlayerFactory { scope -> IosSessionPlayer(scope, soundConfig) }
+    val pictureFactory = VideoPictureFactory(::IosVideoPicture)
 
     /** One per screen, as on Android: it holds that screen's wish to record. */
     fun takes() = TakePipeline(
@@ -125,13 +135,8 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
         practiceNotes, journeyConfig, backings, null, backingConfig, analytics,
     )
 
-    // The waveforms, the files for «Поделиться» and the prepared backings come with the sound of recordings on iOS;
-    // until then there is nothing of theirs to sweep.
-    val waveforms = object : SessionWaveforms {
-        override suspend fun of(audio: PlatformFile): FloatArray? = null
-
-        override suspend fun deleteOrphans(audioNames: Set<String>) = Unit
-    }
+    val waveforms = IosSessionWaveforms({ IosFolders.folder(WAVEFORMS_FOLDER) }, io)
+    // The files for «Поделиться» and the prepared backings come later on iOS; until then there is nothing of theirs to sweep.
     val shareFiles = object : ShareFiles {
         override fun processed(audioName: String, settings: SoundSettings, fileName: String): PlatformFile =
             PlatformFile("${IosFolders.folder(SHARE_FOLDER)}/$fileName")
@@ -150,5 +155,6 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
 
     private companion object {
         const val SHARE_FOLDER = "share"
+        const val WAVEFORMS_FOLDER = "waveforms"
     }
 }

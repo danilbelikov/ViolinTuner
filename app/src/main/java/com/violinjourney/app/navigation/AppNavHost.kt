@@ -68,6 +68,7 @@ import com.violinjourney.app.feature.repertoire.stand.StandRoute
 import com.violinjourney.app.feature.repertoire.stand.StandViewModel
 import com.violinjourney.app.feature.session.SessionRoute
 import com.violinjourney.app.feature.session.SessionViewModel
+import com.violinjourney.app.feature.session.HiltSessionViewModel
 import com.violinjourney.app.feature.settings.HiltSettingsViewModel
 import com.violinjourney.app.feature.settings.SettingsRoute
 import com.violinjourney.app.feature.share.ShareHost
@@ -166,7 +167,14 @@ fun AppNavHost(
             route = "$SESSION_ROUTE/{${SessionViewModel.ARG_SESSION_ID}}",
             arguments = listOf(navArgument(SessionViewModel.ARG_SESSION_ID) { type = NavType.LongType }),
         ) {
-            SessionRoute(onClose = navController::popBackStack, onOpenSound = navController::navigateToSound)
+            val shareViewModel = hiltViewModel<ShareViewModel>()
+            SessionRoute(
+                onClose = navController::popBackStack,
+                onOpenSound = navController::navigateToSound,
+                viewModel = hiltViewModel<HiltSessionViewModel>(),
+                onShare = shareViewModel::start,
+                shareHost = { ShareHost(shareViewModel) },
+            )
         }
         // «Звук» (spec 3.17): of one recording, or — without an id — the default of all of them. Above the tabs.
         composable(

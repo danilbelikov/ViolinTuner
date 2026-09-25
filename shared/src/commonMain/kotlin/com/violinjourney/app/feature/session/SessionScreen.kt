@@ -39,7 +39,41 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.best_clear
+import com.violinjourney.app.shared.resources.best_set
+import com.violinjourney.app.shared.resources.dialog_cancel
+import com.violinjourney.app.shared.resources.session_action_delete
+import com.violinjourney.app.shared.resources.session_action_rename
+import com.violinjourney.app.shared.resources.session_back
+import com.violinjourney.app.shared.resources.session_bias_hint_flat
+import com.violinjourney.app.shared.resources.session_bias_hint_none
+import com.violinjourney.app.shared.resources.session_bias_hint_sharp
+import com.violinjourney.app.shared.resources.session_bias_mean
+import com.violinjourney.app.shared.resources.session_bias_none
+import com.violinjourney.app.shared.resources.session_delete_text
+import com.violinjourney.app.shared.resources.session_delete_title
+import com.violinjourney.app.shared.resources.session_meta
+import com.violinjourney.app.shared.resources.session_not_found
+import com.violinjourney.app.shared.resources.session_rename_confirm
+import com.violinjourney.app.shared.resources.session_rename_hint
+import com.violinjourney.app.shared.resources.session_rename_title
+import com.violinjourney.app.shared.resources.session_take_subtitle
+import com.violinjourney.app.shared.resources.sound_caption_everyone
+import com.violinjourney.app.shared.resources.sound_caption_own
+import com.violinjourney.app.shared.resources.sound_row_off
+import com.violinjourney.app.shared.resources.sound_session_row
+import com.violinjourney.app.shared.resources.sound_session_silent
+import com.violinjourney.app.shared.resources.sound_share
+import com.violinjourney.app.shared.resources.video_delete_text
+import com.violinjourney.app.shared.resources.video_lost_text
+import com.violinjourney.app.shared.resources.video_lost_title
+import com.violinjourney.app.shared.resources.video_resolution
+import com.violinjourney.app.shared.resources.video_size
+import com.violinjourney.app.shared.resources.video_size_lost
+import com.violinjourney.app.shared.resources.video_undecodable_text
+import com.violinjourney.app.shared.resources.video_undecodable_title
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -50,7 +84,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -134,7 +167,7 @@ fun SessionScreen(
             title = title,
             // «дубль · 18:42 · 2:05»: a take says so under its name (handoff 22f1); a free recording has one line, as before
             subtitle = content?.takeIf { it.pieceId != null }?.let {
-                stringResource(R.string.session_take_subtitle, Formats.timeOfDay(it.startedAtEpochMs, zone), Formats.duration(it.durationMs))
+                stringResource(Res.string.session_take_subtitle, Formats.timeOfDay(it.startedAtEpochMs, zone), Formats.duration(it.durationMs))
             },
             best = content?.takeIf { it.pieceId != null }?.best,
             onBest = { onIntent(SessionIntent.BestClicked) },
@@ -146,7 +179,7 @@ fun SessionScreen(
             SessionState.Loading -> Unit
             SessionState.NotFound -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(
-                    text = stringResource(R.string.session_not_found),
+                    text = stringResource(Res.string.session_not_found),
                     color = colors.onSurfaceVariant,
                     style = MaterialTheme.typography.bodyLarge,
                 )
@@ -171,8 +204,8 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
         val scroll = rememberScrollState()
         // What scrolls under the picture: everything but the picture itself and, in landscape, the player beside it.
         val rest: @Composable (playerHere: Boolean) -> Unit = { playerHere ->
-            if (video?.lost == true) VideoMissingRow(stringResource(R.string.video_lost_title), stringResource(R.string.video_lost_text))
-            if (video?.undecodable == true) VideoMissingRow(stringResource(R.string.video_undecodable_title), stringResource(R.string.video_undecodable_text))
+            if (video?.lost == true) VideoMissingRow(stringResource(Res.string.video_lost_title), stringResource(Res.string.video_lost_text))
+            if (video?.undecodable == true) VideoMissingRow(stringResource(Res.string.video_undecodable_title), stringResource(Res.string.video_undecodable_text))
             Summary(content)
             PianoRoll(
                 content = content,
@@ -299,7 +332,7 @@ private fun TopBar(
             modifier = Modifier
                 .size(BackTarget)
                 .clip(CircleShape)
-                .clickable(onClickLabel = stringResource(R.string.session_back), role = Role.Button, onClick = onBack),
+                .clickable(onClickLabel = stringResource(Res.string.session_back), role = Role.Button, onClick = onBack),
             contentAlignment = Alignment.Center,
         ) {
             AppIcon(AppIcons.Back, contentDescription = null, tint = colors.onSurface)
@@ -328,7 +361,7 @@ private fun TopBar(
         }
         if (best != null) {
             // The most familiar "favourite" button there is, and its state needs no words (handoff 22f): outline — not the best, filled — the best.
-            val label = stringResource(if (best) R.string.best_clear else R.string.best_set)
+            val label = stringResource(if (best) Res.string.best_clear else Res.string.best_set)
             val scale by animateFloatAsState(if (best) 1f else BEST_IDLE_SCALE, tween(BEST_STAR_MS), label = "bestStar")
             Box(
                 modifier = Modifier
@@ -350,7 +383,7 @@ private fun TopBar(
             }
         }
         if (onShare != null) {
-            val share = stringResource(R.string.sound_share)
+            val share = stringResource(Res.string.sound_share)
             Box(
                 modifier = Modifier
                     .size(BackTarget)
@@ -384,7 +417,7 @@ private fun Summary(content: SessionContent) {
             }
             Text(
                 text = stringResource(
-                    R.string.session_meta,
+                    Res.string.session_meta,
                     Formats.duration(content.durationMs),
                     content.toleranceCents.roundToInt(),
                 ),
@@ -397,9 +430,9 @@ private fun Summary(content: SessionContent) {
             val biasZone = content.biasZone
             Text(
                 text = if (biasZone == null) {
-                    stringResource(R.string.session_bias_none)
+                    stringResource(Res.string.session_bias_none)
                 } else {
-                    stringResource(R.string.session_bias_mean, Formats.signedCents(content.biasCents))
+                    stringResource(Res.string.session_bias_mean, Formats.signedCents(content.biasCents))
                 },
                 color = biasZone?.let { ViolinTheme.zoneColors.colorFor(it) } ?: ViolinTheme.zoneColors.inTune,
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
@@ -407,9 +440,9 @@ private fun Summary(content: SessionContent) {
             Text(
                 text = stringResource(
                     when {
-                        biasZone == null -> R.string.session_bias_hint_none
-                        content.biasCents < 0 -> R.string.session_bias_hint_flat
-                        else -> R.string.session_bias_hint_sharp
+                        biasZone == null -> Res.string.session_bias_hint_none
+                        content.biasCents < 0 -> Res.string.session_bias_hint_flat
+                        else -> Res.string.session_bias_hint_sharp
                     },
                 ),
                 modifier = Modifier
@@ -444,8 +477,8 @@ private fun PlayerAndSound(state: SessionState.Loaded, onIntent: (SessionIntent)
 /** «видео · 1080p · 214 МБ» — beside «Удалить», where a size is also a warning (handoff 20d1). */
 @Composable
 private fun sizeLineOf(video: VideoUi): String = when {
-    video.lost -> stringResource(R.string.video_size_lost)
-    else -> stringResource(R.string.video_size, stringResource(R.string.video_resolution, minOf(video.width, video.height)), Formats.fileSize(video.sizeBytes))
+    video.lost -> stringResource(Res.string.video_size_lost)
+    else -> stringResource(Res.string.video_size, stringResource(Res.string.video_resolution, minOf(video.width, video.height)), Formats.fileSize(video.sizeBytes))
 }
 
 @Composable
@@ -467,13 +500,13 @@ private fun Actions(onIntent: (SessionIntent) -> Unit, sizeLine: String? = null)
                 }
             }
             Action(
-                label = stringResource(R.string.session_action_rename),
+                label = stringResource(Res.string.session_action_rename),
                 color = colors.onSurfaceVariant,
                 icon = AppIcons.Pencil,
                 onClick = { onIntent(SessionIntent.RenameClicked) },
             )
             Action(
-                label = stringResource(R.string.session_action_delete),
+                label = stringResource(Res.string.session_action_delete),
                 color = ViolinTheme.destructive,
                 icon = AppIcons.Trash,
                 onClick = { onIntent(SessionIntent.DeleteClicked) },
@@ -502,23 +535,23 @@ private fun RenameDialog(currentTitle: String, placeholder: String, onIntent: (S
     var text by rememberSaveable { mutableStateOf(currentTitle) }
     AlertDialog(
         onDismissRequest = { onIntent(SessionIntent.DialogDismissed) },
-        title = { Text(stringResource(R.string.session_rename_title)) },
+        title = { Text(stringResource(Res.string.session_rename_title)) },
         text = {
             OutlinedTextField(
                 value = text,
                 onValueChange = { text = it },
                 singleLine = true,
                 placeholder = { Text(placeholder) },
-                supportingText = { Text(stringResource(R.string.session_rename_hint)) },
+                supportingText = { Text(stringResource(Res.string.session_rename_hint)) },
             )
         },
         confirmButton = {
             TextButton(onClick = { onIntent(SessionIntent.RenameConfirmed(text)) }) {
-                Text(stringResource(R.string.session_rename_confirm))
+                Text(stringResource(Res.string.session_rename_confirm))
             }
         },
         dismissButton = {
-            TextButton(onClick = { onIntent(SessionIntent.DialogDismissed) }) { Text(stringResource(R.string.dialog_cancel)) }
+            TextButton(onClick = { onIntent(SessionIntent.DialogDismissed) }) { Text(stringResource(Res.string.dialog_cancel)) }
         },
     )
 }
@@ -526,9 +559,9 @@ private fun RenameDialog(currentTitle: String, placeholder: String, onIntent: (S
 @Composable
 private fun DeleteDialog(onIntent: (SessionIntent) -> Unit, videoBytes: Long? = null) {
     com.violinjourney.app.core.ui.components.DeleteDialog(
-        title = stringResource(R.string.session_delete_title),
+        title = stringResource(Res.string.session_delete_title),
         // a video is the heaviest thing that goes, and the one that cannot be played again (spec 3.19)
-        text = videoBytes?.let { stringResource(R.string.video_delete_text, Formats.fileSize(it)) } ?: stringResource(R.string.session_delete_text),
+        text = videoBytes?.let { stringResource(Res.string.video_delete_text, Formats.fileSize(it)) } ?: stringResource(Res.string.session_delete_text),
         onConfirm = { onIntent(SessionIntent.DeleteConfirmed) },
         onDismiss = { onIntent(SessionIntent.DialogDismissed) },
     )
@@ -551,13 +584,13 @@ private fun SoundEntry(row: SoundRow, processed: Boolean, onClick: () -> Unit) {
     ) {
         AppIcon(AppIcons.Sound, contentDescription = null, tint = if (processed) colors.primary else colors.onSurfaceVariant)
         Column(modifier = Modifier.weight(1f)) {
-            Text(stringResource(R.string.sound_session_row), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
+            Text(stringResource(Res.string.sound_session_row), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
             Text(
                 text = when {
-                    !row.own -> stringResource(R.string.sound_caption_everyone, name)
-                    !processed -> stringResource(R.string.sound_row_off)
+                    !row.own -> stringResource(Res.string.sound_caption_everyone, name)
+                    !processed -> stringResource(Res.string.sound_row_off)
                     row.caption == SoundCaption.Custom -> name
-                    else -> stringResource(R.string.sound_caption_own, name)
+                    else -> stringResource(Res.string.sound_caption_own, name)
                 },
                 color = colors.onSurfaceVariant,
                 maxLines = 1,
@@ -574,6 +607,6 @@ private fun SilentLine() {
     val colors = MaterialTheme.colorScheme
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         AppIcon(AppIcons.VolumeOff, contentDescription = null, tint = colors.onSurfaceVariant, size = 18.dp)
-        Text(stringResource(R.string.sound_session_silent), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
+        Text(stringResource(Res.string.sound_session_silent), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
     }
 }

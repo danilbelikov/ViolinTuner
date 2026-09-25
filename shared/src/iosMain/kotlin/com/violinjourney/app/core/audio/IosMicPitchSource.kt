@@ -2,6 +2,10 @@ package com.violinjourney.app.core.audio
 
 import com.violinjourney.app.core.audio.dsp.PitchDetectorFactory
 import com.violinjourney.app.core.audio.recording.AudioTap
+import com.violinjourney.app.core.audio.recording.HopAudioTap
+import com.violinjourney.app.core.audio.recording.PcmEncoderFactory
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.PitchFrame
 import kotlinx.cinterop.BetaInteropApi
@@ -39,18 +43,20 @@ import platform.Foundation.NSOperationQueue
  *
  * Fails with [MicUnavailableException] when the engine does not start, when the system takes the input away
  * (a call, Siri, an alarm: an interruption; a reset of the media services) and when the input gives exact zeros
- * for longer than the watchdog allows. Takes are not recorded here yet: [audioTap] is null.
+ * for longer than the watchdog allows. The sound of a take is taken hop by hop, on the same sample clock as the frames.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class IosMicPitchSource(
     private val detectorFactory: PitchDetectorFactory,
+    encoderFactory: PcmEncoderFactory,
     /** Debug builds: a line per second of what the detector saw (FrameStats), for tuning the thresholds. */
     private val logStats: Boolean,
 ) : PitchSource {
 
     override val requiresMicPermission: Boolean = true
 
-    override val audioTap: AudioTap? = null
+    private val tap = HopAudioTap(encoderFactory, Dispatchers.IO)
+    override val audioTap: AudioTap get() = tap
 
     override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
         // The audio thread must never wait: a full queue means the analysis fell far behind, which is a failure,
@@ -96,11 +102,15 @@ class IosMicPitchSource(
             val watchdog = DigitalSilenceWatchdog(config, sampleRateHz)
             val stats = if (logStats) FrameStats(config, "ios rate=$sampleRateHz", ::log) else null
             val ready = ArrayList<PitchFrame>()
+            var samplesRead = 0L
             for (block in blocks) {
                 splitter.push(block) { hop ->
                     if (watchdog.isDead(hop, hop.size)) {
                         throw unavailable(MicUnavailableReason.DIGITAL_SILENCE, "input is digitally silent, reopening")
                     }
+                    // the same sample clock as FrameAnalyzer: the hop after a frame starts at that frame's time
+                    tap.onHop(hop, hop.size, hopStartTMs = samplesRead * MS_PER_SECOND / sampleRateHz, sampleRateHz)
+                    samplesRead += hop.size
                     analyzer.push(hop)?.let(ready::add)
                 }
                 for (frame in ready) {
@@ -110,6 +120,7 @@ class IosMicPitchSource(
                 ready.clear()
             }
         } finally {
+            tap.onStreamEnded()
             observers.forEach(center::removeObserver)
             engine.inputNode.removeTapOnBus(0u)
             engine.stop()
@@ -139,6 +150,7 @@ class IosMicPitchSource(
 
     private companion object {
         const val TAG = "MicPitchSource"
+        const val MS_PER_SECOND = 1_000L
         const val QUEUED_BLOCKS = 64
         const val TAP_BUFFER_FRAMES = 4096u
         const val PREFERRED_RATE_HZ = 48_000.0

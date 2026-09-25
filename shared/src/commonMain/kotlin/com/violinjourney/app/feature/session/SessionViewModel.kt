@@ -4,7 +4,6 @@ import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.playback.PlayerBacking
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.NoBackings
-import android.view.Surface
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,6 +11,9 @@ import com.violinjourney.app.core.audio.playback.SessionPlayer
 import com.violinjourney.app.core.audio.playback.SessionPlayerFactory
 import com.violinjourney.app.core.audio.playback.VideoPicture
 import com.violinjourney.app.core.audio.playback.VideoPictureFactory
+import com.violinjourney.app.core.audio.playback.VideoSurfaceHandle
+import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
@@ -19,9 +21,6 @@ import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.feature.sound.SoundReducer
-import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.File
-import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,8 +32,7 @@ import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-@HiltViewModel
-class SessionViewModel @Inject constructor(
+open class SessionViewModel(
     private val repository: SessionRepository,
     private val defaultConfig: IntonationConfig,
     private val audioFiles: SessionAudioFiles,
@@ -139,10 +137,10 @@ class SessionViewModel @Inject constructor(
         if (picture == null) details?.summary?.videoPath?.let(::startPicture)
     }
 
-    private var surface: Surface? = null
+    private var surface: VideoSurfaceHandle? = null
 
     /** The surface the picture is drawn onto. Not an intent: a surface is not state. */
-    fun attachSurface(next: Surface) {
+    fun attachSurface(next: VideoSurfaceHandle) {
         surface = next
         picture?.setSurface(next)
     }
@@ -152,7 +150,7 @@ class SessionViewModel @Inject constructor(
      * another, and the new surface may well arrive before the old one leaves: only the surface
      * in use takes the picture with it.
      */
-    fun detachSurface(gone: Surface) {
+    fun detachSurface(gone: VideoSurfaceHandle) {
         if (surface !== gone) return
         surface = null
         picture?.setSurface(null)
@@ -167,7 +165,7 @@ class SessionViewModel @Inject constructor(
         val created = pictureFactory.create(file)
         picture = created
         surface?.let(created::setSurface) // the view may have been there before the session was read
-        updateLoaded { it.copy(video = VideoUi(sizeBytes = file.length())) }
+        updateLoaded { it.copy(video = VideoUi(sizeBytes = file.sizeBytes())) }
         viewModelScope.launch {
             created.state.collect { picture ->
                 updateLoaded {
@@ -181,7 +179,7 @@ class SessionViewModel @Inject constructor(
         }
     }
 
-    private fun startPlayer(file: File) {
+    private fun startPlayer(file: PlatformFile) {
         val created = playerFactory.create(viewModelScope)
         player = created
         viewModelScope.launch {
