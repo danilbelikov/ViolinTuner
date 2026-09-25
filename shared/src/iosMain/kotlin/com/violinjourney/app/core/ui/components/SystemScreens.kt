@@ -27,7 +27,10 @@ import platform.UIKit.UIViewController
 import platform.UniformTypeIdentifiers.UTTypeAudio
 import platform.darwin.NSObject
 import platform.darwin.dispatch_async
+import platform.darwin.DISPATCH_TIME_NOW
+import platform.darwin.dispatch_after
 import platform.darwin.dispatch_get_main_queue
+import platform.darwin.dispatch_time
 import platform.Foundation.writeToFile
 
 /**
@@ -37,14 +40,35 @@ import platform.Foundation.writeToFile
  */
 @OptIn(ExperimentalForeignApi::class)
 internal object SystemScreens {
+    /** The controller on top, one that is not on its way out. */
     fun topController(): UIViewController? {
         var controller = UIApplication.sharedApplication.keyWindow?.rootViewController
-        while (controller?.presentedViewController != null) controller = controller.presentedViewController
-        return controller
+        while (true) {
+            val next = controller?.presentedViewController ?: return controller
+            if (next.isBeingDismissed()) return controller
+            controller = next
+        }
     }
 
+    /**
+     * Puts [controller] in front. Compose shows its menus as controllers of their own, and a system screen asked for from
+     * a menu item came up on top of that menu — and went away with it a moment later. So the screen waits for a menu
+     * that is closing, and a moment more for one that is only about to close.
+     */
     fun present(controller: UIViewController) {
-        topController()?.presentViewController(controller, animated = true, completion = null)
+        presentWhenSettled(controller, attemptsLeft = SETTLE_ATTEMPTS)
+    }
+
+    private fun presentWhenSettled(controller: UIViewController, attemptsLeft: Int) {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, SETTLE_STEP_NANOS), dispatch_get_main_queue()) {
+            val top = topController() ?: return@dispatch_after
+            val closing = top.presentedViewController?.isBeingDismissed() == true
+            if (closing && attemptsLeft > 0) {
+                presentWhenSettled(controller, attemptsLeft - 1)
+            } else {
+                top.presentViewController(controller, animated = true, completion = null)
+            }
+        }
     }
 
     /** The photo library: pictures or videos, up to [limit] (0 — any number); each lent file is copied into the temporary folder. */
@@ -76,6 +100,10 @@ internal object SystemScreens {
     }
 
     private const val MOVIE_TYPE = "public.movie"
+
+    /** A menu closes within a frame or two; its dismissal animation within a few tenths of a second. */
+    private const val SETTLE_STEP_NANOS = 100_000_000L
+    private const val SETTLE_ATTEMPTS = 10
 }
 
 /** Answers with the `file:` URIs of copies of what was picked; an empty list when the picker was closed. */

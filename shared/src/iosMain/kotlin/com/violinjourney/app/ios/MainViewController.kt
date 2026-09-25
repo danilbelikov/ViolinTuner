@@ -8,6 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.uikit.OnFocusBehavior
 import androidx.compose.ui.window.ComposeUIViewController
 import androidx.lifecycle.ViewModelStore
 import androidx.lifecycle.ViewModelStoreOwner
@@ -42,7 +43,8 @@ fun MainViewController(analytics: AnalyticsService?): UIViewController {
     val openRoute = launchText("-openRoute")
     val data = PlatformFile(IosStorage.dataDirectory())
     IosRestoreSwap.applyIfPending(data)
-    return ComposeUIViewController {
+    // the whole screen is not pushed up for a focused field: the insets of the keyboard do that where it is needed
+    return ComposeUIViewController(configure = { onFocusBehavior = OnFocusBehavior.DoNothing }) {
         var graph by remember { mutableStateOf(IosGraph(fakeScenario, statistics)) }
         val restart = remember {
             {

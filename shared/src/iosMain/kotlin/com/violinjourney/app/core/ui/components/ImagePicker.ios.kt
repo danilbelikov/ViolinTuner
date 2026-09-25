@@ -14,8 +14,6 @@ import platform.PhotosUI.PHPickerFilter
 import platform.PhotosUI.PHPickerResult
 import platform.PhotosUI.PHPickerViewController
 import platform.PhotosUI.PHPickerViewControllerDelegateProtocol
-import platform.UIKit.UIApplication
-import platform.UIKit.UIViewController
 import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.dispatch_get_main_queue
@@ -35,13 +33,7 @@ private fun present(delegate: PickerDelegate) {
         selectionLimit = 1
     }
     val picker = PHPickerViewController(configuration).apply { this.delegate = delegate }
-    topController()?.presentViewController(picker, animated = true, completion = null)
-}
-
-private fun topController(): UIViewController? {
-    var controller = UIApplication.sharedApplication.keyWindow?.rootViewController
-    while (controller?.presentedViewController != null) controller = controller.presentedViewController
-    return controller
+    SystemScreens.present(picker)
 }
 
 /**

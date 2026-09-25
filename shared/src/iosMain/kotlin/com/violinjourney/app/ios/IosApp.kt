@@ -7,6 +7,8 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.exclude
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
@@ -97,7 +99,9 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
                 val bottomBarTab = currentTab?.takeUnless { landscape && it == TopLevelDestination.LIVE }
                 Scaffold(
                     containerColor = MaterialTheme.colorScheme.surface,
-                    contentWindowInsets = WindowInsets.safeDrawing,
+                    // the keyboard is the business of the fields that bring it — forms pad themselves, dialogs sit above it —
+                    // as on Android, where a dialog's keyboard never reaches the screen behind it
+                    contentWindowInsets = WindowInsets.safeDrawing.exclude(WindowInsets.ime),
                     bottomBar = {
                         if (bottomBarTab != null) {
                             AppBottomBar(
