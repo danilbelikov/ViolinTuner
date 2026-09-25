@@ -6,7 +6,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.viewinterop.UIKitInteropProperties
 import androidx.compose.ui.viewinterop.UIKitView
 import com.violinjourney.app.core.audio.backing.HostClock
 import com.violinjourney.app.core.io.PlatformFile
@@ -195,6 +197,7 @@ private class PreviewView(session: AVCaptureSession) : UIView(frame = CGRectMake
     }
 }
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 actual fun CaptureViewfinder(camera: ShotCamera, front: Boolean, enabled: Boolean, onBindFailed: () -> Unit, modifier: Modifier) {
     val ios = camera as IosShotCamera
@@ -206,7 +209,8 @@ actual fun CaptureViewfinder(camera: ShotCamera, front: Boolean, enabled: Boolea
     }
     DisposableEffect(ios) { onDispose { ios.unbind() } }
     val view = remember(ios) { PreviewView(ios.session) }
-    UIKitView(factory = { view }, modifier = modifier)
+    // only looked at: a touch on it stays with Compose, as on the picture of a video take
+    UIKitView(factory = { view }, modifier = modifier, properties = UIKitInteropProperties(interactionMode = null))
 }
 
 @Composable
