@@ -25,6 +25,7 @@ import kotlinx.coroutines.flow.flow
 import platform.AVFAudio.AVAudioEngine
 import platform.AVFAudio.AVAudioSession
 import platform.AVFAudio.AVAudioSessionCategoryOptionAllowBluetoothA2DP
+import platform.AVFAudio.AVAudioSessionCategoryOptionDefaultToSpeaker
 import platform.AVFAudio.AVAudioSessionCategoryPlayAndRecord
 import platform.AVFAudio.inputLatency
 import platform.AVFAudio.AVAudioSessionInterruptionNotification
@@ -153,7 +154,10 @@ class IosMicPitchSource(
 
     private fun openSession(session: AVAudioSession) = memScoped {
         val error = alloc<ObjCObjectVar<NSError?>>()
-        val ok = session.setCategory(AVAudioSessionCategoryPlayAndRecord, AVAudioSessionModeMeasurement, AVAudioSessionCategoryOptionAllowBluetoothA2DP, error.ptr) &&
+        // a session that records sends its sound to the earpiece unless told otherwise: whatever plays while the
+        // microphone is open (a take, a backing listened to) goes to the loudspeaker, or to headphones when there are some
+        val options = AVAudioSessionCategoryOptionAllowBluetoothA2DP or AVAudioSessionCategoryOptionDefaultToSpeaker
+        val ok = session.setCategory(AVAudioSessionCategoryPlayAndRecord, AVAudioSessionModeMeasurement, options, error.ptr) &&
             session.setPreferredSampleRate(PREFERRED_RATE_HZ, error.ptr) &&
             session.setActive(true, error.ptr)
         if (!ok) throw unavailable(MicUnavailableReason.OPEN_FAILED, "the audio session would not open: ${error.value?.localizedDescription}")
