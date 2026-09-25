@@ -37,7 +37,22 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.res.stringResource
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.backing_take_meta
+import com.violinjourney.app.shared.resources.live_mic_unavailable
+import com.violinjourney.app.shared.resources.live_too_noisy
+import com.violinjourney.app.shared.resources.record_meta
+import com.violinjourney.app.shared.resources.take_chart_description
+import com.violinjourney.app.shared.resources.take_grant_permission
+import com.violinjourney.app.shared.resources.take_level_description
+import com.violinjourney.app.shared.resources.take_no_permission
+import com.violinjourney.app.shared.resources.take_progress
+import com.violinjourney.app.shared.resources.take_record
+import com.violinjourney.app.shared.resources.take_record_hint
+import com.violinjourney.app.shared.resources.take_recording
+import com.violinjourney.app.shared.resources.takes_empty
+import com.violinjourney.app.shared.resources.takes_title
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -46,7 +61,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -110,17 +124,17 @@ fun RecordTakeRow(
             when {
                 take.recording -> RecordingWords(take)
                 blocked && take.micPermission != false -> {
-                    Text(stringResource(R.string.take_record), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold))
+                    Text(stringResource(Res.string.take_record), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold))
                 }
                 refused -> {
-                    Text(stringResource(R.string.take_no_permission), color = colors.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp))
+                    Text(stringResource(Res.string.take_no_permission), color = colors.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp))
                     TextButton(onClick = { onIntent(PieceIntent.GrantMicClicked) }, contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp)) {
-                        Text(stringResource(R.string.take_grant_permission))
+                        Text(stringResource(Res.string.take_grant_permission))
                     }
                 }
                 else -> {
-                    Text(stringResource(R.string.take_record), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold))
-                    Text(stringResource(R.string.take_record_hint), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp))
+                    Text(stringResource(Res.string.take_record), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold))
+                    Text(stringResource(Res.string.take_record_hint), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp))
                 }
             }
             if (below != null) Box(Modifier.padding(top = 6.dp)) { below() }
@@ -145,7 +159,7 @@ private fun RecordingWords(take: TakeState) {
                 .background(ViolinTheme.zoneColors.off, CircleShape),
         )
         Text(
-            text = stringResource(R.string.take_recording, Formats.timer(take.elapsedSeconds * MS_PER_SECOND)),
+            text = stringResource(Res.string.take_recording, Formats.timer(take.elapsedSeconds * MS_PER_SECOND)),
             color = colors.onSurface,
             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
         )
@@ -161,7 +175,7 @@ private fun RecordingWords(take: TakeState) {
                     .border(2.dp, ViolinTheme.statusColors.blocked, CircleShape),
             )
             Text(
-                text = stringResource(if (problem == TakeProblem.TOO_NOISY) R.string.live_too_noisy else R.string.live_mic_unavailable),
+                text = stringResource(if (problem == TakeProblem.TOO_NOISY) Res.string.live_too_noisy else Res.string.live_mic_unavailable),
                 color = colors.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
             )
@@ -175,7 +189,7 @@ private const val MS_PER_SECOND = 1_000L
 @Composable
 private fun LevelBars(levels: List<Float>, quiet: Boolean) {
     val color = MaterialTheme.colorScheme.onSurfaceVariant
-    val description = stringResource(R.string.take_level_description)
+    val description = stringResource(Res.string.take_level_description)
     Canvas(
         modifier = Modifier
             .size(width = LevelBarWidth * levels.size + LevelBarGap * (levels.size - 1).coerceAtLeast(0), height = LevelMaxHeight)
@@ -212,7 +226,7 @@ fun TakeProgressCard(progress: TakeProgress, modifier: Modifier = Modifier) {
             .padding(horizontal = 16.dp, vertical = 14.dp),
         verticalArrangement = Arrangement.spacedBy(6.dp),
     ) {
-        Text(stringResource(R.string.take_progress, progress.lastScore, progress.maxScore), color = colors.onSurface, style = style)
+        Text(stringResource(Res.string.take_progress, progress.lastScore, progress.maxScore), color = colors.onSurface, style = style)
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Text(takesLabel(progress.scores.size), color = colors.onSurfaceVariant, style = style, modifier = Modifier.weight(1f))
             ScoreChart(progress.scores)
@@ -225,7 +239,7 @@ fun TakeProgressCard(progress: TakeProgress, modifier: Modifier = Modifier) {
 private fun ScoreChart(scores: List<Int>) {
     val line = MaterialTheme.colorScheme.primary
     val grid = MaterialTheme.colorScheme.outlineVariant
-    val description = stringResource(R.string.take_chart_description, scores.joinToString())
+    val description = stringResource(Res.string.take_chart_description, scores.joinToString())
     Canvas(
         modifier = Modifier
             .size(ChartWidth, ChartHeight)
@@ -260,7 +274,7 @@ fun TakesBlock(
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Row(modifier = Modifier.heightIn(min = TakesTitleHeight), verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = stringResource(R.string.takes_title),
+                text = stringResource(Res.string.takes_title),
                 modifier = Modifier.weight(1f),
                 color = colors.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
@@ -280,7 +294,7 @@ fun TakesBlock(
         }
         if (takes.isEmpty()) {
             Text(
-                text = stringResource(R.string.takes_empty),
+                text = stringResource(Res.string.takes_empty),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 12.dp),
@@ -311,12 +325,12 @@ private fun TakeCard(take: TakeItem, zone: TimeZone, actions: CardActions?, sele
     val card = take.card
     val date = Formats.recordDate(card.date, card.otherYear)
     val duration = Formats.duration(card.durationMs)
-    val meta = stringResource(R.string.record_meta, if (card.title == null) Formats.timeOfDay(card.startedAtEpochMs, zone) else date, duration)
+    val meta = stringResource(Res.string.record_meta, if (card.title == null) Formats.timeOfDay(card.startedAtEpochMs, zone) else date, duration)
     RecordCard(
         card = card,
         title = card.title ?: date,
         // made under the backing: said in words beside the time — the card already carries its note (spec 3.32)
-        meta = if (take.underBacking) stringResource(R.string.backing_take_meta, meta) else meta,
+        meta = if (take.underBacking) stringResource(Res.string.backing_take_meta, meta) else meta,
         onClick = onClick,
         actions = actions,
         highlighted = take.isNew,

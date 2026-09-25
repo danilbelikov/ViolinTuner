@@ -59,7 +59,30 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.res.stringResource
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.piece_edit
+import com.violinjourney.app.shared.resources.piece_notes_add
+import com.violinjourney.app.shared.resources.piece_notes_less
+import com.violinjourney.app.shared.resources.piece_notes_more
+import com.violinjourney.app.shared.resources.piece_sheet_page
+import com.violinjourney.app.shared.resources.piece_sheets_add
+import com.violinjourney.app.shared.resources.piece_sheets_add_short
+import com.violinjourney.app.shared.resources.piece_sheets_camera
+import com.violinjourney.app.shared.resources.piece_sheets_count
+import com.violinjourney.app.shared.resources.piece_sheets_gallery
+import com.violinjourney.app.shared.resources.piece_sheets_none
+import com.violinjourney.app.shared.resources.piece_status_change
+import com.violinjourney.app.shared.resources.scale_add_photo
+import com.violinjourney.app.shared.resources.scale_more_systems_few
+import com.violinjourney.app.shared.resources.scale_more_systems_many
+import com.violinjourney.app.shared.resources.scale_more_systems_one
+import com.violinjourney.app.shared.resources.scale_notes
+import com.violinjourney.app.shared.resources.scale_open_stand
+import com.violinjourney.app.shared.resources.selection_delete_takes_few
+import com.violinjourney.app.shared.resources.selection_delete_takes_many
+import com.violinjourney.app.shared.resources.selection_delete_takes_one
+import com.violinjourney.app.shared.resources.session_back
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -69,7 +92,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.ui.components.DeleteDialog
@@ -300,7 +322,7 @@ private fun Bars(state: PieceState, selectionHeight: Dp, onIntent: (PieceIntent)
         }
     }
     if (selection.confirming) {
-        val words = Formats.plural(selection.count, R.string.selection_delete_takes_one, R.string.selection_delete_takes_few, R.string.selection_delete_takes_many)
+        val words = Formats.plural(selection.count, Res.string.selection_delete_takes_one, Res.string.selection_delete_takes_few, Res.string.selection_delete_takes_many)
         DeleteDialog(
             title = stringResource(words, selection.count),
             text = deleteTextOf(state.takes.filter { it.card.id in selection.ids }.sumOf { it.card.videoBytes }),
@@ -330,7 +352,7 @@ private fun TopBar(title: String, titleVisible: Boolean, height: Dp, onIntent: (
             .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        val back = stringResource(R.string.session_back)
+        val back = stringResource(Res.string.session_back)
         Box(
             modifier = Modifier
                 .size(TopBarButton)
@@ -355,7 +377,7 @@ private fun TopBar(title: String, titleVisible: Boolean, height: Dp, onIntent: (
         }
         if (title.isNotEmpty()) {
             TextButton(onClick = { onIntent(PieceIntent.EditClicked) }) {
-                IconLabel(AppIcons.Pencil, stringResource(R.string.piece_edit), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
+                IconLabel(AppIcons.Pencil, stringResource(Res.string.piece_edit), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
             }
         }
     }
@@ -400,7 +422,7 @@ private fun HeaderBlock(
 /** The status chip is also how the status is changed: a small menu of the three (handoff 13c3). */
 @Composable
 private fun StatusMenu(status: PieceStatus, open: Boolean, onIntent: (PieceIntent) -> Unit) {
-    val change = stringResource(R.string.piece_status_change, statusLabel(status))
+    val change = stringResource(Res.string.piece_status_change, statusLabel(status))
     Box {
         StatusChip(
             status = status,
@@ -456,13 +478,13 @@ private fun SheetsBlock(state: PieceState, onIntent: (PieceIntent) -> Unit, addP
                 // The scale has its notes already: a quiet line, not a dashed card asking for them.
                 Row(modifier = Modifier.padding(horizontal = ScreenPadding - 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
-                        stringResource(R.string.scale_add_photo),
+                        stringResource(Res.string.scale_add_photo),
                         modifier = Modifier.padding(start = 12.dp).weight(1f),
                         color = colors.onSurfaceVariant,
                         style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
                     )
-                    TextButton(onClick = addPhoto.onCamera) { Text(stringResource(R.string.piece_sheets_camera)) }
-                    TextButton(onClick = addPhoto.onGallery) { Text(stringResource(R.string.piece_sheets_gallery)) }
+                    TextButton(onClick = addPhoto.onCamera) { Text(stringResource(Res.string.piece_sheets_camera)) }
+                    TextButton(onClick = addPhoto.onGallery) { Text(stringResource(Res.string.piece_sheets_gallery)) }
                 }
             } else {
                 LazyRow(contentPadding = PaddingValues(horizontal = ScreenPadding), horizontalArrangement = Arrangement.spacedBy(TileGap)) {
@@ -478,7 +500,7 @@ private fun SheetsBlock(state: PieceState, onIntent: (PieceIntent) -> Unit, addP
     }
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(
-            text = if (state.pages.isEmpty()) stringResource(R.string.piece_sheets_none) else stringResource(R.string.piece_sheets_count, state.pages.size),
+            text = if (state.pages.isEmpty()) stringResource(Res.string.piece_sheets_none) else stringResource(Res.string.piece_sheets_count, state.pages.size),
             modifier = Modifier.padding(horizontal = ScreenPadding),
             color = colors.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
@@ -492,10 +514,10 @@ private fun SheetsBlock(state: PieceState, onIntent: (PieceIntent) -> Unit, addP
                     .padding(vertical = 16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(stringResource(R.string.piece_sheets_add), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
+                Text(stringResource(Res.string.piece_sheets_add), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    TextButton(onClick = addPhoto.onCamera) { Text(stringResource(R.string.piece_sheets_camera)) }
-                    TextButton(onClick = addPhoto.onGallery) { Text(stringResource(R.string.piece_sheets_gallery)) }
+                    TextButton(onClick = addPhoto.onCamera) { Text(stringResource(Res.string.piece_sheets_camera)) }
+                    TextButton(onClick = addPhoto.onGallery) { Text(stringResource(Res.string.piece_sheets_gallery)) }
                 }
             }
         } else {
@@ -512,7 +534,7 @@ private fun SheetsBlock(state: PieceState, onIntent: (PieceIntent) -> Unit, addP
 
 @Composable
 private fun PageTile(tile: SheetTile, first: Boolean, metrics: Metrics, onClick: () -> Unit) {
-    val description = stringResource(R.string.piece_sheet_page, tile.number)
+    val description = stringResource(Res.string.piece_sheet_page, tile.number)
     Box(
         modifier = Modifier
             .clip(RoundedCornerShape(TileCorner))
@@ -579,16 +601,16 @@ private fun AddTile(metrics: Metrics, addPhoto: AddPhotoActions) {
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             AppIcon(AppIcons.Plus, contentDescription = null, tint = colors.primary)
-            Text(stringResource(R.string.piece_sheets_add_short), color = colors.primary, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
+            Text(stringResource(Res.string.piece_sheets_add_short), color = colors.primary, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
         }
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, containerColor = colors.surfaceContainerHigh) {
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.piece_sheets_camera)) },
+                text = { Text(stringResource(Res.string.piece_sheets_camera)) },
                 leadingIcon = { AppIcon(AppIcons.Camera, contentDescription = null) },
                 onClick = { menuOpen = false; addPhoto.onCamera() },
             )
             DropdownMenuItem(
-                text = { Text(stringResource(R.string.piece_sheets_gallery)) },
+                text = { Text(stringResource(Res.string.piece_sheets_gallery)) },
                 leadingIcon = { AppIcon(AppIcons.Gallery, contentDescription = null) },
                 onClick = { menuOpen = false; addPhoto.onGallery() },
             )
@@ -611,7 +633,7 @@ private fun NotesBlock(notes: String, collapsedLines: Int, onIntent: (PieceInten
             contentAlignment = Alignment.Center,
         ) {
             CompositionLocalProvider(LocalContentColor provides colors.primary) {
-                IconLabel(AppIcons.Plus, stringResource(R.string.piece_notes_add), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
+                IconLabel(AppIcons.Plus, stringResource(Res.string.piece_notes_add), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
             }
         }
         return
@@ -634,7 +656,7 @@ private fun NotesBlock(notes: String, collapsedLines: Int, onIntent: (PieceInten
         )
         if (overflows || expanded) {
             Text(
-                text = stringResource(if (expanded) R.string.piece_notes_less else R.string.piece_notes_more),
+                text = stringResource(if (expanded) Res.string.piece_notes_less else Res.string.piece_notes_more),
                 modifier = Modifier
                     .padding(top = 6.dp)
                     .clip(RoundedCornerShape(6.dp))
@@ -663,7 +685,7 @@ private fun DrawnScale(scale: Scale, metrics: Metrics, onClick: () -> Unit) {
     Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Row(verticalAlignment = Alignment.Bottom) {
             Text(
-                stringResource(R.string.scale_notes),
+                stringResource(Res.string.scale_notes),
                 modifier = Modifier.weight(1f),
                 color = colors.onSurface,
                 style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
@@ -676,7 +698,7 @@ private fun DrawnScale(scale: Scale, metrics: Metrics, onClick: () -> Unit) {
                 .fillMaxWidth()
                 .clip(RoundedCornerShape(CardCorner))
                 .background(colors.surfaceContainer)
-                .clickable(role = Role.Button, onClickLabel = stringResource(R.string.scale_open_stand), onClick = onClick)
+                .clickable(role = Role.Button, onClickLabel = stringResource(Res.string.scale_open_stand), onClick = onClick)
                 .animateContentSize(tween(FOLD_MS)),
         ) {
             val inner = maxWidth - 24.dp
@@ -690,7 +712,7 @@ private fun DrawnScale(scale: Scale, metrics: Metrics, onClick: () -> Unit) {
                 if (folded) {
                     val more = systems - FOLDED_SYSTEMS
                     TextButton(onClick = { expanded = true }) {
-                        Text(stringResource(Formats.plural(more, R.string.scale_more_systems_one, R.string.scale_more_systems_few, R.string.scale_more_systems_many), more))
+                        Text(stringResource(Formats.plural(more, Res.string.scale_more_systems_one, Res.string.scale_more_systems_few, Res.string.scale_more_systems_many), more))
                     }
                 }
             }

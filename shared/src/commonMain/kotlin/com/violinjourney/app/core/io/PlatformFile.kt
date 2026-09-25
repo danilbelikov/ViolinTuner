@@ -14,3 +14,9 @@ expect val PlatformFile.fileName: String
 
 /** Deletes the file; true when it is gone now. */
 expect fun PlatformFile.deleteFile(): Boolean
+
+/** The file at [path]. */
+expect fun platformFile(path: String): PlatformFile
+
+/** The file as a `file:` URI, the way pickers hand files over. */
+expect val PlatformFile.fileUri: String

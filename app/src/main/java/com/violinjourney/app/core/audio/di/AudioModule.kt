@@ -11,17 +11,24 @@ import com.violinjourney.app.core.audio.RecordingRate
 import com.violinjourney.app.core.audio.dsp.MpmDetector
 import com.violinjourney.app.core.audio.dsp.PitchDetectorFactory
 import com.violinjourney.app.core.audio.playback.AppSessionWaveforms
+import com.violinjourney.app.core.audio.playback.PcmDecoder
 import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.audio.recording.AacFileEncoder
 import com.violinjourney.app.core.audio.recording.AppSessionAudioFiles
 import com.violinjourney.app.core.audio.recording.PcmEncoderFactory
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
+import com.violinjourney.app.core.di.DefaultDispatcher
+import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.recording.DecodingFileTakeAnalyzer
+import com.violinjourney.app.core.recording.FileTakeAnalyzer
+import com.violinjourney.app.core.recording.OpenedPcm
 import com.violinjourney.app.core.recording.TakePipeline
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Provider
+import kotlinx.coroutines.CoroutineDispatcher
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -52,7 +59,22 @@ object AudioModule {
     fun provideVideoFiles(impl: com.violinjourney.app.core.recording.video.AppVideoFiles): com.violinjourney.app.core.recording.video.VideoFiles = impl
 
     @Provides
-    fun provideFileTakeAnalyzer(impl: com.violinjourney.app.core.recording.DecodingFileTakeAnalyzer): com.violinjourney.app.core.recording.FileTakeAnalyzer = impl
+    fun provideFileTakeAnalyzer(
+        detectorFactory: PitchDetectorFactory,
+        repertoireConfig: RepertoireConfig,
+        @DefaultDispatcher dispatcher: CoroutineDispatcher,
+    ): FileTakeAnalyzer = DecodingFileTakeAnalyzer(detectorFactory, repertoireConfig, dispatcher) { file ->
+        PcmDecoder.open(file)?.let { decoder ->
+            object : OpenedPcm {
+                override val sampleRate = decoder.sampleRate
+                override val totalSamples = decoder.totalSamples
+
+                override fun read(out: ShortArray): Int = decoder.read(out)
+
+                override fun release() = decoder.release()
+            }
+        }
+    }
 
     @Provides
     fun provideSessionWaveforms(impl: AppSessionWaveforms): SessionWaveforms = impl

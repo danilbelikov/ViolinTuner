@@ -1,12 +1,9 @@
 package com.violinjourney.app.core.recording
 
 import com.violinjourney.app.core.audio.dsp.PitchDetectorFactory
-import com.violinjourney.app.core.audio.playback.PcmDecoder
-import com.violinjourney.app.core.di.DefaultDispatcher
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
-import java.io.File
-import javax.inject.Inject
+import com.violinjourney.app.core.io.PlatformFile
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 
@@ -17,7 +14,7 @@ interface FileTakeAnalyzer {
      * stored. [onProgress] comes from the analysing thread.
      */
     suspend fun analyze(
-        file: File,
+        file: PlatformFile,
         config: IntonationConfig,
         startedAtEpochMs: Long,
         audioFileName: String,
@@ -25,30 +22,37 @@ interface FileTakeAnalyzer {
     ): FileAnalysisResult
 }
 
+/** The sound of a media file opened for reading, PCM16 mono; [release] lets the decoder go. */
+interface OpenedPcm : PcmSource {
+    fun release()
+}
+
+/** Opens the sound track of a file with the platform's decoder; null when it has none it can read. */
+fun interface PcmFileOpener {
+    fun open(file: PlatformFile): OpenedPcm?
+}
+
 /**
- * [TakeFileAnalysis] over the sound track of a real file: [PcmDecoder] finds the track among the
+ * [TakeFileAnalysis] over the sound track of a real file: the platform's decoder finds the track among the
  * others of the container — a video is read like a recording. A detector of its own: they keep buffers.
  */
-class DecodingFileTakeAnalyzer @Inject constructor(
+class DecodingFileTakeAnalyzer(
     private val detectorFactory: PitchDetectorFactory,
     private val repertoireConfig: RepertoireConfig,
-    @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
+    private val dispatcher: CoroutineDispatcher,
+    private val opener: PcmFileOpener,
 ) : FileTakeAnalyzer {
     override suspend fun analyze(
-        file: File,
+        file: PlatformFile,
         config: IntonationConfig,
         startedAtEpochMs: Long,
         audioFileName: String,
         onProgress: (FileAnalysisProgress) -> Unit,
     ): FileAnalysisResult = withContext(dispatcher) {
-        val decoder = PcmDecoder.open(file) ?: return@withContext FileAnalysisResult.CannotOpen
+        val decoder = opener.open(file) ?: return@withContext FileAnalysisResult.CannotOpen
         try {
             TakeFileAnalysis.run(
-                source = object : PcmSource {
-                    override val sampleRate = decoder.sampleRate
-                    override val totalSamples = decoder.totalSamples
-                    override fun read(out: ShortArray): Int = decoder.read(out)
-                },
+                source = decoder,
                 config = config,
                 detector = detectorFactory.create(config),
                 startedAtEpochMs = startedAtEpochMs,

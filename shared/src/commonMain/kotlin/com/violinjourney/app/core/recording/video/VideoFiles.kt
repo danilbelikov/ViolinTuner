@@ -1,6 +1,6 @@
 package com.violinjourney.app.core.recording.video
 
-import java.io.File
+import com.violinjourney.app.core.io.PlatformFile
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.toInstant
@@ -22,10 +22,10 @@ data class VideoInfo(
  */
 interface VideoFiles {
     /** Where the system camera is to write a shot; the folder is open to the FileProvider. */
-    fun newCameraFile(): File
+    fun newCameraFile(): PlatformFile
 
     /** Moves a finished shot out of the cache at once (the system may clear a cache when space runs short). Null when it cannot. */
-    fun adopt(cameraFile: File): File?
+    fun adopt(cameraFile: PlatformFile): PlatformFile?
 
     /** Size of what [uri] points at, when the provider tells. */
     fun sizeOf(uri: String): Long?
@@ -33,20 +33,20 @@ interface VideoFiles {
     fun freeBytes(): Long
 
     /** Copies the picked video in, whole and unchanged; null when it cannot be read or written. Cancellable. */
-    suspend fun import(uri: String): File?
+    suspend fun import(uri: String): PlatformFile?
 
-    fun info(file: File): VideoInfo?
+    fun info(file: PlatformFile): VideoInfo?
 
     /** Writes the thumbnail beside [file]; false leaves the take without one. */
-    fun makeThumb(file: File): Boolean
+    fun makeThumb(file: PlatformFile): Boolean
 
     /** The thumbnail of the video stored under [name], if there is one. */
-    fun thumbOf(name: String): File?
+    fun thumbOf(name: String): PlatformFile?
 
-    fun existing(name: String): File?
+    fun existing(name: String): PlatformFile?
 
     /** Removes the video and its thumbnail: a shot the player gave up, an import that failed. */
-    fun discard(file: File)
+    fun discard(file: PlatformFile)
 }
 
 /** `METADATA_KEY_DATE` of a video: «20260918T101500.000Z», always UTC. Pure, for the sake of a test. */

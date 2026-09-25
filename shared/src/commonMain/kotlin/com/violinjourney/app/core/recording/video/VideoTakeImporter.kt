@@ -1,19 +1,21 @@
 package com.violinjourney.app.core.recording.video
 
-import com.violinjourney.app.core.di.DefaultDispatcher
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.session.RecordingBar
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.deleteFile
+import com.violinjourney.app.core.io.fileName
+import com.violinjourney.app.core.io.filePath
+import com.violinjourney.app.core.io.platformFile
 import com.violinjourney.app.core.recording.FileAnalysisResult
 import com.violinjourney.app.core.recording.FileTakeAnalyzer
 import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.core.time.WallClock
-import java.io.File
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -66,8 +68,7 @@ sealed interface VideoImport {
 }
 
 /** How long an analysis takes against the length of the sound — measured on this device by the analyses themselves (spec 5.13). */
-@Singleton
-class AnalysisSpeed @Inject constructor() {
+class AnalysisSpeed() {
     @Volatile var factor: Double = START_FACTOR
         private set
 
@@ -87,8 +88,7 @@ class AnalysisSpeed @Inject constructor() {
  * going to the background, must not tear an analysis that may take a minute; the screen only
  * watches [state]. One video at a time.
  */
-@Singleton
-class VideoTakeImporter @Inject constructor(
+class VideoTakeImporter(
     private val files: VideoFiles,
     private val analyzer: FileTakeAnalyzer,
     private val sessions: SessionRepository,
@@ -99,13 +99,13 @@ class VideoTakeImporter @Inject constructor(
     private val clock: WallClock,
     private val elapsed: ElapsedClock,
     private val speed: AnalysisSpeed,
-    @DefaultDispatcher dispatcher: CoroutineDispatcher,
+    dispatcher: CoroutineDispatcher,
 ) {
     data class Saved(val pieceId: Long, val sessionId: Long)
 
     private val scope = CoroutineScope(SupervisorJob() + dispatcher)
     private var job: Job? = null
-    private var current: File? = null
+    private var current: PlatformFile? = null
 
     private val mutableState = MutableStateFlow<VideoImport>(VideoImport.Idle)
     val state: StateFlow<VideoImport> = mutableState.asStateFlow()
@@ -114,14 +114,14 @@ class VideoTakeImporter @Inject constructor(
     val saved: Flow<Saved> = mutableSaved
 
     /** The system camera came back with [cameraFile] written. */
-    fun shot(pieceId: Long, cameraFile: File) {
+    fun shot(pieceId: Long, cameraFile: PlatformFile) {
         if (mutableState.value != VideoImport.Idle) return
         val returnedAt = clock.millis()
         mutableState.value = VideoImport.Working(pieceId, shot = true, copying = false, visible = false)
         job = scope.launch {
             val file = files.adopt(cameraFile)
             if (file == null) {
-                cameraFile.delete()
+                cameraFile.deleteFile()
                 mutableState.value = VideoImport.Failed(pieceId, VideoImportFailure.CANNOT_OPEN)
             } else {
                 take(pieceId, file, shot = true, returnedAtEpochMs = returnedAt)
@@ -150,13 +150,13 @@ class VideoTakeImporter @Inject constructor(
         }
     }
 
-    private suspend fun take(pieceId: Long, file: File, shot: Boolean, returnedAtEpochMs: Long) {
+    private suspend fun take(pieceId: Long, file: PlatformFile, shot: Boolean, returnedAtEpochMs: Long) {
         current = file
         fun fail(reason: VideoImportFailure) {
             current = null
             // A picked video has its original in the gallery; a shot is kept until the player says what becomes of it.
             if (!shot) files.discard(file)
-            mutableState.value = VideoImport.Failed(pieceId, reason, rescuePath = file.path.takeIf { shot })
+            mutableState.value = VideoImport.Failed(pieceId, reason, rescuePath = file.filePath.takeIf { shot })
         }
 
         val info = files.info(file) ?: return fail(VideoImportFailure.CANNOT_OPEN)
@@ -167,7 +167,7 @@ class VideoTakeImporter @Inject constructor(
         val started = elapsed.nowMs()
         val showAtOnce = info.durationMs * speed.factor > SHOW_FROM_MS
         var shownAt: Long? = started.takeIf { showAtOnce || !shot }
-        mutableState.value = VideoImport.Working(pieceId, shot, copying = false, visible = shownAt != null, thumbPath = files.thumbOf(file.name)?.path)
+        mutableState.value = VideoImport.Working(pieceId, shot, copying = false, visible = shownAt != null, thumbPath = files.thumbOf(file.fileName)?.filePath)
         // The estimate may be wrong — a slow phone, a first analysis: one that drags on gets its sheet after all.
         val late = scope.launch {
             delay(SHOW_FROM_MS)
@@ -178,7 +178,7 @@ class VideoTakeImporter @Inject constructor(
         // A shot is dated by when it was shot; a picked video by what it says of itself, else by now.
         val startedAt = if (shot) returnedAtEpochMs - info.durationMs else info.createdAtEpochMs ?: returnedAtEpochMs
         val result = try {
-            analyzer.analyze(file, config, startedAt, audioFileName = file.name) { progress ->
+            analyzer.analyze(file, config, startedAt, audioFileName = file.fileName) { progress ->
                 // from the analysing thread; a StateFlow takes that, and ten updates a second are plenty
                 val now = elapsed.nowMs()
                 if (now - lastShown >= PROGRESS_EVERY_MS) {
@@ -202,7 +202,7 @@ class VideoTakeImporter @Inject constructor(
                     val stillToShow = MIN_SHOWN_MS - (elapsed.nowMs() - at)
                     if (stillToShow > 0) delay(stillToShow)
                 }
-                val id = sessions.save(result.session.copy(pieceId = pieceId, videoPath = file.name))
+                val id = sessions.save(result.session.copy(pieceId = pieceId, videoPath = file.fileName))
                 current = null
                 // Filming oneself is practising: a practice with a video take in it is not a forgotten one (spec 3.12).
                 if (shot) markSound(returnedAtEpochMs)
@@ -236,8 +236,8 @@ class VideoTakeImporter @Inject constructor(
     fun sendClicked(): String? = when (val now = mutableState.value) {
         is VideoImport.Working -> current?.takeIf { now.shot && !now.copying }?.let { file ->
             job?.cancel()
-            mutableState.value = VideoImport.Failed(now.pieceId, VideoImportFailure.STOPPED, rescuePath = file.path)
-            file.path
+            mutableState.value = VideoImport.Failed(now.pieceId, VideoImportFailure.STOPPED, rescuePath = file.filePath)
+            file.filePath
         }
         is VideoImport.Failed -> now.rescuePath
         VideoImport.Idle -> null
@@ -248,7 +248,7 @@ class VideoTakeImporter @Inject constructor(
         when (val now = mutableState.value) {
             is VideoImport.Working -> stopAndDiscard()
             is VideoImport.Failed -> {
-                now.rescuePath?.let { files.discard(File(it)) }
+                now.rescuePath?.let { files.discard(platformFile(it)) }
                 current = null
                 mutableState.value = VideoImport.Idle
             }

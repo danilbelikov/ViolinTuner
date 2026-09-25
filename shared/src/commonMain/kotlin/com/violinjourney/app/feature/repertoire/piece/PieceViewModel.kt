@@ -1,6 +1,12 @@
 package com.violinjourney.app.feature.repertoire.piece
 
 import androidx.lifecycle.SavedStateHandle
+import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.deleteFile
+import com.violinjourney.app.core.io.filePath
+import com.violinjourney.app.core.io.fileUri
+import com.violinjourney.app.core.io.platformFile
+import com.violinjourney.app.core.io.sizeBytes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.audio.share.ShareFiles
@@ -10,7 +16,6 @@ import com.violinjourney.app.core.audio.backing.BackingFileImporter
 import com.violinjourney.app.core.audio.backing.BackingImport
 import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.backing.BackingPreview
-import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.domain.backing.AudioRoute
 import com.violinjourney.app.core.domain.backing.BackingOffset
 import com.violinjourney.app.core.domain.backing.BackingConfig
@@ -23,6 +28,7 @@ import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.today
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.flow.asStateFlow
@@ -44,9 +50,6 @@ import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.feature.history.Selection
 import com.violinjourney.app.feature.history.SelectionIntent
 import com.violinjourney.app.feature.history.SelectionRules
-import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.File
-import javax.inject.Inject
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -67,8 +70,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.datetime.LocalDate
 
-@HiltViewModel
-class PieceViewModel @Inject constructor(
+open class PieceViewModel(
     private val savedState: SavedStateHandle,
     private val repertoire: RepertoireRepository,
     private val sheetFiles: SheetFiles,
@@ -87,7 +89,7 @@ class PieceViewModel @Inject constructor(
     private val backingImporter: BackingFileImporter? = null,
     private val backingPreview: BackingPreview? = null,
     private val routes: AudioRoutes? = null,
-    @IoDispatcher private val io: CoroutineDispatcher = Dispatchers.IO,
+    private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
 
@@ -137,12 +139,12 @@ class PieceViewModel @Inject constructor(
                 piece, pages, ui.importing, ui.statusMenuOpen, config,
                 takes = PieceReducer.takesOf(piece, sessions, newTakeId, clock.today(), clock.zone),
                 progress = PieceReducer.progressOf(pieceId, sessions, config),
-            ) { sheetFiles.existing(it)?.path }
+            ) { sheetFiles.existing(it)?.filePath }
             takeIds = shown.takes.map { it.card.id }
             val videoNames = sessions.mapNotNull { session -> session.videoPath?.let { session.id to it } }.toMap()
             shown.copy(
                 takes = shown.takes.map { take ->
-                    val withVideo = videoNames[take.card.id]?.let { take.copy(card = take.card.copy(videoBytes = videos.existing(it)?.length() ?: 0)) } ?: take
+                    val withVideo = videoNames[take.card.id]?.let { take.copy(card = take.card.copy(videoBytes = videos.existing(it)?.sizeBytes() ?: 0)) } ?: take
                     if (take.card.id in underBackingIds) withVideo.copy(underBacking = true) else withVideo
                 },
                 selection = SelectionRules.prune(ui.selection, takeIds),
@@ -285,8 +287,8 @@ class PieceViewModel @Inject constructor(
             PieceIntent.CameraClicked -> {
                 val file = sheetFiles.newCameraFile()
                 // The camera app may push this process out of memory: the path has to outlive it.
-                savedState[KEY_CAMERA_FILE] = file.path
-                effectChannel.trySend(PieceEffect.LaunchCamera(file.path))
+                savedState[KEY_CAMERA_FILE] = file.filePath
+                effectChannel.trySend(PieceEffect.LaunchCamera(file.filePath))
             }
             PieceIntent.RecordClicked -> when {
                 // picking and recording do not mix (spec 3.18): the button is dimmed, this is the belt to those braces
@@ -311,16 +313,16 @@ class PieceViewModel @Inject constructor(
             PieceIntent.VideoShootClicked -> if (videoAllowed()) {
                 val file = videos.newCameraFile()
                 // The camera app may push this process out of memory: the path has to outlive it.
-                savedState[KEY_VIDEO_FILE] = file.path
-                effectChannel.trySend(PieceEffect.LaunchVideoCamera(file.path))
+                savedState[KEY_VIDEO_FILE] = file.filePath
+                effectChannel.trySend(PieceEffect.LaunchVideoCamera(file.filePath))
             }
             // under the backing, the same rule as a take: headphones only (spec 3.32); a plain video needs none
             PieceIntent.OwnCameraClicked -> backing.value?.takeIf { it.present && videoAllowed() && (!it.wanted || it.route.output.isHeadphones) }?.let {
                 effectChannel.trySend(PieceEffect.OpenCapture(pieceId))
             }
             is PieceIntent.VideoShotFinished -> {
-                val file = savedState.remove<String>(KEY_VIDEO_FILE)?.let(::File) ?: return
-                if (intent.saved) importer.shot(pieceId, file) else file.delete()
+                val file = savedState.remove<String>(KEY_VIDEO_FILE)?.let(::platformFile) ?: return
+                if (intent.saved) importer.shot(pieceId, file) else file.deleteFile()
             }
             is PieceIntent.VideoPicked -> intent.uri.let { uri -> if (uri != null && videoAllowed()) importer.picked(pieceId, uri) }
             PieceIntent.VideoImportCancelClicked -> importer.cancelClicked()
@@ -329,7 +331,7 @@ class PieceViewModel @Inject constructor(
             PieceIntent.VideoImportSendClicked -> importer.sendClicked()?.let { path ->
                 viewModelScope.launch {
                     // The provider hands out only `cache/share/`: the shot gets a second name there, not a copy.
-                    shareFiles.original(File(path), RESCUE_FILE_NAME)?.let { effectChannel.send(PieceEffect.ShareVideo(it.path)) }
+                    shareFiles.original(platformFile(path), RESCUE_FILE_NAME)?.let { effectChannel.send(PieceEffect.ShareVideo(it.filePath)) }
                 }
             }
             PieceIntent.BackingAddClicked -> if (!takes.recordingRequested.value) effectChannel.trySend(PieceEffect.PickBackingFile)
@@ -346,8 +348,8 @@ class PieceViewModel @Inject constructor(
             }
             PieceIntent.BackingProblemDismissed -> backingEphemeral.update { it.copy(problem = null) }
             is PieceIntent.CameraFinished -> {
-                val file = savedState.remove<String>(KEY_CAMERA_FILE)?.let(::File) ?: return
-                if (intent.saved) import(listOf(file.toURI().toString()), temporary = listOf(file)) else file.delete()
+                val file = savedState.remove<String>(KEY_CAMERA_FILE)?.let(::platformFile) ?: return
+                if (intent.saved) import(listOf(file.fileUri), temporary = listOf(file)) else file.deleteFile()
             }
         }
     }
@@ -451,7 +453,7 @@ class PieceViewModel @Inject constructor(
         ui.update { it.copy(selection = SelectionRules.reduce(current, intent, takeIds)) }
     }
 
-    private fun import(uris: List<String>, temporary: List<File>) {
+    private fun import(uris: List<String>, temporary: List<PlatformFile>) {
         if (uris.isEmpty()) return
         ui.update { it.copy(importing = it.importing + uris.size) }
         viewModelScope.launch {
@@ -463,7 +465,7 @@ class PieceViewModel @Inject constructor(
                     ui.update { it.copy(importing = it.importing - 1) }
                 }
             }
-            temporary.forEach { it.delete() }
+            temporary.forEach { it.deleteFile() }
             // One word for the whole batch: the pages that did open are already in the strip.
             if (failed) effectChannel.send(PieceEffect.ShowPhotoFailed)
         }

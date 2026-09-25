@@ -19,3 +19,7 @@ actual val PlatformFile.fileName: String get() = path.substringAfterLast('/')
 @OptIn(ExperimentalForeignApi::class)
 actual fun PlatformFile.deleteFile(): Boolean =
     NSFileManager.defaultManager.removeItemAtPath(path, null) || !NSFileManager.defaultManager.fileExistsAtPath(path)
+
+actual fun platformFile(path: String): PlatformFile = PlatformFile(path)
+
+actual val PlatformFile.fileUri: String get() = platform.Foundation.NSURL.fileURLWithPath(path).absoluteString.orEmpty()

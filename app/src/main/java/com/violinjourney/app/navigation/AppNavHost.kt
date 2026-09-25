@@ -48,6 +48,8 @@ import com.violinjourney.app.feature.live.HiltLiveViewModel
 import com.violinjourney.app.feature.live.LiveRoute
 import com.violinjourney.app.feature.live.block.HiltBlockViewModel
 import com.violinjourney.app.feature.onboarding.HiltOnboardingViewModel
+import com.violinjourney.app.feature.repertoire.piece.HiltPieceViewModel
+import com.violinjourney.app.feature.repertoire.stand.HiltStandViewModel
 import com.violinjourney.app.feature.onboarding.OnboardingRoute
 import com.violinjourney.app.feature.practice.HiltPracticeViewModel
 import com.violinjourney.app.feature.practice.PracticeRoute
@@ -215,6 +217,8 @@ fun AppNavHost(
             route = PIECE_PATTERN,
             arguments = listOf(navArgument(PieceViewModel.ARG_PIECE_ID) { type = NavType.LongType }),
         ) {
+            val shareViewModel = hiltViewModel<ShareViewModel>()
+            val activity = LocalActivity.current
             PieceRoute(
                 onClose = navController::popBackStack,
                 onOpenForm = { pieceId, focusNotes, scale ->
@@ -224,6 +228,11 @@ fun AppNavHost(
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
                 onOpenCapture = { pieceId -> navController.navigate("$CAPTURE_ROUTE/$pieceId") { launchSingleTop = true } },
+                viewModel = hiltViewModel<HiltPieceViewModel>(),
+                tracking = hiltViewModel<HiltAnalyticsViewModel>(),
+                onShare = shareViewModel::start,
+                shareHost = { ShareHost(shareViewModel) },
+                changingConfigurations = { activity?.isChangingConfigurations == true },
             )
         }
         // «Снять под минусовку» (spec 3.32): the app's own camera, over everything
@@ -246,7 +255,12 @@ fun AppNavHost(
             // The stand only opens from its piece, so that screen lies right under it. Its view model
             // owns the take: shared, a recording walks between the two screens unbroken.
             val pieceEntry = remember(entry) { navController.getBackStackEntry(PIECE_PATTERN) }
-            StandRoute(pieceViewModel = hiltViewModel(pieceEntry), onClose = navController::popBackStack)
+            StandRoute(
+                pieceViewModel = hiltViewModel<HiltPieceViewModel>(pieceEntry),
+                onClose = navController::popBackStack,
+                viewModel = hiltViewModel<HiltStandViewModel>(),
+                tracking = hiltViewModel<HiltAnalyticsViewModel>(),
+            )
         }
         composable(
             route = "$PIECE_FORM_ROUTE?${PieceFormViewModel.ARG_PIECE_ID}={${PieceFormViewModel.ARG_PIECE_ID}}" +

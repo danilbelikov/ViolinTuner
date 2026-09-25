@@ -1,7 +1,9 @@
 package com.violinjourney.app.ios
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
@@ -11,7 +13,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.violinjourney.app.core.domain.journey.JourneyRoute as JourneyStops
 import com.violinjourney.app.core.domain.repertoire.PieceSection
-import com.violinjourney.app.feature.repertoire.SectionKeys
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
 import com.violinjourney.app.feature.history.HistoryRoute
@@ -35,18 +36,23 @@ import com.violinjourney.app.feature.onboarding.OnboardingViewModel
 import com.violinjourney.app.feature.practice.PracticeRoute
 import com.violinjourney.app.feature.practice.PracticeViewModel
 import com.violinjourney.app.feature.repertoire.RepertoireViewModel
+import com.violinjourney.app.feature.repertoire.SectionKeys
 import com.violinjourney.app.feature.repertoire.SectionRoute
 import com.violinjourney.app.feature.repertoire.form.PieceFormRoute
 import com.violinjourney.app.feature.repertoire.form.PieceFormViewModel
+import com.violinjourney.app.feature.repertoire.piece.PieceRoute
+import com.violinjourney.app.feature.repertoire.piece.PieceViewModel
 import com.violinjourney.app.feature.repertoire.scale.ScaleFormRoute
 import com.violinjourney.app.feature.repertoire.scale.ScaleFormViewModel
 import com.violinjourney.app.feature.repertoire.sections.SectionsViewModel
+import com.violinjourney.app.feature.repertoire.stand.StandRoute
+import com.violinjourney.app.feature.repertoire.stand.StandViewModel
 import com.violinjourney.app.feature.session.SessionRoute
 import com.violinjourney.app.feature.session.SessionViewModel
 import com.violinjourney.app.feature.settings.SettingsRoute
+import com.violinjourney.app.feature.settings.SettingsViewModel
 import com.violinjourney.app.feature.sound.SoundRoute
 import com.violinjourney.app.feature.sound.SoundViewModel
-import com.violinjourney.app.feature.settings.SettingsViewModel
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
 import com.violinjourney.app.navigation.TopLevelDestination
 import platform.Foundation.NSURL
@@ -55,6 +61,9 @@ import platform.UIKit.UIApplicationOpenSettingsURLString
 
 private const val SESSION_ROUTE = "session"
 private const val SOUND_ROUTE = "sound"
+private const val PIECE_ROUTE = "piece"
+private const val PIECE_PATTERN = "$PIECE_ROUTE/{${PieceViewModel.ARG_PIECE_ID}}"
+private const val STAND_ROUTE = "stand"
 private const val PIECE_FORM_ROUTE = "pieceForm"
 private const val SCALE_FORM_ROUTE = "scaleForm"
 private const val SECTION_ROUTE = "section"
@@ -74,8 +83,7 @@ private const val SETTINGS_ROUTE = "settings"
 
 /**
  * The graph of screens, as `AppNavHost` on Android: the same routes and the same moves between them. What is not on
- * iOS yet — the screen of a recording, of a piece, «Звук», the copy of the data — is not in the graph, and the ways to
- * it do nothing for now.
+ * iOS yet — «Поделиться», the copy of the data, the own camera — is not in the graph, and the ways to it do nothing for now.
  */
 @Composable
 internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navController: NavHostController, startRoute: String, modifier: Modifier) {
@@ -130,7 +138,7 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
                 onOpenSection = navController::navigateToSection,
-                onOpenPiece = notYet,
+                onOpenPiece = navController::navigateToPiece,
                 viewModel = viewModel {
                     HistoryViewModel(graph.sessions, graph.repertoire, graph.intonationConfig, graph.clock, graph.audioFiles, graph.sectionAsk)
                 },
@@ -178,10 +186,46 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
                 onShare = notYet,
             )
         }
+        // The repertoire (spec 3.15): a piece and its music stand, above the tabs.
+        composable(route = PIECE_PATTERN, arguments = listOf(navArgument(PieceViewModel.ARG_PIECE_ID) { type = NavType.LongType })) {
+            PieceRoute(
+                onClose = navController::popBackStack,
+                onOpenForm = { pieceId, focusNotes, scale ->
+                    if (scale) navController.navigateToScaleForm(pieceId) else navController.navigateToPieceForm(pieceId, focusNotes)
+                },
+                onOpenStand = navController::navigateToStand,
+                onOpenSession = navController::navigateToSession,
+                onOpenSound = navController::navigateToSound,
+                viewModel = viewModel { pieceViewModel(graph, createSavedStateHandle()) },
+                tracking = viewModel { AnalyticsViewModel(graph.analytics) },
+                onShare = notYet,
+            )
+        }
+        composable(
+            route = "$STAND_ROUTE/{${StandViewModel.ARG_PIECE_ID}}?${StandViewModel.ARG_PAGE}={${StandViewModel.ARG_PAGE}}",
+            arguments = listOf(
+                navArgument(StandViewModel.ARG_PIECE_ID) { type = NavType.LongType },
+                navArgument(StandViewModel.ARG_PAGE) {
+                    type = NavType.IntType
+                    defaultValue = 0
+                },
+            ),
+        ) { entry ->
+            // The stand only opens from its piece, which lies right under it; the take belongs to that view model (spec 3.15).
+            val pieceEntry = remember(entry) { navController.getBackStackEntry(PIECE_PATTERN) }
+            StandRoute(
+                pieceViewModel = viewModel(pieceEntry) { pieceViewModel(graph, createSavedStateHandle()) },
+                onClose = navController::popBackStack,
+                viewModel = viewModel {
+                    StandViewModel(createSavedStateHandle(), graph.repertoire, graph.sheetFiles, graph.standHints, graph.repertoireConfig, graph.clock)
+                },
+                tracking = viewModel { AnalyticsViewModel(graph.analytics) },
+            )
+        }
         // A section of the repertoire (spec 3.22): its list, above the tabs; «Гаммы» adds through a form of its own.
         composable(route = SECTION_PATTERN, arguments = listOf(navArgument(RepertoireViewModel.ARG_SECTION) { type = NavType.StringType })) {
             SectionRoute(
-                onOpenPiece = notYet,
+                onOpenPiece = navController::navigateToPiece,
                 onNew = { section ->
                     if (section == SectionRef.BuiltIn(PieceSection.SCALES)) navController.navigateToScaleForm(pieceId = null)
                     else navController.navigateToPieceForm(pieceId = null, section = section)
@@ -213,8 +257,11 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
         ) {
             PieceFormRoute(
                 onClose = navController::popBackStack,
-                // the screen of a piece is not on iOS yet: the new piece is simply in its list
-                onOpenCreated = { navController.popBackStack() },
+                // The new piece takes the place of its form: "back" from it leads to the list.
+                onOpenCreated = { pieceId ->
+                    navController.popBackStack()
+                    navController.navigateToPiece(pieceId)
+                },
                 onCloseDeleted = { navController.popUpToSection() },
                 viewModel = viewModel { PieceFormViewModel(createSavedStateHandle(), graph.repertoire, graph.repertoireConfig, graph.clock) },
             )
@@ -230,7 +277,11 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
         ) {
             ScaleFormRoute(
                 onClose = navController::popBackStack,
-                onOpenScale = { navController.popBackStack() },
+                // a new scale, and one that turned out to exist already, take the place of the form
+                onOpenScale = { pieceId ->
+                    navController.popBackStack()
+                    navController.navigateToPiece(pieceId)
+                },
                 onCloseDeleted = { navController.popUpToSection() },
                 viewModel = viewModel {
                     ScaleFormViewModel(createSavedStateHandle(), graph.repertoire, graph.repertoireConfig, graph.clock, scaleTexts)
@@ -300,6 +351,11 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
     }
 }
 
+private fun pieceViewModel(graph: IosGraph, savedState: SavedStateHandle) = PieceViewModel(
+    savedState, graph.repertoire, graph.sheetFiles, graph.repertoireConfig, graph.clock, graph.takes(), graph.configSource, graph.sessions,
+    graph.videoFiles, graph.videoImporter, graph.shareFiles, graph.backings, recordingRate = graph.recordingRate, io = graph.io,
+)
+
 private fun homeViewModel(graph: IosGraph) = HomeViewModel(graph.home, graph.journey, graph.clock, graph.venues)
 
 private fun openAppSettings() {
@@ -336,6 +392,15 @@ private fun NavHostController.navigateToSession(sessionId: Long) {
 /** [sessionId] null opens the sound of all recordings. */
 private fun NavHostController.navigateToSound(sessionId: Long?) {
     navigate("$SOUND_ROUTE?${SoundViewModel.ARG_SESSION_ID}=${sessionId ?: SoundViewModel.EVERYONE}") { launchSingleTop = true }
+}
+
+private fun NavHostController.navigateToPiece(pieceId: Long) {
+    navigate("$PIECE_ROUTE/$pieceId") { launchSingleTop = true }
+}
+
+/** Opens the music stand of a piece at [pageIndex] (from zero). */
+private fun NavHostController.navigateToStand(pieceId: Long, pageIndex: Int) {
+    navigate("$STAND_ROUTE/$pieceId?${StandViewModel.ARG_PAGE}=$pageIndex") { launchSingleTop = true }
 }
 
 private fun NavHostController.navigateToSettings() {

@@ -10,6 +10,16 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.convert
+import kotlinx.cinterop.usePinned
+import platform.CoreGraphics.CGBitmapContextCreate
+import platform.CoreGraphics.CGColorSpaceCreateDeviceRGB
+import platform.CoreGraphics.CGColorSpaceRelease
+import platform.CoreGraphics.CGContextDrawImage
+import platform.CoreGraphics.CGContextRelease
+import platform.CoreGraphics.CGImageAlphaInfo
+import platform.CoreGraphics.CGImageRef
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
 import platform.Foundation.NSDate
@@ -83,8 +93,31 @@ internal object IosPictures {
         return false
     }
 
+    /** The picture is nearly black — a video fading in: its average over a coarse grid is below [DARK_BELOW] of 255. */
+    fun isDark(image: CGImageRef): Boolean {
+        val side = DARK_GRID
+        val pixels = UByteArray(side * side * RGBA)
+        pixels.usePinned { pinned ->
+            val space = CGColorSpaceCreateDeviceRGB()
+            val context = CGBitmapContextCreate(
+                pinned.addressOf(0), side.convert(), side.convert(), BITS_PER_BYTE.convert(), (side * RGBA).convert(), space,
+                CGImageAlphaInfo.kCGImageAlphaPremultipliedLast.value,
+            )
+            CGContextDrawImage(context, CGRectMake(0.0, 0.0, side.toDouble(), side.toDouble()), image)
+            CGContextRelease(context)
+            CGColorSpaceRelease(space)
+        }
+        var sum = 0L
+        for (i in 0 until side * side) sum += (pixels[i * RGBA].toInt() + pixels[i * RGBA + 1].toInt() + pixels[i * RGBA + 2].toInt()) / 3
+        return sum / (side * side) < DARK_BELOW
+    }
+
     private const val PERCENT = 100.0
     private const val PARTIAL_SUFFIX = ".part"
+    private const val DARK_GRID = 16
+    private const val DARK_BELOW = 16
+    private const val RGBA = 4
+    private const val BITS_PER_BYTE = 8
 }
 
 /** Session audio in `sessions/<uuid>.m4a` — the videos of takes live here too, with a thumbnail beside them. */

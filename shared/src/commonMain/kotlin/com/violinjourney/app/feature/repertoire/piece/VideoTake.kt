@@ -44,12 +44,41 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.stringResource
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.video_cancel
+import com.violinjourney.app.shared.resources.video_continue
+import com.violinjourney.app.shared.resources.video_copying
+import com.violinjourney.app.shared.resources.video_delete
+import com.violinjourney.app.shared.resources.video_error_cannot_open
+import com.violinjourney.app.shared.resources.video_error_no_notes
+import com.violinjourney.app.shared.resources.video_error_no_notes_gallery
+import com.violinjourney.app.shared.resources.video_error_no_sound
+import com.violinjourney.app.shared.resources.video_error_no_space
+import com.violinjourney.app.shared.resources.video_error_too_long
+import com.violinjourney.app.shared.resources.video_listening
+import com.violinjourney.app.shared.resources.video_ok
+import com.violinjourney.app.shared.resources.video_percent
+import com.violinjourney.app.shared.resources.video_pick
+import com.violinjourney.app.shared.resources.video_pick_hint
+import com.violinjourney.app.shared.resources.video_remaining
+import com.violinjourney.app.shared.resources.video_send
+import com.violinjourney.app.shared.resources.video_shoot
+import com.violinjourney.app.shared.resources.video_shoot_backing
+import com.violinjourney.app.shared.resources.video_shoot_backing_hint
+import com.violinjourney.app.shared.resources.video_shoot_hint
+import com.violinjourney.app.shared.resources.video_shoot_own_hint
+import com.violinjourney.app.shared.resources.video_stop_text
+import com.violinjourney.app.shared.resources.video_stop_title
+import com.violinjourney.app.shared.resources.video_stopped_title
+import com.violinjourney.app.shared.resources.video_take
+import com.violinjourney.app.shared.resources.video_take_busy
+import com.violinjourney.app.shared.resources.video_thumb
+import org.jetbrains.compose.resources.StringResource
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.domain.session.RecordingBar
 import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.recording.video.VideoImportFailure
@@ -109,7 +138,7 @@ fun VideoTakeButton(
         ) {
             AppIcon(AppIcons.Video, contentDescription = null, tint = colors.onSurface, size = 20.dp)
             Text(
-                text = stringResource(if (busy) R.string.video_take_busy else R.string.video_take),
+                text = stringResource(if (busy) Res.string.video_take_busy else Res.string.video_take),
                 color = colors.onSurface,
                 maxLines = 1,
                 style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
@@ -118,17 +147,17 @@ fun VideoTakeButton(
         }
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, modifier = Modifier.width(MenuWidth), containerColor = colors.surfaceContainerHigh) {
             when (ownCamera) {
-                null -> MenuItem(AppIcons.Video, R.string.video_shoot, R.string.video_shoot_hint) { menuOpen = false; onShoot() }
-                OwnCamera.UNDER_BACKING -> MenuItem(AppIcons.Backing, R.string.video_shoot_backing, R.string.video_shoot_backing_hint) { menuOpen = false; onShoot() }
-                OwnCamera.PLAIN -> MenuItem(AppIcons.Video, R.string.video_shoot, R.string.video_shoot_own_hint) { menuOpen = false; onShoot() }
+                null -> MenuItem(AppIcons.Video, Res.string.video_shoot, Res.string.video_shoot_hint) { menuOpen = false; onShoot() }
+                OwnCamera.UNDER_BACKING -> MenuItem(AppIcons.Backing, Res.string.video_shoot_backing, Res.string.video_shoot_backing_hint) { menuOpen = false; onShoot() }
+                OwnCamera.PLAIN -> MenuItem(AppIcons.Video, Res.string.video_shoot, Res.string.video_shoot_own_hint) { menuOpen = false; onShoot() }
             }
-            MenuItem(AppIcons.VideoGallery, R.string.video_pick, R.string.video_pick_hint) { menuOpen = false; onPick() }
+            MenuItem(AppIcons.VideoGallery, Res.string.video_pick, Res.string.video_pick_hint) { menuOpen = false; onPick() }
         }
     }
 }
 
 @Composable
-private fun MenuItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: Int, hint: Int, onClick: () -> Unit) {
+private fun MenuItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: StringResource, hint: StringResource, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     DropdownMenuItem(
         leadingIcon = { AppIcon(icon, contentDescription = null, tint = colors.onSurface, size = 20.dp) },
@@ -179,7 +208,7 @@ fun VideoImportSheet(import: VideoImport, onIntent: (PieceIntent) -> Unit) {
                 // the content is drawn from what is current; `target` only says which of the faces is fading in or out
                 when {
                     target == "working" && import is VideoImport.Working -> Working(import, onIntent)
-                    target == "asking" && import is VideoImport.Working -> Rescue(R.string.video_stop_title, showContinue = true, onIntent)
+                    target == "asking" && import is VideoImport.Working -> Rescue(Res.string.video_stop_title, showContinue = true, onIntent)
                     target == "failed" && import is VideoImport.Failed -> Failed(import, onIntent)
                 }
             }
@@ -198,17 +227,17 @@ private fun Working(import: VideoImport.Working, onIntent: (PieceIntent) -> Unit
                 .clip(RoundedCornerShape(6.dp))
                 .background(colors.surfaceContainerHighest),
         ) {
-            if (thumb != null) Image(thumb, contentDescription = stringResource(R.string.video_thumb), contentScale = ContentScale.Crop, modifier = Modifier.size(ThumbWidth, ThumbHeight))
+            if (thumb != null) Image(thumb, contentDescription = stringResource(Res.string.video_thumb), contentScale = ContentScale.Crop, modifier = Modifier.size(ThumbWidth, ThumbHeight))
         }
         Text(
-            text = stringResource(if (import.copying) R.string.video_copying else R.string.video_listening),
+            text = stringResource(if (import.copying) Res.string.video_copying else Res.string.video_listening),
             modifier = Modifier.weight(1f),
             color = colors.onSurface,
             style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold),
         )
         if (!import.copying) {
             Text(
-                text = stringResource(R.string.video_percent, import.percent),
+                text = stringResource(Res.string.video_percent, import.percent),
                 color = colors.primary,
                 style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
             )
@@ -223,12 +252,12 @@ private fun Working(import: VideoImport.Working, onIntent: (PieceIntent) -> Unit
     Row(verticalAlignment = Alignment.CenterVertically) {
         Text(
             // the line keeps its height while the speed is still being measured
-            text = import.remainingSec?.let { stringResource(R.string.video_remaining, it) }.orEmpty(),
+            text = import.remainingSec?.let { stringResource(Res.string.video_remaining, it) }.orEmpty(),
             modifier = Modifier.weight(1f),
             color = colors.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
         )
-        OutlinedButton(onClick = { onIntent(PieceIntent.VideoImportCancelClicked) }) { Text(stringResource(R.string.video_cancel)) }
+        OutlinedButton(onClick = { onIntent(PieceIntent.VideoImportCancelClicked) }) { Text(stringResource(Res.string.video_cancel)) }
     }
 }
 
@@ -267,16 +296,16 @@ private fun EmergingStrip(bars: List<RecordingBar>, fraction: Float) {
 @Composable
 private fun Failed(import: VideoImport.Failed, onIntent: (PieceIntent) -> Unit) {
     if (import.reason == VideoImportFailure.STOPPED) {
-        Rescue(R.string.video_stopped_title, showContinue = false, onIntent)
+        Rescue(Res.string.video_stopped_title, showContinue = false, onIntent)
         return
     }
     val colors = MaterialTheme.colorScheme
     val title = when (import.reason) {
-        VideoImportFailure.NO_SOUND -> stringResource(R.string.video_error_no_sound)
-        VideoImportFailure.TOO_LONG -> stringResource(R.string.video_error_too_long)
-        VideoImportFailure.CANNOT_OPEN -> stringResource(R.string.video_error_cannot_open)
-        VideoImportFailure.NO_NOTES -> stringResource(R.string.video_error_no_notes)
-        VideoImportFailure.NO_SPACE -> stringResource(R.string.video_error_no_space, import.missingMb ?: 0)
+        VideoImportFailure.NO_SOUND -> stringResource(Res.string.video_error_no_sound)
+        VideoImportFailure.TOO_LONG -> stringResource(Res.string.video_error_too_long)
+        VideoImportFailure.CANNOT_OPEN -> stringResource(Res.string.video_error_cannot_open)
+        VideoImportFailure.NO_NOTES -> stringResource(Res.string.video_error_no_notes)
+        VideoImportFailure.NO_SPACE -> stringResource(Res.string.video_error_no_space, import.missingMb ?: 0)
         VideoImportFailure.STOPPED -> ""
     }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -285,26 +314,26 @@ private fun Failed(import: VideoImport.Failed, onIntent: (PieceIntent) -> Unit) 
             Text(title, color = colors.onSurface, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, fontWeight = FontWeight.Bold))
             val more = when {
                 // a shot exists only here — that is what the two ways out below are about
-                import.rescuePath != null -> stringResource(R.string.video_stop_text)
-                import.reason == VideoImportFailure.NO_NOTES -> stringResource(R.string.video_error_no_notes_gallery)
+                import.rescuePath != null -> stringResource(Res.string.video_stop_text)
+                import.reason == VideoImportFailure.NO_NOTES -> stringResource(Res.string.video_error_no_notes_gallery)
                 else -> null
             }
             if (more != null) Text(more, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
         }
-        if (import.rescuePath == null) Button(onClick = { onIntent(PieceIntent.VideoImportDismissed) }) { Text(stringResource(R.string.video_ok)) }
+        if (import.rescuePath == null) Button(onClick = { onIntent(PieceIntent.VideoImportDismissed) }) { Text(stringResource(Res.string.video_ok)) }
     }
     if (import.rescuePath != null) RescueButtons(onIntent)
 }
 
 /** A shot that did not become a take exists nowhere else: send it somewhere, or let it go. */
 @Composable
-private fun Rescue(title: Int, showContinue: Boolean, onIntent: (PieceIntent) -> Unit) {
+private fun Rescue(title: StringResource, showContinue: Boolean, onIntent: (PieceIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     Text(stringResource(title), color = colors.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold))
-    Text(stringResource(R.string.video_stop_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
+    Text(stringResource(Res.string.video_stop_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
     RescueButtons(onIntent)
     if (showContinue) {
-        TextButton(onClick = { onIntent(PieceIntent.VideoImportContinueClicked) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.video_continue)) }
+        TextButton(onClick = { onIntent(PieceIntent.VideoImportContinueClicked) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.video_continue)) }
     }
 }
 
@@ -313,11 +342,11 @@ private fun RescueButtons(onIntent: (PieceIntent) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedButton(onClick = { onIntent(PieceIntent.VideoImportDismissed) }, modifier = Modifier.weight(1f)) {
             androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides ViolinTheme.destructive) {
-                IconLabel(AppIcons.Trash, stringResource(R.string.video_delete))
+                IconLabel(AppIcons.Trash, stringResource(Res.string.video_delete))
             }
         }
         Button(onClick = { onIntent(PieceIntent.VideoImportSendClicked) }, modifier = Modifier.weight(1f)) {
-            IconLabel(AppIcons.Share, stringResource(R.string.video_send), iconSize = 20.dp)
+            IconLabel(AppIcons.Share, stringResource(Res.string.video_send), iconSize = 20.dp)
         }
     }
 }

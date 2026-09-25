@@ -1,11 +1,14 @@
 package com.violinjourney.app.ios
 
+import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.Preferences
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.IosMicPitchSource
 import com.violinjourney.app.core.audio.PitchSource
+import com.violinjourney.app.core.audio.RecordingRate
 import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.dsp.MpmDetector
 import com.violinjourney.app.core.audio.dsp.PitchDetectorFactory
@@ -26,6 +29,7 @@ import com.violinjourney.app.core.data.progress.RoomTrophyRepository
 import com.violinjourney.app.core.data.repertoire.RoomRepertoireRepository
 import com.violinjourney.app.core.data.session.RoomSessionRepository
 import com.violinjourney.app.core.data.sound.RoomSoundRepository
+import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
@@ -41,8 +45,12 @@ import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundSettings
 import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.recording.DecodingFileTakeAnalyzer
+import com.violinjourney.app.core.recording.IosPcmFileOpener
 import com.violinjourney.app.core.recording.RecordingWatch
 import com.violinjourney.app.core.recording.TakePipeline
+import com.violinjourney.app.core.recording.video.AnalysisSpeed
+import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.DataStoreBlockStore
 import com.violinjourney.app.core.settings.DataStorePracticeNotesStore
 import com.violinjourney.app.core.settings.DataStoreProfileRepository
@@ -52,8 +60,6 @@ import com.violinjourney.app.core.settings.DataStoreStandHintStore
 import com.violinjourney.app.core.settings.DataStoreVenueStore
 import com.violinjourney.app.core.settings.SettingsConfigSource
 import com.violinjourney.app.core.settings.SettingsRepository
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import com.violinjourney.app.core.time.SystemWallClock
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.history.HistorySectionAsk
@@ -61,6 +67,7 @@ import kotlin.experimental.ExperimentalNativeApi
 import kotlin.native.Platform
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import platform.Foundation.NSProcessInfo
 
 /**
  * What Hilt puts together on Android, by hand: one instance of everything that is one per app, in the order Hilt
@@ -126,6 +133,18 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
         IosMicPitchSource(PitchDetectorFactory(::MpmDetector), PcmEncoderFactory(::IosAacEncoder), logStats = Platform.isDebugBinary)
     }
 
+    val videoFiles = IosVideoFiles(repertoireConfig, io)
+    val elapsed = ElapsedClock { (NSProcessInfo.processInfo.systemUptime * MS_PER_SECOND).toLong() }
+    val analysisSpeed = AnalysisSpeed()
+    val fileAnalyzer = DecodingFileTakeAnalyzer(PitchDetectorFactory(::MpmDetector), repertoireConfig, Dispatchers.Default, IosPcmFileOpener)
+    val videoImporter = VideoTakeImporter(
+        videoFiles, fileAnalyzer, sessions, configSource, runningPractice, repertoireConfig, intonationConfig, clock, elapsed, analysisSpeed,
+        Dispatchers.Default,
+    )
+
+    /** The measurement session of the microphone asks for 48 kHz, and the phones give it. */
+    val recordingRate = RecordingRate { TakePipeline.DEFAULT_RATE }
+
     val playerFactory = SessionPlayerFactory { scope -> IosSessionPlayer(scope, soundConfig) }
     val pictureFactory = VideoPictureFactory(::IosVideoPicture)
 
@@ -156,5 +175,6 @@ internal class IosGraph(fakeScenario: FakeScenario?) {
     private companion object {
         const val SHARE_FOLDER = "share"
         const val WAVEFORMS_FOLDER = "waveforms"
+        const val MS_PER_SECOND = 1_000.0
     }
 }

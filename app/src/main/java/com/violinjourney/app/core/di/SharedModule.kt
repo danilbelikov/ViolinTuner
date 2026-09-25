@@ -1,15 +1,12 @@
 package com.violinjourney.app.core.di
 
+import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.audio.PitchSource
 import com.violinjourney.app.core.audio.backing.BackingPlaybackFactory
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
+import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingRepository
-import com.violinjourney.app.core.domain.session.SessionRepository
-import com.violinjourney.app.core.recording.RecordingWatch
-import com.violinjourney.app.core.recording.TakePipeline
-import kotlinx.coroutines.CoroutineDispatcher
-import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.journey.PracticeNotesStore
@@ -23,8 +20,17 @@ import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.TrophyAwarder
 import com.violinjourney.app.core.domain.progress.TrophyRepository
+import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.venue.VenueStore
 import com.violinjourney.app.core.domain.venue.Venues
+import com.violinjourney.app.core.recording.FileTakeAnalyzer
+import com.violinjourney.app.core.recording.RecordingWatch
+import com.violinjourney.app.core.recording.TakePipeline
+import com.violinjourney.app.core.recording.video.AnalysisSpeed
+import com.violinjourney.app.core.recording.video.VideoFiles
+import com.violinjourney.app.core.recording.video.VideoTakeImporter
+import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.history.HistorySectionAsk
 import dagger.Module
@@ -32,6 +38,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineDispatcher
 
 /**
  * The classes of the shared module, which knows no javax.inject (iOS has none): what an @Inject
@@ -97,4 +104,26 @@ object SharedModule {
         pitchSource, sessionRepository, audioFiles, runningPractice, practiceConfig, clock, dispatcher, watch,
         practiceNotes, journeyConfig, backings, backingPlaybackFactory, backingConfig, analytics,
     )
+
+    /** One per app: it measures how fast analyses go on this phone. */
+    @Provides
+    @Singleton
+    fun provideAnalysisSpeed() = AnalysisSpeed()
+
+    /** One per app, with a scope of its own: leaving the screen must not tear an analysis (spec 3.19). */
+    @Provides
+    @Singleton
+    fun provideVideoTakeImporter(
+        files: VideoFiles,
+        analyzer: FileTakeAnalyzer,
+        sessions: SessionRepository,
+        configSource: IntonationConfigSource,
+        practice: RunningPracticeStore,
+        repertoireConfig: RepertoireConfig,
+        intonationDefaults: IntonationConfig,
+        clock: WallClock,
+        elapsed: ElapsedClock,
+        speed: AnalysisSpeed,
+        @DefaultDispatcher dispatcher: CoroutineDispatcher,
+    ) = VideoTakeImporter(files, analyzer, sessions, configSource, practice, repertoireConfig, intonationDefaults, clock, elapsed, speed, dispatcher)
 }

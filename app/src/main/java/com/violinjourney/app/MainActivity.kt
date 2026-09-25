@@ -65,7 +65,13 @@ class MainActivity : ComponentActivity() {
         if (savedInstanceState == null) openBackup.value = intent?.getStringExtra(EXTRA_OPEN_BACKUP)
         setContent {
             // the short words of the screens are toasts here, as they always were
-            val messages = remember { Messages { text -> Toast.makeText(this, text, Toast.LENGTH_SHORT).show() } }
+            val messages = remember {
+                object : Messages {
+                    override fun show(text: String) = Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT).show()
+
+                    override fun showLong(text: String) = Toast.makeText(this@MainActivity, text, Toast.LENGTH_LONG).show()
+                }
+            }
             CompositionLocalProvider(LocalMessages provides messages) {
                 ViolinTheme { ViolinTunerRoot(openBackup = openBackup.value, onBackupOpened = { openBackup.value = null }) }
             }
