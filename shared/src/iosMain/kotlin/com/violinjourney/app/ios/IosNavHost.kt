@@ -44,6 +44,8 @@ import com.violinjourney.app.feature.repertoire.sections.SectionsViewModel
 import com.violinjourney.app.feature.session.SessionRoute
 import com.violinjourney.app.feature.session.SessionViewModel
 import com.violinjourney.app.feature.settings.SettingsRoute
+import com.violinjourney.app.feature.sound.SoundRoute
+import com.violinjourney.app.feature.sound.SoundViewModel
 import com.violinjourney.app.feature.settings.SettingsViewModel
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
 import com.violinjourney.app.navigation.TopLevelDestination
@@ -52,6 +54,7 @@ import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
 
 private const val SESSION_ROUTE = "session"
+private const val SOUND_ROUTE = "sound"
 private const val PIECE_FORM_ROUTE = "pieceForm"
 private const val SCALE_FORM_ROUTE = "scaleForm"
 private const val SECTION_ROUTE = "section"
@@ -125,7 +128,7 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
         composable(TopLevelDestination.HISTORY.route) {
             HistoryRoute(
                 onOpenSession = navController::navigateToSession,
-                onOpenSound = notYet,
+                onOpenSound = navController::navigateToSound,
                 onOpenSection = navController::navigateToSection,
                 onOpenPiece = notYet,
                 viewModel = viewModel {
@@ -144,11 +147,32 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
         ) {
             SessionRoute(
                 onClose = navController::popBackStack,
-                onOpenSound = notYet,
+                onOpenSound = navController::navigateToSound,
                 viewModel = viewModel {
                     SessionViewModel(
                         graph.sessions, graph.intonationConfig, graph.audioFiles, graph.playerFactory, graph.repertoire, graph.sound,
                         graph.soundConfig, graph.pictureFactory, createSavedStateHandle(), graph.backings, graph.backingPcm,
+                    )
+                },
+                onShare = notYet,
+            )
+        }
+        // «Звук» (spec 3.17): of one recording, or — without an id — the default of all of them. Above the tabs.
+        composable(
+            route = "$SOUND_ROUTE?${SoundViewModel.ARG_SESSION_ID}={${SoundViewModel.ARG_SESSION_ID}}",
+            arguments = listOf(
+                navArgument(SoundViewModel.ARG_SESSION_ID) {
+                    type = NavType.LongType
+                    defaultValue = SoundViewModel.EVERYONE
+                },
+            ),
+        ) {
+            SoundRoute(
+                onClose = navController::popBackStack,
+                viewModel = viewModel {
+                    SoundViewModel(
+                        createSavedStateHandle(), graph.sound, graph.sessions, graph.repertoire, graph.audioFiles, graph.playerFactory,
+                        graph.waveforms, graph.soundConfig, graph.backings, graph.backingPcm, graph.backingConfig,
                     )
                 },
                 onShare = notYet,
@@ -217,7 +241,7 @@ internal fun IosNavHost(graph: IosGraph, scaleTexts: IosScaleTexts, navControlle
         composable(SETTINGS_ROUTE) {
             SettingsRoute(
                 onOpenOnboarding = navController::navigateToOnboarding,
-                onOpenSound = {},
+                onOpenSound = { navController.navigateToSound(null) },
                 onClose = navController::popBackStack,
                 // iOS keeps the language of each app in its Settings, on the app's own page
                 onLanguageClick = ::openAppSettings,
@@ -307,6 +331,11 @@ private fun NavHostController.navigateToLiveLeavingTheGame() {
 
 private fun NavHostController.navigateToSession(sessionId: Long) {
     navigate("$SESSION_ROUTE/$sessionId") { launchSingleTop = true }
+}
+
+/** [sessionId] null opens the sound of all recordings. */
+private fun NavHostController.navigateToSound(sessionId: Long?) {
+    navigate("$SOUND_ROUTE?${SoundViewModel.ARG_SESSION_ID}=${sessionId ?: SoundViewModel.EVERYONE}") { launchSingleTop = true }
 }
 
 private fun NavHostController.navigateToSettings() {

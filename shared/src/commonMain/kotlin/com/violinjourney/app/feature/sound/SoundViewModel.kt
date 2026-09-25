@@ -28,8 +28,6 @@ import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.domain.sound.SoundSettings
 import com.violinjourney.app.core.domain.sound.UserPreset
-import dagger.hilt.android.lifecycle.HiltViewModel
-import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
@@ -50,8 +48,7 @@ import kotlinx.coroutines.withContext
  * at once, so that it is heard, and to the database a moment later, so that a dragged slider
  * does not write a row a frame. There is no «Сохранить».
  */
-@HiltViewModel
-class SoundViewModel @Inject constructor(
+open class SoundViewModel(
     savedState: SavedStateHandle,
     private val sound: SoundRepository,
     private val sessions: SessionRepository,

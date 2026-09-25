@@ -65,7 +65,10 @@ class IosSessionWaveforms(private val directory: () -> String, private val io: C
         val chunk = ShortArray(CHUNK)
         while (true) {
             checkpoint()
-            if (!file.readIntoBuffer(buffer, CHUNK.toUInt(), null)) return null
+            // at the end the read may say no instead of giving nothing: that is the end, not a broken file
+            if (!file.readIntoBuffer(buffer, CHUNK.toUInt(), null)) {
+                if (file.framePosition >= file.length) break else return null
+            }
             val count = buffer.frameLength.toInt()
             if (count == 0) break
             val channel = buffer.floatChannelData?.get(0) ?: return null

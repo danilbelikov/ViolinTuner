@@ -70,6 +70,7 @@ import com.violinjourney.app.feature.session.SessionRoute
 import com.violinjourney.app.feature.session.SessionViewModel
 import com.violinjourney.app.feature.session.HiltSessionViewModel
 import com.violinjourney.app.feature.settings.HiltSettingsViewModel
+import com.violinjourney.app.feature.sound.HiltSoundViewModel
 import com.violinjourney.app.feature.settings.SettingsRoute
 import com.violinjourney.app.feature.share.ShareHost
 import com.violinjourney.app.feature.share.ShareViewModel
@@ -186,7 +187,13 @@ fun AppNavHost(
                 },
             ),
         ) {
-            SoundRoute(onClose = navController::popBackStack)
+            val shareViewModel = hiltViewModel<ShareViewModel>()
+            SoundRoute(
+                onClose = navController::popBackStack,
+                viewModel = hiltViewModel<HiltSoundViewModel>(),
+                onShare = shareViewModel::start,
+                shareHost = { ShareHost(shareViewModel) },
+            )
         }
         // A section of the repertoire (spec 3.22): its list, above the tabs; «Гаммы» adds through a form of its own.
         composable(
