@@ -37,3 +37,6 @@ class FixedWallClock(private val instant: Instant, override val zone: TimeZone =
 class ZonedSystemWallClock(override val zone: TimeZone) : WallClock {
     override fun instant(): Instant = Clock.System.now()
 }
+
+/** Nanoseconds that only go forward, on the clock the microphone of the platform reports its time on. */
+expect fun monotonicNanos(): Long

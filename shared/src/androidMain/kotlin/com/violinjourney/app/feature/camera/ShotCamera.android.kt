@@ -21,54 +21,19 @@ import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
-import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
-import javax.inject.Inject
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 /**
- * The app's own camera for «Снять под минусовку» (spec 3.32): a viewfinder and the picture alone — the sound is the
- * take's chain's. It says when its recording began on `CLOCK_MONOTONIC`, the clock the microphone reports on too.
- * Main thread only.
+ * [ShotCamera] of Android: CameraX, the preview and a video capture without sound, bound to the screen by
+ * [CaptureViewfinder]. It says when its recording began on `CLOCK_MONOTONIC`, the clock the microphone reports on too.
  */
-interface ShotCamera {
-    /** What the viewfinder draws into; null until the camera is bound. */
-    val surfaceRequest: StateFlow<SurfaceRequest?>
-
-    /** Binds the camera to [owner]; false when there is none to bind (no such camera, or it refused). */
-    suspend fun bind(owner: LifecycleOwner, front: Boolean): Boolean
-
-    /** Lets the camera go; a recording under way goes on and picks up the next [bind] (a turn of the phone). */
-    fun unbind()
-
-    /** Stops whatever is recorded, keeping nothing, and lets the camera go: the screen is gone for good. */
-    fun release()
-
-    /** Focus and exposure at a point of the viewfinder, 0…1 each way. */
-    fun focus(x: Float, y: Float)
-
-    /** How the phone is turned (a `Surface.ROTATION_*`): the picture is written the right way up. */
-    fun setRotation(rotation: Int)
-
-    fun startRecording(file: File)
-
-    /** When the recording's first frame was taken, on `CLOCK_MONOTONIC`; known once [stopRecording] has returned. */
-    val startNanos: Long?
-
-    /** Stops; true when the file holds a picture worth keeping. */
-    suspend fun stopRecording(): Boolean
-}
-
-fun interface ShotCameraFactory {
-    fun create(): ShotCamera
-}
-
-class CameraXShotCamera @Inject constructor(@ApplicationContext private val context: Context) : ShotCamera {
+class CameraXShotCamera(private val context: Context) : ShotCamera {
     private val mutableSurface = MutableStateFlow<SurfaceRequest?>(null)
-    override val surfaceRequest: StateFlow<SurfaceRequest?> = mutableSurface.asStateFlow()
+    val surfaceRequest: StateFlow<SurfaceRequest?> = mutableSurface.asStateFlow()
 
     private val preview = Preview.Builder().build().apply { setSurfaceProvider { request -> mutableSurface.value = request } }
 
@@ -89,7 +54,7 @@ class CameraXShotCamera @Inject constructor(@ApplicationContext private val cont
     private var startEventNanos: Long? = null
     private var recordedNanos: Long = 0
 
-    override suspend fun bind(owner: LifecycleOwner, front: Boolean): Boolean {
+    suspend fun bind(owner: LifecycleOwner, front: Boolean): Boolean {
         val cameras = provider ?: ProcessCameraProvider.awaitInstance(context).also { provider = it }
         val selector = if (front) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
         return try {
@@ -106,7 +71,7 @@ class CameraXShotCamera @Inject constructor(@ApplicationContext private val cont
         }
     }
 
-    override fun unbind() {
+    fun unbind() {
         provider?.unbindAll()
         camera = null
         mutableSurface.value = null
@@ -124,7 +89,7 @@ class CameraXShotCamera @Inject constructor(@ApplicationContext private val cont
         control.startFocusAndMetering(FocusMeteringAction.Builder(point).build())
     }
 
-    override fun setRotation(rotation: Int) {
+    fun setRotation(rotation: Int) {
         if (recording == null) videoCapture.targetRotation = rotation
     }
 

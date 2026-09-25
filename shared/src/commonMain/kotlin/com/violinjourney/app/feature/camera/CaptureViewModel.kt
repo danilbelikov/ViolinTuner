@@ -6,23 +6,25 @@ import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.audio.RecordingRate
 import com.violinjourney.app.core.audio.backing.AudioRoutes
 import com.violinjourney.app.core.audio.backing.BackingPcm
-import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.domain.TargetMode
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingOffset
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
+import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.deleteFile
+import com.violinjourney.app.core.io.fileName
 import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.recording.video.VideoFiles
-import com.violinjourney.app.core.recording.video.VideoMuxer
+import com.violinjourney.app.core.recording.video.VideoMux
+import com.violinjourney.app.core.recording.video.VideoShift
 import com.violinjourney.app.core.settings.IntonationConfigSource
-import dagger.hilt.android.lifecycle.HiltViewModel
-import java.io.File
-import javax.inject.Inject
+import com.violinjourney.app.core.time.monotonicNanos
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -45,8 +47,7 @@ import kotlinx.coroutines.withContext
  * `.mp4`, the picture moved by how much later it began. The take is then an ordinary video take (spec 3.19), analysed
  * already: the chain heard every note while it recorded.
  */
-@HiltViewModel
-class CaptureViewModel @Inject constructor(
+open class CaptureViewModel(
     savedState: SavedStateHandle,
     private val takes: TakePipeline,
     private val configSource: IntonationConfigSource,
@@ -58,7 +59,8 @@ class CaptureViewModel @Inject constructor(
     private val backingConfig: BackingConfig,
     private val cameraFactory: ShotCameraFactory,
     private val recordingRate: RecordingRate,
-    @IoDispatcher private val io: CoroutineDispatcher = Dispatchers.IO,
+    private val muxer: VideoMux,
+    private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
 
@@ -72,13 +74,13 @@ class CaptureViewModel @Inject constructor(
     val effects: Flow<CaptureEffect> = effectChannel.receiveAsFlow()
 
     private val listening = MutableStateFlow(false)
-    private var picture: File? = null
+    private var picture: PlatformFile? = null
     private var soundStartNanos: Long? = null
 
     private val hook = object : TakePipeline.VideoHook {
         override fun onRecordingStarted(recordStartNanos: Long?) {
             // the chain's thread: the camera is the main thread's
-            soundStartNanos = recordStartNanos ?: System.nanoTime()
+            soundStartNanos = recordStartNanos ?: monotonicNanos()
             viewModelScope.launch(Dispatchers.Main.immediate) {
                 val file = videos.newCameraFile()
                 picture = file
@@ -86,23 +88,23 @@ class CaptureViewModel @Inject constructor(
             }
         }
 
-        override suspend fun onRecordingFinished(audio: File, recordStartNanos: Long?): String? {
+        override suspend fun onRecordingFinished(audio: PlatformFile, recordStartNanos: Long?): String? {
             val shot = picture ?: return null
             picture = null
             mutableState.update { it.copy(saving = true) }
             val kept = withContext(Dispatchers.Main.immediate) { camera.stopRecording() }
             val made = if (kept) {
                 val pictureStart = camera.startNanos ?: soundStartNanos ?: 0L
-                val shift = VideoMuxer.shiftUs(pictureStart, recordStartNanos ?: soundStartNanos ?: pictureStart)
+                val shift = VideoShift.shiftUs(pictureStart, recordStartNanos ?: soundStartNanos ?: pictureStart)
                 withContext(io) {
                     val muxed = videos.newCameraFile()
-                    val whole = VideoMuxer.mux(shot, audio, muxed, shift)
-                    shot.delete()
+                    val whole = muxer.mux(shot, audio, muxed, shift)
+                    shot.deleteFile()
                     if (!whole) return@withContext null
-                    videos.adopt(muxed)?.also { videos.makeThumb(it) }?.name
+                    videos.adopt(muxed)?.also { videos.makeThumb(it) }?.fileName
                 }
             } else {
-                shot.delete()
+                shot.deleteFile()
                 null
             }
             if (made == null) effectChannel.send(CaptureEffect.ShowVideoFailed)
@@ -114,7 +116,7 @@ class CaptureViewModel @Inject constructor(
             val shot = picture ?: return
             picture = null
             withContext(Dispatchers.Main.immediate) { camera.stopRecording() }
-            shot.delete()
+            shot.deleteFile()
         }
     }
 

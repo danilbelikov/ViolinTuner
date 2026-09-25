@@ -67,6 +67,12 @@ kotlin {
         androidMain.dependencies {
             // the system pickers (a photo for the profile) behind the shared calls
             implementation(libs.androidx.activity.compose)
+            // the app's own camera of «Снять под минусовку» (spec 3.32), behind the shared screen
+            implementation(libs.androidx.camera.camera2)
+            implementation(libs.androidx.camera.compose)
+            implementation(libs.androidx.camera.core)
+            implementation(libs.androidx.camera.lifecycle)
+            implementation(libs.androidx.camera.video)
         }
         iosMain.dependencies {
             // Android keeps its system SQLite (the database is opened as before); iOS brings its own

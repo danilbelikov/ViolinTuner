@@ -23,6 +23,11 @@ import com.violinjourney.app.feature.backup.DataBlockViewModel
 import com.violinjourney.app.feature.backup.RestoreRoute
 import com.violinjourney.app.feature.backup.RestoreViewModel
 import com.violinjourney.app.feature.backup.rememberBackupSystem
+import com.violinjourney.app.feature.camera.CaptureRoute
+import com.violinjourney.app.feature.camera.CaptureViewModel
+import com.violinjourney.app.feature.camera.IosShotCamera
+import com.violinjourney.app.feature.camera.IosVideoMux
+import com.violinjourney.app.feature.camera.ShotCameraFactory
 import com.violinjourney.app.feature.history.HistoryRoute
 import com.violinjourney.app.feature.history.HistoryViewModel
 import com.violinjourney.app.feature.home.HomeLookViewModel
@@ -74,6 +79,7 @@ private const val SOUND_ROUTE = "sound"
 private const val PIECE_ROUTE = "piece"
 private const val PIECE_PATTERN = "$PIECE_ROUTE/{${PieceViewModel.ARG_PIECE_ID}}"
 private const val STAND_ROUTE = "stand"
+private const val CAPTURE_ROUTE = "capture"
 private const val PIECE_FORM_ROUTE = "pieceForm"
 private const val SCALE_FORM_ROUTE = "scaleForm"
 private const val SECTION_ROUTE = "section"
@@ -95,12 +101,10 @@ private const val RESTORE_ROUTE = "restore"
 private const val RESTORE_PATTERN = "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}={${RestoreViewModel.ARG_URI}}"
 
 /**
- * The graph of screens, as `AppNavHost` on Android: the same routes and the same moves between them. What is not on
- * iOS yet — the own camera — is not in the graph, and the ways to it do nothing for now.
+ * The graph of screens, as `AppNavHost` on Android: the same routes and the same moves between them.
  */
 @Composable
 internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHostController, startRoute: String, modifier: Modifier) {
-    val notYet: (Long) -> Unit = {}
     NavHost(navController = navController, startDestination = startRoute, modifier = modifier) {
         composable(ONBOARDING_ROUTE) {
             // on a new phone a copy is the first thing a person with one needs (spec 3.20): Files, then the restore screen
@@ -222,6 +226,23 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 tracking = viewModel { AnalyticsViewModel(graph.analytics) },
                 onShare = share::start,
                 shareHost = { ShareHost(share) },
+                onOpenCapture = { pieceId -> navController.navigate("$CAPTURE_ROUTE/$pieceId") { launchSingleTop = true } },
+            )
+        }
+        // «Снять под минусовку» (spec 3.32): the app's own camera, over everything
+        composable(
+            route = "$CAPTURE_ROUTE/{${CaptureViewModel.ARG_PIECE_ID}}",
+            arguments = listOf(navArgument(CaptureViewModel.ARG_PIECE_ID) { type = NavType.LongType }),
+        ) {
+            CaptureRoute(
+                onClose = navController::popBackStack,
+                viewModel = viewModel {
+                    CaptureViewModel(
+                        createSavedStateHandle(), graph.takes(), graph.configSource, graph.repertoire, graph.backings, graph.backingPcm,
+                        graph.audioRoutes, graph.videoFiles, graph.backingConfig, ShotCameraFactory(::IosShotCamera), graph.recordingRate,
+                        IosVideoMux, graph.io,
+                    )
+                },
             )
         }
         composable(

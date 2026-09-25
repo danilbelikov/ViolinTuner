@@ -31,6 +31,7 @@ import com.violinjourney.app.feature.backup.HiltRestoreViewModel
 import com.violinjourney.app.feature.backup.RestoreRoute
 import com.violinjourney.app.feature.backup.RestoreViewModel
 import com.violinjourney.app.feature.camera.CaptureRoute
+import com.violinjourney.app.feature.camera.HiltCaptureViewModel
 import com.violinjourney.app.feature.camera.CaptureViewModel
 import com.violinjourney.app.feature.history.HiltHistoryViewModel
 import com.violinjourney.app.feature.history.HistoryRoute
@@ -243,7 +244,7 @@ fun AppNavHost(
             route = "$CAPTURE_ROUTE/{${CaptureViewModel.ARG_PIECE_ID}}",
             arguments = listOf(navArgument(CaptureViewModel.ARG_PIECE_ID) { type = NavType.LongType }),
         ) {
-            CaptureRoute(onClose = navController::popBackStack)
+            CaptureRoute(onClose = navController::popBackStack, viewModel = hiltViewModel<HiltCaptureViewModel>())
         }
         composable(
             route = "$STAND_ROUTE/{${StandViewModel.ARG_PIECE_ID}}?${StandViewModel.ARG_PAGE}={${StandViewModel.ARG_PAGE}}",

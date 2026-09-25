@@ -1,7 +1,5 @@
 package com.violinjourney.app.feature.camera
 
-import androidx.camera.compose.CameraXViewfinder
-import androidx.camera.core.SurfaceRequest
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,14 +32,28 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.res.stringResource
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.backing_block_title
+import com.violinjourney.app.shared.resources.backing_needs_headphones
+import com.violinjourney.app.shared.resources.backing_preparing
+import com.violinjourney.app.shared.resources.capture_camera_failed
+import com.violinjourney.app.shared.resources.capture_close
+import com.violinjourney.app.shared.resources.capture_grant
+import com.violinjourney.app.shared.resources.capture_low_space
+import com.violinjourney.app.shared.resources.capture_no_permission
+import com.violinjourney.app.shared.resources.capture_open_settings
+import com.violinjourney.app.shared.resources.capture_record
+import com.violinjourney.app.shared.resources.capture_saving
+import com.violinjourney.app.shared.resources.capture_stop
+import com.violinjourney.app.shared.resources.capture_switch_camera
+import com.violinjourney.app.shared.resources.live_mic_unavailable
+import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.R
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -61,7 +73,8 @@ private const val TABULAR_FIGURES = "tnum"
 @Composable
 fun CaptureScreen(
     state: CaptureState,
-    surfaceRequest: SurfaceRequest?,
+    /** The picture of the camera, bound to the screen by the platform. */
+    viewfinder: @Composable (Modifier) -> Unit,
     onIntent: (CaptureIntent) -> Unit,
     onOpenSettings: () -> Unit,
     modifier: Modifier = Modifier,
@@ -70,17 +83,14 @@ fun CaptureScreen(
         val landscape = maxWidth > maxHeight
         val width = constraints.maxWidth.toFloat()
         val height = constraints.maxHeight.toFloat()
-        if (surfaceRequest != null) {
-            CameraXViewfinder(
-                surfaceRequest = surfaceRequest,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pointerInput(Unit) { detectTapGestures { at -> onIntent(CaptureIntent.FocusAt(at.x / width, at.y / height)) } },
-            )
-        }
+        viewfinder(
+            Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) { detectTapGestures { at -> onIntent(CaptureIntent.FocusAt(at.x / width, at.y / height)) } },
+        )
         when {
             state.cameraPermission == false || state.micPermission == false -> Refused(onIntent, onOpenSettings)
-            state.cameraFailed -> Centered(stringResource(R.string.capture_camera_failed))
+            state.cameraFailed -> Centered(stringResource(Res.string.capture_camera_failed))
         }
         if (landscape) {
             TopRow(state, onIntent, Modifier.align(Alignment.TopStart).fillMaxWidth(0.7f))
@@ -125,7 +135,7 @@ private fun TopRow(state: CaptureState, onIntent: (CaptureIntent) -> Unit, modif
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = { onIntent(CaptureIntent.CloseClicked) }) {
-            AppIcon(AppIcons.Close, contentDescription = stringResource(R.string.capture_close), tint = OnPicture)
+            AppIcon(AppIcons.Close, contentDescription = stringResource(Res.string.capture_close), tint = OnPicture)
         }
         Text(
             state.title,
@@ -137,7 +147,7 @@ private fun TopRow(state: CaptureState, onIntent: (CaptureIntent) -> Unit, modif
             modifier = Modifier.weight(1f),
         )
         IconButton(onClick = { onIntent(CaptureIntent.SwitchCameraClicked) }, enabled = !state.recording) {
-            AppIcon(AppIcons.Repeat, contentDescription = stringResource(R.string.capture_switch_camera), tint = if (state.recording) OnPicture.copy(alpha = 0.4f) else OnPicture)
+            AppIcon(AppIcons.Repeat, contentDescription = stringResource(Res.string.capture_switch_camera), tint = if (state.recording) OnPicture.copy(alpha = 0.4f) else OnPicture)
         }
     }
 }
@@ -146,10 +156,10 @@ private fun TopRow(state: CaptureState, onIntent: (CaptureIntent) -> Unit, modif
 private fun Controls(state: CaptureState, onIntent: (CaptureIntent) -> Unit, compact: Boolean) {
     val spaceMinutes = state.spaceMinutes
     val hint = when {
-        state.underBacking && state.noHeadphones && !state.recording -> stringResource(R.string.backing_needs_headphones)
-        state.underBacking && state.preparing && !state.recording -> stringResource(R.string.backing_preparing)
-        state.micUnavailable -> stringResource(R.string.live_mic_unavailable)
-        spaceMinutes != null && !state.recording -> stringResource(R.string.capture_low_space, spaceMinutes)
+        state.underBacking && state.noHeadphones && !state.recording -> stringResource(Res.string.backing_needs_headphones)
+        state.underBacking && state.preparing && !state.recording -> stringResource(Res.string.backing_preparing)
+        state.micUnavailable -> stringResource(Res.string.live_mic_unavailable)
+        spaceMinutes != null && !state.recording -> stringResource(Res.string.capture_low_space, spaceMinutes)
         else -> null
     }
     hint?.let {
@@ -170,7 +180,7 @@ private fun Controls(state: CaptureState, onIntent: (CaptureIntent) -> Unit, com
         Column(modifier = Modifier.fillMaxWidth(if (compact) 0.9f else 1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 AppIcon(AppIcons.Backing, contentDescription = null, tint = OnPicture.copy(alpha = DIM), size = 14.dp)
-                Text(stringResource(R.string.backing_block_title), color = OnPicture.copy(alpha = DIM), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp), modifier = Modifier.weight(1f))
+                Text(stringResource(Res.string.backing_block_title), color = OnPicture.copy(alpha = DIM), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp), modifier = Modifier.weight(1f))
                 Text(
                     "${Formats.duration(played.coerceAtMost(state.backingDurationMs))} / ${Formats.duration(state.backingDurationMs)}",
                     color = OnPicture.copy(alpha = DIM),
@@ -183,7 +193,7 @@ private fun Controls(state: CaptureState, onIntent: (CaptureIntent) -> Unit, com
         }
     }
     val enabled = state.recording || state.canRecord
-    val label = stringResource(if (state.recording) R.string.capture_stop else R.string.capture_record)
+    val label = stringResource(if (state.recording) Res.string.capture_stop else Res.string.capture_record)
     Box(
         modifier = Modifier
             .size(RecordButton)
@@ -210,9 +220,9 @@ private fun Refused(onIntent: (CaptureIntent) -> Unit, onOpenSettings: () -> Uni
         verticalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterVertically),
     ) {
         AppIcon(AppIcons.Camera, contentDescription = null, tint = OnPicture, size = 40.dp)
-        Text(stringResource(R.string.capture_no_permission), color = OnPicture, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp))
-        TextButton(onClick = { onIntent(CaptureIntent.RecordClicked) }) { Text(stringResource(R.string.capture_grant)) }
-        TextButton(onClick = onOpenSettings) { Text(stringResource(R.string.capture_open_settings)) }
+        Text(stringResource(Res.string.capture_no_permission), color = OnPicture, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 22.sp))
+        TextButton(onClick = { onIntent(CaptureIntent.RecordClicked) }) { Text(stringResource(Res.string.capture_grant)) }
+        TextButton(onClick = onOpenSettings) { Text(stringResource(Res.string.capture_open_settings)) }
     }
 }
 
@@ -228,7 +238,7 @@ private fun Saving() {
     Box(Modifier.fillMaxSize().background(Scrim), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             CircularProgressIndicator(color = OnPicture)
-            Text(stringResource(R.string.capture_saving), color = OnPicture, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp))
+            Text(stringResource(Res.string.capture_saving), color = OnPicture, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp))
         }
     }
 }

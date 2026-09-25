@@ -17,10 +17,10 @@ import java.nio.ByteBuffer
  */
 object VideoMuxer {
     /** How far the picture is to be moved, in µs: its start minus the sound's, both on `CLOCK_MONOTONIC`. */
-    fun shiftUs(pictureStartNanos: Long, soundStartNanos: Long): Long = (pictureStartNanos - soundStartNanos) / NANOS_PER_US
+    fun shiftUs(pictureStartNanos: Long, soundStartNanos: Long): Long = VideoShift.shiftUs(pictureStartNanos, soundStartNanos)
 
     /** Where a picture sample at [ptsUs] lands after the shift; null — before the sound, left out. */
-    fun shiftedUs(ptsUs: Long, shiftUs: Long): Long? = (ptsUs + shiftUs).takeIf { it >= 0 }
+    fun shiftedUs(ptsUs: Long, shiftUs: Long): Long? = VideoShift.shiftedUs(ptsUs, shiftUs)
 
     /** True when the whole thing worked; [target] is whole then, and gone otherwise. */
     fun mux(picture: File, sound: File, target: File, shiftUs: Long): Boolean {
@@ -97,6 +97,5 @@ object VideoMuxer {
     }
 
     private const val TAG = "VideoMuxer"
-    private const val NANOS_PER_US = 1_000L
     private const val SAMPLE_BUFFER = 2 * 1024 * 1024
 }
