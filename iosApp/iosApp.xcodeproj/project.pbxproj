@@ -13,6 +13,7 @@
 		A10000000000000000000004 /* AppMetricaService.swift in Sources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000006 /* AppMetricaService.swift */; };
 		A10000000000000000000005 /* AppMetricaCore in Frameworks */ = {isa = PBXBuildFile; productRef = AC0000000000000000000001 /* AppMetricaCore */; };
 		A10000000000000000000006 /* AppMetricaCrashes in Frameworks */ = {isa = PBXBuildFile; productRef = AC0000000000000000000002 /* AppMetricaCrashes */; };
+		A10000000000000000000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +23,7 @@
 		A20000000000000000000004 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A20000000000000000000005 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		A20000000000000000000006 /* AppMetricaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMetricaService.swift; sourceTree = "<group>"; };
+		A20000000000000000000007 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -53,6 +55,7 @@
 				A20000000000000000000006 /* AppMetricaService.swift */,
 				A20000000000000000000004 /* Info.plist */,
 				A20000000000000000000005 /* InfoPlist.xcstrings */,
+				A20000000000000000000007 /* Assets.xcassets */,
 			);
 			path = iosApp;
 			sourceTree = "<group>";
@@ -136,6 +139,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A10000000000000000000003 /* InfoPlist.xcstrings in Resources */,
+				A10000000000000000000007 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -220,6 +224,7 @@
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = Z2VJUG45XY;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Violin Journey";
@@ -252,6 +257,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/../shared/build/xcode-frameworks/$(CONFIGURATION)/$(SDK_NAME)";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = iosApp/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Violin Journey";

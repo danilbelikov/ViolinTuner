@@ -1,5 +1,6 @@
 // Launcher icon «Гриф-дорога» (variant 1b of the handoff `docs/design/project/icon_app/project/Значок v2.dc.html`)
-// → adaptive icon layers as vector drawables, and the 512 px icon for the stores (docs/store/icon-512.png). The geometry comes from the handoff's own generator
+// → adaptive icon layers as vector drawables, the 512 px icon for the stores (docs/store/icon-512.png) and the iPhone's
+// 1024 px one (iosApp/iosApp/Assets.xcassets/AppIcon.appiconset). The geometry comes from the handoff's own generator
 // `icon-v2-gen.js` (build().b): changed there, regenerate here with `node tools/icon/export.js`.
 // Layers as the handoff says: sky and ground — background, the fingerboard and the head — foreground;
 // monochrome (themed icons, Android 13+) — the handoff's `mono`, with the scroll's groove cut out.
@@ -113,16 +114,36 @@ const kebab = s => s.replace(/\b(stopColor|stopOpacity|strokeWidth|strokeLinecap
 // The four-pointed star in the upper left corner would be half cut by the store's rounding: left out here.
 const storeFg = icon.fg.replace(/<path d="[^"]*Q[^"]*" fill="#FFF1D6"><\/path>/, '');
 if (storeFg === icon.fg) throw new Error('the star is not in the handoff any more');
-const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="18 18 72 72"><defs>${kebab(icon.defs)}</defs>${kebab(storeFg)}</svg>`;
+const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+function renderIcon(size, target) {
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="18 18 72 72"><defs>${kebab(icon.defs)}</defs>${kebab(storeFg)}</svg>`;
+  const page = target.replace(/\.png$/, '.html');
+  fs.writeFileSync(page, `<!doctype html><html><body style="margin:0;overflow:hidden">${svg}</body></html>`);
+  execFileSync(chrome, ['--headless', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1', `--window-size=${size},${size}`,
+    `--screenshot=${target}`, 'file://' + page], { stdio: 'ignore' });
+  fs.unlinkSync(page);
+}
 const store = path.join(root, 'docs/store');
 fs.mkdirSync(store, { recursive: true });
-const page = path.join(store, 'icon-512.html');
-fs.writeFileSync(page, `<!doctype html><html><body style="margin:0;overflow:hidden">${svg}</body></html>`);
-const chrome = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-execFileSync(chrome, ['--headless', '--disable-gpu', '--hide-scrollbars', '--force-device-scale-factor=1', '--window-size=512,512',
-  `--screenshot=${path.join(store, 'icon-512.png')}`, 'file://' + page], { stdio: 'ignore' });
-fs.unlinkSync(page);
+renderIcon(512, path.join(store, 'icon-512.png'));
 console.log('store icon docs/store/icon-512.png');
+
+// The iPhone's icon: the same full square at 1024 px, one size for every place — iOS rounds the corners itself.
+// The App Store takes no transparency in it: the alpha channel is dropped by sips (a JPEG round trip keeps it opaque).
+const appIcon = path.join(root, 'iosApp/iosApp/Assets.xcassets/AppIcon.appiconset');
+fs.mkdirSync(appIcon, { recursive: true });
+const iosPng = path.join(appIcon, 'AppIcon.png');
+renderIcon(1024, iosPng);
+const opaque = iosPng.replace(/\.png$/, '.jpg');
+execFileSync('sips', ['-s', 'format', 'jpeg', '-s', 'formatOptions', '100', iosPng, '--out', opaque], { stdio: 'ignore' });
+execFileSync('sips', ['-s', 'format', 'png', opaque, '--out', iosPng], { stdio: 'ignore' });
+fs.unlinkSync(opaque);
+fs.writeFileSync(path.join(appIcon, 'Contents.json'), JSON.stringify({
+  images: [{ filename: 'AppIcon.png', idiom: 'universal', platform: 'ios', size: '1024x1024' }],
+  info: { author: 'xcode', version: 1 },
+}, null, 2) + '\n');
+fs.writeFileSync(path.join(appIcon, '..', 'Contents.json'), JSON.stringify({ info: { author: 'xcode', version: 1 } }, null, 2) + '\n');
+console.log('iPhone icon iosApp/iosApp/Assets.xcassets/AppIcon.appiconset/AppIcon.png');
 
 // Google Play's feature graphic: 1024 × 500, the icon's scene widened — the sun and the road on the
 // right, the name and the tagline on the evening sky at the left; one banner per listing language.
