@@ -5,7 +5,6 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.GraphicsContext
-import androidx.compose.ui.graphics.layer.CompositingStrategy
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.platform.LocalGraphicsContext
 import androidx.compose.ui.unit.IntRect
@@ -15,9 +14,10 @@ import kotlin.math.floor
 /**
  * What stands still in a living picture, baked (docs/plan-performance.md). The biggest still steps of
  * [PreparedScene.steps] — at most [MAX_BAKED], of [MIN_LAYERS] layers or more — are drawn once into
- * pictures the GPU keeps, each as large as what it holds; a frame only lays them down. They are baked
- * again only when the view changes, and not while it keeps changing: a frame whose view differs from
- * the one before is drawn directly.
+ * layers, each as large as what it holds; a frame only lays them down. They are baked again only when
+ * the view changes, and not while it keeps changing: a frame whose view differs from the one before is
+ * drawn directly. On Android such a layer is a texture the GPU keeps; on iOS it is a recording laid down
+ * without an offscreen pass ([keptLayerStrategy]) — it saves the work of Kotlin, not of the GPU.
  */
 class SceneBaking internal constructor(private val context: GraphicsContext, val prepared: PreparedScene) {
     /** Where the picture stands in its box: the box, the grid's origin in it and the scale. */
@@ -27,7 +27,7 @@ class SceneBaking internal constructor(private val context: GraphicsContext, val
         .filter { (_, step) -> step is SceneStep.Still && step.layers.size >= MIN_LAYERS }
         .sortedByDescending { (it.value as SceneStep.Still).layers.size }
         .take(MAX_BAKED)
-        .associate { (at, _) -> at to context.createGraphicsLayer().apply { compositingStrategy = CompositingStrategy.Offscreen } }
+        .associate { (at, _) -> at to context.createGraphicsLayer().apply { compositingStrategy = keptLayerStrategy } }
     private var lastView: View? = null
     private var bakedView: View? = null
 

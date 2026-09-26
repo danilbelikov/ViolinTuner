@@ -66,6 +66,9 @@ class PreparedScene(val scene: Scene, val mode: SceneMode, val paths: List<Path>
         skyLifeAt = if (scene.aerial) skyLifeAt else -1,
         skyLife = if (scene.aerial) SceneMotion.skyLifeReach(highSky) else null,
     )
+
+    /** Whether anything in it changes with time — a living layer or the life of its sky: a picture without either is the same at every second. */
+    val lives: Boolean = steps.any { it !is SceneStep.Still }
 }
 
 private object SceneCache {
@@ -232,7 +235,7 @@ private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, 
 
 /**
  * A still picture baked, a living one drawn (docs/plan-performance.md): while the view stands, the
- * biggest still steps of the scene are pictures the GPU keeps, and a frame lays them down with the living
+ * biggest still steps of the scene are kept layers ([SceneBaking]), and a frame lays them down with the living
  * layers between them; while it moves — the first frame, a pinch, a drag — everything is drawn directly.
  * [left], [top] — where the grid's origin is in the box; the pan is none (a card, the full screen as it opens).
  */
