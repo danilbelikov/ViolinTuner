@@ -102,17 +102,26 @@ fun PieceRoute(
         if (!changingConfigurations()) viewModel.onIntent(PieceIntent.Select(SelectionIntent.Closed))
     }
 
+    // What the route opens by itself leaves the screen as surely as what the view model opens: the backing listened to
+    // stops first, so it neither plays over «Звук» nor on behind a picker (spec 3.32).
+    val leaving = remember(viewModel) { { viewModel.onIntent(PieceIntent.LeavingScreen) } }
     val addPhoto = remember(viewModel, system) {
         AddPhotoActions(
             onCamera = { viewModel.onIntent(PieceIntent.CameraClicked) },
-            onGallery = system.pickPhotos,
+            onGallery = { leaving(); system.pickPhotos() },
         )
     }
     PieceScreen(
         state = state, take = take, onIntent = viewModel::onIntent, addPhoto = addPhoto, modifier = modifier,
-        takeActions = remember(onShare, onOpenSound, viewModel) { CardActions(onShare = onShare, onSound = onOpenSound, onBest = { viewModel.onIntent(PieceIntent.BestToggled(it)) }) },
+        takeActions = remember(onShare, onOpenSound, viewModel) {
+            CardActions(
+                onShare = { leaving(); onShare(it) },
+                onSound = { leaving(); onOpenSound(it) },
+                onBest = { viewModel.onIntent(PieceIntent.BestToggled(it)) },
+            )
+        },
         videoImport = videoImport,
-        onPickVideo = system.pickVideo,
+        onPickVideo = remember(viewModel, system) { { leaving(); system.pickVideo() } },
         backing = backing,
     )
     shareHost()

@@ -126,7 +126,8 @@ fun BackingCard(backing: BackingUi, recording: Boolean, onIntent: (PieceIntent) 
                 modifier = Modifier.weight(1f),
             )
             Box {
-                IconButton(onClick = { menu = true }, enabled = !recording) {
+                // one file at a time: while a replacement is copied, «Заменить» and «Убрать» wait for it (spec 3.32)
+                IconButton(onClick = { menu = true }, enabled = !recording && !backing.importing) {
                     AppIcon(AppIcons.More, contentDescription = stringResource(Res.string.backing_menu), tint = colors.onSurfaceVariant)
                 }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
@@ -136,7 +137,11 @@ fun BackingCard(backing: BackingUi, recording: Boolean, onIntent: (PieceIntent) 
             }
         }
         if (backing.problem == BackingProblem.Missing) {
-            Text(stringResource(Res.string.backing_missing), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp), modifier = Modifier.padding(bottom = 8.dp))
+            Row(modifier = Modifier.padding(bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // a replacement on its way: the copy of the new file is under way
+                if (backing.importing) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                Text(stringResource(Res.string.backing_missing), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp), modifier = Modifier.weight(1f))
+            }
         } else {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Box(
@@ -144,12 +149,17 @@ fun BackingCard(backing: BackingUi, recording: Boolean, onIntent: (PieceIntent) 
                         .size(PlayButton)
                         .clip(CircleShape)
                         .background(colors.primaryContainer)
-                        .clickable(enabled = !recording, role = Role.Button, onClickLabel = stringResource(if (backing.previewing) Res.string.backing_preview_stop else Res.string.backing_preview)) {
+                        .clickable(enabled = !recording && !backing.importing, role = Role.Button, onClickLabel = stringResource(if (backing.previewing) Res.string.backing_preview_stop else Res.string.backing_preview)) {
                             onIntent(PieceIntent.BackingPreviewClicked)
                         },
                     contentAlignment = Alignment.Center,
                 ) {
-                    AppIcon(if (backing.previewing) AppIcons.Pause else AppIcons.Play, contentDescription = null, tint = colors.onPrimaryContainer)
+                    // «Заменить»: the new file is being copied in — the same spinner as in the empty block
+                    if (backing.importing) {
+                        CircularProgressIndicator(Modifier.size(20.dp), color = colors.onPrimaryContainer, strokeWidth = 2.dp)
+                    } else {
+                        AppIcon(if (backing.previewing) AppIcons.Pause else AppIcons.Play, contentDescription = null, tint = colors.onPrimaryContainer)
+                    }
                 }
                 Column(Modifier.weight(1f).padding(end = 8.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                     Text(backing.title.orEmpty(), color = colors.onSurface, maxLines = 2, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold, lineHeight = 20.sp))

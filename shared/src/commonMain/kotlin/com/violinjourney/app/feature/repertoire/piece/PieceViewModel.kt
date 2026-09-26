@@ -288,24 +288,33 @@ open class PieceViewModel(
     // Photos go in one at a time and in the order they were picked: that is the order of the pages.
     private val importLock = Mutex()
 
+    /**
+     * Another screen or a system one takes over: the backing listened to stops first (spec 3.32). Through the speaker it
+     * would play into the next take's microphone, over a take's own player, or on behind a camera nobody can stop it from.
+     */
+    private fun handOver(effect: PieceEffect) {
+        backingPreview?.stop()
+        effectChannel.trySend(effect)
+    }
+
     fun onIntent(intent: PieceIntent) {
         when (intent) {
-            PieceIntent.BackClicked -> effectChannel.trySend(PieceEffect.Close)
-            PieceIntent.EditClicked -> effectChannel.trySend(PieceEffect.OpenForm(pieceId, focusNotes = false, scale = state.value.scale != null))
-            PieceIntent.AddNotesClicked -> effectChannel.trySend(PieceEffect.OpenForm(pieceId, focusNotes = true, scale = state.value.scale != null))
+            PieceIntent.BackClicked -> handOver(PieceEffect.Close)
+            PieceIntent.EditClicked -> handOver(PieceEffect.OpenForm(pieceId, focusNotes = false, scale = state.value.scale != null))
+            PieceIntent.AddNotesClicked -> handOver(PieceEffect.OpenForm(pieceId, focusNotes = true, scale = state.value.scale != null))
             PieceIntent.StatusChipClicked -> ui.update { it.copy(statusMenuOpen = true) }
             PieceIntent.StatusMenuDismissed -> ui.update { it.copy(statusMenuOpen = false) }
             is PieceIntent.StatusSelected -> {
                 ui.update { it.copy(statusMenuOpen = false) }
                 viewModelScope.launch { repertoire.setStatus(pieceId, intent.status, clock.millis()) }
             }
-            is PieceIntent.PageClicked -> effectChannel.trySend(PieceEffect.OpenStand(pieceId, intent.index))
+            is PieceIntent.PageClicked -> handOver(PieceEffect.OpenStand(pieceId, intent.index))
             is PieceIntent.PhotosPicked -> import(intent.uris, temporary = emptyList())
             PieceIntent.CameraClicked -> {
                 val file = sheetFiles.newCameraFile()
                 // The camera app may push this process out of memory: the path has to outlive it.
                 savedState[KEY_CAMERA_FILE] = file.filePath
-                effectChannel.trySend(PieceEffect.LaunchCamera(file.filePath))
+                handOver(PieceEffect.LaunchCamera(file.filePath))
             }
             PieceIntent.RecordClicked -> when {
                 // picking and recording do not mix (spec 3.18): the button is dimmed, this is the belt to those braces
@@ -322,19 +331,20 @@ open class PieceViewModel(
             PieceIntent.GrantMicClicked -> effectChannel.trySend(PieceEffect.RequestMicPermission)
             is PieceIntent.MicPermissionChanged -> if (takes.requiresMicPermission) micPermission.value = intent.granted
             PieceIntent.ScreenResumed -> knownBacking?.let(::recheck)
+            PieceIntent.LeavingScreen -> backingPreview?.stop()
             is PieceIntent.TakeClicked ->
-                if (ui.value.selection.active) select(SelectionIntent.CardToggled(intent.sessionId)) else effectChannel.trySend(PieceEffect.OpenSession(intent.sessionId))
+                if (ui.value.selection.active) select(SelectionIntent.CardToggled(intent.sessionId)) else handOver(PieceEffect.OpenSession(intent.sessionId))
             is PieceIntent.Select -> select(intent.intent)
             is PieceIntent.BestToggled -> toggleBest(intent.sessionId)
             PieceIntent.VideoShootClicked -> if (videoAllowed()) {
                 val file = videos.newCameraFile()
                 // The camera app may push this process out of memory: the path has to outlive it.
                 savedState[KEY_VIDEO_FILE] = file.filePath
-                effectChannel.trySend(PieceEffect.LaunchVideoCamera(file.filePath))
+                handOver(PieceEffect.LaunchVideoCamera(file.filePath))
             }
             // under the backing, the same rule as a take: headphones only (spec 3.32); a plain video needs none
             PieceIntent.OwnCameraClicked -> backing.value?.takeIf { it.present && videoAllowed() && (!it.wanted || it.route.output.isHeadphones) }?.let {
-                effectChannel.trySend(PieceEffect.OpenCapture(pieceId))
+                handOver(PieceEffect.OpenCapture(pieceId))
             }
             is PieceIntent.VideoShotFinished -> {
                 val file = savedState.remove<String>(KEY_VIDEO_FILE)?.let(::platformFile) ?: return
@@ -345,12 +355,14 @@ open class PieceViewModel(
             PieceIntent.VideoImportContinueClicked -> importer.continueClicked()
             PieceIntent.VideoImportDismissed -> importer.dismiss()
             PieceIntent.VideoImportSendClicked -> importer.sendClicked()?.let { path ->
+                backingPreview?.stop()
                 viewModelScope.launch {
                     // The provider hands out only `cache/share/`: the shot gets a second name there, not a copy.
                     shareFiles.original(platformFile(path), RESCUE_FILE_NAME)?.let { effectChannel.send(PieceEffect.ShareVideo(it.filePath)) }
                 }
             }
-            PieceIntent.BackingAddClicked -> if (!takes.recordingRequested.value) effectChannel.trySend(PieceEffect.PickBackingFile)
+            // one file at a time: while a replacement is copied, a second one is not asked for (spec 3.32)
+            PieceIntent.BackingAddClicked -> if (!takes.recordingRequested.value && !backingEphemeral.value.importing) handOver(PieceEffect.PickBackingFile)
             is PieceIntent.BackingPicked -> intent.uri?.let(::importBacking)
             PieceIntent.BackingPreviewClicked -> previewBacking()
             PieceIntent.BackingRemoveClicked -> {
@@ -383,7 +395,6 @@ open class PieceViewModel(
                 prepare(found)
                 return
             }
-            backingPreview?.stop()
             takes.backingPlan = TakePipeline.BackingPlan(
                 backing = found,
                 ready = { rate -> pcm.cached(found, rate) },
@@ -395,6 +406,8 @@ open class PieceViewModel(
         } else {
             takes.backingPlan = null
         }
+        // a backing listened to through the speaker would be in the take, whichever it is (spec 3.32)
+        backingPreview?.stop()
         takes.recordingRequested.value = true
         listening.value = true
     }
@@ -439,6 +452,8 @@ open class PieceViewModel(
 
     private fun importBacking(uri: String) {
         val importer = backingImporter ?: return
+        // a pick that comes while another file is still copied in: one at a time
+        if (backingEphemeral.value.importing) return
         backingEphemeral.update { it.copy(importing = true, problem = null) }
         viewModelScope.launch {
             val result = withContext(io) { importer.import(uri) }

@@ -133,6 +133,12 @@ sealed interface PieceIntent {
      */
     data object ScreenResumed : PieceIntent
 
+    /**
+     * The route hands the screen over to what the view model does not open itself — «Звук», «Поделиться», the pickers of
+     * photos and videos: the backing listened to stops, as it does for every screen this one opens (spec 3.32).
+     */
+    data object LeavingScreen : PieceIntent
+
     data class TakeClicked(val sessionId: Long) : PieceIntent
 
     /** «Отметить лучшим» / «Снять отметку „лучший“» of the take's «⋯»: marks it, or clears the mark it has. */

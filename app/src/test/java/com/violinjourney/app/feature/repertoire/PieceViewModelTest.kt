@@ -157,6 +157,19 @@ class PieceViewModelTest {
         }
         override fun deleteOrphans(keptFiles: Set<String>) = pcmRates.clear()
     }
+
+    /** Listening to the backing through whatever output is on (spec 3.32). */
+    private class FakePreview : com.violinjourney.app.core.audio.backing.BackingPreview {
+        override val playing = kotlinx.coroutines.flow.MutableStateFlow(false)
+        override fun toggle(file: File) {
+            playing.value = !playing.value
+        }
+        override fun stop() {
+            playing.value = false
+        }
+    }
+
+    private val preview = FakePreview()
     private val backingFiles = object : com.violinjourney.app.core.domain.backing.BackingFiles {
         override fun newFile(extension: String): File = File("new.$extension")
         override fun existing(name: String): File? = File(name).takeIf { !name.startsWith("gone") }
@@ -186,7 +199,7 @@ class PieceViewModelTest {
             SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), sessions,
             videoFiles, importer(), NoShareFiles,
             backings = backings, backingFiles = backingFiles, backingPcm = backingPcm,
-            backingImporter = { importResult }, backingPreview = null, routes = routes,
+            backingImporter = { importResult }, backingPreview = preview, routes = routes,
             io = StandardTestDispatcher(testScheduler),
         )
         backgroundScope.launch { viewModel.backing.collect {} }
@@ -882,6 +895,85 @@ class PieceViewModelTest {
         assertFalse(block.unprepared)
         assertFalse(block.blocksRecording)
         assertEquals(listOf(48_000), pcmRates)
+    }
+
+    @Test
+    fun `the backing listened to stops when a take begins, with the chip off or from the stand, and not on a tap that starts none`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        val (viewModel, _) = screen(id)
+        advance(100)
+
+        // no headphones: the tap starts no take, and the backing listened to plays on
+        route.value = com.violinjourney.app.core.domain.backing.AudioRoute(com.violinjourney.app.core.domain.backing.BackingOutput.SPEAKER, null)
+        viewModel.onIntent(PieceIntent.BackingPreviewClicked)
+        runCurrent()
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(500)
+        assertFalse(viewModel.takeState.value.recording)
+        assertTrue(preview.playing.value)
+
+        // the chip off: the speaker would carry it into the microphone
+        viewModel.onIntent(PieceIntent.BackingChipToggled)
+        runCurrent()
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.takeState.value.recording)
+        assertFalse(preview.playing.value)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(500)
+
+        preview.playing.value = true
+        viewModel.onIntent(PieceIntent.StandRecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.takeState.value.recording)
+        assertFalse(preview.playing.value)
+    }
+
+    @Test
+    fun `the backing listened to stops when a camera, a replacement, the stand, a take or another screen opens`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        val (viewModel, effects) = screen(id)
+        advance(100)
+        val handOvers = listOf(
+            PieceIntent.OwnCameraClicked to PieceEffect.OpenCapture::class,
+            PieceIntent.VideoShootClicked to PieceEffect.LaunchVideoCamera::class,
+            PieceIntent.CameraClicked to PieceEffect.LaunchCamera::class,
+            PieceIntent.BackingAddClicked to PieceEffect.PickBackingFile::class,
+            PieceIntent.PageClicked(0) to PieceEffect.OpenStand::class,
+            PieceIntent.TakeClicked(42) to PieceEffect.OpenSession::class,
+            PieceIntent.EditClicked to PieceEffect.OpenForm::class,
+        )
+        handOvers.forEach { (intent, effect) ->
+            preview.playing.value = true
+            viewModel.onIntent(intent)
+            runCurrent()
+            assertTrue("$intent opens its screen", effect.isInstance(effects.last()))
+            assertFalse("$intent stops the backing listened to", preview.playing.value)
+        }
+        // what the route opens by itself — «Звук», «Поделиться», the pickers — it says so first
+        preview.playing.value = true
+        viewModel.onIntent(PieceIntent.LeavingScreen)
+        assertFalse(preview.playing.value)
+    }
+
+    @Test
+    fun `while a replacement is copied another one is not asked for`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        val (viewModel, effects) = screen(id)
+        advance(100)
+        importResult = com.violinjourney.app.core.audio.backing.BackingImport.Added(backings.backing(title = "New piano", fileName = "new.m4a"))
+        // the copy of the first file has begun (its import waits for the dispatcher); «Заменить» and a second pick come meanwhile
+        viewModel.onIntent(PieceIntent.BackingPicked("content://a"))
+        effects.clear()
+        viewModel.onIntent(PieceIntent.BackingAddClicked)
+        viewModel.onIntent(PieceIntent.BackingPicked("content://b"))
+        runCurrent()
+        assertTrue(effects.none { it == PieceEffect.PickBackingFile })
+        assertEquals("the old one and one import", 2, backings.backings.value.size)
+        assertEquals("New piano", viewModel.backing.value!!.title)
     }
 
     /** A take's sound at [sampleRateHz]: the microphone opened at a rate of its own (spec 5.25). */
