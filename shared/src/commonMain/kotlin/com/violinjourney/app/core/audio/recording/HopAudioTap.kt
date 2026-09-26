@@ -5,6 +5,7 @@ import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.concurrent.PlatformLock
 import com.violinjourney.app.core.concurrent.withLock
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.withContext
 
 /**
@@ -88,8 +89,10 @@ class HopAudioTap(
             taken
         }
         if (running == null) return streamResult == true
-        // finish() joins the encoder thread: keep that off the caller's dispatcher
-        val complete = withContext(finishDispatcher) { running.finish() }
+        // finish() joins the encoder thread: keep that off the caller's dispatcher. The encoder is out of the tap
+        // already, so it is closed even for a caller cancelled meanwhile — else its file would stay without an end
+        // and its thread alive, and "back to idle either way" would not hold.
+        val complete = withContext(finishDispatcher + NonCancellable) { running.finish() }
         return complete && wasHealthy
     }
 }

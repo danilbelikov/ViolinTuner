@@ -197,22 +197,8 @@ class TakePipeline(
             return null
         }
 
-        // stoppedByPlayer: the player is looking at the screen and hears about the outcome.
-        // Otherwise the recording ended because the screen went away or the microphone
-        // failed; it is saved quietly (spec 3.9).
-        suspend fun finishRecording(stoppedByPlayer: Boolean) {
-            val finished = recorder
-            recorder = null
-            watch.set(false)
-            recordingRequested.value = false
-            val plan = backingStarted
-            backingStarted = null
-            val playedMs = if (plan != null) playback?.stop() ?: 0 else 0
-            val backingStartNanos = playback?.startNanos
-            if (finished == null) {
-                closeAudio(keep = false) // stopped while still waiting for the sound to start
-                return
-            }
+        // What a stopped take comes to: a session (with its video, when the camera shot one), or nothing.
+        suspend fun settleTake(finished: SessionRecorder, stoppedByPlayer: Boolean, plan: BackingPlan?, playedMs: Long, backingStartNanos: Long?) {
             val hook = videoHook
             when (val result = finished.finish()) {
                 RecordingResult.TooShort -> {
@@ -250,6 +236,32 @@ class TakePipeline(
                     )
                     if (stoppedByPlayer) eventChannel.send(Event.Saved(id))
                 }
+            }
+        }
+
+        // stoppedByPlayer: the player is looking at the screen and hears about the outcome.
+        // Otherwise the recording ended because the screen went away or the microphone
+        // failed; it is saved quietly (spec 3.9).
+        // A stopped take is seen through to the end whatever becomes of the chain: kept, or — too short, no notes —
+        // thrown away with its file and its picture. The screen may be gone long before the sound is closed and the
+        // video made (spec 3.9, 3.32), and a take cut off halfway would be lost with its files left behind.
+        suspend fun finishRecording(stoppedByPlayer: Boolean): Unit = withContext(NonCancellable) {
+            val finished = recorder
+            recorder = null
+            recordingRequested.value = false
+            try {
+                val plan = backingStarted
+                backingStarted = null
+                val playedMs = if (plan != null) playback?.stop() ?: 0 else 0
+                val backingStartNanos = playback?.startNanos
+                if (finished == null) {
+                    closeAudio(keep = false) // stopped while still waiting for the sound to start
+                    return@withContext
+                }
+                settleTake(finished, stoppedByPlayer, plan, playedMs, backingStartNanos)
+            } finally {
+                // a copy of the data waits for the take until it is in the database, not only until it stopped (spec 3.20)
+                if (finished != null) watch.set(false)
             }
         }
 
@@ -319,6 +331,7 @@ class TakePipeline(
             }
             // Runs when the collection is cancelled (the screen left, settings changed, permission
             // revoked) and when the source fails, before the retry below: never lose a take.
+            // finishRecording cannot be cut short by itself; the last notes of the practice need the same.
             .onCompletion {
                 withContext(NonCancellable) {
                     finishRecording(stoppedByPlayer = false)
