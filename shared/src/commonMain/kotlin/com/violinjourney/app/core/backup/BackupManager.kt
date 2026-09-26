@@ -8,6 +8,8 @@ import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.io.ByteInput
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.StorageException
+import com.violinjourney.app.core.io.StorageFailure
 import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.openInput
 import com.violinjourney.app.core.io.openOutput
@@ -304,14 +306,19 @@ class BackupManager(
         }
     }
 
-    // A full card says so in the message of the exception, and nowhere else. Room that ran out [inPhone] — under the
-    // snapshot of the database or the archive for «Отправить…» — is the phone's own; a place that went away is a failure
-    // of the stream into it, and SQLite's own «disk I/O error» is about its snapshot, not about the place.
+    // The streams of iOS give the reason as a value ([StorageException], from the errno); on Android a full card says so in
+    // the message of the exception, and nowhere else. Room that ran out [inPhone] — under the snapshot of the database or
+    // the archive for «Отправить…» — is the phone's own; a place that went away is a failure of the stream into it, and
+    // SQLite's own «disk I/O error» is about its snapshot, not about the place.
     private fun failureOf(e: Exception, inPhone: Boolean): SaveFailure {
-        val message = generateSequence<Throwable>(e) { it.cause }.mapNotNull { it.message }.joinToString(" ")
+        val causes = generateSequence<Throwable>(e) { it.cause }
+        val told = causes.filterIsInstance<StorageException>().firstOrNull()?.failure
+        val message = causes.mapNotNull { it.message }.joinToString(" ")
+        val noSpace = told?.let { it == StorageFailure.NO_SPACE } ?: NO_SPACE_WORDS.any { message.contains(it, ignoreCase = true) }
+        val gone = told?.let { it == StorageFailure.GONE } ?: (e is IOException && GONE_WORDS.any { message.contains(it, ignoreCase = true) })
         return when {
-            NO_SPACE_WORDS.any { message.contains(it, ignoreCase = true) } -> if (inPhone) SaveFailure.PHONE_FULL else SaveFailure.NO_SPACE
-            !inPhone && e is IOException && GONE_WORDS.any { message.contains(it, ignoreCase = true) } -> SaveFailure.UNAVAILABLE
+            noSpace -> if (inPhone) SaveFailure.PHONE_FULL else SaveFailure.NO_SPACE
+            !inPhone && gone -> SaveFailure.UNAVAILABLE
             else -> SaveFailure.FAILED
         }
     }
@@ -514,6 +521,8 @@ class BackupManager(
          * Android (seen on the emulator): the errno is only in SQLite's log, not in the exception.
          */
         val NO_SPACE_WORDS = listOf("ENOSPC", "No space left", "disk is full", "SQLITE_IOERR_SHMSIZE")
+
+        /** The words of libcore, as Android's streams write an errno; iOS says it by [StorageException] instead. */
         val GONE_WORDS = listOf("ENOENT", "EIO", "ENODEV", "EPIPE", "No such file", "I/O error")
     }
 }

@@ -2,6 +2,8 @@ package com.violinjourney.app.core.backup
 
 import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.FakeAnalytics
+import com.violinjourney.app.core.io.StorageException
+import com.violinjourney.app.core.io.StorageFailure
 import com.violinjourney.app.core.time.FixedWallClock
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.ZonedSystemWallClock
@@ -105,6 +107,26 @@ class BackupManagerTest {
             assertEquals(reason, (manager.job.value as BackupJob.SaveFailed).reason)
             assertEquals(listOf(uri), documents.deleted.filter { it == uri })
             assertNull(prefs.lastBackupAtEpochMs.value)
+        }
+    }
+
+    @Test
+    fun `a place that goes away on iOS is told by its reason and not by its words`() = runTest {
+        // what the streams of iOS throw: Darwin's words for an errno, which are not libcore's — the reason is a value
+        val cases = listOf(
+            StorageException(StorageFailure.GONE, "write failed: Input/output error") to SaveFailure.UNAVAILABLE,
+            StorageException(StorageFailure.GONE, "write failed: Device not configured") to SaveFailure.UNAVAILABLE,
+            StorageException(StorageFailure.NO_SPACE, "write failed: Disc quota exceeded") to SaveFailure.NO_SPACE,
+            StorageException(StorageFailure.OTHER, "write failed: Permission denied") to SaveFailure.FAILED,
+        )
+        cases.forEachIndexed { index, (failure, reason) ->
+            val manager = manager()
+            documents.failWith = failure
+            val uri = "file:///private/var/mobile/usb/$index"
+            manager.saveTo(uri, all, "копия.zip")
+            advanceUntilIdle()
+            assertEquals(failure.message, reason, (manager.job.value as BackupJob.SaveFailed).reason)
+            assertEquals(listOf(uri), documents.deleted.filter { it == uri })
         }
     }
 
