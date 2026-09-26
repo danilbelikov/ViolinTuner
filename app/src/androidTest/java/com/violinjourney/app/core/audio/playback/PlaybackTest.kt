@@ -277,8 +277,37 @@ class PlaybackTest {
         }
     }
 
+    /**
+     * Leaving «Звук» or the record screen while «Готовим минусовку…» (spec 5.25): the unpack cannot stop mid-file, so the
+     * main thread does not wait up to a second for it, and when it ends nothing of that file shows in the player's state.
+     */
+    @Test
+    fun aPlayerLetGoWhileItsBackingIsMadeNeitherWaitsForItNorShowsIt() {
+        val take = encode("let-go.m4a", seconds = 2)
+        val unpacked = java.util.concurrent.CountDownLatch(1)
+        val player = ChainSessionPlayer(SoundConfig())
+        player.loadWithBacking(take, PlayerBacking(pcm = { unpacked.await(); null }, offsetMs = 0, gainDb = 0f))
+        await("the backing being made") { player.state.value.preparingBacking }
+        val started = System.nanoTime()
+        player.release()
+        val tookMs = (System.nanoTime() - started) / 1_000_000
+        assertTrue("release waited $tookMs ms for the unpack", tookMs < RELEASE_AT_ONCE_MS)
+        unpacked.countDown()
+        Thread.sleep(LET_GO_MS)
+        val state = player.state.value
+        assertFalse("$state", state.ready)
+        assertFalse("$state", state.preparingBacking)
+        assertFalse("$state", state.failed)
+    }
+
     private fun <T : Any> assertNotNullAnd(value: T?): T {
         assertNotNull(value)
         return value!!
+    }
+
+    private companion object {
+        /** Well under the second the main thread used to wait. */
+        const val RELEASE_AT_ONCE_MS = 200L
+        const val LET_GO_MS = 300L
     }
 }

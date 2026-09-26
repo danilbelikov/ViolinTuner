@@ -109,9 +109,13 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
 
     override fun release() {
         worker?.let { running ->
+            // written before [Worker.unpacking] is read, as the worker writes that before it reads this: one of the two sees the other
             running.released = true
             synchronized(lock) { lock.notifyAll() }
-            running.join(JOIN_TIMEOUT_MS)
+            // A worker unpacking the backing holds no output and cannot stop mid-file (what it makes is kept for the next
+            // time, spec 5.25): it goes by itself when done, and the main thread does not wait up to a second for it.
+            // Any other one is out within a chunk.
+            if (!running.unpacking) running.join(JOIN_TIMEOUT_MS)
         }
         worker = null
         synchronized(lock) {
@@ -128,25 +132,28 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
     }
 
     private inner class Worker(private val file: File, private val backing: PlayerBacking?) : Thread("session-player") {
+        // Every write of the state checks this inside its update: release() sets it before it writes a fresh state, so a
+        // worker let go never lands its «ready», «failed» or position in the state of the player's next file.
         @Volatile var released = false
+
+        /** Inside the backing's unpack, which does not stop mid-file: [release] does not wait for it. */
+        @Volatile var unpacking = false
 
         override fun run() {
             val decoder = PcmDecoder.open(file)
             if (decoder == null) {
-                if (!released) mutableState.update { PlayerState(failed = true, processed = it.processed, original = it.original) }
+                fail()
                 return
             }
             var track: AudioTrack? = null
             // the backing's sound at this recording's rate, prepared here, off the main thread; gone — the violin alone
-            val pcm = backing?.let { given ->
-                runCatching {
-                    given.cached(decoder.sampleRate) ?: run {
-                        if (!released) mutableState.update { it.copy(preparingBacking = true) }
-                        given.pcm(decoder.sampleRate)
-                    }
-                }.getOrNull()
+            val pcm = backing?.let { unpack(it, decoder.sampleRate) }
+            if (released) {
+                // let go while the backing was unpacked: what was made stays for the next time (spec 5.25), nothing of it shows here
+                decoder.release()
+                return
             }
-            val reader = pcm?.let { runCatching { BackingPcmReader(it) }.getOrNull() }
+            val reader = pcm?.let(::readerOf)
             try {
                 track = newTrack(decoder.sampleRate, stereo = reader != null)
                 play(decoder, track, reader)
@@ -171,7 +178,39 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
         }
 
         private fun fail() {
-            if (!released) mutableState.update { PlayerState(failed = true, processed = it.processed, original = it.original) }
+            mutableState.update { if (released) it else PlayerState(failed = true, processed = it.processed, original = it.original) }
+        }
+
+        /**
+         * The backing's sound at [rate]: made already, or made here — [unpacking] meanwhile. Null — the violin alone: it
+         * could not be made (spec 5.25), or the player was let go first.
+         */
+        private fun unpack(given: PlayerBacking, rate: Int): File? {
+            // written before [released] is read, as release() writes that before it reads this: one of the two sees the other
+            unpacking = true
+            try {
+                if (released) return null
+                given.cached(rate)?.let { return it }
+                mutableState.update { if (released) it else it.copy(preparingBacking = true) }
+                return given.pcm(rate)
+            } catch (e: IOException) {
+                Log.w(TAG, "the backing of ${file.name} could not be made", e)
+            } catch (e: IllegalArgumentException) {
+                Log.w(TAG, "the backing of ${file.name} could not be made", e)
+            } catch (e: IllegalStateException) {
+                Log.w(TAG, "the backing of ${file.name} could not be made", e)
+            } finally {
+                unpacking = false
+            }
+            return null
+        }
+
+        /** Null — the violin alone: the made sound went away before it could be opened. */
+        private fun readerOf(pcm: File): BackingPcmReader? = try {
+            BackingPcmReader(pcm)
+        } catch (e: IOException) {
+            Log.w(TAG, "the backing of ${file.name} could not be opened", e)
+            null
         }
 
         private fun play(decoder: PcmDecoder, track: AudioTrack, reader: BackingPcmReader?) {
@@ -202,7 +241,9 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
             var running = false
             var sinceMeters = 0
 
-            mutableState.update { it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = backingMix != null, preparingBacking = false) }
+            mutableState.update {
+                if (released) it else it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = backingMix != null, preparingBacking = false)
+            }
 
             while (!released) {
                 // — wishes —
@@ -285,7 +326,9 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
                     wet
                 }
                 val written = if (backingMix != null) {
-                    backingMix.mix(out, count, violinPosition, stereo)
+                    // the A/B line hands the violin over chain.latencySamples late, processed or not: the backing is read as far
+                    // behind — as the render does by dropping those samples (spec 3.17: what is heard is what is sent)
+                    backingMix.mix(out, count, violinPosition - chain.latencySamples, stereo)
                     write(track, stereo, count * 2)
                 } else {
                     write(track, out, count)
@@ -294,7 +337,7 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
                 if (!written) continue // a wish came in mid-chunk: it goes first
 
                 val positionMs = (baseMs + (head(track) - headBase) * MS_PER_SECOND / rate).coerceIn(0, durationMs)
-                mutableState.update { if (it.playing) it.copy(positionMs = positionMs) else it }
+                mutableState.update { if (it.playing && !released) it.copy(positionMs = positionMs) else it }
                 sinceMeters += count
                 if (sinceMeters >= rate / METERS_PER_SECOND) {
                     sinceMeters = 0
@@ -317,7 +360,7 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
                     tailLeft = NO_TAIL
                     synchronized(lock) { wantPlaying = false }
                     mutableMeters.value = null
-                    mutableState.update { it.copy(playing = false, positionMs = 0) }
+                    mutableState.update { if (released) it else it.copy(playing = false, positionMs = 0) }
                 }
             }
         }

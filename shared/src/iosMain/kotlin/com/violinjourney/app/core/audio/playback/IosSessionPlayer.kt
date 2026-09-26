@@ -36,6 +36,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import platform.AVFAudio.AVAudioEngine
@@ -183,19 +184,28 @@ class IosSessionPlayer internal constructor(
     }
 
     private suspend fun run(file: PlatformFile, backing: PlayerBacking?) {
+        // Every write of the state checks the worker inside its update: release() cancels it before it writes a fresh
+        // state, so a worker let go never lands its «ready», «failed» or position in the state of the player's next file.
+        val job = currentCoroutineContext().job
         val source = openSound(file)
         val rate = source?.rate ?: 0
         if (source == null || rate <= 0 || source.length <= 0) {
             source?.close()
-            mutableState.update { PlayerState(failed = true, processed = it.processed, original = it.original) }
+            mutableState.update { if (!job.isActive) it else PlayerState(failed = true, processed = it.processed, original = it.original) }
             return
         }
         // the backing's sound at this recording's rate, prepared here, off the main thread; gone — the violin alone
         val pcm = backing?.let { given ->
             given.cached(rate) ?: run {
-                mutableState.update { it.copy(preparingBacking = true) }
+                mutableState.update { if (!job.isActive) it else it.copy(preparingBacking = true) }
                 given.pcm(rate)
             }
+        }
+        if (!job.isActive) {
+            // let go while the backing was made — a blocking call the cancel cannot stop: what was made stays for the next
+            // time (spec 5.25), nothing of it shows here
+            source.close()
+            return
         }
         val reader = pcm?.let { runCatching { IosBackingPcmReader(it) }.getOrNull() }
         val engine = newEngine()
@@ -203,15 +213,14 @@ class IosSessionPlayer internal constructor(
         val format = AVAudioFormat(standardFormatWithSampleRate = rate.toDouble(), channels = if (reader != null) 2u else 1u)
         engine.attachNode(node)
         engine.connect(node, engine.mainMixerNode, format)
-        val job = currentCoroutineContext()[Job]
         val center = NSNotificationCenter.defaultCenter
         // posted on a thread of the system's: what is done there only leaves a wish; a player let go hears nothing more
         val stopped = center.addObserverForName(AVAudioEngineConfigurationChangeNotification, engine, null) { _ ->
-            if (job?.isActive != false && !engine.running) outputStopped()
+            if (job.isActive && !engine.running) outputStopped()
         }
         var playback: Playback? = null
         try {
-            playback = Playback(source, rate, engine, node, format, reader)
+            playback = Playback(source, rate, engine, node, format, reader, job)
             playback.loop()
         } finally {
             center.removeObserver(stopped)
@@ -250,6 +259,8 @@ class IosSessionPlayer internal constructor(
         private val node: AVAudioPlayerNode,
         private val format: AVAudioFormat,
         reader: IosBackingPcmReader?,
+        /** The worker: once it is let go, nothing of this file is written into the state. */
+        private val job: Job,
     ) {
         private val backingMix = reader?.let {
             val (offset, gain, heard) = lock.withLock { backingChanged = false; Triple(backingOffsetMs, backingGainDb, backingHeard) }
@@ -284,7 +295,7 @@ class IosSessionPlayer internal constructor(
             var processing = !SoundRules.isNeutral(current)
             mixer.jumpTo(if (processing && !lock.withLock { original }) 1f else 0f)
             mutableState.update {
-                it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = backingMix != null, preparingBacking = false)
+                if (!job.isActive) it else it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = backingMix != null, preparingBacking = false)
             }
 
             while (kotlin.coroutines.coroutineContext.isActive) {
@@ -311,7 +322,7 @@ class IosSessionPlayer internal constructor(
                     val heard = heardMs()
                     restartAt(heard)
                     mutableMeters.value = null
-                    mutableState.update { it.copy(positionMs = heard) }
+                    mutableState.update { if (!job.isActive) it else it.copy(positionMs = heard) }
                 }
                 if (seek != NO_SEEK) restartAt(seek)
                 if (!playing) {
@@ -331,7 +342,7 @@ class IosSessionPlayer internal constructor(
                 if (!running) {
                     if (!startOutput()) {
                         lock.withLock { wantPlaying = false }
-                        mutableState.update { PlayerState(failed = true, processed = it.processed, original = it.original) }
+                        mutableState.update { if (!job.isActive) it else PlayerState(failed = true, processed = it.processed, original = it.original) }
                         return
                     }
                     node.play()
@@ -352,7 +363,7 @@ class IosSessionPlayer internal constructor(
                     restartAt(0)
                     lock.withLock { wantPlaying = false }
                     mutableMeters.value = null
-                    mutableState.update { it.copy(playing = false, positionMs = 0) }
+                    mutableState.update { if (!job.isActive) it else it.copy(playing = false, positionMs = 0) }
                     continue
                 }
 
@@ -376,7 +387,9 @@ class IosSessionPlayer internal constructor(
                 }
                 if (count > 0) {
                     if (backingMix != null) {
-                        backingMix.mix(out, count, violinPosition, stereo)
+                        // the A/B line hands the violin over chain.latencySamples late, processed or not: the backing is read as far
+                        // behind — as the render does by dropping those samples (spec 3.17: what is heard is what is sent)
+                        backingMix.mix(out, count, violinPosition - chain.latencySamples, stereo)
                         scheduleStereo(stereo, count)
                     } else {
                         schedule(out, count)
@@ -448,7 +461,7 @@ class IosSessionPlayer internal constructor(
 
         private fun tellPosition() {
             val positionMs = heardMs()
-            mutableState.update { if (it.playing) it.copy(positionMs = positionMs) else it }
+            mutableState.update { if (it.playing && job.isActive) it.copy(positionMs = positionMs) else it }
         }
 
         /**
