@@ -134,7 +134,8 @@ private fun TopRow(state: CaptureState, onIntent: (CaptureIntent) -> Unit, modif
             .padding(horizontal = 4.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = { onIntent(CaptureIntent.CloseClicked) }) {
+        // asleep under «Собираем видео…»: the screen closes by itself once the take is saved (spec 3.32)
+        IconButton(onClick = { onIntent(CaptureIntent.CloseClicked) }, enabled = !state.saving) {
             AppIcon(AppIcons.Close, contentDescription = stringResource(Res.string.capture_close), tint = OnPicture)
         }
         Text(
@@ -233,9 +234,16 @@ private fun Centered(text: String) {
     }
 }
 
+/** Over everything, and it takes every touch: nothing under it answers while the take is being made. */
 @Composable
 private fun Saving() {
-    Box(Modifier.fillMaxSize().background(Scrim), contentAlignment = Alignment.Center) {
+    Box(
+        Modifier
+            .fillMaxSize()
+            .background(Scrim)
+            .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent().changes.forEach { it.consume() } } },
+        contentAlignment = Alignment.Center,
+    ) {
         Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(12.dp)) {
             CircularProgressIndicator(color = OnPicture)
             Text(stringResource(Res.string.capture_saving), color = OnPicture, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp))

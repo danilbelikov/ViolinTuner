@@ -77,6 +77,17 @@ open class CaptureViewModel(
     private var picture: PlatformFile? = null
     private var soundStartNanos: Long? = null
 
+    /** «Закрыть» was tapped during the take: the screen goes as soon as the take is done with, whatever it came to. */
+    private var closeWhenDone = false
+    private var closed = false
+
+    /** Once: the take saved, «закрыть» and the end of a take closed by it may all come to it, and a second pop would leave the piece too. */
+    private fun close() {
+        if (closed) return
+        closed = true
+        effectChannel.trySend(CaptureEffect.Close)
+    }
+
     private val hook = object : TakePipeline.VideoHook {
         override fun onRecordingStarted(recordStartNanos: Long?) {
             // the chain's thread: the camera is the main thread's
@@ -145,7 +156,7 @@ open class CaptureViewModel(
             takes.events.collect { event ->
                 when (event) {
                     // saved: back to the piece, where the take tops the list (spec 3.19)
-                    is TakePipeline.Event.Saved -> effectChannel.send(CaptureEffect.Close)
+                    is TakePipeline.Event.Saved -> close()
                     TakePipeline.Event.NoNotes -> effectChannel.send(CaptureEffect.ShowNoNotes)
                 }
             }
@@ -161,7 +172,11 @@ open class CaptureViewModel(
         } else {
             // what the chain shows here is only whether the microphone can be had: blind, like any take (spec 3.15)
             takes.run(config = intonation, pieceId = pieceId, targetMode = { TargetMode.Chromatic }, unavailable = true) { _, _ -> false }.map { output ->
-                if (!takes.recordingRequested.value && output.recording == null) listening.value = false
+                if (!takes.recordingRequested.value && output.recording == null) {
+                    // the take is over — kept, dropped or ended by the microphone: what the chain does with it is done
+                    listening.value = false
+                    if (closeWhenDone) close()
+                }
                 mutableState.update {
                     it.copy(
                         recording = output.recording != null || takes.recordingRequested.value,
@@ -181,14 +196,25 @@ open class CaptureViewModel(
             is CaptureIntent.PermissionsChanged -> mutableState.update { it.copy(cameraPermission = intent.camera, micPermission = intent.mic) }
             CaptureIntent.RecordClicked -> when {
                 takes.recordingRequested.value -> takes.recordingRequested.value = false
+                // stopped, and still being finished: nothing starts over it, a second tap on «стоп» included
+                state.value.recording -> Unit
                 state.value.cameraPermission != true || state.value.micPermission != true -> effectChannel.trySend(CaptureEffect.RequestPermissions)
                 state.value.canRecord -> viewModelScope.launch { start() }
             }
             CaptureIntent.SwitchCameraClicked -> if (!state.value.recording) mutableState.update { it.copy(front = !it.front, cameraFailed = false) }
             is CaptureIntent.FocusAt -> camera.focus(intent.x, intent.y)
-            CaptureIntent.CloseClicked -> {
-                takes.recordingRequested.value = false
-                effectChannel.trySend(CaptureEffect.Close)
+            CaptureIntent.CloseClicked -> when {
+                // «Собираем видео…»: the button sleeps; a take stopped by the player closes the screen by itself once saved
+                state.value.saving -> Unit
+                // like «назад» (spec 3.32): the shot stops and is kept, and the screen goes when the take is done
+                state.value.recording -> {
+                    closeWhenDone = true
+                    takes.recordingRequested.value = false
+                }
+                else -> {
+                    takes.recordingRequested.value = false
+                    close()
+                }
             }
             CaptureIntent.CameraBindFailed -> mutableState.update { it.copy(cameraFailed = true) }
         }
@@ -224,8 +250,10 @@ open class CaptureViewModel(
         listening.value = true
     }
 
+    // The hook stays: a take the chain is still finishing when the screen goes calls it after this, and it must still
+    // make the video, or throw the picture away — never leave it behind (spec 3.32). The camera stops here, and a
+    // stop the take asks for after it waits for the same end of the picture.
     override fun onCleared() {
-        takes.videoHook = null
         camera.release()
     }
 

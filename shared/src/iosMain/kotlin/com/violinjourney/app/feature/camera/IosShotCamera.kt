@@ -95,6 +95,9 @@ class IosShotCamera : ShotCamera {
     private var file: PlatformFile? = null
     private var startEventNanos: Long? = null
 
+    /** When the output was told to stop — by [stopRecording], or by [release] before it. */
+    private var stoppedAtNanos: Long? = null
+
     override var startNanos: Long? = null
         private set
 
@@ -137,8 +140,14 @@ class IosShotCamera : ShotCamera {
     }
 
     override fun release() {
-        if (output.recording) output.stopRecording()
+        stopOutput()
         dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED.toLong(), 0u)) { session.stopRunning() }
+    }
+
+    private fun stopOutput() {
+        if (!output.recording || stoppedAtNanos != null) return
+        stoppedAtNanos = HostClock.nowNanos()
+        output.stopRecording()
     }
 
     override fun focus(x: Float, y: Float) {
@@ -152,6 +161,7 @@ class IosShotCamera : ShotCamera {
     override fun startRecording(file: PlatformFile) {
         startNanos = null
         startEventNanos = null
+        stoppedAtNanos = null
         this.file = file
         finished = CompletableDeferred()
         (output.connectionWithMediaType(AVMediaTypeVideo) as? AVCaptureConnection)?.let { connection ->
@@ -163,9 +173,10 @@ class IosShotCamera : ShotCamera {
 
     override suspend fun stopRecording(): Boolean {
         val done = finished ?: return false
-        if (!output.recording) return false
-        val stoppedAt = HostClock.nowNanos()
-        output.stopRecording()
+        stopOutput()
+        // stopped by neither: the output never recorded
+        val stoppedAt = stoppedAtNanos ?: return false
+        // the delegate hears of a recording that release() stopped too: the take still being finished gets its file
         val usable = done.await()
         val seconds = file?.let { CMTimeGetSeconds(AVURLAsset(uRL = NSURL.fileURLWithPath(it.path), options = null).duration) } ?: 0.0
         val counted = (stoppedAt - (seconds * NANOS_PER_SECOND).toLong()).takeIf { seconds > 0 }

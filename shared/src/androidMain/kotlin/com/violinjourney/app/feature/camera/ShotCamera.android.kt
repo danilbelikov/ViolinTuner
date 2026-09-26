@@ -47,6 +47,9 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
     private var recording: Recording? = null
     private var finalized: CompletableDeferred<Boolean>? = null
 
+    /** When the recording was told to stop — by [stopRecording], or by [release] before it. */
+    private var stoppedAtNanos: Long? = null
+
     override var startNanos: Long? = null
         private set
 
@@ -78,9 +81,15 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
     }
 
     override fun release() {
-        recording?.close()
-        recording = null
+        stopRunning()
         unbind()
+    }
+
+    private fun stopRunning() {
+        val running = recording ?: return
+        recording = null
+        stoppedAtNanos = System.nanoTime()
+        running.stop()
     }
 
     override fun focus(x: Float, y: Float) {
@@ -97,6 +106,7 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
     override fun startRecording(file: File) {
         startNanos = null
         startEventNanos = null
+        stoppedAtNanos = null
         recordedNanos = 0
         val done = CompletableDeferred<Boolean>()
         finalized = done
@@ -124,11 +134,12 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
      * emulator 1.4 s before — so the picture set by it began too early and ran ahead of the sound.
      */
     override suspend fun stopRecording(): Boolean {
-        val running = recording ?: return false
-        recording = null
-        val stoppedAt = System.nanoTime()
-        running.stop()
-        val usable = finalized?.await() ?: false
+        val done = finalized ?: return false
+        stopRunning()
+        // stopped by neither: nothing was ever recorded
+        val stoppedAt = stoppedAtNanos ?: return false
+        // Finalize comes for a recording that release() stopped too: the take still being finished gets its file
+        val usable = done.await()
         // no length told (the recording broke off): the event is all there is
         val counted = (stoppedAt - recordedNanos).takeIf { recordedNanos > 0 }
         startNanos = listOfNotNull(startEventNanos, counted).maxOrNull()
