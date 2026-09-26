@@ -3,6 +3,7 @@ package com.violinjourney.app.core.backup
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.child
 import com.violinjourney.app.core.io.exists
+import com.violinjourney.app.core.io.listNames
 import com.violinjourney.app.core.io.openInput
 import com.violinjourney.app.core.io.openOutput
 import kotlin.test.AfterTest
@@ -84,6 +85,32 @@ class IosBackupDocumentsTest {
         val uri = NSURL.fileURLWithPath(earlier.path).absoluteString!!
         assertNull(documents.openOutput(uri))
         assertTrue(morning.contentEquals(bytesOf(earlier)))
+    }
+
+    @Test
+    fun `a copy picked where it lies is read in place`() {
+        val picked = folder.child("Интонация · копия.zip")
+        val bytes = ByteArray(70_000) { (it % 251).toByte() }
+        write(picked, bytes)
+        val uri = assertNotNull(IosPickedPlaces.copy(NSURL.fileURLWithPath(picked.path)))
+        val read = ArrayList<Byte>()
+        val buffer = ByteArray(8_192)
+        assertNotNull(documents.openInput(uri)).use { input ->
+            while (true) {
+                val got = input.read(buffer, 0, buffer.size)
+                if (got < 0) break
+                for (i in 0 until got) read += buffer[i]
+            }
+        }
+        assertTrue(bytes.contentEquals(read.toByteArray()))
+        assertEquals("Интонация · копия.zip", documents.nameOf(uri))
+        assertEquals(bytes.size.toLong(), documents.sizeOf(uri))
+        assertEquals(listOf("Интонация · копия.zip"), folder.listNames(), "no second copy of it anywhere in the folder")
+    }
+
+    @Test
+    fun `a copy that is not there is no stream`() {
+        assertNull(documents.openInput(NSURL.fileURLWithPath(folder.child("gone.zip").path).absoluteString!!))
     }
 
     @Test

@@ -18,7 +18,8 @@ import platform.darwin.NSObject
 
 /**
  * A copy on iOS: its place is a folder picked in Files — the app writes the archive into it, with the access the pick
- * gave — and the copy to bring back is picked in Files and copied in by the system. The app starts anew in place.
+ * gave — and the copy to bring back is picked in Files and read where it lies (spec 3.20), with no copy of it made by
+ * the system first. The app starts anew in place.
  */
 @Composable
 actual fun rememberBackupSystem(onPlacePicked: (uri: String?) -> Unit, onCopyPicked: (uri: String?) -> Unit): BackupSystem {
@@ -28,7 +29,7 @@ actual fun rememberBackupSystem(onPlacePicked: (uri: String?) -> Unit, onCopyPic
     return remember(restart) {
         var fileName = ""
         val folder = PickerDelegate { url -> placePicked(url?.let { IosPickedPlaces.place(it, fileName) }) }
-        val copy = PickerDelegate { url -> copyPicked(url?.absoluteString) }
+        val copy = PickerDelegate { url -> copyPicked(url?.let(IosPickedPlaces::copy)) }
         BackupSystem(
             pickPlace = { name ->
                 fileName = name
@@ -36,7 +37,8 @@ actual fun rememberBackupSystem(onPlacePicked: (uri: String?) -> Unit, onCopyPic
             },
             pickCopy = {
                 val types = listOfNotNull(UTTypeZIP, UTTypeData)
-                SystemScreens.present(UIDocumentPickerViewController(forOpeningContentTypes = types, asCopy = true).apply { delegate = copy })
+                // opened in place: a copy made first would need the room of the whole archive twice, and stay in tmp
+                SystemScreens.present(UIDocumentPickerViewController(forOpeningContentTypes = types, asCopy = false).apply { delegate = copy })
             },
             shareFile = SystemScreens::share,
             restart = restart,
