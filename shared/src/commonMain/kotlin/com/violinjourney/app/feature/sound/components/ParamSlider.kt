@@ -40,6 +40,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -52,6 +53,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -82,6 +84,20 @@ private const val BUBBLE_LINGER_MS = 300L
 private const val REPEAT_AFTER_MS = 400L
 private const val REPEAT_EVERY_MS = 125L // eight steps a second
 private const val TABULAR_FIGURES = "tnum"
+
+/**
+ * Where a fraction stands along a slider [width] pixels wide whose thumb keeps [inset] pixels from either end — the
+ * touch, the drawing, the bubble and the words under the track all ask here, so they stand where the thumb does. Pure.
+ */
+internal object SliderGeometry {
+    fun thumbCentre(fraction: Float, width: Float, inset: Float): Float = inset + (width - inset * 2) * fraction
+
+    fun fractionAt(x: Float, width: Float, inset: Float): Float = ((x - inset) / (width - inset * 2)).coerceIn(0f, 1f)
+
+    /** The left edge of a word [labelWidth] wide centred under the thumb at [fraction], kept within the track. */
+    fun markLeft(fraction: Float, labelWidth: Int, width: Int, inset: Float): Int =
+        (thumbCentre(fraction, width.toFloat(), inset) - labelWidth / 2f).roundToInt().coerceIn(0, (width - labelWidth).coerceAtLeast(0))
+}
 
 /** What a slider shows and where it stands; all fractions are 0…1 along the track. */
 data class SliderModel(
@@ -140,6 +156,7 @@ fun ParamSlider(
                 text = model.hint.orEmpty(),
                 color = colors.onSurfaceVariant,
                 maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 modifier = Modifier.weight(1f),
             )
@@ -181,7 +198,7 @@ fun ParamSlider(
                         awaitEachGesture {
                             val down = awaitFirstDown()
                             val inset = Thumb.toPx() / 2
-                            fun fractionAt(x: Float) = ((x - inset) / (size.width - inset * 2)).coerceIn(0f, 1f)
+                            fun fractionAt(x: Float) = SliderGeometry.fractionAt(x, size.width.toFloat(), inset)
                             bubbleJob?.cancel()
                             bubble = true
                             var moved = 0f
@@ -227,7 +244,7 @@ fun ParamSlider(
                     val centreY = size.height / 2
                     val height = TrackHeight.toPx()
                     drawRoundRect(track, Offset(inset, centreY - height / 2), Size(width, height), CornerRadius(height / 2))
-                    val at = inset + width * shown.value
+                    val at = SliderGeometry.thumbCentre(shown.value, size.width, inset)
                     val from = if (model.bipolar) inset + width / 2 else inset
                     drawRoundRect(fill, Offset(minOf(from, at), centreY - height / 2), Size(abs(at - from), height), CornerRadius(height / 2))
                     val defaultX = inset + width * model.defaultFraction
@@ -236,7 +253,7 @@ fun ParamSlider(
                 }
                 if (bubble && enabled) {
                     val density = LocalDensity.current
-                    val x = with(density) { (Thumb.toPx() / 2 + (trackWidth - Thumb.toPx()) * shown.value).roundToInt() }
+                    val x = with(density) { SliderGeometry.thumbCentre(shown.value, trackWidth.toFloat(), Thumb.toPx() / 2).roundToInt() }
                     Box(
                         modifier = Modifier
                             .offset { IntOffset(x - with(density) { 36.dp.roundToPx() }, -with(density) { BubbleLift.roundToPx() }) }
@@ -253,23 +270,24 @@ fun ParamSlider(
             StepButton(up = true, label = stringResource(Res.string.sound_slider_plus, model.label), enabled = enabled) { currentOnStep(true) }
         }
         if (model.marks.isNotEmpty()) {
-            Box(
-                Modifier
+            // as wide as the track, each word centred under the place of the thumb at its fraction (spec 5.11)
+            Layout(
+                content = {
+                    model.marks.forEach { (_, word) ->
+                        Text(text = word, color = colors.onSurfaceVariant, maxLines = 1, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
+                    }
+                },
+                modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = StepButton + 8.dp)
                     .height(16.dp)
                     .clearAndSetSemantics { },
-            ) {
-                var width by remember { mutableIntStateOf(0) }
-                Box(Modifier.fillMaxSize().onSizeChanged { width = it.width }) {
-                    model.marks.forEach { (fraction, word) ->
-                        val density = LocalDensity.current
-                        Text(
-                            text = word,
-                            color = colors.onSurfaceVariant,
-                            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                            modifier = Modifier.offset { IntOffset((width * fraction).roundToInt() - with(density) { 20.dp.roundToPx() }, 0) },
-                        )
+            ) { measurables, constraints ->
+                val words = measurables.map { it.measure(constraints.copy(minWidth = 0, minHeight = 0)) }
+                val inset = Thumb.toPx() / 2
+                layout(constraints.maxWidth, constraints.maxHeight) {
+                    words.forEachIndexed { index, word ->
+                        word.place(SliderGeometry.markLeft(model.marks[index].first, word.width, constraints.maxWidth, inset), 0)
                     }
                 }
             }
