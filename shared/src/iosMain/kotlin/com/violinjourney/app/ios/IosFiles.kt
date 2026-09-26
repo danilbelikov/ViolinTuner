@@ -5,6 +5,7 @@ import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.data.repertoire.SheetFiles
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.pathOfFileUri
 import com.violinjourney.app.core.time.WallClock
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.useContents
@@ -160,7 +161,8 @@ internal class IosAvatarFiles(private val io: CoroutineDispatcher, private val c
     private val directory by lazy { IosFolders.folder(DIRECTORY) }
 
     override suspend fun import(sourceUri: String): String? = withContext(io) {
-        val image = UIImage.imageWithContentsOfFile(sourceUri.removePrefix(FILE_SCHEME)) ?: return@withContext null
+        val path = pathOfFileUri(sourceUri) ?: return@withContext null
+        val image = UIImage.imageWithContentsOfFile(path) ?: return@withContext null
         val (w, h) = IosPictures.pixels(image)
         val side = minOf(w, h)
         val scale = minOf(1.0, AVATAR_SIZE_PX / side)
@@ -184,7 +186,6 @@ internal class IosAvatarFiles(private val io: CoroutineDispatcher, private val c
         const val EXTENSION = ".jpg"
         const val JPEG_QUALITY = 90
         const val AVATAR_SIZE_PX = 512.0
-        const val FILE_SCHEME = "file://"
     }
 }
 
@@ -194,7 +195,8 @@ internal class IosSheetFiles(private val io: CoroutineDispatcher, private val co
     private val cameraDirectory by lazy { IosFolders.folder(CAMERA_DIRECTORY) }
 
     override suspend fun import(sourceUri: String): SheetFiles.Stored? = withContext(io) {
-        val image = UIImage.imageWithContentsOfFile(sourceUri.removePrefix(FILE_SCHEME)) ?: return@withContext null
+        val path = pathOfFileUri(sourceUri) ?: return@withContext null
+        val image = UIImage.imageWithContentsOfFile(path) ?: return@withContext null
         val page = IosPictures.fitted(image, config.pageMaxSidePx)
         val thumb = IosPictures.fitted(page, config.thumbMaxSidePx)
         val id = NSUUID().UUIDString
@@ -231,6 +233,5 @@ internal class IosSheetFiles(private val io: CoroutineDispatcher, private val co
         const val CAMERA_DIRECTORY = "camera"
         const val EXTENSION = ".jpg"
         const val THUMB_SUFFIX = "-thumb"
-        const val FILE_SCHEME = "file://"
     }
 }

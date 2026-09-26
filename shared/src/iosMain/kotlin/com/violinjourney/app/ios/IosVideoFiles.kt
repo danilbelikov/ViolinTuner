@@ -2,6 +2,7 @@ package com.violinjourney.app.ios
 
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.pathOfFileUri
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.recording.video.VideoInfo
 import kotlin.math.abs
@@ -56,13 +57,13 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
         return if (IosFolders.move(cameraFile.path, target)) PlatformFile(target) else null
     }
 
-    override fun sizeOf(uri: String): Long? = pathOf(uri)?.let(::sizeOfPath)
+    override fun sizeOf(uri: String): Long? = pathOfFileUri(uri)?.let(::sizeOfPath)
 
     override fun freeBytes(): Long =
         (files.attributesOfFileSystemForPath(directory, null)?.get(NSFileSystemFreeSize) as? NSNumber)?.longLongValue ?: 0
 
     override suspend fun import(uri: String): PlatformFile? = withContext(io) {
-        val source = pathOf(uri) ?: return@withContext null
+        val source = pathOfFileUri(uri) ?: return@withContext null
         val target = "$directory/${NSUUID().UUIDString}.${extensionOf(source)}"
         // the picker's copy is ours already: it moves in; anything else is copied whole
         val done = IosFolders.move(source, target) || files.copyItemAtPath(source, target, null)
@@ -107,8 +108,6 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
     private fun thumbPath(name: String) = "$directory/${name.substringBeforeLast('.')}$THUMB_SUFFIX"
 
     private fun sizeOfPath(path: String): Long = (files.attributesOfItemAtPath(path, null)?.get(NSFileSize) as? NSNumber)?.longLongValue ?: 0
-
-    private fun pathOf(uri: String): String? = if (uri.startsWith("file:")) NSURL.URLWithString(uri)?.path else uri.takeIf { it.startsWith("/") }
 
     private fun extensionOf(path: String) = path.substringAfterLast('.', DEFAULT_EXTENSION).lowercase()
 

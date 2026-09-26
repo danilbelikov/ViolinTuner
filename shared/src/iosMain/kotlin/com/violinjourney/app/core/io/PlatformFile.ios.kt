@@ -4,6 +4,7 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileSize
 import platform.Foundation.NSNumber
+import platform.Foundation.NSURL
 
 /** A path in the app's sandbox. */
 actual class PlatformFile(val path: String)
@@ -22,7 +23,21 @@ actual fun PlatformFile.deleteFile(): Boolean =
 
 actual fun platformFile(path: String): PlatformFile = PlatformFile(path)
 
-actual val PlatformFile.fileUri: String get() = platform.Foundation.NSURL.fileURLWithPath(path).absoluteString.orEmpty()
+actual val PlatformFile.fileUri: String get() = NSURL.fileURLWithPath(path).absoluteString.orEmpty()
+
+/**
+ * The path of a `file:` URI as [fileUri] writes it, its escapes undone: the data of the app lies in «Application Support»,
+ * and its URI says `Application%20Support`, which is no path. A bare absolute path (the photo picker hands one over) is
+ * returned as it is; anything else — a URI of another scheme, a relative name — is null. An importer of a URI on iOS undoes
+ * its escapes (through this, or `NSURL.path` itself) and never cuts `file://` off.
+ */
+internal fun pathOfFileUri(uri: String): String? = when {
+    uri.startsWith(FILE_SCHEME) -> NSURL.URLWithString(uri)?.path?.takeIf { it.startsWith('/') }
+    uri.startsWith('/') -> uri
+    else -> null
+}
+
+private const val FILE_SCHEME = "file:"
 
 actual fun PlatformFile.sibling(name: String): PlatformFile = PlatformFile("${path.substringBeforeLast('/')}/$name")
 
