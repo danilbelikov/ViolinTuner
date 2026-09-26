@@ -230,6 +230,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Violin Journey";
 				INFOPLIST_KEY_NSCameraUsageDescription = "The camera takes photos of sheet music and video takes. They stay on the phone and are not sent anywhere.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Without the microphone the app cannot hear the violin. Sound is processed on the phone and is never sent anywhere.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "A video you save from “Share” goes to Photos. The app only adds it and does not see the rest of your library.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
@@ -263,6 +264,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Violin Journey";
 				INFOPLIST_KEY_NSCameraUsageDescription = "The camera takes photos of sheet music and video takes. They stay on the phone and are not sent anywhere.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "Without the microphone the app cannot hear the violin. Sound is processed on the phone and is never sent anywhere.";
+				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "A video you save from “Share” goes to Photos. The app only adds it and does not see the rest of your library.";
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UIStatusBarStyle = UIStatusBarStyleLightContent;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";

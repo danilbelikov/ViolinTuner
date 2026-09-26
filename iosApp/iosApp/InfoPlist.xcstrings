@@ -132,6 +132,72 @@
           }
         }
       }
+    },
+    "NSPhotoLibraryAddUsageDescription": {
+      "comment": "The same words as photos_add_permission_text of the shared resources; written by tools/ios/infoplist.py.",
+      "extractionState": "manual",
+      "localizations": {
+        "de": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ein Video, das Sie über „Teilen“ speichern, kommt in „Fotos“. Die App fügt es nur hinzu und sieht den Rest Ihrer Mediathek nicht."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A video you save from “Share” goes to Photos. The app only adds it and does not see the rest of your library."
+          }
+        },
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un vídeo guardado desde «Compartir» va a «Fotos». La app solo lo añade y no ve el resto de la fototeca."
+          }
+        },
+        "fr": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Une vidéo que vous enregistrez depuis « Partager » va dans « Photos ». L'app se contente de l'ajouter et ne voit pas le reste de votre photothèque."
+          }
+        },
+        "it": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Un video salvato da «Condividi» finisce in «Foto». L'app lo aggiunge soltanto e non vede il resto della libreria."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "「共有」から保存した動画は「写真」に入ります。アプリは動画を追加するだけで、ライブラリのほかの内容は見えません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“공유”에서 저장한 영상은 “사진”에 들어가요. 앱은 영상을 추가하기만 하고 나머지 보관함은 보지 못해요."
+          }
+        },
+        "pt": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Um vídeo salvo a partir de “Compartilhar” vai para “Fotos”. O app só o adiciona e não vê o resto da biblioteca."
+          }
+        },
+        "ru": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Видео, которое вы сохраняете из «Поделиться», попадает в «Фото». Приложение только добавляет его и не видит остальную галерею."
+          }
+        },
+        "zh-Hans": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "从“分享”保存的视频会存入“照片”。应用只会添加视频，看不到图库中的其他内容。"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

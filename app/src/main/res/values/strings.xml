@@ -1080,4 +1080,5 @@
     <string name="video_shoot_own_hint">with the app\'s camera — analysed at once</string>
     <string name="camera_no_permission">Without camera access there is nothing to film with — it can be given in the app\'s settings.</string>
     <string name="camera_permission_text">The camera takes photos of sheet music and video takes. They stay on the phone and are not sent anywhere.</string>
+    <string name="photos_add_permission_text">A video you save from “Share” goes to Photos. The app only adds it and does not see the rest of your library.</string>
 </resources>

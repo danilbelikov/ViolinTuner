@@ -1080,4 +1080,5 @@
     <string name="video_shoot_own_hint">アプリのカメラで — すぐに分析</string>
     <string name="camera_no_permission">カメラへのアクセスがないと撮影できません — アプリの設定で許可できます。</string>
     <string name="camera_permission_text">カメラで楽譜の写真とビデオテイクを撮影します。撮影したものは端末に残り、どこにも送信されません。</string>
+    <string name="photos_add_permission_text">「共有」から保存した動画は「写真」に入ります。アプリは動画を追加するだけで、ライブラリのほかの内容は見えません。</string>
 </resources>
