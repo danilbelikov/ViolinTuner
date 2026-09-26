@@ -7,6 +7,7 @@ import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.data.DatabaseMigrations
+import com.violinjourney.app.core.settings.DataStoreSettingsRepository
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -15,6 +16,7 @@ import kotlinx.coroutines.SupervisorJob
 import okio.Path.Companion.toPath
 import platform.Foundation.NSApplicationSupportDirectory
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSLog
 import platform.Foundation.NSUserDomainMask
 
 /**
@@ -35,13 +37,20 @@ internal object IosStorage {
 
     /**
      * DataStore allows one instance per file: whoever calls this keeps it for the life of the app, or cancels [scope]
-     * before the file is opened again.
+     * before the file is opened again. A file that cannot be read starts over, with the statistics off, instead of ending
+     * every start ([DataStoreSettingsRepository.startOverWhenUnreadable]); the database is not affected.
      */
     fun settings(
         directory: String = dataDirectory(),
         scope: CoroutineScope = CoroutineScope(Dispatchers.IO + SupervisorJob()),
     ): DataStore<Preferences> =
-        PreferenceDataStoreFactory.createWithPath(scope = scope, produceFile = { "$directory/$SETTINGS_FILE".toPath() })
+        PreferenceDataStoreFactory.createWithPath(
+            corruptionHandler = DataStoreSettingsRepository.startOverWhenUnreadable {
+                NSLog("Settings: the file could not be read and starts over: ${it.message}".replace("%", "%%"))
+            },
+            scope = scope,
+            produceFile = { "$directory/$SETTINGS_FILE".toPath() },
+        )
 
     @OptIn(ExperimentalForeignApi::class)
     fun dataDirectory(): String {

@@ -28,12 +28,14 @@ import com.violinjourney.app.core.io.makeDirectories
 import com.violinjourney.app.core.io.openInput
 import com.violinjourney.app.core.io.openOutput
 import com.violinjourney.app.core.io.sizeBytes
+import com.violinjourney.app.core.io.writeBytes
 import com.violinjourney.app.core.settings.DataStoreSettingsRepository
 import com.violinjourney.app.core.time.SystemWallClock
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertNotNull
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -82,6 +84,20 @@ class IosStorageTest {
         val reread = DataStoreSettingsRepository(IosStorage.settings(directory)).settings.first()
         assertEquals(442, reread.a4Hz)
         assertEquals(TolerancePreset.PRO, reread.tolerance)
+    }
+
+    /** A settings file that cannot be parsed starts over, with the statistics off, instead of ending every start of the app. */
+    @Test
+    fun `settings that cannot be read start over instead of ending the start`() = runTest {
+        val broken = assertNotNull(PlatformFile("$directory/${IosStorage.SETTINGS_FILE}").openOutput())
+        broken.writeBytes(byteArrayOf(0x0A, 0x7F)) // a length-delimited field cut short
+        broken.close()
+        val life = CoroutineScope(Dispatchers.Default + Job())
+        val settings = DataStoreSettingsRepository(IosStorage.settings(directory, life)).settings.first()
+        assertEquals(false, settings.onboardingDone)
+        assertEquals(440, settings.a4Hz)
+        assertEquals(false, settings.analyticsEnabled)
+        life.coroutineContext[Job]!!.cancelAndJoin()
     }
 
     private fun storeOf(data: PlatformFile, database: AppDatabase, practice: RoomPracticeRepository) = IosBackupStore(

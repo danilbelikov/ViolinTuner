@@ -59,6 +59,29 @@ class DataStoreSettingsRepositoryTest {
         assertFalse(repository.settings.first().analyticsEnabled)
     }
 
+    /**
+     * A settings file DataStore cannot parse — a failing disk, a broken file from a copy — used to end every start of the
+     * app. It starts over: what a fresh install has, but with the statistics off, since the lost file cannot say whether
+     * the person had switched them off (spec 3.34, rule 2).
+     */
+    @Test
+    fun `an unreadable file starts over with the defaults and the statistics off`() = runTest {
+        val file = folder.root.resolve("broken.preferences_pb")
+        // a length-delimited field cut short
+        file.writeBytes(byteArrayOf(0x0A, 0x7F))
+        var told = 0
+        val store = PreferenceDataStoreFactory.create(
+            corruptionHandler = DataStoreSettingsRepository.startOverWhenUnreadable { told++ },
+            scope = backgroundScope,
+        ) { file }
+        val repository = DataStoreSettingsRepository(store)
+        assertEquals(UserSettings(a4Hz = 440, tolerance = TolerancePreset.INTERMEDIATE, onboardingDone = false, analyticsEnabled = false), repository.settings.first())
+        assertEquals(1, told)
+        repository.setOnboardingDone(true)
+        assertTrue(repository.settings.first().onboardingDone)
+        assertEquals(1, told, "the file is whole again")
+    }
+
     @Test
     fun `unknown stored values fall back to defaults`() = runTest {
         val store = dataStore()

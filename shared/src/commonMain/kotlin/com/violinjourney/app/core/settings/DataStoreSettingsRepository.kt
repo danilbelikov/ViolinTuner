@@ -1,10 +1,13 @@
 package com.violinjourney.app.core.settings
 
+import androidx.datastore.core.CorruptionException
 import androidx.datastore.core.DataStore
+import androidx.datastore.core.handlers.ReplaceFileCorruptionHandler
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.preferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.violinjourney.app.core.domain.TolerancePreset
 import com.violinjourney.app.core.domain.UserSettings
@@ -50,10 +53,24 @@ class DataStoreSettingsRepository(
         dataStore.edit { it[ANALYTICS_ENABLED] = enabled }
     }
 
-    private companion object {
-        val A4_HZ = intPreferencesKey("a4_hz")
-        val TOLERANCE = stringPreferencesKey("tolerance_preset")
-        val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
-        val ANALYTICS_ENABLED = booleanPreferencesKey("analytics_enabled")
+    companion object {
+        private val A4_HZ = intPreferencesKey("a4_hz")
+        private val TOLERANCE = stringPreferencesKey("tolerance_preset")
+        private val ONBOARDING_DONE = booleanPreferencesKey("onboarding_done")
+        private val ANALYTICS_ENABLED = booleanPreferencesKey("analytics_enabled")
+
+        /**
+         * For the one DataStore of the settings file, on both platforms: a file that cannot be parsed (a failing disk, a
+         * broken file from a copy) starts over instead of ending every start of the app. What starts over is all that file
+         * holds — the onboarding mark, A4, the tolerance, the running practice, the name, the venue and the rest; the
+         * database and the files are not touched. The statistics are written off, not left at their default «on»: the
+         * lost file cannot tell whether the person had switched them off, and a switched-off choice holds until the person
+         * turns it back (spec 3.34, rule 2). [onUnreadable] tells the log.
+         */
+        fun startOverWhenUnreadable(onUnreadable: (CorruptionException) -> Unit): ReplaceFileCorruptionHandler<Preferences> =
+            ReplaceFileCorruptionHandler { e ->
+                onUnreadable(e)
+                preferencesOf(ANALYTICS_ENABLED to false)
+            }
     }
 }
