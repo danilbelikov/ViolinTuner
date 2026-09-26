@@ -19,8 +19,11 @@ import com.violinjourney.app.core.domain.sound.SoundBlock
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundParam
 import com.violinjourney.app.core.domain.sound.SoundPresets
+import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.core.domain.sound.SoundRules
+import com.violinjourney.app.core.domain.sound.SoundSettings
 import java.io.File
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -82,10 +85,15 @@ class SoundViewModelTest {
         override fun deleteOrphans(keptFiles: Set<String>) = Unit
     }
 
-    private fun TestScope.screen(sessionId: Long?): Pair<SoundViewModel, MutableList<SoundEffect>> {
+    private fun TestScope.screen(
+        sessionId: Long?,
+        sound: SoundRepository = this@SoundViewModelTest.sound,
+        audioFiles: SessionAudioFiles = AudioFiles,
+    ): Pair<SoundViewModel, MutableList<SoundEffect>> {
         val viewModel = SoundViewModel(
             SavedStateHandle(mapOf(SoundViewModel.ARG_SESSION_ID to (sessionId ?: SoundViewModel.EVERYONE))),
-            sound, sessions, repertoire, AudioFiles, { player }, waveforms, config, backings, backingPcm,
+            sound, sessions, repertoire, audioFiles, { player }, waveforms, config, backings, backingPcm,
+            io = StandardTestDispatcher(testScheduler),
         )
         val effects = mutableListOf<SoundEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -305,6 +313,45 @@ class SoundViewModelTest {
         sessions.delete(id)
         runCurrent()
         assertEquals(SoundEffect.Close, effects.last())
+    }
+
+    @Test
+    fun `sharing waits until what was just changed is stored`() = runTest {
+        val id = recording("take.m4a")
+        val stored = CompletableDeferred<Unit>()
+        val slow = object : SoundRepository by sound {
+            override suspend fun setOwn(sessionId: Long, settings: SoundSettings) {
+                stored.await()
+                sound.setOwn(sessionId, settings)
+            }
+        }
+        val (viewModel, effects) = screen(id, sound = slow)
+        viewModel.onIntent(SoundIntent.ParamChanged(SoundParam.REVERB_MIX, 0.4))
+        viewModel.onIntent(SoundIntent.ShareClicked)
+        runCurrent()
+        assertTrue("the sheet reads the settings from the database: not before they are there", effects.isEmpty())
+        stored.complete(Unit)
+        runCurrent()
+        assertEquals(listOf<SoundEffect>(SoundEffect.Share(id)), effects)
+        assertEquals(0.4, sound.own.value.getValue(id).reverb.mix, 0.0)
+    }
+
+    @Test
+    fun `one recording's screen does not look for the files of the others`() = runTest {
+        recording("first.m4a")
+        val id = recording("take.m4a", startedAt = 2_000)
+        recording("third.m4a", startedAt = 3_000)
+        val looked = mutableListOf<String>()
+        val counting = object : SessionAudioFiles by AudioFiles {
+            override fun existing(name: String): File? = AudioFiles.existing(name).also { looked += name }
+        }
+        val (viewModel, _) = screen(id, audioFiles = counting)
+        repeat(2) {
+            viewModel.onIntent(SoundIntent.ParamChanged(SoundParam.REVERB_MIX, 0.3 + it * 0.1))
+            advanceTimeBy(500)
+        }
+        assertEquals(0.4, sound.own.value.getValue(id).reverb.mix, 0.0)
+        assertEquals("only its own sound, once, to play it", listOf("take.m4a"), looked)
     }
 
     private suspend fun underBacking(sessionId: Long, output: com.violinjourney.app.core.domain.backing.BackingOutput = com.violinjourney.app.core.domain.backing.BackingOutput.BLUETOOTH) {

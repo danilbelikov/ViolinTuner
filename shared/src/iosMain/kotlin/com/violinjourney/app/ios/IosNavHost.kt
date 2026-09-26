@@ -204,7 +204,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 viewModel = viewModel {
                     SoundViewModel(
                         createSavedStateHandle(), graph.sound, graph.sessions, graph.repertoire, graph.audioFiles, graph.playerFactory,
-                        graph.waveforms, graph.soundConfig, graph.backings, graph.backingPcm, graph.backingConfig,
+                        graph.waveforms, graph.soundConfig, graph.backings, graph.backingPcm, graph.backingConfig, graph.io,
                     )
                 },
                 onShare = share::start,

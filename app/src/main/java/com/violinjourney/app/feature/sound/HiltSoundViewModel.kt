@@ -5,6 +5,7 @@ import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.playback.SessionPlayerFactory
 import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
+import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
@@ -13,6 +14,7 @@ import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 
 @HiltViewModel
 class HiltSoundViewModel @Inject constructor(
@@ -27,4 +29,5 @@ class HiltSoundViewModel @Inject constructor(
     backings: BackingRepository,
     backingPcm: BackingPcm,
     backingConfig: BackingConfig,
-) : SoundViewModel(savedState, sound, sessions, repertoire, audioFiles, playerFactory, waveforms, config, backings, backingPcm, backingConfig)
+    @IoDispatcher io: CoroutineDispatcher,
+) : SoundViewModel(savedState, sound, sessions, repertoire, audioFiles, playerFactory, waveforms, config, backings, backingPcm, backingConfig, io)

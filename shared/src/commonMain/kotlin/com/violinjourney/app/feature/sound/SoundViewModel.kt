@@ -28,6 +28,9 @@ import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.domain.sound.SoundSettings
 import com.violinjourney.app.core.domain.sound.UserPreset
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
@@ -60,6 +63,7 @@ open class SoundViewModel(
     private val backings: BackingRepository = NoBackings,
     private val backingPcm: BackingPcm? = null,
     private val backingConfig: BackingConfig = BackingConfig(),
+    private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
     private val sessionId: Long? = savedState.get<Long>(ARG_SESSION_ID)?.takeIf { it != EVERYONE }
@@ -164,10 +168,16 @@ open class SoundViewModel(
                 mutableState.update { it.copy(dialog = null) }
                 viewModelScope.launch { listenOn(sessions.sessions.first().firstOrNull { it.id == intent.sessionId }) }
             }
-            SoundIntent.ShareClicked -> sessionId?.let {
+            SoundIntent.ShareClicked -> sessionId?.let { id ->
                 player?.pause()
                 flush()
-                effectChannel.trySend(SoundEffect.Share(it))
+                // The sheet reads the settings and the backing's shift from the database: what was just heard is to be
+                // there first (spec 3.17 — what is heard is what is sent). A write done long ago is joined at once.
+                val writing = listOfNotNull(persistJob, backingJob)
+                viewModelScope.launch {
+                    writing.forEach { it.join() }
+                    effectChannel.send(SoundEffect.Share(id))
+                }
             }
             is SoundIntent.BackingHeardSelected -> player?.setBackingHeard(intent.heard)
             is SoundIntent.BackingGainChanged -> editBacking { it.copy(gainDb = backingConfig.minGainDb + intent.fraction * (backingConfig.maxGainDb - backingConfig.minGainDb)) }
@@ -219,11 +229,17 @@ open class SoundViewModel(
         kotlinx.coroutines.flow.combine(sessions.sessions, sound.own, repertoire.pieces) { all, own, pieces -> Triple(all, own.keys, pieces.associate { it.id to it.title }) }
             .collect { (all, own, titles) ->
                 fun nameOf(session: SessionSummary) = RecordingName(session.id, session.title, session.pieceId?.let(titles::get), session.startedAtEpochMs, hasVideo = session.videoPath != null)
-                val playable = SoundReducer.withSound(all).filter { it.audioPath?.let(audioFiles::existing) != null }
                 val mine = all.firstOrNull { it.id == sessionId }
                 if (mode == SoundMode.RECORDING && mine == null) {
                     effectChannel.trySend(SoundEffect.Close) // deleted from under the screen
                     return@collect
+                }
+                // What the default can be listened on — the screen for everyone only: one recording's screen plays its own.
+                // A look at every file is no work for the main thread, where hundreds of recordings are.
+                val playable = if (mode == SoundMode.EVERYONE) {
+                    withContext(io) { SoundReducer.withSound(all).filter { it.audioPath?.let(audioFiles::existing) != null } }
+                } else {
+                    emptyList()
                 }
                 mutableState.update {
                     it.copy(
