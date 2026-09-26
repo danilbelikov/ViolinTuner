@@ -18,17 +18,20 @@ import kotlinx.cinterop.get
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import platform.AVFAudio.AVAudioEngine
+import platform.AVFAudio.AVAudioEngineConfigurationChangeNotification
 import platform.AVFAudio.AVAudioSession
 import platform.AVFAudio.AVAudioSessionCategoryOptionAllowBluetoothA2DP
 import platform.AVFAudio.AVAudioSessionCategoryOptionDefaultToSpeaker
 import platform.AVFAudio.AVAudioSessionCategoryPlayAndRecord
 import platform.AVFAudio.inputLatency
 import platform.AVFAudio.AVAudioSessionInterruptionNotification
+import platform.AVFAudio.AVAudioSessionInterruptionReasonAppWasSuspended
+import platform.AVFAudio.AVAudioSessionInterruptionReasonKey
+import platform.AVFAudio.AVAudioSessionInterruptionTypeEnded
+import platform.AVFAudio.AVAudioSessionInterruptionTypeKey
 import platform.AVFAudio.AVAudioSessionMediaServicesWereResetNotification
 import platform.AVFAudio.AVAudioSessionModeMeasurement
 import platform.AVFAudio.setActive
@@ -36,7 +39,9 @@ import platform.AVFAudio.setPreferredSampleRate
 import platform.Foundation.NSError
 import platform.Foundation.NSLog
 import platform.Foundation.NSNotificationCenter
+import platform.Foundation.NSNumber
 import platform.Foundation.NSOperationQueue
+import platform.darwin.NSObjectProtocol
 
 /**
  * The microphone of iOS (spec 6): AVAudioEngine on a session made for measuring — play and record, so that a backing can
@@ -49,8 +54,11 @@ import platform.Foundation.NSOperationQueue
  * of a take and its clock belong to that screen alone.
  *
  * Fails with [MicUnavailableException] when the engine does not start, when the system takes the input away
- * (a call, Siri, an alarm: an interruption; a reset of the media services) and when the input gives exact zeros
- * for longer than the watchdog allows. The sound of a take is taken hop by hop, on the same sample clock as the frames.
+ * (a call, Siri, an alarm: an interruption; a reset of the media services), when the engine stops by itself (the
+ * route's rate or channels changed — headphones), when no sound at all comes for as long as the watchdog allows
+ * zeros ([InputBlocks]), and when the input gives exact zeros for longer than that. The screen then says the
+ * microphone is unavailable, a take is saved as it is, and the input is opened again (spec 3.4). The sound of a take
+ * is taken hop by hop, on the same sample clock as the frames.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class IosMicPitchSource(
@@ -75,17 +83,11 @@ class IosMicPitchSource(
     }
 
     override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
-        // The audio thread must never wait: a full queue means the analysis fell far behind, which is a failure,
-        // not a reason to drop sound — the frame clock counts every sample.
-        val blocks = Channel<FloatArray>(QUEUED_BLOCKS, BufferOverflow.SUSPEND)
         val engine = AVAudioEngine()
         var entered = false
         val center = NSNotificationCenter.defaultCenter
-        val observers = listOf(AVAudioSessionInterruptionNotification, AVAudioSessionMediaServicesWereResetNotification).map { name ->
-            center.addObserverForName(name, null, NSOperationQueue.mainQueue) { _ ->
-                blocks.close(unavailable(MicUnavailableReason.READ_FAILED, "the system took the input away: $name"))
-            }
-        }
+        val observers = ArrayList<NSObjectProtocol>()
+        var blocks: InputBlocks? = null
         try {
             val session = IosAudioSession.enter(::openSession)
             entered = true
@@ -95,6 +97,11 @@ class IosMicPitchSource(
             if (sampleRateHz <= 0 || format.channelCount == 0u) {
                 throw unavailable(MicUnavailableReason.OPEN_FAILED, "the input has no format ($sampleRateHz Hz, ${format.channelCount} channels)")
             }
+            // The audio thread must never wait: too much sound waiting means the analysis fell far behind, which is a
+            // failure, not a reason to drop sound — the frame clock counts every sample.
+            val queue = InputBlocks(maxQueuedSamples = sampleRateHz * QUEUED_AUDIO_SECONDS)
+            blocks = queue
+            observers += watch(center, session, engine, queue)
             var delivered = 0L
             anchor = null
             input.installTapOnBus(0u, TAP_BUFFER_FRAMES, format) { buffer, time ->
@@ -108,10 +115,7 @@ class IosMicPitchSource(
                 val channel = data[0] ?: return@installTapOnBus
                 // the first channel is the microphone; a second one, where there is one, is the same sound
                 val block = FloatArray(count) { channel[it] }
-                val sent = blocks.trySend(block)
-                if (sent.isFailure && !sent.isClosed) {
-                    blocks.close(unavailable(MicUnavailableReason.READ_FAILED, "the analysis fell behind the input"))
-                }
+                if (!queue.offer(block)) queue.fail(unavailable(MicUnavailableReason.READ_FAILED, "the analysis fell behind the input"))
             }
             engine.prepare()
             memScoped {
@@ -127,7 +131,9 @@ class IosMicPitchSource(
             val stats = if (logStats) FrameStats(config, "ios rate=$sampleRateHz", ::log) else null
             val ready = ArrayList<PitchFrame>()
             var samplesRead = 0L
-            for (block in blocks) {
+            // No block at all for as long as exact zeros are allowed: the engine stopped without a word (spec 3.4).
+            val stallLimitMs = config.digitalSilenceTimeoutMs
+            queue.forEach(stallLimitMs, stalled = { unavailable(MicUnavailableReason.READ_FAILED, "no sound from the input for $stallLimitMs ms") }) { block ->
                 splitter.push(block) { hop ->
                     if (watchdog.isDead(hop, hop.size)) {
                         throw unavailable(MicUnavailableReason.DIGITAL_SILENCE, "input is digitally silent, reopening")
@@ -143,16 +149,49 @@ class IosMicPitchSource(
                 }
                 ready.clear()
             }
+            // the queue is closed plainly only by the finally below, once the stream is over: an end here is a lost input
+            throw unavailable(MicUnavailableReason.READ_FAILED, "the input ended")
         } finally {
             tap.onStreamEnded()
             observers.forEach(center::removeObserver)
             engine.inputNode.removeTapOnBus(0u)
             engine.stop()
-            blocks.close()
+            blocks?.close()
             // the last one using the session lets it go, and music another app had on comes back
             if (entered) IosAudioSession.leave()
         }
     }
+
+    /**
+     * What ends the input from outside: an interruption that begins (a call, Siri, an alarm), a reset of the media
+     * services, and the engine stopping by itself — iOS stops it and only says so when the input's or the output's
+     * rate or channels change, as headphones come and go. An engine stopped because another user in the app took the
+     * session for playing (a player started while a Live that went away still listens for its two seconds) is not a
+     * lost input and is not counted as one (spec 5.27; [engineStopEndsInput]): only a line is logged, and the
+     * collection, which its screen no longer holds, is mostly cancelled before the no-sound limit — the limit ends it
+     * otherwise, so a screen still open never freezes (and then it is counted: docs/notes/backing.md names when).
+     */
+    private fun watch(center: NSNotificationCenter, session: AVAudioSession, engine: AVAudioEngine, blocks: InputBlocks) = listOf(
+        center.addObserverForName(AVAudioSessionInterruptionNotification, null, NSOperationQueue.mainQueue) { note ->
+            val type = note?.userInfo?.get(AVAudioSessionInterruptionTypeKey).asULong()
+            val reason = note?.userInfo?.get(AVAudioSessionInterruptionReasonKey).asULong()
+            if (interruptionEndsInput(type, reason, engine.running)) {
+                blocks.fail(unavailable(MicUnavailableReason.READ_FAILED, "the system took the input away: an interruption (type $type, reason $reason)"))
+            }
+        },
+        center.addObserverForName(AVAudioSessionMediaServicesWereResetNotification, null, NSOperationQueue.mainQueue) { _ ->
+            blocks.fail(unavailable(MicUnavailableReason.READ_FAILED, "the system took the input away: the media services were reset"))
+        },
+        center.addObserverForName(AVAudioEngineConfigurationChangeNotification, engine, NSOperationQueue.mainQueue) { _ ->
+            val running = engine.running
+            val category = session.category
+            when {
+                engineStopEndsInput(running, category) ->
+                    blocks.fail(unavailable(MicUnavailableReason.READ_FAILED, "the audio engine stopped: its input or output changed"))
+                !running -> log("the audio engine stopped: the session was taken for $category")
+            }
+        },
+    )
 
     private fun openSession(session: AVAudioSession): AVAudioSession = memScoped {
         val error = alloc<ObjCObjectVar<NSError?>>()
@@ -180,8 +219,39 @@ class IosMicPitchSource(
         const val TAG = "MicPitchSource"
         const val MS_PER_SECOND = 1_000L
         const val NANOS_PER_SECOND = 1_000_000_000.0
-        const val QUEUED_BLOCKS = 64
+
+        /** Sound waiting for the analysis before it counts as fallen behind: a take being finished holds it for seconds. */
+        const val QUEUED_AUDIO_SECONDS = 10L
         const val TAP_BUFFER_FRAMES = 4096u
         const val PREFERRED_RATE_HZ = 48_000.0
     }
+}
+
+/**
+ * Whether an interruption notification ends the input. One that begins does: a call, Siri or an alarm took the input.
+ * One that ends does not — it can come after the input was already opened again, and ending that healthy input would
+ * cost the player another pause. A late «began» for the time the app was suspended ends it only if the engine did
+ * stop. A notification without a type is taken as a beginning.
+ */
+internal fun interruptionEndsInput(type: ULong?, reason: ULong?, engineRunning: Boolean): Boolean = when {
+    type == AVAudioSessionInterruptionTypeEnded -> false
+    reason == AVAudioSessionInterruptionReasonAppWasSuspended -> !engineRunning
+    else -> true
+}
+
+/**
+ * Whether a change of the audio engine's configuration ends the input: only when the engine did stop and the session
+ * is still the microphone's (play and record) — iOS stopped it for a change of the route. An engine stopped because
+ * another user in the app set the session for playing (the player of a recording, while a Live that went away still
+ * listens) is not a lost input (spec 5.27 counts those); nor is one with no category to tell — the no-sound limit of
+ * [InputBlocks] ends the input later if it is really gone.
+ */
+internal fun engineStopEndsInput(engineRunning: Boolean, category: String?): Boolean =
+    !engineRunning && category == AVAudioSessionCategoryPlayAndRecord
+
+/** A number of a notification's userInfo, as the bridge hands it over: an NSNumber, or a Kotlin number. */
+private fun Any?.asULong(): ULong? = when (this) {
+    is NSNumber -> unsignedIntegerValue
+    is Number -> toLong().toULong()
+    else -> null
 }
