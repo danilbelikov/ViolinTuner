@@ -9,7 +9,7 @@ import kotlinx.coroutines.launch
 
 /**
  * AppMetrica as the iOS app reaches it: the library is a Swift package of the Xcode project, and the Swift side hands
- * this bridge to `MainViewController`. Kotlin knows nothing of the library itself — only these four calls.
+ * this bridge to `MainViewController`. Kotlin knows nothing of the library itself — only these five calls.
  */
 interface AnalyticsService {
     /** Activates the library with sending off; [logs] makes it say what it took and sent (a build meant to be watched). */
@@ -21,6 +21,12 @@ interface AnalyticsService {
     fun reportEvent(name: String, params: Map<String, Any>)
 
     fun reportError(group: String, message: String, cause: String?)
+
+    /**
+     * A Kotlin exception that ended the last run ([KotlinCrashes]), told at this start as a crash of its own — its class,
+     * message and frames — beside the system's report of the same fall, which has none of them (spec 3.34).
+     */
+    fun reportUnhandledException(type: String, message: String?, frames: List<KotlinCrashFrame>, environment: Map<String, String>)
 }
 
 /**
@@ -40,7 +46,22 @@ class IosAppMetricaAnalytics(private val service: AnalyticsService) : Analytics 
     override fun error(group: ErrorGroup, message: String, cause: Throwable?) =
         service.reportError(group.key, message, cause?.let { "${it::class.simpleName}: ${it.message}" })
 
+    /** A Kotlin exception that ended the last run, told at this start, under the same switch as everything else (spec 3.34). */
+    internal fun crashed(crash: KotlinCrash) = service.reportUnhandledException(
+        crash.type,
+        crash.message,
+        crash.frames,
+        buildMap {
+            put(KOTLIN, KotlinVersion.CURRENT.toString())
+            crash.causes?.let { put(CAUSED_BY, it) }
+        },
+    )
+
     companion object {
+        /** Keys of the environment of a crash: the version of Kotlin, and the chain of causes. */
+        private const val KOTLIN = "kotlin"
+        private const val CAUSED_BY = "caused by"
+
         /** Once per process: the library refuses a second activation. */
         fun activate(service: AnalyticsService, apiKey: String, logs: Boolean): IosAppMetricaAnalytics {
             service.activate(apiKey, logs)

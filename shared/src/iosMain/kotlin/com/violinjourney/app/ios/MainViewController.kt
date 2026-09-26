@@ -15,12 +15,14 @@ import androidx.lifecycle.ViewModelStoreOwner
 import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.violinjourney.app.core.analytics.AnalyticsService
 import com.violinjourney.app.core.analytics.IosAppMetricaAnalytics
+import com.violinjourney.app.core.analytics.KotlinCrashes
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.backup.IosRestoreSwap
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.ui.components.SystemScreens
 import com.violinjourney.app.feature.backup.LocalAppRestart
 import com.violinjourney.app.feature.journey.art.SceneDebug
+import platform.Foundation.NSLog
 import platform.Foundation.NSProcessInfo
 import platform.UIKit.UIViewController
 
@@ -36,12 +38,22 @@ import platform.UIKit.UIViewController
  */
 @Suppress("FunctionName", "unused") // called from Swift
 fun MainViewController(analytics: AnalyticsService?): UIViewController {
+    // before anything else: an unhandled Kotlin exception is kept on its way out and told at the next start (spec 3.34)
+    val crashRecord = KotlinCrashes.defaultRecord()
+    KotlinCrashes.install(crashRecord)
     useInterfaceLanguage()
     // the owner's .debug app (Debug and Profile, whatever its Kotlin binary): the switches of the living pictures listen
     SceneDebug.debugBuild = IosBuild.isDevApp
     // statistics are sent by a build that has a key (spec 5.27); the owner's .debug app only when asked to (`analyticsDebug=true`)
     val sends = IosBuild.sendsStatistics(IosSecrets.APPMETRICA_KEY, IosBuild.isDevApp, IosSecrets.ANALYTICS_IN_DEBUG)
     val statistics = if (sends && analytics != null) IosAppMetricaAnalytics.activate(analytics, IosSecrets.APPMETRICA_KEY, logs = IosSecrets.ANALYTICS_IN_DEBUG) else null
+    KotlinCrashes.takeKept(crashRecord)?.let { crash ->
+        if (statistics != null) {
+            statistics.crashed(crash)
+        } else {
+            NSLog("Kotlin crash of the last run: ${crash.type}: ${crash.message}".replace("%", "%%"))
+        }
+    }
     val fakeScenario = launchArgument<FakeScenario>("-fakeScenario")
     val openRoute = launchText("-openRoute")
     val data = PlatformFile(IosStorage.dataDirectory())
