@@ -6,6 +6,7 @@ import com.violinjourney.app.core.analytics.BackupRestored
 import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.di.ElapsedClock
+import com.violinjourney.app.core.io.ByteInput
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.openInput
@@ -16,21 +17,27 @@ import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okio.IOException
 
-enum class SaveFailure { NO_SPACE, UNAVAILABLE, FAILED }
+/**
+ * Why a copy was not saved. [PHONE_FULL] — the room ran out in the phone itself, under the snapshot of the database or the
+ * archive for «Отправить…», not in the place that was picked: another card would not help.
+ */
+enum class SaveFailure { NO_SPACE, PHONE_FULL, UNAVAILABLE, FAILED }
 
 enum class RestorePhase { VERIFYING, EXTRACTING, FINISHING }
 
@@ -73,12 +80,32 @@ sealed interface BackupJob {
     data class Restored(val manifest: BackupManifest) : BackupJob
 
     data class RestoreFailed(
-        /** True on the safe way: nothing has changed. False — the data had been deleted to make room. */
+        /** True when nothing has changed. False — the media had been deleted to make room. */
         val dataIntact: Boolean,
         val uri: String,
         val manifest: BackupManifest,
+        /** The way it took: without a safety net the copy is checked first. «Ещё раз» takes the same way. */
+        val checked: Boolean,
     ) : BackupJob
 }
+
+/**
+ * «Остановить» still means something (spec 3.20): a copy before its check, a restore before its point of no return — on
+ * the safe way until the mark, without a net until the media go. One rule for the manager, its screens and their dialogs.
+ */
+val BackupJob.stoppable: Boolean
+    get() = when (this) {
+        is BackupJob.Saving -> !verifying
+        is BackupJob.Restoring -> if (checked) phase == RestorePhase.VERIFYING else phase != RestorePhase.FINISHING
+        else -> false
+    }
+
+/**
+ * Work on its way, or a restore waiting for its restart: nothing else starts over it. An outcome that has been shown —
+ * a copy saved, a copy or a restore that failed — is read already, and a new job starts over it.
+ */
+val BackupJob.underWay: Boolean
+    get() = this is BackupJob.Saving || this is BackupJob.Restoring || this is BackupJob.Restored
 
 /** What a picked file turned out to be. */
 sealed interface BackupCandidate {
@@ -92,21 +119,6 @@ fun interface BackupKeepAlive {
     fun start()
 }
 
-/** How long a copy takes against its size — measured on this device by the copies themselves (spec 5.14). */
-class BackupSpeed(config: BackupConfig) {
-    @Volatile var msPerMb: Double = config.startMsPerMb
-        private set
-
-    fun measured(bytes: Long, tookMs: Long) {
-        if (bytes > MIN_BYTES) msPerMb = tookMs / (bytes / BYTES_PER_MB)
-    }
-
-    private companion object {
-        const val BYTES_PER_MB = 1024.0 * 1024.0
-        const val MIN_BYTES = 8L * 1024 * 1024
-    }
-}
-
 /**
  * Saving a copy and bringing one back (spec 3.20, 5.14). A singleton with a scope of its own, as
  * the importer of videos is: minutes of work must not end because a screen did. One job at a time.
@@ -117,14 +129,15 @@ class BackupManager(
     private val prefs: BackupPrefs,
     private val keepAlive: BackupKeepAlive,
     private val config: BackupConfig,
-    private val speed: BackupSpeed,
     private val clock: WallClock,
     private val elapsed: ElapsedClock,
     private val io: CoroutineDispatcher,
     private val analytics: Analytics = NoOpAnalytics(),
 ) {
     private val scope = CoroutineScope(SupervisorJob() + io)
-    private var work: Job? = null
+
+    /** The job whose state [job] shows — or showed, until «Остановить»; a job writes its state only while it is this one. */
+    @Volatile private var work: Job? = null
 
     private val mutableJob = MutableStateFlow<BackupJob>(BackupJob.Idle)
     val job: StateFlow<BackupJob> = mutableJob.asStateFlow()
@@ -137,29 +150,80 @@ class BackupManager(
     /** «Отправить…»: a small copy is built under `cache/share/` and handed to the system sheet. */
     fun share(parts: Set<BackupPart>, fileName: String) = save(parts, fileName, uri = null)
 
-    private fun save(parts: Set<BackupPart>, fileName: String, uri: String?) {
-        if (mutableJob.value != BackupJob.Idle) return
-        mutableJob.value = BackupJob.Saving(fileName, visible = false)
+    /**
+     * Starts [block] as the one job of the manager, showing [first] — or does nothing while a job is under way (the screens
+     * call this from the main thread). A stopped job may still be tidying up after itself — removing its snapshot of the
+     * database or its unpacking folder, which are this job's folders too: this one waits for it first. The wait is deaf to
+     * «Остановить»: a job stopped while it waits still ends only after the one it waited for, so a chain of stopped jobs is
+     * waited for whole and no two jobs ever work in the same folders. [block] starts even for a job stopped by then, and
+     * its first step is to see that it was: what it holds — the file the system picker made for it — goes in its finally.
+     */
+    private fun launchJob(first: BackupJob, block: suspend CoroutineScope.(self: Job) -> Unit) {
+        if (mutableJob.value.underWay) return
+        val previous = work
+        val job = scope.launch(start = CoroutineStart.LAZY) {
+            val self = coroutineContext.job
+            if (previous != null && !previous.isCompleted) {
+                // a copy that waits — for a write stuck in a cloud provider, maybe — gets its screen, and its «Остановить»,
+                // as a copy that drags on does
+                val shown = launch {
+                    delay(SHOW_FROM_MS)
+                    self.moveOn { if (it is BackupJob.Saving && !it.visible) it.copy(visible = true) else null }
+                }
+                withContext(NonCancellable) { previous.join() }
+                shown.cancel()
+            }
+            block(self)
+        }
+        // the manager's job before its first state is shown: a stopped one still at work can no longer write over it
+        work = job
+        mutableJob.value = first
         keepAlive.start()
-        work = scope.launch {
+        job.start()
+    }
+
+    /**
+     * Moves this job's state on in one step — or not at all when it is no longer this job's: stopped by «Остановить», or
+     * followed by another job. [next] answers null when the state is not one it moves on from. Whether «Остановить» came
+     * first or this step did is settled here, once: a point of no return is passed by the same step that checks it.
+     */
+    private fun Job.moveOn(next: (BackupJob) -> BackupJob?): Boolean {
+        while (true) {
+            if (work !== this) return false
+            val now = mutableJob.value
+            val moved = next(now) ?: return false
+            if (mutableJob.compareAndSet(now, moved)) return true
+        }
+    }
+
+    private fun save(parts: Set<BackupPart>, fileName: String, uri: String?) {
+        launchJob(BackupJob.Saving(fileName, visible = false)) { self ->
             val started = elapsed.nowMs()
-            var shownAt: Long? = null
+            // a screen shown while this copy waited for a stopped one is shown already: it is not taken away at once either
+            var shownAt: Long? = if ((mutableJob.value as? BackupJob.Saving)?.visible == true && work === self) started else null
             var finished = false
-            val shareFile = if (uri == null) store.shareFile(fileName) else null
+            var shareFile: PlatformFile? = null
+            // until the stream into the picked place is written, whatever fills up is the phone's own memory
+            var inPhone = true
             try {
+                // stopped while it waited for the job before it: nothing to do, and the finally removes the picked file
+                currentCoroutineContext().ensureActive()
+                if (uri == null) shareFile = store.shareFile(fileName)
                 val prepared = store.prepare(parts)
                 val total = prepared.entries.sumOf { it.size }
                 if (shareFile != null) {
                     val missing = total + config.freeSpaceMarginBytes - store.freeBytes()
                     if (missing > 0) {
-                        mutableJob.value = BackupJob.SaveFailed(SaveFailure.NO_SPACE, missing)
-                        return@launch
+                        self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(SaveFailure.NO_SPACE, missing) else null }
+                        return@launchJob
                     }
                 }
-                val estimate = config.estimateBaseMs + total / BYTES_PER_MB * speed.msPerMb
-                fun show() = mutableJob.update { if (it is BackupJob.Saving && !it.visible) it.copy(visible = true).also { shownAt = elapsed.nowMs() } else it }
-                if (estimate > SHOW_FROM_MS && total > QUICK_BYTES) show()
-                // The estimate may be wrong — a slow card, a cloud folder: a copy that drags on gets its screen after all.
+                inPhone = shareFile != null
+                fun show() {
+                    if (self.moveOn { if (it is BackupJob.Saving && !it.visible) it.copy(visible = true) else null }) shownAt = elapsed.nowMs()
+                }
+                // A big copy gets its screen at once; any other only when it drags on — a slow card, a cloud folder.
+                if (total > QUICK_BYTES) show()
                 val late = launch {
                     delay(SHOW_FROM_MS)
                     show()
@@ -167,27 +231,29 @@ class BackupManager(
                 val out = if (shareFile != null) shareFile.openOutput() else documents.openOutput(checkNotNull(uri))
                 if (out == null) {
                     late.cancel()
-                    mutableJob.value = BackupJob.SaveFailed(SaveFailure.UNAVAILABLE)
-                    return@launch
+                    self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(SaveFailure.UNAVAILABLE) else null }
+                    return@launchJob
                 }
                 val throttle = Throttle(started)
                 try {
                     BackupWriter.write(out, prepared.manifest, prepared.entries) { progress ->
                         throttle.pass(progress.fraction) { remaining ->
-                            mutableJob.update { if (it is BackupJob.Saving) it.copy(progress = progress, remainingSec = remaining) else it }
+                            self.moveOn { if (it is BackupJob.Saving) it.copy(progress = progress, remainingSec = remaining) else null }
                         }
                     }
                 } finally {
                     late.cancel()
                 }
+                // «Проверяем файл» can no longer be stopped: whether «Остановить» came first is settled by this very step
+                if (!self.moveOn { if (it is BackupJob.Saving) it.copy(verifying = true, remainingSec = null) else null }) {
+                    throw CancellationException("stopped before the check")
+                }
                 // The archive is read back from where it went: a copy that cannot be opened is worse than a slow one.
-                mutableJob.update { if (it is BackupJob.Saving) it.copy(verifying = true, remainingSec = null) else it }
                 val readBack = if (shareFile != null) shareFile.openInput() else documents.openInput(checkNotNull(uri))
                 // a provider that will not hand back what it has just taken is not a reason to fail a copy that was written whole
-                readBack?.use { BackupReader.verify(it, total) {} }
+                readBack?.use { requireDatabase(BackupReader.verify(it, total, total + config.freeSpaceMarginBytes) {}) }
                 // The copy is whole where it went: nothing that happens after this takes it away.
                 finished = true
-                speed.measured(total, elapsed.nowMs() - started)
                 rememberDate()
                 // A screen that was shown is shown long enough to be read: nothing on this app's screens flashes by.
                 shownAt?.let { at ->
@@ -195,30 +261,32 @@ class BackupManager(
                     if (stillToShow > 0) delay(stillToShow)
                 }
                 analytics.track(BackupCreated(megabytes = (total / BYTES_PER_MB).toInt(), parts = parts.size))
-                mutableJob.value = BackupJob.Saved(
+                val saved = BackupJob.Saved(
                     fileName = uri?.let(documents::nameOf) ?: fileName,
                     bytes = uri?.let(documents::sizeOf) ?: shareFile?.sizeBytes() ?: total,
                     place = uri?.let(documents::placeOf),
                     manifest = prepared.manifest,
                     shareFile = shareFile,
                 )
+                self.moveOn { if (it is BackupJob.Saving) saved else null }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: BackupFileException) {
                 // a copy cancelled while its write broke stays cancelled: «Отмена» has been said already
                 currentCoroutineContext().ensureActive()
                 analytics.error(ErrorGroup.BACKUP, "the copy could not be written", e)
-                mutableJob.value = BackupJob.SaveFailed(SaveFailure.FAILED)
+                self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(SaveFailure.FAILED) else null }
             } catch (e: Exception) {
                 // The stream's IOException, and whatever else the platform throws on the way — SQLite refusing a snapshot
                 // on a full disk, a provider's own exception: a copy that failed is said on its screen, not a fall of the app.
                 currentCoroutineContext().ensureActive()
                 analytics.error(ErrorGroup.BACKUP, "the copy failed", e)
-                mutableJob.value = BackupJob.SaveFailed(failureOf(e))
+                val reason = failureOf(e, inPhone)
+                self.moveOn { if (it is BackupJob.Saving) BackupJob.SaveFailed(reason) else null }
             } finally {
                 store.cleanUp()
                 // an unfinished file is ours to remove — cancelled, failed, or cut short
-                if (!finished) withContext(kotlinx.coroutines.NonCancellable) {
+                if (!finished) withContext(NonCancellable) {
                     if (uri != null) documents.delete(uri) else shareFile?.deleteFile()
                 }
             }
@@ -236,15 +304,21 @@ class BackupManager(
         }
     }
 
-    // A full card says so in the message of the exception, and nowhere else. A place that went away is a failure of the
-    // stream; SQLite's own «disk I/O error» is about its snapshot, not about the place.
-    private fun failureOf(e: Exception): SaveFailure {
+    // A full card says so in the message of the exception, and nowhere else. Room that ran out [inPhone] — under the
+    // snapshot of the database or the archive for «Отправить…» — is the phone's own; a place that went away is a failure
+    // of the stream into it, and SQLite's own «disk I/O error» is about its snapshot, not about the place.
+    private fun failureOf(e: Exception, inPhone: Boolean): SaveFailure {
         val message = generateSequence<Throwable>(e) { it.cause }.mapNotNull { it.message }.joinToString(" ")
         return when {
-            NO_SPACE_WORDS.any { message.contains(it, ignoreCase = true) } -> SaveFailure.NO_SPACE
-            e is IOException && GONE_WORDS.any { message.contains(it, ignoreCase = true) } -> SaveFailure.UNAVAILABLE
+            NO_SPACE_WORDS.any { message.contains(it, ignoreCase = true) } -> if (inPhone) SaveFailure.PHONE_FULL else SaveFailure.NO_SPACE
+            !inPhone && e is IOException && GONE_WORDS.any { message.contains(it, ignoreCase = true) } -> SaveFailure.UNAVAILABLE
             else -> SaveFailure.FAILED
         }
+    }
+
+    /** A copy without the snapshot of the database is no copy: its media over this phone's database would be a mixture. */
+    private fun requireDatabase(seen: BackupSeen) {
+        if (!seen.hasDatabase) throw BackupFileException(BackupFileProblem.Damaged)
     }
 
     /** What the picked file is; reads the passport only. */
@@ -268,44 +342,62 @@ class BackupManager(
     }
 
     /**
-     * [unsafe] is the way for a phone without room: the copy is checked whole, the media are deleted
-     * to make that room, and only then is it unpacked. Otherwise the copy is unpacked beside the
-     * data, and a failure or a cancellation changes nothing.
+     * [unsafe] is the way for a phone without room: the copy is checked whole — and what the app opens first, the database
+     * and the settings, unpacked and opened on the way — the media are deleted to make the room, and only then is the rest
+     * unpacked. Otherwise the copy is unpacked beside the data, and a failure or a cancellation changes nothing.
      */
-    fun restore(copy: BackupCandidate.Copy, unsafe: Boolean) {
-        if (mutableJob.value != BackupJob.Idle) return
+    fun restore(copy: BackupCandidate.Copy, unsafe: Boolean) = restore(copy, unsafe, mediaGone = false)
+
+    /** [mediaGone] — a retry after the worst case: the media went in the try before, and a failure now cannot bring them back. */
+    private fun restore(copy: BackupCandidate.Copy, unsafe: Boolean, mediaGone: Boolean) {
         val manifest = copy.manifest
-        mutableJob.value = BackupJob.Restoring(if (unsafe) RestorePhase.VERIFYING else RestorePhase.EXTRACTING, checked = unsafe)
-        keepAlive.start()
-        work = scope.launch {
-            var dataIntact = true
+        launchJob(BackupJob.Restoring(if (unsafe) RestorePhase.VERIFYING else RestorePhase.EXTRACTING, checked = unsafe)) { self ->
+            var dataIntact = !mediaGone
             try {
+                // stopped while it waited for the job before it: the catch removes the unpacking folder, which nobody uses now
+                currentCoroutineContext().ensureActive()
                 val total = manifest.totalBytes
+                // more than this was never weighed against the room of the phone: an archive that unpacks past it is damaged
+                val limit = total + config.freeSpaceMarginBytes
                 fun report(phase: RestorePhase, started: Long): (BackupProgress) -> Unit {
                     val throttle = Throttle(started)
                     return { progress ->
                         throttle.pass(progress.fraction) { remaining ->
-                            mutableJob.update { if (it is BackupJob.Restoring) it.copy(phase = phase, progress = progress, remainingSec = remaining) else it }
+                            self.moveOn { if (it is BackupJob.Restoring) it.copy(phase = phase, progress = progress, remainingSec = remaining) else null }
                         }
                     }
                 }
+                // the data of the copy are unpacked while the media are still in place: they need the room now
+                if (unsafe) requireRoomForData(manifest)
+                val staging = store.newStaging()
                 if (unsafe) {
-                    val input = documents.openInput(copy.uri) ?: throw IOException("the copy is not there any more")
-                    input.use { BackupReader.verify(it, total, report(RestorePhase.VERIFYING, elapsed.nowMs())) }
+                    val seen = open(copy.uri).use { BackupReader.extract(it, staging, total, limit, setOf(BackupPart.DATA), report(RestorePhase.VERIFYING, elapsed.nowMs())) }
+                    requireDatabase(seen)
+                    // a copy whose database this app would not open costs nothing yet: the media are still in place
+                    store.settleStaging(manifest.createdAtEpochMs)
+                    requireRoomWithoutMedia(manifest)
+                    // From here on stopping would leave the phone with neither the old data nor the new: whether «Остановить»
+                    // came first is settled by the same step that passes the point.
+                    if (!self.moveOn { if (it is BackupJob.Restoring) it.copy(phase = RestorePhase.EXTRACTING, progress = null, remainingSec = null) else null }) {
+                        throw CancellationException("stopped before the media went")
+                    }
                     dataIntact = false
                     store.deleteMedia()
+                    open(copy.uri).use { BackupReader.extract(it, staging, total, limit, MEDIA_PARTS, report(RestorePhase.EXTRACTING, elapsed.nowMs())) }
+                } else {
+                    val seen = open(copy.uri).use { BackupReader.extract(it, staging, total, limit, onProgress = report(RestorePhase.EXTRACTING, elapsed.nowMs())) }
+                    requireDatabase(seen)
+                    store.settleStaging(manifest.createdAtEpochMs)
                 }
-                mutableJob.update { if (it is BackupJob.Restoring) it.copy(phase = RestorePhase.EXTRACTING, progress = null, remainingSec = null) else it }
-                val staging = store.newStaging()
-                val input = documents.openInput(copy.uri) ?: throw IOException("the copy is not there any more")
-                input.use { BackupReader.extract(it, staging, total, report(RestorePhase.EXTRACTING, elapsed.nowMs())) }
                 // From here on there is no way back, and no need for one: the rest is renames at the next start.
-                mutableJob.update { if (it is BackupJob.Restoring) it.copy(phase = RestorePhase.FINISHING, remainingSec = null) else it }
-                withContext(kotlinx.coroutines.NonCancellable) { store.markStagingReady() }
+                if (!self.moveOn { if (it is BackupJob.Restoring) it.copy(phase = RestorePhase.FINISHING, remainingSec = null) else null }) {
+                    throw CancellationException("stopped before the mark")
+                }
+                withContext(NonCancellable) { store.markStagingReady() }
                 analytics.track(BackupRestored(ok = true))
-                mutableJob.value = BackupJob.Restored(manifest)
+                self.moveOn { if (it is BackupJob.Restoring) BackupJob.Restored(manifest) else null }
             } catch (e: CancellationException) {
-                withContext(kotlinx.coroutines.NonCancellable) { store.discardStaging() }
+                withContext(NonCancellable) { store.discardStaging() }
                 throw e
             } catch (e: Exception) {
                 // The file, the disk, or whatever else the platform throws on the way: said on the screen, not a fall.
@@ -315,9 +407,42 @@ class BackupManager(
                 // The one place where a person can lose everything; until now nobody but them knew.
                 analytics.track(BackupRestored(ok = false))
                 analytics.error(ErrorGroup.BACKUP, "the copy could not be restored", e)
-                mutableJob.value = BackupJob.RestoreFailed(dataIntact, copy.uri, manifest)
+                self.moveOn { if (it is BackupJob.Restoring) BackupJob.RestoreFailed(dataIntact, copy.uri, manifest, checked = unsafe) else null }
             }
         }
+    }
+
+    private fun open(uri: String): ByteInput = documents.openInput(uri) ?: throw IOException("the copy is not there any more")
+
+    /**
+     * The way without a net unpacks the database, the settings and the profile of the copy before the media go (spec 3.20):
+     * a phone without room for them fails the restore before minutes of checking, with nothing changed.
+     */
+    private fun requireRoomForData(manifest: BackupManifest) {
+        val data = manifest.bytes[BackupPart.DATA] ?: 0L
+        if (data + config.freeSpaceMarginBytes - store.freeBytes() > 0) throw IOException("no room for the data of the copy beside the media")
+    }
+
+    /**
+     * The screen offered the way without a net because the media make the room (spec 3.20); minutes of checking later
+     * the phone may have less. The media do not go for a restore that would run out of room all the same.
+     */
+    private suspend fun requireRoomWithoutMedia(manifest: BackupManifest) {
+        val media = store.contents().bytes.filterKeys { it != BackupPart.DATA }.values.sum()
+        // the data of the copy lie unpacked already; what is left to unpack are its media
+        val left = manifest.bytes.filterKeys { it in manifest.parts && it != BackupPart.DATA }.values.sum()
+        if (left + config.freeSpaceMarginBytes - store.freeBytes() > media) throw IOException("no room for the copy even without the media")
+    }
+
+    /** «Ещё раз», «Ещё раз с этим файлом»: the file of the failure, the way it took — a screen needs no passport of its own. */
+    fun retry() {
+        val failed = mutableJob.value as? BackupJob.RestoreFailed ?: return
+        // after the media went there is nothing left for a safe way to keep safe — and a failure of this try says so again
+        restore(
+            BackupCandidate.Copy(failed.uri, fileName = null, fileBytes = null, failed.manifest, missingBytes = 0),
+            unsafe = failed.checked || !failed.dataIntact,
+            mediaGone = !failed.dataIntact,
+        )
     }
 
     /**
@@ -336,23 +461,22 @@ class BackupManager(
      * «Отмена»: at once. A copy being written loses its file; a restore on the safe way loses
      * nothing. On the way without a net the media go as soon as the check has passed — from then
      * on stopping would only leave the phone with neither the old data nor the new, so it cannot be stopped.
+     * A stop that comes too late — the job has passed its point already — does nothing.
      */
     fun cancel() {
-        if (!cancellable) return
+        while (true) {
+            val now = mutableJob.value
+            if (!now.stoppable) return
+            if (mutableJob.compareAndSet(now, BackupJob.Idle)) break
+        }
         work?.cancel()
-        mutableJob.value = BackupJob.Idle
     }
 
-    val cancellable: Boolean
-        get() = when (val now = mutableJob.value) {
-            is BackupJob.Saving -> !now.verifying
-            is BackupJob.Restoring -> if (now.checked) now.phase == RestorePhase.VERIFYING else now.phase != RestorePhase.FINISHING
-            else -> false
-        }
+    val cancellable: Boolean get() = mutableJob.value.stoppable
 
-    /** «Готово», «Закрыть»: the outcome has been read. */
+    /** «Готово», «Закрыть», the system «Назад» from an outcome: it has been read. A job under way is not touched. */
     fun dismiss() {
-        if (!running) mutableJob.value = BackupJob.Idle
+        mutableJob.update { if (it is BackupJob.Saved || it is BackupJob.SaveFailed || it is BackupJob.RestoreFailed) BackupJob.Idle else it }
     }
 
     /** Ten updates a second are plenty, and «осталось около» waits until the speed is worth a word (5 % or 10 s). */
@@ -378,10 +502,18 @@ class BackupManager(
         const val MS_PER_SECOND = 1_000
         const val BYTES_PER_MB = 1024.0 * 1024.0
 
-        /** Below this a copy is seconds whatever the estimate says: the base of the estimate alone must not open a screen. */
+        /** Above this a copy shows its progress screen at once; below it, only when it has not ended in [SHOW_FROM_MS]. */
         const val QUICK_BYTES = 64L * 1024 * 1024
-        /** «disk is full» is SQLITE_FULL, as android.database and androidx.sqlite both word it. */
-        val NO_SPACE_WORDS = listOf("ENOSPC", "No space left", "disk is full")
+
+        /** What the way without a net unpacks after the media have gone: all but the data, unpacked while it checked. */
+        val MEDIA_PARTS = BackupPart.entries.toSet() - BackupPart.DATA
+
+        /**
+         * «disk is full» is SQLITE_FULL, as android.database and androidx.sqlite both word it. SQLITE_IOERR_SHMSIZE is SQLite
+         * failing to enlarge the `-shm` of a database — on a full disk, which is how a snapshot on a full phone ends on
+         * Android (seen on the emulator): the errno is only in SQLite's log, not in the exception.
+         */
+        val NO_SPACE_WORDS = listOf("ENOSPC", "No space left", "disk is full", "SQLITE_IOERR_SHMSIZE")
         val GONE_WORDS = listOf("ENOENT", "EIO", "ENODEV", "EPIPE", "No such file", "I/O error")
     }
 }

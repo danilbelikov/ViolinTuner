@@ -106,7 +106,7 @@ internal class ZipWriter(out: ByteOutput) {
         written += Written(entry.name, crc, compressed, entry.size, entry.offset)
     }
 
-    /** The central directory and its end; the stream under it is closed. */
+    /** The central directory and its end, all handed to the stream under it; the stream stays open — its owner syncs and closes it. */
     fun finish() {
         check(current == null) { "an entry is open" }
         sink.emit()
@@ -180,7 +180,7 @@ internal class ZipWriter(out: ByteOutput) {
             writeIntLe(if (wide) MAX_32.toInt() else directoryOffset.toInt())
             writeShortLe(0)
         }
-        sink.close()
+        sink.flush()
     }
 }
 

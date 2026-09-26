@@ -217,6 +217,7 @@
     <string name="backup_failed_gone_text">Флешку вынули или папка пропала. Недописанный файл удалён — вставьте носитель и попробуйте снова.</string>
     <string name="backup_failed_title">Не получилось сохранить копию</string>
     <string name="backup_failed_text">Недописанный файл удалён. Данные в приложении на месте.</string>
+    <string name="backup_failed_phone_full_text">Место кончилось в памяти самого телефона. Недописанный файл удалён — освободите место и попробуйте снова.</string>
     <string name="backup_retry">Ещё раз</string>
     <string name="backup_close">Закрыть</string>
     <string name="backup_count_sessions_one">%1$d запись</string>
@@ -268,6 +269,9 @@
     <string name="restore_pick_another">Выбрать другой файл</string>
     <string name="restore_no_room_title">Не хватает %1$s, чтобы восстановить безопасно</string>
     <string name="restore_no_room_text">Копия сначала распаковывается рядом с текущими данными и только потом заменяет их. Освободите место на телефоне — или восстановите без страховки.</string>
+    <string name="restore_no_room_any_title">Не хватает %1$s, чтобы восстановить</string>
+    <string name="restore_no_room_even_unsafe_text">Даже если удалить звук, видео и фото нот, которые сейчас в приложении, не хватит ещё %1$s. Освободите место на телефоне и откройте файл снова.</string>
+    <string name="restore_no_room_free_text">Освободите место на телефоне и откройте файл снова.</string>
     <string name="restore_no_room_ok">Понятно</string>
     <string name="restore_unsafe_button">Удалить текущие данные и восстановить</string>
     <string name="restore_unsafe_title">Удалить всё и восстановить?</string>
@@ -291,6 +295,7 @@
     <string name="restore_retry_same">Ещё раз с этим файлом</string>
     <string name="restore_start_clean">Начать с чистого приложения</string>
     <string name="restore_busy">Сначала закончите запись</string>
+    <string name="restore_busy_saving">Сначала дождитесь, пока сохранится копия</string>
     <string name="video_description">Видео</string>
     <string name="video_state_playing">играет, двойное касание — пауза</string>
     <string name="video_state_paused">на паузе, двойное касание — продолжить</string>

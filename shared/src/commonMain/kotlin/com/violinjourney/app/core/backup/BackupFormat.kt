@@ -10,9 +10,6 @@ data class BackupConfig(
     val shareUpToBytes: Long = 200L * 1024 * 1024,
     /** A copy older than this, with recordings made since, says so in its line of the settings. */
     val staleAfterDays: Long = 30,
-    /** Where the estimate of a copy starts before this device has measured itself: a minute a gigabyte. */
-    val startMsPerMb: Double = 60_000.0 / 1024,
-    val estimateBaseMs: Long = 2_000,
 )
 
 /** What a copy is made of. [DATA] is the data itself and always goes; the rest is weight that may stay behind. */
@@ -59,11 +56,20 @@ data class BackupManifest(
         const val MAGIC_KEY = "violin-intonation-backup"
         const val MAGIC = "1"
 
+        /**
+         * A passport is a couple of kilobytes of keys; a first entry larger than this is not one of ours, and is not read
+         * whole into memory to find that out. A limit of the format, not a number of the spec to tune.
+         */
+        const val MAX_BYTES = 64 * 1024
     }
 }
 
-/** One file on its way into a copy. [path] inside the archive says where it goes back to: `sessions/<name>`, `db/violin.db`. */
-class BackupEntry(val path: String, val part: BackupPart, val size: Long, val open: () -> ByteInput?)
+/**
+ * One file on its way into a copy. [path] inside the archive says where it goes back to: `sessions/<name>`, `db/violin.db`.
+ * [required] — the copy is nothing without it: the snapshot of the database, the settings. A medium that has vanished since
+ * the list was made is skipped (its recording comes back without its sound); a required file that has vanished fails the copy.
+ */
+class BackupEntry(val path: String, val part: BackupPart, val size: Long, val required: Boolean = false, val open: () -> ByteInput?)
 
 /** Where a copy is in its making, or in its coming back. */
 data class BackupProgress(

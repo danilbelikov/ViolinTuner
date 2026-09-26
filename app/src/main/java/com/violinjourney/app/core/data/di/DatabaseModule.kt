@@ -2,6 +2,7 @@ package com.violinjourney.app.core.data.di
 
 import android.content.Context
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.data.DatabaseMigrations
 import com.violinjourney.app.core.data.backing.BackingDao
@@ -23,10 +24,7 @@ import javax.inject.Singleton
 object DatabaseModule {
     @Provides
     @Singleton
-    fun provideDatabase(@ApplicationContext context: Context): AppDatabase =
-        Room.databaseBuilder(context, AppDatabase::class.java, AppDatabase.FILE_NAME)
-            .addMigrations(*DatabaseMigrations.ALL)
-            .build()
+    fun provideDatabase(@ApplicationContext context: Context): AppDatabase = appDatabaseBuilder(context, AppDatabase.FILE_NAME).build()
 
     @Provides
     fun provideSessionDao(database: AppDatabase): SessionDao = database.sessionDao()
@@ -49,3 +47,10 @@ object DatabaseModule {
     @Provides
     fun provideSoundDao(database: AppDatabase): SoundDao = database.soundDao()
 }
+
+/**
+ * How the app opens its database: [name] under `databases/`, or an absolute path — a copy unpacked beside the data is
+ * opened by this same builder before it is put in place (spec 5.14), so it passes the same migrations and the same check.
+ */
+fun appDatabaseBuilder(context: Context, name: String): RoomDatabase.Builder<AppDatabase> =
+    Room.databaseBuilder(context, AppDatabase::class.java, name).addMigrations(*DatabaseMigrations.ALL)

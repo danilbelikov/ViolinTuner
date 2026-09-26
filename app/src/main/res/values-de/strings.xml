@@ -217,6 +217,7 @@
     <string name="backup_failed_gone_text">Der USB-Stick wurde abgezogen oder der Ordner ist verschwunden. Die unfertige Datei wurde gelöscht – schließen Sie das Medium an und versuchen Sie es erneut.</string>
     <string name="backup_failed_title">Die Kopie konnte nicht gespeichert werden</string>
     <string name="backup_failed_text">Die unfertige Datei wurde gelöscht. Die Daten in der App sind unverändert.</string>
+    <string name="backup_failed_phone_full_text">Der Speicher des Telefons selbst ist voll. Die unfertige Datei wurde gelöscht – schaffen Sie Platz und versuchen Sie es erneut.</string>
     <string name="backup_retry">Noch einmal</string>
     <string name="backup_close">Schließen</string>
     <string name="backup_count_sessions_one">%1$d Aufnahme</string>
@@ -268,6 +269,9 @@
     <string name="restore_pick_another">Andere Datei wählen</string>
     <string name="restore_no_room_title">Es fehlen %1$s für ein sicheres Wiederherstellen</string>
     <string name="restore_no_room_text">Die Kopie wird zuerst neben den aktuellen Daten entpackt und ersetzt sie erst danach. Schaffen Sie Platz auf dem Telefon – oder stellen Sie ohne Absicherung wieder her.</string>
+    <string name="restore_no_room_any_title">Es fehlen %1$s zum Wiederherstellen</string>
+    <string name="restore_no_room_even_unsafe_text">Selbst wenn Klang, Videos und Notenfotos, die jetzt in der App sind, gelöscht würden, fehlten noch %1$s. Schaffen Sie Platz auf dem Telefon und öffnen Sie die Datei erneut.</string>
+    <string name="restore_no_room_free_text">Schaffen Sie Platz auf dem Telefon und öffnen Sie die Datei erneut.</string>
     <string name="restore_no_room_ok">Verstanden</string>
     <string name="restore_unsafe_button">Aktuelle Daten löschen und wiederherstellen</string>
     <string name="restore_unsafe_title">Alles löschen und wiederherstellen?</string>
@@ -291,6 +295,7 @@
     <string name="restore_retry_same">Noch einmal mit dieser Datei</string>
     <string name="restore_start_clean">Mit leerer App beginnen</string>
     <string name="restore_busy">Beenden Sie zuerst die Aufnahme</string>
+    <string name="restore_busy_saving">Warten Sie zuerst, bis die Kopie gespeichert ist</string>
     <string name="video_description">Video</string>
     <string name="video_state_playing">läuft, doppelt tippen – Pause</string>
     <string name="video_state_paused">pausiert, doppelt tippen – fortsetzen</string>

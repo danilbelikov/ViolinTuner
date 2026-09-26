@@ -217,6 +217,7 @@
     <string name="backup_failed_gone_text">USBメモリが抜かれたか、フォルダがなくなりました。書きかけのファイルは削除しました。メディアを挿し直して、もう一度お試しください。</string>
     <string name="backup_failed_title">コピーを保存できませんでした</string>
     <string name="backup_failed_text">書きかけのファイルは削除しました。アプリ内のデータはそのままです。</string>
+    <string name="backup_failed_phone_full_text">端末本体の空き容量がなくなりました。書きかけのファイルは削除しました。空き容量を増やしてから、もう一度お試しください。</string>
     <string name="backup_retry">もう一度</string>
     <string name="backup_close">閉じる</string>
     <string name="backup_count_sessions_one">録音 %1$d 件</string>
@@ -268,6 +269,9 @@
     <string name="restore_pick_another">別のファイルを選ぶ</string>
     <string name="restore_no_room_title">安全に復元するには、あと %1$s 必要です</string>
     <string name="restore_no_room_text">コピーはまず現在のデータの隣に展開され、そのあとで置き換えます。端末の空き容量を増やすか、安全策なしで復元してください。</string>
+    <string name="restore_no_room_any_title">復元するには、あと %1$s 必要です</string>
+    <string name="restore_no_room_even_unsafe_text">いまアプリにある音声、動画、楽譜の写真を削除しても、あと %1$s 足りません。端末の空き容量を増やしてから、もう一度ファイルを開いてください。</string>
+    <string name="restore_no_room_free_text">端末の空き容量を増やしてから、もう一度ファイルを開いてください。</string>
     <string name="restore_no_room_ok">わかりました</string>
     <string name="restore_unsafe_button">現在のデータを削除して復元</string>
     <string name="restore_unsafe_title">すべて削除して復元しますか？</string>
@@ -291,6 +295,7 @@
     <string name="restore_retry_same">このファイルでもう一度</string>
     <string name="restore_start_clean">まっさらな状態から始める</string>
     <string name="restore_busy">先に録音を終えてください</string>
+    <string name="restore_busy_saving">先にコピーの保存が終わるまでお待ちください</string>
     <string name="video_description">動画</string>
     <string name="video_state_playing">再生中、ダブルタップで一時停止</string>
     <string name="video_state_paused">一時停止中、ダブルタップで再開</string>

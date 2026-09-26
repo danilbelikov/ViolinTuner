@@ -217,6 +217,7 @@
     <string name="backup_failed_gone_text">O pen drive foi retirado ou a pasta sumiu. O arquivo incompleto foi excluído — conecte a mídia e tente de novo.</string>
     <string name="backup_failed_title">Não foi possível salvar a cópia</string>
     <string name="backup_failed_text">O arquivo incompleto foi excluído. Os dados do app continuam no lugar.</string>
+    <string name="backup_failed_phone_full_text">Acabou o espaço na memória do próprio telefone. O arquivo incompleto foi excluído — libere espaço e tente de novo.</string>
     <string name="backup_retry">Tentar de novo</string>
     <string name="backup_close">Fechar</string>
     <string name="backup_count_sessions_one">%1$d gravação</string>
@@ -268,6 +269,9 @@
     <string name="restore_pick_another">Escolher outro arquivo</string>
     <string name="restore_no_room_title">Faltam %1$s para restaurar com segurança</string>
     <string name="restore_no_room_text">A cópia primeiro é descompactada ao lado dos dados atuais e só depois os substitui. Libere espaço no telefone — ou restaure sem rede de segurança.</string>
+    <string name="restore_no_room_any_title">Faltam %1$s para restaurar</string>
+    <string name="restore_no_room_even_unsafe_text">Mesmo excluindo o som, os vídeos e as fotos das partituras que estão no app, ainda faltariam %1$s. Libere espaço no telefone e abra o arquivo de novo.</string>
+    <string name="restore_no_room_free_text">Libere espaço no telefone e abra o arquivo de novo.</string>
     <string name="restore_no_room_ok">Entendi</string>
     <string name="restore_unsafe_button">Excluir os dados atuais e restaurar</string>
     <string name="restore_unsafe_title">Excluir tudo e restaurar?</string>
@@ -291,6 +295,7 @@
     <string name="restore_retry_same">De novo com este arquivo</string>
     <string name="restore_start_clean">Começar com o app limpo</string>
     <string name="restore_busy">Primeiro termine a gravação</string>
+    <string name="restore_busy_saving">Primeiro espere a cópia ser salva</string>
     <string name="video_description">Vídeo</string>
     <string name="video_state_playing">reproduzindo, toque duplo para pausar</string>
     <string name="video_state_paused">em pausa, toque duplo para continuar</string>

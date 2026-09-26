@@ -2,6 +2,10 @@ package com.violinjourney.app.core.backup
 
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -11,6 +15,10 @@ import com.violinjourney.app.core.data.session.SessionEntity
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.After
@@ -119,6 +127,49 @@ class AppBackupStoreTest {
         assertArrayEquals(sound, File(files, "sessions/one.m4a").readBytes())
         assertFalse("what was made after the copy is gone with the data it belonged to", File(files, "sessions/two.m4a").exists())
         assertEquals(schema, database.openHelper.readableDatabase.version)
+    }
+
+    @Test
+    fun anUnpackedCopyIsOpenedBeforeItsMarkAndCarriesTheDateOfItsCopy() = runBlocking {
+        database.sessionDao().insert(session("Гаммы", null), bucketMs = 50, samples = ByteArray(3))
+        val schema = database.openHelper.readableDatabase.version
+        val snapshotFile = snapshot()
+        // settings of the copy, as the app wrote them
+        val copied = File(root, "copied/user_settings.preferences_pb")
+        val life = Job()
+        PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.IO + life)) { copied }.edit { it[booleanPreferencesKey("onboarding_done")] = true }
+        life.cancelAndJoin()
+        val manifest = BackupManifest(1, "test", schema, 1_790_000_000_000, "test", setOf(BackupPart.DATA), BackupCounts(sessions = 1), mapOf(BackupPart.DATA to snapshotFile.length() + copied.length()))
+        val archive = ByteArrayOutputStream()
+        BackupWriter.write(
+            archive, manifest,
+            listOf(
+                BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, snapshotFile.length(), required = true) { snapshotFile.inputStream() },
+                BackupEntry("${BackupPaths.SETTINGS}/${RestoreSwap.SETTINGS_FILE}", BackupPart.DATA, copied.length(), required = true) { copied.inputStream() },
+            ),
+        ) {}
+        val staging = File(files, RestoreSwap.STAGING)
+        BackupReader.extract(ByteArrayInputStream(archive.toByteArray()), staging, manifest.totalBytes) {}
+
+        StagedCopy.settle(context, staging, manifest.createdAtEpochMs, Dispatchers.IO)
+
+        val staged = File(staging, "db/violin.db")
+        assertEquals(schema, SQLiteDatabase.openDatabase(staged.path, null, SQLiteDatabase.OPEN_READONLY).use { it.version })
+        assertFalse("the file is whole alone: the swap moves only it", File(staged.path + "-wal").exists())
+        val readLife = Job()
+        val settings = PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.IO + readLife)) { File(staging, "settings/user_settings.preferences_pb") }.data.first()
+        readLife.cancelAndJoin()
+        assertEquals(manifest.createdAtEpochMs, settings[longPreferencesKey("backup_last_at")])
+        assertEquals(true, settings[booleanPreferencesKey("onboarding_done")])
+    }
+
+    @Test
+    fun anUnpackedDatabaseThatDoesNotOpenFailsBeforeItsMarkAndIsNotReplacedByAnEmptyOne() {
+        val staged = File(files, "${RestoreSwap.STAGING}/db/violin.db").also { it.parentFile!!.mkdirs() }
+        staged.writeBytes(ByteArray(8_192) { 7 })
+        val failure = runCatching { runBlocking { StagedCopy.settle(context, File(files, RestoreSwap.STAGING), 1, Dispatchers.IO) } }.exceptionOrNull()
+        assertTrue("was $failure", failure != null)
+        assertArrayEquals("the file stays as it came", ByteArray(8_192) { 7 }, staged.readBytes())
     }
 
     private suspend fun com.violinjourney.app.core.data.session.SessionDao.observeAllOnce() = observeAll().first()

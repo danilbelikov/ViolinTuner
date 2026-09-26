@@ -20,3 +20,10 @@ expect fun PlatformFile.openInput(): ByteInput?
 
 /** Opens the file for writing from its start, making it if need be; null when it cannot. */
 expect fun PlatformFile.openOutput(): ByteOutput?
+
+/**
+ * What has been written is on the storage itself, not only in the system's cache: a sudden loss of power after this
+ * leaves it whole. A stream with no file of this phone under it — a pipe to a cloud provider — has nothing here to sync
+ * and passes; a disk that does not take the bytes throws.
+ */
+expect fun ByteOutput.syncToDisk()

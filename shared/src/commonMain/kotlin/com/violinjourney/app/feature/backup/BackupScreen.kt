@@ -49,6 +49,7 @@ import com.violinjourney.app.shared.resources.backup_count_trophies_one
 import com.violinjourney.app.shared.resources.backup_done
 import com.violinjourney.app.shared.resources.backup_failed_gone_text
 import com.violinjourney.app.shared.resources.backup_failed_gone_title
+import com.violinjourney.app.shared.resources.backup_failed_phone_full_text
 import com.violinjourney.app.shared.resources.backup_failed_space_inside
 import com.violinjourney.app.shared.resources.backup_failed_space_text
 import com.violinjourney.app.shared.resources.backup_failed_space_title
@@ -96,6 +97,7 @@ import com.violinjourney.app.core.backup.BackupContents
 import com.violinjourney.app.core.backup.BackupJob
 import com.violinjourney.app.core.backup.BackupPart
 import com.violinjourney.app.core.backup.SaveFailure
+import com.violinjourney.app.core.backup.stoppable
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -139,7 +141,7 @@ fun BackupScreen(state: BackupState, fileName: String, onIntent: (BackupIntent) 
                             remainingSec = job.remainingSec,
                             leaveTitle = stringResource(Res.string.backup_can_leave_title),
                             leaveText = stringResource(Res.string.backup_can_leave_text),
-                            cancellable = !job.verifying,
+                            cancellable = job.stoppable,
                             onCancel = { onIntent(BackupIntent.CancelClicked) },
                         )
                     }
@@ -315,6 +317,8 @@ private fun Failed(job: BackupJob.SaveFailed, onIntent: (BackupIntent) -> Unit) 
             // inside the phone — the archive for «Отправить…» did not fit; outside — the place that was picked is full
             if (job.missingBytes > 0) stringResource(Res.string.backup_failed_space_inside, Formats.fileSize(job.missingBytes)) else stringResource(Res.string.backup_failed_space_text),
         )
+        // the phone's own memory ran out — under the snapshot of the database or the archive for «Отправить…»: another card would not help
+        SaveFailure.PHONE_FULL -> ProblemBlock(stringResource(Res.string.backup_failed_title), stringResource(Res.string.backup_failed_phone_full_text))
         SaveFailure.UNAVAILABLE -> ProblemBlock(stringResource(Res.string.backup_failed_gone_title), stringResource(Res.string.backup_failed_gone_text))
         SaveFailure.FAILED -> ProblemBlock(stringResource(Res.string.backup_failed_title), stringResource(Res.string.backup_failed_text))
     }

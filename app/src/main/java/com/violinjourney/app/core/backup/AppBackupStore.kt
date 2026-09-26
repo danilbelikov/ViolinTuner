@@ -8,9 +8,11 @@ import android.provider.DocumentsContract
 import android.provider.OpenableColumns
 import android.util.Log
 import androidx.core.net.toUri
+import androidx.room.RoomDatabase
 import com.violinjourney.app.BuildConfig
 import com.violinjourney.app.R
 import com.violinjourney.app.core.data.AppDatabase
+import com.violinjourney.app.core.data.di.appDatabaseBuilder
 import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.domain.practice.PracticeRepository
 import com.violinjourney.app.core.domain.progress.Progress
@@ -18,6 +20,7 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.TrophyRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.settings.DataStoreBackupPrefs
 import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -86,9 +89,10 @@ class AppBackupStore @Inject constructor(
         val snapshot = snapshotDatabase()
         val now = contents()
         val entries = buildList {
-            add(BackupEntry("${BackupPaths.DATABASE}/${RestoreSwap.DATABASE_FILE}", BackupPart.DATA, snapshot.length()) { snapshot.inputStreamOrNull() })
+            // the snapshot and the settings are the copy itself: vanished on the way, they fail it (spec 5.14)
+            add(BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, snapshot.length(), required = true) { snapshot.inputStreamOrNull() })
             settingsFile.takeIf { it.isFile }?.let { file ->
-                add(BackupEntry("${BackupPaths.SETTINGS}/${RestoreSwap.SETTINGS_FILE}", BackupPart.DATA, file.length()) { file.inputStreamOrNull() })
+                add(BackupEntry("${BackupPaths.SETTINGS}/${RestoreSwap.SETTINGS_FILE}", BackupPart.DATA, file.length(), required = true) { file.inputStreamOrNull() })
             }
             // data first, then by weight: what matters most is in the archive soonest
             listOf(BackupPart.DATA, BackupPart.SHEETS, BackupPart.AUDIO, BackupPart.VIDEO).filter { it in parts || it == BackupPart.DATA }.forEach { part ->
@@ -157,6 +161,10 @@ class AppBackupStore @Inject constructor(
         File(files, RestoreSwap.STAGING).deleteRecursively()
     }
 
+    override suspend fun settleStaging(copyMadeAtEpochMs: Long) = withContext(io) {
+        StagedCopy.settle(context, File(files, RestoreSwap.STAGING), copyMadeAtEpochMs, io)
+    }
+
     override fun markStagingReady() {
         val staging = File(files, RestoreSwap.STAGING)
         // a copy without video, or without a photo, replaces those folders too — with empty ones
@@ -191,7 +199,10 @@ class AppBackupStore @Inject constructor(
 class AppBackupDocuments @Inject constructor(@ApplicationContext private val context: Context) : BackupDocuments {
     private val resolver get() = context.contentResolver
 
-    override fun openOutput(uri: String): OutputStream? = attempt("open for writing", uri) { resolver.openOutputStream(uri.toUri(), "w") }
+    // «wt» empties a file the person chose to replace, where «w» may leave the tail of the old archive after the new one;
+    // a provider that knows no «t» gets the «w» it always had
+    override fun openOutput(uri: String): OutputStream? =
+        attempt("open for writing", uri) { resolver.openOutputStream(uri.toUri(), "wt") } ?: attempt("open for writing", uri) { resolver.openOutputStream(uri.toUri(), "w") }
 
     override fun openInput(uri: String): InputStream? = attempt("open for reading", uri) { resolver.openInputStream(uri.toUri()) }
 
@@ -239,5 +250,41 @@ class AppBackupDocuments @Inject constructor(@ApplicationContext private val con
     private companion object {
         const val TAG = "BackupDocuments"
         const val DOWNLOADS = "Download"
+    }
+}
+
+/**
+ * An unpacked copy opened the way the next start will open it, before its mark is left (spec 5.14): a copy whose database
+ * does not open — a migration that does not take it, a schema that does not match, pages that do not pass their check — is
+ * a failed restore with the data in place, not an app that falls at every start after the swap.
+ */
+internal object StagedCopy {
+    private const val TAG = "StagedCopy"
+    private const val CHECK_PASSED = "ok"
+
+    suspend fun settle(context: Context, staging: File, copyMadeAtEpochMs: Long, io: CoroutineDispatcher) {
+        val database = File(File(staging, BackupPaths.DATABASE), RestoreSwap.DATABASE_FILE)
+        if (!database.isFile) throw IOException("no database among what was unpacked")
+        // A file that is no database, or a damaged one, is told first, by a connection whose handler of corruption leaves
+        // the file alone: Android's own handler deletes such a file and starts an empty database, which would pass every
+        // check after it — and put an empty database in the place of the person's data.
+        SQLiteDatabase.openDatabase(database.path, null, SQLiteDatabase.OPEN_READWRITE or SQLiteDatabase.NO_LOCALIZED_COLLATORS) { /* the file stays as it is */ }.use { raw ->
+            raw.rawQuery("PRAGMA quick_check", null).use { cursor ->
+                if (!cursor.moveToFirst() || cursor.getString(0) != CHECK_PASSED) throw IOException("the unpacked database does not pass its check")
+            }
+        }
+        // Then as the app will open it: the same builder, the same migrations, the same check of the schema. TRUNCATE, not
+        // the journal of the app: once closed the file is whole alone, and the swap moves only the file.
+        val opened = appDatabaseBuilder(context, database.path).setJournalMode(RoomDatabase.JournalMode.TRUNCATE).build()
+        try {
+            opened.openHelper.writableDatabase
+        } finally {
+            opened.close()
+        }
+        // a copy without settings brings none: no file is made here, or the swap would replace the settings with an empty one
+        val settings = File(File(staging, BackupPaths.SETTINGS), RestoreSwap.SETTINGS_FILE)
+        if (settings.isFile) {
+            DataStoreBackupPrefs.stamp(settings.path, copyMadeAtEpochMs, io) { Log.w(TAG, "the settings of the copy could not be read and start over", it) }
+        }
     }
 }

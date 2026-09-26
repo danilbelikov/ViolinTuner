@@ -24,25 +24,79 @@ class BackupFileException(val problem: BackupFileProblem) : IOException(problem.
  * last. Each platform zips with what it has; the archives are the same.
  */
 expect object BackupWriter {
-    /** Answers with the bytes written into entries; a file that has vanished since the list was made is skipped. */
+    /**
+     * Answers with the bytes of the entries; a medium that has vanished since the list was made is skipped, a
+     * [BackupEntry.required] one fails the copy. [out] is closed either way; a copy written to its end is on the storage
+     * itself before it is ([syncToDisk]), a copy that broke is not waited for.
+     */
     suspend fun write(out: ByteOutput, manifest: BackupManifest, entries: List<BackupEntry>, onProgress: (BackupProgress) -> Unit): Long
 }
 
 /** Reads a copy as a stream, from wherever it lies (spec 3.20): the passport alone, a check of the whole, or the unpacking. */
 expect object BackupReader {
-    /** The passport — the first entry. Throws [BackupFileException] for what is not a copy this app can take. */
+    /**
+     * The passport — the first entry, read up to [BackupManifest.MAX_BYTES]. Throws [BackupFileException] for what is not a
+     * copy this app can take.
+     */
     fun manifest(input: ByteInput, knownFormat: Int = BackupManifest.FORMAT_VERSION, knownDatabase: Int): BackupManifest
 
-    /** Reads the whole archive and throws it away: every checksum is checked, and the completion mark has to be there. */
-    suspend fun verify(input: ByteInput, totalBytes: Long, onProgress: (BackupProgress) -> Unit)
+    /**
+     * Reads the whole archive and throws it away: every checksum is checked, the completion mark has to be there and agree
+     * with what was read. An archive that unpacks to more than [limitBytes] is damaged: nobody weighed that much against
+     * the room of the phone.
+     */
+    suspend fun verify(input: ByteInput, totalBytes: Long, limitBytes: Long = Long.MAX_VALUE, onProgress: (BackupProgress) -> Unit): BackupSeen
 
-    /** Unpacks into [target] — `target/sessions/<name>`, `target/db/violin.db` … — and checks as [verify] does. */
-    suspend fun extract(input: ByteInput, target: PlatformFile, totalBytes: Long, onProgress: (BackupProgress) -> Unit)
+    /**
+     * Unpacks the entries of [parts] into [target] — `target/sessions/<name>`, `target/db/violin.db` … — and checks the whole
+     * archive as [verify] does. The entries of [BackupPart.DATA] are on the storage itself when this returns: a mark that
+     * puts them in place is left right after.
+     */
+    suspend fun extract(
+        input: ByteInput,
+        target: PlatformFile,
+        totalBytes: Long,
+        limitBytes: Long = Long.MAX_VALUE,
+        parts: Set<BackupPart> = BackupPart.entries.toSet(),
+        onProgress: (BackupProgress) -> Unit,
+    ): BackupSeen
+}
+
+/** What a pass through an archive found: its files, their bytes, and whether the snapshot of the database is among them. */
+data class BackupSeen(val entries: Int, val bytes: Long, val hasDatabase: Boolean)
+
+/**
+ * The completion mark, the last entry of a copy: how many files went in, and how many bytes. Copies made before 26.09.2026
+ * say only the number of files; what a mark does not say is not checked.
+ */
+internal object BackupEndMark {
+    private const val ENTRIES = "entries"
+    private const val BYTES = "bytes"
+
+    /** More than a mark ever holds: what is past it is not read into memory. */
+    const val MAX_BYTES = 1024
+
+    fun text(entries: Int, bytes: Long): String = "$ENTRIES=$entries\n$BYTES=$bytes\n"
+
+    /** The number of files and of bytes the mark says; null for what it does not say. */
+    fun read(text: String): Pair<Int?, Long?> {
+        val values = text.lineSequence().mapNotNull { line -> line.split('=', limit = 2).takeIf { it.size == 2 }?.let { it[0].trim() to it[1].trim() } }.toMap()
+        return values[ENTRIES]?.toIntOrNull() to values[BYTES]?.toLongOrNull()
+    }
+
+    /** True when an archive of [seen] is the one the mark [text] ends. */
+    fun agrees(text: String, seen: BackupSeen): Boolean {
+        val (entries, bytes) = read(text)
+        return (entries == null || entries == seen.entries) && (bytes == null || bytes == seen.bytes)
+    }
 }
 
 /** Folders inside a copy; they are also the folders of `files/` the media go back into. */
 object BackupPaths {
     const val DATABASE = "db"
+
+    /** The snapshot of the database: a copy without it is no copy (spec 5.14). */
+    const val DATABASE_ENTRY = "$DATABASE/violin.db"
     const val SETTINGS = "settings"
     const val PROFILE = "profile"
     const val SHEETS = "repertoire"

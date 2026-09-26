@@ -3,11 +3,13 @@ package com.violinjourney.app.core.backup
 import java.io.ByteArrayInputStream
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.nio.charset.StandardCharsets
 import java.util.Arrays
 import java.util.zip.ZipEntry
+import java.util.zip.ZipInputStream
 import java.util.zip.ZipOutputStream
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
@@ -249,6 +251,90 @@ class BackupArchiveTest {
         var read = 0L
         BackupReader.verify(archive.input(), size) { read = it.doneBytes }
         assertEquals(size, read)
+    }
+
+    @Test
+    fun `a copy whose database has gone fails instead of passing whole`() {
+        val gone = listOf(BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, 1_000, required = true) { null }) + entries().drop(1)
+        val failure = runCatching { archive(gone) }.exceptionOrNull()
+        assertTrue("was $failure", failure is IOException && failure !is BackupFileException)
+    }
+
+    @Test
+    fun `the end mark counts the entries and the bytes that went in`() {
+        val zip = ZipInputStream(ByteArrayInputStream(archive()))
+        var mark = ""
+        while (true) {
+            val entry = zip.nextEntry ?: break
+            if (entry.name == BackupPaths.COMPLETE_ENTRY) mark = zip.readBytes().decodeToString()
+        }
+        assertEquals("entries=4\nbytes=1360000\n", mark)
+    }
+
+    /** An archive of ours, made by hand: the passport, the database, and [mark] as the completion mark. */
+    private fun handMade(mark: String): ByteArray = ByteArrayOutputStream().also { out ->
+        ZipOutputStream(out).use { zip ->
+            zip.putNextEntry(ZipEntry(BackupManifest.ENTRY))
+            manifest().writeTo(zip)
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry(BackupPaths.DATABASE_ENTRY))
+            zip.write(database)
+            zip.closeEntry()
+            zip.putNextEntry(ZipEntry(BackupPaths.COMPLETE_ENTRY))
+            zip.write(mark.toByteArray())
+            zip.closeEntry()
+        }
+    }.toByteArray()
+
+    @Test
+    fun `an archive at odds with its end mark is damaged, and a mark of an older copy is read as it was`() {
+        assertEquals(BackupFileProblem.Damaged, problemOf { BackupReader.verify(ByteArrayInputStream(handMade("entries=3\n")), 40_000) {} })
+        assertEquals(BackupFileProblem.Damaged, problemOf { BackupReader.verify(ByteArrayInputStream(handMade("entries=1\nbytes=5\n")), 40_000) {} })
+        // copies made before the mark counted bytes say only how many files went in
+        assertEquals(null, problemOf { BackupReader.verify(ByteArrayInputStream(handMade("entries=1\n")), 40_000) {} })
+        assertEquals(null, problemOf { BackupReader.verify(ByteArrayInputStream(handMade("entries=1\nbytes=40000\n")), 40_000) {} })
+    }
+
+    @Test
+    fun `the reader says whether the database is there`() = runTest {
+        assertTrue(BackupReader.verify(ByteArrayInputStream(archive()), 1_360_000) {}.hasDatabase)
+        val withoutDatabase = archive(entries().drop(1))
+        assertEquals(BackupSeen(entries = 3, bytes = 1_320_000, hasDatabase = false), BackupReader.verify(ByteArrayInputStream(withoutDatabase), 1_320_000) {})
+    }
+
+    @Test
+    fun `a passport larger than any passport is not ours`() {
+        val huge = ByteArrayOutputStream().also { out ->
+            ZipOutputStream(out).use { zip ->
+                zip.putNextEntry(ZipEntry(BackupManifest.ENTRY))
+                zip.write("${BackupManifest.MAGIC_KEY}=${BackupManifest.MAGIC}\n".toByteArray())
+                repeat(3_000) { zip.write("key$it=${"x".repeat(20)}\n".toByteArray()) }
+                zip.closeEntry()
+            }
+        }.toByteArray()
+        assertEquals(BackupFileProblem.NotOurs, problemOf { BackupReader.manifest(ByteArrayInputStream(huge), knownDatabase = 6) })
+    }
+
+    @Test
+    fun `an archive that unpacks past what it declared is damaged`() = runTest {
+        assertEquals(BackupFileProblem.Damaged, problemOf { BackupReader.verify(ByteArrayInputStream(archive()), 1_360_000, limitBytes = 1_000) {} })
+        val target = folder.newFolder("staging")
+        assertEquals(BackupFileProblem.Damaged, problemOf { BackupReader.extract(ByteArrayInputStream(archive()), target, 1_360_000, limitBytes = 1_000) {} })
+        BackupReader.verify(ByteArrayInputStream(archive()), 1_360_000, limitBytes = 1_360_000) {}
+    }
+
+    @Test
+    fun `only the parts asked for are unpacked, and the whole is checked all the same`() = runTest {
+        val target = folder.newFolder("staging")
+        BackupReader.extract(ByteArrayInputStream(archive()), target, 1_360_000, parts = setOf(BackupPart.DATA)) {}
+        assertArrayEquals(database, File(target, "db/violin.db").readBytes())
+        assertFalse(File(target, "sessions/two.mp4").exists())
+        BackupReader.extract(ByteArrayInputStream(archive()), target, 1_360_000, parts = BackupPart.entries.toSet() - BackupPart.DATA) {}
+        assertArrayEquals(video, File(target, "sessions/two.mp4").readBytes())
+        assertArrayEquals(database, File(target, "db/violin.db").readBytes())
+
+        val bad = archive().also { it[it.size / 2] = (it[it.size / 2] + 1).toByte() }
+        assertEquals(BackupFileProblem.Damaged, problemOf { BackupReader.extract(ByteArrayInputStream(bad), folder.newFolder("other"), 1_360_000, parts = setOf(BackupPart.DATA)) {} })
     }
 }
 

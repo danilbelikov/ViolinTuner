@@ -33,6 +33,14 @@ interface BackupStore {
 
     fun discardStaging()
 
+    /**
+     * Opens what has been unpacked the way the app will open it at its next start — the database through the same
+     * migrations and the same check of its schema, plus a quick check of its pages; the settings through DataStore — and
+     * leaves the date of this copy, [copyMadeAtEpochMs], in those settings (the file in a copy was taken before its copy
+     * was dated). Throws when the database does not open: the swap must not put in place what the next start cannot read.
+     */
+    suspend fun settleStaging(copyMadeAtEpochMs: Long)
+
     /** The unpacked copy is whole: from now on the next start of the process puts it in place. Throws when the mark cannot be left. */
     fun markStagingReady()
 

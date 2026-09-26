@@ -137,6 +137,73 @@ class IosBackupArchiveTest {
         assertEquals(BackupFileProblem.Damaged, damaged.problem)
     }
 
+    @Test
+    fun `a copy whose database has gone fails instead of passing whole`() = runTest {
+        val archive = folder.child("gone.zip")
+        val gone = BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, 11, required = true) { null }
+        assertFailsWith<okio.IOException> { BackupWriter.write(archive.openOutput()!!, manifest, listOf(gone)) {} }
+    }
+
+    @Test
+    fun `the end mark counts the entries and the bytes and the reader holds the archive to it`() = runTest {
+        val audio = Random(3).nextBytes(300_000)
+        val archive = folder.child("copy.zip")
+        BackupWriter.write(archive.openOutput()!!, manifest, listOf(entryOf("db/violin.db", BackupPart.DATA, "hello world".encodeToByteArray()), entryOf("sessions/a.m4a", BackupPart.AUDIO, audio))) {}
+        assertEquals(BackupSeen(entries = 2, bytes = 300_011, hasDatabase = true), BackupReader.verify(archive.openInput()!!, 300_011) {})
+        // the same entries under a mark that says otherwise: not the archive the mark ended
+        val odd = folder.child("odd.zip")
+        val out = odd.openOutput()!!
+        val zip = ZipWriter(out)
+        zip.beginEntry(BackupManifest.ENTRY, compress = true)
+        BackupManifestText.write(manifest).encodeToByteArray().let { zip.write(it, 0, it.size) }
+        zip.endEntry()
+        zip.beginEntry("db/violin.db", compress = true)
+        "hello world".encodeToByteArray().let { zip.write(it, 0, it.size) }
+        zip.endEntry()
+        zip.beginEntry(BackupPaths.COMPLETE_ENTRY, compress = true)
+        "entries=1\nbytes=5\n".encodeToByteArray().let { zip.write(it, 0, it.size) }
+        zip.endEntry()
+        zip.finish()
+        out.close()
+        assertEquals(BackupFileProblem.Damaged, assertFailsWith<BackupFileException> { BackupReader.verify(odd.openInput()!!, 11) {} }.problem)
+    }
+
+    @Test
+    fun `a passport larger than any passport is not ours`() = runTest {
+        val archive = folder.child("huge.zip")
+        val out = archive.openOutput()!!
+        val zip = ZipWriter(out)
+        zip.beginEntry(BackupManifest.ENTRY, compress = true)
+        val text = BackupManifestText.write(manifest) + buildString { repeat(3_000) { append("key$it=${"x".repeat(20)}\n") } }
+        text.encodeToByteArray().let { zip.write(it, 0, it.size) }
+        zip.endEntry()
+        zip.finish()
+        out.close()
+        assertEquals(BackupFileProblem.NotOurs, assertFailsWith<BackupFileException> { BackupReader.manifest(archive.openInput()!!, knownDatabase = 13) }.problem)
+    }
+
+    @Test
+    fun `an archive that unpacks past what it declared is damaged`() = runTest {
+        val archive = folder.child("copy.zip")
+        BackupWriter.write(archive.openOutput()!!, manifest, listOf(entryOf("sessions/a.m4a", BackupPart.AUDIO, Random(4).nextBytes(50_000)))) {}
+        assertEquals(BackupFileProblem.Damaged, assertFailsWith<BackupFileException> { BackupReader.verify(archive.openInput()!!, 50_000, limitBytes = 1_000) {} }.problem)
+        BackupReader.verify(archive.openInput()!!, 50_000, limitBytes = 50_000) {}
+    }
+
+    @Test
+    fun `only the parts asked for are unpacked and synced`() = runTest {
+        val audio = Random(6).nextBytes(100_000)
+        val db = "hello world".encodeToByteArray()
+        val archive = folder.child("copy.zip")
+        BackupWriter.write(archive.openOutput()!!, manifest, listOf(entryOf("db/violin.db", BackupPart.DATA, db), entryOf("sessions/a.m4a", BackupPart.AUDIO, audio))) {}
+        val staging = folder.child("staging")
+        BackupReader.extract(archive.openInput()!!, staging, 100_011, parts = setOf(BackupPart.DATA)) {}
+        assertTrue(db.contentEquals(bytesOf(staging.child("db").child("violin.db"))))
+        assertEquals(0, bytesOf(staging.child("sessions").child("a.m4a")).size)
+        BackupReader.extract(archive.openInput()!!, staging, 100_011, parts = setOf(BackupPart.AUDIO)) {}
+        assertTrue(audio.contentEquals(bytesOf(staging.child("sessions").child("a.m4a"))))
+    }
+
     private fun entryOf(path: String, part: BackupPart, bytes: ByteArray): BackupEntry {
         val file = folder.child(path.replace('/', '_'))
         writeBytes(file, bytes)

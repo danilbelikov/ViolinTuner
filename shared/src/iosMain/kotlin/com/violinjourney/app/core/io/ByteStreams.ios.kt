@@ -11,6 +11,7 @@ import platform.posix.O_TRUNC
 import platform.posix.O_WRONLY
 import platform.posix.close
 import platform.posix.errno
+import platform.posix.fsync
 import platform.posix.open
 import platform.posix.read
 import platform.posix.strerror
@@ -37,6 +38,10 @@ actual fun ByteOutput.writeBytes(buffer: ByteArray, offset: Int, count: Int) = w
 actual fun PlatformFile.openInput(): ByteInput? = FileInput.open(path)
 
 actual fun PlatformFile.openOutput(): ByteOutput? = FileOutput.open(path)
+
+actual fun ByteOutput.syncToDisk() {
+    (this as? FileOutput)?.sync()
+}
 
 /**
  * A file that is not there yet, made and opened for writing in one step; null when a file of that name is there already.
@@ -67,6 +72,8 @@ private class FileInput(private val fd: Int) : ByteInput() {
 
 @OptIn(ExperimentalForeignApi::class)
 private class FileOutput(private val fd: Int) : ByteOutput() {
+    private var closed = false
+
     override fun write(buffer: ByteArray, offset: Int, count: Int) {
         var done = 0
         while (done < count) {
@@ -77,7 +84,15 @@ private class FileOutput(private val fd: Int) : ByteOutput() {
         }
     }
 
+    /** Plain fsync, not F_FULLFSYNC: enough against a crash of the system or a phone that dies; the drive's cache is its own. */
+    fun sync() {
+        if (fsync(fd) != 0) throw okio.IOException("fsync failed: ${strerror(errno)?.toKString()}")
+    }
+
+    // once: a descriptor closed twice may by then be another file's
     override fun close() {
+        if (closed) return
+        closed = true
         close(fd)
     }
 

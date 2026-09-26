@@ -28,7 +28,6 @@ import com.violinjourney.app.core.audio.recording.PcmEncoderFactory
 import com.violinjourney.app.core.audio.share.IosSoundRenderer
 import com.violinjourney.app.core.backup.BackupConfig
 import com.violinjourney.app.core.backup.BackupManager
-import com.violinjourney.app.core.backup.BackupSpeed
 import com.violinjourney.app.core.backup.IosBackupDocuments
 import com.violinjourney.app.core.backup.IosBackupStore
 import com.violinjourney.app.core.data.backing.RoomBackingRepository
@@ -187,7 +186,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val backupPrefs = DataStoreBackupPrefs(dataStore)
     val backupStore = IosBackupStore(dataDirectory, database, sessions, repertoire, practice, trophies, progressConfig, clock, io)
     val backupManager = BackupManager(
-        backupStore, IosBackupDocuments(), backupPrefs, IosKeepAlive, backupConfig, BackupSpeed(backupConfig), clock, elapsed, io,
+        backupStore, IosBackupDocuments(), backupPrefs, IosKeepAlive, backupConfig, clock, elapsed, io,
         analytics,
     )
 

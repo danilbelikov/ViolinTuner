@@ -15,8 +15,8 @@ import java.nio.charset.StandardCharsets
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
 import kotlin.time.Instant
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -38,77 +38,15 @@ class BackupManagerTest {
     private val now = Instant.parse("2026-09-20T11:32:00Z")
     private val counts = BackupCounts(sessions = 23, pieces = 5, practiceDays = 41, level = 4, withSound = 19, videos = 6)
 
-    private inner class Store : BackupStore {
-        var free = Long.MAX_VALUE
-        var cleaned = 0
-        var readyMarked = false
-        var wipeMarked = false
-        var mediaDeleted = false
-        var stagingDiscarded = 0
-        /** What the platform throws beside the stream: SQLite refusing the snapshot, a folder that cannot be made, a mark… */
-        var prepareFails: Exception? = null
-        var stagingFails: Exception? = null
-        var freeFails: Exception? = null
-        var wipeFails: IOException? = null
-        val video = ByteArray(400_000) { (it % 97).toByte() }
-        override val databaseVersion = 6
-        override suspend fun contents() = BackupContents(counts, mapOf(BackupPart.DATA to 1_000L, BackupPart.VIDEO to video.size.toLong()))
-        override suspend fun prepare(parts: Set<BackupPart>) = prepareFails?.let { throw it } ?: PreparedBackup(
-            BackupManifest(1, "1.0", 6, now.toEpochMilliseconds(), "Pixel 7", parts + BackupPart.DATA, counts, mapOf(BackupPart.DATA to 1_000L, BackupPart.VIDEO to video.size.toLong())),
-            listOfNotNull(
-                BackupEntry("db/violin.db", BackupPart.DATA, 1_000) { ByteArrayInputStream(ByteArray(1_000) { 7 }) },
-                BackupEntry("sessions/a.mp4", BackupPart.VIDEO, video.size.toLong()) { ByteArrayInputStream(video) }.takeIf { BackupPart.VIDEO in parts },
-            ),
-        )
-        override fun cleanUp() { cleaned++ }
-        override fun freeBytes() = freeFails?.let { throw it } ?: free
-        override fun newStaging(): File = stagingFails?.let { throw it } ?: File(folder.root, "staging").also { it.deleteRecursively(); it.mkdirs() }
-        override fun discardStaging() { stagingDiscarded++; File(folder.root, "staging").deleteRecursively() }
-        override fun markStagingReady() { readyMarked = true }
-        override fun deleteMedia() { mediaDeleted = true }
-        override fun markWipe() { wipeFails?.let { throw it }; wipeMarked = true }
-        override fun shareFile(fileName: String) = File(folder.root, "share/$fileName").also { it.parentFile!!.mkdirs() }
-    }
-
-    /** Documents that live in memory; [failWith] breaks the writing half way. */
-    private inner class Documents : BackupDocuments {
-        val written = HashMap<String, ByteArrayOutputStream>()
-        val deleted = mutableListOf<String>()
-        var failWith: IOException? = null
-        var unreadable = false
-        override fun openOutput(uri: String): OutputStream? {
-            val sink = ByteArrayOutputStream().also { written[uri] = it }
-            val failure = failWith ?: return sink
-            return object : OutputStream() {
-                override fun write(b: Int) = sink.write(b)
-                override fun write(b: ByteArray, off: Int, len: Int) {
-                    if (sink.size() > 100_000) throw failure
-                    sink.write(b, off, len)
-                }
-            }
-        }
-        override fun openInput(uri: String): InputStream? = written[uri]?.takeIf { !unreadable }?.let { ByteArrayInputStream(it.toByteArray()) }
-        override fun delete(uri: String) { deleted += uri; written.remove(uri) }
-        override fun placeOf(uri: String) = "Загрузки"
-        override fun nameOf(uri: String) = "Интонация · копия.zip"
-        override fun sizeOf(uri: String) = written[uri]?.size()?.toLong()
-    }
-
-    private class Prefs : BackupPrefs {
-        override val lastBackupAtEpochMs = MutableStateFlow<Long?>(null)
-        var fails: IOException? = null
-        override suspend fun setLastBackupAt(epochMs: Long) { fails?.let { throw it }; lastBackupAtEpochMs.value = epochMs }
-    }
-
-    private val store = Store()
-    private val documents = Documents()
-    private val prefs = Prefs()
+    private val store by lazy { FakeBackupStore(folder.root, now, counts) }
+    private val documents = FakeBackupDocuments()
+    private val prefs = FakeBackupPrefs()
     private var keptAlive = 0
     private val all = BackupPart.entries.toSet()
     private val analytics = FakeAnalytics()
 
-    private fun TestScope.manager(documents: BackupDocuments = this@BackupManagerTest.documents) = BackupManager(
-        store, documents, prefs, { keptAlive++ }, BackupConfig(), BackupSpeed(BackupConfig()),
+    private fun TestScope.manager(documents: BackupDocuments = this@BackupManagerTest.documents, config: BackupConfig = BackupConfig()) = BackupManager(
+        store, documents, prefs, { keptAlive++ }, config,
         FixedWallClock(now, TimeZone.of("Europe/Moscow")), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler), analytics,
     )
 
@@ -171,13 +109,18 @@ class BackupManagerTest {
     }
 
     @Test
-    fun `a snapshot the database refuses is said in words - a full disk as a full disk, the rest as a failure`() = runTest {
-        // what androidx.sqlite and android.database throw: RuntimeExceptions, not IOExceptions
+    fun `a snapshot the database refuses is said in words - the phone's own full memory as such, the rest as a failure`() = runTest {
+        // what androidx.sqlite and android.database throw: RuntimeExceptions, not IOExceptions. The snapshot is taken in the
+        // phone's own memory: no other card helps there, and no place that «went away» — it is not a stream into a place.
         val cases = listOf(
-            RuntimeException("Error code: 13, message: database or disk is full") to SaveFailure.NO_SPACE,
-            IllegalStateException("database or disk is full (code 13 SQLITE_FULL)") to SaveFailure.NO_SPACE,
+            RuntimeException("Error code: 13, message: database or disk is full") to SaveFailure.PHONE_FULL,
+            IllegalStateException("database or disk is full (code 13 SQLITE_FULL)") to SaveFailure.PHONE_FULL,
             RuntimeException("Error code: 10, message: disk I/O error") to SaveFailure.FAILED,
             RuntimeException("database is locked") to SaveFailure.FAILED,
+            IOException("copy failed: ENOSPC (No space left on device)") to SaveFailure.PHONE_FULL,
+            // what the snapshot on a full emulator threw: the -shm of the copy could not grow
+            RuntimeException("disk I/O error (code 4874 SQLITE_IOERR_SHMSIZE): , while compiling: PRAGMA journal_mode") to SaveFailure.PHONE_FULL,
+            IOException("write failed: EIO (I/O error)") to SaveFailure.FAILED,
         )
         val manager = manager()
         cases.forEachIndexed { index, (failure, reason) ->
@@ -239,7 +182,7 @@ class BackupManagerTest {
         val closed = object : BackupDocuments by documents {
             override fun openOutput(uri: String): OutputStream? = null
         }
-        val other = BackupManager(store, closed, prefs, {}, BackupConfig(), BackupSpeed(BackupConfig()), ZonedSystemWallClock(TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler))
+        val other = BackupManager(store, closed, prefs, {}, BackupConfig(), ZonedSystemWallClock(TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler))
         other.saveTo("content://gone/1", all, "копия.zip")
         advanceUntilIdle()
         assertEquals(SaveFailure.UNAVAILABLE, (other.job.value as BackupJob.SaveFailed).reason)
@@ -432,7 +375,7 @@ class BackupManagerTest {
                 override fun write(b: ByteArray, off: Int, len: Int) = Unit
             }
         }
-        val other = BackupManager(store, slow, prefs, {}, BackupConfig(), BackupSpeed(BackupConfig()), ZonedSystemWallClock(TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler))
+        val other = BackupManager(store, slow, prefs, {}, BackupConfig(), ZonedSystemWallClock(TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler))
         other.saveTo("content://slow/1", all, "копия.zip")
         advanceTimeBy(800)
         runCurrent()
@@ -440,5 +383,377 @@ class BackupManagerTest {
         advanceUntilIdle()
         assertTrue(other.job.value is BackupJob.Saved)
         assertEquals(BackupJob.Idle, manager.job.value)
+    }
+
+    // — «Остановить» and the point of no return (spec 3.20) —
+
+    @Test
+    fun `what can still be stopped is one rule`() {
+        assertTrue(BackupJob.Saving("a", visible = true).stoppable)
+        assertFalse(BackupJob.Saving("a", visible = true, verifying = true).stoppable)
+        assertTrue(BackupJob.Restoring(RestorePhase.VERIFYING, checked = true).stoppable)
+        assertFalse(BackupJob.Restoring(RestorePhase.EXTRACTING, checked = true).stoppable)
+        assertTrue(BackupJob.Restoring(RestorePhase.EXTRACTING, checked = false).stoppable)
+        assertFalse(BackupJob.Restoring(RestorePhase.FINISHING, checked = false).stoppable)
+        assertFalse(BackupJob.Restoring(RestorePhase.FINISHING, checked = true).stoppable)
+        val manifest = store.manifest(all)
+        listOf(
+            BackupJob.Idle, BackupJob.Saved("a", 1, null, manifest), BackupJob.SaveFailed(SaveFailure.FAILED),
+            BackupJob.Restored(manifest), BackupJob.RestoreFailed(true, "u", manifest, checked = false),
+        ).forEach { assertFalse("$it", it.stoppable) }
+    }
+
+    @Test
+    fun `a stop pressed while the media go is refused and the restore goes on`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        var stopWasOffered = true
+        store.onDeleteMedia = {
+            stopWasOffered = manager.cancellable
+            manager.cancel()
+        }
+        manager.restore(copy, unsafe = true)
+        advanceUntilIdle()
+        assertFalse("once the media go, «Остановить» is gone", stopWasOffered)
+        assertTrue(manager.job.value is BackupJob.Restored)
+        assertTrue(store.mediaDeleted && store.readyMarked)
+        assertTrue(analytics.errors.isEmpty())
+    }
+
+    @Test
+    fun `a stop pressed during the check keeps the media`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        store.onSettle = { manager.cancel() }
+        manager.restore(copy, unsafe = true)
+        advanceUntilIdle()
+        assertEquals(BackupJob.Idle, manager.job.value)
+        assertFalse(store.mediaDeleted)
+        assertFalse(store.readyMarked)
+        assertEquals(1, store.stagingDiscarded)
+    }
+
+    @Test
+    fun `a new job waits until the stopped one has tidied up after itself`() = runTest {
+        val manager = manager()
+        val gate = CompletableDeferred<Unit>()
+        store.prepareGate = gate
+        manager.saveTo("content://downloads/1", all, "копия.zip")
+        runCurrent()
+        manager.cancel()
+        assertEquals(BackupJob.Idle, manager.job.value)
+        manager.share(all, "копия.zip")
+        runCurrent()
+        assertEquals("the new job has not taken its snapshot yet", 1, store.prepareCalls)
+        // the stopped job leaves its blocking step, and only then removes its snapshot — which is this job's snapshot too
+        gate.complete(Unit)
+        advanceUntilIdle()
+        val saved = manager.job.value as BackupJob.Saved
+        assertEquals(2, store.cleaned)
+        assertTrue(BackupReader.verify(saved.shareFile!!.inputStream(), 401_000) {}.hasDatabase)
+        assertEquals(listOf("content://downloads/1"), documents.deleted)
+    }
+
+    @Test
+    fun `a job stopped while it waits still waits - no two jobs ever work in the same folders`() = runTest {
+        val manager = manager()
+        val gate = CompletableDeferred<Unit>()
+        store.prepareGate = gate
+        // a copy stuck in a blocking step, stopped
+        manager.saveTo("content://downloads/1", all, "копия.zip")
+        runCurrent()
+        manager.cancel()
+        // the next waits for it, shows its screen and its «Остановить» as a copy that drags on does, and is stopped too
+        manager.saveTo("content://downloads/2", all, "копия.zip")
+        runCurrent()
+        assertFalse((manager.job.value as BackupJob.Saving).visible)
+        advanceTimeBy(701)
+        runCurrent()
+        assertTrue((manager.job.value as BackupJob.Saving).visible)
+        assertTrue(manager.cancellable)
+        manager.cancel()
+        assertEquals(BackupJob.Idle, manager.job.value)
+        // the third waits for the first as well: the second has not ended, it is still waiting
+        manager.share(all, "копия.zip")
+        advanceTimeBy(10_000)
+        runCurrent()
+        assertEquals("nothing took a snapshot beside the stuck one", 1, store.prepareCalls)
+        gate.complete(Unit)
+        advanceUntilIdle()
+        val saved = manager.job.value as BackupJob.Saved
+        assertEquals("the stopped waiter took no snapshot of its own", 2, store.prepareCalls)
+        assertTrue(BackupReader.verify(saved.shareFile!!.inputStream(), 401_000) {}.hasDatabase)
+        // the file the picker made for the waiter goes too, and after the file of the job it waited for
+        assertEquals(listOf("content://downloads/1", "content://downloads/2"), documents.deleted)
+    }
+
+    @Test
+    fun `a restore stopped while it waits leaves the unpacking folder of the next alone`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        val gate = CompletableDeferred<Unit>()
+        store.settleGate = gate
+        // a restore stuck in a blocking step, stopped: when it leaves the step, it removes the unpacking folder
+        manager.restore(copy, unsafe = false)
+        runCurrent()
+        manager.cancel()
+        // the next waits for it and is stopped while it waits; the one after waits for both
+        manager.restore(copy, unsafe = false)
+        runCurrent()
+        manager.cancel()
+        manager.restore(copy, unsafe = false)
+        runCurrent()
+        assertEquals("nothing unpacked beside the stuck restore", listOf("settle"), store.calls.filter { it == "settle" })
+        gate.complete(Unit)
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Restored)
+        assertTrue(store.readyMarked)
+        assertEquals(1_000, File(folder.root, "staging/db/violin.db").length())
+        assertEquals(store.video.toList(), File(folder.root, "staging/sessions/a.mp4").readBytes().toList())
+    }
+
+    // — outcomes that have been read, and «Ещё раз» —
+
+    @Test
+    fun `a job starts over an outcome that has been read`() = runTest {
+        val manager = manager()
+        manager.saveTo("content://downloads/1", all, "копия.zip")
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Saved)
+        val copy = manager.inspect("content://downloads/1") as BackupCandidate.Copy
+        // «Сначала сохранить текущие данные», the system «Назад» that did not say «Готово», and «Восстановить»
+        manager.restore(copy, unsafe = false)
+        assertTrue(manager.job.value is BackupJob.Restoring)
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Restored)
+    }
+
+    @Test
+    fun `a failed copy or restore does not stand in the way of the next`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        store.prepareFails = IllegalStateException("database is locked")
+        manager.saveTo("content://downloads/2", all, "копия.zip")
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.SaveFailed)
+        store.prepareFails = null
+        manager.saveTo("content://downloads/3", all, "копия.zip")
+        assertTrue(manager.job.value is BackupJob.Saving)
+        advanceUntilIdle()
+        manager.dismiss()
+
+        store.stagingFails = IllegalStateException("cannot make restore-staging")
+        manager.restore(copy, unsafe = false)
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.RestoreFailed)
+        store.stagingFails = null
+        manager.restore(copy, unsafe = false)
+        assertTrue(manager.job.value is BackupJob.Restoring)
+    }
+
+    @Test
+    fun `a restore waiting for its restart takes nothing else`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        manager.restore(copy, unsafe = false)
+        advanceUntilIdle()
+        val restored = manager.job.value as BackupJob.Restored
+        manager.saveTo("content://downloads/2", all, "копия.zip")
+        manager.restore(copy, unsafe = false)
+        manager.dismiss()
+        advanceUntilIdle()
+        assertEquals(restored, manager.job.value)
+        assertFalse("content://downloads/2" in documents.written)
+    }
+
+    @Test
+    fun `a retry needs no passport - the failure knows its file and its way`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        val bytes = documents.written.getValue(copy.uri).toByteArray()
+        documents.written[copy.uri] = ByteArrayOutputStream().also { it.write(bytes, 0, bytes.size / 2) }
+        manager.restore(copy, unsafe = false)
+        advanceUntilIdle()
+        assertTrue((manager.job.value as BackupJob.RestoreFailed).dataIntact)
+        documents.written[copy.uri] = ByteArrayOutputStream().also { it.write(bytes) }
+        manager.retry()
+        assertEquals(BackupJob.Restoring(RestorePhase.EXTRACTING, checked = false), manager.job.value)
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Restored)
+    }
+
+    @Test
+    fun `a retry of the way without a net takes that way again`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        val bytes = documents.written.getValue(copy.uri).toByteArray()
+        documents.written[copy.uri] = ByteArrayOutputStream().also { it.write(bytes, 0, bytes.size / 2) }
+        manager.restore(copy, unsafe = true)
+        advanceUntilIdle()
+        val failed = manager.job.value as BackupJob.RestoreFailed
+        assertTrue("the check failed: nothing has gone", failed.dataIntact)
+        // a phone short of room is short of it still: the safe way would run out of room after a whole unpacking
+        manager.retry()
+        assertEquals(BackupJob.Restoring(RestorePhase.VERIFYING, checked = true), manager.job.value)
+    }
+
+    @Test
+    fun `a retry after the worst case that fails again still says the media are gone`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        val bytes = documents.written.getValue(copy.uri).toByteArray()
+        // the copy breaks after the media have gone: the worst case
+        store.onDeleteMedia = {
+            store.mediaBytes = 0
+            documents.written[copy.uri] = ByteArrayOutputStream().also { it.write(bytes, 0, bytes.size / 2) }
+        }
+        manager.restore(copy, unsafe = true)
+        advanceUntilIdle()
+        assertFalse((manager.job.value as BackupJob.RestoreFailed).dataIntact)
+        // «Ещё раз с этим файлом» on a phone that has even less room now
+        store.onDeleteMedia = {}
+        documents.written[copy.uri] = ByteArrayOutputStream().also { it.write(bytes) }
+        store.free = 10_000
+        manager.retry()
+        advanceUntilIdle()
+        val again = manager.job.value as BackupJob.RestoreFailed
+        assertFalse("the media went in the try before: «Ваши данные на месте» would not be true", again.dataIntact)
+        assertTrue(again.checked)
+    }
+
+    // — what a copy holds, and what a restore opens —
+
+    @Test
+    fun `a copy whose snapshot has gone is not called whole`() = runTest {
+        val manager = manager()
+        val lost = object : BackupStore by store {
+            override suspend fun prepare(parts: Set<BackupPart>) = store.prepare(parts).let { prepared ->
+                PreparedBackup(prepared.manifest, prepared.entries.map { if (it.part == BackupPart.DATA) BackupEntry(it.path, it.part, it.size, required = true) { null } else it })
+            }
+        }
+        val other = BackupManager(lost, documents, prefs, {}, BackupConfig(), FixedWallClock(now, TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler), analytics)
+        other.saveTo("content://downloads/1", all, "копия.zip")
+        advanceUntilIdle()
+        assertEquals(SaveFailure.FAILED, (other.job.value as BackupJob.SaveFailed).reason)
+        assertEquals(listOf("content://downloads/1"), documents.deleted)
+        assertNull(prefs.lastBackupAtEpochMs.value)
+        assertEquals(BackupJob.Idle, manager.job.value)
+    }
+
+    @Test
+    fun `a picked copy without its database is damaged and the media stay`() = runTest {
+        val manager = manager()
+        val manifest = store.manifest(all)
+        documents.written["content://downloads/media"] = ByteArrayOutputStream().also { out ->
+            BackupWriter.write(out, manifest, listOf(BackupEntry("sessions/a.mp4", BackupPart.VIDEO, store.video.size.toLong()) { ByteArrayInputStream(store.video) })) {}
+        }
+        val copy = manager.inspect("content://downloads/media") as BackupCandidate.Copy
+        manager.restore(copy, unsafe = true)
+        advanceUntilIdle()
+        assertTrue((manager.job.value as BackupJob.RestoreFailed).dataIntact)
+        assertFalse(store.mediaDeleted)
+        assertFalse(store.readyMarked)
+    }
+
+    @Test
+    fun `the way without a net stops at the check when the copy is bigger than its passport`() = runTest {
+        val manager = manager(config = BackupConfig(freeSpaceMarginBytes = 1_000))
+        val understated = store.manifest(all).copy(bytes = mapOf(BackupPart.DATA to 1_000L, BackupPart.VIDEO to 0L))
+        documents.written["content://downloads/big"] = ByteArrayOutputStream().also { out ->
+            BackupWriter.write(
+                out, understated,
+                listOf(
+                    BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, 1_000) { ByteArrayInputStream(ByteArray(1_000) { 7 }) },
+                    BackupEntry("sessions/a.mp4", BackupPart.VIDEO, store.video.size.toLong()) { ByteArrayInputStream(store.video) },
+                ),
+            ) {}
+        }
+        val copy = manager.inspect("content://downloads/big") as BackupCandidate.Copy
+        manager.restore(copy, unsafe = true)
+        advanceUntilIdle()
+        assertTrue((manager.job.value as BackupJob.RestoreFailed).dataIntact)
+        assertFalse(store.mediaDeleted)
+    }
+
+    @Test
+    fun `the way without a net leaves the media when they would not make the room`() = runTest {
+        val manager = manager(config = BackupConfig(freeSpaceMarginBytes = 1_000))
+        val copy = savedCopy(manager)
+        // the check took minutes, and the phone has less room than when the screen offered the way
+        store.free = 10_000
+        store.mediaBytes = 1_000
+        store.calls.clear()
+        manager.restore(copy, unsafe = true)
+        advanceUntilIdle()
+        val failed = manager.job.value as BackupJob.RestoreFailed
+        assertTrue(failed.dataIntact)
+        assertEquals("the data fitted and were opened; the media would not make room for the rest", listOf("settle"), store.calls)
+        assertFalse(store.mediaDeleted)
+        assertFalse(store.readyMarked)
+    }
+
+    @Test
+    fun `the way without a net needs room for the data of the copy before it unpacks them`() = runTest {
+        val manager = manager(config = BackupConfig(freeSpaceMarginBytes = 1_000))
+        val copy = savedCopy(manager)
+        // the media would free plenty, but the data of the copy are unpacked while they are still in place
+        store.free = 1_500
+        store.mediaBytes = 1L shl 30
+        store.calls.clear()
+        manager.restore(copy, unsafe = true)
+        advanceUntilIdle()
+        val failed = manager.job.value as BackupJob.RestoreFailed
+        assertTrue(failed.dataIntact && failed.checked)
+        assertEquals(emptyList<String>(), store.calls)
+        assertFalse(File(folder.root, "staging/db/violin.db").exists())
+    }
+
+    @Test
+    fun `the unpacked data are opened before the point of no return`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        store.settleFails = IllegalStateException("A migration from 9 to 10 was required but not found")
+        manager.restore(copy, unsafe = false)
+        advanceUntilIdle()
+        assertTrue((manager.job.value as BackupJob.RestoreFailed).dataIntact)
+        assertFalse(store.readyMarked)
+        assertEquals(1, store.stagingDiscarded)
+        assertEquals(listOf(ErrorGroup.BACKUP), analytics.errors.map { it.first })
+
+        // without a net the database is opened while the media are still there: a copy the app would not open costs nothing
+        manager.restore(copy, unsafe = true)
+        advanceUntilIdle()
+        val failed = manager.job.value as BackupJob.RestoreFailed
+        assertTrue(failed.dataIntact && failed.checked)
+        assertFalse(store.mediaDeleted)
+        assertFalse(store.readyMarked)
+    }
+
+    @Test
+    fun `settling comes before the media go and before the mark`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        store.calls.clear()
+        manager.restore(copy, unsafe = false)
+        advanceUntilIdle()
+        assertEquals(listOf("settle", "mark"), store.calls)
+        store.calls.clear()
+        store.readyMarked = false
+        manager.dismiss()
+        val other = manager()
+        other.restore(copy, unsafe = true)
+        advanceUntilIdle()
+        assertEquals(listOf("settle", "deleteMedia", "mark"), store.calls)
+        assertEquals(store.video.toList(), File(folder.root, "staging/sessions/a.mp4").readBytes().toList())
+        assertEquals(1_000, File(folder.root, "staging/db/violin.db").length())
+    }
+
+    @Test
+    fun `the unpacked settings are told the date of their copy`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        manager.restore(copy, unsafe = false)
+        advanceUntilIdle()
+        assertEquals(copy.manifest.createdAtEpochMs, store.settled)
     }
 }

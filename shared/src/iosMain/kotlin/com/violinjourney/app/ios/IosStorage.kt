@@ -4,6 +4,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.data.DatabaseMigrations
@@ -28,11 +29,16 @@ import platform.Foundation.NSUserDomainMask
 internal object IosStorage {
     const val SETTINGS_FILE = "user_settings.preferences_pb"
 
-    fun database(directory: String = dataDirectory()): AppDatabase =
+    /**
+     * The one builder of the database: the app's own, and a copy unpacked beside it, opened before it is put in place
+     * (spec 5.14) — with [journalMode] TRUNCATE, so that the file is whole alone once closed.
+     */
+    fun database(directory: String = dataDirectory(), journalMode: RoomDatabase.JournalMode? = null): AppDatabase =
         Room.databaseBuilder<AppDatabase>(name = "$directory/${AppDatabase.FILE_NAME}")
             .setDriver(BundledSQLiteDriver())
             .addMigrations(*DatabaseMigrations.ALL)
             .setQueryCoroutineContext(Dispatchers.IO)
+            .apply { if (journalMode != null) setJournalMode(journalMode) }
             .build()
 
     /**

@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.backup
 
+import androidx.room.RoomDatabase
 import androidx.room.execSQL
 import androidx.room.useWriterConnection
 import com.violinjourney.app.core.data.AppDatabase
@@ -18,7 +19,9 @@ import com.violinjourney.app.core.io.makeDirectories
 import com.violinjourney.app.core.io.openInput
 import com.violinjourney.app.core.io.openOutput
 import com.violinjourney.app.core.io.sizeBytes
+import com.violinjourney.app.core.settings.DataStoreBackupPrefs
 import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.ios.IosStorage
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
@@ -27,6 +30,7 @@ import platform.Foundation.NSBundle
 import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileSystemFreeSize
+import platform.Foundation.NSLog
 import platform.Foundation.NSNumber
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
@@ -97,9 +101,10 @@ internal class IosBackupStore(
         val snapshot = snapshotDatabase()
         val now = contents()
         val entries = buildList {
-            add(BackupEntry("${BackupPaths.DATABASE}/${AppDatabase.FILE_NAME}", BackupPart.DATA, snapshot.sizeBytes()) { snapshot.openInput() })
+            // the snapshot and the settings are the copy itself: vanished on the way, they fail it (spec 5.14)
+            add(BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, snapshot.sizeBytes(), required = true) { snapshot.openInput() })
             if (settingsFile.exists()) {
-                add(BackupEntry("${BackupPaths.SETTINGS}/${IosRestoreSwap.SETTINGS_FILE}", BackupPart.DATA, settingsFile.sizeBytes()) { settingsFile.openInput() })
+                add(BackupEntry("${BackupPaths.SETTINGS}/${IosRestoreSwap.SETTINGS_FILE}", BackupPart.DATA, settingsFile.sizeBytes(), required = true) { settingsFile.openInput() })
             }
             // data first, then by weight: what matters most is in the archive soonest
             listOf(BackupPart.DATA, BackupPart.SHEETS, BackupPart.AUDIO, BackupPart.VIDEO).filter { it in parts || it == BackupPart.DATA }.forEach { part ->
@@ -146,6 +151,33 @@ internal class IosBackupStore(
         data.child(IosRestoreSwap.STAGING).deleteAll()
     }
 
+    /**
+     * The unpacked copy opened the way the next start will open it (spec 5.14), as `StagedCopy` does on Android: the
+     * database through the same builder — migrations, the check of its schema, `quick_check` — and the settings through
+     * DataStore, stamped with the date of this copy. A database that does not open is a failed restore, not a fall at
+     * every start after the swap.
+     */
+    override suspend fun settleStaging(copyMadeAtEpochMs: Long) = withContext(io) {
+        val staging = data.child(IosRestoreSwap.STAGING)
+        val folder = staging.child(BackupPaths.DATABASE)
+        if (!folder.child(AppDatabase.FILE_NAME).exists()) throw okio.IOException("no database among what was unpacked")
+        // TRUNCATE, not WAL: once closed the file is whole alone, and the swap moves only the file
+        val opened = IosStorage.database(folder.path, RoomDatabase.JournalMode.TRUNCATE)
+        try {
+            val check = opened.useWriterConnection { connection -> connection.usePrepared("PRAGMA quick_check") { it.step(); it.getText(0) } }
+            if (check != CHECK_PASSED) throw okio.IOException("the unpacked database does not pass its check")
+        } finally {
+            opened.close()
+        }
+        // a copy without settings brings none: no file is made here, or the swap would replace the settings with an empty one
+        val settings = staging.child(BackupPaths.SETTINGS).child(IosRestoreSwap.SETTINGS_FILE)
+        if (settings.exists()) {
+            DataStoreBackupPrefs.stamp(settings.path, copyMadeAtEpochMs, io) {
+                NSLog("Backup: the settings of the copy could not be read and start over: ${it.message}".replace("%", "%%"))
+            }
+        }
+    }
+
     override fun markStagingReady() {
         val staging = data.child(IosRestoreSwap.STAGING)
         // a copy without video, or without a photo, replaces those folders too — with empty ones
@@ -181,6 +213,7 @@ internal class IosBackupStore(
         const val SHARE_BACKUP_DIR = "backup"
         const val WAL = "-wal"
         const val PARTIAL = ".part"
+        const val CHECK_PASSED = "ok"
     }
 }
 

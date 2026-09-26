@@ -10,12 +10,15 @@ import com.violinjourney.app.core.backup.BackupManager
 import com.violinjourney.app.core.backup.BackupPart
 import com.violinjourney.app.core.backup.BackupPrefs
 import com.violinjourney.app.core.backup.BackupStore
+import com.violinjourney.app.core.backup.stoppable
+import com.violinjourney.app.core.backup.underWay
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.recording.RecordingWatch
 import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.exists
 import com.violinjourney.app.core.io.filePath
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -53,10 +56,12 @@ open class BackupViewModel(
         viewModelScope.launch {
             var shared: PlatformFile? = null
             manager.job.collect { job ->
-                mutableState.update { it.copy(job = job, stopDialog = it.stopDialog && job is BackupJob.Saving) }
-                // «Отправить…»: the archive is built, the system sheet takes it from here — once
+                // «Остановить?» goes by itself as soon as there is nothing left to stop
+                mutableState.update { it.copy(job = job, stopDialog = it.stopDialog && job.stoppable) }
+                // «Отправить…»: the archive is built, the system sheet takes it from here — once, and only while it is there:
+                // a screen opened anew over an old outcome does not hand the sheet a file swept from `cache/share/` since
                 val file = (job as? BackupJob.Saved)?.shareFile
-                if (file != null && file != shared) {
+                if (file != null && file != shared && file.exists()) {
                     shared = file
                     effectChannel.send(BackupEffect.ShareFile(file.filePath))
                 }
@@ -87,12 +92,16 @@ open class BackupViewModel(
                 manager.dismiss()
                 effectChannel.trySend(BackupEffect.PickPlace)
             }
-            // a copy on its way goes on without its screen
-            BackupIntent.BackClicked -> effectChannel.trySend(BackupEffect.Close)
+            // A copy on its way goes on without its screen, and dismiss does not touch it; an outcome shown on the screen
+            // has been read and goes with it — a restore started next must not find it in the way.
+            BackupIntent.BackClicked -> {
+                manager.dismiss()
+                effectChannel.trySend(BackupEffect.Close)
+            }
         }
     }
 
-    private val BackupState.mayStart: Boolean get() = (job == BackupJob.Idle || job is BackupJob.SaveFailed) && !busy && contents != null && !nothingToSave
+    private val BackupState.mayStart: Boolean get() = !job.underWay && !busy && contents != null && !nothingToSave
 }
 
 open class RestoreViewModel(
@@ -108,15 +117,28 @@ open class RestoreViewModel(
     private val effectChannel = Channel<RestoreEffect>(Channel.BUFFERED)
     val effects: Flow<RestoreEffect> = effectChannel.receiveAsFlow()
 
+    /** Opened without a file — from the notification or the block «Данные» — to watch a restore that is on its way. */
+    private val watching = savedState.get<String>(ARG_URI) == null
+    private var closed = false
+
     init {
         savedState.get<String>(ARG_URI)?.let(::inspect)
         viewModelScope.launch { busyFlow(watch, importer).collect { busy -> mutableState.update { it.copy(busy = busy) } } }
         viewModelScope.launch {
             manager.job.collect { job ->
-                mutableState.update { it.copy(job = job, dialog = it.dialog.takeIf { dialog -> dialog != RestoreDialog.STOP || job is BackupJob.Restoring }) }
+                // «Остановить?» goes by itself as soon as the restore has passed the point where stopping meant anything
+                mutableState.update { it.copy(job = job, dialog = it.dialog.takeIf { dialog -> dialog != RestoreDialog.STOP || job.stoppable }) }
                 if (job is BackupJob.Restored) finish()
+                // a screen that came to watch a restore has nothing to show once there is none — not «Читаем копию…» for ever
+                if (watching && job !is BackupJob.Restoring && job !is BackupJob.Restored && job !is BackupJob.RestoreFailed) close()
             }
         }
+    }
+
+    private fun close() {
+        if (closed) return
+        closed = true
+        effectChannel.trySend(RestoreEffect.Close)
     }
 
     private fun inspect(uri: String) {
@@ -142,11 +164,14 @@ open class RestoreViewModel(
         val now = mutableState.value
         val ready = now.stage as? RestoreStage.Ready
         when (intent) {
-            RestoreIntent.RestoreClicked -> if (ready != null && !now.busy && ready.copy.missingBytes == 0L) {
+            RestoreIntent.RestoreClicked -> if (ready != null && !now.busy && !now.savingCopy && ready.copy.missingBytes == 0L) {
                 // into an empty app there is nothing to lose, and nothing to ask about
                 if (ready.current.counts.isEmpty) manager.restore(ready.copy, unsafe = false) else mutableState.update { it.copy(dialog = RestoreDialog.REPLACE) }
             }
-            RestoreIntent.UnsafeClicked -> if (ready != null && !now.busy) mutableState.update { it.copy(dialog = RestoreDialog.UNSAFE) }
+            // the media do not go for a restore that would run out of room all the same
+            RestoreIntent.UnsafeClicked -> if (ready != null && !now.busy && !now.savingCopy && ready.missingEvenUnsafeBytes == 0L) {
+                mutableState.update { it.copy(dialog = RestoreDialog.UNSAFE) }
+            }
             RestoreIntent.DialogConfirmed -> {
                 val dialog = now.dialog
                 mutableState.update { it.copy(dialog = null) }
@@ -162,16 +187,13 @@ open class RestoreViewModel(
             is RestoreIntent.FilePicked -> intent.uri?.let(::inspect)
             RestoreIntent.SaveFirstClicked -> effectChannel.trySend(RestoreEffect.OpenBackup)
             RestoreIntent.CancelClicked -> if (manager.cancellable) mutableState.update { it.copy(dialog = RestoreDialog.STOP) }
-            RestoreIntent.RetryClicked -> (now.job as? BackupJob.RestoreFailed)?.let { failed ->
-                manager.dismiss()
-                // the data are gone already — there is nothing left for a safe way to keep safe
-                ready?.let { manager.restore(it.copy, unsafe = !failed.dataIntact) }
-            }
+            // the failure knows its file and its way: a screen opened from the notification has no passport of its own
+            RestoreIntent.RetryClicked -> manager.retry()
             // a mark that could not be left would restart into the same app: the screen stays, the button can be pressed again
             RestoreIntent.StartCleanClicked -> if (manager.startClean()) effectChannel.trySend(RestoreEffect.Restart)
             RestoreIntent.CloseClicked -> {
                 manager.dismiss()
-                effectChannel.trySend(RestoreEffect.Close)
+                close()
             }
         }
     }

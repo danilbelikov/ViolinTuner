@@ -1,5 +1,7 @@
 package com.violinjourney.app.core.backup
 
+import com.violinjourney.app.core.io.syncToDisk
+import java.io.IOException
 import java.io.OutputStream
 import java.util.zip.Deflater
 import java.util.zip.ZipEntry
@@ -19,13 +21,15 @@ actual object BackupWriter {
 
     /**
      * A file that has vanished since the list was made — a recording deleted in the meantime — is
-     * skipped: its recording comes back without its sound, which the app knows how to show.
-     * Answers with the bytes written into entries.
+     * skipped: its recording comes back without its sound, which the app knows how to show. A
+     * [BackupEntry.required] one — the snapshot of the database, the settings — fails the copy:
+     * without it there is no copy. Answers with the bytes of the entries.
      */
     actual suspend fun write(out: OutputStream, manifest: BackupManifest, entries: List<BackupEntry>, onProgress: (BackupProgress) -> Unit): Long {
         val total = entries.sumOf { it.size }
         var done = 0L
         var written = 0
+        var writtenBytes = 0L
         val counts = entries.groupingBy { it.part }.eachCount()
         val seen = HashMap<BackupPart, Int>()
         val buffer = ByteArray(BUFFER)
@@ -39,6 +43,7 @@ actual object BackupWriter {
                 seen[entry.part] = index
                 val input = entry.open()
                 if (input == null) {
+                    if (entry.required) throw IOException("${entry.path} has gone")
                     done += entry.size
                     continue
                 }
@@ -53,6 +58,7 @@ actual object BackupWriter {
                         if (read < 0) break
                         zip.write(buffer, 0, read)
                         done += read
+                        writtenBytes += read
                         onProgress(BackupProgress(entry.part, index, counts.getValue(entry.part), minOf(done, total), total))
                     }
                 }
@@ -61,8 +67,13 @@ actual object BackupWriter {
             }
             zip.setLevel(Deflater.DEFAULT_COMPRESSION)
             zip.putNextEntry(ZipEntry(BackupPaths.COMPLETE_ENTRY))
-            zip.write("entries=$written\n".toByteArray())
+            zip.write(BackupEndMark.text(written, writtenBytes).toByteArray())
             zip.closeEntry()
+            zip.finish()
+            // «Проверяем файл» and «Готово» are about the card, not the system's cache: a card pulled out right after
+            // «Готово» must not take half the copy with it. Only a copy written to its end is waited for.
+            zip.flush()
+            out.syncToDisk()
         }
         return done
     }

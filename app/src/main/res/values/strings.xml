@@ -217,6 +217,7 @@
     <string name="backup_failed_gone_text">The flash drive was removed or the folder is gone. The unfinished file has been deleted — put the drive back and try again.</string>
     <string name="backup_failed_title">Could not save the copy</string>
     <string name="backup_failed_text">The unfinished file has been deleted. The data in the app is safe.</string>
+    <string name="backup_failed_phone_full_text">The phone itself ran out of space. The unfinished file has been deleted — free some space and try again.</string>
     <string name="backup_retry">Try again</string>
     <string name="backup_close">Close</string>
     <string name="backup_count_sessions_one">%1$d recording</string>
@@ -268,6 +269,9 @@
     <string name="restore_pick_another">Choose another file</string>
     <string name="restore_no_room_title">%1$s short of space to restore safely</string>
     <string name="restore_no_room_text">The copy is first unpacked next to the current data and only then replaces it. Free some space on the phone — or restore without the safety net.</string>
+    <string name="restore_no_room_any_title">%1$s short of space to restore</string>
+    <string name="restore_no_room_even_unsafe_text">Even with the sound, videos and sheet-music photos now in the app deleted, %1$s would still be missing. Free some space on the phone and open the file again.</string>
+    <string name="restore_no_room_free_text">Free some space on the phone and open the file again.</string>
     <string name="restore_no_room_ok">Got it</string>
     <string name="restore_unsafe_button">Delete current data and restore</string>
     <string name="restore_unsafe_title">Delete everything and restore?</string>
@@ -291,6 +295,7 @@
     <string name="restore_retry_same">Try again with this file</string>
     <string name="restore_start_clean">Start with a clean app</string>
     <string name="restore_busy">Finish recording first</string>
+    <string name="restore_busy_saving">Wait until the copy has been saved first</string>
     <string name="video_description">Video</string>
     <string name="video_state_playing">playing, double-tap to pause</string>
     <string name="video_state_paused">paused, double-tap to resume</string>

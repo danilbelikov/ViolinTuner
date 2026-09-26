@@ -217,6 +217,7 @@
     <string name="backup_failed_gone_text">La chiavetta è stata tolta o la cartella è sparita. Il file incompleto è stato eliminato — ricollega il supporto e riprova.</string>
     <string name="backup_failed_title">Non è stato possibile salvare la copia</string>
     <string name="backup_failed_text">Il file incompleto è stato eliminato. I dati nell\'app sono al loro posto.</string>
+    <string name="backup_failed_phone_full_text">Lo spazio è finito nella memoria del telefono stesso. Il file incompleto è stato eliminato — libera spazio e riprova.</string>
     <string name="backup_retry">Riprova</string>
     <string name="backup_close">Chiudi</string>
     <string name="backup_count_sessions_one">%1$d registrazione</string>
@@ -268,6 +269,9 @@
     <string name="restore_pick_another">Scegli un altro file</string>
     <string name="restore_no_room_title">Mancano %1$s per ripristinare in sicurezza</string>
     <string name="restore_no_room_text">La copia viene prima estratta accanto ai dati attuali e solo dopo li sostituisce. Libera spazio sul telefono — oppure ripristina senza rete di sicurezza.</string>
+    <string name="restore_no_room_any_title">Mancano %1$s per ripristinare</string>
+    <string name="restore_no_room_even_unsafe_text">Anche eliminando suono, video e foto degli spartiti ora nell\'app, mancherebbero ancora %1$s. Libera spazio sul telefono e apri di nuovo il file.</string>
+    <string name="restore_no_room_free_text">Libera spazio sul telefono e apri di nuovo il file.</string>
     <string name="restore_no_room_ok">Ho capito</string>
     <string name="restore_unsafe_button">Elimina i dati attuali e ripristina</string>
     <string name="restore_unsafe_title">Eliminare tutto e ripristinare?</string>
@@ -291,6 +295,7 @@
     <string name="restore_retry_same">Riprova con questo file</string>
     <string name="restore_start_clean">Riparti dall\'app vuota</string>
     <string name="restore_busy">Prima termina la registrazione</string>
+    <string name="restore_busy_saving">Prima attendi che la copia sia salvata</string>
     <string name="video_description">Video</string>
     <string name="video_state_playing">in riproduzione, doppio tocco per mettere in pausa</string>
     <string name="video_state_paused">in pausa, doppio tocco per continuare</string>

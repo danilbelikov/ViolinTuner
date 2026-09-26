@@ -47,6 +47,7 @@ import com.violinjourney.app.shared.resources.backup_stop_continue
 import com.violinjourney.app.shared.resources.backup_stop_title
 import com.violinjourney.app.shared.resources.dot_separator
 import com.violinjourney.app.shared.resources.restore_busy
+import com.violinjourney.app.shared.resources.restore_busy_saving
 import com.violinjourney.app.shared.resources.restore_button
 import com.violinjourney.app.shared.resources.restore_can_leave_title
 import com.violinjourney.app.shared.resources.restore_can_stop
@@ -63,6 +64,9 @@ import com.violinjourney.app.shared.resources.restore_failed_lost_title
 import com.violinjourney.app.shared.resources.restore_failed_text
 import com.violinjourney.app.shared.resources.restore_failed_title
 import com.violinjourney.app.shared.resources.restore_made
+import com.violinjourney.app.shared.resources.restore_no_room_any_title
+import com.violinjourney.app.shared.resources.restore_no_room_even_unsafe_text
+import com.violinjourney.app.shared.resources.restore_no_room_free_text
 import com.violinjourney.app.shared.resources.restore_no_room_ok
 import com.violinjourney.app.shared.resources.restore_no_room_text
 import com.violinjourney.app.shared.resources.restore_no_room_title
@@ -104,6 +108,7 @@ import com.violinjourney.app.core.backup.BackupJob
 import com.violinjourney.app.core.backup.BackupManifest
 import com.violinjourney.app.core.backup.BackupPart
 import com.violinjourney.app.core.backup.RestorePhase
+import com.violinjourney.app.core.backup.stoppable
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -205,12 +210,12 @@ private fun Passport(state: RestoreState, zone: TimeZone, onIntent: (RestoreInte
             }
             Button(onClick = { onIntent(RestoreIntent.PickAnotherClicked) }, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(stringResource(Res.string.restore_pick_another)) }
         }
-        is RestoreStage.Ready -> Ready(stage, state.busy, zone, onIntent)
+        is RestoreStage.Ready -> Ready(stage, state.busy, state.savingCopy, zone, onIntent)
     }
 }
 
 @Composable
-private fun Ready(stage: RestoreStage.Ready, busy: Boolean, zone: TimeZone, onIntent: (RestoreIntent) -> Unit) {
+private fun Ready(stage: RestoreStage.Ready, busy: Boolean, savingCopy: Boolean, zone: TimeZone, onIntent: (RestoreIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val copy = stage.copy
     val manifest = copy.manifest
@@ -239,20 +244,33 @@ private fun Ready(stage: RestoreStage.Ready, busy: Boolean, zone: TimeZone, onIn
     } else {
         Text(stringResource(Res.string.restore_empty_app), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 21.sp))
     }
-    if (busy) {
-        Text(stringResource(Res.string.restore_busy), modifier = Modifier.fillMaxWidth(), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
+    // the function is there, only not now: the reason stands under where the button is
+    val waitFor = when {
+        savingCopy -> Res.string.restore_busy_saving
+        busy -> Res.string.restore_busy
+        else -> null
     }
-    if (copy.missingBytes > 0) {
+    if (waitFor != null) {
+        Text(stringResource(waitFor), modifier = Modifier.fillMaxWidth(), color = colors.onSurfaceVariant, textAlign = TextAlign.Center, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
+    }
+    if (copy.missingBytes > 0 && stage.missingEvenUnsafeBytes > 0) {
+        // Not enough room even with the media gone: no second way — deleting data for a restore bound to fail is not offered.
+        ProblemBlock(
+            stringResource(Res.string.restore_no_room_any_title, Formats.fileSize(copy.missingBytes)),
+            if (stage.mediaBytes > 0) stringResource(Res.string.restore_no_room_even_unsafe_text, Formats.fileSize(stage.missingEvenUnsafeBytes)) else stringResource(Res.string.restore_no_room_free_text),
+        )
+        Button(onClick = { onIntent(RestoreIntent.CloseClicked) }, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(stringResource(Res.string.restore_no_room_ok)) }
+    } else if (copy.missingBytes > 0) {
         ProblemBlock(stringResource(Res.string.restore_no_room_title, Formats.fileSize(copy.missingBytes)), stringResource(Res.string.restore_no_room_text))
         Button(onClick = { onIntent(RestoreIntent.CloseClicked) }, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(stringResource(Res.string.restore_no_room_ok)) }
         // the dangerous way is a word in red, not a button that asks to be pressed
-        TextButton(onClick = { onIntent(RestoreIntent.UnsafeClicked) }, enabled = !busy, modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp)) {
+        TextButton(onClick = { onIntent(RestoreIntent.UnsafeClicked) }, enabled = waitFor == null, modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp)) {
             Text(stringResource(Res.string.restore_unsafe_button), color = ViolinTheme.destructive, textAlign = TextAlign.Center)
         }
     } else {
         Button(
             onClick = { onIntent(RestoreIntent.RestoreClicked) },
-            enabled = !busy,
+            enabled = waitFor == null,
             modifier = Modifier.fillMaxWidth().height(56.dp),
             colors = if (overData) ButtonDefaults.buttonColors(containerColor = ViolinTheme.destructive, contentColor = Color.White) else ButtonDefaults.buttonColors(),
         ) { IconLabel(AppIcons.Restore, stringResource(Res.string.restore_button), iconSize = 20.dp) }
@@ -299,7 +317,7 @@ private fun PassportCard(copy: BackupCandidate.Copy, manifest: BackupManifest, z
 @Composable
 private fun Progress(job: BackupJob.Restoring, onIntent: (RestoreIntent) -> Unit) {
     ScreenTitle(stringResource(Res.string.restore_progress_title))
-    val stoppable = if (job.checked) job.phase == RestorePhase.VERIFYING else job.phase != RestorePhase.FINISHING
+    val stoppable = job.stoppable
     JobProgress(
         phase = when (job.phase) {
             RestorePhase.VERIFYING -> stringResource(Res.string.restore_phase_verifying)

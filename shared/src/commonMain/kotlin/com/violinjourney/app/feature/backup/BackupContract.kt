@@ -64,7 +64,25 @@ sealed interface RestoreStage {
     data class Unfit(val problem: BackupFileProblem) : RestoreStage
 
     /** The passport of the copy beside what is in the app now: this is changed for that. */
-    data class Ready(val copy: BackupCandidate.Copy, val current: BackupContents) : RestoreStage
+    data class Ready(val copy: BackupCandidate.Copy, val current: BackupContents) : RestoreStage {
+        /**
+         * What the way without a net frees: the sound, the videos, the photos of sheets and the backings now in the app
+         * ([com.violinjourney.app.core.backup.BackupStore.deleteMedia]); the database, the settings and the photo of the
+         * profile stay. The waveforms it deletes too are not counted: the estimate errs towards «not enough».
+         */
+        val mediaBytes: Long get() = current.bytes.filterKeys { it != BackupPart.DATA }.values.sum()
+
+        /**
+         * Room the way without a net would still miss; above zero, it is not offered (spec 3.20). Its database, settings and
+         * profile are unpacked and opened while the media are still in place, so they have to fit beside everything now;
+         * the rest of the copy fits once the media have gone.
+         */
+        val missingEvenUnsafeBytes: Long get() {
+            if (copy.missingBytes <= 0) return 0
+            val restOfCopy = copy.manifest.totalBytes - (copy.manifest.bytes[BackupPart.DATA] ?: 0L)
+            return maxOf(copy.missingBytes - mediaBytes, copy.missingBytes - restOfCopy, 0L)
+        }
+    }
 }
 
 data class RestoreState(
@@ -74,7 +92,10 @@ data class RestoreState(
     val dialog: RestoreDialog? = null,
     /** «Открываем ваши данные…»: the process is about to start anew under this screen. */
     val opening: Boolean = false,
-)
+) {
+    /** A copy is being saved: one job at a time (spec 5.14), and the restore waits for it, saying why. */
+    val savingCopy: Boolean get() = job is BackupJob.Saving
+}
 
 sealed interface RestoreIntent {
     data object RestoreClicked : RestoreIntent

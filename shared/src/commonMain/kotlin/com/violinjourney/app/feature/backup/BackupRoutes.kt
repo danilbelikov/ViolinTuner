@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.violinjourney.app.core.backup.BackupJob
 import com.violinjourney.app.core.time.SystemWallClock
 import com.violinjourney.app.core.time.today
 import com.violinjourney.app.core.ui.format.Formats
@@ -108,8 +109,12 @@ fun RestoreRoute(onClose: () -> Unit, onOpenBackup: () -> Unit, viewModel: Resto
             }
         }
     }
-    // while the copy is being brought back there is nowhere to go back to that would mean anything
-    BackHandler(enabled = state.job.let { it !is com.violinjourney.app.core.backup.BackupJob.Idle }) {}
+    // While the copy is being brought back there is nowhere to go back to that would mean anything; after a failure that
+    // changed nothing «Назад» is «Закрыть», and the worst outcome keeps its two buttons. From the passport it goes back.
+    val job = state.job
+    BackHandler(enabled = job is BackupJob.Restoring || job is BackupJob.Restored || job is BackupJob.RestoreFailed) {
+        if (job is BackupJob.RestoreFailed && job.dataIntact) viewModel.onIntent(RestoreIntent.CloseClicked)
+    }
     RestoreScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier)
 }
 

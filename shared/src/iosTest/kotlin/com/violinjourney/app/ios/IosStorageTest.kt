@@ -1,5 +1,7 @@
 package com.violinjourney.app.ios
 
+import androidx.datastore.preferences.core.booleanPreferencesKey
+import androidx.datastore.preferences.core.longPreferencesKey
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.backup.BackupCounts
@@ -24,6 +26,7 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.child
+import com.violinjourney.app.core.io.exists
 import com.violinjourney.app.core.io.makeDirectories
 import com.violinjourney.app.core.io.openInput
 import com.violinjourney.app.core.io.openOutput
@@ -34,9 +37,13 @@ import com.violinjourney.app.core.time.SystemWallClock
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.addressOf
+import kotlinx.cinterop.usePinned
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -44,9 +51,12 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
+import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSUUID
+import platform.Foundation.dataWithContentsOfFile
+import platform.posix.memcpy
 
 /** The real storage of the iOS app — Room on its own SQLite, DataStore on a file — in a folder of the simulator. */
 @OptIn(ExperimentalForeignApi::class)
@@ -179,6 +189,70 @@ class IosStorageTest {
         database.close()
     }
 
+    @Test
+    fun `an unpacked copy is opened before its mark and carries the date of its copy`() = runTest {
+        val data = PlatformFile(directory)
+        // what a copy from an older Android app carries: its database at version 12, and settings of its own
+        val older = data.child("older.db")
+        OldDatabaseFile.layOut(older.path, version = 12, madeOnAndroid = true)
+        val copied = data.child("copied-settings").also { it.makeDirectories() }
+        val life = CoroutineScope(Dispatchers.Default + Job())
+        DataStoreSettingsRepository(IosStorage.settings(copied.path, life)).setOnboardingDone(true)
+        life.coroutineContext[Job]!!.cancelAndJoin()
+        val settings = copied.child(IosStorage.SETTINGS_FILE)
+        val manifest = BackupManifest(
+            formatVersion = BackupManifest.FORMAT_VERSION, appVersion = "1.0", databaseVersion = 12, createdAtEpochMs = 1_790_000_000_000,
+            device = "Google Pixel 10a", parts = setOf(BackupPart.DATA), counts = BackupCounts(sessions = 1), bytes = mapOf(BackupPart.DATA to older.sizeBytes()),
+        )
+        val archive = data.child("copy.zip")
+        BackupWriter.write(
+            archive.openOutput()!!, manifest,
+            listOf(
+                BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, older.sizeBytes()) { older.openInput() },
+                BackupEntry("${BackupPaths.SETTINGS}/${IosRestoreSwap.SETTINGS_FILE}", BackupPart.DATA, settings.sizeBytes()) { settings.openInput() },
+            ),
+        ) {}
+        val database = IosStorage.database(directory)
+        val store = storeOf(data, database, RoomPracticeRepository(database.practiceDao()))
+        BackupReader.extract(archive.openInput()!!, store.newStaging(), 0) {}
+        store.settleStaging(manifest.createdAtEpochMs)
+
+        val staged = data.child(IosRestoreSwap.STAGING).child(BackupPaths.DATABASE).child(AppDatabase.FILE_NAME)
+        assertEquals(AppDatabase.VERSION, userVersionOf(staged), "the migrations have run on the unpacked file")
+        assertFalse(data.child(IosRestoreSwap.STAGING).child(BackupPaths.DATABASE).child(AppDatabase.FILE_NAME + "-wal").exists())
+        val readLife = CoroutineScope(Dispatchers.Default + Job())
+        val stamped = IosStorage.settings(data.child(IosRestoreSwap.STAGING).child(BackupPaths.SETTINGS).path, readLife).data.first()
+        readLife.coroutineContext[Job]!!.cancelAndJoin()
+        assertEquals(manifest.createdAtEpochMs, stamped[longPreferencesKey("backup_last_at")])
+        assertEquals(true, stamped[booleanPreferencesKey("onboarding_done")])
+
+        store.markStagingReady()
+        database.close()
+        assertEquals(IosRestoreSwap.Outcome.RESTORED, IosRestoreSwap.applyIfPending(data))
+        val reopened = IosStorage.database(directory)
+        assertEquals("Гаммы", reopened.sessionDao().observeAll().first().single().title)
+        reopened.close()
+    }
+
+    @Test
+    fun `an unpacked database that does not open fails before its mark`() = runTest {
+        val data = PlatformFile(directory)
+        val database = IosStorage.database(directory)
+        val store = storeOf(data, database, RoomPracticeRepository(database.practiceDao()))
+        val folder = store.newStaging().child(BackupPaths.DATABASE).also { it.makeDirectories() }
+        folder.child(AppDatabase.FILE_NAME).openOutput()!!.use { it.write(ByteArray(8_192) { 7 }, 0, 8_192) }
+        assertFails { store.settleStaging(1_790_000_000_000) }
+        database.close()
+    }
+
+    /** `PRAGMA user_version` as SQLite keeps it: four bytes, big-endian, at offset 60 of the header. */
+    private fun userVersionOf(file: PlatformFile): Int {
+        val data = assertNotNull(NSData.dataWithContentsOfFile(file.path))
+        val header = ByteArray(HEADER)
+        header.usePinned { memcpy(it.addressOf(0), data.bytes, HEADER.toULong()) }
+        return (60 until 64).fold(0) { value, i -> (value shl 8) or (header[i].toInt() and 0xFF) }
+    }
+
     private object NoAudioFiles : SessionAudioFiles {
         override fun newFile() = PlatformFile("/dev/null")
         override fun existing(name: String): PlatformFile? = null
@@ -192,5 +266,9 @@ class IosStorageTest {
         override suspend fun delete(names: Collection<String>) = Unit
         override suspend fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
         override fun newCameraFile() = PlatformFile("/dev/null")
+    }
+
+    private companion object {
+        const val HEADER = 100
     }
 }
