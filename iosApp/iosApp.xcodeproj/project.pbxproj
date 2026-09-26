@@ -14,6 +14,7 @@
 		A10000000000000000000005 /* AppMetricaCore in Frameworks */ = {isa = PBXBuildFile; productRef = AC0000000000000000000001 /* AppMetricaCore */; };
 		A10000000000000000000006 /* AppMetricaCrashes in Frameworks */ = {isa = PBXBuildFile; productRef = AC0000000000000000000002 /* AppMetricaCrashes */; };
 		A10000000000000000000007 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000007 /* Assets.xcassets */; };
+		A10000000000000000000008 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A20000000000000000000008 /* PrivacyInfo.xcprivacy */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -24,6 +25,7 @@
 		A20000000000000000000005 /* InfoPlist.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = InfoPlist.xcstrings; sourceTree = "<group>"; };
 		A20000000000000000000006 /* AppMetricaService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppMetricaService.swift; sourceTree = "<group>"; };
 		A20000000000000000000007 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A20000000000000000000008 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -55,6 +57,7 @@
 				A20000000000000000000006 /* AppMetricaService.swift */,
 				A20000000000000000000004 /* Info.plist */,
 				A20000000000000000000005 /* InfoPlist.xcstrings */,
+				A20000000000000000000008 /* PrivacyInfo.xcprivacy */,
 				A20000000000000000000007 /* Assets.xcassets */,
 			);
 			path = iosApp;
@@ -140,6 +143,7 @@
 			files = (
 				A10000000000000000000003 /* InfoPlist.xcstrings in Resources */,
 				A10000000000000000000007 /* Assets.xcassets in Resources */,
+				A10000000000000000000008 /* PrivacyInfo.xcprivacy in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
