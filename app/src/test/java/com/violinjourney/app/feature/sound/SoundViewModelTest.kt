@@ -362,4 +362,21 @@ class SoundViewModelTest {
         viewModel.onIntent(SoundIntent.BackingGainChanged(1f))
         assertEquals(6f, viewModel.state.value.backing?.gainDb)
     }
+
+    @Test
+    fun `a dragged shift lands on a five millisecond step, and «как записано» gives back the exact one`() = runTest {
+        val under = recording("under.m4a")
+        val backingId = backings.add(backings.backing())
+        backings.saveTake(com.violinjourney.app.core.domain.backing.TakeBacking(under, backingId, 203, 203, -6f, 2_000, com.violinjourney.app.core.domain.backing.BackingOutput.WIRED, "Jack"))
+        val (viewModel, _) = screen(under)
+        // 0.5343 of −2000…+2000 is +137.2 ms
+        viewModel.onIntent(SoundIntent.BackingOffsetChanged(0.5343f))
+        assertEquals(135, viewModel.state.value.backing?.offsetMs)
+        assertEquals(135 to -6f, player.mixes.last())
+        viewModel.onIntent(SoundIntent.BackingOffsetChanged(0.5357f))
+        assertEquals(145, viewModel.state.value.backing?.offsetMs)
+
+        viewModel.onIntent(SoundIntent.BackingOffsetRecorded)
+        assertEquals(203, viewModel.state.value.backing?.offsetMs)
+    }
 }

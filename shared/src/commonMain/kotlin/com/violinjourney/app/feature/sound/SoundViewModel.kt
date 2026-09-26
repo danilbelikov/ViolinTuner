@@ -173,8 +173,9 @@ open class SoundViewModel(
             is SoundIntent.BackingGainChanged -> editBacking { it.copy(gainDb = backingConfig.minGainDb + intent.fraction * (backingConfig.maxGainDb - backingConfig.minGainDb)) }
             is SoundIntent.BackingGainStepped -> editBacking { it.copy(gainDb = it.gainDb + if (intent.up) backingConfig.gainStepDb else -backingConfig.gainStepDb) }
             SoundIntent.BackingGainReset -> editBacking { it.copy(gainDb = backingConfig.defaultGainDb) }
+            // the slider lands on whole steps of the shift (spec 5.25); «Как записано» keeps the exact one worked out while recording
             is SoundIntent.BackingOffsetChanged -> editBacking {
-                it.copy(offsetMs = (backingConfig.minOffsetMs + intent.fraction * (backingConfig.maxOffsetMs - backingConfig.minOffsetMs)).roundToInt())
+                it.copy(offsetMs = BackingOffset.snap((backingConfig.minOffsetMs + intent.fraction * (backingConfig.maxOffsetMs - backingConfig.minOffsetMs)).roundToInt(), backingConfig))
             }
             is SoundIntent.BackingOffsetStepped -> editBacking { it.copy(offsetMs = it.offsetMs + if (intent.up) backingConfig.offsetStepMs else -backingConfig.offsetStepMs) }
             SoundIntent.BackingOffsetRecorded -> editBacking { it.copy(offsetMs = it.recordedOffsetMs) }
