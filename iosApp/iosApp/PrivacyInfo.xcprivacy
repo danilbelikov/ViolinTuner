@@ -64,7 +64,8 @@
 				<string>35F9.1</string>
 			</array>
 		</dict>
-		<!-- NSFileSystemFreeSize — room for a copy, a video, a backing, and «about N min left» on the camera; statfs in SQLite -->
+		<!-- volumeAvailableCapacityForImportantUsage (and NSFileSystemFreeSize under it) — room for a copy, a video, a backing,
+		     and «about N min left» on the camera; statfs in SQLite -->
 		<dict>
 			<key>NSPrivacyAccessedAPIType</key>
 			<string>NSPrivacyAccessedAPICategoryDiskSpace</string>

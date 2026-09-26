@@ -153,22 +153,20 @@ class VideoTakeImporter(
     /** The system picker returned [uri]. */
     fun picked(pieceId: Long, uri: String) {
         if (mutableState.value != VideoImport.Idle) return
-        val size = try {
-            files.sizeOf(uri)
-        } catch (e: Exception) {
-            // a provider is somebody else's code and answers with whatever it throws: a size it would not tell, and the
-            // copy itself finds out whether the video can be read
-            analytics.error(ErrorGroup.MEDIA, "a picked video would not tell its size", e)
-            null
-        }
-        val missing = size?.let { it + repertoireConfig.videoFreeSpaceMarginBytes - files.freeBytes() } ?: 0
-        if (missing > 0) {
-            mutableState.value = VideoImport.Failed(pieceId, VideoImportFailure.NO_SPACE, missingMb = ((missing + BYTES_PER_MB - 1) / BYTES_PER_MB).toInt())
-            return
-        }
-        // Copying is shown at once and without a number: it is seconds as a rule, and no estimate of it is worth the name.
-        mutableState.value = VideoImport.Working(pieceId, shot = false, copying = true, visible = true)
+        // Nothing is shown while the room is measured, and it is measured off the caller's thread — the main one: a
+        // provider answers when it will, and iOS counts in the room what it would free, which takes a while on a full phone.
+        val measuring = VideoImport.Working(pieceId, shot = false, copying = true, visible = false)
+        mutableState.value = measuring
         job = scope.launch {
+            val missing = missingBytes(uri)
+            // stopped meanwhile: that answer stands
+            currentCoroutineContext().ensureActive()
+            if (missing > 0) {
+                mutableState.compareAndSet(measuring, VideoImport.Failed(pieceId, VideoImportFailure.NO_SPACE, missingMb = ((missing + BYTES_PER_MB - 1) / BYTES_PER_MB).toInt()))
+                return@launch
+            }
+            // Copying is shown at once and without a number: it is seconds as a rule, and no estimate of it is worth the name.
+            if (!mutableState.compareAndSet(measuring, measuring.copy(visible = true))) return@launch
             val file = try {
                 files.import(uri)
             } catch (e: CancellationException) {
@@ -184,6 +182,19 @@ class VideoTakeImporter(
                 take(pieceId, file, shot = false, returnedAtEpochMs = clock.millis())
             }
         }
+    }
+
+    /** How much more room the picked video needs than there is; 0 when it fits, or when its size is not told. Blocking. */
+    private fun missingBytes(uri: String): Long {
+        val size = try {
+            files.sizeOf(uri)
+        } catch (e: Exception) {
+            // a provider is somebody else's code and answers with whatever it throws: a size it would not tell, and the
+            // copy itself finds out whether the video can be read
+            analytics.error(ErrorGroup.MEDIA, "a picked video would not tell its size", e)
+            null
+        }
+        return size?.let { it + repertoireConfig.videoFreeSpaceMarginBytes - files.freeBytes() } ?: 0
     }
 
     private suspend fun take(pieceId: Long, file: PlatformFile, shot: Boolean, returnedAtEpochMs: Long) {

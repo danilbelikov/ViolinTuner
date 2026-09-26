@@ -136,7 +136,8 @@ open class CaptureViewModel(
         viewModelScope.launch { takes.watchPractice() }
         viewModelScope.launch {
             val title = repertoire.piece(pieceId)?.title.orEmpty()
-            val minutes = (videos.freeBytes() / BYTES_PER_MINUTE).toInt()
+            // off the main thread: on iOS the room is counted with what the system would free, and that takes a while
+            val minutes = (withContext(io) { videos.freeBytes() } / BYTES_PER_MINUTE).toInt()
             mutableState.update { it.copy(title = title, spaceMinutes = minutes.takeIf { m -> m < LOW_SPACE_MINUTES }) }
         }
         viewModelScope.launch {

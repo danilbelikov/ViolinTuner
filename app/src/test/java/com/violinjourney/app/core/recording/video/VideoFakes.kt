@@ -35,7 +35,9 @@ class FakeVideoFiles : VideoFiles {
         return if (adoptFails) null else File("/files/sessions/video-${next++}.mp4")
     }
     override fun sizeOf(uri: String): Long? = sizeThrows?.let { throw it } ?: sizes[uri]
-    override fun freeBytes(): Long = free
+    /** How often the room was asked: never on the caller's thread of `picked`. */
+    var freeAsked = 0
+    override fun freeBytes(): Long = free.also { freeAsked++ }
     override suspend fun import(uri: String): File? {
         delay(COPY_MS)
         importThrows?.let { throw it }

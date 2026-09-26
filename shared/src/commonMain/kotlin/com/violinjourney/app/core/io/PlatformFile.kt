@@ -12,7 +12,7 @@ expect fun PlatformFile.sizeBytes(): Long
 /** The last part of the path: what the database keeps. */
 expect val PlatformFile.fileName: String
 
-/** Deletes the file; true when it is gone now. */
+/** Deletes the file, or an empty folder — never a folder with things in it, as `java.io.File.delete`; true when it is gone now. */
 expect fun PlatformFile.deleteFile(): Boolean
 
 /** The file at [path]. */

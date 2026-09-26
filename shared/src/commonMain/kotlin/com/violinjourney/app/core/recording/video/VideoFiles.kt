@@ -30,6 +30,7 @@ interface VideoFiles {
     /** Size of what [uri] points at, when the provider tells. */
     fun sizeOf(uri: String): Long?
 
+    /** The room for videos. Blocking, and never on the main thread: iOS counts in it what it would free on demand. */
     fun freeBytes(): Long
 
     /** Copies the picked video in, whole and unchanged; null when it cannot be read or written. Cancellable. */

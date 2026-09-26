@@ -11,6 +11,7 @@ import com.violinjourney.app.core.domain.progress.TrophyRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.availableBytes
 import com.violinjourney.app.core.io.child
 import com.violinjourney.app.core.io.deleteAll
 import com.violinjourney.app.core.io.exists
@@ -29,9 +30,7 @@ import kotlinx.coroutines.withContext
 import platform.Foundation.NSBundle
 import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSFileManager
-import platform.Foundation.NSFileSystemFreeSize
 import platform.Foundation.NSLog
-import platform.Foundation.NSNumber
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
 import platform.UIKit.UIDevice
@@ -139,8 +138,8 @@ internal class IosBackupStore(
         snapshotDir.deleteAll()
     }
 
-    override fun freeBytes(): Long =
-        (NSFileManager.defaultManager.attributesOfFileSystemForPath(data.path, null)?.get(NSFileSystemFreeSize) as? NSNumber)?.longLongValue ?: 0
+    // what iOS gives a write the person asked for, what it frees on demand included — the room it shows in its settings
+    override fun freeBytes(): Long = data.availableBytes()
 
     override fun newStaging(): PlatformFile = data.child(IosRestoreSwap.STAGING).also {
         it.deleteAll()

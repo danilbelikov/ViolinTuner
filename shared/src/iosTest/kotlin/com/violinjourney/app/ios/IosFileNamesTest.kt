@@ -10,6 +10,8 @@ import com.violinjourney.app.core.io.openOutput
 import com.violinjourney.app.core.time.SystemWallClock
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -48,6 +50,22 @@ class IosFileNamesTest {
             assertNull(videos.thumbOf(name), "thumbnails «$name»")
             assertNull(backings.existing(name), "backings «$name»")
         }
+    }
+
+    @Test
+    fun `a folder under a plain name is no backing and is not deleted by its name`() {
+        val backings = IosBackingFiles(folder, SystemWallClock)
+        val inner = folder.child("backings").child("x").also { it.makeDirectories() }
+        val kept = inner.child("kept.m4a")
+        kept.openOutput()!!.close()
+        assertNull(backings.existing("x"))
+        backings.delete("x")
+        assertTrue(kept.exists())
+        val real = folder.child("backings").child("a.m4a")
+        real.openOutput()!!.close()
+        assertEquals(real.path, backings.existing("a.m4a")?.path)
+        backings.delete("a.m4a")
+        assertFalse(real.exists())
     }
 
     @Test

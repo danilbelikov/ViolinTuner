@@ -5,11 +5,13 @@ import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingFiles
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.availableBytes
 import com.violinjourney.app.core.io.child
 import com.violinjourney.app.core.io.deleteAll
 import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.exists
 import com.violinjourney.app.core.io.isOwnFileName
+import com.violinjourney.app.core.io.isRegularFile
 import com.violinjourney.app.core.io.listNames
 import com.violinjourney.app.core.io.makeDirectories
 import com.violinjourney.app.core.io.moveTo
@@ -29,9 +31,7 @@ import platform.AVFAudio.AVAudioPCMBuffer
 import platform.Foundation.NSDate
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileModificationDate
-import platform.Foundation.NSFileSystemFreeSize
 import platform.Foundation.NSLog
-import platform.Foundation.NSNumber
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
 import platform.Foundation.timeIntervalSince1970
@@ -50,11 +50,12 @@ internal class IosBackingFiles(private val data: PlatformFile, private val clock
         return directory.child("${NSUUID().UUIDString}.$clean")
     }
 
-    // names come from the database, and a database may come from a copy: a name that leaves the folder is not one of ours
-    override fun existing(name: String): PlatformFile? = directory.child(name).takeIf { isOwnFileName(name) && it.exists() }
+    // names come from the database, and a database may come from a copy: a name that leaves the folder is not one of
+    // ours, and a backing is a file — as on Android, a folder is never one, nor is it deleted by its name
+    override fun existing(name: String): PlatformFile? = directory.child(name).takeIf { isOwnFileName(name) && it.isRegularFile() }
 
     override fun delete(name: String) {
-        existing(name)?.deleteAll()
+        existing(name)?.deleteFile()
     }
 
     override fun deleteOrphans(kept: Set<String>) {
@@ -119,8 +120,8 @@ internal class IosBackingImporter(
         )
     }
 
-    private fun freeBytes(): Long =
-        (NSFileManager.defaultManager.attributesOfFileSystemForPath(data.path, null)?.get(NSFileSystemFreeSize) as? NSNumber)?.longLongValue ?: 0
+    // what iOS gives a write the person asked for, what it frees on demand included
+    private fun freeBytes(): Long = data.availableBytes()
 
     private companion object {
         const val MS_PER_SECOND = 1_000.0

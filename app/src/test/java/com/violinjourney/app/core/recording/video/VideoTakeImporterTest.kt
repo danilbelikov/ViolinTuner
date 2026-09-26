@@ -193,10 +193,15 @@ class VideoTakeImporterTest {
         files.free = 100L * 1024 * 1024
         val (importer, _) = importer()
         importer.picked(7, "content://video/1")
+        // the room is measured on the importer's thread, not on the main one that called — and nothing is shown meanwhile
+        assertEquals(0, files.freeAsked)
+        assertFalse(importer.working.visible)
+        runCurrent()
         val failed = importer.state.value as VideoImport.Failed
         assertEquals(VideoImportFailure.NO_SPACE, failed.reason)
         // 300 to copy and 50 to stay free, 100 there
         assertEquals(250, failed.missingMb)
+        assertEquals(1, files.freeAsked)
     }
 
     @Test
