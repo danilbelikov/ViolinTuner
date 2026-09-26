@@ -31,7 +31,6 @@ import platform.AVFAudio.inputLatency
 import platform.AVFAudio.AVAudioSessionInterruptionNotification
 import platform.AVFAudio.AVAudioSessionMediaServicesWereResetNotification
 import platform.AVFAudio.AVAudioSessionModeMeasurement
-import platform.AVFAudio.AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
 import platform.AVFAudio.setActive
 import platform.AVFAudio.setPreferredSampleRate
 import platform.Foundation.NSError
@@ -45,7 +44,9 @@ import platform.Foundation.NSOperationQueue
  * suppression, the counterpart of the UNPROCESSED source on Android. The system hands over float blocks of its own
  * length on its audio thread; they are only copied there, and the rest — hops of 512, the digital-silence watchdog,
  * FrameAnalyzer and the detector — runs on the collector's thread, the same chain with the same numbers as on
- * Android. Each collection opens its own engine and session and closes them when cancelled.
+ * Android. Each collection opens its own engine and closes it when cancelled; the session is the app's one
+ * ([IosAudioSession]), let go by the last one using it. One source per screen, as on Android (`pitchSources`): the sound
+ * of a take and its clock belong to that screen alone.
  *
  * Fails with [MicUnavailableException] when the engine does not start, when the system takes the input away
  * (a call, Siri, an alarm: an interruption; a reset of the media services) and when the input gives exact zeros
@@ -77,8 +78,8 @@ class IosMicPitchSource(
         // The audio thread must never wait: a full queue means the analysis fell far behind, which is a failure,
         // not a reason to drop sound — the frame clock counts every sample.
         val blocks = Channel<FloatArray>(QUEUED_BLOCKS, BufferOverflow.SUSPEND)
-        val session = AVAudioSession.sharedInstance()
         val engine = AVAudioEngine()
+        var entered = false
         val center = NSNotificationCenter.defaultCenter
         val observers = listOf(AVAudioSessionInterruptionNotification, AVAudioSessionMediaServicesWereResetNotification).map { name ->
             center.addObserverForName(name, null, NSOperationQueue.mainQueue) { _ ->
@@ -86,7 +87,8 @@ class IosMicPitchSource(
             }
         }
         try {
-            openSession(session)
+            val session = IosAudioSession.enter(::openSession)
+            entered = true
             val input = engine.inputNode
             val format = input.outputFormatForBus(0u)
             val sampleRateHz = format.sampleRate.toInt()
@@ -147,12 +149,12 @@ class IosMicPitchSource(
             engine.inputNode.removeTapOnBus(0u)
             engine.stop()
             blocks.close()
-            // let music the player had on come back
-            session.setActive(false, AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation, null)
+            // the last one using the session lets it go, and music another app had on comes back
+            if (entered) IosAudioSession.leave()
         }
     }
 
-    private fun openSession(session: AVAudioSession) = memScoped {
+    private fun openSession(session: AVAudioSession): AVAudioSession = memScoped {
         val error = alloc<ObjCObjectVar<NSError?>>()
         // a session that records sends its sound to the earpiece unless told otherwise: whatever plays while the
         // microphone is open (a take, a backing listened to) goes to the loudspeaker, or to headphones when there are some
@@ -161,6 +163,7 @@ class IosMicPitchSource(
             session.setPreferredSampleRate(PREFERRED_RATE_HZ, error.ptr) &&
             session.setActive(true, error.ptr)
         if (!ok) throw unavailable(MicUnavailableReason.OPEN_FAILED, "the audio session would not open: ${error.value?.localizedDescription}")
+        session
     }
 
     /** Logged here because the presenter turns the exception into a screen state and retries. */

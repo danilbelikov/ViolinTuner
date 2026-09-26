@@ -86,7 +86,8 @@ import platform.Foundation.NSUserDomainMask
 
 /**
  * What Hilt puts together on Android, by hand: one instance of everything that is one per app, in the order Hilt
- * would make them. Screens take their view models from here (see [IosNavHost]); a new pipeline is made per screen.
+ * would make them. Screens take their view models from here (see [IosNavHost]); a new pipeline and a new microphone
+ * are made per screen.
  */
 internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: IosAppMetricaAnalytics?) {
     val io = Dispatchers.IO
@@ -151,12 +152,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val awarder = TrophyAwarder(trophies, progressConfig, clock)
     val recordingWatch = RecordingWatch()
 
-    val pitchSource: PitchSource = if (fakeScenario != null) {
-        FakePitchSource(fakeScenario, intonationConfig)
-    } else {
-        // MPM, as on Android (DetectorComparisonTest)
-        IosMicPitchSource(PitchDetectorFactory(::MpmDetector), PcmEncoderFactory(::IosAacEncoder), logStats = IosBuild.isDevApp)
-    }
+    private val newPitchSource = pitchSources(fakeScenario, intonationConfig, logStats = IosBuild.isDevApp)
 
     val videoFiles = IosVideoFiles(repertoireConfig, io)
     val elapsed = ElapsedClock { (NSProcessInfo.processInfo.systemUptime * MS_PER_SECOND).toLong() }
@@ -173,9 +169,9 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val playerFactory = SessionPlayerFactory { scope -> IosSessionPlayer(scope, soundConfig, backingConfig) }
     val pictureFactory = VideoPictureFactory(::IosVideoPicture)
 
-    /** One per screen, as on Android: it holds that screen's wish to record. */
+    /** One per screen, as on Android: it holds that screen's wish to record, and listens through a microphone of its own. */
     fun takes() = TakePipeline(
-        pitchSource, sessions, audioFiles, runningPractice, practiceConfig, clock, Dispatchers.Default, recordingWatch,
+        newPitchSource(), sessions, audioFiles, runningPractice, practiceConfig, clock, Dispatchers.Default, recordingWatch,
         practiceNotes, journeyConfig, backings, backingPlayback, backingConfig, analytics,
     )
 
@@ -209,4 +205,18 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
         const val WAVEFORMS_FOLDER = "waveforms"
         const val MS_PER_SECOND = 1_000.0
     }
+}
+
+/**
+ * A new source for every call, as Hilt's unscoped provider gives on Android: each screen that records hears through
+ * its own microphone — its own engine, sound of the take and clock of the take — so a Live still listening for its two
+ * seconds after the screen went away shares nothing with the screen that came next. The fake scenario too is one per
+ * screen, as on Android.
+ */
+internal fun pitchSources(fakeScenario: FakeScenario?, config: IntonationConfig, logStats: Boolean): () -> PitchSource {
+    if (fakeScenario != null) return { FakePitchSource(fakeScenario, config) }
+    // MPM, as on Android (DetectorComparisonTest)
+    val detectors = PitchDetectorFactory(::MpmDetector)
+    val encoders = PcmEncoderFactory(::IosAacEncoder)
+    return { IosMicPitchSource(detectors, encoders, logStats) }
 }

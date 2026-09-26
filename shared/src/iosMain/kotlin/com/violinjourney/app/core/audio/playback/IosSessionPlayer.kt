@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.audio.playback
 
+import com.violinjourney.app.core.audio.IosAudioSession
 import com.violinjourney.app.core.audio.backing.BackingMixer
 import com.violinjourney.app.core.audio.backing.IosBackingPcmReader
 import com.violinjourney.app.core.audio.fx.SoundChain
@@ -54,7 +55,8 @@ import platform.Foundation.NSURL
  * AVAudioPlayerNode, a few chunks ahead of the ear. One worker per loaded file; the calls leave wishes it picks up
  * between two chunks. A take under a backing (spec 3.32) is mixed with it by the same [BackingMixer] as on Android.
  * The output (the engine) is taken on play and paused half a second after the sound stops — a pause or the end of the
- * take — so an open screen with nothing playing does not keep the audio hardware running.
+ * take — so an open screen with nothing playing does not keep the audio hardware running; the audio session, shared
+ * with the microphones, is let go through [IosAudioSession] when the player is.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class IosSessionPlayer internal constructor(
@@ -182,11 +184,15 @@ class IosSessionPlayer internal constructor(
         val format = AVAudioFormat(standardFormatWithSampleRate = rate.toDouble(), channels = if (reader != null) 2u else 1u)
         engine.attachNode(node)
         engine.connect(node, engine.mainMixerNode, format)
+        var playback: Playback? = null
         try {
-            Playback(source, rate, engine, node, format, reader).loop()
+            playback = Playback(source, rate, engine, node, format, reader)
+            playback.loop()
         } finally {
             node.stop()
             engine.stop()
+            // the last one using the session lets it go, and music another app had on comes back
+            if (playback?.holdsSession == true) IosAudioSession.leave()
             reader?.close()
             source.close()
         }
@@ -242,6 +248,10 @@ class IosSessionPlayer internal constructor(
         private var running = false
         private var sinceMeters = 0
 
+        /** Counted among the users of the app's audio session (from the first play until the player is let go). */
+        var holdsSession = false
+            private set
+
         suspend fun loop() {
             var current = lock.withLock { settingsChanged = false; settings }
             chain.set(current, immediate = true)
@@ -285,7 +295,7 @@ class IosSessionPlayer internal constructor(
                     continue
                 }
                 if (!running) {
-                    if (!startOutput(engine)) {
+                    if (!startOutput()) {
                         lock.withLock { wantPlaying = false }
                         mutableState.update { PlayerState(failed = true, processed = it.processed, original = it.original) }
                         return
@@ -403,23 +413,32 @@ class IosSessionPlayer internal constructor(
             val positionMs = (baseMs + played.value * MS_PER_SECOND / rate).coerceIn(0, durationMs)
             mutableState.update { if (it.playing) it.copy(positionMs = positionMs) else it }
         }
+
+        /**
+         * The output is taken when the sound goes on, not when the screen opens: a recording looked at is not heard. It
+         * is taken again on every play after the engine was paused — [OUTPUT_LINGER_MS] after a pause or the end of a
+         * take — with the category and the activation set again every time, as on the first play: a microphone opened
+         * meanwhile made the session its own. The session is the app's one ([IosAudioSession]): the first play counts
+         * the player among its users, and the player leaves when it is let go.
+         */
+        private fun startOutput(): Boolean {
+            if (engine.running) return true
+            if (holdsSession) {
+                takeForPlaying(AVAudioSession.sharedInstance())
+            } else {
+                IosAudioSession.enter(::takeForPlaying)
+                holdsSession = true
+            }
+            return memScoped {
+                val error = alloc<ObjCObjectVar<NSError?>>()
+                engine.startAndReturnError(error.ptr).also { if (!it) log("no audio output: ${error.value?.localizedDescription}") }
+            }
+        }
     }
 
-    /**
-     * The output is taken when the sound goes on, not when the screen opens: a recording looked at is not heard. It is
-     * taken again on every play after the engine was paused — [OUTPUT_LINGER_MS] after a pause or the end of a take —
-     * with the category and the session set again, as on the first play. The session is not given up here: it is one
-     * for the whole app, shared with the microphone.
-     */
-    private fun startOutput(engine: AVAudioEngine): Boolean {
-        if (engine.running) return true
-        val session = AVAudioSession.sharedInstance()
+    private fun takeForPlaying(session: AVAudioSession) {
         session.setCategory(AVAudioSessionCategoryPlayback, null)
         session.setActive(true, null)
-        return memScoped {
-            val error = alloc<ObjCObjectVar<NSError?>>()
-            engine.startAndReturnError(error.ptr).also { if (!it) log("no audio output: ${error.value?.localizedDescription}") }
-        }
     }
 
     // NSLog takes Objective-C objects for its arguments: the line is made whole here, its percent signs doubled.
