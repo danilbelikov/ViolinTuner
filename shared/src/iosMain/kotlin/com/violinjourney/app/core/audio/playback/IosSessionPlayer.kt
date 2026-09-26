@@ -35,6 +35,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import platform.AVFAudio.AVAudioEngine
 import platform.AVFAudio.AVAudioFile
 import platform.AVFAudio.AVAudioFormat
@@ -52,13 +53,20 @@ import platform.Foundation.NSURL
  * chunk passes through [SoundChain] and the A/B mixer — what is heard is what is sent (spec 3.17) — and goes to an
  * AVAudioPlayerNode, a few chunks ahead of the ear. One worker per loaded file; the calls leave wishes it picks up
  * between two chunks. A take under a backing (spec 3.32) is mixed with it by the same [BackingMixer] as on Android.
+ * The output (the engine) is taken on play and paused half a second after the sound stops — a pause or the end of the
+ * take — so an open screen with nothing playing does not keep the audio hardware running.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-class IosSessionPlayer(
+class IosSessionPlayer internal constructor(
     private val scope: CoroutineScope,
     private val config: SoundConfig,
-    private val backingConfig: BackingConfig = BackingConfig(),
+    private val backingConfig: BackingConfig,
+    /** The engine of each loaded file; a test gives one that renders by hand, with no audio hardware behind it. */
+    private val newEngine: () -> AVAudioEngine,
 ) : SessionPlayer {
+    constructor(scope: CoroutineScope, config: SoundConfig, backingConfig: BackingConfig = BackingConfig()) :
+        this(scope, config, backingConfig, { AVAudioEngine() })
+
     private val mutableState = MutableStateFlow(PlayerState())
     override val state: StateFlow<PlayerState> = mutableState.asStateFlow()
 
@@ -169,13 +177,13 @@ class IosSessionPlayer(
             }
         }
         val reader = pcm?.let { runCatching { IosBackingPcmReader(it) }.getOrNull() }
-        val engine = AVAudioEngine()
+        val engine = newEngine()
         val node = AVAudioPlayerNode()
         val format = AVAudioFormat(standardFormatWithSampleRate = rate.toDouble(), channels = if (reader != null) 2u else 1u)
         engine.attachNode(node)
         engine.connect(node, engine.mainMixerNode, format)
         try {
-            Playback(source, rate, node, format, reader) { startOutput(engine) }.loop()
+            Playback(source, rate, engine, node, format, reader).loop()
         } finally {
             node.stop()
             engine.stop()
@@ -206,10 +214,10 @@ class IosSessionPlayer(
     private inner class Playback(
         private val source: SoundSource,
         private val rate: Int,
+        private val engine: AVAudioEngine,
         private val node: AVAudioPlayerNode,
         private val format: AVAudioFormat,
         reader: IosBackingPcmReader?,
-        private val startOutput: () -> Boolean,
     ) {
         private val backingMix = reader?.let {
             val (offset, gain, heard) = lock.withLock { backingChanged = false; Triple(backingOffsetMs, backingGainDb, backingHeard) }
@@ -268,11 +276,16 @@ class IosSessionPlayer(
                         running = false
                         mutableMeters.value = null
                     }
+                    if (engine.running) {
+                        // the output is let go only after a stretch of silence; any wish before that — a new look at them all
+                        if (withTimeoutOrNull(OUTPUT_LINGER_MS) { wake.receive() } == null) engine.pause()
+                        continue // a wake lost to the timeout is no matter: the wishes are read again anyway
+                    }
                     wake.receive()
                     continue
                 }
                 if (!running) {
-                    if (!startOutput()) {
+                    if (!startOutput(engine)) {
                         lock.withLock { wantPlaying = false }
                         mutableState.update { PlayerState(failed = true, processed = it.processed, original = it.original) }
                         return
@@ -392,7 +405,12 @@ class IosSessionPlayer(
         }
     }
 
-    /** The output is taken when the sound first goes on, not when the screen opens: a recording looked at is not heard. */
+    /**
+     * The output is taken when the sound goes on, not when the screen opens: a recording looked at is not heard. It is
+     * taken again on every play after the engine was paused — [OUTPUT_LINGER_MS] after a pause or the end of a take —
+     * with the category and the session set again, as on the first play. The session is not given up here: it is one
+     * for the whole app, shared with the microphone.
+     */
     private fun startOutput(engine: AVAudioEngine): Boolean {
         if (engine.running) return true
         val session = AVAudioSession.sharedInstance()
@@ -471,18 +489,26 @@ class IosSessionPlayer(
 
     private data class Wishes(val seek: Long, val playing: Boolean, val original: Boolean, val settings: SoundSettings?)
 
-    private companion object {
-        const val NO_SEEK = -1L
-        const val NO_TAIL = -1
+    internal companion object {
+        private const val NO_SEEK = -1L
+        private const val NO_TAIL = -1
 
         /** ~43 ms at 48 kHz, as on Android. */
-        const val CHUNK = 2_048
+        private const val CHUNK = 2_048
 
         /** Chunks on the node ahead of the ear: ~0.13 s between a turned knob and the sound. */
-        const val AHEAD = 3
-        const val MS_PER_SECOND = 1_000L
-        const val AB_FADE_MS = 60L
-        const val METERS_PER_SECOND = 30
-        const val FULL_SCALE = 32_768f
+        private const val AHEAD = 3
+
+        /**
+         * Silence after a pause or the end of a take before the audio hardware is let go (the engine paused, not
+         * stopped): what the node last played leaves the speaker whole, Bluetooth included, and a quick play or a turned
+         * knob finds the output still on. A paused node alone does not stop an engine — its I/O went on rendering
+         * silence for as long as the screen was open.
+         */
+        const val OUTPUT_LINGER_MS = 500L
+        private const val MS_PER_SECOND = 1_000L
+        private const val AB_FADE_MS = 60L
+        private const val METERS_PER_SECOND = 30
+        private const val FULL_SCALE = 32_768f
     }
 }
