@@ -5,6 +5,7 @@ import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import platform.posix.EINTR
 import platform.posix.O_CREAT
+import platform.posix.O_EXCL
 import platform.posix.O_RDONLY
 import platform.posix.O_TRUNC
 import platform.posix.O_WRONLY
@@ -36,6 +37,12 @@ actual fun ByteOutput.writeBytes(buffer: ByteArray, offset: Int, count: Int) = w
 actual fun PlatformFile.openInput(): ByteInput? = FileInput.open(path)
 
 actual fun PlatformFile.openOutput(): ByteOutput? = FileOutput.open(path)
+
+/**
+ * A file that is not there yet, made and opened for writing in one step; null when a file of that name is there already.
+ * What somebody else put in a place is never emptied by it — [openOutput] would cut such a file to nothing.
+ */
+internal fun PlatformFile.createNewOutput(): ByteOutput? = FileOutput.create(path)
 
 @OptIn(ExperimentalForeignApi::class)
 private class FileInput(private val fd: Int) : ByteInput() {
@@ -78,5 +85,7 @@ private class FileOutput(private val fd: Int) : ByteOutput() {
         private const val MODE = 0x1A4 // rw-r--r--
 
         fun open(path: String): FileOutput? = open(path, O_WRONLY or O_CREAT or O_TRUNC, MODE).takeIf { it >= 0 }?.let(::FileOutput)
+
+        fun create(path: String): FileOutput? = open(path, O_WRONLY or O_CREAT or O_EXCL, MODE).takeIf { it >= 0 }?.let(::FileOutput)
     }
 }

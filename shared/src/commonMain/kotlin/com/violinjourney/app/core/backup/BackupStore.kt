@@ -52,7 +52,7 @@ interface BackupDocuments {
 
     fun openInput(uri: String): ByteInput?
 
-    /** An unfinished file is ours to remove. */
+    /** An unfinished file this app has made for the copy; a file that was in the place before is never touched. */
     fun delete(uri: String)
 
     /** «Загрузки», the name of a folder — as far as the provider tells; null when it does not. */
