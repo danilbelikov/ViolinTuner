@@ -1,9 +1,11 @@
 package com.violinjourney.app.navigation
 
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.provider.Settings
+import android.util.Log
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -520,10 +522,28 @@ private fun NavHostController.popUpToSection() {
     if (!popBackStack(SECTION_PATTERN, inclusive = false)) popBackStack(TopLevelDestination.HISTORY.route, inclusive = false)
 }
 
-/** Android 13 lets a person choose the language of one app; before it the app follows the device and there is nothing to open. */
+/**
+ * Android 13 lets a person choose the language of one app; before it the app follows the device and there is nothing to open.
+ * Some builds of Android 13+ have no such screen: the app's page in the system settings is the nearest thing (some put the
+ * language there), and a build without that either leaves a line in the log — not a fall of the app.
+ */
 @Composable
 private fun rememberAppLanguageSettings(): (() -> Unit)? {
     val context = LocalContext.current
     if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return null
-    return { context.startActivity(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, Uri.fromParts("package", context.packageName, null))) }
+    return {
+        val app = Uri.fromParts("package", context.packageName, null)
+        try {
+            context.startActivity(Intent(Settings.ACTION_APP_LOCALE_SETTINGS, app))
+        } catch (e: ActivityNotFoundException) {
+            Log.w(TAG, "no screen for the language of the app", e)
+            try {
+                context.startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, app))
+            } catch (e2: ActivityNotFoundException) {
+                Log.w(TAG, "no page of the app in the system settings either", e2)
+            }
+        }
+    }
 }
+
+private const val TAG = "AppNavHost"
