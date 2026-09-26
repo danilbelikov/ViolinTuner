@@ -46,6 +46,26 @@
 - **Проверено в симуляторе** (сборка с `ORG_GRADLE_PROJECT_analyticsDebug=true`): SDK активируется с ключом, стартует с запретом отправки (`restriction '3'`), поток согласия тут же разрешает (`'2'`), события приняты: `screen_open {screen=practice}`, `{screen=settings}`, `{screen=history}`.
 - **Не проверено:** доставка на сервер — в симуляторе DNS не находит `startup.mobile.yandex.net`, события остаются в очереди. На iPhone владельца стоит обычная debug-сборка, которая молчит; чтобы iOS отправлял из debug, нужно `analyticsDebug=true` в `local.properties` и пересборка.
 
+### Манифест приватности (26.09.2026)
+
+- У приложения свой `iosApp/iosApp/PrivacyInfo.xcprivacy` (фаза Resources, лежит в корне `.app`). `NSPrivacyTracking = false`, доменов отслеживания нет. Что собирает само приложение (3.34), всё без привязки к личности и без отслеживания: `ProductInteraction` (Analytics — экраны, занятия, дубли, произведения, дорога, лавка, копия), `OtherDiagnosticData` (Analytics — `live_frames`, `mic_unavailable`, ошибки, которые приложение переживает), `CrashData` (AppFunctionality — падения через `AppMetricaCrashes`).
+- Причины API из списка Apple «required reason» — за код самого приложения: Kotlin общего модуля со слинкованными okio, SQLite, Skia и ICU и Swift `iosApp`. SystemBootTime `35F9.1` — `NSProcessInfo.systemUptime` (часы прогресса в `IosGraph`), `mach_absolute_time` в Skia. DiskSpace `E174.1` + `85F4.1` — `NSFileSystemFreeSize` перед копией, видео и минусовкой и «хватит примерно на N мин» на экране съёмки; `statfs` в SQLite. FileTimestamp `C617.1` + `3B52.1` — `NSFileModificationDate` (возраст сирот), `stat`/`fstat`/`lstat` в okio, SQLite, Skia, ICU; размер копии в папке, выбранной в «Файлах». UserDefaults не объявлен: в коде приложения его нет, у AppMetrica свой `CA92.1`. **Новый вызов API из этого списка = новая причина в манифесте**, иначе загрузка в App Store Connect получит ITMS-91053 (в письме будет названа категория).
+- У SDK свои манифесты: в `.app` лежат бандлы `AppMetrica_*` (Core и его модули, Crashes) и `KSCrash_*` (Core, Recording, RecordingCore); SwiftProtobuf не входит — `AppMetricaProductFlow` не подключён. **Объединение собираемых типов** — то, что приложение вместе с ними сообщает Apple; всё без привязки к личности и без отслеживания (сверено по манифестам из собранного `.app`, AppMetrica 6.7.0, KSCrash 2.5.1):
+
+  | Тип | Цель | Кто объявляет |
+  |---|---|---|
+  | CoarseLocation (грубая геопозиция по IP) | Analytics | AppMetricaCore |
+  | ProductInteraction | Analytics; AppFunctionality | приложение, AppMetricaCore; AppMetricaHostState |
+  | PurchaseHistory | Analytics | AppMetricaCore |
+  | OtherDataTypes | Analytics, AppFunctionality | AppMetricaCore, AppMetricaCrashes, AppMetricaHostState |
+  | CrashData | AppFunctionality | приложение, AppMetricaCrashes, KSCrash |
+  | PerformanceData | AppFunctionality | AppMetricaCrashes, KSCrash |
+  | OtherDiagnosticData | Analytics; AppFunctionality | приложение, AppMetricaCrashes; KSCrash |
+  | DeviceID | AppFunctionality | KSCrash (Recording, RecordingCore) |
+
+- **Ярлыки App Privacy в App Store Connect** владелец заполняет не по памяти и не по этой таблице, а по отчёту Xcode: `xcodebuild archive` → Organizer → архив → **Generate Privacy Report** — он сводит манифест приложения и всех SDK той версии, что в архиве.
+- Продукт `AppMetricaAdSupport` не подключать: он объявляет Tracking = true и IDFA, это противоречит `NSPrivacyTracking = false` и 5.27. `ITSAppUsesNonExemptEncryption` не выставлен — это заявление владельца; без него App Store Connect спрашивает про шифрование при каждой загрузке.
+
 ## Проверка руками на эмуляторе
 
 ```
