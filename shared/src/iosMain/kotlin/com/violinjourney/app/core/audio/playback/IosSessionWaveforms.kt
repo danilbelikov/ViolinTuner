@@ -1,10 +1,10 @@
 package com.violinjourney.app.core.audio.playback
 
+import com.violinjourney.app.core.audio.pcm16Of
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.fileName
 import com.violinjourney.app.core.recording.IosPcmFileOpener
 import com.violinjourney.app.core.recording.PcmSource
-import kotlin.math.roundToInt
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.get
@@ -76,7 +76,7 @@ class IosSessionWaveforms(private val directory: () -> String, private val io: C
             val count = buffer.frameLength.toInt()
             if (count == 0) break
             val channel = buffer.floatChannelData?.get(0) ?: return null
-            for (i in 0 until count) chunk[i] = (channel[i].coerceIn(-1f, 1f) * FULL_SCALE).roundToInt().toShort()
+            for (i in 0 until count) chunk[i] = pcm16Of(channel[i])
             builder.add(chunk, count)
         }
         return builder.build()
@@ -103,6 +103,5 @@ class IosSessionWaveforms(private val directory: () -> String, private val io: C
     private companion object {
         const val EXTENSION = ".wave"
         const val CHUNK = 8_192
-        const val FULL_SCALE = 32_767f
     }
 }

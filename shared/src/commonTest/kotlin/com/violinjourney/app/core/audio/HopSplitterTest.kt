@@ -34,4 +34,13 @@ class HopSplitterTest {
         splitter.push(floatArrayOf(1.7f, -3f), onHop = { hop = it.toList() })
         assertContentEquals(listOf<Short>(32767, -32767), hop)
     }
+
+    /** A broken input may hand over NaN: `roundToInt` refuses it, and a throw on the microphone's thread ends the app. */
+    @Test
+    fun `a sample that is not a number is silence and infinity is clipped`() {
+        val splitter = HopSplitter(4)
+        var hop = emptyList<Short>()
+        splitter.push(floatArrayOf(Float.NaN, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY, 0.5f), onHop = { hop = it.toList() })
+        assertContentEquals(listOf<Short>(0, 32767, -32767, 16384), hop)
+    }
 }
