@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
 import com.violinjourney.app.core.data.AppDatabase
+import com.violinjourney.app.core.data.DatabaseMigrations
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -18,8 +19,9 @@ import platform.Foundation.NSUserDomainMask
 
 /**
  * Where the iOS app keeps its data: the database and the settings in Application Support — the app's own, backed up
- * with the phone, never shown in Files. The database is created at the current version (no migrations: there was no
- * earlier iOS app), on the SQLite the app brings.
+ * with the phone, never shown in Files. The database lives on the SQLite the app brings; a file of an older schema — a
+ * copy restored from an older app (Android's too), or this app's own after an update that raised the version — is
+ * brought to the current one by the same [DatabaseMigrations.ALL] as on Android.
  */
 internal object IosStorage {
     const val SETTINGS_FILE = "user_settings.preferences_pb"
@@ -27,6 +29,7 @@ internal object IosStorage {
     fun database(directory: String = dataDirectory()): AppDatabase =
         Room.databaseBuilder<AppDatabase>(name = "$directory/${AppDatabase.FILE_NAME}")
             .setDriver(BundledSQLiteDriver())
+            .addMigrations(*DatabaseMigrations.ALL)
             .setQueryCoroutineContext(Dispatchers.IO)
             .build()
 

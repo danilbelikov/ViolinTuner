@@ -6,11 +6,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 /**
- * Every installed copy of the app updates its database through [DatabaseMigrations.ALL], one step at a
- * time. A step missing there does not lose data — there is no destructive fallback — but the app then
- * fails at start for everyone who updates. The steps' contents are checked on a device by
- * `DatabaseMigrationTest`; this one only makes sure the chain is whole, so a forgotten step fails the
- * build and never reaches a store.
+ * Every installed copy of the app, on Android and on iOS, updates its database through the shared
+ * [DatabaseMigrations.ALL], one step at a time — and so does a copy of the data made by an older app, once
+ * it is restored. A step missing there does not lose data — there is no destructive fallback — but the app
+ * then fails at start for everyone who updates. The steps' contents are checked on a device by
+ * `DatabaseMigrationTest` (and the whole chain on iOS's own SQLite by `IosDatabaseMigrationTest`); this one
+ * only makes sure the chain is whole, so a forgotten step fails the build and never reaches a store.
  */
 class DatabaseMigrationChainTest {
     @Test

@@ -2,7 +2,11 @@ package com.violinjourney.app.ios
 
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
+import com.violinjourney.app.core.backup.BackupCounts
+import com.violinjourney.app.core.backup.BackupEntry
+import com.violinjourney.app.core.backup.BackupManifest
 import com.violinjourney.app.core.backup.BackupPart
+import com.violinjourney.app.core.backup.BackupPaths
 import com.violinjourney.app.core.backup.BackupReader
 import com.violinjourney.app.core.backup.BackupWriter
 import com.violinjourney.app.core.backup.IosBackupStore
@@ -23,6 +27,7 @@ import com.violinjourney.app.core.io.child
 import com.violinjourney.app.core.io.makeDirectories
 import com.violinjourney.app.core.io.openInput
 import com.violinjourney.app.core.io.openOutput
+import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.settings.DataStoreSettingsRepository
 import com.violinjourney.app.core.time.SystemWallClock
 import kotlin.test.AfterTest
@@ -105,6 +110,42 @@ class IosStorageTest {
         assertEquals(IosRestoreSwap.Outcome.RESTORED, IosRestoreSwap.applyIfPending(data))
         val reopened = IosStorage.database(directory)
         assertEquals(listOf(LocalDate(2026, 9, 24)), RoomPracticeRepository(reopened.practiceDao()).entries.first().map { it.date })
+        reopened.close()
+    }
+
+    @Test
+    fun `a copy made by an older app is brought to the current version`() = runTest {
+        val data = PlatformFile(directory)
+        // what a copy from an older Android app carries: its database at version 12, as that app left it
+        val older = data.child("older.db")
+        OldDatabaseFile.layOut(older.path, version = 12, madeOnAndroid = true)
+        val manifest = BackupManifest(
+            formatVersion = BackupManifest.FORMAT_VERSION, appVersion = "1.0", databaseVersion = 12, createdAtEpochMs = 1_790_000_000_000,
+            device = "Google Pixel 10a", parts = setOf(BackupPart.DATA), counts = BackupCounts(sessions = 1, takes = 1, pieces = 1, practiceDays = 1),
+            bytes = mapOf(BackupPart.DATA to older.sizeBytes()),
+        )
+        val archive = data.child("copy.zip")
+        val entry = BackupEntry("${BackupPaths.DATABASE}/${AppDatabase.FILE_NAME}", BackupPart.DATA, older.sizeBytes()) { older.openInput() }
+        BackupWriter.write(archive.openOutput()!!, manifest, listOf(entry)) {}
+        // an older copy is taken, not refused as too new
+        assertEquals(12, BackupReader.manifest(archive.openInput()!!, knownDatabase = AppDatabase.VERSION).databaseVersion)
+        // the iPhone's own data, which the copy replaces
+        val database = IosStorage.database(directory)
+        val practice = RoomPracticeRepository(database.practiceDao())
+        practice.add(PracticeEntry(LocalDate(2026, 9, 25), startedAtEpochMs = 2_000, durationMs = 10 * 60_000, manual = false))
+        val store = storeOf(data, database, practice)
+        BackupReader.extract(archive.openInput()!!, store.newStaging(), 0) {}
+        store.markStagingReady()
+        database.close()
+        assertEquals(IosRestoreSwap.Outcome.RESTORED, IosRestoreSwap.applyIfPending(data))
+        val reopened = IosStorage.database(directory)
+        val session = reopened.sessionDao().observeAll().first().single()
+        assertEquals("Гаммы", session.title)
+        assertEquals(1L, session.pieceId)
+        assertEquals(50L, reopened.sessionDao().samples(session.id)!!.bucketMs)
+        assertEquals(listOf("Менуэт"), reopened.repertoireDao().observePieces().first().map { it.title })
+        assertEquals(listOf("2026-09-13"), reopened.practiceDao().observeAll().first().map { it.date })
+        assertEquals(emptyList(), reopened.backingDao().backings().first())
         reopened.close()
     }
 

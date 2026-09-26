@@ -36,9 +36,8 @@ import com.violinjourney.app.core.data.sound.SoundSettingsEntity
  * the trophies given for that time, the repertoire (pieces with their sheet pages), and how
  * recordings are made to sound (settings of sound processing and the user's presets); the journey
  * and the home; the blocks of practices — time given to elements of the repertoire; the backings of pieces and takes.
- * Every version's schema is exported to `app/schemas` and committed; a new version needs a
- * migration in the app's DatabaseMigrations (Android: the phones with data) and a test that the old rows survive it.
- * iOS databases are created at the current version.
+ * Every version's schema is exported to `app/schemas` and committed; a new version needs a step in [DatabaseMigrations] —
+ * Android and iOS both open older files, and older copies, through it — and a test that the old rows survive it.
  */
 @Database(
     entities = [

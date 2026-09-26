@@ -96,6 +96,18 @@ class IosBackupArchiveTest {
     }
 
     @Test
+    fun `a copy from an older app is taken and one from a newer app is refused`() = runTest {
+        // an older database is brought up by the migrations once restored (spec 5.14); a newer one no migration knows
+        val older = folder.child("older.zip")
+        BackupWriter.write(older.openOutput()!!, manifest.copy(databaseVersion = 12), emptyList()) {}
+        assertEquals(12, BackupReader.manifest(older.openInput()!!, knownDatabase = 13).databaseVersion)
+        val newer = folder.child("newer.zip")
+        BackupWriter.write(newer.openOutput()!!, manifest.copy(databaseVersion = 14), emptyList()) {}
+        val failure = assertFailsWith<BackupFileException> { BackupReader.manifest(newer.openInput()!!, knownDatabase = 13) }
+        assertEquals(BackupFileProblem.TooNew, failure.problem)
+    }
+
+    @Test
     fun `a size no archive can have is damage and not a fall`() = runTest {
         // a local header whose ZIP64 field says «-1»: okio refuses to read a negative count with IllegalArgumentException
         val header = okio.Buffer().apply {
