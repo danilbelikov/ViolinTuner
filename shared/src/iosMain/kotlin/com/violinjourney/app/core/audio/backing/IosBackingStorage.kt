@@ -7,11 +7,13 @@ import com.violinjourney.app.core.domain.backing.BackingFiles
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.child
 import com.violinjourney.app.core.io.deleteAll
+import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.exists
 import com.violinjourney.app.core.io.listNames
 import com.violinjourney.app.core.io.makeDirectories
 import com.violinjourney.app.core.io.moveTo
 import com.violinjourney.app.core.io.openOutput
+import com.violinjourney.app.core.io.pathOfFileUri
 import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.time.WallClock
 import kotlin.math.roundToInt
@@ -66,8 +68,10 @@ internal class IosBackingFiles(private val data: PlatformFile, private val clock
 }
 
 /**
- * Takes a file picked in Files (spec 3.32) — the picker has copied it for the app already: looks into it with AVFoundation,
- * checks the length and the free space, and moves it in as it is, as `BackingImporter` does on Android.
+ * Takes a file picked in Files (spec 3.32). The uri is the app's own temporary copy of it, under the file's own name
+ * (`copyKeepingName`): that name without its extension is the title, as `DISPLAY_NAME` is on Android. Looks into it with
+ * AVFoundation, checks the length and the free space, and moves it in as it is, as `BackingImporter` does on Android;
+ * a copy that is refused is deleted, not left in tmp — it may be hundreds of megabytes.
  */
 @OptIn(ExperimentalForeignApi::class)
 internal class IosBackingImporter(
@@ -77,8 +81,17 @@ internal class IosBackingImporter(
     private val clock: WallClock,
 ) : BackingFileImporter {
     override fun import(uri: String): BackingImport {
-        val path = NSURL.URLWithString(uri)?.path ?: return BackingImport.Unreadable
+        val path = pathOfFileUri(uri) ?: return BackingImport.Unreadable
         val source = PlatformFile(path)
+        return try {
+            take(source, path)
+        } finally {
+            // moved in, there is nothing left at the path; refused, the copy goes
+            source.deleteFile()
+        }
+    }
+
+    private fun take(source: PlatformFile, path: String): BackingImport {
         val probe = runCatching { AVAudioFile(forReading = NSURL.fileURLWithPath(path), error = null) }.getOrNull() ?: return BackingImport.Unreadable
         val rate = probe.fileFormat.sampleRate
         if (rate <= 0 || probe.length <= 0) return BackingImport.Unreadable

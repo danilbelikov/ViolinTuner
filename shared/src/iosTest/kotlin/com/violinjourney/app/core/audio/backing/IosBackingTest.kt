@@ -4,11 +4,16 @@ import com.violinjourney.app.core.audio.recording.AacFile
 import com.violinjourney.app.core.audio.share.IosSoundRenderer
 import com.violinjourney.app.core.audio.share.RenderBacking
 import com.violinjourney.app.core.domain.backing.Backing
+import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.listNames
+import com.violinjourney.app.core.io.openOutput
+import com.violinjourney.app.core.io.pathOfFileUri
+import com.violinjourney.app.core.io.writeBytes
 import com.violinjourney.app.core.time.SystemWallClock
+import com.violinjourney.app.core.ui.components.copyKeepingName
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.roundToInt
@@ -16,6 +21,8 @@ import kotlin.math.sin
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
@@ -31,7 +38,10 @@ import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
 
-/** The backing on iOS (spec 3.32, 5.25): a file of another rate becomes the PCM of the take's rate, and a take is sent with it in stereo. */
+/**
+ * The backing on iOS (spec 3.32, 5.25): a file of another rate becomes the PCM of the take's rate, and a take is sent with it
+ * in stereo; a file picked in Files is named after itself, and one that is refused leaves nothing behind.
+ */
 @OptIn(ExperimentalForeignApi::class)
 class IosBackingTest {
     private val folder = NSTemporaryDirectory() + NSUUID().UUIDString
@@ -131,6 +141,57 @@ class IosBackingTest {
         val left = PlatformFile("${caches.path}/backing-pcm").listNames()
         assertTrue(left.none { it.endsWith(".partial") }, "left behind: $left")
     }
+
+    @Test
+    fun `a picked file keeps its name as the title`() {
+        // what the picker lends: its own copy in the app's tmp
+        val lent = "$folder/Концерт ля минор.m4a"
+        tone(lent, 44_100, 2, 220.0)
+        val uri = assertNotNull(copyKeepingName(NSURL.fileURLWithPath(lent), "$folder/tmp/"))
+        val copy = assertNotNull(pathOfFileUri(uri))
+        assertTrue(copy.endsWith("/Концерт ля минор.m4a"), copy)
+        assertFalse(exists(lent), "the lent copy is moved — not copied a second time")
+        val files = IosBackingFiles(data, SystemWallClock)
+        val added = assertIs<BackingImport.Added>(IosBackingImporter(data, files, BackingConfig(), SystemWallClock).import(uri))
+        assertEquals("Концерт ля минор", added.backing.title)
+        assertFalse(exists(copy), "the copy is moved in")
+        assertNotNull(files.existing(added.backing.fileName))
+    }
+
+    @Test
+    fun `two picks of one name stay apart`() {
+        val first = "$folder/a/Этюд.m4a"
+        val second = "$folder/b/Этюд.m4a"
+        NSFileManager.defaultManager.createDirectoryAtPath("$folder/a", true, null, null)
+        NSFileManager.defaultManager.createDirectoryAtPath("$folder/b", true, null, null)
+        tone(first, 44_100, 1, 220.0)
+        tone(second, 44_100, 1, 330.0)
+        val one = assertNotNull(pathOfFileUri(assertNotNull(copyKeepingName(NSURL.fileURLWithPath(first), "$folder/tmp/"))))
+        val two = assertNotNull(pathOfFileUri(assertNotNull(copyKeepingName(NSURL.fileURLWithPath(second), "$folder/tmp/"))))
+        assertTrue(one != two && exists(one) && exists(two), "$one — $two")
+        assertEquals(one.substringAfterLast('/'), two.substringAfterLast('/'))
+    }
+
+    @Test
+    fun `a refused file leaves no copy behind`() {
+        val files = IosBackingFiles(data, SystemWallClock)
+        val importer = IosBackingImporter(data, files, BackingConfig(maxDurationMs = 1_000), SystemWallClock)
+        val long = "$folder/long.m4a"
+        tone(long, 44_100, 2, 220.0)
+        val longCopy = assertNotNull(copyKeepingName(NSURL.fileURLWithPath(long), "$folder/tmp/"))
+        assertEquals(BackingImport.TooLong, importer.import(longCopy))
+        assertFalse(exists(assertNotNull(pathOfFileUri(longCopy))), "a backing too long")
+        val text = "$folder/x.mp3"
+        val output = assertNotNull(PlatformFile(text).openOutput())
+        output.writeBytes("not a sound".encodeToByteArray())
+        output.close()
+        val textCopy = assertNotNull(copyKeepingName(NSURL.fileURLWithPath(text), "$folder/tmp/"))
+        assertEquals(BackingImport.Unreadable, importer.import(textCopy))
+        assertFalse(exists(assertNotNull(pathOfFileUri(textCopy))), "a file that is no sound")
+        assertTrue(PlatformFile("${data.path}/backings").listNames().isEmpty(), "nothing is taken in")
+    }
+
+    private fun exists(path: String) = NSFileManager.defaultManager.fileExistsAtPath(path)
 
     private companion object {
         /** Long enough for three unpacks to overlap even on a fast Mac. */

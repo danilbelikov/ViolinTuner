@@ -165,14 +165,39 @@ internal class CameraDelegate(private val video: Boolean, private val outPath: (
 
 private const val JPEG_QUALITY = 0.95
 
-/** A file picked in Files, copied by the system for the app: its `file:` URI, or null when nothing was picked. */
+/**
+ * A file picked in Files, copied by the system for the app: the `file:` URI of the app's copy under the file's own name
+ * ([copyKeepingName]), or null when nothing was picked.
+ */
 @OptIn(ExperimentalForeignApi::class)
 internal class DocumentDelegate(private val onPicked: (String?) -> Unit) : NSObject(), UIDocumentPickerDelegateProtocol {
     override fun documentPicker(controller: UIDocumentPickerViewController, didPickDocumentsAtURLs: List<*>) {
-        onPicked((didPickDocumentsAtURLs.firstOrNull() as? NSURL)?.let(::copyToTemporary))
+        onPicked((didPickDocumentsAtURLs.firstOrNull() as? NSURL)?.let { copyKeepingName(it) })
     }
 
     override fun documentPickerWasCancelled(controller: UIDocumentPickerViewController) = onPicked(null)
+}
+
+/**
+ * The app's own copy of a file picked in Files, under the file's own name — the name of a backing is its title (spec 3.32) —
+ * in a folder of its own inside [folder], which keeps two picks of one name apart. Its `file:` URI; null when it cannot be
+ * made. The picker (`asCopy`) has put a copy into the app's tmp already, and that copy is the app's to keep: it is moved,
+ * not copied again — no seconds of copying on the main thread, no second copy of hundreds of megabytes, nothing left in the
+ * picker's Inbox. A lent file that cannot be moved is copied. The importer moves the result in or deletes it.
+ */
+@OptIn(ExperimentalForeignApi::class)
+internal fun copyKeepingName(lent: NSURL, folder: String = NSTemporaryDirectory()): String? {
+    val name = lent.lastPathComponent?.takeIf { it.isNotBlank() && '/' !in it } ?: return copyToTemporary(lent)
+    val manager = NSFileManager.defaultManager
+    val home = folder.trimEnd('/') + "/" + NSUUID().UUIDString
+    if (!manager.createDirectoryAtPath(home, withIntermediateDirectories = true, attributes = null, error = null)) return null
+    val copy = NSURL.fileURLWithPath("$home/$name")
+    if (manager.moveItemAtURL(lent, copy, null)) return copy.absoluteString
+    // a move that failed halfway may have left a piece behind; the folder is ours alone
+    manager.removeItemAtURL(copy, null)
+    if (manager.copyItemAtURL(lent, copy, null)) return copy.absoluteString
+    manager.removeItemAtPath(home, null)
+    return null
 }
 
 @OptIn(ExperimentalForeignApi::class)
