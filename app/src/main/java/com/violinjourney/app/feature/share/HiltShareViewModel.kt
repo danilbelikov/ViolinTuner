@@ -6,6 +6,7 @@ import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.audio.share.ShareFiles
 import com.violinjourney.app.core.audio.share.SoundRenderer
 import com.violinjourney.app.core.di.ElapsedClock
+import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
@@ -14,6 +15,7 @@ import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.core.recording.video.VideoFiles
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CoroutineDispatcher
 
 @HiltViewModel
 class HiltShareViewModel @Inject constructor(
@@ -31,4 +33,5 @@ class HiltShareViewModel @Inject constructor(
     backings: BackingRepository,
     backingPcm: BackingPcm,
     analytics: Analytics,
-) : ShareViewModel(sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, clock, config, videos, backings, backingPcm, analytics)
+    @IoDispatcher io: CoroutineDispatcher,
+) : ShareViewModel(sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, clock, config, videos, backings, backingPcm, analytics, io)

@@ -22,8 +22,11 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
 import org.jetbrains.compose.resources.getString
 import platform.Foundation.NSCachesDirectory
+import platform.Foundation.NSDate
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSFileModificationDate
 import platform.Foundation.NSFileReferenceCount
+import platform.Foundation.NSLog
 import platform.Foundation.NSNumber
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
 import platform.Foundation.NSUserDomainMask
@@ -57,7 +60,16 @@ internal class IosShareFiles(private val io: CoroutineDispatcher) : ShareFiles {
             val done = files.linkItemAtPath(audio.path, target.path, null) || files.copyItemAtPath(audio.path, target.path, null)
             if (!done) return@withContext null
         }
+        handedOver(target)
         target
+    }
+
+    override suspend fun handedOver(file: PlatformFile) = withContext(io) {
+        val folder = file.path.substringBeforeLast('/')
+        // a refusal costs only the refresh: the folder may then be swept at its old age
+        if (!files.setAttributes(mapOf<Any?, Any?>(NSFileModificationDate to NSDate()), ofItemAtPath = folder, error = null)) {
+            NSLog("IosShareFiles: cannot touch ${folder.substringAfterLast('/')}".replace("%", "%%"))
+        }
     }
 
     override suspend fun sweep(nowEpochMs: Long) = withContext(io) {

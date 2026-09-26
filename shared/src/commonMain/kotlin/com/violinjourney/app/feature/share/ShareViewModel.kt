@@ -32,8 +32,14 @@ import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.feature.sound.SoundReducer
 import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
@@ -44,7 +50,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.withContext
 
 /** Titles and the message of a shared recording, in the language of the interface. */
 interface ShareTexts {
@@ -77,7 +86,8 @@ class RenderSpeed {
  * «Поделиться» (spec 3.17), one for every place it is offered from. With processing there is a
  * choice — what is heard in the app, or the recording as it is; without it the original goes
  * straight to the system sheet. Nothing blinks: a short preparation never shows a progress
- * screen, and one that was shown stays long enough to be read.
+ * screen, and one that was shown stays long enough to be read. One piece of work at a time ([launchAlone]), and
+ * files are written by one at a time ([writingAlone]): a new one waits until the last has let go of them.
  */
 open class ShareViewModel(
     private val sessions: SessionRepository,
@@ -94,6 +104,7 @@ open class ShareViewModel(
     private val backings: BackingRepository = NoBackings,
     private val backingPcm: BackingPcm? = null,
     private val analytics: Analytics = NoOpAnalytics(),
+    private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
     private val mutableSheet = MutableStateFlow<ShareSheet?>(null)
@@ -107,12 +118,31 @@ open class ShareViewModel(
     private var takeBacking: Pair<Backing, TakeBacking>? = null
     private var job: Job? = null
 
-    /** A recording without sound has nothing to share; the entry points do not offer it, and a stray call is ignored. */
+    /**
+     * Held by the work that writes files to share ([writingAlone]). A render sees a cancel only between its chunks, and
+     * the unpacking of a backing (blocking, seconds) not at all: a cancelled one may go on writing its `.part` for a while,
+     * and a second render into it would be deleted by the first as it gives up.
+     */
+    private val writing = Mutex()
+
+    /**
+     * A recording without sound has nothing to share; the entry points do not offer it, and a stray call is ignored. A sheet
+     * already open stays; one still being opened gives way to this one. It opens at once, even while a render given up
+     * a moment ago still lets go: only what writes a file waits for that.
+     */
     fun start(sessionId: Long) {
-        if (job?.isActive == true || mutableSheet.value != null) return
-        job = viewModelScope.launch {
-            val session = sessions.sessions.first().firstOrNull { it.id == sessionId } ?: return@launch
-            val file = session.audioPath?.let(audioFiles::existing) ?: return@launch
+        if (mutableSheet.value != null) return
+        launchAlone {
+            // this recording's own choice from here on: «Ещё раз» must never take another recording's
+            lastChoice = null
+            val session = sessions.sessions.first().firstOrNull { it.id == sessionId } ?: return@launchAlone
+            val found = withContext(io) {
+                session.audioPath?.let(audioFiles::existing)?.let { file ->
+                    // the container of a video is opened to read its picture: never on the main thread
+                    Triple(file, file.sizeBytes(), session.videoPath?.let { videos.info(file) })
+                }
+            } ?: return@launchAlone
+            val (file, originalBytes, picture) = found
             val pieceTitle = session.pieceId?.let { repertoire.piece(it) }?.title
             val effective = sound.effective(sessionId).first().settings
             val title = texts.title(session.title, pieceTitle, session.startedAtEpochMs)
@@ -125,11 +155,11 @@ open class ShareViewModel(
                 fileName = ShareNames.fileName(title),
                 durationMs = session.durationMs,
                 processedBytes = ((session.durationMs + SoundRules.tailSec(effective, config) * MS_PER_SECOND) / MS_PER_SECOND * SoundRenderer.BIT_RATE / BITS_PER_BYTE).toLong(),
-                originalBytes = file.sizeBytes(),
+                originalBytes = originalBytes,
                 caption = SoundReducer.captionOf(effective, sound.presets.first(), config),
                 message = texts.message(session.title, pieceTitle, session.scorePercent, session.startedAtEpochMs),
                 videoFileName = session.videoPath?.let { ShareNames.videoFileName(title) },
-                resolution = session.videoPath?.let { videos.info(file) }?.let { minOf(it.width, it.height) } ?: 0,
+                resolution = picture?.let { minOf(it.width, it.height) } ?: 0,
                 processed = !SoundRules.isNeutral(effective),
                 backing = under != null,
                 backingBytes = ((session.durationMs + SoundRules.tailSec(effective, config) * MS_PER_SECOND) / MS_PER_SECOND * SoundRenderer.STEREO_BIT_RATE / BITS_PER_BYTE).toLong(),
@@ -141,8 +171,11 @@ open class ShareViewModel(
                 info.backing -> mutableSheet.value = ShareSheet.Choose(info, ShareVariant.BACKING, withText = true, busy = false)
                 // A video take always has a choice to make — the video or its sound alone (spec 3.19).
                 info.video -> mutableSheet.value = ShareSheet.Choose(info, if (info.processed) ShareVariant.PROCESSED else ShareVariant.ORIGINAL, withText = true, busy = false)
-                // Nothing to choose from: the sheet is skipped (spec 3.17).
-                !info.processed -> sendOriginal(info, withText = false)
+                // Nothing to choose from: the sheet is skipped (spec 3.17) — and «Ещё раз» after a failed copy sends it again.
+                !info.processed -> {
+                    lastChoice = ShareSheet.Choose(info, ShareVariant.ORIGINAL, withText = false, busy = false)
+                    writingAlone { sendOriginal(info, withText = false) }
+                }
                 else -> mutableSheet.value = ShareSheet.Choose(info, ShareVariant.PROCESSED, withText = true, busy = false)
             }
         }
@@ -165,20 +198,20 @@ open class ShareViewModel(
             is ShareIntent.TextToggled -> mutableSheet.update { (it as? ShareSheet.Choose)?.takeIf { c -> !c.busy }?.copy(withText = intent.withText) ?: it }
             ShareIntent.ContinueClicked -> (current as? ShareSheet.Choose)?.takeIf { !it.busy }?.let { choice ->
                 lastChoice = choice
-                job = viewModelScope.launch {
-                    if (choice.variant == ShareVariant.ORIGINAL) sendOriginal(choice.info, choice.withText) else sendProcessed(choice)
-                }
+                // busy at once, whatever is chosen: a second tap finds it so and sends nothing twice
+                mutableSheet.value = choice.copy(busy = true)
+                launchAlone { writingAlone { send(choice) } }
             }
-            ShareIntent.CancelClicked -> {
-                job?.cancel() // the renderer removes what it had written
+            ShareIntent.CancelClicked -> if (current is ShareSheet.Preparing) {
+                job?.cancel() // the renderer removes what it had written; the next work to write waits for it to have done so
                 mutableSheet.value = lastChoice?.copy(busy = false)
             }
             ShareIntent.RetryClicked -> (current as? ShareSheet.Failed)?.let {
                 val choice = lastChoice ?: ShareSheet.Choose(it.info, ShareVariant.PROCESSED, withText = true, busy = false)
-                job = viewModelScope.launch { if (choice.variant == ShareVariant.ORIGINAL) sendOriginal(choice.info, choice.withText) else sendProcessed(choice) }
+                launchAlone { writingAlone { send(choice) } }
             }
             ShareIntent.SendOriginalClicked -> (current as? ShareSheet.Failed)?.let {
-                job = viewModelScope.launch { sendOriginal(it.info, lastChoice?.withText ?: false) }
+                launchAlone { writingAlone { sendOriginal(it.info, lastChoice?.withText ?: false) } }
             }
             ShareIntent.Dismissed -> {
                 job?.cancel()
@@ -189,11 +222,52 @@ open class ShareViewModel(
 
     private var lastChoice: ShareSheet.Choose? = null
 
+    /** Runs [block] as the only work of the sheet: the one before is cancelled. If it still writes, it holds [writing]. */
+    private fun launchAlone(block: suspend CoroutineScope.() -> Unit) {
+        job?.cancel()
+        progressShownAt = null
+        job = viewModelScope.launch(block = block)
+    }
+
+    /**
+     * Runs [block] once no other work writes files ([writing]) — never two renders into one `.part`. The wait is
+     * cancelled at once, and a work given up while it waits writes nothing; one that drags on under «Готовим…» gets its
+     * progress screen — and its «Отмена» — as a preparation does.
+     */
+    private suspend fun CoroutineScope.writingAlone(block: suspend () -> Unit) {
+        if (!writing.tryLock()) {
+            val waiting = launch {
+                delay(SHOW_PROGRESS_FROM_MS)
+                (mutableSheet.value as? ShareSheet.Choose)?.takeIf { it.busy }?.let { showProgress(it.info, 0, null) }
+            }
+            writing.lock() // a cancel while it waits throws here, holding nothing; the waiting child goes with the work
+            waiting.cancel()
+        }
+        try {
+            block()
+        } finally {
+            writing.unlock()
+        }
+    }
+
+    private suspend fun send(choice: ShareSheet.Choose) {
+        if (choice.variant == ShareVariant.ORIGINAL) sendOriginal(choice.info, choice.withText) else sendProcessed(choice)
+    }
+
+    /** When the progress screen of the current work came up: it is then shown long enough to be read. Main thread only. */
+    private var progressShownAt: Long? = null
+
+    private fun showProgress(info: ShareInfo, percent: Int, remainingSec: Int?) {
+        if (progressShownAt == null) progressShownAt = clock.nowMs()
+        mutableSheet.value = ShareSheet.Preparing(info, percent, remainingSec)
+    }
+
     private suspend fun sendOriginal(info: ShareInfo, withText: Boolean) {
         val copy = audio?.let { files.original(it, info.fileNameOf(ShareVariant.ORIGINAL)) }
         if (copy == null) {
             mutableSheet.value = ShareSheet.Failed(info)
         } else {
+            holdProgress(info)
             mutableSheet.value = null
             effectChannel.send(ShareEffect.Send(copy, info.message.takeIf { withText }))
         }
@@ -207,33 +281,39 @@ open class ShareViewModel(
         // the mix is a file of its own: another shift or level is another file
         val key = under?.let { (backing, take) -> "${source.fileName}-backing-${backing.id}-${take.offsetMs}-${take.gainDb}" } ?: source.fileName
         val target = files.processed(key, current, info.fileNameOf(choice.variant))
-        if (target.sizeBytes() == 0L) {
+        if (withContext(io) { target.sizeBytes() } == 0L) {
             if (!prepare(choice, source, current, target)) {
                 mutableSheet.value = ShareSheet.Failed(info)
                 return
             }
         }
+        holdProgress(info)
+        // made now or long ago, it is handed over now: the sweep must not take it from under the receiver
+        files.handedOver(target)
         mutableSheet.value = null
         effectChannel.send(ShareEffect.Send(target, info.message.takeIf { choice.withText }))
     }
 
     /** Renders into a `.part` beside [target] and renames: what lies under the final name is always whole. */
-    private suspend fun prepare(choice: ShareSheet.Choose, source: PlatformFile, settings: SoundSettings, target: PlatformFile): Boolean {
+    private suspend fun prepare(choice: ShareSheet.Choose, source: PlatformFile, settings: SoundSettings, target: PlatformFile): Boolean = coroutineScope {
         val info = choice.info
         val soundMs = info.durationMs + (SoundRules.tailSec(settings, config) * MS_PER_SECOND).toLong()
         val started = clock.nowMs()
-        var shownAt: Long? = null
-        fun showProgress(percent: Int, remainingSec: Int?) {
-            if (shownAt == null) shownAt = clock.nowMs()
-            mutableSheet.value = ShareSheet.Preparing(info, percent, remainingSec)
+        lastPercent = 0
+        if (soundMs * speed.factor > SHOW_PROGRESS_FROM_MS) {
+            showProgress(info, 0, null)
+        } else if (mutableSheet.value !is ShareSheet.Preparing) {
+            mutableSheet.value = choice.copy(busy = true)
         }
-        if (soundMs * speed.factor > SHOW_PROGRESS_FROM_MS) showProgress(0, null) else mutableSheet.value = choice.copy(busy = true)
 
-        // The estimate may be wrong — a slow phone, a first render: a preparation that drags on gets its progress screen after all.
-        val late = viewModelScope.launch {
+        // The estimate may be wrong — a slow phone, a first render: a preparation that drags on gets its progress screen
+        // after all. A child of this work: «Отмена» cancels it at once, not only once the render has let go.
+        val late = launch {
             delay(SHOW_PROGRESS_FROM_MS)
-            if (mutableSheet.value is ShareSheet.Choose) showProgress(lastPercent, null)
+            if ((mutableSheet.value as? ShareSheet.Choose)?.busy == true) showProgress(info, lastPercent, null)
         }
+        // the render thread tells its progress; a work cancelled meanwhile says nothing more
+        val work = coroutineContext.job
         val part = target.sibling(target.fileName + PART)
         var lastShown = 0L
         val whole = try {
@@ -251,16 +331,22 @@ open class ShareViewModel(
             }
             render(source, settings, part) { fraction ->
                 // from the rendering thread; a StateFlow takes that, and ten updates a second are plenty
-                val now = clock.nowMs()
-                lastPercent = (fraction * PERCENT).toInt().coerceIn(0, PERCENT)
-                if (mutableSheet.value is ShareSheet.Preparing && now - lastShown >= PROGRESS_EVERY_MS) {
-                    lastShown = now
-                    val elapsed = now - started
-                    val remaining = if (fraction >= REMAINING_FROM) ((elapsed * (1 - fraction) / fraction) / MS_PER_SECOND).toInt().coerceAtLeast(1) else null
-                    mutableSheet.value = ShareSheet.Preparing(info, lastPercent, remaining)
+                if (work.isActive) {
+                    val now = clock.nowMs()
+                    val percent = (fraction * PERCENT).toInt().coerceIn(0, PERCENT)
+                    lastPercent = percent
+                    if (mutableSheet.value is ShareSheet.Preparing && now - lastShown >= PROGRESS_EVERY_MS) {
+                        lastShown = now
+                        val elapsed = now - started
+                        val remaining = if (fraction >= REMAINING_FROM) ((elapsed * (1 - fraction) / fraction) / MS_PER_SECOND).toInt().coerceAtLeast(1) else null
+                        // in one step: a «Закрыть» or an «Отмена» written meanwhile is never written over
+                        mutableSheet.update { if (it is ShareSheet.Preparing) ShareSheet.Preparing(info, percent, remaining) else it }
+                    }
                 }
-            }
+            }.also { ensureActive() } // a render that finished as it was cancelled: its answer is not wanted
         } catch (e: CancellationException) {
+            // one cancelled midway removes what it wrote itself; one that finished as it was cancelled has left it whole
+            withContext(NonCancellable + io) { part.deleteFile() }
             throw e
         } catch (e: Exception) {
             // A renderer answers false when it did not work; what the system refuses on iOS — no room for the AAC file,
@@ -272,18 +358,24 @@ open class ShareViewModel(
         } finally {
             late.cancel()
         }
-        if (!whole || !part.moveTo(target)) {
-            part.deleteFile()
-            return false
+        val kept = withContext(io) {
+            if (whole && part.moveTo(target)) {
+                true
+            } else {
+                part.deleteFile()
+                false
+            }
         }
-        speed.measured(soundMs, clock.nowMs() - started)
-        // A progress screen that was shown is shown long enough to be read: nothing on this app's screens flashes by.
-        shownAt?.let { at ->
-            mutableSheet.value = ShareSheet.Preparing(info, PERCENT, null)
-            val stillToShow = MIN_PROGRESS_SHOWN_MS - (clock.nowMs() - at)
-            if (stillToShow > 0) delay(stillToShow)
-        }
-        return true
+        if (kept) speed.measured(soundMs, clock.nowMs() - started)
+        kept
+    }
+
+    /** A progress screen that was shown is shown long enough to be read: nothing on this app's screens flashes by. */
+    private suspend fun holdProgress(info: ShareInfo) {
+        val at = progressShownAt ?: return
+        mutableSheet.value = ShareSheet.Preparing(info, PERCENT, null)
+        val stillToShow = MIN_PROGRESS_SHOWN_MS - (clock.nowMs() - at)
+        if (stillToShow > 0) delay(stillToShow)
     }
 
     @Volatile private var lastPercent = 0

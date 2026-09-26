@@ -41,11 +41,18 @@ class AppShareFiles @Inject constructor(
                     audio.copyTo(target, overwrite = true)
                 }
             }
+            handedOver(target)
             target
         } catch (e: IOException) {
             target.delete()
             null
         }
+    }
+
+    override suspend fun handedOver(file: File) = withContext(io) {
+        val folder = file.parentFile ?: return@withContext
+        // a refusal costs only the refresh: the folder may then be swept at its old age
+        if (!folder.setLastModified(System.currentTimeMillis())) Log.i(TAG, "cannot touch ${folder.name}")
     }
 
     override suspend fun sweep(nowEpochMs: Long) = withContext(io) {

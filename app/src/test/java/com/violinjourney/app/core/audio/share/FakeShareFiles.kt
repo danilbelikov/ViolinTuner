@@ -14,6 +14,8 @@ class FakeShareFiles : ShareFiles {
 
     override suspend fun original(audio: File, fileName: String): File? = null
 
+    override suspend fun handedOver(file: File) = Unit
+
     override suspend fun sweep(nowEpochMs: Long) {
         sweeps++
         sweptAtMs = nowEpochMs

@@ -24,8 +24,10 @@ import java.io.File
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -57,13 +59,19 @@ class ShareViewModelTest {
 
     /**
      * Takes [tookMs] of virtual time, telling its progress on the way; fails when told to, or throws [throws] with half a
-     * file written — as the system's refusals come on iOS.
+     * file written — as the system's refusals come on iOS. [stuckMs] first, deaf to a cancel: the unpacking of a backing.
      */
-    private inner class Renderer(var tookMs: Long, var fails: Boolean = false, var throws: Exception? = null) : SoundRenderer {
+    private inner class Renderer(var tookMs: Long, var fails: Boolean = false, var throws: Exception? = null, var stuckMs: Long = 0) : SoundRenderer {
         var renders = 0
+        private var running = 0
+        var mostAtOnce = 0
+            private set
+
         override suspend fun render(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean {
             renders++
+            mostAtOnce = maxOf(mostAtOnce, ++running)
             try {
+                if (stuckMs > 0) withContext(NonCancellable) { delay(stuckMs) }
                 repeat(STEPS) { step ->
                     delay(tookMs / STEPS)
                     onProgress((step + 1f) / STEPS)
@@ -80,6 +88,8 @@ class ShareViewModelTest {
             } catch (e: kotlinx.coroutines.CancellationException) {
                 target.delete()
                 throw e
+            } finally {
+                running--
             }
         }
 
@@ -106,9 +116,16 @@ class ShareViewModelTest {
 
     private inner class Files : ShareFiles {
         var originalFails = false
+        var originalTakesMs = 0L
+        val handedOver = mutableListOf<File>()
         override fun processed(audioName: String, settings: SoundSettings, fileName: String) = File(folder.root, "share/${settings.hashCode()}/$fileName")
-        override suspend fun original(audio: File, fileName: String): File? =
-            if (originalFails) null else File(folder.root, "share/original/$fileName").also { it.parentFile?.mkdirs(); audio.copyTo(it, overwrite = true) }
+        override suspend fun original(audio: File, fileName: String): File? {
+            delay(originalTakesMs)
+            return if (originalFails) null else File(folder.root, "share/original/$fileName").also { it.parentFile?.mkdirs(); audio.copyTo(it, overwrite = true) }
+        }
+        override suspend fun handedOver(file: File) {
+            handedOver += file
+        }
         override suspend fun sweep(nowEpochMs: Long) = Unit
     }
 
@@ -159,6 +176,7 @@ class ShareViewModelTest {
     private fun TestScope.share(renderer: SoundRenderer, analytics: Analytics = NoOpAnalytics()): Pair<ShareViewModel, MutableList<ShareEffect>> {
         val viewModel = ShareViewModel(
             sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, { testScheduler.currentTime }, config, videoFiles, backings, backingPcm, analytics,
+            io = StandardTestDispatcher(testScheduler),
         )
         val effects = mutableListOf<ShareEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -332,6 +350,8 @@ class ShareViewModelTest {
         }
         assertEquals(1, renderer.renders)
         assertEquals(2, effects.size)
+        val target = (effects.first() as ShareEffect.Send).file
+        assertEquals("the file made long ago is handed over again: the sweep must spare it", listOf(target, target), files.handedOver)
 
         sound.setOwn(id, SoundPresets.settingsOf(BuiltInPreset.WARM, config))
         viewModel.start(id)
@@ -506,5 +526,94 @@ class ShareViewModelTest {
         runCurrent()
         assertEquals(0, renderer.backingRenders)
         assertEquals("original sound", (effects.single() as ShareEffect.Send).file.readText())
+    }
+
+    @Test
+    fun `a cancel while the render cannot stop yet - no late progress, and the next render waits for it`() = runTest {
+        sound.setDefault(hall)
+        val renderer = Renderer(tookMs = 1_000, stuckMs = 3_000) // stuck till 3000, deaf to a cancel
+        val (viewModel, effects) = share(renderer)
+        val id = recording(durationMs = 60 * 60_000L)
+        viewModel.start(id)
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(100)
+        assertTrue(viewModel.sheet.value is ShareSheet.Preparing)
+        viewModel.onIntent(ShareIntent.CancelClicked)
+        runCurrent()
+        assertFalse((viewModel.sheet.value as ShareSheet.Choose).busy)
+
+        // again at once (t = 100): it waits under «Готовим…» — the cancelled work's late progress screen (due at 700) is gone
+        // with it — and after 700 ms of its own wait shows its progress and «Отмена»
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        runCurrent()
+        advanceTimeBy(650)
+        assertTrue("no progress screen of the cancelled work", (viewModel.sheet.value as ShareSheet.Choose).busy)
+        advanceTimeBy(100)
+        assertEquals(0, (viewModel.sheet.value as ShareSheet.Preparing).percent)
+        viewModel.onIntent(ShareIntent.CancelClicked)
+        runCurrent()
+        assertFalse((viewModel.sheet.value as ShareSheet.Choose).busy)
+        advanceTimeBy(1_000)
+        assertFalse("no progress screen comes back by itself", (viewModel.sheet.value as ShareSheet.Choose).busy)
+
+        // closed and opened again while the old render still holds on (t = 1850): the sheet is there at once, the render waits
+        viewModel.onIntent(ShareIntent.Dismissed)
+        runCurrent()
+        viewModel.start(id)
+        runCurrent()
+        assertFalse("the sheet opens at once", (viewModel.sheet.value as ShareSheet.Choose).busy)
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(10_000)
+        runCurrent()
+
+        assertEquals("never two renders into one .part", 1, renderer.mostAtOnce)
+        val sent = effects.single() as ShareEffect.Send
+        assertEquals("sound", sent.file.readText())
+    }
+
+    @Test
+    fun `a skipped sheet whose copy failed retries the original - never a render or another recording`() = runTest {
+        val first = recording() // with a processing of its own; the default leaves the sound alone
+        sound.setOwn(first, hall)
+        val renderer = Renderer(tookMs = 100)
+        val (viewModel, effects) = share(renderer)
+        viewModel.start(first)
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(300)
+        runCurrent()
+        assertEquals(1, renderer.renders)
+
+        val second = recording(pieceId = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1))
+        files.originalFails = true
+        viewModel.start(second)
+        runCurrent()
+        assertTrue(viewModel.sheet.value is ShareSheet.Failed)
+        files.originalFails = false
+        viewModel.onIntent(ShareIntent.RetryClicked)
+        runCurrent()
+        assertNull(viewModel.sheet.value)
+        val sent = effects.last() as ShareEffect.Send
+        assertEquals("Менуэт · 18 сентября.m4a", sent.file.name)
+        assertEquals("original sound", sent.file.readText())
+        assertNull("no text was asked for — there was no sheet to ask on", sent.text)
+        assertEquals(1, renderer.renders)
+    }
+
+    @Test
+    fun `a double tap on continue sends once`() = runTest {
+        files.originalTakesMs = 100
+        val (viewModel, effects) = share(Renderer(tookMs = 100))
+        viewModel.start(videoTake())
+        runCurrent()
+        assertEquals(ShareVariant.ORIGINAL, (viewModel.sheet.value as ShareSheet.Choose).variant)
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        assertTrue("«Готовим…» for the moment of the copy", (viewModel.sheet.value as ShareSheet.Choose).busy)
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(500)
+        runCurrent()
+        assertEquals(1, effects.size)
+        assertNull(viewModel.sheet.value)
     }
 }

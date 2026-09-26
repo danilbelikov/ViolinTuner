@@ -32,8 +32,15 @@ interface ShareFiles {
     /** Where the processed file of [audioName] with [settings] lives — or will. */
     fun processed(audioName: String, settings: SoundSettings, fileName: String): PlatformFile
 
-    /** A copy of [audio] under [fileName]; null when it cannot be made. */
+    /** A copy of [audio] under [fileName]; null when it cannot be made. The copy counts as handed over ([handedOver]). */
     suspend fun original(audio: PlatformFile, fileName: String): PlatformFile?
+
+    /**
+     * [file] goes to a receiver now: its folder is the newest one, which [ShareSweep] never takes by weight, and its age
+     * starts again — a file prepared long ago and sent once more is not swept from under the receiver. The folder, not
+     * the file: a hard link shares its time with the take itself.
+     */
+    suspend fun handedOver(file: PlatformFile)
 
     /** Throws out what nobody will read any more; what that is, [ShareSweep] decides. */
     suspend fun sweep(nowEpochMs: Long)

@@ -115,6 +115,7 @@ class PieceViewModelTest {
     private object NoShareFiles : ShareFiles {
         override fun processed(audioName: String, settings: SoundSettings, fileName: String) = File("/cache/share/$fileName")
         override suspend fun original(audio: File, fileName: String): File = File("/cache/share/$fileName")
+        override suspend fun handedOver(file: File) = Unit
         override suspend fun sweep(nowEpochMs: Long) = Unit
     }
 
