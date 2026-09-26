@@ -146,3 +146,12 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }
+
+// XcodeProjectTest reads the configurations of the iOS app: the unit tests run again when those files change, not only
+// when the code does.
+tasks.withType<Test>().configureEach {
+    inputs.files(
+        rootProject.file("iosApp/iosApp.xcodeproj/project.pbxproj"),
+        rootProject.file("iosApp/iosApp.xcodeproj/xcshareddata/xcschemes/iosApp.xcscheme"),
+    ).withPropertyName("xcodeProject").withPathSensitivity(PathSensitivity.RELATIVE)
+}
