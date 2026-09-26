@@ -436,7 +436,7 @@ private fun pieceViewModel(graph: IosGraph, savedState: SavedStateHandle) = Piec
 
 private fun shareViewModel(graph: IosGraph, texts: IosTexts) = ShareViewModel(
     graph.sessions, graph.repertoire, graph.sound, graph.audioFiles, graph.shareFiles, graph.renderer, texts.share, graph.renderSpeed,
-    graph.elapsed, graph.soundConfig, graph.videoFiles, graph.backings, graph.backingPcm,
+    graph.elapsed, graph.soundConfig, graph.videoFiles, graph.backings, graph.backingPcm, graph.analytics,
 )
 
 private fun homeViewModel(graph: IosGraph) = HomeViewModel(graph.home, graph.journey, graph.clock, graph.venues)

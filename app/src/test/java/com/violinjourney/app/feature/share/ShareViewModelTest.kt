@@ -1,5 +1,9 @@
 package com.violinjourney.app.feature.share
 
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.ErrorGroup
+import com.violinjourney.app.core.analytics.FakeAnalytics
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.audio.share.ShareFiles
 import com.violinjourney.app.core.audio.share.SoundRenderer
@@ -51,8 +55,11 @@ class ShareViewModelTest {
     private val hall = SoundPresets.settingsOf(BuiltInPreset.CHAMBER_HALL, config)
     private lateinit var audio: File
 
-    /** Takes [tookMs] of virtual time, telling its progress on the way; fails when told to. */
-    private inner class Renderer(var tookMs: Long, var fails: Boolean = false) : SoundRenderer {
+    /**
+     * Takes [tookMs] of virtual time, telling its progress on the way; fails when told to, or throws [throws] with half a
+     * file written — as the system's refusals come on iOS.
+     */
+    private inner class Renderer(var tookMs: Long, var fails: Boolean = false, var throws: Exception? = null) : SoundRenderer {
         var renders = 0
         override suspend fun render(source: File, settings: SoundSettings, target: File, onProgress: (Float) -> Unit): Boolean {
             renders++
@@ -62,6 +69,11 @@ class ShareViewModelTest {
                     onProgress((step + 1f) / STEPS)
                 }
                 if (fails) return false
+                throws?.let {
+                    target.parentFile?.mkdirs()
+                    target.writeText("half a sound")
+                    throw it
+                }
                 target.parentFile?.mkdirs()
                 target.writeText("sound")
                 return true
@@ -144,8 +156,10 @@ class ShareViewModelTest {
         override fun deleteOrphans(keptFiles: Set<String>) = Unit
     }
 
-    private fun TestScope.share(renderer: SoundRenderer): Pair<ShareViewModel, MutableList<ShareEffect>> {
-        val viewModel = ShareViewModel(sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, { testScheduler.currentTime }, config, videoFiles, backings, backingPcm)
+    private fun TestScope.share(renderer: SoundRenderer, analytics: Analytics = NoOpAnalytics()): Pair<ShareViewModel, MutableList<ShareEffect>> {
+        val viewModel = ShareViewModel(
+            sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, { testScheduler.currentTime }, config, videoFiles, backings, backingPcm, analytics,
+        )
         val effects = mutableListOf<ShareEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
         return viewModel to effects
@@ -275,6 +289,27 @@ class ShareViewModelTest {
         runCurrent()
         assertTrue(viewModel.sheet.value is ShareSheet.Failed)
         assertEquals(2, renderer.renders)
+
+        viewModel.onIntent(ShareIntent.SendOriginalClicked)
+        runCurrent()
+        assertNull(viewModel.sheet.value)
+        assertEquals("original sound", (effects.single() as ShareEffect.Send).file.readText())
+    }
+
+    @Test
+    fun `a render that throws is a failure in the sheet too - the app does not fall, the half file goes, the error is counted`() = runTest {
+        sound.setDefault(hall)
+        val analytics = FakeAnalytics()
+        val renderer = Renderer(tookMs = 100, throws = IllegalStateException("ExtAudioFileCreateWithURL failed: -54"))
+        val (viewModel, effects) = share(renderer, analytics)
+        viewModel.start(recording())
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(200)
+        runCurrent()
+        assertTrue(viewModel.sheet.value is ShareSheet.Failed)
+        assertTrue("what was half written is gone", File(folder.root, "share").walkTopDown().none { it.isFile })
+        assertEquals(listOf(ErrorGroup.MEDIA to "a file to share could not be made"), analytics.errors)
 
         viewModel.onIntent(ShareIntent.SendOriginalClicked)
         runCurrent()

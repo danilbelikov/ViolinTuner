@@ -1,5 +1,6 @@
 package com.violinjourney.app.feature.share
 
+import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.audio.share.ShareFiles
@@ -29,4 +30,5 @@ class HiltShareViewModel @Inject constructor(
     videos: VideoFiles,
     backings: BackingRepository,
     backingPcm: BackingPcm,
-) : ShareViewModel(sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, clock, config, videos, backings, backingPcm)
+    analytics: Analytics,
+) : ShareViewModel(sessions, repertoire, sound, audioFiles, files, renderer, texts, speed, clock, config, videos, backings, backingPcm, analytics)

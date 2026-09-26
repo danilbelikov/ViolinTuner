@@ -2,6 +2,9 @@ package com.violinjourney.app.feature.share
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.ErrorGroup
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.audio.share.RenderBacking
@@ -28,9 +31,12 @@ import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.feature.sound.SoundReducer
 import kotlin.concurrent.Volatile
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -87,6 +93,7 @@ open class ShareViewModel(
     private val videos: VideoFiles,
     private val backings: BackingRepository = NoBackings,
     private val backingPcm: BackingPcm? = null,
+    private val analytics: Analytics = NoOpAnalytics(),
 ) : ViewModel() {
 
     private val mutableSheet = MutableStateFlow<ShareSheet?>(null)
@@ -253,6 +260,15 @@ open class ShareViewModel(
                     mutableSheet.value = ShareSheet.Preparing(info, lastPercent, remaining)
                 }
             }
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // A renderer answers false when it did not work; what the system refuses on iOS — no room for the AAC file,
+            // a rate its encoder will not take, the backing's sound gone meanwhile — comes as a throw. Either way it is
+            // the sheet «Не получилось», not a fall of the app (spec 3.17). Cancelled meanwhile: that answer stands.
+            currentCoroutineContext().ensureActive()
+            analytics.error(ErrorGroup.MEDIA, "a file to share could not be made", e)
+            false
         } finally {
             late.cancel()
         }

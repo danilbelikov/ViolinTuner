@@ -68,6 +68,10 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
             val decoder = IosPcmFileOpener.open(source) ?: return@withContext false
             var whole = false
             var reader: IosBackingPcmReader? = null
+            // What the system refuses here — no room for the file, a rate the encoder will not take, the backing's sound
+            // gone — comes out as a throw, and «Поделиться» makes it «Не получилось»; the file is let go of either way.
+            var writer: AacFile? = null
+            var closed = false
             try {
                 // the backing at this recording's rate; gone or undecodable — the file cannot be what was asked for
                 reader = backing?.let { IosBackingPcmReader(it.pcm(decoder.sampleRate) ?: return@withContext false) }
@@ -76,7 +80,7 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
                 } else {
                     null
                 }
-                val writer = AacFile(target.path, decoder.sampleRate, channels = if (mixer != null) 2 else 1)
+                val aac = AacFile(target.path, decoder.sampleRate, channels = if (mixer != null) 2 else 1).also { writer = it }
                 val chain = SoundChain(decoder.sampleRate, config).apply { set(settings, immediate = true) }
                 // everything off — the chain is not called at all: its limiter would still delay the sound
                 val neutral = SoundRules.isNeutral(settings)
@@ -110,7 +114,7 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
                     toDrop -= from
                     if (mixer == null) {
                         for (i in from until count) pcm[i - from] = toShort(samples[i])
-                        written = writer.write(pcm, count - from)
+                        written = aac.write(pcm, count - from)
                     } else if (count > from) {
                         val kept = count - from
                         samples.copyInto(violin, 0, from, count)
@@ -122,14 +126,17 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
                             interleaved[2 * (i - skip)] = toShort(stereo[2 * i])
                             interleaved[2 * (i - skip) + 1] = toShort(stereo[2 * i + 1])
                         }
-                        written = writer.write(interleaved, (kept - skip) * 2)
+                        written = aac.write(interleaved, (kept - skip) * 2)
                     }
                     done += count
                     onProgress((done.toFloat() / total).coerceIn(0f, 1f))
                 }
-                whole = writer.close() && written && target.sizeBytes() > 0
+                closed = true
+                whole = aac.close() && written && target.sizeBytes() > 0
                 whole
             } finally {
+                // disposed exactly once: by the close above, or here when something threw before it
+                if (!closed) writer?.close()
                 decoder.release()
                 reader?.close()
                 if (!whole) target.deleteFile()
