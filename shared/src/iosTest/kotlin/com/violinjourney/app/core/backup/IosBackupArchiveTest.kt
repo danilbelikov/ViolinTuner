@@ -95,6 +95,36 @@ class IosBackupArchiveTest {
         assertEquals(4000, bytesOf(staging.child("sessions").child("a.m4a")).size)
     }
 
+    @Test
+    fun `a size no archive can have is damage and not a fall`() = runTest {
+        // a local header whose ZIP64 field says «-1»: okio refuses to read a negative count with IllegalArgumentException
+        val header = okio.Buffer().apply {
+            writeIntLe(0x04034b50) // local header
+            writeShortLe(45)
+            writeShortLe(0) // flags: no descriptor
+            writeShortLe(0) // stored
+            writeIntLe(0) // time, date
+            writeIntLe(0) // crc
+            writeIntLe(-1) // compressed: see ZIP64
+            writeIntLe(-1) // size: see ZIP64
+            val name = BackupManifest.ENTRY.encodeToByteArray()
+            writeShortLe(name.size)
+            writeShortLe(20)
+            write(name)
+            writeShortLe(1) // ZIP64
+            writeShortLe(16)
+            writeLongLe(-1) // size
+            writeLongLe(-1) // compressed
+            write(ByteArray(100) { 7 })
+        }.readByteArray()
+        val archive = folder.child("strange.zip")
+        writeBytes(archive, header)
+        val notOurs = assertFailsWith<BackupFileException> { BackupReader.manifest(archive.openInput()!!, knownDatabase = 13) }
+        assertEquals(BackupFileProblem.NotOurs, notOurs.problem)
+        val damaged = assertFailsWith<BackupFileException> { BackupReader.verify(archive.openInput()!!, header.size.toLong()) {} }
+        assertEquals(BackupFileProblem.Damaged, damaged.problem)
+    }
+
     private fun entryOf(path: String, part: BackupPart, bytes: ByteArray): BackupEntry {
         val file = folder.child(path.replace('/', '_'))
         writeBytes(file, bytes)

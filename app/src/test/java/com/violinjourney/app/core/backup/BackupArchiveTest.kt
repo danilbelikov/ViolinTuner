@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.charset.StandardCharsets
 import java.util.Arrays
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
@@ -149,6 +150,33 @@ class BackupArchiveTest {
         assertEquals(BackupFileProblem.NotOurs, problemOf { BackupReader.manifest(ByteArrayInputStream(foreign), knownDatabase = 6) })
         assertEquals(BackupFileProblem.NotOurs, problemOf { BackupReader.manifest(ByteArrayInputStream(bytes(5_000, 6)), knownDatabase = 6) })
         assertEquals(BackupFileProblem.NotOurs, problemOf { BackupReader.manifest(ByteArrayInputStream(ByteArray(0)), knownDatabase = 6) })
+    }
+
+    @Test
+    fun `names not in UTF-8 make somebody else's archive, and a damaged copy - not a fall`() {
+        // how an archiver of Windows writes Cyrillic: the name in its own code page, no flag saying «UTF-8» — and
+        // ZipInputStream of Android (and of JDK 17 and 21) throws IllegalArgumentException on it
+        val foreign = ByteArrayOutputStream().also { out ->
+            ZipOutputStream(out, StandardCharsets.ISO_8859_1).use { it.putNextEntry(ZipEntry("Noten/Étude.pdf")); it.write(bytes(100, 5)); it.closeEntry() }
+        }.toByteArray()
+        assertEquals(BackupFileProblem.NotOurs, problemOf { BackupReader.manifest(ByteArrayInputStream(foreign), knownDatabase = 6) })
+
+        // a copy of ours whose name of an entry got spoilt halfway: names are not under the checksum
+        val spoilt = ByteArrayOutputStream().also { out ->
+            ZipOutputStream(out, StandardCharsets.ISO_8859_1).use { zip ->
+                zip.putNextEntry(ZipEntry(BackupManifest.ENTRY))
+                manifest().writeTo(zip)
+                zip.closeEntry()
+                zip.putNextEntry(ZipEntry("sessions/Étude.m4a"))
+                zip.write(bytes(100, 6))
+                zip.closeEntry()
+                zip.putNextEntry(ZipEntry(BackupPaths.COMPLETE_ENTRY))
+                zip.write("entries=1\n".toByteArray())
+                zip.closeEntry()
+            }
+        }.toByteArray()
+        assertEquals(manifest(), BackupReader.manifest(ByteArrayInputStream(spoilt), knownDatabase = 6))
+        assertEquals(BackupFileProblem.Damaged, problemOf { BackupReader.verify(ByteArrayInputStream(spoilt), 100) {} })
     }
 
     @Test

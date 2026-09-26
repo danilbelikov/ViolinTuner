@@ -7,6 +7,7 @@ import com.violinjourney.app.core.backup.BackupReader
 import com.violinjourney.app.core.backup.BackupWriter
 import com.violinjourney.app.core.backup.IosBackupStore
 import com.violinjourney.app.core.backup.IosRestoreSwap
+import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.data.practice.RoomPracticeRepository
 import com.violinjourney.app.core.data.progress.RoomTrophyRepository
 import com.violinjourney.app.core.data.repertoire.RoomRepertoireRepository
@@ -19,6 +20,7 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.child
+import com.violinjourney.app.core.io.makeDirectories
 import com.violinjourney.app.core.io.openInput
 import com.violinjourney.app.core.io.openOutput
 import com.violinjourney.app.core.settings.DataStoreSettingsRepository
@@ -26,6 +28,7 @@ import com.violinjourney.app.core.time.SystemWallClock
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFailsWith
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -76,17 +79,19 @@ class IosStorageTest {
         assertEquals(TolerancePreset.PRO, reread.tolerance)
     }
 
+    private fun storeOf(data: PlatformFile, database: AppDatabase, practice: RoomPracticeRepository) = IosBackupStore(
+        data, database, RoomSessionRepository(database.sessionDao(), IntonationConfig(), NoAudioFiles, SystemWallClock, NoOpAnalytics()),
+        RoomRepertoireRepository(database.repertoireDao(), NoSheetFiles, RepertoireConfig(), SystemWallClock, NoOpAnalytics()),
+        practice, RoomTrophyRepository(database.trophyDao()), ProgressConfig(), SystemWallClock, Dispatchers.Default,
+    )
+
     @Test
     fun `a copy takes the database whole and puts it back in place`() = runTest {
         val database = IosStorage.database(directory)
         val practice = RoomPracticeRepository(database.practiceDao())
         practice.add(PracticeEntry(LocalDate(2026, 9, 24), startedAtEpochMs = 1_000, durationMs = 30 * 60_000, manual = false))
         val data = PlatformFile(directory)
-        val store = IosBackupStore(
-            data, database, RoomSessionRepository(database.sessionDao(), IntonationConfig(), NoAudioFiles, SystemWallClock, NoOpAnalytics()),
-            RoomRepertoireRepository(database.repertoireDao(), NoSheetFiles, RepertoireConfig(), SystemWallClock, NoOpAnalytics()),
-            practice, RoomTrophyRepository(database.trophyDao()), ProgressConfig(), SystemWallClock, Dispatchers.Default,
-        )
+        val store = storeOf(data, database, practice)
         val prepared = store.prepare(setOf(BackupPart.DATA))
         assertEquals(1, prepared.manifest.counts.practiceDays)
         val archive = data.child("copy.zip")
@@ -101,6 +106,20 @@ class IosStorageTest {
         val reopened = IosStorage.database(directory)
         assertEquals(listOf(LocalDate(2026, 9, 24)), RoomPracticeRepository(reopened.practiceDao()).entries.first().map { it.date })
         reopened.close()
+    }
+
+    @Test
+    fun `a mark that cannot be left is a failure and not a silent success`() = runTest {
+        val database = IosStorage.database(directory)
+        val data = PlatformFile(directory)
+        val store = storeOf(data, database, RoomPracticeRepository(database.practiceDao()))
+        // a folder where the mark goes: the file cannot be made
+        data.child(IosRestoreSwap.READY_MARK).makeDirectories()
+        data.child(IosRestoreSwap.WIPE_MARK).makeDirectories()
+        store.newStaging()
+        assertFailsWith<okio.IOException> { store.markStagingReady() }
+        assertFailsWith<okio.IOException> { store.markWipe() }
+        database.close()
     }
 
     private object NoAudioFiles : SessionAudioFiles {

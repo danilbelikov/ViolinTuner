@@ -69,6 +69,9 @@ actual object BackupReader {
             throw BackupFileException(BackupFileProblem.NotOurs)
         } catch (e: okio.EOFException) {
             throw BackupFileException(BackupFileProblem.NotOurs)
+        } catch (e: IllegalArgumentException) {
+            // a size no archive can have (a negative ZIP64 field), which okio refuses by `require`: somebody else's file
+            throw BackupFileException(BackupFileProblem.NotOurs)
         }
     }
 
@@ -113,6 +116,9 @@ actual object BackupReader {
         } catch (e: ZipFormatException) {
             throw BackupFileException(BackupFileProblem.Damaged)
         } catch (e: okio.EOFException) {
+            throw BackupFileException(BackupFileProblem.Damaged)
+        } catch (e: IllegalArgumentException) {
+            // a size no archive can have, refused by okio's `require`: the copy is damaged, not the app
             throw BackupFileException(BackupFileProblem.Damaged)
         }
         if (!complete) throw BackupFileException(BackupFileProblem.Damaged)

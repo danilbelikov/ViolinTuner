@@ -167,10 +167,8 @@ open class RestoreViewModel(
                 // the data are gone already — there is nothing left for a safe way to keep safe
                 ready?.let { manager.restore(it.copy, unsafe = !failed.dataIntact) }
             }
-            RestoreIntent.StartCleanClicked -> {
-                manager.startClean()
-                effectChannel.trySend(RestoreEffect.Restart)
-            }
+            // a mark that could not be left would restart into the same app: the screen stays, the button can be pressed again
+            RestoreIntent.StartCleanClicked -> if (manager.startClean()) effectChannel.trySend(RestoreEffect.Restart)
             RestoreIntent.CloseClicked -> {
                 manager.dismiss()
                 effectChannel.trySend(RestoreEffect.Close)

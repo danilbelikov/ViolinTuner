@@ -33,13 +33,13 @@ interface BackupStore {
 
     fun discardStaging()
 
-    /** The unpacked copy is whole: from now on the next start of the process puts it in place. */
+    /** The unpacked copy is whole: from now on the next start of the process puts it in place. Throws when the mark cannot be left. */
     fun markStagingReady()
 
     /** The way without a safety net: the media go first — that is where the room is. */
     fun deleteMedia()
 
-    /** «Начать с чистого приложения»: the next start wipes everything. */
+    /** «Начать с чистого приложения»: the next start wipes everything. Throws when the mark cannot be left. */
     fun markWipe()
 
     /** Where an archive is built for «Отправить…»: under `cache/share/`, the only place the file provider hands out. */

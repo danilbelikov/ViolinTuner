@@ -28,6 +28,9 @@ actual object BackupReader {
             }
         } catch (e: ZipException) {
             throw BackupFileException(BackupFileProblem.NotOurs)
+        } catch (e: IllegalArgumentException) {
+            // a name not in UTF-8 and not flagged as such — how an archiver of Windows writes Cyrillic: somebody else's archive
+            throw BackupFileException(BackupFileProblem.NotOurs)
         }
     }
 
@@ -81,6 +84,9 @@ actual object BackupReader {
         } catch (e: ZipException) {
             throw BackupFileException(BackupFileProblem.Damaged)
         } catch (e: java.io.EOFException) {
+            throw BackupFileException(BackupFileProblem.Damaged)
+        } catch (e: IllegalArgumentException) {
+            // names are not under the checksum: a spoilt byte in a name halfway through a copy of ours is damage
             throw BackupFileException(BackupFileProblem.Damaged)
         }
         if (!complete) throw BackupFileException(BackupFileProblem.Damaged)

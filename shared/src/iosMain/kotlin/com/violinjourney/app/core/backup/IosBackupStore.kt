@@ -150,7 +150,9 @@ internal class IosBackupStore(
         val staging = data.child(IosRestoreSwap.STAGING)
         // a copy without video, or without a photo, replaces those folders too — with empty ones
         IosRestoreSwap.MEDIA_DIRS.forEach { staging.child(it).makeDirectories() }
-        data.child(IosRestoreSwap.READY_MARK).openOutput()?.close()
+        // without the mark the next start throws the unpacked copy away, while the screen has said «Данные восстановлены»:
+        // a mark that cannot be left is a failed restore, as `createNewFile` makes it on Android
+        leaveMark(IosRestoreSwap.READY_MARK)
     }
 
     override fun deleteMedia() {
@@ -158,7 +160,11 @@ internal class IosBackupStore(
     }
 
     override fun markWipe() {
-        data.child(IosRestoreSwap.WIPE_MARK).openOutput()?.close()
+        leaveMark(IosRestoreSwap.WIPE_MARK)
+    }
+
+    private fun leaveMark(name: String) {
+        (data.child(name).openOutput() ?: throw okio.IOException("cannot leave the mark $name")).close()
     }
 
     override fun shareFile(fileName: String): PlatformFile {

@@ -18,7 +18,9 @@ import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -183,14 +185,15 @@ class BackupManager(
                 val readBack = if (shareFile != null) shareFile.openInput() else documents.openInput(checkNotNull(uri))
                 // a provider that will not hand back what it has just taken is not a reason to fail a copy that was written whole
                 readBack?.use { BackupReader.verify(it, total) {} }
+                // The copy is whole where it went: nothing that happens after this takes it away.
+                finished = true
                 speed.measured(total, elapsed.nowMs() - started)
-                prefs.setLastBackupAt(clock.millis())
+                rememberDate()
                 // A screen that was shown is shown long enough to be read: nothing on this app's screens flashes by.
                 shownAt?.let { at ->
                     val stillToShow = MIN_SHOWN_MS - (elapsed.nowMs() - at)
                     if (stillToShow > 0) delay(stillToShow)
                 }
-                finished = true
                 analytics.track(BackupCreated(megabytes = (total / BYTES_PER_MB).toInt(), parts = parts.size))
                 mutableJob.value = BackupJob.Saved(
                     fileName = uri?.let(documents::nameOf) ?: fileName,
@@ -202,9 +205,14 @@ class BackupManager(
             } catch (e: CancellationException) {
                 throw e
             } catch (e: BackupFileException) {
+                // a copy cancelled while its write broke stays cancelled: «Отмена» has been said already
+                currentCoroutineContext().ensureActive()
                 analytics.error(ErrorGroup.BACKUP, "the copy could not be written", e)
                 mutableJob.value = BackupJob.SaveFailed(SaveFailure.FAILED)
-            } catch (e: IOException) {
+            } catch (e: Exception) {
+                // The stream's IOException, and whatever else the platform throws on the way — SQLite refusing a snapshot
+                // on a full disk, a provider's own exception: a copy that failed is said on its screen, not a fall of the app.
+                currentCoroutineContext().ensureActive()
                 analytics.error(ErrorGroup.BACKUP, "the copy failed", e)
                 mutableJob.value = BackupJob.SaveFailed(failureOf(e))
             } finally {
@@ -217,12 +225,24 @@ class BackupManager(
         }
     }
 
-    // A full card says so in the message of the exception, and nowhere else.
-    private fun failureOf(e: IOException): SaveFailure {
+    /** The date of a copy that is whole already: a store that will not keep it is told, and the copy stays. */
+    private suspend fun rememberDate() {
+        try {
+            prefs.setLastBackupAt(clock.millis())
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            analytics.error(ErrorGroup.BACKUP, "the date of the copy could not be kept", e)
+        }
+    }
+
+    // A full card says so in the message of the exception, and nowhere else. A place that went away is a failure of the
+    // stream; SQLite's own «disk I/O error» is about its snapshot, not about the place.
+    private fun failureOf(e: Exception): SaveFailure {
         val message = generateSequence<Throwable>(e) { it.cause }.mapNotNull { it.message }.joinToString(" ")
         return when {
             NO_SPACE_WORDS.any { message.contains(it, ignoreCase = true) } -> SaveFailure.NO_SPACE
-            GONE_WORDS.any { message.contains(it, ignoreCase = true) } -> SaveFailure.UNAVAILABLE
+            e is IOException && GONE_WORDS.any { message.contains(it, ignoreCase = true) } -> SaveFailure.UNAVAILABLE
             else -> SaveFailure.FAILED
         }
     }
@@ -234,9 +254,15 @@ class BackupManager(
             val manifest = input.use { BackupReader.manifest(it, knownDatabase = store.databaseVersion) }
             val missing = (manifest.totalBytes + config.freeSpaceMarginBytes - store.freeBytes()).coerceAtLeast(0)
             BackupCandidate.Copy(uri, documents.nameOf(uri), documents.sizeOf(uri), manifest, missing)
+        } catch (e: CancellationException) {
+            throw e
         } catch (e: BackupFileException) {
             BackupCandidate.Unfit(e.problem)
         } catch (e: IOException) {
+            BackupCandidate.Unfit(BackupFileProblem.Damaged)
+        } catch (e: Exception) {
+            // the file was picked by hand, and the platform read it with whatever it throws: a file that cannot be read
+            analytics.error(ErrorGroup.BACKUP, "the picked file could not be read", e)
             BackupCandidate.Unfit(BackupFileProblem.Damaged)
         }
     }
@@ -281,19 +307,29 @@ class BackupManager(
             } catch (e: CancellationException) {
                 withContext(kotlinx.coroutines.NonCancellable) { store.discardStaging() }
                 throw e
-            } catch (e: IOException) {
+            } catch (e: Exception) {
+                // The file, the disk, or whatever else the platform throws on the way: said on the screen, not a fall.
+                store.discardStaging()
+                // a restore cancelled while it broke stays cancelled; what it unpacked is gone either way
+                currentCoroutineContext().ensureActive()
                 // The one place where a person can lose everything; until now nobody but them knew.
                 analytics.track(BackupRestored(ok = false))
                 analytics.error(ErrorGroup.BACKUP, "the copy could not be restored", e)
-                store.discardStaging()
                 mutableJob.value = BackupJob.RestoreFailed(dataIntact, copy.uri, manifest)
             }
         }
     }
 
-    /** «Начать с чистого приложения»: the next start wipes everything. The caller restarts the process. */
-    fun startClean() {
+    /**
+     * «Начать с чистого приложения»: the next start wipes everything. True — the caller restarts the process; false — the
+     * mark could not be left, a restart would change nothing, and the screen stays as it was.
+     */
+    fun startClean(): Boolean = try {
         store.markWipe()
+        true
+    } catch (e: IOException) {
+        analytics.error(ErrorGroup.BACKUP, "the app could not be marked to start clean", e)
+        false
     }
 
     /**
@@ -344,7 +380,8 @@ class BackupManager(
 
         /** Below this a copy is seconds whatever the estimate says: the base of the estimate alone must not open a screen. */
         const val QUICK_BYTES = 64L * 1024 * 1024
-        val NO_SPACE_WORDS = listOf("ENOSPC", "No space left")
+        /** «disk is full» is SQLITE_FULL, as android.database and androidx.sqlite both word it. */
+        val NO_SPACE_WORDS = listOf("ENOSPC", "No space left", "disk is full")
         val GONE_WORDS = listOf("ENOENT", "EIO", "ENODEV", "EPIPE", "No such file", "I/O error")
     }
 }

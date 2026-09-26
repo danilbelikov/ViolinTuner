@@ -1,5 +1,7 @@
 package com.violinjourney.app.core.backup
 
+import com.violinjourney.app.core.analytics.ErrorGroup
+import com.violinjourney.app.core.analytics.FakeAnalytics
 import com.violinjourney.app.core.time.FixedWallClock
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.ZonedSystemWallClock
@@ -9,6 +11,9 @@ import java.io.File
 import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
+import java.nio.charset.StandardCharsets
+import java.util.zip.ZipEntry
+import java.util.zip.ZipOutputStream
 import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,10 +45,15 @@ class BackupManagerTest {
         var wipeMarked = false
         var mediaDeleted = false
         var stagingDiscarded = 0
+        /** What the platform throws beside the stream: SQLite refusing the snapshot, a folder that cannot be made, a mark… */
+        var prepareFails: Exception? = null
+        var stagingFails: Exception? = null
+        var freeFails: Exception? = null
+        var wipeFails: IOException? = null
         val video = ByteArray(400_000) { (it % 97).toByte() }
         override val databaseVersion = 6
         override suspend fun contents() = BackupContents(counts, mapOf(BackupPart.DATA to 1_000L, BackupPart.VIDEO to video.size.toLong()))
-        override suspend fun prepare(parts: Set<BackupPart>) = PreparedBackup(
+        override suspend fun prepare(parts: Set<BackupPart>) = prepareFails?.let { throw it } ?: PreparedBackup(
             BackupManifest(1, "1.0", 6, now.toEpochMilliseconds(), "Pixel 7", parts + BackupPart.DATA, counts, mapOf(BackupPart.DATA to 1_000L, BackupPart.VIDEO to video.size.toLong())),
             listOfNotNull(
                 BackupEntry("db/violin.db", BackupPart.DATA, 1_000) { ByteArrayInputStream(ByteArray(1_000) { 7 }) },
@@ -51,12 +61,12 @@ class BackupManagerTest {
             ),
         )
         override fun cleanUp() { cleaned++ }
-        override fun freeBytes() = free
-        override fun newStaging(): File = File(folder.root, "staging").also { it.deleteRecursively(); it.mkdirs() }
+        override fun freeBytes() = freeFails?.let { throw it } ?: free
+        override fun newStaging(): File = stagingFails?.let { throw it } ?: File(folder.root, "staging").also { it.deleteRecursively(); it.mkdirs() }
         override fun discardStaging() { stagingDiscarded++; File(folder.root, "staging").deleteRecursively() }
         override fun markStagingReady() { readyMarked = true }
         override fun deleteMedia() { mediaDeleted = true }
-        override fun markWipe() { wipeMarked = true }
+        override fun markWipe() { wipeFails?.let { throw it }; wipeMarked = true }
         override fun shareFile(fileName: String) = File(folder.root, "share/$fileName").also { it.parentFile!!.mkdirs() }
     }
 
@@ -86,7 +96,8 @@ class BackupManagerTest {
 
     private class Prefs : BackupPrefs {
         override val lastBackupAtEpochMs = MutableStateFlow<Long?>(null)
-        override suspend fun setLastBackupAt(epochMs: Long) { lastBackupAtEpochMs.value = epochMs }
+        var fails: IOException? = null
+        override suspend fun setLastBackupAt(epochMs: Long) { fails?.let { throw it }; lastBackupAtEpochMs.value = epochMs }
     }
 
     private val store = Store()
@@ -94,10 +105,11 @@ class BackupManagerTest {
     private val prefs = Prefs()
     private var keptAlive = 0
     private val all = BackupPart.entries.toSet()
+    private val analytics = FakeAnalytics()
 
-    private fun TestScope.manager() = BackupManager(
+    private fun TestScope.manager(documents: BackupDocuments = this@BackupManagerTest.documents) = BackupManager(
         store, documents, prefs, { keptAlive++ }, BackupConfig(), BackupSpeed(BackupConfig()),
-        FixedWallClock(now, TimeZone.of("Europe/Moscow")), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler),
+        FixedWallClock(now, TimeZone.of("Europe/Moscow")), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler), analytics,
     )
 
     @Test
@@ -156,6 +168,69 @@ class BackupManagerTest {
             assertEquals(listOf(uri), documents.deleted.filter { it == uri })
             assertNull(prefs.lastBackupAtEpochMs.value)
         }
+    }
+
+    @Test
+    fun `a snapshot the database refuses is said in words - a full disk as a full disk, the rest as a failure`() = runTest {
+        // what androidx.sqlite and android.database throw: RuntimeExceptions, not IOExceptions
+        val cases = listOf(
+            RuntimeException("Error code: 13, message: database or disk is full") to SaveFailure.NO_SPACE,
+            IllegalStateException("database or disk is full (code 13 SQLITE_FULL)") to SaveFailure.NO_SPACE,
+            RuntimeException("Error code: 10, message: disk I/O error") to SaveFailure.FAILED,
+            RuntimeException("database is locked") to SaveFailure.FAILED,
+        )
+        val manager = manager()
+        cases.forEachIndexed { index, (failure, reason) ->
+            store.prepareFails = failure
+            manager.saveTo("content://downloads/$index", all, "копия.zip")
+            advanceUntilIdle()
+            assertEquals(failure.message, reason, (manager.job.value as BackupJob.SaveFailed).reason)
+            assertEquals(index + 1, store.cleaned)
+            manager.dismiss()
+        }
+        assertEquals(List(cases.size) { ErrorGroup.BACKUP }, analytics.errors.map { it.first })
+        assertNull(prefs.lastBackupAtEpochMs.value)
+
+        store.prepareFails = null
+        manager.saveTo("content://downloads/next", all, "копия.zip")
+        advanceUntilIdle()
+        assertTrue("the next copy goes as if nothing had happened", manager.job.value is BackupJob.Saved)
+    }
+
+    @Test
+    fun `a copy written whole stays when its date cannot be kept`() = runTest {
+        val manager = manager()
+        prefs.fails = IOException("write failed: ENOSPC (No space left on device)")
+        manager.saveTo("content://downloads/1", all, "копия.zip")
+        advanceUntilIdle()
+        assertTrue(manager.job.value is BackupJob.Saved)
+        assertTrue("the copy was checked whole: it is not taken away", documents.deleted.isEmpty())
+        assertEquals(all, BackupReader.manifest(documents.openInput("content://downloads/1")!!, knownDatabase = 6).parts)
+        assertEquals(listOf(ErrorGroup.BACKUP), analytics.errors.map { it.first })
+    }
+
+    @Test
+    fun `a copy stopped while its write breaks stays stopped`() = runTest {
+        lateinit var manager: BackupManager
+        val breaking = object : BackupDocuments by documents {
+            override fun openOutput(uri: String): OutputStream {
+                documents.written[uri] = ByteArrayOutputStream()
+                return object : OutputStream() {
+                    override fun write(b: Int) = write(byteArrayOf(b.toByte()), 0, 1)
+                    override fun write(b: ByteArray, off: Int, len: Int) {
+                        // «Отмена» is pressed, and the write under way breaks as the place goes
+                        manager.cancel()
+                        throw IOException("write failed: EPIPE (Broken pipe)")
+                    }
+                }
+            }
+        }
+        manager = manager(breaking)
+        manager.saveTo("content://usb/1", all, "копия.zip")
+        advanceUntilIdle()
+        assertEquals(BackupJob.Idle, manager.job.value)
+        assertEquals(listOf("content://usb/1"), documents.deleted)
+        assertTrue("a stop is no failure to tell about", analytics.errors.isEmpty())
     }
 
     @Test
@@ -226,6 +301,40 @@ class BackupManagerTest {
         documents.written["content://downloads/photo"] = ByteArrayOutputStream().also { it.write(ByteArray(3_000) { 1 }) }
         assertEquals(BackupCandidate.Unfit(BackupFileProblem.NotOurs), manager.inspect("content://downloads/photo"))
         assertEquals(BackupCandidate.Unfit(BackupFileProblem.Damaged), manager.inspect("content://downloads/nothing"))
+    }
+
+    @Test
+    fun `a picked archive with names not in UTF-8 is not ours - and the app stays`() = runTest {
+        val manager = manager()
+        documents.written["content://downloads/notes"] = ByteArrayOutputStream().also { out ->
+            ZipOutputStream(out, StandardCharsets.ISO_8859_1).use { it.putNextEntry(ZipEntry("Noten/Étude.pdf")); it.write(ByteArray(100) { 3 }); it.closeEntry() }
+        }
+        assertEquals(BackupCandidate.Unfit(BackupFileProblem.NotOurs), manager.inspect("content://downloads/notes"))
+    }
+
+    @Test
+    fun `a picked file the platform cannot weigh against the phone is told as damaged - and the app stays`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        // StatFs throws IllegalArgumentException, a database that will not open throws SQLiteException
+        store.freeFails = IllegalArgumentException("Invalid path: /data/user/0")
+        assertEquals(BackupCandidate.Unfit(BackupFileProblem.Damaged), manager.inspect(copy.uri))
+        assertEquals(listOf(ErrorGroup.BACKUP), analytics.errors.map { it.first })
+    }
+
+    @Test
+    fun `a restore that breaks on something other than the file changes nothing`() = runTest {
+        val manager = manager()
+        val copy = savedCopy(manager)
+        store.stagingFails = IllegalStateException("cannot make restore-staging")
+        manager.restore(copy, unsafe = false)
+        advanceUntilIdle()
+        val failed = manager.job.value as BackupJob.RestoreFailed
+        assertTrue(failed.dataIntact)
+        assertEquals(1, store.stagingDiscarded)
+        assertFalse(store.readyMarked)
+        assertTrue("backup_restored {ok=false}" in analytics.sent())
+        assertEquals(listOf(ErrorGroup.BACKUP), analytics.errors.map { it.first })
     }
 
     @Test
@@ -301,8 +410,16 @@ class BackupManagerTest {
 
     @Test
     fun `starting clean only leaves the mark - the next start does the wiping`() = runTest {
-        manager().startClean()
+        assertTrue(manager().startClean())
         assertTrue(store.wipeMarked)
+    }
+
+    @Test
+    fun `a mark to start clean that cannot be left is no restart, and no fall`() = runTest {
+        store.wipeFails = IOException("open failed: EACCES (Permission denied)")
+        assertFalse(manager().startClean())
+        assertFalse(store.wipeMarked)
+        assertEquals(listOf(ErrorGroup.BACKUP), analytics.errors.map { it.first })
     }
 
     @Test
