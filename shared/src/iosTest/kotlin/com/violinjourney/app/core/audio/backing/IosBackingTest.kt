@@ -1,12 +1,13 @@
 package com.violinjourney.app.core.audio.backing
 
-import com.violinjourney.app.core.audio.recording.IosAacEncoder
+import com.violinjourney.app.core.audio.recording.AacFile
 import com.violinjourney.app.core.audio.share.IosSoundRenderer
 import com.violinjourney.app.core.audio.share.RenderBacking
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.listNames
 import com.violinjourney.app.core.time.SystemWallClock
 import kotlin.math.PI
 import kotlin.math.abs
@@ -17,8 +18,12 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.minutes
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import platform.AVFAudio.AVAudioFile
 import platform.Foundation.NSFileManager
@@ -43,15 +48,16 @@ class IosBackingTest {
         NSFileManager.defaultManager.removeItemAtPath(folder, null)
     }
 
+    /** Written straight into the file: the take's encoder gives up on a queue of more than a second and a half of hops. */
     private fun tone(path: String, rate: Int, seconds: Int, hz: Double) {
-        val encoder = IosAacEncoder(PlatformFile(path), rate)
+        val aac = AacFile(path, rate, channels = 1)
         val hop = ShortArray(512)
         var n = 0
         repeat(seconds * rate / hop.size) {
             for (i in hop.indices) hop[i] = (sin(2 * PI * hz * (n++) / rate) * 8_000).roundToInt().toShort()
-            encoder.offer(hop, hop.size)
+            assertTrue(aac.write(hop, hop.size))
         }
-        assertTrue(encoder.finish())
+        assertTrue(aac.close())
     }
 
     @Test
@@ -93,5 +99,41 @@ class IosBackingTest {
         assertTrue(sent)
         val file = AVAudioFile(forReading = NSURL.fileURLWithPath(target.path), error = null)
         assertEquals(2u, file.fileFormat.channelCount)
+    }
+
+    /**
+     * A smoke test of the real path — AVAudioFile, the `.partial` and `moveItemAtPath`, which refuses a target that is there:
+     * three callers let go at once, on a backing long enough for their unpacks to overlap, all get the one ready file. Before
+     * the lock the later ones wrote the same `.partial` and got null. The protocol itself is guarded by
+     * `SingleFlightBackingPcmTest` on the JVM; here the timing is the system's.
+     */
+    @Test
+    fun `three callers at once get one ready file`() = runTest(timeout = 2.minutes) {
+        val files = IosBackingFiles(data, SystemWallClock)
+        val source = files.newFile("m4a")
+        tone(source.path, 44_100, LONG_SECONDS, 220.0)
+        val backing = Backing(
+            fileName = source.path.substringAfterLast('/'), title = "a", durationMs = LONG_SECONDS * 1_000L, sampleRate = 44_100,
+            channels = 1, sizeBytes = 0, addedAtEpochMs = 0,
+        )
+        val pcm = IosBackingPcm(caches, files)
+        val go = CompletableDeferred<Unit>()
+        val callers = List(3) {
+            async(Dispatchers.Default) {
+                go.await()
+                pcm.prepare(backing, 48_000)?.path
+            }
+        }
+        go.complete(Unit)
+        val prepared = callers.awaitAll()
+        val ready = assertNotNull(pcm.cached(backing, 48_000)).path
+        assertEquals(listOf(ready, ready, ready), prepared)
+        val left = PlatformFile("${caches.path}/backing-pcm").listNames()
+        assertTrue(left.none { it.endsWith(".partial") }, "left behind: $left")
+    }
+
+    private companion object {
+        /** Long enough for three unpacks to overlap even on a fast Mac. */
+        const val LONG_SECONDS = 20
     }
 }

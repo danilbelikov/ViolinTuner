@@ -113,10 +113,12 @@ internal class IosBackingImporter(
 
 /**
  * The backing as the mix needs it (spec 5.25), in the same form as on Android: 16-bit stereo, interleaved, at the rate
- * of the take, one plain file in Caches — decoded once by AVAudioFile, resampled once by [Resampler].
+ * of the take, one plain file in Caches — decoded once by AVAudioFile, resampled once by [Resampler]. Made once at a time
+ * per backing and rate ([SingleFlightBackingPcm]): under that lock its target is never there yet when the `.partial` is
+ * moved in, which `moveItemAtPath` would refuse.
  */
 @OptIn(ExperimentalForeignApi::class)
-internal class IosBackingPcm(private val caches: PlatformFile, private val files: BackingFiles) : BackingPcm {
+internal class IosBackingPcm(private val caches: PlatformFile, private val files: BackingFiles) : SingleFlightBackingPcm() {
     private val directory get() = caches.child(DIRECTORY).also { it.makeDirectories() }
 
     override fun deleteOrphans(keptFiles: Set<String>) {
@@ -126,8 +128,7 @@ internal class IosBackingPcm(private val caches: PlatformFile, private val files
 
     override fun cached(backing: Backing, sampleRate: Int): PlatformFile? = fileOf(backing, sampleRate).takeIf { it.exists() }
 
-    override fun prepare(backing: Backing, sampleRate: Int): PlatformFile? {
-        cached(backing, sampleRate)?.let { return it }
+    override fun make(backing: Backing, sampleRate: Int): PlatformFile? {
         val source = files.existing(backing.fileName) ?: return null
         val target = fileOf(backing, sampleRate)
         val partial = directory.child(target.path.substringAfterLast('/') + PARTIAL)

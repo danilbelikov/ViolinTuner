@@ -160,9 +160,10 @@ class BackingImporter @Inject constructor(
 /**
  * The backing as the mix needs it (spec 5.25): 16-bit stereo, interleaved, at the rate of the take, one plain
  * file in the cache — decoded once, resampled once, then read at any position without a codec. A mono backing
- * is doubled to both sides. Rebuilt from the copy whenever the cache has been cleared.
+ * is doubled to both sides. Rebuilt from the copy whenever the cache has been cleared, once at a time per backing and
+ * rate ([SingleFlightBackingPcm]): the fixed `.partial` name has one writer.
  */
-class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, private val files: BackingFiles) : BackingPcm {
+class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, private val files: BackingFiles) : SingleFlightBackingPcm() {
     private val directory = File(context.cacheDir, DIRECTORY)
 
     override fun deleteOrphans(keptFiles: Set<String>) {
@@ -174,8 +175,7 @@ class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, 
 
     override fun cached(backing: Backing, sampleRate: Int): File? = fileOf(backing, sampleRate).takeIf { it.isFile }
 
-    override fun prepare(backing: Backing, sampleRate: Int): File? {
-        cached(backing, sampleRate)?.let { return it }
+    override fun make(backing: Backing, sampleRate: Int): File? {
         val source = files.existing(backing.fileName) ?: return null
         directory.mkdirs()
         val target = fileOf(backing, sampleRate)
