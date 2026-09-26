@@ -25,8 +25,14 @@ data class CaptureState(
     /** The backing is being made ready for the mix: the button waits (spec 5.25). */
     val preparing: Boolean = false,
     val micUnavailable: Boolean = false,
+    /**
+     * The backing's sound could not be made — no room for it, a damaged file (spec 5.25): no take under it until the
+     * screen is opened anew; a line over the button says why.
+     */
+    val backingUnprepared: Boolean = false,
 ) {
-    val canRecord: Boolean get() = cameraPermission == true && micPermission == true && !cameraFailed && !(underBacking && (noHeadphones || preparing)) && !saving
+    val canRecord: Boolean get() =
+        cameraPermission == true && micPermission == true && !cameraFailed && !(underBacking && (noHeadphones || preparing || backingUnprepared)) && !saving
 }
 
 sealed interface CaptureIntent {

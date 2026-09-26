@@ -59,6 +59,7 @@ import com.violinjourney.app.feature.history.components.sessionTitle
 import com.violinjourney.app.feature.sound.components.BackingBlock
 import com.violinjourney.app.feature.sound.components.BackingHeardSwitch
 import com.violinjourney.app.feature.sound.components.BackingPreparingRow
+import com.violinjourney.app.feature.sound.components.BackingUnavailableBlock
 import com.violinjourney.app.feature.sound.components.MiniPlayer
 import com.violinjourney.app.feature.sound.components.MiniPlayerMetrics
 import com.violinjourney.app.feature.sound.components.SoundBlocks
@@ -419,7 +420,7 @@ private fun Blocks(state: SoundState, meters: State<SoundMeters?>, config: Sound
     )
     SoundBlocks(state.settings, state.expanded, state.band, state.details, meters, config, onIntent)
     // last, after «Громкость»: it is not the violin's (spec 3.32)
-    state.backing?.let { BackingBlock(it, BackingConfig(), onIntent) }
+    state.backing?.let { if (state.backingUnavailable) BackingUnavailableBlock() else BackingBlock(it, BackingConfig(), onIntent) }
 }
 
 @Composable

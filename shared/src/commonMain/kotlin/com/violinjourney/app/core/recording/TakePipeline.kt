@@ -86,7 +86,21 @@ class TakePipeline(
      * goes to with what they are believed to lag. Set by the screen before it asks for the recording; read when
      * the recording starts.
      */
-    class BackingPlan(val backing: Backing, val pcm: (sampleRate: Int) -> PlatformFile?, val route: AudioRoute, val latencyMs: Int)
+    class BackingPlan(
+        val backing: Backing,
+        /**
+         * The backing's sound already made at a rate, or null — never made here: it is asked on the thread that reads the
+         * microphone, and an unpack there would hold the input for seconds (spec 5.25).
+         */
+        val ready: (sampleRate: Int) -> PlatformFile?,
+        val route: AudioRoute,
+        val latencyMs: Int,
+        /**
+         * The microphone opened at a rate the sound is not made for ([ready] gave nothing): the take does not begin, and
+         * the screen makes the sound at that rate — the next press records. Called on the chain's thread.
+         */
+        val notReady: (sampleRate: Int) -> Unit,
+    )
 
     @Volatile
     var backingPlan: BackingPlan? = null
@@ -312,12 +326,26 @@ class TakePipeline(
                     counter.finish() // no practice, no journey: what sounded outside it is not counted
                 }
                 if (recordingRequested.value && recorder == null && mayStartRecorder(frame.tMs)) {
-                    recorder = SessionRecorder(config, clock.millis())
-                    watch.set(true)
-                    val takeStartTMs = (tap?.state as? AudioTap.State.Running)?.startTMs ?: frame.tMs
-                    recordStartNanos = pitchSource.clock?.nanosAt(takeStartTMs)
-                    startBacking()?.let { plan -> backingStarted = plan }
-                    videoHook?.onRecordingStarted(recordStartNanos)
+                    // the backing, when there is one to play, at the rate the take is really recorded at (spec 3.32)
+                    val plan = backingPlan?.takeIf { playback != null }
+                    val rate = tap?.sampleRateHz ?: DEFAULT_RATE
+                    val pcm = plan?.ready?.invoke(rate)
+                    if (plan != null && pcm == null) {
+                        // not made for this rate: the take does not begin — no unpacking here (spec 5.25). The sound the tap
+                        // has begun is dropped just below, as for a mind changed before the first frame.
+                        recordingRequested.value = false
+                        plan.notReady(rate)
+                    } else {
+                        recorder = SessionRecorder(config, clock.millis())
+                        watch.set(true)
+                        val takeStartTMs = (tap?.state as? AudioTap.State.Running)?.startTMs ?: frame.tMs
+                        recordStartNanos = pitchSource.clock?.nanosAt(takeStartTMs)
+                        if (plan != null && pcm != null) {
+                            playback?.start(pcm, rate)
+                            backingStarted = plan
+                        }
+                        videoHook?.onRecordingStarted(recordStartNanos)
+                    }
                 }
                 val running = recorder
                 if (running != null) {
@@ -352,16 +380,6 @@ class TakePipeline(
             }
             .conflate()
             .flowOn(dispatcher)
-    }
-
-    /** Starts the backing with the take (spec 3.32), at the rate the take is recorded at. Null when there is no backing to play. */
-    private fun startBacking(): BackingPlan? {
-        val plan = backingPlan ?: return null
-        val player = playback ?: return null
-        val rate = pitchSource.audioTap?.sampleRateHz ?: DEFAULT_RATE
-        val pcm = plan.pcm(rate) ?: return null
-        player.start(pcm, rate)
-        return plan
     }
 
     companion object {

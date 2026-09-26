@@ -34,14 +34,22 @@ data class BackingUi(
     val takesUnder: Int = 0,
     /** «Убрать» asked and waits for an answer. */
     val askingRemove: Boolean = false,
+    /**
+     * Its sound could not be made — no room for it, a damaged file (spec 5.25): no take under it can be made until the
+     * screen is opened anew or the backing replaced; the line under the chip says why.
+     */
+    val unprepared: Boolean = false,
 ) {
     val present: Boolean get() = title != null && problem != BackingProblem.Missing
 
     /** The take is to be made under the backing. */
     val wanted: Boolean get() = present && enabled
 
-    /** Under the backing and no headphones: the record button sleeps, a line says why (the speaker is refused, spec 3.32). */
-    val blocksRecording: Boolean get() = wanted && (!route.output.isHeadphones || preparing)
+    /**
+     * Under the backing and no headphones (the speaker is refused, spec 3.32), or its sound not made yet or not to be made
+     * (spec 5.25): the record button sleeps, a line says why.
+     */
+    val blocksRecording: Boolean get() = wanted && (!route.output.isHeadphones || preparing || unprepared)
 }
 
 
@@ -60,6 +68,7 @@ object PieceBackingReducer {
         previewing: Boolean,
         preparing: Boolean,
         askingRemove: Boolean = false,
+        unprepared: Boolean = false,
     ): BackingUi {
         val row = pieceBackings.firstOrNull { it.pieceId == pieceId }
         val backing = row?.let { r -> backings.firstOrNull { it.id == r.backingId } }
@@ -74,6 +83,7 @@ object PieceBackingReducer {
             preparing = preparing,
             takesUnder = backing?.let { b -> takeBackings.count { it.backingId == b.id && it.sessionId in takeIds } } ?: 0,
             askingRemove = askingRemove,
+            unprepared = unprepared,
         )
     }
 }

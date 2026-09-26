@@ -1064,6 +1064,8 @@
     <string name="backing_chip_off">オフ</string>
     <string name="backing_needs_headphones">ヘッドホンを接続してください：スピーカーだと伴奏が録音に入ります。</string>
     <string name="backing_preparing">伴奏を準備しています…</string>
+    <string name="backing_unprepared">伴奏を準備できませんでした：空き容量が足りないか、ファイルが壊れています。</string>
+    <string name="backing_take_unprepared">このテイクの伴奏を準備できませんでした — ヴァイオリンだけが聞こえます。</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">伴奏つき · %1$s</string>

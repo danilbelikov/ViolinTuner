@@ -1064,6 +1064,8 @@
     <string name="backing_chip_off">aus</string>
     <string name="backing_needs_headphones">Bitte Kopfhörer anschließen: über den Lautsprecher gerät die Begleitung in die Aufnahme.</string>
     <string name="backing_preparing">Begleitspur wird vorbereitet…</string>
+    <string name="backing_unprepared">Die Begleitspur ließ sich nicht vorbereiten: zu wenig Speicher oder die Datei ist beschädigt.</string>
+    <string name="backing_take_unprepared">Die Begleitspur dieses Takes ließ sich nicht vorbereiten — zu hören ist nur die Geige.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">mit Begleitung · %1$s</string>

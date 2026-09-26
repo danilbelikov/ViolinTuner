@@ -131,6 +131,14 @@ open class CaptureViewModel(
         }
     }
 
+    // The backing's sound by (backing, rate), main thread only: being made, made once — a change of headphones does not
+    // look again — and not to be made. A failure is not tried again while the screen lives (spec 5.25). Above `init`: its
+    // collector reads them, and a flow that gives its first value at once would run it before a later initializer.
+    private var currentBackingId: Long? = null
+    private val unpacking = mutableSetOf<Pair<Long, Int>>()
+    private val unpacked = mutableSetOf<Pair<Long, Int>>()
+    private val unpackFailed = mutableSetOf<Pair<Long, Int>>()
+
     init {
         takes.videoHook = hook
         viewModelScope.launch { takes.watchPractice() }
@@ -146,10 +154,12 @@ open class CaptureViewModel(
                 val backing = row?.takeIf { it.enabled }?.let { r -> all.firstOrNull { it.id == r.backingId } }
                 backing to route.output.isHeadphones
             }.collect { (backing, headphones) ->
-                backing?.let(::prepare)
+                currentBackingId = backing?.id
+                backing?.let { prepare(it, recordingRate.likelyHz()) }
                 mutableState.update {
                     it.copy(backingTitle = backing?.title, backingDurationMs = backing?.durationMs ?: 0, underBacking = backing != null, noHeadphones = !headphones)
                 }
+                showPreparation()
             }
         }
         viewModelScope.launch { takes.backingPosition.collect { played -> mutableState.update { it.copy(backingPlayedMs = played) } } }
@@ -221,18 +231,30 @@ open class CaptureViewModel(
         }
     }
 
-    /** The backing made ready for the mix at the rate the take will be recorded at, before the button is pressed. */
-    private fun prepare(backing: Backing) {
-        if (prepared == backing.id) return
-        prepared = backing.id
+    /**
+     * The backing made ready for the mix at [rate] — the one the take will be recorded at — before the button is pressed.
+     * [again]: the take found it gone at that rate after all (the system cleared the cache), so it is made anew.
+     */
+    private fun prepare(backing: Backing, rate: Int, again: Boolean = false) {
+        val key = backing.id to rate
+        if (key in unpacking || key in unpackFailed || (key in unpacked && !again)) return
+        unpacking += key
+        showPreparation()
         viewModelScope.launch {
-            mutableState.update { it.copy(preparing = true) }
-            withContext(io) { backingPcm.cached(backing, recordingRate.likelyHz()) ?: backingPcm.prepare(backing, recordingRate.likelyHz()) }
-            mutableState.update { it.copy(preparing = false) }
+            val made = try {
+                withContext(io) { backingPcm.cached(backing, rate) ?: backingPcm.prepare(backing, rate) }
+            } finally {
+                unpacking -= key
+            }
+            if (made == null) unpackFailed += key else unpacked += key
+            showPreparation()
         }
     }
 
-    private var prepared: Long? = null
+    private fun showPreparation() {
+        val id = currentBackingId
+        mutableState.update { it.copy(preparing = unpacking.any { key -> key.first == id }, backingUnprepared = unpackFailed.any { key -> key.first == id }) }
+    }
 
     /** The take under the backing if the chip is on — as on the piece screen (spec 3.32) — or a plain video. */
     private suspend fun start() {
@@ -242,9 +264,11 @@ open class CaptureViewModel(
         takes.backingPlan = backing?.let {
             TakePipeline.BackingPlan(
                 backing = it,
-                pcm = { rate -> backingPcm.cached(it, rate) ?: backingPcm.prepare(it, rate) },
+                ready = { rate -> backingPcm.cached(it, rate) },
                 route = route,
                 latencyMs = BackingOffset.latencyMs(route, backingConfig),
+                // the microphone opened at a rate the sound was not made for: no take, no picture — it is made, and the next press records
+                notReady = { rate -> viewModelScope.launch { prepare(it, rate, again = true) } },
             )
         }
         takes.recordingRequested.value = true

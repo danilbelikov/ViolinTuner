@@ -127,7 +127,10 @@ sealed interface PieceIntent {
     /** Reported by the route on every resume and after the system dialog. */
     data class MicPermissionChanged(val granted: Boolean) : PieceIntent
 
-    /** Back on screen: what was thrown away while the app was away is made ready again. */
+    /**
+     * Back on screen: the backing's sound the system cleared while the app was away is made ready again, and one another
+     * screen made meanwhile is no longer a failure (spec 5.25).
+     */
     data object ScreenResumed : PieceIntent
 
     data class TakeClicked(val sessionId: Long) : PieceIntent

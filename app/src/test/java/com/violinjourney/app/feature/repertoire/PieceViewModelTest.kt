@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.PitchSource
+import com.violinjourney.app.core.audio.recording.AudioTap
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.audio.share.ShareFiles
 import com.violinjourney.app.core.data.repertoire.FakeSheetFiles
@@ -45,10 +46,12 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.onCompletion
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -139,10 +142,16 @@ class PieceViewModelTest {
 
     private val playback = FakePlayback()
     private val pcmRates = mutableListOf<Int>()
+
+    /** True — the backing's sound cannot be made (a full disk, a damaged copy): prepare gives null, as its contract says. */
+    private var pcmFails = false
+    private var prepareCalls = 0
     private val backingPcm = object : com.violinjourney.app.core.audio.backing.BackingPcm {
         override fun cached(backing: com.violinjourney.app.core.domain.backing.Backing, sampleRate: Int): File? =
             File("pcm-$sampleRate").takeIf { sampleRate in pcmRates }
-        override fun prepare(backing: com.violinjourney.app.core.domain.backing.Backing, sampleRate: Int): File {
+        override fun prepare(backing: com.violinjourney.app.core.domain.backing.Backing, sampleRate: Int): File? {
+            prepareCalls++
+            if (pcmFails) return null
             pcmRates += sampleRate
             return File("pcm-$sampleRate")
         }
@@ -157,11 +166,15 @@ class PieceViewModelTest {
     private var importResult: com.violinjourney.app.core.audio.backing.BackingImport =
         com.violinjourney.app.core.audio.backing.BackingImport.Unreadable
 
-    private fun TestScope.screen(pieceId: Long, saved: SavedStateHandle = SavedStateHandle(mapOf(PieceViewModel.ARG_PIECE_ID to pieceId))):
-        Pair<PieceViewModel, MutableList<PieceEffect>> {
-        val pitch = source ?: CountingSource(FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource)).also { source = it }
+    private fun TestScope.screen(
+        pieceId: Long,
+        saved: SavedStateHandle = SavedStateHandle(mapOf(PieceViewModel.ARG_PIECE_ID to pieceId)),
+        pitchSource: PitchSource? = null,
+        audioFiles: SessionAudioFiles = NoAudioFiles,
+    ): Pair<PieceViewModel, MutableList<PieceEffect>> {
+        val pitch = pitchSource ?: source ?: CountingSource(FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource)).also { source = it }
         val takes = TakePipeline(
-            pitch, sessions, NoAudioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
+            pitch, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
             backings = backings, backingPlaybackFactory = { playback },
         )
         val routes = object : com.violinjourney.app.core.audio.backing.AudioRoutes {
@@ -783,5 +796,145 @@ class PieceViewModelTest {
         advance(3_000)
         assertTrue(viewModel.takeState.value.recording)
         assertNull(playback.started)
+    }
+
+    @Test
+    fun `a backing that cannot be unpacked says so, the button sleeps, and neither a return nor a press unpacks it again`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        pcmFails = true
+        val (viewModel, _) = screen(id)
+        advance(100)
+        val block = viewModel.backing.value!!
+        assertTrue(block.unprepared)
+        assertFalse(block.preparing)
+        assertTrue(block.blocksRecording)
+        assertEquals(1, prepareCalls)
+
+        // back on screen: a full disk fails the same way — not tried again while the screen lives (spec 5.25)
+        viewModel.onIntent(PieceIntent.ScreenResumed)
+        advance(100)
+        assertEquals(1, prepareCalls)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        assertFalse(viewModel.takeState.value.recording)
+        assertEquals(1, prepareCalls)
+
+        // the chip off: a plain take, as before
+        viewModel.onIntent(PieceIntent.BackingChipToggled)
+        runCurrent()
+        assertFalse(viewModel.backing.value!!.blocksRecording)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.takeState.value.recording)
+        assertNull(playback.started)
+    }
+
+    @Test
+    fun `a screen whose backing is known at once is built with its backing known`() = runTest {
+        // stores that answer without suspending on a main thread that runs at once: the init collector runs mid-construction
+        Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        val (viewModel, _) = screen(id)
+        advance(100)
+        assertEquals(listOf(48_000), pcmRates)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        assertEquals("the take goes under the backing the screen knows", File("pcm-48000") to 48_000, playback.started)
+    }
+
+    @Test
+    fun `a backing that could not be unpacked here but was made by another screen meanwhile wakes the button on return`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        pcmFails = true
+        val (viewModel, _) = screen(id)
+        advance(100)
+        assertTrue(viewModel.backing.value!!.unprepared)
+
+        // room freed, «Снять под минусовку» made the sound on a screen of its own (spec 5.25)
+        pcmFails = false
+        pcmRates += 48_000
+        viewModel.onIntent(PieceIntent.ScreenResumed)
+        advance(100)
+        val block = viewModel.backing.value!!
+        assertFalse(block.unprepared)
+        assertFalse(block.blocksRecording)
+        assertEquals("found made, not made again", 1, prepareCalls)
+    }
+
+    @Test
+    fun `a backing that could not be unpacked is tried afresh once it is replaced`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        pcmFails = true
+        val (viewModel, _) = screen(id)
+        advance(100)
+        assertTrue(viewModel.backing.value!!.unprepared)
+
+        pcmFails = false
+        importResult = com.violinjourney.app.core.audio.backing.BackingImport.Added(backings.backing(title = "Other piano", fileName = "other.m4a"))
+        viewModel.onIntent(PieceIntent.BackingPicked("content://other.m4a"))
+        advance(100)
+        val block = viewModel.backing.value!!
+        assertEquals("Other piano", block.title)
+        assertFalse(block.unprepared)
+        assertFalse(block.blocksRecording)
+        assertEquals(listOf(48_000), pcmRates)
+    }
+
+    /** A take's sound at [sampleRateHz]: the microphone opened at a rate of its own (spec 5.25). */
+    private class RateTap(override val sampleRateHz: Int) : AudioTap {
+        override var state: AudioTap.State = AudioTap.State.Idle
+
+        override fun start(file: File) {
+            if (state == AudioTap.State.Idle) state = AudioTap.State.Starting
+        }
+
+        fun onFrame(tMs: Long) {
+            if (state == AudioTap.State.Starting) state = AudioTap.State.Running(tMs)
+        }
+
+        override suspend fun stop(): Boolean {
+            val wasRunning = state is AudioTap.State.Running
+            state = AudioTap.State.Idle
+            return wasRunning
+        }
+    }
+
+    private object TakeFiles : SessionAudioFiles {
+        override fun newFile(): File = File("take.m4a")
+        override fun existing(name: String): File? = File(name)
+        override fun delete(name: String) = Unit
+        override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
+    }
+
+    @Test
+    fun `a microphone at a rate the backing is not made for starts no take, the backing is made at that rate and the next press records`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        val tap = RateTap(44_100)
+        val delegate = FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource)
+        val pitch = object : PitchSource {
+            override val requiresMicPermission = false
+            override val audioTap: AudioTap = tap
+            override fun frames(config: IntonationConfig): Flow<PitchFrame> = delegate.frames(config).onEach { tap.onFrame(it.tMs) }
+        }
+        val (viewModel, _) = screen(id, pitchSource = pitch, audioFiles = TakeFiles)
+        advance(100)
+        assertEquals(listOf(48_000), pcmRates)
+
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        assertFalse(viewModel.takeState.value.recording)
+        assertNull("nothing was unpacked on the microphone's thread, nothing played", playback.started)
+        assertEquals(listOf(48_000, 44_100), pcmRates)
+        assertTrue(sessions.saved.isEmpty())
+
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.takeState.value.recording)
+        assertEquals(File("pcm-44100") to 44_100, playback.started)
     }
 }

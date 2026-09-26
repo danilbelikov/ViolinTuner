@@ -87,7 +87,13 @@ data class SoundState(
     val dialog: SoundDialog?,
     /** A take under a backing (spec 3.32): its block «Минусовка», last. Null for anything else. */
     val backing: BackingBlockState? = null,
-)
+) {
+    /**
+     * A take under a backing whose sound could not be prepared — no room for it, a damaged or missing copy (spec 3.32):
+     * the player is ready but plays the violin alone, so the block says so instead of offering sliders that change nothing.
+     */
+    val backingUnavailable: Boolean get() = backing != null && player?.hasBacking == false
+}
 
 /** The block «Минусовка» of a take: how loud and how far shifted the backing is mixed, and what the headphones could learn. */
 data class BackingBlockState(

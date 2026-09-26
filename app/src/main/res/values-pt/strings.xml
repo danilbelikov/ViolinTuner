@@ -1064,6 +1064,8 @@
     <string name="backing_chip_off">desligado</string>
     <string name="backing_needs_headphones">Conecte fones: pelo alto-falante o playback entraria na gravação.</string>
     <string name="backing_preparing">Preparando o playback…</string>
+    <string name="backing_unprepared">Não foi possível preparar o playback: falta espaço ou o arquivo está danificado.</string>
+    <string name="backing_take_unprepared">Não foi possível preparar o playback deste take — só se ouve o violino.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">com playback · %1$s</string>

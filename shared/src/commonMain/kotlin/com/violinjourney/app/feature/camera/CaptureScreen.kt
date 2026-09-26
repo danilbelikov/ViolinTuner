@@ -36,6 +36,7 @@ import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.backing_block_title
 import com.violinjourney.app.shared.resources.backing_needs_headphones
 import com.violinjourney.app.shared.resources.backing_preparing
+import com.violinjourney.app.shared.resources.backing_unprepared
 import com.violinjourney.app.shared.resources.capture_camera_failed
 import com.violinjourney.app.shared.resources.capture_close
 import com.violinjourney.app.shared.resources.capture_grant
@@ -159,6 +160,7 @@ private fun Controls(state: CaptureState, onIntent: (CaptureIntent) -> Unit, com
     val hint = when {
         state.underBacking && state.noHeadphones && !state.recording -> stringResource(Res.string.backing_needs_headphones)
         state.underBacking && state.preparing && !state.recording -> stringResource(Res.string.backing_preparing)
+        state.underBacking && state.backingUnprepared && !state.recording -> stringResource(Res.string.backing_unprepared)
         state.micUnavailable -> stringResource(Res.string.live_mic_unavailable)
         spaceMinutes != null && !state.recording -> stringResource(Res.string.capture_low_space, spaceMinutes)
         else -> null

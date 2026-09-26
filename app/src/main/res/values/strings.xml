@@ -1064,6 +1064,8 @@
     <string name="backing_chip_off">off</string>
     <string name="backing_needs_headphones">Connect headphones: through the speaker the backing would get into the recording.</string>
     <string name="backing_preparing">Preparing the backing…</string>
+    <string name="backing_unprepared">The backing could not be prepared: not enough space, or the file is damaged.</string>
+    <string name="backing_take_unprepared">The backing of this take could not be prepared — only the violin is heard.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">with backing · %1$s</string>

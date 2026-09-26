@@ -1064,6 +1064,8 @@
     <string name="backing_chip_off">꺼짐</string>
     <string name="backing_needs_headphones">헤드폰을 연결하세요: 스피커로 틀면 반주가 녹음에 들어가요.</string>
     <string name="backing_preparing">반주 준비 중…</string>
+    <string name="backing_unprepared">반주를 준비하지 못했어요: 공간이 부족하거나 파일이 손상됐어요.</string>
+    <string name="backing_take_unprepared">이 테이크의 반주를 준비하지 못했어요 — 바이올린만 들려요.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">반주와 함께 · %1$s</string>

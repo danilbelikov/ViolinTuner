@@ -40,6 +40,7 @@ import com.violinjourney.app.shared.resources.backing_offset
 import com.violinjourney.app.shared.resources.backing_offset_hint
 import com.violinjourney.app.shared.resources.backing_offset_recorded
 import com.violinjourney.app.shared.resources.backing_preparing
+import com.violinjourney.app.shared.resources.backing_take_unprepared
 import org.jetbrains.compose.resources.stringResource
 
 private val SwitchHeight = 36.dp
@@ -153,6 +154,26 @@ fun BackingBlock(state: BackingBlockState, config: BackingConfig, onIntent: (Sou
                 )
             }
         }
+    }
+}
+
+/**
+ * The block «Минусовка» of a take whose backing could not be prepared (spec 3.32): only the violin is heard, so there is a
+ * line that says so where the level and the shift would be — sliders there would move and change nothing.
+ */
+@Composable
+fun BackingUnavailableBlock() {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(CardCorner))
+            .background(colors.surfaceContainer)
+            .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(stringResource(Res.string.backing_block_title), color = colors.onSurface, style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
+        Text(stringResource(Res.string.backing_take_unprepared), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
     }
 }
 

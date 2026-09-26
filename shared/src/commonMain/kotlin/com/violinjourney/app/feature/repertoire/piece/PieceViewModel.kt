@@ -159,16 +159,30 @@ open class PieceViewModel(
     // collected only in between: a piece's screen has no business holding the microphone.
     private val listening = MutableStateFlow(false)
 
-    /** What only the screen knows of the backing: a file on its way in, one that did not open, its sound being prepared. */
+    /**
+     * What only the screen knows of the backing: a file on its way in, one that did not open, its sound being prepared or
+     * one that could not be made.
+     */
     private data class BackingEphemeral(
         val importing: Boolean = false,
         val problem: BackingProblem? = null,
         val preparing: Boolean = false,
         val askingRemove: Boolean = false,
+        val unprepared: Boolean = false,
     )
 
     private val backingConfig = BackingConfig()
     private val backingEphemeral = MutableStateFlow(BackingEphemeral())
+
+    // Above `init`: its collector reads them, and a flow that gives its first value at once would run it before a
+    // later initializer (Kotlin initializes in the order of the text).
+    private var knownBacking: Backing? = null
+
+    // The unpacks of the backing's sound under way and those that came to nothing, by (backing, rate); main thread only.
+    // A failure is not tried again while the screen lives (spec 5.25): a full disk would fail the same way on every return.
+    private val unpacking = mutableSetOf<Pair<Long, Int>>()
+    private val unpackFailed = mutableSetOf<Pair<Long, Int>>()
+
     private val route = routes?.changes ?: flowOf(AudioRoute(BackingOutput.SPEAKER, null))
     private val previewing = backingPreview?.playing ?: flowOf(false)
 
@@ -186,7 +200,7 @@ open class PieceViewModel(
             route = currentRoute,
             fileExists = { backingFiles?.existing(it.fileName) != null },
             importing = ephemeral.importing, problem = ephemeral.problem, previewing = playing, preparing = ephemeral.preparing,
-            askingRemove = ephemeral.askingRemove,
+            askingRemove = ephemeral.askingRemove, unprepared = ephemeral.unprepared,
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
@@ -244,7 +258,10 @@ open class PieceViewModel(
         viewModelScope.launch {
             combine(backings.pieceBackings, backings.backings) { rows, all ->
                 rows.firstOrNull { it.pieceId == pieceId }?.let { row -> all.firstOrNull { it.id == row.backingId } }
-            }.distinctUntilChanged().collect { found -> if (found != null) prepare(found) }
+            }.distinctUntilChanged().collect { found ->
+                knownBacking = found
+                if (found != null) prepare(found) else showPreparation()
+            }
         }
         // A video take lands in the list the way a recorded one does: on top, highlighted, the session screen shut.
         viewModelScope.launch { importer.saved.collect { if (it.pieceId == pieceId) highlight(it.sessionId) } }
@@ -304,8 +321,7 @@ open class PieceViewModel(
             }
             PieceIntent.GrantMicClicked -> effectChannel.trySend(PieceEffect.RequestMicPermission)
             is PieceIntent.MicPermissionChanged -> if (takes.requiresMicPermission) micPermission.value = intent.granted
-            // the prepared backing goes when the app goes away (spec 5.25): back on screen, it is made ready again
-            PieceIntent.ScreenResumed -> knownBacking?.let { found -> if (backingPcm?.cached(found, recordingRate.likelyHz()) == null) prepare(found) }
+            PieceIntent.ScreenResumed -> knownBacking?.let(::recheck)
             is PieceIntent.TakeClicked ->
                 if (ui.value.selection.active) select(SelectionIntent.CardToggled(intent.sessionId)) else effectChannel.trySend(PieceEffect.OpenSession(intent.sessionId))
             is PieceIntent.Select -> select(intent.intent)
@@ -361,7 +377,7 @@ open class PieceViewModel(
             if (block.blocksRecording) return
             val found = backingOf() ?: return
             val pcm = backingPcm ?: return
-            // thrown away while the app was away (spec 5.25): made again first — the button sleeps meanwhile,
+            // cleared by the system since (spec 5.25): made again first — the button sleeps meanwhile,
             // rather than the take decoding on the thread that reads the microphone
             if (pcm.cached(found, recordingRate.likelyHz()) == null) {
                 prepare(found)
@@ -370,9 +386,11 @@ open class PieceViewModel(
             backingPreview?.stop()
             takes.backingPlan = TakePipeline.BackingPlan(
                 backing = found,
-                pcm = { rate -> pcm.cached(found, rate) ?: pcm.prepare(found, rate) },
+                ready = { rate -> pcm.cached(found, rate) },
                 route = block.route,
                 latencyMs = BackingOffset.latencyMs(block.route, backingConfig),
+                // the microphone opened at a rate the sound was not made for: the take did not begin, the screen makes it
+                notReady = { rate -> viewModelScope.launch { prepare(found, rate) } },
             )
         } else {
             takes.backingPlan = null
@@ -382,18 +400,41 @@ open class PieceViewModel(
     }
 
 
-    private var knownBacking: Backing? = null
-
     private fun backingOf(): Backing? = knownBacking
 
-    private fun prepare(found: Backing) {
-        knownBacking = found
+    /** The backing's sound made ready for the mix at [rate] (spec 5.25), off the main thread; the button waits meanwhile. */
+    private fun prepare(found: Backing, rate: Int = recordingRate.likelyHz()) {
         val pcm = backingPcm ?: return
+        val key = found.id to rate
+        if (key in unpacking || key in unpackFailed) return
+        unpacking += key
+        showPreparation()
         viewModelScope.launch {
-            backingEphemeral.update { it.copy(preparing = true) }
-            withContext(io) { recordingRate.likelyHz().let { rate -> pcm.cached(found, rate) ?: pcm.prepare(found, rate) } }
-            backingEphemeral.update { it.copy(preparing = false) }
+            val made = try {
+                withContext(io) { pcm.cached(found, rate) ?: pcm.prepare(found, rate) }
+            } finally {
+                unpacking -= key
+            }
+            if (made == null) unpackFailed += key
+            showPreparation()
         }
+    }
+
+    /**
+     * Back on screen (spec 5.25). The system may have cleared the cache while the app was away: made again. A sound that could
+     * not be made here may have been made meanwhile by another screen — the own camera, a take's player: it is no longer a
+     * failure. A failure is not tried again by itself — only when the screen is opened anew or the backing replaced.
+     */
+    private fun recheck(found: Backing) {
+        val pcm = backingPcm ?: return
+        if (unpackFailed.removeAll { (id, rate) -> id == found.id && pcm.cached(found, rate) != null }) showPreparation()
+        if (pcm.cached(found, recordingRate.likelyHz()) == null) prepare(found)
+    }
+
+    /** «Готовим минусовку…» and «не удалось подготовить» of the piece's backing as it is now — not of one replaced meanwhile. */
+    private fun showPreparation() {
+        val id = knownBacking?.id
+        backingEphemeral.update { it.copy(preparing = unpacking.any { key -> key.first == id }, unprepared = unpackFailed.any { key -> key.first == id }) }
     }
 
     private fun importBacking(uri: String) {
@@ -426,6 +467,7 @@ open class PieceViewModel(
         backingEphemeral.update { it.copy(askingRemove = false) }
         backingPreview?.stop()
         knownBacking = null
+        showPreparation()
         viewModelScope.launch { backings.setForPiece(pieceId, null) }
     }
 

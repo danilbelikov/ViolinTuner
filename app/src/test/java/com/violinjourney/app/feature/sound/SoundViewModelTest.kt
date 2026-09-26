@@ -379,4 +379,29 @@ class SoundViewModelTest {
         viewModel.onIntent(SoundIntent.BackingOffsetRecorded)
         assertEquals(203, viewModel.state.value.backing?.offsetMs)
     }
+
+    @Test
+    fun `a take whose backing could not be prepared has a word instead of the sliders`() = runTest {
+        val under = recording("under.m4a")
+        underBacking(under)
+        val (viewModel, _) = screen(under)
+        player.state.value = com.violinjourney.app.core.audio.playback.PlayerState(ready = true, durationMs = 1_000, hasBacking = false)
+        runCurrent()
+        assertTrue(viewModel.state.value.backingUnavailable)
+
+        player.state.value = com.violinjourney.app.core.audio.playback.PlayerState(ready = true, durationMs = 1_000, hasBacking = true)
+        runCurrent()
+        assertFalse(viewModel.state.value.backingUnavailable)
+
+        // not while it is still being made: that is «Готовим минусовку…»
+        player.state.value = com.violinjourney.app.core.audio.playback.PlayerState(preparingBacking = true)
+        runCurrent()
+        assertFalse(viewModel.state.value.backingUnavailable)
+
+        val plain = recording("plain.m4a")
+        val (other, _) = screen(plain)
+        player.state.value = com.violinjourney.app.core.audio.playback.PlayerState(ready = true, durationMs = 1_000)
+        runCurrent()
+        assertFalse(other.state.value.backingUnavailable)
+    }
 }

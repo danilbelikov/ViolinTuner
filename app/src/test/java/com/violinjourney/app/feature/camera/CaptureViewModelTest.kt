@@ -9,6 +9,7 @@ import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.PitchSource
 import com.violinjourney.app.core.audio.backing.AudioRoutes
+import com.violinjourney.app.core.audio.backing.BackingPlayback
 import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.recording.AudioTap
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
@@ -36,11 +37,13 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
@@ -52,6 +55,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -182,8 +186,45 @@ class CaptureViewModelTest {
         override val changes: Flow<AudioRoute> = flowOf(current())
     }
 
+    /** The take's backing as it plays in the headphones: what it was started with. */
+    private class FakePlayback : BackingPlayback {
+        override val position = MutableStateFlow<Long?>(null)
+        override val startNanos: Long? = null
+        var started: Pair<File, Int>? = null
+
+        override fun start(pcm: File, sampleRate: Int) {
+            started = pcm to sampleRate
+        }
+
+        override fun stop(): Long = 0
+    }
+
+    /** The backing's sound: made at [made] rates, and when [fails] it cannot be made at all (a full disk). */
+    private class FakeBackingPcm(var fails: Boolean = false) : BackingPcm {
+        val made = mutableListOf<Int>()
+        var prepareCalls = 0
+
+        override fun cached(backing: Backing, sampleRate: Int): File? = File("pcm-$sampleRate").takeIf { sampleRate in made }
+
+        override fun prepare(backing: Backing, sampleRate: Int): File? {
+            prepareCalls++
+            if (fails) return null
+            made += sampleRate
+            return File("pcm-$sampleRate")
+        }
+
+        override fun deleteOrphans(keptFiles: Set<String>) = Unit
+    }
+
+    private val playback = FakePlayback()
+
     /** The screen's view model in a store of its own, so that it can be cleared the way the screen going clears it. */
-    private fun TestScope.screen(scenario: FakeScenario = FakeScenario.IN_TUNE): Pair<CaptureViewModel, ViewModelStore> {
+    private fun TestScope.screen(
+        scenario: FakeScenario = FakeScenario.IN_TUNE,
+        backings: FakeBackingRepository = FakeBackingRepository(),
+        backingPcm: BackingPcm = noBackingPcm,
+        likelyHz: Int = TakePipeline.DEFAULT_RATE,
+    ): Pair<CaptureViewModel, ViewModelStore> {
         val tap = FakeAudioTap()
         val delegate = FakePitchSource(scenario, timeSource = testTimeSource)
         val source = object : PitchSource {
@@ -195,14 +236,15 @@ class CaptureViewModelTest {
         val clock = FixedWallClock(Instant.parse("2026-09-26T09:00:00Z"), TimeZone.UTC)
         val takes = TakePipeline(
             source, sessions, FakeAudioFiles(directory), FakeRunningPracticeStore(), PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
+            backings = backings, backingPlaybackFactory = { playback },
         )
         val store = ViewModelStore()
         val factory = viewModelFactory {
             initializer {
                 CaptureViewModel(
                     SavedStateHandle(mapOf(CaptureViewModel.ARG_PIECE_ID to PIECE_ID)), takes, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()),
-                    FakeRepertoireRepository(), FakeBackingRepository(), noBackingPcm, headphones, videos, BackingConfig(), { camera },
-                    { TakePipeline.DEFAULT_RATE }, muxer, StandardTestDispatcher(testScheduler),
+                    FakeRepertoireRepository(), backings, backingPcm, headphones, videos, BackingConfig(), { camera },
+                    { likelyHz }, muxer, StandardTestDispatcher(testScheduler),
                 )
             }
         }
@@ -336,6 +378,62 @@ class CaptureViewModelTest {
         viewModel.onIntent(CaptureIntent.CloseClicked)
         runCurrent()
         assertEquals(listOf(CaptureEffect.Close), effects)
+    }
+
+    private suspend fun withBacking(): FakeBackingRepository = FakeBackingRepository().also { backings ->
+        backings.setForPiece(PIECE_ID, backings.add(backings.backing()))
+    }
+
+    @Test
+    fun `a screen whose backing is known at once makes its sound ready`() = runTest {
+        // stores that answer without suspending on a main thread that runs at once: the init collector runs mid-construction
+        Dispatchers.setMain(UnconfinedTestDispatcher(testScheduler))
+        val pcm = FakeBackingPcm()
+        val (viewModel, _) = screen(backings = withBacking(), backingPcm = pcm)
+        advance(100)
+        assertEquals(listOf(TakePipeline.DEFAULT_RATE), pcm.made)
+        assertTrue(viewModel.state.value.underBacking)
+        assertFalse(viewModel.state.value.preparing)
+    }
+
+    @Test
+    fun `a backing that cannot be unpacked keeps the button asleep and says so, and is not tried again on the same screen`() = runTest {
+        val pcm = FakeBackingPcm(fails = true)
+        val (viewModel, _) = screen(backings = withBacking(), backingPcm = pcm)
+        advance(100)
+        val state = viewModel.state.value
+        assertTrue(state.underBacking)
+        assertTrue(state.backingUnprepared)
+        assertFalse(state.canRecord)
+
+        viewModel.onIntent(CaptureIntent.RecordClicked)
+        advance(1_000)
+        assertFalse(viewModel.state.value.recording)
+        assertEquals(1, pcm.prepareCalls)
+        assertEquals(0, camera.started)
+    }
+
+    @Test
+    fun `a microphone at a rate the backing is not made for starts no picture, the backing is made at it and the next press records`() = runTest {
+        // made ahead at 44 100, while the fake tap records at the usual rate
+        val pcm = FakeBackingPcm()
+        val (viewModel, _) = screen(backings = withBacking(), backingPcm = pcm, likelyHz = 44_100)
+        advance(100)
+        assertEquals(listOf(44_100), pcm.made)
+        assertTrue(viewModel.state.value.canRecord)
+
+        viewModel.onIntent(CaptureIntent.RecordClicked)
+        advance(1_000)
+        assertFalse(viewModel.state.value.recording)
+        assertEquals(0, camera.started)
+        assertNull(playback.started)
+        assertEquals(listOf(44_100, TakePipeline.DEFAULT_RATE), pcm.made)
+
+        viewModel.onIntent(CaptureIntent.RecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.state.value.recording)
+        assertEquals(1, camera.started)
+        assertEquals(File("pcm-${TakePipeline.DEFAULT_RATE}") to TakePipeline.DEFAULT_RATE, playback.started)
     }
 
     private companion object {

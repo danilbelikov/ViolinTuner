@@ -1064,6 +1064,8 @@
     <string name="backing_chip_off">désactivé</string>
     <string name="backing_needs_headphones">Branchez un casque : par le haut-parleur, l\'accompagnement passerait dans l\'enregistrement.</string>
     <string name="backing_preparing">Préparation de l\'accompagnement…</string>
+    <string name="backing_unprepared">Impossible de préparer l\'accompagnement : pas assez d\'espace, ou le fichier est endommagé.</string>
+    <string name="backing_take_unprepared">Impossible de préparer l\'accompagnement de cette prise — seul le violon s\'entend.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">avec accomp. · %1$s</string>

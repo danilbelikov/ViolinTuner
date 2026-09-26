@@ -1064,6 +1064,8 @@
     <string name="backing_chip_off">disattivo</string>
     <string name="backing_needs_headphones">Collega le cuffie: dall\'altoparlante la base finirebbe nella registrazione.</string>
     <string name="backing_preparing">Preparazione della base…</string>
+    <string name="backing_unprepared">Impossibile preparare la base: spazio insufficiente o file danneggiato.</string>
+    <string name="backing_take_unprepared">Impossibile preparare la base di questo take — si sente solo il violino.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">con la base · %1$s</string>

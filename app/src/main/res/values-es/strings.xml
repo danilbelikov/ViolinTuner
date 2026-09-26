@@ -1064,6 +1064,8 @@
     <string name="backing_chip_off">desactivado</string>
     <string name="backing_needs_headphones">Conecta auriculares: por el altavoz el acompañamiento entraría en la grabación.</string>
     <string name="backing_preparing">Preparando el acompañamiento…</string>
+    <string name="backing_unprepared">No se pudo preparar el acompañamiento: falta espacio o el archivo está dañado.</string>
+    <string name="backing_take_unprepared">No se pudo preparar el acompañamiento de esta toma — solo se oye el violín.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">con acompañamiento · %1$s</string>

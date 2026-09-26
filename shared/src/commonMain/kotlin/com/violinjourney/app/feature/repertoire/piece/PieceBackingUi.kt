@@ -63,6 +63,7 @@ import com.violinjourney.app.shared.resources.backing_remove_title
 import com.violinjourney.app.shared.resources.backing_replace
 import com.violinjourney.app.shared.resources.backing_too_long
 import com.violinjourney.app.shared.resources.backing_understood
+import com.violinjourney.app.shared.resources.backing_unprepared
 import com.violinjourney.app.shared.resources.backing_unreadable
 import com.violinjourney.app.shared.resources.dialog_cancel
 import org.jetbrains.compose.resources.stringResource
@@ -206,8 +207,8 @@ private fun ProblemLine(problem: BackingProblem, onIntent: (PieceIntent) -> Unit
 }
 
 /**
- * «С минусовкой» over the record button while the piece has a backing, and — with it on and no headphones — why the
- * button sleeps (spec 3.32).
+ * «С минусовкой» over the record button while the piece has a backing, and — with it on and no headphones, or with its
+ * sound being made or not to be made — why the button sleeps (spec 3.32, 5.25).
  */
 @Composable
 fun BackingChipRow(backing: BackingUi, recording: Boolean, onIntent: (PieceIntent) -> Unit, modifier: Modifier = Modifier) {
@@ -240,6 +241,12 @@ fun BackingChipRow(backing: BackingUi, recording: Boolean, onIntent: (PieceInten
                 stringResource(Res.string.backing_preparing),
                 color = colors.onSurfaceVariant,
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+            )
+            // its sound could not be made (spec 5.25): the button sleeps, and this is why
+            backing.wanted && backing.unprepared -> Text(
+                stringResource(Res.string.backing_unprepared),
+                color = colors.onSurface,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
             )
         }
     }

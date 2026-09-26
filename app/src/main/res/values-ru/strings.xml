@@ -1064,6 +1064,8 @@
     <string name="backing_chip_off">выключено</string>
     <string name="backing_needs_headphones">Подключите наушники: минусовка через динамик попадёт в запись.</string>
     <string name="backing_preparing">Готовим минусовку…</string>
+    <string name="backing_unprepared">Минусовку не удалось подготовить: не хватает места или файл повреждён.</string>
+    <string name="backing_take_unprepared">Минусовку этого дубля не удалось подготовить — слышна только скрипка.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">под минусовку · %1$s</string>

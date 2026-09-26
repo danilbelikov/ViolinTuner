@@ -1064,6 +1064,8 @@
     <string name="backing_chip_off">已关闭</string>
     <string name="backing_needs_headphones">请连接耳机：用扬声器播放，伴奏会录进去。</string>
     <string name="backing_preparing">正在准备伴奏…</string>
+    <string name="backing_unprepared">无法准备伴奏：空间不足或文件已损坏。</string>
+    <string name="backing_take_unprepared">无法准备这段录制的伴奏——只能听到小提琴。</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
     <string name="backing_take_meta">带伴奏 · %1$s</string>
