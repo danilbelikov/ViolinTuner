@@ -187,9 +187,10 @@ open class PracticeViewModel(
 
     private fun stop(running: RunningPractice? = latestRunning) {
         running ?: return
+        if (answering?.isActive == true) return // the practice is being ended already
         val elapsed = running.elapsedMs(clock.millis()).coerceAtMost(config.maxPracticeMs)
         if (elapsed < config.minPracticeMs) {
-            viewModelScope.launch {
+            answer {
                 // too short to keep: its notes and blocks go with it
                 finisher.discard()
                 effectChannel.send(PracticeEffect.ShowTooShort)
@@ -206,6 +207,18 @@ open class PracticeViewModel(
     private var latestProfile: Profile = Profile.EMPTY
     private var latestBlocks: PracticeBlocks? = null
     private var latestTitles: Map<Long, String> = emptyMap()
+
+    /**
+     * «Сохранить», «Не сохранять» or a stop too short to keep, still being written: a second tap that lands before the
+     * sheet has changed is dropped — else a double tap would store the practice twice, or throw away the recap the first
+     * tap has just opened. The finisher takes answers one at a time as well; this only keeps the sheet from answering twice.
+     */
+    private var answering: Job? = null
+
+    private fun answer(block: suspend () -> Unit) {
+        if (answering?.isActive == true) return
+        answering = viewModelScope.launch { block() }
+    }
 
     init {
         viewModelScope.launch { profiles.profile.collect { latestProfile = it } }
@@ -242,7 +255,7 @@ open class PracticeViewModel(
 
     private fun saveSummary() {
         val sheet = ui.value.sheet as? PracticeSheet.Summary ?: return
-        viewModelScope.launch {
+        answer {
             val earning = finisher.save(sheet.startedAtEpochMs, PracticeReducer.durationToSave(sheet))
             // «Занятие сохранено» takes the summary's place (spec 3.31); without an earning the sheet just goes
             if (earning == null) ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it } else openRecap(earning)
@@ -289,10 +302,12 @@ open class PracticeViewModel(
         }
     }
 
+    /** «Не сохранять» answers the summary alone: a late tap must not close the recap or another sheet. */
     private fun discardSummary() {
-        viewModelScope.launch {
+        if (ui.value.sheet !is PracticeSheet.Summary) return
+        answer {
             finisher.discard()
-            ui.update { it.copy(sheet = null) }
+            ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it }
         }
     }
 

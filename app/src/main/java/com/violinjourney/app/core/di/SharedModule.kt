@@ -65,7 +65,9 @@ object SharedModule {
     @Singleton
     fun provideHistorySectionAsk() = HistorySectionAsk()
 
+    /** One per app: its lock takes the answers to a practice — a double tap, the sheet and the prompt — one at a time (spec 5.6). */
     @Provides
+    @Singleton
     fun providePracticeFinisher(
         repository: PracticeRepository,
         store: RunningPracticeStore,

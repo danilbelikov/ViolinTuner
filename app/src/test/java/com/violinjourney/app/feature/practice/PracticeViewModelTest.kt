@@ -71,7 +71,10 @@ class PracticeViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun TestScope.viewModel(finishAsk: FinishPracticeAsk = FinishPracticeAsk()): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
+    private fun TestScope.viewModel(
+        finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
+        repository: FakePracticeRepository = this@PracticeViewModelTest.repository,
+    ): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
         val viewModel = PracticeViewModel(
             repository, store, PracticeFinisher(repository, store, clock, journey = journey), sessions, config, FakeRepertoireRepository(), clock,
             trophies, profiles, avatarFiles, ProgressConfig(), journey, finishAsk = finishAsk,
@@ -212,6 +215,68 @@ class PracticeViewModelTest {
         assertNull(store.running.value)
         assertNull(viewModel.state.value.sheet)
         assertTrue(repository.entries.value.isEmpty())
+    }
+
+    @Test
+    fun `two quick taps on «Сохранить» store the practice and its takts once`() = runTest {
+        // a row takes a moment to write, as in the database: the second tap lands while the first one writes
+        val slow = FakePracticeRepository(addDelayMs = 1)
+        val (viewModel, _) = viewModel(repository = slow)
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        pass(10 * MS_PER_MINUTE)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        viewModel.onIntent(PracticeIntent.SummarySaved)
+        viewModel.onIntent(PracticeIntent.SummarySaved)
+        pass(1_000)
+
+        assertEquals(1, slow.entries.value.size)
+        assertEquals(1, journey.earnings.size)
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.Recap)
+    }
+
+    @Test
+    fun `«Не сохранять» right after «Сохранить» keeps the recap`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        pass(10 * MS_PER_MINUTE)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        viewModel.onIntent(PracticeIntent.SummarySaved)
+        viewModel.onIntent(PracticeIntent.SummaryDiscarded)
+        runCurrent()
+
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.Recap)
+        assertEquals(1, repository.entries.value.size)
+        assertNull(store.running.value)
+    }
+
+    @Test
+    fun `a late «Не сохранять» leaves the recap alone`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        pass(10 * MS_PER_MINUTE)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        viewModel.onIntent(PracticeIntent.SummarySaved)
+        runCurrent()
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.Recap)
+
+        // whatever order the taps are run in, «Не сохранять» answers the summary alone
+        viewModel.onIntent(PracticeIntent.SummaryDiscarded)
+        runCurrent()
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.Recap)
+        assertEquals(1, repository.entries.value.size)
+    }
+
+    @Test
+    fun `a double tap on «Закончить» of a practice too short to keep says so once`() = runTest {
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        pass(30_000)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        runCurrent()
+
+        assertNull(store.running.value)
+        assertEquals(1, effects.count { it == PracticeEffect.ShowTooShort })
     }
 
     @Test

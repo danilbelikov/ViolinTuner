@@ -30,6 +30,7 @@ import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -77,8 +78,8 @@ class AppStartViewModelTest {
         }
     }
 
-    private fun viewModel() = AppStartViewModel(
-        FakeSettingsRepository(), FakeSessionRepository(), store, PracticeFinisher(repository, store, clock), config, clock,
+    private fun viewModel(finisher: PracticeFinisher = PracticeFinisher(repository, store, clock)) = AppStartViewModel(
+        FakeSettingsRepository(), FakeSessionRepository(), store, finisher, config, clock,
         repository, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), profile, avatarFiles, repertoire, FakeSessionWaveforms(), shareFiles,
         blocks, backingPcm = backingPcm, io = kotlinx.coroutines.Dispatchers.Main,
     )
@@ -230,6 +231,25 @@ class AppStartViewModelTest {
         viewModel.onAppOpened()
         runCurrent()
         assertTrue(viewModel.practicePrompt.value is PracticePrompt.Summary)
+    }
+
+    @Test
+    fun `two quick answers to the forgotten practice store it once`() = runTest {
+        running(elapsedMs = 2 * MS_PER_HOUR, lastSoundAgoMs = 90 * MS_PER_MINUTE)
+        // a row takes a moment to write, as in the database: the second tap lands while the first one writes
+        val slow = FakePracticeRepository(addDelayMs = 1)
+        val viewModel = viewModel(PracticeFinisher(slow, store, clock))
+        viewModel.onAppOpened()
+        runCurrent()
+
+        viewModel.onPromptIntent(PracticePromptIntent.EndNow)
+        viewModel.onPromptIntent(PracticePromptIntent.EndNow)
+        advanceTimeBy(10)
+        runCurrent()
+
+        assertEquals(1, slow.entries.value.size)
+        assertNull(store.running.value)
+        assertNull(viewModel.practicePrompt.value)
     }
 
     @Test

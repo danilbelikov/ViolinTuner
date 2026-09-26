@@ -16,6 +16,7 @@ import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.core.time.WallClock
 import kotlin.math.roundToInt
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -62,6 +63,10 @@ open class LiveViewModel(
 
     // The wish to record lives in the chain, which follows it frame by frame.
     private val recordingRequested get() = takes.recordingRequested
+
+    // A tap on the practice tag still being answered: a second tap before the store has taken the first is dropped —
+    // else a double tap on «Начать занятие» would start the practice and at once ask to finish it.
+    private var tagAnswer: Job? = null
 
     private val effectChannel = Channel<LiveEffect>(Channel.BUFFERED)
     val effects: Flow<LiveEffect> = effectChannel.receiveAsFlow()
@@ -129,7 +134,7 @@ open class LiveViewModel(
             LiveIntent.GrantMicClicked -> effectChannel.trySend(LiveEffect.RequestMicPermission)
             is LiveIntent.MicPermissionChanged ->
                 if (takes.requiresMicPermission) micPermissionGranted.value = intent.granted
-            LiveIntent.PracticeTagClicked -> viewModelScope.launch {
+            LiveIntent.PracticeTagClicked -> if (tagAnswer?.isActive != true) tagAnswer = viewModelScope.launch {
                 // the store, not the state on screen: a tap in the second the practice starts or ends must not do both
                 if (runningPractice.running.first() == null) {
                     // the same start as on «Занятия» (spec 3.12), but Live stays: here one is already where one plays

@@ -146,6 +146,8 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val venues = Venues(venueStore, journey)
     val finishAsk = FinishPracticeAsk()
     val sectionAsk = HistorySectionAsk()
+
+    /** One per app, as on Android: its lock takes the answers to a practice one at a time (spec 5.6). */
     val finisher = PracticeFinisher(
         practice, runningPractice, clock, practiceNotes, journey, journeyConfig, blockStore, blockHistory, practiceConfig, analytics,
     )

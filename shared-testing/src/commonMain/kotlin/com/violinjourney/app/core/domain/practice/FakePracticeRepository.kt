@@ -1,15 +1,20 @@
 package com.violinjourney.app.core.domain.practice
 
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.datetime.LocalDate
 
-/** In-memory repository for view model tests; ids count up from 1. */
-class FakePracticeRepository : PracticeRepository {
+/**
+ * In-memory repository for view model tests; ids count up from 1. [addDelayMs] makes a row take time to write, as a
+ * database does: two answers to one practice can then meet halfway.
+ */
+class FakePracticeRepository(private val addDelayMs: Long = 0) : PracticeRepository {
     override val entries = MutableStateFlow<List<PracticeEntry>>(emptyList())
     val replacedDays = mutableListOf<Triple<LocalDate, Long, Long>>()
 
     override suspend fun add(entry: PracticeEntry): Long {
+        if (addDelayMs > 0) delay(addDelayMs)
         val id = (entries.value.maxOfOrNull { it.id } ?: 0L) + 1
         entries.update { (it + entry.copy(id = id)).sortedWith(compareBy({ it.date }, { it.startedAtEpochMs })) }
         return id

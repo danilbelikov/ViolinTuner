@@ -31,6 +31,7 @@ import com.violinjourney.app.feature.practice.PracticeReducer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -102,6 +103,18 @@ open class AppStartViewModel(
     val practicePrompt: StateFlow<PracticePrompt?> = prompt.asStateFlow()
 
     /**
+     * An answer to the prompt that ends the practice, still being written: a second one before the prompt has gone
+     * («Закончить сейчас» tapped twice, «Сохранить» and then «Не сохранять») is dropped. The finisher takes answers
+     * one at a time as well; this only keeps the prompt from answering twice.
+     */
+    private var answering: Job? = null
+
+    private fun answer(block: suspend () -> Unit) {
+        if (answering?.isActive == true) return
+        answering = viewModelScope.launch { block() }
+    }
+
+    /**
      * Every time the app comes to the front. A prompt already on screen stays as it is: a
      * rotation must not turn the summary sheet back into the dialog it came from.
      */
@@ -159,13 +172,13 @@ open class AppStartViewModel(
                 (current as? PracticePrompt.Summary)?.let { PracticePrompt.Summary(PracticeReducer.step(it.sheet, intent.steps, config)) }
                     ?: current
             }
-            PracticePromptIntent.SummarySaved -> viewModelScope.launch {
-                val sheet = (prompt.value as? PracticePrompt.Summary)?.sheet ?: return@launch
+            PracticePromptIntent.SummarySaved -> answer {
+                val sheet = (prompt.value as? PracticePrompt.Summary)?.sheet ?: return@answer
                 finisher.save(sheet.startedAtEpochMs, PracticeReducer.durationToSave(sheet))
                 prompt.value = null
             }
             PracticePromptIntent.SummaryHidden -> prompt.update { if (it is PracticePrompt.Summary) null else it }
-            PracticePromptIntent.SummaryDiscarded -> viewModelScope.launch {
+            PracticePromptIntent.SummaryDiscarded -> answer {
                 finisher.discard()
                 prompt.value = null
             }
@@ -182,7 +195,7 @@ open class AppStartViewModel(
     )
 
     private fun endForgotten(endEpochMs: Long) {
-        viewModelScope.launch {
+        answer {
             val running = runningPractice.running.first()
             if (running != null) {
                 val duration = (endEpochMs - running.startedAtEpochMs).coerceIn(0L, config.maxPracticeMs)

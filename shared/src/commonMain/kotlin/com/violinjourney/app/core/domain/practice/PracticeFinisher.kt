@@ -11,12 +11,20 @@ import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.analytics.PracticeFinished
 import com.violinjourney.app.core.time.WallClock
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 /**
  * Ends the running practice: a row in the repository, then the store is cleared. Both the
  * practice screen and the forgotten-practice prompt go through here, and [save] checks that the
- * practice it was asked about still runs, so two answers to the same practice cannot store it twice.
+ * practice it was asked about still runs. One per app (SharedModule, IosGraph): its lock takes the
+ * answers one at a time, so two answers to the same practice — a double tap, the sheet and the
+ * prompt at once — store it once. Once begun, an answer runs to its end: the rows and the clearing
+ * of the store go together, and a caller gone halfway cannot leave the practice stored and still
+ * running, to be stored again by the next answer (spec 5.6).
  * The blocks of the practice (spec 3.28) are saved and paid for here too, and go with it when it is discarded.
  */
 class PracticeFinisher(
@@ -31,11 +39,16 @@ class PracticeFinisher(
     private val config: PracticeConfig = PracticeConfig(),
     private val analytics: Analytics = NoOpAnalytics(),
 ) {
+    private val lock = Mutex()
+
     /**
      * The earning of the practice as it was stored — what «Занятие сохранено» shows (spec 3.31); null when
      * no practice with that start runs any more (already saved or discarded elsewhere).
      */
-    suspend fun save(startedAtEpochMs: Long, durationMs: Long): TaktEarning? {
+    suspend fun save(startedAtEpochMs: Long, durationMs: Long): TaktEarning? =
+        lock.withLock { withContext(NonCancellable) { saveRunning(startedAtEpochMs, durationMs) } }
+
+    private suspend fun saveRunning(startedAtEpochMs: Long, durationMs: Long): TaktEarning? {
         val running = store.running.first() ?: return null
         if (running.startedAtEpochMs != startedAtEpochMs) return null
         val date = practiceDateOf(startedAtEpochMs, clock.zone)
@@ -68,10 +81,12 @@ class PracticeFinisher(
         return earning
     }
 
-    suspend fun discard() {
-        notes.clear()
-        blocks.clear()
-        store.clear()
+    suspend fun discard(): Unit = lock.withLock {
+        withContext(NonCancellable) {
+            notes.clear()
+            blocks.clear()
+            store.clear()
+        }
     }
 
     private companion object {

@@ -745,6 +745,22 @@ class LiveViewModelTest {
     }
 
     @Test
+    fun `a double tap on «Начать занятие» starts the practice and does not finish it at once`() = runTest {
+        val viewModel = viewModel(FakeScenario.SILENCE)
+        val effects = mutableListOf<LiveEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        observe(viewModel, 300)
+
+        viewModel.onIntent(LiveIntent.PracticeTagClicked)
+        viewModel.onIntent(LiveIntent.PracticeTagClicked)
+        advance(100)
+
+        assertEquals(0L, viewModel.state.value.practiceMs)
+        assertTrue("no «Закончить занятие»", effects.isEmpty())
+        assertFalse(finishAsk.asked.value)
+    }
+
+    @Test
     fun `the gear opens the settings`() = runTest {
         val viewModel = viewModel(FakeScenario.SILENCE)
         val effects = mutableListOf<LiveEffect>()
