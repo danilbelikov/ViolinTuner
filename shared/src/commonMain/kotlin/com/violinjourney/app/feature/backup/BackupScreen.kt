@@ -73,6 +73,7 @@ import com.violinjourney.app.shared.resources.backup_saved_title
 import com.violinjourney.app.shared.resources.backup_saving_button
 import com.violinjourney.app.shared.resources.backup_saving_title
 import com.violinjourney.app.shared.resources.backup_share
+import com.violinjourney.app.shared.resources.backup_stay_title
 import com.violinjourney.app.shared.resources.backup_stop_confirm
 import com.violinjourney.app.shared.resources.backup_stop_continue
 import com.violinjourney.app.shared.resources.backup_stop_text
@@ -108,9 +109,12 @@ private val MaxContentWidth = 560.dp
 private const val SWAP_MS = 250
 private const val MIN_SHARE_WEIGHT = 0.012f
 
-/** «Копия данных» (spec 3.20, handoff 21b, 21c): what goes in, the making of it, and how it ended. Stateless. */
+/**
+ * «Копия данных» (spec 3.20, handoff 21b, 21c): what goes in, the making of it, and how it ended. Stateless.
+ * [goesOnInBackground] — whether the progress may say «Можно свернуть приложение» (`BackupSystem`).
+ */
 @Composable
-fun BackupScreen(state: BackupState, fileName: String, onIntent: (BackupIntent) -> Unit, modifier: Modifier = Modifier) {
+fun BackupScreen(state: BackupState, fileName: String, onIntent: (BackupIntent) -> Unit, modifier: Modifier = Modifier, goesOnInBackground: Boolean = true) {
     val colors = MaterialTheme.colorScheme
     val job = state.job
     // a short copy shows no progress screen — the button says «Сохраняем…» instead (nothing blinks)
@@ -139,7 +143,7 @@ fun BackupScreen(state: BackupState, fileName: String, onIntent: (BackupIntent) 
                             },
                             progress = progress,
                             remainingSec = job.remainingSec,
-                            leaveTitle = stringResource(Res.string.backup_can_leave_title),
+                            leaveTitle = stringResource(if (goesOnInBackground) Res.string.backup_can_leave_title else Res.string.backup_stay_title),
                             leaveText = stringResource(Res.string.backup_can_leave_text),
                             cancellable = job.stoppable,
                             onCancel = { onIntent(BackupIntent.CancelClicked) },

@@ -200,6 +200,7 @@
     <string name="backup_remaining_seconds">a few seconds</string>
     <string name="backup_can_leave_title">You can leave the app — the copy will finish on its own.</string>
     <string name="backup_can_leave_text">Do not turn the phone off or pull out the flash drive until it is done.</string>
+    <string name="backup_stay_title">Keep the app open while the copy is being made: in the background it pauses.</string>
     <string name="backup_cancel">Cancel</string>
     <string name="backup_stop_title">Stop?</string>
     <string name="backup_stop_text">The unfinished file will be deleted.</string>
@@ -284,6 +285,7 @@
     <string name="restore_phase_verifying">Checking the copy</string>
     <string name="restore_phase_extracting">Restoring · %1$s %2$d</string>
     <string name="restore_can_leave_title">You can leave the app — restoring will finish on its own.</string>
+    <string name="restore_stay_title">Keep the app open while restoring: in the background it pauses.</string>
     <string name="restore_can_stop">Your data is still in place: while the copy is being checked and unpacked, you can stop.</string>
     <string name="restore_cannot_stop">Opening the restored data — this can no longer be stopped.</string>
     <string name="restore_done_title">Data restored</string>

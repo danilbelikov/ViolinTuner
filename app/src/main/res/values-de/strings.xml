@@ -200,6 +200,7 @@
     <string name="backup_remaining_seconds">wenige Sekunden</string>
     <string name="backup_can_leave_title">Sie können die App verlassen – die Kopie wird von selbst fertig.</string>
     <string name="backup_can_leave_text">Schalten Sie das Telefon nicht aus und ziehen Sie den USB-Stick nicht ab, bis es fertig ist.</string>
+    <string name="backup_stay_title">Lassen Sie die App geöffnet, solange die Kopie läuft – im Hintergrund pausiert sie.</string>
     <string name="backup_cancel">Abbrechen</string>
     <string name="backup_stop_title">Abbrechen?</string>
     <string name="backup_stop_text">Die unfertige Datei wird gelöscht.</string>
@@ -284,6 +285,7 @@
     <string name="restore_phase_verifying">Kopie wird geprüft</string>
     <string name="restore_phase_extracting">Wiederherstellen · %1$s %2$d</string>
     <string name="restore_can_leave_title">Sie können die App verlassen – das Wiederherstellen wird von selbst fertig.</string>
+    <string name="restore_stay_title">Lassen Sie die App geöffnet, solange das Wiederherstellen läuft – im Hintergrund pausiert es.</string>
     <string name="restore_can_stop">Ihre Daten sind noch da: Solange geprüft und entpackt wird, können Sie abbrechen.</string>
     <string name="restore_cannot_stop">Die wiederhergestellten Daten werden geöffnet – das lässt sich nicht mehr abbrechen.</string>
     <string name="restore_done_title">Daten wiederhergestellt</string>

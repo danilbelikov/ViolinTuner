@@ -200,6 +200,7 @@
     <string name="backup_remaining_seconds">alguns segundos</string>
     <string name="backup_can_leave_title">Pode minimizar o app — a cópia termina sozinha.</string>
     <string name="backup_can_leave_text">Não desligue o telefone nem retire o pen drive até terminar.</string>
+    <string name="backup_stay_title">Não minimize o app enquanto a cópia é feita — em segundo plano ela pausa.</string>
     <string name="backup_cancel">Cancelar</string>
     <string name="backup_stop_title">Parar?</string>
     <string name="backup_stop_text">O arquivo incompleto será excluído.</string>
@@ -284,6 +285,7 @@
     <string name="restore_phase_verifying">Verificando a cópia</string>
     <string name="restore_phase_extracting">Restaurando · %1$s %2$d</string>
     <string name="restore_can_leave_title">Pode minimizar o app — a restauração termina sozinha.</string>
+    <string name="restore_stay_title">Não minimize o app durante a restauração — em segundo plano ela pausa.</string>
     <string name="restore_can_stop">Seus dados ainda estão no lugar: durante a verificação e a descompactação, dá para parar.</string>
     <string name="restore_cannot_stop">Abrindo os dados restaurados — agora já não dá para parar.</string>
     <string name="restore_done_title">Dados restaurados</string>

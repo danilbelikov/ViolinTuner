@@ -82,6 +82,7 @@ import com.violinjourney.app.shared.resources.restore_reading
 import com.violinjourney.app.shared.resources.restore_retry_same
 import com.violinjourney.app.shared.resources.restore_save_first
 import com.violinjourney.app.shared.resources.restore_start_clean
+import com.violinjourney.app.shared.resources.restore_stay_title
 import com.violinjourney.app.shared.resources.restore_step_extracting
 import com.violinjourney.app.shared.resources.restore_step_finishing
 import com.violinjourney.app.shared.resources.restore_step_verifying
@@ -122,9 +123,18 @@ private val MaxContentWidth = 560.dp
 private const val SWAP_MS = 250
 private const val WARNING_ALPHA = 0.12f
 
-/** «Восстановить из копии» (spec 3.20, handoff 21d, 21e): the passport of the copy, what it replaces, the bringing back, and how it ended. Stateless. */
+/**
+ * «Восстановить из копии» (spec 3.20, handoff 21d, 21e): the passport of the copy, what it replaces, the bringing back,
+ * and how it ended. Stateless. [goesOnInBackground] — whether the progress may say «Можно свернуть приложение».
+ */
 @Composable
-fun RestoreScreen(state: RestoreState, onIntent: (RestoreIntent) -> Unit, modifier: Modifier = Modifier, zone: TimeZone = TimeZone.currentSystemDefault()) {
+fun RestoreScreen(
+    state: RestoreState,
+    onIntent: (RestoreIntent) -> Unit,
+    modifier: Modifier = Modifier,
+    zone: TimeZone = TimeZone.currentSystemDefault(),
+    goesOnInBackground: Boolean = true,
+) {
     val colors = MaterialTheme.colorScheme
     val job = state.job
     val face = when {
@@ -150,7 +160,7 @@ fun RestoreScreen(state: RestoreState, onIntent: (RestoreIntent) -> Unit, modifi
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 when {
-                    target == "progress" && job is BackupJob.Restoring -> Progress(job, onIntent)
+                    target == "progress" && job is BackupJob.Restoring -> Progress(job, onIntent, goesOnInBackground)
                     target == "done" && job is BackupJob.Restored -> {
                         DoneMark(size = 48)
                         Text(stringResource(Res.string.restore_done_title), color = colors.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold))
@@ -315,7 +325,7 @@ private fun PassportCard(copy: BackupCandidate.Copy, manifest: BackupManifest, z
 }
 
 @Composable
-private fun Progress(job: BackupJob.Restoring, onIntent: (RestoreIntent) -> Unit) {
+private fun Progress(job: BackupJob.Restoring, onIntent: (RestoreIntent) -> Unit, goesOnInBackground: Boolean) {
     ScreenTitle(stringResource(Res.string.restore_progress_title))
     val stoppable = job.stoppable
     JobProgress(
@@ -326,7 +336,7 @@ private fun Progress(job: BackupJob.Restoring, onIntent: (RestoreIntent) -> Unit
         },
         progress = job.progress,
         remainingSec = job.remainingSec,
-        leaveTitle = stringResource(Res.string.restore_can_leave_title),
+        leaveTitle = stringResource(if (goesOnInBackground) Res.string.restore_can_leave_title else Res.string.restore_stay_title),
         // said in words: while this is only checking and unpacking, the person's data are still there
         leaveText = stringResource(if (stoppable) Res.string.restore_can_stop else Res.string.restore_cannot_stop),
         cancellable = stoppable,

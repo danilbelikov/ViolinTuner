@@ -200,6 +200,7 @@
     <string name="backup_remaining_seconds">quelques secondes</string>
     <string name="backup_can_leave_title">Vous pouvez quitter l\'application — la copie se terminera toute seule.</string>
     <string name="backup_can_leave_text">N\'éteignez pas le téléphone et ne retirez pas la clé USB avant la fin.</string>
+    <string name="backup_stay_title">Ne quittez pas l\'application pendant la copie — en arrière-plan, elle se met en pause.</string>
     <string name="backup_cancel">Annuler</string>
     <string name="backup_stop_title">Arrêter ?</string>
     <string name="backup_stop_text">Le fichier inachevé sera supprimé.</string>
@@ -284,6 +285,7 @@
     <string name="restore_phase_verifying">Vérification de la copie</string>
     <string name="restore_phase_extracting">Restauration · %1$s %2$d</string>
     <string name="restore_can_leave_title">Vous pouvez quitter l\'application — la restauration se terminera toute seule.</string>
+    <string name="restore_stay_title">Ne quittez pas l\'application pendant la restauration — en arrière-plan, elle se met en pause.</string>
     <string name="restore_can_stop">Vos données sont encore là : pendant la vérification et la décompression, on peut arrêter.</string>
     <string name="restore_cannot_stop">Ouverture des données restaurées — on ne peut plus arrêter.</string>
     <string name="restore_done_title">Données restaurées</string>

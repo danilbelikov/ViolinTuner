@@ -200,6 +200,7 @@
     <string name="backup_remaining_seconds">pochi secondi</string>
     <string name="backup_can_leave_title">Si può uscire dall\'app — la copia si completa da sola.</string>
     <string name="backup_can_leave_text">Non spegnere il telefono e non togliere la chiavetta fino alla fine.</string>
+    <string name="backup_stay_title">Non uscire dall\'app mentre la copia è in corso — in background si mette in pausa.</string>
     <string name="backup_cancel">Annulla</string>
     <string name="backup_stop_title">Interrompere?</string>
     <string name="backup_stop_text">Il file incompleto verrà eliminato.</string>
@@ -284,6 +285,7 @@
     <string name="restore_phase_verifying">Verifica della copia</string>
     <string name="restore_phase_extracting">Ripristino · %1$s %2$d</string>
     <string name="restore_can_leave_title">Si può uscire dall\'app — il ripristino si completa da solo.</string>
+    <string name="restore_stay_title">Non uscire dall\'app mentre il ripristino è in corso — in background si mette in pausa.</string>
     <string name="restore_can_stop">I tuoi dati sono ancora al loro posto: durante la verifica e l\'estrazione si può interrompere.</string>
     <string name="restore_cannot_stop">Apertura dei dati ripristinati — ora non si può più interrompere.</string>
     <string name="restore_done_title">Dati ripristinati</string>

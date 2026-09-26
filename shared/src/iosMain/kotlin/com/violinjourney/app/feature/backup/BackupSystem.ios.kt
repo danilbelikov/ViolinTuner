@@ -19,7 +19,7 @@ import platform.darwin.NSObject
 /**
  * A copy on iOS: its place is a folder picked in Files — the app writes the archive into it, with the access the pick
  * gave — and the copy to bring back is picked in Files and read where it lies (spec 3.20), with no copy of it made by
- * the system first. The app starts anew in place.
+ * the system first. The app starts anew in place. A copy does not go on while the app is away: iOS gives it seconds.
  */
 @Composable
 actual fun rememberBackupSystem(onPlacePicked: (uri: String?) -> Unit, onCopyPicked: (uri: String?) -> Unit): BackupSystem {
@@ -45,6 +45,7 @@ actual fun rememberBackupSystem(onPlacePicked: (uri: String?) -> Unit, onCopyPic
             openPrivacyPolicy = {
                 NSURL.URLWithString(PRIVACY_POLICY_URL)?.let { UIApplication.sharedApplication.openURL(it, emptyMap<Any?, Any?>(), null) }
             },
+            goesOnInBackground = false,
         )
     }
 }

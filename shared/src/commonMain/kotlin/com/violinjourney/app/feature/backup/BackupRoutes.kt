@@ -87,7 +87,7 @@ fun BackupRoute(onClose: () -> Unit, viewModel: BackupViewModel, modifier: Modif
         }
     }
     BackHandler { viewModel.onIntent(BackupIntent.BackClicked) }
-    BackupScreen(state = state, fileName = fileName, onIntent = viewModel::onIntent, modifier = modifier)
+    BackupScreen(state = state, fileName = fileName, onIntent = viewModel::onIntent, modifier = modifier, goesOnInBackground = system.goesOnInBackground)
 }
 
 @Composable
@@ -115,7 +115,7 @@ fun RestoreRoute(onClose: () -> Unit, onOpenBackup: () -> Unit, viewModel: Resto
     BackHandler(enabled = job is BackupJob.Restoring || job is BackupJob.Restored || job is BackupJob.RestoreFailed) {
         if (job is BackupJob.RestoreFailed && job.dataIntact) viewModel.onIntent(RestoreIntent.CloseClicked)
     }
-    RestoreScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier)
+    RestoreScreen(state = state, onIntent = viewModel::onIntent, modifier = modifier, goesOnInBackground = system.goesOnInBackground)
 }
 
 /**

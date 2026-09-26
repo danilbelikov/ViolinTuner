@@ -200,6 +200,7 @@
     <string name="backup_remaining_seconds">数秒</string>
     <string name="backup_can_leave_title">アプリを閉じても大丈夫です。コピーは最後まで進みます。</string>
     <string name="backup_can_leave_text">終わるまで電源を切ったり、USBメモリを抜いたりしないでください。</string>
+    <string name="backup_stay_title">コピーの作成中はアプリを閉じないでください。バックグラウンドでは一時停止します。</string>
     <string name="backup_cancel">キャンセル</string>
     <string name="backup_stop_title">中止しますか？</string>
     <string name="backup_stop_text">書きかけのファイルは削除されます。</string>
@@ -284,6 +285,7 @@
     <string name="restore_phase_verifying">コピーを確認しています</string>
     <string name="restore_phase_extracting">復元中 · %1$s %2$d</string>
     <string name="restore_can_leave_title">アプリを閉じても大丈夫です。復元は最後まで進みます。</string>
+    <string name="restore_stay_title">復元中はアプリを閉じないでください。バックグラウンドでは一時停止します。</string>
     <string name="restore_can_stop">データはまだそのままです。確認と展開の間は中止できます。</string>
     <string name="restore_cannot_stop">復元したデータを開いています — ここからは中止できません。</string>
     <string name="restore_done_title">データを復元しました</string>

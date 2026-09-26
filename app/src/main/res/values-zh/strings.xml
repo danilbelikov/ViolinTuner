@@ -200,6 +200,7 @@
     <string name="backup_remaining_seconds">几秒钟</string>
     <string name="backup_can_leave_title">可以把应用切到后台——副本会自行完成。</string>
     <string name="backup_can_leave_text">完成之前，请不要关机，也不要拔出 U 盘。</string>
+    <string name="backup_stay_title">制作副本时请不要把应用切到后台——在后台会暂停。</string>
     <string name="backup_cancel">取消</string>
     <string name="backup_stop_title">要停止吗？</string>
     <string name="backup_stop_text">未写完的文件将被删除。</string>
@@ -284,6 +285,7 @@
     <string name="restore_phase_verifying">正在检查副本</string>
     <string name="restore_phase_extracting">正在恢复 · %1$s %2$d</string>
     <string name="restore_can_leave_title">可以把应用切到后台——恢复会自行完成。</string>
+    <string name="restore_stay_title">恢复时请不要把应用切到后台——在后台会暂停。</string>
     <string name="restore_can_stop">你的数据还在：检查和解压期间可以停止。</string>
     <string name="restore_cannot_stop">正在打开恢复的数据——现在已无法停止。</string>
     <string name="restore_done_title">数据已恢复</string>

@@ -15,6 +15,11 @@ class BackupSystem(
     val restart: () -> Unit,
     /** The policy the stores link to (spec 3.34), in the browser. */
     val openPrivacyPolicy: () -> Unit,
+    /**
+     * True — a copy goes on while the app is away, as the foreground service keeps it on Android; false — the system
+     * gives an app away only some tens of seconds (iOS), and the progress asks not to leave it.
+     */
+    val goesOnInBackground: Boolean = true,
 )
 
 @Composable

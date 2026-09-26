@@ -200,6 +200,7 @@
     <string name="backup_remaining_seconds">몇 초</string>
     <string name="backup_can_leave_title">앱을 닫아 두어도 됩니다 — 사본은 알아서 완성됩니다.</string>
     <string name="backup_can_leave_text">끝날 때까지 휴대폰을 끄거나 USB 메모리를 빼지 마세요.</string>
+    <string name="backup_stay_title">사본을 만드는 동안 앱을 닫지 마세요. 백그라운드에서는 멈춥니다.</string>
     <string name="backup_cancel">취소</string>
     <string name="backup_stop_title">중지할까요?</string>
     <string name="backup_stop_text">쓰다 만 파일은 삭제됩니다.</string>
@@ -284,6 +285,7 @@
     <string name="restore_phase_verifying">사본 확인 중</string>
     <string name="restore_phase_extracting">복원 중 · %1$s %2$d</string>
     <string name="restore_can_leave_title">앱을 닫아 두어도 됩니다 — 복원은 알아서 끝납니다.</string>
+    <string name="restore_stay_title">복원하는 동안 앱을 닫지 마세요. 백그라운드에서는 멈춥니다.</string>
     <string name="restore_can_stop">데이터는 아직 그대로입니다. 확인하고 압축을 푸는 동안에는 중지할 수 있어요.</string>
     <string name="restore_cannot_stop">복원한 데이터를 여는 중입니다 — 이제는 중지할 수 없어요.</string>
     <string name="restore_done_title">데이터를 복원했어요</string>
