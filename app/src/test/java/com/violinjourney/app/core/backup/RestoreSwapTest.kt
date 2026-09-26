@@ -25,6 +25,7 @@ class RestoreSwapTest {
         write(File(files, "sessions/old.m4a"), "old sound")
         write(File(files, "repertoire/old.jpg"), "old sheet")
         write(File(files, "profile/avatar-1.jpg"), "old face")
+        write(File(files, "backings/old.m4a"), "old backing")
         write(File(files, "waveforms/old.m4a.wave"), "old wave")
     }
 
@@ -40,6 +41,7 @@ class RestoreSwapTest {
         write(File(staging, "sessions/new.m4a"), "new sound")
         if (withVideo) write(File(staging, "sessions/new.mp4"), "new video")
         write(File(staging, "repertoire/new.jpg"), "new sheet")
+        write(File(staging, "backings/new.mp3"), "new backing")
         File(staging, "profile").mkdirs() // the copy had no photo: the folder is there all the same, and empty
     }
 
@@ -52,6 +54,7 @@ class RestoreSwapTest {
         assertEquals(listOf("new.m4a", "new.mp4"), File(files, "sessions").list()!!.sorted())
         assertEquals(listOf("new.jpg"), File(files, "repertoire").list()!!.toList())
         assertEquals(emptyList<String>(), File(files, "profile").list()!!.toList())
+        assertEquals(listOf("new.mp3"), File(files, "backings").list()!!.toList())
         assertFalse(File(files, "waveforms").exists())
         assertFalse(File(files, RestoreSwap.STAGING).exists())
         assertFalse(File(files, RestoreSwap.READY_MARK).exists())
@@ -93,6 +96,8 @@ class RestoreSwapTest {
             { File(files, "repertoire").deleteRecursively() },
             { File(files, "restore-staging/repertoire").renameTo(File(files, "repertoire")) },
             { File(files, "sessions").deleteRecursively(); File(files, "restore-staging/sessions").renameTo(File(files, "sessions")) },
+            { File(files, "backings").deleteRecursively() },
+            { File(files, "restore-staging/backings").renameTo(File(files, "backings")) },
         )
         for (done in 0..steps.size) {
             folder.root.listFiles()!!.forEach { it.deleteRecursively() }
@@ -114,6 +119,7 @@ class RestoreSwapTest {
         assertFalse(File(databases, "violin.db").exists())
         assertFalse(File(files, "datastore/user_settings.preferences_pb").exists())
         assertFalse(File(files, "sessions").exists())
+        assertFalse(File(files, "backings").exists())
         assertFalse(File(files, RestoreSwap.STAGING).exists())
         assertEquals(RestoreSwap.Outcome.NOTHING, apply())
     }

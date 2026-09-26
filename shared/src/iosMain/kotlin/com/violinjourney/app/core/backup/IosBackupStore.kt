@@ -23,12 +23,19 @@ import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.settings.DataStoreBackupPrefs
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.ios.IosStorage
+import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.ObjCObjectVar
+import kotlinx.cinterop.alloc
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.ptr
+import kotlinx.cinterop.value
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import platform.Foundation.NSBundle
 import platform.Foundation.NSCachesDirectory
+import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSLog
 import platform.Foundation.NSSearchPathForDirectoriesInDomains
@@ -220,6 +227,7 @@ internal class IosBackupStore(
  * Puts an unpacked copy in the place of the data on iOS (spec 3.20, 5.14), as `RestoreSwap` does on Android — before
  * the database is opened. Every step does only what is left, so a swap cut short is finished by the next run.
  */
+@OptIn(ExperimentalForeignApi::class)
 internal object IosRestoreSwap {
     const val STAGING = "restore-staging"
     const val READY_MARK = "restore-ready"
@@ -230,6 +238,11 @@ internal object IosRestoreSwap {
 
     enum class Outcome { NOTHING, RESTORED, WIPED }
 
+    /**
+     * Throws [okio.IOException] when a step of the swap cannot be done — the old database will not go, a folder will not
+     * move: the start fails, as it does on Android, and the unpacked copy and its mark stay for the next start to finish
+     * the swap. Nothing is thrown away before it is in its place.
+     */
     fun applyIfPending(data: PlatformFile): Outcome {
         val staging = data.child(STAGING)
         return when {
@@ -260,7 +273,8 @@ internal object IosRestoreSwap {
     private fun swap(staging: PlatformFile, data: PlatformFile) {
         val database = staging.child(BackupPaths.DATABASE).child(AppDatabase.FILE_NAME)
         if (database.exists()) {
-            deleteDatabase(data)
+            // a journal of the old database left beside the new one would be played over it
+            if (!deleteDatabase(data)) throw okio.IOException("the old database will not go")
             move(database, data.child(AppDatabase.FILE_NAME))
         }
         val settings = staging.child(BackupPaths.SETTINGS).child(SETTINGS_FILE)
@@ -279,12 +293,19 @@ internal object IosRestoreSwap {
         data.child(WAVEFORMS_DIR).deleteAll()
     }
 
-    private fun deleteDatabase(data: PlatformFile) {
-        listOf("", "-wal", "-shm", "-journal", ".lck").forEach { data.child(AppDatabase.FILE_NAME + it).deleteAll() }
-    }
+    /** True when none of the files of the database is left. */
+    private fun deleteDatabase(data: PlatformFile): Boolean =
+        listOf("", "-wal", "-shm", "-journal", ".lck").map { data.child(AppDatabase.FILE_NAME + it).deleteAll() }.all { it }
 
-    @OptIn(ExperimentalForeignApi::class)
-    private fun move(from: PlatformFile, to: PlatformFile) {
-        NSFileManager.defaultManager.moveItemAtPath(from.path, to.path, null)
+    /**
+     * One rename inside Application Support — `moveItemAtPath` copies by itself where a rename cannot be done. A move that
+     * failed throws before the staging folder, which still holds what did not move, is deleted.
+     */
+    @OptIn(BetaInteropApi::class)
+    private fun move(from: PlatformFile, to: PlatformFile) = memScoped {
+        val error = alloc<ObjCObjectVar<NSError?>>()
+        if (!NSFileManager.defaultManager.moveItemAtPath(from.path, to.path, error.ptr)) {
+            throw okio.IOException("${from.path.substringAfterLast('/')} cannot be put in place: ${error.value?.localizedDescription}")
+        }
     }
 }
