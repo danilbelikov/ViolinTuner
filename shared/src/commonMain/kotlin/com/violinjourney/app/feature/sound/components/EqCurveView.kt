@@ -10,7 +10,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -32,7 +31,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -64,6 +63,7 @@ private val TouchedRadius = 12.dp
 private val DraggedRadius = 14.dp
 private val GrabZone = 44.dp
 private val BubbleLift = 56.dp
+private val BubbleAside = 32.dp
 private const val RANGE_DB = 12.0
 private const val POINTS = 160
 private const val DISPLAY_RATE = 48_000
@@ -81,6 +81,23 @@ internal object EqCurveGeometry {
     fun yOf(db: Double, height: Float, margin: Float): Float = margin + ((RANGE_DB - db.coerceIn(-RANGE_DB, RANGE_DB)) / (2 * RANGE_DB)).toFloat() * (height - 2 * margin)
 
     fun dbAt(y: Float, height: Float, margin: Float): Double = RANGE_DB - ((y - margin) / (height - 2 * margin)).coerceIn(0f, 1f) * 2 * RANGE_DB
+
+    /**
+     * Where the bubble «частота · усиление» stands (spec 3.17): [lift] above the finger, centred over it; a point held
+     * high has no room above it within the curve, and the bubble then stands at the top edge beside the finger, [aside]
+     * off it on the side with more room. Never past the curve's edges: the curve clips what leaves it.
+     */
+    fun bubbleAt(finger: Offset, bubbleWidth: Int, width: Int, height: Int, lift: Float, aside: Float): IntOffset {
+        val x = finger.x.coerceIn(0f, width.toFloat())
+        val y = finger.y.coerceIn(0f, height.toFloat())
+        val maxX = (width - bubbleWidth).coerceAtLeast(0)
+        return if (y - lift >= 0f) {
+            IntOffset((x - bubbleWidth / 2f).roundToInt().coerceIn(0, maxX), (y - lift).roundToInt())
+        } else {
+            val left = if (x <= width / 2f) x + aside else x - aside - bubbleWidth
+            IntOffset(left.roundToInt().coerceIn(0, maxX), 0)
+        }
+    }
 }
 
 /**
@@ -102,7 +119,6 @@ fun EqCurveView(
 ) {
     val colors = MaterialTheme.colorScheme
     val sound = ViolinTheme.soundColors
-    val density = LocalDensity.current
     val measurer = rememberTextMeasurer()
     val names = stringArrayResource(Res.array.sound_band_names)
     val description = stringResource(Res.string.sound_eq_curve_description)
@@ -221,9 +237,12 @@ fun EqCurveView(
             }
             Box(
                 modifier = Modifier
-                    .offset {
-                        val halfWidth = with(density) { 64.dp.roundToPx() }
-                        IntOffset((finger.x.roundToInt() - halfWidth).coerceAtLeast(0), (finger.y - with(density) { BubbleLift.toPx() }).roundToInt())
+                    // measured, then placed where it is whole to be seen; a drag moves it without measuring it again
+                    .layout { measurable, constraints ->
+                        val bubble = measurable.measure(constraints.copy(minWidth = 0, minHeight = 0))
+                        layout(bubble.width, bubble.height) {
+                            bubble.place(EqCurveGeometry.bubbleAt(finger, bubble.width, constraints.maxWidth, constraints.maxHeight, BubbleLift.toPx(), BubbleAside.toPx()))
+                        }
                     }
                     .clip(RoundedCornerShape(10.dp))
                     .background(colors.surface)
