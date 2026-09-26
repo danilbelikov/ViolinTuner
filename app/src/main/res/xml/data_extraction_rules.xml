@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- The same as backup_rules.xml, for API 31 and up. A cable transfer between two phones has no such limit and takes everything. -->
+<!--
+  The same as backup_rules.xml, for API 31 and up. A cable transfer between two phones has no such limit and takes
+  everything but what belongs to this phone alone: a restore unpacked here and its marks, which on the new phone would
+  put a stale copy in place or wipe the data that had just come over.
+-->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="file" path="sessions/" />
@@ -7,9 +11,13 @@
         <exclude domain="file" path="backings/" />
         <exclude domain="file" path="waveforms/" />
         <exclude domain="file" path="restore-staging/" />
+        <exclude domain="file" path="restore-ready" />
+        <exclude domain="file" path="restore-wipe" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="file" path="waveforms/" />
         <exclude domain="file" path="restore-staging/" />
+        <exclude domain="file" path="restore-ready" />
+        <exclude domain="file" path="restore-wipe" />
     </device-transfer>
 </data-extraction-rules>
