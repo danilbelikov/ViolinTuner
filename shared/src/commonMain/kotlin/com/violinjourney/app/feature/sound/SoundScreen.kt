@@ -18,6 +18,8 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -481,8 +483,9 @@ private fun Dialogs(dialog: SoundDialog, state: SoundState, zone: TimeZone, onIn
             onDismissRequest = dismiss,
             title = { Text(stringResource(Res.string.sound_dialog_pick_title)) },
             text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    state.recordings.forEach { recording ->
+                // hundreds of recordings on a phone that has been played for long: only the rows on screen are made
+                LazyColumn {
+                    items(state.recordings, key = { it.sessionId }) { recording ->
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -496,7 +499,13 @@ private fun Dialogs(dialog: SoundDialog, state: SoundState, zone: TimeZone, onIn
                                 color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp), modifier = Modifier.weight(1f),
                             )
-                            Text(Formats.timeOfDay(recording.startedAtEpochMs, zone), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontFeatureSettings = "tnum"))
+                            // a name of its own carries no date: two takes named alike are told apart by their day
+                            val time = Formats.timeOfDay(recording.startedAtEpochMs, zone)
+                            Text(
+                                text = if (recording.title != null) "${Formats.dayAndMonth(recording.startedAtEpochMs, zone)} · $time" else time,
+                                color = colors.onSurfaceVariant,
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontFeatureSettings = "tnum"),
+                            )
                         }
                     }
                 }
