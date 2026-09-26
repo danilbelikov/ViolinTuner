@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.util.Log
 import androidx.core.net.toUri
 import com.violinjourney.app.core.di.IoDispatcher
+import com.violinjourney.app.core.io.isOwnFileName
 import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -47,9 +48,11 @@ class AppAvatarFiles @Inject constructor(
         }
     }
 
-    override fun existing(name: String): File? = File(directory, name).takeIf { it.isFile }
+    // Names come from the database, and a database may come from a copy: a name that leaves the folder is not one of ours.
+    override fun existing(name: String): File? = if (isOwnFileName(name)) File(directory, name).takeIf { it.isFile } else null
 
     override suspend fun delete(name: String) {
+        if (!isOwnFileName(name)) return
         withContext(io) { File(directory, name).delete() }
     }
 

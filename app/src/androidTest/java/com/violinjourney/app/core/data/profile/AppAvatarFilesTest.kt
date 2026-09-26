@@ -133,6 +133,22 @@ class AppAvatarFilesTest {
         assertEquals(8, AvatarImage.sampleSizeFor(8160, 6120))
     }
 
+    @Test
+    fun aNameFromTheDatabaseThatLeavesTheFolderIsNotOurs() = runBlocking {
+        // a database may come from a copy picked by hand: «../…» must neither be found nor deleted
+        val victim = File(context.filesDir, "victim-of-an-avatar-name").apply { writeText("keep") }
+        try {
+            directory.mkdirs()
+            assertNull(files.existing("../victim-of-an-avatar-name"))
+            assertNull(files.existing(".."))
+            listOf("../victim-of-an-avatar-name", "..", "").forEach { files.delete(it) }
+            assertTrue(victim.isFile)
+            assertTrue(directory.isDirectory)
+        } finally {
+            victim.delete()
+        }
+    }
+
     private companion object {
         const val SOURCE_WIDTH = 2000
         const val SOURCE_HEIGHT = 1000

@@ -5,6 +5,7 @@ import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.data.repertoire.SheetFiles
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.isOwnFileName
 import com.violinjourney.app.core.io.pathOfFileUri
 import com.violinjourney.app.core.time.WallClock
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -127,12 +128,12 @@ internal class IosSessionAudioFiles(private val repertoireConfig: RepertoireConf
 
     override fun newFile(): PlatformFile = PlatformFile("$directory/${NSUUID().UUIDString}$EXTENSION")
 
-    // Names come from the database; a name with a path in it is not one of ours.
+    // Names come from the database, and a database may come from a copy: a name that leaves the folder is not one of ours.
     override fun existing(name: String): PlatformFile? =
-        if ('/' in name || !IosFolders.exists("$directory/$name")) null else PlatformFile("$directory/$name")
+        if (!isOwnFileName(name) || !IosFolders.exists("$directory/$name")) null else PlatformFile("$directory/$name")
 
     override fun delete(name: String) {
-        if ('/' in name) return
+        if (!isOwnFileName(name)) return
         IosFolders.delete("$directory/$name")
         IosFolders.delete("$directory/${thumbNameOf(name)}")
     }
@@ -172,9 +173,10 @@ internal class IosAvatarFiles(private val io: CoroutineDispatcher, private val c
         if (IosPictures.writeJpeg(square, "$directory/$name", JPEG_QUALITY)) name else null
     }
 
-    override fun existing(name: String): PlatformFile? = "$directory/$name".takeIf(IosFolders::exists)?.let(::PlatformFile)
+    // a name that leaves the folder is not one of ours — and a delete by it would take a whole folder (removeItemAtPath)
+    override fun existing(name: String): PlatformFile? = "$directory/$name".takeIf { isOwnFileName(name) && IosFolders.exists(it) }?.let(::PlatformFile)
 
-    override suspend fun delete(name: String) = withContext(io) { IosFolders.delete("$directory/$name") }
+    override suspend fun delete(name: String) = withContext(io) { if (isOwnFileName(name)) IosFolders.delete("$directory/$name") }
 
     override suspend fun deleteOrphans(referenced: String?) = withContext(io) {
         IosFolders.names(directory).filter { it != referenced }.forEach { IosFolders.delete("$directory/$it") }
@@ -212,9 +214,10 @@ internal class IosSheetFiles(private val io: CoroutineDispatcher, private val co
         }
     }
 
-    override fun existing(name: String): PlatformFile? = "$directory/$name".takeIf(IosFolders::exists)?.let(::PlatformFile)
+    // a name that leaves the folder is not one of ours — and a delete by it would take a whole folder (removeItemAtPath)
+    override fun existing(name: String): PlatformFile? = "$directory/$name".takeIf { isOwnFileName(name) && IosFolders.exists(it) }?.let(::PlatformFile)
 
-    override suspend fun delete(names: Collection<String>) = withContext(io) { names.forEach { IosFolders.delete("$directory/$it") } }
+    override suspend fun delete(names: Collection<String>) = withContext(io) { names.filter(::isOwnFileName).forEach { IosFolders.delete("$directory/$it") } }
 
     override suspend fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = withContext(io) {
         IosFolders.names(directory)

@@ -9,6 +9,7 @@ import com.violinjourney.app.core.io.child
 import com.violinjourney.app.core.io.deleteAll
 import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.exists
+import com.violinjourney.app.core.io.isOwnFileName
 import com.violinjourney.app.core.io.listNames
 import com.violinjourney.app.core.io.makeDirectories
 import com.violinjourney.app.core.io.moveTo
@@ -49,8 +50,8 @@ internal class IosBackingFiles(private val data: PlatformFile, private val clock
         return directory.child("${NSUUID().UUIDString}.$clean")
     }
 
-    // names come from the database; a name with a path in it is not one of ours
-    override fun existing(name: String): PlatformFile? = directory.child(name).takeIf { '/' !in name && it.exists() }
+    // names come from the database, and a database may come from a copy: a name that leaves the folder is not one of ours
+    override fun existing(name: String): PlatformFile? = directory.child(name).takeIf { isOwnFileName(name) && it.exists() }
 
     override fun delete(name: String) {
         existing(name)?.deleteAll()
@@ -141,7 +142,7 @@ internal class IosBackingPcm(private val caches: PlatformFile, private val files
         directory.listNames().filter { !it.endsWith(PARTIAL) && it.substringBeforeLast(RATE_SEPARATOR) !in kept }.forEach { directory.child(it).deleteAll() }
     }
 
-    override fun cached(backing: Backing, sampleRate: Int): PlatformFile? = fileOf(backing, sampleRate).takeIf { it.exists() }
+    override fun cached(backing: Backing, sampleRate: Int): PlatformFile? = fileOf(backing, sampleRate).takeIf { isOwnFileName(backing.fileName) && it.exists() }
 
     /**
      * Null — never a throw — when the copy cannot be decoded or the cache cannot be written (a full disk, a `.partial`

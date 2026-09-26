@@ -2,6 +2,7 @@ package com.violinjourney.app.ios
 
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.isOwnFileName
 import com.violinjourney.app.core.io.pathOfFileUri
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.recording.video.VideoInfo
@@ -96,9 +97,10 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
         return IosPictures.writeJpeg(UIImage.imageWithCGImage(frame), thumbPath(file.path.substringAfterLast('/')), THUMB_QUALITY)
     }
 
-    override fun thumbOf(name: String): PlatformFile? = thumbPath(name).takeIf { '/' !in name && IosFolders.exists(it) }?.let(::PlatformFile)
+    // names come from the database, and a database may come from a copy: a name that leaves the folder is not one of ours
+    override fun thumbOf(name: String): PlatformFile? = thumbPath(name).takeIf { isOwnFileName(name) && IosFolders.exists(it) }?.let(::PlatformFile)
 
-    override fun existing(name: String): PlatformFile? = "$directory/$name".takeIf { '/' !in name && IosFolders.exists(it) }?.let(::PlatformFile)
+    override fun existing(name: String): PlatformFile? = "$directory/$name".takeIf { isOwnFileName(name) && IosFolders.exists(it) }?.let(::PlatformFile)
 
     override fun discard(file: PlatformFile) {
         IosFolders.delete(thumbPath(file.path.substringAfterLast('/')))

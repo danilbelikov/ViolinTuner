@@ -12,6 +12,7 @@ import com.violinjourney.app.core.backup.BackupPaths
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingFiles
+import com.violinjourney.app.core.io.isOwnFileName
 import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -173,7 +174,8 @@ class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, 
             .forEach { it.delete() }
     }
 
-    override fun cached(backing: Backing, sampleRate: Int): File? = fileOf(backing, sampleRate).takeIf { it.isFile }
+    // the name comes from the database, and a database may come from a copy: a name that leaves the folder is not one of ours
+    override fun cached(backing: Backing, sampleRate: Int): File? = fileOf(backing, sampleRate).takeIf { isOwnFileName(backing.fileName) && it.isFile }
 
     override fun make(backing: Backing, sampleRate: Int): File? {
         val source = files.existing(backing.fileName) ?: return null

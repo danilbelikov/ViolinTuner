@@ -144,6 +144,22 @@ class AppSheetFilesTest {
         assertNotNull(files.existing(stored.fileName))
     }
 
+    @Test
+    fun aNameFromTheDatabaseThatLeavesTheFolderIsNotOurs() = runBlocking {
+        // a database may come from a copy picked by hand: «../…» must neither be found nor deleted
+        val victim = File(context.filesDir, "victim-of-a-sheet-name").apply { writeText("keep") }
+        try {
+            directory.mkdirs()
+            assertNull(files.existing("../victim-of-a-sheet-name"))
+            assertNull(files.existing(".."))
+            files.delete(listOf("../victim-of-a-sheet-name", "..", ""))
+            assertTrue(victim.isFile)
+            assertTrue(directory.isDirectory)
+        } finally {
+            victim.delete()
+        }
+    }
+
     private companion object {
         const val SOURCE_WIDTH = 3_000
         const val SOURCE_HEIGHT = 1_500
