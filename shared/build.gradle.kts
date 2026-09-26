@@ -90,7 +90,8 @@ kotlin {
 }
 
 // The AppMetrica key of the iOS app (spec 5.27), as Android has it: local.properties (git-ignored) or `-PappMetricaKey=…`;
-// a debug build stays silent unless `analyticsDebug=true` is given the same way. Written into build/, never into git.
+// the owner's .debug app (Debug and Profile configurations, IosBuild) stays silent unless `analyticsDebug=true` is given
+// the same way. Written into build/, never into git.
 val iosSecrets = tasks.register("generateIosSecrets") {
     val local = Properties().apply {
         rootProject.file("local.properties").takeIf { it.isFile }?.inputStream()?.use(::load)

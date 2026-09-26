@@ -16,29 +16,31 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import com.violinjourney.app.core.analytics.AnalyticsService
 import com.violinjourney.app.core.analytics.IosAppMetricaAnalytics
 import com.violinjourney.app.core.audio.FakeScenario
-import kotlin.experimental.ExperimentalNativeApi
-import kotlin.native.Platform
 import com.violinjourney.app.core.backup.IosRestoreSwap
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.ui.components.SystemScreens
 import com.violinjourney.app.feature.backup.LocalAppRestart
+import com.violinjourney.app.feature.journey.art.SceneDebug
 import platform.Foundation.NSProcessInfo
 import platform.UIKit.UIViewController
 
 /**
  * The iOS app. `-fakeScenario IN_TUNE` plays a steady script instead of the microphone, as `-PfakeScenario` on Android:
  * `xcrun simctl launch booted com.violinjourney.app.debug -fakeScenario IN_TUNE`; `-openRoute live` opens a screen at once.
+ * In the owner's .debug app ([IosBuild]) `-sceneSeconds 12.5` stops the living pictures at that second and `-noBake`
+ * draws them without baking, as the debug switches of Android (docs/plan-performance.md).
  *
  * A copy brought back (spec 3.20) is put in place before anything opens the data — here at the start, and at the
  * «restart» after a restore: the whole graph is let go, the copy swapped in, and a new graph built, as Android does by
  * starting its process anew.
  */
 @Suppress("FunctionName", "unused") // called from Swift
-@OptIn(ExperimentalNativeApi::class)
 fun MainViewController(analytics: AnalyticsService?): UIViewController {
     useInterfaceLanguage()
-    // statistics are sent by a build that has a key (spec 5.27); a debug build only when asked to (`analyticsDebug=true`)
-    val sends = IosSecrets.APPMETRICA_KEY.isNotBlank() && (!Platform.isDebugBinary || IosSecrets.ANALYTICS_IN_DEBUG)
+    // the owner's .debug app (Debug and Profile, whatever its Kotlin binary): the switches of the living pictures listen
+    SceneDebug.debugBuild = IosBuild.isDevApp
+    // statistics are sent by a build that has a key (spec 5.27); the owner's .debug app only when asked to (`analyticsDebug=true`)
+    val sends = IosBuild.sendsStatistics(IosSecrets.APPMETRICA_KEY, IosBuild.isDevApp, IosSecrets.ANALYTICS_IN_DEBUG)
     val statistics = if (sends && analytics != null) IosAppMetricaAnalytics.activate(analytics, IosSecrets.APPMETRICA_KEY, logs = IosSecrets.ANALYTICS_IN_DEBUG) else null
     val fakeScenario = launchArgument<FakeScenario>("-fakeScenario")
     val openRoute = launchText("-openRoute")

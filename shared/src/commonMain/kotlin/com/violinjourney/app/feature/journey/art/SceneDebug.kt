@@ -7,7 +7,7 @@ import androidx.compose.runtime.Composable
  * tools/perf/snap.py), and still screenshots on iOS. Read when a picture comes on the screen.
  */
 object SceneDebug {
-    /** Set by the app at its start: only a debug build listens to the switches. */
+    /** Set by the app at its start: only a debug build listens to the switches (Android: `BuildConfig.DEBUG`; iOS: the owner's .debug app, `IosBuild`). */
     var debugBuild: Boolean = false
 }
 

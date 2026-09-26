@@ -55,7 +55,7 @@ import platform.Foundation.NSOperationQueue
 class IosMicPitchSource(
     private val detectorFactory: PitchDetectorFactory,
     encoderFactory: PcmEncoderFactory,
-    /** Debug builds: a line per second of what the detector saw (FrameStats), for tuning the thresholds. */
+    /** The owner's .debug app (`IosBuild.isDevApp`): a line per second of what the detector saw (FrameStats), for tuning the thresholds. */
     private val logStats: Boolean,
 ) : PitchSource {
 

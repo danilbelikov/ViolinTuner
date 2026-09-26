@@ -73,8 +73,6 @@ import com.violinjourney.app.core.time.SystemWallClock
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.history.HistorySectionAsk
 import com.violinjourney.app.feature.share.RenderSpeed
-import kotlin.experimental.ExperimentalNativeApi
-import kotlin.native.Platform
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -90,7 +88,6 @@ import platform.Foundation.NSUserDomainMask
  * What Hilt puts together on Android, by hand: one instance of everything that is one per app, in the order Hilt
  * would make them. Screens take their view models from here (see [IosNavHost]); a new pipeline is made per screen.
  */
-@OptIn(ExperimentalNativeApi::class)
 internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: IosAppMetricaAnalytics?) {
     val io = Dispatchers.IO
     val clock: WallClock = SystemWallClock
@@ -158,7 +155,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
         FakePitchSource(fakeScenario, intonationConfig)
     } else {
         // MPM, as on Android (DetectorComparisonTest)
-        IosMicPitchSource(PitchDetectorFactory(::MpmDetector), PcmEncoderFactory(::IosAacEncoder), logStats = Platform.isDebugBinary)
+        IosMicPitchSource(PitchDetectorFactory(::MpmDetector), PcmEncoderFactory(::IosAacEncoder), logStats = IosBuild.isDevApp)
     }
 
     val videoFiles = IosVideoFiles(repertoireConfig, io)
