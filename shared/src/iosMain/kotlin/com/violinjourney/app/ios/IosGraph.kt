@@ -167,7 +167,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val fileAnalyzer = DecodingFileTakeAnalyzer(PitchDetectorFactory(::MpmDetector), repertoireConfig, Dispatchers.Default, IosPcmFileOpener)
     val videoImporter = VideoTakeImporter(
         videoFiles, fileAnalyzer, sessions, configSource, runningPractice, repertoireConfig, intonationConfig, clock, elapsed, analysisSpeed,
-        Dispatchers.Default,
+        Dispatchers.Default, analytics,
     )
 
     /** The measurement session of the microphone asks for 48 kHz, and the phones give it. */

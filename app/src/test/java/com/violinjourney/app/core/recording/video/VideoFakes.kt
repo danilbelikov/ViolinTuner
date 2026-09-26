@@ -19,19 +19,29 @@ class FakeVideoFiles : VideoFiles {
     var sizes = mutableMapOf<String, Long>()
     var importFails = false
     var adoptFails = false
+    /** What the platform throws instead of answering: a provider, a file system, AVFoundation on a duration of NaN. */
+    var adoptThrows: Exception? = null
+    var importThrows: Exception? = null
+    var sizeThrows: Exception? = null
+    /** Asked first by `info()`: it throws, or does what the player does meanwhile; null falls back to [info]. */
+    var onInfo: ((File) -> VideoInfo?)? = null
     val discarded = mutableListOf<String>()
     val thumbs = mutableSetOf<String>()
     private var next = 1
 
     override fun newCameraFile() = File("/cache/camera/shot-${next++}.mp4")
-    override fun adopt(cameraFile: File): File? = if (adoptFails) null else File("/files/sessions/video-${next++}.mp4")
-    override fun sizeOf(uri: String): Long? = sizes[uri]
+    override fun adopt(cameraFile: File): File? {
+        adoptThrows?.let { throw it }
+        return if (adoptFails) null else File("/files/sessions/video-${next++}.mp4")
+    }
+    override fun sizeOf(uri: String): Long? = sizeThrows?.let { throw it } ?: sizes[uri]
     override fun freeBytes(): Long = free
     override suspend fun import(uri: String): File? {
         delay(COPY_MS)
+        importThrows?.let { throw it }
         return if (importFails) null else File("/files/sessions/video-${next++}.mp4")
     }
-    override fun info(file: File): VideoInfo? = info
+    override fun info(file: File): VideoInfo? = onInfo?.invoke(file) ?: info
     override fun makeThumb(file: File): Boolean = thumbs.add(file.name)
     override fun thumbOf(name: String): File? = File("/files/sessions/$name-thumb.jpg").takeIf { name in thumbs }
     override fun existing(name: String): File? = File("/files/sessions/$name")
@@ -44,9 +54,11 @@ class FakeVideoFiles : VideoFiles {
     }
 }
 
-/** An analysis that takes [tookMs] of virtual time, reports progress ten times and ends as told. */
+/** An analysis that takes [tookMs] of virtual time, reports progress ten times and ends as told — or throws [failWith] halfway. */
 class FakeFileTakeAnalyzer(var tookMs: Long = 2_000, var outcome: FileAnalysisResult? = null) : FileTakeAnalyzer {
     var calls = 0
+    /** A codec that gives up in the middle of the file. */
+    var failWith: Exception? = null
 
     override suspend fun analyze(
         file: File,
@@ -57,6 +69,7 @@ class FakeFileTakeAnalyzer(var tookMs: Long = 2_000, var outcome: FileAnalysisRe
     ): FileAnalysisResult {
         calls++
         repeat(STEPS) { step ->
+            if (step == STEPS / 2) failWith?.let { throw it }
             delay(tookMs / STEPS)
             onProgress(FileAnalysisProgress((step + 1f) / STEPS, listOf(RecordingBar((step + 1f) / STEPS / 2, Zone.IN_TUNE))))
         }

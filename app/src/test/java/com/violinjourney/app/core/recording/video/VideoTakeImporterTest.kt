@@ -1,15 +1,21 @@
 package com.violinjourney.app.core.recording.video
 
+import com.violinjourney.app.core.analytics.ErrorGroup
+import com.violinjourney.app.core.analytics.FakeAnalytics
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
+import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
+import com.violinjourney.app.core.domain.session.NewSession
+import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.recording.FileAnalysisResult
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.settings.SettingsConfigSource
 import com.violinjourney.app.core.time.FixedWallClock
 import com.violinjourney.app.core.time.WallClock
 import java.io.File
+import java.io.IOException
 import kotlin.time.Instant
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
@@ -23,10 +29,13 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Rule
 import org.junit.Test
+import org.junit.rules.TemporaryFolder
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class VideoTakeImporterTest {
+    @get:Rule val folder = TemporaryFolder()
     private val files = FakeVideoFiles()
     private val analyzer = FakeFileTakeAnalyzer()
     private val sessions = FakeSessionRepository()
@@ -34,11 +43,16 @@ class VideoTakeImporterTest {
     private val now = Instant.parse("2026-09-20T10:00:00Z")
     private val clock = FixedWallClock(now, TimeZone.of("Europe/Moscow"))
     private val shot = File("/cache/camera/shot.mp4")
+    private val analytics = FakeAnalytics()
 
-    private fun TestScope.importer(speed: AnalysisSpeed = AnalysisSpeed()): Pair<VideoTakeImporter, MutableList<VideoTakeImporter.Saved>> {
+    private fun TestScope.importer(
+        speed: AnalysisSpeed = AnalysisSpeed(),
+        sessions: SessionRepository = this@VideoTakeImporterTest.sessions,
+        practice: RunningPracticeStore = this@VideoTakeImporterTest.practice,
+    ): Pair<VideoTakeImporter, MutableList<VideoTakeImporter.Saved>> {
         val importer = VideoTakeImporter(
             files, analyzer, sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, RepertoireConfig(), IntonationConfig(),
-            clock, { testScheduler.currentTime }, speed, StandardTestDispatcher(testScheduler),
+            clock, { testScheduler.currentTime }, speed, StandardTestDispatcher(testScheduler), analytics,
         )
         val saved = mutableListOf<VideoTakeImporter.Saved>()
         backgroundScope.launch { importer.saved.collect { saved += it } }
@@ -258,6 +272,159 @@ class VideoTakeImporterTest {
         importer.shot(7, shot)
         advance(6_000)
         assertEquals(now.toEpochMilliseconds(), practice.running.value!!.lastSoundEpochMs)
+    }
+
+    @Test
+    fun `a decoder that gives up halfway fails the video in words - a shot is kept, a picked copy goes`() = runTest {
+        // MediaCodec.CodecException is an IllegalStateException
+        analyzer.failWith = IllegalStateException("codec gave up")
+        val (importer, saved) = importer()
+        importer.shot(7, shot)
+        advance(6_000)
+        val failed = importer.state.value as VideoImport.Failed
+        assertEquals(VideoImportFailure.CANNOT_OPEN, failed.reason)
+        assertTrue("the shot exists nowhere else", failed.rescuePath != null && files.discarded.isEmpty())
+        importer.dismiss()
+
+        importer.picked(7, "content://video/1")
+        advance(6_000)
+        val picked = importer.state.value as VideoImport.Failed
+        assertEquals(VideoImportFailure.CANNOT_OPEN, picked.reason)
+        assertNull("its original is in the gallery", picked.rescuePath)
+        assertEquals(2, files.discarded.size)
+        assertEquals(listOf(ErrorGroup.MEDIA, ErrorGroup.MEDIA), analytics.errors.map { it.first })
+        importer.dismiss()
+
+        analyzer.failWith = null
+        importer.picked(7, "content://video/1")
+        advance(6_000)
+        assertEquals("the next video goes as if nothing had happened", 1, saved.size)
+    }
+
+    @Test
+    fun `a video the platform cannot read is said so - and the app stays`() = runTest {
+        // AVFoundation gives a duration of NaN for what it cannot read, and rounding NaN throws IllegalArgumentException
+        files.onInfo = { throw IllegalArgumentException("Cannot round NaN value.") }
+        val (importer, _) = importer()
+        importer.picked(7, "content://video/1")
+        advance(1_000)
+        assertEquals(VideoImportFailure.CANNOT_OPEN, (importer.state.value as VideoImport.Failed).reason)
+        assertEquals(1, files.discarded.size)
+        assertEquals(listOf(ErrorGroup.MEDIA), analytics.errors.map { it.first })
+        assertEquals(0, analyzer.calls)
+    }
+
+    @Test
+    fun `a take the database cannot keep is said and not a fall - the shot stays to be sent`() = runTest {
+        val full = object : SessionRepository by FakeSessionRepository() {
+            override suspend fun save(session: NewSession): Long = throw IllegalStateException("database or disk is full (code 13 SQLITE_FULL)")
+        }
+        val (importer, saved) = importer(sessions = full)
+        importer.shot(7, shot)
+        advance(6_000)
+        val failed = importer.state.value as VideoImport.Failed
+        assertEquals(VideoImportFailure.CANNOT_OPEN, failed.reason)
+        assertTrue(failed.rescuePath != null && files.discarded.isEmpty())
+        assertTrue(saved.isEmpty())
+        assertEquals(listOf(ErrorGroup.MEDIA), analytics.errors.map { it.first })
+    }
+
+    @Test
+    fun `a practice that cannot be marked does not undo a saved take`() = runTest {
+        val stuck = object : RunningPracticeStore by practice {
+            override suspend fun markSound(epochMs: Long) {
+                throw IOException("the settings file cannot be written")
+            }
+        }
+        practice.start(now.toEpochMilliseconds() - 600_000)
+        val (importer, saved) = importer(practice = stuck)
+        importer.shot(7, shot)
+        advance(6_000)
+        assertEquals(VideoImport.Idle, importer.state.value)
+        assertEquals(1, saved.size)
+        assertEquals(7L, sessions.sessions.value.single().pieceId)
+        assertEquals(listOf(ErrorGroup.MEDIA), analytics.errors.map { it.first })
+    }
+
+    @Test
+    fun `a shot that cannot be moved in stays where the camera left it`() = runTest {
+        val cameraFile = folder.newFile("shot.mp4").apply { writeBytes(ByteArray(1_000) { 1 }) }
+        files.adoptThrows = SecurityException("the camera folder is not ours")
+        val (importer, _) = importer()
+        importer.shot(7, cameraFile)
+        advance(1_000)
+        val failed = importer.state.value as VideoImport.Failed
+        assertEquals(VideoImportFailure.CANNOT_OPEN, failed.reason)
+        assertEquals(cameraFile.path, failed.rescuePath)
+        assertTrue("nothing is deleted before the player says so", cameraFile.isFile && files.discarded.isEmpty())
+        assertEquals(listOf(ErrorGroup.MEDIA), analytics.errors.map { it.first })
+        importer.dismiss()
+        assertEquals(listOf(cameraFile.name), files.discarded)
+    }
+
+    @Test
+    fun `a shot the platform will not move in stays too - an empty one goes`() = runTest {
+        // a copy across volumes that ran out of room: the platform answers null, the shot is still whole in the camera folder
+        val cameraFile = folder.newFile("shot.mp4").apply { writeBytes(ByteArray(1_000) { 1 }) }
+        files.adoptFails = true
+        val (importer, _) = importer()
+        importer.shot(7, cameraFile)
+        advance(1_000)
+        val failed = importer.state.value as VideoImport.Failed
+        assertEquals(VideoImportFailure.CANNOT_OPEN, failed.reason)
+        assertEquals(cameraFile.path, failed.rescuePath)
+        assertTrue("nothing is deleted before the player says so", cameraFile.isFile)
+        importer.dismiss()
+
+        // the camera came back with nothing written: there is nothing to send
+        val empty = folder.newFile("empty.mp4")
+        importer.shot(7, empty)
+        advance(1_000)
+        assertNull((importer.state.value as VideoImport.Failed).rescuePath)
+        assertFalse(empty.exists())
+        assertTrue("a platform that answers is no error to tell about", analytics.errors.isEmpty())
+    }
+
+    @Test
+    fun `a picked video that cannot be copied in is said so`() = runTest {
+        files.importThrows = IllegalStateException("the provider has died")
+        val (importer, _) = importer()
+        importer.picked(7, "content://video/1")
+        advance(1_000)
+        val failed = importer.state.value as VideoImport.Failed
+        assertEquals(VideoImportFailure.CANNOT_OPEN, failed.reason)
+        assertNull(failed.rescuePath)
+        assertEquals(listOf(ErrorGroup.MEDIA), analytics.errors.map { it.first })
+    }
+
+    @Test
+    fun `a picked video whose provider will not tell its size is copied all the same`() = runTest {
+        files.sizeThrows = IllegalArgumentException("Invalid column _size")
+        val (importer, saved) = importer()
+        importer.picked(7, "content://video/1")
+        advance(6_000)
+        assertEquals(1, saved.size)
+        assertEquals(listOf(ErrorGroup.MEDIA), analytics.errors.map { it.first })
+    }
+
+    @Test
+    fun `a video stopped while the platform throws stays stopped, and the next one is left alone`() = runTest {
+        val (importer, saved) = importer()
+        files.onInfo = {
+            files.onInfo = null
+            // «Отмена» on a picked video, and the next one picked at once — while the platform is still busy with the first
+            importer.cancelClicked()
+            importer.picked(8, "content://video/2")
+            throw IllegalArgumentException("Cannot round NaN value.")
+        }
+        importer.picked(7, "content://video/1")
+        advance(1_000)
+        assertTrue("the next video goes on", importer.state.value is VideoImport.Working)
+        advance(6_000)
+        assertEquals(listOf(8L), sessions.sessions.value.map { it.pieceId })
+        assertEquals(1, saved.size)
+        assertEquals("only the stopped one is gone", 1, files.discarded.size)
+        assertTrue("a stop is no failure to tell about", analytics.errors.isEmpty())
     }
 
     @Test
