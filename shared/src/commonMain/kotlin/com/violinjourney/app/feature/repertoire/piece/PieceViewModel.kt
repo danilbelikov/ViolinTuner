@@ -403,8 +403,8 @@ open class PieceViewModel(
             val result = withContext(io) { importer.import(uri) }
             val problem = when (result) {
                 is BackingImport.Added -> {
-                    val id = backings.add(result.backing)
-                    backings.setForPiece(pieceId, id)
+                    // stored and put on the piece at once: the housekeeping of a stop in between would not find it on nobody
+                    backings.addForPiece(pieceId, result.backing)
                     null
                 }
                 BackingImport.Unreadable -> BackingProblem.Unreadable

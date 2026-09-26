@@ -111,6 +111,14 @@ interface BackingDao {
     @Query("SELECT fileName FROM backings")
     suspend fun fileNames(): List<String>
 
+    /** A new backing and its piece in one transaction: [deleteUnused] never sees it on nobody. */
+    @Transaction
+    suspend fun insertForPiece(backing: BackingEntity, pieceId: Long): Long {
+        val id = insert(backing)
+        upsertPiece(PieceBackingEntity(pieceId, id, enabled = true))
+        return id
+    }
+
     @Transaction
     suspend fun deleteUnused(): List<String> {
         val gone = unused()
@@ -133,9 +141,9 @@ class RoomBackingRepository(
 
     override suspend fun backing(id: Long): Backing? = dao.backing(id)?.toDomain()
 
-    override suspend fun add(backing: Backing): Long = dao.insert(
-        BackingEntity(0, backing.fileName, backing.title, backing.durationMs, backing.sampleRate, backing.channels, backing.sizeBytes, backing.addedAtEpochMs),
-    )
+    override suspend fun add(backing: Backing): Long = dao.insert(backing.toEntity())
+
+    override suspend fun addForPiece(pieceId: Long, backing: Backing): Long = dao.insertForPiece(backing.toEntity(), pieceId)
 
     override suspend fun setForPiece(pieceId: Long, backingId: Long?) {
         if (backingId == null) dao.deletePiece(pieceId) else dao.upsertPiece(PieceBackingEntity(pieceId, backingId, enabled = true))
@@ -158,6 +166,8 @@ class RoomBackingRepository(
         }
         return kept
     }
+
+    private fun Backing.toEntity() = BackingEntity(0, fileName, title, durationMs, sampleRate, channels, sizeBytes, addedAtEpochMs)
 
     private fun BackingEntity.toDomain() = Backing(id, fileName, title, durationMs, sampleRate, channels, sizeBytes, addedAtEpochMs)
 

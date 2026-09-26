@@ -17,6 +17,8 @@ class FakeBackingRepository : BackingRepository {
         return id
     }
 
+    override suspend fun addForPiece(pieceId: Long, backing: Backing): Long = add(backing).also { setForPiece(pieceId, it) }
+
     override suspend fun setForPiece(pieceId: Long, backingId: Long?) {
         pieceBackings.update { rows -> rows.filter { it.pieceId != pieceId } + listOfNotNull(backingId?.let { PieceBacking(pieceId, it, enabled = true) }) }
     }

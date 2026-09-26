@@ -34,6 +34,7 @@ import platform.Foundation.NSFileModificationDate
 import platform.Foundation.NSLog
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
+import platform.Foundation.dateWithTimeIntervalSince1970
 import platform.Foundation.timeIntervalSince1970
 import platform.posix.O_RDONLY
 import platform.posix.close
@@ -107,6 +108,13 @@ internal class IosBackingImporter(
         val name = path.substringAfterLast('/')
         val target = files.newFile(name.substringAfterLast('.', "audio"))
         if (!source.moveTo(target)) return BackingImport.Unreadable
+        // a move keeps the picked file's own date, and the sweep spares only files younger than an hour
+        // (IosBackingFiles.deleteOrphans): the copy is dated now, its row is a moment away. Not done — it keeps the old date.
+        NSFileManager.defaultManager.setAttributes(
+            mapOf<Any?, Any?>(NSFileModificationDate to NSDate.dateWithTimeIntervalSince1970(clock.millis() / MS_PER_SECOND)),
+            ofItemAtPath = target.path,
+            error = null,
+        )
         return BackingImport.Added(
             Backing(
                 fileName = target.path.substringAfterLast('/'),

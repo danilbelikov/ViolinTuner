@@ -71,6 +71,13 @@ interface BackingRepository {
     /** Stores a backing whose file is already in place; the id. */
     suspend fun add(backing: Backing): Long
 
+    /**
+     * Stores a backing whose file is already in place and puts it on the piece (replacing what was there) in one go — the
+     * housekeeping of a stop in between would find it on nobody and delete it with its file (spec 5.25); the chip is
+     * switched on with a new one, as [setForPiece] does. The id.
+     */
+    suspend fun addForPiece(pieceId: Long, backing: Backing): Long
+
     /** Puts [backingId] on the piece (replacing what was there) or takes it off with null; the chip is switched on with a new one. */
     suspend fun setForPiece(pieceId: Long, backingId: Long?)
 
@@ -124,6 +131,8 @@ object NoBackings : BackingRepository {
     override suspend fun backing(id: Long): Backing? = null
 
     override suspend fun add(backing: Backing): Long = 0
+
+    override suspend fun addForPiece(pieceId: Long, backing: Backing): Long = 0
 
     override suspend fun setForPiece(pieceId: Long, backingId: Long?) = Unit
 
