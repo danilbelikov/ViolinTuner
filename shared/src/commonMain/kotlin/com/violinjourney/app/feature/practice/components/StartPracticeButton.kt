@@ -11,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.FloatState
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -19,7 +20,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
@@ -47,7 +47,7 @@ import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.core.ui.icons.IconSizes
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.theme.ViolinTheme
-import com.violinjourney.app.feature.journey.art.SceneMotion
+import com.violinjourney.app.feature.journey.art.awaitGridFrame
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.practice_start
 import kotlin.math.roundToInt
@@ -129,9 +129,8 @@ private class ButtonWatch {
 
 /**
  * Seconds of the lights, stepped thirty times a second on the frames the postcards step on — they
- * share the screen — while the button is seen and not [calm]. The pace eases in and out over
- * [StartButtonMath.EASE_S]; off the screen it stops at once, since nobody sees it. Asleep while
- * there is nothing to move. Null with «убрать анимации»: the button shows its moment of rest.
+ * share the screen — while the button is seen and not [calm]. Asleep between those frames, and asleep
+ * while there is nothing to move. Null with «убрать анимации»: the button shows its moment of rest.
  */
 @Composable
 private fun rememberLightSeconds(watch: ButtonWatch, calm: () -> Boolean): FloatState? {
@@ -139,29 +138,38 @@ private fun rememberLightSeconds(watch: ButtonWatch, calm: () -> Boolean): Float
     val seconds = remember { mutableFloatStateOf(StartButtonMath.REST_SECONDS) }
     val calmNow by rememberUpdatedState(calm)
     LaunchedEffect(reduce) {
-        if (reduce) return@LaunchedEffect
-        var clock = seconds.floatValue
-        var pace = 0f
-        while (true) {
-            snapshotFlow { watch.seen && !calmNow() }.first { it }
-            var last = withFrameNanos { it }
-            var shown = last
-            while (watch.seen && (pace > 0f || !calmNow())) {
-                val now = withFrameNanos { it }
-                val dt = (now - last) / NANOS_PER_SECOND
-                last = now
-                pace = StartButtonMath.eased(pace, if (calmNow()) 0f else 1f, dt)
-                clock += dt * pace * StartButtonMath.paceFor(watch.widthDp)
-                if (SceneMotion.frameDue(now, shown)) {
-                    shown = now
-                    seconds.floatValue = clock
-                }
-            }
-            seconds.floatValue = clock
-            if (!watch.seen) pace = 0f
-        }
+        if (!reduce) runLightClock(seconds, seen = { watch.seen }, widthDp = { watch.widthDp }, calm = { calmNow() })
     }
     return if (reduce) null else seconds
+}
+
+/**
+ * The clock of the lights: a step on every cell of the postcards' grid ([awaitGridFrame]) while the
+ * button is [seen] and not [calm], its pace easing in and out over [StartButtonMath.EASE_S]; off the
+ * screen it stops at once, since nobody sees it. The first frame of a run only marks the time. The
+ * seconds go on from where they stood, at a pace that keeps the lights' speed in dp on a wide button.
+ */
+internal suspend fun runLightClock(seconds: MutableFloatState, seen: () -> Boolean, widthDp: () -> Float, calm: () -> Boolean) {
+    var clock = seconds.floatValue
+    var pace = 0f
+    var shown = 0L
+    while (true) {
+        snapshotFlow { seen() && !calm() }.first { it }
+        var last = -1L
+        while (seen() && (pace > 0f || !calm())) {
+            shown = awaitGridFrame(shown) { now ->
+                if (last >= 0) {
+                    val dt = (now - last) / NANOS_PER_SECOND
+                    pace = StartButtonMath.eased(pace, if (calm()) 0f else 1f, dt)
+                    clock += dt * pace * StartButtonMath.paceFor(widthDp())
+                    seconds.floatValue = clock
+                }
+                last = now
+            }
+        }
+        seconds.floatValue = clock
+        if (!seen()) pace = 0f
+    }
 }
 
 /**
