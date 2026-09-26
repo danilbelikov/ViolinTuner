@@ -19,56 +19,131 @@ import kotlin.math.sqrt
  * longer tail is longer, not louder.
  */
 internal class Reverb(private val sampleRate: Int, private val config: SoundConfig) {
+    /** The walls the lines are built for, and the ones asked for while the old tail is still being faded out. */
     private var space: ReverbSpace? = null
+    private var nextSpace: ReverbSpace? = null
     private var combs: Array<Comb> = emptyArray()
     private var allPasses: Array<AllPass> = emptyArray()
+    private var decaySec = 0.0
+    private var damping = 0.0
+
+    /** A change on the fly takes this long (spec 5.11): the pre-delay's crossfade, the fall and the rise of [gate]. */
+    private val rampSamples = (config.smoothingMs / MS_PER_SECOND * sampleRate).roundToInt().coerceAtLeast(1)
+
+    /**
+     * How far open the lines are, in steps of [rampSamples]: all the way while nothing changes (× 1.0 — the sound is
+     * the same as with no gate at all), shut while another space waits to be built, then open again from silence.
+     */
+    private var gate = rampSamples
+
     private val preDelay = DoubleArray((config.preDelayMs.max / MS_PER_SECOND * sampleRate).toInt() + 2)
     private var preDelayWrite = 0
-    private var preDelaySamples = 0
+
+    /** The pre-delay moves by a crossfade of two taps, from [preDelayFrom] to [preDelayTo], never by a jump of the tap. */
+    private var preDelayWanted = 0
+    private var preDelayFrom = 0
+    private var preDelayTo = 0
+    private var preDelayFade = 0
 
     private var mixTarget = 0.0
     private var mix = 0.0
     private val glide = exp(-1.0 / (config.smoothingMs / MS_PER_SECOND * sampleRate))
 
     fun set(settings: ReverbSettings, immediate: Boolean) {
-        if (settings.space != space) build(settings.space)
-        preDelaySamples = (settings.preDelayMs / MS_PER_SECOND * sampleRate).roundToInt().coerceIn(0, preDelay.size - 2)
+        // read before anything changes: a hall that rested was not run, and what its lines hold is a tail frozen long ago
+        val resting = idle
+        decaySec = settings.decaySec
         val cutoff = config.dullTailHz * (config.brightTailHz / config.dullTailHz).pow(settings.brightness)
-        val damping = exp(-2 * PI * cutoff / sampleRate)
-        combs.forEach { it.tune(settings.decaySec, damping, sampleRate) }
+        damping = exp(-2 * PI * cutoff / sampleRate)
+        preDelayWanted = (settings.preDelayMs / MS_PER_SECOND * sampleRate).roundToInt().coerceIn(0, preDelay.size - 2)
         mixTarget = if (settings.enabled) settings.mix else 0.0
         if (immediate) mix = mixTarget
+        if (immediate || resting || space == null) {
+            // nothing is heard of the hall: no tail to fade out, no tap to glide
+            if (settings.space != space) build(settings.space)
+            nextSpace = null
+            openAtOnce()
+        } else {
+            // null also calls off a switch still waiting, back to the walls that are there
+            nextSpace = settings.space.takeIf { it != space }
+        }
+        combs.forEach { it.tune(decaySec, damping, sampleRate) }
+        // a tail frozen when the hall went quiet belongs to another place of the recording: waking, it starts from silence
+        if (resting && mixTarget > 0.0) reset()
     }
 
     fun reset() {
+        nextSpace?.let(::build)
+        nextSpace = null
         combs.forEach { it.clear() }
         allPasses.forEach { it.clear() }
         preDelay.fill(0.0)
+        openAtOnce()
     }
 
+    /** While idle the hall is not run at all ([SoundChain]), so its lines stand still; they are cleared on waking ([set]). */
     val idle: Boolean get() = mixTarget == 0.0 && mix < IDLE_BELOW
 
     fun process(sample: Double): Double {
         mix = mixTarget + (mix - mixTarget) * glide
 
+        val waiting = nextSpace
+        if (waiting != null) {
+            if (--gate <= 0) {
+                gate = 0
+                build(waiting)
+                nextSpace = null
+            }
+        } else if (gate < rampSamples) {
+            gate++
+        }
+        val open = if (gate == rampSamples) 1.0 else gate.toDouble() / rampSamples
+
         preDelay[preDelayWrite] = sample
-        var read = preDelayWrite - preDelaySamples
-        if (read < 0) read += preDelay.size
-        val delayed = preDelay[read]
+        if (preDelayFade == 0 && preDelayTo != preDelayWanted) {
+            // a wish that came during a crossfade waits for its end: the tap never jumps
+            preDelayFrom = preDelayTo
+            preDelayTo = preDelayWanted
+            preDelayFade = rampSamples
+        }
+        var delayed = tap(preDelayTo)
+        if (preDelayFade > 0) {
+            val old = preDelayFade.toDouble() / rampSamples
+            delayed = delayed * (1 - old) + tap(preDelayFrom) * old
+            preDelayFade--
+        }
         if (++preDelayWrite == preDelay.size) preDelayWrite = 0
 
         var wet = 0.0
-        for (comb in combs) wet += comb.process(delayed)
+        val input = delayed * open
+        for (comb in combs) wet += comb.process(input)
         wet *= combSum
         for (allPass in allPasses) wet = allPass.process(wet)
-        return sample * (1 - mix) + wet * mix
+        return sample * (1 - mix) + wet * open * mix
     }
 
-    /** Another space is other walls: new delay lines, the old tail is gone. The wet signal starts from silence, so nothing clicks. */
+    private fun tap(samplesBack: Int): Double {
+        var read = preDelayWrite - samplesBack
+        if (read < 0) read += preDelay.size
+        return preDelay[read]
+    }
+
+    /** Lines open, the pre-delay where it is wanted: after a reset, or while nothing of the hall is heard. */
+    private fun openAtOnce() {
+        gate = rampSamples
+        preDelayFrom = preDelayWanted
+        preDelayTo = preDelayWanted
+        preDelayFade = 0
+    }
+
+    /**
+     * Another space is other walls: new delay lines. The old tail has been faded out over the smoothing time before its
+     * lines are dropped ([gate]), and the new ones start from silence — the tail is cut, but without a click.
+     */
     private fun build(newSpace: ReverbSpace) {
         space = newSpace
         val scale = sizeOf(newSpace) * sampleRate / TUNED_AT
-        combs = Array(COMB_TUNINGS.size) { Comb((COMB_TUNINGS[it] * scale).roundToInt()) }
+        combs = Array(COMB_TUNINGS.size) { Comb((COMB_TUNINGS[it] * scale).roundToInt()).apply { tune(decaySec, damping, sampleRate) } }
         allPasses = Array(ALL_PASS_TUNINGS.size) { AllPass((ALL_PASS_TUNINGS[it] * scale).roundToInt()) }
     }
 

@@ -30,6 +30,8 @@ internal class Compressor(private val sampleRate: Int, private val config: Sound
     val reductionDb: Double get() = -gainReductionDb * enabled
 
     fun set(settings: CompressorSettings, immediate: Boolean) {
+        // read before anything changes: a compressor that rested was not run, and its reduction stands where it was left
+        val resting = idle
         thresholdDb = settings.thresholdDb
         slope = 1 / settings.ratio - 1
         attack = coefficient(settings.attackMs)
@@ -40,12 +42,16 @@ internal class Compressor(private val sampleRate: Int, private val config: Sound
             makeupDb = makeupTargetDb
             enabled = enabledTarget
         }
+        // Waking, it starts from no reduction: one frozen at another place of the recording would be let go over the
+        // release — a dip of several decibels — while the attack catches up with this place under the glide of [enabled].
+        if (resting && enabledTarget > 0.0) gainReductionDb = 0.0
     }
 
     fun reset() {
         gainReductionDb = 0.0
     }
 
+    /** While idle it is not run at all ([SoundChain]): its reduction stands still, and is dropped on waking ([set]). */
     val idle: Boolean get() = enabledTarget == 0.0 && enabled < IDLE_BELOW
 
     fun process(sample: Double): Double {

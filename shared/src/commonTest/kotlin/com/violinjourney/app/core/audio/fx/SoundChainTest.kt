@@ -98,4 +98,36 @@ class SoundChainTest {
         assertEquals((1.8 * RATE).toInt(), chain.tailSamples(SoundPresets.settingsOf(BuiltInPreset.CHAMBER_HALL, config)))
     }
 
+    @Test
+    fun `a hall switched off until it rests and on again starts from silence`() {
+        val chain = SoundChain(RATE, config)
+        val hall = SoundPresets.settingsOf(BuiltInPreset.GRAND_HALL, config)
+        chain.set(hall)
+        chain.process(FxSignals.noise(0.5, 1.0))
+        // the equalizer and the compressor keep the chain running; the hall alone goes quiet and rests
+        chain.set(hall.copy(reverb = hall.reverb.copy(enabled = false)))
+        chain.process(FloatArray(RATE))
+        chain.set(hall)
+        val silence = FloatArray(RATE / 2)
+        chain.process(silence)
+        assertEquals(0.0, FxSignals.peak(silence), 0.0)
+    }
+
+    @Test
+    fun `a room preset changed to a hall while it plays comes in without a click`() {
+        val chain = SoundChain(RATE, config)
+        chain.set(SoundPresets.settingsOf(BuiltInPreset.ROOM, config))
+        val buffer = FxSignals.sine(440.0, 0.3, 1.0)
+        val half = buffer.size / 2
+        val first = buffer.copyOfRange(0, half)
+        val second = buffer.copyOfRange(half, buffer.size)
+        chain.process(first)
+        chain.set(SoundPresets.settingsOf(BuiltInPreset.GRAND_HALL, config))
+        chain.process(second)
+        val joined = first + second
+        // the same bound as from a preset without a hall: the room's tail is faded out, not cut
+        val fullScaleStep = 2 * PI * 440 / RATE
+        val around = FxSignals.largestStep(joined, half - 100, joined.size)
+        assertTrue(around < fullScaleStep, "a step of $around")
+    }
 }

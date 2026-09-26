@@ -77,4 +77,24 @@ class CompressorTest {
         val honestStep = 0.5 * 2 * PI * 440 / RATE
         assertTrue(FxSignals.largestStep(output, change - 10, output.size) <= honestStep * 1.1)
     }
+
+    @Test
+    fun `switched back on it starts from no reduction - not from where it stopped`() {
+        val compressor = Compressor(RATE, config)
+        compressor.set(settings, immediate = true)
+        val loud = FxSignals.sine(440.0, peak = 0.5, seconds = 0.5)
+        loud.forEach { compressor.process(it.toDouble()) } // some 8 dB of reduction
+        compressor.set(settings.copy(enabled = false), immediate = false)
+        var index = 0
+        // the chain runs it only until it rests; its reduction then stands where it was
+        while (!compressor.idle) compressor.process(loud[index++ % loud.size].toDouble())
+        assertTrue(compressor.reductionDb < 0.01)
+
+        compressor.set(settings, immediate = false)
+        val quiet = FxSignals.sine(440.0, peak = 0.02, seconds = 0.2) // under the threshold: nothing to reduce
+        val output = FloatArray(quiet.size) { compressor.process(quiet[it].toDouble()).toFloat() }
+        // from the first moments on: the quiet sine as it is, no stale reduction let go over the release
+        assertEquals(0.0, FxSignals.db(FxSignals.peak(output, RATE / 50, RATE / 10) / 0.02), 0.1)
+        assertEquals(0.0, compressor.reductionDb, 0.01)
+    }
 }

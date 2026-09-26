@@ -4,6 +4,7 @@ import com.violinjourney.app.core.audio.fx.FxSignals.RATE
 import com.violinjourney.app.core.domain.sound.ReverbSettings
 import com.violinjourney.app.core.domain.sound.ReverbSpace
 import com.violinjourney.app.core.domain.sound.SoundConfig
+import kotlin.math.roundToInt
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.Test
@@ -90,5 +91,73 @@ class ReverbTest {
         FxSignals.noise(0.5, 0.5).forEach { reverb.process(it.toDouble()) }
         reverb.set(wetOnly.copy(space = ReverbSpace.ROOM, decaySec = 0.6), immediate = true)
         assertEquals(0.0, reverb.process(0.0), 0.0, "no tail of the hall left in the room")
+    }
+
+    /** As [SoundChain] runs it: not at all while it rests — the sound then passes as it is. */
+    private fun Reverb.play(input: FloatArray): FloatArray = FloatArray(input.size) { if (idle) input[it] else process(input[it].toDouble()).toFloat() }
+
+    private val rampSamples = (config.smoothingMs / 1_000 * RATE).roundToInt()
+
+    @Test
+    fun `a hall switched back on starts from silence - not from the tail it had`() {
+        val reverb = Reverb(RATE, config)
+        reverb.set(wetOnly, immediate = true)
+        reverb.play(FxSignals.noise(0.5, 0.5))
+        reverb.set(wetOnly.copy(enabled = false), immediate = false)
+        reverb.play(FloatArray(RATE)) // it goes quiet, and then rests with what its lines held at that moment
+        assertTrue(reverb.idle)
+        reverb.set(wetOnly, immediate = false)
+        val after = reverb.play(FloatArray(RATE / 2))
+        assertEquals(0.0, FxSignals.peak(after), 0.0, "the tail of the place where the hall went quiet does not come back")
+    }
+
+    @Test
+    fun `a pre-delay turned while it plays glides in`() {
+        val input = FxSignals.sine(200.0, 0.5, 1.0)
+        val change = RATE / 2
+        fun run(turned: Boolean): FloatArray {
+            val reverb = Reverb(RATE, config)
+            reverb.set(wetOnly, immediate = true)
+            return FloatArray(input.size) {
+                if (turned && it == change) reverb.set(wetOnly.copy(preDelayMs = 21.0), immediate = false)
+                reverb.process(input[it].toDouble()).toFloat()
+            }
+        }
+        val steady = run(turned = false)
+        val turned = run(turned = true)
+        // what the turn changed: a jump of the tap would come out of the lines as a step of it
+        val difference = FloatArray(RATE / 5) { turned[change + it] - steady[change + it] }
+        val largest = FxSignals.peak(difference)
+        assertTrue(largest > 0.0)
+        val step = FxSignals.largestStep(difference, 0, difference.size)
+        assertTrue(step < largest / 10, "a step of $step against $largest")
+    }
+
+    @Test
+    fun `another space asked for while it plays fades the old tail out without a click`() {
+        val reverb = Reverb(RATE, config)
+        reverb.set(wetOnly, immediate = true)
+        val input = FxSignals.sine(440.0, 0.3, 1.0)
+        val change = input.size / 2
+        val output = FloatArray(input.size) {
+            if (it == change) reverb.set(wetOnly.copy(space = ReverbSpace.ROOM, decaySec = 0.6), immediate = false)
+            reverb.process(input[it].toDouble()).toFloat()
+        }
+        val steady = FxSignals.largestStep(output, change / 2, change)
+        val around = FxSignals.largestStep(output, change - 10, output.size)
+        assertTrue(around < steady * 1.5, "a step of $around against $steady before the switch")
+    }
+
+    @Test
+    fun `another space starts from silence once the old tail has faded out`() {
+        // the pre-delay stays within the smoothing time: what it still holds of before the switch goes into the old lines
+        val hall = wetOnly.copy(preDelayMs = 20.0)
+        val reverb = Reverb(RATE, config)
+        reverb.set(hall, immediate = true)
+        FxSignals.sine(440.0, 0.3, 0.5).forEach { reverb.process(it.toDouble()) }
+        reverb.set(hall.copy(space = ReverbSpace.ROOM, decaySec = 0.6), immediate = false)
+        val after = FloatArray(RATE / 2) { reverb.process(0.0).toFloat() }
+        assertTrue(FxSignals.peak(after, 0, rampSamples / 2) > 0.0, "the old tail is faded out, not cut")
+        assertEquals(0.0, FxSignals.peak(after, rampSamples, after.size), 0.0, "no tail of the hall left in the room")
     }
 }
