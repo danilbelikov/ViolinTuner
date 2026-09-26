@@ -6,15 +6,48 @@ import com.violinjourney.app.core.io.PlatformFile
 /** Names of files as other apps will see them. Pure. */
 object ShareNames {
     const val EXTENSION = ".m4a"
+
+    /** Characters — whole ones: an emoji is two UTF-16 units and is never cut in half. */
     private const val MAX_LENGTH = 80
+
+    /**
+     * Bytes of UTF-8: a name on ext4, f2fs and APFS is at most 255 of them, and the longest name made of this one is a
+     * video's sound on its way, `<name>.mp4.part.sound.m4a` — 80 characters of Chinese alone would be 240 bytes.
+     */
+    private const val MAX_BYTES = 200
     private val FORBIDDEN = Regex("""[\\/:*?"<>|\p{Cntrl}]""")
     private val SPACES = Regex("""\s+""")
 
     /** [title] made fit to be a file name anywhere: «Соната № 1: Allegro» → «Соната № 1 Allegro.m4a». */
     fun fileName(title: String): String {
-        val clean = title.replace(FORBIDDEN, " ").replace(SPACES, " ").trim().trim('.').take(MAX_LENGTH).trim()
+        val clean = fitted(title.replace(FORBIDDEN, " ").replace(SPACES, " ").trim().trim('.')).trim()
         return (clean.ifEmpty { "recording" }) + EXTENSION
     }
+
+    /** The head of [text] that fits [MAX_LENGTH] characters and [MAX_BYTES] bytes of UTF-8, cut between characters. */
+    private fun fitted(text: String): String {
+        var end = 0
+        var characters = 0
+        var bytes = 0
+        while (end < text.length && characters < MAX_LENGTH) {
+            val pair = text[end].isHighSurrogate() && end + 1 < text.length && text[end + 1].isLowSurrogate()
+            val width = if (pair) 2 else 1
+            bytes += if (pair) UTF8_OF_PAIR else utf8Bytes(text[end])
+            if (bytes > MAX_BYTES) break
+            end += width
+            characters++
+        }
+        return text.substring(0, end)
+    }
+
+    /** A lone surrogate is written as the replacement character, three bytes. */
+    private fun utf8Bytes(char: Char): Int = when {
+        char.code < 0x80 -> 1
+        char.code < 0x800 -> 2
+        else -> 3
+    }
+
+    private const val UTF8_OF_PAIR = 4
 
     /** The same name for the video of a take (spec 3.19): «Менуэт соль мажор · 18 сентября.mp4». */
     fun videoFileName(title: String): String = fileName(title).removeSuffix(EXTENSION) + VIDEO_EXTENSION
