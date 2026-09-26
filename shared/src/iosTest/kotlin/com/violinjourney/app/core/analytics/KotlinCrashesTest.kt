@@ -86,7 +86,10 @@ class KotlinCrashesTest {
     fun `the statistics get the crash as a crash of its own`() {
         val service = RecordingService()
         val frames = listOf(KotlinCrashFrame("com.example.Foo", "bar", "Foo.kt", 12))
-        IosAppMetricaAnalytics(service).crashed(KotlinCrash("kotlin.IllegalStateException", "boom", "kotlin.IllegalArgumentException: inner", frames))
+        val statistics = IosAppMetricaAnalytics(service)
+        statistics.crashed(KotlinCrash("kotlin.IllegalStateException", "boom", "kotlin.IllegalArgumentException: inner", frames))
+        assertEquals(emptyList(), service.crashes, "told at the start, it waits until the consent has been read")
+        statistics.consentChanged(true)
         val told = service.crashes.single()
         assertEquals("kotlin.IllegalStateException", told.type)
         assertEquals("boom", told.message)

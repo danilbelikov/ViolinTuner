@@ -24,6 +24,8 @@ class AppMetricaAnalytics @Inject constructor(
     private val settings: SettingsRepository,
     @DefaultDispatcher private val dispatcher: CoroutineDispatcher,
 ) : Analytics {
+    /** The consent as read from the settings: nothing reaches the library before it is read, nor while it is off. */
+    private val consent = ConsentGate()
 
     /**
      * Called once from Application.onCreate. Nothing is sent until the stored consent allows it,
@@ -48,11 +50,11 @@ class AppMetricaAnalytics @Inject constructor(
             settings.settings
                 .map { it.analyticsEnabled }
                 .distinctUntilChanged()
-                .collect { enabled -> AppMetrica.setDataSendingEnabled(enabled) }
+                .collect { enabled -> consent.follow(enabled, AppMetrica::setDataSendingEnabled) }
         }
     }
 
-    override fun track(event: AnalyticsEvent) {
+    override fun track(event: AnalyticsEvent) = consent.pass {
         if (event.params.isEmpty()) {
             AppMetrica.reportEvent(event.name)
         } else {
@@ -60,11 +62,30 @@ class AppMetricaAnalytics @Inject constructor(
         }
     }
 
+    // the class and the frames of the exception go, its messages without the names of files (spec 3.34, rule 1)
     override fun error(group: ErrorGroup, message: String, cause: Throwable?) {
-        if (cause == null) {
-            AppMetrica.reportError(group.key, message)
-        } else {
-            AppMetrica.reportError(group.key, message, cause)
+        val reported = cause?.reported()
+        consent.pass {
+            if (reported == null) {
+                AppMetrica.reportError(group.key, message)
+            } else {
+                AppMetrica.reportError(group.key, message, reported)
+            }
         }
     }
 }
+
+/**
+ * An exception as the statistics may see it: the class and the frames of the original, with the messages — its own and
+ * its causes' — passed through [ErrorText.scrub]. Crashes the library catches itself are not passed through here.
+ */
+internal class ReportedFailure(message: String, cause: Throwable?) : Exception(message, cause)
+
+internal fun Throwable.reported(depth: Int = 0): Throwable =
+    ReportedFailure(
+        listOfNotNull(this::class.java.name, ErrorText.scrub(message)).joinToString(": "),
+        cause?.takeIf { it !== this && depth < MAX_CAUSES }?.reported(depth + 1),
+    ).also { it.stackTrace = stackTrace }
+
+/** A chain of causes longer than this is cut: it is a loop or a pile, and the first ones tell the story. */
+private const val MAX_CAUSES = 8

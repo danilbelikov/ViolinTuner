@@ -31,31 +31,45 @@ interface AnalyticsService {
 
 /**
  * [Analytics] of iOS, as `AppMetricaAnalytics` is on Android (spec 5.27): the library is activated once, muted, and the
- * consent stored in the settings unmutes it — no first session lost to waiting for the disk, nothing sent before consent.
+ * consent stored in the settings unmutes it — no first session lost to waiting for the disk. Nothing reaches the library
+ * until the stored choice has been read, and nothing while it is off ([ConsentGate]).
  */
 class IosAppMetricaAnalytics(private val service: AnalyticsService) : Analytics {
+    private val consent = ConsentGate()
+
     /** Follows the consent of [settings] for as long as [scope] lives — the scope of the app's data. */
     fun followConsent(settings: SettingsRepository, scope: CoroutineScope) {
         scope.launch(Dispatchers.Main) {
-            settings.settings.map { it.analyticsEnabled }.distinctUntilChanged().collect(service::setDataSendingEnabled)
+            settings.settings.map { it.analyticsEnabled }.distinctUntilChanged().collect(::consentChanged)
         }
     }
 
-    override fun track(event: AnalyticsEvent) = service.reportEvent(event.name, event.params)
+    /** The consent as just read from the settings. */
+    internal fun consentChanged(enabled: Boolean) = consent.follow(enabled, service::setDataSendingEnabled)
 
-    override fun error(group: ErrorGroup, message: String, cause: Throwable?) =
-        service.reportError(group.key, message, cause?.let { "${it::class.simpleName}: ${it.message}" })
+    override fun track(event: AnalyticsEvent) = consent.pass { service.reportEvent(event.name, event.params) }
 
-    /** A Kotlin exception that ended the last run, told at this start, under the same switch as everything else (spec 3.34). */
-    internal fun crashed(crash: KotlinCrash) = service.reportUnhandledException(
-        crash.type,
-        crash.message,
-        crash.frames,
-        buildMap {
-            put(KOTLIN, KotlinVersion.CURRENT.toString())
-            crash.causes?.let { put(CAUSED_BY, it) }
-        },
-    )
+    // the class of the exception goes, its message without the names of files (spec 3.34, rule 1)
+    override fun error(group: ErrorGroup, message: String, cause: Throwable?) {
+        val text = cause?.let { "${it::class.simpleName}: ${ErrorText.scrub(it.message)}" }
+        consent.pass { service.reportError(group.key, message, text) }
+    }
+
+    /**
+     * A Kotlin exception that ended the last run, told at this start, under the same switch as everything else (spec 3.34):
+     * it is told as soon as the consent has been read, and not at all when it is off; its messages without names of files.
+     */
+    internal fun crashed(crash: KotlinCrash) = consent.pass {
+        service.reportUnhandledException(
+            crash.type,
+            ErrorText.scrub(crash.message),
+            crash.frames,
+            buildMap {
+                put(KOTLIN, KotlinVersion.CURRENT.toString())
+                ErrorText.scrub(crash.causes)?.let { put(CAUSED_BY, it) }
+            },
+        )
+    }
 
     companion object {
         /** Keys of the environment of a crash: the version of Kotlin, and the chain of causes. */
