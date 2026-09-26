@@ -18,14 +18,25 @@ class AbMixer(latencySamples: Int, private val fadeSamples: Int) {
     var processedShare = 0f
         private set
 
-    /** Where the share is going; it gets there in [fadeSamples]. */
+    /** Where the share is going; it gets there in [fadeSamples]. Moved by [aim] or [jumpTo] only. */
     var target = 0f
-        set(value) {
+        private set(value) {
             field = value.coerceIn(0f, 1f)
         }
 
     /** True while the original alone is heard and is meant to be: the chain need not run at all. */
     val originalOnly: Boolean get() = processedShare == 0f && target == 0f
+
+    /**
+     * Sends the share towards [share]. True when the chain has rested — the original alone was heard — and is to be heard
+     * again now: it knows nothing of the seconds it did not run (the tail of its hall, its compressor and look-ahead stand
+     * where it was left), so the caller resets it first. The fade covers its first moment, the look-ahead's zeros included.
+     */
+    fun aim(share: Float): Boolean {
+        val waking = originalOnly
+        target = share
+        return waking && target > 0f
+    }
 
     /** Without a fade: the state a recording starts to play in. */
     fun jumpTo(share: Float) {

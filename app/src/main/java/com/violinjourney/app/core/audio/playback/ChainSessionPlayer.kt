@@ -278,11 +278,8 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
                 newBacking?.let { (offset, gain, heard) -> backingMix?.set(offset, gain, heard) }
 
                 newSettings?.let { fresh ->
-                    val wasProcessing = processing
                     current = fresh
                     processing = !SoundRules.isNeutral(fresh)
-                    // A chain that has been resting knows nothing of the last seconds: it starts clean, and the fade covers its first moment.
-                    if (processing && !wasProcessing && mixer.originalOnly) chain.reset()
                     chain.set(fresh)
                 }
                 if (seek != NO_SEEK) {
@@ -315,7 +312,9 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
                     for (i in 0 until count) dry[i] = pcm[i] / FULL_SCALE
                 }
 
-                mixer.target = if (processing && !wantOriginal) 1f else 0f
+                // A chain that has been resting — «A», or settings that did nothing — knows nothing of the last seconds: it starts
+                // clean, and the fade covers its first moment.
+                if (mixer.aim(if (processing && !wantOriginal) 1f else 0f)) chain.reset()
                 val out = if (mixer.originalOnly) {
                     mixer.passOriginal(dry, count)
                     dry

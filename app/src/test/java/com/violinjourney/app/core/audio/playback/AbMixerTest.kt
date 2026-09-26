@@ -32,7 +32,7 @@ class AbMixerTest {
         val mixer = AbMixer(latencySamples = 2, fadeSamples = 4)
         mixer.jumpTo(1f)
         mixer.mix(ramp(2), FloatArray(2), 2) // fills the delay with 1, 2
-        mixer.target = 0f
+        mixer.aim(0f)
         val wet = FloatArray(6) { 100f }
         mixer.mix(ramp(6, from = 3), wet, 6)
         // the original under the fade is 1, 2, 3 … — late by the two samples the chain is late by
@@ -43,10 +43,10 @@ class AbMixerTest {
     @Test
     fun `a fade turned round midway goes back from where it was`() {
         val mixer = AbMixer(latencySamples = 0, fadeSamples = 4)
-        mixer.target = 1f
+        mixer.aim(1f)
         mixer.mix(FloatArray(2), FloatArray(2) { 1f }, 2)
         assertEquals(0.5f, mixer.processedShare, 0f)
-        mixer.target = 0f
+        mixer.aim(0f)
         mixer.mix(FloatArray(1), FloatArray(1) { 1f }, 1)
         assertEquals(0.25f, mixer.processedShare, 0f)
     }
@@ -59,5 +59,31 @@ class AbMixerTest {
         val dry = ramp(3, from = 50)
         mixer.passOriginal(dry, 3)
         assertEquals(listOf(0f, 0f, 50f), dry.toList())
+    }
+
+    @Test
+    fun `leaving the original alone tells the chain to start clean - once, and only then`() {
+        val mixer = AbMixer(latencySamples = 0, fadeSamples = 4)
+        mixer.jumpTo(0f)
+        assertTrue("the chain rested: it is to be reset before it is heard", mixer.aim(1f))
+        assertFalse("already on its way — no second reset", mixer.aim(1f))
+        mixer.mix(FloatArray(2), FloatArray(2), 2)
+        assertFalse("staying at the original wakes nothing", AbMixer(latencySamples = 0, fadeSamples = 4).aim(0f))
+
+        // turned round midway: the chain has kept running under the fade, it is not stale
+        mixer.aim(0f)
+        mixer.mix(FloatArray(1), FloatArray(1), 1)
+        assertTrue(mixer.processedShare > 0f)
+        assertFalse(mixer.aim(1f))
+
+        // all the way back to the original, and then to the processing again
+        mixer.aim(0f)
+        mixer.mix(FloatArray(8), FloatArray(8), 8)
+        assertTrue(mixer.originalOnly)
+        assertFalse(mixer.aim(0f))
+        assertTrue(mixer.aim(1f))
+
+        val processing = AbMixer(latencySamples = 0, fadeSamples = 4).apply { jumpTo(1f) }
+        assertFalse("leaving the processing for the original needs no reset", processing.aim(0f))
     }
 }

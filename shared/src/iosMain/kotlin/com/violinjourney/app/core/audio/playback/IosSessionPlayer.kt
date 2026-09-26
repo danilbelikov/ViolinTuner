@@ -311,10 +311,8 @@ class IosSessionPlayer internal constructor(
                     wishes
                 }
                 fresh?.let {
-                    val wasProcessing = processing
                     current = it
                     processing = !SoundRules.isNeutral(it)
-                    if (processing && !wasProcessing && mixer.originalOnly) chain.reset()
                     chain.set(it)
                 }
                 if (lost) {
@@ -375,7 +373,8 @@ class IosSessionPlayer internal constructor(
                     tailLeft -= count
                     dry.fill(0f, 0, count)
                 }
-                mixer.target = if (processing && !wantOriginal) 1f else 0f
+                // a chain that has been resting — «A», or settings that did nothing — starts clean; the fade covers its first moment
+                if (mixer.aim(if (processing && !wantOriginal) 1f else 0f)) chain.reset()
                 val out = if (mixer.originalOnly) {
                     mixer.passOriginal(dry, count)
                     dry
