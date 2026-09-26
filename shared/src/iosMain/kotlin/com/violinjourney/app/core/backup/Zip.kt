@@ -18,6 +18,7 @@ import platform.zlib.Z_BUF_ERROR
 import platform.zlib.Z_NO_FLUSH
 import platform.zlib.Z_OK
 import platform.zlib.Z_STREAM_END
+import platform.zlib.crc32
 import platform.zlib.inflate
 import platform.zlib.inflateEnd
 import platform.zlib.inflateInit2_
@@ -303,23 +304,18 @@ internal class ZipReader(input: ByteInput) : AutoCloseable {
 
 internal class ZipFormatException(message: String) : okio.IOException(message)
 
-/** CRC-32 of ZIP, the reflected polynomial 0xEDB88320. */
+/**
+ * CRC-32 of ZIP, by the system's zlib — the one that inflates the copy: a loop over every byte in Kotlin took minutes
+ * over the gigabytes of video, twice a copy (written, then read back), and longer still in a debug build.
+ */
+@OptIn(ExperimentalForeignApi::class)
 internal class Crc32 {
-    private var crc = 0.inv()
-    val value: Int get() = crc.inv()
+    private var crc: ULong = 0u
+    val value: Int get() = crc.toInt()
 
     fun update(bytes: ByteArray, offset: Int, count: Int) {
-        var c = crc
-        for (i in offset until offset + count) c = TABLE[(c xor bytes[i].toInt()) and 0xFF] xor (c ushr 8)
-        crc = c
-    }
-
-    private companion object {
-        val TABLE = IntArray(256) { n ->
-            var c = n
-            repeat(8) { c = if (c and 1 != 0) (c ushr 1) xor 0xEDB88320.toInt() else c ushr 1 }
-            c
-        }
+        if (count <= 0) return
+        bytes.usePinned { crc = crc32(crc, it.addressOf(offset).reinterpret(), count.convert()) }
     }
 }
 
