@@ -16,17 +16,29 @@ import java.nio.ByteOrder
  * [finish]; [abort] never throws.
  */
 internal class OfflineAacWriter(file: File, private val sampleRate: Int, bitRate: Int, private val channels: Int = 1) {
-    private val codec: MediaCodec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC).apply {
+    // A writer that could not be made lets go of what it took — a device has few codec instances; the exception still
+    // reaches the caller.
+    private val codec: MediaCodec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC).also { encoder ->
         val format = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRate, channels).apply {
             setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
             setInteger(MediaFormat.KEY_BIT_RATE, bitRate)
             setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, MAX_INPUT_BYTES)
         }
-        // Without the flag `configure` fails — and only on a device (see CLAUDE.md, «Сессии»).
-        configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-        start()
+        try {
+            // Without the flag `configure` fails — and only on a device (see CLAUDE.md, «Сессии»).
+            encoder.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+            encoder.start()
+        } catch (e: Exception) {
+            encoder.release()
+            throw e
+        }
     }
-    private val muxer = MediaMuxer(file.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+    private val muxer = try {
+        MediaMuxer(file.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+    } catch (e: Exception) {
+        codec.release()
+        throw e
+    }
     private val info = MediaCodec.BufferInfo()
     private var track = -1
     private var muxing = false

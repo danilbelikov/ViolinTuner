@@ -246,6 +246,37 @@ class PlaybackTest {
         assertNull(waveforms.of(File(directory, "junk.m4a").apply { writeText("x") }))
     }
 
+    /**
+     * The backing's cache file cut short while it plays (a cleared cache, a broken disk): the player's thread is bare, and
+     * the EOF of the reader was a fall of the app; now it is the player's failure.
+     */
+    @Test
+    fun aBackingCutShortWhilePlayingEndsInFailureNotAFall() {
+        val take = encode("take.m4a", seconds = 4)
+        // a backing as the cache prepares it: 16-bit stereo, three seconds of a quiet tone
+        val pcm = File(directory, "backing.pcm")
+        val frames = rate * 3
+        val bytes = java.nio.ByteBuffer.allocate(frames * 4).order(java.nio.ByteOrder.LITTLE_ENDIAN)
+        for (i in 0 until frames) {
+            val sample = (sin(2 * PI * 220.0 * i / rate) * 3_000).toInt().toShort()
+            bytes.putShort(sample)
+            bytes.putShort(sample)
+        }
+        pcm.writeBytes(bytes.array())
+        val player = ChainSessionPlayer(SoundConfig())
+        try {
+            player.loadWithBacking(take, PlayerBacking(pcm = { pcm }, offsetMs = 0, gainDb = 0f))
+            // the reader has its length once it is open: only then does cutting the file make its next read fail
+            await("ready with the backing") { player.state.value.ready && player.state.value.hasBacking }
+            player.play()
+            await("playing") { player.state.value.playing && player.state.value.positionMs > 100 }
+            java.io.RandomAccessFile(pcm, "rw").use { it.setLength(0) }
+            await("the failure") { player.state.value.failed }
+        } finally {
+            player.release()
+        }
+    }
+
     private fun <T : Any> assertNotNullAnd(value: T?): T {
         assertNotNull(value)
         return value!!

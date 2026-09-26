@@ -186,4 +186,13 @@ class SoundFileRendererTest {
         assertFalse(renderer.renderWithBacking(take, SoundRules.off(config), RenderBacking({ null }, offsetMs = 0, gainDb = 0f), target) {})
         assertFalse(target.exists())
     }
+
+    /** The backing's sound gone between its preparing and its reading: «Не получилось», not a FileNotFoundException up to the sheet. */
+    @Test
+    fun aBackingWhoseSoundIsGoneMakesNoFileInsteadOfAFall() = runBlocking {
+        val take = recording("take.m4a", seconds = 1)
+        val target = File(directory, "mix.m4a")
+        assertFalse(renderer.renderWithBacking(take, SoundRules.off(config), RenderBacking({ File(directory, "gone.pcm") }, offsetMs = 0, gainDb = 0f), target) {})
+        assertFalse(target.exists())
+    }
 }

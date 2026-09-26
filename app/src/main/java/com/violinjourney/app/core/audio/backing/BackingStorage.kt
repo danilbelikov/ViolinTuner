@@ -204,7 +204,9 @@ class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, 
         var codec: MediaCodec? = null
         try {
             extractor.setDataSource(source.absolutePath)
-            val track = (0 until extractor.trackCount).first { extractor.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true }
+            // a copy without sound (an iOS import this extractor reads otherwise) is no backing, not a NoSuchElementException
+            val track = (0 until extractor.trackCount).firstOrNull { extractor.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true }
+                ?: throw IOException("no audio track")
             val format = extractor.getTrackFormat(track)
             extractor.selectTrack(track)
             val inRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)

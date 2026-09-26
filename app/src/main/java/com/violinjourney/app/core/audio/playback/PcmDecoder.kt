@@ -141,7 +141,7 @@ class PcmDecoder private constructor(
         private const val MICROS = 1_000_000L
         private const val TIMEOUT_US = 10_000L
 
-        /** Null when the file cannot be opened or holds no sound this device can decode. */
+        /** Null when the file cannot be opened, holds no sound this device can decode, or does not tell its length. */
         fun open(file: File): PcmDecoder? {
             val extractor = MediaExtractor()
             var codec: MediaCodec? = null
@@ -152,6 +152,10 @@ class PcmDecoder private constructor(
                 } ?: throw IOException("no audio track")
                 val format = extractor.getTrackFormat(track)
                 extractor.selectTrack(track)
+                // A track without a length (a stream written live, a webm from a browser) can be neither shown by the
+                // player nor measured by the analysis: it cannot be opened, as a backing without one is refused
+                // (BackingImporter.probe). `getLong` would throw a NullPointerException past every catch.
+                if (!format.containsKey(MediaFormat.KEY_DURATION)) throw IOException("no duration")
                 val mime = checkNotNull(format.getString(MediaFormat.KEY_MIME))
                 codec = MediaCodec.createDecoderByType(mime)
                 codec.configure(format, null, null, 0)

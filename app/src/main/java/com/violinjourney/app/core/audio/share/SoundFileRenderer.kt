@@ -125,6 +125,10 @@ class SoundFileRenderer @Inject constructor(
             // MediaCodec and MediaMuxer report every failure as a runtime exception; so does a disk that is full.
             Log.w(TAG, "rendering ${source.name} failed", e)
             false
+        } catch (e: IOException) {
+            // the backing's sound gone or cut short, a file the muxer cannot open
+            Log.w(TAG, "cannot read or write for ${source.name}", e)
+            false
         } finally {
             if (!whole) {
                 writer?.abort()

@@ -14,6 +14,7 @@ import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.domain.sound.SoundSettings
 import java.io.File
+import java.io.IOException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -157,6 +158,10 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
                 fail()
             } catch (e: UnsupportedOperationException) {
                 Log.w(TAG, "no audio output for ${file.name}", e)
+                fail()
+            } catch (e: IOException) {
+                // the backing's file cut short or gone while it plays: this thread is bare, a throw would end the app
+                Log.w(TAG, "the backing of ${file.name} could not be read", e)
                 fail()
             } finally {
                 track?.release()

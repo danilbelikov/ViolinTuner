@@ -6,6 +6,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.audio.recording.AacFileEncoder
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingFiles
+import com.violinjourney.app.testing.TestVideo
 import java.io.File
 import java.util.UUID
 import java.util.concurrent.CountDownLatch
@@ -15,6 +16,7 @@ import kotlin.math.PI
 import kotlin.math.sin
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -85,6 +87,18 @@ class BackingPcmCacheTest {
         assertEquals(listOf(ready, ready, ready), prepared)
         assertTrue("some sound was unpacked", ready.length() > 0)
         assertEquals(listOf(ready.name), unpacked.listFiles().orEmpty().map { it.name }.filter { it.startsWith(stem) })
+    }
+
+    /** A copy without a sound track — an import from iOS this extractor reads otherwise — is no backing, not a fall (spec 5.25). */
+    @Test
+    fun aCopyWithoutSoundIsNoBackingNotAFall() {
+        val silent = TestVideo.make(files.newFile("mp4"), seconds = 1, withSound = false)
+        val backing = Backing(
+            fileName = silent.name, title = "a", durationMs = 1_000, sampleRate = 48_000, channels = 1, sizeBytes = silent.length(), addedAtEpochMs = 0,
+        )
+        assertNull(BackingPcmCache(context, files).prepare(backing, 48_000))
+        val left = unpacked.listFiles().orEmpty().map { it.name }.filter { it.startsWith(silent.nameWithoutExtension) }
+        assertTrue("left behind: $left", left.isEmpty())
     }
 
     private companion object {
