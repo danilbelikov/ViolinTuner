@@ -29,6 +29,7 @@ import kotlinx.cinterop.value
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -38,6 +39,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withTimeoutOrNull
 import platform.AVFAudio.AVAudioEngine
+import platform.AVFAudio.AVAudioEngineConfigurationChangeNotification
 import platform.AVFAudio.AVAudioFile
 import platform.AVFAudio.AVAudioFormat
 import platform.AVFAudio.AVAudioPCMBuffer
@@ -47,6 +49,7 @@ import platform.AVFAudio.AVAudioSessionCategoryPlayback
 import platform.AVFAudio.setActive
 import platform.Foundation.NSError
 import platform.Foundation.NSLog
+import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSURL
 
 /**
@@ -56,7 +59,8 @@ import platform.Foundation.NSURL
  * between two chunks. A take under a backing (spec 3.32) is mixed with it by the same [BackingMixer] as on Android.
  * The output (the engine) is taken on play and paused half a second after the sound stops — a pause or the end of the
  * take — so an open screen with nothing playing does not keep the audio hardware running; the audio session, shared
- * with the microphones, is let go through [IosAudioSession] when the player is.
+ * with the microphones, is let go through [IosAudioSession] when the player is. When iOS stops the engine by itself (a
+ * change of headphones), the player pauses where the sound was.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class IosSessionPlayer internal constructor(
@@ -85,6 +89,7 @@ class IosSessionPlayer internal constructor(
     private var backingGainDb = 0f
     private var backingHeard = true
     private var backingChanged = false
+    private var outputLost = false
 
     private val wake = Channel<Unit>(Channel.CONFLATED)
     private var worker: Job? = null
@@ -153,6 +158,7 @@ class IosSessionPlayer internal constructor(
         lock.withLock {
             wantPlaying = false
             seekToMs = NO_SEEK
+            outputLost = false
         }
         mutableMeters.value = null
         mutableState.update { PlayerState(processed = it.processed, original = it.original, backingHeard = it.backingHeard) }
@@ -161,6 +167,19 @@ class IosSessionPlayer internal constructor(
     private inline fun wish(change: () -> Unit) {
         lock.withLock(change)
         wake.trySend(Unit)
+    }
+
+    /**
+     * iOS stopped the engine by itself — the route's rate or channels changed, as headphones come and go — and said so
+     * only by a notification: the sound on the node is gone with it. The player pauses where the ear was, as players do
+     * when the route is lost, instead of showing «playing» in silence; the next play takes the output again.
+     */
+    private fun outputStopped() {
+        wish {
+            wantPlaying = false
+            outputLost = true
+        }
+        mutableState.update { it.copy(playing = false) }
     }
 
     private suspend fun run(file: PlatformFile, backing: PlayerBacking?) {
@@ -184,11 +203,18 @@ class IosSessionPlayer internal constructor(
         val format = AVAudioFormat(standardFormatWithSampleRate = rate.toDouble(), channels = if (reader != null) 2u else 1u)
         engine.attachNode(node)
         engine.connect(node, engine.mainMixerNode, format)
+        val job = currentCoroutineContext()[Job]
+        val center = NSNotificationCenter.defaultCenter
+        // posted on a thread of the system's: what is done there only leaves a wish; a player let go hears nothing more
+        val stopped = center.addObserverForName(AVAudioEngineConfigurationChangeNotification, engine, null) { _ ->
+            if (job?.isActive != false && !engine.running) outputStopped()
+        }
         var playback: Playback? = null
         try {
             playback = Playback(source, rate, engine, node, format, reader)
             playback.loop()
         } finally {
+            center.removeObserver(stopped)
             node.stop()
             engine.stop()
             // the last one using the session lets it go, and music another app had on comes back
@@ -262,10 +288,11 @@ class IosSessionPlayer internal constructor(
             }
 
             while (kotlin.coroutines.coroutineContext.isActive) {
-                val (seek, playing, wantOriginal, fresh) = lock.withLock {
-                    val wishes = Wishes(seekToMs, wantPlaying, original, if (settingsChanged) settings else null)
+                val (seek, playing, wantOriginal, fresh, lost) = lock.withLock {
+                    val wishes = Wishes(seekToMs, wantPlaying, original, if (settingsChanged) settings else null, outputLost)
                     seekToMs = NO_SEEK
                     settingsChanged = false
+                    outputLost = false
                     if (backingChanged) {
                         backingChanged = false
                         backingMix?.set(backingOffsetMs, backingGainDb, backingHeard)
@@ -278,6 +305,13 @@ class IosSessionPlayer internal constructor(
                     processing = !SoundRules.isNeutral(it)
                     if (processing && !wasProcessing && mixer.originalOnly) chain.reset()
                     chain.set(it)
+                }
+                if (lost) {
+                    // the stopped engine took the sound on the node with it: on from where the ear was
+                    val heard = heardMs()
+                    restartAt(heard)
+                    mutableMeters.value = null
+                    mutableState.update { it.copy(positionMs = heard) }
                 }
                 if (seek != NO_SEEK) restartAt(seek)
                 if (!playing) {
@@ -409,8 +443,11 @@ class IosSessionPlayer internal constructor(
             tailLeft = NO_TAIL
         }
 
+        /** Where the sound the node has played is in the take. */
+        private fun heardMs(): Long = (baseMs + played.value * MS_PER_SECOND / rate).coerceIn(0, durationMs)
+
         private fun tellPosition() {
-            val positionMs = (baseMs + played.value * MS_PER_SECOND / rate).coerceIn(0, durationMs)
+            val positionMs = heardMs()
             mutableState.update { if (it.playing) it.copy(positionMs = positionMs) else it }
         }
 
@@ -506,7 +543,7 @@ class IosSessionPlayer internal constructor(
         }
     }
 
-    private data class Wishes(val seek: Long, val playing: Boolean, val original: Boolean, val settings: SoundSettings?)
+    private data class Wishes(val seek: Long, val playing: Boolean, val original: Boolean, val settings: SoundSettings?, val outputLost: Boolean)
 
     internal companion object {
         private const val NO_SEEK = -1L

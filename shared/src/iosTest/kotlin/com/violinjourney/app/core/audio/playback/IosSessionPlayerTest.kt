@@ -32,11 +32,13 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import platform.AVFAudio.AVAudioEngine
+import platform.AVFAudio.AVAudioEngineConfigurationChangeNotification
 import platform.AVFAudio.AVAudioEngineManualRenderingModeRealtime
 import platform.AVFAudio.AVAudioFormat
 import platform.AVFAudio.AVAudioPCMBuffer
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSUUID
 
@@ -109,6 +111,36 @@ class IosSessionPlayerTest {
         player.play()
         withTimeout(5.seconds) { player.state.first { it.positionMs > 150 } }
         assertFalse(player.state.value.failed)
+        output.cancel()
+        player.release()
+    }
+
+    @Test
+    fun `when iOS stops the engine by itself the player pauses where the sound was and plays on from there`() = runBlocking {
+        writeTone(seconds = 1.5)
+        val engine = AtomicReference<AVAudioEngine?>(null)
+        val player = IosSessionPlayer(scope, SoundConfig(), BackingConfig()) { byHand().also { engine.value = it } }
+        player.load(PlatformFile(path))
+        withTimeout(5.seconds) { player.state.first { it.ready || it.failed } }
+        assertTrue(player.state.value.ready, "${player.state.value}")
+        val output = scope.launch { pull(engine) }
+
+        player.play()
+        withTimeout(5.seconds) { player.state.first { it.positionMs > 300 } }
+        val running = engine.value!!
+        // what iOS does when headphones come or go: the engine stops, and only a notification says so
+        running.stop()
+        NSNotificationCenter.defaultCenter.postNotificationName(AVAudioEngineConfigurationChangeNotification, running)
+        withTimeout(5.seconds) { player.state.first { !it.playing } }
+        delay(OUTPUT_KEPT_MS) // the worker has taken the wish by now
+        val paused = player.state.value
+        assertFalse(paused.playing, "no «playing» in silence")
+        assertFalse(paused.failed)
+        assertTrue(paused.positionMs in 300 until paused.durationMs, "paused where the sound was, not at the start: ${paused.positionMs}")
+
+        player.play()
+        withTimeout(5.seconds) { player.state.first { it.positionMs > paused.positionMs + 100 } }
+        assertTrue(running.running, "play took the output again")
         output.cancel()
         player.release()
     }
