@@ -22,12 +22,14 @@ import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.get
 import kotlinx.cinterop.usePinned
+import okio.IOException
 import platform.AVFAudio.AVAudioFile
 import platform.AVFAudio.AVAudioPCMBuffer
 import platform.Foundation.NSDate
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSFileModificationDate
 import platform.Foundation.NSFileSystemFreeSize
+import platform.Foundation.NSLog
 import platform.Foundation.NSNumber
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
@@ -141,16 +143,34 @@ internal class IosBackingPcm(private val caches: PlatformFile, private val files
 
     override fun cached(backing: Backing, sampleRate: Int): PlatformFile? = fileOf(backing, sampleRate).takeIf { it.exists() }
 
+    /**
+     * Null — never a throw — when the copy cannot be decoded or the cache cannot be written (a full disk, a `.partial`
+     * that cannot be opened), as on Android: the piece, the camera, the player, «Звук», «Поделиться» and the take on the
+     * microphone's thread all ask for it, and on iOS a throw there ends the app.
+     */
     override fun make(backing: Backing, sampleRate: Int): PlatformFile? {
         val source = files.existing(backing.fileName) ?: return null
         val target = fileOf(backing, sampleRate)
         val partial = directory.child(target.path.substringAfterLast('/') + PARTIAL)
         return try {
             if (decode(source, partial, sampleRate) && partial.moveTo(target)) target else null
+        } catch (e: IOException) {
+            // FileOutput.write on a full disk
+            log("cannot unpack ${backing.fileName}: ${e.message}")
+            null
+        } catch (e: IllegalArgumentException) {
+            // the `.partial` could not be opened, or the resampler refused a rate
+            log("cannot unpack ${backing.fileName}: ${e.message}")
+            null
+        } catch (e: IllegalStateException) {
+            log("cannot unpack ${backing.fileName}: ${e.message}")
+            null
         } finally {
             partial.deleteAll()
         }
     }
+
+    private fun log(line: String) = NSLog("BackingPcm: $line".replace("%", "%%"))
 
     private fun fileOf(backing: Backing, sampleRate: Int) = directory.child("${backing.fileName.substringBeforeLast('.')}$RATE_SEPARATOR$sampleRate.pcm")
 

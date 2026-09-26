@@ -24,6 +24,7 @@ import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Duration.Companion.minutes
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -140,6 +141,26 @@ class IosBackingTest {
         assertEquals(listOf(ready, ready, ready), prepared)
         val left = PlatformFile("${caches.path}/backing-pcm").listNames()
         assertTrue(left.none { it.endsWith(".partial") }, "left behind: $left")
+    }
+
+    /**
+     * A cache that cannot be written — a full disk, a `.partial` that cannot be opened — is no backing (spec 5.25), as on
+     * Android: before, the throw went through the view model, the player or the microphone's thread and ended the app.
+     */
+    @Test
+    fun `a backing that cannot be unpacked is no backing and no fall of the app`() {
+        val files = IosBackingFiles(data, SystemWallClock)
+        val source = files.newFile("m4a")
+        tone(source.path, 44_100, 1, 220.0)
+        val backing = Backing(fileName = source.path.substringAfterLast('/'), title = "a", durationMs = 1_000, sampleRate = 44_100, channels = 1, sizeBytes = 0, addedAtEpochMs = 0)
+        // a file where the folder of the cache should be: nothing can be written under it
+        val blocked = PlatformFile("$folder/blocked")
+        val output = assertNotNull(blocked.openOutput())
+        output.writeBytes("not a folder".encodeToByteArray())
+        output.close()
+        assertNull(IosBackingPcm(blocked, files).prepare(backing, 48_000))
+        // the lock of the pair was let go: where the cache can be written, the same backing is unpacked
+        assertNotNull(IosBackingPcm(caches, files).prepare(backing, 48_000))
     }
 
     @Test

@@ -9,7 +9,9 @@ interface BackingPcm {
     fun cached(backing: Backing, sampleRate: Int): PlatformFile?
 
     /**
-     * The PCM of [backing] at [sampleRate], made if need be; null when its copy is gone or cannot be decoded. Blocking.
+     * The PCM of [backing] at [sampleRate], made if need be; null — never a throw — when its copy is gone, cannot be
+     * decoded or the cache cannot be written (a full disk): its callers run in view models' scopes and on the player's and
+     * the microphone's threads, where a throw ends the app. Blocking.
      * A second caller of the same backing and rate waits for the first and gets its file: the piece, the player, «Звук»,
      * «Поделиться» and the camera may all ask for it at once while the cache is empty.
      */
@@ -35,8 +37,9 @@ abstract class SingleFlightBackingPcm : BackingPcm {
         cached(backing, sampleRate) ?: making.withLock(backing.fileName to sampleRate) { cached(backing, sampleRate) ?: make(backing, sampleRate) }
 
     /**
-     * Decodes [backing] into the cache at [sampleRate]; null when its copy is gone or cannot be decoded. Called under
-     * the lock of the pair and only while its file is missing, so its `.partial` has one writer. Blocking.
+     * Decodes [backing] into the cache at [sampleRate]; null, never a throw, when its copy is gone, cannot be decoded or
+     * cannot be written ([prepare]). Called under the lock of the pair and only while its file is missing, so its
+     * `.partial` has one writer. Blocking.
      */
     protected abstract fun make(backing: Backing, sampleRate: Int): PlatformFile?
 
