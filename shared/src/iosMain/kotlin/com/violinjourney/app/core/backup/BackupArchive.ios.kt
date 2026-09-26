@@ -21,9 +21,10 @@ actual object BackupWriter {
         val counts = entries.groupingBy { it.part }.eachCount()
         val seen = HashMap<BackupPart, Int>()
         val buffer = ByteArray(BUFFER)
-        // the file is let go however the copy ends — a copy that broke or was stopped leaves no descriptor open
+        val zip = ZipWriter(out)
+        // the file is let go however the copy ends — a copy that broke or was stopped leaves no descriptor open, and
+        // no zlib state of the entry it was writing either (ZipOutputStream.use does both on Android)
         try {
-            val zip = ZipWriter(out)
             zip.beginEntry(BackupManifest.ENTRY, compress = true)
             BackupManifestText.write(manifest).encodeToByteArray().let { zip.write(it, 0, it.size) }
             zip.endEntry()
@@ -60,6 +61,9 @@ actual object BackupWriter {
             zip.finish()
             // «Готово» is about the disk, not the system's cache; only a copy written to its end is waited for
             out.syncToDisk()
+        } catch (e: Throwable) {
+            zip.abandon()
+            throw e
         } finally {
             out.close()
         }

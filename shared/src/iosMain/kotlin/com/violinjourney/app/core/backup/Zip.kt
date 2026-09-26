@@ -38,8 +38,16 @@ import okio.buffer
  * The ZIP of a copy on iOS, written and read as a stream — what `ZipOutputStream` and `ZipInputStream` do on Android,
  * byte for byte in what matters: every entry deflated, its sizes and checksum in a data descriptor after it, ZIP64
  * where a size or an offset does not fit in 32 bits. So a copy made on one phone is read on the other.
+ *
+ * [narrowUpTo] is the largest size a data descriptor still gives in four bytes — 32 bits, and only a test says less, to
+ * reach the edge without writing four gigabytes. The central directory always goes by 32 bits. [deflaterOf] makes the
+ * zlib state of an entry, raw deflate at a level; a test holds on to it to see it let go.
  */
-internal class ZipWriter(out: ByteOutput) {
+internal class ZipWriter(
+    out: ByteOutput,
+    private val narrowUpTo: Long = MAX_32,
+    private val deflaterOf: (level: Int) -> Deflater = { Deflater(it, true) },
+) {
     private val counted = CountingSink(ByteOutputSink(out))
     private val sink = counted.buffer()
     private val written = mutableListOf<Written>()
@@ -51,7 +59,8 @@ internal class ZipWriter(out: ByteOutput) {
         val crc = Crc32()
         var size = 0L
         val compressedBefore = counted.bytes
-        val deflating = DeflaterSink(NotClosing(sink), Deflater(level, true)).buffer()
+        val deflater = deflaterOf(level)
+        val deflating = DeflaterSink(NotClosing(sink), deflater).buffer()
     }
 
     /** [compress] false still deflates, at level 0: a stored entry would need its checksum before its bytes. */
@@ -97,7 +106,7 @@ internal class ZipWriter(out: ByteOutput) {
         sink.writeIntLe(DESCRIPTOR)
         sink.writeIntLe(crc)
         // as ZipInputStream decides: eight bytes where a size does not fit in four
-        if (compressed > MAX_32 || entry.size > MAX_32) {
+        if (compressed > narrowUpTo || entry.size > narrowUpTo) {
             sink.writeLongLe(compressed)
             sink.writeLongLe(entry.size)
         } else {
@@ -183,6 +192,17 @@ internal class ZipWriter(out: ByteOutput) {
         }
         sink.flush()
     }
+
+    /**
+     * A copy that broke or was stopped half way: the zlib state of the entry it was writing is let go at once — nothing
+     * more is written, the stream under it is its owner's to close. Without this, every stopped copy kept it until the
+     * end of the process.
+     */
+    fun abandon() {
+        val entry = current ?: return
+        current = null
+        entry.deflater.end()
+    }
 }
 
 /** One entry of an archive being read: its name, and its bytes until [ZipReader.next] is called again. */
@@ -198,8 +218,11 @@ internal class ZipEntryReader(val name: String, private val source: Source) {
     }
 }
 
-/** Reads entries one after another from the start of an archive, checking the checksum and the size of each. */
-internal class ZipReader(input: ByteInput) : AutoCloseable {
+/**
+ * Reads entries one after another from the start of an archive, checking the checksum and the size of each. [narrowUpTo]
+ * is the one of the [ZipWriter] that wrote the archive: 32 bits, as everywhere but in a test.
+ */
+internal class ZipReader(input: ByteInput, private val narrowUpTo: Long = MAX_32) : AutoCloseable {
     private val source = ByteInputSource(input).buffer()
     private var open: Checked? = null
 
@@ -220,7 +243,7 @@ internal class ZipReader(input: ByteInput) : AutoCloseable {
         var size = source.readIntLe().toLong() and MAX_32
         val nameLength = source.readShortLe().toInt() and MAX_16
         val extraLength = source.readShortLe().toInt() and MAX_16
-        val name = source.readUtf8(nameLength.toLong())
+        val name = nameOf(source.readByteArray(nameLength.toLong()))
         val extra = Buffer().also { source.readFully(it, extraLength.toLong()) }
         var zip64 = false
         while (extra.size >= 4) {
@@ -236,17 +259,31 @@ internal class ZipReader(input: ByteInput) : AutoCloseable {
             }
         }
         val described = flags and DESCRIPTOR_FLAG != 0
-        val raw: Source = when (method) {
-            DEFLATED -> RawInflateSource(source)
+        val checked = when (method) {
+            DEFLATED -> {
+                val inflating = RawInflateSource(source)
+                Checked(name, inflating, described, zip64, headerCrc, size) { inflating.consumed }
+            }
             STORED -> {
                 if (described) throw ZipFormatException("a stored entry with a descriptor: $name")
-                LimitedSource(source, compressed)
+                val stored = compressed
+                Checked(name, LimitedSource(source, stored), described, zip64, headerCrc, size) { stored }
             }
             else -> throw ZipFormatException("method $method of $name")
         }
-        val checked = Checked(name, raw, described, zip64, headerCrc, size)
         open = checked
         return ZipEntryReader(name, checked)
+    }
+
+    /**
+     * A name read as ZipInputStream reads it — strictly: a name is not under the checksum, and one whose bytes are no
+     * UTF-8 (spoilt on the way, or an archiver of Windows writing its own code page) is no name of a copy. Replacing the
+     * bad bytes instead would unpack a take of ours under a name nobody looks for — its sound lost without a word.
+     */
+    private fun nameOf(bytes: ByteArray): String = try {
+        bytes.decodeToString(throwOnInvalidSequence = true)
+    } catch (e: CharacterCodingException) {
+        throw ZipFormatException("a name that is not UTF-8")
     }
 
     private fun finish(entry: Checked) {
@@ -259,7 +296,8 @@ internal class ZipReader(input: ByteInput) : AutoCloseable {
             var first = source.readIntLe()
             if (first == DESCRIPTOR) first = source.readIntLe()
             crc = first
-            val wide = entry.zip64 || entry.size > MAX_32
+            // as the writer decided — and as ZipInputStream does: eight bytes where either size did not fit in four
+            val wide = entry.zip64 || entry.size > narrowUpTo || entry.compressedRead() > narrowUpTo
             if (wide) {
                 source.readLongLe()
                 size = source.readLongLe()
@@ -271,7 +309,15 @@ internal class ZipReader(input: ByteInput) : AutoCloseable {
         if (crc != entry.crc.value || size != entry.size) throw ZipFormatException("${entry.name} is damaged: crc ${crc.toUInt().toString(16)} vs ${entry.crc.value.toUInt().toString(16)}, size $size vs ${entry.size}")
     }
 
-    override fun close() = source.close()
+    /** The entry left half read goes too: its zlib state is let go here, not at the end of the process. */
+    override fun close() {
+        try {
+            open?.close()
+        } finally {
+            open = null
+            source.close()
+        }
+    }
 
     private class Checked(
         val name: String,
@@ -280,6 +326,8 @@ internal class ZipReader(input: ByteInput) : AutoCloseable {
         val zip64: Boolean,
         val headerCrc: Int,
         val expectedSize: Long,
+        /** The bytes of the archive the entry's data took — what the width of its descriptor is decided by. */
+        val compressedRead: () -> Long,
     ) : Source {
         val crc = Crc32()
         var size = 0L
@@ -298,7 +346,7 @@ internal class ZipReader(input: ByteInput) : AutoCloseable {
 
         override fun timeout(): Timeout = Timeout.NONE
 
-        override fun close() = Unit
+        override fun close() = raw.close()
     }
 }
 
@@ -395,10 +443,17 @@ private class RawInflateSource(private val source: BufferedSource) : Source {
     private val output = ByteArray(IO_CHUNK)
     private var finished = false
 
+    /** The bytes of the deflate stream taken from the archive so far. */
+    var consumed = 0L
+        private set
+
     init {
         memset(stream.ptr, 0, sizeOf<z_stream>().convert())
         val status = inflateInit2_(stream.ptr, -MAX_WBITS, zlibVersion()?.toKString(), sizeOf<z_stream>().toInt())
-        if (status != Z_OK) throw ZipFormatException("zlib: $status")
+        if (status != Z_OK) {
+            nativeHeap.free(stream.rawPtr)
+            throw ZipFormatException("zlib: $status")
+        }
     }
 
     override fun read(sink: Buffer, byteCount: Long): Long {
@@ -424,6 +479,7 @@ private class RawInflateSource(private val source: BufferedSource) : Source {
                 }
             }
             source.skip(consumed.toLong())
+            this.consumed += consumed
             when (status) {
                 Z_STREAM_END -> {
                     finished = true

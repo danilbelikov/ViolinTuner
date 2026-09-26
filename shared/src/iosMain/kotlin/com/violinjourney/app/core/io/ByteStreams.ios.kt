@@ -50,7 +50,7 @@ actual fun ByteOutput.syncToDisk() {
 internal fun PlatformFile.createNewOutput(): ByteOutput? = FileOutput.create(path)
 
 @OptIn(ExperimentalForeignApi::class)
-private class FileInput(private val fd: Int) : ByteInput() {
+private class FileInput(private var fd: Int) : ByteInput() {
     override fun read(buffer: ByteArray, offset: Int, count: Int): Int {
         if (count == 0) return 0
         while (true) {
@@ -61,8 +61,11 @@ private class FileInput(private val fd: Int) : ByteInput() {
         }
     }
 
+    // once, as an InputStream closes: a descriptor closed twice may by then be another file's — the database's, maybe
     override fun close() {
+        if (fd < 0) return
         close(fd)
+        fd = -1
     }
 
     companion object {
@@ -71,9 +74,7 @@ private class FileInput(private val fd: Int) : ByteInput() {
 }
 
 @OptIn(ExperimentalForeignApi::class)
-private class FileOutput(private val fd: Int) : ByteOutput() {
-    private var closed = false
-
+private class FileOutput(private var fd: Int) : ByteOutput() {
     override fun write(buffer: ByteArray, offset: Int, count: Int) {
         var done = 0
         while (done < count) {
@@ -89,11 +90,11 @@ private class FileOutput(private val fd: Int) : ByteOutput() {
         if (fsync(fd) != 0) throw okio.IOException("fsync failed: ${strerror(errno)?.toKString()}")
     }
 
-    // once: a descriptor closed twice may by then be another file's
+    // once: a descriptor closed twice may by then be another file's — and a write after the close goes nowhere, not into it
     override fun close() {
-        if (closed) return
-        closed = true
+        if (fd < 0) return
         close(fd)
+        fd = -1
     }
 
     companion object {

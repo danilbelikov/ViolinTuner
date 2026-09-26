@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.backup
 
+import com.violinjourney.app.core.io.ByteOutput
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.child
 import com.violinjourney.app.core.io.openInput
@@ -12,9 +13,13 @@ import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFailsWith
+import kotlin.test.assertFalse
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.test.runTest
+import okio.Deflater
 import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSTemporaryDirectory
@@ -202,6 +207,121 @@ class IosBackupArchiveTest {
         assertEquals(0, bytesOf(staging.child("sessions").child("a.m4a")).size)
         BackupReader.extract(archive.openInput()!!, staging, 100_011, parts = setOf(BackupPart.AUDIO)) {}
         assertTrue(audio.contentEquals(bytesOf(staging.child("sessions").child("a.m4a"))))
+    }
+
+    @Test
+    fun `an entry whose deflated size alone passes the limit is read with the descriptor it was written with`() {
+        // media go deflated at level 0: every stored block adds five bytes, so the archive's bytes of an entry just under
+        // the limit are past it — and the writer gives that entry eight-byte sizes, as ZipOutputStream does
+        val limit = 100_000L
+        val bytes = Random(8).nextBytes(99_996)
+        val archive = folder.child("edge.zip")
+        val out = archive.openOutput()!!
+        val zip = ZipWriter(out, narrowUpTo = limit)
+        zip.beginEntry("sessions/a.m4a", compress = false)
+        zip.write(bytes, 0, bytes.size)
+        zip.endEntry()
+        zip.finish()
+        out.close()
+        ZipReader(archive.openInput()!!, narrowUpTo = limit).use { reader ->
+            val entry = assertNotNull(reader.next())
+            val read = okio.Buffer()
+            val buffer = ByteArray(8_192)
+            while (true) {
+                val got = entry.read(buffer, 0, buffer.size)
+                if (got < 0) break
+                read.write(buffer, 0, got)
+            }
+            assertTrue(bytes.contentEquals(read.readByteArray()))
+            // the descriptor is read at the next entry: a width other than the writer's would be damage here
+            assertNull(reader.next())
+        }
+    }
+
+    @Test
+    fun `a copy that breaks while it is written lets go of its file`() = runTest {
+        var closed = 0
+        var writes = 0
+        val breaking = object : ByteOutput() {
+            override fun write(buffer: ByteArray, offset: Int, count: Int) {
+                if (++writes == 3) throw okio.IOException("write failed: Input/output error")
+            }
+
+            override fun close() {
+                closed++
+            }
+        }
+        val entries = listOf(entryOf("db/violin.db", BackupPart.DATA, "hello world".encodeToByteArray()), entryOf("sessions/a.m4a", BackupPart.AUDIO, Random(2).nextBytes(600_000)))
+        assertFailsWith<okio.IOException> { BackupWriter.write(breaking, manifest, entries) {} }
+        assertEquals(1, closed)
+    }
+
+    @Test
+    fun `a copy stopped halfway lets go of the zlib state of the entry it was writing`() {
+        val made = mutableListOf<Deflater>()
+        val out = folder.child("stopped.zip").openOutput()!!
+        val zip = ZipWriter(out, deflaterOf = { level -> Deflater(level, true).also { made += it } })
+        zip.beginEntry("sessions/a.m4a", compress = false)
+        val bytes = Random(9).nextBytes(100_000)
+        zip.write(bytes, 0, bytes.size)
+        val deflater = made.single()
+        assertTrue(deflater.getBytesRead() > 0, "the entry is being written")
+        zip.abandon()
+        // a Deflater that was ended says so, it no longer answers
+        assertFailsWith<IllegalStateException> { deflater.getBytesRead() }
+        zip.abandon()
+        out.close()
+    }
+
+    @Test
+    fun `names not in UTF-8 make somebody else's archive and a damaged copy and not a fall`() = runTest {
+        // how an archiver of Windows writes Cyrillic: the name in its own code page — «É» as the one byte 0xC9, no UTF-8
+        val foreign = folder.child("foreign.zip")
+        writeBytes(foreign, spoilt(archiveOf("Noten/Xtude.pdf" to Random(5).nextBytes(100)), "Noten/Xtude.pdf"))
+        assertEquals(BackupFileProblem.NotOurs, assertFailsWith<BackupFileException> { BackupReader.manifest(foreign.openInput()!!, knownDatabase = 13) }.problem)
+
+        // a copy of ours whose name of an entry got spoilt halfway: names are not under the checksum
+        val archive = folder.child("copy.zip")
+        BackupWriter.write(archive.openOutput()!!, manifest, listOf(entryOf("sessions/Xtude.m4a", BackupPart.AUDIO, Random(6).nextBytes(100)))) {}
+        val copy = folder.child("spoilt.zip")
+        writeBytes(copy, spoilt(bytesOf(archive), "sessions/Xtude.m4a"))
+        assertEquals(manifest, BackupReader.manifest(copy.openInput()!!, knownDatabase = 13))
+        assertEquals(BackupFileProblem.Damaged, assertFailsWith<BackupFileException> { BackupReader.verify(copy.openInput()!!, 100) {} }.problem)
+    }
+
+    @Test
+    fun `an entry may not climb out of the folder it is unpacked into`() = runTest {
+        listOf("sessions/../../outside.txt", "sessions//a.m4a", "/outside.txt").forEach { path ->
+            val archive = folder.child("sly.zip")
+            NSFileManager.defaultManager.removeItemAtPath(archive.path, null)
+            BackupWriter.write(archive.openOutput()!!, manifest, listOf(entryOf(path, BackupPart.AUDIO, Random(7).nextBytes(10)))) {}
+            val failure = assertFailsWith<BackupFileException>(path) { BackupReader.extract(archive.openInput()!!, folder.child("staging").child("inner"), 10) {} }
+            assertEquals(BackupFileProblem.Damaged, failure.problem, path)
+            assertFalse(NSFileManager.defaultManager.fileExistsAtPath(folder.child("outside.txt").path), path)
+            assertFalse(NSFileManager.defaultManager.fileExistsAtPath(folder.child("staging").child("outside.txt").path), path)
+        }
+    }
+
+    /** An archive of entries as they are given, with no passport: somebody else's zip. */
+    private fun archiveOf(vararg entries: Pair<String, ByteArray>): ByteArray {
+        val file = folder.child("plain.zip")
+        val out = file.openOutput()!!
+        val zip = ZipWriter(out)
+        entries.forEach { (name, bytes) ->
+            zip.beginEntry(name, compress = true)
+            zip.write(bytes, 0, bytes.size)
+            zip.endEntry()
+        }
+        zip.finish()
+        out.close()
+        return bytesOf(file)
+    }
+
+    /** [bytes] with the «X» of [name] in its local header turned into 0xC9 — «É» of Latin-1, which no UTF-8 has alone. */
+    private fun spoilt(bytes: ByteArray, name: String): ByteArray {
+        val needle = name.encodeToByteArray()
+        val at = (0..bytes.size - needle.size).first { start -> needle.indices.all { bytes[start + it] == needle[it] } }
+        return bytes.copyOf().also { it[at + name.indexOf('X')] = 0xC9.toByte() }
     }
 
     private fun entryOf(path: String, part: BackupPart, bytes: ByteArray): BackupEntry {
