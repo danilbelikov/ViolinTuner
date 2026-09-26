@@ -44,7 +44,7 @@
 
 - Тот же слой: `Analytics` и все события общие, отправляет `IosAppMetricaAnalytics` через Swift-мост `AppMetricaService` (AppMetrica iOS SDK 6.7.x, `AppMetricaCore` + `AppMetricaCrashes` для ошибок). Ключ — тот же `appMetricaKey` из `local.properties`; события iOS и Android идут под одним ключом.
 - **Проверено в симуляторе** (сборка с `ORG_GRADLE_PROJECT_analyticsDebug=true`): SDK активируется с ключом, стартует с запретом отправки (`restriction '3'`), поток согласия тут же разрешает (`'2'`), события приняты: `screen_open {screen=practice}`, `{screen=settings}`, `{screen=history}`.
-- **Не проверено:** доставка на сервер — в симуляторе DNS не находит `startup.mobile.yandex.net`, события остаются в очереди. На iPhone владельца стоит обычная debug-сборка, которая молчит; чтобы iOS отправлял из debug, нужно `analyticsDebug=true` в `local.properties` и пересборка.
+- **Не проверено:** доставка на сервер — в симуляторе DNS не находит `startup.mobile.yandex.net`, события остаются в очереди. На iPhone владельца стоит приложение `com.violinjourney.app.debug` (конфигурация Debug или Profile); оно молчит по bundle id (`IosBuild.sendsStatistics`, суффикс `.debug`), а не по типу Kotlin-фреймворка — release-фреймворк конфигурации Profile отправку не включает. Чтобы iOS слал из приложения `.debug`, нужно `analyticsDebug=true` в `local.properties` и пересборка.
 
 ### Манифест приватности (26.09.2026)
 
