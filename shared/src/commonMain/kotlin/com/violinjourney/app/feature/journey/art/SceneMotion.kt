@@ -3,6 +3,7 @@ package com.violinjourney.app.feature.journey.art
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.Stable
@@ -19,6 +20,7 @@ import androidx.compose.ui.layout.onLayoutRectChanged
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import kotlin.math.PI
 import kotlin.math.sin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 
 /**
@@ -52,9 +54,16 @@ object SceneMotion {
      * Whether a living picture shows a new frame at [now] after the one it showed at [shown] (frame
      * times, in nanoseconds). Every picture keeps to one grid of [FRAME_NANOS], so two on a screen —
      * a postcard and the living «Начать занятие» (spec 3.16) — change on the same frames: by turns
-     * they would have the screen drawn twice as often.
+     * they would have the screen drawn twice as often. The picture behind Live keeps to a grid of
+     * [LIVE_FRAME_NANOS], every other cell of the same one.
      */
-    fun frameDue(now: Long, shown: Long): Boolean = now / FRAME_NANOS != shown / FRAME_NANOS
+    fun frameDue(now: Long, shown: Long, frameNanos: Long = FRAME_NANOS): Boolean = now.floorDiv(frameNanos) != shown.floorDiv(frameNanos)
+
+    /** Whole milliseconds from frame time [now] to the start of the next cell of the grid: at least one, at most a cell. */
+    fun millisToNextFrame(now: Long, frameNanos: Long = FRAME_NANOS): Long =
+        (frameNanos - now.mod(frameNanos) + NANOS_PER_MILLI - 1) / NANOS_PER_MILLI
+
+    private const val NANOS_PER_MILLI = 1_000_000L
 
     /** The same for the picture behind Live: it lives only while the violin is silent, and a pause is not a picture to watch (docs/plan-performance.md). */
     const val LIVE_FRAME_NANOS = 66_000_000L
@@ -415,6 +424,32 @@ fun Modifier.watchedBy(seconds: State<Float>?): Modifier {
 }
 
 /**
+ * Waits for the first frame in a new cell of the grid of [frameNanos] after the frame [shown], runs
+ * [onFrame] inside it and gives back its time. Between the cells it sleeps on `delay` and asks for no
+ * frame: in Compose Multiplatform on iOS (1.10) a frame that anybody waits for is a full draw of the
+ * window (up to two for every request) — a clock that waited for every frame and only skipped the
+ * ones it did not need kept the window drawn at the rate of the display, 120 times a second, for a
+ * picture that changes 30 or 15 times. [onFrame] writes the state inside the frame, so it is drawn
+ * in that frame: on iOS a write after `withFrameNanos` lands after that frame's draw and costs one
+ * more. After a sleep (off the screen, light out) [shown] is old: the first wait is then anything from
+ * a millisecond to a cell, the first step may come in the middle of a cell, and from then on the
+ * steps keep to the grid. A frame that comes a little early is let go, and the rest of the cell slept.
+ */
+internal suspend fun awaitGridFrame(shown: Long, frameNanos: Long = SceneMotion.FRAME_NANOS, onFrame: (now: Long) -> Unit): Long {
+    var last = shown
+    while (true) {
+        delay(SceneMotion.millisToNextFrame(last, frameNanos))
+        var due = false
+        last = withFrameNanos { now ->
+            due = SceneMotion.frameDue(now, shown, frameNanos)
+            if (due) onFrame(now)
+            now
+        }
+        if (due) return last
+    }
+}
+
+/**
  * Seconds for a living postcard, stepped by frames while [enabled] and while «убрать анимации» is
  * off; it is read where the scene is drawn, so the postcard is redrawn, never recomposed. Null
  * when nothing should move.
@@ -427,30 +462,37 @@ fun rememberSceneSeconds(enabled: Boolean = true): State<Float>? {
     val clock = remember { SceneClock() }
     val run = enabled && !reduce
     LaunchedEffect(run) {
-        if (!run) return@LaunchedEffect
-        var start = -1L
-        var shown = 0L
-        var tick = false
-        while (true) {
-            // asleep while the picture is off the screen: it costs nothing until it comes back
-            snapshotFlow { clock.seen }.first { it }
-            while (clock.seen) {
-                withFrameNanos { now ->
-                    if (start < 0) start = now
-                    if (SceneMotion.frameDue(now, shown)) {
-                        shown = now
-                        tick = !tick
-                        clock.set(frozen?.let { if (tick) it else it + FROZEN_TICK } ?: ((now - start) / 1_000_000_000f))
-                    }
-                }
-            }
-        }
+        if (run) runSceneClock(clock, frozen)
     }
     return if (run) clock else null
 }
 
+/**
+ * The clock of [rememberSceneSeconds]: a step on every cell of the postcards' grid while the picture
+ * is seen, asleep otherwise. With [frozen] the seconds stand there, stepping back and forth by
+ * [FROZEN_TICK] so the picture keeps being drawn.
+ */
+internal suspend fun runSceneClock(clock: SceneClock, frozen: Float?) {
+    var start = -1L
+    var shown = 0L
+    var tick = false
+    while (true) {
+        // asleep while the picture is off the screen: it costs nothing until it comes back
+        snapshotFlow { clock.seen }.first { it }
+        while (clock.seen) {
+            shown = awaitGridFrame(shown) { now ->
+                if (clock.seen) {
+                    if (start < 0) start = now
+                    tick = !tick
+                    clock.set(frozen?.let { if (tick) it else it + FROZEN_TICK } ?: ((now - start) / NANOS_PER_SECOND))
+                }
+            }
+        }
+    }
+}
+
 /** How far a stopped clock steps back and forth, so the picture keeps being drawn: nothing moves by that much. */
-private const val FROZEN_TICK = 1e-4f
+internal const val FROZEN_TICK = 1e-4f
 
 /**
  * Seconds for a picture that lives only while [running] says so, and stops where it is otherwise —
@@ -464,21 +506,28 @@ fun rememberPausableSceneSeconds(frameNanos: Long = SceneMotion.FRAME_NANOS, run
     val seconds = remember { mutableFloatStateOf(0f) }
     val live by rememberUpdatedState(running)
     LaunchedEffect(reduce) {
-        if (reduce) return@LaunchedEffect
-        while (true) {
-            snapshotFlow { live() }.first { it }
-            var last = withFrameNanos { it }
-            while (live()) {
-                val now = withFrameNanos { it }
-                if (now - last >= frameNanos) {
-                    seconds.floatValue += (now - last) / NANOS_PER_SECOND
-                    last = now
-                }
-            }
-        }
+        if (!reduce) runPausableSceneClock(seconds, frameNanos) { live() }
     }
     return if (reduce) null else seconds
 }
 
-private const val NANOS_PER_SECOND = 1_000_000_000f
+/**
+ * The clock of [rememberPausableSceneSeconds]: while [live], a step on every cell of the grid of
+ * [frameNanos], the seconds going on by the time between the frames; asleep while not. The first
+ * frame after the light comes back only marks the time, so the dark time stays out of the scene's.
+ */
+internal suspend fun runPausableSceneClock(seconds: MutableFloatState, frameNanos: Long, live: () -> Boolean) {
+    var shown = 0L
+    while (true) {
+        snapshotFlow { live() }.first { it }
+        var last = -1L
+        while (live()) {
+            shown = awaitGridFrame(shown, frameNanos) { now ->
+                if (last >= 0 && live()) seconds.floatValue += (now - last) / NANOS_PER_SECOND
+                last = now
+            }
+        }
+    }
+}
 
+private const val NANOS_PER_SECOND = 1_000_000_000f
