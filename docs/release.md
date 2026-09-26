@@ -62,7 +62,7 @@
 
 **Полная — если изменился `AppDatabase.VERSION`** (или правились `DatabaseMigrations`, сущности, DataStore-ключи):
 
-1. Миграции на устройстве: `ANDROID_SERIAL=emulator-5554 ./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true` — `DatabaseMigrationTest` должен получить тест на новый шаг (старые строки переживают миграцию, новые поля имеют верные значения по умолчанию).
+1. Миграции на устройстве: `ANDROID_SERIAL=emulator-5554 ./gradlew :app:connectedDebugAndroidTest -Pandroid.injected.androidTest.leaveApksInstalledAfterRun=true` — `DatabaseMigrationTest` должен получить тест на новый шаг (старые строки переживают миграцию, новые поля имеют верные значения по умолчанию). Миграции общие с iOS: там цепочку целиком проходит `IosDatabaseMigrationTest` в `:shared:iosSimulatorArm64Test`. Переезд миграций в `shared` (2026-09-26) тоже правка `DatabaseMigrations`: первая магазинная сборка после него — с полной проверкой.
 2. Настоящее обновление:
    - `adb uninstall com.violinjourney.app` (эмулятор!), `adb install` предыдущей сборки из `~/keys/violin-journey/releases/`;
    - пройти онбординг и набрать данные руками — каждое действие задевает свою часть базы: сохранить занятие (≥ 1 мин), добавить произведение и гамму, записать на Live запись и дубль к произведению, отметить дубль лучшим, выбрать обработку звука дубля, если хватает тактов — купить вещь в лавке; включить/выключить статистику (DataStore);
