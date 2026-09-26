@@ -205,6 +205,28 @@ class PlaybackTest {
     }
 
     @Test
+    fun theMetersGoOutOnAPauseAndComeBackWithTheSound() {
+        val config = SoundConfig()
+        val player = ChainSessionPlayer(config)
+        player.setSound(SoundPresets.settingsOf(BuiltInPreset.GRAND_HALL, config))
+        player.load(encode("pause.m4a", seconds = 3))
+        await("ready") { player.state.value.ready }
+
+        player.play()
+        await("the meters to show the sound") { (player.meters.value?.outputPeakDb ?: -200.0) > -60 }
+        // Once the track is full the worker waits in the middle of a chunk for room in it, so that is where a pause lands.
+        await("the track to fill") { player.state.value.positionMs > 800 }
+        player.pause()
+        await("the meters to go out", timeoutMs = 1_000) { player.meters.value == null }
+        Thread.sleep(300)
+        assertNull("nothing plays, nothing is measured", player.meters.value)
+
+        player.play()
+        await("the meters to come back") { player.meters.value != null }
+        player.release()
+    }
+
+    @Test
     fun theWaveformShowsWhereTheLoudPartIsAndIsKeptForNextTime() = runBlocking {
         val audio = encode("test-wave.m4a", seconds = 4)
         val waveforms = AppSessionWaveforms(context, Dispatchers.IO)

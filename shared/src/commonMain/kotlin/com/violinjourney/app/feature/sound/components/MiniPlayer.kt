@@ -24,7 +24,6 @@ import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -77,11 +76,6 @@ private val PlainTrack = 4.dp
 private const val BAR_STEP_DP = 3f
 private const val BAR_WIDTH_DP = 2f
 private const val MIN_BAR = 0.08f
-private const val METER_FLOOR_DB = -60.0
-/** The whole meter in a second: fast enough to follow a phrase, slow enough for the eye to read a peak. */
-private const val METER_FALL_DB_PER_SECOND = 60.0
-private const val LIMITER_LIT_MS = 600L
-private const val NUMBER_EVERY_MS = 100L
 private const val DISABLED_ALPHA = 0.38f
 private const val TABULAR_FIGURES = "tnum"
 
@@ -260,32 +254,22 @@ private fun OutputMeter(meters: State<SoundMeters?>, modifier: Modifier) {
     val colors = MaterialTheme.colorScheme
     val sound = ViolinTheme.soundColors
     val level = remember { mutableFloatStateOf(0f) }
-    var limitedAt by remember { mutableLongStateOf(Long.MIN_VALUE) }
     var lit by remember { mutableStateOf(false) }
     var number by remember { mutableStateOf<Double?>(null) }
 
     LaunchedEffect(Unit) {
-        var lastFrame = 0L
-        var lastNumberAt = 0L
+        val motion = OutputMeterMotion()
         while (true) {
-            if (meters.value == null && level.floatValue <= 0f && !lit) {
+            if (motion.atRest(meters.value)) {
+                motion.rest()
                 number = null
                 snapshotFlow { meters.value }.first { it != null } // asleep until sound plays through the chain
-                lastFrame = 0
             }
             withFrameMillis { now ->
-                val reading = meters.value
-                val target = reading?.let { ((it.outputPeakDb - METER_FLOOR_DB) / -METER_FLOOR_DB).toFloat().coerceIn(0f, 1f) } ?: 0f
-                val elapsed = if (lastFrame == 0L) 0L else now - lastFrame
-                lastFrame = now
-                val fallen = level.floatValue - (METER_FALL_DB_PER_SECOND / -METER_FLOOR_DB * elapsed / 1_000.0).toFloat()
-                level.floatValue = maxOf(target, fallen, 0f)
-                if (reading?.limiting == true) limitedAt = now
-                lit = now - limitedAt < LIMITER_LIT_MS
-                if (now - lastNumberAt >= NUMBER_EVERY_MS) {
-                    lastNumberAt = now
-                    number = reading?.outputPeakDb
-                }
+                motion.step(now, meters.value)
+                level.floatValue = motion.level
+                lit = motion.lit
+                number = motion.number
             }
         }
     }
@@ -310,7 +294,7 @@ private fun OutputMeter(meters: State<SoundMeters?>, modifier: Modifier) {
         Text(
             text = when {
                 lit -> stringResource(Res.string.sound_meter_limiter)
-                else -> shown?.takeIf { it > METER_FLOOR_DB }?.let { SoundFormats.decibels(it, signed = true) } ?: stringResource(Res.string.sound_meter_none)
+                else -> shown?.takeIf { it > OutputMeterMotion.FLOOR_DB }?.let { SoundFormats.decibels(it, signed = true) } ?: stringResource(Res.string.sound_meter_none)
             },
             color = if (lit) sound.meterLimit else colors.onSurfaceVariant,
             textAlign = TextAlign.End,

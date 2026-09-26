@@ -335,6 +335,8 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
                         if (!wantPlaying) {
                             // Paused mid-chunk: hold the rest until the sound goes on, so that not a sample is lost.
                             track.pause()
+                            // as in a pause between chunks: nothing plays, so there is nothing to show (spec 5.11)
+                            mutableMeters.value = null
                             while (!wantPlaying && seekToMs == NO_SEEK && !released) lock.wait()
                             if (seekToMs != NO_SEEK || released) return@synchronized true
                             track.play()
