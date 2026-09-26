@@ -305,8 +305,13 @@ private fun StepButton(up: Boolean, label: String, enabled: Boolean, onStep: () 
                                 delay(REPEAT_EVERY_MS)
                             }
                         }
-                        tryAwaitRelease()
-                        repeating.cancel()
+                        // a pointerInput started anew (the block switched off by another finger) cancels the press
+                        // instead of releasing it: the repeat stops however the gesture ends
+                        try {
+                            tryAwaitRelease()
+                        } finally {
+                            repeating.cancel()
+                        }
                     },
                 )
             },

@@ -226,8 +226,13 @@ private fun HoldableAb(original: Boolean, enabled: Boolean, height: Dp, onOrigin
                             onTap = { currentOnOriginal(value, false) },
                             onLongPress = { if (value) currentOnOriginal(true, true) },
                             onPress = {
-                                tryAwaitRelease()
-                                if (value) currentOnOriginal(false, true) // lets go only what a hold took
+                                // a pointerInput started anew (the processing switched off meanwhile) cancels the press
+                                // instead of releasing it: a hold of «A» ends however the gesture does
+                                try {
+                                    tryAwaitRelease()
+                                } finally {
+                                    if (value) currentOnOriginal(false, true) // lets go only what a hold took
+                                }
                             },
                         )
                     },
