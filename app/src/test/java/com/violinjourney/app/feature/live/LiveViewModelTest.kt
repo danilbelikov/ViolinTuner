@@ -130,7 +130,10 @@ class LiveViewModelTest {
             source, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
             practiceNotes = practiceNotes, journeyConfig = JourneyConfig(notesFlushMs = 1_000),
         )
-        return LiveViewModel(takes, SettingsConfigSource(base, settings), practice, clock, Venues(venueStore, journey), finishAsk = finishAsk)
+        return LiveViewModel(
+            takes, SettingsConfigSource(base, settings), practice, clock, Venues(venueStore, journey), finishAsk = finishAsk,
+            nanos = { testScheduler.currentTime * NANOS_PER_MS },
+        )
     }
 
     private fun TestScope.advance(millis: Long) {
@@ -383,6 +386,92 @@ class LiveViewModelTest {
         assertEquals(null, viewModel.state.value.recording)
         viewModel.onIntent(LiveIntent.GrantMicClicked)
         assertEquals(LiveEffect.RequestMicPermission, viewModel.effects.first())
+    }
+
+    // ---- leaving Live and coming back (spec 3.27, 5.20)
+
+    @Test
+    fun `leaving Live mid-note takes the note off show once the chain has stopped`() = runTest {
+        inCremona()
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        viewModel.onIntent(LiveIntent.SelectMode(LiveMode.TUNING))
+        val observer = observe(viewModel, 1_200)
+        assertTrue(viewModel.state.value.signal is LiveSignal.Sounding)
+        assertNull("nothing has ended yet", viewModel.state.value.quietSinceNanos)
+
+        val leftAt = testScheduler.currentTime
+        observer.cancel()
+        advance(2_500)
+        val state = viewModel.state.value
+        assertEquals(LiveSignal.Silence, state.signal)
+        assertEquals("no glow, no cents, no level to come back to", LiveGauge(), viewModel.gauge.value)
+        assertEquals(LiveMode.TUNING, state.mode)
+        assertEquals(Venue.Hall("cremona"), state.venue)
+        assertEquals("the light counts from when the screen went", leftAt * NANOS_PER_MS, state.quietSinceNanos)
+    }
+
+    @Test
+    fun `a return within the stop timeout finds the note still sounding`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        val observer = observe(viewModel, 1_200)
+        observer.cancel()
+        advance(500)
+        observe(viewModel, 100)
+        assertTrue(viewModel.state.value.signal is LiveSignal.Sounding)
+        assertNull(viewModel.state.value.quietSinceNanos)
+    }
+
+    @Test
+    fun `a take left in silence is not on show after leaving`() = runTest {
+        val viewModel = viewModel(FakeScenario.SILENCE)
+        val observer = observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.state.value.recording != null)
+
+        val leftAt = testScheduler.currentTime
+        observer.cancel()
+        advance(2_500)
+        assertNull(viewModel.state.value.recording)
+        assertEquals(LiveSignal.Silence, viewModel.state.value.signal)
+        assertEquals(leftAt * NANOS_PER_MS, viewModel.state.value.quietSinceNanos)
+    }
+
+    @Test
+    fun `the prompt for the permission stays on show after leaving`() = runTest {
+        val source = CountingSource(fakeSource(FakeScenario.IN_TUNE), requiresMicPermission = true)
+        val viewModel = viewModel(source)
+        val observer = observe(viewModel, 100)
+        viewModel.onIntent(LiveIntent.MicPermissionChanged(granted = false))
+        advance(100)
+        assertEquals(LiveSignal.NoMicPermission, viewModel.state.value.signal)
+        observer.cancel()
+        advance(2_500)
+        assertEquals(LiveSignal.NoMicPermission, viewModel.state.value.signal)
+    }
+
+    @Test
+    fun `the end of a note is stamped for the light`() = runTest {
+        val playsASecond = object : PitchSource {
+            override val requiresMicPermission = false
+            override val audioTap: AudioTap? = null
+            override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
+                var t = 0L
+                while (true) {
+                    emit(if (t < 1_000) PitchFrame.pitched(t, 440.0, 0.97, 0.2, config.a4Hz) else PitchFrame.unpitched(t, clarity = 0.0, rms = 0.0005))
+                    delay(10)
+                    t += 10
+                }
+            }
+        }
+        val viewModel = viewModel(playsASecond)
+        observe(viewModel, 800)
+        assertTrue(viewModel.state.value.signal is LiveSignal.Sounding)
+        advance(1_200)
+        assertEquals(LiveSignal.Silence, viewModel.state.value.signal)
+        // the silence is shown 300 ms after the last sound (spec 5.1), and the light counts from there
+        val quietSince = requireNotNull(viewModel.state.value.quietSinceNanos)
+        assertTrue("stamped at ${quietSince / NANOS_PER_MS} ms", quietSince in 1_250 * NANOS_PER_MS..1_400 * NANOS_PER_MS)
     }
 
     @Test
@@ -890,5 +979,9 @@ class LiveViewModelTest {
         venueStore.store(VenueRules.HOME)
         advance(100)
         assertEquals(Venue.Home, viewModel.state.value.venue)
+    }
+
+    private companion object {
+        const val NANOS_PER_MS = 1_000_000L
     }
 }

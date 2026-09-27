@@ -113,6 +113,12 @@ data class LiveState(
     val practiceMs: Long? = null,
     /** Where the player is, and so what picture Live takes place in: the room or a hall (spec 3.27); null until it is read. */
     val venue: Venue? = null,
+    /**
+     * When the last note or take on Live ended, on the monotonic clock (`monotonicNanos`); null — none since the screen's
+     * model was made. The light comes back six seconds after it (spec 5.20), counted across a rotation and a trip to
+     * another screen. Means nothing while a note sounds or a take runs.
+     */
+    val quietSinceNanos: Long? = null,
 )
 
 sealed interface LiveIntent {

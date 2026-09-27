@@ -16,22 +16,24 @@ import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.monotonicNanos
 import kotlin.math.roundToInt
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingCommand
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.receiveAsFlow
-import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -43,6 +45,8 @@ open class LiveViewModel(
     private val venues: Venues,
     private val analytics: Analytics = NoOpAnalytics(),
     private val finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
+    /** The clock the light of Live counts by (spec 5.20): the one the screen reads; tests give their own. */
+    private val nanos: () -> Long = ::monotonicNanos,
 ) : ViewModel() {
 
     init {
@@ -124,28 +128,85 @@ open class LiveViewModel(
     private var captionsOf: IntonationConfig? = null
     private var captions: Map<ViolinString, Int> = emptyMap()
 
+    // What the last frame on screen was made of, for the frame shown once the chain has stopped.
+    private var lastConfig: IntonationConfig = configSource.default
+    private var lastPracticeMs: Long? = null
+    private var lastVenue: Venue? = null
+
+    // A note sounded or a take ran in the last frame; and when the last of them ended (spec 5.20).
+    private var down = false
+    private var quietSinceNanos: Long? = null
+
     // One collection of the microphone for both: the state and the gauge are cut from it below.
-    private val screen: StateFlow<Screen> =
+    private val screens: Flow<Screen> =
         combine(
             target, configSource.config, recordingRequested, output, around,
         ) { target, config, requested, output, (practiceMs, venue) ->
+            lastConfig = config
+            lastPracticeMs = practiceMs
+            lastVenue = venue
+            noteDown(output.shown.signal is LiveSignal.Sounding || requested)
             Screen(stateOf(target, config, requested, output, practiceMs, venue), gaugeOf(requested, output))
-        }.stateIn(
-            scope = viewModelScope,
-            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-            initialValue = Screen(
-                stateOf(target.value, configSource.default, false, TakePipeline.Output(LiveReadout.Shown(LiveSignal.Silence)), null, null),
-                LiveGauge(),
-            ),
-        )
+        }
+
+    private val shownState = MutableStateFlow(
+        stateOf(target.value, configSource.default, false, TakePipeline.Output(LiveReadout.Shown(LiveSignal.Silence)), null, null),
+    )
+    private val shownGauge = MutableStateFlow(LiveGauge())
 
     /** What Live says: new only when a word, a shape or a whole second changes — a few times a second at most. */
-    val state: StateFlow<LiveState> =
-        screen.map { it.state }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), screen.value.state)
+    val state: StateFlow<LiveState> = shownState.asStateFlow()
 
-    /** What moves on Live with every frame (spec 5.8): read while drawing only ([LiveGauge]). */
-    val gauge: StateFlow<LiveGauge> =
-        screen.map { it.gauge }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(), screen.value.gauge)
+    /** What moves on Live with every frame (spec 5.8): read while drawing only ([LiveGauge]), and along with [state]. */
+    val gauge: StateFlow<LiveGauge> = shownGauge.asStateFlow()
+
+    init {
+        // The sharing of `stateIn(WhileSubscribed)`, by hand: the chain runs while the words are watched and stops
+        // STOP_TIMEOUT_MS after the last watcher went. Then what it heard is taken off show — a return to Live must not
+        // open on the note that sounded when one left, nor on its glow.
+        viewModelScope.launch {
+            SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS).command(shownState.subscriptionCount).collectLatest { command ->
+                if (command == SharingCommand.START) {
+                    screens.collect { screen ->
+                        shownState.value = screen.state
+                        shownGauge.value = screen.gauge
+                    }
+                } else {
+                    putAway()
+                }
+            }
+        }
+    }
+
+    /**
+     * The chain has stopped (its take is settled by now): a note it heard is not sounding any more, and the light
+     * counts from the moment the screen went, [STOP_TIMEOUT_MS] ago. The prompt for the permission and the words of
+     * a failing microphone or of noise stay: they would only flicker through «Играйте…» on the way back.
+     */
+    private fun putAway() {
+        if (down) {
+            down = false
+            quietSinceNanos = nanos() - STOP_TIMEOUT_MS * NANOS_PER_MS
+        }
+        val signal = shownState.value.signal.let { if (it is LiveSignal.Sounding) LiveSignal.Silence else it }
+        shownState.value = stateOf(
+            target.value, lastConfig, recordingRequested.value, TakePipeline.Output(LiveReadout.Shown(signal)), lastPracticeMs, lastVenue,
+        )
+        shownGauge.value = LiveGauge()
+    }
+
+    /**
+     * Follows whether a note sounds or a take runs ([isDown]) and stamps the moment the last of them ended: the light
+     * comes back six seconds after it ([HouseLights]).
+     */
+    private fun noteDown(isDown: Boolean) {
+        if (isDown) {
+            down = true
+        } else if (down) {
+            down = false
+            quietSinceNanos = nanos()
+        }
+    }
 
     fun onIntent(intent: LiveIntent) {
         when (intent) {
@@ -194,6 +255,7 @@ open class LiveViewModel(
         practiceMs = practiceMs,
         venue = venue,
         stringHz = captionsFor(config),
+        quietSinceNanos = quietSinceNanos,
     )
 
     /** The gauge of a frame, and the notes of the take while one is recorded — none yet before its first frame. */
@@ -214,8 +276,9 @@ open class LiveViewModel(
 
     private companion object {
         // Long enough to survive a configuration change, short enough that the pitch source
-        // (the microphone later on) is released soon after the screen goes away.
+        // (the microphone later on) is released soon after the screen goes away — and its note taken off show.
         const val STOP_TIMEOUT_MS = 2_000L
         const val MS_PER_SECOND = 1_000L
+        const val NANOS_PER_MS = 1_000_000L
     }
 }

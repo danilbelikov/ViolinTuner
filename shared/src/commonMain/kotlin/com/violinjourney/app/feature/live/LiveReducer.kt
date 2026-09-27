@@ -77,7 +77,8 @@ object LiveReducer {
     /**
      * The whole screen from what was chosen and what sounds; the same on Android and iOS. [recording] — the strip of
      * a running take, [practiceMs] — the running practice, [venue] — where Live takes place: what the platform knows.
-     * [stringHz] — the captions of the strings, made once per configuration ([stringHzOf]).
+     * [stringHz] — the captions of the strings, made once per configuration ([stringHzOf]); [quietSinceNanos] — when
+     * the last note or take ended, for the light ([LiveState.quietSinceNanos]).
      */
     fun stateOf(
         target: LiveTarget,
@@ -87,6 +88,7 @@ object LiveReducer {
         practiceMs: Long? = null,
         venue: Venue? = null,
         stringHz: Map<ViolinString, Int> = stringHzOf(config),
+        quietSinceNanos: Long? = null,
     ) = LiveState(
         mode = target.mode,
         signal = signal,
@@ -99,6 +101,7 @@ object LiveReducer {
         statusLine = statusLineOf(target, signal),
         practiceMs = practiceMs,
         venue = venue,
+        quietSinceNanos = quietSinceNanos,
     )
 
     /** The rounded open-string frequencies of the button captions. */

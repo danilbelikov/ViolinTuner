@@ -34,7 +34,6 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +56,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.domain.Note
 import com.violinjourney.app.core.domain.session.RecordingRibbon
+import com.violinjourney.app.core.time.monotonicNanos
 import com.violinjourney.app.core.ui.theme.LiveTheme
 import com.violinjourney.app.feature.live.components.CentsScale
 import com.violinjourney.app.feature.live.components.GlowRing
@@ -147,7 +147,12 @@ fun LiveScreenLayout(
     val currentGauge by rememberUpdatedState(gauge)
     val glowStep by rememberUpdatedState(state.glowStep)
     val glow = rememberRingGlow({ if (reduceMotion) glowStep else currentGauge().glowTarget }, reduceMotion)
-    val darkness = rememberHouseLights(down = sounding != null || state.recording != null, reduceMotion = reduceMotion, enabled = showVenue)
+    val darkness = rememberHouseLights(
+        down = sounding != null || state.recording != null,
+        quietSinceNanos = state.quietSinceNanos,
+        reduceMotion = reduceMotion,
+        enabled = showVenue,
+    )
     val chrome = remember(darkness) { { VenueLook.chromeAlpha(darkness.value) } }
     val readGauge = remember { { currentGauge() } }
 
@@ -208,20 +213,21 @@ fun LiveScreenLayout(
 /**
  * The light in the hall (spec 3.27, 5.20): 0 — on, 1 — out. It goes out as soon as a note is held or
  * a recording starts, like a switch; it comes back like a dimmer, only after [LiveMotion.LIGHT_ON_AFTER_MS]
- * without either — a bow change, a breath, a rest in the music do not light it. Whether it is out
- * survives a rotation, so a note held through it does not flash the room.
+ * without either — a bow change, a breath, a rest in the music do not light it. Those seconds count from
+ * [quietSinceNanos], the moment the model saw the last note or take end ([HouseLights]): a rotation or a short
+ * trip away keeps the room dark to their end, and a return after them opens lit, not dark for another six.
  */
 @Composable
-private fun rememberHouseLights(down: Boolean, reduceMotion: Boolean, enabled: Boolean): State<Float> {
-    // a screen that opens on a note already sounding starts with the light out
-    var out by rememberSaveable { mutableStateOf(down && enabled) }
-    LaunchedEffect(down, enabled) {
+private fun rememberHouseLights(down: Boolean, quietSinceNanos: Long?, reduceMotion: Boolean, enabled: Boolean): State<Float> {
+    // a screen that opens on a note still sounding, or in the pause after one, starts with the light out
+    var out by remember { mutableStateOf(enabled && (down || HouseLights.msStillOut(quietSinceNanos, monotonicNanos()) > 0)) }
+    LaunchedEffect(down, quietSinceNanos, enabled) {
         if (!enabled) {
             out = false
         } else if (down) {
             out = true
         } else {
-            delay(LiveMotion.LIGHT_ON_AFTER_MS)
+            delay(HouseLights.msStillOut(quietSinceNanos, monotonicNanos()))
             out = false
         }
     }
