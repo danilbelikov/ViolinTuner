@@ -12,6 +12,7 @@ import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.sibling
 import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.recording.IosPcmFileOpener
+import com.violinjourney.app.core.recording.PcmFileOpener
 import com.violinjourney.app.core.recording.PcmSource
 import kotlin.coroutines.resume
 import kotlinx.cinterop.ExperimentalForeignApi
@@ -45,10 +46,16 @@ import platform.Foundation.NSURL
  * AVAssetReader → [SoundChain] → AAC, as `SoundFileRenderer` does on Android (spec 3.17). The chain is late by the
  * look-ahead of its limiter: those first samples are dropped, and the hall rings on after the last note. A video take
  * gets its picture back as it was — not re-encoded — beside the rendered sound, by AVAssetExportSession.
- * A take under a backing is mixed with it into a stereo file, as on Android (spec 3.32).
+ * A take under a backing is mixed with it into a stereo file, as on Android (spec 3.32). A sound track the reader gave
+ * up on half-way is no file to send: the render fails rather than hand over a cut one.
  */
 @OptIn(ExperimentalForeignApi::class)
-class IosSoundRenderer(private val config: SoundConfig, private val io: CoroutineDispatcher) : SoundRenderer {
+class IosSoundRenderer(
+    private val config: SoundConfig,
+    private val io: CoroutineDispatcher,
+    /** How the sound track is read; a test gives one that breaks off. */
+    private val opener: PcmFileOpener = IosPcmFileOpener,
+) : SoundRenderer {
     override suspend fun render(source: PlatformFile, settings: SoundSettings, target: PlatformFile, onProgress: (Float) -> Unit): Boolean =
         renderSound(source, settings, null, target, onProgress)
 
@@ -65,7 +72,7 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
 
     private suspend fun renderSound(source: PlatformFile, settings: SoundSettings, backing: RenderBacking?, target: PlatformFile, onProgress: (Float) -> Unit): Boolean =
         withContext(io) {
-            val decoder = IosPcmFileOpener.open(source) ?: return@withContext false
+            val decoder = opener.open(source) ?: return@withContext false
             var whole = false
             var reader: IosBackingPcmReader? = null
             // What the system refuses here — no room for the file, a rate the encoder will not take, the backing's sound
@@ -102,7 +109,8 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
                     ensureActive()
                     var count = decoder.read(pcm)
                     if (count == PcmSource.END) {
-                        if (tailLeft == 0) break
+                        // the reader gave up half-way: what is written is not the take — no tail, the file goes below
+                        if (tailLeft == 0 || decoder.broken) break
                         count = minOf(tailLeft, CHUNK)
                         tailLeft -= count
                         samples.fill(0f, 0, count)
@@ -132,7 +140,7 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
                     onProgress((done.toFloat() / total).coerceIn(0f, 1f))
                 }
                 closed = true
-                whole = aac.close() && written && target.sizeBytes() > 0
+                whole = aac.close() && written && !decoder.broken && target.sizeBytes() > 0
                 whole
             } finally {
                 // disposed exactly once: by the close above, or here when something threw before it
@@ -169,7 +177,8 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
         }
     }
 
-    private suspend fun mux(video: PlatformFile, sound: PlatformFile, target: PlatformFile): Boolean {
+    /** The picture of [video] as it is, with [sound] beside it, into [target]; internal for a test. */
+    internal suspend fun mux(video: PlatformFile, sound: PlatformFile, target: PlatformFile): Boolean {
         val picture = AVURLAsset(uRL = NSURL.fileURLWithPath(video.path), options = null)
         val audio = AVURLAsset(uRL = NSURL.fileURLWithPath(sound.path), options = null)
         val pictureTrack = picture.tracksWithMediaType(AVMediaTypeVideo).firstOrNull() as? AVAssetTrack ?: return false
@@ -183,6 +192,9 @@ class IosSoundRenderer(private val config: SoundConfig, private val io: Coroutin
         // the turn of the camera lives in the track, not in the samples
         toPicture.preferredTransform = pictureTrack.preferredTransform
         val export = AVAssetExportSession(asset = composition, presetName = AVAssetExportPresetPassthrough) ?: return false
+        // AVAssetExportSession writes no file over one that is there: whatever an export the system ended with the app
+        // left under this name goes first, or every try with the same settings would fail
+        target.deleteFile()
         export.outputURL = NSURL.fileURLWithPath(target.path)
         export.outputFileType = AVFileTypeMPEG4
         return suspendCancellableCoroutine { continuation ->

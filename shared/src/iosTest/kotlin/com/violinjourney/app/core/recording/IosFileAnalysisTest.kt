@@ -12,6 +12,7 @@ import kotlin.math.sin
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -65,6 +66,9 @@ class IosFileAnalysisTest {
             val all = count(whole)
             val tail = count(rest)
             assertTrue(tail in rate / 2..rate * 3 / 2, "from the middle: $tail of $all")
+            // a reader that came to the end — of the file, or of the stretch asked for — gave up on nothing
+            assertFalse(whole.broken, "the end of the file is no failure")
+            assertFalse(rest.broken, "the end of a stretch is no failure")
         } finally {
             whole.release()
             rest.release()

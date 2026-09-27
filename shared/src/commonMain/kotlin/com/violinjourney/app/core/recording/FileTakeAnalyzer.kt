@@ -24,6 +24,13 @@ interface FileTakeAnalyzer {
 
 /** The sound of a media file opened for reading, PCM16 mono; [release] lets the decoder go. */
 interface OpenedPcm : PcmSource {
+    /**
+     * True once the platform's reader gave up before the end of the file (iOS: `AVAssetReader` failed half-way — the
+     * app went to the background, a damaged stretch): what [read] gave until [PcmSource.END] is not the whole sound.
+     * Android's decoder throws instead.
+     */
+    val broken: Boolean get() = false
+
     fun release()
 }
 
@@ -34,7 +41,8 @@ fun interface PcmFileOpener {
 
 /**
  * [TakeFileAnalysis] over the sound track of a real file: the platform's decoder finds the track among the
- * others of the container — a video is read like a recording. A detector of its own: they keep buffers.
+ * others of the container — a video is read like a recording. A detector of its own: they keep buffers. A sound the
+ * reader gave up on half-way ([OpenedPcm.broken]) cannot be opened: a shorter take is not saved in its place.
  */
 class DecodingFileTakeAnalyzer(
     private val detectorFactory: PitchDetectorFactory,
@@ -51,7 +59,7 @@ class DecodingFileTakeAnalyzer(
     ): FileAnalysisResult = withContext(dispatcher) {
         val decoder = opener.open(file) ?: return@withContext FileAnalysisResult.CannotOpen
         try {
-            TakeFileAnalysis.run(
+            val result = TakeFileAnalysis.run(
                 source = decoder,
                 config = config,
                 detector = detectorFactory.create(config),
@@ -60,6 +68,7 @@ class DecodingFileTakeAnalyzer(
                 audioFileName = audioFileName,
                 onProgress = onProgress,
             )
+            if (decoder.broken) FileAnalysisResult.CannotOpen else result
         } finally {
             decoder.release()
         }

@@ -94,6 +94,8 @@ class IosSessionWaveforms(private val directory: () -> String, private val io: C
                 if (count == PcmSource.END) break
                 builder.add(chunk, count)
             }
+            // the reader gave up half-way: the waveform of part of the sound would be kept for good — none, the next open tries again
+            if (pcm.broken) return null
             return builder.build()
         } finally {
             pcm.release()

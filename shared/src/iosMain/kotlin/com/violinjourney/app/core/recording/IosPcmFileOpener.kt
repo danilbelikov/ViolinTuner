@@ -10,6 +10,7 @@ import kotlinx.cinterop.readValue
 import kotlinx.cinterop.useContents
 import kotlinx.cinterop.usePinned
 import platform.AVFoundation.AVAssetReader
+import platform.AVFoundation.AVAssetReaderStatusFailed
 import platform.AVFoundation.AVAssetReaderStatusReading
 import platform.AVFoundation.AVAssetReaderTrackOutput
 import platform.AVFoundation.AVAssetTrack
@@ -36,12 +37,15 @@ import platform.CoreMedia.CMTimeRangeMake
 import platform.CoreMedia.kCMTimePositiveInfinity
 import platform.CoreFoundation.CFRelease
 import platform.Foundation.CFBridgingRetain
+import platform.Foundation.NSLog
 import platform.Foundation.NSNumber
 import platform.Foundation.NSURL
 
 /**
  * The sound track of a file on iOS — a recording or a video — as PCM16 mono at its own rate, read by AVAssetReader:
- * what `PcmDecoder` is on Android. Channels beyond the first are averaged into one.
+ * what `PcmDecoder` is on Android. Channels beyond the first are averaged into one. A reader gives no buffer both at
+ * the end and when it failed; only its status tells them apart, and a failure half-way is [OpenedPcm.broken] — read()
+ * ends there either way, as `PcmDecoder` would throw.
  */
 @OptIn(ExperimentalForeignApi::class)
 object IosPcmFileOpener : PcmFileOpener {
@@ -100,6 +104,9 @@ object IosPcmFileOpener : PcmFileOpener {
         private var pending = ShortArray(0)
         private var pendingAt = 0
 
+        override var broken = false
+            private set
+
         override fun read(out: ShortArray): Int {
             var written = 0
             while (written < out.size) {
@@ -113,8 +120,16 @@ object IosPcmFileOpener : PcmFileOpener {
         }
 
         private fun refill(): Boolean {
-            if (reader.status != AVAssetReaderStatusReading) return false
-            val sample = output.copyNextSampleBuffer() ?: return false
+            val sample = if (reader.status == AVAssetReaderStatusReading) output.copyNextSampleBuffer() else null
+            if (sample == null) {
+                // no buffer: the end (Completed), or the reader gave up (Failed) — cancelled by release() is an end too
+                if (reader.status == AVAssetReaderStatusFailed && !broken) {
+                    broken = true
+                    // NSLog takes Objective-C objects for its arguments: the line is made whole here, its percent signs doubled
+                    NSLog("PcmFileOpener: the reader stopped short: ${reader.error?.localizedDescription}".replace("%", "%%"))
+                }
+                return false
+            }
             try {
                 val block = CMSampleBufferGetDataBuffer(sample) ?: return true
                 val length = CMBlockBufferGetDataLength(block).toInt()
