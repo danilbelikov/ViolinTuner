@@ -35,8 +35,8 @@ import org.junit.Before
 import org.junit.Test
 
 /**
- * The form of a scale keeps what the player did (spec 3.15, 3.22): «Открыть» on the scale that is there already asks
- * before it drops a tempo, a status or notes.
+ * The form of a scale keeps what the player did (spec 3.15, 3.22): its draft outlives the process as the notes field
+ * does, and «Открыть» on the scale that is there already asks before it drops a tempo, a status or notes.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ScaleFormTest {
@@ -87,5 +87,51 @@ class ScaleFormTest {
         runCurrent()
         assertEquals(listOf<ScaleFormEffect>(ScaleFormEffect.OpenScale(twoOctaves)), effects)
         assertEquals("the scale left keeps its notes", "", repertoire.piece(threeOctaves)!!.notes)
+    }
+
+    /** The saved state as Android gives it back to a new process: its values, and nothing else of the old one. */
+    private fun rebornFrom(handle: SavedStateHandle) = SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
+
+    @Test
+    fun `a new scale form comes back as it was left after the process was gone`() = runTest {
+        val handle = SavedStateHandle(mapOf(ScaleFormViewModel.ARG_PIECE_ID to ScaleFormViewModel.NEW_SCALE))
+        val (form, _) = scaleForm(handle)
+        form.onIntent(ScaleFormIntent.TonicClicked(Tonic.D))
+        form.onIntent(ScaleFormIntent.KindSelected(ScaleKind.HARMONIC_MINOR))
+        form.onIntent(ScaleFormIntent.OctavesSelected(2))
+        form.onIntent(ScaleFormIntent.TempoPicked(60))
+        form.onIntent(ScaleFormIntent.NotesChanged("x"))
+        runCurrent()
+        val left = form.state.value.draft
+
+        val (reborn, _) = scaleForm(rebornFrom(handle))
+        assertEquals(left, reborn.state.value.draft)
+        reborn.onIntent(ScaleFormIntent.SaveClicked)
+        runCurrent()
+        val saved = repertoire.pieces.value.single()
+        assertEquals(ScaleSpec(Tonic.D, Accidental.NATURAL, ScaleKind.HARMONIC_MINOR, 2), saved.scale)
+        assertEquals(60 to "x", saved.tempoBpm to saved.notes)
+    }
+
+    @Test
+    fun `an edited scale comes back with its edits and still asks before leaving them`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "G-dur", section = PieceSection.SCALES, scale = gMajor, key = gMajor.key), 1)
+        val handle = SavedStateHandle(mapOf(ScaleFormViewModel.ARG_PIECE_ID to id))
+        val (form, _) = scaleForm(handle)
+        form.onIntent(ScaleFormIntent.OctavesSelected(2))
+        form.onIntent(ScaleFormIntent.NotesChanged("x"))
+        runCurrent()
+
+        val (reborn, effects) = scaleForm(rebornFrom(handle))
+        assertEquals(2 to "x", reborn.state.value.draft.octaves to reborn.state.value.draft.notes)
+        assertEquals(Tonic.G to ScaleKind.MAJOR, reborn.state.value.draft.tonic to reborn.state.value.draft.kind)
+        reborn.onIntent(ScaleFormIntent.CloseClicked)
+        runCurrent()
+        assertEquals(ScaleFormDialog.DISCARD, reborn.state.value.dialog)
+        assertTrue(effects.isEmpty())
+
+        // a form never edited reads the scale as stored
+        val (fresh, _) = scaleForm(id)
+        assertEquals(3 to "", fresh.state.value.draft.octaves to fresh.state.value.draft.notes)
     }
 }

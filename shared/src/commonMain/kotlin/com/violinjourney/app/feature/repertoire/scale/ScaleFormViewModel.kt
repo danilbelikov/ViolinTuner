@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 
 /** The form of a scale, new or edited (spec 3.22): three choices, and the notes follow them at once. */
 open class ScaleFormViewModel(
-    savedState: SavedStateHandle,
+    private val savedState: SavedStateHandle,
     private val repertoire: RepertoireRepository,
     private val config: RepertoireConfig,
     private val clock: WallClock,
@@ -35,11 +35,15 @@ open class ScaleFormViewModel(
     /** Null = a new scale. */
     private val pieceId: Long? = savedState.get<Long>(ARG_PIECE_ID)?.takeIf { it != NEW_SCALE }
 
+    // What the player had picked and typed before the system ended the process; laid over the scale once it is read.
+    private val kept: ScaleDraft? = ScaleFormSaved.read(savedState)
+
+    /** The scale as stored (for an edit) or the empty draft: what the form compares with. */
     private var initial = ScaleDraft()
     private var pieces: List<Piece> = emptyList()
     private var saving = false
 
-    private val mutableState = MutableStateFlow(stateOf(ScaleDraft(), loading = pieceId != null, dialog = null))
+    private val mutableState = MutableStateFlow(stateOf(kept ?: initial, loading = pieceId != null, dialog = null))
     val state: StateFlow<ScaleFormState> = mutableState.asStateFlow()
 
     private val effectChannel = Channel<ScaleFormEffect>(Channel.BUFFERED)
@@ -60,7 +64,9 @@ open class ScaleFormViewModel(
                     effectChannel.send(ScaleFormEffect.CloseDeleted)
                 } else {
                     initial = ScaleDraft(scale.tonic, scale.accidental, scale.kind, scale.octaves, piece.tempoBpm, piece.status, piece.notes)
-                    mutableState.value = stateOf(initial, loading = false, dialog = null)
+                    // the key and the kind of a scale that exists are its own, whatever was kept
+                    val restored = kept?.copy(tonic = scale.tonic, accidental = scale.accidental, kind = scale.kind)
+                    mutableState.value = stateOf(restored ?: initial, loading = false, dialog = null)
                 }
             }
         }
@@ -74,11 +80,11 @@ open class ScaleFormViewModel(
             }
             is ScaleFormIntent.AccidentalSelected -> keyEdit { fitted(it.copy(accidental = intent.accidental)) }
             is ScaleFormIntent.KindSelected -> keyEdit { fitted(it.copy(kind = intent.kind)) }
-            is ScaleFormIntent.OctavesSelected -> edit { if (intent.octaves in allowedOctaves(it)) it.copy(octaves = intent.octaves) else it }
-            is ScaleFormIntent.TempoStepped -> edit { it.copy(tempoBpm = PieceRules.stepTempo(it.tempoBpm, intent.by, config)) }
-            is ScaleFormIntent.TempoPicked -> edit { it.copy(tempoBpm = intent.bpm) }
-            is ScaleFormIntent.StatusSelected -> edit { it.copy(status = intent.status) }
-            is ScaleFormIntent.NotesChanged -> edit { it.copy(notes = intent.text.takeCodePoints(config.maxNotesLength)) }
+            is ScaleFormIntent.OctavesSelected -> userEdit { if (intent.octaves in allowedOctaves(it)) it.copy(octaves = intent.octaves) else it }
+            is ScaleFormIntent.TempoStepped -> userEdit { it.copy(tempoBpm = PieceRules.stepTempo(it.tempoBpm, intent.by, config)) }
+            is ScaleFormIntent.TempoPicked -> userEdit { it.copy(tempoBpm = intent.bpm) }
+            is ScaleFormIntent.StatusSelected -> userEdit { it.copy(status = intent.status) }
+            is ScaleFormIntent.NotesChanged -> userEdit { it.copy(notes = intent.text.takeCodePoints(config.maxNotesLength)) }
             ScaleFormIntent.OpenExistingClicked -> openExisting()
             ScaleFormIntent.SaveClicked -> save()
             ScaleFormIntent.CloseClicked -> if (mutableState.value.draft != initial) showDialog(ScaleFormDialog.DISCARD) else effectChannel.trySend(ScaleFormEffect.Close)
@@ -169,11 +175,21 @@ open class ScaleFormViewModel(
     }
 
     private inline fun keyEdit(transform: (ScaleDraft) -> ScaleDraft) {
-        if (pieceId != null) effectChannel.trySend(ScaleFormEffect.ShowLocked) else edit(transform)
+        if (pieceId != null) effectChannel.trySend(ScaleFormEffect.ShowLocked) else userEdit(transform)
     }
 
     private inline fun edit(transform: (ScaleDraft) -> ScaleDraft) {
         mutableState.update { stateOf(transform(it.draft), loading = it.loading, dialog = it.dialog) }
+    }
+
+    /**
+     * The player's own edit: kept in the saved state as well, so that it outlives the process together with the text
+     * of the notes field. Not while an edited scale is still being read — the form under it is the empty one.
+     */
+    private inline fun userEdit(transform: (ScaleDraft) -> ScaleDraft) {
+        edit(transform)
+        val now = mutableState.value
+        if (!now.loading) ScaleFormSaved.write(savedState, now.draft)
     }
 
     private fun stateOf(draft: ScaleDraft, loading: Boolean, dialog: ScaleFormDialog?): ScaleFormState {
