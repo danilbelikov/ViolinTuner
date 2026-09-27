@@ -177,12 +177,14 @@ fun AppNavHost(
             arguments = listOf(navArgument(SessionViewModel.ARG_SESSION_ID) { type = NavType.LongType }),
         ) {
             val shareViewModel = hiltViewModel<HiltShareViewModel>()
+            val activity = LocalActivity.current
             SessionRoute(
                 onClose = navController::popBackStack,
                 onOpenSound = navController::navigateToSound,
                 viewModel = hiltViewModel<HiltSessionViewModel>(),
                 onShare = shareViewModel::start,
                 shareHost = { ShareHost(shareViewModel) },
+                changingConfigurations = { activity?.isChangingConfigurations == true },
             )
         }
         // «Звук» (spec 3.17): of one recording, or — without an id — the default of all of them. Above the tabs.
@@ -196,11 +198,13 @@ fun AppNavHost(
             ),
         ) {
             val shareViewModel = hiltViewModel<HiltShareViewModel>()
+            val activity = LocalActivity.current
             SoundRoute(
                 onClose = navController::popBackStack,
                 viewModel = hiltViewModel<HiltSoundViewModel>(),
                 onShare = shareViewModel::start,
                 shareHost = { ShareHost(shareViewModel) },
+                changingConfigurations = { activity?.isChangingConfigurations == true },
             )
         }
         // A section of the repertoire (spec 3.22): its list, above the tabs; «Гаммы» adds through a form of its own.

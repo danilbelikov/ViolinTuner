@@ -21,14 +21,18 @@ fun SoundRoute(
     onShare: (sessionId: Long) -> Unit,
     /** Where sharing shows how it goes; drawn over the screen. */
     shareHost: @Composable () -> Unit = {},
+    /** True while the screen is only rebuilt (a rotation on Android): the sound plays on through it. */
+    changingConfigurations: () -> Boolean = { false },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val meters = viewModel.meters.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnClose by rememberUpdatedState(onClose)
 
-    // Leaving the screen stops the sound and stores what was set (spec 3.17).
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.onIntent(SoundIntent.ScreenStopped) }
+    // Leaving the screen stops the sound and stores what was set (spec 3.17); a rotation only rebuilds it.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        if (!changingConfigurations()) viewModel.onIntent(SoundIntent.ScreenStopped)
+    }
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

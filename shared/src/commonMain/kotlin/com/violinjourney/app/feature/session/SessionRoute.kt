@@ -29,6 +29,8 @@ fun SessionRoute(
     onShare: (sessionId: Long) -> Unit,
     /** Where sharing shows how it goes; drawn over the screen. */
     shareHost: @Composable () -> Unit = {},
+    /** True while the screen is only rebuilt (a rotation on Android): the sound plays on through it. */
+    changingConfigurations: () -> Boolean = { false },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -36,8 +38,10 @@ fun SessionRoute(
     val currentOnClose by rememberUpdatedState(onClose)
     val currentOnOpenSound by rememberUpdatedState(onOpenSound)
 
-    // Leaving the screen, the app going to the background: the sound stops (spec 3.10).
-    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { viewModel.onIntent(SessionIntent.ScreenStopped) }
+    // Leaving the screen, the app going to the background: the sound stops (spec 3.10). A rotation only rebuilds it.
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        if (!changingConfigurations()) viewModel.onIntent(SessionIntent.ScreenStopped)
+    }
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
