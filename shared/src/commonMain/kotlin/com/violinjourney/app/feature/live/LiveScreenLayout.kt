@@ -506,25 +506,36 @@ private fun LandscapeLayout(
             verticalArrangement = Arrangement.spacedBy(LiveDimens.LandscapeSpacing),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
-            // the switcher, and the gear to its right (handoff 29g, nav_bar 35)
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                ModeSwitcher(
-                    mode = state.mode,
-                    onSelect = { onIntent(LiveIntent.SelectMode(it)) },
-                    enabled = recording == null,
-                    modifier = Modifier.chrome(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha, chrome),
-                )
-                Spacer(Modifier.weight(1f))
-                // the edge of the disc on the edge of the column, like the edge of the plank under it
-                Gear(slots, recording, chrome, Modifier.offset(x = (LiveDimens.GearTouch - LiveDimens.GearSize) / 2))
-            }
-            if (state.mode == LiveMode.TUNING) {
-                StringRow(
-                    tuning = state.tuning,
-                    onStringClick = { onIntent(LiveIntent.StringClicked(it)) },
-                    modifier = Modifier.chrome(chromeAlpha, chrome),
-                    topPadding = LiveDimens.StringPegHeadRise,
-                )
+            // the switcher, and the gear to its right (handoff 29g, nav_bar 35); the pegs unfold under them in 200 ms,
+            // their gap with them, as upright (spec 3.6) — one child of the column, so its spacing does not jump
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    ModeSwitcher(
+                        mode = state.mode,
+                        onSelect = { onIntent(LiveIntent.SelectMode(it)) },
+                        enabled = recording == null,
+                        modifier = Modifier.chrome(if (recording != null) LiveDimens.DISABLED_ALPHA else chromeAlpha, chrome),
+                    )
+                    Spacer(Modifier.weight(1f))
+                    // the edge of the disc on the edge of the column, like the edge of the plank under it
+                    Gear(slots, recording, chrome, Modifier.offset(x = (LiveDimens.GearTouch - LiveDimens.GearSize) / 2))
+                }
+                AnimatedVisibility(
+                    visible = state.mode == LiveMode.TUNING,
+                    enter = expandVertically(tween(LiveMotion.STRING_ROW_EXPAND_MS)) +
+                        fadeIn(tween(LiveMotion.STRING_ROW_EXPAND_MS)),
+                    exit = shrinkVertically(tween(LiveMotion.STRING_ROW_EXPAND_MS)) +
+                        fadeOut(tween(LiveMotion.STRING_ROW_EXPAND_MS)),
+                ) {
+                    StringRow(
+                        tuning = state.tuning,
+                        onStringClick = { onIntent(LiveIntent.StringClicked(it)) },
+                        modifier = Modifier
+                            .padding(top = LiveDimens.LandscapeSpacing)
+                            .chrome(chromeAlpha, chrome),
+                        topPadding = LiveDimens.StringPegHeadRise,
+                    )
+                }
             }
             StatusLineRow(line = state.statusLine, tuning = state.tuning, modifier = Modifier.chrome(1f, chrome), plate = showVenue)
             BoxWithConstraints(
