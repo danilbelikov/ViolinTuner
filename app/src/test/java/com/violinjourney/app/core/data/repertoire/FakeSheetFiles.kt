@@ -19,7 +19,13 @@ class FakeSheetFiles : SheetFiles {
         return SheetFiles.Stored("page-$id.jpg", "page-$id-thumb.jpg").also { names += listOf(it.fileName, it.thumbFileName) }
     }
 
-    override fun existing(name: String): File? = if (name in names) File("/sheets/$name") else null
+    /** How often a file was looked for: the piece screen does it when its pages change, not on every tap. */
+    var existingCalls = 0
+
+    override fun existing(name: String): File? {
+        existingCalls++
+        return if (name in names) File("/sheets/$name") else null
+    }
 
     override suspend fun delete(names: Collection<String>) {
         this.names -= names.toSet()

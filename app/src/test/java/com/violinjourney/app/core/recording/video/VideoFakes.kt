@@ -47,7 +47,9 @@ class FakeVideoFiles : VideoFiles {
     override fun info(file: File): VideoInfo? = onInfo?.invoke(file) ?: info
     override fun makeThumb(file: File): Boolean = thumbs.add(file.name)
     override fun thumbOf(name: String): File? = File("/files/sessions/$name-thumb.jpg").takeIf { name in thumbs }
-    override fun existing(name: String): File? = File("/files/sessions/$name")
+    /** How often a video was looked for: the piece screen does it when its takes change, not on every tap. */
+    var existingCalls = 0
+    override fun existing(name: String): File? = File("/files/sessions/$name").also { existingCalls++ }
     override fun discard(file: File) {
         discarded += file.name
     }

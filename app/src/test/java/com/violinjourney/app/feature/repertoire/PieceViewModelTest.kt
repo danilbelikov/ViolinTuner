@@ -524,6 +524,47 @@ class PieceViewModelTest {
         assertEquals(listOf(PieceEffect.OpenStand(id, 0), PieceEffect.OpenForm(id, false), PieceEffect.OpenSession(take)), effects)
     }
 
+    @Test
+    fun `the files are looked at when the pages or the takes change, not on every tap`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        backgroundScope.launch { viewModel.videoImport.collect {} }
+        // a video take: the delete dialog names its weight
+        viewModel.onIntent(PieceIntent.VideoShootClicked)
+        runCurrent()
+        viewModel.onIntent(PieceIntent.VideoShotFinished(saved = true))
+        advance(3_000)
+        assertTrue(viewModel.state.value.takes.single().card.hasVideo)
+        viewModel.onIntent(PieceIntent.PhotosPicked(listOf("content://1", "content://2")))
+        runCurrent()
+        val sheetLooks = files.existingCalls
+        val videoLooks = videoFiles.existingCalls
+        assertTrue("the video's size was asked", videoLooks > 0)
+
+        repeat(3) {
+            viewModel.onIntent(PieceIntent.StatusChipClicked)
+            runCurrent()
+            viewModel.onIntent(PieceIntent.StatusMenuDismissed)
+            runCurrent()
+        }
+        viewModel.select(SelectionIntent.SelectClicked)
+        runCurrent()
+        viewModel.select(SelectionIntent.CardToggled(viewModel.state.value.takes.single().card.id))
+        runCurrent()
+        viewModel.select(SelectionIntent.Closed)
+        runCurrent()
+        assertEquals("no page looked for on a tap", sheetLooks, files.existingCalls)
+        assertEquals("no video looked for on a tap", videoLooks, videoFiles.existingCalls)
+        assertEquals(listOf("/sheets/page-1-thumb.jpg", "/sheets/page-2-thumb.jpg"), viewModel.state.value.pages.map { it.thumbPath })
+
+        viewModel.onIntent(PieceIntent.PhotosPicked(listOf("content://3")))
+        runCurrent()
+        assertTrue("a new page is looked for", files.existingCalls > sheetLooks)
+        assertEquals(3, viewModel.state.value.pages.size)
+        recordTake(viewModel)
+        assertTrue("a new take: the videos are looked at again", videoFiles.existingCalls > videoLooks)
+    }
+
     private fun TestScope.recordTake(viewModel: PieceViewModel) {
         viewModel.onIntent(PieceIntent.RecordClicked)
         advance(3_000)

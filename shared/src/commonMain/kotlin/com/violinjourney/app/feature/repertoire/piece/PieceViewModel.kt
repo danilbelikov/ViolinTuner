@@ -42,6 +42,8 @@ import com.violinjourney.app.core.domain.LoudnessMeter
 import com.violinjourney.app.core.domain.TargetMode
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
+import com.violinjourney.app.core.domain.repertoire.SheetPage
+import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.recording.TakePipeline
 import com.violinjourney.app.core.recording.video.VideoFiles
@@ -61,6 +63,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.receiveAsFlow
@@ -124,9 +127,24 @@ open class PieceViewModel(
     /** The take recorded a moment ago, while it is still highlighted in the list. */
     private val newTakeId = MutableStateFlow<Long?>(null)
 
+    // The files behind the rows are looked at on io, and only when the rows change — not on every tap of the screen —
+    // and they travel with the rows, so no tile shows up without its thumbnail first.
+    /** Every page, with the path of each of this piece's thumbnails (null — the file is gone). */
+    private val pagesSeen: Flow<Pair<List<SheetPage>, Map<String, String?>>> = repertoire.pages
+        .map { all -> all to PieceReducer.pagesOf(pieceId, all).associate { it.thumbFileName to sheetFiles.existing(it.thumbFileName)?.filePath } }
+        .flowOn(io)
+
+    /** Every recording, with the size of each video take of this piece: the delete dialog names the weight of what goes (spec 3.19). */
+    private val sessionsSeen: Flow<Pair<List<SessionSummary>, Map<Long, Long>>> = sessions.sessions
+        .map { all ->
+            all to all.filter { it.pieceId == pieceId }.mapNotNull { session -> session.videoPath?.let { session.id to (videos.existing(it)?.sizeBytes() ?: 0L) } }.toMap()
+        }
+        .flowOn(io)
+
     val state: StateFlow<PieceState> = combine(
-        repertoire.pieces, repertoire.pages, ui, combine(sessions.sessions, backings.takesUnderBacking, ::Pair), newTakeId,
-    ) { pieces, pages, ui, (sessions, underBackingIds), newTakeId ->
+        repertoire.pieces, pagesSeen, ui, combine(sessionsSeen, backings.takesUnderBacking, ::Pair), newTakeId,
+    ) { pieces, (pages, thumbs), ui, (seen, underBackingIds), newTakeId ->
+        val (sessions, videoBytes) = seen
         val piece = pieces.firstOrNull { it.id == pieceId }
         if (piece == null) {
             // Deleted from its form, or an id from nowhere: there is nothing to show. Said once:
@@ -139,13 +157,10 @@ open class PieceViewModel(
                 piece, pages, ui.importing, ui.statusMenuOpen, config,
                 takes = PieceReducer.takesOf(piece, sessions, newTakeId, clock.today(), clock.zone, underBackingIds),
                 progress = PieceReducer.progressOf(pieceId, sessions, config),
-            ) { sheetFiles.existing(it)?.filePath }
+            ) { thumbs[it] }
             takeIds = shown.takes.map { it.card.id }
-            val videoNames = sessions.mapNotNull { session -> session.videoPath?.let { session.id to it } }.toMap()
             shown.copy(
-                takes = shown.takes.map { take ->
-                    videoNames[take.card.id]?.let { take.copy(card = take.card.copy(videoBytes = videos.existing(it)?.sizeBytes() ?: 0)) } ?: take
-                },
+                takes = shown.takes.map { take -> videoBytes[take.card.id]?.let { take.copy(card = take.card.copy(videoBytes = it)) } ?: take },
                 selection = SelectionRules.prune(ui.selection, takeIds),
             )
         }
@@ -439,11 +454,20 @@ open class PieceViewModel(
      * Back on screen (spec 5.25). The system may have cleared the cache while the app was away: made again. A sound that could
      * not be made here may have been made meanwhile by another screen — the own camera, a take's player: it is no longer a
      * failure. A failure is not tried again by itself — only when the screen is opened anew or the backing replaced.
+     * The question goes to io: the files are looked at, and on Android the rate is asked of the audio service.
      */
     private fun recheck(found: Backing) {
         val pcm = backingPcm ?: return
-        if (unpackFailed.removeAll { (id, rate) -> id == found.id && pcm.cached(found, rate) != null }) showPreparation()
-        if (pcm.cached(found, recordingRate.likelyHz()) == null) prepare(found)
+        val failed = unpackFailed.filter { (id, _) -> id == found.id }
+        viewModelScope.launch {
+            val (rate, madeSince, ready) = withContext(io) {
+                val rate = recordingRate.likelyHz()
+                Triple(rate, failed.filter { (_, made) -> pcm.cached(found, made) != null }, pcm.cached(found, rate) != null)
+            }
+            if (unpackFailed.removeAll(madeSince.toSet())) showPreparation()
+            // replaced or taken off meanwhile: that one is not this screen's to make ready any more
+            if (!ready && knownBacking?.id == found.id) prepare(found, rate)
+        }
     }
 
     /** «Готовим минусовку…» and «не удалось подготовить» of the piece's backing as it is now — not of one replaced meanwhile. */
