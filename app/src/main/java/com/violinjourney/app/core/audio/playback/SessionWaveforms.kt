@@ -9,6 +9,7 @@ import java.io.File
 import java.io.IOException
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.coroutines.cancellation.CancellationException
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -73,6 +74,9 @@ class AppSessionWaveforms @Inject constructor(
                 builder.add(chunk, count)
             }
             return builder.build()
+        } catch (e: CancellationException) {
+            // a CancellationException is an IllegalStateException too: a reckoning given up is not a decoder broken down
+            throw e
         } catch (e: IllegalStateException) {
             Log.w(TAG, "decoding ${audio.name} broke down", e)
             return null
