@@ -391,6 +391,35 @@ class SessionViewModelTest {
     }
 
     @Test
+    fun `a second press of delete while the first is at work deletes and closes once`() = runTest {
+        val viewModel = viewModel(saveSession(audio = "take.m4a"))
+        val effects = mutableListOf<SessionEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        viewModel.onIntent(SessionIntent.DeleteClicked)
+        viewModel.onIntent(SessionIntent.DeleteConfirmed)
+        viewModel.onIntent(SessionIntent.DeleteConfirmed)
+        runCurrent()
+        assertEquals(1, player.released)
+        assertEquals(listOf<SessionEffect>(SessionEffect.Close), effects)
+        assertTrue(repository.sessions.value.isEmpty())
+    }
+
+    @Test
+    fun `a second tap on the star while the first mark is written does nothing`() = runTest {
+        val pieceId = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val take = saveSession(pieceId = pieceId)
+        val viewModel = viewModel(take)
+        val effects = mutableListOf<SessionEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        viewModel.onIntent(SessionIntent.BestClicked)
+        viewModel.onIntent(SessionIntent.BestClicked)
+        runCurrent()
+        assertEquals(take, repertoire.piece(pieceId)!!.bestTakeId)
+        assertEquals(true, viewModel.loaded().content.best)
+        assertEquals(listOf<SessionEffect>(SessionEffect.ShowBestMarked(moved = false)), effects)
+    }
+
+    @Test
     fun `a rename and a star change the header without analysing the recording again`() = runTest {
         val pieceId = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
         val viewModel = viewModel(saveSession(audio = "take.m4a", pieceId = pieceId))

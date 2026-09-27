@@ -24,6 +24,7 @@ import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.feature.sound.SoundReducer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -67,6 +68,12 @@ open class SessionViewModel(
 
     private var player: SessionPlayer? = null
     private var picture: VideoPicture? = null
+
+    /** «Удалить» was confirmed: a second press while the first is at work would delete and close twice. */
+    private var deleting = false
+
+    /** The star being written: a second tap meanwhile would set the mark again instead of clearing it, with a second toast. */
+    private var marking: Job? = null
 
     private val effectChannel = Channel<SessionEffect>(Channel.BUFFERED)
     val effects: Flow<SessionEffect> = effectChannel.receiveAsFlow()
@@ -112,21 +119,30 @@ open class SessionViewModel(
                     updateLoaded { it.copy(selectedSegment = null) }
                 }
             }
-            SessionIntent.DeleteConfirmed -> viewModelScope.launch {
-                picture?.release()
-                picture = null
-                player?.release() // the file is about to go
-                repository.delete(sessionId)
-                effectChannel.send(SessionEffect.Close)
+            SessionIntent.DeleteConfirmed -> {
+                if (deleting) return
+                deleting = true
+                // the dialog stays until the screen goes: nothing flashes before it closes
+                viewModelScope.launch {
+                    picture?.release()
+                    picture = null
+                    player?.release() // the file is about to go
+                    repository.delete(sessionId)
+                    effectChannel.send(SessionEffect.Close)
+                }
             }
         }
     }
 
-    /** Marks this take as the best of its piece, or clears the mark it has; says so only when a mark was set. */
+    /**
+     * Marks this take as the best of its piece, or clears the mark it has; says so only when a mark was set. A tap while the
+     * mark of the one before is still being written does nothing: the mark it read is the old one.
+     */
     private fun toggleBest() {
         val content = (mutableState.value as? SessionState.Loaded)?.content ?: return
         val pieceId = content.pieceId ?: return
-        viewModelScope.launch {
+        if (marking?.isActive == true) return
+        marking = viewModelScope.launch {
             val former = repertoire.piece(pieceId)?.bestTakeId
             repertoire.setBestTake(pieceId, if (content.best) null else sessionId)
             if (!content.best) effectChannel.send(SessionEffect.ShowBestMarked(moved = former != null && former != sessionId))
