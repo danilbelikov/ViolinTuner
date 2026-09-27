@@ -183,11 +183,15 @@ fun PianoRoll(
                 }
                 // the bars, their contours and the note picked
                 Canvas(
-                    modifier = rollSize.pointerInput(Unit) {
+                    // Keyed by the geometry: the scroll is remembered per [math], so a new width (a rotation on iOS, where the
+                    // composition lives on) brings a new scroll, and a detector of the old one would read an offset that no
+                    // longer moves. The density is the scope's own for the same reason.
+                    modifier = rollSize.pointerInput(math) {
                         detectTapGestures { tap ->
-                            val x = (tap.x - LabelGutter.toPx()) / density + scrollDp
-                            if (tap.x < LabelGutter.toPx()) return@detectTapGestures
-                            currentMath.hitTest(x, tap.y / density, currentBars)?.let(currentOnClick)
+                            val gutter = LabelGutter.toPx()
+                            if (tap.x < gutter) return@detectTapGestures
+                            val x = (tap.x - gutter).toDp().value + scrollDp
+                            currentMath.hitTest(x, tap.y.toDp().value, currentBars)?.let(currentOnClick)
                         }
                     },
                 ) {
