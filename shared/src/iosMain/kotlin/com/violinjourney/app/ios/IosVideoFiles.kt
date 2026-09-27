@@ -26,6 +26,7 @@ import platform.AVFoundation.naturalSize
 import platform.AVFoundation.preferredTransform
 import platform.AVFoundation.tracksWithMediaType
 import platform.CoreGraphics.CGRectApplyAffineTransform
+import platform.CoreGraphics.CGImageRelease
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
 import platform.CoreMedia.CMTimeGetSeconds
@@ -90,11 +91,23 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
             appliesPreferredTrackTransform = true
             maximumSize = CGSizeMake(config.thumbMaxSidePx.toDouble(), config.thumbMaxSidePx.toDouble())
         }
-        // a video that fades in from black: the frame a second in says more — the first one is taken only when it is not dark
-        val first = generator.copyCGImageAtTime(CMTimeMakeWithSeconds(0.0, TIMESCALE), null, null)
-        val later = generator.copyCGImageAtTime(CMTimeMakeWithSeconds(1.0, TIMESCALE), null, null)
-        val frame = (if (first != null && !IosPictures.isDark(first)) first else later ?: first) ?: return false
-        return IosPictures.writeJpeg(UIImage.imageWithCGImage(frame), thumbPath(file.path.substringAfterLast('/')), THUMB_QUALITY)
+        // A video that fades in from black: the frame a second in says more — it is decoded only when the first one is dark
+        // or missing (spec 5.13). Both are the caller's under the Copy rule, and Kotlin/Native frees no CoreGraphics object:
+        // each is released here, the one not taken at once, the one taken once UIImage holds its own reference.
+        var frame = generator.copyCGImageAtTime(CMTimeMakeWithSeconds(0.0, TIMESCALE), null, null)
+        if (frame == null || IosPictures.isDark(frame)) {
+            val later = generator.copyCGImageAtTime(CMTimeMakeWithSeconds(LATER_FRAME_SECONDS, TIMESCALE), null, null)
+            if (later != null) {
+                CGImageRelease(frame)
+                frame = later
+            }
+        }
+        if (frame == null) return false
+        return try {
+            IosPictures.writeJpeg(UIImage.imageWithCGImage(frame), thumbPath(file.path.substringAfterLast('/')), THUMB_QUALITY)
+        } finally {
+            CGImageRelease(frame)
+        }
     }
 
     // names come from the database, and a database may come from a copy: a name that leaves the folder is not one of ours
@@ -111,7 +124,8 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
 
     private fun sizeOfPath(path: String): Long = (files.attributesOfItemAtPath(path, null)?.get(NSFileSize) as? NSNumber)?.longLongValue ?: 0
 
-    private fun extensionOf(path: String) = path.substringAfterLast('.', DEFAULT_EXTENSION).lowercase()
+    // of the name, not of the path: `…/<uuid>.debug-Inbox/clip` has a dot only in its folder
+    private fun extensionOf(path: String) = path.substringAfterLast('/').substringAfterLast('.', "").lowercase().ifEmpty { DEFAULT_EXTENSION }
 
     /** As it is seen, the turn the camera recorded applied. */
     private fun seenSize(track: AVAssetTrack): Pair<Int, Int> = CGRectApplyAffineTransform(
@@ -128,5 +142,8 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
         const val THUMB_QUALITY = 85
         const val MS_PER_SECOND = 1_000.0
         const val TIMESCALE = 600
+
+        /** The frame a thumbnail takes when the first one is dark (spec 5.13). */
+        const val LATER_FRAME_SECONDS = 1.0
     }
 }
