@@ -1,6 +1,7 @@
 package com.violinjourney.app.feature.repertoire.stand
 
 import com.violinjourney.app.feature.repertoire.scale.ScaleNotation
+import com.violinjourney.app.feature.repertoire.scale.scaleTitle
 import com.violinjourney.app.feature.repertoire.scale.NotationSizes
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.animation.AnimatedVisibility
@@ -357,13 +358,15 @@ private fun Sheet(page: StandPage, description: String, zoom: StandZoom?, landsc
         val scale = page.scale
         if (scale != null) {
             // As tall as its systems, not as a sheet of paper: dark ink on the paper of the stand, a staff space of 10 dp (handoff 24g1).
+            // One stop for a reader, like a photo: «Страница 1 из 1», then the notes of the scale by its name.
             Box(
                 sheetModifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(SheetCorner))
                     .background(paper)
+                    .semantics(mergeDescendants = true) { contentDescription = description }
                     .padding(top = 14.dp, bottom = 18.dp),
-            ) { ScaleNotation(scale, NotationSizes.Stand, ViolinTheme.exerciseColors.inkOnPaper, name = description) }
+            ) { ScaleNotation(scale, NotationSizes.Stand, ViolinTheme.exerciseColors.inkOnPaper, name = scaleTitle(scale.spec)) }
         } else if (image != null) {
             Image(bitmap = image, contentDescription = description, contentScale = ContentScale.Fit, modifier = shaped)
         } else {

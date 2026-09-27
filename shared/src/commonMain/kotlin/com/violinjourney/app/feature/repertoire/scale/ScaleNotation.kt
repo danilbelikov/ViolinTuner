@@ -31,7 +31,6 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.repertoire.scale.EngravedSystem
 import com.violinjourney.app.core.domain.repertoire.scale.Engraving
 import com.violinjourney.app.core.domain.repertoire.scale.NotationMetrics
@@ -55,10 +54,11 @@ object NotationSizes {
 /**
  * A scale as notation (spec 3.22, handoff 24h): as wide as it is given, as tall as its systems.
  * Everything that is decided — which notes, where, with what sign — comes from [ScaleEngraver];
- * this only draws. [maxSystems] folds a long scale: the first systems stand, the rest wait.
+ * this only draws. [maxSystems] folds a long scale: the first systems stand, the rest wait. [name] is the title of the
+ * scale, what TalkBack and VoiceOver say after «Ноты гаммы».
  */
 @Composable
-fun ScaleNotation(scale: Scale, space: Dp, ink: Color, modifier: Modifier = Modifier, maxSystems: Int? = null, name: String = "") {
+fun ScaleNotation(scale: Scale, space: Dp, ink: Color, name: String, modifier: Modifier = Modifier, maxSystems: Int? = null) {
     val description = stringResource(Res.string.scale_notes_description, name)
     val textMeasurer = rememberTextMeasurer()
     BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
@@ -72,7 +72,9 @@ fun ScaleNotation(scale: Scale, space: Dp, ink: Color, modifier: Modifier = Modi
                 .semantics { contentDescription = description },
         ) {
             val sp = space.toPx()
-            val ottavaStyle = TextStyle(color = ink, fontSize = (NotationMetrics.OTTAVA_TEXT * space.value).sp, fontFamily = FontFamily.Serif, fontStyle = FontStyle.Italic)
+            // «8va» is part of the engraving, as the note of Live is: the size of the system font does not reach it —
+            // Dp.toSp divides by the font scale, so the label is OTTAVA_TEXT spaces tall, as its room above the staff counts.
+            val ottavaStyle = TextStyle(color = ink, fontSize = (space * NotationMetrics.OTTAVA_TEXT).toSp(), fontFamily = FontFamily.Serif, fontStyle = FontStyle.Italic)
             shown.forEachIndexed { index, system ->
                 drawSystem(engraving, index, system, sp, ink) { x, y ->
                     val label = textMeasurer.measure("8va", ottavaStyle)

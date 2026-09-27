@@ -11,6 +11,7 @@ import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.doubleClick
@@ -27,6 +28,10 @@ import com.violinjourney.app.core.domain.repertoire.scale.ScaleKind
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleSpec
 import com.violinjourney.app.core.domain.repertoire.scale.Scales
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.repertoire.scale.scaleTitle
+import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.stand_page_description
+import org.jetbrains.compose.resources.stringResource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -37,7 +42,7 @@ import org.junit.runner.RunWith
 /**
  * The upright stand (spec 3.15, 3.22): a drawn scale taller than the stand scrolls instead of losing its last systems,
  * and a photo turned upright keeps no scroll bar of the lying sheet; a page deleted while zoomed leaves the next one at
- * 1×, free to be swiped; a swipe lights the edge it turned through.
+ * 1×, free to be swiped; a swipe lights the edge it turned through; a drawn page is named by its number and its scale.
  */
 @RunWith(AndroidJUnit4::class)
 class StandScreenTest {
@@ -72,6 +77,25 @@ class StandScreenTest {
         // Cis-dur in three octaves: six systems and more, taller than the stand
         show { stateOf(listOf(drawn(Tonic.C, Accidental.SHARP, octaves = 3))) }
         assertTrue("the systems below the stand are reached by scrolling", scrollRange() > 0f)
+    }
+
+    @Test
+    fun aDrawnPageIsNamedByItsNumberAndByItsScale() {
+        val page = drawn(Tonic.G, Accidental.NATURAL, octaves = 3)
+        var title = ""
+        var number = ""
+        compose.setContent {
+            title = scaleTitle(page.scale!!.spec)
+            number = stringResource(Res.string.stand_page_description, 1, 1)
+            ViolinTheme { Box(Modifier.size(STAND_WIDTH.dp, STAND_HEIGHT.dp)) { StandScreen(stateOf(listOf(page)), idle, onIntent = {}, onRecordClick = {}) } }
+        }
+        // one stop for a reader: «Страница 1 из 1», then «Ноты гаммы G-dur · 3 октавы» — not «Ноты гаммы Страница 1 из 1»
+        val sheet = SemanticsMatcher("the sheet") { it.config.getOrNull(SemanticsProperties.ContentDescription)?.firstOrNull() == number }
+        val said = compose.onNode(sheet).fetchSemanticsNode().config[SemanticsProperties.ContentDescription]
+        assertEquals(number, said.first())
+        assertEquals(2, said.size)
+        assertTrue("the notes are named by the scale: $said", title in said[1])
+        assertFalse("the notes are not named by the page: $said", number in said[1])
     }
 
     @Test
