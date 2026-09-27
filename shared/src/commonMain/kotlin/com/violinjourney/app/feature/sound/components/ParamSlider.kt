@@ -101,6 +101,12 @@ internal object SliderGeometry {
         (thumbCentre(fraction, width.toFloat(), inset) - labelWidth / 2f).roundToInt().coerceIn(0, (width - labelWidth).coerceAtLeast(0))
 }
 
+/**
+ * How long the thumb travels to [target]: to where a reset sent it ([resetTo]) — a double tap, the reader's «Сбросить» —
+ * in 200 ms, anywhere else in 150 (handoff `anims` of «Звук»). Pure.
+ */
+internal fun sliderTravelMs(target: Float, resetTo: Float?): Int = if (resetTo == target) RESET_TRAVEL_MS else THUMB_TRAVEL_MS
+
 /** What a slider shows and where it stands; all fractions are 0…1 along the track. */
 data class SliderModel(
     val label: String,
@@ -115,6 +121,11 @@ data class SliderModel(
     val marks: List<Pair<Float, String>> = emptyList(),
     /** The knob has let go of its numbers («своё»): the thumb is dimmed, the track still takes a touch. */
     val detached: Boolean = false,
+    /**
+     * Where a reset — a double tap, the reader's «Сбросить» — sends the value: the default mark, unless the slider
+     * resets elsewhere («Сдвиг» of a backing: to the shift the take was recorded with).
+     */
+    val resetFraction: Float = defaultFraction,
 )
 
 /**
@@ -143,15 +154,19 @@ fun ParamSlider(
     var bubble by remember { mutableStateOf(false) }
     var bubbleJob by remember { mutableStateOf<Job?>(null) }
     var trackWidth by remember { mutableIntStateOf(0) }
+    // where a reset has sent the value: the thumb goes there a little slower
+    var resetTo by remember { mutableStateOf<Float?>(null) }
 
     // Under the finger the thumb is the finger; otherwise it travels to wherever the value went (a tap on the track, a double tap, a preset).
     LaunchedEffect(model.fraction, dragging) {
-        if (dragging) shown.snapTo(model.fraction) else shown.animateTo(model.fraction, tween(THUMB_TRAVEL_MS))
+        if (dragging) shown.snapTo(model.fraction) else shown.animateTo(model.fraction, tween(sliderTravelMs(model.fraction, resetTo)))
+        resetTo = null
     }
 
     val currentOnFraction by rememberUpdatedState(onFraction)
     val currentOnReset by rememberUpdatedState(onReset)
     val currentOnStep by rememberUpdatedState(onStep)
+    val currentResetFraction by rememberUpdatedState(model.resetFraction)
     val resetLabel = stringResource(Res.string.sound_reset)
     val offText = stringResource(Res.string.sound_slider_off)
 
@@ -192,7 +207,13 @@ fun ParamSlider(
                         if (enabled) {
                             setProgress { target -> currentOnFraction(target.coerceIn(0f, 1f)); true }
                             onClick { true }
-                            customActions = listOf(CustomAccessibilityAction(resetLabel) { currentOnReset(); true })
+                            customActions = listOf(
+                                CustomAccessibilityAction(resetLabel) {
+                                    resetTo = model.resetFraction
+                                    currentOnReset()
+                                    true
+                                },
+                            )
                         } else {
                             disabled()
                         }
@@ -228,6 +249,7 @@ fun ParamSlider(
                                 val now = down.uptimeMillis
                                 if (now - lastTapAt < doubleTap) {
                                     lastTapAt = 0
+                                    resetTo = currentResetFraction
                                     currentOnReset()
                                 } else {
                                     lastTapAt = now

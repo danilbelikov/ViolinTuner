@@ -140,6 +140,8 @@ fun BackingBlock(state: BackingBlockState, config: BackingConfig, onIntent: (Sou
                 // the scale's zero, where the fill starts; «Как записано» is the button under it
                 defaultFraction = BackingSliders.offsetFraction(0, config),
                 bipolar = true,
+                // its reset is «Как записано», not the zero of the scale
+                resetFraction = BackingSliders.offsetFraction(state.recordedOffsetMs, config),
             ),
             enabled = true,
             onFraction = { onIntent(SoundIntent.BackingOffsetChanged(it)) },
