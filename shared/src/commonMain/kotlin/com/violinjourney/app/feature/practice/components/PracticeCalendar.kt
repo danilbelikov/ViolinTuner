@@ -40,8 +40,12 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -123,9 +127,15 @@ fun PracticeCalendar(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             ArrowButton(forward = false, enabled = true, onClick = onMonthBack, description = stringResource(Res.string.practice_month_back))
+            // A heading to jump to, and a polite live region: after an arrow the reader hears the month it came to.
             Text(
                 text = Formats.monthAndYear(month),
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .semantics {
+                        heading()
+                        liveRegion = LiveRegionMode.Polite
+                    },
                 color = colors.onSurface,
                 textAlign = TextAlign.Center,
                 style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
@@ -307,7 +317,8 @@ private fun Legend(modifier: Modifier = Modifier) {
     val variant = MaterialTheme.colorScheme.onSurfaceVariant
     val style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp)
     Row(
-        modifier = modifier.fillMaxWidth(),
+        // The shades are for the eye: to a reader every day already says its time, «меньше» and «больше» alone mean nothing.
+        modifier = modifier.fillMaxWidth().clearAndSetSemantics {},
         horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.End),
         verticalAlignment = Alignment.CenterVertically,
     ) {
