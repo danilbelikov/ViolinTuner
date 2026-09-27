@@ -43,15 +43,23 @@ import kotlin.test.assertFails
 import kotlin.test.assertFailsWith
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.awaitCancellation
 import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.withContext
 import kotlinx.datetime.LocalDate
 import platform.Foundation.NSData
 import platform.Foundation.NSFileManager
@@ -96,6 +104,37 @@ class IosStorageTest {
         val reread = DataStoreSettingsRepository(IosStorage.settings(directory)).settings.first()
         assertEquals(442, reread.a4Hz)
         assertEquals(TolerancePreset.PRO, reread.tolerance)
+    }
+
+    /**
+     * The «restart» after a restore (spec 3.20): the graph's storage is let go — the watches of its scope ended and waited
+     * for, then the database — and a new one opens the same files at once, with no «multiple DataStores» for the file.
+     */
+    @Test
+    fun `a storage let go lets the next one open the same files at once`() = runTest {
+        val first = IosDataStorage(directory)
+        DataStoreSettingsRepository(first.dataStore).setA4(442)
+        RoomPracticeRepository(first.database.practiceDao())
+            .add(PracticeEntry(LocalDate(2026, 9, 27), startedAtEpochMs = 1_000, durationMs = 30 * 60_000, manual = false))
+        // a watch of the graph that takes a moment to end, as the ones on the main thread do
+        val watchEnded = CompletableDeferred<Unit>()
+        first.scope.launch(Dispatchers.Default, start = CoroutineStart.UNDISPATCHED) {
+            try {
+                awaitCancellation()
+            } finally {
+                withContext(NonCancellable) {
+                    delay(50)
+                    watchEnded.complete(Unit)
+                }
+            }
+        }
+        first.close()
+        assertTrue(watchEnded.isCompleted, "the storage is let go only once what its scope ran has ended")
+
+        val second = IosDataStorage(directory)
+        assertEquals(442, DataStoreSettingsRepository(second.dataStore).settings.first().a4Hz)
+        assertEquals(1, RoomPracticeRepository(second.database.practiceDao()).entries.first().size)
+        second.close()
     }
 
     /** A settings file that cannot be parsed starts over, with the statistics off, instead of ending every start of the app. */

@@ -1,7 +1,5 @@
 package com.violinjourney.app.ios
 
-import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.Preferences
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.IosAppMetricaAnalytics
 import com.violinjourney.app.core.analytics.NoOpAnalytics
@@ -73,11 +71,8 @@ import com.violinjourney.app.core.time.SystemWallClock
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.history.HistorySectionAsk
 import com.violinjourney.app.feature.share.RenderSpeed
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import platform.Foundation.NSCachesDirectory
 import platform.Foundation.NSProcessInfo
@@ -108,9 +103,10 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val dataDirectory = PlatformFile(IosStorage.dataDirectory())
 
     // DataStore allows one instance per file: its scope ends with this graph, before a new one opens the file again
-    private val storageScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
-    private val database = IosStorage.database()
-    private val dataStore: DataStore<Preferences> = IosStorage.settings(scope = storageScope)
+    private val storage = IosDataStorage()
+    private val storageScope = storage.scope
+    private val database = storage.database
+    private val dataStore = storage.dataStore
 
     val settings: SettingsRepository = DataStoreSettingsRepository(dataStore)
     val configSource = SettingsConfigSource(intonationConfig, settings)
@@ -200,11 +196,11 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
         statistics?.followConsent(settings, storageScope)
     }
 
-    /** Lets the database and the settings go, so that a copy can be put in their place and a new graph open them. */
-    fun close() {
-        database.close()
-        storageScope.cancel()
-    }
+    /**
+     * Lets the settings go and waits until they have, then the database — so that a copy can be put in their place and a
+     * new graph open them. Its screens and their view models are gone before this is called (`AppGraph.restart`).
+     */
+    suspend fun close() = storage.close()
 
     private companion object {
         const val WAVEFORMS_FOLDER = "waveforms"

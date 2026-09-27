@@ -76,10 +76,17 @@ class IosAppMetricaAnalytics(private val service: AnalyticsService) : Analytics 
         private const val KOTLIN = "kotlin"
         private const val CAUSED_BY = "caused by"
 
-        /** Once per process: the library refuses a second activation. */
-        fun activate(service: AnalyticsService, apiKey: String, logs: Boolean): IosAppMetricaAnalytics {
-            service.activate(apiKey, logs)
-            return IosAppMetricaAnalytics(service)
-        }
+        /** The one made by the first [activate]; main thread only, as the app's start is. */
+        private var active: IosAppMetricaAnalytics? = null
+
+        /**
+         * Once per process: the library refuses a second activation, so a second call — a second controller of the app —
+         * gets the first one back and activates nothing.
+         */
+        fun activate(service: AnalyticsService, apiKey: String, logs: Boolean): IosAppMetricaAnalytics =
+            active ?: IosAppMetricaAnalytics(service).also {
+                service.activate(apiKey, logs)
+                active = it
+            }
     }
 }
