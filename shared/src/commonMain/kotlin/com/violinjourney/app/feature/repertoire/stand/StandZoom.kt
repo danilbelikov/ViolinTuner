@@ -9,6 +9,7 @@ import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
 import androidx.compose.runtime.Stable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -23,7 +24,9 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.util.lerp
 
 /**
- * Scale and drag of the sheet on the stand; the rules are [StandMath]'s. Read in the draw phase.
+ * Scale and drag of the sheet on the stand; the rules are [StandMath]'s. [scale] and [offset] are read in the draw
+ * phase; [zoomed] is read in composition and changes only when the scale crosses the threshold, not on every frame of
+ * a pinch.
  *
  * The scaled layer is the part of the stand the sheet is shown in — the area of gestures without the stand's
  * [margins](standGestures) — and it is centred on that area: the double tap, the pinch and the clamp count on it.
@@ -35,7 +38,7 @@ class StandZoom {
     var offset by mutableStateOf(Offset.Zero)
         private set
 
-    val zoomed: Boolean get() = StandMath.isZoomed(scale)
+    val zoomed: Boolean by derivedStateOf { StandMath.isZoomed(scale) }
 
     /**
      * A pinch or a drag: followed at once, without animation. The point under the fingers' previous [centroid] (in the
