@@ -142,6 +142,13 @@ class MicPitchSource @Inject constructor(
         const val CHANNEL = AudioFormat.CHANNEL_IN_MONO
         const val ENCODING = AudioFormat.ENCODING_PCM_16BIT
         const val BYTES_PER_SAMPLE = 2
-        const val BUFFERED_HOPS = 8
+
+        /**
+         * Room in AudioRecord's buffer, in hops: about a third of a second at 48 kHz. The encoder of a take is made on this
+         * thread, in the middle of the reading (AudioTap: "Created and fed on the audio thread") — a codec, a muxer and a
+         * thread, which takes tens of milliseconds on a phone. Eight hops (~85 ms) left no room for that, and a buffer that
+         * runs over loses the first samples of the take. A bigger buffer adds no delay: a read returns as soon as a hop is there.
+         */
+        const val BUFFERED_HOPS = 32
     }
 }
