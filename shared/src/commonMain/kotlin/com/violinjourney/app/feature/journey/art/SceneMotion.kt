@@ -105,11 +105,7 @@ object SceneMotion {
         if (layer.fill == WATER) WATER_DRIFT * sin(2 * PI.toFloat() * seconds / WATER_PERIOD_S + index * 1.7f) else 0f
 
     /** What a moving thing is at [seconds]: shifted by [dx], [dy] from where it is drawn, flattened to [flap] of its height (a bird's wings), seen at [alpha]. */
-    data class Moved(val dx: Float, val dy: Float, val flap: Float, val alpha: Float, val degrees: Float = 0f, val pivotX: Float = 0f, val pivotY: Float = 0f) {
-        companion object {
-            val STILL = Moved(0f, 0f, 1f, 1f)
-        }
-    }
+    data class Moved(val dx: Float, val dy: Float, val flap: Float, val alpha: Float, val degrees: Float = 0f, val pivotX: Float = 0f, val pivotY: Float = 0f)
 
     /**
      * Where [anim] has taken a layer at [seconds]. A ride and a bob depend on the time alone, so

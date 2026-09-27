@@ -114,7 +114,6 @@ object Formats {
         }
     }
 
-    /** Whole cents with an explicit sign and a real minus: +6, −18, 0. */
     /**
      * The size of a file the way people say it (spec 3.19): «214 МБ», «1,2 ГБ», «8,5 МБ» — a
      * decimal only below ten, and nothing below a megabyte is worth more than «меньше 1 МБ».

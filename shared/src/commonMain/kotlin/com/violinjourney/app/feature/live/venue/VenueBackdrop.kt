@@ -187,9 +187,6 @@ object VenueMotion {
     /** `picture.swap`: one place gives way to another. */
     const val PICTURE_SWAP_MS = 320
 
-    /** `where.sheet`: the list of places comes up. */
-    const val SHEET_MS = 300
-
     /** The picture fades into the tab bar instead of ending with a knife (handoff `sizes`). */
     val BottomFade = 14.dp
 

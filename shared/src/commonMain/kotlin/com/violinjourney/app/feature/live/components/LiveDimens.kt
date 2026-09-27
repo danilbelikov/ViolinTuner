@@ -14,10 +14,6 @@ object LiveDimens {
     val SwitcherSliderCorner = 18.dp
     val SwitcherSegmentPadding = 20.dp
     val SwitcherBorder = 1.dp
-    val SwitcherIconSize = 14.dp
-    val SwitcherIconStroke = 2.5.dp
-    val SwitcherTuningIconWidth = 4.dp
-    val SwitcherIconGap = 8.dp
 
     /** The gear in the row of the switcher, at its right edge (handoff nav_bar 35): a disc of smoked glass. */
     val GearSize = 36.dp
@@ -48,7 +44,6 @@ object LiveDimens {
     val StringLockBadgeSize = 22.dp
     val StringLockBadgeOffset = 7.dp
     val StringLockIconSize = 12.dp
-    val StringHintTopPadding = 10.dp
 
     val RingMargin = 16.dp
     val RingStroke = 6.dp

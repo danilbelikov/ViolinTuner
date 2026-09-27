@@ -30,7 +30,6 @@ object IconSizes {
     val InText = 14.dp
 
     val ButtonGap = 8.dp
-    val MenuGap = 16.dp
 }
 
 /**

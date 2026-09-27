@@ -60,9 +60,6 @@ object ViolinTheme {
     val venueColors: VenueColors
         @Composable @ReadOnlyComposable get() = LocalVenueColors.current
 
-    val accentGlow: Color
-        get() = AccentGlow
-
     /** The dots of «Знакомство»: a page not in view (spec 3.33). */
     val onboardingDotIdle: Color
         get() = OnboardingDotIdle

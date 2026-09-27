@@ -7,9 +7,6 @@ import androidx.compose.ui.graphics.Color
 // The base of the palette and the colors of Live are shared with iOS: BasePalette.kt and
 // LivePalette.kt in the shared module.
 
-/** Center of the soft glow behind onboarding illustrations (handoff 5a-5c). */
-internal val AccentGlow = Color(0xFF2A2352)
-
 // Fill tones of the practice calendar (handoff `practice.1`–`.4`); tones 3 and 4 are
 // primaryContainer and primary. Never zone colors: the calendar is not a grade.
 internal val PracticeFill1 = Color(0xFF2A2352)
