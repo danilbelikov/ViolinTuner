@@ -4,9 +4,9 @@ import kotlinx.coroutines.flow.Flow
 
 /** Every number of the journey (spec 5.17). None of it is about intonation. */
 data class JourneyConfig(
-    /** A note played in tune is one takt; a minute of practice is two — a day of slow scales must not be poorer than a day of fast runs. */
     /** Notes in tune that make one takt, rounded up: one clean note is a takt already (spec 5.19). */
     val notesPerTakt: Int = 3,
+    /** A minute of saved practice is two takts: a day of slow scales must not be poorer than a day of fast runs. */
     val taktsPerMinute: Int = 2,
     /** Takts for an element of the repertoire played for its goal (spec 3.28): once a day an element. */
     val taktsPerPiece: Int = 30,

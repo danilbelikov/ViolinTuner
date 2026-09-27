@@ -1,7 +1,6 @@
 package com.violinjourney.app.feature.journey
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -29,7 +28,6 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -60,7 +58,6 @@ import com.violinjourney.app.shared.resources.journey_mode_evening
 import com.violinjourney.app.shared.resources.journey_mode_inside
 import com.violinjourney.app.shared.resources.journey_mode_outside
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
 /**
@@ -75,13 +72,12 @@ import org.jetbrains.compose.resources.stringResource
 @Composable
 internal fun FullscreenPostcard(state: StopState, city: String, onIntent: (StopIntent) -> Unit, modifier: Modifier = Modifier) {
     val reduce = LocalReduceMotion.current
-    val scope = rememberCoroutineScope()
     val mode = if (state.day) SceneMode.DAY else SceneMode.EVENING
     // the same scene the postcard below draws, from the cache: what it has drawn keeps the camera
     val frame = rememberScene(viewOf(state.stop, state.inside)?.scene, mode)?.scene?.frame ?: SceneFrame.CARD
     // 0 — the view the frame opens at, known only with the size of the box
     var zoom by remember { mutableFloatStateOf(0f) }
-    val panX = remember { Animatable(0f) }
+    var panX by remember { mutableFloatStateOf(0f) }
     var panY by remember { mutableFloatStateOf(0f) }
     var panel by remember { mutableStateOf(true) }
     var touches by remember { mutableIntStateOf(0) }
@@ -89,7 +85,7 @@ internal fun FullscreenPostcard(state: StopState, city: String, onIntent: (StopI
     // the other view is another drawing: it opens the way it opens, not where this one was left
     LaunchedEffect(state.inside) {
         zoom = 0f
-        panX.snapTo(0f)
+        panX = 0f
         panY = 0f
     }
 
@@ -109,8 +105,8 @@ internal fun FullscreenPostcard(state: StopState, city: String, onIntent: (StopI
                     val w = size.width.toFloat()
                     val h = size.height.toFloat()
                     zoom = frame.zoom(zoom, change, w, h)
-                    val (x, y) = frame.clamp(panX.value + drag.x, panY + drag.y, zoom, w, h)
-                    scope.launch { panX.snapTo(x) }
+                    val (x, y) = frame.clamp(panX + drag.x, panY + drag.y, zoom, w, h)
+                    panX = x
                     panY = y
                 }
             }
@@ -121,8 +117,8 @@ internal fun FullscreenPostcard(state: StopState, city: String, onIntent: (StopI
                         val w = size.width.toFloat()
                         val h = size.height.toFloat()
                         zoom = frame.nextZoom(zoom, w, h)
-                        val (x, y) = frame.clamp(panX.value, panY, zoom, w, h)
-                        scope.launch { panX.snapTo(x) }
+                        val (x, y) = frame.clamp(panX, panY, zoom, w, h)
+                        panX = x
                         panY = y
                     },
                 )
@@ -133,7 +129,7 @@ internal fun FullscreenPostcard(state: StopState, city: String, onIntent: (StopI
             modifier = Modifier.fillMaxSize(),
             mode = mode, inside = state.inside,
             seconds = rememberSceneSeconds(),
-            camera = { Triple(zoom, panX.value, panY) },
+            camera = { Triple(zoom, panX, panY) },
         )
         val fade = if (reduce) 0 else JourneyMotion.FULLSCREEN_PANEL_FADE_MS
         AnimatedVisibility(visible = panel, enter = fadeIn(tween(fade)), exit = fadeOut(tween(fade)), modifier = Modifier.fillMaxSize()) {
