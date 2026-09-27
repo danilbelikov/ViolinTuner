@@ -6,9 +6,11 @@ import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.testing.TestVideo
 import java.io.File
+import kotlin.coroutines.cancellation.CancellationException
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -51,12 +53,51 @@ class VideoMuxerTest {
     }
 
     @Test
+    fun a_splice_given_up_halfway_throws_its_cancellation_and_leaves_no_file() {
+        val picture = TestVideo.make(File(scratch, "picture.mp4"), seconds = 3, withSound = false)
+        val sound = TestVideo.make(File(scratch, "sound.mp4"), seconds = 3)
+        val target = File(scratch, "shared.mp4")
+        var samples = 0
+        // «Отмена» of «Поделиться» in the middle of the splice: not a failure to be told, a cancellation to be passed on
+        assertThrows(CancellationException::class.java) {
+            VideoMuxer.splice(picture, sound, target, pictureShiftUs = 0, keepGoing = { if (++samples > 20) throw CancellationException("share given up") })
+        }
+        assertFalse(target.exists())
+    }
+
+    @Test
+    fun a_splice_without_a_shift_keeps_every_picture_sample_and_tells_its_progress_to_the_end() {
+        val picture = TestVideo.make(File(scratch, "picture.mp4"), seconds = 3, withSound = false, rotation = 90)
+        val sound = TestVideo.make(File(scratch, "sound.mp4"), seconds = 3)
+        val target = File(scratch, "shared.mp4")
+        var last = 0f
+        assertTrue(VideoMuxer.splice(picture, sound, target, pictureShiftUs = 0, onProgress = { assertTrue(it >= last); last = it }))
+        assertEquals(videoTimes(picture), videoTimes(target))
+        assertTrue("progress $last", last > 0.9f)
+    }
+
+    @Test
     fun without_a_sound_track_nothing_is_made() {
         val picture = TestVideo.make(File(scratch, "picture.mp4"), seconds = 2, withSound = false)
         assertFalse(VideoMuxer.mux(picture, picture, File(scratch, "take.mp4"), shiftUs = 0))
     }
 
     private fun assertEquals(expected: Long, actual: Long, delta: Double) = assertEquals(expected.toDouble(), actual.toDouble(), delta)
+
+    private fun videoTimes(file: File): List<Long> {
+        val extractor = MediaExtractor()
+        extractor.setDataSource(file.absolutePath)
+        val track = (0 until extractor.trackCount).first { extractor.getTrackFormat(it).getString(MediaFormat.KEY_MIME)!!.startsWith("video/") }
+        extractor.selectTrack(track)
+        val times = mutableListOf<Long>()
+        val buffer = java.nio.ByteBuffer.allocate(1 shl 20)
+        while (extractor.readSampleData(buffer, 0) >= 0) {
+            times += extractor.sampleTime
+            extractor.advance()
+        }
+        extractor.release()
+        return times
+    }
 
     /** The first sample's time of each kind of track. */
     private fun firstTimes(file: File): Map<String, Long> {

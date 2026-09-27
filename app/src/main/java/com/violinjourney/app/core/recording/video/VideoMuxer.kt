@@ -8,12 +8,14 @@ import android.util.Log
 import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
+import kotlin.coroutines.cancellation.CancellationException
 
 /**
- * The picture of the app's camera and the sound of the take's own chain, made into one `.mp4` (spec 3.32, 5.25). The
- * sound stays at zero — the analysis and the backing's shift are counted from its first sample — and the picture is
- * moved by how much later it began; frames from before the sound (a camera quicker than the microphone) are left out
- * up to the first key frame. Nothing is re-encoded.
+ * The one splice of a picture and a sound into an `.mp4`, nothing re-encoded. The take of the app's camera (spec 3.32,
+ * 5.25): the sound stays at zero — the analysis and the backing's shift are counted from its first sample — and the
+ * picture is moved by how much later it began; frames from before the sound (a camera quicker than the microphone) are
+ * left out up to the first key frame. The video sent by «Поделиться» (spec 3.17, 3.19): the picture of the take as it
+ * was, beside its rendered sound.
  */
 object VideoMuxer {
     /** How far the picture is to be moved, in µs: its start minus the sound's, both on `CLOCK_MONOTONIC`. */
@@ -22,8 +24,23 @@ object VideoMuxer {
     /** Where a picture sample at [ptsUs] lands after the shift; null — before the sound, left out. */
     fun shiftedUs(ptsUs: Long, shiftUs: Long): Long? = VideoShift.shiftedUs(ptsUs, shiftUs)
 
-    /** True when the whole thing worked; [target] is whole then, and gone otherwise. */
-    fun mux(picture: File, sound: File, target: File, shiftUs: Long): Boolean {
+    /** The take of the app's camera: [splice] with the picture moved by [shiftUs]. */
+    fun mux(picture: File, sound: File, target: File, shiftUs: Long): Boolean = splice(picture, sound, target, shiftUs)
+
+    /**
+     * The picture track of [picture], moved by [pictureShiftUs], and the sound track of [sound] as it is, into [target].
+     * True when the whole thing worked; [target] is whole then, and gone otherwise. [onProgress] follows the picture, when
+     * its length is known. [keepGoing] is asked before every sample — the render of «Поделиться» throws its cancellation
+     * from there, and it leaves this as it came: a given-up share is not a failed one.
+     */
+    fun splice(
+        picture: File,
+        sound: File,
+        target: File,
+        pictureShiftUs: Long,
+        onProgress: (Float) -> Unit = {},
+        keepGoing: () -> Unit = {},
+    ): Boolean {
         val video = MediaExtractor()
         val audio = MediaExtractor()
         var muxer: MediaMuxer? = null
@@ -39,6 +56,7 @@ object VideoMuxer {
             audio.selectTrack(audioTrack)
             target.parentFile?.mkdirs()
             muxer = MediaMuxer(target.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+            // the turn of the camera lives in the container, not in the samples
             if (videoFormat.containsKey(MediaFormat.KEY_ROTATION)) muxer.setOrientationHint(videoFormat.getInteger(MediaFormat.KEY_ROTATION))
             val toVideo = muxer.addTrack(videoFormat)
             val toAudio = muxer.addTrack(audio.getTrackFormat(audioTrack))
@@ -48,11 +66,15 @@ object VideoMuxer {
             val maxInput = if (videoFormat.containsKey(MediaFormat.KEY_MAX_INPUT_SIZE)) videoFormat.getInteger(MediaFormat.KEY_MAX_INPUT_SIZE) else 0
             val buffer = ByteBuffer.allocate(maxOf(maxInput, SAMPLE_BUFFER))
             val info = MediaCodec.BufferInfo()
+            // a file that does not say how long it is gets no progress, rather than a fall
+            val durationUs = if (videoFormat.containsKey(MediaFormat.KEY_DURATION)) videoFormat.getLong(MediaFormat.KEY_DURATION).coerceAtLeast(1) else null
             var videoLeft = true
             var audioLeft = true
             var keyFrameSeen = false
+            // interleaved by time, as a player reads it: whichever track is behind goes next
             while (videoLeft || audioLeft) {
-                val videoTime = if (videoLeft) video.sampleTime + shiftUs else Long.MAX_VALUE
+                keepGoing()
+                val videoTime = if (videoLeft) video.sampleTime + pictureShiftUs else Long.MAX_VALUE
                 val fromVideo = videoLeft && (!audioLeft || videoTime <= audio.sampleTime)
                 val from = if (fromVideo) video else audio
                 val size = from.readSampleData(buffer, 0)
@@ -62,12 +84,13 @@ object VideoMuxer {
                 }
                 val key = from.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0
                 if (fromVideo) {
-                    val at = shiftedUs(from.sampleTime, shiftUs)
+                    val at = shiftedUs(from.sampleTime, pictureShiftUs)
                     if (at != null && (keyFrameSeen || key)) {
                         keyFrameSeen = true
                         info.set(0, size, at, if (key) MediaCodec.BUFFER_FLAG_KEY_FRAME else 0)
                         muxer.writeSampleData(toVideo, buffer, info)
                     }
+                    durationUs?.let { onProgress((from.sampleTime.toFloat() / it).coerceIn(0f, 1f)) }
                 } else {
                     info.set(0, size, from.sampleTime, if (key) MediaCodec.BUFFER_FLAG_KEY_FRAME else 0)
                     muxer.writeSampleData(toAudio, buffer, info)
@@ -78,8 +101,11 @@ object VideoMuxer {
             started = false
             whole = target.length() > 0
             return whole
+        } catch (e: CancellationException) {
+            // before the catches below: a cancellation is an IllegalStateException too, and it is not a failure
+            throw e
         } catch (e: IOException) {
-            Log.w(TAG, "cannot read the shot or the sound", e)
+            Log.w(TAG, "cannot read the picture or the sound", e)
             return false
         } catch (e: IllegalStateException) {
             Log.w(TAG, "muxing failed", e)
