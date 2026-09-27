@@ -44,11 +44,23 @@ object PieceReducer {
     )
 
     /** The takes of the piece as cards: the one marked as the best first, the rest newest first; the fresh one is marked too (spec 3.21). */
-    fun takesOf(piece: Piece, sessions: List<SessionSummary>, newTakeId: Long?, today: LocalDate, zone: TimeZone): List<TakeItem> {
+    fun takesOf(
+        piece: Piece,
+        sessions: List<SessionSummary>,
+        newTakeId: Long?,
+        today: LocalDate,
+        zone: TimeZone,
+        /** The takes made under a backing (spec 3.32): their cards carry its sign, as in the other lists. */
+        underBackingIds: Set<Long> = emptySet(),
+    ): List<TakeItem> {
         val takes = PieceStats.takesOf(piece.id, sessions)
         val bestId = PieceStats.bestOf(piece, takes)?.id
         return PieceStats.listed(piece, takes).map {
-            TakeItem(HistoryReducer.cardOf(it, today, zone, best = it.id == bestId), best = it.id == bestId, isNew = it.id == newTakeId)
+            TakeItem(
+                HistoryReducer.cardOf(it, today, zone, best = it.id == bestId, underBacking = it.id in underBackingIds),
+                best = it.id == bestId,
+                isNew = it.id == newTakeId,
+            )
         }
     }
 

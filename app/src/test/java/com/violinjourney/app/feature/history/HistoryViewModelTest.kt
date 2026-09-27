@@ -1,6 +1,9 @@
 package com.violinjourney.app.feature.history
 
 import com.violinjourney.app.core.domain.IntonationConfig
+import com.violinjourney.app.core.domain.backing.BackingOutput
+import com.violinjourney.app.core.domain.backing.FakeBackingRepository
+import com.violinjourney.app.core.domain.backing.TakeBacking
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
@@ -66,6 +69,7 @@ class HistoryViewModelTest {
     }
 
     private var files = Files()
+    private val backings = FakeBackingRepository()
 
     @Before
     fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
@@ -88,7 +92,7 @@ class HistoryViewModelTest {
     private val sectionAsk = HistorySectionAsk()
 
     private fun TestScope.viewModel(): HistoryViewModel {
-        val viewModel = HistoryViewModel(repository, repertoire, config, clock, files, sectionAsk, background = StandardTestDispatcher(testScheduler))
+        val viewModel = HistoryViewModel(repository, repertoire, config, clock, files, sectionAsk, backings, background = StandardTestDispatcher(testScheduler))
         backgroundScope.launch { viewModel.state.collect {} }
         return viewModel
     }
@@ -166,6 +170,31 @@ class HistoryViewModelTest {
         assertSame("the cards are the ones built before the picking", cards, viewModel.state.value.cards)
         assertEquals("the list was not built again", builds, clock.reads)
         assertEquals("no file was asked about again", asked, files.asked)
+    }
+
+    @Test
+    fun `a take made under a backing says so on its card`() = runTest {
+        val pieceId = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        val under = save(daysAgo = 0, pieceId = pieceId)
+        val plain = save(daysAgo = 1, pieceId = pieceId)
+        val viewModel = viewModel()
+        runCurrent()
+        assertTrue(viewModel.state.value.cards.none { it.underBacking })
+
+        backings.saveTake(
+            TakeBacking(
+                sessionId = under, backingId = 1, offsetMs = 0, recordedOffsetMs = 0, gainDb = 0f, playedMs = 1_000,
+                output = BackingOutput.WIRED, deviceName = null,
+            ),
+        )
+        runCurrent()
+        assertEquals(mapOf(under to true, plain to false), viewModel.state.value.cards.associate { it.id to it.underBacking })
+
+        // the shift dragged on «Звук» changes nothing the list shows: it is not built again
+        val builds = clock.reads
+        backings.setTakeMix(under, offsetMs = 120, gainDb = -3f)
+        runCurrent()
+        assertEquals("a new shift of a take builds no list", builds, clock.reads)
     }
 
     @Test

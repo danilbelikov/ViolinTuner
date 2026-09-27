@@ -2,6 +2,7 @@ package com.violinjourney.app.feature.practice
 
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.data.profile.AvatarFiles
+import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.practice.BlockStore
@@ -40,4 +41,8 @@ class HiltPracticeViewModel @Inject constructor(
     journeyConfig: JourneyConfig,
     finishAsk: FinishPracticeAsk,
     analytics: Analytics,
-) : PracticeViewModel(repository, runningStore, finisher, sessions, config, repertoire, clock, trophies, profiles, avatarFiles, progressConfig, journey, venues, blocks, journeyConfig, finishAsk, analytics)
+    backings: BackingRepository,
+) : PracticeViewModel(
+    repository, runningStore, finisher, sessions, config, repertoire, clock, trophies, profiles, avatarFiles, progressConfig, journey, venues, blocks,
+    journeyConfig, finishAsk, analytics, backings,
+)

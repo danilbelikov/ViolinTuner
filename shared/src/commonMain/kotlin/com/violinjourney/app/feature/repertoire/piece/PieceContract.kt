@@ -32,8 +32,6 @@ data class TakeItem(
     val best: Boolean,
     /** Recorded a moment ago: highlighted until it settles into the list. */
     val isNew: Boolean,
-    /** Made under the backing (spec 3.32): the card says so. */
-    val underBacking: Boolean = false,
 )
 
 /** «последний 82 % · максимум 88 % · 6 дублей» and the little chart; there from two takes on. */

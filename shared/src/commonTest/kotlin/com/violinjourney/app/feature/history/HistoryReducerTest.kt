@@ -76,6 +76,13 @@ class HistoryReducerTest {
     }
 
     @Test
+    fun `a take made under a backing carries its sign — the others do not`() {
+        val list = listOf(session(1, "2026-09-16T10:00:00", 60).copy(pieceId = 7), session(2, "2026-09-17T10:00:00", 90).copy(pieceId = 7))
+        val cards = HistoryReducer.stateOf(list, HistoryFilter.ALL, today, moscow, config, underBackingIds = setOf(2L)).cards
+        assertEquals(listOf(2L to true, 1L to false), cards.map { it.id to it.underBacking })
+    }
+
+    @Test
     fun `this week starts on Monday`() {
         assertEquals(listOf(6L, 5L), state(HistoryFilter.THIS_WEEK).cards.map { it.id })
     }

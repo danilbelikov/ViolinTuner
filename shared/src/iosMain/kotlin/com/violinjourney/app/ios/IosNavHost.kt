@@ -146,7 +146,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                     PracticeViewModel(
                         graph.practice, graph.runningPractice, graph.finisher, graph.sessions, graph.practiceConfig, graph.repertoire,
                         graph.clock, graph.trophies, graph.profiles, graph.avatarFiles, graph.progressConfig, graph.journey, graph.venues,
-                        graph.blockStore, graph.journeyConfig, graph.finishAsk, graph.analytics,
+                        graph.blockStore, graph.journeyConfig, graph.finishAsk, graph.analytics, graph.backings,
                     )
                 },
                 homeLookViewModel = viewModel { HomeLookViewModel(graph.home) },
@@ -160,7 +160,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onOpenSection = navController::navigateToSection,
                 onOpenPiece = navController::navigateToPiece,
                 viewModel = viewModel {
-                    HistoryViewModel(graph.sessions, graph.repertoire, graph.intonationConfig, graph.clock, graph.audioFiles, graph.sectionAsk)
+                    HistoryViewModel(graph.sessions, graph.repertoire, graph.intonationConfig, graph.clock, graph.audioFiles, graph.sectionAsk, graph.backings)
                 },
                 sectionsViewModel = viewModel {
                     SectionsViewModel(graph.repertoire, graph.repertoireConfig, graph.clock, graph.blockHistory, graph.practiceConfig)

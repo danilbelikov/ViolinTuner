@@ -3,6 +3,9 @@ package com.violinjourney.app.feature.practice
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.data.profile.AvatarFiles
+import com.violinjourney.app.core.domain.backing.BackingRepository
+import com.violinjourney.app.core.domain.backing.NoBackings
+import com.violinjourney.app.core.domain.backing.takesUnderBacking
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyProgress
 import com.violinjourney.app.core.domain.journey.JourneyRepository
@@ -26,8 +29,10 @@ import com.violinjourney.app.core.domain.progress.ProfileRepository
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.Trophy
 import com.violinjourney.app.core.domain.progress.TrophyRepository
+import com.violinjourney.app.core.domain.repertoire.Piece
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.domain.venue.FollowTheRoad
 import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.io.filePath
@@ -80,6 +85,7 @@ open class PracticeViewModel(
     private val journeyConfig: JourneyConfig = JourneyConfig(),
     private val finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
     private val analytics: Analytics = NoOpAnalytics(),
+    backings: BackingRepository = NoBackings,
 ) : ViewModel() {
 
     /** Takts of the practice saved a moment ago, as the pill on the card; null the rest of the time. */
@@ -120,8 +126,13 @@ open class PracticeViewModel(
     /** Trophies and the profile travel together: `combine` takes five flows at most. */
     private val progress: Flow<Pair<List<Trophy>, Profile>> = combine(trophies.trophies, profiles.profile, ::Pair)
 
+    /** The day's records and what they need to be named and marked: the pieces, and the takes made under a backing (spec 3.32). */
+    private val records: Flow<Records> = combine(sessions.sessions, repertoire.pieces, backings.takesUnderBacking, ::Records)
+
+    private data class Records(val sessions: List<SessionSummary>, val pieces: List<Piece>, val underBacking: Set<Long>)
+
     val state: StateFlow<PracticeState> =
-        combine(repository.entries, combine(sessions.sessions, repertoire.pieces, ::Pair), running, ui, progress) { entries, (sessions, pieces), running, ui, (trophies, profile) ->
+        combine(repository.entries, records, running, ui, progress) { entries, (sessions, pieces, underBacking), running, ui, (trophies, profile) ->
             PracticeReducer.stateOf(
                 entries = entries,
                 sessions = sessions,
@@ -138,6 +149,7 @@ open class PracticeViewModel(
                 // A name without its file (cleared storage) is no photo, not a broken one.
                 avatarPath = profile.avatarFile?.let(avatarFiles::existing)?.filePath,
                 progressConfig = progressConfig,
+                underBackingIds = underBacking,
             )
         }.stateIn(
             scope = viewModelScope,

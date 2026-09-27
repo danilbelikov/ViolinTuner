@@ -30,6 +30,8 @@ data class HistoryCard(
     val best: Boolean = false,
     /** Size of the video, for the dialog that deletes it; zero without one or when the file is gone. */
     val videoBytes: Long = 0,
+    /** Made under the backing of its piece (spec 3.32): the sign of the backing and «под минусовку» by its time, in every list. */
+    val underBacking: Boolean = false,
 ) {
     val take: Boolean get() = pieceId != null
 }

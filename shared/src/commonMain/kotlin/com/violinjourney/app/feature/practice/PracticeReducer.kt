@@ -40,6 +40,8 @@ object PracticeReducer {
         profile: Profile,
         avatarPath: String?,
         progressConfig: ProgressConfig,
+        /** The takes made under a backing (spec 3.32): their cards carry its sign, as in «Записи». */
+        underBackingIds: Set<Long> = emptySet(),
     ): PracticeState {
         val totals = PracticeStats.dayTotals(entries)
         val totalMs = Progress.totalMs(entries)
@@ -78,7 +80,11 @@ object PracticeReducer {
                 sessions = sessions
                     .filter { Instant.fromEpochMilliseconds(it.startedAtEpochMs).toLocalDateTime(zone).date == selectedDate }
                     .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
-                    .map { HistoryReducer.cardOf(it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds) },
+                    .map {
+                        HistoryReducer.cardOf(
+                            it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds, underBacking = it.id in underBackingIds,
+                        )
+                    },
             ),
             header = ProgressReducer.headerOf(totalMs, trophies, profile.name, avatarPath, progressConfig),
             trophies = ProgressReducer.trophyLines(totalMs, trophies, progressConfig),

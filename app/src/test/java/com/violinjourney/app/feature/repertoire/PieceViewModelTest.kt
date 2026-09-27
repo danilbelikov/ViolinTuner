@@ -716,7 +716,7 @@ class PieceViewModelTest {
         assertEquals(200, take.latencyMs)
         assertEquals(3_210L, take.playedMs)
         assertEquals(com.violinjourney.app.core.domain.backing.BackingOutput.BLUETOOTH, take.output)
-        assertTrue(viewModel.state.value.takes.single().underBacking)
+        assertTrue(viewModel.state.value.takes.single().card.underBacking)
     }
 
     @Test

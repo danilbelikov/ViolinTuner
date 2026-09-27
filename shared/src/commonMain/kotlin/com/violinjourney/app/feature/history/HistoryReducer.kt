@@ -25,6 +25,8 @@ object HistoryReducer {
         pieceTitles: Map<Long, String> = emptyMap(),
         /** The takes their players marked as the best of their pieces (spec 3.21). */
         bestTakeIds: Set<Long> = emptySet(),
+        /** The takes made under a backing (spec 3.32): their cards carry its sign. */
+        underBackingIds: Set<Long> = emptySet(),
     ): HistoryState {
         val days = RecordDays.daily(sessions, today, zone, config.historyChartDays)
         return HistoryState(
@@ -38,7 +40,9 @@ object HistoryReducer {
             cards = sessions
                 .filter { passes(filter, RecordDays.dateOf(it, zone), today, config) }
                 .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
-                .map { cardOf(it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds) },
+                .map {
+                    cardOf(it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds, underBacking = it.id in underBackingIds)
+                },
         )
     }
 
@@ -56,7 +60,14 @@ object HistoryReducer {
         }
 
     /** Also the card of the "Записи этого дня" list on the practice screen and of a take on the screen of its piece. */
-    fun cardOf(session: SessionSummary, today: LocalDate, zone: TimeZone, pieceTitle: String? = null, best: Boolean = false): HistoryCard =
+    fun cardOf(
+        session: SessionSummary,
+        today: LocalDate,
+        zone: TimeZone,
+        pieceTitle: String? = null,
+        best: Boolean = false,
+        underBacking: Boolean = false,
+    ): HistoryCard =
         HistoryCard(
             id = session.id,
             title = session.title,
@@ -69,5 +80,6 @@ object HistoryReducer {
             hasAudio = session.audioPath != null,
             hasVideo = session.videoPath != null,
             best = best,
+            underBacking = underBacking,
         )
 }

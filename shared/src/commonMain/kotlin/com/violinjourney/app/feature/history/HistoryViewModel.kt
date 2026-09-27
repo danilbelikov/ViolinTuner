@@ -4,6 +4,9 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
+import com.violinjourney.app.core.domain.backing.BackingRepository
+import com.violinjourney.app.core.domain.backing.NoBackings
+import com.violinjourney.app.core.domain.backing.takesUnderBacking
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.io.sizeBytes
@@ -32,6 +35,7 @@ open class HistoryViewModel(
     private val clock: WallClock,
     private val audioFiles: SessionAudioFiles,
     private val sectionAsk: HistorySectionAsk = HistorySectionAsk(),
+    private val backings: BackingRepository = NoBackings,
     /** Where the list is built: off the main thread — sorting, dates and the sizes of the videos grow with the records. */
     private val background: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
@@ -64,18 +68,19 @@ open class HistoryViewModel(
 
     // "Today" is read on every change, so a list left open over midnight is right again as
     // soon as anything changes; the screen is rebuilt on every return to it anyway.
-    // The list itself, without the picking: built off the main thread, and only when the records, the pieces, the filter
-    // or the section change — a tap in the selection mode does not build it again.
+    // The list itself, without the picking: built off the main thread, and only when the records, the pieces, the filter,
+    // the section or the backings change — a tap in the selection mode does not build it again.
     private val listed: Flow<HistoryState> = flow {
         // The sizes of the videos by file name, asked of the file system once while the list is watched: a video never
         // changes under its name. One map per collection — its steps run one after another.
         val videoSizes = HashMap<String, Long>()
         emitAll(
-            combine(repository.sessions, repertoire.pieces, filter, section) { sessions, pieces, filter, section ->
+            combine(repository.sessions, repertoire.pieces, filter, section, backings.takesUnderBacking) { sessions, pieces, filter, section, underBacking ->
                 val shown = HistoryReducer.stateOf(
                     sessions, filter, clock.today(), clock.zone, config, section,
                     pieceTitles = pieces.associate { it.id to it.title },
                     bestTakeIds = pieces.mapNotNull { it.bestTakeId }.toSet(),
+                    underBackingIds = underBacking,
                 )
                 // The dialog that deletes names the weight of what goes (spec 3.19): videos are few, and a length is cheap to ask.
                 // A file that is gone is not remembered: it may come back with a restored copy.

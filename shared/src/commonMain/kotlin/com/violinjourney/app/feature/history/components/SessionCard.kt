@@ -41,9 +41,11 @@ import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.core.ui.icons.IconSizes
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.history.HistoryCard
 import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.backing_take_meta
 import com.violinjourney.app.shared.resources.record_default_title
 import com.violinjourney.app.shared.resources.record_meta
 import com.violinjourney.app.shared.resources.record_tile_no_sound
@@ -61,6 +63,7 @@ import org.jetbrains.compose.resources.stringResource
 private val CardCorner = 16.dp
 private val CardRing = 1.5.dp
 private val BestStar = 14.dp
+private val BackingSignGap = 4.dp
 private const val BEST_IN_MS = 150
 private const val BEST_OUT_MS = 120
 private const val BEST_FROM_SCALE = 0.6f
@@ -104,6 +107,9 @@ fun SessionCard(
  * [selected] is null outside the selection mode (spec 3.18). Inside it the card is a checkbox:
  * the tile turns into a mark of the same shape, a tap picks instead of opening, «⋯» is gone.
  * [onLongClick] is how the mode is entered from a card; the press itself shrinks the card a little.
+ *
+ * A take made under a backing (spec 3.32, [HistoryCard.underBacking]) says so in its line, in every list alike: the
+ * sign of the backing — a note on a staff — and «под минусовку» before the time ([meta]). The words are read out too.
  */
 @Composable
 fun RecordCard(
@@ -192,14 +198,27 @@ fun RecordCard(
                     AppIcon(AppIcons.Star, contentDescription = null, tint = colors.primary, size = BestStar)
                 }
             }
-            Text(
-                text = meta,
-                modifier = Modifier.padding(top = 2.dp),
-                color = colors.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
-            )
+            val line = if (card.underBacking) stringResource(Res.string.backing_take_meta, meta) else meta
+            val lineStyle = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES)
+            if (card.underBacking) {
+                Row(
+                    modifier = Modifier.padding(top = 2.dp),
+                    horizontalArrangement = Arrangement.spacedBy(BackingSignGap),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    AppIcon(AppIcons.Backing, contentDescription = null, tint = colors.onSurfaceVariant, size = IconSizes.InText)
+                    Text(text = line, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, style = lineStyle)
+                }
+            } else {
+                Text(
+                    text = line,
+                    modifier = Modifier.padding(top = 2.dp),
+                    color = colors.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    style = lineStyle,
+                )
+            }
         }
         if (actions != null && menu) CardMenuButton(card, actions)
     }

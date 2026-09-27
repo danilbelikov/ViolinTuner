@@ -37,7 +37,6 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
 import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.backing_take_meta
 import com.violinjourney.app.shared.resources.live_mic_unavailable
 import com.violinjourney.app.shared.resources.live_too_noisy
 import com.violinjourney.app.shared.resources.record_meta
@@ -333,8 +332,8 @@ private fun TakeCard(take: TakeItem, zone: TimeZone, actions: CardActions?, sele
     RecordCard(
         card = card,
         title = card.title ?: date,
-        // made under the backing: said in words beside the time — the card already carries its note (spec 3.32)
-        meta = if (take.underBacking) stringResource(Res.string.backing_take_meta, meta) else meta,
+        // a take made under the backing gets its sign and «под минусовку» from the card itself, as in every list (spec 3.32)
+        meta = meta,
         onClick = onClick,
         actions = actions,
         highlighted = take.isNew,

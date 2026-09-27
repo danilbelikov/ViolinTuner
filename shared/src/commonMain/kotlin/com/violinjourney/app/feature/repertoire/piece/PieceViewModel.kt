@@ -23,6 +23,7 @@ import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingFiles
 import com.violinjourney.app.core.domain.backing.BackingOutput
 import com.violinjourney.app.core.domain.backing.BackingRepository
+import com.violinjourney.app.core.domain.backing.takesUnderBacking
 import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.today
@@ -124,9 +125,8 @@ open class PieceViewModel(
     private val newTakeId = MutableStateFlow<Long?>(null)
 
     val state: StateFlow<PieceState> = combine(
-        repertoire.pieces, repertoire.pages, ui, combine(sessions.sessions, backings.takeBackings, ::Pair), newTakeId,
-    ) { pieces, pages, ui, (sessions, underBacking), newTakeId ->
-        val underBackingIds = underBacking.mapTo(HashSet()) { it.sessionId }
+        repertoire.pieces, repertoire.pages, ui, combine(sessions.sessions, backings.takesUnderBacking, ::Pair), newTakeId,
+    ) { pieces, pages, ui, (sessions, underBackingIds), newTakeId ->
         val piece = pieces.firstOrNull { it.id == pieceId }
         if (piece == null) {
             // Deleted from its form, or an id from nowhere: there is nothing to show. Said once:
@@ -137,15 +137,14 @@ open class PieceViewModel(
         } else {
             val shown = PieceReducer.stateOf(
                 piece, pages, ui.importing, ui.statusMenuOpen, config,
-                takes = PieceReducer.takesOf(piece, sessions, newTakeId, clock.today(), clock.zone),
+                takes = PieceReducer.takesOf(piece, sessions, newTakeId, clock.today(), clock.zone, underBackingIds),
                 progress = PieceReducer.progressOf(pieceId, sessions, config),
             ) { sheetFiles.existing(it)?.filePath }
             takeIds = shown.takes.map { it.card.id }
             val videoNames = sessions.mapNotNull { session -> session.videoPath?.let { session.id to it } }.toMap()
             shown.copy(
                 takes = shown.takes.map { take ->
-                    val withVideo = videoNames[take.card.id]?.let { take.copy(card = take.card.copy(videoBytes = videos.existing(it)?.sizeBytes() ?: 0)) } ?: take
-                    if (take.card.id in underBackingIds) withVideo.copy(underBacking = true) else withVideo
+                    videoNames[take.card.id]?.let { take.copy(card = take.card.copy(videoBytes = videos.existing(it)?.sizeBytes() ?: 0)) } ?: take
                 },
                 selection = SelectionRules.prune(ui.selection, takeIds),
             )

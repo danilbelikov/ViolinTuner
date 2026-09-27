@@ -46,9 +46,10 @@ class PracticeReducerTest {
         running: Boolean = false,
         month: YearMonth = YearMonth(2026, 9),
         selected: LocalDate = today,
+        underBackingIds: Set<Long> = emptySet(),
     ) = PracticeReducer.stateOf(
         entries, sessions, running, month, selected, sheet = null, today, zone, config,
-        trophies = emptyList(), profile = Profile.EMPTY, avatarPath = null, progressConfig = ProgressConfig(),
+        trophies = emptyList(), profile = Profile.EMPTY, avatarPath = null, progressConfig = ProgressConfig(), underBackingIds = underBackingIds,
     )
 
     @Test
@@ -109,6 +110,13 @@ class PracticeReducerTest {
         assertEquals(50 * MS_PER_MINUTE, state.selected.totalMs)
         assertFalse(state.selected.isToday)
         assertTrue(state().selected.isToday)
+    }
+
+    @Test
+    fun `a record of the day made under a backing carries its sign, as in «Записи»`() {
+        val sessions = listOf(session(1, "2026-09-17T08:00:00"), session(2, "2026-09-17T09:00:00"))
+        val cards = state(sessions = sessions, underBackingIds = setOf(1L)).selected.sessions
+        assertEquals(listOf(2L to false, 1L to true), cards.map { it.id to it.underBacking })
     }
 
     @Test

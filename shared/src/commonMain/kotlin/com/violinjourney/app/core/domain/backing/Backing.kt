@@ -2,6 +2,8 @@ package com.violinjourney.app.core.domain.backing
 
 import com.violinjourney.app.core.io.PlatformFile
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 
 /**
  * An accompaniment file — «минусовка» (spec 3.32). One copy of the file per row, whoever points at it:
@@ -93,6 +95,13 @@ interface BackingRepository {
     /** Rows nobody points at any more, with their files: housekeeping at start. The names of the files that are still needed. */
     suspend fun deleteUnused(): Set<String>
 }
+
+/**
+ * The takes made under a backing, by session id: what the cards of the lists need of [BackingRepository.takeBackings]
+ * (spec 3.32). Only a new take or one gone changes it — not the shift and the level dragged on «Звук», step by step.
+ */
+val BackingRepository.takesUnderBacking: Flow<Set<Long>>
+    get() = takeBackings.map { rows -> rows.mapTo(HashSet()) { it.sessionId } }.distinctUntilChanged()
 
 /** Every number of the backing (spec 5.25). None of it is about intonation. */
 data class BackingConfig(
