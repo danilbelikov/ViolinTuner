@@ -13,3 +13,5 @@
 .externalNativeBuild
 .cxx
 local.properties
+# Kotlin 2 keeps its daemon sessions and error reports here: the build's state, not the project
+.kotlin/
