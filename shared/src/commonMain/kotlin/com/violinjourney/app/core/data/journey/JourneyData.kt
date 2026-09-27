@@ -200,7 +200,6 @@ class RoomHomeRepository(
             purchased = purchases.filter { it.kind == ITEM }.map { it.id }.toSet(),
             houses = purchases.filter { it.kind == HOUSE }.map { it.id }.toSet(),
             choices = choices.associate { it.slot to it.itemId },
-            movedInAtEpochMs = purchases.filter { it.kind == HOUSE }.maxOfOrNull { it.boughtAtEpochMs },
         )
     }
 

@@ -2,7 +2,6 @@ package com.violinjourney.app.core.domain.home
 
 import com.violinjourney.app.core.domain.journey.JourneyProgress
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.flowOf
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.number
 
@@ -77,7 +76,6 @@ data class HomeState(
     val purchased: Set<String>,
     val houses: Set<String>,
     val choices: Map<String, String>,
-    val movedInAtEpochMs: Long? = null,
 ) {
     companion object {
         val EMPTY = HomeState(loaded = false, purchased = emptySet(), houses = emptySet(), choices = emptyMap())
@@ -203,16 +201,4 @@ interface HomeRepository {
     suspend fun place(slot: String, itemId: String)
 
     suspend fun liveIn(house: String)
-}
-
-object NoHome : HomeRepository {
-    override val state: Flow<HomeState> = flowOf(HomeState.EMPTY.copy(loaded = true))
-
-    override suspend fun buy(item: HomeItem, nowEpochMs: Long): Boolean = false
-
-    override suspend fun buy(house: HomeHouse, nowEpochMs: Long): Boolean = false
-
-    override suspend fun place(slot: String, itemId: String) = Unit
-
-    override suspend fun liveIn(house: String) = Unit
 }

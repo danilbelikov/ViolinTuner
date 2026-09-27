@@ -209,7 +209,6 @@ fun HomeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
             }
         }
     }
-    ui.moving?.let { Moving(it, ui) }
 }
 
 @Composable

@@ -107,7 +107,7 @@ open class HomeViewModel(
         if (look.value.moving != null || !HomeRules.canBuy(house, latestHome, latestProgress)) return
         viewModelScope.launch {
             if (!home.buy(house, clock.millis())) return@launch
-            look.update { it.copy(houseCard = null, moving = house, outside = false) }
+            look.update { it.copy(houseCard = null, moving = house) }
             delay(if (reduceMotion) HomeMotion.MOVE_REDUCED_MS else HomeMotion.MOVE_MS)
             look.update { it.copy(moving = null) }
             effectChannel.trySend(HomeEffect.OpenHome)
