@@ -68,7 +68,8 @@ import org.jetbrains.compose.resources.stringResource
  * cut like a bookmark in sheet music, its right edge forked, its shadow the same outline set down —
  * no blur. «Репертуар» is the outline alone; a running block is the paper with a line of brass along
  * its lower edge; a done one is closed by a brass rim, «готово» and a tick in ink. [width] is what the
- * row can give a filled bookmark; the outline takes the width of its word.
+ * row can give a filled bookmark; the outline takes the width of its word, and ends it in «…» only when the
+ * row is narrower still.
  */
 @Composable
 fun BlockBookmark(
@@ -121,9 +122,12 @@ private fun EntryBookmark(onClick: () -> Unit) {
             text = label,
             modifier = Modifier
                 .align(Alignment.CenterStart)
-                .padding(start = LiveDimens.BookmarkTextStart, bottom = LiveDimens.BookmarkShadowRoom),
+                // the word may run up to the inner point of the fork, never past it
+                .padding(start = LiveDimens.BookmarkTextStart, end = LiveDimens.BookmarkNotch, bottom = LiveDimens.BookmarkShadowRoom),
             color = paper,
             maxLines = 1,
+            // only where the row itself is narrower than the word (a very large font): an ellipsis, not a cut letter
+            overflow = TextOverflow.Ellipsis,
             style = style,
         )
     }

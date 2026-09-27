@@ -70,6 +70,8 @@ fun StringRow(
             .padding(top = topPadding),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
+        // Each peg is as wide as the handoff's where the row has room, and all four narrow alike where it has not
+        // (a low landscape, a small phone): the row never gives the last one only what is left.
         Row(horizontalArrangement = Arrangement.spacedBy(LiveDimens.StringButtonGap)) {
             ViolinString.entries.forEach { string ->
                 StringButton(
@@ -78,6 +80,7 @@ fun StringRow(
                     isTarget = string == tuning.targetString,
                     isLocked = string == tuning.lockedString,
                     onClick = { onStringClick(string) },
+                    modifier = Modifier.weight(1f, fill = false),
                 )
             }
         }
@@ -95,6 +98,7 @@ private fun StringButton(
     isTarget: Boolean,
     isLocked: Boolean,
     onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     val wood = LiveTheme.venueColors
     val body = when {
@@ -117,7 +121,7 @@ private fun StringButton(
     val shape = RoundedCornerShape(LiveDimens.StringButtonCorner)
     val lockedDescription = stringResource(Res.string.tuning_string_locked)
     val autoDescription = stringResource(Res.string.tuning_string_auto)
-    Box(contentAlignment = Alignment.TopCenter) {
+    Box(modifier = modifier, contentAlignment = Alignment.TopCenter) {
         Column(
             modifier = Modifier
                 .size(LiveDimens.StringButtonWidth, LiveDimens.StringButtonHeight)
