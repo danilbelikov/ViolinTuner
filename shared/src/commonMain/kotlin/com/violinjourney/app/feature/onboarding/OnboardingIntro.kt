@@ -25,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.remember
@@ -35,6 +36,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.theme.ViolinTheme
@@ -62,6 +64,10 @@ private val IntroScenes by lazy { listOf(OnboardingArtData.welcome, OnboardingAr
 
 /** «Пропустить» dissolves the land and the text into the page about the data; the sky stands (36h2). */
 private const val SKIP_HALF_MS = 225
+
+/** «Пропустить» answers while more than half of it is seen. */
+private const val SKIP_ANSWERS_FROM = 0.5f
+
 private val Emphasized = CubicBezierEasing(0.2f, 0f, 0f, 1f)
 
 /**
@@ -110,10 +116,15 @@ internal fun OnboardingIntro(
 
     val position = { pager.currentPage + pager.currentPageOffsetFraction }
     val showSkip = { (OnboardingStep.intro.lastIndex - position()).coerceIn(0f, 1f) }
+    // Faded out on the last page, «Пропустить» is not there (spec 3.33): it neither answers a tap nor stays in the tree of
+    // TalkBack and VoiceOver. The fade itself is read in the draw phase; this recomposes only when the threshold is crossed.
+    val skipAnswers by remember { derivedStateOf { showSkip() > SKIP_ANSWERS_FROM } }
     val skip: @Composable (Modifier) -> Unit = { modifier ->
         SkipButton(
-            onClick = { if (showSkip() > 0.5f) onIntent(OnboardingIntent.SkipClicked) },
-            modifier = modifier.graphicsLayer { alpha = showSkip() },
+            onClick = { if (skipAnswers) onIntent(OnboardingIntent.SkipClicked) },
+            modifier = modifier
+                .graphicsLayer { alpha = showSkip() }
+                .then(if (skipAnswers) Modifier else Modifier.clearAndSetSemantics {}),
         )
     }
 
