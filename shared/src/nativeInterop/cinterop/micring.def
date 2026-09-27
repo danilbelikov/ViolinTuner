@@ -1,0 +1,151 @@
+# The microphone of iOS on the real-time thread without Kotlin (IosMicRing): AVAudioSinkNode hands every I/O cycle to
+# the C below, which only copies it into a ring and says so; Kotlin reads the ring on a thread of its own. Nothing here
+# allocates, locks or sends an Objective-C message on the audio thread: the ring's counters are plain integers touched
+# only through the __atomic builtins, and dispatch_semaphore_signal is the one call out.
+language = Objective-C
+package = com.violinjourney.app.core.audio.micring
+compilerOpts = -fobjc-arc
+---
+#import <AVFAudio/AVFAudio.h>
+#include <dispatch/dispatch.h>
+#include <stdbool.h>
+#include <stdint.h>
+#include <string.h>
+
+typedef struct VJMicRing {
+    float *samples;
+    uint32_t capacity;
+    uint32_t mask;
+    uint64_t written;
+    uint64_t taken;
+    uint32_t behind;
+    uint32_t stampSeq;
+    uint64_t stampFrame;
+    uint64_t stampHost;
+    double nextSampleTime;
+    uint32_t hasSampleTime;
+    uint32_t blocks;
+    uint32_t largest;
+    uint32_t gaps;
+    void *signal;
+} VJMicRing;
+
+/**
+ * The audio thread's side: [frames] samples of the first channel of [data] (every [stride]-th float) go into the ring.
+ * A block that does not fit is not written: the ring says it fell behind, which ends the input — never a wait here —
+ * and nothing is written after it either: the reader takes what came before the gap and stops, rather than go on
+ * across a hole its sample clock would not see.
+ * The host time of a stamped block is kept against the index of its first sample, under a sequence lock.
+ */
+static inline void vj_mic_ring_write(VJMicRing *ring, const float *data, uint32_t frames, uint32_t stride, const AudioTimeStamp *time) {
+    if (__atomic_load_n(&ring->behind, __ATOMIC_ACQUIRE) != 0) {
+        dispatch_semaphore_signal((__bridge dispatch_semaphore_t)ring->signal);
+        return;
+    }
+    uint64_t written = __atomic_load_n(&ring->written, __ATOMIC_RELAXED);
+    uint64_t taken = __atomic_load_n(&ring->taken, __ATOMIC_ACQUIRE);
+    if (written - taken + frames > ring->capacity) {
+        __atomic_store_n(&ring->behind, 1u, __ATOMIC_RELEASE);
+        dispatch_semaphore_signal((__bridge dispatch_semaphore_t)ring->signal);
+        return;
+    }
+    if (time != NULL) {
+        if ((time->mFlags & kAudioTimeStampSampleTimeValid) != 0) {
+            if (ring->hasSampleTime && time->mSampleTime != ring->nextSampleTime) __atomic_add_fetch(&ring->gaps, 1u, __ATOMIC_RELAXED);
+            ring->nextSampleTime = time->mSampleTime + frames;
+            ring->hasSampleTime = 1u;
+        }
+        if ((time->mFlags & kAudioTimeStampHostTimeValid) != 0) {
+            uint32_t seq = __atomic_load_n(&ring->stampSeq, __ATOMIC_RELAXED);
+            __atomic_store_n(&ring->stampSeq, seq + 1u, __ATOMIC_RELAXED);
+            __atomic_thread_fence(__ATOMIC_RELEASE);
+            __atomic_store_n(&ring->stampFrame, written, __ATOMIC_RELAXED);
+            __atomic_store_n(&ring->stampHost, time->mHostTime, __ATOMIC_RELAXED);
+            __atomic_store_n(&ring->stampSeq, seq + 2u, __ATOMIC_RELEASE);
+        }
+    }
+    uint32_t at = (uint32_t)(written & ring->mask);
+    for (uint32_t i = 0; i < frames; i++) ring->samples[(at + i) & ring->mask] = data[(size_t)i * stride];
+    __atomic_store_n(&ring->written, written + frames, __ATOMIC_RELEASE);
+    __atomic_add_fetch(&ring->blocks, 1u, __ATOMIC_RELAXED);
+    if (frames > __atomic_load_n(&ring->largest, __ATOMIC_RELAXED)) __atomic_store_n(&ring->largest, frames, __ATOMIC_RELAXED);
+    dispatch_semaphore_signal((__bridge dispatch_semaphore_t)ring->signal);
+}
+
+/**
+ * A sink node whose every I/O cycle goes into a new ring of [capacity] samples (a power of two), handed out in [ring].
+ * The ring and its semaphore are held by the node's block: they live exactly as long as the node.
+ */
+static inline AVAudioSinkNode *vj_mic_sink_create(uint32_t capacity, VJMicRing **ring) {
+    NSMutableData *memory = [NSMutableData dataWithLength:sizeof(VJMicRing) + (size_t)capacity * sizeof(float)];
+    dispatch_semaphore_t signal = dispatch_semaphore_create(0);
+    VJMicRing *made = (VJMicRing *)memory.mutableBytes;
+    made->samples = (float *)(made + 1);
+    made->capacity = capacity;
+    made->mask = capacity - 1u;
+    made->signal = (__bridge void *)signal;
+    *ring = made;
+    return [[AVAudioSinkNode alloc] initWithReceiverBlock:^OSStatus(const AudioTimeStamp *timestamp, AVAudioFrameCount frameCount, const AudioBufferList *inputData) {
+        (void)memory;
+        (void)signal;
+        if (inputData == NULL || inputData->mNumberBuffers == 0) return noErr;
+        const AudioBuffer *buffer = &inputData->mBuffers[0];
+        if (buffer->mData == NULL) return noErr;
+        uint32_t channels = buffer->mNumberChannels == 0 ? 1u : buffer->mNumberChannels;
+        uint32_t fits = buffer->mDataByteSize / (uint32_t)sizeof(float) / channels;
+        vj_mic_ring_write(made, (const float *)buffer->mData, frameCount < fits ? frameCount : fits, channels, timestamp);
+        return noErr;
+    }];
+}
+
+/** The reader's side: up to [max] samples into [out], in order across the wrap; how many. */
+static inline uint32_t vj_mic_ring_read(VJMicRing *ring, float *out, uint32_t max) {
+    uint64_t taken = __atomic_load_n(&ring->taken, __ATOMIC_RELAXED);
+    uint64_t written = __atomic_load_n(&ring->written, __ATOMIC_ACQUIRE);
+    uint64_t available = written - taken;
+    uint32_t count = available < max ? (uint32_t)available : max;
+    uint32_t at = (uint32_t)(taken & ring->mask);
+    uint32_t first = ring->capacity - at < count ? ring->capacity - at : count;
+    memcpy(out, ring->samples + at, (size_t)first * sizeof(float));
+    if (count > first) memcpy(out + first, ring->samples, (size_t)(count - first) * sizeof(float));
+    __atomic_store_n(&ring->taken, taken + count, __ATOMIC_RELEASE);
+    return count;
+}
+
+/** Waits up to [nanos] for the next block or a wake; true when there was one. */
+static inline bool vj_mic_ring_wait(VJMicRing *ring, int64_t nanos) {
+    return dispatch_semaphore_wait((__bridge dispatch_semaphore_t)ring->signal, dispatch_time(DISPATCH_TIME_NOW, nanos)) == 0;
+}
+
+static inline void vj_mic_ring_wake(VJMicRing *ring) {
+    dispatch_semaphore_signal((__bridge dispatch_semaphore_t)ring->signal);
+}
+
+static inline bool vj_mic_ring_behind(VJMicRing *ring) {
+    return __atomic_load_n(&ring->behind, __ATOMIC_ACQUIRE) != 0;
+}
+
+/** The index of the first sample of the last stamped block and its host time; false before the first, or while one is being written. */
+static inline bool vj_mic_ring_stamp(VJMicRing *ring, uint64_t *frame, uint64_t *host) {
+    for (int attempt = 0; attempt < 64; attempt++) {
+        uint32_t before = __atomic_load_n(&ring->stampSeq, __ATOMIC_ACQUIRE);
+        if (before == 0) return false;
+        if ((before & 1u) != 0) continue;
+        uint64_t f = __atomic_load_n(&ring->stampFrame, __ATOMIC_RELAXED);
+        uint64_t h = __atomic_load_n(&ring->stampHost, __ATOMIC_RELAXED);
+        __atomic_thread_fence(__ATOMIC_ACQUIRE);
+        if (__atomic_load_n(&ring->stampSeq, __ATOMIC_RELAXED) == before) {
+            *frame = f;
+            *host = h;
+            return true;
+        }
+    }
+    return false;
+}
+
+/** The blocks since the last call, the largest of them and the cycles missed (a sample time that did not follow), each taken to zero. */
+static inline void vj_mic_ring_take_counters(VJMicRing *ring, uint32_t *blocks, uint32_t *largest, uint32_t *gaps) {
+    *blocks = __atomic_exchange_n(&ring->blocks, 0u, __ATOMIC_RELAXED);
+    *largest = __atomic_exchange_n(&ring->largest, 0u, __ATOMIC_RELAXED);
+    *gaps = __atomic_exchange_n(&ring->gaps, 0u, __ATOMIC_RELAXED);
+}

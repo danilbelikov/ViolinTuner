@@ -19,6 +19,25 @@ class HopSplitterTest {
     }
 
     @Test
+    fun `a reused chunk read partly gives the hops of exact blocks`() {
+        val signal = FloatArray(40) { it / 64f }
+        val blocks = listOf(signal.sliceArray(0..6), signal.sliceArray(7..20), signal.sliceArray(21..39))
+        val exact = ArrayList<List<Short>>()
+        val whole = HopSplitter(8)
+        blocks.forEach { block -> whole.push(block) { exact += it.toList() } }
+
+        val reused = ArrayList<List<Short>>()
+        val chunk = FloatArray(32) { 0.99f } // what an earlier read left behind the count must not be taken
+        val partly = HopSplitter(8)
+        blocks.forEach { block ->
+            block.copyInto(chunk)
+            partly.push(chunk, block.size) { reused += it.toList() }
+        }
+        assertEquals(5, exact.size)
+        assertEquals(exact, reused)
+    }
+
+    @Test
     fun `samples keep their order across blocks and are scaled as PCM16`() {
         val splitter = HopSplitter(4)
         val hops = ArrayList<List<Short>>()

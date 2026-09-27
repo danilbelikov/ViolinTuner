@@ -40,6 +40,10 @@ kotlin {
             baseName = "Shared"
             isStatic = true
         }
+        // The microphone's ring: a sink node and a few C functions, so that the audio thread never runs Kotlin (IosMicRing).
+        target.compilations.getByName("main").cinterops.create("micring") {
+            definitionFile.set(project.file("src/nativeInterop/cinterop/micring.def"))
+        }
     }
 
     sourceSets {

@@ -508,12 +508,13 @@ class IosSessionPlayer internal constructor(
          * is taken again on every play after the engine was paused — [OUTPUT_LINGER_MS] after a pause or the end of a
          * take — with the category and the activation set again every time, as on the first play: a microphone opened
          * meanwhile made the session its own. The session is the app's one ([IosAudioSession]): the first play of the
-         * player counts it among its users, and the player leaves when it is released — not when another file is loaded.
+         * player counts it among its users, and the player leaves when it is released — not when another file is loaded;
+         * a play after that takes it again ([IosAudioSession.retake]), which gives back the I/O buffer a microphone asked for.
          */
         private fun startOutput(): Boolean {
             if (engine.running) return true
             if (lock.withLock { holdsSession }) {
-                takeForPlaying(AVAudioSession.sharedInstance())
+                IosAudioSession.retake(::takeForPlaying)
             } else {
                 IosAudioSession.enter(::takeForPlaying)
                 // released while it was entering: what was just taken goes at once, and nothing plays

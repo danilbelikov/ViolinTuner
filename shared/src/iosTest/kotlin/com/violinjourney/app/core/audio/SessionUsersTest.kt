@@ -27,6 +27,17 @@ class SessionUsersTest {
     }
 
     @Test
+    fun `a leave hears how many are still in before the last one lets go`() {
+        val heard = ArrayList<Pair<Int, Int>>()
+        users.enter { }
+        users.enter { }
+        users.leave { heard += it to letGo }
+        users.leave { heard += it to letGo }
+        assertEquals(listOf(1 to 0, 0 to 0), heard, "told before the letting go")
+        assertEquals(1, letGo)
+    }
+
+    @Test
     fun `an opening that throws is not counted`() {
         assertFailsWith<IllegalStateException> { users.enter { error("the session would not open") } }
         users.enter { }
@@ -51,6 +62,16 @@ class SessionUsersTest {
         users.leave()
         assertEquals(0, letGo)
         users.enter { }
+        users.leave()
+        users.leave()
+        assertEquals(1, letGo)
+    }
+
+    @Test
+    fun `an opening hears the others in and taking it again counts nobody`() {
+        assertEquals(listOf(0, 1), listOf(users.enter { it }, users.enter { it }))
+        assertEquals(1, users.again { it }, "the one taking it again is not among the others")
+        assertEquals(2, users.users)
         users.leave()
         users.leave()
         assertEquals(1, letGo)
