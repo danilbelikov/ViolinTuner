@@ -89,7 +89,7 @@ object AppIcons {
     val TabPractice: TabIcon by lazy { tab("TabPractice", IconPaths.TAB_PRACTICE) }
     val TabRecords: TabIcon by lazy { tab("TabRecords", IconPaths.TAB_RECORDS) }
 
-    /** Every plain icon by name: for the test that builds them all, and for a gallery preview. */
+    /** Every plain icon by name, in the order declared: for the test that builds them all (it checks that none is missing). */
     val all: List<Pair<String, () -> ImageVector>> = listOf(
         "Back" to { Back },
         "Close" to { Close },
@@ -118,6 +118,8 @@ object AppIcons {
         "Map" to { Map },
         "Passport" to { Passport },
         "Door" to { Door },
+        "House" to { House },
+        "Theatre" to { Theatre },
         "Travel" to { Travel },
         "Shop" to { Shop },
         "Arrange" to { Arrange },
@@ -155,10 +157,13 @@ object AppIcons {
         "Archive" to { Archive },
         "Device" to { Device },
         "Calendar" to { Calendar },
+        "Headphones" to { Headphones },
+        "Backing" to { Backing },
         "Tape" to { Tape },
         "Takt" to { Takt },
     )
 
+    /** Every icon of the bottom bar, for the same test. */
     val tabs: List<() -> TabIcon> = listOf({ TabLive }, { TabPractice }, { TabRecords })
 
     const val GRID = 24f

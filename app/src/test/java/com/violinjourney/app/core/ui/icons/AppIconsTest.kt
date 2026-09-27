@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.ui.icons
 
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.vector.PathNode
 import androidx.compose.ui.graphics.vector.VectorPath
 import androidx.compose.ui.unit.dp
@@ -12,13 +13,27 @@ import org.junit.Test
 class AppIconsTest {
     @Test
     fun `every icon of the handoff builds on the 24 grid`() {
-        assertEquals(66, AppIcons.all.size)
         AppIcons.all.forEach { (name, build) ->
             val icon = build()
+            assertEquals("the name in the list is the icon's own", name, icon.name)
             assertEquals(name, 24.dp, icon.defaultWidth)
             assertEquals(name, 24f, icon.viewportHeight, 0f)
             assertTrue("$name has no paths", icon.root.size > 0)
         }
+    }
+
+    /** The lists are kept by hand: an icon declared and left out of them would never be built by these tests. */
+    @Test
+    fun `every icon declared is in the lists the tests build`() {
+        fun declared(type: Class<*>) = AppIcons::class.java.declaredMethods
+            .filter { it.parameterCount == 0 && it.returnType == type && it.name.startsWith("get") }
+            .map { it.name.removePrefix("get") }
+            .toSet()
+
+        val plain = AppIcons.all.map { it.first }
+        assertEquals("no icon is listed twice", plain.size, plain.toSet().size)
+        assertEquals(declared(ImageVector::class.java), plain.toSet())
+        assertEquals(declared(TabIcon::class.java), AppIcons.tabs.map { it().normal.name }.toSet())
     }
 
     @Test
