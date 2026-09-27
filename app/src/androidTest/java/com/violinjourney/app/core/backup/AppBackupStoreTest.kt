@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.data.AppDatabase
@@ -57,31 +58,19 @@ class AppBackupStoreTest {
         root.deleteRecursively()
     }
 
-    private fun open(): AppDatabase = Room.databaseBuilder(context, AppDatabase::class.java, liveFile.path).addMigrations(*DatabaseMigrations.ALL).build()
+    // the journal the app's database keeps on a phone: what was written a moment ago lies in -wal, not in the main file
+    private fun open(): AppDatabase = Room.databaseBuilder(context, AppDatabase::class.java, liveFile.path)
+        .addMigrations(*DatabaseMigrations.ALL)
+        .setJournalMode(RoomDatabase.JournalMode.WRITE_AHEAD_LOGGING)
+        .build()
 
     private fun session(title: String, audio: String?) = SessionEntity(
         title = title, startedAtEpochMs = 1_790_000_000_000, durationMs = 60_000, a4Hz = 440.0, toleranceCents = 8.0, nearCents = 20.0,
         scorePercent = 80, nearPercent = 15, offPercent = 5, maeCents = 6.5, biasCents = -2.0, previewZones = "ININ", audioPath = audio,
     )
 
-    /** The snapshot the store takes, reproduced on this database: copy under an exclusive lock, then fold the journal in. */
-    private fun snapshot(): File {
-        val target = File(root, "snapshot/violin.db").also { it.parentFile!!.mkdirs() }
-        val live = database.openHelper.writableDatabase
-        live.beginTransaction()
-        try {
-            liveFile.copyTo(target, overwrite = true)
-            File(liveFile.path + "-wal").takeIf { it.isFile }?.copyTo(File(target.path + "-wal"), overwrite = true)
-        } finally {
-            live.endTransaction()
-        }
-        SQLiteDatabase.openDatabase(target.path, null, SQLiteDatabase.OPEN_READWRITE).use { copy ->
-            copy.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null).use { it.moveToFirst() }
-            copy.rawQuery("PRAGMA journal_mode=DELETE", null).use { it.moveToFirst() }
-        }
-        listOf("-wal", "-shm", "-journal").forEach { File(target.path + it).delete() }
-        return target
-    }
+    /** The snapshot the store takes — its own code, on this test's database. */
+    private fun snapshot(): File = DatabaseSnapshot.take(database, liveFile, File(root, "snapshot/violin.db").also { it.parentFile!!.mkdirs() })
 
     @Test
     fun aCopyOfALiveDatabaseComesBackThroughTheSwapWithEverythingInIt() = runBlocking {
@@ -94,6 +83,7 @@ class AppBackupStoreTest {
 
         // whatever the schema is today: the copy carries it, and comes back with it
         val schema = database.openHelper.readableDatabase.version
+        assertTrue("the fresh rows are still in the journal: the snapshot is tested on the way with -wal", File(liveFile.path + "-wal").length() > 0)
         val snapshotFile = snapshot()
         assertFalse(File(snapshotFile.path + "-wal").exists())
         val manifest = BackupManifest(1, "test", schema, 1_790_000_000_000, "test", BackupPart.entries.toSet(), BackupCounts(sessions = 2), mapOf(BackupPart.DATA to snapshotFile.length(), BackupPart.AUDIO to sound.size.toLong()))

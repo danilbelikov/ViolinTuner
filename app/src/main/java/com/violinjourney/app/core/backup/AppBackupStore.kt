@@ -65,7 +65,7 @@ class AppBackupStore @Inject constructor(
             withSound = all.count { it.audioPath != null && it.videoPath == null },
             videos = all.count { it.videoPath != null },
         )
-        val data = databaseFile.length() + File(databaseFile.path + WAL).length() + settingsFile.length() + mediaOf(BackupPart.DATA).sumOf { it.length() }
+        val data = databaseFile.length() + File(databaseFile.path + DatabaseSnapshot.WAL).length() + settingsFile.length() + mediaOf(BackupPart.DATA).sumOf { it.length() }
         BackupContents(
             counts,
             mapOf(BackupPart.DATA to data) + listOf(BackupPart.SHEETS, BackupPart.AUDIO, BackupPart.VIDEO).associateWith { part -> mediaOf(part).sumOf { it.length() } },
@@ -120,30 +120,10 @@ class AppBackupStore @Inject constructor(
         null
     }
 
-    /**
-     * The database and its journal are copied under an exclusive lock — nobody writes meanwhile, so
-     * the pair is consistent — and the copy is then folded into one file. `VACUUM INTO` would be
-     * neater and is not there before API 30.
-     */
     private fun snapshotDatabase(): File {
         snapshotDir.deleteRecursively()
         snapshotDir.mkdirs()
-        val target = File(snapshotDir, AppDatabase.FILE_NAME)
-        val live = database.openHelper.writableDatabase
-        live.beginTransaction()
-        try {
-            databaseFile.copyTo(target, overwrite = true)
-            File(databaseFile.path + WAL).takeIf { it.isFile }?.copyTo(File(target.path + WAL), overwrite = true)
-        } finally {
-            live.endTransaction()
-        }
-        SQLiteDatabase.openDatabase(target.path, null, SQLiteDatabase.OPEN_READWRITE).use { copy ->
-            copy.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null).use { it.moveToFirst() }
-            // one file, whatever mode the next reader opens it in
-            copy.rawQuery("PRAGMA journal_mode=DELETE", null).use { it.moveToFirst() }
-        }
-        listOf(WAL, "-shm", "-journal").forEach { File(target.path + it).delete() }
-        return target
+        return DatabaseSnapshot.take(database, databaseFile, File(snapshotDir, AppDatabase.FILE_NAME))
     }
 
     override fun cleanUp() {
@@ -189,8 +169,37 @@ class AppBackupStore @Inject constructor(
         const val SNAPSHOT_DIR = "backup-snapshot"
         const val SHARE_DIR = "share"
         const val SHARE_BACKUP_DIR = "backup"
-        const val WAL = "-wal"
         const val PARTIAL = ".part"
+    }
+}
+
+/**
+ * The database of a copy (spec 5.14): the file of the live database [database] and its journal are copied under an
+ * exclusive lock — nobody writes meanwhile, so the pair is consistent — and the copy is then folded into one file at
+ * [target]. `VACUUM INTO` would be neater and is not there before API 30. Apart from the store so that its test runs this
+ * very code on a database of its own.
+ */
+internal object DatabaseSnapshot {
+    const val WAL = "-wal"
+    private const val SHM = "-shm"
+    private const val JOURNAL = "-journal"
+
+    fun take(database: RoomDatabase, live: File, target: File): File {
+        val writable = database.openHelper.writableDatabase
+        writable.beginTransaction()
+        try {
+            live.copyTo(target, overwrite = true)
+            File(live.path + WAL).takeIf { it.isFile }?.copyTo(File(target.path + WAL), overwrite = true)
+        } finally {
+            writable.endTransaction()
+        }
+        SQLiteDatabase.openDatabase(target.path, null, SQLiteDatabase.OPEN_READWRITE).use { copy ->
+            copy.rawQuery("PRAGMA wal_checkpoint(TRUNCATE)", null).use { it.moveToFirst() }
+            // one file, whatever mode the next reader opens it in
+            copy.rawQuery("PRAGMA journal_mode=DELETE", null).use { it.moveToFirst() }
+        }
+        listOf(WAL, SHM, JOURNAL).forEach { File(target.path + it).delete() }
+        return target
     }
 }
 
