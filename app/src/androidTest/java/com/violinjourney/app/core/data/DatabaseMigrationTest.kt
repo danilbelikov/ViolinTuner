@@ -14,8 +14,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * Opens a database file laid out exactly as an old version (statements from
- * `shared/schemas/…/1.json` … `5.json`) through Room with the migrations. Room validates the migrated
+ * Opens a database file laid out exactly as an old version (the statements of its `shared/schemas/…/<N>.json`, every
+ * version before the current one) through Room with the migrations. Room validates the migrated
  * schema against the current entities when it opens such a file, so a migration that leaves
  * a table different from what the entities declare fails here, not on the user's phone.
  */

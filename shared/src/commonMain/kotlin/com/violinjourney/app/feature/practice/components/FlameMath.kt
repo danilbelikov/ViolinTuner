@@ -6,7 +6,8 @@ import kotlin.math.cos
 /**
  * The rules of the streak flame (spec 3.18, 5.12; handoff 19g, `anims`) — pure, with tests: which
  * flame a streak earns, how its two layers stand at a moment of the sway, how the sway dies down,
- * how it flares when the streak grows. Only shapes move: no colour and no alpha is ever animated.
+ * how it flares when the streak grows. Only shapes move while the flame stands: no colour is animated, and the one
+ * change of alpha is its fade-in the first time it appears ([appearAlphaAt]).
  */
 internal object FlameMath {
     enum class Stage { NONE, SMALL, FULL, HOT }

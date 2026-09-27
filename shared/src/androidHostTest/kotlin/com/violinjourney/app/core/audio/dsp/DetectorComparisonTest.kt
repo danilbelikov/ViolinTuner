@@ -10,7 +10,8 @@ import kotlin.test.Test
 /**
  * "Choice by tests" (spec 5.1): prints accuracy, noise robustness and cost of both detectors.
  * The numbers behind the default binding in AudioModule come from this report; rerun it with
- * `./gradlew :app:testDebugUnitTest --tests "*.DetectorComparisonTest" -i` after changing either.
+ * `./gradlew :shared:testAndroidHostTest --tests "*.DetectorComparisonTest"` after changing either — the table is in the
+ * `<system-out>` of `shared/build/test-results/testAndroidHostTest/TEST-*DetectorComparisonTest.xml`.
  */
 class DetectorComparisonTest {
     private val config = IntonationConfig()

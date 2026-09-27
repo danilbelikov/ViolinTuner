@@ -6,7 +6,7 @@ import com.violinjourney.app.core.domain.backing.BackingOutput
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/** Which headphones the backing goes to, and the clicks it measures them with (spec 3.32, 5.25). */
+/** Which headphones the backing goes to (spec 3.32, 5.25). */
 class BackingRoutesTest {
     private fun device(type: Int, name: String? = null) = AudioRouteRules.Device(type, name)
 
