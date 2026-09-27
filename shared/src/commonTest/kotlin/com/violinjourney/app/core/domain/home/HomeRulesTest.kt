@@ -74,6 +74,22 @@ class HomeRulesTest {
     }
 
     @Test
+    fun `a desk and a chair are never bare - what stands on them never hangs in the air`() {
+        // «пусто» saved for a desk, a chair or the window before it went from them reads as what the room came with
+        val state = loaded.copy(purchased = setOf("plaid"), choices = mapOf("desk" to "", "chair" to "", "window" to "", "chairTop" to "plaid"))
+        val placed = HomeRules.placed(state)
+        assertEquals("desk_simple", placed["desk"]?.id)
+        assertEquals("chair_simple", placed["chair"]?.id)
+        assertEquals("window_simple", placed["window"]?.id)
+        val standing = HomeRules.standing(state, "rent", false, september).map { it.id }
+        assertTrue("lamp_table" in standing && "desk_simple" in standing, "the lamp stands on a desk")
+        assertTrue("plaid" in standing && "chair_simple" in standing, "the plaid lies on a chair")
+        // what stands on them may still be taken away: a desk without a lamp is a choice
+        assertNull(HomeRules.placed(state.copy(choices = state.choices + ("deskTop" to "")))["deskTop"])
+        assertTrue(HomeCatalog.NEVER_BARE.containsAll(listOf("window", "view", "desk", "chair")))
+    }
+
+    @Test
     fun `things move with their owner - those whose place the new home lacks wait in the wardrobe`() {
         val state = loaded.copy(
             purchased = setOf("bookshelf", "fireplace", "wp_damask", "mailbox", "vane"),

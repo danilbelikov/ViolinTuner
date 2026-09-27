@@ -59,6 +59,13 @@ object HomeCatalog {
     const val MONTH_DAY = 100
     const val SEASON_FROM = 12 * MONTH_DAY + 1
     const val SEASON_TO = 1 * MONTH_DAY + 15
+
+    /**
+     * Places that are never bare: a hole in the wall is not a choice — a room always has its window and something behind
+     * it — and a desk and a chair carry what stands on them, which would hang in the air. An empty choice of one of them,
+     * saved before «пусто» went from them, reads as what the room came with.
+     */
+    val NEVER_BARE: Set<String> = setOf("window", "view", "desk", "chair")
 }
 
 /** Everything the home remembers. What stands where is [choices]: slot → item, an empty string — the place left bare on purpose. */
@@ -99,14 +106,17 @@ object HomeRules {
     fun canBuy(house: HomeHouse, state: HomeState, progress: JourneyProgress): Boolean =
         house.drawn && house.id !in ownedHouses(state) && progress.balance >= house.price
 
-    /** What stands in every place: the choice if it is owned, otherwise what the room came with; an empty choice — nothing. */
+    /** What stands in every place: the choice if it is owned, otherwise what the room came with; an empty choice — nothing, but in a place that is never bare. */
     fun placed(state: HomeState): Map<String, HomeItem> {
         val owned = ownedItems(state)
         val result = LinkedHashMap<String, HomeItem>()
         HomeCatalog.items.filter { it.id in HomeCatalog.startItems }.forEach { result[it.slot] = it }
         state.choices.forEach { (slot, id) ->
             if (slot == HomeState.HOUSE_KEY) return@forEach
-            if (id.isEmpty()) result.remove(slot) else HomeCatalog.byId[id]?.takeIf { it.id in owned && it.slot == slot }?.let { result[slot] = it }
+            when {
+                id.isNotEmpty() -> HomeCatalog.byId[id]?.takeIf { it.id in owned && it.slot == slot }?.let { result[slot] = it }
+                slot !in HomeCatalog.NEVER_BARE -> result.remove(slot)
+            }
         }
         return result
     }

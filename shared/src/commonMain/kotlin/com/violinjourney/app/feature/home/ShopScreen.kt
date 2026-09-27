@@ -219,9 +219,6 @@ private fun ShelfRows(things: List<HomeItem>, material: ShelfMaterial, tile: @Co
     }
 }
 
-/** A hole in the wall is not a choice: a room always has its window and something behind it. */
-private val NEVER_BARE = setOf("window", "view")
-
 /** Takts a usual half-hour of playing brings: for the quiet hint «ещё примерно два занятия». */
 private const val TAKTS_A_SESSION = 300
 
@@ -486,8 +483,8 @@ fun ArrangeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier
                         things.forEach { item ->
                             Choice(chosen = standing == item.id, label = itemName(item.id), onClick = { onIntent(HomeIntent.Placed(slot.id, item.id)) }) { ItemThumb(item) }
                         }
-                        // walls and a floor cannot be bare; a desk without a lamp is a choice too
-                        if (!slot.palette && slot.id !in NEVER_BARE) Choice(chosen = standing == null, label = stringResource(Res.string.arrange_empty), onClick = { onIntent(HomeIntent.Placed(slot.id, "")) }) {}
+                        // walls, a floor, the window and what things stand on cannot be bare; a desk without a lamp is a choice too
+                        if (!slot.palette && slot.id !in HomeCatalog.NEVER_BARE) Choice(chosen = standing == null, label = stringResource(Res.string.arrange_empty), onClick = { onIntent(HomeIntent.Placed(slot.id, "")) }) {}
                     }
                 }
             }
