@@ -51,7 +51,7 @@ class MicPitchSource @Inject constructor(
     @Volatile private var anchor: Anchor? = null
 
     override val clock: SampleClock = SampleClock { tMs ->
-        anchor?.let { at -> at.nanos + ((tMs * at.rate / MS_PER_SECOND) - at.frame) * NANOS_PER_SECOND / at.rate }
+        anchor?.let { at -> FrameClock.nanosAt(tMs, at.frame, at.nanos, at.rate) }
     }
 
     override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
@@ -138,7 +138,6 @@ class MicPitchSource @Inject constructor(
     private companion object {
         const val TAG = "MicPitchSource"
         const val MS_PER_SECOND = 1_000L
-        const val NANOS_PER_SECOND = 1_000_000_000L
         const val CHANNEL = AudioFormat.CHANNEL_IN_MONO
         const val ENCODING = AudioFormat.ENCODING_PCM_16BIT
         const val BYTES_PER_SAMPLE = 2

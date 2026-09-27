@@ -6,6 +6,7 @@ import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.PitchSource
 import com.violinjourney.app.core.audio.RecordingRate
+import com.violinjourney.app.core.audio.SampleClock
 import com.violinjourney.app.core.audio.recording.AudioTap
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.audio.share.ShareFiles
@@ -89,7 +90,11 @@ class PieceViewModelTest {
     }
 
     /** Counts how often it is listened to: a piece's screen may hold the microphone only while a take runs. */
-    private class CountingSource(private val delegate: PitchSource, override val requiresMicPermission: Boolean = false) : PitchSource {
+    private class CountingSource(
+        private val delegate: PitchSource,
+        override val requiresMicPermission: Boolean = false,
+        override val clock: SampleClock? = null,
+    ) : PitchSource {
         var collections = 0
         var active = 0
         override val audioTap = null
@@ -133,9 +138,14 @@ class PieceViewModelTest {
         override var startNanos: Long? = null
         var started: Pair<File, Int>? = null
         var stops = 0
+
+        /** When the first frame leaves the output, as the output tells it; null — it has not said. */
+        var firstFrameNanos: () -> Long? = { null }
+
         override fun start(pcm: File, sampleRate: Int) {
             started = pcm to sampleRate
             position.value = 1_234
+            startNanos = firstFrameNanos()
         }
         override fun stop(): Long {
             stops++
@@ -806,6 +816,33 @@ class PieceViewModelTest {
         assertEquals(3_210L, take.playedMs)
         assertEquals(com.violinjourney.app.core.domain.backing.BackingOutput.BLUETOOTH, take.output)
         assertTrue(viewModel.state.value.takes.single().card.underBacking)
+    }
+
+    @Test
+    fun `a take whose source knows its clock gets its shift from both clocks`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        // the input's clock: the stream's frame-clock time on CLOCK_MONOTONIC, 5 s after it began
+        var asked: Long? = null
+        val clock = SampleClock { tMs -> 5_000_000_000L + tMs * 1_000_000 }
+        source = CountingSource(
+            FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource),
+            clock = SampleClock { tMs -> asked = tMs; clock.nanosAt(tMs) },
+        )
+        // the backing's first frame leaves the output 150 ms after the take's first sample came in
+        playback.firstFrameNanos = { asked?.let { clock.nanosAt(it)!! + 150_000_000 } }
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(300)
+
+        assertNotNull("the take asked the source's clock when its first sample came in", asked)
+        val take = backings.takeBackings.value.single()
+        // wired headphones add nothing: the shift is what the two clocks say
+        assertEquals(150, take.offsetMs)
+        assertEquals(150, take.recordedOffsetMs)
+        assertEquals(0, take.latencyMs)
     }
 
     @Test

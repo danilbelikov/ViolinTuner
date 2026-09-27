@@ -101,13 +101,11 @@ internal class IosMicRing(capacity: Int, private val rate: Int) {
      */
     fun nanosAt(tMs: Long, inputLatencySeconds: Double): Long? {
         val stamp = stamp() ?: return null
-        val sample = tMs * rate / MS_PER_SECOND
-        return HostClock.nanosOf(stamp.hostTime) - (inputLatencySeconds * NANOS_PER_SECOND).toLong() +
-            (sample - stamp.frame) * NANOS_PER_SECOND.toLong() / rate
+        val captured = HostClock.nanosOf(stamp.hostTime) - (inputLatencySeconds * NANOS_PER_SECOND).toLong()
+        return FrameClock.nanosAt(tMs, stamp.frame, captured, rate)
     }
 
     private companion object {
-        const val MS_PER_SECOND = 1_000L
         const val NANOS_PER_SECOND = 1_000_000_000.0
     }
 }
