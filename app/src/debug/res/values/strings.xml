@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The names of the debug app (see the debug AndroidManifest.xml): one for every language, never translated. -->
+<resources>
+    <string name="app_name_debug" translatable="false">Violin Journey debug</string>
+    <string name="app_name_launcher_debug" translatable="false">VJ debug</string>
+</resources>

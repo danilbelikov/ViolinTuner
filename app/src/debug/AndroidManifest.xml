@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  A debug build is another app beside the one from the store (applicationIdSuffix ".debug"), and on a phone
+  with real data the two must not be taken for each other: the one to wipe, the one with the practice of months.
+  So the debug app is named apart — under its icon and among the system's apps. The titles inside the app
+  (@string/app_name on the first screen of the introduction) stay as they are.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <application
+        android:label="@string/app_name_debug"
+        tools:replace="android:label">
+        <activity
+            android:name=".MainActivity"
+            android:label="@string/app_name_launcher_debug"
+            tools:replace="android:label" />
+    </application>
+
+</manifest>

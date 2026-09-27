@@ -8,7 +8,8 @@ plugins {
 }
 
 // `-PfakePitch=true` builds the app on the scripted FakePitchSource(DEMO) instead of the
-// microphone: for emulators and for checking every Live state without an instrument.
+// microphone: for emulators and for checking every Live state without an instrument. Debug builds
+// only, as are the three switches below: a release pins them off.
 val fakePitch = providers.gradleProperty("fakePitch").map(String::toBoolean).getOrElse(false)
 
 // `-PfakeScenario=IN_TUNE` (with `-PfakePitch=true`) plays one steady scenario of FakeScenario instead of
@@ -79,6 +80,13 @@ android {
             applicationIdSuffix = ".debug"
         }
         release {
+            // The switches above are for the emulator and the checks of a debug build. A store build
+            // never takes them, whatever `-P` or `ORG_GRADLE_PROJECT_…` says: a release on the fake
+            // source would play DEMO instead of listening (docs/release.md).
+            buildConfigField("boolean", "FAKE_PITCH_SOURCE", "false")
+            buildConfigField("String", "FAKE_SCENARIO", "\"DEMO\"")
+            buildConfigField("boolean", "PLAIN_LIVE", "false")
+            buildConfigField("boolean", "ANALYTICS_IN_DEBUG", "false")
             signingConfig = signingConfigs.findByName("release")
             optimization {
                 enable = false
