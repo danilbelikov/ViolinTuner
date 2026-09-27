@@ -149,7 +149,9 @@ fun StandScreen(
         val landscape = maxWidth > maxHeight
         val pagerState = rememberPagerState(initialPage = state.initialPage) { state.pages.size }
         val zoom = remember { StandZoom() }
-        LaunchedEffect(pagerState.settledPage) {
+        // A deleted page leaves its index to the next one: another sheet at the same index is a new page, and starts at 1×.
+        val settledPageId = state.pages.getOrNull(pagerState.settledPage)?.pageId
+        LaunchedEffect(pagerState.settledPage, settledPageId) {
             zoom.reset()
             onIntent(StandIntent.PageSettled(pagerState.settledPage))
         }

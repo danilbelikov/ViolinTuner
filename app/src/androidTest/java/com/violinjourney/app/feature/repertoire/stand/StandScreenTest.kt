@@ -8,11 +8,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.domain.repertoire.Accidental
@@ -23,6 +26,7 @@ import com.violinjourney.app.core.domain.repertoire.scale.ScaleSpec
 import com.violinjourney.app.core.domain.repertoire.scale.Scales
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -30,7 +34,8 @@ import org.junit.runner.RunWith
 
 /**
  * The upright stand (spec 3.15, 3.22): a drawn scale taller than the stand scrolls instead of losing its last systems,
- * and a photo turned upright keeps no scroll bar of the lying sheet.
+ * and a photo turned upright keeps no scroll bar of the lying sheet; a page deleted while zoomed leaves the next one at
+ * 1×, free to be swiped.
  */
 @RunWith(AndroidJUnit4::class)
 class StandScreenTest {
@@ -56,6 +61,7 @@ class StandScreenTest {
     }
 
     private val verticalScroll = SemanticsMatcher.keyIsDefined(SemanticsProperties.VerticalScrollAxisRange)
+    private val pager = SemanticsMatcher.keyIsDefined(SemanticsProperties.HorizontalScrollAxisRange)
 
     private fun scrollRange(): Float = compose.onNode(verticalScroll).fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange].maxValue()
 
@@ -92,6 +98,21 @@ class StandScreenTest {
         val y = pixels.height / 2
         val barX = pixels.width - with(compose.density) { SCROLL_BAR_FROM_RIGHT.dp.roundToPx() }
         assertEquals("the right margin of an upright photo is the stand's background", pixels[1, y], pixels[barX, y])
+    }
+
+    @Test
+    fun aPageDeletedWhileZoomedLeavesTheNextOneAtOneAndFreeToSwipe() {
+        var state by mutableStateOf(stateOf(listOf(StandPage(1, null), StandPage(2, null), StandPage(3, null))))
+        show { state }
+        compose.onNodeWithTag(STAND).performTouchInput { doubleClick(center) }
+        compose.waitForIdle()
+        fun canSwipe() = SemanticsActions.ScrollToIndex in compose.onNode(pager).fetchSemanticsNode().config
+        assertFalse("a zoomed page does not turn", canSwipe())
+
+        // what the view model does on «Удалить»: the next page takes the index of the one deleted
+        compose.runOnIdle { state = stateOf(listOf(StandPage(2, null), StandPage(3, null))) }
+        compose.waitForIdle()
+        assertTrue("the page in its place is a new one, at 1×", canSwipe())
     }
 
     private companion object {
