@@ -2,6 +2,7 @@ package com.violinjourney.app.core.audio.playback
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import androidx.test.platform.app.InstrumentationRegistry
 import com.violinjourney.app.core.audio.recording.AacFileEncoder
 import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.domain.sound.SoundConfig
@@ -298,6 +299,84 @@ class PlaybackTest {
         assertFalse("$state", state.ready)
         assertFalse("$state", state.preparingBacking)
         assertFalse("$state", state.failed)
+    }
+
+    /** Keeps whether the player holds the phone's sound, and the call it left for a loss. */
+    private class FakeFocus(private val granted: Boolean = true) : PlaybackFocus {
+        @Volatile var taken = 0
+        @Volatile var held = false
+        @Volatile var onLost: (() -> Unit)? = null
+
+        override fun take(onLost: () -> Unit): Boolean {
+            if (!granted) return false
+            taken++
+            held = true
+            this.onLost = onLost
+            return true
+        }
+
+        override fun give() {
+            held = false
+        }
+    }
+
+    /** A call, another player or pulled-out headphones take the sound away: the player pauses, never falls through to the speaker. */
+    @Test
+    fun thePlayerAsksForTheSoundAndPausesWhenItIsTakenAway() {
+        val focus = FakeFocus()
+        val player = ChainSessionPlayer(SoundConfig(), focus = focus)
+        try {
+            player.load(encode("focus.m4a", seconds = 3))
+            await("ready") { player.state.value.ready }
+            player.play()
+            assertEquals(1, focus.taken)
+            assertTrue("the sound held while it plays", focus.held)
+            await("the position to move") { player.state.value.positionMs > 200 }
+            InstrumentationRegistry.getInstrumentation().runOnMainSync { checkNotNull(focus.onLost).invoke() }
+            assertFalse("paused by the loss", player.state.value.playing)
+            assertFalse("nothing held after the loss", focus.held)
+            val paused = player.state.value.positionMs
+            Thread.sleep(300)
+            assertEquals("a paused player stands still", paused, player.state.value.positionMs)
+            player.play()
+            assertTrue("asked again by the next play", focus.held)
+        } finally {
+            player.release()
+        }
+        assertFalse("the sound given back on release", focus.held)
+    }
+
+    /** A call on: play does nothing. */
+    @Test
+    fun aRefusedSoundLeavesThePlayerQuiet() {
+        val player = ChainSessionPlayer(SoundConfig(), focus = FakeFocus(granted = false))
+        try {
+            player.load(encode("refused.m4a", seconds = 1))
+            await("ready") { player.state.value.ready }
+            player.play()
+            assertFalse(player.state.value.playing)
+            Thread.sleep(300)
+            assertEquals(0L, player.state.value.positionMs)
+        } finally {
+            player.release()
+        }
+    }
+
+    /** At the end of the recording the sound goes back by itself, not only at the next pause. */
+    @Test
+    fun theSoundGoesBackAtTheEndOfTheRecording() {
+        val focus = FakeFocus()
+        val player = ChainSessionPlayer(SoundConfig(), focus = focus)
+        try {
+            player.load(encode("end.m4a", seconds = 1))
+            await("ready") { player.state.value.ready }
+            player.play()
+            assertTrue("the sound held while it plays", focus.held)
+            await("the end", timeoutMs = 10_000) { !player.state.value.playing && player.state.value.positionMs == 0L }
+            await("the sound given back") { !focus.held }
+        } finally {
+            player.release()
+        }
     }
 
     private fun <T : Any> assertNotNullAnd(value: T?): T {

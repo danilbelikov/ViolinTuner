@@ -1,8 +1,9 @@
 package com.violinjourney.app.core.audio.playback
 
-import android.media.AudioAttributes
 import android.media.AudioFormat
 import android.media.AudioTrack
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.violinjourney.app.core.audio.backing.BackingMixer
 import com.violinjourney.app.core.audio.backing.BackingPcmReader
@@ -27,8 +28,15 @@ import kotlinx.coroutines.flow.update
  *
  * The calls of the interface only leave wishes (play, seek, settings, A/B) for the thread, which
  * picks them up between two chunks of sound — about every 40 ms.
+ *
+ * While it plays it holds the phone's sound ([PlaybackFocus]): a call, another player or pulled-out headphones pause it,
+ * and it gives the sound back on a pause, at the end of the recording and on [release]. Main thread, as its callers are.
  */
-class ChainSessionPlayer(private val config: SoundConfig, private val backingConfig: BackingConfig = BackingConfig()) : SessionPlayer {
+class ChainSessionPlayer(
+    private val config: SoundConfig,
+    private val backingConfig: BackingConfig = BackingConfig(),
+    private val focus: PlaybackFocus = PlaybackFocus.None,
+) : SessionPlayer {
     private val mutableState = MutableStateFlow(PlayerState())
     override val state: StateFlow<PlayerState> = mutableState.asStateFlow()
 
@@ -37,6 +45,10 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
 
     private val lock = Object()
     private var worker: Worker? = null
+
+    /** The end of the recording, told by the worker: the sound goes back unless a play came in first. */
+    private val main = Handler(Looper.getMainLooper())
+    private val giveBackIfQuiet = Runnable { if (!state.value.playing) focus.give() }
 
     // Wishes, written on the main thread and read by the worker under [lock].
     private var wantPlaying = false
@@ -77,11 +89,14 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
 
     override fun play() {
         if (!state.value.ready || state.value.playing) return
+        // refused while a call is on: the button stays «play»
+        if (!focus.take(onLost = ::pause)) return
         wish { wantPlaying = true }
         mutableState.update { it.copy(playing = true) }
     }
 
     override fun pause() {
+        focus.give()
         if (!state.value.playing) return
         wish { wantPlaying = false }
         mutableState.update { it.copy(playing = false) }
@@ -108,6 +123,7 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
     }
 
     override fun release() {
+        focus.give()
         worker?.let { running ->
             // written before [Worker.unpacking] is read, as the worker writes that before it reads this: one of the two sees the other
             running.released = true
@@ -360,6 +376,7 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
                     synchronized(lock) { wantPlaying = false }
                     mutableMeters.value = null
                     mutableState.update { if (released) it else it.copy(playing = false, positionMs = 0) }
+                    if (!released) main.post(giveBackIfQuiet)
                 }
             }
         }
@@ -417,12 +434,7 @@ class ChainSessionPlayer(private val config: SoundConfig, private val backingCon
             val channels = if (stereo) 2 else 1
             val minimum = AudioTrack.getMinBufferSize(rate, mask, AudioFormat.ENCODING_PCM_FLOAT)
             return AudioTrack.Builder()
-                .setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
-                        .build(),
-                )
+                .setAudioAttributes(MediaAttributes.MUSIC)
                 .setAudioFormat(
                     AudioFormat.Builder()
                         .setSampleRate(rate)
