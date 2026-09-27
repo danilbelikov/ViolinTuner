@@ -47,6 +47,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -145,22 +146,26 @@ class AddPhotoActions(val onCamera: () -> Unit, val onGallery: () -> Unit)
 
 /**
  * One piece of the repertoire (spec 3.15, handoff 13c, 13d, 13h). Stateless. [take] comes apart
- * from [state] because it changes twenty times a second while a take is recorded.
+ * from [state] because it changes twenty times a second while a take is recorded: it is handed
+ * down as a state and read by the record row, so the rest of the screen hears only that a take
+ * began or ended.
  */
 @Composable
 fun PieceScreen(
     state: PieceState,
-    take: TakeState,
+    take: State<TakeState>,
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
     modifier: Modifier = Modifier,
-    zone: TimeZone = TimeZone.currentSystemDefault(),
+    // asked once: a new zone on every recomposition is a new object, and every take card would recompose with it
+    zone: TimeZone = remember { TimeZone.currentSystemDefault() },
     takeActions: CardActions? = null,
     videoImport: VideoImport = VideoImport.Idle,
     onPickVideo: () -> Unit = {},
     backing: BackingUi? = null,
 ) {
     val colors = MaterialTheme.colorScheme
+    val recording by remember(take) { derivedStateOf { take.value.recording } }
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
@@ -174,9 +179,9 @@ fun PieceScreen(
             // «Выучено» for a scale, an étude, a stroke; «В репертуаре» for a piece (spec 3.22)
             CompositionLocalProvider(LocalExerciseWords provides state.exercise) {
                 if (landscape) {
-                    LandscapeLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo, backing)
+                    LandscapeLayout(state, take, recording, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo, backing)
                 } else {
-                    PortraitLayout(state, take, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo, backing)
+                    PortraitLayout(state, take, recording, header, onIntent, addPhoto, zone, takeActions, videoImport, onPickVideo, backing)
                 }
             }
         }
@@ -187,7 +192,8 @@ fun PieceScreen(
 @Composable
 private fun PortraitLayout(
     state: PieceState,
-    take: TakeState,
+    take: State<TakeState>,
+    recording: Boolean,
     header: PieceHeader,
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
@@ -219,17 +225,17 @@ private fun PortraitLayout(
                     // Recording stands above the notes: the notes are read once before playing, a take is recorded every time.
                     // The backing goes right over it: it is what the next take is played to (spec 3.32).
                     backing?.let {
-                        BackingCard(it, take.recording, onIntent)
-                        BackingChipRow(it, take.recording, onIntent)
+                        BackingCard(it, recording, onIntent)
+                        BackingChipRow(it, recording, onIntent)
                     }
-                    RecordTakeRow(take, onIntent, blocked = backing?.blocksRecording == true) { VideoEntry(take, videoImport, onIntent, onPickVideo, backing) }
+                    RecordTakeRow(take, onIntent, blocked = backing?.blocksRecording == true) { VideoEntry(recording, videoImport, onIntent, onPickVideo, backing) }
                     NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
                     state.progress?.let { TakeProgressCard(it) }
                 }
             }
             TakesBlock(
                 state.takes, zone, onIntent, Modifier.padding(horizontal = ScreenPadding),
-                actions = takeActions, selection = state.selection, canSelect = !take.recording,
+                actions = takeActions, selection = state.selection, canSelect = !recording,
             )
         }
     }
@@ -239,7 +245,8 @@ private fun PortraitLayout(
 @Composable
 private fun LandscapeLayout(
     state: PieceState,
-    take: TakeState,
+    take: State<TakeState>,
+    recording: Boolean,
     header: PieceHeader,
     onIntent: (PieceIntent) -> Unit,
     addPhoto: AddPhotoActions,
@@ -266,10 +273,10 @@ private fun LandscapeLayout(
             ) {
                 HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Landscape, scale = state.scale)
                 backing?.let {
-                    BackingCard(it, take.recording, onIntent)
-                    BackingChipRow(it, take.recording, onIntent)
+                    BackingCard(it, recording, onIntent)
+                    BackingChipRow(it, recording, onIntent)
                 }
-                RecordTakeRow(take, onIntent, buttonSize = LandscapeRecordButton, blocked = backing?.blocksRecording == true) { VideoEntry(take, videoImport, onIntent, onPickVideo, backing) }
+                RecordTakeRow(take, onIntent, buttonSize = LandscapeRecordButton, blocked = backing?.blocksRecording == true) { VideoEntry(recording, videoImport, onIntent, onPickVideo, backing) }
                 state.progress?.let { TakeProgressCard(it) }
             }
             Column(
@@ -286,7 +293,7 @@ private fun LandscapeLayout(
                 }
                 TakesBlock(
                     state.takes, zone, onIntent, Modifier.padding(horizontal = ScreenPadding),
-                    actions = takeActions, selection = state.selection, canSelect = !take.recording,
+                    actions = takeActions, selection = state.selection, canSelect = !recording,
                 )
             }
         }
@@ -295,9 +302,9 @@ private fun LandscapeLayout(
 
 /** «Видео-дубль» under the words of the record button; asleep while a take is recorded or another video is on its way in. */
 @Composable
-private fun VideoEntry(take: TakeState, videoImport: VideoImport, onIntent: (PieceIntent) -> Unit, onPickVideo: () -> Unit, backing: BackingUi?) {
+private fun VideoEntry(recording: Boolean, videoImport: VideoImport, onIntent: (PieceIntent) -> Unit, onPickVideo: () -> Unit, backing: BackingUi?) {
     VideoTakeButton(
-        enabled = !take.recording && videoImport == VideoImport.Idle,
+        enabled = !recording && videoImport == VideoImport.Idle,
         // a short analysis shows no sheet — the button says what is going on instead
         busy = videoImport is VideoImport.Working && !videoImport.visible,
         // a piece with a backing is filmed by the app's own camera only: the system one knows nothing of the backing

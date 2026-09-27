@@ -6,10 +6,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.InfiniteRepeatableSpec
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -79,7 +75,7 @@ import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.repertoire.piece.TakeProblem
-import com.violinjourney.app.feature.repertoire.piece.TakeState
+import com.violinjourney.app.feature.repertoire.components.rememberRecordingPulse
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.dialog_cancel
 import com.violinjourney.app.shared.resources.live_mic_unavailable
@@ -136,7 +132,7 @@ private const val PAPER_RATIO = 3f / 4f
 @Composable
 fun StandScreen(
     state: StandState,
-    take: TakeState,
+    take: StandTake,
     onIntent: (StandIntent) -> Unit,
     onRecordClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -383,7 +379,7 @@ private fun Sheet(page: StandPage, description: String, zoom: StandZoom?, landsc
 private fun Panel(
     visible: Boolean,
     counter: String,
-    take: TakeState,
+    take: StandTake,
     landscape: Boolean,
     canDelete: Boolean,
     onIntent: (StandIntent) -> Unit,
@@ -467,7 +463,7 @@ private fun PanelIconButton(icon: ImageVector, description: String, onClick: () 
 
 /** «● Записать дубль» at rest; «dot · timer · stop» while a take runs. Blind like the row on the piece screen: nothing about the notes. */
 @Composable
-private fun RecordPill(take: TakeState, onClick: () -> Unit) {
+private fun RecordPill(take: StandTake, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val off = ViolinTheme.zoneColors.off
     val label = stringResource(if (take.recording) Res.string.record_stop else Res.string.take_record)
@@ -523,7 +519,7 @@ private fun PillGlyphButton(container: Color, glyph: Color, glyphCorner: Dp) {
 }
 
 @Composable
-private fun Capsule(counter: String, take: TakeState) {
+private fun Capsule(counter: String, take: StandTake) {
     val colors = ViolinTheme.repertoireColors
     Row(
         modifier = Modifier
@@ -544,17 +540,12 @@ private fun Capsule(counter: String, take: TakeState) {
 
 @Composable
 private fun PulsingDot(size: Dp) {
-    val pulse by rememberInfiniteTransition(label = "standRec").animateFloat(
-        initialValue = 1f,
-        targetValue = StandMotion.REC_PULSE_MIN_ALPHA,
-        animationSpec = InfiniteRepeatableSpec(tween(StandMotion.REC_PULSE_MS / 2), RepeatMode.Reverse),
-        label = "standRecAlpha",
-    )
+    val pulse = rememberRecordingPulse(StandMotion.REC_PULSE_MS, StandMotion.REC_PULSE_MIN_ALPHA)
     val color = ViolinTheme.zoneColors.off
     Box(
         Modifier
             .size(size)
-            .graphicsLayer { alpha = pulse }
+            .graphicsLayer { alpha = pulse.value }
             .background(color, CircleShape),
     )
 }

@@ -2,6 +2,7 @@ package com.violinjourney.app.feature.repertoire.piece
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -44,7 +45,9 @@ fun PieceRoute(
     changingConfigurations: () -> Boolean = { false },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val take by viewModel.takeState.collectAsStateWithLifecycle()
+    // a state, not a value: it changes twenty times a second while a take runs, and only the record row reads it whole
+    val take = viewModel.takeState.collectAsStateWithLifecycle()
+    val recording by remember(take) { derivedStateOf { take.value.recording } }
     val videoImport by viewModel.videoImport.collectAsStateWithLifecycle()
     val backing by viewModel.backing.collectAsStateWithLifecycle()
     val messages = LocalMessages.current
@@ -66,7 +69,7 @@ fun PieceRoute(
     }
     // A take is played with the hands on the violin, and the backing listened to often along with it: the screen must not
     // dim under either — its going dark would end the backing's listening (below).
-    if (take.recording || backing?.previewing == true) KeepScreenOn()
+    if (recording || backing?.previewing == true) KeepScreenOn()
 
     val system = rememberPieceSystem(
         onPhotosPicked = { viewModel.onIntent(PieceIntent.PhotosPicked(it)) },

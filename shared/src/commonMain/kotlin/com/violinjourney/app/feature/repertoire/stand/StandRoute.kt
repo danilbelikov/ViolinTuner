@@ -3,6 +3,7 @@ package com.violinjourney.app.feature.repertoire.stand
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
@@ -22,6 +23,8 @@ import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.profile_photo_failed
 import com.violinjourney.app.shared.resources.record_no_notes
 import com.violinjourney.app.shared.resources.stand_hint
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.getString
 
@@ -39,7 +42,9 @@ fun StandRoute(
     tracking: AnalyticsViewModel,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val take by pieceViewModel.takeState.collectAsStateWithLifecycle()
+    // only what the stand shows of the take; collecting it still keeps the take alive between the piece and its stand
+    val take by remember(pieceViewModel) { pieceViewModel.takeState.map(StandTake::of).distinctUntilChanged() }
+        .collectAsStateWithLifecycle(StandTake.of(pieceViewModel.takeState.value))
     val messages = LocalMessages.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnClose by rememberUpdatedState(onClose)

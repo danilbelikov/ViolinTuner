@@ -1,11 +1,6 @@
 package com.violinjourney.app.feature.repertoire.piece
 
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.InfiniteRepeatableSpec
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -27,10 +22,14 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.State
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -72,6 +71,7 @@ import com.violinjourney.app.feature.history.components.CardActions
 import com.violinjourney.app.feature.history.components.RecordCard
 import com.violinjourney.app.feature.history.components.SelectAction
 import com.violinjourney.app.feature.live.components.RecordButton
+import com.violinjourney.app.feature.repertoire.components.rememberRecordingPulse
 import com.violinjourney.app.feature.repertoire.takesLabel
 import kotlinx.datetime.TimeZone
 
@@ -100,7 +100,8 @@ private const val CHART_GOOD = 75f
  */
 @Composable
 fun RecordTakeRow(
-    take: TakeState,
+    /** Read where it is shown: the row follows a take's beginning and end, the words of a running take its twenty readings a second. */
+    take: State<TakeState>,
     onIntent: (PieceIntent) -> Unit,
     modifier: Modifier = Modifier,
     buttonSize: androidx.compose.ui.unit.Dp = 72.dp,
@@ -110,10 +111,12 @@ fun RecordTakeRow(
     below: (@Composable () -> Unit)? = null,
 ) {
     val colors = MaterialTheme.colorScheme
-    val refused = take.micPermission == false || (blocked && !take.recording)
+    val recording by remember(take) { derivedStateOf { take.value.recording } }
+    val micPermission by remember(take) { derivedStateOf { take.value.micPermission } }
+    val refused = micPermission == false || (blocked && !recording)
     Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         RecordButton(
-            recording = take.recording,
+            recording = recording,
             enabled = !refused,
             onClick = { onIntent(PieceIntent.RecordClicked) },
             modifier = Modifier
@@ -122,8 +125,8 @@ fun RecordTakeRow(
         )
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
             when {
-                take.recording -> RecordingWords(take)
-                blocked && take.micPermission != false -> {
+                recording -> RecordingWords(take)
+                blocked && micPermission != false -> {
                     Text(stringResource(Res.string.take_record), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold))
                 }
                 refused -> {
@@ -143,19 +146,20 @@ fun RecordTakeRow(
 }
 
 @Composable
-private fun RecordingWords(take: TakeState) {
+private fun RecordingWords(state: State<TakeState>) {
     val colors = MaterialTheme.colorScheme
-    val pulse by rememberInfiniteTransition(label = "rec").animateFloat(
-        initialValue = 1f,
-        targetValue = REC_PULSE_MIN_ALPHA,
-        animationSpec = InfiniteRepeatableSpec(tween(REC_PULSE_MS / 2), RepeatMode.Reverse),
-        label = "recDot",
-    )
+    val take = state.value
+    // read in the layer: the dot pulses thirty times a second, the words change once a second
+    val pulse = rememberRecordingPulse(REC_PULSE_MS, REC_PULSE_MIN_ALPHA)
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Box(
             Modifier
                 .size(RecDot)
-                .alpha(pulse)
+                .graphicsLayer {
+                    // what Modifier.alpha does, read here
+                    alpha = pulse.value
+                    clip = pulse.value != 1f
+                }
                 .background(ViolinTheme.zoneColors.off, CircleShape),
         )
         Text(

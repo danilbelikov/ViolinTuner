@@ -1,6 +1,8 @@
 package com.violinjourney.app.feature.repertoire.stand
 
 import com.violinjourney.app.core.domain.repertoire.scale.Scale
+import com.violinjourney.app.feature.repertoire.piece.TakeProblem
+import com.violinjourney.app.feature.repertoire.piece.TakeState
 
 /** One sheet on the stand. */
 data class StandPage(
@@ -34,6 +36,17 @@ data class StandState(
     /** The very first visit: outline the page-turning zones once. */
     val showHint: Boolean,
 )
+
+/**
+ * What the stand shows of the piece's take (spec 3.15): whether it runs, its seconds and what went wrong — blind as
+ * the piece screen, and without the loudness row and the backing's bar it has no room for. The take changes twenty
+ * times a second with its loudness; this, once a second.
+ */
+data class StandTake(val recording: Boolean, val elapsedSeconds: Long, val problem: TakeProblem?) {
+    companion object {
+        fun of(take: TakeState) = StandTake(take.recording, take.elapsedSeconds, take.problem)
+    }
+}
 
 sealed interface StandIntent {
     data object BackClicked : StandIntent
