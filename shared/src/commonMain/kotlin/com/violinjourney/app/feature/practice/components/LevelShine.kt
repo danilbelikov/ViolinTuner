@@ -10,6 +10,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.runtime.withFrameMillis
@@ -84,17 +85,20 @@ class LevelShine {
 /**
  * Runs the passes. One long-lived loop that sleeps between them (`delay` spends no frames) and
  * steps by frames only while the light is on its way. It gives way to the bar itself: no pass
- * starts while [filled] is moving, a running one is dropped, and the next waits for
- * [LevelShineMath.AFTER_GROWTH_MS] after the bar has come to rest.
+ * starts while the bar is [moving], a running one is dropped, and the next waits for
+ * [LevelShineMath.AFTER_GROWTH_MS] after the bar has come to rest. [moving] must read snapshot state,
+ * and it covers the whole of a level-up (spec 3.16) — the pause between «to the end» and «from zero»
+ * too, when [filled] itself stands still on a full bar.
  */
 @Composable
-fun rememberLevelShine(filled: Animatable<Float, AnimationVector1D>, enabled: Boolean): LevelShine {
+fun rememberLevelShine(filled: Animatable<Float, AnimationVector1D>, moving: () -> Boolean, enabled: Boolean): LevelShine {
     val shine = remember { LevelShine() }
     val density = LocalDensity.current.density
+    val currentMoving by rememberUpdatedState(moving)
     LaunchedEffect(enabled, density) {
         shine.progress = LevelShine.NONE
         if (!enabled) return@LaunchedEffect
-        runShinePasses(shine, fill = { filled.value }, growing = { filled.isRunning }, density = density)
+        runShinePasses(shine, fill = { filled.value }, growing = { currentMoving() }, density = density)
     }
     return shine
 }

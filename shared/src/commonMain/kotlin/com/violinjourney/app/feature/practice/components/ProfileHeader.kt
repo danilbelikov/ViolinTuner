@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.text.firstSymbol
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.theme.ViolinTheme
@@ -238,28 +239,36 @@ private fun LevelBlock(
     val filled = remember { Animatable(target) }
     var shownLevel by remember { mutableIntStateOf(level) }
     var shownCaptions by remember { mutableStateOf(captions) }
+    // The bar is busy for the whole of its growth and of a level-up — the pause on a full bar included, when [filled]
+    // stands still: the shine gives way to all of it (spec 3.16).
+    var moving by remember { mutableStateOf(false) }
 
     LaunchedEffect(level, target, captions) {
-        when {
-            !motion -> filled.snapTo(target)
-            level > shownLevel -> {
-                filled.animateTo(1f, tween(ProgressMotion.BAR_LEVEL_UP_FILL_MS, easing = FastOutSlowInEasing))
-                delay(ProgressMotion.BAR_LEVEL_UP_PAUSE_MS)
-                filled.snapTo(0f)
-                shownLevel = level
-                shownCaptions = captions
-                filled.animateTo(target, tween(ProgressMotion.BAR_LEVEL_UP_GROW_MS, easing = FastOutSlowInEasing))
+        moving = true
+        try {
+            when {
+                !motion -> filled.snapTo(target)
+                level > shownLevel -> {
+                    filled.animateTo(1f, tween(ProgressMotion.BAR_LEVEL_UP_FILL_MS, easing = FastOutSlowInEasing))
+                    delay(ProgressMotion.BAR_LEVEL_UP_PAUSE_MS)
+                    filled.snapTo(0f)
+                    shownLevel = level
+                    shownCaptions = captions
+                    filled.animateTo(target, tween(ProgressMotion.BAR_LEVEL_UP_GROW_MS, easing = FastOutSlowInEasing))
+                }
+                else -> {
+                    shownCaptions = captions
+                    filled.animateTo(target, tween(ProgressMotion.BAR_GROW_MS, easing = FastOutSlowInEasing))
+                }
             }
-            else -> {
-                shownCaptions = captions
-                filled.animateTo(target, tween(ProgressMotion.BAR_GROW_MS, easing = FastOutSlowInEasing))
-            }
+            shownLevel = level
+            shownCaptions = captions
+        } finally {
+            moving = false
         }
-        shownLevel = level
-        shownCaptions = captions
     }
 
-    val shine = rememberLevelShine(filled, enabled = !LocalReduceMotion.current)
+    val shine = rememberLevelShine(filled, moving = { moving }, enabled = !LocalReduceMotion.current)
 
     Column(verticalArrangement = Arrangement.spacedBy(gap)) {
         val description = captions.toNext ?: captions.level
@@ -417,6 +426,8 @@ private fun trophyWords(header: ProfileHeader): String {
 @Composable
 internal fun levelName(level: Int): String = stringArrayResource(Res.array.progress_level_names).getOrElse(level - 1) { "" }
 
-/** First character of the name as the avatar shows it; a surrogate pair (an emoji) stays whole. */
-fun initialOf(name: String): String =
-    if (name.isEmpty()) "" else name.substring(0, if (name[0].isHighSurrogate() && name.length > 1) 2 else 1).uppercase()
+/**
+ * First character of the name as the avatar shows it: a symbol whole — an emoji with its skin tone, a flag, a family
+ * joined by ZWJ, a letter with its combining marks.
+ */
+fun initialOf(name: String): String = name.firstSymbol().uppercase()

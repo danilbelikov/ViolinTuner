@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.domain.progress
 
+import com.violinjourney.app.core.text.takeCodePoints
 import kotlinx.coroutines.flow.Flow
 
 /** Who practises: shown in the header of the practice screen only (spec 3.13). */
@@ -10,11 +11,12 @@ data class Profile(
     val avatarFile: String?,
 ) {
     companion object {
+        /** In characters as a person counts them — code points: an emoji is one, and is never cut in half. */
         const val MAX_NAME_LENGTH = 24
         val EMPTY = Profile(name = "", avatarFile = null)
 
         /** What a typed name becomes when stored: no edge spaces, at most [MAX_NAME_LENGTH] characters. */
-        fun cleanName(raw: String): String = raw.trim().take(MAX_NAME_LENGTH).trim()
+        fun cleanName(raw: String): String = raw.trim().takeCodePoints(MAX_NAME_LENGTH).trim()
     }
 }
 

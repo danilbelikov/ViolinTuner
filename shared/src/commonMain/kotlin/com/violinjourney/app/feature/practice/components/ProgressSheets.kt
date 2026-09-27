@@ -41,6 +41,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.progress.Profile
+import com.violinjourney.app.core.text.codePointLength
+import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.ui.components.rememberImagePicker
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
@@ -141,7 +143,7 @@ fun ProfileSheetContent(
         OutlinedTextField(
             value = name,
             onValueChange = {
-                name = it.take(Profile.MAX_NAME_LENGTH)
+                name = it.takeCodePoints(Profile.MAX_NAME_LENGTH)
                 onIntent(PracticeIntent.ProfileNameChanged(name))
             },
             modifier = Modifier.fillMaxWidth(),
@@ -149,7 +151,7 @@ fun ProfileSheetContent(
             placeholder = { Text(stringResource(Res.string.profile_name_placeholder), color = colors.onSurfaceVariant) },
             trailingIcon = {
                 Text(
-                    text = stringResource(Res.string.profile_name_counter, name.length, Profile.MAX_NAME_LENGTH),
+                    text = stringResource(Res.string.profile_name_counter, name.codePointLength(), Profile.MAX_NAME_LENGTH),
                     color = colors.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontFeatureSettings = TABULAR_FIGURES),
                     modifier = Modifier.clearAndSetSemantics { },
