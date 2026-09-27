@@ -119,8 +119,11 @@ private val LABELS: Map<String, Triple<Float, Float, Boolean>> = mapOf(
     "sydney" to Triple(-8f, -8f, true),
 )
 
-/** The road being travelled: the leg from stop [fromIndex] and how far along it the train is. */
-data class RoadOnMap(val fromIndex: Int, val progress: Float, val transport: Transport)
+/**
+ * The road being travelled: the leg from stop [fromIndex] and how far along it the train is — [progress] is read while
+ * drawing, so the road redraws the map on every frame of the train without composing the screen again.
+ */
+class RoadOnMap(val fromIndex: Int, val progress: () -> Float, val transport: Transport)
 
 /**
  * The route map (spec 3.23, handoff 26e): a scheme, not a globe — Europe large, the far cities at
@@ -132,9 +135,16 @@ data class RoadOnMap(val fromIndex: Int, val progress: Float, val transport: Tra
 fun JourneyMapCanvas(reached: Int, modifier: Modifier = Modifier, road: RoadOnMap? = null, interactive: Boolean = false, onStopTap: (Int) -> Unit = {}) {
     val colors = MaterialTheme.colorScheme
     val cities = stringArrayResource(Res.array.journey_cities)
-    val measurer = rememberTextMeasurer()
+    // every name in both of its looks is laid out once: the default cache of eight would lay them out again on every frame of a pinch
+    val measurer = rememberTextMeasurer(cacheSize = JourneyRoute.stops.size * 2)
     val land = remember { LAND.map { PathParser().parsePathString(it).toPath() } }
     val points = remember { JourneyMapMath.points() }
+    // the curves of the legs are built once; the part of the leg behind the train is cut into one path, frame after frame
+    val legs = remember(points) { (0 until points.lastIndex).map { JourneyMapMath.leg(it, points).toPath() } }
+    val behind = remember { Path() }
+    val measure = remember { PathMeasure() }
+    val nameStyle = TextStyle(color = colors.onSurfaceVariant, fontSize = 11.sp, fontWeight = FontWeight.Medium)
+    val currentStyle = TextStyle(color = colors.onSurface, fontSize = 11.sp, fontWeight = FontWeight.Bold)
     var zoom by remember { mutableFloatStateOf(1f) }
     var pan by remember { mutableStateOf(Offset.Zero) }
     val description = stringResource(Res.string.journey_map_description, reached, points.lastIndex)
@@ -179,7 +189,7 @@ fun JourneyMapCanvas(reached: Int, modifier: Modifier = Modifier, road: RoadOnMa
                     translate(0f, 3f) { drawPath(path, colors.surfaceContainerHigh) }
                     drawPath(path, colors.surfaceContainer)
                 }
-                drawRoute(points, reached, road, k, colors.primary, colors.outlineVariant)
+                drawRoute(points, legs, behind, measure, reached, road, k, colors.primary, colors.outlineVariant)
                 drawStops(points, reached, road, k, colors.primary, colors.outlineVariant, colors.surface)
             }
         }
@@ -190,27 +200,37 @@ fun JourneyMapCanvas(reached: Int, modifier: Modifier = Modifier, road: RoadOnMa
             if (index > reached + 1 && !arrived) return@forEachIndexed
             val current = index == reached
             val (dx, dy, ends) = LABELS[stop.id] ?: Triple(8f, -8f, false)
-            val text = measurer.measure(
-                cities.getOrElse(index) { "" },
-                TextStyle(color = if (current) colors.onSurface else colors.onSurfaceVariant, fontSize = 11.sp, fontWeight = if (current) FontWeight.Bold else FontWeight.Medium),
-                softWrap = false,
-            )
+            val text = measurer.measure(cities.getOrElse(index) { "" }, if (current) currentStyle else nameStyle, softWrap = false)
             val anchor = origin + Offset(points[index].x * k + dx * density, points[index].y * k + dy * density)
             drawText(text, topLeft = Offset(if (ends) anchor.x - text.size.width else anchor.x, anchor.y - text.size.height * 0.75f))
         }
     }
 }
 
-private fun DrawScope.drawRoute(points: List<JourneyMapMath.Point>, reached: Int, road: RoadOnMap?, k: Float, accent: Color, quiet: Color) {
+private fun JourneyMapMath.Leg.toPath(): Path = Path().apply {
+    moveTo(from.x, from.y)
+    cubicTo(c1.x, c1.y, c2.x, c2.y, to.x, to.y)
+}
+
+/** The legs of the route, [legs] built once; [behind] and [measure] are reused for the part of the travelled leg behind the train. */
+private fun DrawScope.drawRoute(
+    points: List<JourneyMapMath.Point>,
+    legs: List<Path>,
+    behind: Path,
+    measure: PathMeasure,
+    reached: Int,
+    road: RoadOnMap?,
+    k: Float,
+    accent: Color,
+    quiet: Color,
+) {
+    val progress = road?.progress?.invoke() ?: 0f
+    // the dash is as long on the screen at any zoom: one effect for the frame
+    val dash = PathEffect.dashPathEffect(floatArrayOf(4f / k * density, 6f / k * density))
     for (index in 0 until points.lastIndex) {
-        val leg = JourneyMapMath.leg(index, points)
-        val path = Path().apply {
-            moveTo(leg.from.x, leg.from.y)
-            cubicTo(leg.c1.x, leg.c1.y, leg.c2.x, leg.c2.y, leg.to.x, leg.to.y)
-        }
+        val path = legs[index]
         val travelling = road != null && index == road.fromIndex
         val done = index < reached && !travelling
-        val dash = PathEffect.dashPathEffect(floatArrayOf(4f / k * density, 6f / k * density))
         when {
             done -> {
                 drawPath(path, accent.copy(alpha = 0.18f), style = Stroke(10f / k * density, cap = StrokeCap.Round))
@@ -219,8 +239,9 @@ private fun DrawScope.drawRoute(points: List<JourneyMapMath.Point>, reached: Int
             travelling -> {
                 drawPath(path, accent.copy(alpha = 0.75f), style = Stroke(2f / k * density, cap = StrokeCap.Round, pathEffect = dash))
                 // the line is drawn as the train runs: the part behind it is solid
-                val measure = PathMeasure().apply { setPath(path, false) }
-                val behind = Path().also { measure.getSegment(0f, measure.length * road!!.progress, it, true) }
+                measure.setPath(path, false)
+                behind.rewind()
+                measure.getSegment(0f, measure.length * progress, behind, true)
                 drawPath(behind, accent.copy(alpha = 0.18f), style = Stroke(10f / k * density, cap = StrokeCap.Round))
                 drawPath(behind, accent, style = Stroke(2.4f / k * density, cap = StrokeCap.Round))
             }
@@ -230,8 +251,8 @@ private fun DrawScope.drawRoute(points: List<JourneyMapMath.Point>, reached: Int
     }
     if (road != null) {
         val leg = JourneyMapMath.leg(road.fromIndex, points)
-        val at = JourneyMapMath.at(leg, road.progress)
-        drawTransport(at, JourneyMapMath.headingAt(leg, road.progress), road.transport, k, accent)
+        val at = JourneyMapMath.at(leg, progress)
+        drawTransport(at, JourneyMapMath.headingAt(leg, progress), road.transport, k, accent)
     }
 }
 

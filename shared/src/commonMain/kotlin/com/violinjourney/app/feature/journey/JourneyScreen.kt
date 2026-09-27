@@ -331,8 +331,10 @@ private fun RoadContent(road: JourneyPhase.Road) {
     val reduce = LocalReduceMotion.current
     val progress = remember(road) { Animatable(if (reduce) 1f else 0f) }
     LaunchedEffect(road) { if (!reduce) progress.animateTo(1f, tween(road.durationMs, easing = FastOutSlowInEasing)) }
+    // the train's progress is read by the map while it draws: the screen is not composed again on every frame of the road
+    val onMap = remember(road) { RoadOnMap(road.fromIndex, { progress.value }, road.to.transport) }
     Box(Modifier.fillMaxSize()) {
-        JourneyMapCanvas(reached = road.fromIndex, road = RoadOnMap(road.fromIndex, progress.value, road.to.transport), modifier = Modifier.fillMaxSize())
+        JourneyMapCanvas(reached = road.fromIndex, road = onMap, modifier = Modifier.fillMaxSize())
         Column(
             modifier = Modifier.align(Alignment.BottomCenter).padding(24.dp).clip(CardShape).background(colors.surfaceContainer.copy(alpha = 0.92f)).padding(horizontal = 20.dp, vertical = 12.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
