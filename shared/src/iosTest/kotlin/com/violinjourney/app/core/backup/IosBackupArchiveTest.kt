@@ -17,6 +17,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
+import kotlin.test.fail
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.coroutines.test.runTest
 import okio.Deflater
@@ -29,7 +30,10 @@ import kotlinx.cinterop.addressOf
 import kotlinx.cinterop.usePinned
 import platform.posix.memcpy
 
-/** A copy on iOS: the archive written here is read back whole, and an archive of Android's `ZipOutputStream` is read too. */
+/**
+ * A copy on iOS: the archive written here is read back whole, an archive of Android's `ZipOutputStream` is read too, and
+ * what is written here is the sample Android's `BackupArchiveTest` reads (ArchiveFixtures).
+ */
 @OptIn(ExperimentalForeignApi::class, ExperimentalEncodingApi::class)
 class IosBackupArchiveTest {
     private val folder = PlatformFile(NSTemporaryDirectory() + NSUUID().UUIDString).also {
@@ -98,6 +102,21 @@ class IosBackupArchiveTest {
         BackupReader.extract(archive.openInput()!!, staging, 0) {}
         assertEquals("hello world", bytesOf(staging.child("db").child("violin.db")).decodeToString())
         assertEquals(4000, bytesOf(staging.child("sessions").child("a.m4a")).size)
+    }
+
+    /** The sample Android's test reads (ArchiveFixtures): a change of what Zip.kt writes is a new sample to check there. */
+    @Test
+    fun `the archive this phone writes is the one Android is tested on`() = runTest {
+        val archive = folder.child("fixture.zip")
+        val entries = listOf(
+            entryOf("db/violin.db", BackupPart.DATA, ArchiveFixtures.database),
+            entryOf("sessions/a.m4a", BackupPart.AUDIO, ArchiveFixtures.sound),
+        )
+        BackupWriter.write(archive.openOutput()!!, ArchiveFixtures.manifest, entries) {}
+        val written = bytesOf(archive)
+        if (!written.contentEquals(ArchiveFixtures.fromIos())) {
+            fail("Zip.kt writes other bytes now; put this into ArchiveFixtures.FROM_IOS and run BackupArchiveTest of Android:\n" + Base64.encode(written))
+        }
     }
 
     @Test

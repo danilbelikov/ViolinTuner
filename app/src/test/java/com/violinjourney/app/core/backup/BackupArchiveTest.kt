@@ -188,6 +188,19 @@ class BackupArchiveTest {
         assertEquals(3, BackupReader.manifest(ByteArrayInputStream(archive(manifest = manifest(database = 3))), knownDatabase = 6).databaseVersion)
     }
 
+    /** The other way is `IosBackupArchiveTest`, which reads a copy of Android; this sample is what Zip.kt of iOS writes today. */
+    @Test
+    fun `a copy written on an iPhone is read here`() = runTest {
+        val bytes = ArchiveFixtures.fromIos()
+        assertEquals(ArchiveFixtures.manifest, BackupReader.manifest(ByteArrayInputStream(bytes), knownDatabase = ArchiveFixtures.manifest.databaseVersion))
+        val seen = BackupReader.verify(ByteArrayInputStream(bytes), ArchiveFixtures.manifest.totalBytes) {}
+        assertTrue("the database is in it", seen.hasDatabase)
+        val target = folder.newFolder("staging")
+        BackupReader.extract(ByteArrayInputStream(bytes), target, ArchiveFixtures.manifest.totalBytes) {}
+        assertArrayEquals(ArchiveFixtures.database, File(target, "db/violin.db").readBytes())
+        assertArrayEquals(ArchiveFixtures.sound, File(target, "sessions/a.m4a").readBytes())
+    }
+
     @Test
     fun `an entry may not climb out of the folder it is unpacked into`() {
         val target = folder.newFolder("staging")
