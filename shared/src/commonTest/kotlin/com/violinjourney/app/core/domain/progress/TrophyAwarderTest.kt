@@ -1,9 +1,13 @@
 package com.violinjourney.app.core.domain.progress
 
+import com.violinjourney.app.core.domain.practice.FakePracticeRepository
+import com.violinjourney.app.core.domain.practice.PracticeEntry
 import com.violinjourney.app.core.domain.progress.ProgressConfig.Companion.MS_PER_HOUR
 import com.violinjourney.app.core.time.FixedWallClock
 import com.violinjourney.app.core.time.WallClock
 import kotlin.time.Instant
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -53,5 +57,27 @@ class TrophyAwarderTest {
         awarder.award(12 * MS_PER_HOUR, awardedHours = emptySet())
 
         assertEquals(listOf(Trophy(1, earlier, shown = false), Trophy(10, earlier, shown = false)), repository.trophies.value)
+    }
+
+    @Test
+    fun `following the practice gives each trophy once as the total grows`() = runTest {
+        val repository = FakeTrophyRepository()
+        val practice = FakePracticeRepository()
+        backgroundScope.launch { TrophyAwarder(repository, config, clock).follow(practice.entries) }
+        runCurrent()
+        assertEquals(emptyList(), repository.trophies.value)
+
+        practice.add(PracticeEntry(today, startedAtEpochMs = 0, durationMs = 5 * MS_PER_HOUR, manual = true))
+        runCurrent()
+        assertEquals(listOf(Trophy(1, today, shown = false)), repository.trophies.value)
+
+        practice.add(PracticeEntry(today, startedAtEpochMs = 1, durationMs = 6 * MS_PER_HOUR, manual = true))
+        runCurrent()
+        assertEquals(listOf(1, 10), repository.trophies.value.map { it.hours }, "the ten hours are given, the first hour is not given again")
+
+        // a day changed by hand to less: what was given stays (spec 5.7)
+        practice.replaceDay(today, durationMs = MS_PER_HOUR / 2, startedAtEpochMs = 0)
+        runCurrent()
+        assertEquals(listOf(1, 10), repository.trophies.value.map { it.hours })
     }
 }

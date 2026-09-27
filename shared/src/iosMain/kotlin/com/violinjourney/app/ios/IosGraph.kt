@@ -30,6 +30,7 @@ import com.violinjourney.app.core.backup.BackupConfig
 import com.violinjourney.app.core.backup.BackupManager
 import com.violinjourney.app.core.backup.IosBackupDocuments
 import com.violinjourney.app.core.backup.IosBackupStore
+import com.violinjourney.app.core.data.Housekeeping
 import com.violinjourney.app.core.data.backing.RoomBackingRepository
 import com.violinjourney.app.core.data.journey.RoomHomeRepository
 import com.violinjourney.app.core.data.journey.RoomJourneyRepository
@@ -178,6 +179,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
 
     val waveforms = IosSessionWaveforms({ IosFolders.folder(WAVEFORMS_FOLDER) }, io)
     val shareFiles = IosShareFiles(io)
+    val housekeeping = Housekeeping(sessions, waveforms, avatarFiles, profiles, shareFiles, repertoire, backings, backingPcm, clock, io)
     val renderer = IosSoundRenderer(soundConfig, io)
     val renderSpeed = RenderSpeed()
 

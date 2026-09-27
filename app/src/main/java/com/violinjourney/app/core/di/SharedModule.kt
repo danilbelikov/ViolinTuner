@@ -2,8 +2,13 @@ package com.violinjourney.app.core.di
 
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.audio.PitchSource
+import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.backing.BackingPlaybackFactory
+import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
+import com.violinjourney.app.core.audio.share.ShareFiles
+import com.violinjourney.app.core.data.Housekeeping
+import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingRepository
@@ -17,10 +22,12 @@ import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeFinisher
 import com.violinjourney.app.core.domain.practice.PracticeRepository
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
+import com.violinjourney.app.core.domain.progress.ProfileRepository
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.TrophyAwarder
 import com.violinjourney.app.core.domain.progress.TrophyRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.venue.VenueStore
 import com.violinjourney.app.core.domain.venue.Venues
@@ -54,6 +61,20 @@ object SharedModule {
 
     @Provides
     fun provideVenues(store: VenueStore, journey: JourneyRepository) = Venues(store, journey)
+
+    @Provides
+    fun provideHousekeeping(
+        sessions: SessionRepository,
+        waveforms: SessionWaveforms,
+        avatarFiles: AvatarFiles,
+        profile: ProfileRepository,
+        shareFiles: ShareFiles,
+        repertoire: RepertoireRepository,
+        backings: BackingRepository,
+        backingPcm: BackingPcm,
+        clock: WallClock,
+        @IoDispatcher io: CoroutineDispatcher,
+    ) = Housekeeping(sessions, waveforms, avatarFiles, profile, shareFiles, repertoire, backings, backingPcm, clock, io)
 
     /** One per app: the ask travels from Live to «Занятия» (spec 3.12). */
     @Provides

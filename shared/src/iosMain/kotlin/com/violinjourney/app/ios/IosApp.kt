@@ -65,9 +65,9 @@ import platform.Foundation.preferredLanguages
 internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null) {
     val start = viewModel {
         AppStartViewModel(
-            graph.settings, graph.sessions, graph.runningPractice, graph.finisher, graph.practiceConfig, graph.clock, graph.practice,
-            graph.trophies, graph.awarder, graph.profiles, graph.avatarFiles, graph.repertoire, graph.waveforms, graph.shareFiles,
-            graph.blockStore, graph.backings, graph.backingPcm, graph.io,
+            repository = graph.settings, runningPractice = graph.runningPractice, finisher = graph.finisher, config = graph.practiceConfig,
+            clock = graph.clock, practice = graph.practice, awarder = graph.awarder, repertoire = graph.repertoire,
+            housekeeping = graph.housekeeping, blocks = graph.blockStore,
         )
     }
     val startRoute by start.startRoute.collectAsStateWithLifecycle()

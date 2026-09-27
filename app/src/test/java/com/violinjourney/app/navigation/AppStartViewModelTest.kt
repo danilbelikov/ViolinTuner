@@ -2,7 +2,9 @@ package com.violinjourney.app.navigation
 
 import com.violinjourney.app.core.audio.playback.FakeSessionWaveforms
 import com.violinjourney.app.core.audio.share.FakeShareFiles
+import com.violinjourney.app.core.data.Housekeeping
 import com.violinjourney.app.core.data.profile.FakeAvatarFiles
+import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.practice.BlockRules
 import com.violinjourney.app.core.domain.practice.FakeBlockStore
 import com.violinjourney.app.core.domain.practice.FakePracticeRepository
@@ -86,9 +88,12 @@ class AppStartViewModelTest {
     }
 
     private fun viewModel(finisher: PracticeFinisher = PracticeFinisher(repository, store, clock)) = AppStartViewModel(
-        FakeSettingsRepository(), FakeSessionRepository(), store, finisher, config, clock,
-        repository, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), profile, avatarFiles, repertoire, FakeSessionWaveforms(), shareFiles,
-        blocks, backingPcm = backingPcm, io = kotlinx.coroutines.Dispatchers.Main,
+        FakeSettingsRepository(), store, finisher, config, clock, repository, TrophyAwarder(trophies, ProgressConfig(), clock), repertoire,
+        Housekeeping(
+            FakeSessionRepository(), FakeSessionWaveforms(), avatarFiles, profile, shareFiles, repertoire, NoBackings, backingPcm, clock,
+            io = Dispatchers.Main,
+        ),
+        blocks,
     )
 
     private suspend fun running(elapsedMs: Long, lastSoundAgoMs: Long?) {

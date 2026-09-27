@@ -1,10 +1,13 @@
 package com.violinjourney.app.feature.settings
 
+import com.violinjourney.app.core.audio.backing.NoBackingPcm
 import com.violinjourney.app.core.audio.playback.FakeSessionWaveforms
 import com.violinjourney.app.core.audio.share.FakeShareFiles
+import com.violinjourney.app.core.data.Housekeeping
 import com.violinjourney.app.core.data.profile.FakeAvatarFiles
 import com.violinjourney.app.core.domain.TolerancePreset
 import com.violinjourney.app.core.domain.UserSettings
+import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.practice.FakePracticeRepository
 import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
 import com.violinjourney.app.core.domain.practice.PracticeConfig
@@ -116,9 +119,14 @@ class SettingsViewModelTest {
         val clock = ZonedSystemWallClock(TimeZone.UTC)
         val practice = FakePracticeRepository()
         val trophies = FakeTrophyRepository()
+        val repertoire = FakeRepertoireRepository()
         return AppStartViewModel(
-            settings, sessions, store, PracticeFinisher(practice, store, clock), PracticeConfig(), clock,
-            practice, trophies, TrophyAwarder(trophies, ProgressConfig(), clock), FakeProfileRepository(), FakeAvatarFiles(), FakeRepertoireRepository(), FakeSessionWaveforms(), FakeShareFiles(),
+            settings, store, PracticeFinisher(practice, store, clock), PracticeConfig(), clock, practice, TrophyAwarder(trophies, ProgressConfig(), clock),
+            repertoire,
+            Housekeeping(
+                sessions, FakeSessionWaveforms(), FakeAvatarFiles(), FakeProfileRepository(), FakeShareFiles(), repertoire, NoBackings, NoBackingPcm,
+                clock, Dispatchers.Main,
+            ),
         )
     }
 
