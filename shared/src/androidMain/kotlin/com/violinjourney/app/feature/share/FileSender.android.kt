@@ -32,7 +32,8 @@ actual fun rememberFileSender(): (file: PlatformFile, text: String?) -> Unit {
 private suspend fun Context.send(file: PlatformFile, text: String?, say: (String) -> Unit) {
     val uri = FileProvider.getUriForFile(this, "$packageName$FILES_AUTHORITY_SUFFIX", file)
     val intent = Intent(Intent.ACTION_SEND).apply {
-        type = if (file.name.endsWith(ShareNames.VIDEO_EXTENSION)) VIDEO_TYPE else AUDIO_TYPE
+        // by the file's own extension: «Видео как снято» of a take shot on an iPhone is a `.mov`
+        type = ShareNames.mimeTypeOf(file.name)
         putExtra(Intent.EXTRA_STREAM, uri)
         if (text != null) putExtra(Intent.EXTRA_TEXT, text)
         // the chooser reads the grant and the preview from the clip data
@@ -45,9 +46,6 @@ private suspend fun Context.send(file: PlatformFile, text: String?, say: (String
         say(getString(Res.string.share_no_app))
     }
 }
-
-private const val AUDIO_TYPE = "audio/mp4"
-private const val VIDEO_TYPE = "video/mp4"
 
 /** Matches `android:authorities` of the FileProvider in the manifest. */
 private const val FILES_AUTHORITY_SUFFIX = ".files"

@@ -34,4 +34,23 @@ class ShareNamesTest {
         assertEquals("three bytes a character, two hundred at most", 66, stem.length)
         assertTrue((chinese + ".part.sound.m4a").encodeToByteArray().size <= 255)
     }
+
+    @Test
+    fun `a video sent as shot keeps its container`() {
+        assertEquals(".mov", ShareNames.videoExtensionOf("/x/sessions/A1.mov"))
+        assertEquals(".mp4", ShareNames.videoExtensionOf("B.MP4"))
+        assertEquals("a dot in a folder is no extension", ".mp4", ShareNames.videoExtensionOf("/tmp/a.debug-Inbox/clip"))
+        assertEquals(".mp4", ShareNames.videoExtensionOf("clip."))
+        assertEquals("Соната № 1 Allegro.mov", ShareNames.originalVideoFileName("Соната № 1: Allegro", "x.mov"))
+        assertEquals("Соната № 1 Allegro.mp4", ShareNames.originalVideoFileName("Соната № 1: Allegro", "x.mp4"))
+    }
+
+    @Test
+    fun `other apps are told the type of the file itself`() {
+        assertEquals("audio/mp4", ShareNames.mimeTypeOf("Соната № 1 Allegro.m4a"))
+        assertEquals("video/mp4", ShareNames.mimeTypeOf("Соната № 1 Allegro.mp4"))
+        // shot on an iPhone and brought over by a copy: a video, never a sound for the apps that take one
+        assertEquals("video/quicktime", ShareNames.mimeTypeOf("/cache/share/1f/Соната № 1 Allegro.MOV"))
+        assertEquals("video/*", ShareNames.mimeTypeOf("Соната.m4v"))
+    }
 }

@@ -393,10 +393,29 @@ class ShareViewModelTest {
         const val STEPS = 10
     }
 
-    private suspend fun videoTake(): Long {
-        val id = recording(pieceId = repertoire.add(com.violinjourney.app.core.domain.repertoire.PieceDraft(title = "Менуэт"), nowEpochMs = 1))
-        sessions.sessions.value = sessions.sessions.value.map { if (it.id == id) it.copy(videoPath = it.audioPath) else it }
+    /** A video take as the app keeps one: its sound is the track of the video itself — one file, one name (docs/notes/video.md). */
+    private suspend fun videoTake(name: String = "take.mp4"): Long {
+        audio = folder.newFile(name).apply { writeText("original video") }
+        val id = recording(audioName = name, pieceId = repertoire.add(com.violinjourney.app.core.domain.repertoire.PieceDraft(title = "Менуэт"), nowEpochMs = 1))
+        sessions.sessions.value = sessions.sessions.value.map { if (it.id == id) it.copy(videoPath = name) else it }
         return id
+    }
+
+    @Test
+    fun `an iPhone video is sent as shot in its own container and the rest as mp4`() = runTest {
+        sound.setDefault(hall)
+        val (viewModel, effects) = share(Renderer(tookMs = 100))
+        viewModel.start(videoTake("take.mov"))
+        runCurrent()
+        val info = (viewModel.sheet.value as ShareSheet.Choose).info
+        assertEquals("Менуэт · 18 сентября.mov", info.fileNameOf(ShareVariant.ORIGINAL))
+        assertEquals("what is made here is an mp4", "Менуэт · 18 сентября.mp4", info.fileNameOf(ShareVariant.PROCESSED))
+        assertEquals("Менуэт · 18 сентября.m4a", info.fileNameOf(ShareVariant.SOUND))
+
+        viewModel.onIntent(ShareIntent.VariantSelected(ShareVariant.ORIGINAL))
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        runCurrent()
+        assertEquals("Менуэт · 18 сентября.mov", (effects.single() as ShareEffect.Send).file.name)
     }
 
     @Test

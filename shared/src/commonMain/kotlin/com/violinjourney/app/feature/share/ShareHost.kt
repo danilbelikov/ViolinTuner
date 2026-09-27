@@ -166,7 +166,8 @@ private fun Choose(sheet: ShareSheet.Choose, onIntent: (ShareIntent) -> Unit) {
             Variant(
                 title = stringResource(if (info.processed) Res.string.share_video_original else Res.string.share_video),
                 caption = stringResource(if (info.processed) Res.string.share_video_original_caption else Res.string.share_video_caption),
-                selected = sheet.variant == ShareVariant.ORIGINAL, enabled = !sheet.busy, chip = MP4,
+                // as shot: in the container of the file itself — «.mov» from the camera of an iPhone
+                selected = sheet.variant == ShareVariant.ORIGINAL, enabled = !sheet.busy, chip = ShareNames.videoExtensionOf(info.fileNameOf(ShareVariant.ORIGINAL)),
             ) { onIntent(ShareIntent.VariantSelected(ShareVariant.ORIGINAL)) }
             Variant(
                 title = stringResource(Res.string.share_sound_only),

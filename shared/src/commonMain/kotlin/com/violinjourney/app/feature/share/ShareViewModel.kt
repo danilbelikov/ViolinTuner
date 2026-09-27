@@ -159,6 +159,7 @@ open class ShareViewModel(
                 caption = SoundReducer.captionOf(effective, sound.presets.first(), config),
                 message = texts.message(session.title, pieceTitle, session.scorePercent, session.startedAtEpochMs),
                 videoFileName = session.videoPath?.let { ShareNames.videoFileName(title) },
+                originalVideoFileName = session.videoPath?.let { ShareNames.originalVideoFileName(title, it) },
                 resolution = picture?.let { minOf(it.width, it.height) } ?: 0,
                 processed = !SoundRules.isNeutral(effective),
                 backing = under != null,

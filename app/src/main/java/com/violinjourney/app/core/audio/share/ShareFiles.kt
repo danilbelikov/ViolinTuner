@@ -84,7 +84,10 @@ class AppShareFiles @Inject constructor(
         const val DIRECTORY = "share"
         const val HEX = 16
 
-        /** What is as heavy as the thing it was made from: the picture of a take, all the data at once. */
-        val HEAVY = listOf(ShareNames.VIDEO_EXTENSION, ".zip")
+        /**
+         * What is as heavy as the thing it was made from: the picture of a take — a `.mov` too, shot on an iPhone and
+         * brought over by a copy — all the data at once.
+         */
+        val HEAVY = listOf(ShareNames.VIDEO_EXTENSION, ".mov", ".zip")
     }
 }

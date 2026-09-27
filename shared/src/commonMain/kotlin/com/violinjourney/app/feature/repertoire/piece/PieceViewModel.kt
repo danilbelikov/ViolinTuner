@@ -10,6 +10,7 @@ import com.violinjourney.app.core.io.sizeBytes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.audio.share.ShareFiles
+import com.violinjourney.app.core.audio.share.ShareNames
 import com.violinjourney.app.core.audio.RecordingRate
 import com.violinjourney.app.core.audio.backing.AudioRoutes
 import com.violinjourney.app.core.audio.backing.BackingFileImporter
@@ -359,8 +360,9 @@ open class PieceViewModel(
                 savedState[KEY_VIDEO_FILE] = file.filePath
                 handOver(PieceEffect.LaunchVideoCamera(file.filePath))
             }
-            // under the backing, the same rule as a take: headphones only (spec 3.32); a plain video needs none
-            PieceIntent.OwnCameraClicked -> backing.value?.takeIf { it.present && videoAllowed() && (!it.wanted || it.route.output.isHeadphones) }?.let {
+            // With or without headphones: under the backing the camera screen keeps the rule of a take itself — its button
+            // sleeps and says why, and wakes when headphones come (spec 3.32). Dropping the tap here said nothing at all.
+            PieceIntent.OwnCameraClicked -> backing.value?.takeIf { it.present && videoAllowed() }?.let {
                 handOver(PieceEffect.OpenCapture(pieceId))
             }
             is PieceIntent.VideoShotFinished -> {
@@ -374,8 +376,9 @@ open class PieceViewModel(
             PieceIntent.VideoImportSendClicked -> importer.sendClicked()?.let { path ->
                 backingPreview?.stop()
                 viewModelScope.launch {
-                    // The provider hands out only `cache/share/`: the shot gets a second name there, not a copy.
-                    shareFiles.original(platformFile(path), RESCUE_FILE_NAME)?.let { effectChannel.send(PieceEffect.ShareVideo(it.filePath)) }
+                    // The provider hands out only `cache/share/`: the shot gets a second name there, not a copy — in its own
+                    // container, «video.mov» from the camera of an iPhone.
+                    shareFiles.original(platformFile(path), RESCUE_BASE_NAME + ShareNames.videoExtensionOf(path))?.let { effectChannel.send(PieceEffect.ShareVideo(it.filePath)) }
                 }
             }
             // one file at a time: while a replacement is copied, a second one is not asked for (spec 3.32)
@@ -562,7 +565,7 @@ open class PieceViewModel(
         const val ARG_PIECE_ID = "pieceId"
         private const val KEY_CAMERA_FILE = "cameraFile"
         private const val KEY_VIDEO_FILE = "videoFile"
-        private const val RESCUE_FILE_NAME = "video.mp4"
+        private const val RESCUE_BASE_NAME = "video"
         private const val STOP_TIMEOUT_MS = 5_000L
 
         private const val BYTES_PER_MB = 1024L * 1024

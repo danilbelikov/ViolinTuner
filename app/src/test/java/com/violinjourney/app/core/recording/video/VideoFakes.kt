@@ -30,10 +30,13 @@ class FakeVideoFiles : VideoFiles {
     val thumbs = mutableSetOf<String>()
     private var next = 1
 
-    override fun newCameraFile() = File("/cache/camera/shot-${next++}.mp4")
+    /** The container the camera writes: `.mov` on an iPhone. Adopted files keep it, as `IosVideoFiles.adopt` does. */
+    var cameraExtension = ".mp4"
+
+    override fun newCameraFile() = File("/cache/camera/shot-${next++}$cameraExtension")
     override fun adopt(cameraFile: File): File? {
         adoptThrows?.let { throw it }
-        return if (adoptFails) null else File("/files/sessions/video-${next++}.mp4")
+        return if (adoptFails) null else File("/files/sessions/video-${next++}.${cameraFile.extension}")
     }
     override fun sizeOf(uri: String): Long? = sizeThrows?.let { throw it } ?: sizes[uri]
     /** How often the room was asked: never on the caller's thread of `picked`. */

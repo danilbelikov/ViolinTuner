@@ -40,10 +40,19 @@ data class ShareInfo(
     val backing: Boolean = false,
     /** Of the file «С минусовкой» — an estimate; a video weighs what its picture does. */
     val backingBytes: Long = 0,
+    /**
+     * A video take's file as it was shot, in its own container: «….mov» from the camera of an iPhone. What is made here —
+     * processed, under the backing — is always an `.mp4` ([videoFileName]). Null — the same as [videoFileName].
+     */
+    val originalVideoFileName: String? = null,
 ) {
     val video: Boolean get() = videoFileName != null
 
-    fun fileNameOf(variant: ShareVariant): String = if (video && variant != ShareVariant.SOUND) videoFileName!! else fileName
+    fun fileNameOf(variant: ShareVariant): String = when {
+        !video || variant == ShareVariant.SOUND -> fileName
+        variant == ShareVariant.ORIGINAL -> originalVideoFileName ?: videoFileName!!
+        else -> videoFileName!!
+    }
 
     /** An estimate for what is rendered, the real size for what is sent as it is. A processed video weighs what its picture does. */
     fun bytesOf(variant: ShareVariant): Long = when {

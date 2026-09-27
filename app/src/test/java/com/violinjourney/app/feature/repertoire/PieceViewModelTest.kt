@@ -734,6 +734,20 @@ class PieceViewModelTest {
         assertEquals(1, videoFiles.discarded.size)
     }
 
+    @Test
+    fun `a shot from an iPhone goes to the system sheet in its own container`() = runTest {
+        videoAnalyzer.outcome = com.violinjourney.app.core.recording.FileAnalysisResult.NoNotes
+        videoFiles.cameraExtension = ".mov"
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, effects) = screen(id)
+        viewModel.onIntent(PieceIntent.VideoShootClicked)
+        viewModel.onIntent(PieceIntent.VideoShotFinished(saved = true))
+        advance(5_000)
+        viewModel.onIntent(PieceIntent.VideoImportSendClicked)
+        runCurrent()
+        assertEquals(PieceEffect.ShareVideo("/cache/share/video.mov"), effects.last())
+    }
+
     private suspend fun withBacking(pieceId: Long) {
         val backingId = backings.add(backings.backing(title = "Piano"))
         backings.setForPiece(pieceId, backingId)
@@ -846,22 +860,24 @@ class PieceViewModelTest {
     }
 
     @Test
-    fun `a piece with a backing is filmed by the app's camera — under it only with headphones, a plain video without the chip`() = runTest {
+    fun `a piece with a backing is filmed by the app's camera with or without headphones and the camera screen asks for them`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
         withBacking(id)
         route.value = com.violinjourney.app.core.domain.backing.AudioRoute(com.violinjourney.app.core.domain.backing.BackingOutput.SPEAKER, null)
         val (viewModel, effects) = screen(id)
-        viewModel.onIntent(PieceIntent.OwnCameraClicked)
-        runCurrent()
-        assertTrue(effects.none { it is PieceEffect.OpenCapture })
-
-        route.value = com.violinjourney.app.core.domain.backing.AudioRoute(com.violinjourney.app.core.domain.backing.BackingOutput.BLUETOOTH, "Buds")
-        runCurrent()
+        // no headphones under the chip: the camera screen opens all the same — its button sleeps there and says why (spec 3.32)
         viewModel.onIntent(PieceIntent.OwnCameraClicked)
         runCurrent()
         assertEquals(PieceEffect.OpenCapture(id), effects.last())
 
-        // the chip off: no headphones asked for
+        route.value = com.violinjourney.app.core.domain.backing.AudioRoute(com.violinjourney.app.core.domain.backing.BackingOutput.BLUETOOTH, "Buds")
+        runCurrent()
+        effects.clear()
+        viewModel.onIntent(PieceIntent.OwnCameraClicked)
+        runCurrent()
+        assertEquals(PieceEffect.OpenCapture(id), effects.last())
+
+        // the chip off: a plain video, no headphones asked for
         route.value = com.violinjourney.app.core.domain.backing.AudioRoute(com.violinjourney.app.core.domain.backing.BackingOutput.SPEAKER, null)
         viewModel.onIntent(PieceIntent.BackingChipToggled)
         runCurrent()
@@ -869,6 +885,23 @@ class PieceViewModelTest {
         viewModel.onIntent(PieceIntent.OwnCameraClicked)
         runCurrent()
         assertEquals(PieceEffect.OpenCapture(id), effects.last())
+    }
+
+    @Test
+    fun `while a take records the app's camera does not open`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        val (viewModel, effects) = screen(id)
+        advance(100)
+        viewModel.onIntent(PieceIntent.BackingChipToggled) // a plain take: no headphones needed
+        advance(100)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.takeState.value.recording)
+        effects.clear()
+        viewModel.onIntent(PieceIntent.OwnCameraClicked)
+        runCurrent()
+        assertTrue(effects.none { it is PieceEffect.OpenCapture })
     }
 
     @Test

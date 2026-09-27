@@ -52,7 +52,38 @@ object ShareNames {
     /** The same name for the video of a take (spec 3.19): «Менуэт соль мажор · 18 сентября.mp4». */
     fun videoFileName(title: String): String = fileName(title).removeSuffix(EXTENSION) + VIDEO_EXTENSION
 
+    /**
+     * The same name for a video sent as it was shot: it keeps the container it was made in (spec 3.19) — a QuickTime movie
+     * from the camera of an iPhone goes as «….mov», never as an `.mp4` it is not.
+     */
+    fun originalVideoFileName(title: String, videoName: String): String = fileName(title).removeSuffix(EXTENSION) + videoExtensionOf(videoName)
+
+    /** «.mov» of «/…/sessions/A1.MOV»; [VIDEO_EXTENSION] when the last part of the path has none. */
+    fun videoExtensionOf(name: String): String =
+        name.substringAfterLast('/').substringAfterLast('.', "").lowercase().takeIf { it.isNotEmpty() && it.all(Char::isLetterOrDigit) }
+            ?.let { ".$it" } ?: VIDEO_EXTENSION
+
     const val VIDEO_EXTENSION = ".mp4"
+
+    /**
+     * The type other apps are told a file is (Android's `Intent.type`), by its own extension: the sound of a take, an
+     * `.mp4` made here, or a video shot on an iPhone and brought over by a copy (spec 3.20) — a QuickTime `.mov`, which
+     * sent as `audio/mp4` would reach only the apps that play sound.
+     */
+    fun mimeTypeOf(name: String): String = when (name.substringAfterLast('/').substringAfterLast('.', "").lowercase()) {
+        EXTENSION.removePrefix(".") -> AUDIO_TYPE
+        VIDEO_EXTENSION.removePrefix(".") -> VIDEO_TYPE
+        QUICKTIME_EXTENSION -> QUICKTIME_TYPE
+        else -> ANY_VIDEO_TYPE
+    }
+
+    private const val AUDIO_TYPE = "audio/mp4"
+    private const val VIDEO_TYPE = "video/mp4"
+    private const val QUICKTIME_EXTENSION = "mov"
+    private const val QUICKTIME_TYPE = "video/quicktime"
+
+    /** Any other extension here is a video's as it was shot — a sound is always `.m4a`. */
+    private const val ANY_VIDEO_TYPE = "video/*"
 }
 
 /**

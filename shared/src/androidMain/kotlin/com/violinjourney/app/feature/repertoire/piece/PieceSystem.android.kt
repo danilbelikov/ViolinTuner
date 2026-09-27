@@ -19,6 +19,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
+import com.violinjourney.app.core.audio.share.ShareNames
 import com.violinjourney.app.core.ui.components.LocalMessages
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.camera_no_permission
@@ -92,7 +93,7 @@ private fun Context.providedUri(path: String) = FileProvider.getUriForFile(this,
 private suspend fun Context.shareVideo(file: File, say: (String) -> Unit) {
     val uri = providedUri(file.path)
     val intent = Intent(Intent.ACTION_SEND).apply {
-        type = VIDEO_TYPE
+        type = ShareNames.mimeTypeOf(file.name)
         putExtra(Intent.EXTRA_STREAM, uri)
         clipData = ClipData.newRawUri(null, uri)
         addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
@@ -106,5 +107,4 @@ private suspend fun Context.shareVideo(file: File, say: (String) -> Unit) {
 
 /** Matches `android:authorities` of the FileProvider in the manifest. */
 private const val FILES_AUTHORITY_SUFFIX = ".files"
-private const val VIDEO_TYPE = "video/mp4"
 private const val AUDIO_TYPES = "audio/*"
