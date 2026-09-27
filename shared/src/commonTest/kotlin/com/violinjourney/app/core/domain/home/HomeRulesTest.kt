@@ -120,6 +120,26 @@ class HomeRulesTest {
     }
 
     @Test
+    fun `the tree does not evict - out of its season what stood in its place stands there`() {
+        val tree = loaded.copy(purchased = setOf("xmas", "cello"), choices = mapOf("floorR" to "xmas", HomeState.SEASON_KEY to "cello"))
+        fun byTheRightWall(state: HomeState, date: LocalDate) = HomeRules.standing(state, "rent", false, date).filter { it.slot == "floorR" }.map { it.id }
+        assertEquals(listOf("cello"), byTheRightWall(tree, september))
+        assertEquals(listOf("xmas"), byTheRightWall(tree, LocalDate(2026, 12, 10)))
+        assertEquals(listOf("cello"), byTheRightWall(tree, LocalDate(2027, 1, 20)))
+        // a tree put in before what stood there was remembered: the room's own, which is nothing by the right wall
+        assertEquals(emptyList(), byTheRightWall(tree.copy(choices = mapOf("floorR" to "xmas")), september))
+        // the place was bare on purpose
+        assertEquals(emptyList(), byTheRightWall(tree.copy(choices = mapOf("floorR" to "xmas", HomeState.SEASON_KEY to "")), september))
+        // a thing remembered but not owned, or of another place, is not shown
+        assertEquals(emptyList(), byTheRightWall(tree.copy(choices = mapOf("floorR" to "xmas", HomeState.SEASON_KEY to "ficus")), september))
+        assertEquals(emptyList(), byTheRightWall(tree.copy(choices = mapOf("floorR" to "xmas", HomeState.SEASON_KEY to "desk_simple")), september))
+        // the keys of the home are not places, whatever they hold
+        assertTrue(HomeRules.placed(tree).keys.none { it.startsWith("@") })
+        assertEquals(HomeState.SEASON_KEY, HomeRules.underKeyOf(item("xmas")))
+        assertNull(HomeRules.underKeyOf(item("cello")))
+    }
+
+    @Test
     fun `the cat is on the porch of a home that has one - the next home is the cheapest not owned`() {
         val state = loaded.copy(purchased = setOf("cat_black"), choices = mapOf("pet" to "cat_black"))
         assertNull(HomeRules.catOnPorch(state, "rent"))

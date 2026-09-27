@@ -8,9 +8,11 @@ import androidx.room.OnConflictStrategy
 import androidx.room.PrimaryKey
 import androidx.room.Query
 import androidx.room.Transaction
+import com.violinjourney.app.core.domain.home.HomeCatalog
 import com.violinjourney.app.core.domain.home.HomeHouse
 import com.violinjourney.app.core.domain.home.HomeItem
 import com.violinjourney.app.core.domain.home.HomeRepository
+import com.violinjourney.app.core.domain.home.HomeRules
 import com.violinjourney.app.core.domain.home.HomeState
 import com.violinjourney.app.core.domain.journey.Arrival
 import com.violinjourney.app.core.domain.journey.BoughtExtra
@@ -51,7 +53,10 @@ data class ExtraEntity(val stopId: String, val extra: String, val price: Int, va
 @Entity(tableName = "home_purchases")
 data class HomePurchaseEntity(@PrimaryKey val id: String, val kind: String, val price: Int, val boughtAtEpochMs: Long)
 
-/** What stands where: slot → item id, an empty id — the place left bare; the key `@house` — the home lived in. */
+/**
+ * What stands where: slot → item id, an empty id — the place left bare; the key `@house` — the home lived in, `@season` —
+ * what stood in the place of the tree when it was put there (spec 3.24).
+ */
 @Entity(tableName = "home_choices")
 data class HomeChoiceEntity(@PrimaryKey val slot: String, val itemId: String)
 
@@ -69,12 +74,34 @@ abstract class JourneyDao {
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     abstract suspend fun putHomeChoice(choice: HomeChoiceEntity)
 
-    /** Pays for a thing of the home and puts it where it belongs, or does neither. */
+    @Query("SELECT itemId FROM home_choices WHERE slot = :slot")
+    protected abstract suspend fun choiceOf(slot: String): String?
+
+    @Query("DELETE FROM home_choices WHERE slot = :slot")
+    protected abstract suspend fun clearChoice(slot: String)
+
+    /**
+     * Puts [id] into [slot]. A thing that stands only in its season remembers under [underKey] what stood in its place,
+     * so that the place shows it the rest of the year (spec 3.24): no row — the room's own, an empty id — nothing. Put
+     * again where it already stands, it keeps what it remembers. [underKey] null — a thing like any other.
+     */
     @Transaction
-    open suspend fun buyForHome(id: String, kind: String, price: Int, slot: String, now: Long): Boolean {
+    open suspend fun putOnPlace(slot: String, id: String, underKey: String?) {
+        if (underKey != null) {
+            val before = choiceOf(slot)
+            if (before != id) {
+                if (before == null) clearChoice(underKey) else putHomeChoice(HomeChoiceEntity(underKey, before))
+            }
+        }
+        putHomeChoice(HomeChoiceEntity(slot, id))
+    }
+
+    /** Pays for a thing of the home and puts it where it belongs ([putOnPlace]), or does neither. */
+    @Transaction
+    open suspend fun buyForHome(id: String, kind: String, price: Int, slot: String, now: Long, underKey: String? = null): Boolean {
         if (balance() < price) return false
         if (insertHomePurchase(HomePurchaseEntity(id, kind, price, now)) == -1L) return false
-        putHomeChoice(HomeChoiceEntity(slot, id))
+        putOnPlace(slot, id, underKey)
         return true
     }
 
@@ -173,14 +200,14 @@ class RoomHomeRepository(
     }
 
     override suspend fun buy(item: HomeItem, nowEpochMs: Long): Boolean =
-        dao.buyForHome(item.id, ITEM, item.price, item.slot, nowEpochMs)
+        dao.buyForHome(item.id, ITEM, item.price, item.slot, nowEpochMs, HomeRules.underKeyOf(item))
             .also { bought -> if (bought) analytics.track(ItemBought(item.id, house = false)) }
 
     override suspend fun buy(house: HomeHouse, nowEpochMs: Long): Boolean =
         (house.drawn && dao.buyForHome(house.id, HOUSE, house.price, HomeState.HOUSE_KEY, nowEpochMs))
             .also { bought -> if (bought) analytics.track(ItemBought(house.id, house = true)) }
 
-    override suspend fun place(slot: String, itemId: String) = dao.putHomeChoice(HomeChoiceEntity(slot, itemId))
+    override suspend fun place(slot: String, itemId: String) = dao.putOnPlace(slot, itemId, HomeCatalog.byId[itemId]?.let(HomeRules::underKeyOf))
 
     override suspend fun liveIn(house: String) = dao.putHomeChoice(HomeChoiceEntity(HomeState.HOUSE_KEY, house))
 

@@ -68,7 +68,10 @@ object HomeCatalog {
     val NEVER_BARE: Set<String> = setOf("window", "view", "desk", "chair")
 }
 
-/** Everything the home remembers. What stands where is [choices]: slot → item, an empty string — the place left bare on purpose. */
+/**
+ * Everything the home remembers. What stands where is [choices]: slot → item, an empty string — the place left bare on
+ * purpose; keys that start with «@» are not places ([HOUSE_KEY], [SEASON_KEY]).
+ */
 data class HomeState(
     val loaded: Boolean,
     val purchased: Set<String>,
@@ -81,6 +84,12 @@ data class HomeState(
 
         /** The key of [choices] that holds the home lived in. */
         const val HOUSE_KEY = "@house"
+
+        /**
+         * The key of [choices] that holds what stood in the place of the seasonal thing when it was put there: out of its
+         * season that stands there instead (spec 3.24). No key — what the room came with; an empty string — nothing.
+         */
+        const val SEASON_KEY = "@season"
     }
 }
 
@@ -112,7 +121,7 @@ object HomeRules {
         val result = LinkedHashMap<String, HomeItem>()
         HomeCatalog.items.filter { it.id in HomeCatalog.startItems }.forEach { result[it.slot] = it }
         state.choices.forEach { (slot, id) ->
-            if (slot == HomeState.HOUSE_KEY) return@forEach
+            if (slot.startsWith(CHOICE_MARK)) return@forEach
             when {
                 id.isNotEmpty() -> HomeCatalog.byId[id]?.takeIf { it.id in owned && it.slot == slot }?.let { result[slot] = it }
                 slot !in HomeCatalog.NEVER_BARE -> result.remove(slot)
@@ -121,11 +130,28 @@ object HomeRules {
         return result
     }
 
-    /** What is seen in [house] from [outside] or inside on [date], back to front. Things whose place this home lacks wait in the wardrobe. */
+    /**
+     * What is seen in [house] from [outside] or inside on [date], back to front. Things whose place this home lacks wait in
+     * the wardrobe; out of its season the tree's place shows what stood there when it was put in ([underSeasonal]).
+     */
     fun standing(state: HomeState, house: String, outside: Boolean, date: LocalDate): List<HomeItem> =
         placed(state).values
-            .filter { it.outside == outside && slotIn(it.slot, house) && (it.at == null || slotIn(it.at, house)) && inSeason(it, date) }
+            .mapNotNull { if (inSeason(it, date)) it else underSeasonal(state, it.slot) }
+            .filter { it.outside == outside && slotIn(it.slot, house) && (it.at == null || slotIn(it.at, house)) }
             .sortedBy { it.z }
+
+    /**
+     * What stands in [slot] while the seasonal thing chosen for it waits for its season: what stood there when it was put
+     * in, if it is still owned; what the room came with when nothing was remembered (a tree put in before this was kept).
+     */
+    fun underSeasonal(state: HomeState, slot: String): HomeItem? = when (val id = state.choices[HomeState.SEASON_KEY]) {
+        null -> HomeCatalog.items.firstOrNull { it.slot == slot && it.id in HomeCatalog.startItems }
+        "" -> null
+        else -> HomeCatalog.byId[id]?.takeIf { it.slot == slot && it.id != HomeCatalog.SEASONAL && it.id in ownedItems(state) }
+    }
+
+    /** The key under which what stood in the place of [item] is remembered when it is put in; null — nothing to remember. */
+    fun underKeyOf(item: HomeItem): String? = if (item.id == HomeCatalog.SEASONAL) HomeState.SEASON_KEY else null
 
     fun inSeason(item: HomeItem, date: LocalDate): Boolean {
         if (item.id != HomeCatalog.SEASONAL) return true
@@ -141,6 +167,8 @@ object HomeRules {
 
     /** The next home to save for: the cheapest one not owned — drawn or not, the row shows both. */
     fun nextHouse(state: HomeState): HomeHouse? = HomeCatalog.houses.filter { it.id !in ownedHouses(state) && it.price > 0 }.minByOrNull { it.price }
+
+    private const val CHOICE_MARK = '@'
 
     /** Owned things of [slot] to choose from in «Обставить», the room's own first. */
     fun wardrobe(slot: String, state: HomeState): List<HomeItem> {
