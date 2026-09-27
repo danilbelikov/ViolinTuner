@@ -41,7 +41,11 @@ class IntonationEngine(private val config: IntonationConfig = IntonationConfig()
                 clearTracking()
                 IntonationReading.TooNoisy
             }
-            SignalState.GAP -> bridgeGap(frame.tMs)
+            // the locked note holds through the gap; a candidate does not count it towards its lock
+            SignalState.GAP -> {
+                noteLock.pause(frame.tMs)
+                bridgeGap(frame.tMs)
+            }
             // kind == PITCHED guarantees both values are non-null
             SignalState.PITCHED -> track(frame.tMs, fractionalMidi!!, targetMidi!!)
         }

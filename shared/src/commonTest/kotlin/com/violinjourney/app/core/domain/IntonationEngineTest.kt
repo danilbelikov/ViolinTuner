@@ -140,6 +140,30 @@ class IntonationEngineTest {
     }
 
     @Test
+    fun `octave errors on both sides of a short pause never lock`() {
+        play(0, 1_000, midi = 69) // last frame at 990
+        assertEquals("A4", feed(played(1_000, 81)).active().note.name)
+        times(1_010, 1_200).forEach { feed(quiet(it)) } // a bow change, well within the silence timeout
+        assertEquals("A4", feed(played(1_200, 81)).active().note.name, "two frames of A5 are not 100 ms of it")
+        assertEquals("A4", feed(played(1_210, 69)).active().note.name)
+    }
+
+    @Test
+    fun `an unclear frame in the attack of a new note delays its lock by a frame`() {
+        play(0, 30, midi = 71) // 0, 10, 20
+        assertEquals(Silence, feed(noise(30)))
+        assertEquals(Silence, play(40, 110, midi = 71))
+        assertEquals("B4", feed(played(110, 71)).active().note.name)
+    }
+
+    @Test
+    fun `a note unclear in every other frame still locks twice as late`() {
+        val before = times(0, 200).map { t -> feed(if (t % 20 == 0L) played(t, 71) else noise(t)) }
+        assertTrue(before.all { it == Silence }, "not locked before 100 ms of it are heard: $before")
+        assertEquals("B4", feed(played(200, 71)).active().note.name)
+    }
+
+    @Test
     fun `moderate vibrato around the note stays in tune`() {
         play(0, 300, midi = 69)
         val readings = times(300, 2_300).map { t ->
