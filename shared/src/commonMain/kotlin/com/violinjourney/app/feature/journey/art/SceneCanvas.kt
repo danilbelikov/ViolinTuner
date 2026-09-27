@@ -239,11 +239,14 @@ private fun DrawScope.seen(left: Float, top: Float, panX: Float, k: Float): Rect
  */
 private fun DrawScope.drawScene(prepared: PreparedScene, k: Float, panX: Float, seconds: Float?, lightAlpha: Float = 1f, seen: Rect? = null) {
     val scene = prepared.scene
-    scene.layers.forEachIndexed { index, layer ->
-        if (seen == null || !outOfSight(layer, prepared.bounds[index], seen, (SceneCamera.shift(panX, layer.depth) - panX) / k)) {
-            drawOne(prepared, index, k, panX, seconds, lightAlpha)
+    // the scene is scaled once, not once a layer: a layer is drawn in units of the grid
+    scale(k, k, pivot = Offset.Zero) {
+        scene.layers.forEachIndexed { index, layer ->
+            if (seen == null || !outOfSight(layer, prepared.bounds[index], seen, (SceneCamera.shift(panX, layer.depth) - panX) / k)) {
+                drawOne(prepared, index, k, panX, seconds, lightAlpha)
+            }
+            if (index == prepared.skyLifeAt && seconds != null && scene.aerial) drawSkyOf(prepared, k, panX, seconds)
         }
-        if (index == prepared.skyLifeAt && seconds != null && scene.aerial) drawSkyOf(prepared, k, panX, seconds)
     }
 }
 
@@ -270,7 +273,7 @@ private fun DrawScope.drawBaked(baking: SceneBaking, left: Float, top: Float, k:
         }
         layer.topLeft = pixels.topLeft
         layer.record(size = pixels.size) {
-            translate(left - pixels.left, top - pixels.top) { shown.forEach { index -> drawOne(prepared, index, k, 0f, null) } }
+            translate(left - pixels.left, top - pixels.top) { scale(k, k, pivot = Offset.Zero) { shown.forEach { index -> drawOne(prepared, index, k, 0f, null) } } }
         }
     }
     prepared.steps.forEachIndexed { at, step ->
@@ -280,18 +283,24 @@ private fun DrawScope.drawBaked(baking: SceneBaking, left: Float, top: Float, k:
                 if (layer != null) {
                     drawLayer(layer)
                 } else {
-                    translate(left, top) { step.layers.forEach { index -> if (!outOfSight(prepared.scene.layers[index], prepared.bounds[index], seen, 0f)) drawOne(prepared, index, k, 0f, null) } }
+                    translate(left, top) { scale(k, k, pivot = Offset.Zero) { step.layers.forEach { index -> if (!outOfSight(prepared.scene.layers[index], prepared.bounds[index], seen, 0f)) drawOne(prepared, index, k, 0f, null) } } }
                 }
             }
             is SceneStep.Alive -> translate(left, top) {
-                step.layers.forEach { index -> if (!outOfSight(prepared.scene.layers[index], prepared.bounds[index], seen, 0f)) drawOne(prepared, index, k, 0f, seconds) }
+                scale(k, k, pivot = Offset.Zero) {
+                    step.layers.forEach { index -> if (!outOfSight(prepared.scene.layers[index], prepared.bounds[index], seen, 0f)) drawOne(prepared, index, k, 0f, seconds) }
+                }
             }
-            SceneStep.SkyLife -> translate(left, top) { drawSkyOf(prepared, k, 0f, seconds) }
+            SceneStep.SkyLife -> translate(left, top) { scale(k, k, pivot = Offset.Zero) { drawSkyOf(prepared, k, 0f, seconds) } }
         }
     }
 }
 
-/** One layer of [prepared] at [k] pixels a unit, its plane shifted for a pan of [panX]; alive with [seconds] if it lives. */
+/**
+ * One layer of [prepared], its plane shifted for a pan of [panX] pixels; alive with [seconds] if it lives. Drawn in units
+ * of the grid: the caller has scaled the canvas by [k] once for the whole scene. A layer is moved sideways only when its
+ * plane is — a pan of the parallax, the drift of water — so a card of a thousand layers pays for one transform, not two a layer.
+ */
 private fun DrawScope.drawOne(prepared: PreparedScene, index: Int, k: Float, panX: Float, seconds: Float?, lightAlpha: Float = 1f) {
     val layer = prepared.scene.layers[index]
     val path = prepared.paths[index]
@@ -302,40 +311,45 @@ private fun DrawScope.drawOne(prepared: PreparedScene, index: Int, k: Float, pan
     val alpha = if (alive) own * SceneMotion.alpha(layer, index, prepared.mode, seconds!!) else own
     val drift = if (alive) SceneMotion.drift(layer, index, seconds!!) else 0f
     val moved = if (alive && layer.anim != null) SceneMotion.moved(layer.anim, bounds.center.x, bounds.center.y, index, seconds!!) else null
-    translate(SceneCamera.shift(panX, layer.depth) + drift * k, 0f) {
-        scale(k, k, pivot = Offset.Zero) {
-            if (moved != null) {
-                // A living layer is drawn by its movement alone: its own tx, ty and scale are not applied here. The exporters
-                // never write them for a living layer, nor for a thing that may lie on a rocking chair and take its swing —
-                // SceneTest and HomeComposerTest keep it so; one that did would stand in the wrong place.
-                // A thing drawn by its outline moves as well — the runners of a rocking chair, steam over a cup (spec 3.29).
-                if (moved.alpha <= 0f || (paint.fill == null && paint.stroke == null)) return@scale
-                val seen = alpha * moved.alpha
-                translate(moved.dx, moved.dy) {
-                    when {
-                        moved.flap != 1f -> scale(1f, moved.flap, pivot = bounds.center) { drawLayer(path, paint, seen) }
-                        moved.degrees != 0f -> rotate(moved.degrees, pivot = Offset(moved.pivotX, moved.pivotY)) { drawLayer(path, paint, seen) }
-                        else -> drawLayer(path, paint, seen)
-                    }
-                }
-                return@scale
-            }
-            if (layer.tx != 0f || layer.ty != 0f || layer.scale != 1f) {
-                translate(layer.tx, layer.ty) { scale(layer.scale, layer.scale, pivot = Offset.Zero) { drawLayer(path, paint, alpha) } }
-            } else {
-                drawLayer(path, paint, alpha)
+    // the shift of the plane is in pixels, the canvas in units of the grid; no pan — no division, and no transform at all
+    val shift = SceneCamera.shift(panX, layer.depth)
+    val dx = (if (shift != 0f) shift / k else 0f) + drift
+    if (dx != 0f) translate(dx, 0f) { drawPlaced(layer, path, bounds, paint, alpha, moved) } else drawPlaced(layer, path, bounds, paint, alpha, moved)
+}
+
+/** A layer where it stands in the grid: moved by its movement, or placed by its own offset and scale. */
+private fun DrawScope.drawPlaced(layer: SceneLayer, path: Path, bounds: Rect, paint: LayerPaint, alpha: Float, moved: SceneMotion.Moved?) {
+    if (moved != null) {
+        // A living layer is drawn by its movement alone: its own tx, ty and scale are not applied here. The exporters
+        // never write them for a living layer, nor for a thing that may lie on a rocking chair and take its swing —
+        // SceneTest and HomeComposerTest keep it so; one that did would stand in the wrong place.
+        // A thing drawn by its outline moves as well — the runners of a rocking chair, steam over a cup (spec 3.29).
+        if (moved.alpha <= 0f || (paint.fill == null && paint.stroke == null)) return
+        val seen = alpha * moved.alpha
+        translate(moved.dx, moved.dy) {
+            when {
+                moved.flap != 1f -> scale(1f, moved.flap, pivot = bounds.center) { drawLayer(path, paint, seen) }
+                moved.degrees != 0f -> rotate(moved.degrees, pivot = Offset(moved.pivotX, moved.pivotY)) { drawLayer(path, paint, seen) }
+                else -> drawLayer(path, paint, seen)
             }
         }
+        return
+    }
+    if (layer.tx != 0f || layer.ty != 0f || layer.scale != 1f) {
+        translate(layer.tx, layer.ty) { scale(layer.scale, layer.scale, pivot = Offset.Zero) { drawLayer(path, paint, alpha) } }
+    } else {
+        drawLayer(path, paint, alpha)
     }
 }
 
-/** The sky's own life of [prepared] — over the high sky where there is one — its plane the far one. */
+/** The sky's own life of [prepared] — over the high sky where there is one — its plane the far one; in units of the grid, as [drawOne]. */
 private fun DrawScope.drawSkyOf(prepared: PreparedScene, k: Float, panX: Float, seconds: Float) {
-    translate(SceneCamera.shift(panX, 0), 0f) {
-        scale(k, k, pivot = Offset.Zero) {
-            if (prepared.highSky) drawHighSkyLife(prepared.scene, prepared.mode, seconds) else drawSkyLife(prepared.mode, seconds)
-        }
-    }
+    val shift = SceneCamera.shift(panX, 0)
+    if (shift != 0f) translate(shift / k, 0f) { drawSkyLifeOf(prepared, seconds) } else drawSkyLifeOf(prepared, seconds)
+}
+
+private fun DrawScope.drawSkyLifeOf(prepared: PreparedScene, seconds: Float) {
+    if (prepared.highSky) drawHighSkyLife(prepared.scene, prepared.mode, seconds) else drawSkyLife(prepared.mode, seconds)
 }
 
 private fun DrawScope.drawLayer(path: Path, paint: LayerPaint, alpha: Float) {
