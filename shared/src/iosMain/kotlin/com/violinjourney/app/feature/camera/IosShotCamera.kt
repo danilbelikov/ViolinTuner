@@ -130,7 +130,7 @@ class IosShotCamera : ShotCamera {
     /** When the delegate heard that the recording ended — the end, for one the system cut short. */
     @Volatile private var endedNanos: Long? = null
 
-    /** When the output was told to stop — by [stopRecording], or by [release] before it. */
+    /** When the output was told to stop — by [stopRecording], or by [release] or [stopNow] before it. */
     @Volatile private var stoppedAtNanos: Long? = null
 
     // The main thread's: the layer of the viewfinder and what turns it.
@@ -208,6 +208,11 @@ class IosShotCamera : ShotCamera {
             stopOutput()
             session.stopRunning()
         }
+    }
+
+    /** The moment is kept as the queue comes to it: nothing waits here for the end of the file. */
+    override fun stopNow() {
+        dispatch_async(queue) { stopOutput() }
     }
 
     /**

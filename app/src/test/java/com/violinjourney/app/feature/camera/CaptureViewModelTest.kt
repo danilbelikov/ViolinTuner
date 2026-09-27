@@ -34,6 +34,8 @@ import com.violinjourney.app.core.time.FixedWallClock
 import java.io.File
 import kotlin.time.Instant
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.async
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
@@ -84,9 +86,17 @@ class CaptureViewModelTest {
         var finalize = CompletableDeferred<Boolean>()
         var released = false
         var started = 0
+        var stops = 0
+
+        /** [stopNow] calls, and whether each came before the take asked for [stopRecording]. */
+        val stoppedNow = mutableListOf<Boolean>()
 
         override fun release() {
             released = true
+        }
+
+        override fun stopNow() {
+            stoppedNow += stops == 0
         }
 
         override fun focus(x: Float, y: Float) = Unit
@@ -99,7 +109,10 @@ class CaptureViewModelTest {
 
         override val startNanos: Long? = null
 
-        override suspend fun stopRecording(): Boolean = if (shot == null) false else finalize.await()
+        override suspend fun stopRecording(): Boolean {
+            stops++
+            return if (shot == null) false else finalize.await()
+        }
     }
 
     /** Making the video waits at [gate], as a long one does. */
@@ -218,6 +231,9 @@ class CaptureViewModelTest {
 
     private val playback = FakePlayback()
 
+    /** The chain of the last screen made: its hook is the camera's. */
+    private lateinit var pipeline: TakePipeline
+
     /** The screen's view model in a store of its own, so that it can be cleared the way the screen going clears it. */
     private fun TestScope.screen(
         scenario: FakeScenario = FakeScenario.IN_TUNE,
@@ -238,6 +254,7 @@ class CaptureViewModelTest {
             source, sessions, FakeAudioFiles(directory), FakeRunningPracticeStore(), PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
             backings = backings, backingPlaybackFactory = { playback },
         )
+        pipeline = takes
         val store = ViewModelStore()
         val factory = viewModelFactory {
             initializer {
@@ -378,6 +395,76 @@ class CaptureViewModelTest {
         viewModel.onIntent(CaptureIntent.CloseClicked)
         runCurrent()
         assertEquals(listOf(CaptureEffect.Close), effects)
+    }
+
+    @Test
+    fun `leaving the app mid-shot keeps the take quietly and stops the camera`() = runTest {
+        val (viewModel, _) = screen()
+        val effects = effectsOf(viewModel)
+        viewModel.onIntent(CaptureIntent.RecordClicked)
+        advance(5_000)
+        assertTrue(viewModel.state.value.recording)
+
+        viewModel.onIntent(CaptureIntent.ScreenLeft)
+        // the picture ends as the screen is left, not once the take's sound is closed: its start is counted back from there
+        assertEquals(listOf(true), camera.stoppedNow)
+        runCurrent()
+        camera.finalize.complete(true)
+        runCurrent()
+        muxer.gate.complete(Unit)
+        advance(1_000)
+
+        assertEquals("the take is kept", 1, sessions.saved.size)
+        assertNotNull("with its picture", sessions.saved.single().videoPath)
+        assertEquals("the take waits for the end of the file the screen stopped", 1, camera.stops)
+        assertTrue("quietly: no word, and the screen stays for the next take", effects.isEmpty())
+        assertFalse(viewModel.state.value.recording)
+        assertFalse(viewModel.state.value.saving)
+    }
+
+    @Test
+    fun `leaving the app while nothing is shot changes nothing`() = runTest {
+        val (viewModel, _) = screen()
+        val effects = effectsOf(viewModel)
+        viewModel.onIntent(CaptureIntent.ScreenLeft)
+        advance(1_000)
+        assertTrue(sessions.saved.isEmpty())
+        assertEquals(0, camera.started)
+        assertTrue(effects.isEmpty())
+
+        viewModel.onIntent(CaptureIntent.RecordClicked)
+        advance(3_000)
+        assertTrue("a take starts as ever", viewModel.state.value.recording)
+        assertEquals(1, camera.started)
+    }
+
+    @Test
+    fun `a take that ends before its camera starts still stops the camera`() = runTest {
+        screen()
+        val hook = checkNotNull(pipeline.videoHook)
+        // the sound began: the camera's start is queued for the main thread
+        hook.onRecordingStarted(null)
+        camera.finalize.complete(false)
+        // the take is thrown away before the main thread has run that start
+        val discard = launch(start = CoroutineStart.UNDISPATCHED) { hook.onRecordingDiscarded() }
+        runCurrent()
+        discard.join()
+        assertEquals(1, camera.started)
+        assertEquals("the camera started late is stopped by the take all the same", 1, camera.stops)
+        assertFalse("its picture is thrown away", camera.shot!!.exists())
+    }
+
+    @Test
+    fun `a take kept before its camera starts stops the camera and keeps the take as sound`() = runTest {
+        screen()
+        val hook = checkNotNull(pipeline.videoHook)
+        hook.onRecordingStarted(null)
+        camera.finalize.complete(false)
+        val sound = File(directory, "sound.m4a").apply { writeText("audio") }
+        val made = async(start = CoroutineStart.UNDISPATCHED) { hook.onRecordingFinished(sound, null) }
+        runCurrent()
+        assertNull("no picture worth keeping: the take stays sound", made.await())
+        assertEquals(1, camera.stops)
     }
 
     private suspend fun withBacking(): FakeBackingRepository = FakeBackingRepository().also { backings ->

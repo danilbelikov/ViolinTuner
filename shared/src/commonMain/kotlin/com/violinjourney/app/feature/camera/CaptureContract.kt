@@ -47,6 +47,9 @@ sealed interface CaptureIntent {
     data object CloseClicked : CaptureIntent
 
     data object CameraBindFailed : CaptureIntent
+
+    /** The app went to the background or the screen went dark — not a turn of the phone, which only rebuilds the screen. */
+    data object ScreenLeft : CaptureIntent
 }
 
 sealed interface CaptureEffect {

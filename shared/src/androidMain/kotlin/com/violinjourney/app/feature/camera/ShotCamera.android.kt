@@ -19,6 +19,10 @@ import androidx.camera.video.Recorder
 import androidx.camera.video.Recording
 import androidx.camera.video.VideoCapture
 import androidx.camera.video.VideoRecordEvent
+import androidx.camera.viewfinder.compose.CoordinateTransformer
+import androidx.camera.viewfinder.compose.MutableCoordinateTransformer
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.unit.IntSize
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import java.io.File
@@ -47,7 +51,7 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
     private var recording: Recording? = null
     private var finalized: CompletableDeferred<Boolean>? = null
 
-    /** When the recording was told to stop — by [stopRecording], or by [release] before it. */
+    /** When the recording was told to stop — by [stopRecording], or by [release] or [stopNow] before it. */
     private var stoppedAtNanos: Long? = null
 
     override var startNanos: Long? = null
@@ -85,6 +89,8 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
         unbind()
     }
 
+    override fun stopNow() = stopRunning()
+
     private fun stopRunning() {
         val running = recording ?: return
         recording = null
@@ -92,9 +98,21 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
         running.stop()
     }
 
+    /**
+     * What turns a point of the viewfinder into one of the camera's surface — its turn to the sensor and the crop of the
+     * screen undone. [CaptureViewfinder] hands it to `CameraXViewfinder`, which keeps it up to date. The main thread.
+     */
+    val coordinates: MutableCoordinateTransformer = MutableCoordinateTransformer()
+
+    /** The size of the viewfinder on the screen, in pixels; the main thread. */
+    var viewfinderSize: IntSize = IntSize.Zero
+
     override fun focus(x: Float, y: Float) {
         val control = camera?.cameraControl ?: return
-        val point = SurfaceOrientedMeteringPointFactory(1f, 1f).createPoint(x, y)
+        val resolution = mutableSurface.value?.resolution ?: return
+        if (viewfinderSize == IntSize.Zero) return
+        val at = ViewfinderTouch.onSurface(x, y, viewfinderSize, coordinates)
+        val point = SurfaceOrientedMeteringPointFactory(resolution.width.toFloat(), resolution.height.toFloat()).createPoint(at.x, at.y)
         control.startFocusAndMetering(FocusMeteringAction.Builder(point).build())
     }
 
@@ -104,6 +122,9 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
 
     @androidx.annotation.OptIn(markerClass = [ExperimentalPersistentRecording::class])
     override fun startRecording(file: File) {
+        // a recording nobody stopped is closed rather than a second one started, which the recorder refuses by throwing
+        recording?.close()
+        recording = null
         startNanos = null
         startEventNanos = null
         stoppedAtNanos = null
@@ -157,4 +178,14 @@ class CameraXShotCamera(private val context: Context) : ShotCamera {
             VideoRecordEvent.Finalize.ERROR_INSUFFICIENT_STORAGE,
         )
     }
+}
+
+/**
+ * Where a touch of the viewfinder lands on the camera's surface (spec 3.32: «фокус и экспозиция в эту точку»): the share
+ * of the viewfinder back to its pixels, then through the viewfinder's own matrix to the surface in the sensor's
+ * orientation. The shares alone would be read as the sensor's — turned a quarter on an upright phone, and blind to the crop.
+ */
+internal object ViewfinderTouch {
+    fun onSurface(x: Float, y: Float, viewfinder: IntSize, transformer: CoordinateTransformer): Offset =
+        with(transformer) { Offset(x * viewfinder.width, y * viewfinder.height).transform() }
 }

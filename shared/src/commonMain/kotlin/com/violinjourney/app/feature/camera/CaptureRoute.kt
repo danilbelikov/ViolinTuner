@@ -20,9 +20,17 @@ import com.violinjourney.app.shared.resources.capture_video_failed
 import com.violinjourney.app.shared.resources.record_no_notes
 import org.jetbrains.compose.resources.getString
 
-/** «Снять под минусовку» (spec 3.32): permissions, the camera bound to the screen, the screen kept on. */
+/**
+ * «Снять под минусовку» (spec 3.32): permissions, the camera bound to the screen, the screen kept on.
+ * [changingConfigurations]: the screen stops only to come back turned (Android) — a shot goes on through that.
+ */
 @Composable
-fun CaptureRoute(onClose: () -> Unit, viewModel: CaptureViewModel, modifier: Modifier = Modifier) {
+fun CaptureRoute(
+    onClose: () -> Unit,
+    viewModel: CaptureViewModel,
+    modifier: Modifier = Modifier,
+    changingConfigurations: () -> Boolean = { false },
+) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val messages = LocalMessages.current
     val lifecycleOwner = LocalLifecycleOwner.current
@@ -44,6 +52,10 @@ fun CaptureRoute(onClose: () -> Unit, viewModel: CaptureViewModel, modifier: Mod
 
     // «назад» during a shot stops it and keeps the take, like the button: leaving must not lose what was played
     BackHandler(enabled = state.recording) { viewModel.onIntent(CaptureIntent.RecordClicked) }
+    // the app in the background — «Домой», the power button, a call over the whole screen: the take is kept quietly
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
+        if (!changingConfigurations()) viewModel.onIntent(CaptureIntent.ScreenLeft)
+    }
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

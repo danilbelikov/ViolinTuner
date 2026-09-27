@@ -250,7 +250,12 @@ fun AppNavHost(
             route = "$CAPTURE_ROUTE/{${CaptureViewModel.ARG_PIECE_ID}}",
             arguments = listOf(navArgument(CaptureViewModel.ARG_PIECE_ID) { type = NavType.LongType }),
         ) {
-            CaptureRoute(onClose = navController::popBackStack, viewModel = hiltViewModel<HiltCaptureViewModel>())
+            val activity = LocalActivity.current
+            CaptureRoute(
+                onClose = navController::popBackStack,
+                viewModel = hiltViewModel<HiltCaptureViewModel>(),
+                changingConfigurations = { activity?.isChangingConfigurations == true },
+            )
         }
         composable(
             route = "$STAND_ROUTE/{${StandViewModel.ARG_PIECE_ID}}?${StandViewModel.ARG_PAGE}={${StandViewModel.ARG_PAGE}}",

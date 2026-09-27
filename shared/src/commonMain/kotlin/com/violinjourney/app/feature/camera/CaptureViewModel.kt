@@ -21,10 +21,12 @@ import com.violinjourney.app.core.recording.video.VideoMux
 import com.violinjourney.app.core.recording.video.VideoShift
 import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.core.time.monotonicNanos
+import kotlin.concurrent.Volatile
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.IO
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -74,8 +76,17 @@ open class CaptureViewModel(
     val effects: Flow<CaptureEffect> = effectChannel.receiveAsFlow()
 
     private val listening = MutableStateFlow(false)
-    private var picture: PlatformFile? = null
-    private var soundStartNanos: Long? = null
+
+    // Written on the main thread and on the chain's: the hook is called from the chain.
+    @Volatile private var picture: PlatformFile? = null
+    @Volatile private var soundStartNanos: Long? = null
+
+    /**
+     * The camera's start, on its way to the main thread. A take that ends before it has run waits for it: the camera it
+     * starts is stopped by that take all the same, instead of shooting on until the screen goes — and CameraX refusing
+     * the next take's recording.
+     */
+    @Volatile private var cameraStart: Job? = null
 
     /** «Закрыть» was tapped during the take: the screen goes as soon as the take is done with, whatever it came to. */
     private var closeWhenDone = false
@@ -92,7 +103,7 @@ open class CaptureViewModel(
         override fun onRecordingStarted(recordStartNanos: Long?) {
             // the chain's thread: the camera is the main thread's
             soundStartNanos = recordStartNanos ?: monotonicNanos()
-            viewModelScope.launch(Dispatchers.Main.immediate) {
+            cameraStart = viewModelScope.launch(Dispatchers.Main.immediate) {
                 val file = videos.newCameraFile()
                 picture = file
                 camera.startRecording(file)
@@ -100,6 +111,8 @@ open class CaptureViewModel(
         }
 
         override suspend fun onRecordingFinished(audio: PlatformFile, recordStartNanos: Long?): String? {
+            // a camera still on its way is started first, then stopped with the take; one cancelled with the screen never started
+            cameraStart?.join()
             val shot = picture ?: return null
             picture = null
             mutableState.update { it.copy(saving = true) }
@@ -124,6 +137,7 @@ open class CaptureViewModel(
         }
 
         override suspend fun onRecordingDiscarded() {
+            cameraStart?.join()
             val shot = picture ?: return
             picture = null
             withContext(Dispatchers.Main.immediate) { camera.stopRecording() }
@@ -228,6 +242,15 @@ open class CaptureViewModel(
                 }
             }
             CaptureIntent.CameraBindFailed -> mutableState.update { it.copy(cameraFailed = true) }
+            // Leaving the app is a quiet save (spec 3.32): the chain ends, its end keeps the take without a word, the backing
+            // stops with it, and the screen waits for the next one. Shooting on blind in the background would only leave
+            // a hole in the picture. The picture ends here, where the camera stops taking frames: the take would stop it
+            // only once its sound is closed, and a start counted back from that later moment would come out late by as
+            // much — baked into the video. A take already being finished keeps its sound as it is.
+            CaptureIntent.ScreenLeft -> {
+                camera.stopNow()
+                if (takes.recordingRequested.value) listening.value = false
+            }
         }
     }
 

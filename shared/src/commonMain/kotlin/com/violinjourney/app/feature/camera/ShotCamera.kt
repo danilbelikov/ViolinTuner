@@ -22,7 +22,14 @@ interface ShotCamera {
     /** When the recording's first frame was taken; known once [stopRecording] has returned. */
     val startNanos: Long?
 
-    /** Stops, or waits for the stop [release] has made; true when the file holds a picture worth keeping. */
+    /**
+     * Stops the recording under way at once, without waiting for its file: the app is leaving, and the camera takes no
+     * more frames from this moment (spec 3.32). The take's [stopRecording] that comes later counts the start of the
+     * picture back from here, not from when the take got round to it, and waits for the same end of the file.
+     */
+    fun stopNow()
+
+    /** Stops, or waits for the stop [release] or [stopNow] has made; true when the file holds a picture worth keeping. */
     suspend fun stopRecording(): Boolean
 }
 

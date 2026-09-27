@@ -82,12 +82,11 @@ fun CaptureScreen(
 ) {
     BoxWithConstraints(modifier = modifier.fillMaxSize().background(Color.Black)) {
         val landscape = maxWidth > maxHeight
-        val width = constraints.maxWidth.toFloat()
-        val height = constraints.maxHeight.toFloat()
         viewfinder(
             Modifier
                 .fillMaxSize()
-                .pointerInput(Unit) { detectTapGestures { at -> onIntent(CaptureIntent.FocusAt(at.x / width, at.y / height)) } },
+                // shares of the viewfinder as it is now: a turn of an iPhone changes its size without a new screen
+                .pointerInput(Unit) { detectTapGestures { at -> onIntent(CaptureIntent.FocusAt(at.x / size.width, at.y / size.height)) } },
         )
         when {
             state.cameraPermission == false || state.micPermission == false -> Refused(onIntent, onOpenSettings)

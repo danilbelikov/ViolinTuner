@@ -16,6 +16,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.core.content.ContextCompat
@@ -54,7 +55,14 @@ actual fun CaptureViewfinder(camera: ShotCamera, front: Boolean, enabled: Boolea
     DisposableEffect(cameraX) { onDispose { cameraX.unbind() } }
     // the picture is written the way the phone is held when the shot starts
     view.display?.rotation?.let(cameraX::setRotation)
-    surface?.let { CameraXViewfinder(surfaceRequest = it, modifier = modifier) }
+    // the viewfinder keeps the matrix from its points to the surface's: a touch is turned and uncropped by it (spec 3.32)
+    surface?.let {
+        CameraXViewfinder(
+            surfaceRequest = it,
+            modifier = modifier.onSizeChanged { size -> cameraX.viewfinderSize = size },
+            coordinateTransformer = cameraX.coordinates,
+        )
+    }
 }
 
 private fun Context.granted(permission: String): Boolean = ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
