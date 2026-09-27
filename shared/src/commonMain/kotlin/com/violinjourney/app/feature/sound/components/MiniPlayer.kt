@@ -73,6 +73,9 @@ import org.jetbrains.compose.resources.stringResource
 private val MeterHeight = 4.dp
 private val LimiterMark = 8.dp
 private val PlainTrack = 4.dp
+
+/** Handoff `sizes`, «Форма волны»: a wave lower than this is not drawn — a plain 4 dp slider stands instead (spec 3.17). */
+private val PlainTrackBelow = 20.dp
 private const val BAR_STEP_DP = 3f
 private const val BAR_WIDTH_DP = 2f
 private const val MIN_BAR = 0.08f
@@ -178,7 +181,7 @@ private fun SeekWave(player: PlayerState, position: () -> Long, waveform: List<F
             .drawBehind {
                 val played = dragged ?: (position().toFloat() / duration)
                 val bars = waveform
-                if (bars == null || size.height < 20.dp.toPx()) {
+                if (bars == null || size.height < PlainTrackBelow.toPx()) {
                     val track = PlainTrack.toPx()
                     val y = (size.height - track) / 2
                     drawRoundRect(rest, Offset(0f, y), Size(size.width, track), CornerRadius(track / 2))

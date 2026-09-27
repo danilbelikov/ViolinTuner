@@ -6,9 +6,9 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * Numbers of the «Звук» screen as text: always with their unit, a decimal comma, a true minus
- * (U+2212) and a non-breaking space before the unit — «2,4 кГц», «−18 дБ», «3,5:1», «1,8 с».
- * The locale is fixed, as everywhere in the app's formats: the interface is Russian.
+ * Numbers of the «Звук» screen as text: always with their unit, the decimal separator of the language of the interface
+ * ([Formats.decimal]), a true minus (U+2212) and a non-breaking space before the unit; the units are the language's own
+ * (`FormatLanguage.sound`) — «2,4 кГц», «−18 дБ», «3,5:1», «1,8 с» in Russian.
  */
 object SoundFormats {
     private val units get() = Formats.language.sound

@@ -52,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.domain.backing.BackingConfig
+import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.ui.components.SegmentedSwitch
@@ -263,7 +264,7 @@ private fun TopBar(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) ->
 @Composable
 fun captionName(caption: SoundCaption): String = when (caption) {
     is SoundCaption.BuiltIn -> stringArrayResource(Res.array.sound_preset_names)[caption.preset.ordinal].let { name ->
-        if (caption.preset.ordinal == 0) stringResource(Res.string.sound_caption_off) else name
+        if (caption.preset == BuiltInPreset.OFF) stringResource(Res.string.sound_caption_off) else name
     }
     is SoundCaption.User -> caption.name
     SoundCaption.Custom -> stringResource(Res.string.sound_caption_custom)
