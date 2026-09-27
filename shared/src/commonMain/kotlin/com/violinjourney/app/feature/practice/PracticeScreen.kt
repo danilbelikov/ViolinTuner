@@ -152,9 +152,13 @@ fun PracticeScreen(
     state: PracticeState,
     onIntent: (PracticeIntent) -> Unit,
     modifier: Modifier = Modifier,
-    zone: TimeZone = TimeZone.currentSystemDefault(),
+    // asked once: a new zone on every recomposition is a new object each time, and on iOS a read of its file
+    zone: TimeZone = remember { TimeZone.currentSystemDefault() },
     // The window into the journey (spec 3.23) comes as a slot: it lives on its own flow, not in PracticeState.
     journeyCard: @Composable (compact: Boolean) -> Unit = {},
+    // The clock of the running practice lives on its own flow too, and is read only by the timer: a tick redraws the
+    // timer, not the screen. Null — not read yet.
+    timer: () -> PracticeTimer? = { null },
 ) {
     // Two movements at most (spec 3.16): while the streak flame sways, the start button rests. Drawing only.
     val flameSways = remember { mutableStateOf(false) }
@@ -164,9 +168,9 @@ fun PracticeScreen(
             .background(MaterialTheme.colorScheme.surface),
     ) {
         if (maxWidth > maxHeight) {
-            LandscapeLayout(state, onIntent, zone, journeyCard, flameSways)
+            LandscapeLayout(state, onIntent, zone, journeyCard, flameSways, timer)
         } else {
-            PortraitLayout(state, onIntent, zone, journeyCard, flameSways)
+            PortraitLayout(state, onIntent, zone, journeyCard, flameSways, timer)
         }
     }
     when (val sheet = state.sheet) {
@@ -187,6 +191,7 @@ private fun PortraitLayout(
     zone: TimeZone,
     journeyCard: @Composable (Boolean) -> Unit,
     flameSways: MutableState<Boolean>,
+    timer: () -> PracticeTimer?,
 ) {
     val metrics = Metrics.Portrait
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
@@ -201,7 +206,7 @@ private fun PortraitLayout(
             Header(state, onIntent, metrics)
             if (!state.loading) {
                 journeyCard(false)
-                MainAction(state, onIntent, metrics, flameSways)
+                MainAction(state, onIntent, metrics, flameSways, timer)
                 SummaryCards(state, metrics, flameSways)
                 PracticeCalendar(
                     month = state.month,
@@ -225,6 +230,7 @@ private fun LandscapeLayout(
     zone: TimeZone,
     journeyCard: @Composable (Boolean) -> Unit,
     flameSways: MutableState<Boolean>,
+    timer: () -> PracticeTimer?,
 ) {
     val metrics = Metrics.Landscape
     Row(modifier = Modifier.fillMaxSize()) {
@@ -238,7 +244,7 @@ private fun LandscapeLayout(
         ) {
             Header(state, onIntent, metrics)
             if (!state.loading) {
-                MainAction(state, onIntent, metrics, flameSways)
+                MainAction(state, onIntent, metrics, flameSways, timer)
                 SummaryCards(state, metrics, flameSways)
                 journeyCard(true)
             }
@@ -284,12 +290,12 @@ private fun Header(state: PracticeState, onIntent: (PracticeIntent) -> Unit, met
 }
 
 @Composable
-private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit, metrics: Metrics, flameSways: MutableState<Boolean>) {
+private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit, metrics: Metrics, flameSways: MutableState<Boolean>, timer: () -> PracticeTimer?) {
     val colors = MaterialTheme.colorScheme
     // A sheet over the screen has the eye: the start button rests under it.
     val sheetOpen = state.sheet != null || state.gift != null
     AnimatedContent(
-        targetState = state.runningMs != null,
+        targetState = state.running,
         transitionSpec = {
             // unclipped: the glow of the start button lies past its bounds and must not be cut while it fades
             (fadeIn(tween(ACTION_SWITCH_MS)) + scaleIn(tween(ACTION_SWITCH_MS), initialScale = ACTION_SWITCH_SCALE))
@@ -300,52 +306,7 @@ private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit,
     ) { running ->
         Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             if (running) {
-                val timer = Formats.timer(state.runningMs ?: 0L)
-                val timerDescription = stringResource(Res.string.practice_timer_description, timer)
-                Text(
-                    text = timer,
-                    modifier = Modifier.semantics { contentDescription = timerDescription },
-                    color = colors.onSurface,
-                    style = MaterialTheme.typography.displayLarge.copy(
-                        fontSize = metrics.timerSize.sp,
-                        lineHeight = (metrics.timerSize + 4).sp,
-                        fontWeight = FontWeight.Bold,
-                        letterSpacing = (-1).sp,
-                        fontFeatureSettings = TABULAR_FIGURES,
-                    ),
-                )
-                Row(
-                    modifier = Modifier.padding(top = 4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    RunningDot(
-                        elapsedMs = state.runningMs ?: 0L,
-                        color = colors.primary,
-                        ringColor = ViolinTheme.practiceColors.timerRing,
-                    )
-                    Text(
-                        text = stringResource(Res.string.practice_running),
-                        color = colors.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                    )
-                }
-                // the block that runs within the practice (spec 3.28, handoff 30g4): a quiet line, no motion of its own
-                state.runningBlock?.let { block ->
-                    val left = block.minutesLeft
-                    Text(
-                        text = stringResource(
-                            Res.string.block_line,
-                            block.title,
-                            if (left == null) stringResource(Res.string.block_done) else stringResource(Formats.plural(left, Res.string.block_left_one, Res.string.block_left_few, Res.string.block_left_many), left),
-                        ),
-                        modifier = Modifier.padding(top = 2.dp, start = 16.dp, end = 16.dp),
-                        color = colors.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES),
-                    )
-                }
+                RunningTimer(timer, metrics)
                 OutlinedButton(
                     onClick = { onIntent(PracticeIntent.StopClicked) },
                     modifier = Modifier
@@ -389,6 +350,63 @@ private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit,
     }
 }
 
+/**
+ * The time of the running practice, «Занятие идёт» with its living dot, and the block that runs (handoff 10b, 30g4).
+ * The only reader of [timer]: a tick of the practice clock recomposes this and nothing else. Until the clock is read
+ * the time is an empty line of its height, not «0:00».
+ */
+@Composable
+private fun RunningTimer(timer: () -> PracticeTimer?, metrics: Metrics) {
+    val colors = MaterialTheme.colorScheme
+    val now = timer()
+    val time = now?.let { Formats.timer(it.elapsedMs) }.orEmpty()
+    val timerDescription = stringResource(Res.string.practice_timer_description, time)
+    Text(
+        text = time,
+        modifier = Modifier.semantics { contentDescription = timerDescription },
+        color = colors.onSurface,
+        style = MaterialTheme.typography.displayLarge.copy(
+            fontSize = metrics.timerSize.sp,
+            lineHeight = (metrics.timerSize + 4).sp,
+            fontWeight = FontWeight.Bold,
+            letterSpacing = (-1).sp,
+            fontFeatureSettings = TABULAR_FIGURES,
+        ),
+    )
+    Row(
+        modifier = Modifier.padding(top = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        RunningDot(
+            elapsedMs = now?.elapsedMs ?: 0L,
+            color = colors.primary,
+            ringColor = ViolinTheme.practiceColors.timerRing,
+        )
+        Text(
+            text = stringResource(Res.string.practice_running),
+            color = colors.onSurfaceVariant,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+        )
+    }
+    // the block that runs within the practice (spec 3.28, handoff 30g4): a quiet line, no motion of its own
+    now?.block?.let { block ->
+        val left = block.minutesLeft
+        Text(
+            text = stringResource(
+                Res.string.block_line,
+                block.title,
+                if (left == null) stringResource(Res.string.block_done) else stringResource(Formats.plural(left, Res.string.block_left_one, Res.string.block_left_few, Res.string.block_left_many), left),
+            ),
+            modifier = Modifier.padding(top = 2.dp, start = 16.dp, end = 16.dp),
+            color = colors.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES),
+        )
+    }
+}
+
 @Composable
 private fun SummaryCards(state: PracticeState, metrics: Metrics, flameSways: MutableState<Boolean>) {
     val none = stringResource(Res.string.practice_no_value)
@@ -420,7 +438,7 @@ private fun SummaryCards(state: PracticeState, metrics: Metrics, flameSways: Mut
             // The flame follows the streak itself, not the number rolling towards it; while a practice runs it stands still.
             StreakFlame(
                 streakDays = if (state.hasHistory) state.summary.streakDays else 0,
-                running = state.runningMs != null,
+                running = state.running,
                 scope = scope,
                 maxSize = metrics.flameSize,
                 onSway = { flameSways.value = it },

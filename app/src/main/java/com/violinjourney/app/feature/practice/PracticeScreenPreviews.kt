@@ -61,14 +61,14 @@ private object Sample {
     )
 
     fun state(
-        runningMs: Long? = null,
+        running: Boolean = false,
         selected: LocalDate = today,
         entries: List<PracticeEntry> = this.entries + earlier,
         sheet: PracticeSheet? = null,
         trophies: List<Trophy> = if (entries.isEmpty()) emptyList() else this.trophies,
         name: String = "Даня",
     ): PracticeState = PracticeReducer.stateOf(
-        entries = entries, sessions = sessions, runningMs = runningMs, month = YearMonth(2026, 9),
+        entries = entries, sessions = sessions, running = running, month = YearMonth(2026, 9),
         selectedDate = selected, sheet = sheet, today = today, zone = zone, config = PracticeConfig(),
         trophies = trophies, profile = Profile(name, avatarFile = null),
         avatarPath = null, progressConfig = ProgressConfig(),
@@ -84,7 +84,7 @@ private fun IdlePreview() {
 @Preview(name = "10b running", widthDp = 412, heightDp = 892)
 @Composable
 private fun RunningPreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(runningMs = 754_000), onIntent = {}, zone = Sample.zone) }
+    ViolinTheme { PracticeScreen(state = Sample.state(running = true), onIntent = {}, zone = Sample.zone, timer = { PracticeTimer(754_000, block = null) }) }
 }
 
 @Preview(name = "10c1 empty day", widthDp = 412, heightDp = 892)
@@ -164,7 +164,7 @@ private fun TrophiesSheetPreview() {
 @Preview(name = "10j landscape running", widthDp = 892, heightDp = 412)
 @Composable
 private fun LandscapePreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(runningMs = 3_754_000), onIntent = {}, zone = Sample.zone) }
+    ViolinTheme { PracticeScreen(state = Sample.state(running = true), onIntent = {}, zone = Sample.zone, timer = { PracticeTimer(3_754_000, block = null) }) }
 }
 
 @Preview(name = "10d summary sheet", widthDp = 412)

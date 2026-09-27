@@ -35,6 +35,8 @@ fun PracticeRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val journey by viewModel.journeyWindow.collectAsStateWithLifecycle()
+    // a state, not a value: read by the timer alone, so a tick of the practice clock recomposes only the timer
+    val timer = viewModel.timer.collectAsStateWithLifecycle()
     val messages = LocalMessages.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnOpenLive by rememberUpdatedState(onOpenLive)
@@ -74,6 +76,7 @@ fun PracticeRoute(
                     JourneyWindowCard(window, compact, onClick = { viewModel.onIntent(if (window.here is Venue.Hall) PracticeIntent.JourneyClicked else PracticeIntent.HomeClicked) })
                 }
             },
+            timer = { timer.value },
         )
     }
 }

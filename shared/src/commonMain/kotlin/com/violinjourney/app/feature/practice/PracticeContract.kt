@@ -91,6 +91,18 @@ data class PlayedLine(val title: String, val minutes: Int, val goalMinutes: Int,
 /** The block that runs, under «Занятие идёт» (handoff 30g4): «ещё 7 мин», or «готово» when [minutesLeft] is null. */
 data class RunningBlockLine(val title: String, val minutesLeft: Int?)
 
+/**
+ * The clock of the running practice (spec 3.12, 3.28): apart from [PracticeState], for it changes every second
+ * and the rest of the screen has nothing to do with it — the calendar, the header and the day's records are not
+ * worked out again for a tick.
+ */
+data class PracticeTimer(
+    /** How long the practice has been running, refreshed every second. */
+    val elapsedMs: Long,
+    /** The block that runs within the practice; null without one. */
+    val block: RunningBlockLine?,
+)
+
 sealed interface PracticeSheet {
     /**
      * "Закончить занятие": the timed length with a chance to trim it. [minutes] is what the
@@ -135,8 +147,8 @@ data class PracticeState(
     val loading: Boolean,
     /** False = the empty state: no practice was ever saved (spec 3.12). */
     val hasHistory: Boolean,
-    /** Null when no practice runs; otherwise how long it has been running, refreshed every second. */
-    val runningMs: Long?,
+    /** A practice runs; how long it has been running is [PracticeTimer], a flow of its own. */
+    val running: Boolean,
     val todayMs: Long,
     val summary: PracticeSummary,
     val month: YearMonth,
@@ -152,8 +164,6 @@ data class PracticeState(
     val sheet: PracticeSheet?,
     /** Whole minutes of one stepper step, from the config: the sheets word their hint with it. */
     val stepMinutes: Int,
-    /** The block that runs within the practice (spec 3.28); null without one. */
-    val runningBlock: RunningBlockLine? = null,
 )
 
 sealed interface PracticeIntent {

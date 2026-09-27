@@ -1,5 +1,6 @@
 package com.violinjourney.app.feature.practice
 
+import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.data.profile.FakeAvatarFiles
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.practice.FakePracticeRepository
@@ -74,6 +75,7 @@ class PracticeViewModelTest {
     private fun TestScope.viewModel(
         finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
         repository: FakePracticeRepository = this@PracticeViewModelTest.repository,
+        avatarFiles: AvatarFiles = this@PracticeViewModelTest.avatarFiles,
     ): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
         val viewModel = PracticeViewModel(
             repository, store, PracticeFinisher(repository, store, clock, journey = journey), sessions, config, FakeRepertoireRepository(), clock,
@@ -81,6 +83,7 @@ class PracticeViewModelTest {
         )
         val effects = mutableListOf<PracticeEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
+        backgroundScope.launch { viewModel.timer.collect {} }
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
         runCurrent()
         return viewModel to effects
@@ -106,7 +109,8 @@ class PracticeViewModelTest {
         val state = viewModel.state.value
         assertFalse(state.loading)
         assertFalse(state.hasHistory)
-        assertNull(state.runningMs)
+        assertFalse(state.running)
+        assertNull(viewModel.timer.value)
         assertEquals(YearMonth(2026, 9), state.month)
         assertEquals(today, state.selected.date)
     }
@@ -118,11 +122,36 @@ class PracticeViewModelTest {
         runCurrent()
         assertEquals(RunningPractice(clock.nowMs, null), store.running.value)
         assertEquals(listOf(PracticeEffect.OpenLive), effects)
-        assertEquals(0L, viewModel.state.value.runningMs)
+        assertTrue(viewModel.state.value.running)
+        assertEquals(0L, viewModel.timer.value?.elapsedMs)
         pass(2_500)
-        assertEquals(2_000L, viewModel.state.value.runningMs)
+        assertEquals(2_000L, viewModel.timer.value?.elapsedMs)
         pass(500)
-        assertEquals(3_000L, viewModel.state.value.runningMs)
+        assertEquals(3_000L, viewModel.timer.value?.elapsedMs)
+    }
+
+    @Test
+    fun `the state stands still while only the clock ticks`() = runTest {
+        // the photo's file is looked for each time the state is worked out: that is what must not happen every second
+        var looks = 0
+        val counting = object : AvatarFiles by avatarFiles {
+            override fun existing(name: String) = avatarFiles.existing(name).also { looks++ }
+        }
+        profiles.setAvatarFile(avatarFiles.import("content://photo"))
+        val (viewModel, _) = viewModel(avatarFiles = counting)
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        runCurrent()
+        val looksAtStart = looks
+        val states = mutableListOf<PracticeState>()
+        val ticks = mutableListOf<Long?>()
+        backgroundScope.launch { viewModel.state.collect { states += it } }
+        backgroundScope.launch { viewModel.timer.collect { ticks += it?.elapsedMs } }
+        pass(5_000)
+        // the calendar, the header and the day's records are not worked out again for a tick of the practice clock
+        assertEquals(1, states.size)
+        assertTrue(states.single().running)
+        assertEquals(looksAtStart, looks)
+        assertEquals(listOf(0L, 1_000L, 2_000L, 3_000L, 4_000L, 5_000L), ticks)
     }
 
     @Test
@@ -161,7 +190,7 @@ class PracticeViewModelTest {
         assertEquals(47, sheet.minutes)
         assertEquals(47 * MS_PER_MINUTE + 20_000, sheet.actualMs)
         // the timer keeps going behind the sheet: the practice is not over until "Сохранить"
-        assertEquals(47 * MS_PER_MINUTE + 20_000, viewModel.state.value.runningMs)
+        assertEquals(47 * MS_PER_MINUTE + 20_000, viewModel.timer.value?.elapsedMs)
 
         viewModel.onIntent(PracticeIntent.SummarySaved)
         runCurrent()
@@ -172,7 +201,8 @@ class PracticeViewModelTest {
         assertNull(store.running.value)
         // «Занятие сохранено» takes the summary's place (spec 3.31)
         assertTrue(viewModel.state.value.sheet is PracticeSheet.Recap)
-        assertNull(viewModel.state.value.runningMs)
+        assertFalse(viewModel.state.value.running)
+        assertNull(viewModel.timer.value)
         assertTrue(viewModel.state.value.hasHistory)
         assertEquals(47 * MS_PER_MINUTE + 20_000, viewModel.state.value.todayMs)
     }

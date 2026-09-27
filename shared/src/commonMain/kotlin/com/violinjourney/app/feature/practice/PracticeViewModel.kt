@@ -47,7 +47,10 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -96,20 +99,33 @@ open class PracticeViewModel(
 
     private val ui = MutableStateFlow(Ui(today().yearMonth, today(), sheet = null))
 
-    private val runningMs: Flow<Long?> = runningStore.elapsedTicker(clock)
+    /**
+     * The clock of the running practice (spec 3.12) and the line of its block (spec 3.28), whose minutes left follow
+     * the same tick: a flow of its own, like [journeyWindow] — it changes every second, and the calendar, the header
+     * and the day's records have nothing to do with it. The time does not wait for the stored blocks and the names of
+     * the pieces: it is there as soon as the running practice is read, the block line a moment later.
+     */
+    val timer: StateFlow<PracticeTimer?> = combine(
+        runningStore.elapsedTicker(clock),
+        runningStore.running,
+        blocks.blocks.onStart { emit(null) },
+        repertoire.pieces.map { pieces -> pieces.associate { it.id to it.title } }.onStart { emit(emptyMap()) },
+    ) { elapsedMs, running, blocks, titles ->
+        elapsedMs?.let { PracticeTimer(it, PracticeReducer.runningBlockOf(running, blocks, titles, clock.millis())) }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
-    /** The practice's time and its blocks travel together: a block's minutes left follow the same tick (spec 3.28). */
-    private val running = combine(runningMs, runningStore.running, blocks.blocks, ::Triple)
+    /** Whether a practice runs: all the rest of the screen needs to know of it. */
+    private val running: Flow<Boolean> = runningStore.running.map { it != null }.distinctUntilChanged()
 
     /** Trophies and the profile travel together: `combine` takes five flows at most. */
     private val progress: Flow<Pair<List<Trophy>, Profile>> = combine(trophies.trophies, profiles.profile, ::Pair)
 
     val state: StateFlow<PracticeState> =
-        combine(repository.entries, combine(sessions.sessions, repertoire.pieces, ::Pair), running, ui, progress) { entries, (sessions, pieces), (runningMs, running, blocks), ui, (trophies, profile) ->
+        combine(repository.entries, combine(sessions.sessions, repertoire.pieces, ::Pair), running, ui, progress) { entries, (sessions, pieces), running, ui, (trophies, profile) ->
             PracticeReducer.stateOf(
                 entries = entries,
                 sessions = sessions,
-                runningMs = runningMs,
+                running = running,
                 month = ui.month,
                 selectedDate = ui.selectedDate,
                 sheet = ui.sheet,
@@ -122,7 +138,6 @@ open class PracticeViewModel(
                 // A name without its file (cleared storage) is no photo, not a broken one.
                 avatarPath = profile.avatarFile?.let(avatarFiles::existing)?.filePath,
                 progressConfig = progressConfig,
-                runningBlock = PracticeReducer.runningBlockOf(running, blocks, pieces.associate { it.id to it.title }, clock.millis()),
             )
         }.stateIn(
             scope = viewModelScope,

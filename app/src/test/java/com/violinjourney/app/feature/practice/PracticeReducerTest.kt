@@ -43,11 +43,11 @@ class PracticeReducerTest {
     private fun state(
         entries: List<PracticeEntry> = listOf(entry(1, 30), entry(4, 100), entry(16, 50), entry(17, 45)),
         sessions: List<SessionSummary> = emptyList(),
-        runningMs: Long? = null,
+        running: Boolean = false,
         month: YearMonth = YearMonth(2026, 9),
         selected: LocalDate = today,
     ) = PracticeReducer.stateOf(
-        entries, sessions, runningMs, month, selected, sheet = null, today, zone, config,
+        entries, sessions, running, month, selected, sheet = null, today, zone, config,
         trophies = emptyList(), profile = Profile.EMPTY, avatarPath = null, progressConfig = ProgressConfig(),
     )
 
@@ -75,6 +75,13 @@ class PracticeReducerTest {
         assertEquals(PracticeSummary(weekMs = 95 * MS_PER_MINUTE, monthMs = 225 * MS_PER_MINUTE, streakDays = 2), state.summary)
         assertTrue(state.hasHistory)
         assertFalse(state.loading)
+    }
+
+    @Test
+    fun `the state knows only whether a practice runs - its clock is a flow of its own`() {
+        assertFalse(state().running)
+        assertTrue(state(running = true).running)
+        assertFalse(PracticeReducer.loading(today, config, ProgressConfig()).running)
     }
 
     @Test

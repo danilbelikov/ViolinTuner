@@ -27,7 +27,7 @@ object PracticeReducer {
     fun stateOf(
         entries: List<PracticeEntry>,
         sessions: List<SessionSummary>,
-        runningMs: Long?,
+        running: Boolean,
         month: YearMonth,
         selectedDate: LocalDate,
         sheet: PracticeSheet?,
@@ -40,7 +40,6 @@ object PracticeReducer {
         profile: Profile,
         avatarPath: String?,
         progressConfig: ProgressConfig,
-        runningBlock: RunningBlockLine? = null,
     ): PracticeState {
         val totals = PracticeStats.dayTotals(entries)
         val totalMs = Progress.totalMs(entries)
@@ -50,7 +49,7 @@ object PracticeReducer {
         return PracticeState(
             loading = false,
             hasHistory = hasHistory,
-            runningMs = runningMs,
+            running = running,
             todayMs = totals[today] ?: 0L,
             summary = PracticeSummary(
                 weekMs = PracticeStats.weekTotal(totals, today),
@@ -86,7 +85,6 @@ object PracticeReducer {
             gift = if (sheet == null) ProgressReducer.giftOf(trophies, progressConfig) else null,
             sheet = sheet,
             stepMinutes = config.editStepMinutes,
-            runningBlock = runningBlock.takeIf { runningMs != null },
         )
     }
 
@@ -100,7 +98,7 @@ object PracticeReducer {
     fun loading(today: LocalDate, config: PracticeConfig, progressConfig: ProgressConfig): PracticeState = PracticeState(
         loading = true,
         hasHistory = false,
-        runningMs = null,
+        running = false,
         todayMs = 0,
         summary = PracticeSummary(0, 0, 0),
         month = today.yearMonth,
