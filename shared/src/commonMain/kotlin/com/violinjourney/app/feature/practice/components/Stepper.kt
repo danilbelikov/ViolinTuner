@@ -1,6 +1,10 @@
 package com.violinjourney.app.feature.practice.components
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.border
+import androidx.compose.foundation.indication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,6 +19,7 @@ import androidx.compose.material3.Text
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -43,7 +48,7 @@ private const val VALUE_SIZE = 56
 private const val MIN_VALUE_SIZE = 28
 private const val REPEAT_PERIOD_MS = 120L
 
-/** «− value +» with a big tabular number; holding a button repeats it (handoff `anims`, «Степпер ±5»). */
+/** «− value +» with a big tabular number; a tap steps once, holding a button repeats it (handoff `anims`, «Степпер ±5»). */
 @Composable
 fun Stepper(
     value: String,
@@ -80,17 +85,24 @@ fun Stepper(
     }
 }
 
+/**
+ * A tap is one step when the finger lifts — a press the sheet takes for its drag, one that began on «−» or «+», changes
+ * nothing; holding repeats from [REPEAT_DELAY_MS], every [REPEAT_PERIOD_MS] (as the tempo stepper of a piece).
+ */
 @Composable
 private fun RepeatingButton(label: String, enabled: Boolean, description: String, onFire: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val currentOnFire by rememberUpdatedState(onFire)
     val currentEnabled by rememberUpdatedState(enabled)
+    val interactions = remember { MutableInteractionSource() }
     Box(
         modifier = Modifier
             .size(ButtonSize)
             .alpha(if (enabled) 1f else DISABLED_ALPHA)
             .clip(CircleShape)
             .border(1.dp, colors.outlineVariant, CircleShape)
+            // the ripple of every other button, round within the clip
+            .indication(interactions, LocalIndication.current)
             .semantics {
                 this.role = Role.Button
                 contentDescription = description
@@ -99,20 +111,28 @@ private fun RepeatingButton(label: String, enabled: Boolean, description: String
             }
             .pointerInput(Unit) {
                 detectTapGestures(
-                    onPress = {
+                    onPress = { offset ->
                         if (!currentEnabled) return@detectTapGestures
-                        currentOnFire()
-                        coroutineScope {
-                            val repeater = launch {
-                                delay(REPEAT_DELAY_MS)
-                                while (currentEnabled) {
-                                    currentOnFire()
-                                    delay(REPEAT_PERIOD_MS)
+                        val press = PressInteraction.Press(offset)
+                        interactions.tryEmit(press)
+                        var repeated = false
+                        var released = false
+                        try {
+                            released = coroutineScope {
+                                val repeater = launch {
+                                    delay(REPEAT_DELAY_MS)
+                                    while (currentEnabled) {
+                                        repeated = true
+                                        currentOnFire()
+                                        delay(REPEAT_PERIOD_MS)
+                                    }
                                 }
+                                tryAwaitRelease().also { repeater.cancel() }
                             }
-                            tryAwaitRelease()
-                            repeater.cancel()
+                        } finally {
+                            interactions.tryEmit(if (released) PressInteraction.Release(press) else PressInteraction.Cancel(press))
                         }
+                        if (released && !repeated && currentEnabled) currentOnFire()
                     },
                 )
             },
