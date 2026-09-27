@@ -30,6 +30,31 @@ class VenueLookTest {
     }
 
     @Test
+    fun `the lamps of a still picture go down in sixteen steps and end where the light does`() {
+        assertEquals(1f, VenueLook.lampsOf(0f))
+        assertEquals(VenueLook.LIGHT_DROP, VenueLook.lampsOf(1f), 1e-6f)
+        val values = (0..1_000).map { VenueLook.lampsOf(it / 1_000f) }
+        assertTrue(values.zipWithNext().all { (a, b) -> b <= a }, "the lamps only go down as the light goes")
+        assertTrue(values.distinct().size <= VenueLook.LAMP_STEPS + 1, "${values.distinct().size} values")
+        (0..1_000).forEach { assertEquals(VenueLook.lightAlpha(it / 1_000f), VenueLook.lampsOf(it / 1_000f), (1 - VenueLook.LIGHT_DROP) / 32 + 1e-6f) }
+    }
+
+    @Test
+    fun `the lamps of a living picture follow the light on the ticks of its clock only — and exactly at the ends`() {
+        val clock = LampClock()
+        assertEquals(1f, clock.lampsAt(0f, seconds = 3f))
+        // the light goes out between two ticks: the lamps wait for the next one
+        assertEquals(1f, clock.lampsAt(0.2f, seconds = 3f))
+        assertEquals(1f, clock.lampsAt(0.4f, seconds = 3f))
+        assertEquals(VenueLook.lightAlpha(0.5f), clock.lampsAt(0.5f, seconds = 3.066f))
+        assertEquals(VenueLook.lightAlpha(0.5f), clock.lampsAt(0.9f, seconds = 3.066f))
+        // fully out, with the clock stopped: exactly where the light is
+        assertEquals(VenueLook.LIGHT_DROP, clock.lampsAt(1f, seconds = 3.066f), 1e-6f)
+        // no clock: in steps
+        assertEquals(VenueLook.lampsOf(0.37f), clock.lampsAt(0.37f, seconds = null))
+    }
+
+    @Test
     fun `with the light on nothing changes — and halfway it is halfway`() {
         val gold = rgb(0xE2, 0xB7, 0x4E)
         assertArrayEquals(gold, applied(VenueLook.dimMatrix(0f, surface), gold), 1e-4f)

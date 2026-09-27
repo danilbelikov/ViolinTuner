@@ -1,6 +1,7 @@
 package com.violinjourney.app.feature.live.venue
 
 import com.violinjourney.app.core.domain.Zone
+import kotlin.math.round
 
 /**
  * How the picture behind Live answers the light (spec 3.27, 5.20; handoff `venue.*`). Pure numbers
@@ -103,6 +104,15 @@ object VenueLook {
     /** How much of the glowing layers is left at [darkness]. */
     fun lightAlpha(darkness: Float): Float = 1f - (1f - LIGHT_DROP) * darkness.coerceIn(0f, 1f)
 
+    /**
+     * The glowing layers of a picture with no clock to follow («убрать анимации», a place with nothing alive): they dim
+     * in these steps, not on every frame, since each step draws the picture again. Exact with the light fully on and out.
+     */
+    const val LAMP_STEPS = 16
+
+    /** [lightAlpha] in [LAMP_STEPS] steps. */
+    fun lampsOf(darkness: Float): Float = lightAlpha(round(darkness.coerceIn(0f, 1f) * LAMP_STEPS) / LAMP_STEPS)
+
     /** How much a zone lights the picture: a miss less than a hit. */
     fun zoneScale(zone: Zone?): Float = if (zone == Zone.OFF) OFF_SCALE else 1f
 
@@ -132,4 +142,28 @@ object VenueLook {
     private const val OFFSET = 4
     private const val ALPHA_ROW = 3
     private const val MATRIX_SIZE = 20
+}
+
+/**
+ * How much of the glowing layers a picture shows while the light changes. The lamps are part of what the kept picture is
+ * drawn from ([KeptPicture.Mark]), so each new value draws the whole picture again: a living picture takes them only on
+ * the ticks of its own clock, which draw it again anyway, and a picture with no clock («убрать анимации», a place with
+ * nothing alive) takes them in [VenueLook.LAMP_STEPS] steps. Exact with the light fully on and fully out, so a picture at
+ * rest is the same as ever. Read while drawing; one per picture.
+ */
+internal class LampClock {
+    private var tick = Float.NaN
+    private var lamps = 1f
+
+    fun lampsAt(darkness: Float, seconds: Float?): Float {
+        if (seconds == null) {
+            tick = Float.NaN
+            return VenueLook.lampsOf(darkness)
+        }
+        if (darkness <= 0f || darkness >= 1f || seconds != tick) {
+            tick = seconds
+            lamps = VenueLook.lightAlpha(darkness)
+        }
+        return lamps
+    }
 }

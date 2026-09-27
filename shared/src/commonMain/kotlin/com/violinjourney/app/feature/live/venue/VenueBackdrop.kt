@@ -5,6 +5,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -15,6 +16,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -128,13 +130,19 @@ fun VenueBackdrop(
         Crossfade(targetState = venue to picture, animationSpec = tween(VenueMotion.PICTURE_SWAP_MS), label = "venuePicture", modifier = Modifier.fillMaxSize()) { (_, shown) ->
             if (shown != null) PlacePicture(shown, kind, landscape, darkness, surface)
         }
-        Canvas(Modifier.fillMaxSize()) {
-            drawLight(kind, darkness(), glow(), zoneColor(), zoneScale(), ringCenter(), ringDiameter(), surface)
-            if (fadeInto != null) {
-                val fade = VenueMotion.BottomFade.toPx()
-                drawRect(Brush.verticalGradient(listOf(fadeInto.copy(alpha = 0f), fadeInto), startY = size.height - fade, endY = size.height), topLeft = Offset(0f, size.height - fade))
-            }
-        }
+        // the light changes on every frame; the fade into the tab bar only with the size, so its brush is kept
+        Spacer(
+            Modifier.fillMaxSize().drawWithCache {
+                val fade = fadeInto?.let { colour ->
+                    val height = VenueMotion.BottomFade.toPx()
+                    Brush.verticalGradient(listOf(colour.copy(alpha = 0f), colour), startY = size.height - height, endY = size.height) to height
+                }
+                onDrawBehind {
+                    drawLight(kind, darkness(), glow(), zoneColor(), zoneScale(), ringCenter(), ringDiameter(), surface)
+                    fade?.let { (brush, height) -> drawRect(brush, topLeft = Offset(0f, size.height - height)) }
+                }
+            },
+        )
     }
 }
 
@@ -146,11 +154,12 @@ private fun PlacePicture(picture: PreparedScene, kind: PictureKind, landscape: B
     val seconds = rememberPausableSceneSeconds(SceneMotion.LIVE_FRAME_NANOS) { lives && darkness() < 1f }
     val surfaceRgb = remember(surface) { floatArrayOf(surface.red, surface.green, surface.blue) }
     val kept = rememberKeptPicture()
+    val lampClock = remember { LampClock() }
     Canvas(Modifier.fillMaxSize()) {
         val d = darkness()
         val t = if (lives) seconds?.value else null
         val framing = VenueFraming.of(kind, size.width, size.height, landscape)
-        val lamps = VenueLook.lightAlpha(d)
+        val lamps = lampClock.lampsAt(d, t)
         // it will stay as it is: the light fully out (the scene's time stops with it), or on with no time running
         val still = d >= 1f || (t == null && d <= 0f)
         with(kept) {
