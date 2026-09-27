@@ -29,14 +29,13 @@ import com.violinjourney.app.core.domain.home.HomeCatalog
 import com.violinjourney.app.core.domain.home.HomeRules
 import com.violinjourney.app.core.domain.home.HomeState
 import com.violinjourney.app.core.domain.venue.Venue
-import com.violinjourney.app.feature.home.art.HomeComposer
+import com.violinjourney.app.feature.home.art.rememberHomeScene
 import com.violinjourney.app.feature.home.art.rememberHomeTime
 import com.violinjourney.app.feature.home.art.rememberHouseArt
 import com.violinjourney.app.feature.journey.art.PreparedScene
 import com.violinjourney.app.feature.journey.art.SceneMode
 import com.violinjourney.app.feature.journey.art.SceneMotion
 import com.violinjourney.app.feature.journey.art.drawPrepared
-import com.violinjourney.app.feature.journey.art.prepare
 import com.violinjourney.app.feature.journey.art.rememberPausableSceneSeconds
 import com.violinjourney.app.feature.journey.art.rememberScene
 
@@ -71,10 +70,8 @@ private fun rememberRoomPicture(home: HomeState?): PreparedScene? {
     val house = remember(state) { state?.let(HomeRules::house) }
     val art = rememberHouseArt(house ?: HomeCatalog.START_HOUSE, time.mode)
     val standing = remember(state, house, time.date) { if (state != null && house != null) HomeRules.standing(state, house, false, time.date) else null }
-    return remember(art, standing, time.mode) {
-        if (art == null || standing == null) return@remember null
-        prepare(HomeComposer.compose(art, standing, outside = false, mode = time.mode, withViolin = false).scene, time.mode)
-    }
+    // composed off the main thread; the first entry of a process fades the room in, as a hall read from its file does
+    return rememberHomeScene(art, standing, outside = false, mode = time.mode, withViolin = false)
 }
 
 /**

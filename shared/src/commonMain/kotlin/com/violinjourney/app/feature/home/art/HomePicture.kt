@@ -6,29 +6,34 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import com.violinjourney.app.core.concurrent.PlatformLock
-import com.violinjourney.app.core.concurrent.withLock
 import com.violinjourney.app.core.domain.home.HomeItem
 import com.violinjourney.app.core.domain.home.HomeRules
 import com.violinjourney.app.core.domain.home.HomeState
+import com.violinjourney.app.feature.journey.art.RecentScenes
 import com.violinjourney.app.feature.journey.art.SceneMode
 import com.violinjourney.app.feature.journey.art.ScenePicture
-import com.violinjourney.app.feature.journey.art.prepare
 import com.violinjourney.app.feature.journey.art.readSceneText
+import kotlin.coroutines.CoroutineContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
-/** The home files as read, one per home and time of day: bounded by the files themselves, so without a budget. */
-private object HouseArtCache {
-    private val lock = PlatformLock()
-    private val arts = HashMap<String, HouseArt>()
+/**
+ * The home files as read, one per home and time of day: bounded by the files themselves, so without a budget. Each file
+ * is read and parsed once and is one instance, however many ask for it at once (pictures that come on the screen in one
+ * frame): the keys of the pictures made from it ([HomeSceneKey]) compare it by identity, and a second copy would miss
+ * their cache and stay held by it.
+ */
+internal class HouseArts(private val read: suspend (path: String) -> String?) {
+    private val arts = RecentScenes<String, HouseArt>(budget = Int.MAX_VALUE) { 0 }
 
-    fun get(key: String): HouseArt? = lock.withLock { arts[key] }
+    /** The art of [key] (`<house>.<mode>`) read before, or null. */
+    fun peek(key: String): HouseArt? = arts.peek(key)
 
-    fun put(key: String, art: HouseArt) = lock.withLock {
-        arts[key] = art
-    }
+    /** The art of [key], read and parsed in [context] by the first who asks, the others waiting for it; null — no such file. */
+    suspend fun obtain(key: String, context: CoroutineContext): HouseArt? =
+        arts.obtain(key, context) { read("home/$key.scene")?.let(HouseArt::parse) }
 }
+
+private val houseArts = HouseArts(::readSceneText)
 
 /**
  * The art of [house] at [mode], read off the main thread; null while it is read. Only the art asked for: while the
@@ -37,11 +42,9 @@ private object HouseArtCache {
 @Composable
 fun rememberHouseArt(house: String, mode: SceneMode): HouseArt? {
     val key = "$house.${mode.suffix}"
-    val kept = remember(key) { HouseArtCache.get(key) }
+    val kept = remember(key) { houseArts.peek(key) }
     val read by produceState<Pair<String, HouseArt?>?>(null, key) {
-        value = key to (HouseArtCache.get(key) ?: withContext(Dispatchers.Default) {
-            readSceneText("home/$key.scene")?.let { HouseArt.parse(it).also { art -> HouseArtCache.put(key, art) } }
-        })
+        value = key to houseArts.obtain(key, Dispatchers.Default)
     }
     return kept ?: read?.takeIf { it.first == key }?.second
 }
@@ -67,9 +70,9 @@ fun HomePicture(
     val shown = mode ?: time.mode
     val art = rememberHouseArt(house, shown)
     val standing = remember(state, house, outside, time.date) { HomeRules.standing(state, house, outside, time.date) }
-    val composed = remember(art, standing, state, outside, shown, house, ghost) {
-        art?.let { HomeComposer.compose(it, standing, outside, shown, ghost?.takeIf { g -> g.outside == outside }, HomeRules.catOnPorch(state, house), HomeRules.placed(state)["curtain"]) }
-    }
-    val prepared = remember(composed) { composed?.let { prepare(it.scene, shown) } }
+    // the cat on the porch and our curtains are seen only from outside
+    val porchCat = remember(state, house, outside) { if (outside) HomeRules.catOnPorch(state, house) else null }
+    val curtains = remember(state, outside) { if (outside) HomeRules.placed(state)["curtain"] else null }
+    val prepared = rememberHomeScene(art, standing, outside, shown, ghost, porchCat, curtains)
     ScenePicture(prepared, description, modifier, seconds, camera, centred = true)
 }
