@@ -32,11 +32,12 @@ class DatabaseMigrationTest {
     }
 
     /**
-     * Version 1 with one session; [version2] adds what version 2 had on top — practice entries
-     * with one row; [version3] adds the trophies of version 3 with one row; [version4] adds the
-     * repertoire of version 4: a piece with a page, and the session becomes its take.
+     * The file of [version] as the app of that version left it: version 1 with one session, and on top every block up to
+     * [version] — practice entries with one row (2), the trophies with one row (3), the repertoire: a piece with a page, and
+     * the session becomes its take (4), and so on. The next version of the database adds one block, `if (version >= N)`.
      */
-    private fun createOldFile(version2: Boolean, version3: Boolean = false, version4: Boolean = false, version5: Boolean = false, version6: Boolean = false, version7: Boolean = false, version8: Boolean = false, version9: Boolean = false, version10: Boolean = false, version11: Boolean = false, version12: Boolean = false) {
+    private fun createOldFile(version: Int) {
+        require(version in 1 until AppDatabase.VERSION) { "no old file of version $version" }
         SQLiteDatabase.openOrCreateDatabase(file, null).use { db ->
             db.execSQL(
                 "CREATE TABLE IF NOT EXISTS `sessions` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
@@ -57,7 +58,7 @@ class DatabaseMigrationTest {
                     "VALUES (1, 'Гаммы', 1700000000000, 120000, 440.0, 8.0, 20.0, 80, 15, 5, 6.5, -2.0, 'ININ', NULL)",
             )
             db.execSQL("INSERT INTO session_samples (sessionId, bucketMs, data) VALUES (1, 50, X'000000')")
-            if (version2) {
+            if (version >= 2) {
                 db.execSQL(
                     "CREATE TABLE IF NOT EXISTS `practice_entries` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
                         "`date` TEXT NOT NULL, `startedAtEpochMs` INTEGER NOT NULL, `durationMs` INTEGER NOT NULL, " +
@@ -69,14 +70,14 @@ class DatabaseMigrationTest {
                         "VALUES (1, '2026-09-13', 1789300000000, 2700000, 0)",
                 )
             }
-            if (version3) {
+            if (version >= 3) {
                 db.execSQL(
                     "CREATE TABLE IF NOT EXISTS `trophies` (`hours` INTEGER NOT NULL, `awardedDate` TEXT NOT NULL, " +
                         "`shown` INTEGER NOT NULL, PRIMARY KEY(`hours`))",
                 )
                 db.execSQL("INSERT INTO trophies (hours, awardedDate, shown) VALUES (1, '2026-09-18', 1)")
             }
-            if (version4) {
+            if (version >= 4) {
                 db.execSQL(
                     "CREATE TABLE IF NOT EXISTS `pieces` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `title` TEXT NOT NULL, " +
                         "`composer` TEXT NOT NULL, `keyTonic` TEXT, `keyAccidental` TEXT, `keyMode` TEXT, `tempoBpm` INTEGER, " +
@@ -99,7 +100,7 @@ class DatabaseMigrationTest {
                 db.execSQL("INSERT INTO sheet_pages (id, pieceId, position, fileName, thumbFileName) VALUES (1, 1, 0, 'a.jpg', 'a-thumb.jpg')")
                 db.execSQL("UPDATE sessions SET pieceId = 1 WHERE id = 1")
             }
-            if (version5) {
+            if (version >= 5) {
                 val columns = DatabaseMigrations.SOUND_COLUMNS
                 db.execSQL("CREATE TABLE IF NOT EXISTS `sound_settings` (`ownerId` INTEGER NOT NULL, $columns, PRIMARY KEY(`ownerId`))")
                 db.execSQL(
@@ -108,12 +109,12 @@ class DatabaseMigrationTest {
                 )
                 db.execSQL("UPDATE sessions SET audioPath = 'take.m4a' WHERE id = 1")
             }
-            if (version6) db.execSQL("ALTER TABLE `sessions` ADD COLUMN `videoPath` TEXT")
-            if (version7) {
+            if (version >= 6) db.execSQL("ALTER TABLE `sessions` ADD COLUMN `videoPath` TEXT")
+            if (version >= 7) {
                 db.execSQL("ALTER TABLE `pieces` ADD COLUMN `bestTakeId` INTEGER")
                 db.execSQL("INSERT INTO pieces (id, title, composer, status, notes, createdAtEpochMs, updatedAtEpochMs) VALUES (2, 'Концерт', '', 'IN_REPERTOIRE', '', 3, 777)")
             }
-            if (version8) {
+            if (version >= 8) {
                 db.execSQL("ALTER TABLE `pieces` ADD COLUMN `section` TEXT NOT NULL DEFAULT 'PIECES'")
                 db.execSQL("ALTER TABLE `pieces` ADD COLUMN `groupId` INTEGER")
                 db.execSQL("ALTER TABLE `pieces` ADD COLUMN `scaleKind` TEXT")
@@ -121,25 +122,25 @@ class DatabaseMigrationTest {
                 db.execSQL("ALTER TABLE `pieces` ADD COLUMN `learnedAtEpochMs` INTEGER")
                 db.execSQL("CREATE TABLE IF NOT EXISTS `piece_groups` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `createdAtEpochMs` INTEGER NOT NULL)")
             }
-            if (version9) {
+            if (version >= 9) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS `journey_earnings` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `atEpochMs` INTEGER NOT NULL, `notesPlayed` INTEGER NOT NULL, `notesInTune` INTEGER NOT NULL, `durationMs` INTEGER NOT NULL, `takts` INTEGER NOT NULL)")
                 db.execSQL("CREATE TABLE IF NOT EXISTS `journey_arrivals` (`stopId` TEXT NOT NULL, `arrivedAtEpochMs` INTEGER NOT NULL, `price` INTEGER NOT NULL, PRIMARY KEY(`stopId`))")
                 db.execSQL("CREATE TABLE IF NOT EXISTS `journey_extras` (`stopId` TEXT NOT NULL, `extra` TEXT NOT NULL, `price` INTEGER NOT NULL, `boughtAtEpochMs` INTEGER NOT NULL, PRIMARY KEY(`stopId`, `extra`))")
                 db.execSQL("INSERT INTO journey_earnings (atEpochMs, notesPlayed, notesInTune, durationMs, takts) VALUES (1, 900, 800, 3600000, 1000)")
                 db.execSQL("INSERT INTO journey_arrivals (stopId, arrivedAtEpochMs, price) VALUES ('home', 1, 0), ('cremona', 2, 300)")
             }
-            if (version10) {
+            if (version >= 10) {
                 db.execSQL("CREATE TABLE IF NOT EXISTS `home_purchases` (`id` TEXT NOT NULL, `kind` TEXT NOT NULL, `price` INTEGER NOT NULL, `boughtAtEpochMs` INTEGER NOT NULL, PRIMARY KEY(`id`))")
                 db.execSQL("CREATE TABLE IF NOT EXISTS `home_choices` (`slot` TEXT NOT NULL, `itemId` TEXT NOT NULL, PRIMARY KEY(`slot`))")
                 db.execSQL("INSERT INTO home_purchases (id, kind, price, boughtAtEpochMs) VALUES ('cat_ginger', 'ITEM', 800, 5)")
             }
             // version 11 changed no table, only rows: the rug of the rented room, as its migration leaves it
-            if (version11) {
+            if (version >= 11) {
                 db.execSQL("INSERT OR IGNORE INTO home_purchases (id, kind, price, boughtAtEpochMs) VALUES ('rug_plum', 'ITEM', 0, 0)")
                 db.execSQL("INSERT OR IGNORE INTO home_choices (slot, itemId) VALUES ('rug', 'rug_plum')")
             }
             // version 12: the blocks, laid out as its migration leaves them
-            if (version12) {
+            if (version >= 12) {
                 db.execSQL(
                     "CREATE TABLE IF NOT EXISTS `piece_blocks` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `pieceId` INTEGER NOT NULL, " +
                         "`date` TEXT NOT NULL, `startedAtEpochMs` INTEGER NOT NULL, `durationMs` INTEGER NOT NULL, `goalMs` INTEGER NOT NULL, " +
@@ -149,7 +150,7 @@ class DatabaseMigrationTest {
                 db.execSQL("CREATE INDEX IF NOT EXISTS `index_piece_blocks_pieceId` ON `piece_blocks` (`pieceId`)")
                 db.execSQL("ALTER TABLE `journey_earnings` ADD COLUMN `piecesPaid` INTEGER NOT NULL DEFAULT 0")
             }
-            db.execSQL("PRAGMA user_version = ${if (version12) 12 else if (version11) 11 else if (version10) 10 else if (version9) 9 else if (version8) 8 else if (version7) 7 else if (version6) 6 else if (version5) 5 else if (version4) 4 else if (version3) 3 else if (version2) 2 else 1}")
+            db.execSQL("PRAGMA user_version = $version")
         }
     }
 
@@ -167,7 +168,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun sessionsSurviveTheMigrationAndPracticeEntriesWork() = runBlocking {
-        createOldFile(version2 = false)
+        createOldFile(version = 1)
         val db = openMigrated()
 
         val sessions = db.sessionDao().observeAll().first()
@@ -186,7 +187,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun sessionsAndPracticeSurviveTheMigrationToTrophies() = runBlocking {
-        createOldFile(version2 = true)
+        createOldFile(version = 2)
         val db = openMigrated()
 
         assertEquals("Гаммы", db.sessionDao().observeAll().first().single().title)
@@ -202,7 +203,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun everythingSurvivesTheMigrationToTheRepertoireAndOldSessionsBelongToNoPiece() = runBlocking {
-        createOldFile(version2 = true, version3 = true)
+        createOldFile(version = 3)
         val db = openMigrated()
 
         val session = db.sessionDao().observeAll().first().single()
@@ -224,7 +225,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun everythingSurvivesTheMigrationToSoundSettingsAndNothingIsProcessedYet() = runBlocking {
-        createOldFile(version2 = true, version3 = true, version4 = true)
+        createOldFile(version = 4)
         val db = openMigrated()
 
         val session = db.sessionDao().observeAll().first().single()
@@ -245,7 +246,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun everythingSurvivesTheMigrationToVideoTakesAndOldSessionsHaveNoPicture() = runBlocking {
-        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true)
+        createOldFile(version = 5)
         val db = openMigrated()
 
         val session = db.sessionDao().observeAll().first().single()
@@ -264,7 +265,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun everythingSurvivesTheMigrationToTheBestTakeAndOldPiecesHaveNone() = runBlocking {
-        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true)
+        createOldFile(version = 6)
         val db = openMigrated()
 
         val piece = db.repertoireDao().piece(1)!!
@@ -282,7 +283,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun everyPieceLandsInTheMainSectionAndTheLearntOnesGetTheirDay() = runBlocking {
-        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true, version7 = true)
+        createOldFile(version = 7)
         val db = openMigrated()
 
         val minuet = db.repertoireDao().piece(1)!!
@@ -298,7 +299,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun theJourneyStartsEmptyOnTopOfEverythingThatWasThere() = runBlocking {
-        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true, version7 = true, version8 = true)
+        createOldFile(version = 8)
         val db = openMigrated()
 
         assertEquals("Менуэт", db.repertoireDao().piece(1)!!.title)
@@ -321,7 +322,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun theHomeStartsEmpty_andSharesOnePurseWithTheRoad() = runBlocking {
-        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true, version7 = true, version8 = true, version9 = true)
+        createOldFile(version = 9)
         val db = openMigrated()
         val dao = db.journeyDao()
 
@@ -344,7 +345,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun whoeverHadTheRentedRoomKeepsItsRug_forNothing() = runBlocking {
-        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true, version7 = true, version8 = true, version9 = true, version10 = true)
+        createOldFile(version = 10)
         val dao = openMigrated().journeyDao()
 
         val purchases = dao.observeHomePurchases().first().associateBy { it.id }
@@ -355,7 +356,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun blocksStartEmpty_andOldEarningsPaidForNoElement() = runBlocking {
-        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true, version7 = true, version8 = true, version9 = true, version10 = true, version11 = true)
+        createOldFile(version = 11)
         val db = openMigrated()
 
         assertEquals(emptyList<Any>(), db.pieceBlockDao().observeAll().first())
@@ -374,7 +375,7 @@ class DatabaseMigrationTest {
 
     @Test
     fun backingsStartEmpty_andGoWhenNothingPointsAtThem() = runBlocking {
-        createOldFile(version2 = true, version3 = true, version4 = true, version5 = true, version6 = true, version7 = true, version8 = true, version9 = true, version10 = true, version11 = true, version12 = true)
+        createOldFile(version = 12)
         val db = openMigrated()
         val dao = db.backingDao()
 
