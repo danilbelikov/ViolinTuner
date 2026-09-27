@@ -41,6 +41,7 @@ import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.progress.Profile
 import com.violinjourney.app.core.text.codePointLength
 import com.violinjourney.app.core.text.takeCodePoints
+import com.violinjourney.app.core.ui.components.rememberHeldSheet
 import com.violinjourney.app.core.ui.components.rememberImagePicker
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
@@ -81,20 +82,25 @@ private val TrophyLineIcon = 40.dp
 private const val TABULAR_FIGURES = "tnum"
 private const val FAR_ALPHA = 0.7f
 
-/** «Профиль»: the photo and the name (spec 3.13, handoff 11d1, 11d2). Closing it any way stores the name. */
+/**
+ * «Профиль»: the photo and the name (spec 3.13, handoff 11d1, 11d2). Closing it any way stores the name. Null — no
+ * sheet; one that was open slides away, as [SummarySheet].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ProfileSheet(sheet: PracticeSheet.Profile, header: ProfileHeader, onIntent: (PracticeIntent) -> Unit) {
+fun ProfileSheet(sheet: PracticeSheet.Profile?, header: ProfileHeader, onIntent: (PracticeIntent) -> Unit, slideAway: Boolean = true) {
+    // Whole at once: half a sheet under a keyboard would hide the field it was opened for.
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val shown = rememberHeldSheet(sheet, sheetState, slideAway) ?: return
     // The system photo picker: no permission is involved, the app gets one picture and no more.
     val pickPhoto = rememberImagePicker { picked -> onIntent(PracticeIntent.ProfilePhotoPicked(picked)) }
     ModalBottomSheet(
         onDismissRequest = { onIntent(PracticeIntent.ProfileClosed) },
-        // Whole at once: half a sheet under a keyboard would hide the field it was opened for.
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         ProfileSheetContent(
-            sheet = sheet,
+            sheet = shown,
             header = header,
             onIntent = onIntent,
             onPickPhoto = pickPhoto,

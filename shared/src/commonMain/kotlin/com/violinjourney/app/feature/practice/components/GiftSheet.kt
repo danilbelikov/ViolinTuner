@@ -31,6 +31,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.rememberHeldSheet
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.practice.Gift
@@ -70,19 +71,21 @@ private const val GLOW_MID_SHARE = 0.27f
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GiftSheet(gift: Gift, onIntent: (PracticeIntent) -> Unit) {
+fun GiftSheet(gift: Gift?, onIntent: (PracticeIntent) -> Unit, slideAway: Boolean = true) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    // Null — no gift; «Спасибо» for the last one slides the sheet away, as a swipe does
+    val shown = rememberHeldSheet(gift, sheetState, slideAway) ?: return
     ModalBottomSheet(
-        onDismissRequest = { onIntent(PracticeIntent.GiftAccepted(gift.hours)) },
+        onDismissRequest = { onIntent(PracticeIntent.GiftAccepted(shown.hours)) },
         sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
-        GiftSheetContent(gift, onAccept = { onIntent(PracticeIntent.GiftAccepted(gift.hours)) })
+        GiftSheetContent(shown, onAccept = { onIntent(PracticeIntent.GiftAccepted(shown.hours)) })
     }
     // A gift swiped away hides before the table marks it seen, and the next one comes into that hidden sheet — M3 shows
     // a sheet only when it enters the composition: up it comes. Only a sheet laid out already — its first entry is M3's,
     // and a show() before the layout would put it in place without sliding up.
-    LaunchedEffect(gift.hours) {
+    LaunchedEffect(shown.hours) {
         if (sheetState.hasExpandedState && !sheetState.isVisible && sheetState.targetValue == SheetValue.Hidden) sheetState.show()
     }
 }

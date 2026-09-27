@@ -176,15 +176,19 @@ fun PracticeScreen(
             PortraitLayout(state, onIntent, zone, journeyCard, flameSways, timer)
         }
     }
-    when (val sheet = state.sheet) {
-        is PracticeSheet.Summary -> SummarySheet(sheet, state.stepMinutes, onIntent)
-        is PracticeSheet.EditTime -> EditTimeSheet(sheet, state.stepMinutes, onIntent)
-        is PracticeSheet.Profile -> ProfileSheet(sheet, state.header, onIntent)
-        PracticeSheet.Trophies -> TrophiesSheet(state.trophies, state.header.totalMs, onIntent)
-        is PracticeSheet.Recap -> RecapSheet(sheet.recap, onIntent)
-        // The gift waits for the other sheets: the reducer offers it only when none is open.
-        null -> state.gift?.let { GiftSheet(it, onIntent) }
-    }
+    // Each sheet is always there and shows itself when it has something: one closed by its own button slides away as a
+    // swiped one does — but only when nothing comes in its place: the recap after «Сохранить» (spec 3.31), the gift
+    // after a sheet take the place at once.
+    val sheet = state.sheet
+    val slideAway = sheet == null && state.gift == null
+    SummarySheet(sheet as? PracticeSheet.Summary, state.stepMinutes, onIntent, slideAway)
+    EditTimeSheet(sheet as? PracticeSheet.EditTime, state.stepMinutes, onIntent, slideAway)
+    ProfileSheet(sheet as? PracticeSheet.Profile, state.header, onIntent, slideAway)
+    // no button closes it, only a swipe
+    if (sheet == PracticeSheet.Trophies) TrophiesSheet(state.trophies, state.header.totalMs, onIntent)
+    RecapSheet((sheet as? PracticeSheet.Recap)?.recap, onIntent, slideAway)
+    // The gift waits for the other sheets: the reducer offers it only when none is open.
+    GiftSheet(state.gift, onIntent, slideAway = sheet == null)
 }
 
 @Composable

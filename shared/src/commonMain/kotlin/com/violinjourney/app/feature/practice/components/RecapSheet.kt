@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.practice.PracticeRecap
 import com.violinjourney.app.core.domain.practice.RecapRoad
 import com.violinjourney.app.core.domain.progress.LevelProgress
+import com.violinjourney.app.core.ui.components.rememberHeldSheet
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.theme.ViolinTheme
@@ -104,15 +105,18 @@ private const val TABULAR_FIGURES = "tnum"
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RecapSheet(recap: PracticeRecap, onIntent: (PracticeIntent) -> Unit) {
+fun RecapSheet(recap: PracticeRecap?, onIntent: (PracticeIntent) -> Unit, slideAway: Boolean = true) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    // Null — no sheet; «Готово» slides it away, as a swipe does (a gift coming in its place does not wait for that)
+    val shown = rememberHeldSheet(recap, sheetState, slideAway) ?: return
     ModalBottomSheet(
         onDismissRequest = { onIntent(PracticeIntent.RecapClosed) },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         sheetMaxWidth = SheetMaxWidth,
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         RecapSheetContent(
-            recap = recap,
+            recap = shown,
             onClose = { onIntent(PracticeIntent.RecapClosed) },
             onTravel = { onIntent(PracticeIntent.RecapTravelClicked) },
         )

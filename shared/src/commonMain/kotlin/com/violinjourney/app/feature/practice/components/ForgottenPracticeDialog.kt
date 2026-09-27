@@ -79,23 +79,21 @@ fun PracticePromptHost(
             }
         }
     }
-    when (prompt) {
-        is PracticePrompt.Forgotten -> ForgottenPracticeDialog(prompt, onIntent, zone)
-        is PracticePrompt.Summary -> SummarySheet(
-            sheet = prompt.sheet,
-            stepMinutes = stepMinutes,
-            onIntent = { intent ->
-                when (intent) {
-                    is PracticeIntent.SummaryStepped -> onIntent(PracticePromptIntent.SummaryStepped(intent.steps))
-                    PracticeIntent.SummarySaved -> onIntent(PracticePromptIntent.SummarySaved)
-                    PracticeIntent.SummaryDiscarded -> onIntent(PracticePromptIntent.SummaryDiscarded)
-                    PracticeIntent.SummaryHidden -> onIntent(PracticePromptIntent.SummaryHidden)
-                    else -> Unit
-                }
-            },
-        )
-        null -> Unit
-    }
+    if (prompt is PracticePrompt.Forgotten) ForgottenPracticeDialog(prompt, onIntent, zone)
+    // always there: the sheet answered by «Сохранить» or «Не сохранять» slides away as a swiped one does
+    SummarySheet(
+        sheet = (prompt as? PracticePrompt.Summary)?.sheet,
+        stepMinutes = stepMinutes,
+        onIntent = { intent ->
+            when (intent) {
+                is PracticeIntent.SummaryStepped -> onIntent(PracticePromptIntent.SummaryStepped(intent.steps))
+                PracticeIntent.SummarySaved -> onIntent(PracticePromptIntent.SummarySaved)
+                PracticeIntent.SummaryDiscarded -> onIntent(PracticePromptIntent.SummaryDiscarded)
+                PracticeIntent.SummaryHidden -> onIntent(PracticePromptIntent.SummaryHidden)
+                else -> Unit
+            }
+        },
+    )
 }
 
 /** «Занятие не закончено» (handoff 10f1 with the last sound, 10f2 without). */

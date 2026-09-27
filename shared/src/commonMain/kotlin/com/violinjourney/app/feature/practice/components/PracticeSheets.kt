@@ -16,6 +16,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
+import com.violinjourney.app.core.ui.components.rememberHeldSheet
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.feature.practice.PlayedLine
@@ -75,18 +76,23 @@ private const val CHIP_TEN = 10
 private const val CHIP_THIRTY = 30
 private const val CHIP_HOUR = 60
 
-/** "Закончить занятие": the timed length with a stepper to trim it (spec 3.12, handoff 10d). */
+/**
+ * "Закончить занятие": the timed length with a stepper to trim it (spec 3.12, handoff 10d). Null — no sheet; one
+ * that was open slides away ([rememberHeldSheet]), unless [slideAway] is false: something comes in its place.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SummarySheet(sheet: PracticeSheet.Summary, stepMinutes: Int, onIntent: (PracticeIntent) -> Unit) {
+fun SummarySheet(sheet: PracticeSheet.Summary?, stepMinutes: Int, onIntent: (PracticeIntent) -> Unit, slideAway: Boolean = true) {
+    // with «Что играли» the sheet is taller than half a screen: it opens whole, «Не сохранять» never under the fold
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val shown = rememberHeldSheet(sheet, sheetState, slideAway) ?: return
     ModalBottomSheet(
         // hiding the sheet is not an answer: saving and throwing away are its two buttons alone
         onDismissRequest = { onIntent(PracticeIntent.SummaryHidden) },
-        // with «Что играли» the sheet is taller than half a screen: it opens whole, «Не сохранять» never under the fold
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
-        SummarySheetContent(sheet, stepMinutes, onIntent)
+        SummarySheetContent(shown, stepMinutes, onIntent)
     }
 }
 
@@ -163,17 +169,19 @@ private fun PlayedBlock(played: List<PlayedLine>) {
     }
 }
 
-/** "Изменить время" of a day: the whole day's time (spec 3.12, handoff 10e). */
+/** "Изменить время" of a day: the whole day's time (spec 3.12, handoff 10e). Null — no sheet, as [SummarySheet]. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun EditTimeSheet(sheet: PracticeSheet.EditTime, stepMinutes: Int, onIntent: (PracticeIntent) -> Unit) {
+fun EditTimeSheet(sheet: PracticeSheet.EditTime?, stepMinutes: Int, onIntent: (PracticeIntent) -> Unit, slideAway: Boolean = true) {
+    // taller than half a screen: it opens whole, «Отмена» never under the fold
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val shown = rememberHeldSheet(sheet, sheetState, slideAway) ?: return
     ModalBottomSheet(
         onDismissRequest = { onIntent(PracticeIntent.EditTimeCancelled) },
-        // taller than half a screen: it opens whole, «Отмена» never under the fold
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
-        EditTimeSheetContent(sheet, stepMinutes, onIntent)
+        EditTimeSheetContent(shown, stepMinutes, onIntent)
     }
 }
 

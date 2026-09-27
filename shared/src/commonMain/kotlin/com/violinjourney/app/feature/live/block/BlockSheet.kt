@@ -64,6 +64,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.min
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.rememberHeldSheet
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -104,19 +105,21 @@ import org.jetbrains.compose.resources.stringResource
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun BlockSheetHost(sheet: BlockSheet?, landscape: Boolean, onIntent: (BlockIntent) -> Unit, reduceMotion: Boolean = false) {
-    if (sheet == null) return
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    // «Не сейчас», «Начать», «Открыть репертуар» drop the sheet in the model: it slides away as from a swipe
+    val shown = rememberHeldSheet(sheet, sheetState, slideAway = !reduceMotion) ?: return
     // a practice ended under the open choice turns it back into the offer: the choice fades out as it was
     var lastPicker by remember { mutableStateOf<BlockSheet.Picker?>(null) }
-    if (sheet is BlockSheet.Picker) SideEffect { lastPicker = sheet }
+    if (shown is BlockSheet.Picker) SideEffect { lastPicker = shown }
     ModalBottomSheet(
         onDismissRequest = { onIntent(BlockIntent.SheetDismissed) },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         // in landscape the list and the goal stand side by side over the whole width (handoff 30e5)
         sheetMaxWidth = if (landscape) Dp.Unspecified else SheetMaxWidth,
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         AnimatedContent(
-            targetState = sheet is BlockSheet.Offer,
+            targetState = shown is BlockSheet.Offer,
             transitionSpec = {
                 val swap = if (reduceMotion) 0 else LiveMotion.BLOCK_SHEET_SWAP_MS
                 fadeIn(tween(swap)) togetherWith fadeOut(tween(swap)) using
@@ -127,7 +130,7 @@ fun BlockSheetHost(sheet: BlockSheet?, landscape: Boolean, onIntent: (BlockInten
             if (offer) {
                 OfferContent(onIntent)
             } else {
-                ((sheet as? BlockSheet.Picker) ?: lastPicker)?.let { picker ->
+                ((shown as? BlockSheet.Picker) ?: lastPicker)?.let { picker ->
                     if (landscape) PickerLandscape(picker, onIntent) else PickerPortrait(picker, onIntent)
                 }
             }
