@@ -8,19 +8,35 @@ import com.violinjourney.app.core.domain.sound.SoundPresets
 import kotlin.test.Test
 import kotlin.test.assertTrue
 
-/** The speed of the chain on a desktop JVM (a Kotlin/Native debug build of the tests is no measure of a phone). */
+/**
+ * The speed of the chain on a desktop JVM (a Kotlin/Native debug build of the tests is no measure of a phone). A rough
+ * check — seconds, not minutes: the JIT is warmed up first and the best of three runs counts, so what fails it is a
+ * regression of the chain, not the interpreter or a laptop busy with another build.
+ */
 class SoundChainSpeedTest {
     private val config = SoundConfig()
 
+    private fun chain() = SoundChain(RATE, config).apply {
+        set(SoundPresets.settingsOf(BuiltInPreset.GRAND_HALL, config).copy(output = OutputSettings(true, 12.0)))
+    }
+
     @Test
     fun `an hour of sound is rendered in seconds — not minutes`() {
-        val chain = SoundChain(RATE, config)
-        chain.set(SoundPresets.settingsOf(BuiltInPreset.GRAND_HALL, config).copy(output = OutputSettings(true, 12.0)))
+        chain().process(FxSignals.sine(440.0, 0.9, 2.0))
         val minute = FxSignals.sine(440.0, 0.9, 60.0)
-        val started = System.nanoTime()
-        chain.process(minute)
-        val seconds = (System.nanoTime() - started) / 1e9
+        val seconds = (1..RUNS).minOf {
+            // a fresh chain and a fresh copy each time: the chain works in place and keeps its tails
+            val chain = chain()
+            val input = minute.copyOf()
+            val started = System.nanoTime()
+            chain.process(input)
+            (System.nanoTime() - started) / 1e9
+        }
         // A desktop JVM; a phone is several times slower, and the spec promises about a minute per hour there.
-        assertTrue(seconds < 3.0, "a minute of sound took $seconds s")
+        assertTrue(seconds < 3.0, "a minute of sound took $seconds s at best of $RUNS")
+    }
+
+    private companion object {
+        const val RUNS = 3
     }
 }
