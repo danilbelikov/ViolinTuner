@@ -13,9 +13,11 @@ import kotlinx.coroutines.flow.update
 import platform.AVFoundation.AVLayerVideoGravityResizeAspect
 import platform.AVFoundation.AVMediaTypeVideo
 import platform.AVFoundation.AVPlayer
+import platform.AVFoundation.AVPlayerItemStatusFailed
 import platform.AVFoundation.AVPlayerLayer
 import platform.AVFoundation.AVURLAsset
 import platform.AVFoundation.AVAssetTrack
+import platform.AVFoundation.currentItem
 import platform.AVFoundation.currentTime
 import platform.AVFoundation.muted
 import platform.AVFoundation.pause
@@ -33,6 +35,10 @@ import platform.CoreMedia.CMTimeMakeWithSeconds
 import platform.Foundation.NSURL
 import platform.UIKit.UIView
 import platform.QuartzCore.CATransaction
+import platform.darwin.DISPATCH_TIME_NOW
+import platform.darwin.dispatch_after
+import platform.darwin.dispatch_get_main_queue
+import platform.darwin.dispatch_time
 
 /** Where the picture of a take is drawn on iOS: a view that keeps the layer of the player over its whole size. */
 @OptIn(ExperimentalForeignApi::class)
@@ -72,6 +78,11 @@ class IosVideoPicture(file: PlatformFile) : VideoPicture {
     private var layer: AVPlayerLayer? = null
     private var surface: VideoSurfaceHandle? = null
 
+    // The main thread's, as every call here: the look for the first frame ([lookForFirstFrame]).
+    private var released = false
+    private var watching = false
+    private var watchedMs = 0L
+
     init {
         val track = asset.tracksWithMediaType(AVMediaTypeVideo).firstOrNull() as? AVAssetTrack
         if (track == null) {
@@ -96,6 +107,36 @@ class IosVideoPicture(file: PlatformFile) : VideoPicture {
         val fresh = layer ?: AVPlayerLayer.playerLayerWithPlayer(player).apply { videoGravity = AVLayerVideoGravityResizeAspect }
         layer = fresh
         next.view.playerLayer = fresh
+        watchFirstFrame()
+    }
+
+    /**
+     * The placeholder stays only until the first frame is ready (spec 3.19) — and that must not wait for «play»: [follow]
+     * comes only when the sound's state changes, and a paused player has nothing more to say after it is ready. So from the
+     * moment the layer is on a view, the main queue looks every [FIRST_FRAME_STEP_MS] whether it has a frame to show, and
+     * stops at the first one, or after [FIRST_FRAME_WAIT_MS]. A poll, not KVO: Kotlin/Native cannot override
+     * `observeValueForKeyPath`. An item AVPlayer could not open is a picture this phone cannot show: «не показать».
+     */
+    private fun watchFirstFrame() {
+        if (watching) return
+        watching = true
+        watchedMs = 0
+        lookForFirstFrame()
+    }
+
+    private fun lookForFirstFrame() {
+        val done = when {
+            released || state.value.showing || state.value.failed -> true
+            layer?.readyForDisplay == true -> true.also { mutableState.update { it.copy(showing = true) } }
+            player.currentItem?.status == AVPlayerItemStatusFailed -> true.also { mutableState.update { it.copy(failed = true) } }
+            else -> watchedMs >= FIRST_FRAME_WAIT_MS
+        }
+        if (done) {
+            watching = false
+            return
+        }
+        watchedMs += FIRST_FRAME_STEP_MS
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, FIRST_FRAME_STEP_MS * NANOS_PER_MS), dispatch_get_main_queue()) { lookForFirstFrame() }
     }
 
     override fun follow(positionMs: Long, playing: Boolean) {
@@ -109,6 +150,7 @@ class IosVideoPicture(file: PlatformFile) : VideoPicture {
     }
 
     override fun release() {
+        released = true
         surface?.view?.playerLayer = null
         surface = null
         player.pause()
@@ -120,5 +162,8 @@ class IosVideoPicture(file: PlatformFile) : VideoPicture {
         const val TIMESCALE = 600
         const val DRIFT_PLAYING_MS = 150.0
         const val DRIFT_STILL_MS = 40.0
+        const val FIRST_FRAME_STEP_MS = 50L
+        const val FIRST_FRAME_WAIT_MS = 10_000L
+        const val NANOS_PER_MS = 1_000_000L
     }
 }
