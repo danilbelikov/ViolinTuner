@@ -25,7 +25,7 @@ data class SectionsState(
     /** True until the stored pieces have been read once. */
     val loading: Boolean,
     val cards: List<SectionCard>,
-    /** Everything in every section: «выучено 9 из 27» at the top. */
+    /** Everything in every section: «выучено 9 из 27» at the top, «пока пусто» before the first element. */
     val total: SectionCount,
     /** Non-null while «Новый раздел» is open: what has been typed so far. */
     val newName: String? = null,

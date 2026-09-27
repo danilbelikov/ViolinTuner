@@ -86,9 +86,10 @@ const val TIME_ROWS_LANDSCAPE = 5
 fun LazyListScope.sectionItems(state: SectionsState, onIntent: (SectionsIntent) -> Unit, showTime: Boolean = true) {
     if (state.loading) return
     item(key = "sectionsTotal") {
-        // in the place of the former «5 произведений»: everything there is, and how much of it is learnt
+        // in the place of the former «5 произведений»: everything there is, and how much of it is learnt — «пока пусто»
+        // before the first element, as an empty section says it
         Text(
-            text = stringResource(Res.string.section_learned, state.total.learned, state.total.total),
+            text = sectionCountLabel(state.total),
             modifier = Modifier.padding(top = 16.dp, bottom = 4.dp),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
