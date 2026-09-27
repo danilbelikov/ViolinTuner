@@ -35,5 +35,9 @@ class FakeSheetFiles : SheetFiles {
         names.retainAll(referenced)
     }
 
-    override fun newCameraFile(): File = File.createTempFile("shot", ".jpg").also { cameraFiles += it }
+    /** A real empty file, as the camera wants one; gone when the test run ends. */
+    override fun newCameraFile(): File = File.createTempFile("shot", ".jpg").also {
+        it.deleteOnExit()
+        cameraFiles += it
+    }
 }

@@ -76,7 +76,10 @@ class LiveViewModelTest {
     fun setUp() = Dispatchers.setMain(mainDispatcher)
 
     @After
-    fun tearDown() = Dispatchers.resetMain()
+    fun tearDown() {
+        Dispatchers.resetMain()
+        audioFiles.deleteAll()
+    }
 
     private val settings = FakeSettingsRepository()
     private val sessions = FakeSessionRepository()
@@ -100,6 +103,11 @@ class LiveViewModelTest {
         override fun existing(name: String): File? = File(directory, name).takeIf(File::isFile)
         override fun delete(name: String) { File(directory, name).delete() }
         override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
+
+        /** The folder of this test's takes goes with the test: one left per test filled the machine's temporary folder. */
+        fun deleteAll() {
+            directory.deleteRecursively()
+        }
     }
 
     /** A tap driven by the frames of the source it sits on, like the microphone one. */

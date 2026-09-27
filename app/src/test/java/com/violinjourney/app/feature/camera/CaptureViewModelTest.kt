@@ -73,8 +73,12 @@ class CaptureViewModelTest {
     fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
 
     @After
-    fun tearDown() = Dispatchers.resetMain()
+    fun tearDown() {
+        Dispatchers.resetMain()
+        directory.deleteRecursively()
+    }
 
+    /** This test's files; they go with it — one folder left per test filled the machine's temporary folder. */
     private val directory = File(System.getProperty("java.io.tmpdir"), "capture-test-${System.nanoTime()}").apply { mkdirs() }
     private val sessions = FakeSessionRepository()
     private val camera = FakeCamera()
