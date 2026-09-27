@@ -9,7 +9,11 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -86,7 +90,9 @@ private const val NUMBER_FADE_FROM = 0.66f
  * Recordings per day over the last two weeks (spec 3.21, handoff 22c): today on the right in the
  * accent, the rest quieter, an empty day a small mark on the baseline so that the axis does not
  * break. Not the colours of the zones: this is how much, not how well. It answers no touch.
- * The bars rise once when the chart appears; after that they simply follow the numbers.
+ * The bars rise once when the chart appears; after that they simply follow the numbers. Once for
+ * the life of the chart in its list (spec 5.15): scrolled out of sight and back, or come back to from
+ * a recording, it stands as it was — the list keeps what an item saves, and the growth is saved as begun.
  */
 @Composable
 fun DailyChart(days: List<DayCount>, top: Int, modifier: Modifier = Modifier, barWidthDp: Float = DailyChartMath.BAR_WIDTH) {
@@ -101,9 +107,14 @@ fun DailyChart(days: List<DayCount>, top: Int, modifier: Modifier = Modifier, ba
     }
     val description = (listOf(stringResource(Res.string.history_chart_description)) + barWords).joinToString("; ")
     val reduceMotion = LocalReduceMotion.current
-    val grow = remember { Animatable(if (reduceMotion) 1f else 0f) }
+    // marked as grown when the growth begins: a chart that leaves in the middle of it comes back standing
+    var grown by rememberSaveable { mutableStateOf(false) }
+    val grow = remember { Animatable(if (reduceMotion || grown) 1f else 0f) }
     val growTotalMs = GROW_MS + GROW_STEP_MS * (days.size - 1).coerceAtLeast(0)
-    LaunchedEffect(Unit) { grow.animateTo(1f, tween(growTotalMs, easing = { it })) }
+    LaunchedEffect(Unit) {
+        grown = true
+        grow.animateTo(1f, tween(growTotalMs, easing = { it }))
+    }
     val numbered = remember(days) { DailyChartMath.numbered(days) }
     val labelled = remember(days) { DailyChartMath.labelled(days) }
     Canvas(
