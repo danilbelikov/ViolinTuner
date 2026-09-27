@@ -207,7 +207,7 @@ private fun PortraitLayout(
     val selecting = state.selection.active
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Bars(state, SelectionBarHeight.Portrait, onIntent) {
-            TopBar(header.title, titleVisible = scroll.isPast(TitleAppearsAfter), height = TopBarHeight, onIntent = onIntent)
+            TopBar(header.title, titleVisible = scroll.isPast(TitleAppearsAfter), height = TopBarHeight, onIntent = onIntent, editable = !recording)
         }
         Column(
             modifier = Modifier
@@ -220,7 +220,7 @@ private fun PortraitLayout(
             // While takes are being picked everything that is not the list steps aside (spec 3.18, handoff 19f1).
             Column(modifier = Modifier.dimmedWhen(selecting), verticalArrangement = Arrangement.spacedBy(BlockGap)) {
                 HeaderBlock(header, state.statusMenuOpen, onIntent, Metrics.Portrait, Modifier.padding(horizontal = ScreenPadding), scale = state.scale)
-                SheetsBlock(state, onIntent, addPhoto, Metrics.Portrait)
+                SheetsBlock(state, onIntent, addPhoto, Metrics.Portrait, adding = !recording)
                 Column(modifier = Modifier.padding(horizontal = ScreenPadding), verticalArrangement = Arrangement.spacedBy(BlockGap)) {
                     // Recording stands above the notes: the notes are read once before playing, a take is recorded every time.
                     // The backing goes right over it: it is what the next take is played to (spec 3.32).
@@ -229,13 +229,13 @@ private fun PortraitLayout(
                         BackingChipRow(it, recording, onIntent)
                     }
                     RecordTakeRow(take, onIntent, blocked = backing?.blocksRecording == true) { VideoEntry(recording, videoImport, onIntent, onPickVideo, backing) }
-                    NotesBlock(state.notes, state.notesCollapsedLines, onIntent)
+                    NotesBlock(state.notes, state.notesCollapsedLines, onIntent, adding = !recording)
                     state.progress?.let { TakeProgressCard(it) }
                 }
             }
             TakesBlock(
                 state.takes, zone, onIntent, Modifier.padding(horizontal = ScreenPadding),
-                actions = takeActions, selection = state.selection, canSelect = !recording,
+                actions = takeActions, selection = state.selection, canSelect = !recording, canOpen = !recording,
             )
         }
     }
@@ -259,7 +259,7 @@ private fun LandscapeLayout(
     val selecting = state.selection.active
     Column {
         Bars(state, SelectionBarHeight.Landscape, onIntent) {
-            TopBar(header.title, titleVisible = false, height = TopBarHeightLandscape, onIntent = onIntent)
+            TopBar(header.title, titleVisible = false, height = TopBarHeightLandscape, onIntent = onIntent, editable = !recording)
         }
         Row(modifier = Modifier.fillMaxSize()) {
             Column(
@@ -288,12 +288,12 @@ private fun LandscapeLayout(
                 verticalArrangement = Arrangement.spacedBy(ScreenPadding),
             ) {
                 Column(modifier = Modifier.dimmedWhen(selecting), verticalArrangement = Arrangement.spacedBy(ScreenPadding)) {
-                    SheetsBlock(state, onIntent, addPhoto, Metrics.Landscape)
-                    Box(Modifier.padding(horizontal = ScreenPadding)) { NotesBlock(state.notes, state.notesCollapsedLines, onIntent) }
+                    SheetsBlock(state, onIntent, addPhoto, Metrics.Landscape, adding = !recording)
+                    Box(Modifier.padding(horizontal = ScreenPadding)) { NotesBlock(state.notes, state.notesCollapsedLines, onIntent, adding = !recording) }
                 }
                 TakesBlock(
                     state.takes, zone, onIntent, Modifier.padding(horizontal = ScreenPadding),
-                    actions = takeActions, selection = state.selection, canSelect = !recording,
+                    actions = takeActions, selection = state.selection, canSelect = !recording, canOpen = !recording,
                 )
             }
         }
@@ -349,8 +349,9 @@ private fun ScrollState.isPast(distance: Dp): Boolean {
     return past
 }
 
+/** [editable] false while a take is recorded: the form would end it (spec 3.15), so «Изменить» sleeps meanwhile. */
 @Composable
-private fun TopBar(title: String, titleVisible: Boolean, height: Dp, onIntent: (PieceIntent) -> Unit) {
+private fun TopBar(title: String, titleVisible: Boolean, height: Dp, onIntent: (PieceIntent) -> Unit, editable: Boolean = true) {
     val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
@@ -383,7 +384,7 @@ private fun TopBar(title: String, titleVisible: Boolean, height: Dp, onIntent: (
             }
         }
         if (title.isNotEmpty()) {
-            TextButton(onClick = { onIntent(PieceIntent.EditClicked) }) {
+            TextButton(onClick = { onIntent(PieceIntent.EditClicked) }, modifier = Modifier.dimmedWhen(!editable)) {
                 IconLabel(AppIcons.Pencil, stringResource(Res.string.piece_edit), style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp))
             }
         }
@@ -470,9 +471,11 @@ private fun Chevron(tint: Color) {
 /**
  * The music: a strip of page tiles that scrolls sideways and never grows downwards, be it one
  * page or thirty (spec 3.15). The caption says the count even when three tiles are in sight.
+ * [adding] false while a take is recorded: the camera and the gallery would end it, so the ways to add a page sleep;
+ * the pages still open the stand, which keeps the take.
  */
 @Composable
-private fun SheetsBlock(state: PieceState, onIntent: (PieceIntent) -> Unit, addPhoto: AddPhotoActions, metrics: Metrics) {
+private fun SheetsBlock(state: PieceState, onIntent: (PieceIntent) -> Unit, addPhoto: AddPhotoActions, metrics: Metrics, adding: Boolean) {
     val colors = MaterialTheme.colorScheme
     val empty = state.pages.isEmpty() && state.importing == 0
     val scale = state.scale
@@ -483,7 +486,7 @@ private fun SheetsBlock(state: PieceState, onIntent: (PieceIntent) -> Unit, addP
             DrawnScale(scale, metrics) { onIntent(PieceIntent.PageClicked(0)) }
             if (empty) {
                 // The scale has its notes already: a quiet line, not a dashed card asking for them.
-                Row(modifier = Modifier.padding(horizontal = ScreenPadding - 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(modifier = Modifier.dimmedWhen(!adding).padding(horizontal = ScreenPadding - 12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(
                         stringResource(Res.string.scale_add_photo),
                         modifier = Modifier.padding(start = 12.dp).weight(1f),
@@ -499,7 +502,7 @@ private fun SheetsBlock(state: PieceState, onIntent: (PieceIntent) -> Unit, addP
                         PageTile(tile, first = false, metrics = metrics) { onIntent(PieceIntent.PageClicked(index + firstPhoto)) }
                     }
                     items(state.importing, key = { "importing-$it" }) { ImportingTile(metrics) }
-                    item(key = "add") { AddTile(metrics, addPhoto) }
+                    item(key = "add") { AddTile(metrics, addPhoto, Modifier.dimmedWhen(!adding)) }
                 }
             }
         }
@@ -516,6 +519,7 @@ private fun SheetsBlock(state: PieceState, onIntent: (PieceIntent) -> Unit, addP
             Column(
                 modifier = Modifier
                     .padding(horizontal = ScreenPadding)
+                    .dimmedWhen(!adding)
                     .fillMaxWidth()
                     .dashedBorder(colors.outlineVariant, CardCorner)
                     .padding(vertical = 16.dp),
@@ -533,7 +537,7 @@ private fun SheetsBlock(state: PieceState, onIntent: (PieceIntent) -> Unit, addP
                     PageTile(tile, first = index == 0, metrics = metrics) { onIntent(PieceIntent.PageClicked(index)) }
                 }
                 items(state.importing, key = { "importing-$it" }) { ImportingTile(metrics) }
-                item(key = "add") { AddTile(metrics, addPhoto) }
+                item(key = "add") { AddTile(metrics, addPhoto, Modifier.dimmedWhen(!adding)) }
             }
         }
     }
@@ -594,10 +598,10 @@ private fun ImportingTile(metrics: Metrics) {
 }
 
 @Composable
-private fun AddTile(metrics: Metrics, addPhoto: AddPhotoActions) {
+private fun AddTile(metrics: Metrics, addPhoto: AddPhotoActions, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     var menuOpen by remember { mutableStateOf(false) }
-    Box {
+    Box(modifier) {
         Column(
             modifier = Modifier
                 .size(metrics.tileWidth, metrics.tileHeight)
@@ -625,13 +629,17 @@ private fun AddTile(metrics: Metrics, addPhoto: AddPhotoActions) {
     }
 }
 
-/** A teacher's pencil marks: meant to be read, so they are text on a card, folded only when long. */
+/**
+ * A teacher's pencil marks: meant to be read, so they are text on a card, folded only when long. [adding] false while a
+ * take is recorded: «Добавить заметку» opens the form, which would end it.
+ */
 @Composable
-private fun NotesBlock(notes: String, collapsedLines: Int, onIntent: (PieceIntent) -> Unit) {
+private fun NotesBlock(notes: String, collapsedLines: Int, onIntent: (PieceIntent) -> Unit, adding: Boolean) {
     val colors = MaterialTheme.colorScheme
     if (notes.isEmpty()) {
         Box(
             modifier = Modifier
+                .dimmedWhen(!adding)
                 .fillMaxWidth()
                 .height(48.dp)
                 .clip(RoundedCornerShape(CardCorner))

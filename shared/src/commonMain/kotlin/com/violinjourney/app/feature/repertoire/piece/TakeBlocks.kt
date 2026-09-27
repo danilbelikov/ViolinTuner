@@ -28,6 +28,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import com.violinjourney.app.core.ui.components.dimmedWhen
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.draw.clip
@@ -272,6 +273,11 @@ fun TakesBlock(
     selection: Selection = Selection(),
     /** No «Выбрать» while a take is being recorded (spec 3.18). */
     canSelect: Boolean = true,
+    /**
+     * False while a take is recorded (spec 3.15): a card opens the recording's screen, and its «⋯» «Звук» and
+     * «Поделиться» — each would end the take, so the cards sleep meanwhile.
+     */
+    canOpen: Boolean = true,
 ) {
     val colors = MaterialTheme.colorScheme
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -312,6 +318,7 @@ fun TakesBlock(
                     take, zone, actions,
                     selected = if (selection.active) id in selection.ids else null,
                     onLongClick = { onIntent(PieceIntent.Select(SelectionIntent.CardLongPressed(id))) }.takeIf { canSelect },
+                    modifier = Modifier.dimmedWhen(!canOpen),
                 ) { onIntent(PieceIntent.TakeClicked(id)) }
             }
         }
@@ -324,7 +331,15 @@ fun TakesBlock(
  * a take with a name of its own keeps the name, and the date moves into the line. Once, either way.
  */
 @Composable
-private fun TakeCard(take: TakeItem, zone: TimeZone, actions: CardActions?, selected: Boolean?, onLongClick: (() -> Unit)?, onClick: () -> Unit) {
+private fun TakeCard(
+    take: TakeItem,
+    zone: TimeZone,
+    actions: CardActions?,
+    selected: Boolean?,
+    onLongClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit,
+) {
     val card = take.card
     val date = Formats.recordDate(card.date, card.otherYear)
     val duration = Formats.duration(card.durationMs)
@@ -335,6 +350,7 @@ private fun TakeCard(take: TakeItem, zone: TimeZone, actions: CardActions?, sele
         // a take made under the backing gets its sign and «под минусовку» from the card itself, as in every list (spec 3.32)
         meta = meta,
         onClick = onClick,
+        modifier = modifier,
         actions = actions,
         highlighted = take.isNew,
         selected = selected,

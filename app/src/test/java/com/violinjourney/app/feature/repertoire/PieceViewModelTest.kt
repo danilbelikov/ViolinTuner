@@ -496,6 +496,34 @@ class PieceViewModelTest {
         assertEquals(listOf<PieceEffect>(PieceEffect.OpenSession(42)), effects)
     }
 
+    // spec 3.15: leaving the screen ends a take quietly — an accidental tap mid-take must not
+    @Test
+    fun `while a take runs, the ways off the screen that would end it do not answer - the stand still opens`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, effects) = screen(id)
+        recordTake(viewModel)
+        val take = viewModel.state.value.takes.single().card.id
+
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        viewModel.onIntent(PieceIntent.EditClicked)
+        viewModel.onIntent(PieceIntent.AddNotesClicked)
+        viewModel.onIntent(PieceIntent.CameraClicked)
+        viewModel.onIntent(PieceIntent.TakeClicked(take))
+        viewModel.onIntent(PieceIntent.PageClicked(0))
+        runCurrent()
+        assertEquals(listOf<PieceEffect>(PieceEffect.OpenStand(id, 0)), effects)
+        assertTrue("no shot is asked for", files.cameraFiles.isEmpty())
+        assertTrue("the take goes on", viewModel.takeState.value.recording)
+
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(500)
+        viewModel.onIntent(PieceIntent.EditClicked)
+        viewModel.onIntent(PieceIntent.TakeClicked(take))
+        runCurrent()
+        assertEquals(listOf(PieceEffect.OpenStand(id, 0), PieceEffect.OpenForm(id, false), PieceEffect.OpenSession(take)), effects)
+    }
+
     private fun TestScope.recordTake(viewModel: PieceViewModel) {
         viewModel.onIntent(PieceIntent.RecordClicked)
         advance(3_000)

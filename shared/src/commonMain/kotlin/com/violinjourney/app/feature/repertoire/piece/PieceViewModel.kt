@@ -299,8 +299,9 @@ open class PieceViewModel(
     fun onIntent(intent: PieceIntent) {
         when (intent) {
             PieceIntent.BackClicked -> handOver(PieceEffect.Close)
-            PieceIntent.EditClicked -> handOver(PieceEffect.OpenForm(pieceId, focusNotes = false, scale = state.value.scale != null))
-            PieceIntent.AddNotesClicked -> handOver(PieceEffect.OpenForm(pieceId, focusNotes = true, scale = state.value.scale != null))
+            // While a take runs, the ways off the screen that would end it sleep (spec 3.15): the buttons are dimmed, this is the belt.
+            PieceIntent.EditClicked -> if (!takeRunning()) handOver(PieceEffect.OpenForm(pieceId, focusNotes = false, scale = state.value.scale != null))
+            PieceIntent.AddNotesClicked -> if (!takeRunning()) handOver(PieceEffect.OpenForm(pieceId, focusNotes = true, scale = state.value.scale != null))
             PieceIntent.StatusChipClicked -> ui.update { it.copy(statusMenuOpen = true) }
             PieceIntent.StatusMenuDismissed -> ui.update { it.copy(statusMenuOpen = false) }
             is PieceIntent.StatusSelected -> {
@@ -309,7 +310,7 @@ open class PieceViewModel(
             }
             is PieceIntent.PageClicked -> handOver(PieceEffect.OpenStand(pieceId, intent.index))
             is PieceIntent.PhotosPicked -> import(intent.uris, temporary = emptyList())
-            PieceIntent.CameraClicked -> {
+            PieceIntent.CameraClicked -> if (!takeRunning()) {
                 val file = sheetFiles.newCameraFile()
                 // The camera app may push this process out of memory: the path has to outlive it.
                 savedState[KEY_CAMERA_FILE] = file.filePath
@@ -331,8 +332,10 @@ open class PieceViewModel(
             is PieceIntent.MicPermissionChanged -> if (takes.requiresMicPermission) micPermission.value = intent.granted
             PieceIntent.ScreenResumed -> knownBacking?.let(::recheck)
             PieceIntent.LeavingScreen -> backingPreview?.stop()
-            is PieceIntent.TakeClicked ->
-                if (ui.value.selection.active) select(SelectionIntent.CardToggled(intent.sessionId)) else handOver(PieceEffect.OpenSession(intent.sessionId))
+            is PieceIntent.TakeClicked -> when {
+                ui.value.selection.active -> select(SelectionIntent.CardToggled(intent.sessionId))
+                !takeRunning() -> handOver(PieceEffect.OpenSession(intent.sessionId))
+            }
             is PieceIntent.Select -> select(intent.intent)
             is PieceIntent.BestToggled -> toggleBest(intent.sessionId)
             PieceIntent.VideoShootClicked -> if (videoAllowed()) {
@@ -491,9 +494,11 @@ open class PieceViewModel(
         backingPreview?.stop()
     }
 
+    /** From the tap on «record» until the chain has let the microphone go. */
+    private fun takeRunning(): Boolean = takes.recordingRequested.value || listening.value
+
     // Two takes are not made at once, and takes are not made while others are being picked for deletion.
-    private fun videoAllowed(): Boolean =
-        !takes.recordingRequested.value && !listening.value && !ui.value.selection.active && importer.state.value == VideoImport.Idle
+    private fun videoAllowed(): Boolean = !takeRunning() && !ui.value.selection.active && importer.state.value == VideoImport.Idle
 
     private fun toggleBest(sessionId: Long) {
         // Read from what is on screen: the one place that already knows which take carries the mark.
