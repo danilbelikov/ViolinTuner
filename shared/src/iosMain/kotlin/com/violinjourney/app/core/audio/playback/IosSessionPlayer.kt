@@ -2,9 +2,7 @@ package com.violinjourney.app.core.audio.playback
 
 import com.violinjourney.app.core.audio.IosAudioSession
 import com.violinjourney.app.core.audio.asULong
-import com.violinjourney.app.core.audio.backing.BackingMixer
 import com.violinjourney.app.core.audio.backing.IosBackingPcmReader
-import com.violinjourney.app.core.audio.fx.SoundChain
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.audio.interruptionEndsInput
 import com.violinjourney.app.core.audio.routeChangeStopsSound
@@ -62,10 +60,10 @@ import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSURL
 
 /**
- * [SessionPlayer] of iOS, the same chain as `ChainSessionPlayer` on Android: the file is decoded by AVAudioFile, every
- * chunk passes through [SoundChain] and the A/B mixer — what is heard is what is sent (spec 3.17) — and goes to an
- * AVAudioPlayerNode, a few chunks ahead of the ear. One worker per loaded file; the calls leave wishes it picks up
- * between two chunks. A take under a backing (spec 3.32) is mixed with it by the same [BackingMixer] as on Android.
+ * [SessionPlayer] of iOS: the file is decoded by AVAudioFile, every chunk passes through [PlayerSound] — the chain, the
+ * A/B mixer and, under a backing (spec 3.32), its mix, the same as `ChainSessionPlayer` on Android: what is heard is what
+ * is sent (spec 3.17) — and goes to an AVAudioPlayerNode, a few chunks ahead of the ear. One worker per loaded file; the
+ * calls leave wishes it picks up between two chunks.
  * The output (the engine) is taken on play and paused half a second after the sound stops — a pause or the end of the
  * take — so an open screen with nothing playing does not keep the audio hardware running. The audio session, shared
  * with the microphones, is held through [IosAudioSession] from the first play until the player is released — another
@@ -300,36 +298,23 @@ class IosSessionPlayer internal constructor(
         /** The worker: once it is let go, nothing of this file is written into the state. */
         private val job: Job,
     ) {
-        private val backingMix = reader?.let {
-            val (offset, gain, heard) = lock.withLock { backingChanged = false; Triple(backingOffsetMs, backingGainDb, backingHeard) }
-            BackingMixer(rate, it, offset, gain, heard, fadeSamples = (backingConfig.shiftFadeMs * rate / MS_PER_SECOND).toInt(), soundConfig = config)
+        private val sound = lock.withLock {
+            settingsChanged = false
+            backingChanged = false
+            PlayerSound(rate, config, backingConfig, reader, backingOffsetMs, backingGainDb, backingHeard, settings, original)
         }
-        private val stereo = FloatArray(if (backingMix != null) CHUNK * 2 else 0)
-
-        /** The violin's sample the next chunk starts at: where the backing is read from. */
-        private var violinPosition = 0L
-        private val chain = SoundChain(rate, config)
-        private val mixer = AbMixer(chain.latencySamples, fadeSamples = (AB_FADE_MS * rate / MS_PER_SECOND).toInt())
         private val durationMs = source.length * MS_PER_SECOND / rate
-        private val dry = FloatArray(CHUNK)
-        private val wet = FloatArray(CHUNK)
 
         /** Buffers on the node not played yet; the completions of a flushed generation do not count. */
         private val queued = AtomicInt(0)
         private val played = AtomicLong(0)
         private val generation = AtomicInt(0)
         private var baseMs = 0L
-        private var tailLeft = NO_TAIL
         private var running = false
-        private var sinceMeters = 0
 
         suspend fun loop() {
-            var current = lock.withLock { settingsChanged = false; settings }
-            chain.set(current, immediate = true)
-            var processing = !SoundRules.isNeutral(current)
-            mixer.jumpTo(if (processing && !lock.withLock { original }) 1f else 0f)
             mutableState.update {
-                if (!job.isActive) it else it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = backingMix != null, preparingBacking = false)
+                if (!job.isActive) it else it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = sound.stereo, preparingBacking = false)
             }
 
             while (kotlin.coroutines.coroutineContext.isActive) {
@@ -340,15 +325,11 @@ class IosSessionPlayer internal constructor(
                     outputLost = false
                     if (backingChanged) {
                         backingChanged = false
-                        backingMix?.set(backingOffsetMs, backingGainDb, backingHeard)
+                        sound.changeBacking(backingOffsetMs, backingGainDb, backingHeard)
                     }
                     wishes
                 }
-                fresh?.let {
-                    current = it
-                    processing = !SoundRules.isNeutral(it)
-                    chain.set(it)
-                }
+                fresh?.let(sound::changeSettings)
                 if (lost) {
                     // the stopped engine took the sound on the node with it: on from where the ear was
                     val heard = heardMs()
@@ -386,7 +367,7 @@ class IosSessionPlayer internal constructor(
                     wake.receive()
                     continue
                 }
-                if (tailLeft == 0) {
+                if (sound.ended) {
                     // everything is scheduled: wait for the node to play it out, then back to the start (spec 3.10)
                     if (queued.value > 0) {
                         tellPosition()
@@ -401,45 +382,14 @@ class IosSessionPlayer internal constructor(
                 }
 
                 // — a chunk of sound —
-                var count = if (tailLeft == NO_TAIL) decode() else 0
-                if (count == 0) {
-                    if (tailLeft == NO_TAIL) tailLeft = chain.latencySamples + (backingMix?.latencySamples ?: 0) + if (mixer.originalOnly) 0 else chain.tailSamples(current)
-                    count = minOf(tailLeft, CHUNK)
-                    tailLeft -= count
-                    dry.fill(0f, 0, count)
-                }
-                // a chain that has been resting — «A», or settings that did nothing — starts clean; the fade covers its first moment
-                if (mixer.aim(if (processing && !wantOriginal) 1f else 0f)) chain.reset()
-                val out = if (mixer.originalOnly) {
-                    mixer.passOriginal(dry, count)
-                    dry
-                } else {
-                    dry.copyInto(wet, 0, 0, count)
-                    chain.process(wet, count)
-                    mixer.mix(dry, wet, count)
-                    wet
-                }
+                val count = sound.next(wantOriginal) { into -> source.read(into, PlayerSound.CHUNK) }
                 if (count > 0) {
-                    if (backingMix != null) {
-                        // the A/B line hands the violin over chain.latencySamples late, processed or not: the backing is read as far
-                        // behind — as the render does by dropping those samples (spec 3.17: what is heard is what is sent)
-                        backingMix.mix(out, count, violinPosition - chain.latencySamples, stereo)
-                        scheduleStereo(stereo, count)
-                    } else {
-                        schedule(out, count)
-                    }
+                    if (sound.stereo) scheduleStereo(sound.output, count) else schedule(sound.output, count)
                 }
-                violinPosition += count
-                sinceMeters += count
-                if (sinceMeters >= rate / METERS_PER_SECOND) {
-                    sinceMeters = 0
-                    showMeters(if (mixer.originalOnly) null else chain.takeMeters())
-                }
+                if (sound.metersDue(count)) showMeters(sound.meters())
                 tellPosition()
             }
         }
-
-        private fun decode(): Int = source.read(dry, CHUNK)
 
         /** The meters of this file — nothing of it once the player has let it go. */
         private fun showMeters(meters: SoundMeters?) {
@@ -486,13 +436,10 @@ class IosSessionPlayer internal constructor(
             running = false
             queued.value = 0
             played.value = 0
-            source.seek(positionMs * rate / MS_PER_SECOND)
-            chain.reset()
-            mixer.reset()
-            backingMix?.reset()
-            violinPosition = positionMs * rate / MS_PER_SECOND
+            val frame = positionMs * rate / MS_PER_SECOND
+            source.seek(frame)
+            sound.restartAt(frame)
             baseMs = positionMs
-            tailLeft = NO_TAIL
         }
 
         /** Where the sound the node has played is in the take. */
@@ -605,10 +552,9 @@ class IosSessionPlayer internal constructor(
 
     internal companion object {
         private const val NO_SEEK = -1L
-        private const val NO_TAIL = -1
 
-        /** ~43 ms at 48 kHz, as on Android. */
-        private const val CHUNK = 2_048
+        /** What a take is read by: [PlayerSound]'s chunk, ~43 ms at 48 kHz. */
+        private const val CHUNK = PlayerSound.CHUNK
 
         /** Chunks on the node ahead of the ear: ~0.13 s between a turned knob and the sound. */
         private const val AHEAD = 3
@@ -621,8 +567,6 @@ class IosSessionPlayer internal constructor(
          */
         const val OUTPUT_LINGER_MS = 500L
         private const val MS_PER_SECOND = 1_000L
-        private const val AB_FADE_MS = 60L
-        private const val METERS_PER_SECOND = 30
         private const val FULL_SCALE = 32_768f
     }
 }

@@ -4,6 +4,7 @@ import android.media.MediaCodec
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.util.Log
+import com.violinjourney.app.core.recording.PcmSource
 import java.io.File
 import java.io.IOException
 import java.nio.ByteBuffer
@@ -28,9 +29,9 @@ class PcmDecoder private constructor(
     trackChannels: Int,
     /** 0 when the file does not tell it and [open] was not asked for it. */
     val durationUs: Long,
-) {
+) : PcmSource {
     /** The rate the codec puts out, settled by [open] before anyone builds a track or a resampler on it. */
-    var sampleRate: Int = trackRate
+    override var sampleRate: Int = trackRate
         private set
     private var rateSettled = false
     private var channels = trackChannels.coerceAtLeast(1)
@@ -49,10 +50,10 @@ class PcmDecoder private constructor(
     private var toSkip = 0L
     private var seekTargetUs = -1L
 
-    val totalSamples: Long get() = durationUs * sampleRate / MICROS
+    override val totalSamples: Long get() = durationUs * sampleRate / MICROS
 
     /** Fills [out] with up to its size of mono samples; returns how many, or [END] once the sound has ended. */
-    fun read(out: ShortArray): Int {
+    override fun read(out: ShortArray): Int {
         var written = 0
         while (written < out.size) {
             val buffer = held

@@ -48,6 +48,10 @@ data class SoundConfig(
 
     /** A parameter changed while the sound plays glides to its new value over this long: no clicks. */
     val smoothingMs: Double = 30.0,
+    /** «A» and «B» cross over this long while the sound plays (spec 5.11): no click. */
+    val abFadeMs: Long = 60,
+    /** How often a playing player tells the meters (spec 5.11: a frame about 30 times a second). */
+    val metersPerSecond: Int = 30,
     /** The file gets the tail of the hall after the last note, but never more than this. */
     val maxTailSec: Double = 6.0,
     val maxPresetNameLength: Int = 24,

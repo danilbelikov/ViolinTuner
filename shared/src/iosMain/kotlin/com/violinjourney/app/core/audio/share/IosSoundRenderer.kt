@@ -1,11 +1,8 @@
 package com.violinjourney.app.core.audio.share
 
-import com.violinjourney.app.core.audio.backing.BackingMixer
 import com.violinjourney.app.core.audio.backing.IosBackingPcmReader
-import com.violinjourney.app.core.audio.fx.SoundChain
 import com.violinjourney.app.core.audio.recording.AacFile
 import com.violinjourney.app.core.domain.sound.SoundConfig
-import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.domain.sound.SoundSettings
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.deleteFile
@@ -13,12 +10,10 @@ import com.violinjourney.app.core.io.sibling
 import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.recording.IosPcmFileOpener
 import com.violinjourney.app.core.recording.PcmFileOpener
-import com.violinjourney.app.core.recording.PcmSource
 import kotlin.coroutines.resume
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.readValue
 import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import platform.AVFoundation.AVAssetExportPresetPassthrough
@@ -42,12 +37,11 @@ import platform.CoreMedia.kCMTimeZero
 import platform.Foundation.NSURL
 
 /**
- * [SoundRenderer] of iOS: the very chain the player plays through, without the clock — the sound track read by
- * AVAssetReader → [SoundChain] → AAC, as `SoundFileRenderer` does on Android (spec 3.17). The chain is late by the
- * look-ahead of its limiter: those first samples are dropped, and the hall rings on after the last note. A video take
- * gets its picture back as it was — not re-encoded — beside the rendered sound, by AVAssetExportSession.
- * A take under a backing is mixed with it into a stereo file, as on Android (spec 3.32). A sound track the reader gave
- * up on half-way is no file to send: the render fails rather than hand over a cut one.
+ * [SoundRenderer] of iOS: the sound track read by AVAssetReader → [SoundRenderLoop] — the very chain the player plays
+ * through, without the clock, the same loop as `SoundFileRenderer` on Android (spec 3.17) — → AAC. A video take gets its
+ * picture back as it was — not re-encoded — beside the rendered sound, by AVAssetExportSession. A take under a backing is
+ * mixed with it into a stereo file (spec 3.32). A sound track the reader gave up on half-way is no file to send: the
+ * render fails rather than hand over a cut one.
  */
 @OptIn(ExperimentalForeignApi::class)
 class IosSoundRenderer(
@@ -82,64 +76,11 @@ class IosSoundRenderer(
             try {
                 // the backing at this recording's rate; gone or undecodable — the file cannot be what was asked for
                 reader = backing?.let { IosBackingPcmReader(it.pcm(decoder.sampleRate) ?: return@withContext false) }
-                val mixer = if (backing != null && reader != null) {
-                    BackingMixer(decoder.sampleRate, reader, backing.offsetMs, backing.gainDb, heard = true, fadeSamples = 0, soundConfig = config)
-                } else {
-                    null
-                }
-                val aac = AacFile(target.path, decoder.sampleRate, channels = if (mixer != null) 2 else 1).also { writer = it }
-                val chain = SoundChain(decoder.sampleRate, config).apply { set(settings, immediate = true) }
-                // everything off — the chain is not called at all: its limiter would still delay the sound
-                val neutral = SoundRules.isNeutral(settings)
-                val pcm = ShortArray(CHUNK)
-                val samples = FloatArray(CHUNK)
-                var toDrop = if (neutral) 0 else chain.latencySamples
-                val tail = (if (neutral) 0 else chain.tailSamples(settings) + chain.latencySamples) + (mixer?.latencySamples ?: 0)
-                // the mix is late by its limiter's look-ahead, like the chain by its own: those first frames go too
-                var mixToDrop = mixer?.latencySamples ?: 0
-                var violinPosition = 0L
-                val violin = FloatArray(CHUNK)
-                val stereo = FloatArray(if (mixer != null) CHUNK * 2 else 0)
-                val interleaved = ShortArray(if (mixer != null) CHUNK * 2 else 0)
-                val total = (decoder.totalSamples + tail).coerceAtLeast(1)
-                var done = 0L
-                var tailLeft = tail
-                var written = true
-                while (written) {
-                    ensureActive()
-                    var count = decoder.read(pcm)
-                    if (count == PcmSource.END) {
-                        // the reader gave up half-way: what is written is not the take — no tail, the file goes below
-                        if (tailLeft == 0 || decoder.broken) break
-                        count = minOf(tailLeft, CHUNK)
-                        tailLeft -= count
-                        samples.fill(0f, 0, count)
-                    } else {
-                        for (i in 0 until count) samples[i] = pcm[i] / FULL_SCALE
-                    }
-                    if (!neutral) chain.process(samples, count)
-                    val from = minOf(toDrop, count)
-                    toDrop -= from
-                    if (mixer == null) {
-                        for (i in from until count) pcm[i - from] = toShort(samples[i])
-                        written = aac.write(pcm, count - from)
-                    } else if (count > from) {
-                        val kept = count - from
-                        samples.copyInto(violin, 0, from, count)
-                        mixer.mix(violin, kept, violinPosition, stereo)
-                        violinPosition += kept
-                        val skip = minOf(mixToDrop, kept)
-                        mixToDrop -= skip
-                        for (i in skip until kept) {
-                            interleaved[2 * (i - skip)] = toShort(stereo[2 * i])
-                            interleaved[2 * (i - skip) + 1] = toShort(stereo[2 * i + 1])
-                        }
-                        written = aac.write(interleaved, (kept - skip) * 2)
-                    }
-                    done += count
-                    onProgress((done.toFloat() / total).coerceIn(0f, 1f))
-                }
+                val mix = reader?.let { if (backing != null) RenderMix(it, backing.offsetMs, backing.gainDb) else null }
+                val aac = AacFile(target.path, decoder.sampleRate, channels = if (mix != null) 2 else 1).also { writer = it }
+                val written = SoundRenderLoop.run(decoder, settings, config, mix, write = aac::write, onProgress = onProgress, gaveUp = { decoder.broken })
                 closed = true
+                // the reader gave up half-way: what is written is not the take — the file goes below
                 whole = aac.close() && written && !decoder.broken && target.sizeBytes() > 0
                 whole
             } finally {
@@ -205,12 +146,7 @@ class IosSoundRenderer(
         }
     }
 
-    private fun toShort(sample: Float): Short = (sample * FULL_SCALE).toInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
-
     private companion object {
-        const val CHUNK = 4_096
-        const val FULL_SCALE = 32_768f
-
         /** The sound is nearly all of the work of a video: no picture is decoded. */
         const val SOUND_SHARE = 0.9f
         const val SOUND_SUFFIX = ".sound.m4a"

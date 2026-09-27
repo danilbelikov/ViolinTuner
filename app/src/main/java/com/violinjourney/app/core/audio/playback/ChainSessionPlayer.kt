@@ -6,10 +6,8 @@ import android.media.AudioTrack
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
-import com.violinjourney.app.core.audio.backing.BackingMixer
 import com.violinjourney.app.core.audio.backing.BackingPcmReader
 import com.violinjourney.app.core.audio.backing.PcmBackingSource
-import com.violinjourney.app.core.audio.fx.SoundChain
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.domain.sound.SoundConfig
@@ -23,9 +21,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 
 /**
- * [SessionPlayer] of our own making: decoder → [SoundChain] → `AudioTrack`, on a thread of its
+ * [SessionPlayer] of our own making: decoder → [PlayerSound] → `AudioTrack`, on a thread of its
  * own. `MediaPlayer` could only play a file as it is; here the samples pass through the very
  * chain that also renders the file to be shared — what is heard is what is sent (spec 3.17).
+ * [PlayerSound] is the same on iOS; the thread, the track and the wishes are Android's.
  *
  * The calls of the interface only leave wishes (play, seek, settings, A/B) for the thread, which
  * picks them up between two chunks of sound — about every 40 ms.
@@ -243,35 +242,28 @@ class ChainSessionPlayer(
 
         private fun play(decoder: PcmDecoder, track: AudioTrack, reader: BackingPcmReader?) {
             val rate = decoder.sampleRate
-            val chain = SoundChain(rate, config)
-            val backingMix = reader?.let {
-                val (offset, gain, heard) = synchronized(lock) { backingChanged = false; Triple(backingOffsetMs, backingGainDb, backingHeard) }
-                BackingMixer(rate, PcmBackingSource(it), offset, gain, heard, fadeSamples = (backingConfig.shiftFadeMs * rate / MS_PER_SECOND).toInt(), soundConfig = config)
+            val sound = synchronized(lock) {
+                settingsChanged = false
+                backingChanged = false
+                PlayerSound(
+                    rate, config, backingConfig, reader?.let(::PcmBackingSource), backingOffsetMs, backingGainDb, backingHeard,
+                    settings, original,
+                )
             }
-            val stereo = FloatArray(if (backingMix != null) CHUNK * 2 else 0)
-            /** The violin's sample the next chunk starts at: where the backing is read from. */
-            var violinPosition = 0L
-            val mixer = AbMixer(chain.latencySamples, fadeSamples = (AB_FADE_MS * rate / MS_PER_SECOND).toInt())
+            val channels = if (sound.stereo) 2 else 1
             val durationMs = decoder.durationUs / US_PER_MS
             val heard = HeardClock(rate, MAX_OUTPUT_LAG_MS, LAG_WAIT_MS)
             val stamp = AudioTimestamp()
             var sinceStamp = 0
-            val pcm = ShortArray(CHUNK)
-            val dry = FloatArray(CHUNK)
-            val wet = FloatArray(CHUNK)
-
-            var current = synchronized(lock) { settingsChanged = false; settings }
-            chain.set(current, immediate = true)
-            var processing = !SoundRules.isNeutral(current)
-            mixer.jumpTo(if (processing && !synchronized(lock) { original }) 1f else 0f)
-
-            /** Samples of silence still to be pushed through after the end: the hall rings on, the delays empty out. */
-            var tailLeft = NO_TAIL
+            val pcm = ShortArray(PlayerSound.CHUNK)
+            val read: (FloatArray) -> Int = { into ->
+                val count = decoder.read(pcm)
+                if (count == PcmDecoder.END) 0 else count.also { for (i in 0 until it) into[i] = pcm[i] / FULL_SCALE }
+            }
             var running = false
-            var sinceMeters = 0
 
             mutableState.update {
-                if (released) it else it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = backingMix != null, preparingBacking = false)
+                if (released) it else it.copy(ready = true, durationMs = durationMs, positionMs = 0, playing = false, failed = false, hasBacking = sound.stereo, preparingBacking = false)
             }
 
             while (!released) {
@@ -304,24 +296,15 @@ class ChainSessionPlayer(
                     }
                 }
                 if (released) break
-                newBacking?.let { (offset, gain, heard) -> backingMix?.set(offset, gain, heard) }
-
-                newSettings?.let { fresh ->
-                    current = fresh
-                    processing = !SoundRules.isNeutral(fresh)
-                    chain.set(fresh)
-                }
+                newBacking?.let { (offset, gain, heardBacking) -> sound.changeBacking(offset, gain, heardBacking) }
+                newSettings?.let(sound::changeSettings)
                 if (seek != NO_SEEK) {
                     track.pause()
                     track.flush()
                     running = false
                     decoder.seekTo(seek * US_PER_MS)
-                    chain.reset()
-                    mixer.reset()
-                    backingMix?.reset()
-                    violinPosition = seek * rate / MS_PER_SECOND
+                    sound.restartAt(seek * rate / MS_PER_SECOND)
                     heard.startAt(seek, head(track))
-                    tailLeft = NO_TAIL
                 }
                 if (!playing) continue
                 if (!running) {
@@ -331,38 +314,8 @@ class ChainSessionPlayer(
                 }
 
                 // — a chunk of sound —
-                var count = if (tailLeft == NO_TAIL) decoder.read(pcm) else PcmDecoder.END
-                if (count == PcmDecoder.END) {
-                    if (tailLeft == NO_TAIL) tailLeft = chain.latencySamples + (backingMix?.latencySamples ?: 0) + if (mixer.originalOnly) 0 else chain.tailSamples(current)
-                    count = minOf(tailLeft, CHUNK)
-                    tailLeft -= count
-                    dry.fill(0f, 0, count)
-                } else {
-                    for (i in 0 until count) dry[i] = pcm[i] / FULL_SCALE
-                }
-
-                // A chain that has been resting — «A», or settings that did nothing — knows nothing of the last seconds: it starts
-                // clean, and the fade covers its first moment.
-                if (mixer.aim(if (processing && !wantOriginal) 1f else 0f)) chain.reset()
-                val out = if (mixer.originalOnly) {
-                    mixer.passOriginal(dry, count)
-                    dry
-                } else {
-                    dry.copyInto(wet, 0, 0, count)
-                    chain.process(wet, count)
-                    mixer.mix(dry, wet, count)
-                    wet
-                }
-                val written = if (backingMix != null) {
-                    // the A/B line hands the violin over chain.latencySamples late, processed or not: the backing is read as far
-                    // behind — as the render does by dropping those samples (spec 3.17: what is heard is what is sent)
-                    backingMix.mix(out, count, violinPosition - chain.latencySamples, stereo)
-                    write(track, stereo, count * 2)
-                } else {
-                    write(track, out, count)
-                }
-                violinPosition += count
-                if (!written) continue // a wish came in mid-chunk: it goes first
+                val count = sound.next(wantOriginal, read)
+                if (!write(track, sound.output, count * channels)) continue // a wish came in mid-chunk: it goes first
 
                 // what the output presents: at every chunk until it has said it once, then twice a second (the route may change)
                 sinceStamp += count
@@ -374,25 +327,17 @@ class ChainSessionPlayer(
                 }
                 val positionMs = heard.positionMs(head(track), count, durationMs)
                 mutableState.update { if (it.playing && !released) it.copy(positionMs = positionMs) else it }
-                sinceMeters += count
-                if (sinceMeters >= rate / METERS_PER_SECOND) {
-                    sinceMeters = 0
-                    mutableMeters.value = if (mixer.originalOnly) null else chain.takeMeters()
-                }
+                if (sound.metersDue(count)) mutableMeters.value = sound.meters()
 
-                if (tailLeft == 0) {
+                if (sound.ended) {
                     // The end: let what is in the track play out, then back to the start, ready to play again (spec 3.10).
                     drain(track)
                     track.pause()
                     track.flush()
                     running = false
                     decoder.seekTo(0)
-                    chain.reset()
-                    mixer.reset()
-                    backingMix?.reset()
-                    violinPosition = 0
+                    sound.restartAt(0)
                     heard.startAt(0, head(track))
-                    tailLeft = NO_TAIL
                     synchronized(lock) { wantPlaying = false }
                     mutableMeters.value = null
                     mutableState.update { if (released) it else it.copy(playing = false, positionMs = 0) }
@@ -470,7 +415,7 @@ class ChainSessionPlayer(
                 )
                 .setTransferMode(AudioTrack.MODE_STREAM)
                 // Twice the minimum: room for a hiccup, and still only ~0.1 s between a turned knob and the ear.
-                .setBufferSizeInBytes(minimum.coerceAtLeast(CHUNK * BYTES_PER_FLOAT * channels) * 2)
+                .setBufferSizeInBytes(minimum.coerceAtLeast(PlayerSound.CHUNK * BYTES_PER_FLOAT * channels) * 2)
                 .build()
         }
     }
@@ -478,16 +423,10 @@ class ChainSessionPlayer(
     private companion object {
         const val TAG = "SessionPlayer"
         const val NO_SEEK = -1L
-        const val NO_TAIL = -1
-
-        /** ~43 ms at 48 kHz: how often wishes are looked at and the position is told. */
-        const val CHUNK = 2_048
         const val FULL_SCALE = 32_768f
         const val BYTES_PER_FLOAT = 4
         const val MS_PER_SECOND = 1_000L
         const val US_PER_MS = 1_000L
-        const val AB_FADE_MS = 60L
-        const val METERS_PER_SECOND = 30
         const val DRAIN_POLL_MS = 20L
         const val DRAIN_TIMEOUT_NS = 1_000_000_000L
         const val JOIN_TIMEOUT_MS = 1_000L
