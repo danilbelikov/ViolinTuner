@@ -24,6 +24,8 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -164,13 +166,14 @@ fun Balance(ui: HomeUi) {
 @Composable
 fun TwoWay(first: String, second: String, secondChosen: Boolean, onChoose: (second: Boolean) -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
-    Row(modifier.clip(CircleShape).background(colors.surface.copy(alpha = 0.78f)).padding(3.dp)) {
+    // Two tabs of one group: TalkBack and VoiceOver say which side is chosen, not only what each is called.
+    Row(modifier.clip(CircleShape).background(colors.surface.copy(alpha = 0.78f)).padding(3.dp).selectableGroup()) {
         listOf(first to false, second to true).forEach { (word, isSecond) ->
             val chosen = isSecond == secondChosen
             Text(
                 word,
                 modifier = Modifier.clip(CircleShape).background(if (chosen) colors.primary else Color.Transparent)
-                    .clickable(role = Role.Tab) { onChoose(isSecond) }.padding(horizontal = 12.dp, vertical = 6.dp),
+                    .selectable(selected = chosen, role = Role.Tab) { onChoose(isSecond) }.padding(horizontal = 12.dp, vertical = 6.dp),
                 color = if (chosen) colors.onPrimary else colors.onSurface,
                 style = MaterialTheme.typography.labelLarge,
             )

@@ -148,4 +148,21 @@ class HomeRulesTest {
         assertEquals("flat", HomeRules.nextHouse(state.copy(houses = setOf("wood")))?.id)
         assertEquals(1 to 0, HomeRules.counts(state))
     }
+
+    @Test
+    fun `«Обставить» counts the places a thing stands in - not the points where a pet sits`() {
+        val rent = HomeRules.places("rent", outside = false).map { it.id }
+        assertTrue("sillL" !in rent, "the cat's sill is no place of its own")
+        assertTrue("pet" in rent)
+        assertTrue("fire" !in rent, "the rented room has no stove")
+        rent.forEach { place -> assertTrue(HomeCatalog.items.any { it.slot == place }, "$place holds no thing") }
+        assertEquals(23, rent.size)
+
+        assertTrue("fire" in HomeRules.places("wood", outside = false).map { it.id })
+        val woodOutside = HomeRules.places("wood", outside = true).map { it.id }
+        assertTrue("oRoof" in woodOutside)
+        assertTrue("oPorch" !in woodOutside, "the porch is where the cat sits")
+        assertEquals(5, woodOutside.size)
+        assertEquals(4, HomeRules.places("rent", outside = true).size)
+    }
 }

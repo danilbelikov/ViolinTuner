@@ -63,6 +63,7 @@
     <string name="shop_sessions_one">ещё примерно одно занятие</string>
     <string name="shop_sessions_few">ещё примерно %1$d занятия</string>
     <string name="shop_sessions_many">ещё примерно %1$d занятий</string>
+    <string name="shop_sessions_one_counted">ещё примерно %1$d занятие</string>
     <string name="shop_left_after">останется %1$s</string>
     <string name="shop_left_after_road">останется %1$s · до %2$s ещё %3$s</string>
     <string name="shop_item_description">%1$s, %2$s</string>
@@ -71,11 +72,13 @@
     <string name="shop_bought">Куплено: %1$s</string>
 
     <string name="arrange_title">Обставить</string>
-    <string name="arrange_places_few">%1$d мест, %2$d занято</string>
+    <string name="arrange_places_one">%1$s · %2$d место, %3$d занято</string>
+    <string name="arrange_places_few">%1$s · %2$d места, %3$d занято</string>
+    <string name="arrange_places_many">%1$s · %2$d мест, %3$d занято</string>
     <string name="arrange_empty">пусто</string>
     <string name="arrange_in_shop">в лавке %1$d</string>
     <string name="arrange_not_here">Мест, которых в этом доме нет</string>
-    <string name="arrange_waiting">ждёт в гардеробе: %1$s</string>
+    <string name="arrange_waiting">%1$s — ждёт в гардеробе: %2$s</string>
 
     <string name="houses_title">Дома</string>
     <string name="houses_live_here">здесь живу</string>

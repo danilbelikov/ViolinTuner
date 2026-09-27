@@ -63,6 +63,7 @@
     <string name="shop_sessions_one">noch etwa einmal üben</string>
     <string name="shop_sessions_few">noch etwa %1$d Mal üben</string>
     <string name="shop_sessions_many">noch etwa %1$d Mal üben</string>
+    <string name="shop_sessions_one_counted">noch etwa %1$d Mal üben</string>
     <string name="shop_left_after">es bleiben %1$s</string>
     <string name="shop_left_after_road">es bleiben %1$s · bis %2$s noch %3$s</string>
     <string name="shop_item_description">%1$s, %2$s</string>
@@ -71,11 +72,13 @@
     <string name="shop_bought">Gekauft: %1$s</string>
 
     <string name="arrange_title">Einrichten</string>
-    <string name="arrange_places_few">%1$d Plätze, %2$d belegt</string>
+    <string name="arrange_places_one">%1$s · %2$d Platz, %3$d belegt</string>
+    <string name="arrange_places_few">%1$s · %2$d Plätze, %3$d belegt</string>
+    <string name="arrange_places_many">%1$s · %2$d Plätze, %3$d belegt</string>
     <string name="arrange_empty">leer</string>
     <string name="arrange_in_shop">im Laden %1$d</string>
     <string name="arrange_not_here">Plätze, die es in diesem Haus nicht gibt</string>
-    <string name="arrange_waiting">wartet im Schrank: %1$s</string>
+    <string name="arrange_waiting">%1$s – wartet im Schrank: %2$s</string>
 
     <string name="houses_title">Häuser</string>
     <string name="houses_live_here">hier wohne ich</string>

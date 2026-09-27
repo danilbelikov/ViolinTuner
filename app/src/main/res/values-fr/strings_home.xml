@@ -63,6 +63,7 @@
     <string name="shop_sessions_one">encore une séance environ</string>
     <string name="shop_sessions_few">encore %1$d séances environ</string>
     <string name="shop_sessions_many">encore %1$d séances environ</string>
+    <string name="shop_sessions_one_counted">encore %1$d séances environ</string>
     <string name="shop_left_after">il restera %1$s</string>
     <string name="shop_left_after_road">il restera %1$s · pour %2$s, encore %3$s</string>
     <string name="shop_item_description">%1$s, %2$s</string>
@@ -71,11 +72,13 @@
     <string name="shop_bought">Acheté : %1$s</string>
 
     <string name="arrange_title">Aménager</string>
-    <string name="arrange_places_few">%1$d emplacements, %2$d occupés</string>
+    <string name="arrange_places_one">%1$s · %2$d emplacement, %3$d occupé</string>
+    <string name="arrange_places_few">%1$s · %2$d emplacements, %3$d occupés</string>
+    <string name="arrange_places_many">%1$s · %2$d emplacements, %3$d occupés</string>
     <string name="arrange_empty">vide</string>
     <string name="arrange_in_shop">%1$d en boutique</string>
     <string name="arrange_not_here">Emplacements absents de cette maison</string>
-    <string name="arrange_waiting">attend dans l\'armoire : %1$s</string>
+    <string name="arrange_waiting">%1$s — attend dans l\'armoire : %2$s</string>
 
     <string name="houses_title">Maisons</string>
     <string name="houses_live_here">j\'habite ici</string>

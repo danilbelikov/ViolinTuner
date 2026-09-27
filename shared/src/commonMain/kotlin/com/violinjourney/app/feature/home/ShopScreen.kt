@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -85,6 +87,8 @@ import com.violinjourney.app.shared.resources.arrange_empty
 import com.violinjourney.app.shared.resources.arrange_in_shop
 import com.violinjourney.app.shared.resources.arrange_not_here
 import com.violinjourney.app.shared.resources.arrange_places_few
+import com.violinjourney.app.shared.resources.arrange_places_many
+import com.violinjourney.app.shared.resources.arrange_places_one
 import com.violinjourney.app.shared.resources.arrange_title
 import com.violinjourney.app.shared.resources.arrange_waiting
 import com.violinjourney.app.shared.resources.home_day
@@ -116,6 +120,7 @@ import com.violinjourney.app.shared.resources.shop_put
 import com.violinjourney.app.shared.resources.shop_sessions_few
 import com.violinjourney.app.shared.resources.shop_sessions_many
 import com.violinjourney.app.shared.resources.shop_sessions_one
+import com.violinjourney.app.shared.resources.shop_sessions_one_counted
 import com.violinjourney.app.shared.resources.shop_shelf_furniture
 import com.violinjourney.app.shared.resources.shop_shelf_instrument
 import com.violinjourney.app.shared.resources.shop_shelf_life
@@ -386,7 +391,7 @@ private fun ItemCard(item: HomeItem, ui: HomeUi, tags: ShelfTags, today: LocalDa
                     } else {
                         val sessions = ((-left + TAKTS_A_SESSION - 1) / TAKTS_A_SESSION).toInt().coerceAtLeast(1)
                         Text(
-                            if (sessions == 1) stringResource(Res.string.shop_sessions_one) else stringResource(Formats.plural(sessions, Res.string.shop_sessions_few, Res.string.shop_sessions_few, Res.string.shop_sessions_many), sessions),
+                            if (sessions == 1) stringResource(Res.string.shop_sessions_one) else stringResource(sessionsLeftWords(sessions), sessions),
                             color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall,
                         )
                     }
@@ -463,13 +468,16 @@ fun ArrangeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier
         val placed = HomeRules.placed(ui.home)
         val owned = HomeRules.ownedItems(ui.home)
         val slots = HomeCatalog.slots.filter { it.outside == ui.outside }
-        val here = slots.filter { HomeRules.slotIn(it.id, ui.house) }
+        val here = HomeRules.places(ui.house, ui.outside)
         val filled = here.filter { HomeRules.wardrobe(it.id, ui.home).isNotEmpty() }
         Column(
             Modifier.widthIn(max = HomeMaxWidth).fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text("${houseName(ui.house)} · " + stringResource(Res.string.arrange_places_few, here.size, here.count { placed[it.id] != null }), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelLarge)
+            Text(
+                stringResource(placesWords(here.size), houseName(ui.house), here.size, here.count { placed[it.id] != null }),
+                color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelLarge,
+            )
             filled.forEach { slot ->
                 val things = HomeRules.wardrobe(slot.id, ui.home)
                 val standing = placed[slot.id]?.id
@@ -479,7 +487,7 @@ fun ArrangeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier
                         val more = HomeCatalog.items.count { it.slot == slot.id && it.id !in owned }
                         if (more > 0) Text(stringResource(Res.string.arrange_in_shop, more), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                     }
-                    Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Row(Modifier.horizontalScroll(rememberScrollState()).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         things.forEach { item ->
                             Choice(chosen = standing == item.id, label = itemName(item.id), onClick = { onIntent(HomeIntent.Placed(slot.id, item.id)) }) { ItemThumb(item) }
                         }
@@ -493,22 +501,38 @@ fun ArrangeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier
                 Text(stringResource(Res.string.arrange_not_here), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelLarge)
                 missing.forEach { slot ->
                     val waiting = HomeRules.wardrobe(slot.id, ui.home).map { itemName(it.id) }.joinToString(", ")
-                    Text("${slotName(slot.id)} — " + stringResource(Res.string.arrange_waiting, waiting), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+                    Text(stringResource(Res.string.arrange_waiting, slotName(slot.id), waiting), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                 }
             }
         }
     }
 }
 
+/**
+ * «ещё примерно N занятий» for more than one practice: Russian says «21 занятие», «2 занятия», «5 занятий»; the form for
+ * one alone is the words of its own, [Res.string.shop_sessions_one] — «ещё примерно одно занятие».
+ */
+internal fun sessionsLeftWords(sessions: Int): StringResource =
+    Formats.plural(sessions, Res.string.shop_sessions_one_counted, Res.string.shop_sessions_few, Res.string.shop_sessions_many)
+
+/** The header of «Обставить»: «Съёмная комната · 23 места, 18 занято» — the home, then the places in the words of the language. */
+internal fun placesWords(places: Int): StringResource =
+    Formats.plural(places, Res.string.arrange_places_one, Res.string.arrange_places_few, Res.string.arrange_places_many)
+
 @Composable
 private fun Choice(chosen: Boolean, label: String, onClick: () -> Unit, picture: @Composable () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Column(Modifier.width(84.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        // A radio button of its place: named by the word under it, which is then not said a second time, and chosen or not.
         Box(
             Modifier.size(84.dp, 64.dp).clip(TileShape).background(colors.surfaceContainer)
                 .then(if (chosen) Modifier.border(2.dp, colors.primary, TileShape) else Modifier)
-                .clickable(onClickLabel = label, role = Role.RadioButton, onClick = onClick),
+                .selectable(selected = chosen, role = Role.RadioButton, onClick = onClick)
+                .semantics { contentDescription = label },
         ) { picture() }
-        Text(label, color = if (chosen) colors.primary else colors.onSurfaceVariant, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(
+            label, color = if (chosen) colors.primary else colors.onSurfaceVariant, style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
+            modifier = Modifier.clearAndSetSemantics {},
+        )
     }
 }

@@ -63,6 +63,7 @@
     <string name="shop_sessions_one">연습 한 번쯤 더</string>
     <string name="shop_sessions_few">연습 %1$d번쯤 더</string>
     <string name="shop_sessions_many">연습 %1$d번쯤 더</string>
+    <string name="shop_sessions_one_counted">연습 %1$d번쯤 더</string>
     <string name="shop_left_after">%1$s 남음</string>
     <string name="shop_left_after_road">%1$s 남음 · %2$s까지 %3$s 더</string>
     <string name="shop_item_description">%1$s, %2$s</string>
@@ -71,11 +72,13 @@
     <string name="shop_bought">구매함: %1$s</string>
 
     <string name="arrange_title">꾸미기</string>
-    <string name="arrange_places_few">자리 %1$d곳, %2$d곳 사용 중</string>
+    <string name="arrange_places_one">%1$s · 자리 %2$d곳, %3$d곳 사용 중</string>
+    <string name="arrange_places_few">%1$s · 자리 %2$d곳, %3$d곳 사용 중</string>
+    <string name="arrange_places_many">%1$s · 자리 %2$d곳, %3$d곳 사용 중</string>
     <string name="arrange_empty">비어 있음</string>
     <string name="arrange_in_shop">상점에 %1$d개</string>
     <string name="arrange_not_here">이 집에는 없는 자리</string>
-    <string name="arrange_waiting">옷장에서 기다리는 중: %1$s</string>
+    <string name="arrange_waiting">%1$s — 옷장에서 기다리는 중: %2$s</string>
 
     <string name="houses_title">집</string>
     <string name="houses_live_here">여기 살아요</string>

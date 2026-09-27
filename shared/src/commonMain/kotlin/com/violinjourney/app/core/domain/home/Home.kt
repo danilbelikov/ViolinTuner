@@ -104,6 +104,13 @@ object HomeRules {
 
     fun slotIn(slotId: String, house: String): Boolean = HomeCatalog.slotById[slotId]?.let { it.houses == null || house in it.houses } ?: false
 
+    /**
+     * The places of [house] inside or [outside] that a thing stands in — what the header of «Обставить» counts. The
+     * points where a pet sits (the left sill, the porch) hold no thing of their own and are no place to furnish.
+     */
+    fun places(house: String, outside: Boolean): List<HomeSlot> =
+        HomeCatalog.slots.filter { slot -> slot.outside == outside && slotIn(slot.id, house) && HomeCatalog.items.any { it.slot == slot.id } }
+
     /** Brought from a city: on the shelf once the city is reached. */
     fun unlocked(item: HomeItem, progress: JourneyProgress): Boolean = item.from == null || progress.arrivals.any { it.stopId == item.from }
 
