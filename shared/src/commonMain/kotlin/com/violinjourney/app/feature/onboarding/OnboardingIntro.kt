@@ -55,6 +55,8 @@ import com.violinjourney.app.shared.resources.onboarding_welcome_cta
 import com.violinjourney.app.shared.resources.onboarding_welcome_text
 import kotlin.math.abs
 import kotlin.math.floor
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.isActive
 
 private val IntroScenes by lazy { listOf(OnboardingArtData.welcome, OnboardingArtData.live, OnboardingArtData.road, OnboardingArtData.data) }
 
@@ -81,13 +83,23 @@ internal fun OnboardingIntro(
 
     LaunchedEffect(step) {
         val target = step.indexInPart
-        if (step.part != OnboardingPart.INTRO || pager.currentPage == target) return@LaunchedEffect
+        if (step.part != OnboardingPart.INTRO) return@LaunchedEffect
+        val far = !still && abs(target - pager.currentPage) > 1
+        // A dissolve cut short — a new step half-way, back in the middle of «Пропустить» — never leaves the words
+        // faded: every step but the far jump starts from the words in full.
+        if (!far) fade.snapTo(1f)
+        if (pager.currentPage == target) return@LaunchedEffect
         when {
             still -> pager.scrollToPage(target)
-            abs(target - pager.currentPage) > 1 -> {
+            far -> {
                 fade.animateTo(0f, tween(SKIP_HALF_MS, easing = Emphasized))
-                pager.scrollToPage(target)
-                fade.animateTo(1f, tween(SKIP_HALF_MS, easing = Emphasized))
+                try {
+                    pager.scrollToPage(target)
+                } finally {
+                    // A finger on the pager refuses the jump (the refusal ends this effect as it always did): the words
+                    // come back all the same. A new step that cancelled this one brings them back itself.
+                    if (currentCoroutineContext().isActive) fade.animateTo(1f, tween(SKIP_HALF_MS, easing = Emphasized))
+                }
             }
             else -> pager.animateScrollToPage(target)
         }
