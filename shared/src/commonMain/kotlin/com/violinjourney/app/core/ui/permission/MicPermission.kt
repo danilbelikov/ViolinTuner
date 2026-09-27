@@ -10,8 +10,8 @@ import androidx.compose.runtime.Composable
  * already (nothing is asked then) and never on the checks made on every return to the screen, which is
  * why it can be counted (spec 3.34). While a dialog is up, another tap asks nothing ([MicAsk]).
  *
- * With [openSettingsWhenBlocked] a request the system refuses to show ("denied for good": it
- * answers at once and wants no rationale before or after) opens the app settings instead,
+ * With [openSettingsWhenBlocked] a request the system refuses to show ("denied for good": it wants no rationale
+ * before or after, and a refusal was seen before or the answer came at once) opens the app settings instead,
  * because nothing else can help then (spec 3.4).
  */
 @Composable
