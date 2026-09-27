@@ -47,6 +47,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -319,6 +320,30 @@ class SectionsTest {
         assertEquals("G-dur", saved.title)
         assertEquals("no edit, no activity (spec 5.9)", 1L, saved.updatedAtEpochMs)
         assertEquals(listOf<ScaleFormEffect>(ScaleFormEffect.Close), effects)
+    }
+
+    @Test
+    fun `typing a name leaves the lists as they were built`() = runTest {
+        repertoire.add(PieceDraft(title = "Менуэт"), 1)
+        val groupId = repertoire.addGroup("Терции", 2)
+        val (landing, _) = sections()
+        landing.onIntent(SectionsIntent.AddClicked)
+        runCurrent()
+        val cards = landing.state.value.cards
+        landing.onIntent(SectionsIntent.NameChanged("Д"))
+        landing.onIntent(SectionsIntent.NameChanged("Дв"))
+        runCurrent()
+        assertEquals("Дв", landing.state.value.newName)
+        assertSame(cards, landing.state.value.cards)
+
+        val (list, _) = list(SectionRef.Custom(groupId))
+        list.onIntent(RepertoireIntent.DialogRequested(SectionDialog.RENAME))
+        runCurrent()
+        val pieces = list.state.value.cards
+        list.onIntent(RepertoireIntent.NameChanged("Терции и сексты"))
+        runCurrent()
+        assertEquals("Терции и сексты", list.state.value.nameDraft)
+        assertSame(pieces, list.state.value.cards)
     }
 
     @Test

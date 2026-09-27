@@ -40,7 +40,7 @@ open class SectionsViewModel(
     private val newName = MutableStateFlow<String?>(null)
     private val timeExpanded = MutableStateFlow(false)
 
-    val state: StateFlow<SectionsState> = combine(repertoire.pieces, repertoire.groups, newName, blocks.blocks, timeExpanded) { pieces, groups, newName, saved, expanded ->
+    private val content = combine(repertoire.pieces, repertoire.groups, blocks.blocks, timeExpanded) { pieces, groups, saved, expanded ->
         // the alphabet of the interface, asked on each change: the language may have changed since
         val byName = Formats.alphabetical()
         val cards = SectionStats.summaries(pieces, groups, byName).map { SectionCard(it.ref, it.name, it.count) }
@@ -48,11 +48,13 @@ open class SectionsViewModel(
             loading = false,
             cards = cards,
             total = cards.fold(SectionCount.EMPTY) { sum, card -> sum + card.count },
-            newName = newName,
             maxNameLength = config.maxGroupNameLength,
             time = timeCardOf(pieces, saved, expanded, byName),
         )
-    }.stateIn(
+    }
+
+    // The name being typed for a new section joins the lists after they are built: a letter does not count them again.
+    val state: StateFlow<SectionsState> = combine(content, newName) { content, name -> content.copy(newName = name) }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
         SectionsState(loading = true, cards = emptyList(), total = SectionCount.EMPTY, maxNameLength = config.maxGroupNameLength),
     )

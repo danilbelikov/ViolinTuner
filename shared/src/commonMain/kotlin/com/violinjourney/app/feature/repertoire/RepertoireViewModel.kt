@@ -38,16 +38,20 @@ open class RepertoireViewModel(
 ) : ViewModel() {
     private val section: SectionRef = SectionKeys.refOf(savedState.get<String>(ARG_SECTION))
 
-    private data class Ui(val filter: PieceStatus? = null, val dialog: SectionDialog? = null, val nameDraft: String = "")
+    private data class DialogUi(val dialog: SectionDialog? = null, val nameDraft: String = "")
 
-    private val ui = MutableStateFlow(Ui())
+    private val filter = MutableStateFlow<PieceStatus?>(null)
+
+    // The dialog and the name being typed into it: a flow of their own, joined after the list is built — a letter typed
+    // does not build the list again, nor look at the files of its pictures.
+    private val dialogUi = MutableStateFlow(DialogUi())
     private var closed = false
 
     // The name as the list shows it: read by the intents, written where the state is built — both on the main thread.
     private var currentName: String? = null
 
-    val state: StateFlow<RepertoireState> =
-        combine(repertoire.pieces, repertoire.groups, repertoire.pages, sessions.sessions, ui) { pieces, groups, pages, sessions, ui ->
+    private val list: Flow<RepertoireState> =
+        combine(repertoire.pieces, repertoire.groups, repertoire.pages, sessions.sessions, filter) { pieces, groups, pages, sessions, filter ->
             val group = (section as? SectionRef.Custom)?.let { ref -> groups.firstOrNull { it.id == ref.groupId } }
             // Deleted here or from elsewhere: there is nothing to show. Said once — a second "close" would take the screen underneath with it.
             if (section is SectionRef.Custom && group == null && !closed) {
@@ -56,15 +60,16 @@ open class RepertoireViewModel(
             }
             currentName = group?.name
             val own = SectionStats.piecesOf(section, pieces, groups)
-            RepertoireReducer.stateOf(own, pages, sessions, ui.filter, clock.today(), clock.zone) { sheetFiles.existing(it)?.filePath }.copy(
+            RepertoireReducer.stateOf(own, pages, sessions, filter, clock.today(), clock.zone) { sheetFiles.existing(it)?.filePath }.copy(
                 section = section,
                 sectionName = group?.name,
                 count = SectionStats.countOf(own),
-                dialog = ui.dialog,
-                nameDraft = ui.nameDraft,
                 maxNameLength = config.maxGroupNameLength,
             )
-        }.stateIn(
+        }
+
+    val state: StateFlow<RepertoireState> =
+        combine(list, dialogUi) { list, ui -> list.copy(dialog = ui.dialog, nameDraft = ui.nameDraft) }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
             initialValue = RepertoireReducer.loading(filter = null).copy(section = section),
@@ -75,21 +80,21 @@ open class RepertoireViewModel(
 
     fun onIntent(intent: RepertoireIntent) {
         when (intent) {
-            is RepertoireIntent.FilterSelected -> ui.update { it.copy(filter = intent.status) }
+            is RepertoireIntent.FilterSelected -> filter.value = intent.status
             is RepertoireIntent.PieceClicked -> effectChannel.trySend(RepertoireEffect.OpenPiece(intent.id))
             RepertoireIntent.AddClicked -> effectChannel.trySend(RepertoireEffect.OpenNew(section))
             RepertoireIntent.BackClicked -> effectChannel.trySend(RepertoireEffect.Close)
             is RepertoireIntent.DialogRequested ->
-                if (section is SectionRef.Custom) ui.update { it.copy(dialog = intent.dialog, nameDraft = currentName.orEmpty()) }
-            is RepertoireIntent.NameChanged -> ui.update { it.copy(nameDraft = intent.text.takeCodePoints(config.maxGroupNameLength)) }
-            RepertoireIntent.DialogDismissed -> ui.update { it.copy(dialog = null) }
+                if (section is SectionRef.Custom) dialogUi.value = DialogUi(dialog = intent.dialog, nameDraft = currentName.orEmpty())
+            is RepertoireIntent.NameChanged -> dialogUi.update { it.copy(nameDraft = intent.text.takeCodePoints(config.maxGroupNameLength)) }
+            RepertoireIntent.DialogDismissed -> dialogUi.update { it.copy(dialog = null) }
             RepertoireIntent.DialogConfirmed -> confirm()
         }
     }
 
     private fun confirm() {
         val group = section as? SectionRef.Custom ?: return
-        val current = ui.value
+        val current = dialogUi.value
         when (current.dialog) {
             SectionDialog.RENAME -> {
                 val name = PieceRules.cleanGroupName(current.nameDraft, config) ?: return
@@ -99,7 +104,7 @@ open class RepertoireViewModel(
             SectionDialog.DELETE -> viewModelScope.launch { repertoire.deleteGroup(group.groupId) }
             null -> Unit
         }
-        ui.update { it.copy(dialog = null) }
+        dialogUi.update { it.copy(dialog = null) }
     }
 
     companion object {
