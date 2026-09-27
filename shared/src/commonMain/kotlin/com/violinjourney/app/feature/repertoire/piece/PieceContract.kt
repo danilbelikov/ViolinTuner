@@ -135,7 +135,8 @@ sealed interface PieceIntent {
 
     /**
      * The route hands the screen over to what the view model does not open itself — «Звук», «Поделиться», the pickers of
-     * photos and videos: the backing listened to stops, as it does for every screen this one opens (spec 3.32).
+     * photos and videos — or the screen went away (another app, «Домой», the power button; not a rotation): the backing
+     * listened to stops, as it does for every screen this one opens (spec 3.32).
      */
     data object LeavingScreen : PieceIntent
 

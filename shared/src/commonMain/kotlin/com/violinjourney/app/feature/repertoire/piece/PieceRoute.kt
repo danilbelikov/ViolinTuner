@@ -64,8 +64,9 @@ fun PieceRoute(
         viewModel.onIntent(PieceIntent.MicPermissionChanged(micPermissionGranted()))
         viewModel.onIntent(PieceIntent.ScreenResumed)
     }
-    // A take is played with the hands on the violin: the screen must not dim under it.
-    if (take.recording) KeepScreenOn()
+    // A take is played with the hands on the violin, and the backing listened to often along with it: the screen must not
+    // dim under either — its going dark would end the backing's listening (below).
+    if (take.recording || backing?.previewing == true) KeepScreenOn()
 
     val system = rememberPieceSystem(
         onPhotosPicked = { viewModel.onIntent(PieceIntent.PhotosPicked(it)) },
@@ -96,10 +97,14 @@ fun PieceRoute(
         }
     }
 
-    // The selection mode does not outlive the screen (spec 3.18); a rotation only rebuilds it and keeps the mode.
+    // Neither the selection mode (spec 3.18) nor listening to the backing (spec 3.32) outlives the screen — the app going to
+    // the background included; a rotation only rebuilds it and keeps both.
     BackHandler(enabled = state.selection.active) { viewModel.onIntent(PieceIntent.Select(SelectionIntent.Closed)) }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
-        if (!changingConfigurations()) viewModel.onIntent(PieceIntent.Select(SelectionIntent.Closed))
+        if (!changingConfigurations()) {
+            viewModel.onIntent(PieceIntent.Select(SelectionIntent.Closed))
+            viewModel.onIntent(PieceIntent.LeavingScreen)
+        }
     }
 
     // What the route opens by itself leaves the screen as surely as what the view model opens: the backing listened to
