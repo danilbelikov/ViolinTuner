@@ -169,6 +169,8 @@ private fun PlayedBlock(played: List<PlayedLine>) {
 fun EditTimeSheet(sheet: PracticeSheet.EditTime, stepMinutes: Int, onIntent: (PracticeIntent) -> Unit) {
     ModalBottomSheet(
         onDismissRequest = { onIntent(PracticeIntent.EditTimeCancelled) },
+        // taller than half a screen: it opens whole, «Отмена» never under the fold
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         EditTimeSheetContent(sheet, stepMinutes, onIntent)
@@ -213,11 +215,16 @@ fun EditTimeSheetContent(sheet: PracticeSheet.EditTime, stepMinutes: Int, onInte
     }
 }
 
+/**
+ * The column of a sheet of «Занятия». Scrolls when the window is lower than the sheet — landscape, a large font: its
+ * buttons are the only answers to it (spec 3.12). Nothing inside may scroll the same way without a bound.
+ */
 @Composable
 fun SheetColumn(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .verticalScroll(rememberScrollState())
             .padding(start = SheetPadding, end = SheetPadding, bottom = SheetBottom),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {

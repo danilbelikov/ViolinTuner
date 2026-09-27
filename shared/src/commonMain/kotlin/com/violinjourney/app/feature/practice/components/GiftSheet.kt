@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -96,60 +94,58 @@ fun GiftSheetContent(gift: Gift, onAccept: () -> Unit, modifier: Modifier = Modi
         launch { glow.animateTo(1f, tween(ProgressMotion.GIFT_GLOW_MS, delayMillis = ProgressMotion.GIFT_GLOW_DELAY_MS)) }
     }
 
-    // Scrolls when it has to: a low landscape window is shorter than the sheet.
-    Column(modifier = modifier.verticalScroll(rememberScrollState())) {
-        SheetColumn {
-            Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = stringResource(Res.string.gift_title),
-                    color = colors.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-                    modifier = Modifier.fillMaxWidth(),
+    // Scrolls when it has to (SheetColumn): a low landscape window is shorter than the sheet.
+    SheetColumn(modifier) {
+        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = stringResource(Res.string.gift_title),
+                color = colors.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            Box(
+                modifier = Modifier
+                    .size(if (low) StageLow else Stage)
+                    .drawBehind {
+                        drawCircle(
+                            brush = Brush.radialGradient(
+                                0f to glowColor,
+                                GLOW_MID_STOP to glowColor.copy(alpha = glowColor.alpha * GLOW_MID_SHARE),
+                                GLOW_END_STOP to Color.Transparent,
+                            ),
+                            alpha = glow.value,
+                        )
+                    },
+                contentAlignment = Alignment.Center,
+            ) {
+                TrophyIcon(
+                    hours = gift.hours,
+                    locked = false,
+                    size = if (low) IllustrationLow else Illustration,
+                    modifier = Modifier.graphicsLayer {
+                        val scale = ProgressMotion.GIFT_SCALE_FROM + (1f - ProgressMotion.GIFT_SCALE_FROM) * arrival.value
+                        scaleX = scale
+                        scaleY = scale
+                        alpha = arrival.value
+                    },
                 )
-                Box(
-                    modifier = Modifier
-                        .size(if (low) StageLow else Stage)
-                        .drawBehind {
-                            drawCircle(
-                                brush = Brush.radialGradient(
-                                    0f to glowColor,
-                                    GLOW_MID_STOP to glowColor.copy(alpha = glowColor.alpha * GLOW_MID_SHARE),
-                                    GLOW_END_STOP to Color.Transparent,
-                                ),
-                                alpha = glow.value,
-                            )
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    TrophyIcon(
-                        hours = gift.hours,
-                        locked = false,
-                        size = if (low) IllustrationLow else Illustration,
-                        modifier = Modifier.graphicsLayer {
-                            val scale = ProgressMotion.GIFT_SCALE_FROM + (1f - ProgressMotion.GIFT_SCALE_FROM) * arrival.value
-                            scaleX = scale
-                            scaleY = scale
-                            alpha = arrival.value
-                        },
-                    )
-                }
-                Text(
-                    text = name,
-                    color = colors.onSurface,
-                    style = MaterialTheme.typography.headlineMedium.copy(
-                        fontSize = (if (low) NAME_SIZE_LOW else NAME_SIZE).sp, lineHeight = 1.1.em, fontWeight = FontWeight.Bold,
-                    ),
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    text = giftHours(gift.hours) + "\n" + Formats.dayAndMonth(gift.awardedDate),
-                    color = colors.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 22.sp, fontFeatureSettings = TABULAR_FIGURES),
-                    textAlign = TextAlign.Center,
-                )
-                if (!low) Spacer(Modifier.height(ButtonGap))
-                PrimaryButton(text = stringResource(Res.string.gift_thanks), onClick = onAccept)
             }
+            Text(
+                text = name,
+                color = colors.onSurface,
+                style = MaterialTheme.typography.headlineMedium.copy(
+                    fontSize = (if (low) NAME_SIZE_LOW else NAME_SIZE).sp, lineHeight = 1.1.em, fontWeight = FontWeight.Bold,
+                ),
+                textAlign = TextAlign.Center,
+            )
+            Text(
+                text = giftHours(gift.hours) + "\n" + Formats.dayAndMonth(gift.awardedDate),
+                color = colors.onSurfaceVariant,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 22.sp, fontFeatureSettings = TABULAR_FIGURES),
+                textAlign = TextAlign.Center,
+            )
+            if (!low) Spacer(Modifier.height(ButtonGap))
+            PrimaryButton(text = stringResource(Res.string.gift_thanks), onClick = onAccept)
         }
     }
 }

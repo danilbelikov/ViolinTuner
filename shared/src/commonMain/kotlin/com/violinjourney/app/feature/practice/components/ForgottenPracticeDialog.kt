@@ -1,6 +1,8 @@
 package com.violinjourney.app.feature.practice.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -109,6 +111,8 @@ fun ForgottenPracticeDialog(prompt: PracticePrompt.Forgotten, onIntent: (Practic
             modifier = Modifier
                 .fillMaxWidth()
                 .background(colors.surfaceContainerHigh, RoundedCornerShape(DialogCorner))
+                // a low landscape window or a large font: the three answers stay reachable
+                .verticalScroll(rememberScrollState())
                 .padding(start = DialogPaddingSide, end = DialogPaddingSide, top = DialogPaddingTop, bottom = DialogPaddingBottom),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {

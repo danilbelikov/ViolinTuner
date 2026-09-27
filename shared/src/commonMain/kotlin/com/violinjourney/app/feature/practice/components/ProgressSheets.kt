@@ -9,11 +9,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -204,35 +202,34 @@ fun TrophiesSheet(lines: List<TrophyLine>, totalMs: Long, onIntent: (PracticeInt
 fun TrophiesSheetContent(lines: List<TrophyLine>, totalMs: Long, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val names = stringArrayResource(Res.array.progress_trophy_names)
-    Column(modifier = modifier.verticalScroll(rememberScrollState())) {
-        SheetColumn {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Row(
-                    modifier = Modifier.alignByBaseline(),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    AppIcon(AppIcons.Trophy, contentDescription = null, tint = colors.primary)
-                    Text(
-                        text = stringResource(Res.string.trophies_title),
-                        color = colors.onSurface,
-                        style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold),
-                    )
-                }
+    // Scrolls when it has to (SheetColumn): the far marks of a long list below a low window.
+    SheetColumn(modifier) {
+        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Row(
+                modifier = Modifier.alignByBaseline(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                AppIcon(AppIcons.Trophy, contentDescription = null, tint = colors.primary)
                 Text(
-                    text = stringResource(Res.string.trophies_total, Formats.totalTime(totalMs)),
-                    color = colors.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
-                    maxLines = 1,
-                    modifier = Modifier.alignByBaseline(),
+                    text = stringResource(Res.string.trophies_title),
+                    color = colors.onSurface,
+                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold),
                 )
             }
-            Column {
-                lines.forEachIndexed { index, line ->
-                    // The divider stands before the first far mark only.
-                    if (line.isFar && lines.getOrNull(index - 1)?.isFar != true) FarDivider()
-                    TrophyLineRow(line, name = names.getOrElse(line.index) { "" })
-                }
+            Text(
+                text = stringResource(Res.string.trophies_total, Formats.totalTime(totalMs)),
+                color = colors.onSurfaceVariant,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
+                maxLines = 1,
+                modifier = Modifier.alignByBaseline(),
+            )
+        }
+        Column {
+            lines.forEachIndexed { index, line ->
+                // The divider stands before the first far mark only.
+                if (line.isFar && lines.getOrNull(index - 1)?.isFar != true) FarDivider()
+                TrophyLineRow(line, name = names.getOrElse(line.index) { "" })
             }
         }
     }
