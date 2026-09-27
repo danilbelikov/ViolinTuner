@@ -30,11 +30,8 @@ import com.violinjourney.app.core.time.today
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.withContext
-import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.first
 import com.violinjourney.app.core.data.repertoire.SheetFiles
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.IntonationReading
@@ -72,7 +69,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
-import kotlinx.datetime.LocalDate
 
 open class PieceViewModel(
     private val savedState: SavedStateHandle,
@@ -407,7 +403,7 @@ open class PieceViewModel(
         val block = backing.value
         if (underBacking && block != null && block.wanted) {
             if (block.blocksRecording) return
-            val found = backingOf() ?: return
+            val found = knownBacking ?: return
             val pcm = backingPcm ?: return
             // cleared by the system since (spec 5.25): made again first — the button sleeps meanwhile,
             // rather than the take decoding on the thread that reads the microphone
@@ -431,9 +427,6 @@ open class PieceViewModel(
         takes.recordingRequested.value = true
         listening.value = true
     }
-
-
-    private fun backingOf(): Backing? = knownBacking
 
     /** The backing's sound made ready for the mix at [rate] (spec 5.25), off the main thread; the button waits meanwhile. */
     private fun prepare(found: Backing, rate: Int = recordingRate.likelyHz()) {
@@ -501,7 +494,7 @@ open class PieceViewModel(
     }
 
     private fun previewBacking() {
-        val found = backingOf() ?: return
+        val found = knownBacking ?: return
         // not while a take is recorded, nor until the chain has let the microphone go: on iOS the preview sets the
         // session for playing, which would stop the microphone that is still open under it
         if (takes.recordingRequested.value || listening.value) return
@@ -569,8 +562,6 @@ open class PieceViewModel(
         private const val STOP_TIMEOUT_MS = 5_000L
 
         private const val BYTES_PER_MB = 1024L * 1024
-
-        /** The rates a take is recorded at (spec 5.1): the backing is made ready for both. */
 
         // Long enough to survive a rotation, short enough that the microphone goes soon after the screen does (as on Live).
         private const val TAKE_STOP_TIMEOUT_MS = 2_000L

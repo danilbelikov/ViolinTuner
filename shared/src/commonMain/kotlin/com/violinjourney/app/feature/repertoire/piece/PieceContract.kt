@@ -184,8 +184,6 @@ sealed interface PieceIntent {
     data object BackingChipToggled : PieceIntent
 
     data object BackingProblemDismissed : PieceIntent
-
-    /** «Проверить»: the sheet «Настроим наушники». */
 }
 
 sealed interface PieceEffect {

@@ -218,12 +218,12 @@ private fun LevelBars(levels: List<Float>, quiet: Boolean) {
 
 private const val QUIET_SHARE = 0.4f
 
-/** «последний 82 % · лучший 88 %», «6 дублей» and the scores of the takes as a little line (handoff 13c1). */
+/** «последний 82 % · максимум 88 %», «6 дублей» and the scores of the takes as a little line (handoff 13c1). */
 @Composable
 fun TakeProgressCard(progress: TakeProgress, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES)
-    // the summary gets the whole width: beside the chart it wrapped in the middle of «лучший 88 %»
+    // the summary gets the whole width: beside the chart it wrapped in the middle of «максимум 88 %»
     Column(
         modifier = modifier
             .fillMaxWidth()
