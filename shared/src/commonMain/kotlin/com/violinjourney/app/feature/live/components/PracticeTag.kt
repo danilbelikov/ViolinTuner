@@ -60,6 +60,8 @@ private const val SHADOW_ALPHA = 0.30f
  * of blocks on its left — the notch on the side of the key, the rounded corners outside. No practice: the outline, a
  * stopwatch and «Начать занятие»; a tap starts one. A practice runs: paper, a velvet dot, «занятие» and the time; a
  * tap leads to «Закончить занятие». Starting, the paper pours in from the notch. [maxWidth] is what the row can give.
+ * Not [enabled] — a take is recorded, and leaving Live would end it — it looks the same and tells TalkBack it is not
+ * available; the view model answers such a tap with nothing all the same.
  */
 @Composable
 fun PracticeTag(
@@ -68,6 +70,7 @@ fun PracticeTag(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     reduceMotion: Boolean = false,
+    enabled: Boolean = true,
 ) {
     val colors = ViolinTheme.venueColors
     val running = practiceMs != null
@@ -96,7 +99,7 @@ fun PracticeTag(
                 if (paper < 1f) drawPath(outline, colors.bone.copy(alpha = EDGE_ALPHA), style = Stroke(LiveDimens.BookmarkEdge.toPx()))
                 if (paper > 0f) clipRect(right = size.width * paper) { drawPath(outline, colors.bone) }
             }
-            .clickable(role = Role.Button, onClick = onClick)
+            .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .semantics(mergeDescendants = true) { contentDescription = description },
     ) {
         Crossfade(

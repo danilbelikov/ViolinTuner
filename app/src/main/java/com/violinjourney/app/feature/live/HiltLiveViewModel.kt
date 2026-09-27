@@ -2,6 +2,7 @@ package com.violinjourney.app.feature.live
 
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.domain.practice.FinishPracticeAsk
+import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.recording.TakePipeline
@@ -19,4 +20,5 @@ class HiltLiveViewModel @Inject constructor(
     venues: Venues,
     analytics: Analytics,
     finishAsk: FinishPracticeAsk,
-) : LiveViewModel(takes, configSource, runningPractice, clock, venues, analytics, finishAsk)
+    practiceConfig: PracticeConfig,
+) : LiveViewModel(takes, configSource, runningPractice, clock, venues, analytics, finishAsk, practiceConfig)

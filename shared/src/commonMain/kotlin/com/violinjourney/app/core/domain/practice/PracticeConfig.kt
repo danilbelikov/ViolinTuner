@@ -23,6 +23,11 @@ data class PracticeConfig(
     val maxDayMinutes: Int = 12 * 60,
     /** The "violin sounded" mark is written at most this often. */
     val soundMarkIntervalMs: Long = MS_PER_MINUTE,
+    /**
+     * A tap on the practice tag of Live this soon after the practice started is the second tap of the gesture that
+     * started it: it neither ends the practice nor starts it anew (spec 3.12).
+     */
+    val tagSecondTapMs: Long = MS_PER_SECOND,
     /** Lower bounds, in minutes, of fill levels 2, 3 and 4 of the calendar; level 1 is any time. */
     val fillLevelMinutes: List<Int> = listOf(20, 45, 90),
     /** The goal of a block — «подход» (spec 5.21): from, to and by how much. */
@@ -39,6 +44,7 @@ data class PracticeConfig(
     val pieceTimeDays: Int = 30,
 ) {
     companion object {
+        const val MS_PER_SECOND = 1_000L
         const val MS_PER_MINUTE = 60_000L
         const val MS_PER_HOUR = 60 * MS_PER_MINUTE
     }

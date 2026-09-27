@@ -123,7 +123,10 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onOpenRepertoire = { navController.navigateToTopLevel(TopLevelDestination.HISTORY) },
                 onOpenSettings = navController::navigateToSettings,
                 viewModel = viewModel {
-                    LiveViewModel(graph.takes(), graph.configSource, graph.runningPractice, graph.clock, graph.venues, graph.analytics, graph.finishAsk)
+                    LiveViewModel(
+                        graph.takes(), graph.configSource, graph.runningPractice, graph.clock, graph.venues, graph.analytics, graph.finishAsk,
+                        graph.practiceConfig,
+                    )
                 },
                 blockViewModel = viewModel {
                     BlockViewModel(

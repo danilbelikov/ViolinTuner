@@ -46,6 +46,7 @@ fun LiveScreen(
     val home = LocalHomeLook.current
     val currentVenue by rememberUpdatedState(state.venue)
     val currentPracticeMs by rememberUpdatedState(state.practiceMs)
+    val currentRecording by rememberUpdatedState(state.recording != null)
     val currentHome by rememberUpdatedState(home)
     val currentBlock by rememberUpdatedState(block)
     val currentOnIntent by rememberUpdatedState(onIntent)
@@ -85,12 +86,15 @@ fun LiveScreen(
                 )
             },
             tag = { maxWidth, tagModifier ->
+                val practiceMs = currentPracticeMs
                 PracticeTag(
-                    practiceMs = currentPracticeMs,
+                    practiceMs = practiceMs,
                     maxWidth = maxWidth,
                     onClick = { currentOnIntent(LiveIntent.PracticeTagClicked) },
                     modifier = tagModifier,
                     reduceMotion = currentReduceMotion,
+                    // a running practice cannot be finished while a take records: leaving Live would end it (spec 3.12)
+                    enabled = practiceMs == null || !currentRecording,
                 )
             },
             recordKey = { recording, enabled, keyModifier ->

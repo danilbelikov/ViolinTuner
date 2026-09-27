@@ -8,6 +8,7 @@ import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.domain.practice.FinishPracticeAsk
+import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.practice.elapsedTicker
 import com.violinjourney.app.core.domain.session.RecordingRibbon
@@ -45,6 +46,7 @@ open class LiveViewModel(
     private val venues: Venues,
     private val analytics: Analytics = NoOpAnalytics(),
     private val finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
+    private val practiceConfig: PracticeConfig = PracticeConfig(),
     /** The clock the light of Live counts by (spec 5.20): the one the screen reads; tests give their own. */
     private val nanos: () -> Long = ::monotonicNanos,
 ) : ViewModel() {
@@ -223,12 +225,19 @@ open class LiveViewModel(
                 if (takes.requiresMicPermission) micPermissionGranted.value = intent.granted
             LiveIntent.PracticeTagClicked -> if (tagAnswer?.isActive != true) tagAnswer = viewModelScope.launch {
                 // the store, not the state on screen: a tap in the second the practice starts or ends must not do both
-                if (runningPractice.running.first() == null) {
+                val running = runningPractice.running.first()
+                when {
                     // the same start as on «Занятия» (spec 3.12), but Live stays: here one is already where one plays
-                    runningPractice.start(clock.millis())
-                } else {
-                    finishAsk.ask()
-                    effectChannel.send(LiveEffect.FinishPractice)
+                    running == null -> runningPractice.start(clock.millis())
+                    // the second tap of the double tap that started it: neither an end nor a new start (spec 3.12). The raw
+                    // difference — a clock moved back does not lock the tag.
+                    clock.millis() - running.startedAtEpochMs in 0 until practiceConfig.tagSecondTapMs -> Unit
+                    // leaving Live would end the take, as the gear would (spec 3.1): the tag of a running practice waits
+                    recordingRequested.value -> Unit
+                    else -> {
+                        finishAsk.ask()
+                        effectChannel.send(LiveEffect.FinishPractice)
+                    }
                 }
             }
             LiveIntent.SettingsClicked -> effectChannel.trySend(LiveEffect.OpenSettings)

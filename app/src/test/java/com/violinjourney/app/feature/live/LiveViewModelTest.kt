@@ -863,6 +863,42 @@ class LiveViewModelTest {
     }
 
     @Test
+    fun `a second tap right after the tag started a practice does not finish it`() = runTest {
+        val viewModel = viewModel(FakeScenario.SILENCE)
+        val effects = mutableListOf<LiveEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        observe(viewModel, 300)
+
+        // the first tap is written before the second lands: the double tap of a slower finger
+        viewModel.onIntent(LiveIntent.PracticeTagClicked)
+        runCurrent()
+        viewModel.onIntent(LiveIntent.PracticeTagClicked)
+        advance(100)
+
+        assertEquals(0L, viewModel.state.value.practiceMs)
+        assertTrue("no «Закончить занятие»", effects.isEmpty())
+        assertFalse(finishAsk.asked.value)
+    }
+
+    @Test
+    fun `while a take is recorded the tag of a running practice does not lead away`() = runTest {
+        practice.start(startedAt.toEpochMilliseconds() - 754_000)
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        val effects = mutableListOf<LiveEffect>()
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(500)
+        assertTrue(viewModel.state.value.recording != null)
+
+        viewModel.onIntent(LiveIntent.PracticeTagClicked)
+        advance(100)
+        assertTrue("leaving Live would end the take", effects.none { it == LiveEffect.FinishPractice })
+        assertFalse(finishAsk.asked.value)
+        assertTrue(viewModel.state.value.recording != null)
+    }
+
+    @Test
     fun `the gear opens the settings`() = runTest {
         val viewModel = viewModel(FakeScenario.SILENCE)
         val effects = mutableListOf<LiveEffect>()
@@ -891,6 +927,54 @@ class LiveViewModelTest {
         job.cancel()
         advance(3_000)
         assertEquals(NoteCount.ZERO, practiceNotes.count)
+    }
+
+    @Test
+    fun `past twelve hours a practice hears no sound and counts no notes`() = runTest {
+        // it has ended by itself at its last sound (spec 3.12): a morning's playing must not stretch it to twelve hours
+        val practiceStart = startedAt.toEpochMilliseconds() - PracticeConfig().maxPracticeMs - 60_000
+        practice.start(practiceStart)
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        val job = observe(viewModel, 3_000)
+        job.cancel()
+        advance(3_000)
+        assertNull(practice.running.value!!.lastSoundEpochMs)
+        assertEquals(NoteCount.ZERO, practiceNotes.countFor(practiceStart))
+    }
+
+    @Test
+    fun `after the microphone is reopened the notes are written out every few seconds again`() = runTest {
+        practice.start(startedAt.toEpochMilliseconds() - 60_000)
+        // like both microphones: every opening counts its frames from zero; the first one breaks after six seconds
+        var attempts = 0
+        val source = object : PitchSource {
+            override val requiresMicPermission = false
+            override val audioTap: AudioTap? = null
+            override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
+                val attempt = ++attempts
+                var t = 0L
+                while (true) {
+                    if (attempt == 1 && t > 6_000) throw MicUnavailableException(MicUnavailableReason.READ_FAILED, "read failed")
+                    // A4 and B4 by turns, half a second each: a note ends every half second
+                    val hz = if ((t / 500) % 2 == 0L) 440.0 else 493.88
+                    emit(PitchFrame.pitched(t, hz, clarity = 0.95, rms = 0.1, a4Hz = config.a4Hz))
+                    delay(10)
+                    t += 10
+                }
+            }
+        }
+        val viewModel = viewModel(source)
+        observe(viewModel, 6_100)
+        assertEquals(LiveSignal.MicUnavailable, viewModel.state.value.signal)
+        val beforeReopening = practiceNotes.count.played
+        assertTrue(beforeReopening > 0)
+
+        advance(IntonationConfig().micRetryDelayMs + 3_000)
+        assertEquals(2, attempts)
+        assertTrue(
+            "notes of the reopened stream are written while it plays: ${practiceNotes.count.played} after $beforeReopening",
+            practiceNotes.count.played > beforeReopening,
+        )
     }
 
     @Test
