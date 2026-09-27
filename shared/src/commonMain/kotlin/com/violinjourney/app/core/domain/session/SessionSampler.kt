@@ -9,7 +9,8 @@ import com.violinjourney.app.core.domain.IntonationReading
  *
  * Only fresh measurements count: a reading held on screen through a pitch gap is not data, and
  * a bucket that has nothing else is "no note". If the note changes inside a bucket, the note
- * with more readings wins.
+ * with more readings wins; a tie goes to the note heard last — what the player was seeing then —
+ * and not to whichever the map happens to list first, which differs between Android and iOS.
  */
 class SessionSampler(private val config: IntonationConfig) {
     private val samples = ArrayList<SessionSample?>()
@@ -18,6 +19,10 @@ class SessionSampler(private val config: IntonationConfig) {
     private var bucket = 0
     private val centsSum = HashMap<Int, Double>()
     private val counts = HashMap<Int, Int>()
+
+    /** When each note of the bucket was last heard, by reading: the tie-break. */
+    private val lastHeard = HashMap<Int, Int>()
+    private var readingIndex = 0
 
     /** Time covered so far. */
     val durationMs: Long
@@ -32,6 +37,7 @@ class SessionSampler(private val config: IntonationConfig) {
             val midi = reading.note.midi
             centsSum[midi] = (centsSum[midi] ?: 0.0) + reading.cents
             counts[midi] = (counts[midi] ?: 0) + 1
+            lastHeard[midi] = readingIndex++
         }
     }
 
@@ -46,11 +52,12 @@ class SessionSampler(private val config: IntonationConfig) {
         samples += currentSample()
         centsSum.clear()
         counts.clear()
+        lastHeard.clear()
         bucket++
     }
 
     private fun currentSample(): SessionSample? {
-        val midi = counts.maxByOrNull { it.value }?.key ?: return null
+        val midi = counts.keys.maxWithOrNull(compareBy<Int> { counts.getValue(it) }.thenBy { lastHeard.getValue(it) }) ?: return null
         return SessionSample(midi, centsSum.getValue(midi) / counts.getValue(midi))
     }
 }

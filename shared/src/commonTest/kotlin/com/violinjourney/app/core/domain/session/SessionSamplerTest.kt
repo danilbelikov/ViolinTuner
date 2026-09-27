@@ -58,6 +58,21 @@ class SessionSamplerTest {
     }
 
     @Test
+    fun `a tie in a bucket goes to the note heard last — on every platform`() {
+        sampler.add(0, active(69, 1.0))
+        sampler.add(10, active(69, 3.0))
+        sampler.add(20, active(71, -1.0))
+        sampler.add(30, active(71, -3.0))
+        assertEquals(SessionSample(71, -2.0), sampler.snapshot().last(), "71 was heard last")
+
+        sampler.add(50, active(71, -1.0))
+        sampler.add(60, active(71, -3.0))
+        sampler.add(70, active(69, 1.0))
+        sampler.add(80, active(69, 3.0))
+        assertEquals(SessionSample(69, 2.0), sampler.snapshot().last(), "69 was heard last")
+    }
+
+    @Test
     fun `empty sampler`() {
         assertEquals(listOf<SessionSample?>(null), sampler.snapshot())
         assertEquals(0, sampler.durationMs)
