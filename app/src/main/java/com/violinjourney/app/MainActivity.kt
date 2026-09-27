@@ -149,9 +149,14 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
                 modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding),
             )
             // A process that has just put a copy in place opens on «Занятия»: the restored days are seen there at once (spec 3.20).
+            // After the restart of a restore the stack is «Занятия» alone and nothing moves; a process that died with the copy
+            // marked ready and is brought back from the recent apps gets its old screens restored above it — they go. Popped,
+            // not switched to: a tab reselected with `restoreState` would bring the same screens back.
             LaunchedEffect(Unit) {
                 if (ViolinTunerApp.consumeStartedAfter() == RestoreSwap.Outcome.RESTORED && route != ONBOARDING_ROUTE) {
-                    navController.navigateToTopLevel(TopLevelDestination.PRACTICE)
+                    if (!navController.popBackStack(TopLevelDestination.START.route, inclusive = false)) {
+                        navController.navigateToTopLevel(TopLevelDestination.START)
+                    }
                 }
             }
             LaunchedEffect(openBackup) {
