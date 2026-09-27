@@ -2,6 +2,7 @@ package com.violinjourney.app.core.io
 
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertTrue
@@ -51,7 +52,11 @@ class IosFileLayerTest {
     fun `the room for a write the person asked for is read from the system and is never less than the free blocks`() {
         // null would mean the key is not read at all, and the room would silently be NSFileSystemFreeSize again
         assertNotNull(folder.importantUsageBytes(), "volumeAvailableCapacityForImportantUsage is read")
-        assertTrue(folder.availableBytes() >= folder.freeSystemBytes())
         assertTrue(folder.availableBytes() > 0)
+        // the rule on two readings: the disk of a busy machine changes between two reads of it, so the live numbers are
+        // not compared with each other (the free blocks read after the room once came out larger and failed the run)
+        assertEquals(9_000L, roomOf(importantUsage = 9_000, freeBlocks = 5_000))
+        assertEquals(5_000L, roomOf(importantUsage = 3_000, freeBlocks = 5_000), "never less than the free blocks")
+        assertEquals(5_000L, roomOf(importantUsage = null, freeBlocks = 5_000), "a volume that does not say")
     }
 }

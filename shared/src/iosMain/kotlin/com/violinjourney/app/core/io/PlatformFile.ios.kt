@@ -45,7 +45,10 @@ internal fun PlatformFile.isRegularFile(): Boolean = memScoped {
  * some volumes answer the first with nothing. Blocking, and not on the main thread: the system works out what it could
  * free, which is slower than counting free blocks.
  */
-internal fun PlatformFile.availableBytes(): Long = maxOf(importantUsageBytes() ?: 0L, freeSystemBytes())
+internal fun PlatformFile.availableBytes(): Long = roomOf(importantUsageBytes(), freeSystemBytes())
+
+/** [availableBytes] of two readings: what the system would give a wanted write, never less than the free blocks. */
+internal fun roomOf(importantUsage: Long?, freeBlocks: Long): Long = maxOf(importantUsage ?: 0L, freeBlocks)
 
 /** `volumeAvailableCapacityForImportantUsage` of the volume this lies on; null when the system does not say. */
 @OptIn(ExperimentalForeignApi::class)
