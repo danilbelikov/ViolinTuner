@@ -192,6 +192,8 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
 
     init {
         storageScope.launch(Dispatchers.Main) { backupManager.job.collect { if (!backupManager.running) IosKeepAlive.stop() } }
+        // a take on its way to the database is not put to sleep halfway when the app leaves (spec 3.9, 3.32)
+        storageScope.launch(Dispatchers.Main) { IosTakeKeepAlive.follow(recordingWatch) }
         // the consent lives in these settings: it is followed as long as they are this graph's
         statistics?.followConsent(settings, storageScope)
     }

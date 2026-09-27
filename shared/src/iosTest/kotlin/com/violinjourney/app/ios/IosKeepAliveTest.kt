@@ -1,12 +1,19 @@
 package com.violinjourney.app.ios
 
+import com.violinjourney.app.core.recording.RecordingWatch
 import com.violinjourney.app.core.ui.components.ScreenOnHolds
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertTrue
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.runCurrent
+import kotlinx.coroutines.test.runTest
 
-/** A copy on iOS keeps the screen lit and asks for background time again whenever the app comes back (spec 3.20). */
+/**
+ * A copy on iOS keeps the screen lit and asks for background time again whenever the app comes back (spec 3.20); a take
+ * holds background time from its start until it is saved, without the screen (spec 3.9, 3.32).
+ */
 class IosKeepAliveTest {
     private class FakeTime : BackgroundTime {
         var begun = 0
@@ -71,6 +78,31 @@ class IosKeepAliveTest {
         turns.becameActive()
         assertEquals(1, time.begun)
         assertFalse(screen.held)
+    }
+
+    @Test
+    fun `a take holds background time from its start until it is saved and leaves the screen alone`() = runTest {
+        val watch = RecordingWatch()
+        val follower = backgroundScope.launch { IosTakeKeepAlive.follow(watch, time) }
+        runCurrent()
+        assertEquals(0, time.begun, "no take, no stint")
+
+        watch.set(true)
+        runCurrent()
+        assertEquals(1, time.begun)
+        assertFalse(screen.held)
+        assertTrue(time.ended.isEmpty(), "held while the take is finished, not only while it records")
+
+        watch.set(false)
+        runCurrent()
+        assertEquals(listOf(1uL), time.ended, "given back once the take is in the database")
+
+        // the graph goes (a copy restored) in the middle of the next take: its stint goes with it
+        watch.set(true)
+        runCurrent()
+        follower.cancel()
+        runCurrent()
+        assertEquals(listOf(1uL, 2uL), time.ended)
     }
 
     @Test
