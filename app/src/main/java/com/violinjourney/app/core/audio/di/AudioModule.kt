@@ -22,6 +22,8 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.recording.DecodingFileTakeAnalyzer
 import com.violinjourney.app.core.recording.FileTakeAnalyzer
 import com.violinjourney.app.core.recording.TakePipeline
+import com.violinjourney.app.core.recording.video.AppVideoFiles
+import com.violinjourney.app.core.recording.video.VideoFiles
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -45,8 +47,6 @@ object AudioModule {
     fun provideRecordingRate(real: Provider<AndroidRecordingRate>): RecordingRate =
         if (BuildConfig.FAKE_PITCH_SOURCE) RecordingRate { TakePipeline.DEFAULT_RATE } else real.get()
 
-    // MPM over YIN by DetectorComparisonTest: same accuracy on clean tones, slightly smaller
-    // error under noise, negligible extra cost.
     @Provides
     fun providePcmEncoderFactory(analytics: Analytics): PcmEncoderFactory =
         PcmEncoderFactory { file, rate -> AacFileEncoder(file, rate, analytics) }
@@ -55,7 +55,7 @@ object AudioModule {
     fun provideSessionAudioFiles(impl: AppSessionAudioFiles): SessionAudioFiles = impl
 
     @Provides
-    fun provideVideoFiles(impl: com.violinjourney.app.core.recording.video.AppVideoFiles): com.violinjourney.app.core.recording.video.VideoFiles = impl
+    fun provideVideoFiles(impl: AppVideoFiles): VideoFiles = impl
 
     @Provides
     fun provideFileTakeAnalyzer(
@@ -67,6 +67,8 @@ object AudioModule {
     @Provides
     fun provideSessionWaveforms(impl: AppSessionWaveforms): SessionWaveforms = impl
 
+    // MPM over YIN by DetectorComparisonTest: same accuracy on clean tones, slightly smaller
+    // error under noise, less cost per frame.
     @Provides
     fun providePitchDetectorFactory(): PitchDetectorFactory = PitchDetectorFactory(::MpmDetector)
 }

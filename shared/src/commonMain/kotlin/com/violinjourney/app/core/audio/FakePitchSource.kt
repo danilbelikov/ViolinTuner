@@ -68,7 +68,7 @@ class FakePitchSource(
     }
 
     private fun frameTimeMs(index: Long, config: IntonationConfig): Long =
-        index * config.hopSizeSamples * MS_PER_SECOND.toLong() / config.sampleRateHz
+        index * config.hopSizeSamples * MS_PER_SECOND.toLong() / SAMPLE_RATE_HZ
 
     private fun driftCents(seconds: Double): Double =
         (DRIFT_CENTS_PER_SECOND * seconds).coerceAtMost(DRIFT_LIMIT_CENTS)
@@ -85,6 +85,9 @@ class FakePitchSource(
     // Every scenario plays around A4.
     private companion object {
         const val MS_PER_SECOND = 1000.0
+
+        /** Frames are timed as a 44.1 kHz microphone hops them (spec 5.1 names 44.1 and 48). */
+        const val SAMPLE_RATE_HZ = 44_100
         const val IN_TUNE_OFFSET_CENTS = 2.0
         const val DRIFT_CENTS_PER_SECOND = 12.0
         const val DRIFT_LIMIT_CENTS = 35.0

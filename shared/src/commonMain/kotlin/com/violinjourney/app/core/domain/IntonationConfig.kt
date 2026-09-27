@@ -91,7 +91,6 @@ data class IntonationConfig(
     val centsReadoutMax: Int = 99,
 
     // Audio framing (spec 5.1)
-    val sampleRateHz: Int = 44_100,
     /** Tried in this order after the device's native rate. */
     val supportedSampleRatesHz: List<Int> = listOf(48_000, 44_100),
     val windowSizeSamples: Int = 2_048,
