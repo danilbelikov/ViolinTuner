@@ -33,7 +33,6 @@ import com.violinjourney.app.core.concurrent.withLock
 import com.violinjourney.app.core.domain.journey.JourneyStop
 import com.violinjourney.app.core.domain.journey.StopView
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 
 /** The grid every postcard is drawn on (handoff): the horizon of the outdoor ones is at y 190. */
 object SceneGrid {
@@ -71,18 +70,19 @@ class PreparedScene(val scene: Scene, val mode: SceneMode, val paths: List<Path>
     val lives: Boolean = steps.any { it !is SceneStep.Still }
 }
 
-private object SceneCache {
-    private val lock = PlatformLock()
-    private val scenes = HashMap<String, PreparedScene>()
+/**
+ * The scenes read from their files, the latest seen kept within [SCENE_LAYER_BUDGET] layers: the ribbon of passed stops,
+ * the stop on screen in both times of day, the hall behind Live. A scene let go is read again when it is seen again.
+ */
+private val scenes = RecentScenes<String, PreparedScene>(SCENE_LAYER_BUDGET) { it.scene.layers.size }
 
-    fun get(key: String): PreparedScene? = lock.withLock { scenes[key] }
+/** All the scenes of the journey are about 37 000 layers: this is some thirty average ones. */
+private const val SCENE_LAYER_BUDGET = 12_000
 
-    fun put(key: String, scene: PreparedScene) = lock.withLock {
-        scenes[key] = scene
-    }
-}
-
-/** Paths by their text: a composed room is put together again at every purchase, its paths are parsed once. */
+/**
+ * Paths by their text: a composed room is put together again at every purchase, its paths are parsed once. Bounded
+ * without a budget: a composed room is made only of the paths of the home files (two homes, two times of day).
+ */
 private object PathCache {
     private val lock = PlatformLock()
     private val paths = HashMap<String, Path>()
@@ -143,16 +143,19 @@ fun DrawScope.drawPrepared(prepared: PreparedScene, k: Float, seconds: Float? = 
 fun rememberScene(sceneKey: String?, mode: SceneMode, folder: String = "journey"): PreparedScene? {
     val id = sceneKey?.let { "$it.${mode.suffix}" }
     val cacheKey = id?.let { "$folder/$it" }
-    val prepared by produceState(initialValue = cacheKey?.let(SceneCache::get), cacheKey) {
-        if (id == null) {
+    // a scene kept already is there in the first frame; the cache is looked at once a key, not on every recomposition
+    val initial = remember(cacheKey) { cacheKey?.let(scenes::peek) }
+    val prepared by produceState(initial, cacheKey) {
+        if (cacheKey == null) {
             value = null
             return@produceState
         }
-        value = SceneCache.get(cacheKey!!) ?: withContext(Dispatchers.Default) {
+        // two pictures of one scene at once (the full screen and its postcard) read it once
+        value = scenes.obtain(cacheKey, Dispatchers.Default) {
             readSceneText("$folder/$id.scene")?.let { text ->
                 val scene = SceneParser.parse(text)
                 val paths = scene.layers.map { PathParser().parsePathString(it.path).toPath() }
-                PreparedScene(scene, mode, paths, paths.map { it.getBounds() }).also { SceneCache.put(cacheKey, it) }
+                PreparedScene(scene, mode, paths, paths.map { it.getBounds() })
             }
         }
     }
