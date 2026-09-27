@@ -33,7 +33,6 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.violinjourney.app.core.backup.RestoreSwap
-import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.ui.analytics.HiltAnalyticsViewModel
 import com.violinjourney.app.core.ui.components.LocalMessages
 import com.violinjourney.app.core.ui.components.Messages
@@ -164,7 +163,7 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
         }
         PracticePromptHost(
             prompt = practicePrompt,
-            stepMinutes = PracticeConfig().editStepMinutes,
+            stepMinutes = startViewModel.promptStepMinutes,
             onIntent = startViewModel::onPromptIntent,
             effects = startViewModel.promptEffects,
         )

@@ -75,6 +75,9 @@ open class AppStartViewModel(
     private val prompt = MutableStateFlow<PracticePrompt?>(null)
     val practicePrompt: StateFlow<PracticePrompt?> = prompt.asStateFlow()
 
+    /** The step of «−» and «+» in the forgotten-practice prompt (spec 3.12), from the injected [PracticeConfig]. */
+    val promptStepMinutes: Int get() = config.editStepMinutes
+
     private val promptEffectChannel = Channel<PracticePromptEffect>(Channel.BUFFERED)
 
     /** What the prompt tells without a question: «Слишком коротко» (spec 3.12). */

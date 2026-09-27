@@ -88,7 +88,10 @@ class AppStartViewModelTest {
         }
     }
 
-    private fun viewModel(finisher: PracticeFinisher = testPracticeFinisher(repository, store, clock)) = AppStartViewModel(
+    private fun viewModel(
+        finisher: PracticeFinisher = testPracticeFinisher(repository, store, clock),
+        config: PracticeConfig = this.config,
+    ) = AppStartViewModel(
         FakeSettingsRepository(), store, finisher, config, clock, repository, TrophyAwarder(trophies, ProgressConfig(), clock), repertoire,
         Housekeeping(
             FakeSessionRepository(), FakeSessionWaveforms(), avatarFiles, profile, shareFiles, repertoire, NoBackings, backingPcm, clock,
@@ -100,6 +103,12 @@ class AppStartViewModelTest {
     private suspend fun running(elapsedMs: Long, lastSoundAgoMs: Long?) {
         store.startIfIdle(now - elapsedMs)
         if (lastSoundAgoMs != null) store.markSound(now - lastSoundAgoMs)
+    }
+
+    @Test
+    fun `the forgotten-practice prompt steps by the injected config`() = runTest {
+        assertEquals(10, viewModel(config = PracticeConfig(editStepMinutes = 10)).promptStepMinutes)
+        assertEquals(PracticeConfig().editStepMinutes, viewModel().promptStepMinutes)
     }
 
     @Test

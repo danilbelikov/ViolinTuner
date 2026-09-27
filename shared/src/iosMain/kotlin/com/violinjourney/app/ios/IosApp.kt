@@ -127,7 +127,7 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
                     }
                     PracticePromptHost(
                         prompt = practicePrompt,
-                        stepMinutes = graph.practiceConfig.editStepMinutes,
+                        stepMinutes = start.promptStepMinutes,
                         onIntent = start::onPromptIntent,
                         effects = start.promptEffects,
                     )
