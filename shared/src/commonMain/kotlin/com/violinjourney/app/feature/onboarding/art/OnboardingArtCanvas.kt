@@ -3,10 +3,13 @@ package com.violinjourney.app.feature.onboarding.art
 import androidx.compose.foundation.Canvas
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.State
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
@@ -27,6 +30,7 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.runtime.withFrameNanos
 import com.violinjourney.app.core.ui.theme.ZoneColors
+import com.violinjourney.app.feature.journey.art.awaitGridFrame
 import kotlin.math.abs
 import kotlin.math.floor
 import kotlin.math.max
@@ -60,9 +64,13 @@ fun OnboardingArtCanvas(
     fadeEndPx: Float = 0f,
 ) {
     val prepared = remember(scenes) { scenes.map(::PreparedArt) }
-    val clock = rememberArtClock(still)
     val starts = remember { mutableStateMapOf<Int, Float>() }
+    val inView by rememberUpdatedState(shownPage)
+    val pictures by rememberUpdatedState(prepared)
+    // at the rate of the display while the page's quick motions of its visit run, on the postcards' grid after them
+    val clock = rememberArtClock(still) { (starts[inView] ?: 0f) + (pictures.getOrNull(inView)?.quickUntil ?: 0f) }
     LaunchedEffect(shownPage) { starts[shownPage] = clock.value }
+    val layerPaint = remember { Paint() }
 
     Canvas(modifier) {
         val h = height?.invoke()?.coerceAtMost(size.height) ?: size.height
@@ -92,7 +100,7 @@ fun OnboardingArtCanvas(
                         val zone = demoZone(LiveDemo.at(t, still), zoneColors)
                         // The far land lags behind the page, so it would still be half in view when its page
                         // is gone and would vanish at once: it melts away as its page leaves instead.
-                        withAlpha(alpha * (1f - abs(page - pos)), view) {
+                        withAlpha(alpha * (1f - abs(page - pos)), view, layerPaint) {
                             drawDepth(art, 1, offset * FAR_DEPTH, t, still, zone, 1f)
                         }
                         drawDepth(art, 2, offset, t, still, zone, alpha)
@@ -107,12 +115,40 @@ fun OnboardingArtCanvas(
     }
 }
 
-/** Seconds since the pictures appeared, ticking every frame unless motion is removed. */
+/** Seconds since the pictures appeared, stepped by [runArtClock] unless motion is removed. */
 @Composable
-private fun rememberArtClock(still: Boolean): State<Float> = produceState(0f, still) {
-    if (still) return@produceState
-    val start = withFrameNanos { it }
-    while (true) withFrameNanos { value = (it - start) / NANOS_PER_SECOND }
+private fun rememberArtClock(still: Boolean, smoothUntil: () -> Float): State<Float> {
+    val until by rememberUpdatedState(smoothUntil)
+    val seconds = remember { mutableFloatStateOf(0f) }
+    LaunchedEffect(still) {
+        if (!still) runArtClock(seconds) { until() }
+    }
+    return seconds
+}
+
+/**
+ * The clock of the pictures: seconds since its first frame, written inside the frames. Until [smoothUntil] — while
+ * the walker walks, the copy flies, the bars appear — on every frame of the display; then on the postcards' grid,
+ * thirty a second ([awaitGridFrame]), which is plenty for the stars, the sinking sun and the phone's colours and on
+ * iOS a quarter of the frames drawn. The swipe is read in the draw phase and keeps the rate of the display either way.
+ */
+internal suspend fun runArtClock(seconds: MutableFloatState, smoothUntil: () -> Float) {
+    var start = -1L
+    var shown = 0L
+    val step = { now: Long ->
+        if (start < 0) start = now
+        seconds.floatValue = (now - start) / NANOS_PER_SECOND
+    }
+    while (true) {
+        shown = if (seconds.floatValue < smoothUntil()) {
+            withFrameNanos { now ->
+                step(now)
+                now
+            }
+        } else {
+            awaitGridFrame(shown, onFrame = step)
+        }
+    }
 }
 
 private fun demoZone(mix: LiveDemo.Mix, zones: ZoneColors): Color =
@@ -147,12 +183,13 @@ private fun DrawScope.drawDepth(art: PreparedArt, depth: Int, dx: Float, t: Floa
     }
 }
 
-/** Draws [block] as one layer at [alpha], so shapes of the same page never show through each other. */
-private inline fun DrawScope.withAlpha(alpha: Float, bounds: Rect, block: DrawScope.() -> Unit) {
+/** Draws [block] as one layer at [alpha], so shapes of the same page never show through each other; [paint] is the canvas's own, reused. */
+private inline fun DrawScope.withAlpha(alpha: Float, bounds: Rect, paint: Paint, block: DrawScope.() -> Unit) {
     if (alpha <= 0f) return
     if (alpha >= 1f) return block()
     val canvas = drawContext.canvas
-    canvas.saveLayer(bounds, Paint().apply { this.alpha = alpha })
+    paint.alpha = alpha
+    canvas.saveLayer(bounds, paint)
     block()
     canvas.restore()
 }
@@ -161,7 +198,7 @@ private fun DrawScope.drawFade(art: PreparedArt) {
     art.layers.forEachIndexed { i, layer -> if (layer.fade) art.draw(this, i, 0f, true, Color.Unspecified, 1f) }
 }
 
-/** A scene with its paths parsed and its brushes made once; only what follows the zone is made per frame. */
+/** A scene with its paths parsed and its brushes made once; what follows the zone is made again only when its colour changes. */
 private class PreparedArt(scene: ArtScene) {
     val layers = scene.layers
     private val gradients = scene.gradients
@@ -174,6 +211,13 @@ private class PreparedArt(scene: ArtScene) {
         layer.fill == ZONE || gradientOf(layer)?.stops?.any { it.color == ZONE } == true
     }
     private val brushes: List<Brush?> = layers.mapIndexed { i, layer -> if (followsZone[i]) null else brushOf(layer, Color.Unspecified) }
+
+    /** The brushes that follow the zone, with the colour each was made for: new ones only inside a 0.4 s crossfade of 36b. */
+    private val zoneBrushes = arrayOfNulls<Brush>(layers.size)
+    private val zoneBrushColors = arrayOfNulls<Color>(layers.size)
+
+    /** When the quick motions of this page's visit are over, in seconds of the page ([ArtMotion.quickOnceUntil]). */
+    val quickUntil: Float = motions.maxOfOrNull { it?.quickOnceUntil() ?: 0f } ?: 0f
     private val strokes: List<Stroke?> = layers.map { layer ->
         if (layer.stroke == null) null else Stroke(width = layer.strokeWidth, cap = StrokeCap.Round, join = StrokeJoin.Round)
     }
@@ -186,11 +230,19 @@ private class PreparedArt(scene: ArtScene) {
         if (alpha <= 0f) return
         val shift = motion?.shift(t, still) ?: ArtShift.None
         scope.translate(shift.dx, shift.dy) {
-            val brush = brushes[i] ?: if (followsZone[i]) brushOf(layer, zone) else null
+            val brush = brushes[i] ?: if (followsZone[i]) zoneBrush(i, layer, zone) else null
             if (brush != null) drawPath(paths[i], brush, alpha = layer.opacity * alpha)
             val stroke = strokes[i]
             val color = strokeColors[i]
             if (stroke != null && color != null) drawPath(paths[i], color, alpha = layer.opacity * alpha, style = stroke)
+        }
+    }
+
+    private fun zoneBrush(i: Int, layer: ArtLayer, zone: Color): Brush? {
+        if (zoneBrushColors[i] == zone) return zoneBrushes[i]
+        return brushOf(layer, zone).also {
+            zoneBrushes[i] = it
+            zoneBrushColors[i] = zone
         }
     }
 

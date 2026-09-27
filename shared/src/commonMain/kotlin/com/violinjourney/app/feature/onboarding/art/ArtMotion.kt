@@ -15,6 +15,13 @@ internal sealed interface ArtMotion {
 
     fun shift(t: Float, still: Boolean): ArtShift = ArtShift.None
 
+    /**
+     * When a quick motion that runs once per visit is over, seconds after the page came into view; null — nothing
+     * quick and once: a slow one (the sun sinking over 20 s) or one that goes round. While a quick one runs the
+     * picture is drawn at the rate of the display — at 30 frames a second the copy's arc would step by a dozen dp.
+     */
+    fun quickOnceUntil(): Float? = null
+
     /** Stars: 1 → 0.3 → 1 over [period], starting after [delay]. */
     data class Twinkle(val period: Float, val delay: Float) : ArtMotion {
         override fun alpha(t: Float, still: Boolean): Float {
@@ -32,6 +39,8 @@ internal sealed interface ArtMotion {
     /** The bars on the road come one by one. */
     data class Appear(val delay: Float) : ArtMotion {
         override fun alpha(t: Float, still: Boolean) = progress(t, delay, APPEAR_S, still, Linear)
+
+        override fun quickOnceUntil() = delay + APPEAR_S
     }
 
     /** The walker with the case takes a few steps up the road. */
@@ -40,6 +49,8 @@ internal sealed interface ArtMotion {
             val p = progress(t, 0f, WALK_S, still, EaseInOut)
             return ArtShift(WALK_DX * p, WALK_DY * p)
         }
+
+        override fun quickOnceUntil() = WALK_S
     }
 
     /** The copy flies from the phone into the folder along an arc, once; before it sets off it is not there. */
@@ -54,6 +65,8 @@ internal sealed interface ArtMotion {
             val cy = 2f * COPY_MID_Y - COPY_FROM_Y / 2f
             return ArtShift(u * u * COPY_FROM_X + 2f * u * p * cx, u * u * COPY_FROM_Y + 2f * u * p * cy)
         }
+
+        override fun quickOnceUntil() = COPY_DELAY_S + COPY_S
     }
 
     /** The mark on the phone's ring: seen while the demo shows its zone. */
