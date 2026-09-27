@@ -43,3 +43,29 @@ class MarkerSpring(private val dampingRatio: Float, private val stiffness: Float
         const val REST_VELOCITY = 0.001f
     }
 }
+
+/**
+ * Whether the marker of the scale needs frames, and when it jumps instead of riding the spring (spec 3.6, 5.3):
+ * after a silence it shows up where the pitch is, not travelling from its old place. Every target is shown to
+ * [follow] — the silences too, even while the spring sleeps at rest — so none of them is missed. Pure.
+ */
+class MarkerTrack(private val spring: MarkerSpring, visible: Boolean) {
+    private var visible = visible
+
+    /**
+     * Takes the marker's target, null in silence. True when there is something to show: the marker has just
+     * jumped to [target] after a silence, or the spring still has a way to go; false in silence and at rest.
+     */
+    fun follow(target: Float?): Boolean {
+        if (target == null) {
+            visible = false
+            return false
+        }
+        if (!visible) {
+            spring.snapTo(target)
+            visible = true
+            return true
+        }
+        return !spring.isAtRest(target)
+    }
+}

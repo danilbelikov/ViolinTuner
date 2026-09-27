@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import com.violinjourney.app.core.ui.theme.LiveTheme
 import com.violinjourney.app.feature.live.MarkerSpring
+import com.violinjourney.app.feature.live.MarkerTrack
 import kotlinx.coroutines.flow.first
 
 /**
@@ -55,23 +56,19 @@ fun CentsScale(
         MarkerSpring(LiveMotion.MARKER_DAMPING, LiveMotion.MARKER_STIFFNESS, Snapshot.withoutReadObservation { target() } ?: CENTER)
     }
     val position = remember { mutableFloatStateOf(spring.position) }
+    val track = remember { MarkerTrack(spring, visible = Snapshot.withoutReadObservation { target() } != null) }
     LaunchedEffect(Unit) {
-        var wasVisible = target() != null
         while (true) {
-            // Asleep while there is nothing to do: no frames are spent on a marker at rest.
-            val goal = snapshotFlow { target() }.first { it != null && (!wasVisible || !spring.isAtRest(it)) }!!
-            if (!wasVisible) spring.snapTo(goal)
-            wasVisible = true
+            // Asleep while there is nothing to do: no frames are spent on a marker at rest. The silences are seen
+            // here too, so the next note makes the marker jump even when the spring was asleep before it.
+            snapshotFlow { target() }.first { track.follow(it) }
+            position.floatValue = spring.position
             var last = withFrameMillis { it }
             while (true) {
                 val current = target()
-                if (current == null) {
-                    wasVisible = false
-                    break
-                }
-                if (spring.isAtRest(current)) break
+                if (!track.follow(current)) break
                 val now = withFrameMillis { it }
-                spring.advance(current, (now - last).toFloat())
+                spring.advance(current!!, (now - last).toFloat())
                 last = now
                 position.floatValue = spring.position
             }
