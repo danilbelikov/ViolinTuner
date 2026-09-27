@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 /** What the history list needs; stored computed so that the list never re-analyses sessions. */
 data class SessionSummary(
     val id: Long,
-    /** Null = the default "Сессия · date" name, built by the UI in its locale. */
+    /** Null = the default «Запись · date» name, built by the UI in the language of the interface. */
     val title: String?,
     val startedAtEpochMs: Long,
     val durationMs: Long,
@@ -20,7 +20,7 @@ data class SessionSummary(
     val offPercent: Int,
     val maeCents: Double,
     val biasCents: Double,
-    /** Zones of the first notes, for the mini bars of the history card. */
+    /** Zones of the first notes (spec 5.5), stored with the summary; no card draws them since spec 3.21. */
     val previewZones: List<Zone>,
     /**
      * Null while the session has no audio (recorded before stage 11 or from a silent source), and when its file is gone —

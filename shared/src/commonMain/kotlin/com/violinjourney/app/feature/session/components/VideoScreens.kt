@@ -270,8 +270,9 @@ fun FullscreenVideo(
             playing = playing,
             callbacks = callbacks,
             onTap = {
-                // a tap with the panel away brings it back and pauses, as the handoff has it; with the panel there it is the panel's business
-                if (panel) onPlayPause() else onPlayPause()
+                // a tap pauses or resumes, as on the video in the screen and as the handoff has it (spec 3.19), and brings
+                // the panel back for its seconds
+                onPlayPause()
                 panel = true
                 touches++
             },

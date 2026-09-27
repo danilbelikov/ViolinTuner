@@ -95,7 +95,7 @@ private const val NUMBER_FADE_FROM = 0.66f
  * a recording, it stands as it was — the list keeps what an item saves, and the growth is saved as begun.
  */
 @Composable
-fun DailyChart(days: List<DayCount>, top: Int, modifier: Modifier = Modifier, barWidthDp: Float = DailyChartMath.BAR_WIDTH) {
+fun DailyChart(days: List<DayCount>, top: Int, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val textMeasurer = rememberTextMeasurer()
     val numberStyle = TextStyle(color = colors.onSurfaceVariant, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = "tnum")
@@ -126,7 +126,7 @@ fun DailyChart(days: List<DayCount>, top: Int, modifier: Modifier = Modifier, ba
         val widthDp = size.width / density
         val baselineTop = (DailyChartMath.PLOT_HEIGHT - DailyChartMath.BASELINE).dp.toPx()
         drawRect(colors.surfaceContainerHigh, topLeft = Offset(0f, baselineTop), size = Size(size.width, DailyChartMath.BASELINE.dp.toPx()))
-        val barWidth = minOf(barWidthDp, DailyChartMath.barWidth(widthDp, days.size)).dp.toPx()
+        val barWidth = DailyChartMath.barWidth(widthDp, days.size).dp.toPx()
         days.forEachIndexed { index, day ->
             val left = DailyChartMath.barLeft(index, days.size, widthDp).dp.toPx()
             // each bar starts a step after its left neighbour and takes the same time to rise
