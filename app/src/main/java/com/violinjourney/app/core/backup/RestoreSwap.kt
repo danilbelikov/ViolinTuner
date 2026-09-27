@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.backup
 
+import com.violinjourney.app.core.data.AppDatabase
 import java.io.File
 
 /**
@@ -15,15 +16,12 @@ object RestoreSwap {
     const val STAGING = "restore-staging"
     const val READY_MARK = "restore-ready"
     const val WIPE_MARK = "restore-wipe"
-    const val DATABASE_FILE = "violin.db"
-    const val SETTINGS_FILE = "user_settings.preferences_pb"
-    private const val DATASTORE_DIR = "datastore"
 
-    /** Caches that belong to the data that is going: recomputed from the new data when asked for. */
-    private const val WAVEFORMS_DIR = "waveforms"
+    /** Where DataStore keeps the settings file under `files/` on Android ([DataLayout.SETTINGS_FILE] in it). */
+    const val DATASTORE_DIR = "datastore"
 
-    /** Folders of `files/` that a copy replaces whole. Unpacking creates every one of them in the staging folder, empty if need be. */
-    val MEDIA_DIRS = listOf(BackupPaths.PROFILE, BackupPaths.SHEETS, BackupPaths.SESSIONS, BackupPaths.BACKINGS)
+    // The database file is a const of AppDatabase, inlined: nothing of Room is loaded here.
+    private const val DATABASE_FILE = AppDatabase.FILE_NAME
 
     enum class Outcome { NOTHING, RESTORED, WIPED }
 
@@ -60,14 +58,15 @@ object RestoreSwap {
             databasesDir.mkdirs()
             move(database, File(databasesDir, DATABASE_FILE))
         }
-        val settings = File(File(staging, BackupPaths.SETTINGS), SETTINGS_FILE)
+        val settings = File(File(staging, BackupPaths.SETTINGS), DataLayout.SETTINGS_FILE)
         if (settings.exists()) {
-            val target = File(File(filesDir, DATASTORE_DIR), SETTINGS_FILE)
+            val target = File(File(filesDir, DATASTORE_DIR), DataLayout.SETTINGS_FILE)
             target.parentFile?.mkdirs()
             target.delete()
             move(settings, target)
         }
-        MEDIA_DIRS.forEach { name ->
+        // a copy replaces these folders whole; unpacking made every one of them in the staging folder, empty if need be
+        DataLayout.MEDIA_DIRS.forEach { name ->
             val from = File(staging, name)
             // gone from the staging folder means moved already, by a run that was cut short after this step
             if (from.exists()) {
@@ -76,14 +75,15 @@ object RestoreSwap {
                 move(from, to)
             }
         }
-        File(filesDir, WAVEFORMS_DIR).deleteRecursively()
+        // reckoned from the data that is going: made again from the new data when asked for
+        File(filesDir, DataLayout.WAVEFORMS).deleteRecursively()
     }
 
     private fun clear(filesDir: File, databasesDir: File) {
         deleteDatabase(databasesDir)
-        File(File(filesDir, DATASTORE_DIR), SETTINGS_FILE).delete()
-        MEDIA_DIRS.forEach { File(filesDir, it).deleteRecursively() }
-        File(filesDir, WAVEFORMS_DIR).deleteRecursively()
+        File(File(filesDir, DATASTORE_DIR), DataLayout.SETTINGS_FILE).delete()
+        DataLayout.MEDIA_DIRS.forEach { File(filesDir, it).deleteRecursively() }
+        File(filesDir, DataLayout.WAVEFORMS).deleteRecursively()
     }
 
     private fun deleteDatabase(databasesDir: File) {

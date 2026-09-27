@@ -40,7 +40,7 @@ class AppBackupStoreTest {
     private val root = File(context.cacheDir, "backup-store-test")
     private val files = File(root, "files")
     private val databases = File(root, "databases")
-    private val liveFile = File(databases, RestoreSwap.DATABASE_FILE)
+    private val liveFile = File(databases, AppDatabase.FILE_NAME)
     private lateinit var database: AppDatabase
 
     @Before
@@ -116,7 +116,7 @@ class AppBackupStoreTest {
         // the restore: unpack beside the data, mark, and let the start of the next process swap
         val staging = File(files, RestoreSwap.STAGING)
         BackupReader.extract(ByteArrayInputStream(archive.toByteArray()), staging, manifest.totalBytes) {}
-        RestoreSwap.MEDIA_DIRS.forEach { File(staging, it).mkdirs() }
+        DataLayout.MEDIA_DIRS.forEach { File(staging, it).mkdirs() }
         File(files, RestoreSwap.READY_MARK).createNewFile()
         assertEquals(RestoreSwap.Outcome.RESTORED, RestoreSwap.applyIfPending(files, databases))
 
@@ -145,7 +145,7 @@ class AppBackupStoreTest {
             archive, manifest,
             listOf(
                 BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, snapshotFile.length(), required = true) { snapshotFile.inputStream() },
-                BackupEntry("${BackupPaths.SETTINGS}/${RestoreSwap.SETTINGS_FILE}", BackupPart.DATA, copied.length(), required = true) { copied.inputStream() },
+                BackupEntry("${BackupPaths.SETTINGS}/${DataLayout.SETTINGS_FILE}", BackupPart.DATA, copied.length(), required = true) { copied.inputStream() },
             ),
         ) {}
         val staging = File(files, RestoreSwap.STAGING)

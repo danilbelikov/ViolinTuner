@@ -26,6 +26,7 @@ import com.violinjourney.app.core.audio.recording.PcmEncoderFactory
 import com.violinjourney.app.core.audio.share.IosSoundRenderer
 import com.violinjourney.app.core.backup.BackupConfig
 import com.violinjourney.app.core.backup.BackupManager
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.backup.IosBackupDocuments
 import com.violinjourney.app.core.backup.IosBackupStore
 import com.violinjourney.app.core.data.Housekeeping
@@ -179,7 +180,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
         backingPlaybackFactory = backingPlayback, backingConfig = backingConfig, analytics = analytics,
     )
 
-    val waveforms = IosSessionWaveforms({ IosFolders.folder(WAVEFORMS_FOLDER) }, io)
+    val waveforms = IosSessionWaveforms({ IosFolders.folder(DataLayout.WAVEFORMS) }, io)
     val shareFiles = IosShareFiles(io)
     val housekeeping = Housekeeping(sessions, waveforms, avatarFiles, profiles, shareFiles, repertoire, backings, backingPcm, clock, io)
     val renderer = IosSoundRenderer(soundConfig, io)
@@ -209,7 +210,6 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     suspend fun close() = storage.close()
 
     private companion object {
-        const val WAVEFORMS_FOLDER = "waveforms"
         const val MS_PER_SECOND = 1_000.0
     }
 }

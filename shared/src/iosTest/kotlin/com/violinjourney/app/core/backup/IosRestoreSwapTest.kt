@@ -56,7 +56,7 @@ class IosRestoreSwapTest {
         // what is in the app now
         write(data.child("violin.db"), "old database")
         write(data.child("violin.db-wal"), "old journal")
-        write(data.child(IosRestoreSwap.SETTINGS_FILE), "old settings")
+        write(data.child(DataLayout.SETTINGS_FILE), "old settings")
         write(data.child("sessions/old.m4a"), "old sound")
         write(data.child("repertoire/old.jpg"), "old sheet")
         write(data.child("profile/avatar-1.jpg"), "old face")
@@ -64,7 +64,7 @@ class IosRestoreSwapTest {
         write(data.child("waveforms/old.m4a.wave"), "old wave")
         // what the copy brought, unpacked and marked
         write(staging.child("db/violin.db"), "new database")
-        write(staging.child("settings/${IosRestoreSwap.SETTINGS_FILE}"), "new settings")
+        write(staging.child("settings/${DataLayout.SETTINGS_FILE}"), "new settings")
         write(staging.child("sessions/new.m4a"), "new sound")
         write(staging.child("sessions/new.mov"), "new video")
         write(staging.child("repertoire/new.jpg"), "new sheet")
@@ -76,7 +76,7 @@ class IosRestoreSwapTest {
     private fun assertRestored() {
         assertEquals("new database", read(data.child("violin.db")))
         assertFalse(data.child("violin.db-wal").exists(), "the journal of the old database must not be played over the new one")
-        assertEquals("new settings", read(data.child(IosRestoreSwap.SETTINGS_FILE)))
+        assertEquals("new settings", read(data.child(DataLayout.SETTINGS_FILE)))
         assertEquals(listOf("new.m4a", "new.mov"), data.child("sessions").listNames().sorted())
         assertEquals(listOf("new.jpg"), data.child("repertoire").listNames())
         assertEquals(listOf("new.mp3"), data.child("backings").listNames())
@@ -101,7 +101,7 @@ class IosRestoreSwapTest {
         val steps: List<() -> Unit> = listOf(
             { data.child("violin.db").deleteAll(); data.child("violin.db-wal").deleteAll() },
             { move("db/violin.db", "violin.db") },
-            { data.child(IosRestoreSwap.SETTINGS_FILE).deleteAll(); move("settings/${IosRestoreSwap.SETTINGS_FILE}", IosRestoreSwap.SETTINGS_FILE) },
+            { data.child(DataLayout.SETTINGS_FILE).deleteAll(); move("settings/${DataLayout.SETTINGS_FILE}", DataLayout.SETTINGS_FILE) },
             { data.child("profile").deleteAll(); move("profile", "profile") },
             { data.child("repertoire").deleteAll() },
             { move("repertoire", "repertoire") },
@@ -164,7 +164,7 @@ class IosRestoreSwapTest {
         layOut()
         write(data.child(IosRestoreSwap.WIPE_MARK), "")
         assertEquals(IosRestoreSwap.Outcome.WIPED, IosRestoreSwap.applyIfPending(data))
-        listOf("violin.db", "violin.db-wal", IosRestoreSwap.SETTINGS_FILE, "sessions", "repertoire", "profile", "backings", "waveforms").forEach {
+        listOf("violin.db", "violin.db-wal", DataLayout.SETTINGS_FILE, "sessions", "repertoire", "profile", "backings", "waveforms").forEach {
             assertFalse(data.child(it).exists(), it)
         }
         assertFalse(staging.exists())

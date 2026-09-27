@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.core.net.toUri
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.io.isOwnFileName
 import com.violinjourney.app.core.time.WallClock
@@ -20,7 +21,7 @@ class AppAvatarFiles @Inject constructor(
     @IoDispatcher private val io: CoroutineDispatcher,
     private val clock: WallClock,
 ) : AvatarFiles {
-    private val directory = File(context.filesDir, DIRECTORY)
+    private val directory = File(context.filesDir, DataLayout.PROFILE)
 
     override suspend fun import(sourceUri: String): String? = withContext(io) {
         val uri = sourceUri.toUri()
@@ -64,7 +65,6 @@ class AppAvatarFiles @Inject constructor(
 
     private companion object {
         const val TAG = "AvatarFiles"
-        const val DIRECTORY = "profile"
         const val PREFIX = "avatar-"
         const val EXTENSION = ".jpg"
         const val PARTIAL_SUFFIX = ".part"

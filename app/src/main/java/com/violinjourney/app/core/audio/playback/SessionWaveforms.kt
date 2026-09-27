@@ -2,6 +2,7 @@ package com.violinjourney.app.core.audio.playback
 
 import android.content.Context
 import android.util.Log
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.di.IoDispatcher
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -23,7 +24,7 @@ class AppSessionWaveforms @Inject constructor(
     @ApplicationContext context: Context,
     @IoDispatcher private val io: CoroutineDispatcher,
 ) : SessionWaveforms {
-    private val directory = File(context.filesDir, DIRECTORY)
+    private val directory = File(context.filesDir, DataLayout.WAVEFORMS)
 
     override suspend fun of(audio: File): FloatArray? = withContext(io) {
         val cache = File(directory, audio.name + EXTENSION)
@@ -83,7 +84,6 @@ class AppSessionWaveforms @Inject constructor(
     private companion object {
         const val BARS = SessionWaveforms.BARS
         const val TAG = "SessionWaveforms"
-        const val DIRECTORY = "waveforms"
         const val EXTENSION = ".wave"
         const val PART = ".part"
         const val CHUNK = 8_192

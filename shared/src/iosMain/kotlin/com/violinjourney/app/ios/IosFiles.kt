@@ -1,6 +1,7 @@
 package com.violinjourney.app.ios
 
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.data.repertoire.SheetFiles
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
@@ -230,7 +231,7 @@ internal object IosPictures {
 
 /** Session audio in `sessions/<uuid>.m4a` — the videos of takes live here too, with a thumbnail beside them. */
 internal class IosSessionAudioFiles(private val repertoireConfig: RepertoireConfig) : SessionAudioFiles {
-    private val directory by lazy { IosFolders.folder(DIRECTORY) }
+    private val directory by lazy { IosFolders.folder(DataLayout.SESSIONS) }
 
     override fun newFile(): PlatformFile = PlatformFile("$directory/${NSUUID().UUIDString}$EXTENSION")
 
@@ -256,7 +257,6 @@ internal class IosSessionAudioFiles(private val repertoireConfig: RepertoireConf
     private fun thumbNameOf(name: String) = name.substringBeforeLast('.') + THUMB_SUFFIX
 
     private companion object {
-        const val DIRECTORY = "sessions"
         const val EXTENSION = ".m4a"
         const val THUMB_SUFFIX = "-thumb.jpg"
     }
@@ -265,7 +265,7 @@ internal class IosSessionAudioFiles(private val repertoireConfig: RepertoireConf
 /** The profile photo in `profile/`, one at a time: a square around the centre, 512 px at most (as on Android). */
 @OptIn(ExperimentalForeignApi::class)
 internal class IosAvatarFiles(private val io: CoroutineDispatcher, private val clock: WallClock) : AvatarFiles {
-    private val directory by lazy { IosFolders.folder(DIRECTORY) }
+    private val directory by lazy { IosFolders.folder(DataLayout.PROFILE) }
 
     override suspend fun import(sourceUri: String): String? = withContext(io) {
         val path = pathOfFileUri(sourceUri) ?: return@withContext null
@@ -289,7 +289,6 @@ internal class IosAvatarFiles(private val io: CoroutineDispatcher, private val c
     }
 
     private companion object {
-        const val DIRECTORY = "profile"
         const val PREFIX = "avatar-"
         const val EXTENSION = ".jpg"
         const val JPEG_QUALITY = 90
@@ -299,8 +298,8 @@ internal class IosAvatarFiles(private val io: CoroutineDispatcher, private val c
 
 /** Sheet photos in `repertoire/`, each with a thumbnail; shots of the camera pass through `camera/` (as on Android). */
 internal class IosSheetFiles(private val io: CoroutineDispatcher, private val config: RepertoireConfig) : SheetFiles {
-    private val directory by lazy { IosFolders.folder(DIRECTORY) }
-    private val cameraDirectory by lazy { IosFolders.folder(CAMERA_DIRECTORY) }
+    private val directory by lazy { IosFolders.folder(DataLayout.SHEETS) }
+    private val cameraDirectory by lazy { IosFolders.folder(DataLayout.CAMERA) }
 
     // One picture per pool: the pictures and their data are let go when it is done, not when the thread of io next drains.
     override suspend fun import(sourceUri: String): SheetFiles.Stored? = withContext(io) { autoreleasepool { importNow(sourceUri) } }
@@ -338,8 +337,6 @@ internal class IosSheetFiles(private val io: CoroutineDispatcher, private val co
     override fun newCameraFile(): PlatformFile = PlatformFile("$cameraDirectory/${NSUUID().UUIDString}$EXTENSION")
 
     private companion object {
-        const val DIRECTORY = "repertoire"
-        const val CAMERA_DIRECTORY = "camera"
         const val EXTENSION = ".jpg"
         const val THUMB_SUFFIX = "-thumb"
     }

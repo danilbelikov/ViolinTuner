@@ -7,6 +7,7 @@ import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.AppMetricaAnalytics
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.backup.RestoreSwap
+import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.ui.format.use
 import com.violinjourney.app.feature.journey.art.SceneDebug
 import dagger.hilt.android.HiltAndroidApp
@@ -23,7 +24,7 @@ class ViolinTunerApp : Application() {
      */
     override fun attachBaseContext(base: Context) {
         super.attachBaseContext(base)
-        startedAfter = RestoreSwap.applyIfPending(base.filesDir, base.getDatabasePath(RestoreSwap.DATABASE_FILE).parentFile ?: base.filesDir)
+        startedAfter = RestoreSwap.applyIfPending(base.filesDir, base.getDatabasePath(AppDatabase.FILE_NAME).parentFile ?: base.filesDir)
     }
 
     override fun onCreate() {

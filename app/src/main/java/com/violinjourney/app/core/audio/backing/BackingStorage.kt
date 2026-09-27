@@ -10,7 +10,7 @@ import android.provider.OpenableColumns
 import android.util.Log
 import com.violinjourney.app.core.audio.playback.PcmDecoder
 import com.violinjourney.app.core.audio.playback.PcmSamples
-import com.violinjourney.app.core.backup.BackupPaths
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingFiles
@@ -27,7 +27,7 @@ import javax.inject.Inject
 
 /** `files/backings/<uuid>.<extension>` — a folder of its own, so a copy of the data can take it whole (spec 3.20). */
 class AppBackingFiles @Inject constructor(@ApplicationContext context: Context, private val clock: WallClock) : BackingFiles {
-    private val directory = File(context.filesDir, DIRECTORY)
+    private val directory = File(context.filesDir, DataLayout.BACKINGS)
 
     override fun newFile(extension: String): File {
         directory.mkdirs()
@@ -50,7 +50,6 @@ class AppBackingFiles @Inject constructor(@ApplicationContext context: Context, 
     }
 
     companion object {
-        const val DIRECTORY = BackupPaths.BACKINGS
         private const val MAX_EXTENSION = 5
         /** An import copies first and stores its row after: a file younger than this may be one about to get its row. */
         private const val ORPHAN_MIN_AGE_MS = 60 * 60_000L

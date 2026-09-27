@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.audio.recording
 
 import android.content.Context
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
 import java.io.File
@@ -15,7 +16,7 @@ class AppSessionAudioFiles @Inject constructor(
     @ApplicationContext context: Context,
     private val repertoireConfig: RepertoireConfig,
 ) : SessionAudioFiles {
-    private val directory = File(context.filesDir, DIRECTORY)
+    private val directory = File(context.filesDir, DataLayout.SESSIONS)
 
     override fun newFile(): File {
         directory.mkdirs()
@@ -45,7 +46,6 @@ class AppSessionAudioFiles @Inject constructor(
     private fun thumbNameOf(name: String) = name.substringBeforeLast('.') + THUMB_SUFFIX
 
     private companion object {
-        const val DIRECTORY = "sessions"
         const val EXTENSION = ".m4a"
         const val THUMB_SUFFIX = "-thumb.jpg"
     }

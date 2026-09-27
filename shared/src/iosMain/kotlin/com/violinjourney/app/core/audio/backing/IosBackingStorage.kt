@@ -1,6 +1,6 @@
 package com.violinjourney.app.core.audio.backing
 
-import com.violinjourney.app.core.backup.BackupPaths
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingFiles
@@ -45,7 +45,7 @@ import platform.posix.pread
 /** `backings/<uuid>.<extension>` in Application Support — a folder of its own, so a copy of the data takes it whole (spec 3.20). */
 @OptIn(ExperimentalForeignApi::class)
 internal class IosBackingFiles(private val data: PlatformFile, private val clock: WallClock) : BackingFiles {
-    private val directory get() = data.child(BackupPaths.BACKINGS).also { it.makeDirectories() }
+    private val directory get() = data.child(DataLayout.BACKINGS).also { it.makeDirectories() }
 
     override fun newFile(extension: String): PlatformFile {
         val clean = extension.lowercase().filter { it.isLetterOrDigit() }.take(MAX_EXTENSION).ifEmpty { "audio" }

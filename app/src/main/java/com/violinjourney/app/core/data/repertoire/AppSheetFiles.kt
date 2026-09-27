@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.util.Log
 import androidx.core.net.toUri
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.data.image.ImageImport
 import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.io.isOwnFileName
@@ -22,8 +23,8 @@ class AppSheetFiles @Inject constructor(
     @IoDispatcher private val io: CoroutineDispatcher,
     private val config: RepertoireConfig,
 ) : SheetFiles {
-    private val directory = File(context.filesDir, DIRECTORY)
-    private val cameraDirectory = File(context.cacheDir, CAMERA_DIRECTORY)
+    private val directory = File(context.filesDir, DataLayout.SHEETS)
+    private val cameraDirectory = File(context.cacheDir, DataLayout.CAMERA)
 
     override suspend fun import(sourceUri: String): SheetFiles.Stored? = withContext(io) {
         val uri = sourceUri.toUri()
@@ -88,8 +89,6 @@ class AppSheetFiles @Inject constructor(
 
     private companion object {
         const val TAG = "SheetFiles"
-        const val DIRECTORY = "repertoire"
-        const val CAMERA_DIRECTORY = "camera"
         const val EXTENSION = ".jpg"
         const val THUMB_SUFFIX = "-thumb"
         const val PARTIAL_SUFFIX = ".part"

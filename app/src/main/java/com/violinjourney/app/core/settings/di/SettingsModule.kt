@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.violinjourney.app.core.backup.BackupPrefs
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.BlockStore
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
@@ -75,7 +76,6 @@ abstract class SettingsModule {
         @Singleton
         fun provideVenueStore(dataStore: DataStore<Preferences>): VenueStore = DataStoreVenueStore(dataStore)
 
-        private const val FILE_NAME = "user_settings"
         private const val TAG = "Settings"
 
         // DataStore allows one instance per file: keep it a singleton. A file that cannot be read starts over rather than
@@ -87,6 +87,6 @@ abstract class SettingsModule {
                 corruptionHandler = DataStoreSettingsRepository.startOverWhenUnreadable {
                     Log.w(TAG, "the settings file could not be read and starts over", it)
                 },
-            ) { context.preferencesDataStoreFile(FILE_NAME) }
+            ) { context.preferencesDataStoreFile(DataLayout.SETTINGS_NAME) }
     }
 }

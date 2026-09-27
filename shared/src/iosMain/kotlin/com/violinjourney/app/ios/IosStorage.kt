@@ -6,6 +6,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.sqlite.driver.bundled.BundledSQLiteDriver
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.data.DatabaseMigrations
 import com.violinjourney.app.core.settings.DataStoreSettingsRepository
@@ -27,8 +28,6 @@ import platform.Foundation.NSUserDomainMask
  * brought to the current one by the same [DatabaseMigrations.ALL] as on Android.
  */
 internal object IosStorage {
-    const val SETTINGS_FILE = "user_settings.preferences_pb"
-
     /**
      * The one builder of the database: the app's own, and a copy unpacked beside it, opened before it is put in place
      * (spec 5.14) — with [journalMode] TRUNCATE, so that the file is whole alone once closed.
@@ -55,7 +54,7 @@ internal object IosStorage {
                 NSLog("Settings: the file could not be read and starts over: ${it.message}".replace("%", "%%"))
             },
             scope = scope,
-            produceFile = { "$directory/$SETTINGS_FILE".toPath() },
+            produceFile = { "$directory/${DataLayout.SETTINGS_FILE}".toPath() },
         )
 
     @OptIn(ExperimentalForeignApi::class)

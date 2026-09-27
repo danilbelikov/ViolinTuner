@@ -47,7 +47,7 @@ class AppBackupStore @Inject constructor(
     private val files = context.filesDir
     private val snapshotDir = File(context.cacheDir, SNAPSHOT_DIR)
     private val databaseFile get() = context.getDatabasePath(AppDatabase.FILE_NAME)
-    private val settingsFile get() = File(File(files, DATASTORE_DIR), RestoreSwap.SETTINGS_FILE)
+    private val settingsFile get() = File(File(files, RestoreSwap.DATASTORE_DIR), DataLayout.SETTINGS_FILE)
 
     override val databaseVersion: Int get() = database.openHelper.readableDatabase.version
 
@@ -92,7 +92,7 @@ class AppBackupStore @Inject constructor(
             // the snapshot and the settings are the copy itself: vanished on the way, they fail it (spec 5.14)
             add(BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, snapshot.length(), required = true) { snapshot.inputStreamOrNull() })
             settingsFile.takeIf { it.isFile }?.let { file ->
-                add(BackupEntry("${BackupPaths.SETTINGS}/${RestoreSwap.SETTINGS_FILE}", BackupPart.DATA, file.length(), required = true) { file.inputStreamOrNull() })
+                add(BackupEntry("${BackupPaths.SETTINGS}/${DataLayout.SETTINGS_FILE}", BackupPart.DATA, file.length(), required = true) { file.inputStreamOrNull() })
             }
             // data first, then by weight: what matters most is in the archive soonest
             listOf(BackupPart.DATA, BackupPart.SHEETS, BackupPart.AUDIO, BackupPart.VIDEO).filter { it in parts || it == BackupPart.DATA }.forEach { part ->
@@ -128,7 +128,7 @@ class AppBackupStore @Inject constructor(
     private fun snapshotDatabase(): File {
         snapshotDir.deleteRecursively()
         snapshotDir.mkdirs()
-        val target = File(snapshotDir, RestoreSwap.DATABASE_FILE)
+        val target = File(snapshotDir, AppDatabase.FILE_NAME)
         val live = database.openHelper.writableDatabase
         live.beginTransaction()
         try {
@@ -168,12 +168,12 @@ class AppBackupStore @Inject constructor(
     override fun markStagingReady() {
         val staging = File(files, RestoreSwap.STAGING)
         // a copy without video, or without a photo, replaces those folders too — with empty ones
-        RestoreSwap.MEDIA_DIRS.forEach { File(staging, it).mkdirs() }
+        DataLayout.MEDIA_DIRS.forEach { File(staging, it).mkdirs() }
         File(files, RestoreSwap.READY_MARK).createNewFile()
     }
 
     override fun deleteMedia() {
-        listOf(BackupPaths.SESSIONS, BackupPaths.SHEETS, BackupPaths.BACKINGS, WAVEFORMS_DIR).forEach { File(files, it).deleteRecursively() }
+        listOf(DataLayout.SESSIONS, DataLayout.SHEETS, DataLayout.BACKINGS, DataLayout.WAVEFORMS).forEach { File(files, it).deleteRecursively() }
     }
 
     override fun markWipe() {
@@ -186,8 +186,6 @@ class AppBackupStore @Inject constructor(
     }
 
     private companion object {
-        const val DATASTORE_DIR = "datastore"
-        const val WAVEFORMS_DIR = "waveforms"
         const val SNAPSHOT_DIR = "backup-snapshot"
         const val SHARE_DIR = "share"
         const val SHARE_BACKUP_DIR = "backup"
@@ -263,7 +261,7 @@ internal object StagedCopy {
     private const val CHECK_PASSED = "ok"
 
     suspend fun settle(context: Context, staging: File, copyMadeAtEpochMs: Long, io: CoroutineDispatcher) {
-        val database = File(File(staging, BackupPaths.DATABASE), RestoreSwap.DATABASE_FILE)
+        val database = File(File(staging, BackupPaths.DATABASE), AppDatabase.FILE_NAME)
         if (!database.isFile) throw IOException("no database among what was unpacked")
         // A file that is no database, or a damaged one, is told first, by a connection whose handler of corruption leaves
         // the file alone: Android's own handler deletes such a file and starts an empty database, which would pass every
@@ -282,7 +280,7 @@ internal object StagedCopy {
             opened.close()
         }
         // a copy without settings brings none: no file is made here, or the swap would replace the settings with an empty one
-        val settings = File(File(staging, BackupPaths.SETTINGS), RestoreSwap.SETTINGS_FILE)
+        val settings = File(File(staging, BackupPaths.SETTINGS), DataLayout.SETTINGS_FILE)
         if (settings.isFile) {
             DataStoreBackupPrefs.stamp(settings.path, copyMadeAtEpochMs, io) { Log.w(TAG, "the settings of the copy could not be read and start over", it) }
         }

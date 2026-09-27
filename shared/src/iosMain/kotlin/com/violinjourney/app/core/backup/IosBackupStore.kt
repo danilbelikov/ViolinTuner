@@ -62,7 +62,7 @@ internal class IosBackupStore(
     private val caches = PlatformFile(NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true).first() as String)
     private val snapshotDir = caches.child(SNAPSHOT_DIR)
     private val databaseFile = data.child(AppDatabase.FILE_NAME)
-    private val settingsFile = data.child(IosRestoreSwap.SETTINGS_FILE)
+    private val settingsFile = data.child(DataLayout.SETTINGS_FILE)
 
     override val databaseVersion: Int = AppDatabase.VERSION
 
@@ -110,7 +110,7 @@ internal class IosBackupStore(
             // the snapshot and the settings are the copy itself: vanished on the way, they fail it (spec 5.14)
             add(BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, snapshot.sizeBytes(), required = true) { snapshot.openInput() })
             if (settingsFile.exists()) {
-                add(BackupEntry("${BackupPaths.SETTINGS}/${IosRestoreSwap.SETTINGS_FILE}", BackupPart.DATA, settingsFile.sizeBytes(), required = true) { settingsFile.openInput() })
+                add(BackupEntry("${BackupPaths.SETTINGS}/${DataLayout.SETTINGS_FILE}", BackupPart.DATA, settingsFile.sizeBytes(), required = true) { settingsFile.openInput() })
             }
             // data first, then by weight: what matters most is in the archive soonest
             listOf(BackupPart.DATA, BackupPart.SHEETS, BackupPart.AUDIO, BackupPart.VIDEO).filter { it in parts || it == BackupPart.DATA }.forEach { part ->
@@ -176,7 +176,7 @@ internal class IosBackupStore(
             opened.close()
         }
         // a copy without settings brings none: no file is made here, or the swap would replace the settings with an empty one
-        val settings = staging.child(BackupPaths.SETTINGS).child(IosRestoreSwap.SETTINGS_FILE)
+        val settings = staging.child(BackupPaths.SETTINGS).child(DataLayout.SETTINGS_FILE)
         if (settings.exists()) {
             DataStoreBackupPrefs.stamp(settings.path, copyMadeAtEpochMs, io) {
                 NSLog("Backup: the settings of the copy could not be read and start over: ${it.message}".replace("%", "%%"))
@@ -187,14 +187,14 @@ internal class IosBackupStore(
     override fun markStagingReady() {
         val staging = data.child(IosRestoreSwap.STAGING)
         // a copy without video, or without a photo, replaces those folders too — with empty ones
-        IosRestoreSwap.MEDIA_DIRS.forEach { staging.child(it).makeDirectories() }
+        DataLayout.MEDIA_DIRS.forEach { staging.child(it).makeDirectories() }
         // without the mark the next start throws the unpacked copy away, while the screen has said «Данные восстановлены»:
         // a mark that cannot be left is a failed restore, as `createNewFile` makes it on Android
         leaveMark(IosRestoreSwap.READY_MARK)
     }
 
     override fun deleteMedia() {
-        listOf(BackupPaths.SESSIONS, BackupPaths.SHEETS, BackupPaths.BACKINGS, WAVEFORMS_DIR).forEach { data.child(it).deleteAll() }
+        listOf(DataLayout.SESSIONS, DataLayout.SHEETS, DataLayout.BACKINGS, DataLayout.WAVEFORMS).forEach { data.child(it).deleteAll() }
     }
 
     override fun markWipe() {
@@ -213,7 +213,6 @@ internal class IosBackupStore(
     }
 
     private companion object {
-        const val WAVEFORMS_DIR = "waveforms"
         const val SNAPSHOT_DIR = "backup-snapshot"
         const val SHARE_DIR = "share"
         const val SHARE_BACKUP_DIR = "backup"
@@ -232,9 +231,6 @@ internal object IosRestoreSwap {
     const val STAGING = "restore-staging"
     const val READY_MARK = "restore-ready"
     const val WIPE_MARK = "restore-wipe"
-    const val SETTINGS_FILE = "user_settings.preferences_pb"
-    private const val WAVEFORMS_DIR = "waveforms"
-    val MEDIA_DIRS = listOf(BackupPaths.PROFILE, BackupPaths.SHEETS, BackupPaths.SESSIONS, BackupPaths.BACKINGS)
 
     enum class Outcome { NOTHING, RESTORED, WIPED }
 
@@ -250,9 +246,9 @@ internal object IosRestoreSwap {
                 staging.deleteAll()
                 data.child(READY_MARK).deleteAll()
                 deleteDatabase(data)
-                data.child(SETTINGS_FILE).deleteAll()
-                MEDIA_DIRS.forEach { data.child(it).deleteAll() }
-                data.child(WAVEFORMS_DIR).deleteAll()
+                data.child(DataLayout.SETTINGS_FILE).deleteAll()
+                DataLayout.MEDIA_DIRS.forEach { data.child(it).deleteAll() }
+                data.child(DataLayout.WAVEFORMS).deleteAll()
                 data.child(WIPE_MARK).deleteAll()
                 Outcome.WIPED
             }
@@ -277,12 +273,13 @@ internal object IosRestoreSwap {
             if (!deleteDatabase(data)) throw okio.IOException("the old database will not go")
             move(database, data.child(AppDatabase.FILE_NAME))
         }
-        val settings = staging.child(BackupPaths.SETTINGS).child(SETTINGS_FILE)
+        val settings = staging.child(BackupPaths.SETTINGS).child(DataLayout.SETTINGS_FILE)
         if (settings.exists()) {
-            data.child(SETTINGS_FILE).deleteAll()
-            move(settings, data.child(SETTINGS_FILE))
+            data.child(DataLayout.SETTINGS_FILE).deleteAll()
+            move(settings, data.child(DataLayout.SETTINGS_FILE))
         }
-        MEDIA_DIRS.forEach { name ->
+        // a copy replaces these folders whole; unpacking made every one of them in the staging folder, empty if need be
+        DataLayout.MEDIA_DIRS.forEach { name ->
             val from = staging.child(name)
             // gone from the staging folder means moved already, by a run that was cut short after this step
             if (from.exists()) {
@@ -290,7 +287,8 @@ internal object IosRestoreSwap {
                 move(from, data.child(name))
             }
         }
-        data.child(WAVEFORMS_DIR).deleteAll()
+        // reckoned from the data that is going: made again from the new data when asked for
+        data.child(DataLayout.WAVEFORMS).deleteAll()
     }
 
     /** True when none of the files of the database is left. */

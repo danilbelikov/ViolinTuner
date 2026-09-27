@@ -1,5 +1,6 @@
 package com.violinjourney.app.ios
 
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.availableBytes
@@ -47,8 +48,8 @@ import platform.UIKit.UIImage
  */
 @OptIn(ExperimentalForeignApi::class)
 internal class IosVideoFiles(private val config: RepertoireConfig, private val io: CoroutineDispatcher) : VideoFiles {
-    private val directory by lazy { IosFolders.folder(DIRECTORY) }
-    private val cameraDirectory by lazy { IosFolders.folder(CAMERA_DIRECTORY) }
+    private val directory by lazy { IosFolders.folder(DataLayout.SESSIONS) }
+    private val cameraDirectory by lazy { IosFolders.folder(DataLayout.CAMERA) }
     private val files = NSFileManager.defaultManager
 
     override fun newCameraFile(): PlatformFile = PlatformFile("$cameraDirectory/${NSUUID().UUIDString}$CAMERA_EXTENSION")
@@ -134,8 +135,6 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
     ).useContents { abs(size.width).roundToInt() to abs(size.height).roundToInt() }
 
     private companion object {
-        const val DIRECTORY = "sessions"
-        const val CAMERA_DIRECTORY = "camera"
         const val CAMERA_EXTENSION = ".mov"
         const val DEFAULT_EXTENSION = "mp4"
         const val THUMB_SUFFIX = "-thumb.jpg"

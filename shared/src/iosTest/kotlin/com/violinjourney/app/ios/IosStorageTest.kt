@@ -11,6 +11,7 @@ import com.violinjourney.app.core.backup.BackupPart
 import com.violinjourney.app.core.backup.BackupPaths
 import com.violinjourney.app.core.backup.BackupReader
 import com.violinjourney.app.core.backup.BackupWriter
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.backup.IosBackupStore
 import com.violinjourney.app.core.backup.IosRestoreSwap
 import com.violinjourney.app.core.data.AppDatabase
@@ -140,7 +141,7 @@ class IosStorageTest {
     /** A settings file that cannot be parsed starts over, with the statistics off, instead of ending every start of the app. */
     @Test
     fun `settings that cannot be read start over instead of ending the start`() = runTest {
-        val broken = assertNotNull(PlatformFile("$directory/${IosStorage.SETTINGS_FILE}").openOutput())
+        val broken = assertNotNull(PlatformFile("$directory/${DataLayout.SETTINGS_FILE}").openOutput())
         broken.writeBytes(byteArrayOf(0x0A, 0x7F)) // a length-delimited field cut short
         broken.close()
         val life = CoroutineScope(Dispatchers.Default + Job())
@@ -240,7 +241,7 @@ class IosStorageTest {
         val life = CoroutineScope(Dispatchers.Default + Job())
         DataStoreSettingsRepository(IosStorage.settings(copied.path, life)).setOnboardingDone(true)
         life.coroutineContext[Job]!!.cancelAndJoin()
-        val settings = copied.child(IosStorage.SETTINGS_FILE)
+        val settings = copied.child(DataLayout.SETTINGS_FILE)
         val manifest = BackupManifest(
             formatVersion = BackupManifest.FORMAT_VERSION, appVersion = "1.0", databaseVersion = 12, createdAtEpochMs = 1_790_000_000_000,
             device = "Google Pixel 10a", parts = setOf(BackupPart.DATA), counts = BackupCounts(sessions = 1), bytes = mapOf(BackupPart.DATA to older.sizeBytes()),
@@ -250,7 +251,7 @@ class IosStorageTest {
             archive.openOutput()!!, manifest,
             listOf(
                 BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, older.sizeBytes()) { older.openInput() },
-                BackupEntry("${BackupPaths.SETTINGS}/${IosRestoreSwap.SETTINGS_FILE}", BackupPart.DATA, settings.sizeBytes()) { settings.openInput() },
+                BackupEntry("${BackupPaths.SETTINGS}/${DataLayout.SETTINGS_FILE}", BackupPart.DATA, settings.sizeBytes()) { settings.openInput() },
             ),
         ) {}
         val database = IosStorage.database(directory)

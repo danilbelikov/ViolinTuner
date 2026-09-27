@@ -9,6 +9,7 @@ import android.os.StatFs
 import android.provider.OpenableColumns
 import android.util.Log
 import androidx.core.net.toUri
+import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -26,8 +27,8 @@ class AppVideoFiles @Inject constructor(
     private val config: RepertoireConfig,
     @IoDispatcher private val io: CoroutineDispatcher,
 ) : VideoFiles {
-    private val directory = File(context.filesDir, DIRECTORY)
-    private val cameraDirectory = File(context.cacheDir, CAMERA_DIRECTORY)
+    private val directory = File(context.filesDir, DataLayout.SESSIONS)
+    private val cameraDirectory = File(context.cacheDir, DataLayout.CAMERA)
 
     override fun newCameraFile(): File {
         cameraDirectory.mkdirs()
@@ -189,8 +190,6 @@ class AppVideoFiles @Inject constructor(
 
     private companion object {
         const val TAG = "VideoFiles"
-        const val DIRECTORY = "sessions"
-        const val CAMERA_DIRECTORY = "camera"
         const val EXTENSION = ".mp4"
         const val THUMB_SUFFIX = "-thumb.jpg"
         const val PARTIAL_SUFFIX = ".part"

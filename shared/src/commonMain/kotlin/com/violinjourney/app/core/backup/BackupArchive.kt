@@ -91,19 +91,19 @@ internal object BackupEndMark {
     }
 }
 
-/** Folders inside a copy; they are also the folders of `files/` the media go back into. */
+/** Folders inside a copy; the folders of media are the very folders of the data they go back into ([DataLayout]). */
 object BackupPaths {
     const val DATABASE = "db"
 
     /** The snapshot of the database: a copy without it is no copy (spec 5.14). */
     const val DATABASE_ENTRY = "$DATABASE/violin.db"
     const val SETTINGS = "settings"
-    const val PROFILE = "profile"
-    const val SHEETS = "repertoire"
-    const val SESSIONS = "sessions"
+    const val PROFILE = DataLayout.PROFILE
+    const val SHEETS = DataLayout.SHEETS
+    const val SESSIONS = DataLayout.SESSIONS
 
     /** Accompaniment files (spec 3.32); a part of the sound. */
-    const val BACKINGS = "backings"
+    const val BACKINGS = DataLayout.BACKINGS
     const val AUDIO_EXTENSION = ".m4a"
 
     /** The last entry of a copy: an archive without it was cut short. */
