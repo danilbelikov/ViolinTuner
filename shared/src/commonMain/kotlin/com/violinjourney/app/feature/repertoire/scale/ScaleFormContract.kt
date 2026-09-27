@@ -6,7 +6,13 @@ import com.violinjourney.app.core.domain.repertoire.Tonic
 import com.violinjourney.app.core.domain.repertoire.scale.Scale
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleKind
 
-enum class ScaleFormDialog { DISCARD, DELETE }
+enum class ScaleFormDialog {
+    DISCARD,
+
+    /** «Не сохранять?» on the way to the scale that is there already («Такая гамма уже есть · Открыть»). */
+    DISCARD_AND_OPEN,
+    DELETE,
+}
 
 /** What the form of a scale holds (spec 3.22, handoff 24d). No tonic — no scale yet. */
 data class ScaleDraft(

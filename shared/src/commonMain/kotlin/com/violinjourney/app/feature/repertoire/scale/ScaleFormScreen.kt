@@ -143,7 +143,7 @@ fun ScaleFormScreen(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit, 
         }
     }
     when (state.dialog) {
-        ScaleFormDialog.DISCARD -> Confirm(
+        ScaleFormDialog.DISCARD, ScaleFormDialog.DISCARD_AND_OPEN -> Confirm(
             title = stringResource(Res.string.piece_form_discard_title), text = null,
             confirm = stringResource(Res.string.piece_form_discard_confirm), destructive = false, onIntent = onIntent,
         )

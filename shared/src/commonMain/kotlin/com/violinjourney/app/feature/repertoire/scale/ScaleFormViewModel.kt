@@ -79,7 +79,7 @@ open class ScaleFormViewModel(
             is ScaleFormIntent.TempoPicked -> edit { it.copy(tempoBpm = intent.bpm) }
             is ScaleFormIntent.StatusSelected -> edit { it.copy(status = intent.status) }
             is ScaleFormIntent.NotesChanged -> edit { it.copy(notes = intent.text.takeCodePoints(config.maxNotesLength)) }
-            ScaleFormIntent.OpenExistingClicked -> mutableState.value.existingId?.let { effectChannel.trySend(ScaleFormEffect.OpenScale(it)) }
+            ScaleFormIntent.OpenExistingClicked -> openExisting()
             ScaleFormIntent.SaveClicked -> save()
             ScaleFormIntent.CloseClicked -> if (mutableState.value.draft != initial) showDialog(ScaleFormDialog.DISCARD) else effectChannel.trySend(ScaleFormEffect.Close)
             ScaleFormIntent.DeleteClicked -> if (pieceId != null) showDialog(ScaleFormDialog.DELETE)
@@ -109,9 +109,25 @@ open class ScaleFormViewModel(
         }
     }
 
+    /**
+     * «Открыть» the scale that is there already: it is found by the key, the kind and the octaves, so those are no loss;
+     * a tempo, a status or notes of this form would be (spec 3.15: leaving with edits asks «Не сохранять?»).
+     */
+    private fun openExisting() {
+        val current = mutableState.value
+        val id = current.existingId ?: return
+        val draft = current.draft
+        if (draft.tempoBpm != initial.tempoBpm || draft.status != initial.status || draft.notes != initial.notes) {
+            showDialog(ScaleFormDialog.DISCARD_AND_OPEN)
+        } else {
+            effectChannel.trySend(ScaleFormEffect.OpenScale(id))
+        }
+    }
+
     private fun confirm() {
         when (mutableState.value.dialog) {
             ScaleFormDialog.DISCARD -> effectChannel.trySend(ScaleFormEffect.Close)
+            ScaleFormDialog.DISCARD_AND_OPEN -> mutableState.value.existingId?.let { effectChannel.trySend(ScaleFormEffect.OpenScale(it)) }
             ScaleFormDialog.DELETE -> viewModelScope.launch {
                 pieceId?.let { repertoire.delete(it) }
                 effectChannel.send(ScaleFormEffect.CloseDeleted)
