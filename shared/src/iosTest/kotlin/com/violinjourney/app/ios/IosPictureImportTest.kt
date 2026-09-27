@@ -2,12 +2,14 @@ package com.violinjourney.app.ios
 
 import com.violinjourney.app.core.data.repertoire.SheetFiles
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.io.PickedCopies
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.fileUri
 import com.violinjourney.app.core.time.SystemWallClock
 import com.violinjourney.app.core.time.WallClock
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.test.assertFalse
 import kotlin.math.abs
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
@@ -89,12 +91,37 @@ class IosPictureImportTest {
         assertTrue(' ' in shot.path, "the camera writes into Application Support: ${shot.path}")
         jpeg(shot.path)
         assertStored(assertNotNull(sheets.import(shot.fileUri), "the shot of the camera is read"))
+        assertTrue(files.fileExistsAtPath(shot.path), "a shot is no pick: the screen that asked for it deletes it")
     }
 
     @Test
-    fun `a copy of the photo picker is imported as before`() = runTest {
-        val copy = jpeg("${NSTemporaryDirectory()}${NSUUID().UUIDString}.jpg")
+    fun `a copy of the photo picker is imported and then goes with its folder`() = runTest {
+        val copy = picked(jpeg("$folder/lent.jpg"))
         assertStored(assertNotNull(sheets.import(PlatformFile(copy).fileUri)))
+        assertFalse(files.fileExistsAtPath(copy.substringBeforeLast('/')), "the pick is let go once read")
+    }
+
+    @Test
+    fun `a copy of the photo picker that is no picture goes too`() = runTest {
+        val text = "$folder/lent.jpg"
+        assertTrue(("not a picture" as NSString).writeToFile(text, atomically = true, encoding = NSUTF8StringEncoding, error = null))
+        made += text
+        val copy = picked(text)
+        assertNull(sheets.import(PlatformFile(copy).fileUri))
+        assertFalse(files.fileExistsAtPath(copy), "a refused pick is not left in tmp")
+    }
+
+    @Test
+    fun `the copy of the avatar picker goes once read whether a picture or not`() = runTest {
+        val photo = picked(jpeg("$folder/face.jpg"))
+        made += assertNotNull(avatars.existing(assertNotNull(avatars.import(photo)))).path
+        assertFalse(files.fileExistsAtPath(photo), "an avatar taken in")
+        val text = "$folder/notes.jpg"
+        assertTrue(("not a picture" as NSString).writeToFile(text, atomically = true, encoding = NSUTF8StringEncoding, error = null))
+        made += text
+        val notPicture = picked(text)
+        assertNull(avatars.import(notPicture))
+        assertFalse(files.fileExistsAtPath(notPicture), "an avatar refused")
     }
 
     @Test
@@ -137,6 +164,13 @@ class IosPictureImportTest {
         assertTrue(("not a picture" as NSString).writeToFile(text, atomically = true, encoding = NSUTF8StringEncoding, error = null))
         made += text
         assertNull(sheets.import(PlatformFile(text).fileUri))
+    }
+
+    /** What a picker hands over: a copy of [lent] in a pick of its own in `tmp/picked/`; gone after the test whatever happens. */
+    private fun picked(lent: String): String {
+        val copy = assertNotNull(PickedCopies.copy(NSURL.fileURLWithPath(lent), "${NSUUID().UUIDString}.jpg"))
+        made += copy.substringBeforeLast('/')
+        return copy
     }
 
     /** The page and its thumbnail are in the folder of the repertoire; both go away after the test. */

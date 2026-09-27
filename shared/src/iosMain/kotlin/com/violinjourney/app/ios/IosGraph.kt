@@ -51,6 +51,7 @@ import com.violinjourney.app.core.domain.progress.TrophyAwarder
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.venue.Venues
+import com.violinjourney.app.core.io.PickedCopies
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.recording.DecodingFileTakeAnalyzer
 import com.violinjourney.app.core.recording.IosPcmFileOpener
@@ -180,7 +181,8 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
         backingPlaybackFactory = backingPlayback, backingConfig = backingConfig, analytics = analytics,
     )
 
-    val waveforms = IosSessionWaveforms({ IosFolders.folder(DataLayout.WAVEFORMS) }, io)
+    // reckoned again from the sound whenever it is missing: not for the backup of the phone (spec 5.14)
+    val waveforms = IosSessionWaveforms({ IosFolders.deviceOnlyFolder(DataLayout.WAVEFORMS) }, io)
     val shareFiles = IosShareFiles(io)
     val housekeeping = Housekeeping(sessions, waveforms, avatarFiles, profiles, shareFiles, repertoire, backings, backingPcm, clock, io)
     val renderer = IosSoundRenderer(soundConfig, io)
@@ -201,6 +203,9 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
         storageScope.launch(Dispatchers.Main) { IosTakeKeepAlive.follow(recordingWatch) }
         // the consent lives in these settings: it is followed as long as they are this graph's
         statistics?.followConsent(settings, storageScope)
+        // What a crash or a dropped pick left of the pickers' copies. Only here, as a graph is made: no picker is open and
+        // no import runs, and the copies an older build left keep the dates of their originals (PickedCopies.sweep).
+        storageScope.launch { PickedCopies.sweep(clock.millis()) }
     }
 
     /**

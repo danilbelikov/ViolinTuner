@@ -154,36 +154,52 @@ class VideoTakeImporter(
 
     /** The system picker returned [uri]. */
     fun picked(pieceId: Long, uri: String) {
-        if (mutableState.value != VideoImport.Idle) return
+        if (mutableState.value != VideoImport.Idle) {
+            release(uri)
+            return
+        }
         // Nothing is shown while the room is measured, and it is measured off the caller's thread — the main one: a
         // provider answers when it will, and iOS counts in the room what it would free, which takes a while on a full phone.
         val measuring = VideoImport.Working(pieceId, shot = false, copying = true, visible = false)
         mutableState.value = measuring
         job = scope.launch {
-            val missing = missingBytes(uri)
-            // stopped meanwhile: that answer stands
-            currentCoroutineContext().ensureActive()
-            if (missing > 0) {
-                mutableState.compareAndSet(measuring, VideoImport.Failed(pieceId, VideoImportFailure.NO_SPACE, missingMb = ((missing + BYTES_PER_MB - 1) / BYTES_PER_MB).toInt()))
-                return@launch
+            var file: PlatformFile? = null
+            try {
+                file = copyIn(pieceId, uri, measuring)
+            } finally {
+                // Refused for room, failed, or stopped while measured or copied: what the platform holds of the pick goes
+                // (on iOS a copy in tmp — maybe the very gigabytes the room was short of).
+                if (file == null) files.release(uri)
             }
-            // Copying is shown at once and without a number: it is seconds as a rule, and no estimate of it is worth the name.
-            if (!mutableState.compareAndSet(measuring, measuring.copy(visible = true))) return@launch
-            val file = try {
-                files.import(uri)
-            } catch (e: CancellationException) {
-                throw e
-            } catch (e: Exception) {
-                currentCoroutineContext().ensureActive()
-                analytics.error(ErrorGroup.MEDIA, "a picked video could not be copied in", e)
-                null
-            }
-            if (file == null) {
-                mutableState.value = VideoImport.Failed(pieceId, VideoImportFailure.CANNOT_OPEN)
-            } else {
-                take(pieceId, file, shot = false, returnedAtEpochMs = clock.millis())
-            }
+            file?.let { take(pieceId, it, shot = false, returnedAtEpochMs = clock.millis()) }
         }
+    }
+
+    /** A pick this screen will not import: one video at a time, none while a take is recorded (spec 3.19). */
+    fun release(uri: String) = files.release(uri)
+
+    /** The picked video copied in; null when it does not come in, the state saying why. */
+    private suspend fun copyIn(pieceId: Long, uri: String, measuring: VideoImport.Working): PlatformFile? {
+        val missing = missingBytes(uri)
+        // stopped meanwhile: that answer stands
+        currentCoroutineContext().ensureActive()
+        if (missing > 0) {
+            mutableState.compareAndSet(measuring, VideoImport.Failed(pieceId, VideoImportFailure.NO_SPACE, missingMb = ((missing + BYTES_PER_MB - 1) / BYTES_PER_MB).toInt()))
+            return null
+        }
+        // Copying is shown at once and without a number: it is seconds as a rule, and no estimate of it is worth the name.
+        if (!mutableState.compareAndSet(measuring, measuring.copy(visible = true))) return null
+        val file = try {
+            files.import(uri)
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            currentCoroutineContext().ensureActive()
+            analytics.error(ErrorGroup.MEDIA, "a picked video could not be copied in", e)
+            null
+        }
+        if (file == null) mutableState.value = VideoImport.Failed(pieceId, VideoImportFailure.CANNOT_OPEN)
+        return file
     }
 
     /** How much more room the picked video needs than there is; 0 when it fits, or when its size is not told. Blocking. */

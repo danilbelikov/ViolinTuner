@@ -704,6 +704,7 @@ class PieceViewModelTest {
         advance(1_000)
         viewModel.onIntent(PieceIntent.VideoShootClicked)
         viewModel.onIntent(PieceIntent.VideoPicked("content://video/1"))
+        assertEquals("a pick not wanted now is let go", listOf("content://video/1"), videoFiles.released)
         viewModel.onIntent(PieceIntent.RecordClicked)
         advance(3_000)
 
@@ -714,10 +715,11 @@ class PieceViewModelTest {
         assertTrue(effects.none { it is PieceEffect.LaunchVideoCamera })
         assertEquals(0, videoAnalyzer.calls)
 
-        viewModel.onIntent(PieceIntent.VideoPicked("content://video/1"))
+        viewModel.onIntent(PieceIntent.VideoPicked("content://video/2"))
         viewModel.onIntent(PieceIntent.VideoShootClicked)
         runCurrent()
         assertTrue("one at a time", effects.none { it is PieceEffect.LaunchVideoCamera })
+        assertEquals("the pick that is taken in is not let go", listOf("content://video/1"), videoFiles.released)
     }
 
     @Test

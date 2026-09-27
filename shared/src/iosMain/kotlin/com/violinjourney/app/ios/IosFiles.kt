@@ -5,6 +5,8 @@ import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.data.repertoire.SheetFiles
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.io.DeviceOnly
+import com.violinjourney.app.core.io.PickedCopies
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.isOwnFileName
@@ -78,7 +80,8 @@ import platform.UIKit.UIImageJPEGRepresentation
  * The files of the iOS app, as the app keeps them on Android: bare names in the database, the files in folders of
  * Application Support. Pictures are read and turned upright (HEIC and the orientation of a photo included) — sheet pages
  * by ImageIO straight at their size, avatars by UIKit — scaled down and written as JPEG, first under another name, so a
- * file with the final name is always whole.
+ * file with the final name is always whole. The folders of data go into the backup of the phone; the helpers — what is
+ * reckoned again or only passes through — are opened by [deviceOnlyFolder] and stay out of it (spec 5.14).
  */
 @OptIn(ExperimentalForeignApi::class)
 internal object IosFolders {
@@ -87,6 +90,13 @@ internal object IosFolders {
     fun folder(name: String): String = "${IosStorage.dataDirectory()}/$name".also {
         files.createDirectoryAtPath(it, withIntermediateDirectories = true, attributes = null, error = null)
     }
+
+    /**
+     * A folder of Application Support that stays out of the backup of the phone ([DeviceOnly]). Marked when it is made —
+     * again after a restore or a reset deleted it — and once for a folder made before there were marks; a folder marked
+     * already is only looked at.
+     */
+    fun deviceOnlyFolder(name: String): String = folder(name).also { if (!DeviceOnly.isMarked(it)) DeviceOnly.mark(it) }
 
     /** There, and not a folder: what a name from the database may point at. */
     fun isFile(path: String): Boolean = PlatformFile(path).isRegularFile()
@@ -269,14 +279,23 @@ internal class IosAvatarFiles(private val io: CoroutineDispatcher, private val c
 
     override suspend fun import(sourceUri: String): String? = withContext(io) {
         val path = pathOfFileUri(sourceUri) ?: return@withContext null
-        val image = UIImage.imageWithContentsOfFile(path) ?: return@withContext null
+        // the picker's copy is the app's own: once read it goes, whatever came of it
+        try {
+            storeSquare(path)
+        } finally {
+            PickedCopies.release(path)
+        }
+    }
+
+    private fun storeSquare(path: String): String? {
+        val image = UIImage.imageWithContentsOfFile(path) ?: return null
         val (w, h) = IosPictures.pixels(image)
         val side = minOf(w, h)
         val scale = minOf(1.0, AVATAR_SIZE_PX / side)
         val size = (side * scale).toInt().coerceAtLeast(1)
         val square = IosPictures.draw(image, size, size, -(w - side) / 2 * scale, -(h - side) / 2 * scale, scale)
         val name = "$PREFIX${clock.millis()}$EXTENSION"
-        if (IosPictures.writeJpeg(square, "$directory/$name", JPEG_QUALITY)) name else null
+        return if (IosPictures.writeJpeg(square, "$directory/$name", JPEG_QUALITY)) name else null
     }
 
     // a name that leaves the folder is not one of ours — a delete by it would reach a file outside it, the database maybe
@@ -296,16 +315,29 @@ internal class IosAvatarFiles(private val io: CoroutineDispatcher, private val c
     }
 }
 
-/** Sheet photos in `repertoire/`, each with a thumbnail; shots of the camera pass through `camera/` (as on Android). */
+/**
+ * Sheet photos in `repertoire/`, each with a thumbnail; shots of the camera pass through `camera/` (as on Android), a
+ * folder out of the backup of the phone.
+ */
 internal class IosSheetFiles(private val io: CoroutineDispatcher, private val config: RepertoireConfig) : SheetFiles {
     private val directory by lazy { IosFolders.folder(DataLayout.SHEETS) }
-    private val cameraDirectory by lazy { IosFolders.folder(DataLayout.CAMERA) }
+    private val cameraDirectory by lazy { IosFolders.deviceOnlyFolder(DataLayout.CAMERA) }
 
     // One picture per pool: the pictures and their data are let go when it is done, not when the thread of io next drains.
     override suspend fun import(sourceUri: String): SheetFiles.Stored? = withContext(io) { autoreleasepool { importNow(sourceUri) } }
 
     private fun importNow(sourceUri: String): SheetFiles.Stored? {
         val path = pathOfFileUri(sourceUri) ?: return null
+        // A copy of the photo picker is the app's own: once read it goes, whatever came of it. A shot of the camera is no
+        // copy — it lies in `camera/`, and the screen that asked for it deletes it.
+        return try {
+            store(path)
+        } finally {
+            PickedCopies.release(path)
+        }
+    }
+
+    private fun store(path: String): SheetFiles.Stored? {
         // the page straight at its size (spec 5.9): the full frame is never unpacked
         val page = IosPictures.downsampled(path, config.pageMaxSidePx) ?: return null
         val thumb = IosPictures.fitted(page, config.thumbMaxSidePx)

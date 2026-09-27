@@ -1,9 +1,9 @@
 package com.violinjourney.app.core.ui.components
 
+import com.violinjourney.app.core.io.PickedCopies
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.autoreleasepool
 import platform.Foundation.NSFileManager
-import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
 import platform.PhotosUI.PHPickerConfiguration
@@ -79,7 +79,7 @@ internal object SystemScreens {
         }
     }
 
-    /** The photo library: pictures or videos, up to [limit] (0 — any number); each lent file is copied into the temporary folder. */
+    /** The photo library: pictures or videos, up to [limit] (0 — any number); each lent file is copied into `tmp/picked/` ([PickedCopies]). */
     fun mediaPicker(videos: Boolean, limit: Long, delegate: MediaPickerDelegate): PHPickerViewController {
         val configuration = PHPickerConfiguration().apply {
             filter = if (videos) PHPickerFilter.videosFilter else PHPickerFilter.imagesFilter
@@ -189,17 +189,17 @@ internal class DocumentDelegate(private val onPicked: (String?) -> Unit) : NSObj
 
 /**
  * The app's own copy of a file picked in Files, under the file's own name — the name of a backing is its title (spec 3.32) —
- * in a folder of its own inside [folder], which keeps two picks of one name apart. Its `file:` URI; null when it cannot be
- * made. The picker (`asCopy`) has put a copy into the app's tmp already, and that copy is the app's to keep: it is moved,
- * not copied again — no seconds of copying on the main thread, no second copy of hundreds of megabytes, nothing left in the
- * picker's Inbox. A lent file that cannot be moved is copied. The importer moves the result in or deletes it.
+ * in a folder of its own inside [folder] (`tmp/picked/`, [PickedCopies]), which keeps two picks of one name apart. Its
+ * `file:` URI; null when it cannot be made. The picker (`asCopy`) has put a copy into the app's tmp already, and that copy is
+ * the app's to keep: it is moved, not copied again — no seconds of copying on the main thread, no second copy of hundreds of
+ * megabytes, nothing left in the picker's Inbox. A lent file that cannot be moved is copied. The importer moves the result
+ * in or deletes it, and lets the folder of the pick go.
  */
 @OptIn(ExperimentalForeignApi::class)
-internal fun copyKeepingName(lent: NSURL, folder: String = NSTemporaryDirectory()): String? {
+internal fun copyKeepingName(lent: NSURL, folder: String = PickedCopies.root()): String? {
     val name = lent.lastPathComponent?.takeIf { it.isNotBlank() && '/' !in it } ?: return copyToTemporary(lent)
     val manager = NSFileManager.defaultManager
-    val home = folder.trimEnd('/') + "/" + NSUUID().UUIDString
-    if (!manager.createDirectoryAtPath(home, withIntermediateDirectories = true, attributes = null, error = null)) return null
+    val home = PickedCopies.newFolder(folder.trimEnd('/')) ?: return null
     val copy = NSURL.fileURLWithPath("$home/$name")
     if (manager.moveItemAtURL(lent, copy, null)) return copy.absoluteString
     // a move that failed halfway may have left a piece behind; the folder is ours alone
@@ -209,9 +209,9 @@ internal fun copyKeepingName(lent: NSURL, folder: String = NSTemporaryDirectory(
     return null
 }
 
+/** A copy of [lent] in a pick of its own in `tmp/picked/`, under a new name with the lent file's extension: its `file:` URI. */
 @OptIn(ExperimentalForeignApi::class)
 private fun copyToTemporary(lent: NSURL): String? {
     val extension = lent.pathExtension?.takeIf { it.isNotEmpty() }?.let { ".$it" }.orEmpty()
-    val copy = NSURL.fileURLWithPath("${NSTemporaryDirectory()}${NSUUID().UUIDString}$extension")
-    return if (NSFileManager.defaultManager.copyItemAtURL(lent, copy, null)) copy.absoluteString else null
+    return PickedCopies.copy(lent, "${NSUUID().UUIDString}$extension")?.let { NSURL.fileURLWithPath(it).absoluteString }
 }

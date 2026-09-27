@@ -110,6 +110,7 @@ class VideoTakeImporterTest {
         assertFalse(importer.working.copying)
         advance(5_000)
         assertEquals(1_700_000_000_000, sessions.sessions.value.single().startedAtEpochMs)
+        assertTrue("a pick that came in is the take's now", files.released.isEmpty())
     }
 
     @Test
@@ -203,6 +204,7 @@ class VideoTakeImporterTest {
         // 300 to copy and 50 to stay free, 100 there
         assertEquals(250, failed.missingMb)
         assertEquals(1, files.freeAsked)
+        assertEquals("the copy of the pick does not keep the room it found missing", listOf("content://video/1"), files.released)
     }
 
     @Test
@@ -234,6 +236,21 @@ class VideoTakeImporterTest {
         advance(10_000)
         assertTrue(sessions.sessions.value.isEmpty())
         assertEquals(1, files.discarded.size)
+        assertTrue("copied in, the pick is the app's file, discarded above", files.released.isEmpty())
+    }
+
+    @Test
+    fun `cancelling a picked video while it is copied lets the pick go`() = runTest {
+        val (importer, _) = importer()
+        importer.picked(7, "content://video/1")
+        advance(FakeVideoFiles.COPY_MS / 2)
+        assertTrue(importer.working.copying)
+        importer.cancelClicked()
+        runCurrent()
+        assertEquals(VideoImport.Idle, importer.state.value)
+        assertEquals(listOf("content://video/1"), files.released)
+        advance(10_000)
+        assertTrue(sessions.sessions.value.isEmpty() && files.discarded.isEmpty())
     }
 
     @Test
@@ -413,6 +430,16 @@ class VideoTakeImporterTest {
         assertEquals(VideoImportFailure.CANNOT_OPEN, failed.reason)
         assertNull(failed.rescuePath)
         assertEquals(listOf(ErrorGroup.MEDIA), analytics.errors.map { it.first })
+        assertEquals(listOf("content://video/1"), files.released)
+        importer.dismiss()
+
+        // the platform answers that it could not, without throwing
+        files.importThrows = null
+        files.importFails = true
+        importer.picked(7, "content://video/2")
+        advance(1_000)
+        assertEquals(VideoImportFailure.CANNOT_OPEN, (importer.state.value as VideoImport.Failed).reason)
+        assertEquals(listOf("content://video/1", "content://video/2"), files.released)
     }
 
     @Test
@@ -450,6 +477,7 @@ class VideoTakeImporterTest {
         val (importer, _) = importer()
         importer.shot(7, shot)
         importer.picked(8, "content://video/2")
+        assertEquals("the second pick is let go at once", listOf("content://video/2"), files.released)
         advance(6_000)
         assertEquals(listOf(7L), sessions.sessions.value.map { it.pieceId })
     }

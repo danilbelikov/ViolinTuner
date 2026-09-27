@@ -365,7 +365,8 @@ open class PieceViewModel(
                 val file = savedState.remove<String>(KEY_VIDEO_FILE)?.let(::platformFile) ?: return
                 if (intent.saved) importer.shot(pieceId, file) else file.deleteFile()
             }
-            is PieceIntent.VideoPicked -> intent.uri.let { uri -> if (uri != null && videoAllowed()) importer.picked(pieceId, uri) }
+            // a pick that is not wanted now is let go: on iOS it is the app's own copy, maybe gigabytes
+            is PieceIntent.VideoPicked -> intent.uri?.let { uri -> if (videoAllowed()) importer.picked(pieceId, uri) else importer.release(uri) }
             PieceIntent.VideoImportCancelClicked -> importer.cancelClicked()
             PieceIntent.VideoImportContinueClicked -> importer.continueClicked()
             PieceIntent.VideoImportDismissed -> importer.dismiss()

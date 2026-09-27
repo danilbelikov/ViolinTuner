@@ -4,10 +4,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import com.violinjourney.app.core.io.PickedCopies
 import kotlinx.cinterop.ExperimentalForeignApi
-import platform.Foundation.NSFileManager
-import platform.Foundation.NSTemporaryDirectory
-import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
 import platform.PhotosUI.PHPickerConfiguration
 import platform.PhotosUI.PHPickerFilter
@@ -37,8 +35,8 @@ private fun present(delegate: PickerDelegate) {
 }
 
 /**
- * The picker lends the picture as a file that is gone once its callback returns: it is copied into the app's temporary
- * folder first, and that copy is what the app imports.
+ * The picker lends the picture as a file that is gone once its callback returns: it is copied into `tmp/picked/` first
+ * ([PickedCopies]), and that copy is what the app imports; the importer lets it go once read.
  */
 @OptIn(ExperimentalForeignApi::class)
 private class PickerDelegate(private val onPath: (String) -> Unit) : NSObject(), PHPickerViewControllerDelegateProtocol {
@@ -48,11 +46,8 @@ private class PickerDelegate(private val onPath: (String) -> Unit) : NSObject(),
         result.itemProvider.loadFileRepresentationForTypeIdentifier(IMAGE_TYPE) { url, _ ->
             val lent = url ?: return@loadFileRepresentationForTypeIdentifier
             val extension = lent.pathExtension?.takeIf { it.isNotEmpty() } ?: "jpg"
-            val copy = NSURL.fileURLWithPath("${NSTemporaryDirectory()}${NSUUID().UUIDString}.$extension")
-            if (NSFileManager.defaultManager.copyItemAtURL(lent, copy, null)) {
-                val path = copy.path ?: return@loadFileRepresentationForTypeIdentifier
-                dispatch_async(dispatch_get_main_queue()) { onPath(path) }
-            }
+            val path = PickedCopies.copy(lent, "${NSUUID().UUIDString}.$extension") ?: return@loadFileRepresentationForTypeIdentifier
+            dispatch_async(dispatch_get_main_queue()) { onPath(path) }
         }
     }
 }

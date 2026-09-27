@@ -4,6 +4,7 @@ import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingFiles
+import com.violinjourney.app.core.io.PickedCopies
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.availableBytes
 import com.violinjourney.app.core.io.child
@@ -92,8 +93,9 @@ internal class IosBackingImporter(
         return try {
             take(source, path)
         } finally {
-            // moved in, there is nothing left at the path; refused, the copy goes
+            // moved in, there is nothing left at the path; refused, the copy goes — and with it the folder of its pick
             source.deleteFile()
+            PickedCopies.release(path)
         }
     }
 

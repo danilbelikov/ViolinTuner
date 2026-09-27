@@ -10,6 +10,7 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.TrophyRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.io.DeviceOnly
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.availableBytes
 import com.violinjourney.app.core.io.child
@@ -151,6 +152,9 @@ internal class IosBackupStore(
     override fun newStaging(): PlatformFile = data.child(IosRestoreSwap.STAGING).also {
         it.deleteAll()
         it.makeDirectories()
+        // A copy waiting for the restart is not for the backup of the phone: gigabytes a second time, and on a new
+        // iPhone a copy that is not its own. The mark stays with this folder; what the swap moves out of it is backed up.
+        DeviceOnly.mark(it.path)
     }
 
     override fun discardStaging() {
@@ -202,7 +206,11 @@ internal class IosBackupStore(
     }
 
     private fun leaveMark(name: String) {
-        (data.child(name).openOutput() ?: throw okio.IOException("cannot leave the mark $name")).close()
+        val mark = data.child(name)
+        (mark.openOutput() ?: throw okio.IOException("cannot leave the mark $name")).close()
+        // this phone's alone, as on Android: restored on a new iPhone, «restore-wipe» would wipe what had just come over,
+        // and «restore-ready» would swap in a staging folder the backup does not hold
+        DeviceOnly.mark(mark.path)
     }
 
     override fun shareFile(fileName: String): PlatformFile {

@@ -7,8 +7,9 @@ package com.violinjourney.app.core.backup
  *
  * A new folder of data is named here, and it says what becomes of it: a copy carries it ([MEDIA_DIRS]), it goes with the
  * data without being copied ([WAVEFORMS]), or it is no data at all ([CAMERA]). The rules of the system's own backup
- * (`res/xml/backup_rules.xml`, `data_extraction_rules.xml`) repeat the names, and `DataLayoutRulesTest` holds them and the
- * folders the storages open to this list.
+ * (`res/xml/backup_rules.xml`, `data_extraction_rules.xml`) repeat the names; on iOS the folders that are no data for a
+ * backup are opened by `IosFolders.deviceOnlyFolder`. `DataLayoutRulesTest` holds them and the folders the storages open
+ * to this list.
  */
 object DataLayout {
     /** The photo of the profile. */

@@ -23,7 +23,8 @@ import platform.Foundation.NSUserDomainMask
 
 /**
  * Where the iOS app keeps its data: the database and the settings in Application Support — the app's own, backed up
- * with the phone, never shown in Files. The database lives on the SQLite the app brings; a file of an older schema — a
+ * with the phone like any app's data (spec 5.14; the helpers, marked [com.violinjourney.app.core.io.DeviceOnly], stay out
+ * of that backup), never shown in Files. The database lives on the SQLite the app brings; a file of an older schema — a
  * copy restored from an older app (Android's too), or this app's own after an update that raised the version — is
  * brought to the current one by the same [DatabaseMigrations.ALL] as on Android.
  */

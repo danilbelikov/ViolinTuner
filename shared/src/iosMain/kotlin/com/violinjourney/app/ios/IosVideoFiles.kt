@@ -2,6 +2,7 @@ package com.violinjourney.app.ios
 
 import com.violinjourney.app.core.backup.DataLayout
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.io.PickedCopies
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.availableBytes
 import com.violinjourney.app.core.io.isOwnFileName
@@ -42,14 +43,15 @@ import platform.UIKit.UIImage
 
 /**
  * Videos of takes on iOS (spec 3.19), where Android keeps them: beside the sound of sessions, `sessions/<uuid>.<ext>`
- * with `<uuid>-thumb.jpg`. The camera writes into `camera/`; the pickers hand over copies in the temporary folder as
- * `file:` URIs. The container is kept as it came (`.mov` from the camera of an iPhone). AVAudioFile on iOS opens no file
- * with a picture in it: the sound of a video is read by AVAssetReader (`IosPcmFileOpener`).
+ * with `<uuid>-thumb.jpg`. The camera writes into `camera/`, a folder out of the backup of the phone; the pickers hand
+ * over copies in `tmp/picked/` as `file:` URIs ([PickedCopies]), and every copy goes once it is in or will not come in.
+ * The container is kept as it came (`.mov` from the camera of an iPhone). AVAudioFile on iOS opens no file with a picture
+ * in it: the sound of a video is read by AVAssetReader (`IosPcmFileOpener`).
  */
 @OptIn(ExperimentalForeignApi::class)
 internal class IosVideoFiles(private val config: RepertoireConfig, private val io: CoroutineDispatcher) : VideoFiles {
     private val directory by lazy { IosFolders.folder(DataLayout.SESSIONS) }
-    private val cameraDirectory by lazy { IosFolders.folder(DataLayout.CAMERA) }
+    private val cameraDirectory by lazy { IosFolders.deviceOnlyFolder(DataLayout.CAMERA) }
     private val files = NSFileManager.defaultManager
 
     override fun newCameraFile(): PlatformFile = PlatformFile("$cameraDirectory/${NSUUID().UUIDString}$CAMERA_EXTENSION")
@@ -67,10 +69,20 @@ internal class IosVideoFiles(private val config: RepertoireConfig, private val i
 
     override suspend fun import(uri: String): PlatformFile? = withContext(io) {
         val source = pathOfFileUri(uri) ?: return@withContext null
-        val target = "$directory/${NSUUID().UUIDString}.${extensionOf(source)}"
-        // the picker's copy is ours already: it moves in; anything else is copied whole
-        val done = IosFolders.move(source, target) || files.copyItemAtPath(source, target, null)
-        if (done) PlatformFile(target) else null
+        try {
+            val target = "$directory/${NSUUID().UUIDString}.${extensionOf(source)}"
+            // the picker's copy is ours already: it moves in; anything else is copied whole
+            val done = IosFolders.move(source, target) || files.copyItemAtPath(source, target, null)
+            if (done) PlatformFile(target) else null
+        } finally {
+            // moved in, the folder of the pick is left empty; copied or not taken at all, the copy goes with it
+            PickedCopies.release(source)
+        }
+    }
+
+    // a copy of the picker that will not come in: gigabytes, maybe, the very room a video found missing
+    override fun release(uri: String) {
+        pathOfFileUri(uri)?.let { PickedCopies.release(it) }
     }
 
     override fun info(file: PlatformFile): VideoInfo? {

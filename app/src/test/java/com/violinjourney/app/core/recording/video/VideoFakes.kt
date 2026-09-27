@@ -47,6 +47,11 @@ class FakeVideoFiles : VideoFiles {
         importThrows?.let { throw it }
         return if (importFails) null else File("/files/sessions/video-${next++}.mp4")
     }
+    /** The picks let go without coming in, in order. */
+    val released = mutableListOf<String>()
+    override fun release(uri: String) {
+        released += uri
+    }
     override fun info(file: File): VideoInfo? = onInfo?.invoke(file) ?: info
     override fun makeThumb(file: File): Boolean = thumbs.add(file.name)
     override fun thumbOf(name: String): File? = File("/files/sessions/$name-thumb.jpg").takeIf { name in thumbs }

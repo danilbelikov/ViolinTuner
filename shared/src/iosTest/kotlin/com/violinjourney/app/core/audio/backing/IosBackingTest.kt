@@ -8,6 +8,7 @@ import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRules
+import com.violinjourney.app.core.io.PickedCopies
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.listNames
 import com.violinjourney.app.core.io.openOutput
@@ -220,6 +221,26 @@ class IosBackingTest {
         assertEquals(BackingImport.Unreadable, importer.import(textCopy))
         assertFalse(exists(assertNotNull(pathOfFileUri(textCopy))), "a file that is no sound")
         assertTrue(PlatformFile("${data.path}/backings").listNames().isEmpty(), "nothing is taken in")
+    }
+
+    /** A pick lies in a folder of its own in `tmp/picked/`: the import lets that folder go too, the file taken in or refused. */
+    @Test
+    fun `a pick goes with its folder whether taken in or refused`() {
+        val files = IosBackingFiles(data, SystemWallClock)
+        val importer = IosBackingImporter(data, files, BackingConfig(maxDurationMs = 1_500), SystemWallClock)
+        val long = "$folder/long.m4a"
+        tone(long, 44_100, 2, 220.0)
+        val refused = assertNotNull(copyKeepingName(NSURL.fileURLWithPath(long)))
+        val refusedPick = assertNotNull(PickedCopies.pickOf(assertNotNull(pathOfFileUri(refused))), "the copy lies in tmp/picked")
+        assertEquals(BackingImport.TooLong, importer.import(refused))
+        assertFalse(exists(refusedPick), "the folder of a refused pick")
+
+        val short = "$folder/short.m4a"
+        tone(short, 44_100, 1, 220.0)
+        val taken = assertNotNull(copyKeepingName(NSURL.fileURLWithPath(short)))
+        val takenPick = assertNotNull(PickedCopies.pickOf(assertNotNull(pathOfFileUri(taken))))
+        assertIs<BackingImport.Added>(importer.import(taken))
+        assertFalse(exists(takenPick), "the folder the copy was moved out of")
     }
 
     private fun exists(path: String) = NSFileManager.defaultManager.fileExistsAtPath(path)

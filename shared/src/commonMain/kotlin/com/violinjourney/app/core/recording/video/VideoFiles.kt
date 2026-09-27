@@ -36,6 +36,13 @@ interface VideoFiles {
     /** Copies the picked video in, whole and unchanged; null when it cannot be read or written. Cancellable. */
     suspend fun import(uri: String): PlatformFile?
 
+    /**
+     * [uri] was picked but will not come in — refused, failed, stopped, or not wanted now (one video at a time, none while
+     * a take is recorded; spec 3.19): what the platform holds of it goes. On Android nothing, a provider owns what it
+     * lends; on iOS the app's own copy of the pick (`tmp/picked/`).
+     */
+    fun release(uri: String)
+
     fun info(file: PlatformFile): VideoInfo?
 
     /** Writes the thumbnail beside [file]; false leaves the take without one. */

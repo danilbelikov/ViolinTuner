@@ -144,6 +144,8 @@ class CaptureViewModelTest {
 
         override suspend fun import(uri: String): File? = null
 
+        override fun release(uri: String) = Unit
+
         override fun info(file: File): VideoInfo? = null
 
         override fun makeThumb(file: File): Boolean = true

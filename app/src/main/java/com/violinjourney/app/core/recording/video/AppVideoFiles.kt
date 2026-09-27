@@ -96,6 +96,9 @@ class AppVideoFiles @Inject constructor(
         }
     }
 
+    // a content: uri belongs to its provider — the app holds nothing of a pick until it is copied in
+    override fun release(uri: String) = Unit
+
     override fun info(file: File): VideoInfo? {
         val retriever = MediaMetadataRetriever()
         return try {

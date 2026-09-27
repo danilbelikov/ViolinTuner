@@ -46,7 +46,7 @@ class DataLayoutRulesTest {
     @Test
     fun `every folder of data the storages open is named in DataLayout`() {
         val sources = listOf(File("src/main/java"), File("../shared/src/commonMain/kotlin"), File("../shared/src/androidMain/kotlin"), File("../shared/src/iosMain/kotlin"))
-        val opened = Regex("""File\(context\.filesDir,\s*([^)]+)\)|IosFolders\.folder\(([^)]+)\)""")
+        val opened = Regex("""File\(context\.filesDir,\s*([^)]+)\)|IosFolders\.(?:folder|deviceOnlyFolder)\(([^)]+)\)""")
         val named = Regex("""DataLayout\.[A-Z_]+""")
         val sites = sources.flatMap { root -> root.walkTopDown().filter { it.extension == "kt" }.toList() }
             .flatMap { file -> opened.findAll(file.readText()).map { file.name to (it.groupValues[1].ifEmpty { it.groupValues[2] }).trim() } }
@@ -54,5 +54,21 @@ class DataLayoutRulesTest {
         assertTrue("found ${sites.size} folders", sites.size >= 12)
         val strays = sites.filterNot { (_, name) -> named.matches(name) }
         assertTrue("folders of data named outside DataLayout: $strays", strays.isEmpty())
+    }
+
+    /**
+     * On an iPhone one backup is both the cloud and the move to a new phone, and it has no limit per app: it takes the data,
+     * as a cable transfer does on Android, and leaves out what is reckoned again or only passes through — the folders iOS
+     * opens with `deviceOnlyFolder`. A restore's staging folder and its marks are marked by `IosBackupStore` (`IosStorageTest`).
+     */
+    @Test
+    fun `the backup of an iPhone leaves out the waveforms and the shots on their way in, and nothing of the data`() {
+        val sources = File("../shared/src/iosMain/kotlin").walkTopDown().filter { it.extension == "kt" }.map { it.readText() }.toList()
+        fun opened(how: String) = sources.flatMap { text -> Regex("""IosFolders\.$how\(DataLayout\.([A-Z_]+)\)""").findAll(text).map { it.groupValues[1] } }.toSet()
+        val helpers = setOf("WAVEFORMS", "CAMERA")
+        assertEquals(helpers, opened("deviceOnlyFolder"))
+        val backedUp = opened("folder")
+        assertTrue("found ${backedUp.size} folders of data", backedUp.isNotEmpty())
+        assertTrue("helpers opened into the backup: ${backedUp intersect helpers}", (backedUp intersect helpers).isEmpty())
     }
 }

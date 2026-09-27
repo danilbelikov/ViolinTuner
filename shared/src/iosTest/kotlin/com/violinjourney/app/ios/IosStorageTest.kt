@@ -25,6 +25,7 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.io.DeviceOnly
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.child
 import com.violinjourney.app.core.io.exists
@@ -177,6 +178,27 @@ class IosStorageTest {
         val reopened = IosStorage.database(directory)
         assertEquals(listOf(LocalDate(2026, 9, 24)), RoomPracticeRepository(reopened.practiceDao()).entries.first().map { it.date })
         reopened.close()
+        // out of the staging folder, the restored data go into the backup of the phone again (spec 5.14)
+        for (name in DataLayout.MEDIA_DIRS) assertFalse(DeviceOnly.isMarked(data.child(name).path), name)
+    }
+
+    /**
+     * An unpacked copy waiting for the restart and the marks of a restore are this phone's alone (spec 5.14), as the
+     * rules of the system's backup keep them on Android: a backup of the phone taken meanwhile holds none of them.
+     */
+    @Test
+    fun `what a restore leaves until the restart stays out of the backup of the phone`() = runTest {
+        val database = IosStorage.database(directory)
+        val data = PlatformFile(directory)
+        val store = storeOf(data, database, RoomPracticeRepository(database.practiceDao()))
+        val staging = store.newStaging()
+        store.markStagingReady()
+        store.markWipe()
+        database.close()
+        assertTrue(DeviceOnly.isMarked(staging.path), "the unpacked copy")
+        assertTrue(DeviceOnly.isMarked(data.child(IosRestoreSwap.READY_MARK).path), "the mark of a restore")
+        assertTrue(DeviceOnly.isMarked(data.child(IosRestoreSwap.WIPE_MARK).path), "the mark of a wipe")
+        assertFalse(DeviceOnly.isMarked(data.child(AppDatabase.FILE_NAME).path), "the database is backed up")
     }
 
     @Test
