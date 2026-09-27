@@ -12,7 +12,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.violinjourney.app.core.audio.backing.IosBackingPreview
-import com.violinjourney.app.core.domain.journey.JourneyRoute as JourneyStops
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
@@ -49,7 +48,6 @@ import com.violinjourney.app.feature.onboarding.OnboardingViewModel
 import com.violinjourney.app.feature.practice.PracticeRoute
 import com.violinjourney.app.feature.practice.PracticeViewModel
 import com.violinjourney.app.feature.repertoire.RepertoireViewModel
-import com.violinjourney.app.feature.repertoire.SectionKeys
 import com.violinjourney.app.feature.repertoire.SectionRoute
 import com.violinjourney.app.feature.repertoire.form.PieceFormRoute
 import com.violinjourney.app.feature.repertoire.form.PieceFormViewModel
@@ -69,39 +67,14 @@ import com.violinjourney.app.feature.share.ShareViewModel
 import com.violinjourney.app.feature.sound.SoundRoute
 import com.violinjourney.app.feature.sound.SoundViewModel
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
+import com.violinjourney.app.navigation.Routes
 import com.violinjourney.app.navigation.TopLevelDestination
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
 import platform.UIKit.UIApplicationOpenSettingsURLString
 
-private const val SESSION_ROUTE = "session"
-private const val SOUND_ROUTE = "sound"
-private const val PIECE_ROUTE = "piece"
-private const val PIECE_PATTERN = "$PIECE_ROUTE/{${PieceViewModel.ARG_PIECE_ID}}"
-private const val STAND_ROUTE = "stand"
-private const val CAPTURE_ROUTE = "capture"
-private const val PIECE_FORM_ROUTE = "pieceForm"
-private const val SCALE_FORM_ROUTE = "scaleForm"
-private const val SECTION_ROUTE = "section"
-private const val SECTION_PATTERN = "$SECTION_ROUTE/{${RepertoireViewModel.ARG_SECTION}}"
-private const val JOURNEY_ROUTE = "journey"
-private const val JOURNEY_MAP_ROUTE = "journeyMap"
-private const val JOURNEY_PASSPORT_ROUTE = "journeyPassport"
-private const val JOURNEY_STOP_ROUTE = "journeyStop"
-private const val JOURNEY_STOP_PATTERN = "$JOURNEY_STOP_ROUTE/{${StopViewModel.ARG_STOP_ID}}"
-private const val HOME_ROUTE = "home"
-private const val HOME_SHOP_ROUTE = "homeShop"
-private const val HOME_ARRANGE_ROUTE = "homeArrange"
-private const val HOME_HOUSES_ROUTE = "homeHouses"
-private const val SPLASH_AWAY_ROUTE = "splashAway"
-private const val SPLASH_HOME_ROUTE = "splashHome"
-private const val SETTINGS_ROUTE = "settings"
-private const val BACKUP_ROUTE = "backup"
-private const val RESTORE_ROUTE = "restore"
-private const val RESTORE_PATTERN = "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}={${RestoreViewModel.ARG_URI}}"
-
 /**
- * The graph of screens, as `AppNavHost` on Android: the same routes and the same moves between them.
+ * The graph of screens, as `AppNavHost` on Android: the same routes ([Routes]) and the same moves between them.
  */
 @Composable
 internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHostController, startRoute: String, modifier: Modifier) {
@@ -142,8 +115,8 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             PracticeRoute(
                 onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },
                 onOpenSession = navController::navigateToSession,
-                onOpenJourney = { navController.navigate(JOURNEY_ROUTE) { launchSingleTop = true } },
-                onOpenHome = { navController.navigate(HOME_ROUTE) { launchSingleTop = true } },
+                onOpenJourney = { navController.navigate(Routes.JOURNEY) { launchSingleTop = true } },
+                onOpenHome = { navController.navigate(Routes.HOME) { launchSingleTop = true } },
                 onOpenSettings = navController::navigateToSettings,
                 viewModel = viewModel {
                     PracticeViewModel(
@@ -174,7 +147,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
         }
         // A recording (spec 3.10): above the tabs, without the bottom bar; back returns to where it was opened from.
         composable(
-            route = "$SESSION_ROUTE/{${SessionViewModel.ARG_SESSION_ID}}",
+            route = Routes.SESSION_PATTERN,
             arguments = listOf(navArgument(SessionViewModel.ARG_SESSION_ID) { type = NavType.LongType }),
         ) {
             val share = viewModel { shareViewModel(graph, texts) }
@@ -193,7 +166,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
         }
         // «Звук» (spec 3.17): of one recording, or — without an id — the default of all of them. Above the tabs.
         composable(
-            route = "$SOUND_ROUTE?${SoundViewModel.ARG_SESSION_ID}={${SoundViewModel.ARG_SESSION_ID}}",
+            route = Routes.SOUND_PATTERN,
             arguments = listOf(
                 navArgument(SoundViewModel.ARG_SESSION_ID) {
                     type = NavType.LongType
@@ -215,7 +188,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             )
         }
         // The repertoire (spec 3.15): a piece and its music stand, above the tabs.
-        composable(route = PIECE_PATTERN, arguments = listOf(navArgument(PieceViewModel.ARG_PIECE_ID) { type = NavType.LongType })) {
+        composable(route = Routes.PIECE_PATTERN, arguments = listOf(navArgument(PieceViewModel.ARG_PIECE_ID) { type = NavType.LongType })) {
             val share = viewModel { shareViewModel(graph, texts) }
             PieceRoute(
                 onClose = navController::popBackStack,
@@ -229,12 +202,12 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 tracking = viewModel { AnalyticsViewModel(graph.analytics) },
                 onShare = share::start,
                 shareHost = { ShareHost(share) },
-                onOpenCapture = { pieceId -> navController.navigate("$CAPTURE_ROUTE/$pieceId") { launchSingleTop = true } },
+                onOpenCapture = navController::navigateToCapture,
             )
         }
         // «Снять под минусовку» (spec 3.32): the app's own camera, over everything
         composable(
-            route = "$CAPTURE_ROUTE/{${CaptureViewModel.ARG_PIECE_ID}}",
+            route = Routes.CAPTURE_PATTERN,
             arguments = listOf(navArgument(CaptureViewModel.ARG_PIECE_ID) { type = NavType.LongType }),
         ) {
             CaptureRoute(
@@ -249,7 +222,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             )
         }
         composable(
-            route = "$STAND_ROUTE/{${StandViewModel.ARG_PIECE_ID}}?${StandViewModel.ARG_PAGE}={${StandViewModel.ARG_PAGE}}",
+            route = Routes.STAND_PATTERN,
             arguments = listOf(
                 navArgument(StandViewModel.ARG_PIECE_ID) { type = NavType.LongType },
                 navArgument(StandViewModel.ARG_PAGE) {
@@ -259,7 +232,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             ),
         ) { entry ->
             // The stand only opens from its piece, which lies right under it; the take belongs to that view model (spec 3.15).
-            val pieceEntry = remember(entry) { navController.getBackStackEntry(PIECE_PATTERN) }
+            val pieceEntry = remember(entry) { navController.getBackStackEntry(Routes.PIECE_PATTERN) }
             StandRoute(
                 pieceViewModel = viewModel(pieceEntry) { pieceViewModel(graph, createSavedStateHandle()) },
                 onClose = navController::popBackStack,
@@ -270,7 +243,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             )
         }
         // A section of the repertoire (spec 3.22): its list, above the tabs; «Гаммы» adds through a form of its own.
-        composable(route = SECTION_PATTERN, arguments = listOf(navArgument(RepertoireViewModel.ARG_SECTION) { type = NavType.StringType })) {
+        composable(route = Routes.SECTION_PATTERN, arguments = listOf(navArgument(RepertoireViewModel.ARG_SECTION) { type = NavType.StringType })) {
             SectionRoute(
                 onOpenPiece = navController::navigateToPiece,
                 onNew = { section ->
@@ -284,9 +257,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             )
         }
         composable(
-            route = "$PIECE_FORM_ROUTE?${PieceFormViewModel.ARG_PIECE_ID}={${PieceFormViewModel.ARG_PIECE_ID}}" +
-                "&${PieceFormViewModel.ARG_FOCUS_NOTES}={${PieceFormViewModel.ARG_FOCUS_NOTES}}" +
-                "&${PieceFormViewModel.ARG_SECTION}={${PieceFormViewModel.ARG_SECTION}}",
+            route = Routes.PIECE_FORM_PATTERN,
             arguments = listOf(
                 navArgument(PieceFormViewModel.ARG_SECTION) {
                     type = NavType.StringType
@@ -314,7 +285,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             )
         }
         composable(
-            route = "$SCALE_FORM_ROUTE?${ScaleFormViewModel.ARG_PIECE_ID}={${ScaleFormViewModel.ARG_PIECE_ID}}",
+            route = Routes.SCALE_FORM_PATTERN,
             arguments = listOf(
                 navArgument(ScaleFormViewModel.ARG_PIECE_ID) {
                     type = NavType.LongType
@@ -336,14 +307,13 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             )
         }
         // «Настройки» (spec 3.8, 4): the gear of Live opens them above the tabs, without the bottom bar.
-        composable(SETTINGS_ROUTE) {
+        composable(Routes.SETTINGS) {
             SettingsRoute(
                 onOpenOnboarding = navController::navigateToOnboarding,
                 onOpenSound = { navController.navigateToSound(null) },
                 onClose = navController::popBackStack,
                 // iOS keeps the language of each app in its Settings, on the app's own page
                 onLanguageClick = ::openAppSettings,
-                // the copy of the data comes to iOS with its own step; the statistics switch has nothing to send yet
                 dataBlock = { analyticsEnabled, onAnalyticsChange ->
                     DataBlock(
                         onOpenBackup = navController::navigateToBackup,
@@ -357,14 +327,14 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             )
         }
         // A copy of the data and its coming back (spec 3.20): above the tabs, without the bottom bar.
-        composable(BACKUP_ROUTE) {
+        composable(Routes.BACKUP) {
             BackupRoute(
                 onClose = navController::popBackStack,
                 viewModel = viewModel { BackupViewModel(graph.backupManager, graph.backupStore, graph.backupConfig, graph.recordingWatch, graph.videoImporter) },
             )
         }
         composable(
-            route = RESTORE_PATTERN,
+            route = Routes.RESTORE_PATTERN,
             arguments = listOf(
                 navArgument(RestoreViewModel.ARG_URI) {
                     type = NavType.StringType
@@ -382,15 +352,14 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             )
         }
         // The journey (spec 3.23): above the tabs; the map and the passport are views of the same state.
-        mapOf(JOURNEY_ROUTE to JourneyView.MAIN, JOURNEY_MAP_ROUTE to JourneyView.MAP, JOURNEY_PASSPORT_ROUTE to JourneyView.PASSPORT).forEach { (route, view) ->
+        mapOf(Routes.JOURNEY to JourneyView.MAIN, Routes.JOURNEY_MAP to JourneyView.MAP, Routes.JOURNEY_PASSPORT to JourneyView.PASSPORT).forEach { (route, view) ->
             composable(route) {
                 JourneyRoute(
                     view = view,
-                    onOpenMap = { navController.navigate(JOURNEY_MAP_ROUTE) { launchSingleTop = true } },
-                    onOpenPassport = { navController.navigate(JOURNEY_PASSPORT_ROUTE) { launchSingleTop = true } },
-                    onOpenStop = { stopId ->
-                        navController.navigate(if (stopId == JourneyStops.HOME) SPLASH_HOME_ROUTE else "$JOURNEY_STOP_ROUTE/$stopId") { launchSingleTop = true }
-                    },
+                    onOpenMap = { navController.navigate(Routes.JOURNEY_MAP) { launchSingleTop = true } },
+                    onOpenPassport = { navController.navigate(Routes.JOURNEY_PASSPORT) { launchSingleTop = true } },
+                    // home is a section of its own (spec 3.24); the way into it goes through its title card (3.25)
+                    onOpenStop = { stopId -> navController.navigate(Routes.stop(stopId)) { launchSingleTop = true } },
                     onOpenLive = navController::navigateToLiveLeavingTheGame,
                     onClose = navController::popBackStack,
                     viewModel = viewModel { JourneyViewModel(graph.journey, graph.clock, graph.venues) },
@@ -398,35 +367,35 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 )
             }
         }
-        composable(route = JOURNEY_STOP_PATTERN, arguments = listOf(navArgument(StopViewModel.ARG_STOP_ID) { type = NavType.StringType })) {
+        composable(route = Routes.JOURNEY_STOP_PATTERN, arguments = listOf(navArgument(StopViewModel.ARG_STOP_ID) { type = NavType.StringType })) {
             StopRoute(
                 onClose = navController::popBackStack,
                 onOpenLive = navController::navigateToLiveLeavingTheGame,
-                onOpenHome = { navController.navigate(SPLASH_HOME_ROUTE) { launchSingleTop = true } },
+                onOpenHome = { navController.navigate(Routes.SPLASH_HOME) { launchSingleTop = true } },
                 viewModel = viewModel { StopViewModel(createSavedStateHandle(), graph.journey, graph.journeyConfig, graph.clock, graph.venues) },
             )
         }
         // The home (spec 3.24): four views of one state, above the tabs.
-        mapOf(HOME_ROUTE to HomeView.MAIN, HOME_SHOP_ROUTE to HomeView.SHOP, HOME_ARRANGE_ROUTE to HomeView.ARRANGE, HOME_HOUSES_ROUTE to HomeView.HOUSES).forEach { (route, view) ->
+        mapOf(Routes.HOME to HomeView.MAIN, Routes.HOME_SHOP to HomeView.SHOP, Routes.HOME_ARRANGE to HomeView.ARRANGE, Routes.HOME_HOUSES to HomeView.HOUSES).forEach { (route, view) ->
             composable(route) {
                 HomeRoute(
                     view = view,
-                    onOpenShop = { navController.navigate(HOME_SHOP_ROUTE) { launchSingleTop = true } },
-                    onOpenArrange = { navController.navigate(HOME_ARRANGE_ROUTE) { launchSingleTop = true } },
-                    onOpenHouses = { navController.navigate(HOME_HOUSES_ROUTE) { launchSingleTop = true } },
-                    onOpenHome = { if (!navController.popBackStack(HOME_ROUTE, inclusive = false)) navController.navigate(HOME_ROUTE) { launchSingleTop = true } },
-                    onOpenJourney = { navController.navigate(SPLASH_AWAY_ROUTE) { launchSingleTop = true } },
+                    onOpenShop = { navController.navigate(Routes.HOME_SHOP) { launchSingleTop = true } },
+                    onOpenArrange = { navController.navigate(Routes.HOME_ARRANGE) { launchSingleTop = true } },
+                    onOpenHouses = { navController.navigate(Routes.HOME_HOUSES) { launchSingleTop = true } },
+                    onOpenHome = { if (!navController.popBackStack(Routes.HOME, inclusive = false)) navController.navigate(Routes.HOME) { launchSingleTop = true } },
+                    onOpenJourney = { navController.navigate(Routes.SPLASH_AWAY) { launchSingleTop = true } },
                     onClose = navController::popBackStack,
                     viewModel = viewModel { homeViewModel(graph) },
                 )
             }
         }
         // The title cards between the home and the journey (spec 3.25, 3.27): the player moves from one to the other.
-        composable(SPLASH_AWAY_ROUTE) {
-            SplashRoute(SplashKind.AWAY, onDone = { navController.navigateWithinTheGame(JOURNEY_ROUTE) }, viewModel = viewModel { homeViewModel(graph) })
+        composable(Routes.SPLASH_AWAY) {
+            SplashRoute(SplashKind.AWAY, onDone = { navController.navigateWithinTheGame(Routes.JOURNEY) }, viewModel = viewModel { homeViewModel(graph) })
         }
-        composable(SPLASH_HOME_ROUTE) {
-            SplashRoute(SplashKind.HOME, onDone = { navController.navigateWithinTheGame(HOME_ROUTE) }, viewModel = viewModel { homeViewModel(graph) })
+        composable(Routes.SPLASH_HOME) {
+            SplashRoute(SplashKind.HOME, onDone = { navController.navigateWithinTheGame(Routes.HOME) }, viewModel = viewModel { homeViewModel(graph) })
         }
     }
 }
@@ -472,34 +441,34 @@ private fun NavHostController.navigateToLiveLeavingTheGame() {
 }
 
 private fun NavHostController.navigateToSession(sessionId: Long) {
-    navigate("$SESSION_ROUTE/$sessionId") { launchSingleTop = true }
+    navigate(Routes.session(sessionId)) { launchSingleTop = true }
 }
 
 /** [sessionId] null opens the sound of all recordings. */
 private fun NavHostController.navigateToSound(sessionId: Long?) {
-    navigate("$SOUND_ROUTE?${SoundViewModel.ARG_SESSION_ID}=${sessionId ?: SoundViewModel.EVERYONE}") { launchSingleTop = true }
+    navigate(Routes.sound(sessionId)) { launchSingleTop = true }
 }
 
 private fun NavHostController.navigateToPiece(pieceId: Long) {
-    navigate("$PIECE_ROUTE/$pieceId") { launchSingleTop = true }
+    navigate(Routes.piece(pieceId)) { launchSingleTop = true }
 }
 
 /** Opens the music stand of a piece at [pageIndex] (from zero). */
 private fun NavHostController.navigateToStand(pieceId: Long, pageIndex: Int) {
-    navigate("$STAND_ROUTE/$pieceId?${StandViewModel.ARG_PAGE}=$pageIndex") { launchSingleTop = true }
+    navigate(Routes.stand(pieceId, pageIndex)) { launchSingleTop = true }
 }
 
 private fun NavHostController.navigateToBackup() {
-    navigate(BACKUP_ROUTE) { launchSingleTop = true }
+    navigate(Routes.BACKUP) { launchSingleTop = true }
 }
 
 /** [uri] is the file Files came back with; blank — a restore that is on its way already is come back to. */
 private fun NavHostController.navigateToRestore(uri: String) {
-    navigate(if (uri.isBlank()) RESTORE_ROUTE else "$RESTORE_ROUTE?${RestoreViewModel.ARG_URI}=${encodeQuery(uri)}") { launchSingleTop = true }
+    navigate(Routes.restore(uri)) { launchSingleTop = true }
 }
 
 private fun NavHostController.navigateToSettings() {
-    navigate(SETTINGS_ROUTE) { launchSingleTop = true }
+    navigate(Routes.SETTINGS) { launchSingleTop = true }
 }
 
 private fun NavHostController.navigateFromOnboarding() {
@@ -518,32 +487,25 @@ private fun NavHostController.navigateToOnboarding() {
 }
 
 private fun NavHostController.navigateToSection(section: SectionRef) {
-    navigate("$SECTION_ROUTE/${SectionKeys.keyOf(section)}") { launchSingleTop = true }
+    navigate(Routes.section(section)) { launchSingleTop = true }
 }
 
+/** «Снять под минусовку» (spec 3.32): the app's own camera for a take of [pieceId]. */
+private fun NavHostController.navigateToCapture(pieceId: Long) {
+    navigate(Routes.capture(pieceId)) { launchSingleTop = true }
+}
+
+/** [pieceId] null opens the form of a new element of [section]. */
 private fun NavHostController.navigateToPieceForm(pieceId: Long?, focusNotes: Boolean = false, section: SectionRef = SectionRef.BuiltIn(PieceSection.PIECES)) {
-    val id = pieceId ?: PieceFormViewModel.NEW_PIECE
-    navigate(
-        "$PIECE_FORM_ROUTE?${PieceFormViewModel.ARG_PIECE_ID}=$id&${PieceFormViewModel.ARG_FOCUS_NOTES}=$focusNotes" +
-            "&${PieceFormViewModel.ARG_SECTION}=${SectionKeys.keyOf(section)}",
-    ) { launchSingleTop = true }
+    navigate(Routes.pieceForm(pieceId, focusNotes, section)) { launchSingleTop = true }
 }
 
+/** [pieceId] null opens the form of a new scale. */
 private fun NavHostController.navigateToScaleForm(pieceId: Long?) {
-    navigate("$SCALE_FORM_ROUTE?${ScaleFormViewModel.ARG_PIECE_ID}=${pieceId ?: ScaleFormViewModel.NEW_SCALE}") { launchSingleTop = true }
+    navigate(Routes.scaleForm(pieceId)) { launchSingleTop = true }
 }
 
 /** An element is gone with its form: back to the list of its section, or to the tab if it was opened from elsewhere. */
 private fun NavHostController.popUpToSection() {
-    if (!popBackStack(SECTION_PATTERN, inclusive = false)) popBackStack(TopLevelDestination.HISTORY.route, inclusive = false)
+    if (!popBackStack(Routes.SECTION_PATTERN, inclusive = false)) popBackStack(TopLevelDestination.HISTORY.route, inclusive = false)
 }
-
-/** A value inside the query of a route: everything but the unreserved characters percent-encoded, as `Uri.encode` does. */
-private fun encodeQuery(value: String): String = buildString {
-    value.encodeToByteArray().forEach { byte ->
-        val c = byte.toInt().toChar()
-        if (byte >= 0 && (c.isLetterOrDigit() || c in UNRESERVED)) append(c) else append('%').append((byte.toInt() and 0xFF).toString(16).uppercase().padStart(2, '0'))
-    }
-}
-
-private const val UNRESERVED = "-_.~"
