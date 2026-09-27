@@ -28,8 +28,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -67,7 +65,6 @@ import com.violinjourney.app.shared.resources.sound_ab_processed
 import com.violinjourney.app.shared.resources.sound_meter_limiter
 import com.violinjourney.app.shared.resources.sound_meter_none
 import com.violinjourney.app.shared.resources.sound_meter_output
-import kotlinx.coroutines.flow.first
 import org.jetbrains.compose.resources.stringResource
 
 private val MeterHeight = 4.dp
@@ -90,11 +87,13 @@ data class MiniPlayerMetrics(val button: Dp, val wave: Dp, val ab: Dp) {
 /**
  * Always in sight on the «Звук» screen: everything here is set by ear. Play and pause, the
  * waveform that is also the seek bar, the time, A/B and the level that leaves the chain.
- * [meters] is read where it is drawn — thirty readings a second recompose nothing but a number.
+ * [meters] and [position] are read where they are drawn: the readings and the chunks of sound
+ * recompose nothing but a number, and [player] keeps its position to the whole second.
  */
 @Composable
 fun MiniPlayer(
     player: PlayerState,
+    position: () -> Long,
     waveform: List<Float>?,
     meters: State<SoundMeters?>,
     metrics: MiniPlayerMetrics,
@@ -118,7 +117,7 @@ fun MiniPlayer(
                     ),
                 contentAlignment = Alignment.Center,
             ) { PlayPauseGlyph(playing = player.playing, tint = colors.onPrimary) }
-            SeekWave(player, waveform, metrics.wave, onSeek, Modifier.weight(1f))
+            SeekWave(player, position, waveform, metrics.wave, onSeek, Modifier.weight(1f))
             HoldableAb(original = player.original, enabled = player.processed, height = metrics.ab, onOriginal = onOriginal)
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -134,22 +133,25 @@ fun MiniPlayer(
     }
 }
 
-/** The waveform as the seek bar: the played part is primary, the finger goes anywhere along it. Until reckoned — a plain track. */
+/**
+ * The waveform as the seek bar: the played part is primary, the finger goes anywhere along it. Until reckoned — a plain
+ * track. The played part follows [position] in the draw phase; what TalkBack is told goes by the whole second.
+ */
 @Composable
-private fun SeekWave(player: PlayerState, waveform: List<Float>?, height: Dp, onSeek: (Long) -> Unit, modifier: Modifier) {
+private fun SeekWave(player: PlayerState, position: () -> Long, waveform: List<Float>?, height: Dp, onSeek: (Long) -> Unit, modifier: Modifier) {
     val colors = MaterialTheme.colorScheme
     val rest = ViolinTheme.soundColors.waveRest
     val duration = player.durationMs.coerceAtLeast(1)
     var dragged by remember { mutableStateOf<Float?>(null) }
     val currentOnSeek by rememberUpdatedState(onSeek)
     val description = stringResource(Res.string.session_player_position)
-    val played = dragged ?: (player.positionMs.toFloat() / duration)
+    val spoken = dragged ?: (player.positionMs.toFloat() / duration)
     Box(
         modifier = modifier
             .height(height)
             .semantics {
                 contentDescription = description
-                progressBarRangeInfo = ProgressBarRangeInfo(played, 0f..1f)
+                progressBarRangeInfo = ProgressBarRangeInfo(spoken, 0f..1f)
                 setProgress { fraction -> currentOnSeek((fraction.coerceIn(0f, 1f) * duration).toLong()); true }
             }
             .pointerInput(duration) {
@@ -168,6 +170,7 @@ private fun SeekWave(player: PlayerState, waveform: List<Float>?, height: Dp, on
                 }
             }
             .drawBehind {
+                val played = dragged ?: (position().toFloat() / duration)
                 val bars = waveform
                 if (bars == null || size.height < 20.dp.toPx()) {
                     val track = PlainTrack.toPx()
@@ -249,10 +252,10 @@ private fun HoldableAb(original: Boolean, enabled: Boolean, height: Dp, onOrigin
 }
 
 /**
- * The level at the output: up at once, down at a readable pace, stepped by frames only while
- * there is something to show. The mark at its end lights up for a moment when the limiter has
- * had to work, and the number gives way to the word — «ограничитель», not "overload": there
- * will be none in the file, but too much was asked for.
+ * The level at the output: up at once, the whole bar down in ~300 ms, thirty frames a second on the
+ * postcards' grid and only while there is something to show (spec 5.11, [runMeter]). The mark at its
+ * end lights up for a moment when the limiter has had to work, and the number gives way to the word —
+ * «ограничитель», not "overload": there will be none in the file, but too much was asked for.
  */
 @Composable
 private fun OutputMeter(meters: State<SoundMeters?>, modifier: Modifier) {
@@ -264,18 +267,11 @@ private fun OutputMeter(meters: State<SoundMeters?>, modifier: Modifier) {
 
     LaunchedEffect(Unit) {
         val motion = OutputMeterMotion()
-        while (true) {
-            if (motion.atRest(meters.value)) {
-                motion.rest()
-                number = null
-                snapshotFlow { meters.value }.first { it != null } // asleep until sound plays through the chain
-            }
-            withFrameMillis { now ->
-                motion.step(now, meters.value)
-                level.floatValue = motion.level
-                lit = motion.lit
-                number = motion.number
-            }
+        // asleep until sound plays through the chain
+        runMeter(motion, reading = { meters.value }) {
+            level.floatValue = motion.level
+            lit = motion.lit
+            number = motion.number
         }
     }
 

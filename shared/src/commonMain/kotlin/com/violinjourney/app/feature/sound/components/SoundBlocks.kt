@@ -35,9 +35,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -118,6 +120,8 @@ import com.violinjourney.app.shared.resources.sound_param_width
 import com.violinjourney.app.shared.resources.sound_param_width_hint
 import com.violinjourney.app.shared.resources.sound_space_names
 import kotlin.math.exp
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -127,6 +131,12 @@ private val ChipHeight = 36.dp
 private const val DISABLED_ALPHA = 0.38f
 private const val EXPAND_MS = 250
 private const val REDUCTION_FULL_DB = 20.0
+
+/** The limiter's line under «Громкость» looks at the readings ten times a second while the sound plays… */
+private const val LIMITER_NOTE_STEP_MS = 100L
+
+/** …and its warning goes out after a second of calm. */
+private const val LIMITER_NOTE_CALM_STEPS = 10
 private const val TABULAR_FIGURES = "tnum"
 
 /** The four cards, in the order the signal passes them. */
@@ -339,16 +349,21 @@ private fun CompressorContent(settings: SoundSettings, details: Boolean, on: Boo
     }
 }
 
-/** «Сейчас сжимает −4 дБ»: the bar grows from the right, the number moves in halves of a decibel and not too often. */
+/**
+ * «Сейчас сжимает −4 дБ»: the bar grows from the right at once and falls in ~300 ms, thirty frames a second while the
+ * sound plays and asleep otherwise (spec 5.11, [runMeter]); the number moves in halves of a decibel and not too often.
+ */
 @Composable
 private fun ReductionMeter(meters: State<SoundMeters?>, on: Boolean) {
     val colors = MaterialTheme.colorScheme
     val tint = ViolinTheme.soundColors.meterReduce
+    val level = remember { mutableFloatStateOf(0f) }
     var shown by remember { mutableDoubleStateOf(0.0) }
     LaunchedEffect(on) {
-        while (true) {
-            shown = if (on) meters.value?.reductionDb ?: 0.0 else 0.0
-            kotlinx.coroutines.delay(100) // ten readings a second: a number, not a flicker
+        val motion = ReductionMeterMotion(REDUCTION_FULL_DB)
+        runMeter(motion, reading = { if (on) meters.value?.reductionDb else null }) {
+            level.floatValue = motion.level
+            shown = motion.number
         }
     }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.alpha(if (on) 1f else DISABLED_ALPHA)) {
@@ -360,7 +375,7 @@ private fun ReductionMeter(meters: State<SoundMeters?>, on: Boolean) {
                 .clearAndSetSemantics { }
                 .drawBehind {
                     drawRoundRect(colors.surfaceContainerHigh, size = size, cornerRadius = CornerRadius(size.height / 2))
-                    val share = ((if (on) meters.value?.reductionDb ?: 0.0 else 0.0) / REDUCTION_FULL_DB).toFloat().coerceIn(0f, 1f)
+                    val share = level.floatValue
                     drawRoundRect(tint, Offset(size.width * (1 - share), 0f), Size(size.width * share, size.height), CornerRadius(size.height / 2))
                 },
         )
@@ -408,9 +423,16 @@ private fun OutputContent(settings: SoundSettings, on: Boolean, meters: State<So
     LaunchedEffect(Unit) {
         var quietFor = 0
         while (true) {
+            // asleep while nothing plays and the warning is out: no polling for as long as the block is open
+            if (!hot && meters.value == null) snapshotFlow { meters.value }.first { it != null }
             // The warning comes at once and leaves only after a second of calm: a line of text must not blink with the music.
-            if (meters.value?.limiting == true) { hot = true; quietFor = 0 } else if (++quietFor > 10) hot = false
-            kotlinx.coroutines.delay(100)
+            if (meters.value?.limiting == true) {
+                hot = true
+                quietFor = 0
+            } else if (++quietFor > LIMITER_NOTE_CALM_STEPS) {
+                hot = false
+            }
+            delay(LIMITER_NOTE_STEP_MS)
         }
     }
     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.Top) {

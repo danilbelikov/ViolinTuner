@@ -26,6 +26,8 @@ fun SoundRoute(
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
     val meters = viewModel.meters.collectAsStateWithLifecycle()
+    // a state, not a value, like the meters: read where the waveform is drawn, so the screen recomposes once a second
+    val position = viewModel.position.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnClose by rememberUpdatedState(onClose)
 
@@ -45,6 +47,6 @@ fun SoundRoute(
         }
     }
 
-    SoundScreen(state = state, meters = meters, onIntent = viewModel::onIntent, modifier = modifier)
+    SoundScreen(state = state, meters = meters, onIntent = viewModel::onIntent, modifier = modifier, position = { position.value })
     shareHost()
 }

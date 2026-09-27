@@ -33,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -125,8 +126,11 @@ fun SoundScreen(
     meters: State<SoundMeters?>,
     onIntent: (SoundIntent) -> Unit,
     modifier: Modifier = Modifier,
-    config: SoundConfig = SoundConfig(),
-    zone: TimeZone = TimeZone.currentSystemDefault(),
+    config: SoundConfig = remember { SoundConfig() },
+    // asked once: a new zone on every recomposition is a new object each time, and on iOS a read of its file
+    zone: TimeZone = remember { TimeZone.currentSystemDefault() },
+    /** Where the player is, exactly; [SoundState.player] keeps it to the whole second. Read where the waveform is drawn. */
+    position: () -> Long = { state.player?.positionMs ?: 0L },
 ) {
     BoxWithConstraints(
         modifier = modifier
@@ -152,7 +156,7 @@ fun SoundScreen(
                 ) {
                     TopBar(state, zone, onIntent)
                     Column(Modifier.padding(horizontal = ScreenPadding).weight(1f), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Player(state, meters, MiniPlayerMetrics.Compact, onIntent)
+                        Player(state, meters, position, MiniPlayerMetrics.Compact, onIntent)
                         Presets(state, onIntent)
                     }
                     share?.let { Box(Modifier.padding(horizontal = ScreenPadding)) { it() } }
@@ -172,7 +176,7 @@ fun SoundScreen(
         } else {
             Column(Modifier.fillMaxSize()) {
                 TopBar(state, zone, onIntent)
-                Box(Modifier.padding(horizontal = ScreenPadding).padding(bottom = 8.dp)) { Player(state, meters, metrics, onIntent) }
+                Box(Modifier.padding(horizontal = ScreenPadding).padding(bottom = 8.dp)) { Player(state, meters, position, metrics, onIntent) }
                 Column(
                     modifier = Modifier
                         .weight(1f)
@@ -260,7 +264,7 @@ fun captionName(caption: SoundCaption): String = when (caption) {
 }
 
 @Composable
-private fun Player(state: SoundState, meters: State<SoundMeters?>, metrics: MiniPlayerMetrics, onIntent: (SoundIntent) -> Unit) {
+private fun Player(state: SoundState, meters: State<SoundMeters?>, position: () -> Long, metrics: MiniPlayerMetrics, onIntent: (SoundIntent) -> Unit) {
     val player = state.player
     if (player == null && state.preparingBacking) {
         BackingPreparingRow()
@@ -280,6 +284,7 @@ private fun Player(state: SoundState, meters: State<SoundMeters?>, metrics: Mini
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         MiniPlayer(
             player = player,
+            position = position,
             waveform = state.waveform,
             meters = meters,
             metrics = metrics,

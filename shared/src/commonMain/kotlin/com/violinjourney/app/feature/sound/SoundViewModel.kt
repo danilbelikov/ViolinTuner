@@ -7,6 +7,7 @@ import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.audio.playback.SessionPlayer
 import com.violinjourney.app.core.audio.playback.SessionPlayerFactory
 import com.violinjourney.app.core.audio.playback.PlayerBacking
+import com.violinjourney.app.core.audio.playback.onWholeSeconds
 import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
@@ -82,6 +83,14 @@ open class SoundViewModel(
     /** Apart from [state]: it changes thirty times a second while the sound plays. */
     private val mutableMeters = MutableStateFlow<SoundMeters?>(null)
     val meters: StateFlow<SoundMeters?> = mutableMeters.asStateFlow()
+
+    private val mutablePosition = MutableStateFlow(0L)
+
+    /**
+     * Where the player is, as it tells it — with every chunk of sound, ~22 times a second: apart from [state], like
+     * [meters], whose player keeps the position to the whole second. Read only where the waveform is drawn.
+     */
+    val position: StateFlow<Long> = mutablePosition.asStateFlow()
 
     private val effectChannel = Channel<SoundEffect>(Channel.BUFFERED)
     val effects: Flow<SoundEffect> = effectChannel.receiveAsFlow()
@@ -259,7 +268,13 @@ open class SoundViewModel(
         val current = player ?: playerFactory.create(viewModelScope).also { created ->
             player = created
             created.setSound(state.value.settings)
-            viewModelScope.launch { created.state.collect { playerState -> mutableState.update { it.copy(player = playerState.takeIf { p -> p.ready && !p.failed }, preparingBacking = playerState.preparingBacking && !playerState.failed) } } }
+            viewModelScope.launch {
+                created.state.collect { playerState ->
+                    mutablePosition.value = playerState.positionMs
+                    // to the whole second: within a second nothing of the screen's state changes, and nothing is emitted
+                    mutableState.update { it.copy(player = playerState.takeIf { p -> p.ready && !p.failed }?.onWholeSeconds(), preparingBacking = playerState.preparingBacking && !playerState.failed) }
+                }
+            }
             viewModelScope.launch { created.meters.collect { mutableMeters.value = it } }
         }
         val under = take?.takeIf { session.id == sessionId }

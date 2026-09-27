@@ -4,14 +4,14 @@ import com.violinjourney.app.core.audio.fx.SoundMeters
 
 /**
  * The motion of the output meter of the mini player, stepped by frame times: the level goes up at
- * once and falls at a readable pace, the limiter mark stays lit a while after each time the
- * limiter worked, the number is refreshed a few times a second. Pure; the screen only draws what
- * it says and sleeps while [atRest].
+ * once and the whole bar falls in ~300 ms ([MeterFall], spec 5.11), the limiter mark stays lit a
+ * while after each time the limiter worked, the number is refreshed a few times a second. Pure; the
+ * screen only draws what it says, thirty times a second ([runMeter]), and sleeps while [atRest].
  *
  * "Never yet" is null, not a sentinel time: `now - Long.MIN_VALUE` wrapped around to a negative
  * number, which lit «ограничитель» from the first frame on and kept the frames going forever.
  */
-internal class OutputMeterMotion {
+internal class OutputMeterMotion : MeterMotion<SoundMeters> {
     /** How full the bar is, 0…1. */
     var level = 0f
         private set
@@ -28,12 +28,11 @@ internal class OutputMeterMotion {
     private var limitedAtMs: Long? = null
     private var numberAtMs: Long? = null
 
-    fun step(nowMs: Long, reading: SoundMeters?) {
+    override fun step(nowMs: Long, reading: SoundMeters?) {
         val target = reading?.let { ((it.outputPeakDb - FLOOR_DB) / -FLOOR_DB).toFloat().coerceIn(0f, 1f) } ?: 0f
         val elapsedMs = lastFrameMs?.let { nowMs - it } ?: 0L
         lastFrameMs = nowMs
-        val fallen = level - (FALL_DB_PER_SECOND / -FLOOR_DB * elapsedMs / MS_PER_SECOND).toFloat()
-        level = maxOf(target, fallen, 0f)
+        level = MeterFall.next(level, target, elapsedMs)
         if (reading?.limiting == true) limitedAtMs = nowMs
         lit = limitedAtMs?.let { nowMs - it < LIMITER_LIT_MS } ?: false
         val shownAt = numberAtMs
@@ -43,11 +42,9 @@ internal class OutputMeterMotion {
         }
     }
 
-    /** Nothing plays and nothing is left to show: the frames may stop until a reading comes. */
-    fun atRest(reading: SoundMeters?): Boolean = reading == null && level <= 0f && !lit
+    override fun atRest(reading: SoundMeters?): Boolean = reading == null && level <= 0f && !lit
 
-    /** Asleep: the time spent so is not a frame to fall by, and the first frame after it shows its number at once. */
-    fun rest() {
+    override fun rest() {
         lastFrameMs = null
         limitedAtMs = null
         numberAtMs = null
@@ -58,12 +55,8 @@ internal class OutputMeterMotion {
         /** The bottom of the bar, dBFS: quieter reads as nothing. */
         const val FLOOR_DB = -60.0
 
-        /** The whole bar in a second: fast enough to follow a phrase, slow enough for the eye to read a peak. */
-        const val FALL_DB_PER_SECOND = 60.0
-
         /** Spec 5.11: the mark is lit for 600 ms per event. */
         const val LIMITER_LIT_MS = 600L
         const val NUMBER_EVERY_MS = 100L
-        private const val MS_PER_SECOND = 1_000.0
     }
 }

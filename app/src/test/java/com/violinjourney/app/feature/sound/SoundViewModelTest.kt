@@ -26,6 +26,7 @@ import java.io.File
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -290,6 +291,27 @@ class SoundViewModelTest {
         viewModel.onIntent(SoundIntent.DialogConfirmed)
         advanceTimeBy(500)
         assertTrue(SoundRules.isNeutral(sound.default.value))
+    }
+
+    @Test
+    fun `the position is a flow of its own and the state keeps it to the second`() = runTest {
+        val id = recording("take.m4a")
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(SoundIntent.PlayPauseClicked)
+        runCurrent()
+        player.state.update { it.copy(positionMs = 2_345) }
+        runCurrent()
+        val states = mutableListOf<SoundState>()
+        backgroundScope.launch { viewModel.state.collect { states += it } }
+        runCurrent()
+        assertEquals(2_000L, viewModel.state.value.player!!.positionMs)
+        assertEquals(2_345L, viewModel.position.value)
+
+        // a chunk later, in the same second: the waveform is redrawn, the screen is not recomposed
+        player.state.update { it.copy(positionMs = 2_700) }
+        runCurrent()
+        assertEquals(2_700L, viewModel.position.value)
+        assertEquals(1, states.size)
     }
 
     @Test

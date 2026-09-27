@@ -74,7 +74,10 @@ data class SoundState(
     val band: EqBand,
     /** «Подробно» of the compressor is open. */
     val details: Boolean,
-    /** Null — there is nothing to listen to (no recording with sound), or the file cannot be played. */
+    /**
+     * Null — there is nothing to listen to (no recording with sound), or the file cannot be played. Its position is
+     * to the whole second; the exact one is [SoundViewModel.position].
+     */
     val player: PlayerState?,
     /** The player waits for the backing's sound to be made (spec 5.25): «Готовим минусовку…» where it will be. */
     val preparingBacking: Boolean = false,

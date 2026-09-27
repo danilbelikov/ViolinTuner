@@ -7,7 +7,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** The output meter of the mini player on made-up frame times; its numbers are those of `docs/notes/sound.md`. */
+/** The output meter of the mini player on made-up frame times; its numbers are those of spec 5.11. */
 class OutputMeterMotionTest {
     private fun reading(peakDb: Double, limiting: Boolean = false) = SoundMeters(outputPeakDb = peakDb, reductionDb = 0.0, limiting = limiting)
 
@@ -34,13 +34,15 @@ class OutputMeterMotionTest {
     }
 
     @Test
-    fun `the level rises at once and falls at sixty decibels a second as the notes say`() {
+    fun `the level rises at once and the whole bar falls in three hundred milliseconds as spec five eleven says`() {
         val motion = OutputMeterMotion()
         motion.step(0, reading(-30.0))
         assertEquals(0.5f, motion.level, 1e-6f)
-        motion.step(250, null)
-        assertEquals(0.25f, motion.level, 1e-6f)
-        motion.step(260, reading(-6.0))
+        motion.step(60, null)
+        assertEquals(0.3f, motion.level, 1e-6f)
+        motion.step(150, null)
+        assertEquals(0f, motion.level, 1e-6f)
+        motion.step(160, reading(-6.0))
         assertEquals(0.9f, motion.level, 1e-6f, "a louder reading is shown at once")
     }
 
