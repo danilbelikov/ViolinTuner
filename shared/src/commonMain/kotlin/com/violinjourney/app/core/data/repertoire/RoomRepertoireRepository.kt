@@ -40,7 +40,7 @@ class RoomRepertoireRepository(
 
     override suspend fun add(draft: PieceDraft, nowEpochMs: Long): Long {
         val clean = requireNotNull(PieceRules.clean(draft, config)) { "a piece needs a title" }
-        analytics.track(PieceAdded(section = clean.section.name, ownSection = clean.groupId != null, scale = clean.scale != null))
+        analytics.track(PieceAdded(section = clean.section, ownSection = clean.groupId != null, scale = clean.scale != null))
         return dao.insertPiece(RepertoireMapper.toEntity(clean, createdAt = nowEpochMs))
     }
 

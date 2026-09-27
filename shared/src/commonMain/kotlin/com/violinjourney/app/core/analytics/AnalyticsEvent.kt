@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.analytics
 
 import com.violinjourney.app.core.audio.MicUnavailableReason
+import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.ui.permission.MicPermissionAnswer
 
 /**
@@ -65,9 +66,19 @@ class TakeRecorded(seconds: Int, video: Boolean, backing: Boolean) :
 /** Takes thrown away, one or a handful at once (spec 3.18). */
 class TakeDeleted(count: Int) : AnalyticsEvent("take_deleted", mapOf("count" to count))
 
-/** Which parts of the repertoire get used (spec 3.22). The section, never the title. */
-class PieceAdded(section: String, ownSection: Boolean, scale: Boolean) :
-    AnalyticsEvent("piece_added", mapOf("section" to section, "own_section" to ownSection, "scale" to scale))
+/**
+ * Which parts of the repertoire get used (spec 3.22). The section, never the title: a built-in one by its key
+ * (pieces / scales / etudes / strokes), a section of the player's own as «custom» — its name is the player's.
+ */
+class PieceAdded(section: PieceSection, ownSection: Boolean, scale: Boolean) :
+    AnalyticsEvent(
+        "piece_added",
+        mapOf("section" to if (ownSection) CUSTOM_SECTION else section.name.lowercase(), "own_section" to ownSection, "scale" to scale),
+    ) {
+    private companion object {
+        const val CUSTOM_SECTION = "custom"
+    }
+}
 
 /** How far along the road people get (spec 3.23): the number of the city, not its name. */
 class CityReached(index: Int) : AnalyticsEvent("city_reached", mapOf("index" to index))

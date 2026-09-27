@@ -41,7 +41,7 @@
 
 **Игровой слой** — доходят ли до него
 
-- `city_reached` {`index`}, `item_bought` {`item_id` — ключ каталога, не имя вещи на языке человека}, `level_up` {`level`}.
+- `city_reached` {`index`}, `item_bought` {`item_id` — ключ каталога, не имя вещи на языке человека, `kind`: house / item — дом или вещь (27.09.2026)}, `level_up` {`level`}.
 
 **Экраны и копия**
 
