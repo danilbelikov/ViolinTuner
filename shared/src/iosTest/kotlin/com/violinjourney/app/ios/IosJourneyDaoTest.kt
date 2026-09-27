@@ -4,8 +4,10 @@ import com.violinjourney.app.core.data.journey.EarningEntity
 import com.violinjourney.app.core.data.journey.HomeChoiceEntity
 import com.violinjourney.app.core.data.journey.JourneyDao
 import com.violinjourney.app.core.data.journey.RoomHomeRepository
+import com.violinjourney.app.core.data.journey.RoomJourneyRepository
 import com.violinjourney.app.core.domain.home.HomeCatalog
 import com.violinjourney.app.core.domain.home.HomeState
+import com.violinjourney.app.core.domain.journey.JourneyRoute
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -18,7 +20,7 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSUUID
 
-/** The journey and home tables over the real Room of iOS (the app's own builder): what a purchase and a choice write. */
+/** The journey and home tables over the real Room of iOS (the app's own builder): what a purchase and a choice write, what the progress reads. */
 @OptIn(ExperimentalForeignApi::class)
 class IosJourneyDaoTest {
     private val directory = NSTemporaryDirectory() + NSUUID().UUIDString
@@ -64,6 +66,26 @@ class IosJourneyDaoTest {
         // any other thing remembers nothing
         home.place("floorR", "cello")
         assertEquals("", home.state.first().choices[HomeState.SEASON_KEY])
+        database.close()
+    }
+
+    @Test
+    fun `the progress sums the earnings in the database - and spends from one purse`() = runTest {
+        val database = IosStorage.database(directory)
+        val dao = database.journeyDao()
+        val journey = RoomJourneyRepository(dao)
+        assertEquals(0L, journey.progress.first().earned)
+        dao.earn(30)
+        dao.earn(50)
+        dao.earn(20)
+        assertEquals(100L, journey.progress.first().earned)
+        dao.begin(JourneyRoute.HOME, 1)
+        assertTrue(dao.arrive("cremona", JourneyRoute.HOME, price = 60, now = 2))
+        assertTrue(dao.buyForHome("tea", "ITEM", price = 25, slot = "deskR", now = 3))
+        val progress = journey.progress.first()
+        assertEquals(100L, progress.earned)
+        assertEquals(85L, progress.spent)
+        assertEquals(15L, progress.balance)
         database.close()
     }
 

@@ -108,6 +108,10 @@ abstract class JourneyDao {
     @Query("SELECT * FROM journey_earnings ORDER BY id")
     abstract fun observeEarnings(): Flow<List<EarningEntity>>
 
+    /** All the takts ever earned, summed by the database: one number, however long the history of practice grows. */
+    @Query("SELECT COALESCE(SUM(takts), 0) FROM journey_earnings")
+    abstract fun observeEarned(): Flow<Long>
+
     @Query("SELECT * FROM journey_arrivals")
     abstract fun observeArrivals(): Flow<List<ArrivalEntity>>
 
@@ -155,10 +159,12 @@ class RoomJourneyRepository(
     private val dao: JourneyDao,
     private val analytics: Analytics = NoOpAnalytics(),
 ) : JourneyRepository {
+    // the earnings are summed by the database: every subscriber (the card of «Занятия», Live, «Дом», the journey) would
+    // otherwise load the whole history of practice, a row a saved practice, to add it up
     override val progress: Flow<JourneyProgress> =
-        combine(dao.observeEarnings(), dao.observeArrivals(), dao.observeExtras(), dao.observeHomePurchases()) { earnings, arrivals, extras, home ->
+        combine(dao.observeEarned(), dao.observeArrivals(), dao.observeExtras(), dao.observeHomePurchases()) { earned, arrivals, extras, home ->
             JourneyProgress(
-                earned = earnings.sumOf { it.takts.toLong() },
+                earned = earned,
                 // one purse: the road, the extras of the stops and the home (spec 3.24)
                 spent = arrivals.sumOf { it.price.toLong() } + extras.sumOf { it.price.toLong() } + home.sumOf { it.price.toLong() },
                 arrivals = arrivals.map { Arrival(it.stopId, it.arrivedAtEpochMs) },
