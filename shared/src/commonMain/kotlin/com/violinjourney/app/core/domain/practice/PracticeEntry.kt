@@ -29,7 +29,10 @@ data class RunningPractice(
     fun elapsedMs(nowEpochMs: Long): Long = (nowEpochMs - startedAtEpochMs).coerceAtLeast(0)
 }
 
-/** The day a practice started on belongs to, in the zone the device was in at that moment. */
+/**
+ * The day a practice that started at [startedAtEpochMs] belongs to, read in [zone] — the zone at the moment it is saved
+ * (spec 3.12: the date is fixed when it is saved). A practice during which the zone changed is dated in the new one.
+ */
 fun practiceDateOf(startedAtEpochMs: Long, zone: TimeZone): LocalDate =
     Instant.fromEpochMilliseconds(startedAtEpochMs).toLocalDateTime(zone).date
 
