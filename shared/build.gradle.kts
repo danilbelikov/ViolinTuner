@@ -128,13 +128,24 @@ kotlin.sourceSets.named("iosMain") { kotlin.srcDir(iosSecrets) }
 // (spec 3.26) — where Android reads them and LocalizationTest checks them. The shared code and iOS read the same
 // files as compose resources: copied here at build time, with the escapes Android needs undone (compose resources
 // unescape only \n, \t and \u, and would show \' and the %% of a formatted string as they are). Never edit the copy.
+// An escape the list does not know would reach iOS as it is, a stray backslash on the screen: the copy refuses it
+// instead, and the build says which line — the list is where it goes.
 val composeStrings = tasks.register<Sync>("syncComposeStrings") {
     val androidEscapes = listOf("\\'" to "'", "\\\"" to "\"", "\\?" to "?", "\\@" to "@", "%%" to "%")
-    // a new escape must make the copy again: the list is an input, the lambda below is not
+    // what compose resources undo themselves; any other backslash left after the list is Android's alone
+    val unknownEscape = Regex("""\\(?![ntu])""")
+    // a new escape must make the copy again: the list and the guard are inputs, the lambda below is not
     inputs.property("androidEscapes", androidEscapes.toString())
+    inputs.property("unknownEscape", unknownEscape.pattern)
     from(rootProject.layout.projectDirectory.dir("app/src/main/res")) {
         include("values*/strings.xml", "values*/strings_home.xml", "values*/home_catalog.xml")
-        filter { line -> androidEscapes.fold(line) { text, (escaped, plain) -> text.replace(escaped, plain) } }
+        filter { line ->
+            val plain = androidEscapes.fold(line) { text, (escaped, unescaped) -> text.replace(escaped, unescaped) }
+            if (unknownEscape.containsMatchIn(plain)) {
+                throw GradleException("Android syntax the copy for iOS cannot undo — add it to androidEscapes: ${line.trim()}")
+            }
+            plain
+        }
     }
     // the rest of the shared resources — the pictures of the journey and the home — lie in the usual place; the
     // custom directory below replaces it, so they are copied along
