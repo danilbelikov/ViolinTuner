@@ -25,8 +25,9 @@ class MicPermission(answer: MicPermissionAnswer) : AnalyticsEvent("mic_permissio
 class MicUnavailable(reason: MicUnavailableReason) : AnalyticsEvent("mic_unavailable", mapOf("reason" to reason.key))
 
 /**
- * One visit to Live, folded by [FramePicture]: the picture the thresholds get tuned by. The
- * tolerance and the reference pitch ride along because both change what «active» means.
+ * One visit to Live, folded by [FramePicture]: the picture the thresholds get tuned by. The clarity is
+ * the median of the frames louder than silence, the floor the loudness a tenth of the frames stay under.
+ * The tolerance and the reference pitch ride along because both change what «active» means.
  */
 class LiveFrames(
     seconds: Int,
@@ -34,6 +35,7 @@ class LiveFrames(
     noisyPct: Int,
     activePct: Int,
     clarityMedian: Double,
+    floorRmsDbfs: Int,
     peakRmsDbfs: Int,
     toleranceCents: Int,
     a4Hz: Int,
@@ -45,6 +47,7 @@ class LiveFrames(
         "noisy_pct" to noisyPct,
         "active_pct" to activePct,
         "clarity_median" to clarityMedian,
+        "rms_floor_dbfs" to floorRmsDbfs,
         "rms_peak_dbfs" to peakRmsDbfs,
         "tolerance" to toleranceCents,
         "a4" to a4Hz,

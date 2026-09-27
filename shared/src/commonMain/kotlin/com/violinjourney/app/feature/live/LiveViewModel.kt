@@ -88,7 +88,11 @@ open class LiveViewModel(
             pieceId = null,
             targetMode = { LiveReducer.targetModeOf(target.value) },
             unavailable = LiveReadout.Shown(LiveSignal.MicUnavailable),
-            onRestart = readout::reset,
+            // a reopened input starts from nothing, and its frames count their own time
+            onRestart = {
+                readout.reset()
+                picture.newStretch()
+            },
             present = { frame, reading ->
                 picture.add(frame, reading)
                 readout.shownOf(frame, reading)

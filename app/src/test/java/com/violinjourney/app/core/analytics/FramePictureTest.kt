@@ -48,6 +48,7 @@ class FramePictureTest {
                 "noisy_pct" to 25,
                 "active_pct" to 25,
                 "clarity_median" to 0.905,
+                "rms_floor_dbfs" to -20,
                 "rms_peak_dbfs" to -20,
                 "tolerance" to 3,
                 "a4" to 442,
@@ -82,5 +83,33 @@ class FramePictureTest {
         val louder = FramePicture(toleranceCents = 8, a4Hz = 440, silenceRms = silenceRms)
         repeat(4_000) { index -> louder.add(frame(index * 15L, rms = if (index == 7) 0.5 else 0.001), IntonationReading.Silence) }
         assertEquals(-6, requireNotNull(louder.finish()).params["rms_peak_dbfs"])
+    }
+
+    @Test
+    fun `the floor is the loudness a tenth of the frames stay under`() {
+        val picture = FramePicture(toleranceCents = 8, a4Hz = 440, silenceRms = silenceRms)
+        repeat(4_000) { index -> picture.add(frame(index * 15L, rms = if (index % 5 == 0) 0.001 else 0.1), IntonationReading.Silence) }
+        assertEquals(-60, requireNotNull(picture.finish()).params["rms_floor_dbfs"])
+
+        val dead = FramePicture(toleranceCents = 8, a4Hz = 440, silenceRms = silenceRms)
+        repeat(4_000) { dead.add(frame(it * 15L, rms = 0.0), IntonationReading.Silence) }
+        assertEquals(-120, requireNotNull(dead.finish()).params["rms_floor_dbfs"])
+    }
+
+    @Test
+    fun `a reopened microphone starts a stretch of its own, and the seconds add up`() {
+        val picture = FramePicture(toleranceCents = 8, a4Hz = 440, silenceRms = silenceRms)
+        (0..2_800).forEach { picture.add(frame(it * 10L), IntonationReading.Silence) } // 28 s
+        picture.newStretch() // the input failed and was opened again 3 s later, on a clock that went on meanwhile
+        (0..500).forEach { picture.add(frame(31_000 + it * 10L), IntonationReading.Silence) } // 5 s more
+        assertEquals("the 3 s of the reopening are not heard", 33, requireNotNull(picture.finish()).params["seconds"])
+    }
+
+    @Test
+    fun `a clock that jumps back counts nothing for the jump even when nobody said it was a new stretch`() {
+        val picture = FramePicture(toleranceCents = 8, a4Hz = 440, silenceRms = silenceRms)
+        (0..2_000).forEach { picture.add(frame(it * 10L), IntonationReading.Silence) } // 20 s
+        (0..1_500).forEach { picture.add(frame(46 + it * 10L), IntonationReading.Silence) } // 15 s
+        assertEquals(35, requireNotNull(picture.finish()).params["seconds"])
     }
 }
