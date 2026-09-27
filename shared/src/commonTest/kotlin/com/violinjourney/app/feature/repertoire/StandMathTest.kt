@@ -54,10 +54,36 @@ class StandMathTest {
 
     @Test
     fun `a double tap keeps the tapped point under the finger — as far as the edges allow`() {
-        assertEquals(0f, StandMath.offsetToKeep(tap = 200f, size = 400f, scale = 2f), 0f)
-        assertEquals(100f, StandMath.offsetToKeep(tap = 100f, size = 400f, scale = 2f), 0f)
-        assertEquals(-200f, StandMath.offsetToKeep(tap = 400f, size = 400f, scale = 2f), 0f)
-        assertEquals(0f, StandMath.offsetToKeep(tap = 100f, size = 400f, scale = 1f), 0f)
+        assertEquals(0f, StandMath.offsetToKeep(tap = 200f, area = 400f, layer = 400f, scale = 2f), 0f)
+        assertEquals(100f, StandMath.offsetToKeep(tap = 100f, area = 400f, layer = 400f, scale = 2f), 0f)
+        assertEquals(-200f, StandMath.offsetToKeep(tap = 400f, area = 400f, layer = 400f, scale = 2f), 0f)
+        assertEquals(0f, StandMath.offsetToKeep(tap = 100f, area = 400f, layer = 400f, scale = 1f), 0f)
+    }
+
+    @Test
+    fun `a zoomed sheet inside the margins of the stand stops at its own margin`() {
+        // the layer is 300 of an area of 400: at 2× its edge comes to where it stood at 1× after 150, not 200
+        assertEquals(150f, StandMath.offsetToKeep(tap = 0f, area = 400f, layer = 300f, scale = 2f), 0f)
+        assertEquals(50f, StandMath.offsetToKeep(tap = 150f, area = 400f, layer = 300f, scale = 2f), 0f)
+        assertEquals(-150f, StandMath.clampOffset(-900f, scale = 2f, size = 300f), 0f)
+    }
+
+    @Test
+    fun `a pinch keeps the point under the fingers where it is`() {
+        // a point of the sheet under the previous centroid, 80 left of the centre, on a sheet at 1.5× moved by 30
+        val scale = 1.5f
+        val offset = 30f
+        val focus = -80f
+        val point = (focus - offset) / scale
+        val zoomChange = 1.2f
+        val after = StandMath.offsetAfterPinch(offset, focus, zoomChange, pan = 0f)
+        assertEquals(focus, scale * zoomChange * point + after, 1e-3f)
+        // from 1× a pinch to 2× keeps the point as a double tap there does
+        assertEquals(StandMath.offsetToKeep(tap = 100f, area = 400f, layer = 400f, scale = 2f), StandMath.offsetAfterPinch(0f, -100f, 2f, pan = 0f), 1e-3f)
+        // and then the point follows the fingers
+        assertEquals(after + 15f, StandMath.offsetAfterPinch(offset, focus, zoomChange, pan = 15f), 1e-3f)
+        // one finger drags: no zoom, only the move
+        assertEquals(offset + 15f, StandMath.offsetAfterPinch(offset, focus, 1f, pan = 15f), 1e-3f)
     }
 
     @Test

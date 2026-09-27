@@ -34,17 +34,28 @@ object StandMath {
 
     fun clampScale(scale: Float): Float = scale.coerceIn(MIN_SCALE, MAX_SCALE)
 
-    /** How far a sheet of [size] scaled about its centre may be dragged before its edge would come off the screen's. */
+    /**
+     * How far the scaled layer of the sheet — the part of the stand the sheet is shown in, [size] long, centred on the area
+     * of gestures — may be dragged: until its edge comes to where it stands at 1×, the margin of the stand, and no further.
+     */
     fun clampOffset(offset: Float, scale: Float, size: Float): Float {
         val limit = (scale - 1f).coerceAtLeast(0f) * size / 2f
         return offset.coerceIn(-limit, limit)
     }
 
     /**
-     * Where the sheet has to move so that the point under a double tap stays under the finger
-     * once scaled about the centre. [tap] and [size] run along the same axis.
+     * Where the sheet has to move so that the point under a double tap stays under the finger once scaled. The layer is
+     * scaled about its centre, which is the centre of the area of gestures ([area] long, where [tap] is measured); it is
+     * [layer] long itself, and the move is held to it ([clampOffset]). [tap], [area] and [layer] run along one axis.
      */
-    fun offsetToKeep(tap: Float, size: Float, scale: Float): Float = clampOffset((size / 2f - tap) * (scale - 1f), scale, size)
+    fun offsetToKeep(tap: Float, area: Float, layer: Float, scale: Float): Float = clampOffset((area / 2f - tap) * (scale - 1f), scale, layer)
+
+    /**
+     * The offset after one step of a pinch: the point under the fingers' previous centroid ([focus], measured from the
+     * centre of the area, which is the centre of the scaled layer) stays under them while the scale changes by
+     * [zoomChange], and then follows the fingers by [pan]. Along one axis; unclamped.
+     */
+    fun offsetAfterPinch(offset: Float, focus: Float, zoomChange: Float, pan: Float): Float = focus * (1f - zoomChange) + zoomChange * offset + pan
 
     /**
      * The largest power of two a picture [sourceWidth] wide can be decoded down by and still be

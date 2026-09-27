@@ -69,6 +69,7 @@ import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.ui.format.Formats
@@ -189,6 +190,14 @@ private fun Sheets(
     val pageCount by rememberUpdatedState(pages.size)
     // A tap in the middle waits to see whether it is the first half of a double tap.
     val pendingPanelTap = remember { mutableStateOf<Job?>(null) }
+    // What the stand leaves around the scaled layer of the sheet (see Sheet): the zoom is centred and held within it.
+    val margins = with(density) {
+        if (landscape) {
+            IntSize(LandscapeSheetSide.roundToPx() * 2, 0)
+        } else {
+            IntSize(PortraitSheetSide.roundToPx() * 2, PortraitSheetTop.roundToPx() * 2)
+        }
+    }
 
     fun turn(zone: StandZone) {
         onIntent(StandIntent.Touched)
@@ -233,7 +242,7 @@ private fun Sheets(
                     CustomAccessibilityAction(nextLabel) { turn(StandZone.NEXT); true },
                 )
             }
-            .standGestures(zoom) { tap, area ->
+            .standGestures(zoom, margins) { tap, area ->
                 when (val zone = StandMath.zoneOf(tap.x, area.width.toFloat(), zoom.zoomed)) {
                     StandZone.PREVIOUS, StandZone.NEXT -> turn(zone)
                     StandZone.PANEL -> {
@@ -241,7 +250,7 @@ private fun Sheets(
                         if (pending?.isActive == true) {
                             pending.cancel()
                             pendingPanelTap.value = null
-                            scope.launch { zoom.toggle(tap, area) }
+                            scope.launch { zoom.toggle(tap, area, margins) }
                         } else {
                             pendingPanelTap.value = scope.launch {
                                 delay(doubleTapTimeout)
@@ -338,6 +347,8 @@ private fun Sheet(page: StandPage, description: String, zoom: StandZoom?, landsc
             Box(shaped.semantics { contentDescription = description })
         }
     }
+    // The zoom scales what is on screen — the layer stands before the scroll, never on the scrolled content — and is
+    // centred on the area of gestures, as StandMath counts (the paddings are the margins Sheets passes to the zoom).
     // Each way of holding the phone has a scroll of its own: iOS turns the screen without composing it anew, and the
     // range of a lying sheet must not draw a bar over an upright photo, which does not scroll.
     val thumb = MaterialTheme.colorScheme.outline
@@ -353,9 +364,9 @@ private fun Sheet(page: StandPage, description: String, zoom: StandZoom?, landsc
             Column(
                 modifier = Modifier
                     .fillMaxSize()
+                    .then(zoomLayer)
                     .verticalScroll(scroll)
-                    .padding(vertical = 16.dp)
-                    .then(zoomLayer),
+                    .padding(vertical = 16.dp),
             ) { sheet(Modifier.fillMaxWidth()) }
         }
     } else {
