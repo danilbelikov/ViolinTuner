@@ -1,16 +1,17 @@
 package com.violinjourney.app.core.audio.backing
 
 import android.content.Context
-import android.media.AudioAttributes
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioTimestamp
 import android.media.AudioTrack
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import com.violinjourney.app.core.audio.playback.MediaAttributes
 import com.violinjourney.app.core.domain.backing.AudioRoute
 import com.violinjourney.app.core.domain.backing.BackingOutput
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -32,13 +33,24 @@ object AudioRouteRules {
     /** One output device: its platform type and the name it gives itself. */
     data class Device(val type: Int, val name: String?)
 
-    /** The media go to the headphones plugged or paired last; failing that, wireless ones go first, the speaker last. */
+    /**
+     * Among the [devices] media play on, headphones of any kind win over the speaker: wireless first, then USB and wired
+     * (usually there is only one). An output that is no ears — a hearing aid, a TV, a telephony line — counts for nothing.
+     */
     fun routeOf(devices: List<Device>): AudioRoute {
         val ranked = devices.mapNotNull { device -> outputOf(device.type)?.let { it to device } }
         val best = ranked.minByOrNull { (output, _) -> RANK.indexOf(output) } ?: return AudioRoute(BackingOutput.SPEAKER, null)
         return AudioRoute(best.first, best.second.name?.takeIf { best.first != BackingOutput.SPEAKER })
     }
 
+    /**
+     * Below API 33 Android cannot be asked where media go: [outputs] is every output there is, and the route a guess over
+     * them. A Bluetooth device on its call profile alone — a car kit, a headset between calls — carries no music, which
+     * plays on the speaker then: it is left out. A headset on both profiles still counts by its media one.
+     */
+    fun likelyRouteOf(outputs: List<Device>): AudioRoute = routeOf(outputs.filter { it.type != AudioDeviceInfo.TYPE_BLUETOOTH_SCO })
+
+    /** SCO counts as wireless here: media that really go to it — as Android 13+ can tell — are in the ears. */
     fun outputOf(type: Int): BackingOutput? = when (type) {
         AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLUETOOTH_SCO, TYPE_BLE_HEADSET -> BackingOutput.BLUETOOTH
         AudioDeviceInfo.TYPE_USB_HEADSET, AudioDeviceInfo.TYPE_USB_DEVICE -> BackingOutput.USB
@@ -53,12 +65,24 @@ object AudioRouteRules {
     private const val TYPE_BLE_HEADSET = 26
 }
 
+/**
+ * Where media play now (spec 3.32): from Android 13 Android is asked ([AudioManager.getAudioDevicesForAttributes]), below
+ * that it is a guess over every output ([AudioRouteRules.likelyRouteOf]). Read anew on every device added or removed; a
+ * switch in the system's output switcher shows at the next such event.
+ */
 class AndroidAudioRoutes @Inject constructor(@ApplicationContext context: Context) : AudioRoutes {
     private val audio = context.getSystemService(AudioManager::class.java)
 
-    override fun current(): AudioRoute = AudioRouteRules.routeOf(
-        audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS).map { AudioRouteRules.Device(it.type, it.productName?.toString()) },
-    )
+    override fun current(): AudioRoute {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            // empty when the question failed: then the guess below
+            val media = audio.getAudioDevicesForAttributes(MediaAttributes.MUSIC)
+            if (media.isNotEmpty()) return AudioRouteRules.routeOf(media.map(::deviceOf))
+        }
+        return AudioRouteRules.likelyRouteOf(audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS).map(::deviceOf))
+    }
+
+    private fun deviceOf(info: AudioDeviceInfo) = AudioRouteRules.Device(info.type, info.productName?.toString())
 
     override val changes: Flow<AudioRoute> = callbackFlow {
         val callback = object : AudioDeviceCallback() {
@@ -138,14 +162,16 @@ class TrackBackingPlayback(private val routes: AudioRoutes) : BackingPlayback {
                             startNanos = timestamp.nanoTime - timestamp.framePosition * NANOS_PER_SECOND / rate
                         }
                     }
-                    // the end of the file: let what is in the track play out, the take goes on. A stream track
-                    // holds back a tail shorter than its start threshold until it is told there is no more.
-                    if (!stopped) newTrack.stop()
+                    // The end of the file: what is in the track plays out, the take goes on. A stream track holds back a
+                    // tail shorter than its start threshold until more comes, so silence goes in behind the last chunk and
+                    // pushes it out, while the head is read up to the file's end. Not stop(): it zeroes the head, and the bar
+                    // would fall to 0:00 for as long as the wait lasts.
+                    val silence = ByteArray(CHUNK_FRAMES * BYTES_PER_FRAME)
                     var lastHead = -1L
                     var stillSince = System.nanoTime()
                     while (!stopped) {
                         val head = newTrack.playbackHeadPosition.toLong() and UNSIGNED_INT
-                        playedMs = head * MS_PER_SECOND / rate
+                        playedMs = minOf(head, written) * MS_PER_SECOND / rate
                         mutablePosition.value = playedMs
                         if (head >= written) break
                         // an output that stopped moving will not finish: do not wait for it forever
@@ -155,6 +181,9 @@ class TrackBackingPlayback(private val routes: AudioRoutes) : BackingPlayback {
                         } else if (System.nanoTime() - stillSince > STALL_NANOS) {
                             break
                         }
+                        // without blocking: a stalled output is still caught above, it never hangs the thread
+                        val n = newTrack.write(silence, 0, silence.size, AudioTrack.WRITE_NON_BLOCKING)
+                        if (n < 0) throw IllegalStateException("AudioTrack.write returned $n")
                         sleep(POLL_MS)
                     }
                     // played to its end: the bar stands full (spec 3.32)
@@ -179,7 +208,7 @@ class TrackBackingPlayback(private val routes: AudioRoutes) : BackingPlayback {
         private fun newTrack(rate: Int): AudioTrack {
             val minimum = AudioTrack.getMinBufferSize(rate, AudioFormat.CHANNEL_OUT_STEREO, AudioFormat.ENCODING_PCM_16BIT)
             return AudioTrack.Builder()
-                .setAudioAttributes(AudioAttributes.Builder().setUsage(AudioAttributes.USAGE_MEDIA).setContentType(AudioAttributes.CONTENT_TYPE_MUSIC).build())
+                .setAudioAttributes(MediaAttributes.MUSIC)
                 .setAudioFormat(AudioFormat.Builder().setSampleRate(rate).setChannelMask(AudioFormat.CHANNEL_OUT_STEREO).setEncoding(AudioFormat.ENCODING_PCM_16BIT).build())
                 .setTransferMode(AudioTrack.MODE_STREAM)
                 // the shortest the output allows: the less sits in the buffer, the less there is for the clocks to be wrong about
