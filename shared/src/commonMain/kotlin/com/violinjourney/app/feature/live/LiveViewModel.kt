@@ -79,7 +79,7 @@ open class LiveViewModel(
         val readout = LiveReadout(config)
         // One picture per visit (spec 3.34): the flow ends when the screen goes away or the config
         // changes, and that is exactly when the picture is whole.
-        val picture = FramePicture(config.toleranceCents.roundToInt(), config.a4Hz.roundToInt())
+        val picture = FramePicture(config.toleranceCents.roundToInt(), config.a4Hz.roundToInt(), config.silenceRms)
         return takes.run(
             config = config,
             pieceId = null,

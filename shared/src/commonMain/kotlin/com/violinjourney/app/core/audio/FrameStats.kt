@@ -10,6 +10,10 @@ import kotlin.math.roundToLong
  * Debug builds only: one line per second with what the detector saw, for tuning the silence and clarity thresholds
  * on a real instrument — `adb logcat -s MicPitchSource` on Android, the log of the app on iOS. [header] names the
  * input (its source and rate); [log] writes the line where the platform keeps such lines.
+ *
+ * The clarity is only that of frames not quieter than the silence threshold: the detector does not run on the quieter
+ * ones (spec 5.1), which carry 0. The silence threshold is judged by the peak RMS; to see the clarity of soft playing,
+ * lower `silenceRmsDbfs` first.
  */
 class FrameStats(
     private val config: IntonationConfig,

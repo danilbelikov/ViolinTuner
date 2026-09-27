@@ -1,6 +1,8 @@
 package com.violinjourney.app.core.audio
 
 import com.violinjourney.app.core.audio.dsp.MpmDetector
+import com.violinjourney.app.core.audio.dsp.PitchDetector
+import com.violinjourney.app.core.audio.dsp.PitchEstimate
 import com.violinjourney.app.core.audio.dsp.SignalSynth
 import com.violinjourney.app.core.domain.Direction
 import com.violinjourney.app.core.domain.IntonationConfig
@@ -88,6 +90,32 @@ class FrameAnalyzerTest {
         assertEquals(IntonationReading.TooNoisy, readings(loud).last())
         val quiet = SignalSynth.whiteNoise(rate * 2, seed = 7, amplitude = 0.002)
         assertEquals(IntonationReading.Silence, readings(quiet).last())
+    }
+
+    @Test
+    fun `a quiet frame does not wake the detector`() {
+        var calls = 0
+        val counting = object : PitchDetector {
+            private val mpm = MpmDetector(config)
+
+            override fun detect(window: FloatArray, sampleRateHz: Int): PitchEstimate {
+                calls++
+                return mpm.detect(window, sampleRateHz)
+            }
+        }
+        fun framesOf(signal: FloatArray): List<PitchFrame> {
+            val analyzer = FrameAnalyzer(counting, config, rate)
+            return SignalSynth.toPcm16(signal).toList().chunked(config.hopSizeSamples).mapNotNull { analyzer.push(it.toShortArray()) }
+        }
+
+        val quiet = framesOf(SignalSynth.whiteNoise(rate * 2, seed = 7, amplitude = 0.002))
+        assertTrue(quiet.isNotEmpty() && quiet.all { it.rms < config.silenceRms }, "the noise is below the silence threshold")
+        assertEquals(0, calls, "the detector ran on quiet frames")
+        assertTrue(quiet.all { it.freqHz == null && it.clarity == 0.0 }, "a quiet frame carries no pitch and no clarity")
+
+        val loud = framesOf(SignalSynth.tone(SignalSynth.hz(69), rate, rate / 2, SignalSynth.VIOLIN))
+        assertEquals(loud.size, calls, "one detection per loud frame")
+        assertTrue(loud.last().freqHz != null, "a loud tone is still heard")
     }
 
     @Test

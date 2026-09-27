@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.domain
 
+import kotlin.random.Random
 import kotlin.test.assertEquals
 import kotlin.test.Test
 
@@ -27,6 +28,28 @@ class SmoothingTest {
         val median = MedianFilter(3)
         listOf(1.0, 2.0, 3.0).forEach(median::add)
         assertEquals(4.0, median.add(4.0).let { median.add(5.0) }, EPS)
+    }
+
+    @Test
+    fun `the median sorted in place matches sorting a copy`() {
+        val random = Random(5)
+        for (window in 1..7) {
+            val median = MedianFilter(window)
+            val seen = ArrayList<Double>()
+            repeat(2_000) { index ->
+                if (index == 1_000) {
+                    median.reset()
+                    seen.clear()
+                }
+                // few distinct values, so ties are common
+                val value = random.nextInt(-6, 7) / 2.0
+                seen += value
+                val last = seen.takeLast(window).sorted()
+                val mid = last.size / 2
+                val expected = if (last.size % 2 == 1) last[mid] else (last[mid - 1] + last[mid]) / 2
+                assertEquals(expected, median.add(value), 0.0, "window $window, value $index")
+            }
+        }
     }
 
     @Test

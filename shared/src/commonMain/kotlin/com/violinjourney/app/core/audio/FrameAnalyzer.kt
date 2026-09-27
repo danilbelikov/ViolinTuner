@@ -7,9 +7,9 @@ import kotlin.math.sqrt
 
 /**
  * Turns a stream of PCM16 hops into [PitchFrame]s: keeps the last
- * [IntonationConfig.windowSizeSamples] samples, runs the detector on every hop and measures RMS.
- * Frame time is the sample clock at the end of the window, so it is exact and monotonic
- * regardless of scheduling. Pure Kotlin; not thread-safe.
+ * [IntonationConfig.windowSizeSamples] samples, measures RMS on every hop and runs the detector on
+ * every hop loud enough to be heard. Frame time is the sample clock at the end of the window, so it
+ * is exact and monotonic regardless of scheduling. Pure Kotlin; not thread-safe.
  */
 class FrameAnalyzer(
     private val detector: PitchDetector,
@@ -31,6 +31,9 @@ class FrameAnalyzer(
 
         val tMs = samplesSeen * MS_PER_SECOND / sampleRateHz
         val rms = rms()
+        // The engine reads nothing but the RMS of a frame quieter than the silence threshold (spec 5.1): the
+        // costliest step of the chain sleeps through the pauses and the silence of an open Live.
+        if (rms < config.silenceRms) return PitchFrame.unpitched(tMs, clarity = 0.0, rms = rms)
         val estimate = detector.detect(window, sampleRateHz)
         val freq = estimate.freqHz
         return if (freq == null) {

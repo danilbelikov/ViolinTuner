@@ -4,6 +4,7 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.ceil
+import kotlin.math.cos
 import kotlin.math.floor
 import kotlin.math.sin
 import kotlin.math.sqrt
@@ -33,13 +34,36 @@ internal object LagSearch {
     private val GOLDEN = (sqrt(5.0) - 1) / 2
     private const val EPSILON = 1e-12
 
-    /** Lanczos-interpolated value of [values] (first [size] entries valid) at fractional [t]. */
+    // sin and cos of π·m / SUPPORT for m in −SUPPORT until SUPPORT, at index m + SUPPORT
+    private val SIN_STEP = DoubleArray(2 * SUPPORT) { sin(PI * (it - SUPPORT) / SUPPORT) }
+    private val COS_STEP = DoubleArray(2 * SUPPORT) { cos(PI * (it - SUPPORT) / SUPPORT) }
+
+    /**
+     * Lanczos-interpolated value of [values] (first [size] entries valid) at fractional [t]. The kernel
+     * L(x) = S·sin(πx)·sin(πx/S) / (πx)² is taken at x = frac + m for whole m, so three sines and cosines of
+     * frac serve every tap: sin(π(frac + m)) = (−1)^m·sin(π·frac), and sin(π(frac + m)/S) splits by the sum rule
+     * over a table of π·m/S.
+     */
     fun interpolate(values: DoubleArray, size: Int, t: Double): Double {
         val base = floor(t).toInt()
+        val frac = t - base
+        val sinPi = sin(PI * frac)
+        val sinA = sin(PI * frac / SUPPORT)
+        val cosA = cos(PI * frac / SUPPORT)
         var sum = 0.0
         var weights = 0.0
         for (k in maxOf(0, base - SUPPORT + 1)..minOf(size - 1, base + SUPPORT)) {
-            val w = lanczos(t - k)
+            val m = base - k
+            val x = frac + m
+            val w = when {
+                abs(x) < EPSILON -> 1.0
+                abs(x) >= SUPPORT -> 0.0
+                else -> {
+                    val sign = if (m and 1 == 0) 1.0 else -1.0
+                    val px = PI * x
+                    SUPPORT * sign * sinPi * (sinA * COS_STEP[m + SUPPORT] + cosA * SIN_STEP[m + SUPPORT]) / (px * px)
+                }
+            }
             sum += w * values[k]
             weights += w
         }
@@ -73,13 +97,6 @@ internal object LagSearch {
             }
         }
         return (lo + hi) / 2
-    }
-
-    private fun lanczos(x: Double): Double {
-        if (abs(x) < EPSILON) return 1.0
-        if (abs(x) >= SUPPORT) return 0.0
-        val px = PI * x
-        return SUPPORT * sin(px) * sin(px / SUPPORT) / (px * px)
     }
 }
 

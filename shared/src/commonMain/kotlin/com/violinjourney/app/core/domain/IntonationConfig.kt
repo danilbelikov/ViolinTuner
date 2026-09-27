@@ -98,19 +98,18 @@ data class IntonationConfig(
     /** MPM: the first NSDF peak at least this fraction of the highest one wins. */
     val mpmPeakRatio: Double = 0.9,
 ) {
-    val minFrequencyHz: Double
-        get() = PitchMath.midiToFrequency(
-            lowestMidi - rangeMarginBelowCents / PitchMath.CENTS_PER_SEMITONE, a4Hz,
-        )
+    // Worked out once, not on every read: the engine and the analyzer ask for them on every frame. Body properties,
+    // so they stay out of equals, hashCode and copy.
+    val minFrequencyHz: Double = PitchMath.midiToFrequency(
+        lowestMidi - rangeMarginBelowCents / PitchMath.CENTS_PER_SEMITONE, a4Hz,
+    )
 
-    val maxFrequencyHz: Double
-        get() = PitchMath.midiToFrequency(
-            highestMidi + rangeMarginAboveCents / PitchMath.CENTS_PER_SEMITONE, a4Hz,
-        )
+    val maxFrequencyHz: Double = PitchMath.midiToFrequency(
+        highestMidi + rangeMarginAboveCents / PitchMath.CENTS_PER_SEMITONE, a4Hz,
+    )
 
     /** Silence threshold as linear RMS, full scale = 1.0. */
-    val silenceRms: Double
-        get() = 10.0.pow(silenceRmsDbfs / DB_PER_AMPLITUDE_DECADE)
+    val silenceRms: Double = 10.0.pow(silenceRmsDbfs / DB_PER_AMPLITUDE_DECADE)
 
     private companion object {
         const val DB_PER_AMPLITUDE_DECADE = 20.0

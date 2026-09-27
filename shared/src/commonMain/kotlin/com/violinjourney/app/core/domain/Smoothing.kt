@@ -1,22 +1,41 @@
 package com.violinjourney.app.core.domain
 
-/** Sliding-window median; rejects isolated outliers such as one-frame octave errors. */
+/**
+ * Sliding-window median; rejects isolated outliers such as one-frame octave errors. The window is a ring of
+ * plain doubles sorted in place on every frame: a handful of values, no boxing and nothing allocated.
+ */
 class MedianFilter(private val window: Int) {
-    private val values = ArrayDeque<Double>(window)
+    private val ring = DoubleArray(window)
+    private val sorted = DoubleArray(window)
+    private var next = 0
+    private var count = 0
 
     init {
         require(window > 0) { "window must be positive" }
     }
 
     fun add(value: Double): Double {
-        if (values.size == window) values.removeFirst()
-        values.addLast(value)
-        val sorted = values.sorted()
-        val mid = sorted.size / 2
-        return if (sorted.size % 2 == 1) sorted[mid] else (sorted[mid - 1] + sorted[mid]) / 2
+        ring[next] = value
+        next = (next + 1) % window
+        if (count < window) count++
+        // the oldest value is overwritten, so the ring holds exactly the last [count]; their order does not matter
+        for (i in 0 until count) {
+            val v = ring[i]
+            var j = i - 1
+            while (j >= 0 && sorted[j] > v) {
+                sorted[j + 1] = sorted[j]
+                j--
+            }
+            sorted[j + 1] = v
+        }
+        val mid = count / 2
+        return if (count % 2 == 1) sorted[mid] else (sorted[mid - 1] + sorted[mid]) / 2
     }
 
-    fun reset() = values.clear()
+    fun reset() {
+        next = 0
+        count = 0
+    }
 }
 
 /** Exponential moving average; the first sample initializes the state. */

@@ -16,8 +16,11 @@ class YinDetector(private val config: IntonationConfig = IntonationConfig()) : P
     private val candidateLags = DoubleArray(MAX_CANDIDATES)
     private val candidateDepths = DoubleArray(MAX_CANDIDATES)
 
+    private var lagRange: LagRange? = null
+    private var lagRate = 0
+
     override fun detect(window: FloatArray, sampleRateHz: Int): PitchEstimate {
-        val lags = LagRange(config, sampleRateHz)
+        val lags = lagsFor(sampleRateHz)
         val size = lags.top + 1
         require(window.size > size) { "window of ${window.size} is too short for lag ${lags.top}" }
         ensureBuffers(window.size, size)
@@ -58,6 +61,15 @@ class YinDetector(private val config: IntonationConfig = IntonationConfig()) : P
             )
         }
         return PitchEstimate(freqHz = null, clarity = 0.0)
+    }
+
+    /** The bounds of the lags, worked out once per sample rate rather than on every frame. */
+    private fun lagsFor(sampleRateHz: Int): LagRange {
+        lagRange?.takeIf { lagRate == sampleRateHz }?.let { return it }
+        return LagRange(config, sampleRateHz).also {
+            lagRange = it
+            lagRate = sampleRateHz
+        }
     }
 
     private fun isDip(lag: Int): Boolean =

@@ -95,6 +95,11 @@ class DetectorComparisonTest {
             repeat(WARM_UP) { detector.detect(signal, rate) }
             val nanos = measureNanoTime { repeat(TIMED) { detector.detect(signal, rate) } }
             report.append("  cost: %.3f ms per frame on this JVM\n".format(nanos / 1e6 / TIMED))
+            // the frames without a tone: a bow scraping, a room talking — most of what the microphone hears between notes
+            val noise = SignalSynth.whiteNoise(window, seed = 1)
+            repeat(WARM_UP) { detector.detect(noise, rate) }
+            val noiseNanos = measureNanoTime { repeat(TIMED) { detector.detect(noise, rate) } }
+            report.append("  cost on white noise: %.3f ms per frame\n".format(noiseNanos / 1e6 / TIMED))
         }
         println(report)
     }
