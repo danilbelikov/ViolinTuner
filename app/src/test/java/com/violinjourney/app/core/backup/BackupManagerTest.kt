@@ -391,27 +391,78 @@ class BackupManagerTest {
         assertEquals(listOf(ErrorGroup.BACKUP), analytics.errors.map { it.first })
     }
 
-    @Test
-    fun `remaining time waits until the speed is worth a word`() = runTest {
-        // a slow place: every write takes its time
-        val manager = manager()
-        val slow = object : BackupDocuments by documents {
-            override fun openOutput(uri: String): OutputStream = object : OutputStream() {
-                override fun write(b: Int) = Unit
-                override fun write(b: ByteArray, off: Int, len: Int) = Unit
+    /**
+     * A copy of [reads] reads of 4 KiB, each taking [msPerRead] on the manager's clock — the clock is moved by the reading
+     * itself — and every state of progress it published, with the moment it came. Saved in the end.
+     */
+    private fun TestScope.timedCopy(reads: Int, msPerRead: Long): List<Pair<Long, BackupJob.Saving>> {
+        var nowMs = 0L
+        val seen = mutableListOf<Pair<Long, BackupJob.Saving>>()
+        lateinit var manager: BackupManager
+        // the state a read finds is the one the read before it published, at the moment the clock still shows
+        fun look() {
+            val state = manager.job.value as? BackupJob.Saving ?: return
+            if (state.progress != null && state.progress != seen.lastOrNull()?.second?.progress) seen += nowMs to state
+        }
+        val video = object : InputStream() {
+            private var left = reads
+            override fun read(): Int = error("read in blocks")
+            override fun read(b: ByteArray, off: Int, len: Int): Int {
+                look()
+                if (left == 0) return -1
+                left--
+                nowMs += msPerRead
+                val count = minOf(len, BLOCK)
+                b.fill(0, off, off + count)
+                return count
             }
         }
-        val other = BackupManager(
-            store, slow, prefs, {}, BackupConfig(), ZonedSystemWallClock(TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler),
+        val slow = object : BackupStore by store {
+            override suspend fun prepare(parts: Set<BackupPart>) = PreparedBackup(
+                store.manifest(parts),
+                listOf(
+                    BackupEntry(BackupPaths.DATABASE_ENTRY, BackupPart.DATA, 1_000, required = true) { ByteArrayInputStream(ByteArray(1_000) { 7 }) },
+                    BackupEntry("sessions/big.mp4", BackupPart.VIDEO, reads.toLong() * BLOCK) { video },
+                ),
+            )
+        }
+        manager = BackupManager(
+            slow, documents, prefs, {}, BackupConfig(), FixedWallClock(now, TimeZone.UTC), { nowMs }, StandardTestDispatcher(testScheduler),
             analytics = NoOpAnalytics(),
         )
-        other.saveTo("content://slow/1", all, "копия.zip")
-        advanceTimeBy(800)
-        runCurrent()
-        assertTrue(other.job.value.let { it !is BackupJob.Saving || it.visible })
+        manager.saveTo("content://slow/1", all, "копия.zip")
         advanceUntilIdle()
-        assertTrue(other.job.value is BackupJob.Saved)
-        assertEquals(BackupJob.Idle, manager.job.value)
+        assertTrue("${manager.job.value}", manager.job.value is BackupJob.Saved)
+        return seen
+    }
+
+    @Test
+    fun `the time left waits for five percent and then counts down`() = runTest {
+        // forty seconds of writing, evenly
+        val seen = timedCopy(reads = 2_000, msPerRead = 20)
+        val (early, late) = seen.partition { it.second.progress!!.fraction < 0.05f }
+        assertTrue("the start is published too", early.isNotEmpty())
+        assertTrue("no word of the time left before 5 % and 10 s", early.all { it.second.remainingSec == null })
+        // at 5 % two seconds have gone of forty: about 38 are left
+        assertTrue("${late.first()}", late.first().second.remainingSec in 37..39)
+        val left = late.map { it.second.remainingSec!! }
+        assertTrue("the time left only goes down: $left", left.zipWithNext().all { (a, b) -> b <= a })
+        assertTrue("and never below a second: $left", left.all { it >= 1 })
+        // ten a second at most, but the end is always told
+        val moments = seen.map { it.first }
+        assertTrue("$moments", moments.dropLast(1).zipWithNext().all { (a, b) -> b - a >= 100 })
+        assertEquals(1f, seen.last().second.progress!!.fraction, 0f)
+    }
+
+    @Test
+    fun `a slow start says the time left after ten seconds even below five percent`() = runTest {
+        // five minutes of writing: 5 % would be a quarter of a minute away
+        val seen = timedCopy(reads = 1_000, msPerRead = 300)
+        assertTrue(seen.filter { it.first < 10_000 }.all { it.second.remainingSec == null })
+        val first = seen.first { it.first >= 10_000 }
+        assertTrue("$first", first.second.progress!!.fraction < 0.05f)
+        // about 290 s are left of 300 after 10 s: the guess counts what was written so far, the database too
+        assertTrue("$first", first.second.remainingSec in 280..292)
     }
 
     // — «Остановить» and the point of no return (spec 3.20) —
@@ -784,5 +835,10 @@ class BackupManagerTest {
         manager.restore(copy, unsafe = false)
         advanceUntilIdle()
         assertEquals(copy.manifest.createdAtEpochMs, store.settled)
+    }
+
+    private companion object {
+        /** What one read of [timedCopy] gives. */
+        const val BLOCK = 4_096
     }
 }
