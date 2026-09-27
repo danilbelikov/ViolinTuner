@@ -8,7 +8,7 @@ import com.violinjourney.app.core.domain.practice.SavedBlock
 import com.violinjourney.app.core.domain.practice.practiceDateOf
 import com.violinjourney.app.core.domain.repertoire.Piece
 import com.violinjourney.app.core.domain.repertoire.PieceGroup
-import com.violinjourney.app.core.domain.repertoire.PieceStats
+import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.repertoire.SectionStats
 import com.violinjourney.app.core.domain.session.SessionSummary
 import kotlinx.datetime.TimeZone
@@ -21,26 +21,55 @@ import kotlinx.datetime.TimeZone
 object BlockReducer {
     data class Ui(val sheetOpen: Boolean = false, val selectedId: Long? = null, val goalMinutes: Int? = null)
 
+    /** A section of the choice: its pieces in the order of its own list — the latest activity first (spec 5.9). */
+    data class ShelfSection(val ref: SectionRef, val name: String?, val pieces: List<Piece>)
+
+    /** What the bookmark and the choice are made of, ordered once whenever the repertoire or the takes change. */
+    data class Shelf(val titles: Map<Long, String>, val sections: List<ShelfSection>) {
+        companion object {
+            val EMPTY = Shelf(emptyMap(), emptyList())
+        }
+    }
+
+    /**
+     * The shelf of [pieces]: the titles of the bookmark and the sections of the choice, each in the order of its own list
+     * (spec 5.9) — marks never move anything, so the order does not follow the clock. One pass over [sessions] finds the
+     * latest take of every piece.
+     */
+    fun shelfOf(pieces: List<Piece>, groups: List<PieceGroup>, sessions: List<SessionSummary>): Shelf {
+        val latestTake = HashMap<Long, Long>()
+        for (session in sessions) {
+            val id = session.pieceId ?: continue
+            if (session.startedAtEpochMs > (latestTake[id] ?: Long.MIN_VALUE)) latestTake[id] = session.startedAtEpochMs
+        }
+        // PieceStats.lastActivity, with the takes counted above
+        fun activityOf(piece: Piece) = maxOf(piece.updatedAtEpochMs, piece.createdAtEpochMs, latestTake[piece.id] ?: 0L)
+        val sections = SectionStats.summaries(pieces, groups).mapNotNull { summary ->
+            val own = SectionStats.piecesOf(summary.ref, pieces, groups)
+            if (own.isEmpty()) return@mapNotNull null
+            ShelfSection(summary.ref, summary.name, own.sortedWith(compareByDescending<Piece> { activityOf(it) }.thenByDescending { it.id }))
+        }
+        return Shelf(pieces.associate { it.id to it.title }, sections)
+    }
+
+    /** [zone] is asked only while the choice is open: the day of the marks is its business alone. */
     fun stateOf(
         running: RunningPractice?,
         blocks: PracticeBlocks?,
         saved: List<SavedBlock>,
-        pieces: List<Piece>,
-        groups: List<PieceGroup>,
-        sessions: List<SessionSummary>,
+        shelf: Shelf,
         ui: Ui,
         nowEpochMs: Long,
-        zone: TimeZone,
+        zone: () -> TimeZone,
         config: PracticeConfig,
     ): BlockState {
         val own = BlockRules.ofPractice(running, blocks)
-        val titles = pieces.associate { it.id to it.title }
         return BlockState(
-            bookmark = bookmarkOf(own, titles, nowEpochMs),
+            bookmark = bookmarkOf(own, shelf.titles, nowEpochMs),
             sheet = when {
                 !ui.sheetOpen -> null
                 running == null -> BlockSheet.Offer
-                else -> pickerOf(running, own, saved, pieces, groups, sessions, ui, nowEpochMs, zone, config)
+                else -> pickerOf(running, own, saved, shelf, ui, nowEpochMs, zone(), config)
             },
         )
     }
@@ -60,9 +89,7 @@ object BlockReducer {
         running: RunningPractice,
         blocks: PracticeBlocks?,
         saved: List<SavedBlock>,
-        pieces: List<Piece>,
-        groups: List<PieceGroup>,
-        sessions: List<SessionSummary>,
+        shelf: Shelf,
         ui: Ui,
         nowEpochMs: Long,
         zone: TimeZone,
@@ -70,18 +97,14 @@ object BlockReducer {
     ): BlockSheet.Picker {
         // «today» is the day of the running practice: one that went past midnight keeps its day (spec 5.21)
         val marks = BlockRules.marksOf(saved, blocks, practiceDateOf(running.startedAtEpochMs, zone), nowEpochMs, config)
-        val sections = SectionStats.summaries(pieces, groups).mapNotNull { summary ->
-            val own = SectionStats.piecesOf(summary.ref, pieces, groups)
-            if (own.isEmpty()) return@mapNotNull null
-            // the order of the section's own list: the latest activity first (spec 5.9); marks never move anything
-            val listed = own
-                .map { piece -> piece to PieceStats.lastActivity(piece, PieceStats.takesOf(piece.id, sessions)) }
-                .sortedWith(compareByDescending<Pair<Piece, Long>> { it.second }.thenByDescending { it.first.id })
-                .map { (piece, _) -> PickerPiece(piece.id, piece.title, piece.composer.takeIf { it.isNotBlank() && piece.scale == null }, markOf(marks[piece.id], config)) }
-            PickerSection(summary.ref, summary.name, doneToday = own.count { marks[it.id]?.done == true }, pieces = listed)
+        val sections = shelf.sections.map { section ->
+            val listed = section.pieces.map { piece ->
+                PickerPiece(piece.id, piece.title, piece.composer.takeIf { it.isNotBlank() && piece.scale == null }, markOf(marks[piece.id], config))
+            }
+            PickerSection(section.ref, section.name, doneToday = section.pieces.count { marks[it.id]?.done == true }, pieces = listed)
         }
         val current = blocks?.current?.takeIf { BlockRules.isRunning(it, nowEpochMs) }
-        val now = current?.let { block -> pieces.firstOrNull { it.id == block.pieceId }?.let { NowLine(it.title, BlockRules.minutesLeft(block, nowEpochMs)) } }
+        val now = current?.let { block -> shelf.titles[block.pieceId]?.let { NowLine(it, BlockRules.minutesLeft(block, nowEpochMs)) } }
         // a pick of the running element or of one that is gone is no pick
         val selectedId = ui.selectedId?.takeIf { id -> sections.any { section -> section.pieces.any { it.id == id && it.today != TodayMark.Running } } }
         val goal = ui.goalMinutes ?: selectedId?.let { BlockRules.defaultGoalMinutes(it, saved, blocks, config) } ?: config.blockDefaultGoalMinutes

@@ -9,8 +9,11 @@ import com.violinjourney.app.core.domain.practice.SavedBlock
 import com.violinjourney.app.core.domain.repertoire.Piece
 import com.violinjourney.app.core.domain.repertoire.PieceGroup
 import com.violinjourney.app.core.domain.repertoire.PieceSection
+import com.violinjourney.app.core.domain.repertoire.PieceStats
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.SectionRef
+import com.violinjourney.app.core.domain.session.SessionSummary
+import kotlin.random.Random
 import kotlin.time.Instant
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
@@ -43,6 +46,12 @@ class BlockReducerTest {
     )
     private val groups = listOf(PieceGroup(1, "Двойные ноты", 0))
 
+    private fun session(id: Long, pieceId: Long?, startedAt: Long) = SessionSummary(
+        id = id, title = null, startedAtEpochMs = startedAt, durationMs = 60_000, a4Hz = 440.0, toleranceCents = 8.0, nearCents = 20.0,
+        scorePercent = 80, nearPercent = 10, offPercent = 10, maeCents = 5.0, biasCents = 0.0, previewZones = emptyList(), audioPath = null,
+        pieceId = pieceId,
+    )
+
     /** Handoff 30e1: the scale and Kaiser done today, the minuet stopped at seven minutes, the concerto running. */
     private val saved = listOf(
         SavedBlock(3, today, at(-120), 10 * min, 10 * min, done = true, paid = true),
@@ -55,7 +64,7 @@ class BlockReducerTest {
     )
 
     private fun state(ui: BlockReducer.Ui = BlockReducer.Ui(sheetOpen = true), now: Long = at(34), running: RunningPractice? = this.running, current: PracticeBlocks? = blocks) =
-        BlockReducer.stateOf(running, current, saved, pieces, groups, sessions = emptyList(), ui = ui, nowEpochMs = now, zone = zone, config = config)
+        BlockReducer.stateOf(running, current, saved, BlockReducer.shelfOf(pieces, groups, sessions = emptyList()), ui = ui, nowEpochMs = now, zone = { zone }, config = config)
 
     @Test
     fun `without a practice the bookmark says «Репертуар» and a tap offers a practice`() {
@@ -97,7 +106,7 @@ class BlockReducerTest {
         assertEquals(Bookmark.Done("Концерт ля минор, I ч."), state(now = at(41)).bookmark)
         assertNull((state(now = at(41)).sheet as BlockSheet.Picker).now)
         assertEquals(Bookmark.Entry, state(current = BlockRules.stopped(blocks, practiceStart, at(30))).bookmark)
-        val gone = BlockReducer.stateOf(running, blocks, saved, pieces.filter { it.id != 2L }, groups, emptyList(), BlockReducer.Ui(), at(34), zone, config)
+        val gone = BlockReducer.stateOf(running, blocks, saved, BlockReducer.shelfOf(pieces.filter { it.id != 2L }, groups, emptyList()), BlockReducer.Ui(), at(34), { zone }, config)
         assertEquals(Bookmark.Entry, gone.bookmark)
     }
 
@@ -123,7 +132,51 @@ class BlockReducerTest {
 
     @Test
     fun `an empty repertoire leaves the choice empty`() {
-        val empty = BlockReducer.stateOf(running, null, emptyList(), emptyList(), emptyList(), emptyList(), BlockReducer.Ui(sheetOpen = true), at(1), zone, config)
+        val empty = BlockReducer.stateOf(running, null, emptyList(), BlockReducer.Shelf.EMPTY, BlockReducer.Ui(sheetOpen = true), at(1), { zone }, config)
         assertEquals(emptyList<PickerSection>(), (empty.sheet as BlockSheet.Picker).sections)
+    }
+
+    @Test
+    fun `the shelf orders each section as the takes of each piece would`() {
+        val random = Random(3)
+        repeat(20) {
+            val many = List(30) { index ->
+                piece(index + 10L, "p$index", PieceSection.entries[random.nextInt(PieceSection.entries.size)], updated = random.nextLong(0, 50))
+            }
+            val takes = List(200) { index ->
+                session(id = index + 1L, pieceId = many[random.nextInt(many.size)].id.takeIf { random.nextInt(5) > 0 }, startedAt = random.nextLong(0, 100))
+            }
+            val shelf = BlockReducer.shelfOf(many, emptyList(), takes)
+            for (section in shelf.sections) {
+                val expected = section.pieces.sortedWith(
+                    compareByDescending<Piece> { PieceStats.lastActivity(it, PieceStats.takesOf(it.id, takes)) }.thenByDescending { it.id },
+                )
+                assertEquals(expected.map { it.id }, section.pieces.map { it.id })
+            }
+            assertEquals(many.size, shelf.sections.sumOf { it.pieces.size })
+        }
+    }
+
+    @Test
+    fun `the ticker moves the marks and never the order`() {
+        val takes = listOf(session(id = 1, pieceId = 1, startedAt = at(-5)))
+        fun picker(now: Long) = BlockReducer.stateOf(
+            running, blocks, saved, BlockReducer.shelfOf(pieces, groups, takes), BlockReducer.Ui(sheetOpen = true), now, { zone }, config,
+        ).sheet as BlockSheet.Picker
+        val early = picker(at(34))
+        val late = picker(at(41))
+        assertEquals(listOf(1L, 2L), early.sections[0].pieces.map { it.id }, "a take today puts the minuet first")
+        assertEquals(early.sections.map { section -> section.pieces.map { it.id } }, late.sections.map { section -> section.pieces.map { it.id } })
+        assertEquals(TodayMark.Running, early.sections[0].pieces[1].today)
+        assertEquals(TodayMark.Done(20 * min), late.sections[0].pieces[1].today)
+    }
+
+    @Test
+    fun `the time zone is asked only while the choice is open`() {
+        var asked = 0
+        BlockReducer.stateOf(running, blocks, saved, BlockReducer.shelfOf(pieces, groups, emptyList()), BlockReducer.Ui(), at(34), { asked++; zone }, config)
+        assertEquals(0, asked)
+        BlockReducer.stateOf(running, blocks, saved, BlockReducer.shelfOf(pieces, groups, emptyList()), BlockReducer.Ui(sheetOpen = true), at(34), { asked++; zone }, config)
+        assertEquals(1, asked)
     }
 }

@@ -67,11 +67,16 @@ open class BlockViewModel(
     }
 
     private val practice = combine(runningPractice.running, blockStore.blocks, blockHistory.blocks, ::Triple)
-    private val shelf = combine(repertoire.pieces, repertoire.groups, sessions.sessions, ::Triple)
+
+    // ordered when the repertoire or the takes change, not on every tick of the clock
+    private val shelf = combine(repertoire.pieces, repertoire.groups, sessions.sessions, BlockReducer::shelfOf)
+
+    // the time zone is asked only while the choice is open: the bookmark alone ticks without it
+    private val zone = { clock.zone }
 
     val state: StateFlow<BlockState> =
-        combine(practice, shelf, ui, now) { (running, blocks, saved), (pieces, groups, takes), ui, now ->
-            BlockReducer.stateOf(running, blocks, saved, pieces, groups, takes, ui, now, clock.zone, config)
+        combine(practice, shelf, ui, now) { (running, blocks, saved), shelf, ui, now ->
+            BlockReducer.stateOf(running, blocks, saved, shelf, ui, now, zone, config)
         }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), BlockState.NONE)
 
     private val effectChannel = Channel<BlockEffect>(Channel.BUFFERED)
