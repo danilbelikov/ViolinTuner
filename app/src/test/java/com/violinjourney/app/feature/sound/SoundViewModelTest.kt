@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import com.violinjourney.app.core.audio.playback.FakeSessionPlayer
 import com.violinjourney.app.core.audio.playback.FakeSessionWaveforms
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
+import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
@@ -90,10 +91,11 @@ class SoundViewModelTest {
         sessionId: Long?,
         sound: SoundRepository = this@SoundViewModelTest.sound,
         audioFiles: SessionAudioFiles = AudioFiles,
+        backingConfig: BackingConfig = BackingConfig(),
     ): Pair<SoundViewModel, MutableList<SoundEffect>> {
         val viewModel = SoundViewModel(
             SavedStateHandle(mapOf(SoundViewModel.ARG_SESSION_ID to (sessionId ?: SoundViewModel.EVERYONE))),
-            sound, sessions, repertoire, audioFiles, { player }, waveforms, config, backings, backingPcm,
+            sound, sessions, repertoire, audioFiles, { player }, waveforms, config, backings, backingPcm, backingConfig,
             io = StandardTestDispatcher(testScheduler),
         )
         val effects = mutableListOf<SoundEffect>()
@@ -430,6 +432,27 @@ class SoundViewModelTest {
         assertEquals(200, viewModel.state.value.backing?.offsetMs)
         viewModel.onIntent(SoundIntent.BackingGainChanged(1f))
         assertEquals(6f, viewModel.state.value.backing?.gainDb)
+    }
+
+    @Test
+    fun `the backing sliders stand where the injected config sets the values`() = runTest {
+        val under = recording("under.m4a")
+        val backingId = backings.add(backings.backing())
+        backings.saveTake(
+            com.violinjourney.app.core.domain.backing.TakeBacking(under, backingId, 0, 0, -6f, 2_000, com.violinjourney.app.core.domain.backing.BackingOutput.WIRED, "Jack"),
+        )
+        // ranges other than the defaults: a slider read by another config would put the value elsewhere
+        val narrow = BackingConfig(minOffsetMs = -500, maxOffsetMs = 500, minGainDb = -12f, maxGainDb = 0f)
+        val (viewModel, _) = screen(under, backingConfig = narrow)
+
+        viewModel.onIntent(SoundIntent.BackingOffsetChanged(0.75f))
+        viewModel.onIntent(SoundIntent.BackingGainChanged(0.25f))
+        assertEquals(250, viewModel.state.value.backing?.offsetMs)
+        assertEquals(-9f, viewModel.state.value.backing?.gainDb)
+        // the screen draws the thumbs by the view model's config: where they were let go, over the values they set
+        assertEquals(narrow, viewModel.backingConfig)
+        assertEquals(0.75f, BackingSliders.offsetFraction(250, viewModel.backingConfig))
+        assertEquals(0.25f, BackingSliders.gainFraction(-9f, viewModel.backingConfig))
     }
 
     @Test

@@ -129,8 +129,10 @@ fun SoundScreen(
     state: SoundState,
     meters: State<SoundMeters?>,
     onIntent: (SoundIntent) -> Unit,
+    /** The view model's, not one of the screen's own: the sliders stand on the ranges the values are set by. */
+    config: SoundConfig,
+    backingConfig: BackingConfig,
     modifier: Modifier = Modifier,
-    config: SoundConfig = remember { SoundConfig() },
     // asked once: a new zone on every recomposition is a new object each time, and on iOS a read of its file
     zone: TimeZone = remember { TimeZone.currentSystemDefault() },
     /** Where the player is, exactly; [SoundState.player] keeps it to the whole second. Read where the waveform is drawn. */
@@ -174,7 +176,7 @@ fun SoundScreen(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Scope(state, zone, onIntent)
-                    Blocks(state, meters, config, onIntent)
+                    Blocks(state, meters, config, backingConfig, onIntent)
                 }
             }
         } else {
@@ -191,7 +193,7 @@ fun SoundScreen(
                 ) {
                     Scope(state, zone, onIntent)
                     Presets(state, onIntent)
-                    Blocks(state, meters, config, onIntent)
+                    Blocks(state, meters, config, backingConfig, onIntent)
                 }
                 share?.let { Box(Modifier.padding(horizontal = ScreenPadding).padding(bottom = 12.dp)) { it() } }
             }
@@ -431,7 +433,7 @@ private fun Presets(state: SoundState, onIntent: (SoundIntent) -> Unit) {
 }
 
 @Composable
-private fun Blocks(state: SoundState, meters: State<SoundMeters?>, config: SoundConfig, onIntent: (SoundIntent) -> Unit) {
+private fun Blocks(state: SoundState, meters: State<SoundMeters?>, config: SoundConfig, backingConfig: BackingConfig, onIntent: (SoundIntent) -> Unit) {
     Text(
         text = stringResource(Res.string.sound_order),
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -439,7 +441,7 @@ private fun Blocks(state: SoundState, meters: State<SoundMeters?>, config: Sound
     )
     SoundBlocks(state.settings, state.expanded, state.band, state.details, meters, config, onIntent)
     // last, after «Громкость»: it is not the violin's (spec 3.32)
-    state.backing?.let { if (state.backingUnavailable) BackingUnavailableBlock() else BackingBlock(it, BackingConfig(), onIntent) }
+    state.backing?.let { if (state.backingUnavailable) BackingUnavailableBlock() else BackingBlock(it, backingConfig, onIntent) }
 }
 
 @Composable

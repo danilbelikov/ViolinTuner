@@ -94,6 +94,8 @@ open class PieceViewModel(
     private val backingImporter: BackingFileImporter? = null,
     private val backingPreview: BackingPreview? = null,
     private val routes: AudioRoutes? = null,
+    /** The app's, as the pipeline and «Звук» have it: the lag guessed for wireless headphones comes from here (spec 5.25). */
+    private val backingConfig: BackingConfig,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
@@ -186,7 +188,6 @@ open class PieceViewModel(
         val unprepared: Boolean = false,
     )
 
-    private val backingConfig = BackingConfig()
     private val backingEphemeral = MutableStateFlow(BackingEphemeral())
 
     // Above `init`: its collector reads them, and a flow that gives its first value at once would run it before a

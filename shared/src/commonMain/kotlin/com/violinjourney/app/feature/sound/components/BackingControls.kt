@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.feature.sound.BackingBlockState
+import com.violinjourney.app.feature.sound.BackingSliders
 import com.violinjourney.app.feature.sound.SoundFormats
 import com.violinjourney.app.feature.sound.SoundIntent
 import com.violinjourney.app.shared.resources.Res
@@ -121,8 +122,8 @@ fun BackingBlock(state: BackingBlockState, config: BackingConfig, onIntent: (Sou
                 label = stringResource(Res.string.backing_gain),
                 hint = null,
                 valueText = SoundFormats.decibels(state.gainDb.toDouble(), signed = true),
-                fraction = gainFraction(state.gainDb, config),
-                defaultFraction = gainFraction(config.defaultGainDb, config),
+                fraction = BackingSliders.gainFraction(state.gainDb, config),
+                defaultFraction = BackingSliders.gainFraction(config.defaultGainDb, config),
                 bipolar = false,
             ),
             enabled = true,
@@ -135,9 +136,9 @@ fun BackingBlock(state: BackingBlockState, config: BackingConfig, onIntent: (Sou
                 label = stringResource(Res.string.backing_offset),
                 hint = stringResource(Res.string.backing_offset_hint),
                 valueText = SoundFormats.signedMs(state.offsetMs),
-                fraction = offsetFraction(state.offsetMs, config),
+                fraction = BackingSliders.offsetFraction(state.offsetMs, config),
                 // the scale's zero, where the fill starts; «Как записано» is the button under it
-                defaultFraction = offsetFraction(0, config),
+                defaultFraction = BackingSliders.offsetFraction(0, config),
                 bipolar = true,
             ),
             enabled = true,
@@ -176,8 +177,3 @@ fun BackingUnavailableBlock() {
         Text(stringResource(Res.string.backing_take_unprepared), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
     }
 }
-
-internal fun gainFraction(gainDb: Float, config: BackingConfig): Float = ((gainDb - config.minGainDb) / (config.maxGainDb - config.minGainDb)).coerceIn(0f, 1f)
-
-internal fun offsetFraction(offsetMs: Int, config: BackingConfig): Float =
-    ((offsetMs - config.minOffsetMs).toFloat() / (config.maxOffsetMs - config.minOffsetMs)).coerceIn(0f, 1f)

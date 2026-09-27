@@ -403,7 +403,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
 private fun pieceViewModel(graph: IosGraph, savedState: SavedStateHandle) = PieceViewModel(
     savedState, graph.repertoire, graph.sheetFiles, graph.repertoireConfig, graph.clock, graph.takes(), graph.configSource, graph.sessions,
     graph.videoFiles, graph.videoImporter, graph.shareFiles, graph.backings, graph.backingFiles, graph.backingPcm, graph.recordingRate,
-    graph.backingImporter, IosBackingPreview(), graph.audioRoutes, graph.io,
+    graph.backingImporter, IosBackingPreview(), graph.audioRoutes, graph.backingConfig, graph.io,
 )
 
 private fun shareViewModel(graph: IosGraph, texts: IosTexts) = ShareViewModel(

@@ -47,6 +47,9 @@ fun SoundRoute(
         }
     }
 
-    SoundScreen(state = state, meters = meters, onIntent = viewModel::onIntent, modifier = modifier, position = { position.value })
+    SoundScreen(
+        state = state, meters = meters, onIntent = viewModel::onIntent, config = viewModel.config, backingConfig = viewModel.backingConfig,
+        modifier = modifier, position = { position.value },
+    )
     shareHost()
 }

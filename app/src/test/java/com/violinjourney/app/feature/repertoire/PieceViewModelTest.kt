@@ -180,6 +180,9 @@ class PieceViewModelTest {
     private var importResult: com.violinjourney.app.core.audio.backing.BackingImport =
         com.violinjourney.app.core.audio.backing.BackingImport.Unreadable
 
+    /** The app's config of backings, as Hilt and the iOS graph give it. */
+    private var backingConfig = com.violinjourney.app.core.domain.backing.BackingConfig()
+
     private fun TestScope.screen(
         pieceId: Long,
         saved: SavedStateHandle = SavedStateHandle(mapOf(PieceViewModel.ARG_PIECE_ID to pieceId)),
@@ -200,7 +203,7 @@ class PieceViewModelTest {
             SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), sessions,
             videoFiles, importer(), NoShareFiles,
             backings = backings, backingFiles = backingFiles, backingPcm = backingPcm,
-            backingImporter = { importResult }, backingPreview = preview, routes = routes,
+            backingImporter = { importResult }, backingPreview = preview, routes = routes, backingConfig = backingConfig,
             io = StandardTestDispatcher(testScheduler),
         )
         backgroundScope.launch { viewModel.backing.collect {} }
@@ -800,6 +803,21 @@ class PieceViewModelTest {
         assertEquals(3_210L, take.playedMs)
         assertEquals(com.violinjourney.app.core.domain.backing.BackingOutput.BLUETOOTH, take.output)
         assertTrue(viewModel.state.value.takes.single().card.underBacking)
+    }
+
+    @Test
+    fun `the lag guessed for wireless headphones is the one of the app's config`() = runTest {
+        backingConfig = com.violinjourney.app.core.domain.backing.BackingConfig(defaultWirelessLatencyMs = 250)
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        route.value = com.violinjourney.app.core.domain.backing.AudioRoute(com.violinjourney.app.core.domain.backing.BackingOutput.BLUETOOTH, "Buds")
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(300)
+
+        assertEquals(250, backings.takeBackings.value.single().latencyMs)
     }
 
     @Test

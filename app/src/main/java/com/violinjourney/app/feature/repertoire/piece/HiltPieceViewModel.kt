@@ -9,6 +9,7 @@ import com.violinjourney.app.core.audio.backing.BackingPreview
 import com.violinjourney.app.core.audio.share.ShareFiles
 import com.violinjourney.app.core.data.repertoire.SheetFiles
 import com.violinjourney.app.core.di.IoDispatcher
+import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingFiles
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
@@ -43,8 +44,9 @@ class HiltPieceViewModel @Inject constructor(
     backingImporter: BackingFileImporter,
     backingPreview: BackingPreview,
     routes: AudioRoutes,
+    backingConfig: BackingConfig,
     @IoDispatcher io: CoroutineDispatcher,
 ) : PieceViewModel(
     savedState, repertoire, sheetFiles, config, clock, takes, configSource, sessions, videos, importer, shareFiles, backings,
-    backingFiles, backingPcm, recordingRate, backingImporter, backingPreview, routes, io,
+    backingFiles, backingPcm, recordingRate, backingImporter, backingPreview, routes, backingConfig, io,
 )
