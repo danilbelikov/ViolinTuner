@@ -26,7 +26,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import platform.Foundation.NSLog
-import platform.Foundation.NSProcessInfo
 import platform.UIKit.UIViewController
 
 /**
@@ -41,7 +40,7 @@ import platform.UIKit.UIViewController
 @Suppress("FunctionName", "unused") // called from Swift
 fun MainViewController(analytics: AnalyticsService?): UIViewController {
     AppGraph.start(analytics)
-    val openRoute = launchText("-openRoute")
+    val openRoute = LaunchArguments.valueOf("-openRoute")
     // the whole screen is not pushed up for a focused field: the insets of the keyboard do that where it is needed
     val controller = ComposeUIViewController(configure = { onFocusBehavior = OnFocusBehavior.DoNothing }) {
         // null for the moment of a restart: the dark surface, as at the start
@@ -148,11 +147,4 @@ private object AppGraph {
 }
 
 private inline fun <reified T : Enum<T>> launchArgument(name: String): T? =
-    launchText(name)?.let { value -> enumValues<T>().firstOrNull { it.name == value } }
-
-/** The word after [name] among the arguments of the launch (`xcrun simctl launch … -openRoute live`). */
-private fun launchText(name: String): String? {
-    val arguments = NSProcessInfo.processInfo.arguments.map { it.toString() }
-    val index = arguments.indexOf(name)
-    return if (index < 0) null else arguments.getOrNull(index + 1)
-}
+    LaunchArguments.valueOf(name)?.let { value -> enumValues<T>().firstOrNull { it.name == value } }
