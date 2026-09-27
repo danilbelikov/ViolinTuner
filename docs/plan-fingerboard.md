@@ -35,7 +35,7 @@
 80. **Вход и такты.**
     - `feature/practice`: `FingerboardCard` под `SummaryCards` в портрете и в левой колонке landscape (миниатюра из того же `FingerboardLayout`, лёжа, 46 точек); «новое · N» из снимка; `PracticeViewModel` получает сводку грифа.
     - `navigation/AppNavHost`: маршрут `fingerboard` без нижней панели, «назад» — на «Занятия».
-    - Такты грифа — в том же «+N» на карточке дома: строку заработка уже читает `lastEarning`, отдельной работы не нужно — проверить тестом.
+    - Такты грифа — в том же «+N» на карточке дома и в итоге занятия: оба берут сохранённое занятие из `PracticeFinisher.lastSaved` (`SavedPractice.earning`, таблетка — `showPill(earning.takts)`), поэтому отдельной работы не нужно, если такты грифа входят в `TaktEarning.takts` (и в `JourneyRules.taktsBySource` — для строк итога) — проверить тестом в `PracticeViewModelTest`.
     - Строки: русский источник в `values-ru/strings.xml`, английский и ещё восемь по `docs/i18n-glossary.md` (добавить в глоссарий «гриф», «ступени», «чистая / своя»); `python3 tools/i18n/check.py` по каждому тегу.
     - Тесты: `PracticeReducerTest` (карточка: пусто, счёт, «новое»), `LocalizationTest`.
 

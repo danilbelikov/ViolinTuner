@@ -137,7 +137,6 @@ class RoomJourneyRepository(
                 arrivals = arrivals.map { Arrival(it.stopId, it.arrivedAtEpochMs) },
                 // an extra this build does not know (a row written by a newer one) is simply not shown
                 extras = extras.mapNotNull { row -> JourneyExtra.entries.firstOrNull { it.name == row.extra }?.let { BoughtExtra(row.stopId, it) } }.toSet(),
-                lastEarning = earnings.lastOrNull()?.let { TaktEarning(it.atEpochMs, it.notesPlayed, it.notesInTune, it.durationMs, it.takts, it.piecesPaid) },
             )
         }
 

@@ -10,6 +10,7 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
+import kotlinx.datetime.plus
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
@@ -78,6 +79,25 @@ class RecapRulesTest {
         )
         assertNull(recap.dayTotalMs)
         assertTrue(recap.streakExtended)
+    }
+
+    @Test
+    fun `an old practice saved days later grows no streak`() {
+        // forgotten the day before yesterday and saved only now: nothing yesterday and nothing today
+        val old = entry(today.minus(2, DateTimeUnit.DAY), 10, 47 * min)
+        val recap = RecapRules.of(earning(), listOf(old), JourneyProgress.EMPTY, today, journeyConfig, progressConfig, practice = old)
+        assertEquals(0, recap.streakDays)
+        assertFalse(recap.streakExtended)
+    }
+
+    @Test
+    fun `the recap's day is that of its own practice — not of a later timed entry`() {
+        // a copy restored with a timed entry «from the future»: the latest start is not the practice just saved
+        val own = entry(today, 10, 47 * min)
+        val entries = listOf(entry(today, 5, 38 * min, manual = true), own, entry(today.plus(1, DateTimeUnit.DAY), 99, 20 * min))
+        val recap = RecapRules.of(earning(), entries, JourneyProgress.EMPTY, today, journeyConfig, progressConfig, practice = own)
+        assertEquals(85 * min, recap.dayTotalMs)
+        assertFalse(recap.streakExtended)
     }
 
     @Test

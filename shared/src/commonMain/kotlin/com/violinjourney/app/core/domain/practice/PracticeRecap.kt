@@ -38,7 +38,7 @@ data class PracticeRecap(
     val sources: TaktSources,
     val road: RecapRoad,
     val streakDays: Int,
-    /** The practice was the first of its day: the streak grew by it. */
+    /** The streak grew by the practice: it is longer with it than without it (spec 5.24). */
     val streakExtended: Boolean,
     val levelBefore: LevelProgress,
     val levelAfter: LevelProgress,
@@ -48,9 +48,10 @@ data class PracticeRecap(
 
 object RecapRules {
     /**
-     * [earning] is the row the save has just written; [entries] and [journey] are read after it, so
-     * they already hold the practice and its takts — «before» is them minus the practice (spec 5.24).
-     * The practice itself is the latest timed entry: nothing else was saved since.
+     * [earning] is the row the save has just written and [practice] the entry it stored; [entries] and
+     * [journey] are read after it, so they already hold the practice and its takts — «before» is them
+     * minus the practice (spec 5.24). Without [practice] its day is guessed as that of the latest timed
+     * entry — a fallback only: a clock set back or a copy restored with entries «from the future» fool it.
      */
     fun of(
         earning: TaktEarning,
@@ -59,19 +60,27 @@ object RecapRules {
         today: LocalDate,
         journeyConfig: JourneyConfig,
         progressConfig: ProgressConfig,
+        practice: PracticeEntry? = null,
     ): PracticeRecap {
         val totals = PracticeStats.dayTotals(entries)
-        val date = entries.filter { !it.manual }.maxByOrNull { it.startedAtEpochMs }?.date ?: today
+        val date = practice?.date ?: entries.filter { !it.manual }.maxByOrNull { it.startedAtEpochMs }?.date ?: today
         val dayTotal = totals[date] ?: earning.durationMs
         val total = Progress.totalMs(entries)
+        // the days without this practice: its own day less its length, and gone if nothing else was played on it
+        val totalsBefore = totals.toMutableMap().apply {
+            val left = dayTotal - earning.durationMs
+            if (left > 0) put(date, left) else remove(date)
+        }
+        val streak = PracticeStats.streak(totals, today)
         return PracticeRecap(
             durationMs = earning.durationMs,
             dayTotalMs = dayTotal.takeIf { it > earning.durationMs },
             takts = earning.takts,
             sources = JourneyRules.taktsBySource(earning, journeyConfig),
             road = roadOf(journey, earning.takts),
-            streakDays = PracticeStats.streak(totals, today),
-            streakExtended = dayTotal <= earning.durationMs,
+            streakDays = streak,
+            // an old forgotten practice saved days later grows no streak: the streak ends today or yesterday (spec 5.6)
+            streakExtended = streak > PracticeStats.streak(totalsBefore, today),
             levelBefore = Progress.levelOf((total - earning.durationMs).coerceAtLeast(0), progressConfig),
             levelAfter = Progress.levelOf(total, progressConfig),
         )

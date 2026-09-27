@@ -31,9 +31,12 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -412,32 +415,41 @@ private fun SummaryCards(state: PracticeState, metrics: Metrics, flameSways: Mut
     val none = stringResource(Res.string.practice_no_value)
     // Another month, or the first numbers after loading, are other numbers — not these ones grown.
     val scope = state.month to state.loading
+    // Numbers grow before the eyes (spec 3.16, 3.18): while a sheet lies over them — the recap, the gift after it, the
+    // edited time, or a practice being saved by the prompt whose recap is on its way — they keep what was seen, and roll
+    // and flare once it has gone. Another scope is other numbers: a model just made with a sheet open shows them at once.
+    val sheetOpen = state.sheet != null || state.gift != null || state.recapPending
+    var seen by remember(scope) { mutableStateOf(state.hasHistory to state.summary) }
+    LaunchedEffect(sheetOpen, state.hasHistory, state.summary) {
+        if (!sheetOpen) seen = state.hasHistory to state.summary
+    }
+    val (hasHistory, summary) = if (sheetOpen) seen else state.hasHistory to state.summary
     val rollFrom = PracticeMotion.ROLL_FROM_MINUTES * MS_PER_MINUTE
-    val weekMs = rolledValue(state.summary.weekMs, scope, PracticeMotion.ROLL_MS, rollFrom)
-    val monthMs = rolledValue(state.summary.monthMs, scope, PracticeMotion.ROLL_MS, rollFrom)
-    val streak = rolledValue(state.summary.streakDays.toLong(), scope, PracticeMotion.ROLL_STREAK_MS, rollFrom = STREAK_ROLL_FROM)
+    val weekMs = rolledValue(summary.weekMs, scope, PracticeMotion.ROLL_MS, rollFrom)
+    val monthMs = rolledValue(summary.monthMs, scope, PracticeMotion.ROLL_MS, rollFrom)
+    val streak = rolledValue(summary.streakDays.toLong(), scope, PracticeMotion.ROLL_STREAK_MS, rollFrom = STREAK_ROLL_FROM)
     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         SummaryCard(
             label = stringResource(Res.string.practice_week),
-            value = if (state.hasHistory) Formats.minutesInWords(weekMs) else none,
+            value = if (hasHistory) Formats.minutesInWords(weekMs) else none,
             metrics = metrics,
             modifier = Modifier.weight(1f),
         )
         SummaryCard(
             label = stringResource(Res.string.practice_month),
-            value = if (state.hasHistory) Formats.minutesInWords(monthMs) else none,
+            value = if (hasHistory) Formats.minutesInWords(monthMs) else none,
             metrics = metrics,
             modifier = Modifier.weight(1f),
         )
         SummaryCard(
             label = stringResource(Res.string.practice_streak),
-            value = if (state.hasHistory) streak.toString() else none,
+            value = if (hasHistory) streak.toString() else none,
             metrics = metrics,
             modifier = Modifier.weight(1f),
         ) {
             // The flame follows the streak itself, not the number rolling towards it; while a practice runs it stands still.
             StreakFlame(
-                streakDays = if (state.hasHistory) state.summary.streakDays else 0,
+                streakDays = if (hasHistory) summary.streakDays else 0,
                 running = state.running,
                 scope = scope,
                 maxSize = metrics.flameSize,

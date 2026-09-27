@@ -3,6 +3,13 @@ package com.violinjourney.app.feature.practice
 import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.data.profile.FakeAvatarFiles
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
+import com.violinjourney.app.core.domain.repertoire.Piece
+import com.violinjourney.app.core.domain.repertoire.PieceDraft
+import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
+import com.violinjourney.app.core.domain.practice.BlockRules
+import com.violinjourney.app.core.domain.practice.BlockStore
+import com.violinjourney.app.core.domain.practice.FakeBlockStore
+import com.violinjourney.app.core.domain.practice.NoBlocks
 import com.violinjourney.app.core.domain.practice.FakePracticeRepository
 import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
 import com.violinjourney.app.core.domain.practice.PracticeConfig
@@ -23,6 +30,9 @@ import com.violinjourney.app.feature.journey.JourneyMotion
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -72,14 +82,18 @@ class PracticeViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
+    /** [finisher] is one per app: a test that saves as the prompt would passes its own to share it with the screen. */
     private fun TestScope.viewModel(
         finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
         repository: FakePracticeRepository = this@PracticeViewModelTest.repository,
         avatarFiles: AvatarFiles = this@PracticeViewModelTest.avatarFiles,
+        finisher: PracticeFinisher = PracticeFinisher(repository, store, clock, journey = journey),
+        repertoire: RepertoireRepository = FakeRepertoireRepository(),
+        blocks: BlockStore = NoBlocks,
     ): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
         val viewModel = PracticeViewModel(
-            repository, store, PracticeFinisher(repository, store, clock, journey = journey), sessions, config, FakeRepertoireRepository(), clock,
-            trophies, profiles, avatarFiles, ProgressConfig(), journey, finishAsk = finishAsk,
+            repository, store, finisher, sessions, config, repertoire, clock,
+            trophies, profiles, avatarFiles, ProgressConfig(), journey, blocks = blocks, finishAsk = finishAsk,
         )
         val effects = mutableListOf<PracticeEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
@@ -594,7 +608,8 @@ class PracticeViewModelTest {
     fun `the journey window shows takts earned on the spot after their recap, not those earned before`() = runTest {
         journey.start(clock.millis())
         journey.earn(TaktEarning(clock.millis(), 100, 80, 600_000, 100))
-        val (viewModel, effects) = viewModel()
+        val finisher = PracticeFinisher(repository, store, clock, journey = journey)
+        val (viewModel, effects) = viewModel(finisher = finisher)
         backgroundScope.launch { viewModel.journeyWindow.collect {} }
         runCurrent()
 
@@ -604,26 +619,28 @@ class PracticeViewModelTest {
         assertNull(before.justEarned)
         assertNull(viewModel.state.value.sheet) // history is not recapped
 
-        // saved elsewhere — the forgotten-practice prompt over this screen: the recap opens here all the same
-        repository.add(PracticeEntry(today, clock.millis() - 2_280_000, 2_280_000, manual = false))
-        journey.earn(TaktEarning(clock.millis(), 300, 264, 2_280_000, 340))
+        // saved elsewhere — the forgotten-practice prompt over this screen, through the one finisher of the app:
+        // the recap opens here all the same
+        val start = clock.millis() - 110 * MS_PER_MINUTE
+        store.start(start)
+        finisher.save(start, 110 * MS_PER_MINUTE)
         runCurrent()
         val recap = (viewModel.state.value.sheet as PracticeSheet.Recap).recap
-        assertEquals(340, recap.takts)
-        assertEquals(2_280_000L, recap.durationMs)
+        assertEquals(220, recap.takts) // 110 minutes, no notes, no elements
+        assertEquals(110 * MS_PER_MINUTE, recap.durationMs)
         assertNull(viewModel.journeyWindow.value!!.justEarned) // the pill waits for the recap
 
         viewModel.onIntent(PracticeIntent.RecapClosed)
         runCurrent()
         assertNull(viewModel.state.value.sheet)
         val fresh = viewModel.journeyWindow.value!!
-        assertEquals(340, fresh.justEarned)
+        assertEquals(220, fresh.justEarned)
         assertTrue(fresh.canDepart)
 
         advanceTimeBy(JourneyMotion.EARNED_PILL_MS + 1)
         runCurrent()
         assertNull(viewModel.journeyWindow.value!!.justEarned)
-        assertEquals(440L, viewModel.journeyWindow.value!!.balance)
+        assertEquals(320L, viewModel.journeyWindow.value!!.balance)
 
         viewModel.onIntent(PracticeIntent.JourneyClicked)
         runCurrent()
@@ -665,6 +682,148 @@ class PracticeViewModelTest {
         assertNull(viewModel.journeyWindow.value!!.justEarned)
         // the earning seen by the journey flow afterwards is the same practice: no second recap
         assertNull(viewModel.state.value.sheet)
+    }
+
+    @Test
+    fun `a practice saved before the screen opened is history - not recapped`() = runTest {
+        val finisher = PracticeFinisher(repository, store, clock, journey = journey)
+        val start = clock.millis() - 30 * MS_PER_MINUTE
+        store.start(start)
+        finisher.save(start, 30 * MS_PER_MINUTE)
+        trophies.award(1, today)
+
+        val (viewModel, _) = viewModel(finisher = finisher)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+        assertEquals("nothing to wait for: the gift comes at once", 1, viewModel.state.value.gift?.hours)
+    }
+
+    @Test
+    fun `a trophy the prompt's save brings waits for its recap`() = runTest {
+        // a row takes a while to write: the prompt's «Закончить сейчас» is still saving when the trophy is given
+        val slow = FakePracticeRepository(addDelayMs = 10)
+        val finisher = PracticeFinisher(slow, store, clock, journey = journey)
+        val (viewModel, _) = viewModel(repository = slow, finisher = finisher)
+        val start = clock.millis() - 62 * MS_PER_MINUTE
+        store.start(start)
+        runCurrent()
+
+        launch { finisher.save(start, 62 * MS_PER_MINUTE) }
+        runCurrent()
+        trophies.award(1, today)
+        runCurrent()
+        assertNull("the practice is being saved: the gift waits for its recap", viewModel.state.value.gift)
+
+        advanceTimeBy(20)
+        runCurrent()
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.Recap)
+        assertNull(viewModel.state.value.gift)
+
+        viewModel.onIntent(PracticeIntent.RecapClosed)
+        runCurrent()
+        assertEquals(1, viewModel.state.value.gift?.hours)
+        // answered, so that the pill waiting for the gift does not keep the screen's flows — the day's clock with them — alive
+        viewModel.onIntent(PracticeIntent.GiftAccepted(1))
+        runCurrent()
+    }
+
+    @Test
+    fun `a practice left running past twelve hours is summed up to its last sound`() = runTest {
+        val start = clock.millis() - 13 * MS_PER_HOUR
+        store.start(start)
+        store.markSound(start + 40 * MS_PER_MINUTE)
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        runCurrent()
+        val sheet = viewModel.state.value.sheet as PracticeSheet.Summary
+        assertEquals(40 * MS_PER_MINUTE, sheet.actualMs)
+        assertEquals(40, sheet.maxMinutes)
+
+        // the same from the tag on Live
+        viewModel.onIntent(PracticeIntent.SummaryHidden)
+        val (asked, _) = viewModel(FinishPracticeAsk().apply { ask() })
+        runCurrent()
+        assertEquals(40 * MS_PER_MINUTE, (asked.state.value.sheet as PracticeSheet.Summary).actualMs)
+    }
+
+    @Test
+    fun `the sheet asked for from Live lists what was played even before the titles are heard`() = runTest {
+        val start = clock.millis() - 20 * MS_PER_MINUTE
+        store.start(start)
+        val stored = FakeRepertoireRepository()
+        val scale = stored.add(PieceDraft(title = "G-dur · 3 октавы"), 0)
+        // the titles take a moment to come, as from the database: the view model made for the ask has not heard them
+        val slowTitles = object : RepertoireRepository by stored {
+            override val pieces: Flow<List<Piece>> = stored.pieces.onStart { delay(50) }
+        }
+        val blocks = FakeBlockStore()
+        blocks.update { BlockRules.started(it, start, scale, 10 * MS_PER_MINUTE, start) }
+        val (viewModel, _) = viewModel(FinishPracticeAsk().apply { ask() }, repertoire = slowTitles, blocks = blocks)
+        advanceTimeBy(100)
+        runCurrent()
+        val sheet = viewModel.state.value.sheet as PracticeSheet.Summary
+        assertEquals(listOf(PlayedLine("G-dur · 3 октавы", 10, 10, done = true)), sheet.played)
+    }
+
+    @Test
+    fun `blocks left of another practice are not in its sheet`() = runTest {
+        val start = clock.millis() - 20 * MS_PER_MINUTE
+        store.start(start)
+        val pieces = FakeRepertoireRepository()
+        val scale = pieces.add(PieceDraft(title = "G-dur · 3 октавы"), 0)
+        val blocks = FakeBlockStore()
+        // an hour earlier, another practice whose blocks were not cleared
+        val other = start - MS_PER_HOUR
+        blocks.update { BlockRules.started(it, other, scale, 10 * MS_PER_MINUTE, other) }
+
+        val (viewModel, _) = viewModel(repertoire = pieces, blocks = blocks)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        runCurrent()
+        assertTrue((viewModel.state.value.sheet as PracticeSheet.Summary).played.isEmpty())
+
+        viewModel.onIntent(PracticeIntent.SummaryHidden)
+        val (asked, _) = viewModel(FinishPracticeAsk().apply { ask() }, repertoire = pieces, blocks = blocks)
+        runCurrent()
+        assertTrue((asked.state.value.sheet as PracticeSheet.Summary).played.isEmpty())
+    }
+
+    @Test
+    fun `saving an unchanged day writes nothing`() = runTest {
+        repository.add(PracticeEntry(today, 1_000, 47 * MS_PER_MINUTE + 40_000, manual = false))
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
+        runCurrent()
+        assertEquals(48, (viewModel.state.value.sheet as PracticeSheet.EditTime).minutes)
+        viewModel.onIntent(PracticeIntent.EditTimeSaved)
+        runCurrent()
+        assertTrue(repository.replacedDays.isEmpty())
+        assertEquals(47 * MS_PER_MINUTE + 40_000, viewModel.state.value.todayMs)
+        assertNull(viewModel.state.value.sheet)
+    }
+
+    @Test
+    fun `the picked day and the month follow today across midnight`() = runTest {
+        clock.nowMs = Instant.parse("2026-09-30T20:59:30Z").toEpochMilliseconds() // 23:59:30 in Moscow
+        val (viewModel, _) = viewModel()
+        assertEquals(LocalDate(2026, 9, 30), viewModel.state.value.selected.date)
+
+        pass(60_000)
+        val state = viewModel.state.value
+        assertEquals(LocalDate(2026, 10, 1), state.selected.date)
+        assertTrue(state.selected.isToday)
+        assertEquals(YearMonth(2026, 10), state.month)
+        assertFalse(state.canGoForward)
+    }
+
+    @Test
+    fun `a day picked by hand stays after midnight`() = runTest {
+        clock.nowMs = Instant.parse("2026-09-17T20:59:30Z").toEpochMilliseconds() // 23:59:30 in Moscow
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 15)))
+        pass(60_000)
+        val state = viewModel.state.value
+        assertEquals(LocalDate(2026, 9, 15), state.selected.date)
+        assertEquals(LocalDate(2026, 9, 18), state.cells.filterNotNull().single { it.isToday }.date)
     }
 
     @Test

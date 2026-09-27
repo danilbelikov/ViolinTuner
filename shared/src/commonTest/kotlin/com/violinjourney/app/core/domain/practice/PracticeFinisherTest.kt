@@ -8,8 +8,10 @@ import com.violinjourney.app.core.domain.journey.PracticeNotesStore
 import com.violinjourney.app.core.time.FixedWallClock
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNotNull
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.time.Instant
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -72,6 +74,32 @@ class PracticeFinisherTest {
         assertNull(store.running.value, "a stored practice does not run on, to be stored again by the next answer")
         assertNull(finisher.save(1_000, halfAnHour))
         assertEquals(1, practice.entries.value.size)
+    }
+
+    @Test
+    fun `a save tells what it stored and is saving until then`() = runTest {
+        val practice = FakePracticeRepository(addDelayMs = 1)
+        val finisher = finisher(practice)
+        store.start(1_000)
+        assertNull(finisher.lastSaved.value)
+
+        val saved = async { finisher.save(1_000, halfAnHour) }
+        runCurrent()
+        assertTrue(finisher.saving.value, "the row is being written")
+        assertNull(finisher.lastSaved.value)
+
+        advanceUntilIdle()
+        val earning = saved.await()
+        assertFalse(finisher.saving.value)
+        val last = assertNotNull(finisher.lastSaved.value)
+        assertEquals(earning, last.earning)
+        assertEquals(practice.entries.value.single(), last.entry, "the row as stored — with its id")
+        assertEquals(halfAnHour, last.entry.durationMs)
+
+        // an answer to a practice that no longer runs stores nothing, and tells nothing new
+        assertNull(finisher.save(1_000, halfAnHour))
+        assertEquals(last, finisher.lastSaved.value)
+        assertFalse(finisher.saving.value)
     }
 
     @Test

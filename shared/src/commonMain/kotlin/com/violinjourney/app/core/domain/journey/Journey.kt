@@ -101,7 +101,6 @@ data class JourneyProgress(
     val spent: Long,
     val arrivals: List<Arrival>,
     val extras: Set<BoughtExtra>,
-    val lastEarning: TaktEarning? = null,
 ) {
     val balance: Long get() = (earned - spent).coerceAtLeast(0)
 

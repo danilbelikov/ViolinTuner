@@ -30,7 +30,7 @@ class FakeJourneyRepository : JourneyRepository {
     override suspend fun earn(earning: TaktEarning) {
         if (earning.takts <= 0) return
         earnings += earning
-        progress.update { it.copy(earned = it.earned + earning.takts, lastEarning = earning) }
+        progress.update { it.copy(earned = it.earned + earning.takts) }
     }
 }
 

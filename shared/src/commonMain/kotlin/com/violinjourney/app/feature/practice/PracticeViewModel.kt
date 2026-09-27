@@ -7,11 +7,11 @@ import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.backing.takesUnderBacking
 import com.violinjourney.app.core.domain.journey.JourneyConfig
-import com.violinjourney.app.core.domain.journey.JourneyProgress
 import com.violinjourney.app.core.domain.journey.JourneyRepository
 import com.violinjourney.app.core.domain.journey.NoJourney
-import com.violinjourney.app.core.domain.journey.TaktEarning
+import com.violinjourney.app.core.domain.practice.BlockRules
 import com.violinjourney.app.core.domain.practice.BlockStore
+import com.violinjourney.app.core.domain.practice.ForgottenPractice
 import com.violinjourney.app.core.domain.practice.NoBlocks
 import com.violinjourney.app.core.domain.practice.PracticeBlocks
 import com.violinjourney.app.core.domain.practice.PracticeConfig
@@ -23,6 +23,7 @@ import com.violinjourney.app.core.domain.practice.PracticeStats
 import com.violinjourney.app.core.domain.practice.RecapRules
 import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
+import com.violinjourney.app.core.domain.practice.SavedPractice
 import com.violinjourney.app.core.domain.practice.elapsedTicker
 import com.violinjourney.app.core.domain.progress.Profile
 import com.violinjourney.app.core.domain.progress.ProfileRepository
@@ -36,7 +37,9 @@ import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.domain.venue.FollowTheRoad
 import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.io.filePath
+import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.dates
 import com.violinjourney.app.core.time.today
 import com.violinjourney.app.feature.journey.JourneyMotion
 import com.violinjourney.app.feature.journey.JourneyReducer
@@ -100,10 +103,35 @@ open class PracticeViewModel(
         JourneyReducer.windowOf(progress, justEarned = pill, here = here)
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
-    /** What only the screen decides: the month shown, the day picked and the open sheet. */
-    private data class Ui(val month: YearMonth, val selectedDate: LocalDate, val sheet: PracticeSheet?)
+    /**
+     * What only the screen decides: the month shown, the day picked and the open sheet. A null month or day follows
+     * today (spec 3.12: «по умолчанию выбран сегодняшний»): the screen stays open overnight, and in the morning it is on
+     * the new day. Only one picked by hand stays where it was put.
+     */
+    private data class Ui(val month: YearMonth? = null, val selectedDate: LocalDate? = null, val sheet: PracticeSheet? = null)
 
-    private val ui = MutableStateFlow(Ui(today().yearMonth, today(), sheet = null))
+    private val ui = MutableStateFlow(Ui())
+
+    // The recap's bookkeeping is declared before [state] and [init], which read it: on the main thread a collector
+    // launched in init runs at once, and a field declared after init would be set back by its own initializer.
+
+    /** The saved practice the recap was last opened for, or history (read first): a practice is recapped once. */
+    private var recapped: SavedPractice? = null
+
+    /** The saved practice whose recap has been dealt with — opened, or history; the gift waits until it is the last saved. */
+    private val recapDone = MutableStateFlow(finisher.lastSaved.value)
+
+    /**
+     * A practice is being saved, here or by the prompt over the screen, and its recap has not opened yet: the gift of a
+     * trophy it crossed waits for it (spec 3.31: «Занятие сохранено», then «Подарок»).
+     */
+    private val recapPending: Flow<Boolean> =
+        combine(finisher.saving, finisher.lastSaved, recapDone) { saving, last, done -> saving || last != done }.distinctUntilChanged()
+
+    /** What the screen decides, the day it is — anew at midnight — and whether a recap is on its way. */
+    private data class Screen(val ui: Ui, val today: LocalDate, val recapPending: Boolean)
+
+    private val screen: Flow<Screen> = combine(ui, clock.dates(), recapPending, ::Screen)
 
     /**
      * The clock of the running practice (spec 3.12) and the line of its block (spec 3.28), whose minutes left follow
@@ -132,15 +160,16 @@ open class PracticeViewModel(
     private data class Records(val sessions: List<SessionSummary>, val pieces: List<Piece>, val underBacking: Set<Long>)
 
     val state: StateFlow<PracticeState> =
-        combine(repository.entries, records, running, ui, progress) { entries, (sessions, pieces, underBacking), running, ui, (trophies, profile) ->
+        combine(repository.entries, records, running, screen, progress) { entries, (sessions, pieces, underBacking), running, screen, (trophies, profile) ->
+            val (ui, today) = screen
             PracticeReducer.stateOf(
                 entries = entries,
                 sessions = sessions,
                 running = running,
-                month = ui.month,
-                selectedDate = ui.selectedDate,
+                month = ui.month ?: today.yearMonth,
+                selectedDate = ui.selectedDate ?: today,
                 sheet = ui.sheet,
-                today = today(),
+                today = today,
                 zone = clock.zone,
                 config = config,
                 pieces = pieces,
@@ -150,6 +179,7 @@ open class PracticeViewModel(
                 avatarPath = profile.avatarFile?.let(avatarFiles::existing)?.filePath,
                 progressConfig = progressConfig,
                 underBackingIds = underBacking,
+                recapPending = screen.recapPending,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -170,9 +200,12 @@ open class PracticeViewModel(
             // hidden is only hidden: the practice runs on, saved or thrown away by a button of the sheet alone
             PracticeIntent.SummaryHidden -> ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it }
             is PracticeIntent.DaySelected -> selectDay(intent.date)
-            PracticeIntent.MonthBack -> ui.update { it.copy(month = it.month.minus(1, DateTimeUnit.MONTH)) }
+            PracticeIntent.MonthBack -> ui.update { it.copy(month = (it.month ?: today().yearMonth).minus(1, DateTimeUnit.MONTH)) }
             PracticeIntent.MonthForward -> ui.update {
-                if (it.month < today().yearMonth) it.copy(month = it.month.plus(1, DateTimeUnit.MONTH)) else it
+                val current = today().yearMonth
+                val shown = it.month ?: current
+                // back on the current month the calendar follows today again
+                if (shown < current) it.copy(month = shown.plus(1, DateTimeUnit.MONTH).takeIf { next -> next != current }) else it
             }
             PracticeIntent.EditTimeClicked -> openEditSheet()
             is PracticeIntent.EditTimeStepped -> updateEdit { PracticeReducer.step(it, intent.steps, config) }
@@ -185,7 +218,7 @@ open class PracticeViewModel(
             is PracticeIntent.SessionClicked -> effectChannel.trySend(PracticeEffect.OpenSession(intent.id))
             PracticeIntent.ProfileClicked -> openSheet(PracticeSheet.Profile(latestProfile.name, importingPhoto = false))
             is PracticeIntent.ProfileNameChanged ->
-                updateProfile { it.copy(nameDraft = intent.text.take(Profile.MAX_NAME_LENGTH)) }
+                updateProfile { it.copy(nameDraft = intent.text.takeCodePoints(Profile.MAX_NAME_LENGTH)) }
             is PracticeIntent.ProfilePhotoPicked -> importPhoto(intent.uri)
             PracticeIntent.ProfilePhotoRemoved -> replaceAvatar(null)
             PracticeIntent.ProfileClosed -> closeProfile()
@@ -212,19 +245,41 @@ open class PracticeViewModel(
         }
     }
 
+    /**
+     * «Закончить занятие» on this screen, which has heard from the stores already: the sheet is built at once from its
+     * mirrors. A practice left running past the limit is summed up to its last sound, not to twelve hours (spec 3.12).
+     */
     private fun stop(running: RunningPractice? = latestRunning) {
         running ?: return
         if (answering?.isActive == true) return // the practice is being ended already
-        val elapsed = running.elapsedMs(clock.millis()).coerceAtMost(config.maxPracticeMs)
-        if (elapsed < config.minPracticeMs) {
-            answer {
-                // too short to keep: its notes and blocks go with it
-                finisher.discard()
-                effectChannel.send(PracticeEffect.ShowTooShort)
-            }
+        val length = ForgottenPractice.lengthAt(running, clock.millis(), config)
+        if (length < config.minPracticeMs) {
+            dropTooShort()
         } else {
-            ui.update { it.copy(sheet = PracticeReducer.summarySheet(running.startedAtEpochMs, elapsed, config, latestBlocks, latestTitles)) }
+            val blocks = BlockRules.ofPractice(running, latestBlocks)
+            ui.update { it.copy(sheet = PracticeReducer.summarySheet(running.startedAtEpochMs, length, config, blocks, latestTitles)) }
         }
+    }
+
+    /**
+     * «Закончить занятие» asked for from Live (spec 3.12): as [stop], but the sheet — «Что играли» with it — is read
+     * from the stores, for a view model made just now for this ask has not heard from them yet ([summarySheetOf]).
+     */
+    private suspend fun finishFromStores(running: RunningPractice) {
+        if (answering?.isActive == true) return
+        val length = ForgottenPractice.lengthAt(running, clock.millis(), config)
+        if (length < config.minPracticeMs) {
+            dropTooShort()
+        } else {
+            val sheet = summarySheetOf(running, length, config, blocks, repertoire)
+            ui.update { it.copy(sheet = sheet) }
+        }
+    }
+
+    /** Too short to keep (spec 3.12): the practice goes, its notes and blocks with it, and the toast says so. */
+    private fun dropTooShort() = answer {
+        finisher.discard()
+        effectChannel.send(PracticeEffect.ShowTooShort)
     }
 
     // The stores are the truth; the state only mirrors them a moment later, and an intent may
@@ -257,27 +312,20 @@ open class PracticeViewModel(
         // rather than [latestRunning]: a view model made just now for this ask has not heard from it yet.
         viewModelScope.launch {
             finishAsk.asked.collect { asked ->
-                if (asked && finishAsk.take()) runningStore.running.first()?.let(::stop)
+                if (asked && finishAsk.take()) runningStore.running.first()?.let { finishFromStores(it) }
             }
         }
-        // A practice saved elsewhere — the forgotten-practice prompt over this screen — is recapped here all the
-        // same. The first value read is history, not news.
+        // Every practice saved while this screen lives is recapped here — by its own «Сохранить» and by the forgotten-practice
+        // prompt over it alike (spec 3.31). What was saved before it opened is history, not news: read here, in the
+        // coroutine, so that it is read before the first value is collected whatever the order of the fields.
         viewModelScope.launch {
-            var first = true
-            journey.progress.collect { progress ->
-                val last = progress.lastEarning
-                if (first) {
-                    recapped = last
-                    first = false
-                } else if (last != null && last != recapped && last.takts > 0) {
-                    openRecap(last, progress)
-                }
-            }
+            val history = finisher.lastSaved.value
+            recapped = history
+            recapDone.value = history
+            finisher.lastSaved.collect { saved -> if (saved != null) openRecap(saved) }
         }
     }
 
-    /** The earning the recap was last opened for (or history, read first): a practice is recapped once, whoever notices it first. */
-    private var recapped: TaktEarning? = null
     private var pillJob: Job? = null
 
     private fun saveSummary() {
@@ -285,28 +333,41 @@ open class PracticeViewModel(
         answer {
             val earning = finisher.save(sheet.startedAtEpochMs, PracticeReducer.durationToSave(sheet))
             // «Занятие сохранено» takes the summary's place (spec 3.31); without an earning the sheet just goes
-            if (earning == null) ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it } else openRecap(earning)
+            if (earning == null) {
+                ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it }
+            } else {
+                finisher.lastSaved.value?.let { openRecap(it) }
+            }
         }
     }
 
     /**
      * Builds the recap from what is stored after the save — the entries and the journey already hold the
      * practice (spec 5.24) — and opens it in place of the summary. Another sheet open (nothing can be
-     * saved from under it, but a prompt can): no recap, the pill alone.
+     * saved from under it, but a prompt can): no recap, the pill alone. Once, whoever calls first: the
+     * screen's own save and the collector of [PracticeFinisher.lastSaved] both come here.
      */
-    private suspend fun openRecap(earning: TaktEarning, progress: JourneyProgress? = null) {
-        if (earning == recapped) return
-        recapped = earning
-        val recap = RecapRules.of(earning, repository.entries.first(), progress ?: journey.progress.first(), today(), journeyConfig, progressConfig)
-        // The level is not stored anywhere — it is worked out from the time, and this is the one
-        // place that knows it has just grown (spec 3.13, 5.24).
-        if (recap.levelUp) analytics.track(LevelUp(recap.levelAfter.level))
-        var opened = false
-        ui.update {
-            opened = it.sheet == null || it.sheet is PracticeSheet.Summary
-            if (opened) it.copy(sheet = PracticeSheet.Recap(recap)) else it
+    private suspend fun openRecap(saved: SavedPractice) {
+        if (saved == recapped) return
+        recapped = saved
+        try {
+            val earning = saved.earning
+            val recap = RecapRules.of(
+                earning, repository.entries.first(), journey.progress.first(), today(), journeyConfig, progressConfig, practice = saved.entry,
+            )
+            // The level is not stored anywhere — it is worked out from the time, and this is the one
+            // place that knows it has just grown (spec 3.13, 5.24).
+            if (recap.levelUp) analytics.track(LevelUp(recap.levelAfter.level))
+            var opened = false
+            ui.update {
+                opened = it.sheet == null || it.sheet is PracticeSheet.Summary
+                if (opened) it.copy(sheet = PracticeSheet.Recap(recap)) else it
+            }
+            if (!opened) showPill(earning.takts)
+        } finally {
+            // the recap is open (or the pill is on its way): the gift may come after it
+            recapDone.value = saved
         }
-        if (!opened) showPill(earning.takts)
     }
 
     private fun closeRecap() {
@@ -339,16 +400,26 @@ open class PracticeViewModel(
     }
 
     private fun selectDay(date: LocalDate) {
-        if (date > today()) return
-        ui.update { it.copy(selectedDate = date) }
+        val today = today()
+        if (date > today) return
+        // today picked is today followed: tomorrow morning the new day is picked
+        ui.update { it.copy(selectedDate = date.takeIf { picked -> picked != today }) }
     }
 
     private fun openEditSheet() {
-        ui.update { it.copy(sheet = PracticeReducer.editSheet(it.selectedDate, latestTotals[it.selectedDate] ?: 0L, config)) }
+        ui.update {
+            val date = it.selectedDate ?: today()
+            it.copy(sheet = PracticeReducer.editSheet(date, latestTotals[date] ?: 0L, config))
+        }
     }
 
     private fun saveEdit() {
         val sheet = ui.value.sheet as? PracticeSheet.EditTime ?: return
+        // the number as it opened: the day keeps its exact time rather than one manual entry of its rounding (spec 5.6)
+        if (sheet.minutes == sheet.initialMinutes) {
+            ui.update { if (it.sheet is PracticeSheet.EditTime) it.copy(sheet = null) else it }
+            return
+        }
         viewModelScope.launch {
             repository.replaceDay(
                 date = sheet.date,

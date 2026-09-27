@@ -137,6 +137,29 @@ class PracticeReducerTest {
     }
 
     @Test
+    fun `a stepper back where it started saves the exact time again`() {
+        val sheet = PracticeReducer.summarySheet(startedAtEpochMs = 1_000, actualMs = 47 * MS_PER_MINUTE + 40_000, config)
+        val back = PracticeReducer.step(PracticeReducer.step(sheet, -1, config), +1, config)
+        assertEquals(48, back.minutes)
+        assertFalse(back.edited)
+        assertEquals(47 * MS_PER_MINUTE + 40_000, PracticeReducer.durationToSave(back))
+    }
+
+    @Test
+    fun `a trim never saves more than was played`() {
+        val sheet = PracticeReducer.summarySheet(startedAtEpochMs = 1_000, actualMs = 47 * MS_PER_MINUTE + 40_000, config)
+        // the rounding of 47:40 is 48 minutes: as a trim it is still the time played, not twenty seconds more
+        assertEquals(47 * MS_PER_MINUTE + 40_000, PracticeReducer.durationToSave(sheet.copy(edited = true)))
+    }
+
+    @Test
+    fun `the edit sheet remembers the minutes it opened with`() {
+        val sheet = PracticeReducer.editSheet(today, 47 * MS_PER_MINUTE + 40_000, config)
+        assertEquals(48, sheet.initialMinutes)
+        assertEquals(48, PracticeReducer.step(sheet, +1, config).initialMinutes)
+    }
+
+    @Test
     fun `a practice shorter than five minutes cannot be trimmed`() {
         val sheet = PracticeReducer.summarySheet(startedAtEpochMs = 1_000, actualMs = 3 * MS_PER_MINUTE, config)
         assertEquals(3, sheet.minMinutes)

@@ -139,6 +139,8 @@ sealed interface PracticeSheet {
         val date: LocalDate,
         val minutes: Int,
         val maxMinutes: Int,
+        /** The minutes the sheet opened with: «Сохранить» with the same number rewrites nothing (spec 5.6). */
+        val initialMinutes: Int = minutes,
     ) : PracticeSheet
 }
 
@@ -159,11 +161,19 @@ data class PracticeState(
     val selected: SelectedDay,
     val header: ProfileHeader,
     val trophies: List<TrophyLine>,
-    /** The lowest trophy not seen yet; null while another sheet is open — it waits its turn. */
+    /**
+     * The lowest trophy not seen yet; null while another sheet is open, or while a practice is being saved and its
+     * recap has not opened yet — it waits its turn (spec 3.31).
+     */
     val gift: Gift?,
     val sheet: PracticeSheet?,
     /** Whole minutes of one stepper step, from the config: the sheets word their hint with it. */
     val stepMinutes: Int,
+    /**
+     * A practice is being saved — here or by the prompt over the screen — and its recap is not open yet: what grows
+     * with it grows only once the recap and the gift after it have gone (spec 3.16, 3.18, 3.31).
+     */
+    val recapPending: Boolean = false,
 )
 
 sealed interface PracticeIntent {

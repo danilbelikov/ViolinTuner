@@ -42,6 +42,8 @@ object PracticeReducer {
         progressConfig: ProgressConfig,
         /** The takes made under a backing (spec 3.32): their cards carry its sign, as in «Записи». */
         underBackingIds: Set<Long> = emptySet(),
+        /** A practice is being saved and its recap has not opened: the gift waits for it (spec 3.31). */
+        recapPending: Boolean = false,
     ): PracticeState {
         val totals = PracticeStats.dayTotals(entries)
         val totalMs = Progress.totalMs(entries)
@@ -88,9 +90,10 @@ object PracticeReducer {
             ),
             header = ProgressReducer.headerOf(totalMs, trophies, profile.name, avatarPath, progressConfig),
             trophies = ProgressReducer.trophyLines(totalMs, trophies, progressConfig),
-            gift = if (sheet == null) ProgressReducer.giftOf(trophies, progressConfig) else null,
+            gift = if (sheet == null && !recapPending) ProgressReducer.giftOf(trophies, progressConfig) else null,
             sheet = sheet,
             stepMinutes = config.editStepMinutes,
+            recapPending = recapPending,
         )
     }
 
@@ -142,9 +145,10 @@ object PracticeReducer {
         ).withPlayed(config)
     }
 
+    /** The stepper of the summary: back where it started, the sheet saves the exact time again, not its rounding. */
     fun step(sheet: PracticeSheet.Summary, steps: Int, config: PracticeConfig): PracticeSheet.Summary {
         val minutes = (sheet.minutes + steps * config.editStepMinutes).coerceIn(sheet.minMinutes, sheet.maxMinutes)
-        return sheet.copy(minutes = minutes, edited = true).withPlayed(config)
+        return sheet.copy(minutes = minutes, edited = minutes != wholeMinutes(sheet.actualMs)).withPlayed(config)
     }
 
     /**
@@ -160,9 +164,12 @@ object PracticeReducer {
 
     private fun PracticeSheet.Summary.withPlayed(config: PracticeConfig) = copy(played = playedOf(this, config))
 
-    /** What the summary sheet saves: the exact timed length unless the stepper was used. */
+    /**
+     * What the summary sheet saves: the exact timed length unless the stepper moved it — then whole minutes, but never
+     * more than was played (spec 3.12: from 5 min to the actual length; the rounding of 47:40 is 48).
+     */
     fun durationToSave(sheet: PracticeSheet.Summary): Long =
-        if (sheet.edited) sheet.minutes * MS_PER_MINUTE else sheet.actualMs
+        if (sheet.edited) minOf(sheet.minutes * MS_PER_MINUTE, sheet.actualMs) else sheet.actualMs
 
     fun editSheet(date: LocalDate, totalMs: Long, config: PracticeConfig): PracticeSheet.EditTime =
         PracticeSheet.EditTime(date, minutes = wholeMinutes(totalMs).coerceAtMost(config.maxDayMinutes), maxMinutes = config.maxDayMinutes)

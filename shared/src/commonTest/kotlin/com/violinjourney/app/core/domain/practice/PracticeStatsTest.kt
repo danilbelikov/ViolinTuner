@@ -138,4 +138,15 @@ class PracticeStatsTest {
         assertEquals(LocalDate.parse("2026-09-16"), practiceDateOf(start, zone))
         assertEquals(12, Instant.fromEpochMilliseconds(start).toLocalDateTime(zone).hour)
     }
+
+    @Test
+    fun `the night of the clock change keeps its day — its noon and the streak through it`() {
+        // Berlin 29 March 2026: 02:00 becomes 03:00, the day is 23 hours long
+        val berlin = TimeZone.of("Europe/Berlin")
+        val day = LocalDate.parse("2026-03-29")
+        assertEquals(Instant.parse("2026-03-29T10:00:00Z").toEpochMilliseconds(), PracticeStats.manualStartOf(day, berlin))
+        // half past one at night, still winter time
+        assertEquals(day, practiceDateOf(Instant.parse("2026-03-29T00:30:00Z").toEpochMilliseconds(), berlin))
+        assertEquals(3, PracticeStats.streak(totals("2026-03-28" to 30, "2026-03-29" to 30, "2026-03-30" to 30), LocalDate.parse("2026-03-30")))
+    }
 }
