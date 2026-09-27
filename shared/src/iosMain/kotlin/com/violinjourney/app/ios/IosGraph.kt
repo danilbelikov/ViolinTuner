@@ -8,8 +8,8 @@ import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.IosMicPitchSource
+import com.violinjourney.app.core.audio.IosRecordingRate
 import com.violinjourney.app.core.audio.PitchSource
-import com.violinjourney.app.core.audio.RecordingRate
 import com.violinjourney.app.core.audio.backing.BackingPlaybackFactory
 import com.violinjourney.app.core.audio.backing.IosAudioRoutes
 import com.violinjourney.app.core.audio.backing.IosBackingFiles
@@ -140,7 +140,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val backingPcm = IosBackingPcm(caches, backingFiles, clock, backingConfig)
     val backingImporter = IosBackingImporter(dataDirectory, backingFiles, backingConfig, clock)
     val audioRoutes = IosAudioRoutes()
-    private val backingPlayback = BackingPlaybackFactory { IosBackingPlayback(audioRoutes) }
+    private val backingPlayback = BackingPlaybackFactory { IosBackingPlayback(audioRoutes, logStats = IosBuild.isDevApp) }
 
     val venues = Venues(venueStore, journey)
     val finishAsk = FinishPracticeAsk()
@@ -153,7 +153,10 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val awarder = TrophyAwarder(trophies, progressConfig, clock)
     val recordingWatch = RecordingWatch()
 
-    private val newPitchSource = pitchSources(fakeScenario, intonationConfig, logStats = IosBuild.isDevApp)
+    /** The rate the microphone last got on the route of now; 48 kHz, which it asks for, on a route not heard yet (spec 5.25). */
+    val recordingRate = IosRecordingRate(intonationConfig.supportedSampleRatesHz, audioRoutes)
+
+    private val newPitchSource = pitchSources(fakeScenario, intonationConfig, logStats = IosBuild.isDevApp, onInputRate = recordingRate::heard)
 
     val videoFiles = IosVideoFiles(repertoireConfig, io)
     val elapsed = ElapsedClock { (NSProcessInfo.processInfo.systemUptime * MS_PER_SECOND).toLong() }
@@ -163,9 +166,6 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
         videoFiles, fileAnalyzer, sessions, configSource, runningPractice, repertoireConfig, intonationConfig, clock, elapsed, analysisSpeed,
         Dispatchers.Default, analytics,
     )
-
-    /** The measurement session of the microphone asks for 48 kHz, and the phones give it. */
-    val recordingRate = RecordingRate { TakePipeline.DEFAULT_RATE }
 
     val playerFactory = SessionPlayerFactory { scope -> IosSessionPlayer(scope, soundConfig, backingConfig) }
     val pictureFactory = VideoPictureFactory(::IosVideoPicture)
@@ -214,10 +214,10 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
  * seconds after the screen went away shares nothing with the screen that came next. The fake scenario too is one per
  * screen, as on Android.
  */
-internal fun pitchSources(fakeScenario: FakeScenario?, config: IntonationConfig, logStats: Boolean): () -> PitchSource {
+internal fun pitchSources(fakeScenario: FakeScenario?, config: IntonationConfig, logStats: Boolean, onInputRate: (Int) -> Unit = {}): () -> PitchSource {
     if (fakeScenario != null) return { FakePitchSource(fakeScenario, config) }
     // MPM, as on Android (DetectorComparisonTest)
     val detectors = PitchDetectorFactory(::MpmDetector)
     val encoders = PcmEncoderFactory(::IosAacEncoder)
-    return { IosMicPitchSource(detectors, encoders, logStats) }
+    return { IosMicPitchSource(detectors, encoders, logStats, onInputRate) }
 }

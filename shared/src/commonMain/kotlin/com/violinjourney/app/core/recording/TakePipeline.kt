@@ -212,7 +212,7 @@ class TakePipeline(
         }
 
         // What a stopped take comes to: a session (with its video, when the camera shot one), or nothing.
-        suspend fun settleTake(finished: SessionRecorder, stoppedByPlayer: Boolean, plan: BackingPlan?, playedMs: Long, backingStartNanos: Long?) {
+        suspend fun settleTake(finished: SessionRecorder, stoppedByPlayer: Boolean, plan: BackingPlan?, playedMs: Long, backingStartNanos: Long?, clockHoldsMs: Int) {
             val hook = videoHook
             when (val result = finished.finish()) {
                 RecordingResult.TooShort -> {
@@ -232,12 +232,14 @@ class TakePipeline(
                     val session = result.session.copy(audioPath = video ?: audioName, videoPath = video, pieceId = pieceId)
                     val id = sessionRepository.save(session)
                     if (plan != null) {
-                        val offset = BackingOffset.offsetMs(backingStartNanos, recordStartNanos, plan.latencyMs, backingConfig)
+                        // the headphones' lag goes on top of the clocks only as far as the output's clock does not hold it
+                        val latency = BackingOffset.latencyAddedMs(backingStartNanos, recordStartNanos, plan.latencyMs, clockHoldsMs)
+                        val offset = BackingOffset.offsetMs(backingStartNanos, recordStartNanos, latency, backingConfig)
                         backings.saveTake(
                             TakeBacking(
                                 sessionId = id, backingId = plan.backing.id, offsetMs = offset, recordedOffsetMs = offset,
                                 gainDb = backingConfig.defaultGainDb, playedMs = playedMs, output = plan.route.output,
-                                deviceName = plan.route.deviceName, latencyMs = plan.latencyMs,
+                                deviceName = plan.route.deviceName, latencyMs = latency,
                             ),
                         )
                     }
@@ -267,12 +269,14 @@ class TakePipeline(
                 val plan = backingStarted
                 backingStarted = null
                 val playedMs = if (plan != null) playback?.stop() ?: 0 else 0
+                // both kept by the playback after its stop
                 val backingStartNanos = playback?.startNanos
+                val clockHoldsMs = playback?.includedLatencyMs ?: 0
                 if (finished == null) {
                     closeAudio(keep = false) // stopped while still waiting for the sound to start
                     return@withContext
                 }
-                settleTake(finished, stoppedByPlayer, plan, playedMs, backingStartNanos)
+                settleTake(finished, stoppedByPlayer, plan, playedMs, backingStartNanos, clockHoldsMs)
             } finally {
                 // a copy of the data waits for the take until it is in the database, not only until it stopped (spec 3.20)
                 if (finished != null) watch.set(false)

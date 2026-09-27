@@ -32,6 +32,21 @@ class BackingRulesTest {
     }
 
     @Test
+    fun `the headphones' lag is added only beyond what the output's clock already holds of it`() {
+        // Android: AudioTrack's timestamps leave the Bluetooth link out — the whole guess
+        assertEquals(200, BackingOffset.latencyAddedMs(1_035 * ms, 1_000 * ms, headphoneLatencyMs = 200, clockHoldsMs = 0))
+        // iOS: the session's output latency may hold the link — only the rest of the guess
+        assertEquals(40, BackingOffset.latencyAddedMs(1_035 * ms, 1_000 * ms, headphoneLatencyMs = 200, clockHoldsMs = 160))
+        // a clock that holds more than the guess: nothing added, never taken away
+        assertEquals(0, BackingOffset.latencyAddedMs(1_035 * ms, 1_000 * ms, headphoneLatencyMs = 200, clockHoldsMs = 260))
+        // wired: nothing to add, whatever the clock holds
+        assertEquals(0, BackingOffset.latencyAddedMs(1_035 * ms, 1_000 * ms, headphoneLatencyMs = 0, clockHoldsMs = 5))
+        // without both clocks nothing of the output's latency is in the shift: the whole guess
+        assertEquals(200, BackingOffset.latencyAddedMs(null, 1_000 * ms, headphoneLatencyMs = 200, clockHoldsMs = 160))
+        assertEquals(200, BackingOffset.latencyAddedMs(1_035 * ms, null, headphoneLatencyMs = 200, clockHoldsMs = 160))
+    }
+
+    @Test
     fun `the shift snaps to whole steps and the level to half decibels`() {
         assertEquals(215, BackingOffset.snap(213, config))
         assertEquals(-775, BackingOffset.snap(-777, config))

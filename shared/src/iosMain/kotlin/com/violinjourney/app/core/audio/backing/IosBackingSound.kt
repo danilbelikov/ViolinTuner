@@ -9,6 +9,8 @@ import com.violinjourney.app.core.domain.backing.BackingOutput
 import com.violinjourney.app.core.io.PlatformFile
 import kotlin.concurrent.AtomicInt
 import kotlin.concurrent.AtomicLong
+import kotlin.concurrent.Volatile
+import kotlin.math.roundToInt
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.get
 import kotlinx.cinterop.set
@@ -50,6 +52,7 @@ import platform.AVFAudio.currentRoute
 import platform.AVFAudio.outputLatency
 import platform.AVFAudio.setActive
 import platform.Foundation.NSError
+import platform.Foundation.NSLog
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
 import platform.Foundation.NSURL
@@ -167,15 +170,26 @@ internal class IosBackingPreview : BackingPreview {
 /**
  * The backing played into the headphones while a take is recorded (spec 3.32), as `TrackBackingPlayback` does on
  * Android: the prepared PCM, a few chunks ahead on an AVAudioPlayerNode of its own engine, started at a host time
- * that is known — the moment its first frame leaves the output is that time plus the output's latency. The
- * headphones going stop it rather than let it fall through to the speaker.
+ * that is known — the moment its first frame leaves the output is that time plus the output's latency, which on
+ * iOS may already hold the headphones' Bluetooth link ([includedLatencyMs]). The headphones going stop it rather than
+ * let it fall through to the speaker.
  */
 @OptIn(ExperimentalForeignApi::class)
-internal class IosBackingPlayback(private val routes: AudioRoutes) : BackingPlayback {
+internal class IosBackingPlayback(
+    private val routes: AudioRoutes,
+    /** The owner's .debug app: a line per take of the route and of the output latency it reports (spec 5.25 — is the link in it?). */
+    private val logStats: Boolean = false,
+    /** The engine of each take; a test gives one that renders by hand, with no audio hardware behind it. */
+    private val newEngine: () -> AVAudioEngine = { AVAudioEngine() },
+) : BackingPlayback {
     private val mutablePosition = MutableStateFlow<Long?>(null)
     override val position: StateFlow<Long?> = mutablePosition.asStateFlow()
 
-    override var startNanos: Long? = null
+    // Both kept after stop(), until the next start: the take reads them once the backing has stopped.
+    @Volatile override var startNanos: Long? = null
+        private set
+
+    @Volatile override var includedLatencyMs: Int = 0
         private set
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -187,10 +201,12 @@ internal class IosBackingPlayback(private val routes: AudioRoutes) : BackingPlay
 
     override fun start(pcm: PlatformFile, sampleRate: Int) {
         stop()
+        startNanos = null
+        includedLatencyMs = 0
         rate = sampleRate
         val reader = runCatching { IosBackingPcmReader(pcm) }.getOrNull() ?: return
         val stereo = AVAudioFormat(standardFormatWithSampleRate = sampleRate.toDouble(), channels = 2u)
-        val engine = AVAudioEngine().also { this.engine = it }
+        val engine = newEngine().also { this.engine = it }
         val node = AVAudioPlayerNode().also { this.node = it }
         engine.attachNode(node)
         engine.connect(node, engine.mainMixerNode, stereo)
@@ -231,7 +247,11 @@ internal class IosBackingPlayback(private val routes: AudioRoutes) : BackingPlay
         repeat(AHEAD) { scheduleNext() }
         val at = HostClock.nowNanos() + START_DELAY_NANOS
         node.playAtTime(AVAudioTime(hostTime = HostClock.hostTimeOf(at)))
-        startNanos = at + (AVAudioSession.sharedInstance().outputLatency * NANOS_PER_SECOND).toLong()
+        val latency = AVAudioSession.sharedInstance().outputLatency
+        startNanos = at + (latency * NANOS_PER_SECOND).toLong()
+        // held in the start already: the guess of the headphones goes on top only beyond it (spec 5.25)
+        includedLatencyMs = (latency * MS_PER_SECOND).roundToInt()
+        if (logStats) NSLog("BackingPlayback: route ${routes.current()}, output latency $includedLatencyMs ms".replace("%", "%%"))
         mutablePosition.value = 0
         job = scope.launch {
             launch {
@@ -259,7 +279,6 @@ internal class IosBackingPlayback(private val routes: AudioRoutes) : BackingPlay
         engine = null
         val played = if (rate > 0) playedFrames.value * MS_PER_SECOND / rate else 0
         mutablePosition.value = null
-        startNanos = null
         return played
     }
 

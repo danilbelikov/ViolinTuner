@@ -65,6 +65,8 @@ class IosMicPitchSource(
     encoderFactory: PcmEncoderFactory,
     /** The owner's .debug app (`IosBuild.isDevApp`): a line per second of what the detector saw (FrameStats), for tuning the thresholds. */
     private val logStats: Boolean,
+    /** The rate the input opened at, told on every opening: what the backing is made ready at next time ([IosRecordingRate]). */
+    private val onInputRate: (Int) -> Unit = {},
 ) : PitchSource {
 
     override val requiresMicPermission: Boolean = true
@@ -96,6 +98,7 @@ class IosMicPitchSource(
             if (sampleRateHz <= 0 || format.channelCount == 0u) {
                 throw unavailable(MicUnavailableReason.OPEN_FAILED, "the input has no format ($sampleRateHz Hz, ${format.channelCount} channels)")
             }
+            onInputRate(sampleRateHz)
             // The audio thread must never wait: too much sound waiting means the analysis fell far behind, which is a
             // failure, not a reason to drop sound — the frame clock counts every sample.
             val queue = InputBlocks(maxQueuedSamples = sampleRateHz * QUEUED_AUDIO_SECONDS)

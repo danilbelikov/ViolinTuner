@@ -52,7 +52,10 @@ data class TakeBacking(
     val playedMs: Long,
     val output: BackingOutput,
     val deviceName: String?,
-    /** What the headphones were believed to lag when the take was made — the part of [recordedOffsetMs] they gave. */
+    /**
+     * What the guess of the headphones' lag added to the clocks when the take was made — the part of [recordedOffsetMs]
+     * it gave; what the output's clock already held of the lag is not in it ([BackingOffset.latencyAddedMs]).
+     */
     val latencyMs: Int = 0,
 )
 
@@ -103,7 +106,10 @@ data class BackingConfig(
     val minOffsetMs: Int = -2_000,
     val maxOffsetMs: Int = 2_000,
     val offsetStepMs: Int = 5,
-    /** Wireless headphones never set: a guess in the middle of what they usually lag (150–300 ms). */
+    /**
+     * Wireless headphones never set: a guess in the middle of what they usually lag in all (150–300 ms). What the
+     * output's clock already holds of it is not added again ([BackingOffset.latencyAddedMs]).
+     */
     val defaultWirelessLatencyMs: Int = 200,
     /** A shift changed while playing glides in over this much, without a click. */
     val shiftFadeMs: Int = 30,

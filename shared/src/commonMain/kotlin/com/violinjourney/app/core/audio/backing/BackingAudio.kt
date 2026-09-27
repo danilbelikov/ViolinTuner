@@ -26,8 +26,15 @@ interface BackingPlayback {
     /** Plays [pcm] — 16-bit stereo at [sampleRate], as the backing cache makes it — from its start. Returns at once. */
     fun start(pcm: PlatformFile, sampleRate: Int)
 
-    /** When the first frame left the output; null until the output has said so. */
+    /** When the first frame left the output; null until the output has said so. Kept after [stop], until the next [start]. */
     val startNanos: Long?
+
+    /**
+     * How much of what headphones lag [startNanos] already holds, in ms: the output latency the platform counts into
+     * it. 0 on Android — `AudioTrack.getTimestamp` leaves a Bluetooth link out; on iOS the session's `outputLatency`,
+     * which may hold it. The guess of the headphones is added only beyond it (spec 5.25). Kept after [stop], as [startNanos].
+     */
+    val includedLatencyMs: Int get() = 0
 
     /** Stops; how far it had played, in ms. */
     fun stop(): Long
