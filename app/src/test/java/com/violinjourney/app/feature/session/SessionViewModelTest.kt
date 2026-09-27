@@ -319,9 +319,14 @@ class SessionViewModelTest {
     }
 
     @Test
-    fun `a session whose file is gone has no player either`() = runTest {
+    fun `a session whose file is gone has no player either and reads as a recording without sound`() = runTest {
         audioFiles = FakeAudioFiles(present = emptySet())
-        assertNull(viewModel(saveSession(audio = "take.m4a")).loaded().player)
+        val loaded = viewModel(saveSession(audio = "take.m4a")).loaded()
+        assertNull(loaded.player)
+        assertNull(player.loaded)
+        // a copy restored without «Звук записей» (spec 3.20): the quiet line of a recording without sound, not an empty place
+        assertFalse(loaded.content.hasAudio)
+        assertFalse(loaded.soundFailed)
     }
 
     @Test
@@ -355,10 +360,14 @@ class SessionViewModelTest {
     @Test
     fun `a player that fails disappears, the screen stays`() = runTest {
         val viewModel = viewModel(saveSession(audio = "take.m4a"))
+        assertFalse(viewModel.loaded().soundFailed)
         player.state.value = PlayerState(failed = true)
         runCurrent()
         assertNull(viewModel.loaded().player)
         assertEquals(50, viewModel.loaded().content.scorePercent)
+        // the file is there, it only does not play here: the screen says so where the player was (spec 3.17)
+        assertTrue(viewModel.loaded().soundFailed)
+        assertTrue(viewModel.loaded().content.hasAudio)
     }
 
     @Test
@@ -507,6 +516,8 @@ class SessionViewModelTest {
         val viewModel = viewModel(saveVideoTake())
         assertEquals(VideoUi(lost = true), viewModel.loaded().video)
         assertNull(viewModel.loaded().player)
+        // its sound went with it — the same file; the row of the lost video says so, not the line of a silent recording
+        assertFalse(viewModel.loaded().content.hasAudio)
         assertTrue(pictures.isEmpty())
         viewModel.onIntent(SessionIntent.FullscreenChanged(true))
         assertFalse(viewModel.loaded().fullscreen)

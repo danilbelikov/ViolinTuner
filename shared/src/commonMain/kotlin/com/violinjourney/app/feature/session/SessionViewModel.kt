@@ -129,20 +129,22 @@ open class SessionViewModel(
         }
     }
 
+    /** The recording and its sound, looked for here: a file that is gone makes it a recording without sound (spec 3.17, 3.20). */
     private suspend fun load() {
         val details = repository.details(sessionId)
         val piece = details?.summary?.pieceId?.let { repertoire.piece(it) }
+        val sound = details?.summary?.audioPath?.let(audioFiles::existing)
         mutableState.update { previous ->
             if (details == null) {
                 SessionState.NotFound
             } else {
                 // a reload after renaming keeps what is open and what is playing
-                val content = SessionContentMapper.contentOf(details, defaultConfig)
+                val content = SessionContentMapper.contentOf(details, defaultConfig, soundFound = sound != null)
                     .copy(pieceTitle = piece?.title, pieceId = piece?.id, best = piece?.bestTakeId == sessionId)
                 (previous as? SessionState.Loaded ?: SessionState.Loaded(content)).copy(content = content, dialog = null)
             }
         }
-        if (player == null) details?.summary?.audioPath?.let(audioFiles::existing)?.let(::startPlayer)
+        if (player == null) sound?.let(::startPlayer)
         if (picture == null) details?.summary?.videoPath?.let(::startPicture)
     }
 
@@ -218,7 +220,13 @@ open class SessionViewModel(
             created.state.collect { playerState ->
                 mutablePosition.value = playerState.positionMs
                 // to the whole second: within a second nothing of the screen's state changes, and nothing is emitted
-                updateLoaded { it.copy(player = playerState.takeIf { state -> state.ready && !state.failed }?.onWholeSeconds(), preparingBacking = playerState.preparingBacking && !playerState.failed) }
+                updateLoaded {
+                    it.copy(
+                        player = playerState.takeIf { state -> state.ready && !state.failed }?.onWholeSeconds(),
+                        preparingBacking = playerState.preparingBacking && !playerState.failed,
+                        soundFailed = playerState.failed,
+                    )
+                }
             }
         }
     }

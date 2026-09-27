@@ -22,7 +22,10 @@ data class HistoryCard(
     val pieceTitle: String? = null,
     /** The piece this recording is a take of; null for a free recording. */
     val pieceId: Long? = null,
-    /** Only a recording with sound can be shared or processed (spec 3.17); without it the tile is a ring. */
+    /**
+     * Only a recording with sound can be shared or processed (spec 3.17); without it the tile is a ring. A recording whose
+     * file is gone has no sound either (spec 3.20): the repository reads it so.
+     */
     val hasAudio: Boolean = false,
     /** A video take (spec 3.19): the tile shows a camera instead of a note. */
     val hasVideo: Boolean = false,

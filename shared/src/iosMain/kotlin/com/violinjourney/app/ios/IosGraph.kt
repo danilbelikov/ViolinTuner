@@ -124,7 +124,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val avatarFiles = IosAvatarFiles(io, clock)
     val sheetFiles = IosSheetFiles(io, repertoireConfig)
 
-    val sessions = RoomSessionRepository(database.sessionDao(), intonationConfig, audioFiles, clock, analytics)
+    val sessions = RoomSessionRepository(database.sessionDao(), intonationConfig, audioFiles, clock, analytics, io)
     val practice = RoomPracticeRepository(database.practiceDao())
     val blockHistory = RoomPieceBlockRepository(database.pieceBlockDao())
     val trophies = RoomTrophyRepository(database.trophyDao())

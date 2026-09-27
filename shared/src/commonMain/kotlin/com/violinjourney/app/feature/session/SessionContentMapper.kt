@@ -12,7 +12,8 @@ import kotlin.math.abs
 
 /** Stored session → what the screen shows. Pure; the thresholds come from the config. */
 object SessionContentMapper {
-    fun contentOf(details: SessionDetails, defaultConfig: IntonationConfig): SessionContent {
+    /** [soundFound]: the file of its sound is there to be played — otherwise it is a recording without sound (spec 3.17). */
+    fun contentOf(details: SessionDetails, defaultConfig: IntonationConfig, soundFound: Boolean = details.summary.audioPath != null): SessionContent {
         val summary = details.summary
         val config = defaultConfig.forSession(summary)
         val metrics = details.analysis.metrics
@@ -58,7 +59,7 @@ object SessionContentMapper {
             },
             rollNotes = segments.map { it.note.midi }.distinct().sortedDescending().map(::Note),
             segments = segments,
-            hasAudio = summary.audioPath != null,
+            hasAudio = soundFound,
         )
     }
 

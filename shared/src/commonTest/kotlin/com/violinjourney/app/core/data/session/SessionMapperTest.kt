@@ -37,6 +37,16 @@ class SessionMapperTest {
     }
 
     @Test
+    fun `a summary whose sound file is gone is a recording without sound — the row keeps its name`() {
+        val entity = SessionMapper.toEntity(newSession.copy(audioPath = "take.m4a", videoPath = "shot.mp4")).copy(id = 3)
+        assertEquals("take.m4a", SessionMapper.toSummary(entity) { true }.audioPath)
+        val gone = SessionMapper.toSummary(entity) { name -> name != "take.m4a" }
+        assertNull(gone.audioPath)
+        assertEquals("shot.mp4", gone.videoPath, "a video take still says it was one: its screen tells the file is gone")
+        assertEquals("take.m4a", entity.audioPath)
+    }
+
+    @Test
     fun `zones are stored as letters and unknown letters are skipped`() {
         assertEquals("INO", SessionMapper.encodeZones(listOf(Zone.IN_TUNE, Zone.NEAR, Zone.OFF)))
         assertEquals(listOf(Zone.OFF, Zone.IN_TUNE), SessionMapper.decodeZones("O?I"))

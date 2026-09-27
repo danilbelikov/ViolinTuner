@@ -223,8 +223,9 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
                 followCursor = state.player?.playing == true,
             )
             if (playerHere) PlayerAndSound(state, onIntent, position)
-            // An empty place where a player would be reads as something broken; a quiet line says what it is.
-            if (!content.hasAudio) SilentLine()
+            // An empty place where a player would be reads as something broken; a quiet line says what it is. A video
+            // that is gone says it with its own row: its sound went with it.
+            if (!content.hasAudio && video?.lost != true) SilentLine()
             SessionStatCards(content)
             ProblemNotes(content.problemNotes)
             Actions(onIntent, sizeLine = video?.let { sizeLineOf(it) })
@@ -468,6 +469,8 @@ private fun Summary(content: SessionContent) {
 @Composable
 private fun PlayerAndSound(state: SessionState.Loaded, onIntent: (SessionIntent) -> Unit, position: () -> Long) {
     if (state.player == null && state.preparingBacking) BackingPreparingRow()
+    // the file is there but does not play here: the quiet line of a recording without sound, where the player would be (spec 3.17)
+    if (state.soundFailed) SilentLine()
     state.player?.let { player ->
         PlayerBar(
             player = player,

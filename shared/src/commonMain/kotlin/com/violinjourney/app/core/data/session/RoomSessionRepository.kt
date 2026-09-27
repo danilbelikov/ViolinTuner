@@ -13,26 +13,38 @@ import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.analytics.TakeDeleted
 import com.violinjourney.app.core.time.WallClock
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.IO
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 
+/**
+ * A recording whose sound file is gone — a copy restored without «Звук записей», a file lost — is read as a recording
+ * without sound (spec 3.17, 3.20): [SessionSummary.audioPath] is null, and every list, menu and screen treats it so. The
+ * row itself is not changed: the file may come back with another copy.
+ */
 class RoomSessionRepository(
     private val dao: SessionDao,
     private val defaultConfig: IntonationConfig,
     private val audioFiles: SessionAudioFiles,
     private val clock: WallClock,
     private val analytics: Analytics = NoOpAnalytics(),
+    /** Where the files are looked for: one question to the file system per recording with sound. */
+    private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : SessionRepository {
 
     override val sessions: Flow<List<SessionSummary>> =
-        dao.observeAll().map { entities -> entities.map(SessionMapper::toSummary) }
+        dao.observeAll().map { entities -> entities.map { SessionMapper.toSummary(it, ::soundFound) } }.flowOn(io)
 
     /**
      * Segments and per-note figures are not stored: they are re-derived from the samples with
      * the tolerance and bucket size the session was recorded with, which gives the same result.
      */
     override suspend fun details(id: Long): SessionDetails? {
-        val summary = dao.session(id)?.let(SessionMapper::toSummary) ?: return null
+        val summary = dao.session(id)?.let { withContext(io) { SessionMapper.toSummary(it, ::soundFound) } } ?: return null
         val stored = dao.samples(id) ?: return null
         val samples = SampleCodec.decode(stored.data)
         val config = defaultConfig.forSession(summary).copy(sessionBucketMs = stored.bucketMs)
@@ -62,4 +74,6 @@ class RoomSessionRepository(
         // a file younger than the longest possible take may be the take being recorded
         minAgeMs = defaultConfig.maxSessionMs,
     )
+
+    private fun soundFound(name: String): Boolean = audioFiles.existing(name) != null
 }

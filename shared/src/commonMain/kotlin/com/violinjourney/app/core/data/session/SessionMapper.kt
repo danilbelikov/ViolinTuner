@@ -28,7 +28,11 @@ internal object SessionMapper {
         videoPath = session.videoPath,
     )
 
-    fun toSummary(entity: SessionEntity): SessionSummary = SessionSummary(
+    /**
+     * [soundFound] answers whether the file of the sound is there: a recording whose file is gone — a copy restored
+     * without «Звук записей», a file lost — is read as one without sound (spec 3.17, 3.20). The row keeps its name.
+     */
+    fun toSummary(entity: SessionEntity, soundFound: (String) -> Boolean = { true }): SessionSummary = SessionSummary(
         id = entity.id,
         title = entity.title,
         startedAtEpochMs = entity.startedAtEpochMs,
@@ -42,7 +46,7 @@ internal object SessionMapper {
         maeCents = entity.maeCents,
         biasCents = entity.biasCents,
         previewZones = decodeZones(entity.previewZones),
-        audioPath = entity.audioPath,
+        audioPath = entity.audioPath?.takeIf(soundFound),
         pieceId = entity.pieceId,
         videoPath = entity.videoPath,
     )

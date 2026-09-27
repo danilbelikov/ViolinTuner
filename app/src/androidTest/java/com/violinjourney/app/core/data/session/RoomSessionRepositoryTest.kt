@@ -34,8 +34,11 @@ class RoomSessionRepositoryTest {
     private class RecordingAudioFiles : SessionAudioFiles {
         val deleted = mutableListOf<String>()
         var orphanCall: Triple<Set<String>, Long, Long>? = null
+
+        /** The files that are there; the rest are gone. */
+        var present: Set<String> = emptySet()
         override fun newFile(): File = error("not used")
-        override fun existing(name: String): File? = null
+        override fun existing(name: String): File? = File(name).takeIf { name in present }
         override fun delete(name: String) { deleted += name }
         override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) {
             orphanCall = Triple(referenced, nowEpochMs, minAgeMs)
@@ -160,6 +163,19 @@ class RoomSessionRepositoryTest {
         val (referenced, _, minAge) = audioFiles.orphanCall!!
         assertEquals(setOf("kept.m4a"), referenced)
         assertEquals(IntonationConfig().maxSessionMs, minAge)
+    }
+
+    @Test
+    fun aRecordingWhoseSoundFileIsGoneIsReadWithoutSoundAndTheRowKeepsIt() = runBlocking {
+        audioFiles.present = setOf("here.m4a")
+        val here = repository.save(newSession(startedAt = 1_000, audio = "here.m4a"))
+        val gone = repository.save(newSession(startedAt = 2_000, audio = "gone.m4a"))
+
+        assertEquals(mapOf(here to "here.m4a", gone to null), repository.sessions.first().associate { it.id to it.audioPath })
+        assertEquals("here.m4a", repository.details(here)!!.summary.audioPath)
+        assertNull(repository.details(gone)!!.summary.audioPath)
+        // the file may come back with another copy: the row still names it
+        assertEquals(setOf("here.m4a", "gone.m4a"), database.sessionDao().audioPaths().toSet())
     }
 
     @Test

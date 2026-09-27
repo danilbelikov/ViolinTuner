@@ -52,6 +52,7 @@ data class SessionContent(
     /** Notes of the roll, highest first: the rows. */
     val rollNotes: List<Note>,
     val segments: List<RollSegment>,
+    /** The file of its sound is there (spec 3.17): without it — none recorded, or gone with a copy restored without it — a quiet line says so. */
     val hasAudio: Boolean,
 )
 
@@ -77,6 +78,11 @@ sealed interface SessionState {
         val preparingBacking: Boolean = false,
         /** What the row «Звук» under the player says; there with the player only. */
         val sound: SoundRow? = null,
+        /**
+         * The file of the sound is there, but it cannot be played here — it does not open, or there is no output for it
+         * (spec 3.17): the quiet line of a recording without sound stands where the player would be, not an empty place.
+         */
+        val soundFailed: Boolean = false,
         /** Null for a recording that is sound only (spec 3.19). */
         val video: VideoUi? = null,
         /** The video fills the screen; the rest of the screen waits underneath. */

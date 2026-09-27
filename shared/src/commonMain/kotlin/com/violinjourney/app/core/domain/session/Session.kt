@@ -22,7 +22,10 @@ data class SessionSummary(
     val biasCents: Double,
     /** Zones of the first notes, for the mini bars of the history card. */
     val previewZones: List<Zone>,
-    /** Null while the session has no audio (recorded before stage 11 or from a silent source). */
+    /**
+     * Null while the session has no audio (recorded before stage 11 or from a silent source), and when its file is gone —
+     * a copy restored without «Звук записей», a file lost (spec 3.17, 3.20): such a recording is one without sound everywhere.
+     */
     val audioPath: String?,
     /** The piece this session is a take of (spec 3.15); null for a session recorded on Live. */
     val pieceId: Long? = null,
