@@ -49,6 +49,7 @@ import com.violinjourney.app.shared.resources.share_file_details_stereo
 import com.violinjourney.app.shared.resources.share_large_file
 import com.violinjourney.app.shared.resources.share_original
 import com.violinjourney.app.shared.resources.share_original_caption
+import com.violinjourney.app.shared.resources.share_percent
 import com.violinjourney.app.shared.resources.share_preparing
 import com.violinjourney.app.shared.resources.share_processed
 import com.violinjourney.app.shared.resources.share_processed_caption
@@ -281,7 +282,7 @@ private fun Preparing(sheet: ShareSheet.Preparing, onIntent: (ShareIntent) -> Un
     val colors = MaterialTheme.colorScheme
     Row(verticalAlignment = Alignment.Bottom) {
         Text(stringResource(Res.string.share_preparing), color = colors.onSurface, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold), modifier = Modifier.weight(1f))
-        Text("${sheet.percent} %", color = colors.primary, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = "tnum"))
+        Text(stringResource(Res.string.share_percent, sheet.percent), color = colors.primary, style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = "tnum"))
     }
     LinearProgressIndicator(
         progress = { sheet.percent / 100f },

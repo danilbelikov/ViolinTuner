@@ -879,7 +879,6 @@
     <string name="sound_meter_none">—</string>
     <string name="sound_slider_minus">%1$s: weniger</string>
     <string name="sound_slider_plus">%1$s: mehr</string>
-    <string name="sound_slider_reset_hint">doppelt tippen – zurücksetzen</string>
     <string name="sound_slider_off">aus</string>
     <string name="sound_dialog_everyone_title">Wieder wie alle?</string>
     <string name="sound_dialog_everyone_text">Die eigenen Einstellungen dieser Aufnahme werden vergessen.</string>
@@ -917,6 +916,7 @@
     <string name="share_continue">Weiter</string>
     <string name="share_busy">Wird vorbereitet…</string>
     <string name="share_preparing">Datei wird vorbereitet</string>
+    <string name="share_percent">%1$d %%</string>
     <string name="share_remaining">noch etwa %1$d s</string>
     <string name="share_failed_title">Die Datei ließ sich nicht vorbereiten</string>
     <string name="share_failed_text">Die Aufnahme ist da, die Einstellungen auch. Versuchen Sie es noch einmal oder senden Sie das Original ohne Bearbeitung.</string>

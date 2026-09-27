@@ -43,9 +43,11 @@ import androidx.compose.ui.input.pointer.positionChange
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.progressBarRangeInfo
@@ -60,10 +62,10 @@ import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.sound_reset
 import com.violinjourney.app.shared.resources.sound_slider_minus
 import com.violinjourney.app.shared.resources.sound_slider_off
 import com.violinjourney.app.shared.resources.sound_slider_plus
-import com.violinjourney.app.shared.resources.sound_slider_reset_hint
 import kotlin.math.abs
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Job
@@ -120,6 +122,10 @@ data class SliderModel(
  * the eye stops seeing the control and reads the captions. The whole row takes the touch, the
  * value stands as a number with its unit and rides above the finger while dragged, − and +
  * step finely (held — they repeat), the default has a mark, a double tap returns to it.
+ *
+ * To TalkBack and VoiceOver the track is a slider moved by swiping; the way back to the default is the action «Сбросить»
+ * of the actions menu. Their activation — the double tap of a reader — does nothing: it resets no setting by the way, and
+ * without an action of its own it would come as a touch in the middle of the track and set the value there.
  */
 @Composable
 fun ParamSlider(
@@ -146,7 +152,7 @@ fun ParamSlider(
     val currentOnFraction by rememberUpdatedState(onFraction)
     val currentOnReset by rememberUpdatedState(onReset)
     val currentOnStep by rememberUpdatedState(onStep)
-    val resetHint = stringResource(Res.string.sound_slider_reset_hint)
+    val resetLabel = stringResource(Res.string.sound_reset)
     val offText = stringResource(Res.string.sound_slider_off)
 
     Column(modifier = modifier.alpha(if (enabled) 1f else DISABLED_ALPHA)) {
@@ -181,11 +187,12 @@ fun ParamSlider(
                     .onSizeChanged { trackWidth = it.width }
                     .semantics(mergeDescendants = true) {
                         contentDescription = model.label
-                        stateDescription = if (enabled) "${model.valueText}. $resetHint" else offText
+                        stateDescription = if (enabled) model.valueText else offText
                         progressBarRangeInfo = ProgressBarRangeInfo(model.fraction, 0f..1f)
                         if (enabled) {
                             setProgress { target -> currentOnFraction(target.coerceIn(0f, 1f)); true }
-                            onClick(label = resetHint) { currentOnReset(); true }
+                            onClick { true }
+                            customActions = listOf(CustomAccessibilityAction(resetLabel) { currentOnReset(); true })
                         } else {
                             disabled()
                         }

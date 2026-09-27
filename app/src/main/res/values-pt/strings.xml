@@ -879,7 +879,6 @@
     <string name="sound_meter_none">—</string>
     <string name="sound_slider_minus">%1$s: menos</string>
     <string name="sound_slider_plus">%1$s: mais</string>
-    <string name="sound_slider_reset_hint">toque duplo — redefinir</string>
     <string name="sound_slider_off">desligado</string>
     <string name="sound_dialog_everyone_title">Voltar ao som de todas?</string>
     <string name="sound_dialog_everyone_text">Os ajustes próprios desta gravação serão esquecidos.</string>
@@ -917,6 +916,7 @@
     <string name="share_continue">Continuar</string>
     <string name="share_busy">Preparando…</string>
     <string name="share_preparing">Preparando o arquivo</string>
+    <string name="share_percent">%1$d %%</string>
     <string name="share_remaining">faltam cerca de %1$d s</string>
     <string name="share_failed_title">Não foi possível preparar o arquivo</string>
     <string name="share_failed_text">A gravação está no lugar, os ajustes também. Tente de novo ou envie o original, sem processamento.</string>

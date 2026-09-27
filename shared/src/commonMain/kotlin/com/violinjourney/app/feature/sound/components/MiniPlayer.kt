@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -40,6 +41,8 @@ import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
@@ -153,6 +156,9 @@ private fun SeekWave(player: PlayerState, position: () -> Long, waveform: List<F
                 contentDescription = description
                 progressBarRangeInfo = ProgressBarRangeInfo(spoken, 0f..1f)
                 setProgress { fraction -> currentOnSeek((fraction.coerceIn(0f, 1f) * duration).toLong()); true }
+                // A reader moves the position by swiping. Its activation does nothing: without an action of its own it would
+                // come as a touch in the middle of the wave and seek there.
+                onClick { true }
             }
             .pointerInput(duration) {
                 awaitEachGesture {
@@ -199,7 +205,10 @@ private fun SeekWave(player: PlayerState, position: () -> Long, waveform: List<F
     )
 }
 
-/** «A | B»; a finger held on A plays the original only for as long as it stays there (handoff `anims`). */
+/**
+ * «A | B»; a finger held on A plays the original only for as long as it stays there (handoff `anims`). To TalkBack and
+ * VoiceOver the halves are two radio buttons that their activation picks — the hold is a gesture of the finger only.
+ */
 @Composable
 private fun HoldableAb(original: Boolean, enabled: Boolean, height: Dp, onOriginal: (Boolean, Boolean) -> Unit) {
     val colors = MaterialTheme.colorScheme
@@ -209,7 +218,8 @@ private fun HoldableAb(original: Boolean, enabled: Boolean, height: Dp, onOrigin
         modifier = Modifier
             .height(height)
             .clip(RoundedCornerShape(height / 2))
-            .background(colors.surfaceContainerHigh),
+            .background(colors.surfaceContainerHigh)
+            .selectableGroup(),
     ) {
         listOf(true, false).forEachIndexed { index, value ->
             val chosen = enabled && original == value
@@ -218,10 +228,11 @@ private fun HoldableAb(original: Boolean, enabled: Boolean, height: Dp, onOrigin
                     .size(width = height + 2.dp, height = height)
                     .clip(RoundedCornerShape(height / 2))
                     .background(if (chosen) colors.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)
-                    .semantics {
+                    .semantics(mergeDescendants = true) {
                         contentDescription = labels[index]
                         role = Role.RadioButton
                         selected = chosen
+                        if (enabled) onClick { currentOnOriginal(value, false); true } else disabled()
                     }
                     .pointerInput(enabled, value) {
                         if (!enabled) return@pointerInput

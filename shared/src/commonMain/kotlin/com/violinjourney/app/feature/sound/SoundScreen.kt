@@ -21,6 +21,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -43,6 +44,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -106,6 +108,7 @@ import com.violinjourney.app.shared.resources.sound_preset_save
 import com.violinjourney.app.shared.resources.sound_reset
 import com.violinjourney.app.shared.resources.sound_share
 import kotlinx.datetime.TimeZone
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 
@@ -348,9 +351,8 @@ private fun Scope(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> 
                 }
             }
             if (state.affected > 0) {
-                val one = state.affected % 10 == 1 && state.affected % 100 != 11
                 Text(
-                    text = stringResource(if (one) Res.string.sound_affected_one else Res.string.sound_affected_many, state.affected),
+                    text = stringResource(affectedWords(state.affected), state.affected),
                     color = colors.onSurfaceVariant,
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 )
@@ -359,6 +361,13 @@ private fun Scope(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> 
     }
 }
 
+/**
+ * «для N записей» in the words of the interface language (spec 3.26). After «для» Russian takes the genitive, where 2
+ * and 5 recordings share a form — «для 2 записей», «для 5 записей», «для 21 записи» — so its few is its many.
+ */
+internal fun affectedWords(count: Int): StringResource =
+    Formats.plural(count, Res.string.sound_affected_one, Res.string.sound_affected_many, Res.string.sound_affected_many)
+
 /** The presets in a row that runs off the edge; «Свои» first once the settings are nobody's preset, «Сохранить как пресет» last. */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -366,7 +375,8 @@ private fun Presets(state: SoundState, onIntent: (SoundIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val names = stringArrayResource(Res.array.sound_preset_names)
     val removeHint = stringResource(Res.string.sound_preset_remove_hint)
-    Row(modifier = Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+    // One of the presets is chosen, as in a group of radio buttons: TalkBack says which (the long press of an own one deletes it).
+    Row(modifier = Modifier.horizontalScroll(rememberScrollState()).selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         if (state.custom) {
             Row(
                 modifier = Modifier
@@ -395,6 +405,7 @@ private fun Presets(state: SoundState, onIntent: (SoundIntent) -> Unit) {
                         onLongClick = { onIntent(SoundIntent.PresetLongPressed(chip.ref)) },
                         onClick = { onIntent(SoundIntent.PresetSelected(chip.ref)) },
                     )
+                    .semantics { selected = chip.selected }
                     .padding(horizontal = 14.dp),
                 contentAlignment = Alignment.Center,
             ) {

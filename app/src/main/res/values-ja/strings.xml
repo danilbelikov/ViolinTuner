@@ -879,7 +879,6 @@
     <string name="sound_meter_none">—</string>
     <string name="sound_slider_minus">%1$s：下げる</string>
     <string name="sound_slider_plus">%1$s：上げる</string>
-    <string name="sound_slider_reset_hint">ダブルタップでリセット</string>
     <string name="sound_slider_off">オフ</string>
     <string name="sound_dialog_everyone_title">共通の設定に戻しますか？</string>
     <string name="sound_dialog_everyone_text">この録音の個別の設定は消えます。</string>
@@ -917,6 +916,7 @@
     <string name="share_continue">続ける</string>
     <string name="share_busy">準備中…</string>
     <string name="share_preparing">ファイルを準備しています</string>
+    <string name="share_percent">%1$d %%</string>
     <string name="share_remaining">残り約 %1$d 秒</string>
     <string name="share_failed_title">ファイルを準備できませんでした</string>
     <string name="share_failed_text">録音も設定もそのままです。もう一度試すか、加工なしのオリジナルを送信できます。</string>

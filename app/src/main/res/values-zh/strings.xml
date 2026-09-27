@@ -879,7 +879,6 @@
     <string name="sound_meter_none">—</string>
     <string name="sound_slider_minus">%1$s：减小</string>
     <string name="sound_slider_plus">%1$s：增大</string>
-    <string name="sound_slider_reset_hint">双击重置</string>
     <string name="sound_slider_off">已关闭</string>
     <string name="sound_dialog_everyone_title">恢复为与全部相同？</string>
     <string name="sound_dialog_everyone_text">这条录音的自定义设置将被遗忘。</string>
@@ -917,6 +916,7 @@
     <string name="share_continue">继续</string>
     <string name="share_busy">准备中…</string>
     <string name="share_preparing">正在准备文件</string>
+    <string name="share_percent">%1$d\u00A0%%</string>
     <string name="share_remaining">还剩约 %1$d 秒</string>
     <string name="share_failed_title">文件准备失败</string>
     <string name="share_failed_text">录音完好，设置也在。可以再试一次，或者发送未处理的原声。</string>

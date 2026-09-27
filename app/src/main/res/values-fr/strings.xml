@@ -879,7 +879,6 @@
     <string name="sound_meter_none">—</string>
     <string name="sound_slider_minus">%1$s : moins</string>
     <string name="sound_slider_plus">%1$s : plus</string>
-    <string name="sound_slider_reset_hint">touchez deux fois pour réinitialiser</string>
     <string name="sound_slider_off">désactivé</string>
     <string name="sound_dialog_everyone_title">Revenir au réglage commun ?</string>
     <string name="sound_dialog_everyone_text">Les réglages propres à cet enregistrement seront oubliés.</string>
@@ -917,6 +916,7 @@
     <string name="share_continue">Continuer</string>
     <string name="share_busy">Préparation…</string>
     <string name="share_preparing">Préparation du fichier</string>
+    <string name="share_percent">%1$d %%</string>
     <string name="share_remaining">reste environ %1$d s</string>
     <string name="share_failed_title">Impossible de préparer le fichier</string>
     <string name="share_failed_text">L\'enregistrement est intact, les réglages aussi. Vous pouvez réessayer ou envoyer l\'original sans traitement.</string>

@@ -879,7 +879,6 @@
     <string name="sound_meter_none">—</string>
     <string name="sound_slider_minus">%1$s: less</string>
     <string name="sound_slider_plus">%1$s: more</string>
-    <string name="sound_slider_reset_hint">double-tap to reset</string>
     <string name="sound_slider_off">off</string>
     <string name="sound_dialog_everyone_title">Go back to same as all?</string>
     <string name="sound_dialog_everyone_text">This recording\'s own settings will be forgotten.</string>
@@ -917,6 +916,7 @@
     <string name="share_continue">Continue</string>
     <string name="share_busy">Preparing…</string>
     <string name="share_preparing">Preparing the file</string>
+    <string name="share_percent">%1$d %%</string>
     <string name="share_remaining">about %1$d s left</string>
     <string name="share_failed_title">Could not prepare the file</string>
     <string name="share_failed_text">The recording is in place, and so are the settings. You can try again or send the original without processing.</string>

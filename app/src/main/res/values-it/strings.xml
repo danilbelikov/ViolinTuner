@@ -879,7 +879,6 @@
     <string name="sound_meter_none">—</string>
     <string name="sound_slider_minus">%1$s: meno</string>
     <string name="sound_slider_plus">%1$s: più</string>
-    <string name="sound_slider_reset_hint">doppio tocco per reimpostare</string>
     <string name="sound_slider_off">disattivato</string>
     <string name="sound_dialog_everyone_title">Tornare a «come le altre»?</string>
     <string name="sound_dialog_everyone_text">Le impostazioni proprie di questa registrazione andranno perse.</string>
@@ -917,6 +916,7 @@
     <string name="share_continue">Continua</string>
     <string name="share_busy">Preparazione…</string>
     <string name="share_preparing">Preparazione del file</string>
+    <string name="share_percent">%1$d %%</string>
     <string name="share_remaining">mancano circa %1$d s</string>
     <string name="share_failed_title">Non è stato possibile preparare il file</string>
     <string name="share_failed_text">La registrazione è al suo posto, le impostazioni anche. Si può riprovare o inviare l\'originale senza elaborazione.</string>

@@ -879,7 +879,6 @@
     <string name="sound_meter_none">—</string>
     <string name="sound_slider_minus">%1$s: меньше</string>
     <string name="sound_slider_plus">%1$s: больше</string>
-    <string name="sound_slider_reset_hint">двойное касание — сброс</string>
     <string name="sound_slider_off">выключен</string>
     <string name="sound_dialog_everyone_title">Вернуть как у всех?</string>
     <string name="sound_dialog_everyone_text">Свои настройки этой записи забудутся.</string>
@@ -917,6 +916,7 @@
     <string name="share_continue">Продолжить</string>
     <string name="share_busy">Готовим…</string>
     <string name="share_preparing">Готовим файл</string>
+    <string name="share_percent">%1$d\u00A0%%</string>
     <string name="share_remaining">осталось около %1$d с</string>
     <string name="share_failed_title">Не получилось подготовить файл</string>
     <string name="share_failed_text">Запись на месте, настройки тоже. Можно попробовать ещё раз или отправить оригинал без обработки.</string>
