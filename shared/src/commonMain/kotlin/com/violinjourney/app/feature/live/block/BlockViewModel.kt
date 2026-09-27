@@ -46,7 +46,7 @@ open class BlockViewModel(
     sessions: SessionRepository,
     private val config: PracticeConfig,
     private val clock: WallClock,
-    private val sectionAsk: HistorySectionAsk = HistorySectionAsk(),
+    private val sectionAsk: HistorySectionAsk,
 ) : ViewModel() {
 
     private val ui = MutableStateFlow(BlockReducer.Ui())

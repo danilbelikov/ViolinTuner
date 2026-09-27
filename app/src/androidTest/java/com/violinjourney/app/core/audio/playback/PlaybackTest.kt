@@ -3,7 +3,9 @@ package com.violinjourney.app.core.audio.playback
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.recording.AacFileEncoder
+import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundPresets
@@ -41,7 +43,7 @@ class PlaybackTest {
     /** A tone whose pitch tells the time: [firstHz] for the first half, [secondHz] for the second; quiet, then loud. */
     private fun encode(name: String, seconds: Int, firstHz: Double = 440.0, secondHz: Double = 880.0): File {
         val file = File(directory, name)
-        val encoder = AacFileEncoder(file, rate)
+        val encoder = AacFileEncoder(file, rate, analytics = NoOpAnalytics())
         val hop = ShortArray(512)
         var sample = 0L
         val half = rate.toLong() * seconds / 2
@@ -142,7 +144,7 @@ class PlaybackTest {
         assertNull(PcmDecoder.open(junk))
         assertNull(PcmDecoder.open(File(directory, "missing.m4a")))
 
-        val player = ChainSessionPlayer(SoundConfig())
+        val player = ChainSessionPlayer(SoundConfig(), backingConfig = BackingConfig(), focus = PlaybackFocus.None)
         player.load(junk)
         await("the failure to be told") { player.state.value.failed }
         assertFalse(player.state.value.ready)
@@ -151,7 +153,7 @@ class PlaybackTest {
 
     @Test
     fun thePlayerPlaysPausesSeeksAndComesBackToTheStart() {
-        val player = ChainSessionPlayer(SoundConfig())
+        val player = ChainSessionPlayer(SoundConfig(), backingConfig = BackingConfig(), focus = PlaybackFocus.None)
         player.load(encode("play.m4a", seconds = 3))
         await("ready") { player.state.value.ready }
         assertTrue("duration ${player.state.value.durationMs}", player.state.value.durationMs in 2_900..3_150)
@@ -179,7 +181,7 @@ class PlaybackTest {
     @Test
     fun processingIsHeardThroughTheChainAndTheTailRingsOnAfterTheEnd() {
         val config = SoundConfig()
-        val player = ChainSessionPlayer(config)
+        val player = ChainSessionPlayer(config, backingConfig = BackingConfig(), focus = PlaybackFocus.None)
         player.setSound(SoundPresets.settingsOf(BuiltInPreset.GRAND_HALL, config))
         player.load(encode("hall.m4a", seconds = 2))
         await("ready") { player.state.value.ready }
@@ -208,7 +210,7 @@ class PlaybackTest {
     @Test
     fun theMetersGoOutOnAPauseAndComeBackWithTheSound() {
         val config = SoundConfig()
-        val player = ChainSessionPlayer(config)
+        val player = ChainSessionPlayer(config, backingConfig = BackingConfig(), focus = PlaybackFocus.None)
         player.setSound(SoundPresets.settingsOf(BuiltInPreset.GRAND_HALL, config))
         player.load(encode("pause.m4a", seconds = 3))
         await("ready") { player.state.value.ready }
@@ -264,7 +266,7 @@ class PlaybackTest {
             bytes.putShort(sample)
         }
         pcm.writeBytes(bytes.array())
-        val player = ChainSessionPlayer(SoundConfig())
+        val player = ChainSessionPlayer(SoundConfig(), backingConfig = BackingConfig(), focus = PlaybackFocus.None)
         try {
             player.loadWithBacking(take, PlayerBacking(pcm = { pcm }, offsetMs = 0, gainDb = 0f))
             // the reader has its length once it is open: only then does cutting the file make its next read fail
@@ -286,7 +288,7 @@ class PlaybackTest {
     fun aPlayerLetGoWhileItsBackingIsMadeNeitherWaitsForItNorShowsIt() {
         val take = encode("let-go.m4a", seconds = 2)
         val unpacked = java.util.concurrent.CountDownLatch(1)
-        val player = ChainSessionPlayer(SoundConfig())
+        val player = ChainSessionPlayer(SoundConfig(), backingConfig = BackingConfig(), focus = PlaybackFocus.None)
         player.loadWithBacking(take, PlayerBacking(pcm = { unpacked.await(); null }, offsetMs = 0, gainDb = 0f))
         await("the backing being made") { player.state.value.preparingBacking }
         val started = System.nanoTime()
@@ -324,7 +326,7 @@ class PlaybackTest {
     @Test
     fun thePlayerAsksForTheSoundAndPausesWhenItIsTakenAway() {
         val focus = FakeFocus()
-        val player = ChainSessionPlayer(SoundConfig(), focus = focus)
+        val player = ChainSessionPlayer(SoundConfig(), focus = focus, backingConfig = BackingConfig())
         try {
             player.load(encode("focus.m4a", seconds = 3))
             await("ready") { player.state.value.ready }
@@ -349,7 +351,7 @@ class PlaybackTest {
     /** A call on: play does nothing. */
     @Test
     fun aRefusedSoundLeavesThePlayerQuiet() {
-        val player = ChainSessionPlayer(SoundConfig(), focus = FakeFocus(granted = false))
+        val player = ChainSessionPlayer(SoundConfig(), focus = FakeFocus(granted = false), backingConfig = BackingConfig())
         try {
             player.load(encode("refused.m4a", seconds = 1))
             await("ready") { player.state.value.ready }
@@ -366,7 +368,7 @@ class PlaybackTest {
     @Test
     fun theSoundGoesBackAtTheEndOfTheRecording() {
         val focus = FakeFocus()
-        val player = ChainSessionPlayer(SoundConfig(), focus = focus)
+        val player = ChainSessionPlayer(SoundConfig(), focus = focus, backingConfig = BackingConfig())
         try {
             player.load(encode("end.m4a", seconds = 1))
             await("ready") { player.state.value.ready }

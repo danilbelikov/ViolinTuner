@@ -10,6 +10,7 @@ import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.domain.Zone
+import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
@@ -133,7 +134,7 @@ class SessionViewModelTest {
         val viewModel = SessionViewModel(
             repository, config, audioFiles, { player }, repertoire, sound, SoundConfig(), { file -> FakePicture(file).also { pictures += it } },
             SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)),
-            compute = StandardTestDispatcher(testScheduler),
+            compute = StandardTestDispatcher(testScheduler), backings = NoBackings, backingPcm = null,
         )
         runCurrent()
         return viewModel

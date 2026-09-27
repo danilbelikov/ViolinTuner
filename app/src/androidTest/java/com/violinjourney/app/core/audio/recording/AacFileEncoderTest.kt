@@ -6,6 +6,7 @@ import android.media.MediaFormat
 import android.media.MediaPlayer
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import java.io.File
 import kotlin.math.PI
 import kotlin.math.sin
@@ -29,7 +30,7 @@ class AacFileEncoderTest {
 
     /** [seconds] of a 440 Hz tone in hops of 512, offered a little faster than real time. */
     private fun encodeTone(file: File, sampleRate: Int, seconds: Int): Boolean {
-        val encoder = AacFileEncoder(file, sampleRate)
+        val encoder = AacFileEncoder(file, sampleRate, analytics = NoOpAnalytics())
         val hop = ShortArray(512)
         var sample = 0L
         var accepted = true
@@ -81,7 +82,7 @@ class AacFileEncoderTest {
         val nowhere = File(directory, "no-such-folder/take.m4a")
         repeat(instances + 1) {
             try {
-                AacFileEncoder(nowhere, 48_000)
+                AacFileEncoder(nowhere, 48_000, analytics = NoOpAnalytics())
                 fail("a file in a folder that is not there cannot be written")
             } catch (expected: java.io.IOException) {
                 // the take would go on without sound; the codec must not stay behind
@@ -93,7 +94,7 @@ class AacFileEncoderTest {
     @Test
     fun offeringFasterThanTheCodecCanEncodeFailsInsteadOfBlocking() {
         val file = File(directory, "flood.m4a")
-        val encoder = AacFileEncoder(file, 48_000)
+        val encoder = AacFileEncoder(file, 48_000, analytics = NoOpAnalytics())
         val hop = ShortArray(512)
         val startedAt = System.nanoTime()
         val accepted = (0 until 20_000).count { encoder.offer(hop, hop.size) } // 3.5 minutes of audio at once
@@ -106,7 +107,7 @@ class AacFileEncoderTest {
     /** Cannot happen in the app (the encoder is created with the first hop), but must not hang. */
     @Test
     fun finishingWithoutAnySoundReturnsPromptly() {
-        val encoder = AacFileEncoder(File(directory, "empty.m4a"), 48_000)
+        val encoder = AacFileEncoder(File(directory, "empty.m4a"), 48_000, analytics = NoOpAnalytics())
         val startedAt = System.nanoTime()
         encoder.finish()
         assertTrue((System.nanoTime() - startedAt) / 1_000_000 < 2_000)

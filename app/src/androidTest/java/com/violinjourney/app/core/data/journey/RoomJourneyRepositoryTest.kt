@@ -3,6 +3,7 @@ package com.violinjourney.app.core.data.journey
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.domain.journey.JourneyRoute
 import kotlinx.coroutines.flow.first
@@ -25,7 +26,7 @@ class RoomJourneyRepositoryTest {
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java).build()
         dao = database.journeyDao()
-        journey = RoomJourneyRepository(dao)
+        journey = RoomJourneyRepository(dao, analytics = NoOpAnalytics())
     }
 
     @After

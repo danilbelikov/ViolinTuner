@@ -25,6 +25,7 @@ import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.recording.TakePipeline
+import com.violinjourney.app.core.recording.testTakePipeline
 import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.recording.video.VideoInfo
 import com.violinjourney.app.core.recording.video.VideoMux
@@ -250,7 +251,7 @@ class CaptureViewModelTest {
             override fun frames(config: IntonationConfig): Flow<PitchFrame> = delegate.frames(config).onEach { tap.onFrame(it.tMs) }
         }
         val clock = FixedWallClock(Instant.parse("2026-09-26T09:00:00Z"), TimeZone.UTC)
-        val takes = TakePipeline(
+        val takes = testTakePipeline(
             source, sessions, FakeAudioFiles(directory), FakeRunningPracticeStore(), PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
             backings = backings, backingPlaybackFactory = { playback },
         )

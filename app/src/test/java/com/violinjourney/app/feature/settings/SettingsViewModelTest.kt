@@ -10,8 +10,9 @@ import com.violinjourney.app.core.domain.UserSettings
 import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.practice.FakePracticeRepository
 import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
+import com.violinjourney.app.core.domain.practice.NoBlocks
 import com.violinjourney.app.core.domain.practice.PracticeConfig
-import com.violinjourney.app.core.domain.practice.PracticeFinisher
+import com.violinjourney.app.core.domain.practice.testPracticeFinisher
 import com.violinjourney.app.core.domain.progress.FakeProfileRepository
 import com.violinjourney.app.core.domain.progress.FakeTrophyRepository
 import com.violinjourney.app.core.domain.progress.ProgressConfig
@@ -121,12 +122,12 @@ class SettingsViewModelTest {
         val trophies = FakeTrophyRepository()
         val repertoire = FakeRepertoireRepository()
         return AppStartViewModel(
-            settings, store, PracticeFinisher(practice, store, clock), PracticeConfig(), clock, practice, TrophyAwarder(trophies, ProgressConfig(), clock),
+            settings, store, testPracticeFinisher(practice, store, clock), PracticeConfig(), clock, practice, TrophyAwarder(trophies, ProgressConfig(), clock),
             repertoire,
             Housekeeping(
                 sessions, FakeSessionWaveforms(), FakeAvatarFiles(), FakeProfileRepository(), FakeShareFiles(), repertoire, NoBackings, NoBackingPcm,
                 clock, Dispatchers.Main,
-            ),
+            ), blocks = NoBlocks,
         )
     }
 

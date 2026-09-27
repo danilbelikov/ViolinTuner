@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.FramePicture
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.domain.practice.FinishPracticeAsk
@@ -44,9 +43,9 @@ open class LiveViewModel(
     private val runningPractice: RunningPracticeStore,
     private val clock: WallClock,
     private val venues: Venues,
-    private val analytics: Analytics = NoOpAnalytics(),
-    private val finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
-    private val practiceConfig: PracticeConfig = PracticeConfig(),
+    private val analytics: Analytics,
+    private val finishAsk: FinishPracticeAsk,
+    private val practiceConfig: PracticeConfig,
     /** The clock the light of Live counts by (spec 5.20): the one the screen reads; tests give their own. */
     private val nanos: () -> Long = ::monotonicNanos,
 ) : ViewModel() {

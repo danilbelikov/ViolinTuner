@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.data.Housekeeping
 import com.violinjourney.app.core.domain.practice.BlockStore
 import com.violinjourney.app.core.domain.practice.ForgottenPractice
-import com.violinjourney.app.core.domain.practice.NoBlocks
 import com.violinjourney.app.core.domain.practice.PracticeCheck
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeFinisher
@@ -54,7 +53,7 @@ open class AppStartViewModel(
     awarder: TrophyAwarder,
     private val repertoire: RepertoireRepository,
     private val housekeeping: Housekeeping,
-    private val blocks: BlockStore = NoBlocks,
+    private val blocks: BlockStore,
 ) : ViewModel() {
     init {
         viewModelScope.launch { housekeeping.atStart() }

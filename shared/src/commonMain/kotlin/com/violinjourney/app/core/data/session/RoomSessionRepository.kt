@@ -10,7 +10,6 @@ import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.domain.session.forSession
 import com.violinjourney.app.core.analytics.Analytics
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.analytics.TakeDeleted
 import com.violinjourney.app.core.time.WallClock
 import kotlinx.coroutines.CoroutineDispatcher
@@ -31,7 +30,7 @@ class RoomSessionRepository(
     private val defaultConfig: IntonationConfig,
     private val audioFiles: SessionAudioFiles,
     private val clock: WallClock,
-    private val analytics: Analytics = NoOpAnalytics(),
+    private val analytics: Analytics,
     /** Where the files are looked for: one question to the file system per recording with sound. */
     private val io: CoroutineDispatcher = Dispatchers.IO,
     /** Where a recording is unpacked and analysed: an hour is 72 000 samples, too much for the main thread. */

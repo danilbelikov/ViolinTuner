@@ -80,7 +80,7 @@ class IosBackingTest {
         val source = files.newFile("m4a")
         tone(source.path, 44_100, 2, 220.0)
         val backing = Backing(fileName = source.path.substringAfterLast('/'), title = "a", durationMs = 2_000, sampleRate = 44_100, channels = 1, sizeBytes = 0, addedAtEpochMs = 0)
-        val pcm = IosBackingPcm(caches, files)
+        val pcm = IosBackingPcm(caches, files, config = BackingConfig())
         val prepared = assertNotNull(pcm.prepare(backing, 48_000))
         assertEquals(prepared.path, pcm.cached(backing, 48_000)?.path)
         val reader = IosBackingPcmReader(prepared)
@@ -104,7 +104,7 @@ class IosBackingTest {
         val source = files.newFile("m4a")
         tone(source.path, 48_000, 3, 220.0)
         val backing = Backing(fileName = source.path.substringAfterLast('/'), title = "a", durationMs = 3_000, sampleRate = 48_000, channels = 1, sizeBytes = 0, addedAtEpochMs = 0)
-        val pcm = IosBackingPcm(caches, files)
+        val pcm = IosBackingPcm(caches, files, config = BackingConfig())
         val target = PlatformFile("$folder/sent.m4a")
         val config = SoundConfig()
         val sent = IosSoundRenderer(config, Dispatchers.Default).renderWithBacking(
@@ -130,7 +130,7 @@ class IosBackingTest {
             fileName = source.path.substringAfterLast('/'), title = "a", durationMs = LONG_SECONDS * 1_000L, sampleRate = 44_100,
             channels = 1, sizeBytes = 0, addedAtEpochMs = 0,
         )
-        val pcm = IosBackingPcm(caches, files)
+        val pcm = IosBackingPcm(caches, files, config = BackingConfig())
         val go = CompletableDeferred<Unit>()
         val callers = List(3) {
             async(Dispatchers.Default) {
@@ -149,7 +149,7 @@ class IosBackingTest {
     /** A `.partial` left by a process killed mid-unpack goes after an hour untouched; one being written stays (spec 5.25). */
     @Test
     fun `a partial nobody writes to is swept and a fresh one stays`() {
-        val pcm = IosBackingPcm(caches, IosBackingFiles(data, SystemWallClock))
+        val pcm = IosBackingPcm(caches, IosBackingFiles(data, SystemWallClock), config = BackingConfig())
         pcm.deleteOrphans(emptySet()) // makes the folder
         val directory = "${caches.path}/backing-pcm"
         for (name in listOf("old-48000.pcm.partial", "fresh-48000.pcm.partial")) {
@@ -178,9 +178,9 @@ class IosBackingTest {
         val output = assertNotNull(blocked.openOutput())
         output.writeBytes("not a folder".encodeToByteArray())
         output.close()
-        assertNull(IosBackingPcm(blocked, files).prepare(backing, 48_000))
+        assertNull(IosBackingPcm(blocked, files, config = BackingConfig()).prepare(backing, 48_000))
         // the lock of the pair was let go: where the cache can be written, the same backing is unpacked
-        assertNotNull(IosBackingPcm(caches, files).prepare(backing, 48_000))
+        assertNotNull(IosBackingPcm(caches, files, config = BackingConfig()).prepare(backing, 48_000))
     }
 
     @Test

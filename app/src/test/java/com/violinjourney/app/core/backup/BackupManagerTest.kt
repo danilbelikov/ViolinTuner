@@ -2,6 +2,7 @@ package com.violinjourney.app.core.backup
 
 import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.FakeAnalytics
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.io.StorageException
 import com.violinjourney.app.core.io.StorageFailure
 import com.violinjourney.app.core.time.FixedWallClock
@@ -204,7 +205,10 @@ class BackupManagerTest {
         val closed = object : BackupDocuments by documents {
             override fun openOutput(uri: String): OutputStream? = null
         }
-        val other = BackupManager(store, closed, prefs, {}, BackupConfig(), ZonedSystemWallClock(TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler))
+        val other = BackupManager(
+            store, closed, prefs, {}, BackupConfig(), ZonedSystemWallClock(TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler),
+            analytics = NoOpAnalytics(),
+        )
         other.saveTo("content://gone/1", all, "копия.zip")
         advanceUntilIdle()
         assertEquals(SaveFailure.UNAVAILABLE, (other.job.value as BackupJob.SaveFailed).reason)
@@ -397,7 +401,10 @@ class BackupManagerTest {
                 override fun write(b: ByteArray, off: Int, len: Int) = Unit
             }
         }
-        val other = BackupManager(store, slow, prefs, {}, BackupConfig(), ZonedSystemWallClock(TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler))
+        val other = BackupManager(
+            store, slow, prefs, {}, BackupConfig(), ZonedSystemWallClock(TimeZone.UTC), { testScheduler.currentTime }, StandardTestDispatcher(testScheduler),
+            analytics = NoOpAnalytics(),
+        )
         other.saveTo("content://slow/1", all, "копия.zip")
         advanceTimeBy(800)
         runCurrent()

@@ -1,5 +1,6 @@
 package com.violinjourney.app.ios
 
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.IosMicPitchSource
 import com.violinjourney.app.core.domain.IntonationConfig
@@ -15,7 +16,7 @@ import kotlin.test.assertNotSame
 class PitchSourcesTest {
     @Test
     fun `every screen gets its own microphone with its own sound of the take`() {
-        val next = pitchSources(fakeScenario = null, config = IntonationConfig(), logStats = false)
+        val next = pitchSources(fakeScenario = null, config = IntonationConfig(), logStats = false, analytics = NoOpAnalytics())
         val first = next()
         val second = next()
         assertIs<IosMicPitchSource>(first)
@@ -26,7 +27,7 @@ class PitchSourcesTest {
 
     @Test
     fun `the fake scenario is one per screen too`() {
-        val next = pitchSources(FakeScenario.IN_TUNE, IntonationConfig(), logStats = false)
+        val next = pitchSources(FakeScenario.IN_TUNE, IntonationConfig(), logStats = false, analytics = NoOpAnalytics())
         assertNotSame(next(), next())
     }
 }

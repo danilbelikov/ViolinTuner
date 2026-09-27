@@ -5,14 +5,12 @@ import com.violinjourney.app.core.io.deleteFile
 import com.violinjourney.app.core.io.fileName
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.domain.journey.JourneyConfig
-import com.violinjourney.app.core.domain.journey.NoPracticeNotes
 import com.violinjourney.app.core.domain.journey.NoteCount
 import com.violinjourney.app.core.domain.journey.NoteCounter
 import com.violinjourney.app.core.domain.journey.PracticeNotesStore
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.MicUnavailable
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.analytics.TakeRecorded
 import com.violinjourney.app.core.audio.MicUnavailableException
 import com.violinjourney.app.core.audio.PitchSource
@@ -25,7 +23,6 @@ import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingOffset
 import com.violinjourney.app.core.domain.backing.BackingProgress
 import com.violinjourney.app.core.domain.backing.BackingRepository
-import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.backing.TakeBacking
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
@@ -77,13 +74,13 @@ class TakePipeline(
     private val practiceConfig: PracticeConfig,
     private val clock: WallClock,
     private val dispatcher: CoroutineDispatcher,
-    private val watch: RecordingWatch = RecordingWatch(),
-    private val practiceNotes: PracticeNotesStore = NoPracticeNotes,
-    private val journeyConfig: JourneyConfig = JourneyConfig(),
-    private val backings: BackingRepository = NoBackings,
-    private val backingPlaybackFactory: BackingPlaybackFactory? = null,
-    private val backingConfig: BackingConfig = BackingConfig(),
-    private val analytics: Analytics = NoOpAnalytics(),
+    private val watch: RecordingWatch,
+    private val practiceNotes: PracticeNotesStore,
+    private val journeyConfig: JourneyConfig,
+    private val backings: BackingRepository,
+    private val backingPlaybackFactory: BackingPlaybackFactory?,
+    private val backingConfig: BackingConfig,
+    private val analytics: Analytics,
 ) {
     /**
      * A take to be made under a backing (spec 3.32): which one, its sound at the take's rate, and the headphones it

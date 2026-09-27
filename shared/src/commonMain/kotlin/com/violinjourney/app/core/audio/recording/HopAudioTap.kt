@@ -2,7 +2,6 @@ package com.violinjourney.app.core.audio.recording
 
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.ErrorGroup
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import kotlin.concurrent.Volatile
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.concurrent.PlatformLock
@@ -20,7 +19,7 @@ class HopAudioTap(
     private val encoderFactory: PcmEncoderFactory,
     private val finishDispatcher: CoroutineDispatcher,
     /** Where an encoder that could not be made is told (spec 3.34): the take goes on without sound, and nobody would know why. */
-    private val analytics: Analytics = NoOpAnalytics(),
+    private val analytics: Analytics,
 ) : AudioTap {
     private val lock = PlatformLock()
     private var pendingFile: PlatformFile? = null

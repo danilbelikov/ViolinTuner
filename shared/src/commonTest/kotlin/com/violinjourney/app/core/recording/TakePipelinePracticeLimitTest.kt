@@ -68,7 +68,7 @@ class TakePipelinePracticeLimitTest {
         val limit = practiceStart + config.maxPracticeMs
         val running = FakeRunningPracticeStore().apply { startIfIdle(practiceStart) }
         val notes = FakePracticeNotesStore()
-        val takes = TakePipeline(
+        val takes = testTakePipeline(
             pitchSource = FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource),
             sessionRepository = FakeSessionRepository(),
             audioFiles = NoAudioFiles,

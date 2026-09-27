@@ -4,7 +4,6 @@ import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.BackupCreated
 import com.violinjourney.app.core.analytics.BackupRestored
 import com.violinjourney.app.core.analytics.ErrorGroup
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.io.ByteInput
 import com.violinjourney.app.core.io.PlatformFile
@@ -134,7 +133,7 @@ class BackupManager(
     private val clock: WallClock,
     private val elapsed: ElapsedClock,
     private val io: CoroutineDispatcher,
-    private val analytics: Analytics = NoOpAnalytics(),
+    private val analytics: Analytics,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + io)
 

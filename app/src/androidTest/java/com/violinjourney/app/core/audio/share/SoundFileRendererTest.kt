@@ -2,6 +2,7 @@ package com.violinjourney.app.core.audio.share
 
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.playback.PcmDecoder
 import com.violinjourney.app.core.audio.recording.AacFileEncoder
 import com.violinjourney.app.core.domain.sound.BuiltInPreset
@@ -42,7 +43,7 @@ class SoundFileRendererTest {
 
     private fun recording(name: String, seconds: Int, level: Int = 6_000): File {
         val file = File(directory, name)
-        val encoder = AacFileEncoder(file, rate)
+        val encoder = AacFileEncoder(file, rate, analytics = NoOpAnalytics())
         val hop = ShortArray(512)
         var sample = 0L
         repeat(rate * seconds / hop.size) {

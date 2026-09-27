@@ -25,7 +25,6 @@ import com.violinjourney.app.core.domain.backing.BackingFiles
 import com.violinjourney.app.core.domain.backing.BackingOutput
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.takesUnderBacking
-import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.today
 import kotlinx.coroutines.CoroutineDispatcher
@@ -87,13 +86,13 @@ open class PieceViewModel(
     private val videos: VideoFiles,
     private val importer: VideoTakeImporter,
     private val shareFiles: ShareFiles,
-    private val backings: BackingRepository = NoBackings,
-    private val backingFiles: BackingFiles? = null,
-    private val backingPcm: BackingPcm? = null,
-    private val recordingRate: RecordingRate = RecordingRate { TakePipeline.DEFAULT_RATE },
-    private val backingImporter: BackingFileImporter? = null,
-    private val backingPreview: BackingPreview? = null,
-    private val routes: AudioRoutes? = null,
+    private val backings: BackingRepository,
+    private val backingFiles: BackingFiles?,
+    private val backingPcm: BackingPcm?,
+    private val recordingRate: RecordingRate,
+    private val backingImporter: BackingFileImporter?,
+    private val backingPreview: BackingPreview?,
+    private val routes: AudioRoutes?,
     /** The app's, as the pipeline and «Звук» have it: the lag guessed for wireless headphones comes from here (spec 5.25). */
     private val backingConfig: BackingConfig,
     private val io: CoroutineDispatcher = Dispatchers.IO,

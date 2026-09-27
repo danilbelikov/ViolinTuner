@@ -13,7 +13,6 @@ import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingOffset
 import com.violinjourney.app.core.domain.backing.BackingRepository
-import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.backing.TakeBacking
 import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
@@ -61,8 +60,8 @@ open class SoundViewModel(
     private val waveforms: SessionWaveforms,
     /** Read by the screen too: its sliders stand on the ranges the view model sets values by. */
     val config: SoundConfig,
-    private val backings: BackingRepository = NoBackings,
-    private val backingPcm: BackingPcm? = null,
+    private val backings: BackingRepository,
+    private val backingPcm: BackingPcm?,
     /** Read by the screen too ([BackingSliders]). */
     val backingConfig: BackingConfig,
     private val io: CoroutineDispatcher = Dispatchers.IO,

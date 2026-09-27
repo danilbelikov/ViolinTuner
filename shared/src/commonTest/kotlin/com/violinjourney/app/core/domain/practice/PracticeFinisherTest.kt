@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.domain.practice
 
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.domain.journey.FakeJourneyRepository
 import com.violinjourney.app.core.domain.journey.FakePracticeNotesStore
 import com.violinjourney.app.core.domain.journey.JourneyConfig
@@ -33,7 +34,7 @@ class PracticeFinisherTest {
     private val halfAnHour = 30 * 60_000L
 
     private fun finisher(practice: PracticeRepository, notes: PracticeNotesStore = this.notes) =
-        PracticeFinisher(practice, store, clock, notes, journey, JourneyConfig(), blocks, history, PracticeConfig())
+        PracticeFinisher(practice, store, clock, notes, journey, JourneyConfig(), blocks, history, PracticeConfig(), analytics = NoOpAnalytics())
 
     @Test
     fun `two saves of one practice at once store it once`() = runTest {

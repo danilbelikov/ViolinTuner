@@ -5,7 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.backing.BackingRepository
-import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.backing.takesUnderBacking
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
@@ -34,8 +33,8 @@ open class HistoryViewModel(
     private val config: IntonationConfig,
     private val clock: WallClock,
     private val audioFiles: SessionAudioFiles,
-    private val sectionAsk: HistorySectionAsk = HistorySectionAsk(),
-    private val backings: BackingRepository = NoBackings,
+    private val sectionAsk: HistorySectionAsk,
+    private val backings: BackingRepository,
     /** Where the list is built: off the main thread — sorting, dates and the sizes of the videos grow with the records. */
     private val background: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {

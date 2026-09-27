@@ -25,7 +25,6 @@ import com.violinjourney.app.core.domain.journey.TaktEarning
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.CityReached
 import com.violinjourney.app.core.analytics.ItemBought
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -157,7 +156,7 @@ abstract class JourneyDao {
 
 class RoomJourneyRepository(
     private val dao: JourneyDao,
-    private val analytics: Analytics = NoOpAnalytics(),
+    private val analytics: Analytics,
 ) : JourneyRepository {
     // the earnings are summed by the database: every subscriber (the card of «Занятия», Live, «Дом», the journey) would
     // otherwise load the whole history of practice, a row a saved practice, to add it up
@@ -193,7 +192,7 @@ class RoomJourneyRepository(
 
 class RoomHomeRepository(
     private val dao: JourneyDao,
-    private val analytics: Analytics = NoOpAnalytics(),
+    private val analytics: Analytics,
 ) : HomeRepository {
     override val state: Flow<HomeState> = combine(dao.observeHomePurchases(), dao.observeHomeChoices()) { purchases, choices ->
         HomeState(

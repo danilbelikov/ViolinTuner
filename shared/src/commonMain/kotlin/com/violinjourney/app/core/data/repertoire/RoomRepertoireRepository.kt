@@ -16,7 +16,6 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.SheetPage
 import com.violinjourney.app.core.domain.repertoire.Tonic
 import com.violinjourney.app.core.analytics.Analytics
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.analytics.PieceAdded
 import com.violinjourney.app.core.time.WallClock
 import kotlinx.coroutines.flow.Flow
@@ -27,7 +26,7 @@ class RoomRepertoireRepository(
     private val files: SheetFiles,
     private val config: RepertoireConfig,
     private val clock: WallClock,
-    private val analytics: Analytics = NoOpAnalytics(),
+    private val analytics: Analytics,
 ) : RepertoireRepository {
     override val pieces: Flow<List<Piece>> = dao.observePieces().map { rows -> rows.map(RepertoireMapper::toPiece) }
 

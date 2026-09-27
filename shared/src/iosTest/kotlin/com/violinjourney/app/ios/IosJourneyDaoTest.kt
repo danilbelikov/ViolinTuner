@@ -1,5 +1,6 @@
 package com.violinjourney.app.ios
 
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.data.journey.EarningEntity
 import com.violinjourney.app.core.data.journey.HomeChoiceEntity
 import com.violinjourney.app.core.data.journey.JourneyDao
@@ -41,7 +42,7 @@ class IosJourneyDaoTest {
     fun `the tree remembers what stood in its place - bought or put in - and forgets nothing it is put on again`() = runTest {
         val database = IosStorage.database(directory)
         val dao = database.journeyDao()
-        val home = RoomHomeRepository(dao)
+        val home = RoomHomeRepository(dao, analytics = NoOpAnalytics())
         dao.earn(5_000)
         assertTrue(home.buy(item("cello"), 1))
         assertTrue(home.buy(item("xmas"), 2))
@@ -73,7 +74,7 @@ class IosJourneyDaoTest {
     fun `the progress sums the earnings in the database - and spends from one purse`() = runTest {
         val database = IosStorage.database(directory)
         val dao = database.journeyDao()
-        val journey = RoomJourneyRepository(dao)
+        val journey = RoomJourneyRepository(dao, analytics = NoOpAnalytics())
         assertEquals(0L, journey.progress.first().earned)
         dao.earn(30)
         dao.earn(50)
@@ -93,7 +94,7 @@ class IosJourneyDaoTest {
     fun `a tree bought into a place that held nothing chosen forgets what an older tree remembered`() = runTest {
         val database = IosStorage.database(directory)
         val dao = database.journeyDao()
-        val home = RoomHomeRepository(dao)
+        val home = RoomHomeRepository(dao, analytics = NoOpAnalytics())
         dao.earn(500)
         dao.putHomeChoice(HomeChoiceEntity(HomeState.SEASON_KEY, "cello"))
         assertTrue(home.buy(item("xmas"), 1))

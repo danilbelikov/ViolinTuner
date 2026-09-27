@@ -112,7 +112,7 @@ class TakePipelineFinishTest {
 
             override fun frames(config: IntonationConfig): Flow<PitchFrame> = delegate.frames(config).onEach { tap.onFrame(it.tMs) }
         }
-        return TakePipeline(
+        return testTakePipeline(
             source, sessions, audioFiles, FakeRunningPracticeStore(), PracticeConfig(), clock, StandardTestDispatcher(testScheduler), watch,
         )
     }

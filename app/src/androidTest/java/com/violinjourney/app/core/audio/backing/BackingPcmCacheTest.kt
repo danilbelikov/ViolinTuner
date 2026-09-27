@@ -5,6 +5,7 @@ import android.content.ContextWrapper
 import android.util.Log
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.recording.AacFileEncoder
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
@@ -66,7 +67,7 @@ class BackingPcmCacheTest {
     }
 
     private fun tone(file: File, rate: Int, seconds: Int) {
-        val encoder = AacFileEncoder(file, rate)
+        val encoder = AacFileEncoder(file, rate, analytics = NoOpAnalytics())
         val hop = ShortArray(512)
         var sample = 0L
         repeat(rate * seconds / hop.size) {

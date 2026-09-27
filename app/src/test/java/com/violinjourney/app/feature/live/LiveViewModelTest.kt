@@ -2,6 +2,7 @@ package com.violinjourney.app.feature.live
 
 import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.FakeAnalytics
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.MicUnavailableException
@@ -31,7 +32,7 @@ import com.violinjourney.app.core.domain.venue.FakeVenueStore
 import com.violinjourney.app.core.domain.venue.Venue
 import com.violinjourney.app.core.domain.venue.VenueRules
 import com.violinjourney.app.core.domain.venue.Venues
-import com.violinjourney.app.core.recording.TakePipeline
+import com.violinjourney.app.core.recording.testTakePipeline
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.settings.SettingsConfigSource
 import com.violinjourney.app.core.time.FixedWallClock
@@ -129,13 +130,13 @@ class LiveViewModelTest {
 
     private fun TestScope.viewModel(source: PitchSource, base: IntonationConfig = IntonationConfig()): LiveViewModel {
         val clock = FixedWallClock(startedAt, TimeZone.UTC)
-        val takes = TakePipeline(
+        val takes = testTakePipeline(
             source, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
             practiceNotes = practiceNotes, journeyConfig = JourneyConfig(notesFlushMs = 1_000), analytics = analytics,
         )
         return LiveViewModel(
             takes, SettingsConfigSource(base, settings), practice, clock, Venues(venueStore, journey), finishAsk = finishAsk,
-            nanos = { testScheduler.currentTime * NANOS_PER_MS },
+            nanos = { testScheduler.currentTime * NANOS_PER_MS }, analytics = NoOpAnalytics(), practiceConfig = PracticeConfig(),
         )
     }
 

@@ -148,7 +148,7 @@ internal class IosBackingPcm(
     private val caches: PlatformFile,
     private val files: BackingFiles,
     private val clock: WallClock = SystemWallClock,
-    private val config: BackingConfig = BackingConfig(),
+    private val config: BackingConfig,
 ) : SingleFlightBackingPcm() {
     private val directory get() = caches.child(DIRECTORY).also { it.makeDirectories() }
 

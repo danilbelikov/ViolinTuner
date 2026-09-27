@@ -3,6 +3,7 @@ package com.violinjourney.app.core.data.backing
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.data.repertoire.RoomRepertoireRepository
 import com.violinjourney.app.core.data.repertoire.SheetFiles
@@ -64,7 +65,10 @@ class RoomBackingRepositoryTest {
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java).build()
         repository = RoomBackingRepository(database.backingDao(), files, Dispatchers.IO)
-        pieces = RoomRepertoireRepository(database.repertoireDao(), NoSheetFiles, RepertoireConfig(), FixedWallClock(Instant.fromEpochMilliseconds(1), TimeZone.UTC))
+        pieces = RoomRepertoireRepository(
+            database.repertoireDao(), NoSheetFiles, RepertoireConfig(), FixedWallClock(Instant.fromEpochMilliseconds(1), TimeZone.UTC),
+            analytics = NoOpAnalytics(),
+        )
     }
 
     @After

@@ -77,7 +77,7 @@ class IosSessionPlayerTest {
     @Test
     fun `a take plays to its end and is ready to play again`() = runBlocking {
         writeTone(seconds = 0.5)
-        val player = IosSessionPlayer(scope, SoundConfig())
+        val player = IosSessionPlayer(scope, SoundConfig(), BackingConfig())
         player.load(PlatformFile(path))
         withTimeout(5.seconds) { player.state.first { it.ready || it.failed } }
         assertTrue(player.state.value.ready, "${player.state.value}")
@@ -271,7 +271,7 @@ class IosSessionPlayerTest {
     fun `a player let go while the backing is made shows nothing of it`() = runBlocking {
         writeTone(seconds = 0.5)
         val open = AtomicInt(0)
-        val player = IosSessionPlayer(scope, SoundConfig())
+        val player = IosSessionPlayer(scope, SoundConfig(), BackingConfig())
         // an unpack that cannot be cut short: it ends only when the test says so, after the player is let go
         player.loadWithBacking(
             PlatformFile(path),

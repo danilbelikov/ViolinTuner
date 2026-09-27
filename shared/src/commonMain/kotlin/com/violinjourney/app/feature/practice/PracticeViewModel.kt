@@ -4,15 +4,12 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.domain.backing.BackingRepository
-import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.backing.takesUnderBacking
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyRepository
-import com.violinjourney.app.core.domain.journey.NoJourney
 import com.violinjourney.app.core.domain.practice.BlockRules
 import com.violinjourney.app.core.domain.practice.BlockStore
 import com.violinjourney.app.core.domain.practice.ForgottenPractice
-import com.violinjourney.app.core.domain.practice.NoBlocks
 import com.violinjourney.app.core.domain.practice.PracticeBlocks
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
@@ -34,7 +31,6 @@ import com.violinjourney.app.core.domain.repertoire.Piece
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.session.SessionSummary
-import com.violinjourney.app.core.domain.venue.FollowTheRoad
 import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.io.filePath
 import com.violinjourney.app.core.text.takeCodePoints
@@ -46,7 +42,6 @@ import com.violinjourney.app.feature.journey.JourneyReducer
 import com.violinjourney.app.feature.journey.JourneyWindow
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.LevelUp
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -82,13 +77,13 @@ open class PracticeViewModel(
     private val profiles: ProfileRepository,
     private val avatarFiles: AvatarFiles,
     private val progressConfig: ProgressConfig,
-    private val journey: JourneyRepository = NoJourney,
-    venues: Venues = Venues(FollowTheRoad, journey),
-    private val blocks: BlockStore = NoBlocks,
-    private val journeyConfig: JourneyConfig = JourneyConfig(),
-    private val finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
-    private val analytics: Analytics = NoOpAnalytics(),
-    backings: BackingRepository = NoBackings,
+    private val journey: JourneyRepository,
+    venues: Venues,
+    private val blocks: BlockStore,
+    private val journeyConfig: JourneyConfig,
+    private val finishAsk: FinishPracticeAsk,
+    private val analytics: Analytics,
+    backings: BackingRepository,
 ) : ViewModel() {
 
     /** Takts of the practice saved a moment ago, as the pill on the card; null the rest of the time. */

@@ -97,14 +97,16 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onOpenSettings = navController::navigateToSettings,
                 viewModel = viewModel {
                     LiveViewModel(
-                        graph.takes(), graph.configSource, graph.runningPractice, graph.clock, graph.venues, graph.analytics, graph.finishAsk,
-                        graph.practiceConfig,
+                        takes = graph.takes(), configSource = graph.configSource, runningPractice = graph.runningPractice,
+                        clock = graph.clock, venues = graph.venues, analytics = graph.analytics, finishAsk = graph.finishAsk,
+                        practiceConfig = graph.practiceConfig,
                     )
                 },
                 blockViewModel = viewModel {
                     BlockViewModel(
-                        graph.runningPractice, graph.blockStore, graph.blockHistory, graph.repertoire, graph.sessions, graph.practiceConfig,
-                        graph.clock, graph.sectionAsk,
+                        runningPractice = graph.runningPractice, blockStore = graph.blockStore,
+                        blockHistory = graph.blockHistory, repertoire = graph.repertoire, sessions = graph.sessions,
+                        config = graph.practiceConfig, clock = graph.clock, sectionAsk = graph.sectionAsk,
                     )
                 },
                 homeLookViewModel = viewModel { HomeLookViewModel(graph.home) },
@@ -120,9 +122,12 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onOpenSettings = navController::navigateToSettings,
                 viewModel = viewModel {
                     PracticeViewModel(
-                        graph.practice, graph.runningPractice, graph.finisher, graph.sessions, graph.practiceConfig, graph.repertoire,
-                        graph.clock, graph.trophies, graph.profiles, graph.avatarFiles, graph.progressConfig, graph.journey, graph.venues,
-                        graph.blockStore, graph.journeyConfig, graph.finishAsk, graph.analytics, graph.backings,
+                        repository = graph.practice, runningStore = graph.runningPractice, finisher = graph.finisher,
+                        sessions = graph.sessions, config = graph.practiceConfig, repertoire = graph.repertoire,
+                        clock = graph.clock, trophies = graph.trophies, profiles = graph.profiles,
+                        avatarFiles = graph.avatarFiles, progressConfig = graph.progressConfig, journey = graph.journey,
+                        venues = graph.venues, blocks = graph.blockStore, journeyConfig = graph.journeyConfig,
+                        finishAsk = graph.finishAsk, analytics = graph.analytics, backings = graph.backings,
                     )
                 },
                 homeLookViewModel = viewModel { HomeLookViewModel(graph.home) },
@@ -156,8 +161,10 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onOpenSound = navController::navigateToSound,
                 viewModel = viewModel {
                     SessionViewModel(
-                        graph.sessions, graph.intonationConfig, graph.audioFiles, graph.playerFactory, graph.repertoire, graph.sound,
-                        graph.soundConfig, graph.pictureFactory, createSavedStateHandle(), graph.backings, graph.backingPcm,
+                        repository = graph.sessions, defaultConfig = graph.intonationConfig, audioFiles = graph.audioFiles,
+                        playerFactory = graph.playerFactory, repertoire = graph.repertoire, sound = graph.sound,
+                        soundConfig = graph.soundConfig, pictureFactory = graph.pictureFactory,
+                        savedState = createSavedStateHandle(), backings = graph.backings, backingPcm = graph.backingPcm,
                     )
                 },
                 onShare = share::start,
@@ -179,8 +186,10 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onClose = navController::popBackStack,
                 viewModel = viewModel {
                     SoundViewModel(
-                        createSavedStateHandle(), graph.sound, graph.sessions, graph.repertoire, graph.audioFiles, graph.playerFactory,
-                        graph.waveforms, graph.soundConfig, graph.backings, graph.backingPcm, graph.backingConfig, graph.io,
+                        savedState = createSavedStateHandle(), sound = graph.sound, sessions = graph.sessions,
+                        repertoire = graph.repertoire, audioFiles = graph.audioFiles, playerFactory = graph.playerFactory,
+                        waveforms = graph.waveforms, config = graph.soundConfig, backings = graph.backings,
+                        backingPcm = graph.backingPcm, backingConfig = graph.backingConfig, io = graph.io,
                     )
                 },
                 onShare = share::start,
@@ -214,9 +223,11 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 onClose = navController::popBackStack,
                 viewModel = viewModel {
                     CaptureViewModel(
-                        createSavedStateHandle(), graph.takes(), graph.configSource, graph.repertoire, graph.backings, graph.backingPcm,
-                        graph.audioRoutes, graph.videoFiles, graph.backingConfig, ShotCameraFactory(::IosShotCamera), graph.recordingRate,
-                        IosVideoMux, graph.io,
+                        savedState = createSavedStateHandle(), takes = graph.takes(), configSource = graph.configSource,
+                        repertoire = graph.repertoire, backings = graph.backings, backingPcm = graph.backingPcm,
+                        routes = graph.audioRoutes, videos = graph.videoFiles, backingConfig = graph.backingConfig,
+                        cameraFactory = ShotCameraFactory(::IosShotCamera), recordingRate = graph.recordingRate,
+                        muxer = IosVideoMux, io = graph.io,
                     )
                 },
             )
@@ -401,14 +412,19 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
 }
 
 private fun pieceViewModel(graph: IosGraph, savedState: SavedStateHandle) = PieceViewModel(
-    savedState, graph.repertoire, graph.sheetFiles, graph.repertoireConfig, graph.clock, graph.takes(), graph.configSource, graph.sessions,
-    graph.videoFiles, graph.videoImporter, graph.shareFiles, graph.backings, graph.backingFiles, graph.backingPcm, graph.recordingRate,
-    graph.backingImporter, IosBackingPreview(), graph.audioRoutes, graph.backingConfig, graph.io,
+    savedState = savedState, repertoire = graph.repertoire, sheetFiles = graph.sheetFiles, config = graph.repertoireConfig,
+    clock = graph.clock, takes = graph.takes(), configSource = graph.configSource, sessions = graph.sessions,
+    videos = graph.videoFiles, importer = graph.videoImporter, shareFiles = graph.shareFiles, backings = graph.backings,
+    backingFiles = graph.backingFiles, backingPcm = graph.backingPcm, recordingRate = graph.recordingRate,
+    backingImporter = graph.backingImporter, backingPreview = IosBackingPreview(), routes = graph.audioRoutes,
+    backingConfig = graph.backingConfig, io = graph.io,
 )
 
 private fun shareViewModel(graph: IosGraph, texts: IosTexts) = ShareViewModel(
-    graph.sessions, graph.repertoire, graph.sound, graph.audioFiles, graph.shareFiles, graph.renderer, texts.share, graph.renderSpeed,
-    graph.elapsed, graph.soundConfig, graph.videoFiles, graph.backings, graph.backingPcm, graph.analytics, graph.io,
+    sessions = graph.sessions, repertoire = graph.repertoire, sound = graph.sound, audioFiles = graph.audioFiles,
+    files = graph.shareFiles, renderer = graph.renderer, texts = texts.share, speed = graph.renderSpeed, clock = graph.elapsed,
+    config = graph.soundConfig, videos = graph.videoFiles, backings = graph.backings, backingPcm = graph.backingPcm,
+    analytics = graph.analytics, io = graph.io,
 )
 
 private fun homeViewModel(graph: IosGraph) = HomeViewModel(graph.home, graph.journey, graph.clock, graph.venues)

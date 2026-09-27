@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.ErrorGroup
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.audio.share.RenderBacking
@@ -14,7 +13,6 @@ import com.violinjourney.app.core.audio.share.SoundRenderer
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingRepository
-import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.backing.TakeBacking
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
@@ -101,9 +99,9 @@ open class ShareViewModel(
     private val clock: ElapsedClock,
     private val config: SoundConfig,
     private val videos: VideoFiles,
-    private val backings: BackingRepository = NoBackings,
-    private val backingPcm: BackingPcm? = null,
-    private val analytics: Analytics = NoOpAnalytics(),
+    private val backings: BackingRepository,
+    private val backingPcm: BackingPcm?,
+    private val analytics: Analytics,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 

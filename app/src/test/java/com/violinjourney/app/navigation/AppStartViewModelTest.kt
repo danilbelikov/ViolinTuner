@@ -14,6 +14,7 @@ import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PE
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.violinjourney.app.core.domain.practice.PracticeFinisher
 import com.violinjourney.app.core.domain.practice.PracticeStats
+import com.violinjourney.app.core.domain.practice.testPracticeFinisher
 import com.violinjourney.app.core.domain.progress.FakeProfileRepository
 import com.violinjourney.app.core.domain.progress.FakeTrophyRepository
 import com.violinjourney.app.core.domain.progress.ProgressConfig
@@ -87,7 +88,7 @@ class AppStartViewModelTest {
         }
     }
 
-    private fun viewModel(finisher: PracticeFinisher = PracticeFinisher(repository, store, clock)) = AppStartViewModel(
+    private fun viewModel(finisher: PracticeFinisher = testPracticeFinisher(repository, store, clock)) = AppStartViewModel(
         FakeSettingsRepository(), store, finisher, config, clock, repository, TrophyAwarder(trophies, ProgressConfig(), clock), repertoire,
         Housekeeping(
             FakeSessionRepository(), FakeSessionWaveforms(), avatarFiles, profile, shareFiles, repertoire, NoBackings, backingPcm, clock,
@@ -250,7 +251,7 @@ class AppStartViewModelTest {
         running(elapsedMs = 2 * MS_PER_HOUR, lastSoundAgoMs = 90 * MS_PER_MINUTE)
         // a row takes a moment to write, as in the database: the second tap lands while the first one writes
         val slow = FakePracticeRepository(addDelayMs = 1)
-        val viewModel = viewModel(PracticeFinisher(slow, store, clock))
+        val viewModel = viewModel(testPracticeFinisher(slow, store, clock))
         viewModel.onAppOpened()
         runCurrent()
 

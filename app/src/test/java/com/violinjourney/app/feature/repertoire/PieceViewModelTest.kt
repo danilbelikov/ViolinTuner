@@ -1,9 +1,11 @@
 package com.violinjourney.app.feature.repertoire
 
 import androidx.lifecycle.SavedStateHandle
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.PitchSource
+import com.violinjourney.app.core.audio.RecordingRate
 import com.violinjourney.app.core.audio.recording.AudioTap
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.audio.share.ShareFiles
@@ -23,6 +25,7 @@ import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundPresets
 import com.violinjourney.app.core.domain.sound.SoundSettings
 import com.violinjourney.app.core.recording.TakePipeline
+import com.violinjourney.app.core.recording.testTakePipeline
 import com.violinjourney.app.core.recording.video.AnalysisSpeed
 import com.violinjourney.app.core.recording.video.FakeFileTakeAnalyzer
 import com.violinjourney.app.core.recording.video.FakeVideoFiles
@@ -109,7 +112,7 @@ class PieceViewModelTest {
     // one importer for all the screens of a test, as it is one for the app
     private fun TestScope.importer() = videoImporter ?: VideoTakeImporter(
         videoFiles, videoAnalyzer, sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, PracticeConfig(), RepertoireConfig(), IntonationConfig(),
-        clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
+        clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler), analytics = NoOpAnalytics(),
     ).also { videoImporter = it }
 
     private object NoShareFiles : ShareFiles {
@@ -190,7 +193,7 @@ class PieceViewModelTest {
         audioFiles: SessionAudioFiles = NoAudioFiles,
     ): Pair<PieceViewModel, MutableList<PieceEffect>> {
         val pitch = pitchSource ?: source ?: CountingSource(FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource)).also { source = it }
-        val takes = TakePipeline(
+        val takes = testTakePipeline(
             pitch, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
             backings = backings, backingPlaybackFactory = { playback },
         )
@@ -204,7 +207,7 @@ class PieceViewModelTest {
             videoFiles, importer(), NoShareFiles,
             backings = backings, backingFiles = backingFiles, backingPcm = backingPcm,
             backingImporter = { importResult }, backingPreview = preview, routes = routes, backingConfig = backingConfig,
-            io = StandardTestDispatcher(testScheduler),
+            io = StandardTestDispatcher(testScheduler), recordingRate = RecordingRate { TakePipeline.DEFAULT_RATE },
         )
         backgroundScope.launch { viewModel.backing.collect {} }
         val effects = mutableListOf<PieceEffect>()

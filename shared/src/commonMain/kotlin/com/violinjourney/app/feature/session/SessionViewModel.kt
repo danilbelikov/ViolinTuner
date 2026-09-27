@@ -3,7 +3,6 @@ package com.violinjourney.app.feature.session
 import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.playback.PlayerBacking
 import com.violinjourney.app.core.domain.backing.BackingRepository
-import com.violinjourney.app.core.domain.backing.NoBackings
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -47,8 +46,8 @@ open class SessionViewModel(
     private val soundConfig: SoundConfig,
     private val pictureFactory: VideoPictureFactory,
     savedState: SavedStateHandle,
-    private val backings: BackingRepository = NoBackings,
-    private val backingPcm: BackingPcm? = null,
+    private val backings: BackingRepository,
+    private val backingPcm: BackingPcm?,
     /** Where the analysis becomes the screen's content — a contour for every note: an hour of samples is too much for the main thread. */
     private val compute: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {

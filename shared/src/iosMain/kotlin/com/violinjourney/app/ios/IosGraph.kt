@@ -145,7 +145,9 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
 
     /** One per app, as on Android: its lock takes the answers to a practice one at a time (spec 5.6). */
     val finisher = PracticeFinisher(
-        practice, runningPractice, clock, practiceNotes, journey, journeyConfig, blockStore, blockHistory, practiceConfig, analytics,
+        repository = practice, store = runningPractice, clock = clock, notes = practiceNotes, journey = journey,
+        journeyConfig = journeyConfig, blocks = blockStore, blockHistory = blockHistory, config = practiceConfig,
+        analytics = analytics,
     )
     val awarder = TrophyAwarder(trophies, progressConfig, clock)
     val recordingWatch = RecordingWatch()
@@ -160,8 +162,10 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val analysisSpeed = AnalysisSpeed()
     val fileAnalyzer = DecodingFileTakeAnalyzer(PitchDetectorFactory(::MpmDetector), repertoireConfig, Dispatchers.Default, IosPcmFileOpener)
     val videoImporter = VideoTakeImporter(
-        videoFiles, fileAnalyzer, sessions, configSource, runningPractice, practiceConfig, repertoireConfig, intonationConfig, clock, elapsed, analysisSpeed,
-        Dispatchers.Default, analytics,
+        files = videoFiles, analyzer = fileAnalyzer, sessions = sessions, configSource = configSource,
+        practice = runningPractice, practiceConfig = practiceConfig, repertoireConfig = repertoireConfig,
+        intonationDefaults = intonationConfig, clock = clock, elapsed = elapsed, speed = analysisSpeed,
+        dispatcher = Dispatchers.Default, analytics = analytics,
     )
 
     val playerFactory = SessionPlayerFactory { scope -> IosSessionPlayer(scope, soundConfig, backingConfig) }
@@ -169,8 +173,10 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
 
     /** One per screen, as on Android: it holds that screen's wish to record, and listens through a microphone of its own. */
     fun takes() = TakePipeline(
-        newPitchSource(), sessions, audioFiles, runningPractice, practiceConfig, clock, Dispatchers.Default, recordingWatch,
-        practiceNotes, journeyConfig, backings, backingPlayback, backingConfig, analytics,
+        pitchSource = newPitchSource(), sessionRepository = sessions, audioFiles = audioFiles,
+        runningPractice = runningPractice, practiceConfig = practiceConfig, clock = clock, dispatcher = Dispatchers.Default,
+        watch = recordingWatch, practiceNotes = practiceNotes, journeyConfig = journeyConfig, backings = backings,
+        backingPlaybackFactory = backingPlayback, backingConfig = backingConfig, analytics = analytics,
     )
 
     val waveforms = IosSessionWaveforms({ IosFolders.folder(WAVEFORMS_FOLDER) }, io)
@@ -184,8 +190,8 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val backupPrefs = DataStoreBackupPrefs(dataStore)
     val backupStore = IosBackupStore(dataDirectory, database, sessions, repertoire, practice, trophies, progressConfig, clock, io)
     val backupManager = BackupManager(
-        backupStore, IosBackupDocuments(), backupPrefs, IosKeepAlive, backupConfig, clock, elapsed, io,
-        analytics,
+        store = backupStore, documents = IosBackupDocuments(), prefs = backupPrefs, keepAlive = IosKeepAlive,
+        config = backupConfig, clock = clock, elapsed = elapsed, io = io, analytics = analytics,
     )
 
     init {
@@ -219,7 +225,7 @@ internal fun pitchSources(
     config: IntonationConfig,
     logStats: Boolean,
     onInputRate: (Int) -> Unit = {},
-    analytics: Analytics = NoOpAnalytics(),
+    analytics: Analytics,
 ): () -> PitchSource {
     if (fakeScenario != null) return { FakePitchSource(fakeScenario, config) }
     // MPM, as on Android (DetectorComparisonTest)

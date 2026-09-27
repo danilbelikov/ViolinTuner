@@ -79,7 +79,7 @@ class IosSessionPlayer internal constructor(
     /** The engine of each loaded file; a test gives one that renders by hand, with no audio hardware behind it. */
     private val newEngine: () -> AVAudioEngine,
 ) : SessionPlayer {
-    constructor(scope: CoroutineScope, config: SoundConfig, backingConfig: BackingConfig = BackingConfig()) :
+    constructor(scope: CoroutineScope, config: SoundConfig, backingConfig: BackingConfig) :
         this(scope, config, backingConfig, { AVAudioEngine() })
 
     private val mutableState = MutableStateFlow(PlayerState())

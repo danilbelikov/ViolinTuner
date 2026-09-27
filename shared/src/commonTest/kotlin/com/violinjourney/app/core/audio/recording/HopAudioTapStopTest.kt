@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.audio.recording
 
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.io.platformFile
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -28,7 +29,7 @@ class HopAudioTapStopTest {
     fun `stop from a caller cancelled meanwhile still closes the encoder`() = runTest {
         val encoder = FakeEncoder()
         // a dispatcher of its own: the closing really moves off the caller's, as it does onto the encoder's thread
-        val tap = HopAudioTap(encoderFactory = { _, _ -> encoder }, finishDispatcher = StandardTestDispatcher(testScheduler))
+        val tap = HopAudioTap(encoderFactory = { _, _ -> encoder }, finishDispatcher = StandardTestDispatcher(testScheduler), analytics = NoOpAnalytics())
         tap.start(platformFile("/violin-test/take.m4a"))
         tap.onHop(ShortArray(HOP), HOP, hopStartTMs = 0, sampleRateHz = RATE)
 

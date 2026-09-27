@@ -2,7 +2,6 @@ package com.violinjourney.app.core.recording.video
 
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.ErrorGroup
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.ForgottenPractice
@@ -112,7 +111,7 @@ class VideoTakeImporter(
     private val elapsed: ElapsedClock,
     private val speed: AnalysisSpeed,
     dispatcher: CoroutineDispatcher,
-    private val analytics: Analytics = NoOpAnalytics(),
+    private val analytics: Analytics,
 ) {
     data class Saved(val pieceId: Long, val sessionId: Long)
 

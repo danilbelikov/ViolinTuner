@@ -1,7 +1,11 @@
 package com.violinjourney.app.feature.practice
 
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.data.profile.AvatarFiles
 import com.violinjourney.app.core.data.profile.FakeAvatarFiles
+import com.violinjourney.app.core.domain.backing.NoBackings
+import com.violinjourney.app.core.domain.journey.JourneyConfig
+import com.violinjourney.app.core.domain.practice.testPracticeFinisher
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.Piece
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
@@ -25,6 +29,8 @@ import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.domain.journey.FakeJourneyRepository
 import com.violinjourney.app.core.domain.journey.TaktEarning
+import com.violinjourney.app.core.domain.venue.FollowTheRoad
+import com.violinjourney.app.core.domain.venue.Venues
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.journey.JourneyMotion
 import kotlin.time.Instant
@@ -87,13 +93,14 @@ class PracticeViewModelTest {
         finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
         repository: FakePracticeRepository = this@PracticeViewModelTest.repository,
         avatarFiles: AvatarFiles = this@PracticeViewModelTest.avatarFiles,
-        finisher: PracticeFinisher = PracticeFinisher(repository, store, clock, journey = journey),
+        finisher: PracticeFinisher = testPracticeFinisher(repository, store, clock, journey = journey),
         repertoire: RepertoireRepository = FakeRepertoireRepository(),
         blocks: BlockStore = NoBlocks,
     ): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
         val viewModel = PracticeViewModel(
             repository, store, finisher, sessions, config, repertoire, clock,
-            trophies, profiles, avatarFiles, ProgressConfig(), journey, blocks = blocks, finishAsk = finishAsk,
+            trophies, profiles, avatarFiles, ProgressConfig(), journey, blocks = blocks, finishAsk = finishAsk, venues = Venues(FollowTheRoad, journey),
+            journeyConfig = JourneyConfig(), analytics = NoOpAnalytics(), backings = NoBackings,
         )
         val effects = mutableListOf<PracticeEffect>()
         backgroundScope.launch { viewModel.state.collect {} }
@@ -193,7 +200,7 @@ class PracticeViewModelTest {
 
     @Test
     fun `«Не сохранять» on the sheet of a practice saved elsewhere leaves the next one running`() = runTest {
-        val finisher = PracticeFinisher(repository, store, clock, journey = journey)
+        val finisher = testPracticeFinisher(repository, store, clock, journey = journey)
         val (viewModel, _) = viewModel(finisher = finisher)
         viewModel.onIntent(PracticeIntent.StartClicked)
         val first = clock.nowMs
@@ -642,7 +649,7 @@ class PracticeViewModelTest {
     fun `the journey window shows takts earned on the spot after their recap, not those earned before`() = runTest {
         journey.start(clock.millis())
         journey.earn(TaktEarning(clock.millis(), 100, 80, 600_000, 100))
-        val finisher = PracticeFinisher(repository, store, clock, journey = journey)
+        val finisher = testPracticeFinisher(repository, store, clock, journey = journey)
         val (viewModel, effects) = viewModel(finisher = finisher)
         backgroundScope.launch { viewModel.journeyWindow.collect {} }
         runCurrent()
@@ -720,7 +727,7 @@ class PracticeViewModelTest {
 
     @Test
     fun `a practice saved before the screen opened is history - not recapped`() = runTest {
-        val finisher = PracticeFinisher(repository, store, clock, journey = journey)
+        val finisher = testPracticeFinisher(repository, store, clock, journey = journey)
         val start = clock.millis() - 30 * MS_PER_MINUTE
         store.startIfIdle(start)
         finisher.save(start, 30 * MS_PER_MINUTE)
@@ -736,7 +743,7 @@ class PracticeViewModelTest {
     fun `a trophy the prompt's save brings waits for its recap`() = runTest {
         // a row takes a while to write: the prompt's «Закончить сейчас» is still saving when the trophy is given
         val slow = FakePracticeRepository(addDelayMs = 10)
-        val finisher = PracticeFinisher(slow, store, clock, journey = journey)
+        val finisher = testPracticeFinisher(slow, store, clock, journey = journey)
         val (viewModel, _) = viewModel(repository = slow, finisher = finisher)
         val start = clock.millis() - 62 * MS_PER_MINUTE
         store.startIfIdle(start)

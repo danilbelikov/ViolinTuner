@@ -1,6 +1,7 @@
 package com.violinjourney.app.ios
 
 import com.violinjourney.app.core.analytics.FakeAnalytics
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.data.session.RoomSessionRepository
 import com.violinjourney.app.core.domain.IntonationConfig
@@ -60,7 +61,7 @@ class IosSessionRepositoryTest {
     fun `a recording whose sound file is gone is read without sound — the row keeps it`() = runTest {
         val database = IosStorage.database(directory)
         val files = Files(present = setOf("here.m4a"))
-        val repository = RoomSessionRepository(database.sessionDao(), config, files, SystemWallClock, io = Dispatchers.Default)
+        val repository = RoomSessionRepository(database.sessionDao(), config, files, SystemWallClock, io = Dispatchers.Default, analytics = NoOpAnalytics())
         val here = repository.save(take("here.m4a"))
         val gone = repository.save(take("gone.m4a"))
 

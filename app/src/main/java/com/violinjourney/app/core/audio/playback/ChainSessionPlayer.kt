@@ -38,8 +38,8 @@ import kotlinx.coroutines.flow.update
  */
 class ChainSessionPlayer(
     private val config: SoundConfig,
-    private val backingConfig: BackingConfig = BackingConfig(),
-    private val focus: PlaybackFocus = PlaybackFocus.None,
+    private val backingConfig: BackingConfig,
+    private val focus: PlaybackFocus,
 ) : SessionPlayer {
     private val mutableState = MutableStateFlow(PlayerState())
     override val state: StateFlow<PlayerState> = mutableState.asStateFlow()

@@ -1,6 +1,7 @@
 package com.violinjourney.app.feature.backup
 
 import androidx.lifecycle.SavedStateHandle
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.backup.BackupCandidate
 import com.violinjourney.app.core.backup.BackupConfig
 import com.violinjourney.app.core.backup.BackupContents
@@ -68,11 +69,13 @@ class BackupViewModelsTest {
 
     private fun TestScope.manager() = BackupManager(
         store, documents, FakeBackupPrefs(), {}, BackupConfig(), clock, { testScheduler.currentTime }, StandardTestDispatcher(testScheduler),
+        analytics = NoOpAnalytics(),
     )
 
     private fun TestScope.importer() = VideoTakeImporter(
         FakeVideoFiles(), FakeFileTakeAnalyzer(), FakeSessionRepository(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), FakeRunningPracticeStore(),
         PracticeConfig(), RepertoireConfig(), IntonationConfig(), clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
+        analytics = NoOpAnalytics(),
     )
 
     private fun TestScope.backupScreen(manager: BackupManager) = BackupViewModel(manager, store, BackupConfig(), watch, importer())

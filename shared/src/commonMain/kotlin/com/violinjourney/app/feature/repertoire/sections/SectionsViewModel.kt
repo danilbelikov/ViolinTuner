@@ -3,7 +3,6 @@ package com.violinjourney.app.feature.repertoire.sections
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.domain.practice.BlockRules
-import com.violinjourney.app.core.domain.practice.NoBlockHistory
 import com.violinjourney.app.core.domain.practice.PieceBlockRepository
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.SavedBlock
@@ -34,8 +33,8 @@ open class SectionsViewModel(
     private val repertoire: RepertoireRepository,
     private val config: RepertoireConfig,
     private val clock: WallClock,
-    blocks: PieceBlockRepository = NoBlockHistory,
-    private val practiceConfig: PracticeConfig = PracticeConfig(),
+    blocks: PieceBlockRepository,
+    private val practiceConfig: PracticeConfig,
 ) : ViewModel() {
     private val newName = MutableStateFlow<String?>(null)
     private val timeExpanded = MutableStateFlow(false)

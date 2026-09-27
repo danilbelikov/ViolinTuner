@@ -1,7 +1,6 @@
 package com.violinjourney.app.core.audio
 
 import com.violinjourney.app.core.analytics.Analytics
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.dsp.PitchDetectorFactory
 import com.violinjourney.app.core.audio.recording.AudioTap
 import com.violinjourney.app.core.audio.recording.HopAudioTap
@@ -73,7 +72,7 @@ class IosMicPitchSource(
     /** The rate the input opened at, told on every opening: what the backing is made ready at next time ([IosRecordingRate]). */
     private val onInputRate: (Int) -> Unit = {},
     /** Where an encoder of a take that could not be made is told (spec 3.34). */
-    analytics: Analytics = NoOpAnalytics(),
+    analytics: Analytics,
 ) : PitchSource {
 
     override val requiresMicPermission: Boolean = true

@@ -3,6 +3,7 @@ package com.violinjourney.app.core.data.repertoire
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.data.session.SessionEntity
 import com.violinjourney.app.core.domain.repertoire.Accidental
@@ -59,7 +60,7 @@ class RoomRepertoireRepositoryTest {
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java).build()
-        repository = RoomRepertoireRepository(database.repertoireDao(), files, config, clock)
+        repository = RoomRepertoireRepository(database.repertoireDao(), files, config, clock, analytics = NoOpAnalytics())
     }
 
     @After

@@ -7,7 +7,6 @@ import android.media.MediaMuxer
 import android.util.Log
 import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.analytics.ErrorGroup
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import java.io.File
 import java.nio.ByteOrder
 import java.util.concurrent.ArrayBlockingQueue
@@ -21,7 +20,7 @@ import java.util.concurrent.TimeUnit
 class AacFileEncoder(
     private val file: File,
     private val sampleRateHz: Int,
-    private val analytics: Analytics = NoOpAnalytics(),
+    private val analytics: Analytics,
 ) : PcmEncoder {
     private class Chunk(val samples: ShortArray, val count: Int)
 

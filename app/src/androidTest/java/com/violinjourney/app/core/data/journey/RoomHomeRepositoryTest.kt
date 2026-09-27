@@ -3,6 +3,7 @@ package com.violinjourney.app.core.data.journey
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.domain.home.HomeCatalog
 import com.violinjourney.app.core.domain.home.HomeState
@@ -27,7 +28,7 @@ class RoomHomeRepositoryTest {
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java).build()
         dao = database.journeyDao()
-        home = RoomHomeRepository(dao)
+        home = RoomHomeRepository(dao, analytics = NoOpAnalytics())
     }
 
     @After

@@ -2,13 +2,10 @@ package com.violinjourney.app.core.domain.practice
 
 import com.violinjourney.app.core.domain.journey.JourneyConfig
 import com.violinjourney.app.core.domain.journey.JourneyRepository
-import com.violinjourney.app.core.domain.journey.NoJourney
 import com.violinjourney.app.core.domain.journey.JourneyRules
-import com.violinjourney.app.core.domain.journey.NoPracticeNotes
 import com.violinjourney.app.core.domain.journey.PracticeNotesStore
 import com.violinjourney.app.core.domain.journey.TaktEarning
 import com.violinjourney.app.core.analytics.Analytics
-import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.analytics.PracticeFinished
 import com.violinjourney.app.core.time.WallClock
 import kotlinx.coroutines.NonCancellable
@@ -37,13 +34,13 @@ class PracticeFinisher(
     private val repository: PracticeRepository,
     private val store: RunningPracticeStore,
     private val clock: WallClock,
-    private val notes: PracticeNotesStore = NoPracticeNotes,
-    private val journey: JourneyRepository = NoJourney,
-    private val journeyConfig: JourneyConfig = JourneyConfig(),
-    private val blocks: BlockStore = NoBlocks,
-    private val blockHistory: PieceBlockRepository = NoBlockHistory,
-    private val config: PracticeConfig = PracticeConfig(),
-    private val analytics: Analytics = NoOpAnalytics(),
+    private val notes: PracticeNotesStore,
+    private val journey: JourneyRepository,
+    private val journeyConfig: JourneyConfig,
+    private val blocks: BlockStore,
+    private val blockHistory: PieceBlockRepository,
+    private val config: PracticeConfig,
+    private val analytics: Analytics,
 ) {
     private val lock = Mutex()
 

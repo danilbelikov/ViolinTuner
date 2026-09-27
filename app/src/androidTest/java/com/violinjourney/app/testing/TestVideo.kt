@@ -5,6 +5,7 @@ import android.media.MediaCodecInfo
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaMuxer
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.recording.AacFileEncoder
 import java.io.File
 import java.nio.ByteBuffer
@@ -114,7 +115,7 @@ object TestVideo {
     }
 
     private fun encodeSound(file: File, seconds: Int, hzAt: (Double) -> Double?): File {
-        val encoder = AacFileEncoder(file, SAMPLE_RATE)
+        val encoder = AacFileEncoder(file, SAMPLE_RATE, analytics = NoOpAnalytics())
         val hop = ShortArray(HOP)
         var phase = 0.0
         var sample = 0L
