@@ -1,5 +1,9 @@
 package com.violinjourney.app.core.audio.backing
 
+import com.violinjourney.app.core.audio.IosAudioSession
+import com.violinjourney.app.core.audio.asULong
+import com.violinjourney.app.core.audio.interruptionEndsInput
+import com.violinjourney.app.core.audio.routeChangeStopsSound
 import com.violinjourney.app.core.domain.backing.AudioRoute
 import com.violinjourney.app.core.domain.backing.BackingOutput
 import com.violinjourney.app.core.io.PlatformFile
@@ -29,6 +33,10 @@ import platform.AVFAudio.AVAudioPlayer
 import platform.AVFAudio.AVAudioPlayerDelegateProtocol
 import platform.AVFAudio.AVAudioPlayerNode
 import platform.AVFAudio.AVAudioSession
+import platform.AVFAudio.AVAudioSessionCategoryPlayback
+import platform.AVFAudio.AVAudioSessionInterruptionNotification
+import platform.AVFAudio.AVAudioSessionInterruptionReasonKey
+import platform.AVFAudio.AVAudioSessionInterruptionTypeKey
 import platform.AVFAudio.AVAudioSessionPortBluetoothA2DP
 import platform.AVFAudio.AVAudioSessionPortBluetoothHFP
 import platform.AVFAudio.AVAudioSessionPortBluetoothLE
@@ -36,14 +44,18 @@ import platform.AVFAudio.AVAudioSessionPortDescription
 import platform.AVFAudio.AVAudioSessionPortHeadphones
 import platform.AVFAudio.AVAudioSessionPortUSBAudio
 import platform.AVFAudio.AVAudioSessionRouteChangeNotification
+import platform.AVFAudio.AVAudioSessionRouteChangeReasonKey
 import platform.AVFAudio.AVAudioTime
 import platform.AVFAudio.currentRoute
 import platform.AVFAudio.outputLatency
+import platform.AVFAudio.setActive
+import platform.Foundation.NSError
 import platform.Foundation.NSNotificationCenter
 import platform.Foundation.NSOperationQueue
 import platform.Foundation.NSURL
 import platform.QuartzCore.CACurrentMediaTime
 import platform.darwin.NSObject
+import platform.darwin.NSObjectProtocol
 
 /** The host clock of iOS in nanoseconds: what the start of a take and of its backing are both measured on (spec 5.25). */
 internal object HostClock {
@@ -86,14 +98,25 @@ internal class IosAudioRoutes : AudioRoutes {
     }
 }
 
-/** The backing listened to on the piece screen (spec 3.32): the file as it is, through whatever output there is. */
+/**
+ * The backing listened to on the piece screen (spec 3.32): the file as it is, through whatever output there is. While it
+ * sounds it is one more user of the app's audio session ([IosAudioSession]), set for playing: a fresh process has the
+ * default category, which the silent switch mutes, and whatever was opened before (Live, a player) must not decide
+ * whether it is heard. The last one out lets the session go, and music another app had on may come back. A call or an
+ * alarm, headphones taken off and a file that fails to decode stop it — the button goes back to ▶ instead of showing
+ * «stop» in silence. Main thread only; the session is taken and let go there too.
+ */
 @OptIn(ExperimentalForeignApi::class)
 internal class IosBackingPreview : BackingPreview {
     private val mutablePlaying = MutableStateFlow(false)
     override val playing: StateFlow<Boolean> = mutablePlaying.asStateFlow()
     private var player: AVAudioPlayer? = null
+    private var holdsSession = false
+    private val observers = ArrayList<NSObjectProtocol>()
     private val ended = object : NSObject(), AVAudioPlayerDelegateProtocol {
         override fun audioPlayerDidFinishPlaying(player: AVAudioPlayer, successfully: Boolean) = stop()
+
+        override fun audioPlayerDecodeErrorDidOccur(player: AVAudioPlayer, error: NSError?) = stop()
     }
 
     override fun toggle(file: PlatformFile) {
@@ -103,16 +126,41 @@ internal class IosBackingPreview : BackingPreview {
         }
         val next = runCatching { AVAudioPlayer(contentsOfURL = NSURL.fileURLWithPath(file.path), error = null) }.getOrNull() ?: return
         next.delegate = ended
-        if (next.play()) {
-            player = next
-            mutablePlaying.value = true
-        }
+        IosAudioSession.enter(::takeForPlaying)
+        holdsSession = true
+        player = next
+        watch(next)
+        if (next.play()) mutablePlaying.value = true else stop()
     }
 
     override fun stop() {
+        observers.forEach(NSNotificationCenter.defaultCenter::removeObserver)
+        observers.clear()
         player?.stop()
         player = null
+        if (holdsSession) {
+            holdsSession = false
+            IosAudioSession.leave()
+        }
         mutablePlaying.value = false
+    }
+
+    /** What stops the sound from outside: an interruption that begins, the output it went to gone. */
+    private fun watch(sounding: AVAudioPlayer) {
+        val center = NSNotificationCenter.defaultCenter
+        observers += center.addObserverForName(AVAudioSessionInterruptionNotification, null, NSOperationQueue.mainQueue) { note ->
+            val type = note?.userInfo?.get(AVAudioSessionInterruptionTypeKey).asULong()
+            val reason = note?.userInfo?.get(AVAudioSessionInterruptionReasonKey).asULong()
+            if (interruptionEndsInput(type, reason, engineRunning = sounding.playing)) stop()
+        }
+        observers += center.addObserverForName(AVAudioSessionRouteChangeNotification, null, NSOperationQueue.mainQueue) { note ->
+            if (routeChangeStopsSound(note?.userInfo?.get(AVAudioSessionRouteChangeReasonKey).asULong())) stop()
+        }
+    }
+
+    private fun takeForPlaying(session: AVAudioSession) {
+        session.setCategory(AVAudioSessionCategoryPlayback, null)
+        session.setActive(true, null)
     }
 }
 

@@ -1,10 +1,13 @@
 package com.violinjourney.app.core.audio.playback
 
 import com.violinjourney.app.core.audio.IosAudioSession
+import com.violinjourney.app.core.audio.asULong
 import com.violinjourney.app.core.audio.backing.BackingMixer
 import com.violinjourney.app.core.audio.backing.IosBackingPcmReader
 import com.violinjourney.app.core.audio.fx.SoundChain
 import com.violinjourney.app.core.audio.fx.SoundMeters
+import com.violinjourney.app.core.audio.interruptionEndsInput
+import com.violinjourney.app.core.audio.routeChangeStopsSound
 import com.violinjourney.app.core.concurrent.PlatformLock
 import com.violinjourney.app.core.concurrent.withLock
 import com.violinjourney.app.core.domain.backing.BackingConfig
@@ -47,6 +50,11 @@ import platform.AVFAudio.AVAudioPCMBuffer
 import platform.AVFAudio.AVAudioPlayerNode
 import platform.AVFAudio.AVAudioSession
 import platform.AVFAudio.AVAudioSessionCategoryPlayback
+import platform.AVFAudio.AVAudioSessionInterruptionNotification
+import platform.AVFAudio.AVAudioSessionInterruptionReasonKey
+import platform.AVFAudio.AVAudioSessionInterruptionTypeKey
+import platform.AVFAudio.AVAudioSessionRouteChangeNotification
+import platform.AVFAudio.AVAudioSessionRouteChangeReasonKey
 import platform.AVFAudio.setActive
 import platform.Foundation.NSError
 import platform.Foundation.NSLog
@@ -59,9 +67,11 @@ import platform.Foundation.NSURL
  * AVAudioPlayerNode, a few chunks ahead of the ear. One worker per loaded file; the calls leave wishes it picks up
  * between two chunks. A take under a backing (spec 3.32) is mixed with it by the same [BackingMixer] as on Android.
  * The output (the engine) is taken on play and paused half a second after the sound stops — a pause or the end of the
- * take — so an open screen with nothing playing does not keep the audio hardware running; the audio session, shared
- * with the microphones, is let go through [IosAudioSession] when the player is. When iOS stops the engine by itself (a
- * change of headphones), the player pauses where the sound was.
+ * take — so an open screen with nothing playing does not keep the audio hardware running. The audio session, shared
+ * with the microphones, is held through [IosAudioSession] from the first play until the player is released — another
+ * file loaded keeps it, so other apps' music does not come back between two recordings picked on «Звук». When iOS stops
+ * the engine by itself (a change of headphones) or a call, an alarm or Siri interrupts it, the player pauses where the
+ * sound was; headphones taken off pause it too, rather than let it go on out of the loudspeaker.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class IosSessionPlayer internal constructor(
@@ -92,13 +102,16 @@ class IosSessionPlayer internal constructor(
     private var backingChanged = false
     private var outputLost = false
 
+    /** Counted among the users of the app's audio session: from the first play until [release], across loads. */
+    private var holdsSession = false
+
     private val wake = Channel<Unit>(Channel.CONFLATED)
     private var worker: Job? = null
 
     override fun load(file: PlatformFile) = loadWithBacking(file, null)
 
     override fun loadWithBacking(file: PlatformFile, backing: PlayerBacking?) {
-        release()
+        stopWorker()
         lock.withLock {
             backingOffsetMs = backing?.offsetMs ?: 0
             backingGainDb = backing?.gainDb ?: 0f
@@ -154,6 +167,17 @@ class IosSessionPlayer internal constructor(
     }
 
     override fun release() {
+        val ending = worker
+        stopWorker()
+        val held = lock.withLock { holdsSession.also { holdsSession = false } }
+        if (!held) return
+        // the last one using the session lets it go, and music another app had on comes back — once the worker has
+        // stopped its engine: a session let go under running sound stops it with an error
+        if (ending == null) IosAudioSession.leave() else ending.invokeOnCompletion { IosAudioSession.leave() }
+    }
+
+    /** The file let go, the session kept: what a new load and [release] have in common. */
+    private fun stopWorker() {
         worker?.cancel()
         worker = null
         lock.withLock {
@@ -183,9 +207,16 @@ class IosSessionPlayer internal constructor(
         mutableState.update { it.copy(playing = false) }
     }
 
+    /** The output the sound went to is gone — headphones taken off: a pause where the ear was, as a tap on pause would. */
+    private fun outputGone() {
+        wish { wantPlaying = false }
+        mutableState.update { it.copy(playing = false) }
+    }
+
     private suspend fun run(file: PlatformFile, backing: PlayerBacking?) {
-        // Every write of the state checks the worker inside its update: release() cancels it before it writes a fresh
-        // state, so a worker let go never lands its «ready», «failed» or position in the state of the player's next file.
+        // Every write of the state checks the worker inside its update, and every wish it clears checks it under the
+        // lock: a new load and release() cancel it before they write a fresh state, so a worker let go never lands its
+        // «ready», «failed», position or meters in the state of the player's next file, nor takes back its «play».
         val job = currentCoroutineContext().job
         val source = openSound(file)
         val rate = source?.rate ?: 0
@@ -215,19 +246,26 @@ class IosSessionPlayer internal constructor(
         engine.connect(node, engine.mainMixerNode, format)
         val center = NSNotificationCenter.defaultCenter
         // posted on a thread of the system's: what is done there only leaves a wish; a player let go hears nothing more
-        val stopped = center.addObserverForName(AVAudioEngineConfigurationChangeNotification, engine, null) { _ ->
-            if (job.isActive && !engine.running) outputStopped()
-        }
-        var playback: Playback? = null
+        val observers = listOf(
+            center.addObserverForName(AVAudioEngineConfigurationChangeNotification, engine, null) { _ ->
+                if (job.isActive && !engine.running) outputStopped()
+            },
+            // a call, an alarm, Siri: iOS stops the engine and says so only here — no completions come any more
+            center.addObserverForName(AVAudioSessionInterruptionNotification, null, null) { note ->
+                val type = note?.userInfo?.get(AVAudioSessionInterruptionTypeKey).asULong()
+                val reason = note?.userInfo?.get(AVAudioSessionInterruptionReasonKey).asULong()
+                if (job.isActive && interruptionEndsInput(type, reason, engine.running)) outputStopped()
+            },
+            center.addObserverForName(AVAudioSessionRouteChangeNotification, null, null) { note ->
+                if (job.isActive && routeChangeStopsSound(note?.userInfo?.get(AVAudioSessionRouteChangeReasonKey).asULong())) outputGone()
+            },
+        )
         try {
-            playback = Playback(source, rate, engine, node, format, reader, job)
-            playback.loop()
+            Playback(source, rate, engine, node, format, reader, job).loop()
         } finally {
-            center.removeObserver(stopped)
+            observers.forEach(center::removeObserver)
             node.stop()
             engine.stop()
-            // the last one using the session lets it go, and music another app had on comes back
-            if (playback?.holdsSession == true) IosAudioSession.leave()
             reader?.close()
             source.close()
         }
@@ -285,10 +323,6 @@ class IosSessionPlayer internal constructor(
         private var running = false
         private var sinceMeters = 0
 
-        /** Counted among the users of the app's audio session (from the first play until the player is let go). */
-        var holdsSession = false
-            private set
-
         suspend fun loop() {
             var current = lock.withLock { settingsChanged = false; settings }
             chain.set(current, immediate = true)
@@ -319,7 +353,7 @@ class IosSessionPlayer internal constructor(
                     // the stopped engine took the sound on the node with it: on from where the ear was
                     val heard = heardMs()
                     restartAt(heard)
-                    mutableMeters.value = null
+                    showMeters(null)
                     mutableState.update { if (!job.isActive) it else it.copy(positionMs = heard) }
                 }
                 if (seek != NO_SEEK) restartAt(seek)
@@ -327,7 +361,7 @@ class IosSessionPlayer internal constructor(
                     if (running) {
                         node.pause()
                         running = false
-                        mutableMeters.value = null
+                        showMeters(null)
                     }
                     if (engine.running) {
                         // the output is let go only after a stretch of silence; any wish before that — a new look at them all
@@ -339,7 +373,8 @@ class IosSessionPlayer internal constructor(
                 }
                 if (!running) {
                     if (!startOutput()) {
-                        lock.withLock { wantPlaying = false }
+                        // the wishes are the player's, not the file's: a worker let go leaves them to the next file
+                        lock.withLock { if (job.isActive) wantPlaying = false }
                         mutableState.update { if (!job.isActive) it else PlayerState(failed = true, processed = it.processed, original = it.original) }
                         return
                     }
@@ -359,8 +394,8 @@ class IosSessionPlayer internal constructor(
                         continue
                     }
                     restartAt(0)
-                    lock.withLock { wantPlaying = false }
-                    mutableMeters.value = null
+                    lock.withLock { if (job.isActive) wantPlaying = false }
+                    showMeters(null)
                     mutableState.update { if (!job.isActive) it else it.copy(playing = false, positionMs = 0) }
                     continue
                 }
@@ -398,13 +433,18 @@ class IosSessionPlayer internal constructor(
                 sinceMeters += count
                 if (sinceMeters >= rate / METERS_PER_SECOND) {
                     sinceMeters = 0
-                    mutableMeters.value = if (mixer.originalOnly) null else chain.takeMeters()
+                    showMeters(if (mixer.originalOnly) null else chain.takeMeters())
                 }
                 tellPosition()
             }
         }
 
         private fun decode(): Int = source.read(dry, CHUNK)
+
+        /** The meters of this file — nothing of it once the player has let it go. */
+        private fun showMeters(meters: SoundMeters?) {
+            if (job.isActive) mutableMeters.value = meters
+        }
 
         private fun schedule(samples: FloatArray, count: Int) {
             val buffer = AVAudioPCMBuffer(pCMFormat = format, frameCapacity = count.toUInt())
@@ -467,16 +507,21 @@ class IosSessionPlayer internal constructor(
          * The output is taken when the sound goes on, not when the screen opens: a recording looked at is not heard. It
          * is taken again on every play after the engine was paused — [OUTPUT_LINGER_MS] after a pause or the end of a
          * take — with the category and the activation set again every time, as on the first play: a microphone opened
-         * meanwhile made the session its own. The session is the app's one ([IosAudioSession]): the first play counts
-         * the player among its users, and the player leaves when it is let go.
+         * meanwhile made the session its own. The session is the app's one ([IosAudioSession]): the first play of the
+         * player counts it among its users, and the player leaves when it is released — not when another file is loaded.
          */
         private fun startOutput(): Boolean {
             if (engine.running) return true
-            if (holdsSession) {
+            if (lock.withLock { holdsSession }) {
                 takeForPlaying(AVAudioSession.sharedInstance())
             } else {
                 IosAudioSession.enter(::takeForPlaying)
-                holdsSession = true
+                // released while it was entering: what was just taken goes at once, and nothing plays
+                val kept = lock.withLock { job.isActive.also { if (it) holdsSession = true } }
+                if (!kept) {
+                    IosAudioSession.leave()
+                    return false
+                }
             }
             return memScoped {
                 val error = alloc<ObjCObjectVar<NSError?>>()

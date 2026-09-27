@@ -4,8 +4,10 @@ import com.violinjourney.app.core.concurrent.PlatformLock
 import com.violinjourney.app.core.concurrent.withLock
 import kotlinx.cinterop.ExperimentalForeignApi
 import platform.AVFAudio.AVAudioSession
+import platform.AVFAudio.AVAudioSessionRouteChangeReasonOldDeviceUnavailable
 import platform.AVFAudio.AVAudioSessionSetActiveOptionNotifyOthersOnDeactivation
 import platform.AVFAudio.setActive
+import platform.Foundation.NSNumber
 
 /**
  * Who is using a shared thing, counted: [enter] runs the opening and counts the user only if it returns, [leave] lets
@@ -17,6 +19,9 @@ internal class SessionUsers(private val letGo: () -> Unit) {
     private var count = 0
 
     fun <T> enter(open: () -> T): T = lock.withLock { open().also { count++ } }
+
+    /** How many are in now; for tests. */
+    val users: Int get() = lock.withLock { count }
 
     /** A leave with nobody in is a mistake of the caller, not a reason to let go twice. */
     fun leave() = lock.withLock {
@@ -44,4 +49,21 @@ internal object IosAudioSession {
 
     /** One user fewer; the last one lets the session go. Only after an [enter] that returned. */
     fun leave() = users.leave()
+
+    /** How many use the session now; for tests. */
+    val count: Int get() = users.users
+}
+
+/**
+ * Whether a change of the route ends what plays: the output it went to is gone — headphones taken off — and the sound
+ * would go on out of the loudspeaker. Players stop there, as they do on Android when the output «becomes noisy»; a new
+ * device and a category changed by another user in the app do not stop them.
+ */
+internal fun routeChangeStopsSound(reason: ULong?): Boolean = reason == AVAudioSessionRouteChangeReasonOldDeviceUnavailable
+
+/** A number of a notification's userInfo, as the bridge hands it over: an NSNumber, or a Kotlin number. */
+internal fun Any?.asULong(): ULong? = when (this) {
+    is NSNumber -> unsignedIntegerValue
+    is Number -> toLong().toULong()
+    else -> null
 }

@@ -473,7 +473,9 @@ open class PieceViewModel(
 
     private fun previewBacking() {
         val found = backingOf() ?: return
-        if (takes.recordingRequested.value) return
+        // not while a take is recorded, nor until the chain has let the microphone go: on iOS the preview sets the
+        // session for playing, which would stop the microphone that is still open under it
+        if (takes.recordingRequested.value || listening.value) return
         val file = backingFiles?.existing(found.fileName) ?: return
         backingPreview?.toggle(file)
     }

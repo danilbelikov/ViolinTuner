@@ -932,6 +932,29 @@ class PieceViewModelTest {
     }
 
     @Test
+    fun `the backing is not listened to until the take has let the microphone go`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        val (viewModel, _) = screen(id)
+        advance(100)
+        viewModel.onIntent(PieceIntent.BackingChipToggled)
+        runCurrent()
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.takeState.value.recording)
+
+        // stopped, but the chain lets the microphone go only on its next frame: on iOS the preview would take the
+        // session for playing from under it
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        viewModel.onIntent(PieceIntent.BackingPreviewClicked)
+        assertFalse(preview.playing.value)
+
+        advance(500)
+        viewModel.onIntent(PieceIntent.BackingPreviewClicked)
+        assertTrue(preview.playing.value)
+    }
+
+    @Test
     fun `the backing listened to stops when a camera, a replacement, the stand, a take or another screen opens`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
         withBacking(id)

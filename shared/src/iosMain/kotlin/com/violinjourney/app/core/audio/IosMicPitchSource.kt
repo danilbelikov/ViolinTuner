@@ -39,7 +39,6 @@ import platform.AVFAudio.setPreferredSampleRate
 import platform.Foundation.NSError
 import platform.Foundation.NSLog
 import platform.Foundation.NSNotificationCenter
-import platform.Foundation.NSNumber
 import platform.Foundation.NSOperationQueue
 import platform.darwin.NSObjectProtocol
 
@@ -248,10 +247,3 @@ internal fun interruptionEndsInput(type: ULong?, reason: ULong?, engineRunning: 
  */
 internal fun engineStopEndsInput(engineRunning: Boolean, category: String?): Boolean =
     !engineRunning && category == AVAudioSessionCategoryPlayAndRecord
-
-/** A number of a notification's userInfo, as the bridge hands it over: an NSNumber, or a Kotlin number. */
-private fun Any?.asULong(): ULong? = when (this) {
-    is NSNumber -> unsignedIntegerValue
-    is Number -> toLong().toULong()
-    else -> null
-}

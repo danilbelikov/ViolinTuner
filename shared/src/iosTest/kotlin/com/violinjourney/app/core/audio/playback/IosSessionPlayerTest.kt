@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.audio.playback
 
+import com.violinjourney.app.core.audio.IosAudioSession
 import com.violinjourney.app.core.audio.recording.IosAacEncoder
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.sound.SoundConfig
@@ -41,9 +42,16 @@ import platform.AVFAudio.AVAudioEngineConfigurationChangeNotification
 import platform.AVFAudio.AVAudioEngineManualRenderingModeRealtime
 import platform.AVFAudio.AVAudioFormat
 import platform.AVFAudio.AVAudioPCMBuffer
+import platform.AVFAudio.AVAudioSessionInterruptionNotification
+import platform.AVFAudio.AVAudioSessionInterruptionTypeBegan
+import platform.AVFAudio.AVAudioSessionInterruptionTypeKey
+import platform.AVFAudio.AVAudioSessionRouteChangeNotification
+import platform.AVFAudio.AVAudioSessionRouteChangeReasonKey
+import platform.AVFAudio.AVAudioSessionRouteChangeReasonOldDeviceUnavailable
 import platform.Foundation.NSError
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSNotificationCenter
+import platform.Foundation.NSNumber
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSUUID
 import platform.posix.usleep
@@ -151,6 +159,112 @@ class IosSessionPlayerTest {
         assertTrue(running.running, "play took the output again")
         output.cancel()
         player.release()
+    }
+
+    @Test
+    fun `a call pauses the player where it was and play goes on from there`() = runBlocking {
+        pausedFromOutside(
+            AVAudioSessionInterruptionNotification!!,
+            mapOf<Any?, Any?>(AVAudioSessionInterruptionTypeKey to NSNumber(unsignedLong = AVAudioSessionInterruptionTypeBegan)),
+        )
+    }
+
+    @Test
+    fun `headphones taken off pause the player where it was and play goes on from there`() = runBlocking {
+        pausedFromOutside(
+            AVAudioSessionRouteChangeNotification!!,
+            mapOf<Any?, Any?>(AVAudioSessionRouteChangeReasonKey to NSNumber(unsignedLong = AVAudioSessionRouteChangeReasonOldDeviceUnavailable)),
+        )
+    }
+
+    /** What iOS says of a call or of headphones taken off, said while the take plays: a pause where the ear was. */
+    private suspend fun pausedFromOutside(name: String, userInfo: Map<Any?, *>) {
+        writeTone(seconds = 1.5)
+        val engine = AtomicReference<AVAudioEngine?>(null)
+        val player = IosSessionPlayer(scope, SoundConfig(), BackingConfig()) { byHand().also { engine.value = it } }
+        player.load(PlatformFile(path))
+        withTimeout(5.seconds) { player.state.first { it.ready || it.failed } }
+        assertTrue(player.state.value.ready, "${player.state.value}")
+        val output = scope.launch { pull(engine) }
+
+        player.play()
+        withTimeout(5.seconds) { player.state.first { it.positionMs > 300 } }
+        NSNotificationCenter.defaultCenter.postNotificationName(name, null, userInfo)
+        withTimeout(5.seconds) { player.state.first { !it.playing } }
+        delay(OUTPUT_KEPT_MS) // the worker has taken the wish by now
+        val paused = player.state.value
+        assertFalse(paused.playing, "no «playing» in silence")
+        assertFalse(paused.failed)
+        assertTrue(paused.positionMs in 300 until paused.durationMs, "paused where the sound was, not at the start: ${paused.positionMs}")
+
+        player.play()
+        withTimeout(5.seconds) { player.state.first { it.positionMs > paused.positionMs + 100 } }
+        output.cancel()
+        player.release()
+    }
+
+    @Test
+    fun `the session is kept while another recording is loaded and let go when the player is`() = runBlocking {
+        writeTone(seconds = 1.5)
+        val engine = AtomicReference<AVAudioEngine?>(null)
+        val player = IosSessionPlayer(scope, SoundConfig(), BackingConfig()) { byHand().also { engine.value = it } }
+        val before = IosAudioSession.count
+        player.load(PlatformFile(path))
+        withTimeout(5.seconds) { player.state.first { it.ready || it.failed } }
+        val output = scope.launch { pull(engine) }
+        player.play()
+        withTimeout(5.seconds) { player.state.first { it.positionMs > 150 } }
+        assertEquals(before + 1, IosAudioSession.count, "the first play takes the session")
+
+        // «Слушать на…» on «Звук»: another recording in the same player — other apps' music is not let back in between
+        player.load(PlatformFile(path))
+        withTimeout(5.seconds) { player.state.first { it.ready || it.failed } }
+        delay(LET_GO_MS) // the worker of the file before has ended by now
+        assertEquals(before + 1, IosAudioSession.count, "another file keeps the session")
+        player.play()
+        withTimeout(5.seconds) { player.state.first { it.positionMs > 150 } }
+        assertEquals(before + 1, IosAudioSession.count, "and plays in it without taking it twice")
+
+        player.release()
+        withTimeout(3.seconds) { while (IosAudioSession.count != before) delay(POLL_MS) }
+        output.cancel()
+    }
+
+    @Test
+    fun `a file let go while it waited for the session leaves the play of the next file alone`() = runBlocking {
+        writeTone(seconds = 1.5)
+        val engine = AtomicReference<AVAudioEngine?>(null)
+        val player = IosSessionPlayer(scope, SoundConfig(), BackingConfig()) { byHand().also { engine.value = it } }
+        player.load(PlatformFile(path))
+        withTimeout(5.seconds) { player.state.first { it.ready || it.failed } }
+        assertTrue(player.state.value.ready, "${player.state.value}")
+        val output = scope.launch { pull(engine) }
+        // another user opening the session slowly: the player's first play waits for it inside its own opening
+        val inside = AtomicInt(0)
+        val opening = AtomicInt(1)
+        val other = scope.launch {
+            IosAudioSession.enter { _ ->
+                inside.value = 1
+                while (opening.value == 1) usleep(POLL_US)
+            }
+        }
+        withTimeout(5.seconds) { while (inside.value == 0) delay(POLL_MS) }
+
+        player.play()
+        delay(LET_GO_MS) // the first file's worker waits at the session by now
+        // «Слушать на…» on «Звук»: another recording picked and played while that worker still waits
+        player.load(PlatformFile(path))
+        withTimeout(5.seconds) { player.state.first { it.ready || it.failed } }
+        assertTrue(player.state.value.ready, "${player.state.value}")
+        player.play()
+        opening.value = 0
+        other.join()
+
+        withTimeout(5.seconds) { player.state.first { it.positionMs > 300 } }
+        assertTrue(player.state.value.playing, "${player.state.value}")
+        output.cancel()
+        player.release()
+        IosAudioSession.leave() // the other user's
     }
 
     @Test
