@@ -75,7 +75,8 @@ fun StreakFlame(
         alpha.floatValue = 0f
     }
     LaunchedEffect(streakDays, scope) {
-        if (streakDays > known.intValue && FlameMath.stageOf(streakDays) != FlameMath.Stage.NONE) {
+        // At rest («убрать анимации») nothing is kept for later: a growth not seen is history, not a wake (spec 3.18).
+        if (!still && streakDays > known.intValue && FlameMath.stageOf(streakDays) != FlameMath.Stage.NONE) {
             wakes.trySend(Wake(flare = true, appearing = FlameMath.stageOf(known.intValue) == FlameMath.Stage.NONE))
         }
         known.intValue = streakDays
@@ -83,6 +84,8 @@ fun StreakFlame(
 
     LaunchedEffect(still) {
         if (still) return@LaunchedEffect
+        // Animations back on: a wake sent before they went off is long past — the flame starts from rest, not with a flare.
+        while (wakes.tryReceive().isSuccess) Unit
         var next: Wake? = Wake(flare = false, appearing = false).takeIf { PracticeMotion.FLAME_SWAY_ON_OPEN && !runningNow }
         try {
             while (true) {
