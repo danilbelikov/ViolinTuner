@@ -15,11 +15,17 @@ class FakeSessionRepository : SessionRepository {
         return id
     }
 
+    /** How many times a recording was unpacked and analysed: a rename or a star should not do it again. */
+    var detailsReads = 0
+
     override suspend fun details(id: Long): SessionDetails? {
+        detailsReads++
         val summary = sessions.value.firstOrNull { it.id == id } ?: return null
         val session = saved[(id - 1).toInt()]
         return SessionDetails(summary, session.samples, SessionAnalyzer.analyze(session.samples, session.config))
     }
+
+    override suspend fun summary(id: Long): SessionSummary? = sessions.value.firstOrNull { it.id == id }
 
     override suspend fun rename(id: Long, title: String?) = sessions.update { list ->
         list.map { if (it.id == id) it.copy(title = title?.trim()?.takeIf(String::isNotEmpty)) else it }

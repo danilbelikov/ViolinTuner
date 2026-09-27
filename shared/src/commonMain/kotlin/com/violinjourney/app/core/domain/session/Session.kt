@@ -61,6 +61,9 @@ interface SessionRepository {
     /** Null when there is no such session (deleted meanwhile). */
     suspend fun details(id: Long): SessionDetails?
 
+    /** The row alone, without unpacking and analysing the samples: its name, piece and sound. Null when it is gone. */
+    suspend fun summary(id: Long): SessionSummary? = details(id)?.summary
+
     suspend fun save(session: NewSession): Long
 
     /** Blank or null restores the default name. */

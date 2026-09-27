@@ -4,6 +4,7 @@ import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.data.session.RoomSessionRepository
 import com.violinjourney.app.core.data.session.SessionDao
+import com.violinjourney.app.core.di.DefaultDispatcher
 import com.violinjourney.app.core.di.IoDispatcher
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.session.SessionRepository
@@ -27,5 +28,6 @@ object SessionDataModule {
         clock: WallClock,
         analytics: Analytics,
         @IoDispatcher io: CoroutineDispatcher,
-    ): SessionRepository = RoomSessionRepository(dao, defaultConfig, audioFiles, clock, analytics, io)
+        @DefaultDispatcher compute: CoroutineDispatcher,
+    ): SessionRepository = RoomSessionRepository(dao, defaultConfig, audioFiles, clock, analytics, io, compute)
 }

@@ -67,6 +67,7 @@ class IosSessionRepositoryTest {
         assertEquals(mapOf(here to "here.m4a", gone to null), listed)
         assertEquals("here.m4a", repository.details(here)!!.summary.audioPath)
         assertNull(repository.details(gone)!!.summary.audioPath)
+        assertNull(repository.summary(gone)!!.audioPath)
         // the file may come back with another copy: the row still names it
         assertEquals(setOf("here.m4a", "gone.m4a"), database.sessionDao().audioPaths().toSet())
         database.close()

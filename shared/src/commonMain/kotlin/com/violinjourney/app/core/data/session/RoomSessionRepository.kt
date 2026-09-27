@@ -34,6 +34,8 @@ class RoomSessionRepository(
     private val analytics: Analytics = NoOpAnalytics(),
     /** Where the files are looked for: one question to the file system per recording with sound. */
     private val io: CoroutineDispatcher = Dispatchers.IO,
+    /** Where a recording is unpacked and analysed: an hour is 72 000 samples, too much for the main thread. */
+    private val compute: CoroutineDispatcher = Dispatchers.Default,
 ) : SessionRepository {
 
     override val sessions: Flow<List<SessionSummary>> =
@@ -44,11 +46,19 @@ class RoomSessionRepository(
      * the tolerance and bucket size the session was recorded with, which gives the same result.
      */
     override suspend fun details(id: Long): SessionDetails? {
-        val summary = dao.session(id)?.let { withContext(io) { SessionMapper.toSummary(it, ::soundFound) } } ?: return null
+        val entity = dao.session(id) ?: return null
         val stored = dao.samples(id) ?: return null
-        val samples = SampleCodec.decode(stored.data)
-        val config = defaultConfig.forSession(summary).copy(sessionBucketMs = stored.bucketMs)
-        return SessionDetails(summary, samples, SessionAnalyzer.analyze(samples, config))
+        return withContext(compute) {
+            val summary = SessionMapper.toSummary(entity, ::soundFound)
+            val samples = SampleCodec.decode(stored.data)
+            val config = defaultConfig.forSession(summary).copy(sessionBucketMs = stored.bucketMs)
+            SessionDetails(summary, samples, SessionAnalyzer.analyze(samples, config))
+        }
+    }
+
+    override suspend fun summary(id: Long): SessionSummary? {
+        val entity = dao.session(id) ?: return null
+        return withContext(io) { SessionMapper.toSummary(entity, ::soundFound) }
     }
 
     override suspend fun save(session: NewSession): Long = dao.insert(

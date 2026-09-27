@@ -22,6 +22,8 @@ import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.feature.sound.SoundReducer
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,6 +34,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 open class SessionViewModel(
     private val repository: SessionRepository,
@@ -45,6 +48,8 @@ open class SessionViewModel(
     savedState: SavedStateHandle,
     private val backings: BackingRepository = NoBackings,
     private val backingPcm: BackingPcm? = null,
+    /** Where the analysis becomes the screen's content — a contour for every note: an hour of samples is too much for the main thread. */
+    private val compute: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
 
     private val sessionId: Long = checkNotNull(savedState[ARG_SESSION_ID]) { "session id is required" }
@@ -93,7 +98,7 @@ open class SessionViewModel(
             SessionIntent.DialogDismissed -> updateLoaded { it.copy(dialog = null) }
             is SessionIntent.RenameConfirmed -> viewModelScope.launch {
                 repository.rename(sessionId, intent.title)
-                load() // the repository decides what a blank name means
+                refreshHeader() // the repository decides what a blank name means
             }
             is SessionIntent.FullscreenChanged -> updateLoaded { it.copy(fullscreen = intent.fullscreen && it.video?.lost == false) }
             is SessionIntent.PlaySegmentClicked -> {
@@ -125,27 +130,52 @@ open class SessionViewModel(
             val former = repertoire.piece(pieceId)?.bestTakeId
             repertoire.setBestTake(pieceId, if (content.best) null else sessionId)
             if (!content.best) effectChannel.send(SessionEffect.ShowBestMarked(moved = former != null && former != sessionId))
-            load()
+            refreshHeader()
         }
     }
 
-    /** The recording and its sound, looked for here: a file that is gone makes it a recording without sound (spec 3.17, 3.20). */
+    /**
+     * The recording, once: unpacked and analysed by the repository, made into the screen's content off the main thread.
+     * Its sound is looked for here too — a file that is gone makes it a recording without sound (spec 3.17, 3.20).
+     */
     private suspend fun load() {
         val details = repository.details(sessionId)
         val piece = details?.summary?.pieceId?.let { repertoire.piece(it) }
-        val sound = details?.summary?.audioPath?.let(audioFiles::existing)
+        val shown = details?.let {
+            withContext(compute) {
+                val sound = it.summary.audioPath?.let(audioFiles::existing)
+                SessionContentMapper.contentOf(it, defaultConfig, soundFound = sound != null) to sound
+            }
+        }
         mutableState.update { previous ->
-            if (details == null) {
+            if (shown == null) {
                 SessionState.NotFound
             } else {
-                // a reload after renaming keeps what is open and what is playing
-                val content = SessionContentMapper.contentOf(details, defaultConfig, soundFound = sound != null)
-                    .copy(pieceTitle = piece?.title, pieceId = piece?.id, best = piece?.bestTakeId == sessionId)
+                val content = shown.first.copy(pieceTitle = piece?.title, pieceId = piece?.id, best = piece?.bestTakeId == sessionId)
                 (previous as? SessionState.Loaded ?: SessionState.Loaded(content)).copy(content = content, dialog = null)
             }
         }
-        if (player == null) sound?.let(::startPlayer)
+        if (player == null) shown?.second?.let(::startPlayer)
         if (picture == null) details?.summary?.videoPath?.let(::startPicture)
+    }
+
+    /**
+     * After a rename or a star: only the name, the piece and the mark are read again — not the samples, which have not
+     * changed. What is open and what is playing stays as it is.
+     */
+    private suspend fun refreshHeader() {
+        val summary = repository.summary(sessionId)
+        if (summary == null) {
+            mutableState.value = SessionState.NotFound // deleted meanwhile
+            return
+        }
+        val piece = summary.pieceId?.let { repertoire.piece(it) }
+        updateLoaded {
+            it.copy(
+                content = it.content.copy(title = summary.title, pieceTitle = piece?.title, pieceId = piece?.id, best = piece?.bestTakeId == sessionId),
+                dialog = null,
+            )
+        }
     }
 
     private var surface: VideoSurfaceHandle? = null

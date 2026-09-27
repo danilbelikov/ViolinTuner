@@ -133,6 +133,7 @@ class SessionViewModelTest {
         val viewModel = SessionViewModel(
             repository, config, audioFiles, { player }, repertoire, sound, SoundConfig(), { file -> FakePicture(file).also { pictures += it } },
             SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)),
+            compute = StandardTestDispatcher(testScheduler),
         )
         runCurrent()
         return viewModel
@@ -387,6 +388,23 @@ class SessionViewModelTest {
         viewModel.onIntent(SessionIntent.DeleteConfirmed)
         runCurrent()
         assertEquals(1, player.released)
+    }
+
+    @Test
+    fun `a rename and a star change the header without analysing the recording again`() = runTest {
+        val pieceId = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val viewModel = viewModel(saveSession(audio = "take.m4a", pieceId = pieceId))
+        val content = viewModel.loaded().content
+        assertEquals(1, repository.detailsReads)
+
+        viewModel.onIntent(SessionIntent.RenameConfirmed("Этюд"))
+        runCurrent()
+        viewModel.onIntent(SessionIntent.BestClicked)
+        runCurrent()
+        assertEquals("unpacked and analysed once, when the screen opened", 1, repository.detailsReads)
+        assertEquals("Этюд", viewModel.loaded().content.title)
+        assertTrue(viewModel.loaded().content.best)
+        assertEquals("the analysis is the one already shown", content.segments, viewModel.loaded().content.segments)
     }
 
     @Test
