@@ -87,6 +87,23 @@ class StandMathTest {
     }
 
     @Test
+    fun `a swipe lights the edge it went through`() {
+        val ids = listOf(5L, 6L, 7L)
+        assertEquals(StandZone.NEXT, StandMath.edgeOfSettle(ids, fromId = 5L, toId = 6L, byTap = false))
+        assertEquals(StandZone.PREVIOUS, StandMath.edgeOfSettle(ids, fromId = 7L, toId = 6L, byTap = false))
+        assertEquals(StandZone.NEXT, StandMath.edgeOfSettle(ids, fromId = 5L, toId = 7L, byTap = false))
+    }
+
+    @Test
+    fun `a deleted page and a tap turn and the first rest light nothing`() {
+        // the page 6 was deleted: 7 stands on its place and did not turn in
+        assertNull(StandMath.edgeOfSettle(listOf(5L, 7L), fromId = 6L, toId = 7L, byTap = false))
+        assertNull(StandMath.edgeOfSettle(listOf(5L, 6L, 7L), fromId = 5L, toId = 6L, byTap = true))
+        assertNull(StandMath.edgeOfSettle(listOf(5L, 6L, 7L), fromId = null, toId = 6L, byTap = false))
+        assertNull(StandMath.edgeOfSettle(listOf(5L, 6L, 7L), fromId = 6L, toId = 6L, byTap = false))
+    }
+
+    @Test
     fun `an unzoomed sheet is decoded at half the stored size — a zoomed one in full`() {
         assertEquals(2, StandMath.sampleSize(sourceWidth = 1920, wantedWidth = 936))
         assertEquals(1, StandMath.sampleSize(sourceWidth = 1920, wantedWidth = 1836))

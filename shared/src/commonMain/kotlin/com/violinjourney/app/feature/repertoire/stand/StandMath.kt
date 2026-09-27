@@ -58,6 +58,20 @@ object StandMath {
     fun offsetAfterPinch(offset: Float, focus: Float, zoomChange: Float, pan: Float): Float = focus * (1f - zoomChange) + zoomChange * offset + pan
 
     /**
+     * The edge to light when the pager comes to rest on [toId] after resting on [fromId] (spec 3.15): the side the sheet
+     * came in from — [StandZone.NEXT] forwards, [StandZone.PREVIOUS] back. Nothing when a tap turned the page (the tap
+     * has lit its edge already, [byTap]), when there was no page before (the first rest), when the page is the same, and
+     * when [fromId] is no longer among [pageIds]: that page was deleted, and the one on its place did not turn in.
+     */
+    fun edgeOfSettle(pageIds: List<Long>, fromId: Long?, toId: Long?, byTap: Boolean): StandZone? {
+        if (byTap || fromId == null || toId == null || fromId == toId) return null
+        val from = pageIds.indexOf(fromId)
+        val to = pageIds.indexOf(toId)
+        if (from < 0 || to < 0) return null
+        return if (to > from) StandZone.NEXT else StandZone.PREVIOUS
+    }
+
+    /**
      * The largest power of two a picture [sourceWidth] wide can be decoded down by and still be
      * no narrower than [wantedWidth]: a page is 2560 px for the sake of zooming, the unzoomed
      * sheet needs half of that.

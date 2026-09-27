@@ -190,6 +190,7 @@ private fun Sheets(
     val flashSide = remember { mutableStateOf(StandZone.NEXT) }
     val hint = remember { Animatable(0f) }
     val pageCount by rememberUpdatedState(pages.size)
+    val currentPages by rememberUpdatedState(pages)
     // A tap in the middle waits to see whether it is the first half of a double tap.
     val pendingPanelTap = remember { mutableStateOf<Job?>(null) }
     // What the stand leaves around the scaled layer of the sheet (see Sheet): the zoom is centred and held within it.
@@ -198,6 +199,17 @@ private fun Sheets(
             IntSize(LandscapeSheetSide.roundToPx() * 2, 0)
         } else {
             IntSize(PortraitSheetSide.roundToPx() * 2, PortraitSheetTop.roundToPx() * 2)
+        }
+    }
+    // Plain holders: read and written by the handlers and the effect below, never drawn.
+    val tapTargetId = remember { mutableStateOf<Long?>(null) }
+    val lastSettledId = remember { mutableStateOf<Long?>(null) }
+
+    fun flashEdge(zone: StandZone) {
+        flashSide.value = zone
+        scope.launch {
+            flash.snapTo(StandMotion.EDGE_FLASH_ALPHA)
+            flash.animateTo(0f, tween(StandMotion.EDGE_FLASH_MS))
         }
     }
 
@@ -211,14 +223,23 @@ private fun Sheets(
                 bounce.animateTo(distance, tween(StandMotion.BOUNCE_MS / 2))
                 bounce.animateTo(0f, tween(StandMotion.BOUNCE_MS / 2))
             } else {
-                flashSide.value = zone
-                launch {
-                    flash.snapTo(StandMotion.EDGE_FLASH_ALPHA)
-                    flash.animateTo(0f, tween(StandMotion.EDGE_FLASH_MS))
-                }
+                // the tap lights its edge as it turns; the rest it comes to must not light it again
+                tapTargetId.value = currentPages.getOrNull(target)?.pageId
+                flashEdge(zone)
                 pagerState.animateScrollToPage(target, animationSpec = tween(StandMotion.PAGE_TURN_MS, easing = FastOutSlowInEasing))
             }
         }
+    }
+
+    // A swipe lights the edge it turned through too (spec 3.15), once the sheet has come to rest: later than a tap's
+    // flash, which comes with the tap. Compared by page, not by index, so a deleted page lights nothing.
+    val settledId = pages.getOrNull(pagerState.settledPage)?.pageId
+    LaunchedEffect(settledId) {
+        val byTap = settledId != null && settledId == tapTargetId.value
+        val edge = StandMath.edgeOfSettle(currentPages.map { it.pageId }, lastSettledId.value, settledId, byTap)
+        tapTargetId.value = null
+        lastSettledId.value = settledId
+        if (edge != null) flashEdge(edge)
     }
 
     if (showHint) {

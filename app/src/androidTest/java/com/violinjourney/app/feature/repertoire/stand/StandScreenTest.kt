@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.SemanticsActions
@@ -16,6 +17,7 @@ import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.domain.repertoire.Accidental
@@ -35,7 +37,7 @@ import org.junit.runner.RunWith
 /**
  * The upright stand (spec 3.15, 3.22): a drawn scale taller than the stand scrolls instead of losing its last systems,
  * and a photo turned upright keeps no scroll bar of the lying sheet; a page deleted while zoomed leaves the next one at
- * 1×, free to be swiped.
+ * 1×, free to be swiped; a swipe lights the edge it turned through.
  */
 @RunWith(AndroidJUnit4::class)
 class StandScreenTest {
@@ -115,7 +117,36 @@ class StandScreenTest {
         assertTrue("the page in its place is a new one, at 1×", canSwipe())
     }
 
+    @Test
+    fun aSwipeLightsTheEdgeItTurnedThrough() {
+        show { stateOf(listOf(StandPage(1, null), StandPage(2, null), StandPage(3, null))) }
+        compose.waitForIdle()
+        compose.mainClock.autoAdvance = false
+        val background = edges().first
+        compose.onNodeWithTag(STAND).performTouchInput { swipeLeft() }
+        // frame by frame until the sheet has come to rest and a little after: the flash lasts 200 ms from the rest
+        var lit = false
+        repeat(FRAMES) {
+            compose.mainClock.advanceTimeByFrame()
+            val (left, right) = edges()
+            // the edge of the stand is dark; lit, it takes the tint of the accent while the other edge keeps the background
+            if (left == background && right != background && right.isDark()) lit = true
+        }
+        compose.mainClock.autoAdvance = true
+        assertTrue("the right edge was lit by the swipe to the next page", lit)
+    }
+
+    /** The colours at the left and the right edge of the stand, half-way down. */
+    private fun edges(): Pair<Color, Color> {
+        val pixels = compose.onNodeWithTag(STAND).captureToImage().toPixelMap()
+        val y = pixels.height / 2
+        return pixels[1, y] to pixels[pixels.width - 2, y]
+    }
+
+    private fun Color.isDark() = red < 0.5f && green < 0.5f && blue < 0.5f
+
     private companion object {
+        const val FRAMES = 120
         const val STAND = "stand"
         const val STAND_WIDTH = 400
         const val STAND_HEIGHT = 800
