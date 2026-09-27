@@ -249,21 +249,13 @@ private fun shelfLabel(group: HomeGroup): StringResource = when (group) {
     HomeGroup.OUTSIDE -> Res.string.shop_shelf_outside
 }
 
-/** What a thing on a shelf says under its name. */
-private enum class Tag { PRICE, GIFT, STANDING, OWNED, LOCKED }
-
-private fun tagOf(item: HomeItem, ui: HomeUi): Tag = when {
-    HomeRules.owned(item, ui.home) -> if (HomeRules.placed(ui.home)[item.slot]?.id == item.id) Tag.STANDING else Tag.OWNED
-    !HomeRules.unlocked(item, ui.progress) -> Tag.LOCKED
-    item.price == 0 -> Tag.GIFT
-    else -> Tag.PRICE
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ShopScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     ui.tryOn?.let { TryOn(it, ui, onIntent, modifier); return }
+    val today = rememberHomeTime().date
+    val tags = remember(ui.home, ui.progress, ui.house, today) { ShelfTags(ui.home, ui.progress, ui.house, today) }
     Column(modifier.fillMaxSize().background(colors.surface), horizontalAlignment = Alignment.CenterHorizontally) {
         JourneyTopBar(stringResource(Res.string.home_shop), onBack = { onIntent(HomeIntent.BackClicked) }) { Balance(ui) }
         if (ui.loading) return@Column
@@ -290,8 +282,8 @@ fun ShopScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Text(stringResource(shelfLabel(group)), color = Color.White.copy(alpha = 0.92f), style = MaterialTheme.typography.titleSmall)
-                    ShelfRows(things, material) { item, width -> Tile(item, ui, onIntent, width) }
-                    if (things.all { HomeRules.owned(it, ui.home) }) {
+                    ShelfRows(things, material) { item, width -> Tile(item, tags.of(item), onIntent, width) }
+                    if (things.all(tags::owned)) {
                         Text(stringResource(Res.string.shop_shelf_yours), color = Color.White.copy(alpha = 0.7f), style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -299,7 +291,7 @@ fun ShopScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
         }
     }
     ui.card?.let { item ->
-        ModalBottomSheet(onDismissRequest = { onIntent(HomeIntent.CardClosed) }) { ItemCard(item, ui, onIntent) }
+        ModalBottomSheet(onDismissRequest = { onIntent(HomeIntent.CardClosed) }) { ItemCard(item, ui, tags, today, onIntent) }
     }
 }
 
@@ -310,27 +302,26 @@ fun ShopScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
  * two lines and one line: a price or a state. A thing of a city not reached yet stands faint, «привезут».
  */
 @Composable
-private fun Tile(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit, width: Dp) {
-    val tag = tagOf(item, ui)
+private fun Tile(item: HomeItem, tag: ShelfTag, onIntent: (HomeIntent) -> Unit, width: Dp) {
     val name = itemName(item.id)
     val city = item.from?.let { cityOf(JourneyRoute.indexOf(it)) }
     val under = when (tag) {
-        Tag.PRICE -> Formats.takts(item.price.toLong())
-        Tag.GIFT -> stringResource(Res.string.shop_gift)
-        Tag.STANDING -> stringResource(if (item.outside) Res.string.shop_standing_outside else Res.string.shop_standing)
-        Tag.OWNED -> stringResource(Res.string.shop_owned)
-        Tag.LOCKED -> stringResource(Res.string.shop_soon)
+        ShelfTag.PRICE -> Formats.takts(item.price.toLong())
+        ShelfTag.GIFT -> stringResource(Res.string.shop_gift)
+        ShelfTag.STANDING -> stringResource(if (item.outside) Res.string.shop_standing_outside else Res.string.shop_standing)
+        ShelfTag.OWNED -> stringResource(Res.string.shop_owned)
+        ShelfTag.LOCKED -> stringResource(Res.string.shop_soon)
     }
-    val description = listOfNotNull(name, city, if (tag == Tag.PRICE) stringResource(Res.string.shop_price_takts, under) else under).joinToString(", ")
+    val description = listOfNotNull(name, city, if (tag == ShelfTag.PRICE) stringResource(Res.string.shop_price_takts, under) else under).joinToString(", ")
     Column(
         Modifier.width(width).clip(TileShape)
             // a thing of the next city calls to the road: it has no card yet
-            .then(if (tag == Tag.LOCKED) Modifier else Modifier.clickable(role = Role.Button) { onIntent(HomeIntent.ItemClicked(item.id)) })
+            .then(if (tag == ShelfTag.LOCKED) Modifier else Modifier.clickable(role = Role.Button) { onIntent(HomeIntent.ItemClicked(item.id)) })
             .clearAndSetSemantics { contentDescription = description },
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Box(Modifier.size(width, width * PICTURE_RATIO)) {
-            Box(Modifier.fillMaxSize().alpha(if (tag == Tag.LOCKED) LOCKED_ALPHA else 1f)) { ItemThumb(item) }
+            Box(Modifier.fillMaxSize().alpha(if (tag == ShelfTag.LOCKED) LOCKED_ALPHA else 1f)) { ItemThumb(item) }
             if (city != null) {
                 Text(
                     city,
@@ -340,13 +331,13 @@ private fun Tile(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit, wid
             }
         }
         Text(
-            name, color = Color.White.copy(alpha = if (tag == Tag.LOCKED) 0.55f else 0.92f), fontSize = 11.sp, lineHeight = 14.sp,
+            name, color = Color.White.copy(alpha = if (tag == ShelfTag.LOCKED) 0.55f else 0.92f), fontSize = 11.sp, lineHeight = 14.sp,
             textAlign = TextAlign.Center, minLines = 2, maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = BoardHeight + 6.dp),
         )
-        if (tag == Tag.PRICE) {
+        if (tag == ShelfTag.PRICE) {
             TaktAmount(under, color = Color.White.copy(alpha = 0.8f), style = MaterialTheme.typography.labelMedium, icon = 12.dp)
         } else {
-            Text(under, color = Color.White.copy(alpha = if (tag == Tag.STANDING) 0.92f else 0.6f), style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
+            Text(under, color = Color.White.copy(alpha = if (tag == ShelfTag.STANDING) 0.92f else 0.6f), style = MaterialTheme.typography.labelSmall, maxLines = 1, softWrap = false)
         }
     }
 }
@@ -358,10 +349,9 @@ private const val TRY_ON_ZOOM = 0.62f
 
 /** The card of a thing (handoff 27b2): the thing large, a line about it, where it will stand, what will be left — and «Примерить · Купить». */
 @Composable
-private fun ItemCard(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit) {
+private fun ItemCard(item: HomeItem, ui: HomeUi, tags: ShelfTags, today: LocalDate, onIntent: (HomeIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val tag = tagOf(item, ui)
-    val today = rememberHomeTime().date
+    val tag = tags.of(item)
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         // the thing large and alive, on the material of its shelf and on its board (spec 3.29)
         val material = ShelfMaterial.of(item.group)
@@ -380,9 +370,12 @@ private fun ItemCard(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit)
             !HomeRules.inSeason(item, today) -> Text(stringResource(Res.string.shop_waits_season), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         when (tag) {
-            Tag.STANDING, Tag.LOCKED -> Unit
-            Tag.OWNED -> OutlinedButton(onClick = { onIntent(HomeIntent.Placed(item.slot, item.id)); onIntent(HomeIntent.CardClosed) }, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text(stringResource(Res.string.shop_put)) }
-            Tag.GIFT, Tag.PRICE -> {
+            ShelfTag.STANDING, ShelfTag.LOCKED -> Unit
+            // only where the thing can stand, and only when it is not the choice of its place already (waiting for its season)
+            ShelfTag.OWNED -> if (here && !tags.chosen(item)) {
+                OutlinedButton(onClick = { onIntent(HomeIntent.Placed(item.slot, item.id)); onIntent(HomeIntent.CardClosed) }, modifier = Modifier.fillMaxWidth().height(52.dp)) { Text(stringResource(Res.string.shop_put)) }
+            }
+            ShelfTag.GIFT, ShelfTag.PRICE -> {
                 if (item.price > 0) {
                     val left = ui.balance - item.price
                     val next = JourneyRules.next(ui.progress)
@@ -471,6 +464,7 @@ fun ArrangeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier
             modifier = Modifier.widthIn(max = HomeMaxWidth).fillMaxWidth().padding(horizontal = 16.dp).height(210.dp).clip(RoundedCornerShape(20.dp)), seconds = rememberSceneSeconds(),
         )
         val placed = HomeRules.placed(ui.home)
+        val owned = HomeRules.ownedItems(ui.home)
         val slots = HomeCatalog.slots.filter { it.outside == ui.outside }
         val here = slots.filter { HomeRules.slotIn(it.id, ui.house) }
         val filled = here.filter { HomeRules.wardrobe(it.id, ui.home).isNotEmpty() }
@@ -485,7 +479,7 @@ fun ArrangeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier
                 Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Text(slotName(slot.id), modifier = Modifier.weight(1f), color = colors.onSurface, style = MaterialTheme.typography.titleSmall)
-                        val more = HomeCatalog.items.count { it.slot == slot.id && !HomeRules.owned(it, ui.home) }
+                        val more = HomeCatalog.items.count { it.slot == slot.id && it.id !in owned }
                         if (more > 0) Text(stringResource(Res.string.arrange_in_shop, more), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
                     }
                     Row(Modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
