@@ -40,7 +40,8 @@ import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.core.domain.journey.JourneyRules
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.motion.rememberAnimationsRemoved
-import com.violinjourney.app.feature.home.art.homeModeNow
+import com.violinjourney.app.core.time.SystemWallClock
+import com.violinjourney.app.feature.home.art.HomeTimeRules
 import com.violinjourney.app.feature.journey.art.ScenePicture
 import com.violinjourney.app.feature.journey.art.rememberScene
 import com.violinjourney.app.feature.journey.art.rememberSceneSeconds
@@ -96,7 +97,8 @@ fun SplashRoute(kind: SplashKind, onDone: () -> Unit, modifier: Modifier = Modif
     BackHandler {}
     CompositionLocalProvider(LocalReduceMotion provides reduce) {
         val colors = MaterialTheme.colorScheme
-        val mode = remember { homeModeNow() }
+        // one look at the clock for a film of a second or two
+        val mode = remember { HomeTimeRules.at(SystemWallClock).mode }
         val caption = remember { Animatable(if (reduce) 1f else 0f) }
         LaunchedEffect(Unit) {
             if (reduce) return@LaunchedEffect

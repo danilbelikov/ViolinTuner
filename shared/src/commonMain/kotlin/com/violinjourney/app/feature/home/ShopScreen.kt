@@ -34,8 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.unit.IntSize
-import com.violinjourney.app.core.time.SystemWallClock
-import com.violinjourney.app.core.time.today
 import com.violinjourney.app.feature.home.art.rememberHouseArt
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -71,7 +69,7 @@ import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.feature.home.art.HomePicture
 import com.violinjourney.app.feature.home.art.CARD_MAX_SCALE
 import com.violinjourney.app.feature.home.art.ItemThumb
-import com.violinjourney.app.feature.home.art.homeModeNow
+import com.violinjourney.app.feature.home.art.rememberHomeTime
 import com.violinjourney.app.feature.journey.JourneyTopBar
 import com.violinjourney.app.feature.journey.TaktAmount
 import com.violinjourney.app.feature.journey.art.SceneMode
@@ -358,6 +356,7 @@ private const val TRY_ON_ZOOM = 0.62f
 private fun ItemCard(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val tag = tagOf(item, ui)
+    val today = rememberHomeTime().date
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(start = 20.dp, end = 20.dp, bottom = 24.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         // the thing large and alive, on the material of its shelf and on its board (spec 3.29)
         val material = ShelfMaterial.of(item.group)
@@ -373,7 +372,7 @@ private fun ItemCard(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit)
         val here = HomeRules.slotIn(item.slot, ui.house) && item.at.let { at -> at == null || HomeRules.slotIn(at, ui.house) }
         when {
             !here -> Text(stringResource(if (item.slot == "fire") Res.string.shop_needs_chimney else Res.string.shop_no_place), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            !HomeRules.inSeason(item, SystemWallClock.today()) -> Text(stringResource(Res.string.shop_waits_season), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
+            !HomeRules.inSeason(item, today) -> Text(stringResource(Res.string.shop_waits_season), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
         }
         when (tag) {
             Tag.STANDING, Tag.LOCKED -> Unit
@@ -415,11 +414,19 @@ private fun ItemCard(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit)
 private fun TryOn(item: HomeItem, ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val camera = rememberSceneCamera()
-    val mode = ui.tryMode ?: homeModeNow()
+    val byClock = rememberHomeTime().mode
+    val mode = ui.tryMode ?: byClock
     val box = rememberHouseArt(ui.house, mode)?.items?.get(item.id)
     var size by remember { mutableStateOf(IntSize.Zero) }
-    // upright the room is wider than the screen: the eye starts on the thing, not on the middle of the room
-    LaunchedEffect(item.id, box != null, size) { if (box != null && size != IntSize.Zero) camera.lookAt((box.left + box.right) / 2, size.width.toFloat(), size.height.toFloat(), atZoom = TRY_ON_ZOOM) }
+    // upright the room is wider than the screen: the eye starts on the thing, not on the middle of the room — once for a
+    // thing and a size: «вечер · день» reads the other file, and the box that goes while it is read must not undo a pan
+    var looked by remember(item.id, size) { mutableStateOf(false) }
+    LaunchedEffect(item.id, box != null, size) {
+        if (!looked && box != null && size != IntSize.Zero) {
+            camera.lookAt((box.left + box.right) / 2, size.width.toFloat(), size.height.toFloat(), atZoom = TRY_ON_ZOOM)
+            looked = true
+        }
+    }
     Box(modifier.fillMaxSize().background(Color.Black).onSizeChanged { size = it }) {
         HomePicture(
             ui.home, outside = item.outside, mode = mode, description = itemName(item.id), ghost = item,
@@ -455,7 +462,7 @@ fun ArrangeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier
         }
         if (ui.loading) return@Column
         HomePicture(
-            ui.home, ui.outside, homeModeNow(), description = houseName(ui.house),
+            ui.home, ui.outside, description = houseName(ui.house),
             modifier = Modifier.widthIn(max = HomeMaxWidth).fillMaxWidth().padding(horizontal = 16.dp).height(210.dp).clip(RoundedCornerShape(20.dp)), seconds = rememberSceneSeconds(),
         )
         val placed = HomeRules.placed(ui.home)

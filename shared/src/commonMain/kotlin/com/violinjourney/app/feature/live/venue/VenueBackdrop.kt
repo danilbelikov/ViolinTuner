@@ -9,11 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawWithCache
@@ -29,13 +25,12 @@ import androidx.compose.ui.graphics.ColorMatrix
 import androidx.compose.ui.graphics.drawscope.DrawScope
 import androidx.compose.ui.graphics.drawscope.translate
 import androidx.compose.ui.unit.dp
+import com.violinjourney.app.core.domain.home.HomeCatalog
 import com.violinjourney.app.core.domain.home.HomeRules
 import com.violinjourney.app.core.domain.home.HomeState
 import com.violinjourney.app.core.domain.venue.Venue
-import com.violinjourney.app.core.time.SystemWallClock
-import com.violinjourney.app.core.time.today
 import com.violinjourney.app.feature.home.art.HomeComposer
-import com.violinjourney.app.feature.home.art.homeModeNow
+import com.violinjourney.app.feature.home.art.rememberHomeTime
 import com.violinjourney.app.feature.home.art.rememberHouseArt
 import com.violinjourney.app.feature.journey.art.PreparedScene
 import com.violinjourney.app.feature.journey.art.SceneMode
@@ -44,8 +39,6 @@ import com.violinjourney.app.feature.journey.art.drawPrepared
 import com.violinjourney.app.feature.journey.art.prepare
 import com.violinjourney.app.feature.journey.art.rememberPausableSceneSeconds
 import com.violinjourney.app.feature.journey.art.rememberScene
-import kotlinx.coroutines.delay
-import kotlinx.datetime.LocalDate
 
 /** The scene a place is drawn from: the room is composed of what stands in it, a hall is read from its file (tools/journey/stage-scenes.js). */
 object VenueScenes {
@@ -66,37 +59,23 @@ fun rememberVenuePicture(venue: Venue?, home: HomeState?): PreparedScene? = when
     is Venue.Hall -> rememberScene(VenueScenes.stageOf(venue.stopId), SceneMode.EVENING)
 }
 
+/**
+ * The room lived in, composed of what stands in it at the phone's time of day ([rememberHomeTime]): the clock is state,
+ * looked at on entry, on coming back to the front and at 07:00, 19:00 and midnight, so a practice that runs through
+ * 19:00 with Live open sees the room turn in silence too, and no frame of Live reads the time zone.
+ */
 @Composable
 private fun rememberRoomPicture(home: HomeState?): PreparedScene? {
     val state = home?.takeIf { it.loaded }
-    val mode = rememberHomeMode()
-    val house = state?.let(HomeRules::house)
-    val art = rememberHouseArt(house ?: HomeRules.house(HomeState.EMPTY), mode)
-    return remember(art, state, mode) {
-        if (art == null || state == null || house == null) return@remember null
-        val composed = HomeComposer.compose(art, HomeRules.standing(state, house, false, SystemWallClock.today()), outside = false, mode = mode, withViolin = false)
-        prepare(composed.scene, mode)
+    val time = rememberHomeTime()
+    val house = remember(state) { state?.let(HomeRules::house) }
+    val art = rememberHouseArt(house ?: HomeCatalog.START_HOUSE, time.mode)
+    val standing = remember(state, house, time.date) { if (state != null && house != null) HomeRules.standing(state, house, false, time.date) else null }
+    return remember(art, standing, time.mode) {
+        if (art == null || standing == null) return@remember null
+        prepare(HomeComposer.compose(art, standing, outside = false, mode = time.mode, withViolin = false).scene, time.mode)
     }
 }
-
-/**
- * Day or evening by the phone's clock (spec 3.27), looked at again every [HOME_MODE_CHECK_MS]: Live composes its picture
- * only when the place changes, and a practice that runs through 07:00 or 19:00 with Live open still sees the room turn.
- */
-@Composable
-private fun rememberHomeMode(): SceneMode {
-    var mode by remember { mutableStateOf(homeModeNow()) }
-    LaunchedEffect(Unit) {
-        while (true) {
-            delay(HOME_MODE_CHECK_MS)
-            mode = homeModeNow()
-        }
-    }
-    return mode
-}
-
-/** How often the room behind Live looks at the clock: a minute late at 07:00 and 19:00 at most. */
-private const val HOME_MODE_CHECK_MS = 60_000L
 
 /**
  * The picture behind Live (spec 3.27, handoff 29a–29h): the place, framed by [VenueFraming]; the light

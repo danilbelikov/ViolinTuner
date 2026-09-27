@@ -8,7 +8,6 @@ import com.violinjourney.app.core.domain.home.HomeState
 import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.core.domain.journey.JourneyStop
 import com.violinjourney.app.feature.home.art.HomePicture
-import com.violinjourney.app.feature.home.art.homeModeNow
 import com.violinjourney.app.feature.journey.art.Postcard
 import com.violinjourney.app.feature.journey.art.SceneMode
 
@@ -32,7 +31,7 @@ fun StopPostcard(
 ) {
     val home = LocalHomeLook.current
     if (stop.id == JourneyRoute.HOME && home != null && home.loaded) {
-        HomePicture(home, outside = homeOutside, mode = homeModeNow(), description = description, modifier = modifier, seconds = seconds)
+        HomePicture(home, outside = homeOutside, description = description, modifier = modifier, seconds = seconds)
     } else {
         Postcard(stop, description, modifier, mode, inside, seconds)
     }

@@ -121,7 +121,6 @@ import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.feature.home.art.HomePicture
 import com.violinjourney.app.feature.home.art.HomeSilhouettes
 import com.violinjourney.app.feature.home.art.ItemThumb
-import com.violinjourney.app.feature.home.art.homeModeNow
 import com.violinjourney.app.feature.journey.JourneyTopBar
 import com.violinjourney.app.feature.journey.PriceBar
 import com.violinjourney.app.feature.journey.TaktAmount
@@ -216,7 +215,7 @@ private fun Picture(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifi
     val whole = stringResource(Res.string.home_fullscreen)
     Box(modifier.clip(PictureShape).clickable(onClickLabel = whole, role = Role.Button) { onIntent(HomeIntent.FullscreenClicked) }) {
         HomePicture(
-            ui.home, ui.outside, homeModeNow(),
+            ui.home, ui.outside,
             description = stringResource(if (ui.outside) Res.string.home_picture_outside else Res.string.home_picture_room, name),
             modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds(),
         )
@@ -249,7 +248,7 @@ private fun FullscreenHome(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier:
     val name = houseName(ui.house)
     Box(modifier.fillMaxSize().background(Color.Black).onSizeChanged { size = it }.sceneCamera(camera) { panel = !panel }) {
         HomePicture(
-            ui.home, ui.outside, homeModeNow(), description = stringResource(if (ui.outside) Res.string.home_picture_outside else Res.string.home_picture_room, name),
+            ui.home, ui.outside, description = stringResource(if (ui.outside) Res.string.home_picture_outside else Res.string.home_picture_room, name),
             modifier = Modifier.fillMaxSize(), seconds = rememberSceneSeconds(), camera = camera::read,
         )
         val fade = if (reduce) 0 else JourneyMotion.FULLSCREEN_PANEL_FADE_MS
