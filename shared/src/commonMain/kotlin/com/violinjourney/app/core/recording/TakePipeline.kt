@@ -22,6 +22,7 @@ import com.violinjourney.app.core.domain.backing.AudioRoute
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingOffset
+import com.violinjourney.app.core.domain.backing.BackingProgress
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.NoBackings
 import com.violinjourney.app.core.domain.backing.TakeBacking
@@ -46,6 +47,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.conflate
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onCompletion
@@ -125,8 +127,13 @@ class TakePipeline(
 
     private val playback: BackingPlayback? by lazy { backingPlaybackFactory?.create() }
 
-    /** How far the backing of the running take has played, in ms; null while none plays. */
-    val backingPosition: StateFlow<Long?> get() = playback?.position ?: NO_POSITION
+    /**
+     * How far the backing of the running take has played, in ms, in steps of [BackingConfig.progressStepMs]; null while
+     * none plays. For the screens only: the playback tells it with every chunk, and the bar and the words under the
+     * timer need no finer. What a take stores is the playback's own exact count at its stop.
+     */
+    val backingPosition: Flow<Long?>
+        get() = (playback?.position ?: NO_POSITION).map { played -> played?.let { BackingProgress.shownMs(it, backingConfig) } }.distinctUntilChanged()
 
     /** What one frame came to: what the screen shows, and how the recording stands, if one runs. */
     class Output<T>(val shown: T, val recording: RecordingProgress? = null)

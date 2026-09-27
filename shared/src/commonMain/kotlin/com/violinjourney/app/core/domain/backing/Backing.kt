@@ -118,6 +118,11 @@ data class BackingConfig(
      * and is swept: a live one moves with every chunk.
      */
     val unpackIdleMs: Long = 60 * 60_000L,
+    /**
+     * How finely the screens are told how far the backing of a take has played: the thin bar and «1:12 / 3:40»
+     * need no finer (spec 3.32), and the player tells it with every chunk, ~47 times a second.
+     */
+    val progressStepMs: Long = 100,
 )
 
 /** The copies of backing files: `files/backings/<uuid>.<extension>`. Named, not located. */

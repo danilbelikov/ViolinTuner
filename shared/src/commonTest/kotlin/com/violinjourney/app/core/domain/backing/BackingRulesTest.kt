@@ -6,10 +6,18 @@ import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.Test
 
-/** The shift of spec 5.25. */
+/** The shift of spec 5.25, and how far the backing has played as the screens are told it (spec 3.32). */
 class BackingRulesTest {
     private val config = BackingConfig()
     private val ms = 1_000_000L
+
+    @Test
+    fun `the screens hear how far the backing has played in tenths of a second`() {
+        assertEquals(1_200L, BackingProgress.shownMs(1_234, config))
+        assertEquals(0L, BackingProgress.shownMs(99, config))
+        assertEquals(100L, BackingProgress.shownMs(100, config))
+        assertEquals(0L, BackingProgress.shownMs(0, config))
+    }
 
     @Test
     fun `the shift is the backing's start minus the take's on one clock — plus what the headphones add`() {

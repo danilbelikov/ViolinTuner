@@ -3,6 +3,12 @@ package com.violinjourney.app.core.domain.backing
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
 
+/** How far the backing of a take has played, as the screens are told it (spec 3.32). Pure. */
+object BackingProgress {
+    /** [playedMs] down to a whole [BackingConfig.progressStepMs]: the screens change ten times a second, not with every chunk. */
+    fun shownMs(playedMs: Long, config: BackingConfig): Long = playedMs - playedMs % config.progressStepMs
+}
+
 /** The shift of a take's backing (spec 5.25). Pure. */
 object BackingOffset {
     /**

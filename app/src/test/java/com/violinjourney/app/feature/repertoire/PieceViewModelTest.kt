@@ -703,7 +703,8 @@ class PieceViewModelTest {
         viewModel.onIntent(PieceIntent.RecordClicked)
         advance(3_000)
         assertEquals(File("pcm-48000") to 48_000, playback.started)
-        assertEquals(1_234L, viewModel.takeState.value.backingPlayedMs)
+        // the playback said 1 234 ms; the screen is told in tenths of a second — the take keeps the exact count of the stop
+        assertEquals(1_200L, viewModel.takeState.value.backingPlayedMs)
         viewModel.onIntent(PieceIntent.RecordClicked)
         advance(300)
 
