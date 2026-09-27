@@ -30,11 +30,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
@@ -268,16 +269,19 @@ private fun LevelBlock(
                 .height(BarHeight)
                 .clip(RoundedCornerShape(BarCorner))
                 .background(colors.levelTrack)
-                .drawBehind {
-                    // Read in the draw phase: a growing bar redraws, it does not recompose.
+                // out of sight the shine rests (spec 3.16): a header scrolled away runs no passes
+                .onLayoutRectChanged { shine.seen = it.fractionVisibleInWindow() > 0f }
+                .drawWithCache {
+                    // Read in the draw phase: a growing bar redraws, it does not recompose. The fill's brush is made
+                    // for its width — anew while the bar grows; a pass of the shine only redraws.
                     val width = size.width * filled.value
-                    if (width > 0f) {
-                        drawRoundRect(
-                            brush = Brush.horizontalGradient(listOf(colors.levelFillStart, colors.levelFillEnd), endX = width),
-                            size = Size(width, size.height),
-                            cornerRadius = CornerRadius(BarCorner.toPx()),
-                        )
-                        shine.draw(this, fillWidth = width, corner = BarCorner.toPx(), color = colors.levelShine)
+                    val fill = if (width > 0f) Brush.horizontalGradient(listOf(colors.levelFillStart, colors.levelFillEnd), endX = width) else null
+                    val corner = BarCorner.toPx()
+                    onDrawBehind {
+                        if (fill != null) {
+                            drawRoundRect(brush = fill, size = Size(width, size.height), cornerRadius = CornerRadius(corner))
+                            shine.draw(this, fillWidth = width, corner = corner, color = colors.levelShine)
+                        }
                     }
                 }
                 .onSizeChanged { shine.barWidthPx = it.width }

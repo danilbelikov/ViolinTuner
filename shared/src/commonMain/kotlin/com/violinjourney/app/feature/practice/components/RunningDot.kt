@@ -7,8 +7,10 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableFloatState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
@@ -16,9 +18,11 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.feature.journey.art.awaitGridFrame
+import kotlinx.coroutines.flow.first
 
 private val Container = 20.dp
 private val Dot = 8.dp
@@ -33,7 +37,8 @@ private const val NANOS_PER_MILLI = 1_000_000L
  * by a free cycle: after a return to the screen it stands where it should. Between the ticks of
  * the timer it is carried on by frames — the postcards' frames, thirty a second, like the breath
  * ([runDotClock]): both move by about a dp a second, so a step is under a twentieth of a dp.
- * Everything is read in the draw phase.
+ * Everything is read in the draw phase. Asleep while scrolled off the screen (spec 3.16): the arc
+ * follows the timer, so it stands right when it comes back.
  */
 @Composable
 fun RunningDot(elapsedMs: Long, color: Color, ringColor: Color, modifier: Modifier = Modifier) {
@@ -41,12 +46,15 @@ fun RunningDot(elapsedMs: Long, color: Color, ringColor: Color, modifier: Modifi
     val tick by rememberUpdatedState(elapsedMs)
     val angle = remember { mutableFloatStateOf(angleOf(elapsedMs)) }
     val breath = remember { mutableFloatStateOf(0f) }
+    // true until the layout says otherwise: the first frames come before the first word of it
+    val seen = remember { mutableStateOf(true) }
     if (!still) {
-        LaunchedEffect(Unit) { runDotClock(tick = { tick }, angle = angle, breath = breath) }
+        LaunchedEffect(Unit) { runDotClock(tick = { tick }, angle = angle, breath = breath, seen = { seen.value }) }
     }
     Box(
         modifier = modifier
             .size(Container)
+            .onLayoutRectChanged { seen.value = it.fractionVisibleInWindow() > 0f }
             .drawBehind {
                 val phase = if (still) 1f else breath.floatValue
                 val centre = Offset(size.width / 2, size.height / 2)
@@ -72,23 +80,27 @@ fun RunningDot(elapsedMs: Long, color: Color, ringColor: Color, modifier: Modifi
 /**
  * The clock of the dot: on every cell of the postcards' grid ([awaitGridFrame]) the arc is carried on
  * from the last [tick] of the timer by the time since the frame that saw it, and the breath is read
- * from the time since the first frame. Asleep between the cells.
+ * from the time since the first frame. Asleep between the cells, and asleep altogether while the dot
+ * is not [seen]: a timer scrolled away under the calendar asks for no frames.
  */
-internal suspend fun runDotClock(tick: () -> Long, angle: MutableFloatState, breath: MutableFloatState) {
+internal suspend fun runDotClock(tick: () -> Long, angle: MutableFloatState, breath: MutableFloatState, seen: () -> Boolean = { true }) {
     var lastTick = -1L
     var tickFrame = 0L
     var start = -1L
     var shown = 0L
     while (true) {
-        shown = awaitGridFrame(shown) { now ->
-            if (start < 0) start = now
-            val elapsed = tick()
-            if (elapsed != lastTick) {
-                lastTick = elapsed
-                tickFrame = now
+        snapshotFlow { seen() }.first { it }
+        while (seen()) {
+            shown = awaitGridFrame(shown) { now ->
+                if (start < 0) start = now
+                val elapsed = tick()
+                if (elapsed != lastTick) {
+                    lastTick = elapsed
+                    tickFrame = now
+                }
+                angle.floatValue = angleOf(lastTick + (now - tickFrame) / NANOS_PER_MILLI)
+                breath.floatValue = breathAt((now - start) / NANOS_PER_MILLI)
             }
-            angle.floatValue = angleOf(lastTick + (now - tickFrame) / NANOS_PER_MILLI)
-            breath.floatValue = breathAt((now - start) / NANOS_PER_MILLI)
         }
     }
 }

@@ -6,6 +6,8 @@ import androidx.compose.animation.core.TargetBasedAnimation
 import androidx.compose.animation.core.VectorConverter
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.snapshots.Snapshot
 import com.violinjourney.app.feature.journey.art.SECOND_MS
 import com.violinjourney.app.feature.journey.art.VSYNC_120
 import com.violinjourney.app.feature.journey.art.VirtualDisplay
@@ -61,5 +63,32 @@ class RunningDotTest {
         tick = 30_000
         advanceTimeBy(100)
         assertTrue(angle.floatValue in 180f..181f, "${angle.floatValue}")
+    }
+
+    @Test
+    fun `off the screen the dot asks for no frames and stands right when it comes back`() = runTest {
+        val display = VirtualDisplay(testScheduler, VSYNC_120)
+        val angle = mutableFloatStateOf(0f)
+        val breath = mutableFloatStateOf(0f)
+        val seen = mutableStateOf(true)
+        var tick = 0L
+        backgroundScope.launch(display) { runDotClock(tick = { tick }, angle = angle, breath = breath, seen = { seen.value }) }
+        advanceTimeBy(SECOND_MS)
+        seen.value = false
+        Snapshot.sendApplyNotifications()
+        advanceTimeBy(100) // the step that was already on its way
+        val asked = display.asked
+        advanceTimeBy(20 * SECOND_MS)
+        assertEquals(asked, display.asked, "frames asked off the screen")
+
+        // twenty seconds on, the timer says so, and the arc is there at the first step back
+        tick = 21_000
+        seen.value = true
+        Snapshot.sendApplyNotifications()
+        advanceTimeBy(SECOND_MS)
+        testScheduler.runCurrent()
+        val steps = display.asked - asked
+        assertTrue(steps in 29..32, "$steps frames a second after coming back")
+        assertTrue(angle.floatValue in 126f..132f, "${angle.floatValue}")
     }
 }
