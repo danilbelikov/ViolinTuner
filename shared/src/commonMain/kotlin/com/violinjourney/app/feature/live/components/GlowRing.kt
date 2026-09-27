@@ -72,12 +72,12 @@ fun rememberRingGlow(glowTarget: () -> Float, reduceMotion: Boolean): State<Floa
 /**
  * The ring of Live (spec 3.14, handoff 12a, 12h): an outline that shines with the zone color, as
  * strongly as [glow] says ([rememberRingGlow]). The halo breathes with [level]; a wave leaves the
- * ring when [noteSerial] moves and when [holdComplete] turns true. With [reduceMotion] there are no
- * waves and no breath.
+ * ring when [noteSerial] moves and when [holdComplete] turns true, and goes as far as [waveReach]. With
+ * [reduceMotion] there are no waves and no breath.
  *
  * Everything that changes many times a second — the glow, the level, the colour of the zone — is read
  * in the draw phase: the ring redraws, it does not recompose. The halo reaches past the bounds ([GlowMath.EXTENT] × the radius) and is
- * not clipped on purpose; the layout leaves it room.
+ * not clipped on purpose; on a narrow screen its outer, nearly transparent part may cross the screen edge.
  */
 @Composable
 fun GlowRing(
@@ -89,9 +89,12 @@ fun GlowRing(
     reduceMotion: Boolean,
     size: Dp,
     modifier: Modifier = Modifier,
+    /** How far a wave goes, in radii of the ring ([GlowMath.waveReach]): less on a narrow screen. */
+    waveReach: Float = GlowMath.WAVE_REACH,
     content: @Composable () -> Unit,
 ) {
     val loudness by rememberUpdatedState(level)
+    val reach by rememberUpdatedState(waveReach)
     val color by rememberUpdatedState(zoneColor)
     val breathes by rememberUpdatedState(!reduceMotion)
     val waves = remember { mutableStateListOf<Wave>() }
@@ -122,7 +125,7 @@ fun GlowRing(
             .drawBehind {
                 val zone = color()
                 drawRing(glow.value, if (breathes) loudness() else 0f, zone)
-                waves.forEach { drawWave(it.startAlpha, it.progress.value, zone) }
+                waves.forEach { drawWave(it.startAlpha, it.progress.value, zone, reach) }
             },
         contentAlignment = Alignment.Center,
     ) {
@@ -156,10 +159,10 @@ private fun DrawScope.drawRing(glow: Float, level: Float, zoneColor: Color) {
     )
 }
 
-private fun DrawScope.drawWave(startAlpha: Float, progress: Float, zoneColor: Color) {
+private fun DrawScope.drawWave(startAlpha: Float, progress: Float, zoneColor: Color, reach: Float) {
     drawCircle(
         color = zoneColor,
-        radius = outlineRadius() * GlowMath.waveRadius(progress),
+        radius = outlineRadius() * GlowMath.waveRadius(progress, reach),
         alpha = GlowMath.waveAlpha(startAlpha, progress),
         style = Stroke(LiveDimens.WaveStroke.toPx()),
     )

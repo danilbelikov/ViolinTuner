@@ -70,6 +70,21 @@ class GlowMathTest {
         assertTrue(GlowMath.waveRadius(1f) < GlowMath.EXTENT)
     }
 
+    @Test
+    fun `on a narrow phone a wave stops at the edge of the screen and the ring keeps its size`() {
+        // 360 dp wide: the 300 dp ring leaves 180 dp from its centre to either side
+        val reach = GlowMath.waveReach(ringDiameter = 300f, halfSpan = 180f)
+        assertEquals(1.2f, reach, 1e-6f)
+        assertEquals(180f, 150f * GlowMath.waveRadius(1f, reach), 1e-3f)
+        // the handoff's base screen (412 dp) and wider ones keep the whole reach
+        assertEquals(GlowMath.WAVE_REACH, GlowMath.waveReach(ringDiameter = 300f, halfSpan = 206f), 0f)
+        // a low landscape: the panel of the ring is the narrower side
+        assertEquals(143.5f / 127.5f, GlowMath.waveReach(ringDiameter = 255f, halfSpan = 143.5f), 1e-6f)
+        // never inside the ring itself, and no ring yet is the plain reach
+        assertEquals(1f, GlowMath.waveReach(ringDiameter = 300f, halfSpan = 100f), 0f)
+        assertEquals(GlowMath.WAVE_REACH, GlowMath.waveReach(ringDiameter = 0f, halfSpan = 100f), 0f)
+    }
+
     private fun run(from: Float, to: Float, ms: Int): Float {
         var glow = from
         repeat(ms / 10) { glow = GlowMath.follow(glow, to, 10f, riseMs = 500, fallMs = 900) }

@@ -348,6 +348,8 @@ private fun PortraitLayout(
                 LiveDimens.IndicatorSpacing + LiveDimens.StatusRowHeight
             }
             val ringSize = ringSizeFor(state, landscape = false, maxWidth, maxHeight, reserved)
+            // the block spans the screen: the waves may go as far as its side edges
+            val waveReach = GlowMath.waveReach(ringSize.value, maxWidth.value / 2)
             // A ring this small means a small screen: the word and the cents shrink with it.
             val compact = ringSize < LiveDimens.CompactStatusBelowRing
             Column(
@@ -356,7 +358,7 @@ private fun PortraitLayout(
                 ),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Ring(state, gauge, zoneColor, glow, ringSize, ringModifier, reduceMotion)
+                Ring(state, gauge, zoneColor, glow, ringSize, waveReach, ringModifier, reduceMotion)
                 if (noMic) {
                     MicPermissionPrompt(onGrantClick = { onIntent(LiveIntent.GrantMicClicked) })
                 } else {
@@ -491,7 +493,9 @@ private fun LandscapeLayout(
             contentAlignment = Alignment.Center,
         ) {
             val ringSize = ringSizeFor(state, landscape = true, maxWidth, maxHeight, reserved = 0.dp)
-            Ring(state, gauge, zoneColor, glow, ringSize, ringModifier, reduceMotion)
+            // the ring stands in the middle of its panel: the waves may go as far as its left edge and the screen's top and bottom
+            val waveReach = GlowMath.waveReach(ringSize.value, minOf(maxWidth, maxHeight).value / 2)
+            Ring(state, gauge, zoneColor, glow, ringSize, waveReach, ringModifier, reduceMotion)
         }
         Column(
             modifier = Modifier
@@ -622,6 +626,7 @@ private fun Ring(
     zoneColor: () -> Color,
     glow: State<Float>,
     size: Dp,
+    waveReach: Float,
     modifier: Modifier,
     reduceMotion: Boolean,
 ) {
@@ -639,6 +644,7 @@ private fun Ring(
         reduceMotion = reduceMotion,
         size = size,
         modifier = modifier,
+        waveReach = waveReach,
     ) {
         RingContent(state.signal, noteScale = LiveLayoutMath.noteScale(size.value))
     }

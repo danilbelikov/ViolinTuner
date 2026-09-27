@@ -50,7 +50,10 @@ object GlowMath {
     const val WAVE_ALPHA_NEW_NOTE = 0.25f
     const val WAVE_ALPHA_REWARD = 0.35f
 
-    /** The farthest anything is drawn from the centre, in R: the layout keeps this clear of the screen edge. */
+    /**
+     * The farthest anything is drawn from the centre, in R. The layout does not keep it clear of the screen edge: the
+     * outer, nearly transparent part of the halo may cross it (spec 3.14); the waves stop at it ([waveReach]).
+     */
     const val EXTENT = HALO_RADIUS * (1f + BREATH_SHARE)
 
     /** Share of white mixed into the zone color of the outline. */
@@ -96,8 +99,16 @@ object GlowMath {
         )
     }
 
-    /** Radius of a wave in R at [progress] 0..1 of its life (already eased by the caller). */
-    fun waveRadius(progress: Float): Float = 1f + (WAVE_REACH - 1f) * progress.coerceIn(0f, 1f)
+    /**
+     * How far a wave may go, in R, around a ring [ringDiameter] across whose centre the screen leaves [halfSpan] to its
+     * nearest edge (the same units for both): [WAVE_REACH] where there is room, less on a narrow screen — the wave
+     * fades out on the edge instead of being cut by it (spec 3.14), and the ring and its note keep their size.
+     */
+    fun waveReach(ringDiameter: Float, halfSpan: Float): Float =
+        if (ringDiameter <= 0f) WAVE_REACH else (halfSpan / (ringDiameter / 2)).coerceIn(1f, WAVE_REACH)
+
+    /** Radius of a wave in R at [progress] 0..1 of its life (already eased by the caller), going as far as [reach]. */
+    fun waveRadius(progress: Float, reach: Float = WAVE_REACH): Float = 1f + (reach - 1f) * progress.coerceIn(0f, 1f)
 
     fun waveAlpha(startAlpha: Float, progress: Float): Float = startAlpha * (1f - progress.coerceIn(0f, 1f))
 
