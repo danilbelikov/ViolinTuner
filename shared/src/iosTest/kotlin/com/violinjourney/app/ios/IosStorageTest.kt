@@ -3,7 +3,6 @@ package com.violinjourney.app.ios
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.violinjourney.app.core.analytics.NoOpAnalytics
-import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.backup.BackupCounts
 import com.violinjourney.app.core.backup.BackupEntry
 import com.violinjourney.app.core.backup.BackupManifest
@@ -18,7 +17,6 @@ import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.data.practice.RoomPracticeRepository
 import com.violinjourney.app.core.data.progress.RoomTrophyRepository
 import com.violinjourney.app.core.data.repertoire.RoomRepertoireRepository
-import com.violinjourney.app.core.data.repertoire.SheetFiles
 import com.violinjourney.app.core.data.session.RoomSessionRepository
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.TolerancePreset
@@ -311,21 +309,6 @@ class IosStorageTest {
         val header = ByteArray(HEADER)
         header.usePinned { memcpy(it.addressOf(0), data.bytes, HEADER.toULong()) }
         return (60 until 64).fold(0) { value, i -> (value shl 8) or (header[i].toInt() and 0xFF) }
-    }
-
-    private object NoAudioFiles : SessionAudioFiles {
-        override fun newFile() = PlatformFile("/dev/null")
-        override fun existing(name: String): PlatformFile? = null
-        override fun delete(name: String) = Unit
-        override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
-    }
-
-    private object NoSheetFiles : SheetFiles {
-        override suspend fun import(sourceUri: String): SheetFiles.Stored? = null
-        override fun existing(name: String): PlatformFile? = null
-        override suspend fun delete(names: Collection<String>) = Unit
-        override suspend fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
-        override fun newCameraFile() = PlatformFile("/dev/null")
     }
 
     private companion object {
