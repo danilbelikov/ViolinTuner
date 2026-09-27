@@ -73,7 +73,7 @@ class VideoTakeImporterTest {
         advance(1_000)
         assertTrue(importer.working.visible)
         assertEquals(50, importer.working.percent)
-        assertTrue(importer.working.bars.isNotEmpty())
+        assertTrue(importer.working.bars.pieces.isNotEmpty())
         assertTrue(importer.working.thumbPath!!.endsWith("-thumb.jpg"))
 
         advance(5_000)

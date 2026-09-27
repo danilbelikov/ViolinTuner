@@ -1,13 +1,13 @@
 package com.violinjourney.app.feature.live
 
+import androidx.compose.runtime.Immutable
 import com.violinjourney.app.core.domain.Direction
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Note
 import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.domain.Zone
-import com.violinjourney.app.core.domain.session.RecordingBar
+import com.violinjourney.app.core.domain.session.RecordingRibbon
 import com.violinjourney.app.core.domain.venue.Venue
-import kotlin.math.roundToInt
 
 enum class LiveMode { PLAY, TUNING }
 
@@ -22,22 +22,40 @@ sealed interface LiveSignal {
     /** The microphone cannot be opened right now; the view model keeps retrying. */
     data object MicUnavailable : LiveSignal
 
-    /** InTune, Sharp and Flat rows: they differ only in [zone] and [direction]. */
+    /**
+     * InTune, Sharp and Flat rows: they differ only in [zone] and [direction]. Only what is said in words and shapes is
+     * here — it changes a few times a second at most; the numbers that move on every frame are in [LiveGauge].
+     */
     data class Sounding(
         val note: Note,
-        val cents: Double,
         val zone: Zone,
         /** Null while in tune. */
         val direction: Direction?,
-        val holdProgress: Double,
         /** The cents as digits: whole, within two digits, changing calmly ([LiveReadout], spec 5.8). */
-        val displayCents: Int = cents.roundToInt(),
-        /** Loudness 0..1, smoothed; the halo of the ring breathes with it. */
-        val level: Float = 0f,
+        val displayCents: Int,
+        /** The note has been held in tune for the whole hold (spec 5.3): the ring glows full and sends its wave. */
+        val holdComplete: Boolean = false,
         /** Moves whenever a new note sounds; the ring sends a wave when it does. */
         val noteSerial: Int = 0,
     ) : LiveSignal
 }
+
+/**
+ * What moves on Live with every frame of sound: the cents the marker of the scale rides on, the loudness the halo of the
+ * ring breathes with, the glow the ring moves towards, and the mini ribbon of a take. Apart from [LiveState] on purpose:
+ * it is read only while drawing and in effects, never in composition — a screen that read it there would be composed
+ * again on every frame (docs/plan-performance.md).
+ */
+data class LiveGauge(
+    /** The smoothed cents of the note; null without one. */
+    val cents: Double? = null,
+    /** Loudness 0..1, smoothed; 0 without a note. */
+    val level: Float = 0f,
+    /** 0..1, what the glow of the ring moves towards; how fast is the screen's business (spec 5.8). */
+    val glowTarget: Float = 0f,
+    /** The notes of the take being recorded (spec 3.9); null when nothing is recorded. */
+    val ribbon: RecordingRibbon? = null,
+)
 
 /** The dot of the status line: may one play right now. Two shapes, not only two colors (spec 3.14). */
 enum class StatusDot { READY, BLOCKED }
@@ -59,7 +77,8 @@ data class ScaleSpec(
     constructor(config: IntonationConfig) : this(config.scaleRangeCents, config.toleranceCents)
 }
 
-/** String row of the tuning mode (spec 3.5). */
+/** String row of the tuning mode (spec 3.5). Immutable: its map is made once per configuration and never changed. */
+@Immutable
 data class TuningState(
     /** Pinned by a tap; null means the nearest string is followed automatically. */
     val lockedString: ViolinString?,
@@ -69,12 +88,11 @@ data class TuningState(
     val stringHz: Map<ViolinString, Int>,
 )
 
-/** The strip above the record button while a session is being recorded (spec 3.9). */
-data class RecordingState(
-    val elapsedMs: Long,
-    /** Notes played so far as shares of the mini bar, in order. */
-    val bars: List<RecordingBar>,
-)
+/**
+ * The strip above the record button while a session is being recorded (spec 3.9): its timer, in whole seconds — as the
+ * timer shows it. Its notes move with every closed bucket and are in [LiveGauge.ribbon].
+ */
+data class RecordingState(val elapsedMs: Long)
 
 data class LiveState(
     val mode: LiveMode,
@@ -87,9 +105,7 @@ data class LiveState(
     val scale: ScaleSpec,
     /** Duration of the zone color cross-fade (spec 3.2). */
     val zoneCrossfadeMs: Int,
-    /** 0..1, what the glow of the ring moves towards; how fast is the screen's business (spec 5.8). */
-    val glowTarget: Float = 0f,
-    /** The same without the growth of the hold: the zone's step, and full only once the hold is complete. */
+    /** The glow of the ring without the growth of the hold: the zone's step, and full only once the hold is complete. */
     val glowStep: Float = 0f,
     /** Null while a note sounds and without the permission: the line is hidden, its place stays. */
     val statusLine: StatusLine? = null,

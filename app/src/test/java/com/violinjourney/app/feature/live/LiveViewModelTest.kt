@@ -143,9 +143,12 @@ class LiveViewModelTest {
 
     private fun TestScope.viewModel(scenario: FakeScenario) = viewModel(fakeSource(scenario))
 
-    /** Subscribes like the screen does and lets [millis] of signal through. */
+    /** Subscribes like the screen does — to the words and to the gauge — and lets [millis] of signal through. */
     private fun TestScope.observe(viewModel: LiveViewModel, millis: Long): Job {
-        val job = backgroundScope.launch { viewModel.state.collect {} }
+        val job = backgroundScope.launch {
+            launch { viewModel.gauge.collect {} }
+            viewModel.state.collect {}
+        }
         advanceTimeBy(millis)
         runCurrent()
         return job
@@ -166,7 +169,9 @@ class LiveViewModelTest {
         val signal = viewModel.state.value.signal as LiveSignal.Sounding
         assertEquals("A4", signal.note.name)
         assertEquals(Zone.IN_TUNE, signal.zone)
-        assertTrue(signal.holdProgress in 0.4..0.6)
+        // the hold is 0.4..0.6 of the way: the glow the ring moves to is 0.6 + 0.4 × that
+        assertFalse(signal.holdComplete)
+        assertTrue("glow ${viewModel.gauge.value.glowTarget}", viewModel.gauge.value.glowTarget in 0.76f..0.84f)
     }
 
     @Test
@@ -275,12 +280,12 @@ class LiveViewModelTest {
         }
         val viewModel = viewModel(plays442)
         observe(viewModel, 500)
-        assertEquals(7.85, (viewModel.state.value.signal as LiveSignal.Sounding).cents, 0.05)
+        assertEquals(7.85, viewModel.gauge.value.cents!!, 0.05)
 
         settings.setA4(442)
         advanceTimeBy(500)
         runCurrent()
-        assertEquals(0.0, (viewModel.state.value.signal as LiveSignal.Sounding).cents, 0.01)
+        assertEquals(0.0, viewModel.gauge.value.cents!!, 0.01)
         assertEquals(442, viewModel.state.value.tuning.stringHz.getValue(ViolinString.A4))
     }
 
@@ -295,12 +300,14 @@ class LiveViewModelTest {
 
         viewModel.onIntent(LiveIntent.RecordClicked)
         runCurrent()
-        assertEquals(RecordingState(0, emptyList()), viewModel.state.value.recording) // shows at once
+        assertEquals(RecordingState(0), viewModel.state.value.recording) // shows at once
+        assertEquals(0, viewModel.gauge.value.ribbon!!.pieces.size) // with no notes yet
 
         advance(3_000)
         val recording = viewModel.state.value.recording!!
-        assertTrue("elapsed ${recording.elapsedMs}", recording.elapsedMs in 2_900..3_000)
-        assertEquals(listOf(Zone.IN_TUNE), recording.bars.map { it.zone })
+        // whole seconds, as the timer shows them: about three seconds recorded is 0:02 or 0:03
+        assertTrue("elapsed ${recording.elapsedMs}", recording.elapsedMs in 2_000..3_000 && recording.elapsedMs % 1_000 == 0L)
+        assertEquals(listOf(Zone.IN_TUNE), viewModel.gauge.value.ribbon!!.pieces.map { it.zone })
         assertTrue(sessions.saved.isEmpty())
     }
 
@@ -387,7 +394,7 @@ class LiveViewModelTest {
         observer.cancel()
         advance(500) // the new activity subscribes well within the stop timeout
         observe(viewModel, 1_500)
-        assertTrue(viewModel.state.value.recording!!.elapsedMs > 3_000)
+        assertTrue(viewModel.state.value.recording!!.elapsedMs >= 3_000)
         assertTrue(sessions.saved.isEmpty())
     }
 
@@ -814,10 +821,43 @@ class LiveViewModelTest {
     }
 
     @Test
+    fun `a held note moves the gauge every frame and the words only a few times a second`() = runTest {
+        val viewModel = viewModel(FakeScenario.IN_TUNE)
+        observe(viewModel, 1_000) // the note is locked and its digits have settled
+        val states = mutableListOf<LiveState>()
+        val gauges = mutableListOf<LiveGauge>()
+        val counting = backgroundScope.launch {
+            launch { viewModel.gauge.collect { gauges += it } }
+            viewModel.state.collect { states += it }
+        }
+        advance(2_000)
+        counting.cancel()
+        // the digits may change every readout interval, and the hold completes once; nothing else is new
+        val allowed = 2_000 / IntonationConfig().centsReadoutIntervalMs + 2
+        assertTrue("${states.size} states in two seconds", states.size <= allowed)
+        assertTrue("${gauges.size} gauges in two seconds", gauges.size >= 50)
+    }
+
+    @Test
+    fun `a take in silence changes the words once a second`() = runTest {
+        val viewModel = viewModel(FakeScenario.SILENCE)
+        observe(viewModel, 500)
+        viewModel.onIntent(LiveIntent.RecordClicked)
+        advance(500)
+        val states = mutableListOf<LiveState>()
+        val counting = backgroundScope.launch { viewModel.state.collect { states += it } }
+        advance(3_000)
+        counting.cancel()
+        // the first is the state as it was; after it only the seconds of the timer
+        assertTrue("${states.map { it.recording }}", states.size <= 1 + 3 + 1)
+        assertTrue(states.all { it.recording!!.elapsedMs % 1_000 == 0L })
+    }
+
+    @Test
     fun `the glow target, the level, the calm cents and the status line reach the state`() = runTest {
         val silent = viewModel(FakeScenario.SILENCE)
         val silentJob = observe(silent, 500)
-        assertEquals(0f, silent.state.value.glowTarget, 0f)
+        assertEquals(LiveGauge(), silent.gauge.value)
         assertEquals(StatusLine(StatusDot.READY, StatusMessage.PLAY), silent.state.value.statusLine)
         silentJob.cancel()
 
@@ -826,10 +866,11 @@ class LiveViewModelTest {
         val state = playing.state.value
         val signal = state.signal as LiveSignal.Sounding
         assertNull(state.statusLine)
-        assertTrue("in tune and held for a while: past the base glow", state.glowTarget > 0.6f)
-        assertTrue(signal.level > 0f)
+        val gauge = playing.gauge.value
+        assertTrue("in tune and held for a while: past the base glow", gauge.glowTarget > 0.6f)
+        assertTrue(gauge.level > 0f)
         assertTrue(signal.noteSerial > 0)
-        assertEquals(signal.cents, signal.displayCents.toDouble(), 1.5)
+        assertEquals(gauge.cents!!, signal.displayCents.toDouble(), 1.5)
         job.cancel()
     }
 

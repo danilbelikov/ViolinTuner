@@ -8,7 +8,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
@@ -38,6 +42,7 @@ import com.violinjourney.app.feature.journey.art.drawPrepared
 import com.violinjourney.app.feature.journey.art.prepare
 import com.violinjourney.app.feature.journey.art.rememberPausableSceneSeconds
 import com.violinjourney.app.feature.journey.art.rememberScene
+import kotlinx.coroutines.delay
 import kotlinx.datetime.LocalDate
 
 /** The scene a place is drawn from: the room is composed of what stands in it, a hall is read from its file (tools/journey/stage-scenes.js). */
@@ -62,7 +67,7 @@ fun rememberVenuePicture(venue: Venue?, home: HomeState?): PreparedScene? = when
 @Composable
 private fun rememberRoomPicture(home: HomeState?): PreparedScene? {
     val state = home?.takeIf { it.loaded }
-    val mode = homeModeNow()
+    val mode = rememberHomeMode()
     val house = state?.let(HomeRules::house)
     val art = rememberHouseArt(house ?: HomeRules.house(HomeState.EMPTY), mode)
     return remember(art, state, mode) {
@@ -71,6 +76,25 @@ private fun rememberRoomPicture(home: HomeState?): PreparedScene? {
         prepare(composed.scene, mode)
     }
 }
+
+/**
+ * Day or evening by the phone's clock (spec 3.27), looked at again every [HOME_MODE_CHECK_MS]: Live composes its picture
+ * only when the place changes, and a practice that runs through 07:00 or 19:00 with Live open still sees the room turn.
+ */
+@Composable
+private fun rememberHomeMode(): SceneMode {
+    var mode by remember { mutableStateOf(homeModeNow()) }
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(HOME_MODE_CHECK_MS)
+            mode = homeModeNow()
+        }
+    }
+    return mode
+}
+
+/** How often the room behind Live looks at the clock: a minute late at 07:00 and 19:00 at most. */
+private const val HOME_MODE_CHECK_MS = 60_000L
 
 /**
  * The picture behind Live (spec 3.27, handoff 29a–29h): the place, framed by [VenueFraming]; the light

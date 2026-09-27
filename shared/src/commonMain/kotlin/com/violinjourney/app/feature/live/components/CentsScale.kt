@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -29,14 +30,17 @@ import kotlinx.coroutines.flow.first
 
 /**
  * Cents scale (spec 3.1) as a wooden ruler (spec 3.27, handoff 29j): green in-tune pill in the
- * middle, zero tick and a bone slider with a halo of the zone color. No labels or numbers. [markerFraction] is 0..1 along
- * the track, null hides the marker; [inTuneFraction] is the pill width as a track fraction.
+ * middle, zero tick and a bone slider with a halo of the zone color. No labels or numbers. The marker shows while
+ * [markerVisible]; [markerFraction] is where, 0..1 along the track, or null before the pitch is known — it moves with every
+ * frame of sound, so it is read only in the loop of the spring, and the halo colour only while drawing. [inTuneFraction]
+ * is the pill width as a track fraction.
  */
 @Composable
 fun CentsScale(
-    markerFraction: Float?,
+    markerVisible: Boolean,
+    markerFraction: () -> Float?,
     inTuneFraction: Float,
-    haloColor: Color,
+    haloColor: () -> Color,
     modifier: Modifier = Modifier,
 ) {
     val wood = LiveTheme.venueColors
@@ -44,19 +48,23 @@ fun CentsScale(
     // After silence the marker shows up where the pitch is instead of travelling from its old
     // place; while sounding it rides a spring. It stays put while fading out. The spring is
     // stepped frame by frame ([MarkerSpring] says why) and read in the draw phase.
-    val target by rememberUpdatedState(markerFraction)
-    val spring = remember { MarkerSpring(LiveMotion.MARKER_DAMPING, LiveMotion.MARKER_STIFFNESS, markerFraction ?: CENTER) }
+    val visible by rememberUpdatedState(markerVisible)
+    val fraction by rememberUpdatedState(markerFraction)
+    val target = { if (visible) fraction() else null }
+    val spring = remember {
+        MarkerSpring(LiveMotion.MARKER_DAMPING, LiveMotion.MARKER_STIFFNESS, Snapshot.withoutReadObservation { target() } ?: CENTER)
+    }
     val position = remember { mutableFloatStateOf(spring.position) }
     LaunchedEffect(Unit) {
-        var wasVisible = target != null
+        var wasVisible = target() != null
         while (true) {
             // Asleep while there is nothing to do: no frames are spent on a marker at rest.
-            val goal = snapshotFlow { target }.first { it != null && (!wasVisible || !spring.isAtRest(it)) }!!
+            val goal = snapshotFlow { target() }.first { it != null && (!wasVisible || !spring.isAtRest(it)) }!!
             if (!wasVisible) spring.snapTo(goal)
             wasVisible = true
             var last = withFrameMillis { it }
             while (true) {
-                val current = target
+                val current = target()
                 if (current == null) {
                     wasVisible = false
                     break
@@ -71,7 +79,7 @@ fun CentsScale(
         }
     }
     val markerAlpha by animateFloatAsState(
-        targetValue = if (markerFraction != null) 1f else 0f,
+        targetValue = if (markerVisible) 1f else 0f,
         animationSpec = tween(LiveMotion.CONTENT_FADE_MS),
         label = "markerAlpha",
     )
@@ -94,6 +102,7 @@ fun CentsScale(
         if (markerAlpha > 0f) {
             val animatedMarker = position.floatValue
             val feather = LiveDimens.HaloFeather
+            val haloColor = haloColor()
             centeredBar(
                 haloColor.copy(alpha = LiveDimens.HALO_ALPHA_FEATHER * markerAlpha), animatedMarker,
                 (LiveDimens.HaloWidth + feather * 2).toPx(), LiveDimens.HaloHeight + feather * 2,

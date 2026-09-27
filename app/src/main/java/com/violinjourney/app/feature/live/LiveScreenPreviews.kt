@@ -10,11 +10,13 @@ import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.domain.Zone
 import com.violinjourney.app.core.domain.home.HomeState
 import com.violinjourney.app.core.domain.session.RecordingBar
+import com.violinjourney.app.core.domain.session.RecordingRibbon
 import com.violinjourney.app.core.domain.venue.Venue
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.journey.LocalHomeLook
 import com.violinjourney.app.feature.live.block.BlockState
 import com.violinjourney.app.feature.live.block.Bookmark
+import kotlin.math.roundToInt
 
 // One preview per row of the state table in spec 3.4, mirroring handoff frames 8a–8f
 // (the area above the navigation bar of the 412 × 892 base screen).
@@ -23,12 +25,35 @@ private const val A4 = 69
 private const val D4 = 62
 private const val F_SHARP_5 = 78
 
+/** A note as the chain hands it to Live: the words in the signal, the numbers that move every frame in the gauge. */
+private class Heard(val signal: LiveSignal.Sounding, val gauge: LiveGauge)
+
+private fun heard(note: Note, cents: Double, zone: Zone, direction: Direction?, holdProgress: Double, level: Float = 0f) = Heard(
+    LiveSignal.Sounding(note, zone, direction, displayCents = cents.roundToInt(), holdComplete = holdProgress >= 1.0),
+    LiveGauge(cents = cents, level = level, glowTarget = LiveReducer.glowTargetOf(zone, holdProgress, IntonationConfig())),
+)
+
 @Composable
 private fun LivePreview(
-    signal: LiveSignal,
+    heard: Heard,
     mode: LiveMode = LiveMode.PLAY,
     lockedString: ViolinString? = null,
     recording: RecordingState? = null,
+    ribbon: RecordingRibbon? = null,
+    practiceMs: Long? = null,
+    reduceMotion: Boolean = false,
+    venue: Venue? = null,
+    bookmark: Bookmark = Bookmark.Entry,
+) = LivePreview(heard.signal, heard.gauge, mode, lockedString, recording, ribbon, practiceMs, reduceMotion, venue, bookmark)
+
+@Composable
+private fun LivePreview(
+    signal: LiveSignal,
+    gauge: LiveGauge = LiveGauge(),
+    mode: LiveMode = LiveMode.PLAY,
+    lockedString: ViolinString? = null,
+    recording: RecordingState? = null,
+    ribbon: RecordingRibbon? = null,
     practiceMs: Long? = null,
     reduceMotion: Boolean = false,
     venue: Venue? = null,
@@ -36,6 +61,7 @@ private fun LivePreview(
 ) {
     val config = IntonationConfig()
     val target = LiveTarget(mode, lockedString)
+    val shownGauge = gauge.copy(ribbon = ribbon ?: RecordingRibbon.EMPTY.takeIf { recording != null })
     ViolinTheme {
         // the pictures are read from the assets: an interactive preview shows them, a static one the field
         CompositionLocalProvider(LocalHomeLook provides HomeState.EMPTY.copy(loaded = true)) {
@@ -48,13 +74,13 @@ private fun LivePreview(
                 canRecord = LiveReducer.canRecord(LiveTarget(mode, lockedString), signal),
                 scale = ScaleSpec(config),
                 zoneCrossfadeMs = config.zoneCrossfadeMs,
-                glowTarget = LiveReducer.glowTargetOf(signal, config),
-                glowStep = LiveReducer.glowTargetOf(signal, config, stepped = true),
+                glowStep = LiveReducer.glowStepOf(signal, config),
                 statusLine = LiveReducer.statusLineOf(target, signal),
                 practiceMs = practiceMs,
                 venue = venue,
             ),
             onIntent = {},
+            gauge = { shownGauge },
             reduceMotion = reduceMotion,
             block = BlockState(bookmark, sheet = null),
         )
@@ -65,38 +91,38 @@ private fun LivePreview(
 @Preview(name = "12a2 InTune · A4, just hit: glow .6", widthDp = 412, heightDp = 788)
 @Composable
 private fun InTuneFreshPreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.0, level = 0.5f),
+    heard(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.0, level = 0.5f),
 )
 
 @Preview(name = "InTune · A4, held 70 %: glow .88", widthDp = 412, heightDp = 788)
 @Composable
 private fun InTunePreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7, level = 0.6f),
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7, level = 0.6f),
 )
 
 @Preview(name = "12a3 InTune · A4, held 2 s: glow 1", widthDp = 412, heightDp = 788)
 @Composable
 private fun InTuneHeldPreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 1.0, level = 0.8f),
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 1.0, level = 0.8f),
 )
 
 @Preview(name = "12a9 animations removed: the step of the zone, no breath", widthDp = 412, heightDp = 788)
 @Composable
 private fun ReducedMotionPreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7, level = 0.9f),
+    heard(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7, level = 0.9f),
     reduceMotion = true,
 )
 
 @Preview(name = "Sharp · F#5, near", widthDp = 412, heightDp = 788)
 @Composable
 private fun SharpNearPreview() = LivePreview(
-    LiveSignal.Sounding(Note(F_SHARP_5), cents = 14.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
+    heard(Note(F_SHARP_5), cents = 14.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
 )
 
 @Preview(name = "Flat · D4, off", widthDp = 412, heightDp = 788)
 @Composable
 private fun FlatOffPreview() = LivePreview(
-    LiveSignal.Sounding(Note(D4), cents = -27.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    heard(Note(D4), cents = -27.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
 )
 
 @Preview(name = "Silence", widthDp = 412, heightDp = 788)
@@ -120,14 +146,14 @@ private fun NoMicPermissionPreview() = LivePreview(LiveSignal.NoMicPermission)
 @Preview(name = "Tuning · auto, nearest string A", widthDp = 412, heightDp = 788)
 @Composable
 private fun TuningAutoPreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 1.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.15),
+    heard(Note(A4), cents = 1.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.15),
     mode = LiveMode.TUNING,
 )
 
 @Preview(name = "Tuning · string D locked", widthDp = 412, heightDp = 788)
 @Composable
 private fun TuningLockedPreview() = LivePreview(
-    LiveSignal.Sounding(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    heard(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
     mode = LiveMode.TUNING,
     lockedString = ViolinString.D4,
 )
@@ -141,7 +167,7 @@ private fun TuningSilencePreview() = LivePreview(LiveSignal.Silence, mode = Live
 @Preview(name = "Landscape · InTune", widthDp = 892, heightDp = 412)
 @Composable
 private fun LandscapeInTunePreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
 )
 
 @Preview(name = "Landscape · Silence", widthDp = 892, heightDp = 412)
@@ -155,7 +181,7 @@ private fun LandscapeNoMicPreview() = LivePreview(LiveSignal.NoMicPermission)
 @Preview(name = "Landscape · Tuning, D locked", widthDp = 892, heightDp = 412)
 @Composable
 private fun LandscapeTuningPreview() = LivePreview(
-    LiveSignal.Sounding(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    heard(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
     mode = LiveMode.TUNING,
     lockedString = ViolinString.D4,
 )
@@ -163,45 +189,49 @@ private fun LandscapeTuningPreview() = LivePreview(
 @Preview(name = "Landscape · low 640 x 336, tuning", widthDp = 640, heightDp = 336)
 @Composable
 private fun LandscapeLowPreview() = LivePreview(
-    LiveSignal.Sounding(Note(F_SHARP_5), cents = 14.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
+    heard(Note(F_SHARP_5), cents = 14.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
     mode = LiveMode.TUNING,
 )
 
 @Preview(name = "Small phone 320 x 500", widthDp = 320, heightDp = 500)
 @Composable
 private fun SmallPhonePreview() = LivePreview(
-    LiveSignal.Sounding(Note(F_SHARP_5), cents = 14.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
+    heard(Note(F_SHARP_5), cents = 14.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
 )
 
 @Preview(name = "Large system font", widthDp = 412, heightDp = 788, fontScale = 1.5f)
 @Composable
 private fun LargeFontPreview() = LivePreview(
-    LiveSignal.Sounding(Note(F_SHARP_5), cents = 14.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
+    heard(Note(F_SHARP_5), cents = 14.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
     mode = LiveMode.TUNING,
 )
 
 // Recording (spec 3.9): red stop button, strip with timer and mini bar, switcher dimmed.
 
-private val SampleRecording = RecordingState(
-    elapsedMs = 47_000,
-    bars = listOf(
-        RecordingBar(0.20f, Zone.IN_TUNE), RecordingBar(0.08f, Zone.NEAR), RecordingBar(0.15f, Zone.IN_TUNE),
-        RecordingBar(0.05f, Zone.OFF), RecordingBar(0.22f, Zone.IN_TUNE), RecordingBar(0.10f, Zone.NEAR),
+private val SampleRecording = RecordingState(elapsedMs = 47_000)
+
+private val SampleRibbon = RecordingRibbon(
+    listOf(
+        RecordingBar(20, Zone.IN_TUNE), RecordingBar(8, Zone.NEAR), RecordingBar(15, Zone.IN_TUNE),
+        RecordingBar(5, Zone.OFF), RecordingBar(22, Zone.IN_TUNE), RecordingBar(10, Zone.NEAR),
     ),
+    span = 100f,
 )
 
 @Preview(name = "Recording · portrait", widthDp = 412, heightDp = 788)
 @Composable
 private fun RecordingPreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.4),
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.4),
     recording = SampleRecording,
+    ribbon = SampleRibbon,
 )
 
 @Preview(name = "Recording · landscape", widthDp = 892, heightDp = 412)
 @Composable
 private fun RecordingLandscapePreview() = LivePreview(
-    LiveSignal.Sounding(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    heard(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
     recording = SampleRecording,
+    ribbon = SampleRibbon,
 )
 
 // The practice tag by the record key, handoff nav_bar 35a (none yet: «Начать занятие») and 35b (running).
@@ -219,22 +249,23 @@ private fun PracticeTagSilencePreview() = LivePreview(LiveSignal.Silence, practi
 @Preview(name = "Practice tag · play", widthDp = 412, heightDp = 788)
 @Composable
 private fun PracticeTagPreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
     practiceMs = PRACTICE_MS,
 )
 
 @Preview(name = "Practice tag · recording", widthDp = 412, heightDp = 788)
 @Composable
 private fun PracticeTagRecordingPreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
-    recording = RecordingState(elapsedMs = 84_000, bars = listOf(RecordingBar(0.5f, Zone.IN_TUNE), RecordingBar(0.2f, Zone.NEAR))),
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
+    recording = RecordingState(elapsedMs = 84_000),
+    ribbon = RecordingRibbon(listOf(RecordingBar(50, Zone.IN_TUNE), RecordingBar(20, Zone.NEAR)), span = 100f),
     practiceMs = PRACTICE_MS,
 )
 
 @Preview(name = "Practice tag · tuning", widthDp = 412, heightDp = 788)
 @Composable
 private fun PracticeTagTuningPreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
     mode = LiveMode.TUNING,
     practiceMs = PRACTICE_MS,
 )
@@ -242,7 +273,7 @@ private fun PracticeTagTuningPreview() = LivePreview(
 @Preview(name = "Practice tag · landscape", widthDp = 892, heightDp = 412)
 @Composable
 private fun PracticeTagLandscapePreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.7),
     practiceMs = PRACTICE_MS,
 )
 
@@ -258,7 +289,7 @@ private fun TuningNoisyPreview() = LivePreview(LiveSignal.TooNoisy, mode = LiveM
 @Preview(name = "12g1 small screen 360x640", widthDp = 360, heightDp = 576)
 @Composable
 private fun SmallScreenPreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 1.0, level = 0.6f),
+    heard(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 1.0, level = 0.6f),
 )
 
 // In the room and in the halls (spec 3.27, handoff venue 29c, 29d): the light is on in silence and
@@ -271,7 +302,7 @@ private fun RoomSilencePreview() = LivePreview(LiveSignal.Silence, venue = Venue
 @Preview(name = "29c2 In the room · in tune, the light out", widthDp = 412, heightDp = 788)
 @Composable
 private fun RoomInTunePreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.3, level = 0.5f),
+    heard(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.3, level = 0.5f),
     venue = Venue.Home,
 )
 
@@ -282,14 +313,14 @@ private fun HallSilencePreview() = LivePreview(LiveSignal.Silence, venue = Venue
 @Preview(name = "29d Paris from the stage · off, the light out", widthDp = 412, heightDp = 788)
 @Composable
 private fun HallOffPreview() = LivePreview(
-    LiveSignal.Sounding(Note(D4), cents = -27.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    heard(Note(D4), cents = -27.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
     venue = Venue.Hall("paris"),
 )
 
 @Preview(name = "29e In a hall · tuning, string D locked", widthDp = 412, heightDp = 788)
 @Composable
 private fun HallTuningPreview() = LivePreview(
-    LiveSignal.Sounding(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    heard(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
     mode = LiveMode.TUNING,
     lockedString = ViolinString.D4,
     venue = Venue.Hall("vienna"),
@@ -298,7 +329,7 @@ private fun HallTuningPreview() = LivePreview(
 @Preview(name = "29g Landscape in the room · in tune", widthDp = 892, heightDp = 412)
 @Composable
 private fun RoomLandscapePreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 1.0, level = 0.7f),
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 1.0, level = 0.7f),
     venue = Venue.Home,
 )
 
@@ -325,7 +356,7 @@ private fun BookmarkDonePreview() = LivePreview(LiveSignal.Silence, practiceMs =
 @Preview(name = "30c2 Bookmark · done while a note sounds (stays whole)", widthDp = 412, heightDp = 788)
 @Composable
 private fun BookmarkDoneInPlayPreview() = LivePreview(
-    LiveSignal.Sounding(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.4, level = 0.5f),
+    heard(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.4, level = 0.5f),
     practiceMs = 41 * 60_000L,
     bookmark = Bookmark.Done(CONCERTO),
 )
@@ -334,7 +365,7 @@ private fun BookmarkDoneInPlayPreview() = LivePreview(
 @Composable
 private fun BookmarkRecordingPreview() = LivePreview(
     LiveSignal.Silence,
-    recording = RecordingState(elapsedMs = 84_000, bars = emptyList()),
+    recording = RecordingState(elapsedMs = 84_000),
     practiceMs = 34 * 60_000L,
     bookmark = Bookmark.Running(CONCERTO, minutesLeft = 7, progress = 0.65f),
 )

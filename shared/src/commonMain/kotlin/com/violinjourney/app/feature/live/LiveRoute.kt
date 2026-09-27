@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
@@ -42,6 +43,9 @@ fun LiveRoute(
     showVenue: Boolean = true,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // kept as a state and handed on as a reading: it moves with every frame and is read only while drawing (LiveGauge)
+    val gauge = viewModel.gauge.collectAsStateWithLifecycle()
+    val readGauge = remember(gauge) { { gauge.value } }
     val block by blockViewModel.state.collectAsStateWithLifecycle()
     val currentOnOpenRepertoire by rememberUpdatedState(onOpenRepertoire)
     val messages = LocalMessages.current
@@ -97,6 +101,7 @@ fun LiveRoute(
             state = state,
             onIntent = viewModel::onIntent,
             modifier = modifier,
+            gauge = readGauge,
             reduceMotion = reduceMotion,
             showVenue = showVenue,
             block = block,

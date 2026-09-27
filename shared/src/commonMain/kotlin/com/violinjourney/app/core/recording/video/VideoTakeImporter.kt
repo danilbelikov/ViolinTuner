@@ -7,7 +7,7 @@ import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
-import com.violinjourney.app.core.domain.session.RecordingBar
+import com.violinjourney.app.core.domain.session.RecordingRibbon
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.deleteFile
@@ -57,8 +57,8 @@ sealed interface VideoImport {
         val visible: Boolean,
         val thumbPath: String? = null,
         val percent: Int = 0,
-        /** The notes found so far, as shares of the whole file: the strip fills up like a progress bar. */
-        val bars: List<RecordingBar> = emptyList(),
+        /** The notes found so far, measured against the whole file: the strip fills up like a progress bar. */
+        val bars: RecordingRibbon = RecordingRibbon.EMPTY,
         /** Null until the speed has been measured. */
         val remainingSec: Int? = null,
         /** «Остановить разбор?» is up; the analysis goes on underneath. */

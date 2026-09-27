@@ -79,7 +79,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.core.domain.session.RecordingBar
+import com.violinjourney.app.core.domain.session.RecordingRibbon
 import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.recording.video.VideoImportFailure
 import com.violinjourney.app.core.ui.components.dimmedWhen
@@ -266,11 +266,11 @@ private fun Working(import: VideoImport.Working, onIntent: (PieceIntent) -> Unit
  * their zone, left to right, as on the recording strip of Live; the cursor is the progress.
  */
 @Composable
-private fun EmergingStrip(bars: List<RecordingBar>, fraction: Float) {
+private fun EmergingStrip(bars: RecordingRibbon, fraction: Float) {
     val colors = MaterialTheme.colorScheme
     val zoneColors = ViolinTheme.zoneColors
     val cursor = colors.primary
-    val pieces = bars.map { it.fraction to zoneColors.colorFor(it.zone) }
+    val pieces = bars.pieces.map { bars.share(it) to zoneColors.colorFor(it.zone) }
     Box(
         Modifier
             .fillMaxWidth()

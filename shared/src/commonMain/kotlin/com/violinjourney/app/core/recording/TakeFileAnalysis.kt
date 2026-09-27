@@ -7,7 +7,7 @@ import com.violinjourney.app.core.domain.IntonationEngine
 import com.violinjourney.app.core.domain.IntonationReading
 import com.violinjourney.app.core.domain.TargetMode
 import com.violinjourney.app.core.domain.session.NewSession
-import com.violinjourney.app.core.domain.session.RecordingBar
+import com.violinjourney.app.core.domain.session.RecordingRibbon
 import com.violinjourney.app.core.domain.session.RecordingResult
 import com.violinjourney.app.core.domain.session.SessionRecorder
 import kotlin.coroutines.coroutineContext
@@ -26,8 +26,8 @@ interface PcmSource {
     }
 }
 
-/** How far the analysis of a file has come: the share done and the notes found so far, as shares of the whole file. */
-data class FileAnalysisProgress(val fraction: Float, val bars: List<RecordingBar>)
+/** How far the analysis of a file has come: the share done and the notes found so far, measured against the whole file. */
+data class FileAnalysisProgress(val fraction: Float, val bars: RecordingRibbon)
 
 sealed interface FileAnalysisResult {
     data class Recorded(val session: NewSession) : FileAnalysisResult
@@ -114,17 +114,13 @@ object TakeFileAnalysis {
         }
     }
 
-    // The recorder measures its bars against the time recorded so far (the strip on Live grows with the take);
-    // here the whole is known in advance, so the bars are re-measured against it and the strip fills up like a progress bar.
-    private fun progressOf(recorder: SessionRecorder, seen: Long, total: Long, totalMs: Long, config: IntonationConfig): FileAnalysisProgress {
-        val progress = recorder.progress()
-        val measuredAgainstMs = maxOf(progress.elapsedMs, config.recordingBarMinMs)
-        val scale = measuredAgainstMs.toFloat() / totalMs.coerceAtLeast(1)
-        return FileAnalysisProgress(
+    // The recorder measures its ribbon against the time recorded so far (the strip on Live grows with the take);
+    // here the whole is known in advance, so the ribbon is measured against it and the strip fills up like a progress bar.
+    private fun progressOf(recorder: SessionRecorder, seen: Long, total: Long, totalMs: Long, config: IntonationConfig): FileAnalysisProgress =
+        FileAnalysisProgress(
             fraction = (seen.toFloat() / total.coerceAtLeast(1)).coerceIn(0f, 1f),
-            bars = progress.bars.map { it.copy(fraction = it.fraction * scale) },
+            bars = recorder.progress().ribbon.against(totalMs.coerceAtLeast(1).toFloat() / config.sessionBucketMs),
         )
-    }
 
     private const val MS_PER_SECOND = 1_000L
     private const val PROGRESS_STEPS = 200

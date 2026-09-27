@@ -33,20 +33,30 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.GraphicsLayerScope
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.LayoutCoordinates
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.boundsInRoot
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.positionInRoot
+import androidx.compose.ui.node.LayoutModifierNode
+import androidx.compose.ui.node.ModifierNodeElement
+import androidx.compose.ui.node.invalidatePlacement
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.domain.Note
+import com.violinjourney.app.core.domain.session.RecordingRibbon
 import com.violinjourney.app.core.ui.theme.LiveTheme
 import com.violinjourney.app.feature.live.components.CentsScale
 import com.violinjourney.app.feature.live.components.GlowRing
@@ -82,8 +92,8 @@ class LiveSlots(
     val recordKey: @Composable (recording: Boolean, enabled: Boolean, modifier: Modifier) -> Unit = { _, _, _ -> },
     /** The gear to «Настройки» (spec 3.8). */
     val gear: @Composable (enabled: Boolean, modifier: Modifier) -> Unit = { _, _ -> },
-    /** The strip above the key while a take is recorded (spec 3.9). */
-    val recordingStrip: @Composable (recording: RecordingState, modifier: Modifier) -> Unit = { _, _ -> },
+    /** The strip above the key while a take is recorded (spec 3.9); its notes are read while drawing. */
+    val recordingStrip: @Composable (recording: RecordingState, ribbon: () -> RecordingRibbon, modifier: Modifier) -> Unit = { _, _, _ -> },
     /** Over everything: the sheets of blocks. */
     val overlay: @Composable (landscape: Boolean) -> Unit = {},
 )
@@ -116,6 +126,8 @@ fun LiveScreenLayout(
     onIntent: (LiveIntent) -> Unit,
     slots: LiveSlots,
     modifier: Modifier = Modifier,
+    /** What moves with every frame of sound ([LiveGauge]): read only while drawing and in effects, never here. */
+    gauge: () -> LiveGauge = NoGauge,
     /** System animations are switched off: the ring stands still and changes in steps (spec 3.14). */
     reduceMotion: Boolean = false,
 ) {
@@ -123,28 +135,47 @@ fun LiveScreenLayout(
     val zoneColors = LiveTheme.zoneColors
     val sounding = state.signal as? LiveSignal.Sounding
 
-    // Gradient, status, ring fill and marker halo always share this one color (spec 3.4).
-    val zoneColor by animateColorAsState(
+    // Gradient, status, ring fill and marker halo always share this one color (spec 3.4). It is read while drawing:
+    // a change of zone fades it without composing the screen on every frame of the fade.
+    val zoneColorState = animateColorAsState(
         targetValue = zoneColors.colorFor(sounding?.zone),
         animationSpec = tween(state.zoneCrossfadeMs),
         label = "zoneColor",
     )
+    val zoneColor = remember(zoneColorState) { { zoneColorState.value } }
     // the ring and the light of the zone on the picture are lit by one number
-    val glow = rememberRingGlow(if (reduceMotion) state.glowStep else state.glowTarget, reduceMotion)
+    val currentGauge by rememberUpdatedState(gauge)
+    val glowStep by rememberUpdatedState(state.glowStep)
+    val glow = rememberRingGlow({ if (reduceMotion) glowStep else currentGauge().glowTarget }, reduceMotion)
     val darkness = rememberHouseLights(down = sounding != null || state.recording != null, reduceMotion = reduceMotion, enabled = showVenue)
-    val chrome = { VenueLook.chromeAlpha(darkness.value) }
+    val chrome = remember(darkness) { { VenueLook.chromeAlpha(darkness.value) } }
+    val readGauge = remember { { currentGauge() } }
 
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
     var ringCenter by remember { mutableStateOf(Offset.Unspecified) }
     val ringDiameter = remember { mutableFloatStateOf(0f) }
-    val ringModifier = Modifier.onGloballyPositioned {
-        ringCenter = it.centerIn(rootPosition)
-        ringDiameter.floatValue = it.size.width.toFloat()
+    val ringModifier = remember {
+        Modifier.onGloballyPositioned {
+            ringCenter = it.centerIn(rootPosition)
+            ringDiameter.floatValue = it.size.width.toFloat()
+        }
     }
+    val zoneScale by rememberUpdatedState(VenueLook.zoneScale(sounding?.zone))
 
     BoxWithConstraints(modifier = modifier.fillMaxSize()) {
         val landscape = LiveLayoutMath.isLandscape(maxWidth.value, maxHeight.value)
-        val zoneScale = VenueLook.zoneScale(sounding?.zone)
+        // made once per shape: the picture behind reads everything through it and is not composed again with the words
+        val look = remember(landscape) {
+            LiveBackdrop(
+                landscape = landscape,
+                darkness = { darkness.value },
+                glow = { glow.value },
+                zoneColor = zoneColor,
+                zoneScale = { zoneScale },
+                ringCenter = { ringCenter },
+                ringDiameter = { ringDiameter.floatValue },
+            )
+        }
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -163,21 +194,11 @@ fun LiveScreenLayout(
                     },
                 ),
         ) {
-            slots.backdrop?.invoke(
-                LiveBackdrop(
-                    landscape = landscape,
-                    darkness = { darkness.value },
-                    glow = { glow.value },
-                    zoneColor = { zoneColor },
-                    zoneScale = { zoneScale },
-                    ringCenter = { ringCenter },
-                    ringDiameter = { ringDiameter.floatValue },
-                ),
-            )
+            slots.backdrop?.invoke(look)
             if (landscape) {
-                LandscapeLayout(state, zoneColor, glow, chrome, showVenue, onIntent, ringModifier, reduceMotion, slots)
+                LandscapeLayout(state, readGauge, zoneColor, glow, chrome, showVenue, onIntent, ringModifier, reduceMotion, slots)
             } else {
-                PortraitLayout(state, zoneColor, glow, chrome, showVenue, onIntent, ringModifier, reduceMotion, slots)
+                PortraitLayout(state, readGauge, zoneColor, glow, chrome, showVenue, onIntent, ringModifier, reduceMotion, slots)
             }
             slots.overlay(landscape)
         }
@@ -217,13 +238,44 @@ private fun rememberHouseLights(down: Boolean, reduceMotion: Boolean, enabled: B
     return darkness.asState()
 }
 
-/** The alpha of a control one does not touch while playing: its own, times the light (handoff `chrome.dim`). */
-private fun Modifier.chrome(base: Float, chrome: () -> Float): Modifier = graphicsLayer { alpha = base * chrome() }
+/**
+ * The alpha of a control one does not touch while playing: its own, times the light (handoff `chrome.dim`). Equal for an
+ * equal [base] and the same [light], so a control whose words have not changed is not composed again with the screen.
+ */
+internal fun Modifier.chrome(base: Float, light: () -> Float): Modifier = this then ChromeElement(base, light)
+
+/** A layer with the alpha of [chrome], as `graphicsLayer { }` makes it — but equal by what it does, not by the lambda. */
+private data class ChromeElement(val base: Float, val light: () -> Float) : ModifierNodeElement<ChromeNode>() {
+    override fun create() = ChromeNode(base, light)
+
+    override fun update(node: ChromeNode) = node.set(base, light)
+}
+
+private class ChromeNode(base: Float, light: () -> Float) : Modifier.Node(), LayoutModifierNode {
+    // the light is read in the layer: its change redraws the layer without measuring or composing anything
+    private var layerBlock = layerOf(base, light)
+
+    fun set(base: Float, light: () -> Float) {
+        layerBlock = layerOf(base, light)
+        invalidatePlacement()
+    }
+
+    override fun MeasureScope.measure(measurable: Measurable, constraints: Constraints): MeasureResult {
+        val placeable = measurable.measure(constraints)
+        return layout(placeable.width, placeable.height) { placeable.placeWithLayer(0, 0, layerBlock = layerBlock) }
+    }
+
+    private fun layerOf(base: Float, light: () -> Float): GraphicsLayerScope.() -> Unit = { alpha = base * light() }
+}
+
+/** No sound yet: the gauge of a screen that has none (previews, a state from elsewhere). */
+internal val NoGauge: () -> LiveGauge = { LiveGauge() }
 
 @Composable
 private fun PortraitLayout(
     state: LiveState,
-    zoneColor: Color,
+    gauge: () -> LiveGauge,
+    zoneColor: () -> Color,
     glow: State<Float>,
     chrome: () -> Float,
     showVenue: Boolean,
@@ -298,7 +350,7 @@ private fun PortraitLayout(
                 ),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Ring(state, zoneColor, glow, ringSize, ringModifier, reduceMotion)
+                Ring(state, gauge, zoneColor, glow, ringSize, ringModifier, reduceMotion)
                 if (noMic) {
                     MicPermissionPrompt(onGrantClick = { onIntent(LiveIntent.GrantMicClicked) })
                 } else {
@@ -314,6 +366,7 @@ private fun PortraitLayout(
         }
         ScaleSlot(
             state = state,
+            gauge = gauge,
             zoneColor = zoneColor,
             modifier = Modifier.padding(
                 start = LiveDimens.ScreenPadding,
@@ -324,6 +377,7 @@ private fun PortraitLayout(
         RecordingStripSlot(
             slots = slots,
             recording = recording,
+            gauge = gauge,
             modifier = Modifier.padding(
                 start = LiveDimens.ScreenPadding,
                 end = LiveDimens.ScreenPadding,
@@ -393,18 +447,23 @@ private fun Gear(slots: LiveSlots, recording: RecordingState?, chrome: () -> Flo
 @Composable
 private fun RecordKey(slots: LiveSlots, state: LiveState, chrome: () -> Float) {
     val recording = state.recording != null
+    val light = remember(recording, chrome) { if (recording) Whole else chrome }
     slots.recordKey(
         recording,
         state.canRecord || recording,
-        Modifier.chrome(if (state.canRecord || recording) 1f else LiveDimens.DISABLED_ALPHA) { if (recording) 1f else chrome() },
+        Modifier.chrome(if (state.canRecord || recording) 1f else LiveDimens.DISABLED_ALPHA, light),
     )
 }
+
+/** The light of what stays whole in the dark. */
+private val Whole: () -> Float = { 1f }
 
 /** Handoff `v1-land`: ring panel on the left; switcher, status, scale and record on the right. */
 @Composable
 private fun LandscapeLayout(
     state: LiveState,
-    zoneColor: Color,
+    gauge: () -> LiveGauge,
+    zoneColor: () -> Color,
     glow: State<Float>,
     chrome: () -> Float,
     showVenue: Boolean,
@@ -426,7 +485,7 @@ private fun LandscapeLayout(
             contentAlignment = Alignment.Center,
         ) {
             val ringSize = ringSizeFor(state, landscape = true, maxWidth, maxHeight, reserved = 0.dp)
-            Ring(state, zoneColor, glow, ringSize, ringModifier, reduceMotion)
+            Ring(state, gauge, zoneColor, glow, ringSize, ringModifier, reduceMotion)
         }
         Column(
             modifier = Modifier
@@ -483,8 +542,8 @@ private fun LandscapeLayout(
                     )
                 }
             }
-            ScaleSlot(state = state, zoneColor = zoneColor)
-            RecordingStripSlot(slots = slots, recording = recording)
+            ScaleSlot(state = state, gauge = gauge, zoneColor = zoneColor)
+            RecordingStripSlot(slots = slots, recording = recording, gauge = gauge)
             // the tag beside the key, as upright: the row is wide enough for both (the handoff would put it under the bookmark)
             KeyRow(
                 modifier = Modifier.padding(top = LiveDimens.LandscapeRecordTopPadding),
@@ -500,19 +559,28 @@ private fun LandscapeLayout(
 
 /**
  * The recording strip unfolds above the record button and folds away again; while it folds it
- * keeps showing the last numbers, because the state is already back to "not recording".
+ * keeps showing the last numbers and notes, because the state is already back to "not recording".
  */
 @Composable
-private fun RecordingStripSlot(slots: LiveSlots, recording: RecordingState?, modifier: Modifier = Modifier) {
-    var lastShown by remember { mutableStateOf(RecordingState(elapsedMs = 0, bars = emptyList())) }
+private fun RecordingStripSlot(slots: LiveSlots, recording: RecordingState?, gauge: () -> LiveGauge, modifier: Modifier = Modifier) {
+    var lastShown by remember { mutableStateOf(RecordingState(elapsedMs = 0)) }
     if (recording != null) SideEffect { lastShown = recording }
+    val kept = remember(gauge) { KeptRibbon(gauge) }
+    val ribbon = remember(kept) { { kept.current() } }
     AnimatedVisibility(
         visible = recording != null,
         enter = expandVertically(tween(LiveMotion.RECORD_MORPH_MS)) + fadeIn(tween(LiveMotion.RECORD_MORPH_MS)),
         exit = shrinkVertically(tween(LiveMotion.RECORD_MORPH_MS)) + fadeOut(tween(LiveMotion.RECORD_MORPH_MS)),
     ) {
-        slots.recordingStrip(recording ?: lastShown, modifier)
+        slots.recordingStrip(recording ?: lastShown, ribbon, modifier)
     }
+}
+
+/** The notes of the take as they come, read while drawing; once it is over, the last of them, for the strip folding away. */
+private class KeptRibbon(private val gauge: () -> LiveGauge) {
+    private var last = RecordingRibbon.EMPTY
+
+    fun current(): RecordingRibbon = gauge().ribbon?.also { last = it } ?: last
 }
 
 private fun ringSizeFor(state: LiveState, landscape: Boolean, maxWidth: Dp, maxHeight: Dp, reserved: Dp): Dp {
@@ -531,17 +599,26 @@ private fun ringSizeFor(state: LiveState, landscape: Boolean, maxWidth: Dp, maxH
 }
 
 @Composable
-private fun Ring(state: LiveState, zoneColor: Color, glow: State<Float>, size: Dp, modifier: Modifier, reduceMotion: Boolean) {
+private fun Ring(
+    state: LiveState,
+    gauge: () -> LiveGauge,
+    zoneColor: () -> Color,
+    glow: State<Float>,
+    size: Dp,
+    modifier: Modifier,
+    reduceMotion: Boolean,
+) {
     val sounding = state.signal as? LiveSignal.Sounding
     // Silence has no count of its own; keeping the last one means going silent is not "a new note".
     var noteSerial by remember { mutableIntStateOf(sounding?.noteSerial ?: 0) }
     if (sounding != null) noteSerial = sounding.noteSerial
+    val level = remember(gauge) { { gauge().level } }
     GlowRing(
         glow = glow,
-        level = sounding?.level ?: 0f,
+        level = level,
         zoneColor = zoneColor,
         noteSerial = noteSerial,
-        holdComplete = sounding != null && sounding.holdProgress >= 1.0,
+        holdComplete = sounding?.holdComplete == true,
         reduceMotion = reduceMotion,
         size = size,
         modifier = modifier,
@@ -556,21 +633,24 @@ private fun Ring(state: LiveState, zoneColor: Color, glow: State<Float>, size: D
  * puts its strip there. It stays whole in the dark: it is read, not touched.
  */
 @Composable
-private fun ScaleSlot(state: LiveState, zoneColor: Color, modifier: Modifier = Modifier) {
+private fun ScaleSlot(state: LiveState, gauge: () -> LiveGauge, zoneColor: () -> Color, modifier: Modifier = Modifier) {
     AnimatedVisibility(
         visible = state.mode == LiveMode.TUNING,
         enter = expandVertically(tween(LiveMotion.STRING_ROW_EXPAND_MS)) + fadeIn(tween(LiveMotion.STRING_ROW_EXPAND_MS)),
         exit = shrinkVertically(tween(LiveMotion.STRING_ROW_EXPAND_MS)) + fadeOut(tween(LiveMotion.STRING_ROW_EXPAND_MS)),
     ) {
-        Scale(state, zoneColor, modifier)
+        Scale(state, gauge, zoneColor, modifier)
     }
 }
 
 @Composable
-private fun Scale(state: LiveState, zoneColor: Color, modifier: Modifier = Modifier) {
+private fun Scale(state: LiveState, gauge: () -> LiveGauge, zoneColor: () -> Color, modifier: Modifier = Modifier) {
     val sounding = state.signal as? LiveSignal.Sounding
+    val scale = state.scale
+    val markerFraction = remember(gauge, scale) { { gauge().cents?.let { ScaleMath.markerFraction(it, scale).toFloat() } } }
     CentsScale(
-        markerFraction = sounding?.let { ScaleMath.markerFraction(it.cents, state.scale).toFloat() },
+        markerVisible = sounding != null,
+        markerFraction = markerFraction,
         inTuneFraction = ScaleMath.inTuneFraction(state.scale).toFloat(),
         haloColor = zoneColor,
         modifier = modifier.graphicsLayer {

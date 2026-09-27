@@ -4,6 +4,7 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Zone
 import com.violinjourney.app.core.domain.session.NewSession
 import com.violinjourney.app.core.domain.session.RecordingBar
+import com.violinjourney.app.core.domain.session.RecordingRibbon
 import com.violinjourney.app.core.domain.session.SessionAnalyzer
 import com.violinjourney.app.core.domain.session.SessionSample
 import com.violinjourney.app.core.recording.FileAnalysisProgress
@@ -73,7 +74,7 @@ class FakeFileTakeAnalyzer(var tookMs: Long = 2_000, var outcome: FileAnalysisRe
         repeat(STEPS) { step ->
             if (step == STEPS / 2) failWith?.let { throw it }
             delay(tookMs / STEPS)
-            onProgress(FileAnalysisProgress((step + 1f) / STEPS, listOf(RecordingBar((step + 1f) / STEPS / 2, Zone.IN_TUNE))))
+            onProgress(FileAnalysisProgress((step + 1f) / STEPS, RecordingRibbon(listOf(RecordingBar(step + 1, Zone.IN_TUNE)), span = 2f * STEPS)))
         }
         return outcome ?: FileAnalysisResult.Recorded(sessionOf(config, startedAtEpochMs, audioFileName))
     }

@@ -14,6 +14,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,25 +42,26 @@ private class Wave(val startAlpha: Float) {
  * down, so that a note slipping out of the zone for a moment does not put it out — nothing on this
  * screen blinks. With [reduceMotion] the glow only changes in steps. Hoisted out of the ring: the
  * picture behind Live is lit by the same number (spec 3.27). What is already true when the screen
- * appears is shown as it is: no climb from zero after a rotation or a return to the tab.
+ * appears is shown as it is: no climb from zero after a rotation or a return to the tab. The target
+ * moves with every frame of sound, so it is read here, in the loop, and never where the screen is composed.
  */
 @Composable
-fun rememberRingGlow(glowTarget: Float, reduceMotion: Boolean): State<Float> {
+fun rememberRingGlow(glowTarget: () -> Float, reduceMotion: Boolean): State<Float> {
     val target by rememberUpdatedState(glowTarget)
-    val glow = remember { mutableFloatStateOf(glowTarget) }
+    val glow = remember { mutableFloatStateOf(Snapshot.withoutReadObservation { glowTarget() }) }
     LaunchedEffect(reduceMotion) {
         val riseMs = if (reduceMotion) LiveMotion.GLOW_STEP_MS else LiveMotion.GLOW_RISE_MS
         val fallMs = if (reduceMotion) LiveMotion.GLOW_STEP_MS else LiveMotion.GLOW_FALL_MS
         while (true) {
-            if (abs(target - glow.floatValue) < GLOW_SETTLED) {
-                glow.floatValue = target
+            if (abs(target() - glow.floatValue) < GLOW_SETTLED) {
+                glow.floatValue = target()
                 // Nothing to do until the target moves: no frames are spent on a ring at rest.
-                snapshotFlow { target }.first { abs(it - glow.floatValue) >= GLOW_SETTLED }
+                snapshotFlow { target() }.first { abs(it - glow.floatValue) >= GLOW_SETTLED }
             }
             var last = withFrameMillis { it }
-            while (abs(target - glow.floatValue) >= GLOW_SETTLED) {
+            while (abs(target() - glow.floatValue) >= GLOW_SETTLED) {
                 val now = withFrameMillis { it }
-                glow.floatValue = GlowMath.follow(glow.floatValue, target, (now - last).toFloat(), riseMs, fallMs)
+                glow.floatValue = GlowMath.follow(glow.floatValue, target(), (now - last).toFloat(), riseMs, fallMs)
                 last = now
             }
         }
@@ -73,15 +75,15 @@ fun rememberRingGlow(glowTarget: Float, reduceMotion: Boolean): State<Float> {
  * ring when [noteSerial] moves and when [holdComplete] turns true. With [reduceMotion] there are no
  * waves and no breath.
  *
- * Everything that changes many times a second is read in the draw phase: the ring redraws, it
- * does not recompose. The halo reaches past the bounds ([GlowMath.EXTENT] × the radius) and is
+ * Everything that changes many times a second — the glow, the level, the colour of the zone — is read
+ * in the draw phase: the ring redraws, it does not recompose. The halo reaches past the bounds ([GlowMath.EXTENT] × the radius) and is
  * not clipped on purpose; the layout leaves it room.
  */
 @Composable
 fun GlowRing(
     glow: State<Float>,
-    level: Float,
-    zoneColor: Color,
+    level: () -> Float,
+    zoneColor: () -> Color,
     noteSerial: Int,
     holdComplete: Boolean,
     reduceMotion: Boolean,
@@ -89,8 +91,9 @@ fun GlowRing(
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit,
 ) {
-    val loudness by rememberUpdatedState(if (reduceMotion) 0f else level)
+    val loudness by rememberUpdatedState(level)
     val color by rememberUpdatedState(zoneColor)
+    val breathes by rememberUpdatedState(!reduceMotion)
     val waves = remember { mutableStateListOf<Wave>() }
     val gate = remember { WaveGate(LiveMotion.WAVE_MIN_INTERVAL_MS) }
 
@@ -117,8 +120,9 @@ fun GlowRing(
         modifier = modifier
             .size(size)
             .drawBehind {
-                drawRing(glow.value, loudness, color)
-                waves.forEach { drawWave(it.startAlpha, it.progress.value, color) }
+                val zone = color()
+                drawRing(glow.value, if (breathes) loudness() else 0f, zone)
+                waves.forEach { drawWave(it.startAlpha, it.progress.value, zone) }
             },
         contentAlignment = Alignment.Center,
     ) {

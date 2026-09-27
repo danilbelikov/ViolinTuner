@@ -50,7 +50,7 @@ class LiveReducerTest {
     fun `auto target is the string nearest to the sound`() {
         val config = IntonationConfig()
         val tuning = LiveTarget(LiveMode.TUNING)
-        val playingA = LiveSignal.Sounding(Note(69), -12.0, Zone.NEAR, Direction.FLAT, 0.0)
+        val playingA = LiveSignal.Sounding(Note(69), Zone.NEAR, Direction.FLAT, displayCents = -12)
         assertEquals(ViolinString.A4, LiveReducer.tuningStateOf(tuning, playingA, config).targetString)
         assertNull(LiveReducer.tuningStateOf(tuning, LiveSignal.Silence, config).targetString)
         assertNull(LiveReducer.tuningStateOf(LiveTarget(LiveMode.PLAY), playingA, config).targetString)
@@ -75,27 +75,37 @@ class LiveReducerTest {
 
     private val config = IntonationConfig()
 
-    private fun sounding(zone: Zone, hold: Double = 0.0) =
-        LiveSignal.Sounding(Note(69), 0.0, zone, direction = null, holdProgress = hold)
+    private fun sounding(zone: Zone, holdComplete: Boolean = false) =
+        LiveSignal.Sounding(Note(69), zone, direction = null, displayCents = 0, holdComplete = holdComplete)
 
     @Test
     fun `nothing glows without a note`() {
         listOf(LiveSignal.Silence, LiveSignal.TooNoisy, LiveSignal.MicUnavailable, LiveSignal.NoMicPermission)
-            .forEach { assertEquals(0f, LiveReducer.glowTargetOf(it, config), 0f) }
+            .forEach { assertEquals(0f, LiveReducer.glowStepOf(it, config), 0f) }
     }
 
     @Test
     fun `a miss glows less than a near miss — and both less than a hit`() {
-        assertEquals(0.25f, LiveReducer.glowTargetOf(sounding(Zone.OFF), config), 0f)
-        assertEquals(0.4f, LiveReducer.glowTargetOf(sounding(Zone.NEAR), config), 0f)
-        assertEquals(0.6f, LiveReducer.glowTargetOf(sounding(Zone.IN_TUNE), config), 0f)
+        assertEquals(0.25f, LiveReducer.glowTargetOf(Zone.OFF, 0.0, config), 0f)
+        assertEquals(0.4f, LiveReducer.glowTargetOf(Zone.NEAR, 0.0, config), 0f)
+        assertEquals(0.6f, LiveReducer.glowTargetOf(Zone.IN_TUNE, 0.0, config), 0f)
+        // a hold does not brighten a miss
+        assertEquals(0.4f, LiveReducer.glowTargetOf(Zone.NEAR, 1.0, config), 0f)
     }
 
     @Test
     fun `in tune the glow grows to full with the hold`() {
-        assertEquals(0.8f, LiveReducer.glowTargetOf(sounding(Zone.IN_TUNE, hold = 0.5), config), 1e-6f)
-        assertEquals(1f, LiveReducer.glowTargetOf(sounding(Zone.IN_TUNE, hold = 1.0), config), 1e-6f)
-        assertEquals(1f, LiveReducer.glowTargetOf(sounding(Zone.IN_TUNE, hold = 1.3), config), 1e-6f)
+        assertEquals(0.8f, LiveReducer.glowTargetOf(Zone.IN_TUNE, 0.5, config), 1e-6f)
+        assertEquals(1f, LiveReducer.glowTargetOf(Zone.IN_TUNE, 1.0, config), 1e-6f)
+        assertEquals(1f, LiveReducer.glowTargetOf(Zone.IN_TUNE, 1.3, config), 1e-6f)
+    }
+
+    @Test
+    fun `without animations the glow steps — the step of the zone and full only once the hold is complete`() {
+        assertEquals(0.25f, LiveReducer.glowStepOf(sounding(Zone.OFF), config), 0f)
+        assertEquals(0.4f, LiveReducer.glowStepOf(sounding(Zone.NEAR), config), 0f)
+        assertEquals(0.6f, LiveReducer.glowStepOf(sounding(Zone.IN_TUNE), config), 0f)
+        assertEquals(1f, LiveReducer.glowStepOf(sounding(Zone.IN_TUNE, holdComplete = true), config), 1e-6f)
     }
 
     @Test

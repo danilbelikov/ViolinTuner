@@ -90,9 +90,9 @@ class TakeFileAnalysisTest {
         assertTrue(seen.zipWithNext().all { (a, b) -> b.fraction >= a.fraction })
         assertEquals(1f, seen.last().fraction, 0.02f)
         val bars = seen.last().bars
-        assertEquals(listOf(Zone.IN_TUNE, Zone.OFF), bars.map { it.zone })
+        assertEquals(listOf(Zone.IN_TUNE, Zone.OFF), bars.pieces.map { it.zone })
         // three seconds of notes out of three and a half: pauses take no room on the strip
-        assertEquals(3_000f / 3_500f, bars.sumOf { it.fraction.toDouble() }.toFloat(), 0.06f)
+        assertEquals(3_000f / 3_500f, bars.pieces.sumOf { bars.share(it).toDouble() }.toFloat(), 0.06f)
     }
 
     @Test

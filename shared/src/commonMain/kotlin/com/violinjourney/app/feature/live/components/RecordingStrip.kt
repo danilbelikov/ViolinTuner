@@ -17,17 +17,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.domain.session.RecordingRibbon
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.live.RecordingState
@@ -39,16 +39,17 @@ import org.jetbrains.compose.resources.stringResource
 private const val TABULAR_FIGURES = "tnum"
 /**
  * Strip above the record button while recording (spec 3.9): pulsing red dot, timer and the mini
- * bar of the notes played so far, colored by zone and filling up from the left.
+ * bar of the notes played so far, colored by zone and filling up from the left. The pulse and the
+ * notes ([ribbon]) are read in the layer and while drawing: they move many times a second, the words once.
  */
 @Composable
-fun RecordingStrip(recording: RecordingState, modifier: Modifier = Modifier) {
+fun RecordingStrip(recording: RecordingState, ribbon: () -> RecordingRibbon, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val zoneColors = ViolinTheme.zoneColors
     val elapsed = Formats.duration(recording.elapsedMs)
     val description = stringResource(Res.string.recording_elapsed_description, elapsed)
 
-    val pulse by rememberInfiniteTransition(label = "recordingPulse").animateFloat(
+    val pulse = rememberInfiniteTransition(label = "recordingPulse").animateFloat(
         initialValue = 1f,
         targetValue = LiveMotion.RECORDING_PULSE_MIN_ALPHA,
         animationSpec = infiniteRepeatable(tween(LiveMotion.RECORDING_PULSE_MS / 2), RepeatMode.Reverse),
@@ -64,7 +65,11 @@ fun RecordingStrip(recording: RecordingState, modifier: Modifier = Modifier) {
         Box(
             Modifier
                 .size(LiveDimens.RecordingDotSize)
-                .alpha(pulse)
+                .graphicsLayer {
+                    // what Modifier.alpha does, read here
+                    alpha = pulse.value
+                    clip = pulse.value != 1f
+                }
                 .background(zoneColors.off, CircleShape),
         )
         Text(
@@ -89,9 +94,10 @@ fun RecordingStrip(recording: RecordingState, modifier: Modifier = Modifier) {
                 .background(colors.surfaceContainerHigh),
         ) {
             val gap = LiveDimens.RecordingBarGap.toPx()
+            val notes = ribbon()
             var x = 0f
-            for (bar in recording.bars) {
-                val width = size.width * bar.fraction
+            for (bar in notes.pieces) {
+                val width = size.width * notes.share(bar)
                 // very short notes still get a sliver, the gap is taken out of the note itself
                 drawRect(
                     color = zoneColors.colorFor(bar.zone),
