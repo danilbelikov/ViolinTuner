@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.audio.backing
 
-import com.violinjourney.app.core.audio.recording.AacFile
+import com.violinjourney.app.core.audio.recording.Tone
+import com.violinjourney.app.core.audio.recording.writeAacTones
 import com.violinjourney.app.core.audio.share.IosSoundRenderer
 import com.violinjourney.app.core.audio.share.RenderBacking
 import com.violinjourney.app.core.domain.backing.Backing
@@ -14,10 +15,7 @@ import com.violinjourney.app.core.io.pathOfFileUri
 import com.violinjourney.app.core.io.writeBytes
 import com.violinjourney.app.core.time.SystemWallClock
 import com.violinjourney.app.core.ui.components.copyKeepingName
-import kotlin.math.PI
 import kotlin.math.abs
-import kotlin.math.roundToInt
-import kotlin.math.sin
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -62,17 +60,9 @@ class IosBackingTest {
         NSFileManager.defaultManager.removeItemAtPath(folder, null)
     }
 
-    /** Written straight into the file: the take's encoder gives up on a queue of more than a second and a half of hops. */
-    private fun tone(path: String, rate: Int, seconds: Int, hz: Double) {
-        val aac = AacFile(path, rate, channels = 1)
-        val hop = ShortArray(512)
-        var n = 0
-        repeat(seconds * rate / hop.size) {
-            for (i in hop.indices) hop[i] = (sin(2 * PI * hz * (n++) / rate) * 8_000).roundToInt().toShort()
-            assertTrue(aac.write(hop, hop.size))
-        }
-        assertTrue(aac.close())
-    }
+    /** Written straight into the file ([writeAacTones]): the take's encoder gives up on a queue of about two seconds of hops. */
+    private fun tone(path: String, rate: Int, seconds: Int, hz: Double) =
+        writeAacTones(path, rate, listOf(Tone(hz, seconds.toDouble())), amplitude = 8_000.0)
 
     @Test
     fun `a backing of 44_1 kHz is made ready at 48 kHz`() {

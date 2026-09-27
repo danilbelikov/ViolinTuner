@@ -2,13 +2,13 @@ package com.violinjourney.app.core.recording
 
 import com.violinjourney.app.core.audio.dsp.MpmDetector
 import com.violinjourney.app.core.audio.dsp.PitchDetectorFactory
-import com.violinjourney.app.core.audio.recording.IosAacEncoder
+import com.violinjourney.app.core.audio.recording.Tone
+import com.violinjourney.app.core.audio.recording.writeAacTones
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.io.PlatformFile
-import kotlin.math.PI
-import kotlin.math.roundToInt
-import kotlin.math.sin
+import kotlin.math.abs
+import kotlin.math.pow
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -23,49 +23,59 @@ import platform.Foundation.NSFileManager
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSUUID
 
-/** The analysis of a file on iOS — how a video take is heard: three seconds of A4 come out as a session in tune. */
+/**
+ * The analysis of a file on iOS — how a video take is heard: the notes, their cents and the share in tune come out as they
+ * were played, as `DecodingFileTakeAnalyzerTest` holds on Android; a file of silence has no notes.
+ */
 @OptIn(ExperimentalForeignApi::class)
 class IosFileAnalysisTest {
     private val path = NSTemporaryDirectory() + NSUUID().UUIDString + ".m4a"
+    private val config = IntonationConfig()
+    private val analyzer = DecodingFileTakeAnalyzer(PitchDetectorFactory(::MpmDetector), RepertoireConfig(), Dispatchers.Default, IosPcmFileOpener)
 
     @AfterTest
     fun cleanUp() {
         NSFileManager.defaultManager.removeItemAtPath(path, null)
     }
 
-    @Test
-    fun `three seconds of A4 are a recorded session`() = runTest {
-        val rate = 48_000
-        val encoder = IosAacEncoder(PlatformFile(path), rate)
-        val hop = ShortArray(512)
-        var n = 0
-        repeat(3 * rate / hop.size) {
-            for (i in hop.indices) hop[i] = (sin(2 * PI * 440 * (n++) / rate) * 10_000).roundToInt().toShort()
-            encoder.offer(hop, hop.size)
-        }
-        assertTrue(encoder.finish())
+    private fun hz(midi: Int, cents: Double = 0.0) = 440.0 * 2.0.pow((midi - 69 + cents / 100) / 12)
 
-        val analyzer = DecodingFileTakeAnalyzer(PitchDetectorFactory(::MpmDetector), RepertoireConfig(), Dispatchers.Default, IosPcmFileOpener)
-        val result = analyzer.analyze(PlatformFile(path), IntonationConfig(), startedAtEpochMs = 0, audioFileName = "take.m4a") {}
-        val recorded = assertIs<FileAnalysisResult.Recorded>(result)
-        assertTrue(recorded.session.durationMs in 2_500L..3_200L, "duration ${recorded.session.durationMs}")
+    @Test
+    fun `A4 in tune and then D5 twenty-five cents flat are heard as they were`() = runTest {
+        writeAacTones(path, RATE, listOf(Tone(hz(69), 1.5), Tone(hz(74, cents = -25.0), 1.5)))
+
+        val result = analyzer.analyze(PlatformFile(path), config, startedAtEpochMs = 0, audioFileName = "take.m4a") {}
+        val session = assertIs<FileAnalysisResult.Recorded>(result).session
+        assertTrue(session.durationMs in 2_850L..3_150L, "duration ${session.durationMs}")
+        val bucket = config.sessionBucketMs
+        val inTune = assertNotNull(session.samples[(750 / bucket).toInt()], "a note in the middle of A4")
+        assertEquals(69, inTune.midi)
+        assertTrue(abs(inTune.cents) < 3, "A4 at ${inTune.cents} cents")
+        val flat = assertNotNull(session.samples[(2_250 / bucket).toInt()], "a note in the middle of D5")
+        assertEquals(74, flat.midi)
+        assertEquals(-25.0, flat.cents, 3.0, "D5 flat")
+        // half the time in tune, half off
+        assertEquals(50.0, session.metrics.scorePercent.toDouble(), 10.0, "in tune")
+    }
+
+    @Test
+    fun `a file of silence has no notes`() = runTest {
+        // as long as a take has to be: a shorter one would be too short before it is silent
+        writeAacTones(path, RATE, listOf(Tone(hz = null, seconds = 3.0)))
+        assertEquals(FileAnalysisResult.NoNotes, analyzer.analyze(PlatformFile(path), config, startedAtEpochMs = 0, audioFileName = "silent.m4a") {})
     }
 
     @Test
     fun `a file opened from its middle gives the rest of the sound`() {
-        val rate = 48_000
-        val encoder = IosAacEncoder(PlatformFile(path), rate)
-        val hop = ShortArray(512)
-        repeat(2 * rate / hop.size) { encoder.offer(hop, hop.size) }
-        assertTrue(encoder.finish())
+        writeAacTones(path, RATE, listOf(Tone(hz = null, seconds = 2.0)))
 
         val whole = assertNotNull(IosPcmFileOpener.open(PlatformFile(path)))
-        val rest = assertNotNull(IosPcmFileOpener.openAt(PlatformFile(path), fromSample = rate.toLong()))
+        val rest = assertNotNull(IosPcmFileOpener.openAt(PlatformFile(path), fromSample = RATE.toLong()))
         try {
             assertEquals(whole.totalSamples, rest.totalSamples, "the length stays the whole file's")
             val all = count(whole)
             val tail = count(rest)
-            assertTrue(tail in rate / 2..rate * 3 / 2, "from the middle: $tail of $all")
+            assertTrue(tail in RATE / 2..RATE * 3 / 2, "from the middle: $tail of $all")
             // a reader that came to the end — of the file, or of the stretch asked for — gave up on nothing
             assertFalse(whole.broken, "the end of the file is no failure")
             assertFalse(rest.broken, "the end of a stretch is no failure")
@@ -83,5 +93,9 @@ class IosFileAnalysisTest {
             if (read == PcmSource.END) return total
             total += read
         }
+    }
+
+    private companion object {
+        const val RATE = 48_000
     }
 }

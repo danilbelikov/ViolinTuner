@@ -69,7 +69,7 @@ class IosAacEncoder(private val file: PlatformFile, sampleRateHz: Int) : PcmEnco
     }
 
     private companion object {
-        // about a second and a half of hops of 512 at 48 kHz, as on Android
+        // about two seconds of hops of 512 at 48 kHz, as on Android
         const val QUEUE_HOPS = 200
     }
 }

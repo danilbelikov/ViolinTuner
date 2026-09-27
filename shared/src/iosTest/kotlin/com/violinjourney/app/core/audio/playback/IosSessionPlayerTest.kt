@@ -1,17 +1,18 @@
 package com.violinjourney.app.core.audio.playback
 
 import com.violinjourney.app.core.audio.IosAudioSession
-import com.violinjourney.app.core.audio.recording.IosAacEncoder
+import com.violinjourney.app.core.audio.recording.Tone
+import com.violinjourney.app.core.audio.recording.writeAacTones
 import com.violinjourney.app.core.domain.backing.BackingConfig
+import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.domain.sound.SoundConfig
+import com.violinjourney.app.core.domain.sound.SoundPresets
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.openOutput
 import kotlin.concurrent.AtomicInt
 import kotlin.concurrent.AtomicReference
 import kotlin.math.abs
-import kotlin.math.PI
 import kotlin.math.roundToInt
-import kotlin.math.sin
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -27,12 +28,15 @@ import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.takeWhile
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -57,9 +61,10 @@ import platform.Foundation.NSUUID
 import platform.posix.usleep
 
 /**
- * The player of recordings on iOS: a take is prepared, plays through and comes back to its start. The process of the
- * tests has no sound output, so what the speaker does is heard only on a device; the output the player takes and lets
- * go is checked here on an engine that renders by hand, pulled by the test at the pace of a real output.
+ * The player of recordings on iOS: a take is prepared, plays through and comes back to its start, goes where a seek sends
+ * it, and sounds both as it was recorded and processed (A/B). The process of the tests has no sound output, so what the
+ * speaker does is heard only on a device; the output the player takes and lets go, and what goes into it, are checked
+ * here on an engine that renders by hand, pulled by the test at the pace of a real output.
  */
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 class IosSessionPlayerTest {
@@ -129,6 +134,95 @@ class IosSessionPlayerTest {
         assertFalse(player.state.value.failed)
         output.cancel()
         player.release()
+    }
+
+    @Test
+    fun `a seek back while playing plays on from the new place`() = runBlocking {
+        writeTone(seconds = 2.0)
+        val (player, output) = playing()
+        withTimeout(5.seconds) { player.state.first { it.positionMs > 900 } }
+
+        // every place the ear is told from now until the end of the take
+        val told = mutableListOf<Long>()
+        val watch = scope.launch(start = CoroutineStart.UNDISPATCHED) { player.state.takeWhile { it.playing }.collect { told += it.positionMs } }
+        player.seekTo(200)
+        withTimeout(10.seconds) { watch.join() }
+        // a player that did not go back would tell nothing below where it was until its end
+        assertTrue(told.any { it in 300L..800L }, "played on from 200: $told")
+        assertEquals(0, player.state.value.positionMs, "and back to the start at the end")
+        assertFalse(player.state.value.failed)
+        output.cancel()
+        player.release()
+    }
+
+    @Test
+    fun `a seek while paused waits there and play goes on from it`() = runBlocking {
+        writeTone(seconds = 2.0)
+        val (player, output) = playing()
+        withTimeout(5.seconds) { player.state.first { it.positionMs > 900 } }
+        player.pause()
+        player.seekTo(100)
+        assertEquals(100, player.state.value.positionMs)
+        assertFalse(player.state.value.playing)
+
+        val told = mutableListOf<Long>()
+        val watch = scope.launch(start = CoroutineStart.UNDISPATCHED) {
+            player.state.first { state ->
+                if (state.playing) told += state.positionMs
+                state.playing && state.positionMs > 850
+            }
+        }
+        player.play()
+        withTimeout(10.seconds) { watch.join() }
+        // a player that forgot the seek would go on from past 900 at once
+        val back = told.indexOfFirst { it in 150L..600L }
+        assertTrue(back >= 0 && back < told.indexOfFirst { it > 850 }, "played on from 100: $told")
+        output.cancel()
+        player.release()
+    }
+
+    @Test
+    fun `A and B both play on and both are heard`() = runBlocking {
+        writeTone(seconds = 2.0)
+        val peak = Peak()
+        val (player, output) = playing(peak) {
+            it.setSound(SoundPresets.settingsOf(BuiltInPreset.GRAND_HALL, SoundConfig()))
+        }
+        assertTrue(player.state.value.processed, "${player.state.value}")
+        withTimeout(5.seconds) { player.state.first { it.positionMs > 150 } }
+
+        suspend fun heardAfterSwitch(original: Boolean) {
+            player.setOriginal(original)
+            assertEquals(original, player.state.value.original)
+            // the chunks queued before the switch and the crossfade go by first
+            val switchedAt = player.state.value.positionMs
+            withTimeout(5.seconds) { player.state.first { it.positionMs >= switchedAt + SETTLE_MS } }
+            peak.reset()
+            val from = player.state.value.positionMs
+            withTimeout(5.seconds) { player.state.first { it.positionMs >= from + LISTEN_MS } }
+            assertTrue(peak.value > HEARD, "the ${if (original) "original" else "processed"} sound is heard: ${peak.value}")
+        }
+        heardAfterSwitch(original = true)
+        heardAfterSwitch(original = false)
+
+        withTimeout(10.seconds) { player.state.first { !it.playing } }
+        assertFalse(player.state.value.failed)
+        assertEquals(0, player.state.value.positionMs)
+        output.cancel()
+        player.release()
+    }
+
+    /** A player of the tone on an engine rendered by hand, pulled by the test, playing; [prepare] is told before play. */
+    private suspend fun playing(peak: Peak? = null, prepare: (IosSessionPlayer) -> Unit = {}): Pair<IosSessionPlayer, Job> {
+        val engine = AtomicReference<AVAudioEngine?>(null)
+        val player = IosSessionPlayer(scope, SoundConfig(), BackingConfig()) { byHand().also { engine.value = it } }
+        player.load(PlatformFile(path))
+        withTimeout(5.seconds) { player.state.first { it.ready || it.failed } }
+        assertTrue(player.state.value.ready, "${player.state.value}")
+        prepare(player)
+        val output = scope.launch { pull(engine, peak = peak) }
+        player.play()
+        return player to output
     }
 
     @Test
@@ -368,20 +462,42 @@ class IosSessionPlayerTest {
         }
     }
 
+    /** The loudest sample of the left channel the output took since the last [reset]; one writer, the pull. */
+    private class Peak {
+        private val bits = AtomicInt(0)
+
+        fun add(sample: Float) {
+            val level = abs(sample)
+            while (true) {
+                val old = bits.value
+                if (Float.fromBits(old) >= level || bits.compareAndSet(old, level.toRawBits())) return
+            }
+        }
+
+        fun reset() {
+            bits.value = 0
+        }
+
+        val value: Float get() = Float.fromBits(bits.value)
+    }
+
     /**
      * The sound output's part: takes the engine's sound a block at a time, about as fast as a speaker would, while it runs;
-     * what it took of the left channel goes into [heard].
+     * what it took of the left channel goes into [heard], its loudest sample into [peak].
      */
-    private suspend fun pull(engine: AtomicReference<AVAudioEngine?>, heard: FloatArrayList? = null) {
+    private suspend fun pull(engine: AtomicReference<AVAudioEngine?>, heard: FloatArrayList? = null, peak: Peak? = null) {
         val buffer = AVAudioPCMBuffer(pCMFormat = renderFormat, frameCapacity = RENDER_FRAMES)
         while (kotlin.coroutines.coroutineContext.isActive) {
             val running = engine.value?.takeIf { it.running }
             if (running != null) {
                 buffer.frameLength = RENDER_FRAMES
                 running.manualRenderingBlock?.invoke(RENDER_FRAMES, buffer.mutableAudioBufferList, null)
-                if (heard != null) {
-                    val left = buffer.floatChannelData?.get(0)
-                    if (left != null) for (i in 0 until buffer.frameLength.toInt()) heard.add(left[i])
+                val left = buffer.floatChannelData?.get(0)
+                if (left != null) {
+                    for (i in 0 until buffer.frameLength.toInt()) {
+                        heard?.add(left[i])
+                        peak?.add(left[i])
+                    }
                 }
             }
             delay(RENDER_EVERY_MS)
@@ -392,22 +508,15 @@ class IosSessionPlayerTest {
         while (engine.running) delay(POLL_MS)
     }
 
-    private fun writeTone(seconds: Double) {
-        val rate = 48_000
-        val encoder = IosAacEncoder(PlatformFile(path), rate)
-        val hop = ShortArray(512)
-        var n = 0
-        repeat((rate * seconds).toInt() / hop.size) {
-            for (i in hop.indices) hop[i] = (sin(2 * PI * 440 * (n++) / rate) * 8_000).roundToInt().toShort()
-            encoder.offer(hop, hop.size)
-        }
-        assertTrue(encoder.finish())
-    }
+    private fun writeTone(seconds: Double) = writeAacTones(path, RATE, listOf(Tone(440.0, seconds)), amplitude = 8_000.0)
 
     private companion object {
         val renderFormat = AVAudioFormat(standardFormatWithSampleRate = 48_000.0, channels = 2u)
         const val RENDER_FRAMES = 512u
         const val RENDER_EVERY_MS = 10L
+        const val SETTLE_MS = 250L
+        const val LISTEN_MS = 150L
+        const val HEARD = 0.01f
         const val POLL_MS = 20L
         const val POLL_US = 1_000u
         const val LET_GO_MS = 500L
