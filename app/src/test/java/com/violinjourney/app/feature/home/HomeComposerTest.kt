@@ -216,6 +216,18 @@ class HomeComposerTest {
     }
 
     @Test
+    fun `what lies on a chair has no offset or scale of its own - it takes the swing of the chair`() {
+        for (house in HomeCatalog.houses.filter { it.drawn }) for (mode in SceneMode.entries) {
+            val art = art(house.id, mode)
+            HomeCatalog.items.filter { it.slot == "chairTop" && it.drawn }.forEach { item ->
+                art.items[item.id]?.layers?.forEachIndexed { index, layer ->
+                    assertTrue("${item.id} in ${house.id}, layer $index", layer.tx == 0f && layer.ty == 0f && layer.scale == 1f)
+                }
+            }
+        }
+    }
+
+    @Test
     fun `from outside the window of the rented room has our curtains - and the cat sits on the porch of the wooden house`() {
         val teal = HomeCatalog.byId.getValue("curtain_teal")
         val state = loaded.copy(purchased = setOf("curtain_teal", "cat_grey"), houses = setOf("wood"), choices = mapOf("curtain" to "curtain_teal", "pet" to "cat_grey"))

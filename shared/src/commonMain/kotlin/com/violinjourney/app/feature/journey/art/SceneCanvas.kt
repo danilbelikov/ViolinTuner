@@ -305,7 +305,10 @@ private fun DrawScope.drawOne(prepared: PreparedScene, index: Int, k: Float, pan
     translate(SceneCamera.shift(panX, layer.depth) + drift * k, 0f) {
         scale(k, k, pivot = Offset.Zero) {
             if (moved != null) {
-                // a thing drawn by its outline moves as well — the runners of a rocking chair, steam over a cup (spec 3.29)
+                // A living layer is drawn by its movement alone: its own tx, ty and scale are not applied here. The exporters
+                // never write them for a living layer, nor for a thing that may lie on a rocking chair and take its swing —
+                // SceneTest and HomeComposerTest keep it so; one that did would stand in the wrong place.
+                // A thing drawn by its outline moves as well — the runners of a rocking chair, steam over a cup (spec 3.29).
                 if (moved.alpha <= 0f || (paint.fill == null && paint.stroke == null)) return@scale
                 val seen = alpha * moved.alpha
                 translate(moved.dx, moved.dy) {

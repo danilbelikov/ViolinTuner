@@ -4,8 +4,10 @@ import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.feature.journey.art.JourneySilhouettes
 import com.violinjourney.app.feature.journey.art.Scene
 import com.violinjourney.app.feature.journey.art.SceneAnim
+import com.violinjourney.app.feature.home.art.HouseArt
 import com.violinjourney.app.feature.journey.art.SceneFrame
 import com.violinjourney.app.feature.journey.art.SceneLayer
+import com.violinjourney.app.feature.journey.art.SceneMotion
 import com.violinjourney.app.feature.journey.art.SceneMode
 import com.violinjourney.app.feature.journey.art.ScenePalette
 import com.violinjourney.app.feature.journey.art.SceneParser
@@ -103,6 +105,33 @@ class SceneTest {
         }
         // home is drawn by the home; its postcard is still a card
         assertEquals(SceneFrame.CARD, SceneParser.parse(File(assets, "home.eve.scene").readText()).frame)
+    }
+
+    @Test
+    fun `a living layer carries no offset or scale of its own - its movement alone places it`() {
+        val homeFiles = File(assets.parentFile, "home").listFiles { file -> file.name.endsWith(".scene") }.orEmpty().toList()
+        val files = assets.listFiles { file -> file.name.endsWith(".scene") }.orEmpty().toList() + homeFiles
+        assertTrue(homeFiles.any { it.name.startsWith("splash.") } && homeFiles.any { it.name.startsWith("rent.") })
+        var living = 0
+        for (file in files) {
+            val mode = if (file.name.contains(".day.")) SceneMode.DAY else SceneMode.EVENING
+            val text = file.readText()
+            // the homes are their own format (sections of things); the rest — the postcards, the halls, the title cards — are scenes
+            val layers = if (text.lineSequence().any { it.startsWith("@room") }) {
+                val art = HouseArt.parse(text)
+                art.room + art.outside + art.hero + art.items.values.flatMap { it.layers } + art.porch.values.flatten() +
+                    art.backs.values.flatten() + art.caseViolins.values.flatten() + art.wallPatterns.values.flatten() + art.floorPatterns.values.flatten()
+            } else {
+                SceneParser.parse(text).layers
+            }
+            layers.forEachIndexed { index, layer ->
+                if (layer.anim != null && SceneMotion.moves(layer, mode)) {
+                    living++
+                    assertTrue("${file.name}, layer $index: a living layer is drawn by its movement alone", layer.tx == 0f && layer.ty == 0f && layer.scale == 1f)
+                }
+            }
+        }
+        assertTrue("the check sees the living layers: $living", living > 100)
     }
 
     @Test
