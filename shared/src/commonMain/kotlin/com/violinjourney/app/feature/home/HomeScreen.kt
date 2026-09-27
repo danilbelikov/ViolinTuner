@@ -343,20 +343,28 @@ private fun About(ui: HomeUi, onIntent: (HomeIntent) -> Unit) {
         }
     }
     HomeRules.nextHouse(ui.home)?.let { next ->
-        // the same count and bar as the way ahead: saving for a home and for the road look alike
+        // the same count and bar as the way ahead: saving for a home and for the road look alike; a home not drawn yet (it
+        // comes with an update) cannot be bought, so it says its price and «скоро», as its row in «Дома» does — no bar to save for
         Column(
             Modifier.fillMaxWidth().clip(HomeCard).background(colors.surfaceContainer).clickable(role = Role.Button) { onIntent(HomeIntent.HousesClicked) }.padding(14.dp),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                HouseSilhouette(next.id, colors.onSurfaceVariant, Modifier.size(72.dp, 44.dp))
+                HouseSilhouette(next.id, colors.onSurfaceVariant, Modifier.size(72.dp, 44.dp), outline = !next.drawn)
                 Column(Modifier.weight(1f)) {
                     Text(stringResource(Res.string.home_next_house), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelMedium)
                     Text(houseName(next.id), color = colors.onSurface, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                TaktAmount(stringResource(Res.string.home_have, Formats.takts(ui.balance), Formats.takts(next.price.toLong())), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelLarge, icon = 14.dp)
+                if (next.drawn) {
+                    TaktAmount(stringResource(Res.string.home_have, Formats.takts(ui.balance), Formats.takts(next.price.toLong())), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelLarge, icon = 14.dp)
+                } else {
+                    Column(horizontalAlignment = Alignment.End) {
+                        TaktAmount(Formats.takts(next.price.toLong()), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelLarge, icon = 14.dp)
+                        Text(stringResource(Res.string.home_house_soon), color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelSmall)
+                    }
+                }
             }
-            PriceBar((ui.balance.toFloat() / next.price).coerceIn(0f, 1f))
+            if (next.drawn) PriceBar((ui.balance.toFloat() / next.price).coerceIn(0f, 1f))
         }
     }
     TextButton(onClick = { onIntent(HomeIntent.HousesClicked) }) { Text(stringResource(Res.string.home_all_houses)) }
