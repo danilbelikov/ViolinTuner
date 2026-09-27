@@ -209,7 +209,9 @@ open class AppStartViewModel(
             }
             PracticePromptIntent.SummaryHidden -> prompt.update { if (it is PracticePrompt.Summary) null else it }
             PracticePromptIntent.SummaryDiscarded -> answer {
-                finisher.discard()
+                val sheet = (prompt.value as? PracticePrompt.Summary)?.sheet ?: return@answer
+                // the practice of this sheet only: one begun after it was saved elsewhere runs on
+                finisher.discard(sheet.startedAtEpochMs)
                 prompt.value = null
             }
         }
@@ -225,14 +227,14 @@ open class AppStartViewModel(
      */
     private suspend fun sheetOrDrop(running: RunningPractice, lengthMs: Long): PracticePrompt.Summary? {
         if (lengthMs < config.minPracticeMs) {
-            dropTooShort()
+            dropTooShort(running)
             return null
         }
         return PracticePrompt.Summary(summarySheetOf(running, lengthMs, config, blocks, repertoire))
     }
 
-    private suspend fun dropTooShort() {
-        finisher.discard()
+    private suspend fun dropTooShort(running: RunningPractice) {
+        finisher.discard(running.startedAtEpochMs)
         promptEffectChannel.send(PracticePromptEffect.ShowTooShort)
     }
 
@@ -242,7 +244,7 @@ open class AppStartViewModel(
             val running = runningPractice.running.first()
             if (running != null) {
                 val length = ForgottenPractice.lengthAt(running, endEpochMs, config)
-                if (length >= config.minPracticeMs) finisher.save(running.startedAtEpochMs, length) else dropTooShort()
+                if (length >= config.minPracticeMs) finisher.save(running.startedAtEpochMs, length) else dropTooShort(running)
             }
             prompt.value = null
         }

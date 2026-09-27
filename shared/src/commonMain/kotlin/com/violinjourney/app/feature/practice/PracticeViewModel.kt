@@ -240,7 +240,8 @@ open class PracticeViewModel(
 
     private fun start() {
         viewModelScope.launch {
-            if (latestRunning == null) runningStore.start(clock.millis())
+            // begins only when none runs, the look and the start in one write: a practice begun elsewhere a moment ago keeps its start
+            runningStore.startIfIdle(clock.millis())
             effectChannel.send(PracticeEffect.OpenLive)
         }
     }
@@ -254,7 +255,7 @@ open class PracticeViewModel(
         if (answering?.isActive == true) return // the practice is being ended already
         val length = ForgottenPractice.lengthAt(running, clock.millis(), config)
         if (length < config.minPracticeMs) {
-            dropTooShort()
+            dropTooShort(running)
         } else {
             val blocks = BlockRules.ofPractice(running, latestBlocks)
             ui.update { it.copy(sheet = PracticeReducer.summarySheet(running.startedAtEpochMs, length, config, blocks, latestTitles)) }
@@ -269,7 +270,7 @@ open class PracticeViewModel(
         if (answering?.isActive == true) return
         val length = ForgottenPractice.lengthAt(running, clock.millis(), config)
         if (length < config.minPracticeMs) {
-            dropTooShort()
+            dropTooShort(running)
         } else {
             val sheet = summarySheetOf(running, length, config, blocks, repertoire)
             ui.update { it.copy(sheet = sheet) }
@@ -277,8 +278,8 @@ open class PracticeViewModel(
     }
 
     /** Too short to keep (spec 3.12): the practice goes, its notes and blocks with it, and the toast says so. */
-    private fun dropTooShort() = answer {
-        finisher.discard()
+    private fun dropTooShort(running: RunningPractice) = answer {
+        finisher.discard(running.startedAtEpochMs)
         effectChannel.send(PracticeEffect.ShowTooShort)
     }
 
@@ -392,9 +393,10 @@ open class PracticeViewModel(
 
     /** «Не сохранять» answers the summary alone: a late tap must not close the recap or another sheet. */
     private fun discardSummary() {
-        if (ui.value.sheet !is PracticeSheet.Summary) return
+        val sheet = ui.value.sheet as? PracticeSheet.Summary ?: return
         answer {
-            finisher.discard()
+            // the practice of this sheet, not whatever runs now: it may have been saved from the prompt and another begun
+            finisher.discard(sheet.startedAtEpochMs)
             ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it }
         }
     }

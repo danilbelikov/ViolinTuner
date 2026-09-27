@@ -102,7 +102,7 @@ open class BlockViewModel(
             BlockIntent.SheetDismissed, BlockIntent.NotNowClicked -> ui.value = BlockReducer.Ui()
             BlockIntent.StartPracticeClicked -> viewModelScope.launch {
                 // the same start as on «Занятия» (spec 3.12), but Live stays: the sheet turns into the choice by itself
-                if (latestRunning == null) runningPractice.start(clock.millis())
+                runningPractice.startIfIdle(clock.millis())
             }
             is BlockIntent.PieceClicked -> ui.update {
                 val blocks = BlockRules.ofPractice(latestRunning, latestBlocks)

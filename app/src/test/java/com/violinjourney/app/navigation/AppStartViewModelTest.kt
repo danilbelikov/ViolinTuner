@@ -92,7 +92,7 @@ class AppStartViewModelTest {
     )
 
     private suspend fun running(elapsedMs: Long, lastSoundAgoMs: Long?) {
-        store.start(now - elapsedMs)
+        store.startIfIdle(now - elapsedMs)
         if (lastSoundAgoMs != null) store.markSound(now - lastSoundAgoMs)
     }
 
@@ -436,7 +436,7 @@ class AppStartViewModelTest {
 
     @Test
     fun `an expired practice under a minute is not kept and says so`() = runTest {
-        store.start(now - 14 * MS_PER_HOUR)
+        store.startIfIdle(now - 14 * MS_PER_HOUR)
         store.markSound(now - 14 * MS_PER_HOUR + 30_000)
         val viewModel = viewModel()
         val effects = viewModel.effects(this)
@@ -450,7 +450,7 @@ class AppStartViewModelTest {
 
     @Test
     fun `ending at a last sound under a minute says so`() = runTest {
-        store.start(now - 2 * MS_PER_HOUR)
+        store.startIfIdle(now - 2 * MS_PER_HOUR)
         store.markSound(now - 2 * MS_PER_HOUR + 40_000)
         val viewModel = viewModel()
         val effects = viewModel.effects(this)

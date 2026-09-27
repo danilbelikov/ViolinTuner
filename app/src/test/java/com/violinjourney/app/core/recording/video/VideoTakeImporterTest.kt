@@ -269,7 +269,7 @@ class VideoTakeImporterTest {
 
     @Test
     fun `a shot with notes says the violin sounded when the camera came back, a picked video says nothing`() = runTest {
-        practice.start(now.toEpochMilliseconds() - 600_000)
+        practice.startIfIdle(now.toEpochMilliseconds() - 600_000)
         val (importer, _) = importer()
         importer.picked(7, "content://video/1")
         advance(6_000)
@@ -284,7 +284,7 @@ class VideoTakeImporterTest {
     fun `a shot past the twelve hours of a practice leaves its last sound where it was`() = runTest {
         // the practice has ended by itself at its last sound (spec 3.12): a later shot would stretch it to twelve hours
         val start = now.toEpochMilliseconds() - PracticeConfig().maxPracticeMs - 60_000
-        practice.start(start)
+        practice.startIfIdle(start)
         practice.markSound(start + 40 * 60_000)
         val (importer, _) = importer()
         importer.shot(7, shot)
@@ -354,7 +354,7 @@ class VideoTakeImporterTest {
                 throw IOException("the settings file cannot be written")
             }
         }
-        practice.start(now.toEpochMilliseconds() - 600_000)
+        practice.startIfIdle(now.toEpochMilliseconds() - 600_000)
         val (importer, saved) = importer(practice = stuck)
         importer.shot(7, shot)
         advance(6_000)

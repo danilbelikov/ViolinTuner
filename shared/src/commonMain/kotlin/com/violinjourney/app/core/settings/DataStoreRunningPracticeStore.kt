@@ -24,11 +24,17 @@ class DataStoreRunningPracticeStore(
         }
         .distinctUntilChanged()
 
-    override suspend fun start(startedAtEpochMs: Long) {
+    override suspend fun startIfIdle(startedAtEpochMs: Long): Boolean {
+        var started = false
+        // the look and the write in one edit: DataStore runs edits one after another, so a second start sees the first
         dataStore.edit {
-            it[STARTED_AT] = startedAtEpochMs
-            it.remove(LAST_SOUND)
+            if (!it.contains(STARTED_AT)) {
+                it[STARTED_AT] = startedAtEpochMs
+                it.remove(LAST_SOUND)
+                started = true
+            }
         }
+        return started
     }
 
     override suspend fun markSound(epochMs: Long) {

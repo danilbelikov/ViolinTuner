@@ -5,6 +5,10 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import com.violinjourney.app.core.domain.TolerancePreset
 import com.violinjourney.app.core.domain.practice.RunningPractice
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.runTest
@@ -31,7 +35,7 @@ class DataStoreRunningPracticeStoreTest {
     @Test
     fun `start — sound marks and clear are stored`() = runTest {
         val store = DataStoreRunningPracticeStore(dataStore())
-        store.start(1_000)
+        store.startIfIdle(1_000)
         assertEquals(RunningPractice(1_000, lastSoundEpochMs = null), store.running.first())
         store.markSound(5_000)
         store.markSound(9_000)
@@ -41,12 +45,34 @@ class DataStoreRunningPracticeStoreTest {
     }
 
     @Test
-    fun `a new start forgets the sound of the previous practice`() = runTest {
+    fun `a start while a practice runs changes nothing`() = runTest {
         val store = DataStoreRunningPracticeStore(dataStore())
-        store.start(1_000)
+        assertTrue(store.startIfIdle(1_000))
         store.markSound(5_000)
-        store.start(20_000)
+        assertFalse(store.startIfIdle(20_000), "one practice at a time (spec 3.12)")
+        assertEquals(RunningPractice(1_000, lastSoundEpochMs = 5_000), store.running.first())
+    }
+
+    @Test
+    fun `a start after the end begins without the old sound`() = runTest {
+        val store = DataStoreRunningPracticeStore(dataStore())
+        store.startIfIdle(1_000)
+        store.markSound(5_000)
+        store.clear()
+        assertTrue(store.startIfIdle(20_000))
         assertEquals(RunningPractice(20_000, lastSoundEpochMs = null), store.running.first())
+    }
+
+    @Test
+    fun `two starts at once make one practice`() = runTest {
+        val store = DataStoreRunningPracticeStore(dataStore())
+        // «Начать занятие» on «Занятия» and the tag on Live in the same moment
+        val first = async { store.startIfIdle(1_000) }
+        val second = async { store.startIfIdle(1_200) }
+        val started = awaitAll(first, second)
+        assertEquals(1, started.count { it }, "exactly one of the two begins it")
+        val winner = if (started[0]) 1_000L else 1_200L
+        assertEquals(RunningPractice(winner, lastSoundEpochMs = null), store.running.first())
     }
 
     @Test
@@ -54,7 +80,7 @@ class DataStoreRunningPracticeStoreTest {
         val store = DataStoreRunningPracticeStore(dataStore())
         store.markSound(5_000)
         assertNull(store.running.first())
-        store.start(1_000)
+        store.startIfIdle(1_000)
         assertEquals(RunningPractice(1_000, lastSoundEpochMs = null), store.running.first())
     }
 
@@ -64,7 +90,7 @@ class DataStoreRunningPracticeStoreTest {
         val settings = DataStoreSettingsRepository(dataStore)
         val store = DataStoreRunningPracticeStore(dataStore)
         settings.setTolerance(TolerancePreset.PRO)
-        store.start(1_000)
+        store.startIfIdle(1_000)
         store.clear()
         assertEquals(TolerancePreset.PRO, settings.settings.first().tolerance)
     }

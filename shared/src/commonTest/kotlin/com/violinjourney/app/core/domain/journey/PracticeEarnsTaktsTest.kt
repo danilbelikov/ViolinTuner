@@ -34,7 +34,7 @@ class PracticeEarnsTaktsTest {
 
     @Test
     fun `saving a practice earns a takt for every three notes in tune and two takts a minute — once`() = runTest {
-        store.start(1_000)
+        store.startIfIdle(1_000)
         notes.add(1_000, NoteCount(played = 412, inTune = 264))
         val saved = finisher.save(1_000, durationMs = 38 * 60_000L)
         assertEquals(TaktEarning(9_000_000, 412, 264, 38 * 60_000L, takts = 164), journey.earnings.single())
@@ -52,13 +52,13 @@ class PracticeEarnsTaktsTest {
     @Test
     fun `notes of another practice are not this one's — and a discarded practice earns nothing`() = runTest {
         notes.add(500, NoteCount(100, 90)) // left behind by a practice that never ended properly
-        store.start(1_000)
+        store.startIfIdle(1_000)
         assertTrue(finisher.save(1_000, durationMs = 10 * 60_000L) != null)
         assertEquals(20, journey.earnings.single().takts)
 
-        store.start(2_000)
+        store.startIfIdle(2_000)
         notes.add(2_000, NoteCount(50, 50))
-        finisher.discard()
+        finisher.discard(2_000)
         assertEquals(1, journey.earnings.size)
         assertEquals(NoteCount.ZERO, notes.countFor(2_000))
     }
@@ -69,7 +69,7 @@ class PracticeEarnsTaktsTest {
 
     @Test
     fun `an element played for its goal adds thirty takts — once a day — and the blocks are saved with the practice`() = runTest {
-        store.start(1_000)
+        store.startIfIdle(1_000)
         play(1_000, pieceId = 1, goalMinutes = 10, atMinute = 0)
         play(1_000, pieceId = 2, goalMinutes = 15, atMinute = 10) // the scale is done at 10
         play(1_000, pieceId = 1, goalMinutes = 5, atMinute = 25) // the etude is done at 25; the scale again — done, but paid already
@@ -88,7 +88,7 @@ class PracticeEarnsTaktsTest {
     @Test
     fun `an element paid for earlier that day brings no second thirty`() = runTest {
         history.blocks.value = listOf(SavedBlock(1, LocalDate(1970, 1, 1), 0, 10 * min, 10 * min, done = true, paid = true, id = 1))
-        store.start(2_000_000)
+        store.startIfIdle(2_000_000)
         play(2_000_000, pieceId = 1, goalMinutes = 5, atMinute = 0)
         assertTrue(finisher.save(2_000_000, durationMs = 5 * min) != null)
         assertEquals(0, journey.earnings.single().piecesPaid)
@@ -97,13 +97,13 @@ class PracticeEarnsTaktsTest {
 
     @Test
     fun `blocks of a discarded practice go with it — and a deleted element is neither saved nor paid`() = runTest {
-        store.start(1_000)
+        store.startIfIdle(1_000)
         play(1_000, pieceId = 1, goalMinutes = 5, atMinute = 0)
-        finisher.discard()
+        finisher.discard(1_000)
         assertEquals(null, blocks.blocks.value)
 
         history.pieces = setOf(2L)
-        store.start(2_000_000)
+        store.startIfIdle(2_000_000)
         play(2_000_000, pieceId = 1, goalMinutes = 5, atMinute = 0)
         play(2_000_000, pieceId = 2, goalMinutes = 5, atMinute = 5)
         assertTrue(finisher.save(2_000_000, durationMs = 10 * min) != null)

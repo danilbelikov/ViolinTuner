@@ -224,11 +224,13 @@ open class LiveViewModel(
             is LiveIntent.MicPermissionChanged ->
                 if (takes.requiresMicPermission) micPermissionGranted.value = intent.granted
             LiveIntent.PracticeTagClicked -> if (tagAnswer?.isActive != true) tagAnswer = viewModelScope.launch {
-                // the store, not the state on screen: a tap in the second the practice starts or ends must not do both
-                val running = runningPractice.running.first()
+                // The store, not the state on screen: a tap in the second the practice starts or ends must not do both.
+                // The same start as on «Занятия» (spec 3.12), but Live stays: here one is already where one plays. The look
+                // and the start are one write — a practice begun on another screen meanwhile is not begun again.
+                if (runningPractice.startIfIdle(clock.millis())) return@launch
+                // ended in the moment between: nothing to finish
+                val running = runningPractice.running.first() ?: return@launch
                 when {
-                    // the same start as on «Занятия» (spec 3.12), but Live stays: here one is already where one plays
-                    running == null -> runningPractice.start(clock.millis())
                     // the second tap of the double tap that started it: neither an end nor a new start (spec 3.12). The raw
                     // difference — a clock moved back does not lock the tag.
                     clock.millis() - running.startedAtEpochMs in 0 until practiceConfig.tagSecondTapMs -> Unit

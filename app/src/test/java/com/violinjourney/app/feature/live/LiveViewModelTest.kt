@@ -818,7 +818,7 @@ class LiveViewModelTest {
         observe(viewModel, 300)
         assertEquals(null, viewModel.state.value.practiceMs)
 
-        practice.start(startedAt.toEpochMilliseconds() - 754_000)
+        practice.startIfIdle(startedAt.toEpochMilliseconds() - 754_000)
         advance(100)
         assertEquals(754_000L, viewModel.state.value.practiceMs)
 
@@ -882,7 +882,7 @@ class LiveViewModelTest {
 
     @Test
     fun `while a take is recorded the tag of a running practice does not lead away`() = runTest {
-        practice.start(startedAt.toEpochMilliseconds() - 754_000)
+        practice.startIfIdle(startedAt.toEpochMilliseconds() - 754_000)
         val viewModel = viewModel(FakeScenario.IN_TUNE)
         val effects = mutableListOf<LiveEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -911,7 +911,7 @@ class LiveViewModelTest {
     @Test
     fun `while a practice runs the notes are counted for the journey, and the last one is not lost when the screen leaves`() = runTest {
         val practiceStart = startedAt.toEpochMilliseconds() - 60_000
-        practice.start(practiceStart)
+        practice.startIfIdle(practiceStart)
         val viewModel = viewModel(FakeScenario.IN_TUNE) // one long A4, in tune
         val job = observe(viewModel, 3_000)
         assertEquals("a note that still sounds is not counted yet", NoteCount.ZERO, practiceNotes.count)
@@ -933,7 +933,7 @@ class LiveViewModelTest {
     fun `past twelve hours a practice hears no sound and counts no notes`() = runTest {
         // it has ended by itself at its last sound (spec 3.12): a morning's playing must not stretch it to twelve hours
         val practiceStart = startedAt.toEpochMilliseconds() - PracticeConfig().maxPracticeMs - 60_000
-        practice.start(practiceStart)
+        practice.startIfIdle(practiceStart)
         val viewModel = viewModel(FakeScenario.IN_TUNE)
         val job = observe(viewModel, 3_000)
         job.cancel()
@@ -944,7 +944,7 @@ class LiveViewModelTest {
 
     @Test
     fun `after the microphone is reopened the notes are written out every few seconds again`() = runTest {
-        practice.start(startedAt.toEpochMilliseconds() - 60_000)
+        practice.startIfIdle(startedAt.toEpochMilliseconds() - 60_000)
         // like both microphones: every opening counts its frames from zero; the first one breaks after six seconds
         var attempts = 0
         val source = object : PitchSource {
@@ -979,7 +979,7 @@ class LiveViewModelTest {
 
     @Test
     fun `a sounding note marks the practice once per interval`() = runTest {
-        practice.start(startedAt.toEpochMilliseconds() - 60_000)
+        practice.startIfIdle(startedAt.toEpochMilliseconds() - 60_000)
         val viewModel = viewModel(FakeScenario.IN_TUNE)
         observe(viewModel, 1_500)
         // the clock is fixed, so every frame is "now": one mark, not one per frame
@@ -988,7 +988,7 @@ class LiveViewModelTest {
 
     @Test
     fun `silence marks nothing, and nothing is marked without a practice`() = runTest {
-        practice.start(startedAt.toEpochMilliseconds() - 60_000)
+        practice.startIfIdle(startedAt.toEpochMilliseconds() - 60_000)
         val silent = viewModel(FakeScenario.SILENCE)
         observe(silent, 1_500)
         assertEquals(null, practice.running.value!!.lastSoundEpochMs)

@@ -171,12 +171,46 @@ class PracticeViewModelTest {
     @Test
     fun `a second start does not restart a running practice`() = runTest {
         val (viewModel, effects) = viewModel()
-        store.start(clock.nowMs - 10 * MS_PER_MINUTE)
+        store.startIfIdle(clock.nowMs - 10 * MS_PER_MINUTE)
         runCurrent()
         viewModel.onIntent(PracticeIntent.StartClicked)
         runCurrent()
         assertEquals(clock.nowMs - 10 * MS_PER_MINUTE, store.running.value!!.startedAtEpochMs)
         assertEquals(listOf(PracticeEffect.OpenLive), effects)
+    }
+
+    @Test
+    fun `a start here in the moment another screen starts one keeps the first start`() = runTest {
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        // the tag on Live a second ago, written before this screen has heard of it
+        val other = clock.nowMs - 1_000
+        store.startIfIdle(other)
+        runCurrent()
+        assertEquals(RunningPractice(other, null), store.running.value)
+        assertEquals(listOf(PracticeEffect.OpenLive), effects)
+    }
+
+    @Test
+    fun `«Не сохранять» on the sheet of a practice saved elsewhere leaves the next one running`() = runTest {
+        val finisher = PracticeFinisher(repository, store, clock, journey = journey)
+        val (viewModel, _) = viewModel(finisher = finisher)
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        val first = clock.nowMs
+        pass(20 * MS_PER_MINUTE)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        runCurrent()
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.Summary)
+
+        // the forgotten-practice prompt saves it, and the tag on Live begins the next one, before the sheet is answered
+        assertNotNull(finisher.save(first, 20 * MS_PER_MINUTE))
+        val next = clock.nowMs
+        store.startIfIdle(next)
+        viewModel.onIntent(PracticeIntent.SummaryDiscarded)
+        runCurrent()
+
+        assertEquals(RunningPractice(next, null), store.running.value)
+        assertEquals(1, repository.entries.value.size)
     }
 
     @Test
@@ -341,7 +375,7 @@ class PracticeViewModelTest {
 
     @Test
     fun `finishing asked for from Live opens the summary once, even in a view model made for the ask`() = runTest {
-        store.start(clock.millis() - 20 * MS_PER_MINUTE)
+        store.startIfIdle(clock.millis() - 20 * MS_PER_MINUTE)
         val ask = FinishPracticeAsk().apply { ask() }
         val (viewModel, _) = viewModel(ask)
         runCurrent()
@@ -622,7 +656,7 @@ class PracticeViewModelTest {
         // saved elsewhere — the forgotten-practice prompt over this screen, through the one finisher of the app:
         // the recap opens here all the same
         val start = clock.millis() - 110 * MS_PER_MINUTE
-        store.start(start)
+        store.startIfIdle(start)
         finisher.save(start, 110 * MS_PER_MINUTE)
         runCurrent()
         val recap = (viewModel.state.value.sheet as PracticeSheet.Recap).recap
@@ -688,7 +722,7 @@ class PracticeViewModelTest {
     fun `a practice saved before the screen opened is history - not recapped`() = runTest {
         val finisher = PracticeFinisher(repository, store, clock, journey = journey)
         val start = clock.millis() - 30 * MS_PER_MINUTE
-        store.start(start)
+        store.startIfIdle(start)
         finisher.save(start, 30 * MS_PER_MINUTE)
         trophies.award(1, today)
 
@@ -705,7 +739,7 @@ class PracticeViewModelTest {
         val finisher = PracticeFinisher(slow, store, clock, journey = journey)
         val (viewModel, _) = viewModel(repository = slow, finisher = finisher)
         val start = clock.millis() - 62 * MS_PER_MINUTE
-        store.start(start)
+        store.startIfIdle(start)
         runCurrent()
 
         launch { finisher.save(start, 62 * MS_PER_MINUTE) }
@@ -730,7 +764,7 @@ class PracticeViewModelTest {
     @Test
     fun `a practice left running past twelve hours is summed up to its last sound`() = runTest {
         val start = clock.millis() - 13 * MS_PER_HOUR
-        store.start(start)
+        store.startIfIdle(start)
         store.markSound(start + 40 * MS_PER_MINUTE)
         val (viewModel, _) = viewModel()
         viewModel.onIntent(PracticeIntent.StopClicked)
@@ -749,7 +783,7 @@ class PracticeViewModelTest {
     @Test
     fun `the sheet asked for from Live lists what was played even before the titles are heard`() = runTest {
         val start = clock.millis() - 20 * MS_PER_MINUTE
-        store.start(start)
+        store.startIfIdle(start)
         val stored = FakeRepertoireRepository()
         val scale = stored.add(PieceDraft(title = "G-dur · 3 октавы"), 0)
         // the titles take a moment to come, as from the database: the view model made for the ask has not heard them
@@ -768,7 +802,7 @@ class PracticeViewModelTest {
     @Test
     fun `blocks left of another practice are not in its sheet`() = runTest {
         val start = clock.millis() - 20 * MS_PER_MINUTE
-        store.start(start)
+        store.startIfIdle(start)
         val pieces = FakeRepertoireRepository()
         val scale = pieces.add(PieceDraft(title = "G-dur · 3 октавы"), 0)
         val blocks = FakeBlockStore()

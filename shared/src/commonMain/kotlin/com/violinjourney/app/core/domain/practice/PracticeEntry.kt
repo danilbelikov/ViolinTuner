@@ -53,7 +53,12 @@ interface RunningPracticeStore {
     /** Null when no practice runs. */
     val running: Flow<RunningPractice?>
 
-    suspend fun start(startedAtEpochMs: Long)
+    /**
+     * One practice at a time (spec 3.12): begins one at [startedAtEpochMs] only when none runs, by one write — so two
+     * taps, or «Начать занятие» on two screens at once, never begin two, and a start never moves the start of the one
+     * that runs. True — this call began it.
+     */
+    suspend fun startIfIdle(startedAtEpochMs: Long): Boolean
 
     /** No-op when nothing runs. */
     suspend fun markSound(epochMs: Long)

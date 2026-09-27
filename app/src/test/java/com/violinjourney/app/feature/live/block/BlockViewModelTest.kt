@@ -100,7 +100,7 @@ class BlockViewModelTest {
     @Test
     fun `a pick and a goal start a block, the bookmark counts down and is done at the goal`() = runTest {
         val kaiser = add("Кайзер № 3", composer = "Г. Кайзер")
-        practice.start(clock.nowMs)
+        practice.startIfIdle(clock.nowMs)
         val (viewModel, _) = viewModel()
         viewModel.onIntent(BlockIntent.BookmarkClicked)
         viewModel.onIntent(BlockIntent.PieceClicked(kaiser))
@@ -123,7 +123,7 @@ class BlockViewModelTest {
     fun `«Остановить» ends the block, a new pick ends the running one without a question`() = runTest {
         val scale = add("G-dur · 3 октавы")
         val minuet = add("Менуэт соль мажор")
-        practice.start(clock.nowMs)
+        practice.startIfIdle(clock.nowMs)
         val (viewModel, _) = viewModel()
         fun start(id: Long) {
             viewModel.onIntent(BlockIntent.BookmarkClicked)
@@ -151,7 +151,7 @@ class BlockViewModelTest {
     @Test
     fun `the element whose block runs cannot be picked again`() = runTest {
         val scale = add("G-dur · 3 октавы")
-        practice.start(clock.nowMs)
+        practice.startIfIdle(clock.nowMs)
         val (viewModel, _) = viewModel()
         viewModel.onIntent(BlockIntent.BookmarkClicked)
         viewModel.onIntent(BlockIntent.PieceClicked(scale))
@@ -168,7 +168,7 @@ class BlockViewModelTest {
     @Test
     fun `a deleted element leaves the bookmark, and an empty repertoire leads to it`() = runTest {
         val scale = add("G-dur · 3 октавы")
-        practice.start(clock.nowMs)
+        practice.startIfIdle(clock.nowMs)
         val (viewModel, effects) = viewModel()
         viewModel.onIntent(BlockIntent.BookmarkClicked)
         viewModel.onIntent(BlockIntent.PieceClicked(scale))

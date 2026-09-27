@@ -66,7 +66,7 @@ class TakePipelinePracticeLimitTest {
         // three seconds of the test before the practice reaches its limit
         val practiceStart = nowMs - config.maxPracticeMs + 3_000
         val limit = practiceStart + config.maxPracticeMs
-        val running = FakeRunningPracticeStore().apply { start(practiceStart) }
+        val running = FakeRunningPracticeStore().apply { startIfIdle(practiceStart) }
         val notes = FakePracticeNotesStore()
         val takes = TakePipeline(
             pitchSource = FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource),

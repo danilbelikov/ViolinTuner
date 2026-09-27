@@ -32,9 +32,8 @@ class FakePracticeRepository(private val addDelayMs: Long = 0) : PracticeReposit
 class FakeRunningPracticeStore : RunningPracticeStore {
     override val running = MutableStateFlow<RunningPractice?>(null)
 
-    override suspend fun start(startedAtEpochMs: Long) {
-        running.value = RunningPractice(startedAtEpochMs, lastSoundEpochMs = null)
-    }
+    override suspend fun startIfIdle(startedAtEpochMs: Long): Boolean =
+        running.compareAndSet(null, RunningPractice(startedAtEpochMs, lastSoundEpochMs = null))
 
     override suspend fun markSound(epochMs: Long) {
         running.update { it?.copy(lastSoundEpochMs = epochMs) }

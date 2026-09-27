@@ -40,7 +40,7 @@ class PracticeFinisherTest {
         // a row takes a moment to write, as in the database: the second answer comes while the first one writes
         val practice = FakePracticeRepository(addDelayMs = 1)
         val finisher = finisher(practice)
-        store.start(1_000)
+        store.startIfIdle(1_000)
         notes.add(1_000, NoteCount(played = 30, inTune = 30))
 
         val results = listOf(async { finisher.save(1_000, halfAnHour) }, async { finisher.save(1_000, halfAnHour) }).awaitAll()
@@ -62,7 +62,7 @@ class PracticeFinisherTest {
             }
         }
         val finisher = finisher(practice, slowNotes)
-        store.start(1_000)
+        store.startIfIdle(1_000)
 
         val answer = launch { finisher.save(1_000, halfAnHour) }
         runCurrent()
@@ -80,7 +80,7 @@ class PracticeFinisherTest {
     fun `a save tells what it stored and is saving until then`() = runTest {
         val practice = FakePracticeRepository(addDelayMs = 1)
         val finisher = finisher(practice)
-        store.start(1_000)
+        store.startIfIdle(1_000)
         assertNull(finisher.lastSaved.value)
 
         val saved = async { finisher.save(1_000, halfAnHour) }
@@ -103,15 +103,31 @@ class PracticeFinisherTest {
     }
 
     @Test
+    fun `a discard of another practice leaves the running one`() = runTest {
+        val finisher = finisher(FakePracticeRepository())
+        store.startIfIdle(1_000)
+        notes.add(1_000, NoteCount(played = 10, inTune = 8))
+
+        // the sheet of a practice begun at 999 — saved from the prompt meanwhile — answered «Не сохранять» late
+        finisher.discard(999)
+        assertEquals(1_000, store.running.value?.startedAtEpochMs, "the running practice is not the sheet's")
+        assertEquals(NoteCount(played = 10, inTune = 8), notes.countFor(1_000), "nor are its notes")
+
+        finisher.discard(1_000)
+        assertNull(store.running.value)
+        assertEquals(NoteCount.ZERO, notes.countFor(1_000))
+    }
+
+    @Test
     fun `a discard that meets a save waits for it and takes nothing from it`() = runTest {
         val practice = FakePracticeRepository(addDelayMs = 1)
         val finisher = finisher(practice)
-        store.start(1_000)
+        store.startIfIdle(1_000)
         notes.add(1_000, NoteCount(played = 30, inTune = 30))
 
         val saved = async { finisher.save(1_000, halfAnHour) }
         runCurrent()
-        val discarded = launch { finisher.discard() }
+        val discarded = launch { finisher.discard(1_000) }
         runCurrent()
         assertNotNull(store.running.value, "the discard waits while the save writes")
 

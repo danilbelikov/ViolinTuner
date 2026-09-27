@@ -109,8 +109,14 @@ class PracticeFinisher(
         return earning
     }
 
-    suspend fun discard(): Unit = lock.withLock {
+    /**
+     * The practice that began at [startedAtEpochMs] goes unsaved, its notes and blocks with it. As [save], it ends only
+     * that one: a sheet answered late — its practice saved from the prompt meanwhile, and the next one begun — leaves
+     * the next one running.
+     */
+    suspend fun discard(startedAtEpochMs: Long): Unit = lock.withLock {
         withContext(NonCancellable) {
+            if (store.running.first()?.startedAtEpochMs != startedAtEpochMs) return@withContext
             notes.clear()
             blocks.clear()
             store.clear()
