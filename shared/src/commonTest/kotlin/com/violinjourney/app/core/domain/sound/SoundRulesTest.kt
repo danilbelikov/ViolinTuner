@@ -105,6 +105,10 @@ class SoundRulesTest {
     fun `a preset name is trimmed and capped — and an empty one is no name`() {
         assertEquals("Мой зал", SoundRules.cleanPresetName("  Мой зал ", config))
         assertEquals(24, SoundRules.cleanPresetName("x".repeat(40), config)!!.length)
+        // an emoji is one character, left whole on either side of the limit
+        val violin = "\uD83C\uDFBB"
+        assertEquals("x".repeat(23) + violin, SoundRules.cleanPresetName("x".repeat(23) + violin + "y", config))
+        assertEquals("x".repeat(24), SoundRules.cleanPresetName("x".repeat(24) + violin, config))
         assertNull(SoundRules.cleanPresetName("   ", config))
     }
 }

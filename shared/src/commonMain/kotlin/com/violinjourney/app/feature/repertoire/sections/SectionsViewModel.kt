@@ -14,6 +14,7 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.SectionCount
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.repertoire.SectionStats
+import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.today
 import kotlinx.coroutines.channels.Channel
@@ -60,7 +61,7 @@ open class SectionsViewModel(
         when (intent) {
             is SectionsIntent.SectionClicked -> effectChannel.trySend(SectionsEffect.OpenSection(intent.ref))
             SectionsIntent.AddClicked -> newName.value = ""
-            is SectionsIntent.NameChanged -> if (newName.value != null) newName.value = intent.text.take(config.maxGroupNameLength)
+            is SectionsIntent.NameChanged -> if (newName.value != null) newName.value = intent.text.takeCodePoints(config.maxGroupNameLength)
             SectionsIntent.DialogDismissed -> newName.value = null
             SectionsIntent.CreateConfirmed -> create()
             SectionsIntent.TimeToggled -> timeExpanded.value = !timeExpanded.value

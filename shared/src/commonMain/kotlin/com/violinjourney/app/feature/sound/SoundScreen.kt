@@ -51,6 +51,7 @@ import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.sound.SoundConfig
+import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.ui.components.SegmentedSwitch
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
@@ -472,7 +473,7 @@ private fun Dialogs(dialog: SoundDialog, state: SoundState, zone: TimeZone, onIn
                 text = {
                     OutlinedTextField(
                         value = name,
-                        onValueChange = { name = it.take(PRESET_NAME_LENGTH) },
+                        onValueChange = { name = it.takeCodePoints(PRESET_NAME_LENGTH) },
                         singleLine = true,
                         placeholder = { Text(stringResource(Res.string.sound_dialog_preset_hint)) },
                     )

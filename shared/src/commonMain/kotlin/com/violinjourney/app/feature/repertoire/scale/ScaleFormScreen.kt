@@ -62,6 +62,8 @@ import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.Tonic
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleKind
 import com.violinjourney.app.core.domain.repertoire.scale.Scales
+import com.violinjourney.app.core.text.codePointLength
+import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.ui.components.SegmentedSwitch
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -297,14 +299,14 @@ private fun Fields(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
     FormField(
         value = notes,
         onValueChange = {
-            notes = it.take(state.maxNotesLength)
+            notes = it.takeCodePoints(state.maxNotesLength)
             onIntent(ScaleFormIntent.NotesChanged(notes))
         },
         label = stringResource(Res.string.piece_field_notes),
         singleLine = false,
         capitalization = KeyboardCapitalization.Sentences,
         modifier = Modifier.heightIn(min = NotesMinHeight),
-        supporting = stringResource(Res.string.profile_name_counter, notes.length, state.maxNotesLength),
+        supporting = stringResource(Res.string.profile_name_counter, notes.codePointLength(), state.maxNotesLength),
     )
     if (!state.isNew) {
         OutlinedButton(

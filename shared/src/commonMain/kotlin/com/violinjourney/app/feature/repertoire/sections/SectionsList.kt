@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionCount
 import com.violinjourney.app.core.domain.repertoire.SectionRef
+import com.violinjourney.app.core.text.codePointLength
+import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.core.ui.theme.ViolinTheme
@@ -232,14 +234,14 @@ fun SectionNameDialog(
             OutlinedTextField(
                 value = text,
                 onValueChange = {
-                    text = it.take(maxLength)
+                    text = it.takeCodePoints(maxLength)
                     onNameChange(text)
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .focusRequester(focus),
                 label = { Text(stringResource(Res.string.section_name_label)) },
-                supportingText = { Text("${text.length} / $maxLength", style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = TABULAR_FIGURES)) },
+                supportingText = { Text("${text.codePointLength()} / $maxLength", style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = TABULAR_FIGURES)) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { if (canConfirm) onConfirm() }),

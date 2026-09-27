@@ -7,6 +7,7 @@ import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.PieceRules
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.Tonic
+import com.violinjourney.app.core.text.takeCodePoints
 
 /** Rules of the piece form that are not about storage (spec 3.15). Pure. */
 object PieceFormReducer {
@@ -17,8 +18,11 @@ object PieceFormReducer {
         else -> key.copy(tonic = tonic)
     }
 
-    /** Typed text is capped while typing, so the counter never runs past its limit; edges are left for the save. */
-    fun capped(text: String, max: Int): String = text.take(max)
+    /**
+     * Typed text is capped while typing, so the counter never runs past its limit; edges are left for the save. An emoji
+     * is one character and is never cut in half.
+     */
+    fun capped(text: String, max: Int): String = text.takeCodePoints(max)
 
     fun canSave(draft: PieceDraft, config: RepertoireConfig): Boolean = PieceRules.clean(draft, config) != null
 

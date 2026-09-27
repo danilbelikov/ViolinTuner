@@ -13,6 +13,7 @@ import com.violinjourney.app.core.domain.repertoire.SectionStats
 import com.violinjourney.app.core.domain.repertoire.Tonic
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleSpec
 import com.violinjourney.app.core.domain.repertoire.scale.Scales
+import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.time.WallClock
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -77,7 +78,7 @@ open class ScaleFormViewModel(
             is ScaleFormIntent.TempoStepped -> edit { it.copy(tempoBpm = PieceRules.stepTempo(it.tempoBpm, intent.by, config)) }
             is ScaleFormIntent.TempoPicked -> edit { it.copy(tempoBpm = intent.bpm) }
             is ScaleFormIntent.StatusSelected -> edit { it.copy(status = intent.status) }
-            is ScaleFormIntent.NotesChanged -> edit { it.copy(notes = intent.text.take(config.maxNotesLength)) }
+            is ScaleFormIntent.NotesChanged -> edit { it.copy(notes = intent.text.takeCodePoints(config.maxNotesLength)) }
             ScaleFormIntent.OpenExistingClicked -> mutableState.value.existingId?.let { effectChannel.trySend(ScaleFormEffect.OpenScale(it)) }
             ScaleFormIntent.SaveClicked -> save()
             ScaleFormIntent.CloseClicked -> if (mutableState.value.draft != initial) showDialog(ScaleFormDialog.DISCARD) else effectChannel.trySend(ScaleFormEffect.Close)

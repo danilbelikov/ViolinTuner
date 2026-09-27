@@ -30,6 +30,18 @@ class PieceRulesTest {
     }
 
     @Test
+    fun `an emoji at the edge of a limit is left out whole or kept whole — never cut in half`() {
+        val violin = "\uD83C\uDFBB" // 🎻, two UTF-16 units
+        val over = PieceRules.clean(PieceDraft(title = "а".repeat(80) + violin, notes = "в".repeat(2_000) + violin), config)!!
+        assertEquals("а".repeat(80), over.title)
+        assertEquals("в".repeat(2_000), over.notes)
+        // an emoji counts as one character: the 80th of a title may be one
+        assertEquals("а".repeat(79) + violin, PieceRules.clean(PieceDraft(title = "а".repeat(79) + violin + "б"), config)!!.title)
+        assertEquals("а".repeat(23) + violin, PieceRules.cleanGroupName("а".repeat(23) + violin + "б", config))
+        assertEquals("а".repeat(24), PieceRules.cleanGroupName("а".repeat(24) + violin, config))
+    }
+
+    @Test
     fun `a cut never leaves a space at the end`() {
         val title = "а".repeat(79) + " хвост"
         assertEquals("а".repeat(79), PieceRules.clean(PieceDraft(title = title), config)!!.title)

@@ -12,6 +12,7 @@ import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.repertoire.SectionStats
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.io.filePath
+import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.today
 import kotlinx.coroutines.channels.Channel
@@ -80,7 +81,7 @@ open class RepertoireViewModel(
             RepertoireIntent.BackClicked -> effectChannel.trySend(RepertoireEffect.Close)
             is RepertoireIntent.DialogRequested ->
                 if (section is SectionRef.Custom) ui.update { it.copy(dialog = intent.dialog, nameDraft = currentName.orEmpty()) }
-            is RepertoireIntent.NameChanged -> ui.update { it.copy(nameDraft = intent.text.take(config.maxGroupNameLength)) }
+            is RepertoireIntent.NameChanged -> ui.update { it.copy(nameDraft = intent.text.takeCodePoints(config.maxGroupNameLength)) }
             RepertoireIntent.DialogDismissed -> ui.update { it.copy(dialog = null) }
             RepertoireIntent.DialogConfirmed -> confirm()
         }

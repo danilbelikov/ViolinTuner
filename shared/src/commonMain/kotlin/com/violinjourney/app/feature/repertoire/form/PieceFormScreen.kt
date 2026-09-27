@@ -71,6 +71,8 @@ import com.violinjourney.app.core.domain.repertoire.KeyMode
 import com.violinjourney.app.core.domain.repertoire.MusicalKey
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.Tonic
+import com.violinjourney.app.core.text.codePointLength
+import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.ui.components.SegmentedSwitch
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -244,7 +246,7 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
         FormField(
             value = title,
             onValueChange = {
-                title = it.take(state.maxTitleLength)
+                title = it.takeCodePoints(state.maxTitleLength)
                 onIntent(PieceFormIntent.TitleChanged(title))
             },
             label = stringResource(Res.string.piece_field_title),
@@ -265,7 +267,7 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
         FormField(
             value = composer,
             onValueChange = {
-                composer = it.take(state.maxComposerLength)
+                composer = it.takeCodePoints(state.maxComposerLength)
                 onIntent(PieceFormIntent.ComposerChanged(composer))
             },
             // an étude has an author — Kayser, Kreutzer, Mazas — rather than a composer
@@ -288,7 +290,7 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
     FormField(
         value = notes,
         onValueChange = {
-            notes = it.take(state.maxNotesLength)
+            notes = it.takeCodePoints(state.maxNotesLength)
             onIntent(PieceFormIntent.NotesChanged(notes))
         },
         label = stringResource(Res.string.piece_field_notes),
@@ -297,7 +299,7 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
         modifier = Modifier
             .heightIn(min = NotesMinHeight)
             .focusRequester(notesFocus),
-        supporting = stringResource(Res.string.profile_name_counter, notes.length, state.maxNotesLength),
+        supporting = stringResource(Res.string.profile_name_counter, notes.codePointLength(), state.maxNotesLength),
     )
     if (!state.isNew) {
         val error = ViolinTheme.repertoireColors.formError

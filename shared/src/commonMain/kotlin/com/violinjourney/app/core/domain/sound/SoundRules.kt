@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.domain.sound
 
+import com.violinjourney.app.core.text.takeCodePoints
 import kotlin.math.abs
 
 /**
@@ -118,7 +119,7 @@ object SoundRules {
 
     /** Edges trimmed, no longer than the config allows; null when nothing is left — such a preset is not saved. */
     fun cleanPresetName(name: String, config: SoundConfig): String? =
-        name.trim().take(config.maxPresetNameLength).trim().takeIf { it.isNotEmpty() }
+        name.trim().takeCodePoints(config.maxPresetNameLength).trim().takeIf { it.isNotEmpty() }
 
     private const val EPSILON = 1e-6
 }

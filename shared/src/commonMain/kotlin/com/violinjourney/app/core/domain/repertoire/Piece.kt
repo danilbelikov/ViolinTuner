@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.domain.repertoire
 
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleSpec
+import com.violinjourney.app.core.text.takeCodePoints
 import kotlinx.coroutines.flow.Flow
 
 /** Where a piece stands with its player (spec 3.15). */
@@ -84,7 +85,7 @@ object PieceRules {
             composer = cut(draft.composer, config.maxComposerLength),
             tempoBpm = draft.tempoBpm?.coerceIn(config.minTempoBpm, config.maxTempoBpm),
             // Notes keep their inner line breaks: they are a teacher's pencil marks, not a label.
-            notes = draft.notes.trim().take(config.maxNotesLength).trimEnd(),
+            notes = draft.notes.trim().takeCodePoints(config.maxNotesLength).trimEnd(),
         )
     }
 
@@ -102,7 +103,8 @@ object PieceRules {
     fun sectionOf(piece: Piece, groups: List<PieceGroup>): SectionRef =
         piece.groupId?.takeIf { id -> groups.any { it.id == id } }?.let { SectionRef.Custom(it) } ?: SectionRef.BuiltIn(piece.section)
 
-    private fun cut(text: String, max: Int): String = text.trim().take(max).trimEnd()
+    // Limits count characters as a person does: an emoji at the edge is left out whole, never halved into a lone surrogate.
+    private fun cut(text: String, max: Int): String = text.trim().takeCodePoints(max).trimEnd()
 
     private const val DEFAULT_TEMPO_BPM = 96
 }
