@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -313,13 +314,16 @@ fun TakesBlock(
             )
         } else {
             takes.forEach { take ->
-                val id = take.card.id
-                TakeCard(
-                    take, zone, actions,
-                    selected = if (selection.active) id in selection.ids else null,
-                    onLongClick = { onIntent(PieceIntent.Select(SelectionIntent.CardLongPressed(id))) }.takeIf { canSelect },
-                    modifier = Modifier.dimmedWhen(!canOpen),
-                ) { onIntent(PieceIntent.TakeClicked(id)) }
+                // A card keeps its own highlight, press and star when a new take lands on top or the best one moves first.
+                key(take.card.id) {
+                    val id = take.card.id
+                    TakeCard(
+                        take, zone, actions,
+                        selected = if (selection.active) id in selection.ids else null,
+                        onLongClick = { onIntent(PieceIntent.Select(SelectionIntent.CardLongPressed(id))) }.takeIf { canSelect },
+                        modifier = Modifier.dimmedWhen(!canOpen),
+                    ) { onIntent(PieceIntent.TakeClicked(id)) }
+                }
             }
         }
     }
