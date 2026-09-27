@@ -8,6 +8,8 @@ import android.net.Uri
 import androidx.core.net.toUri
 import android.provider.OpenableColumns
 import android.util.Log
+import com.violinjourney.app.core.audio.playback.PcmDecoder
+import com.violinjourney.app.core.audio.playback.PcmSamples
 import com.violinjourney.app.core.backup.BackupPaths
 import com.violinjourney.app.core.domain.backing.Backing
 import com.violinjourney.app.core.domain.backing.BackingConfig
@@ -22,7 +24,6 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.UUID
 import javax.inject.Inject
-import kotlin.math.roundToInt
 
 /** `files/backings/<uuid>.<extension>` — a folder of its own, so a copy of the data can take it whole (spec 3.20). */
 class AppBackingFiles @Inject constructor(@ApplicationContext context: Context, private val clock: WallClock) : BackingFiles {
@@ -161,17 +162,24 @@ class BackingImporter @Inject constructor(
 /**
  * The backing as the mix needs it (spec 5.25): 16-bit stereo, interleaved, at the rate of the take, one plain
  * file in the cache — decoded once, resampled once, then read at any position without a codec. A mono backing
- * is doubled to both sides. Rebuilt from the copy whenever the cache has been cleared, once at a time per backing and
+ * is doubled to both sides. Read through [PcmDecoder], in the codec's own rate and kind of samples, as the player
+ * reads a take. Rebuilt from the copy whenever the cache has been cleared, once at a time per backing and
  * rate ([SingleFlightBackingPcm]): the fixed `.partial` name has one writer.
  */
-class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, private val files: BackingFiles) : SingleFlightBackingPcm() {
-    private val directory = File(context.cacheDir, DIRECTORY)
+class BackingPcmCache @Inject constructor(
+    @ApplicationContext context: Context,
+    private val files: BackingFiles,
+    private val config: BackingConfig,
+    private val clock: WallClock,
+) : SingleFlightBackingPcm() {
+    private val cacheDir = context.cacheDir
+    private val directory = File(cacheDir, DIRECTORY)
 
     override fun deleteOrphans(keptFiles: Set<String>) {
-        val kept = keptFiles.mapTo(HashSet()) { it.substringBeforeLast('.') }
-        directory.listFiles().orEmpty()
-            .filter { !it.name.endsWith(PARTIAL) && it.name.substringBeforeLast(RATE_SEPARATOR) !in kept }
-            .forEach { it.delete() }
+        LEGACY_DIRECTORIES.forEach { File(cacheDir, it).deleteRecursively() }
+        val present = directory.listFiles().orEmpty().associateBy { it.name }
+        BackingPcmSweep.doomed(present.keys.toList(), keptFiles, clock.millis(), config.unpackIdleMs) { present.getValue(it).lastModified() }
+            .forEach { present.getValue(it).delete() }
     }
 
     // the name comes from the database, and a database may come from a copy: a name that leaves the folder is not one of ours
@@ -202,74 +210,26 @@ class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, 
     private fun fileOf(backing: Backing, sampleRate: Int) = File(directory, "${backing.fileName.substringBeforeLast('.')}$RATE_SEPARATOR$sampleRate.pcm")
 
     private fun decode(source: File, target: File, outRate: Int) {
-        val extractor = MediaExtractor()
-        var codec: MediaCodec? = null
+        // A copy without sound (an iOS import this extractor reads otherwise) or with none this phone decodes is no
+        // backing. Its length is not needed here: the whole of it is read, never sought.
+        val decoder = PcmDecoder.open(source, lengthRequired = false) ?: throw IOException("cannot decode ${source.name}")
         try {
-            extractor.setDataSource(source.absolutePath)
-            // a copy without sound (an iOS import this extractor reads otherwise) is no backing, not a NoSuchElementException
-            val track = (0 until extractor.trackCount).firstOrNull { extractor.getTrackFormat(it).getString(MediaFormat.KEY_MIME)?.startsWith("audio/") == true }
-                ?: throw IOException("no audio track")
-            val format = extractor.getTrackFormat(track)
-            extractor.selectTrack(track)
-            val inRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
-            var channels = format.getInteger(MediaFormat.KEY_CHANNEL_COUNT).coerceAtLeast(1)
-            val decoder = MediaCodec.createDecoderByType(checkNotNull(format.getString(MediaFormat.KEY_MIME)))
-            codec = decoder
-            decoder.configure(format, null, null, 0)
-            decoder.start()
-            val left = Resampler(inRate, outRate)
-            val right = Resampler(inRate, outRate)
+            val left = Resampler(decoder.sampleRate, outRate)
+            val right = Resampler(decoder.sampleRate, outRate)
             RandomAccessFile(target, "rw").use { out ->
                 out.setLength(0)
                 val writer = StereoWriter(out)
-                val info = MediaCodec.BufferInfo()
-                var inputDone = false
-                var outputDone = false
-                while (!outputDone) {
-                    if (!inputDone) {
-                        val index = decoder.dequeueInputBuffer(TIMEOUT_US)
-                        if (index >= 0) {
-                            val buffer = checkNotNull(decoder.getInputBuffer(index))
-                            val size = extractor.readSampleData(buffer, 0)
-                            if (size < 0) {
-                                decoder.queueInputBuffer(index, 0, 0, 0, MediaCodec.BUFFER_FLAG_END_OF_STREAM)
-                                inputDone = true
-                            } else {
-                                decoder.queueInputBuffer(index, 0, size, extractor.sampleTime, 0)
-                                extractor.advance()
-                            }
-                        }
-                    }
-                    val index = decoder.dequeueOutputBuffer(info, TIMEOUT_US)
-                    when {
-                        index == MediaCodec.INFO_OUTPUT_FORMAT_CHANGED -> channels = decoder.outputFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT).coerceAtLeast(1)
-                        index >= 0 -> {
-                            if (info.flags and MediaCodec.BUFFER_FLAG_END_OF_STREAM != 0) outputDone = true
-                            val buffer = decoder.getOutputBuffer(index)
-                            if (buffer != null && info.size > 0) {
-                                buffer.position(info.offset).limit(info.offset + info.size)
-                                val shorts = buffer.order(ByteOrder.nativeOrder()).asShortBuffer()
-                                val frames = shorts.remaining() / channels
-                                val l = FloatArray(frames)
-                                val r = FloatArray(frames)
-                                for (i in 0 until frames) {
-                                    val a = shorts.get() / FULL_SCALE
-                                    val b = if (channels > 1) shorts.get() / FULL_SCALE else a
-                                    repeat((channels - 2).coerceAtLeast(0)) { shorts.get() }
-                                    l[i] = a
-                                    r[i] = b
-                                }
-                                writer.push(left, right, l, r, frames)
-                            }
-                            decoder.releaseOutputBuffer(index, false)
-                        }
-                    }
+                val l = FloatArray(CHUNK_FRAMES)
+                val r = FloatArray(CHUNK_FRAMES)
+                while (true) {
+                    val count = decoder.readStereo(l, r)
+                    if (count == PcmDecoder.END) break
+                    writer.push(left, right, l, r, count)
                 }
                 writer.finish(left, right)
             }
         } finally {
-            codec?.let { runCatching { it.stop() }; it.release() }
-            extractor.release()
+            decoder.release()
         }
     }
 
@@ -295,15 +255,13 @@ class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, 
             if (n == 0) return
             val bytes = ByteBuffer.allocate(n * BYTES_PER_FRAME).order(ByteOrder.LITTLE_ENDIAN)
             for (i in 0 until n) {
-                bytes.putShort(toShort(lefts.values[i]))
-                bytes.putShort(toShort(rights.values[i]))
+                bytes.putShort(PcmSamples.toShort(lefts.values[i]))
+                bytes.putShort(PcmSamples.toShort(rights.values[i]))
             }
             out.write(bytes.array())
             lefts.dropFirst(n)
             rights.dropFirst(n)
         }
-
-        private fun toShort(value: Float): Short = (value * FULL_SCALE).roundToInt().coerceIn(Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt()).toShort()
     }
 
     /** A growing run of floats without boxing. */
@@ -329,10 +287,20 @@ class BackingPcmCache @Inject constructor(@ApplicationContext context: Context, 
 
     companion object {
         private const val TAG = "BackingPcmCache"
-        private const val DIRECTORY = "backing-pcm"
-        private const val PARTIAL = ".partial"
-        private const val RATE_SEPARATOR = '-'
-        private const val TIMEOUT_US = 10_000L
+
+        /** `backing-pcm2`: see [LEGACY_DIRECTORIES]. */
+        const val DIRECTORY = "backing-pcm2"
+
+        /**
+         * Made until 27.09.2026 at the container's rate and read as 16 bits whatever the codec gave: HE-AAC at half its
+         * speed, a 24-bit or float WAV as noise — under the same names. Swept whole: each backing is unpacked once more.
+         */
+        private val LEGACY_DIRECTORIES = listOf("backing-pcm")
+        private const val PARTIAL = BackingPcmSweep.PARTIAL
+        private const val RATE_SEPARATOR = BackingPcmSweep.RATE_SEPARATOR
+
+        /** Frames read from the decoder at a time. */
+        private const val CHUNK_FRAMES = 4_096
         const val FULL_SCALE = 32_768f
         const val BYTES_PER_FRAME = 4
     }

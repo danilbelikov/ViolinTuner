@@ -19,7 +19,9 @@ interface BackingPcm {
 
     /**
      * Throws away the prepared sound of every backing whose copy is not among [keptFiles] (spec 5.25): a backing is
-     * heavy — some 45 MB for four minutes — and kept only while a piece or a take still has it. One being made is left.
+     * heavy — some 45 MB for four minutes — and kept only while a piece or a take still has it. A `.partial` still being
+     * written is left; one nobody has touched for `BackingConfig.unpackIdleMs` goes — its maker died with the process
+     * ([BackingPcmSweep]).
      */
     fun deleteOrphans(keptFiles: Set<String>)
 }

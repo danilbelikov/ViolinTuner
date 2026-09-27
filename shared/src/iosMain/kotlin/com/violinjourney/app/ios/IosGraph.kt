@@ -137,7 +137,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     private val caches = PlatformFile(NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, true).first() as String)
     val backingFiles = IosBackingFiles(dataDirectory, clock)
     val backings = RoomBackingRepository(database.backingDao(), backingFiles, io)
-    val backingPcm = IosBackingPcm(caches, backingFiles)
+    val backingPcm = IosBackingPcm(caches, backingFiles, clock, backingConfig)
     val backingImporter = IosBackingImporter(dataDirectory, backingFiles, backingConfig, clock)
     val audioRoutes = IosAudioRoutes()
     private val backingPlayback = BackingPlaybackFactory { IosBackingPlayback(audioRoutes) }

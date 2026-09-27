@@ -11,13 +11,34 @@ import kotlin.math.sin
  * rates so nothing folds back when going down (spec 5.25: a backing at 44.1 kHz under a take at 48, or
  * the other way). Streaming: feed chunks with [process], then [finish] once; pure Kotlin, one per channel.
  */
-class Resampler(private val inRate: Int, private val outRate: Int, private val halfWidth: Int = HALF_WIDTH) {
+class Resampler internal constructor(
+    private val inRate: Int,
+    private val outRate: Int,
+    private val halfWidth: Int,
+    /** The most positions between input samples a weight table is made for (see [weights]); tests pass 0 to go without. */
+    maxPhases: Int,
+) {
+    constructor(inRate: Int, outRate: Int, halfWidth: Int = HALF_WIDTH) : this(inRate, outRate, halfWidth, MAX_PHASES)
+
     private val step = inRate.toDouble() / outRate
     /** Going down, the band ends a little below the new Nyquist: the kernel's edge is not a wall, and what lies past it must not fold back. */
     private val cutoff = if (outRate < inRate) outRate.toDouble() / inRate * DOWN_MARGIN else 1.0
     /** Kernel half-width in input samples: widened when the cutoff is lowered, so the window still spans [halfWidth] zero crossings. */
     private val reach = (halfWidth / cutoff).toInt() + 1
     private val table = kernelTable()
+
+    /** Input samples under the kernel of one output sample: from `base - reach + 1` to `base + reach`. */
+    private val taps = 2 * reach
+
+    /** Output samples fall between the input ones at this many positions, over and over: the rates' ratio in lowest terms. */
+    private val phases = outRate / gcd(inRate, outRate)
+
+    /**
+     * The normalised weights of the [taps] of each of the [phases] positions, reckoned once. Reckoned anew for every sample
+     * of every channel, the kernel held the unpack of a backing to about twice real time on the emulator. Null for rates
+     * that share too little for a table (more than `maxPhases` positions): then the kernel is reckoned as it goes.
+     */
+    private val weights: DoubleArray? = if (inRate == outRate || phases > maxPhases) null else weightTable()
 
     /** Input kept for the kernel: samples from [bufferStart] on. */
     private var buffer = FloatArray(INITIAL_BUFFER)
@@ -51,10 +72,11 @@ class Resampler(private val inRate: Int, private val outRate: Int, private val h
         val inputTotal = bufferStart + bufferCount
         // The last output sample lies at the last input sample: the length follows the rates exactly.
         val outTotal = if (inputEnded) floor((inputTotal - 1) / step).toLong() + 1 else Long.MAX_VALUE
+        val weighed = weights
         while (outIndex < outTotal) {
-            val center = outIndex * step
-            if (!inputEnded && floor(center).toLong() + reach >= inputTotal) break
-            out[written++] = sampleAt(center)
+            val base = baseOf(outIndex)
+            if (!inputEnded && base + reach >= inputTotal) break
+            out[written++] = if (weighed != null) weighedSampleAt(outIndex, base, weighed) else sampleAt(outIndex * step)
             outIndex++
             if (written == OUT_CHUNK) {
                 emit(out, written)
@@ -63,8 +85,44 @@ class Resampler(private val inRate: Int, private val outRate: Int, private val h
         }
         if (written > 0) emit(out, written)
         // what no future output sample can reach any more
-        val keepFrom = floor(outIndex * step).toLong() - reach
+        val keepFrom = baseOf(outIndex) - reach
         drop(keepFrom)
+    }
+
+    /**
+     * The input sample at or before output sample [index]. With a table, in whole numbers: a position that falls right on
+     * an input sample must find its own row of weights, which the rounding of `index * step` could miss.
+     */
+    private fun baseOf(index: Long): Long = if (weights != null) index * inRate / outRate else floor(index * step).toLong()
+
+    /** [sampleAt] with the weights of the table: the same sum, without the kernel. */
+    private fun weighedSampleAt(index: Long, base: Long, weights: DoubleArray): Float {
+        val row = (index % phases).toInt() * taps
+        // the buffer index of the first tap; taps outside the buffer count as silence, as in sampleAt
+        val first = base - reach + 1 - bufferStart
+        val from = maxOf(0L, -first).toInt()
+        val until = minOf(taps.toLong(), bufferCount - first).toInt()
+        var sum = 0.0
+        for (t in from until until) sum += buffer[(first + t).toInt()] * weights[row + t]
+        return sum.toFloat()
+    }
+
+    private fun weightTable(): DoubleArray {
+        val out = DoubleArray(phases * taps)
+        for (phase in 0 until phases) {
+            // where between two input samples this position falls, exactly
+            val fraction = (phase.toLong() * inRate % outRate).toDouble() / outRate
+            val row = phase * taps
+            var total = 0.0
+            for (t in 0 until taps) {
+                val weight = kernel((fraction - (t - reach + 1)) * cutoff)
+                out[row + t] = weight
+                total += weight
+            }
+            // normalised as in sampleAt: over every tap, in the buffer or not
+            for (t in 0 until taps) out[row + t] = if (total == 0.0) 0.0 else out[row + t] / total
+        }
+        return out
     }
 
     private fun sampleAt(center: Double): Float {
@@ -123,5 +181,10 @@ class Resampler(private val inRate: Int, private val outRate: Int, private val h
         const val DOWN_MARGIN = 0.95
         const val INITIAL_BUFFER = 8_192
         const val OUT_CHUNK = 4_096
+
+        /** 44.1 and 48 kHz share 160 positions, 22.05 and 48 — 320, 11.025 and 48 — 640; a table at most ~0.3 MB. */
+        const val MAX_PHASES = 1_024
+
+        tailrec fun gcd(a: Int, b: Int): Int = if (b == 0) a else gcd(b, a % b)
     }
 }

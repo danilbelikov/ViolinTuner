@@ -18,6 +18,7 @@ import com.violinjourney.app.core.io.moveTo
 import com.violinjourney.app.core.io.openOutput
 import com.violinjourney.app.core.io.pathOfFileUri
 import com.violinjourney.app.core.io.sizeBytes
+import com.violinjourney.app.core.time.SystemWallClock
 import com.violinjourney.app.core.time.WallClock
 import kotlin.math.roundToInt
 import kotlin.math.roundToLong
@@ -143,12 +144,18 @@ internal class IosBackingImporter(
  * moved in, which `moveItemAtPath` would refuse.
  */
 @OptIn(ExperimentalForeignApi::class)
-internal class IosBackingPcm(private val caches: PlatformFile, private val files: BackingFiles) : SingleFlightBackingPcm() {
+internal class IosBackingPcm(
+    private val caches: PlatformFile,
+    private val files: BackingFiles,
+    private val clock: WallClock = SystemWallClock,
+    private val config: BackingConfig = BackingConfig(),
+) : SingleFlightBackingPcm() {
     private val directory get() = caches.child(DIRECTORY).also { it.makeDirectories() }
 
     override fun deleteOrphans(keptFiles: Set<String>) {
-        val kept = keptFiles.mapTo(HashSet()) { it.substringBeforeLast('.') }
-        directory.listNames().filter { !it.endsWith(PARTIAL) && it.substringBeforeLast(RATE_SEPARATOR) !in kept }.forEach { directory.child(it).deleteAll() }
+        val folder = directory
+        BackingPcmSweep.doomed(folder.listNames(), keptFiles, clock.millis(), config.unpackIdleMs) { modifiedMs(folder.child(it)) }
+            .forEach { folder.child(it).deleteAll() }
     }
 
     override fun cached(backing: Backing, sampleRate: Int): PlatformFile? = fileOf(backing, sampleRate).takeIf { isOwnFileName(backing.fileName) && it.exists() }
@@ -254,8 +261,8 @@ internal class IosBackingPcm(private val caches: PlatformFile, private val files
 
     companion object {
         private const val DIRECTORY = "backing-pcm"
-        private const val PARTIAL = ".partial"
-        private const val RATE_SEPARATOR = '-'
+        private const val PARTIAL = BackingPcmSweep.PARTIAL
+        private const val RATE_SEPARATOR = BackingPcmSweep.RATE_SEPARATOR
         private const val CHUNK = 8_192
         const val FULL_SCALE = 32_768f
         const val BYTES_PER_FRAME = 4

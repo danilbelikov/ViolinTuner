@@ -107,6 +107,11 @@ data class BackingConfig(
     val defaultWirelessLatencyMs: Int = 200,
     /** A shift changed while playing glides in over this much, without a click. */
     val shiftFadeMs: Int = 30,
+    /**
+     * A `.partial` of a prepared backing nobody has written to for this long was left by a process that died mid-unpack
+     * and is swept: a live one moves with every chunk.
+     */
+    val unpackIdleMs: Long = 60 * 60_000L,
 )
 
 /** The copies of backing files: `files/backings/<uuid>.<extension>`. Named, not located. */

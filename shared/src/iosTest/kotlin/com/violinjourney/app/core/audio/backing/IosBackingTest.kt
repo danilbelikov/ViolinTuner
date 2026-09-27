@@ -34,10 +34,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.test.runTest
 import platform.AVFAudio.AVAudioFile
+import platform.Foundation.NSDate
 import platform.Foundation.NSFileManager
+import platform.Foundation.NSFileModificationDate
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
 import platform.Foundation.NSUUID
+import platform.Foundation.dateWithTimeIntervalSinceNow
 
 /**
  * The backing on iOS (spec 3.32, 5.25): a file of another rate becomes the PCM of the take's rate, and a take is sent with it
@@ -141,6 +144,23 @@ class IosBackingTest {
         assertEquals(listOf(ready, ready, ready), prepared)
         val left = PlatformFile("${caches.path}/backing-pcm").listNames()
         assertTrue(left.none { it.endsWith(".partial") }, "left behind: $left")
+    }
+
+    /** A `.partial` left by a process killed mid-unpack goes after an hour untouched; one being written stays (spec 5.25). */
+    @Test
+    fun `a partial nobody writes to is swept and a fresh one stays`() {
+        val pcm = IosBackingPcm(caches, IosBackingFiles(data, SystemWallClock))
+        pcm.deleteOrphans(emptySet()) // makes the folder
+        val directory = "${caches.path}/backing-pcm"
+        for (name in listOf("old-48000.pcm.partial", "fresh-48000.pcm.partial")) {
+            val output = assertNotNull(PlatformFile("$directory/$name").openOutput())
+            output.writeBytes("sound".encodeToByteArray())
+            output.close()
+        }
+        val twoHoursAgo = NSDate.dateWithTimeIntervalSinceNow(-2.0 * 60 * 60)
+        assertTrue(NSFileManager.defaultManager.setAttributes(mapOf(NSFileModificationDate to twoHoursAgo), "$directory/old-48000.pcm.partial", null))
+        pcm.deleteOrphans(emptySet())
+        assertEquals(listOf("fresh-48000.pcm.partial"), PlatformFile(directory).listNames())
     }
 
     /**
