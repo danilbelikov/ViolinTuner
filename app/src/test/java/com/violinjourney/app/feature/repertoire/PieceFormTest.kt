@@ -47,9 +47,11 @@ class PieceFormTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private fun TestScope.form(pieceId: Long? = null): Pair<PieceFormViewModel, MutableList<PieceFormEffect>> {
-        val args = mapOf(PieceFormViewModel.ARG_PIECE_ID to (pieceId ?: PieceFormViewModel.NEW_PIECE))
-        val viewModel = PieceFormViewModel(SavedStateHandle(args), repertoire, config, clock)
+    private fun handleOf(pieceId: Long?) = SavedStateHandle(mapOf(PieceFormViewModel.ARG_PIECE_ID to (pieceId ?: PieceFormViewModel.NEW_PIECE)))
+
+    /** [saved] shared by two view models stands for a process the system ended and brought back. */
+    private fun TestScope.form(pieceId: Long? = null, saved: SavedStateHandle = handleOf(pieceId)): Pair<PieceFormViewModel, MutableList<PieceFormEffect>> {
+        val viewModel = PieceFormViewModel(saved, repertoire, config, clock)
         val effects = mutableListOf<PieceFormEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
         runCurrent()
@@ -203,6 +205,69 @@ class PieceFormTest {
         form.onIntent(PieceFormIntent.DeleteClicked)
         assertEquals(PieceFormDialog.DELETE, form.state.value.dialog)
         assertEquals("Менуэт", form.state.value.savedTitle)
+    }
+
+    // Android may end the process while the player is in another app; the fields bring their text back by themselves.
+    @Test
+    fun `an edit outlives the process`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт", composer = "Бах"), nowEpochMs = 1)
+        val saved = handleOf(id)
+        val (before, _) = form(id, saved)
+        before.onIntent(PieceFormIntent.NotesChanged("Такты 9–12: не спешить"))
+        before.onIntent(PieceFormIntent.TonicClicked(Tonic.G))
+        before.onIntent(PieceFormIntent.ModeSelected(KeyMode.MINOR))
+        before.onIntent(PieceFormIntent.TempoPicked(96))
+        before.onIntent(PieceFormIntent.StatusSelected(PieceStatus.LEARNING))
+
+        val (after, effects) = form(id, saved)
+        assertEquals(before.state.value.draft, after.state.value.draft)
+        assertEquals("the stored title is still what the dialog names", "Менуэт", after.state.value.savedTitle)
+        after.onIntent(PieceFormIntent.CloseClicked)
+        assertEquals("the edits are still edits", PieceFormDialog.DISCARD, after.state.value.dialog)
+        after.onIntent(PieceFormIntent.DialogDismissed)
+        after.onIntent(PieceFormIntent.SaveClicked)
+        runCurrent()
+        val piece = repertoire.piece(id)!!
+        assertEquals("Такты 9–12: не спешить", piece.notes)
+        assertEquals("g-moll", piece.key!!.germanName)
+        assertEquals(96, piece.tempoBpm)
+        assertEquals(PieceStatus.LEARNING, piece.status)
+        assertEquals("Бах", piece.composer)
+        assertEquals(listOf<PieceFormEffect>(PieceFormEffect.Close), effects)
+    }
+
+    @Test
+    fun `a new piece comes back with its title, key and a touched title field`() = runTest {
+        val saved = handleOf(null)
+        val (before, _) = form(saved = saved)
+        before.onIntent(PieceFormIntent.TitleChanged("Гавот"))
+        before.onIntent(PieceFormIntent.TonicClicked(Tonic.D))
+        before.onIntent(PieceFormIntent.TitleChanged(""))
+
+        val (after, _) = form(saved = saved)
+        assertEquals("", after.state.value.draft.title)
+        assertEquals("D-dur", after.state.value.draft.key!!.germanName)
+        assertTrue("the field had been there, and says so again", after.state.value.titleError)
+        after.onIntent(PieceFormIntent.TitleChanged("Гавот"))
+        after.onIntent(PieceFormIntent.SaveClicked)
+        runCurrent()
+        assertEquals("D-dur", repertoire.pieces.value.single().key!!.germanName)
+    }
+
+    @Test
+    fun `nothing is kept before the player edits`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт", composer = "Бах"), nowEpochMs = 1)
+        val saved = handleOf(id)
+        val (before, _) = form(id, saved)
+        assertEquals("Бах", before.state.value.draft.composer)
+        // a section made meanwhile reaches the open form — that is not the player's edit
+        repertoire.addGroup("Мои этюды", nowEpochMs = 1)
+        runCurrent()
+        // the piece changed elsewhere since: a form opened anew — the process came back — reads it anew
+        repertoire.update(id, PieceDraft(title = "Менуэт", composer = "И. С. Бах"), nowEpochMs = 2)
+        val (after, _) = form(id, saved)
+        assertEquals("И. С. Бах", after.state.value.draft.composer)
+        assertFalse(after.state.value.titleError)
     }
 
     @Test

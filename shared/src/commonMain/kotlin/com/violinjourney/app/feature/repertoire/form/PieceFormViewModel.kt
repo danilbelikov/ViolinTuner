@@ -24,7 +24,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 open class PieceFormViewModel(
-    savedState: SavedStateHandle,
+    private val savedState: SavedStateHandle,
     private val repertoire: RepertoireRepository,
     private val config: RepertoireConfig,
     private val clock: WallClock,
@@ -35,12 +35,16 @@ open class PieceFormViewModel(
 
     private val startSection: SectionRef = SectionKeys.refOf(savedState.get<String>(ARG_SECTION))
 
+    // What the player had typed and picked before the system ended the process; laid over the piece once it is read.
+    private val kept = PieceFormSaved.read(savedState)
+
+    /** The piece as stored (for an edit) or the empty draft: what the form compares with. */
     private var initial = draftIn(startSection)
     private var groups: List<PieceGroup> = emptyList()
-    private var titleTouched = false
+    private var titleTouched = kept?.titleTouched ?: false
     private var saving = false
 
-    private val mutableState = MutableStateFlow(stateOf(initial, loading = pieceId != null, dialog = null))
+    private val mutableState = MutableStateFlow(stateOf(kept?.over(initial) ?: initial, loading = pieceId != null, dialog = null))
     val state: StateFlow<PieceFormState> = mutableState.asStateFlow()
 
     private val effectChannel = Channel<PieceFormEffect>(Channel.BUFFERED)
@@ -60,7 +64,7 @@ open class PieceFormViewModel(
                     effectChannel.send(PieceFormEffect.CloseDeleted)
                 } else {
                     initial = PieceRules.draftOf(piece)
-                    mutableState.value = stateOf(initial, loading = false, dialog = null)
+                    mutableState.value = stateOf(kept?.over(initial) ?: initial, loading = false, dialog = null)
                 }
             }
         }
@@ -70,19 +74,19 @@ open class PieceFormViewModel(
         when (intent) {
             is PieceFormIntent.TitleChanged -> {
                 titleTouched = true
-                edit { it.copy(title = PieceFormReducer.capped(intent.text, config.maxTitleLength)) }
+                userEdit { it.copy(title = PieceFormReducer.capped(intent.text, config.maxTitleLength)) }
             }
-            is PieceFormIntent.ComposerChanged -> edit { it.copy(composer = PieceFormReducer.capped(intent.text, config.maxComposerLength)) }
-            is PieceFormIntent.NotesChanged -> edit { it.copy(notes = PieceFormReducer.capped(intent.text, config.maxNotesLength)) }
-            is PieceFormIntent.TonicClicked -> edit { it.copy(key = PieceFormReducer.clickTonic(it.key, intent.tonic)) }
-            is PieceFormIntent.AccidentalSelected -> edit { it.copy(key = it.key?.copy(accidental = intent.accidental)) }
-            is PieceFormIntent.ModeSelected -> edit { it.copy(key = it.key?.copy(mode = intent.mode)) }
-            is PieceFormIntent.TempoStepped -> edit { it.copy(tempoBpm = PieceRules.stepTempo(it.tempoBpm, intent.by, config)) }
-            is PieceFormIntent.TempoPicked -> edit { it.copy(tempoBpm = intent.bpm) }
-            is PieceFormIntent.StatusSelected -> edit { it.copy(status = intent.status) }
+            is PieceFormIntent.ComposerChanged -> userEdit { it.copy(composer = PieceFormReducer.capped(intent.text, config.maxComposerLength)) }
+            is PieceFormIntent.NotesChanged -> userEdit { it.copy(notes = PieceFormReducer.capped(intent.text, config.maxNotesLength)) }
+            is PieceFormIntent.TonicClicked -> userEdit { it.copy(key = PieceFormReducer.clickTonic(it.key, intent.tonic)) }
+            is PieceFormIntent.AccidentalSelected -> userEdit { it.copy(key = it.key?.copy(accidental = intent.accidental)) }
+            is PieceFormIntent.ModeSelected -> userEdit { it.copy(key = it.key?.copy(mode = intent.mode)) }
+            is PieceFormIntent.TempoStepped -> userEdit { it.copy(tempoBpm = PieceRules.stepTempo(it.tempoBpm, intent.by, config)) }
+            is PieceFormIntent.TempoPicked -> userEdit { it.copy(tempoBpm = intent.bpm) }
+            is PieceFormIntent.StatusSelected -> userEdit { it.copy(status = intent.status) }
             // «Гаммы» is for scales alone
             is PieceFormIntent.SectionSelected -> if (intent.ref != SectionRef.BuiltIn(PieceSection.SCALES)) {
-                edit { draft ->
+                userEdit { draft ->
                     when (val ref = intent.ref) {
                         // a stroke shows neither an author nor a key: what cannot be seen must not be kept
                         SectionRef.BuiltIn(PieceSection.STROKES) -> draft.copy(section = PieceSection.STROKES, groupId = null, composer = "", key = null)
@@ -104,7 +108,7 @@ open class PieceFormViewModel(
         if (saving) return
         if (!PieceFormReducer.canSave(draft, config)) {
             titleTouched = true
-            edit { it }
+            userEdit { it }
             return
         }
         saving = true
@@ -153,6 +157,16 @@ open class PieceFormViewModel(
 
     private inline fun edit(transform: (PieceDraft) -> PieceDraft) {
         mutableState.update { stateOf(transform(it.draft), loading = it.loading, dialog = it.dialog) }
+    }
+
+    /**
+     * The player's own edit: kept in the saved state as well, so that it outlives the process together with the text
+     * of the fields. Not while an edited piece is still being read — the form under it is the empty one.
+     */
+    private inline fun userEdit(transform: (PieceDraft) -> PieceDraft) {
+        edit(transform)
+        val now = mutableState.value
+        if (!now.loading) PieceFormSaved.write(savedState, now.draft, titleTouched)
     }
 
     private fun stateOf(draft: PieceDraft, loading: Boolean, dialog: PieceFormDialog?): PieceFormState {
