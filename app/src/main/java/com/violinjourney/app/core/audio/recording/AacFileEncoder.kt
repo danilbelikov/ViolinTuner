@@ -32,17 +32,29 @@ class AacFileEncoder(
     @Volatile private var finishing = false
 
     // Both are created here, on the caller's thread, so that a device without the encoder
-    // fails the factory call instead of the worker.
-    private val codec: MediaCodec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC).apply {
-        val format = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRateHz, CHANNELS).apply {
-            setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
-            setInteger(MediaFormat.KEY_BIT_RATE, BIT_RATE)
-            setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, MAX_INPUT_BYTES)
+    // fails the factory call instead of the worker. Until the worker runs, nothing else would let
+    // the codec go: one that fails half-way is released at once, not held until it is finalized —
+    // a device has few codecs, and the next take may need this one.
+    private val codec: MediaCodec = MediaCodec.createEncoderByType(MediaFormat.MIMETYPE_AUDIO_AAC).also { created ->
+        try {
+            val format = MediaFormat.createAudioFormat(MediaFormat.MIMETYPE_AUDIO_AAC, sampleRateHz, CHANNELS).apply {
+                setInteger(MediaFormat.KEY_AAC_PROFILE, MediaCodecInfo.CodecProfileLevel.AACObjectLC)
+                setInteger(MediaFormat.KEY_BIT_RATE, BIT_RATE)
+                setInteger(MediaFormat.KEY_MAX_INPUT_SIZE, MAX_INPUT_BYTES)
+            }
+            created.configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
+            created.start()
+        } catch (e: Exception) {
+            created.release()
+            throw e
         }
-        configure(format, null, null, MediaCodec.CONFIGURE_FLAG_ENCODE)
-        start()
     }
-    private val muxer = MediaMuxer(file.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4)
+    private val muxer = try {
+        MediaMuxer(file.absolutePath, MediaMuxer.OutputFormat.MUXER_OUTPUT_MPEG_4) // no folder, no room: IOException
+    } catch (e: Exception) {
+        codec.release()
+        throw e
+    }
     private val worker = Thread(::encodeLoop, "session-audio-encoder").apply { start() }
 
     override fun offer(hop: ShortArray, count: Int): Boolean {

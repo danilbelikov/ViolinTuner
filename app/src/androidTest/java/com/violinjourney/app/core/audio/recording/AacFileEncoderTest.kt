@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.audio.recording
 
+import android.media.MediaCodecList
 import android.media.MediaExtractor
 import android.media.MediaFormat
 import android.media.MediaPlayer
@@ -11,6 +12,7 @@ import kotlin.math.sin
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
+import org.junit.Assert.fail
 import org.junit.Test
 import org.junit.runner.RunWith
 
@@ -63,6 +65,29 @@ class AacFileEncoderTest {
             assertTrue("player duration ${player.duration}", player.duration in 2_900..3_150)
             player.release()
         }
+    }
+
+    /**
+     * A file that cannot be opened fails the factory with the file's own error — the take goes on without sound — and more
+     * such failures than the device may run codecs at once still leave the next take its encoder. That the codec already
+     * started is released at once is not seen from here: this emulator's software encoder did not run out even when the
+     * codecs were left to the finalizer (checked 27.09.2026), so the release is guarded by review.
+     */
+    @Test
+    fun aFileThatCannotBeOpenedFailsTheEncoderAndTheNextTakeStillGetsOne() {
+        val instances = MediaCodecList(MediaCodecList.REGULAR_CODECS).codecInfos
+            .filter { it.isEncoder && MediaFormat.MIMETYPE_AUDIO_AAC in it.supportedTypes }
+            .maxOf { it.getCapabilitiesForType(MediaFormat.MIMETYPE_AUDIO_AAC).maxSupportedInstances }
+        val nowhere = File(directory, "no-such-folder/take.m4a")
+        repeat(instances + 1) {
+            try {
+                AacFileEncoder(nowhere, 48_000)
+                fail("a file in a folder that is not there cannot be written")
+            } catch (expected: java.io.IOException) {
+                // the take would go on without sound; the codec must not stay behind
+            }
+        }
+        assertTrue("a take after ${instances + 1} failed ones still gets an encoder", encodeTone(File(directory, "after.m4a"), 48_000, seconds = 1))
     }
 
     @Test
