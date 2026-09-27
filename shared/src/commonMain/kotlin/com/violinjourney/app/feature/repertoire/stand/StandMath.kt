@@ -82,4 +82,7 @@ object StandMath {
         while (sourceWidth / (sample * 2) >= wantedWidth) sample *= 2
         return sample
     }
+
+    /** How wide a picture [sourceWidth] wide comes out when it is decoded by [sampleSize] for [wantedWidth]; 0 for no picture. */
+    fun sampledWidth(sourceWidth: Int, wantedWidth: Int): Int = if (sourceWidth <= 0) 0 else sourceWidth / sampleSize(sourceWidth, wantedWidth)
 }

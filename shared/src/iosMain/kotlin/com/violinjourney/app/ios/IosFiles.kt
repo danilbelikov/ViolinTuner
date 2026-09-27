@@ -11,7 +11,12 @@ import com.violinjourney.app.core.io.isRegularFile
 import com.violinjourney.app.core.io.pathOfFileUri
 import com.violinjourney.app.core.time.WallClock
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.IntVar
+import kotlinx.cinterop.alloc
 import kotlinx.cinterop.autoreleasepool
+import kotlinx.cinterop.memScoped
+import kotlinx.cinterop.reinterpret
+import kotlinx.cinterop.value
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.CoroutineDispatcher
@@ -28,6 +33,12 @@ import platform.CoreGraphics.CGImageAlphaInfo
 import platform.CoreGraphics.CGImageRef
 import platform.CoreGraphics.CGImageRelease
 import platform.CoreFoundation.CFDictionaryCreateMutable
+import platform.CoreFoundation.CFDictionaryGetValue
+import platform.CoreFoundation.CFDictionaryRef
+import platform.CoreFoundation.CFNumberGetValue
+import platform.CoreFoundation.CFNumberRef
+import platform.CoreFoundation.CFStringRef
+import platform.CoreFoundation.kCFNumberIntType
 import platform.CoreFoundation.CFDictionarySetValue
 import platform.CoreFoundation.CFRelease
 import platform.CoreFoundation.CFURLRef
@@ -37,13 +48,18 @@ import platform.CoreFoundation.kCFTypeDictionaryValueCallBacks
 import platform.Foundation.CFBridgingRetain
 import platform.Foundation.NSNumber
 import platform.Foundation.NSURL
+import platform.ImageIO.CGImageSourceCopyPropertiesAtIndex
 import platform.ImageIO.CGImageSourceCreateThumbnailAtIndex
+import platform.ImageIO.CGImageSourceRef
 import platform.ImageIO.CGImageSourceCreateWithURL
 import platform.ImageIO.CGImageSourceGetPrimaryImageIndex
 import platform.ImageIO.kCGImageSourceCreateThumbnailFromImageAlways
 import platform.ImageIO.kCGImageSourceCreateThumbnailWithTransform
 import platform.ImageIO.kCGImageSourceShouldCacheImmediately
 import platform.ImageIO.kCGImageSourceThumbnailMaxPixelSize
+import platform.ImageIO.kCGImagePropertyOrientation
+import platform.ImageIO.kCGImagePropertyPixelHeight
+import platform.ImageIO.kCGImagePropertyPixelWidth
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
 import platform.Foundation.NSDate
@@ -120,12 +136,12 @@ internal object IosPictures {
      * turned upright by its EXIF: the whole frame — 24 or 48 Mp from a phone's camera, some hundred megabytes unpacked —
      * is never held in memory. Never enlarged. Null when the file is not a picture.
      */
-    fun downsampled(path: String, maxLongSide: Int): UIImage? {
-        @Suppress("UNCHECKED_CAST")
-        val url = CFBridgingRetain(NSURL.fileURLWithPath(path)) as CFURLRef
-        val source = CGImageSourceCreateWithURL(url, null)
-        CFRelease(url)
-        if (source == null) return null
+    fun downsampled(path: String, maxLongSide: Int): UIImage? =
+        downsampledImage(path, maxLongSide)?.let { picture -> UIImage.imageWithCGImage(picture).also { CGImageRelease(picture) } }
+
+    /** [downsampled] as the CoreGraphics picture itself; the caller releases it (`CGImageRelease`). */
+    fun downsampledImage(path: String, maxLongSide: Int): CGImageRef? {
+        val source = sourceOf(path) ?: return null
         val size = CFBridgingRetain(NSNumber(int = maxLongSide))
         val options = CFDictionaryCreateMutable(null, OPTIONS.convert(), kCFTypeDictionaryKeyCallBacks.ptr, kCFTypeDictionaryValueCallBacks.ptr)
         CFDictionarySetValue(options, kCGImageSourceCreateThumbnailFromImageAlways, kCFBooleanTrue)
@@ -137,8 +153,39 @@ internal object IosPictures {
         CFRelease(options)
         CFRelease(size)
         CFRelease(source)
-        if (picture == null) return null
-        return UIImage.imageWithCGImage(picture).also { CGImageRelease(picture) }
+        return picture
+    }
+
+    /**
+     * The size of the picture at [path] in pixels as it is shown — turned by its EXIF, as [downsampled] turns it: an
+     * orientation of 5 to 8 lies on its side and swaps the two. Read from the header, nothing is decoded. Null when the
+     * file is not a picture.
+     */
+    fun uprightSize(path: String): Pair<Int, Int>? {
+        val source = sourceOf(path) ?: return null
+        val properties = CGImageSourceCopyPropertiesAtIndex(source, CGImageSourceGetPrimaryImageIndex(source), null)
+        CFRelease(source)
+        if (properties == null) return null
+        val width = intOf(properties, kCGImagePropertyPixelWidth)
+        val height = intOf(properties, kCGImagePropertyPixelHeight)
+        val orientation = intOf(properties, kCGImagePropertyOrientation) ?: UPRIGHT
+        CFRelease(properties)
+        if (width == null || height == null || width <= 0 || height <= 0) return null
+        return if (orientation in SIDEWAYS) height to width else width to height
+    }
+
+    private fun sourceOf(path: String): CGImageSourceRef? {
+        @Suppress("UNCHECKED_CAST")
+        val url = CFBridgingRetain(NSURL.fileURLWithPath(path)) as CFURLRef
+        val source = CGImageSourceCreateWithURL(url, null)
+        CFRelease(url)
+        return source
+    }
+
+    private fun intOf(dictionary: CFDictionaryRef, key: CFStringRef?): Int? = memScoped {
+        val number: CFNumberRef = CFDictionaryGetValue(dictionary, key)?.reinterpret() ?: return null
+        val value = alloc<IntVar>()
+        if (CFNumberGetValue(number, kCFNumberIntType, value.ptr)) value.value else null
     }
 
     fun writeJpeg(image: UIImage, path: String, quality: Int): Boolean {
@@ -170,6 +217,10 @@ internal object IosPictures {
 
     private const val PERCENT = 100.0
     private const val OPTIONS = 4
+    private const val UPRIGHT = 1
+
+    /** EXIF orientations that turn the picture by a quarter: shown, its width is the stored height. */
+    private val SIDEWAYS = 5..8
     private const val PARTIAL_SUFFIX = ".part"
     private const val DARK_GRID = 16
     private const val DARK_BELOW = 16

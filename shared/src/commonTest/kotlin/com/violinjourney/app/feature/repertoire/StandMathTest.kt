@@ -112,4 +112,12 @@ class StandMathTest {
         assertEquals(4, StandMath.sampleSize(sourceWidth = 4000, wantedWidth = 1000))
         assertEquals(1, StandMath.sampleSize(sourceWidth = 0, wantedWidth = 936))
     }
+
+    @Test
+    fun `a sample comes out as wide as its share of the page`() {
+        assertEquals(960, StandMath.sampledWidth(sourceWidth = 1920, wantedWidth = 954))
+        assertEquals(1920, StandMath.sampledWidth(sourceWidth = 1920, wantedWidth = 1146))
+        assertEquals(1920, StandMath.sampledWidth(sourceWidth = 1920, wantedWidth = Int.MAX_VALUE))
+        assertEquals(0, StandMath.sampledWidth(sourceWidth = 0, wantedWidth = 900))
+    }
 }
