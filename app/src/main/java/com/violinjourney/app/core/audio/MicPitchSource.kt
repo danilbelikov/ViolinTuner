@@ -20,6 +20,7 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import kotlin.coroutines.coroutineContext
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -61,6 +62,7 @@ class MicPitchSource @Inject constructor(
             val analyzer = FrameAnalyzer(detectorFactory.create(config), config, sampleRateHz)
             val hop = ShortArray(config.hopSizeSamples)
             val watchdog = DigitalSilenceWatchdog(config, sampleRateHz)
+            val emptyReads = EmptyReadWatch(config, sampleRateHz)
             val stats = if (BuildConfig.DEBUG) FrameStats(config, "src=${recorder.audioSource} rate=$sampleRateHz") { Log.d(TAG, it) } else null
             var samplesRead = 0L
             val timestamp = AudioTimestamp()
@@ -68,6 +70,14 @@ class MicPitchSource @Inject constructor(
             while (coroutineContext.isActive) {
                 val read = recorder.read(hop, 0, hop.size, AudioRecord.READ_BLOCKING)
                 if (read < 0) throw unavailable(MicUnavailableReason.READ_FAILED, "AudioRecord.read failed with code $read")
+                // a blocking read that gives nothing does not block: wait a hop instead of spinning, and give up in the end
+                if (emptyReads.isDead(read)) {
+                    throw unavailable(MicUnavailableReason.READ_FAILED, "AudioRecord.read gave no samples for ${config.digitalSilenceTimeoutMs} ms")
+                }
+                if (read == 0) {
+                    delay(emptyReads.waitMs)
+                    continue
+                }
                 if (watchdog.isDead(hop, read)) throw unavailable(MicUnavailableReason.DIGITAL_SILENCE, "input is digitally silent, reopening")
                 // Same sample clock as FrameAnalyzer: a frame's tMs is the end of its hop, so the
                 // hop that follows a frame starts exactly at that frame's time.
