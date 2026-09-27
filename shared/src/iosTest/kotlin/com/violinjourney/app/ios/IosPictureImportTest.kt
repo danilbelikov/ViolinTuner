@@ -8,11 +8,14 @@ import com.violinjourney.app.core.time.SystemWallClock
 import com.violinjourney.app.core.time.WallClock
 import kotlin.test.AfterTest
 import kotlin.test.Test
+import kotlin.math.abs
 import kotlin.test.assertNotNull
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.time.Instant
 import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.convert
+import kotlinx.cinterop.ptr
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.runTest
 import kotlinx.datetime.TimeZone
@@ -26,6 +29,23 @@ import platform.CoreGraphics.CGContextSetRGBFillColor
 import platform.CoreGraphics.CGImageAlphaInfo
 import platform.CoreGraphics.CGImageRelease
 import platform.CoreGraphics.CGRectMake
+import platform.CoreFoundation.CFDictionaryCreateMutable
+import platform.CoreFoundation.CFDictionarySetValue
+import platform.CoreFoundation.CFRelease
+import platform.CoreFoundation.CFStringCreateWithCString
+import platform.CoreFoundation.CFURLRef
+import platform.CoreFoundation.kCFStringEncodingUTF8
+import platform.CoreFoundation.kCFTypeDictionaryKeyCallBacks
+import platform.CoreFoundation.kCFTypeDictionaryValueCallBacks
+import platform.Foundation.CFBridgingRetain
+import platform.Foundation.NSNumber
+import platform.Foundation.NSString
+import platform.Foundation.NSURL
+import platform.Foundation.NSUTF8StringEncoding
+import platform.ImageIO.CGImageDestinationAddImage
+import platform.ImageIO.CGImageDestinationCreateWithURL
+import platform.ImageIO.CGImageDestinationFinalize
+import platform.ImageIO.kCGImagePropertyOrientation
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSUUID
@@ -42,7 +62,8 @@ import platform.UIKit.UIImageJPEGRepresentation
 class IosPictureImportTest {
     private val files = NSFileManager.defaultManager
     private val folder = "${NSTemporaryDirectory()}${NSUUID().UUIDString} shots"
-    private val sheets = IosSheetFiles(Dispatchers.Default, RepertoireConfig())
+    private val config = RepertoireConfig()
+    private val sheets = IosSheetFiles(Dispatchers.Default, config)
     private val avatars = IosAvatarFiles(Dispatchers.Default, TickingClock())
     private val made = mutableListOf<String>()
 
@@ -85,26 +106,83 @@ class IosPictureImportTest {
         }
     }
 
+    // The page is read by ImageIO straight at its size (spec 5.9). These guard what the reading must keep — the size,
+    // the turn of the EXIF, no enlarging; what it saves, the memory of a 24–48 Mp frame, shows only on a device.
+    @Test
+    fun `a large photo becomes a page of 2560 px and a thumbnail of 320`() = runTest {
+        val stored = assertNotNull(sheets.import(PlatformFile(jpeg("$folder/large.jpg", width = 4000, height = 3000)).fileUri))
+        assertStored(stored)
+        assertSize(config.pageMaxSidePx, 1920, stored.fileName)
+        assertSize(config.thumbMaxSidePx, 240, stored.thumbFileName)
+    }
+
+    @Test
+    fun `a photo turned by its EXIF comes out upright`() = runTest {
+        // stored lying on its side, 400 × 300, with «turn a quarter clockwise» for whoever shows it
+        val stored = assertNotNull(sheets.import(PlatformFile(jpeg("$folder/turned.jpg", width = 400, height = 300, orientation = 6)).fileUri))
+        assertStored(stored)
+        assertSize(300, 400, stored.fileName)
+    }
+
+    @Test
+    fun `a small picture is not enlarged`() = runTest {
+        val stored = assertNotNull(sheets.import(PlatformFile(jpeg("$folder/small.jpg")).fileUri))
+        assertStored(stored)
+        assertSize(WIDTH, HEIGHT, stored.fileName)
+    }
+
+    @Test
+    fun `a file that is not a picture is not a page`() = runTest {
+        val text = "$folder/notes.jpg"
+        assertTrue(("not a picture" as NSString).writeToFile(text, atomically = true, encoding = NSUTF8StringEncoding, error = null))
+        made += text
+        assertNull(sheets.import(PlatformFile(text).fileUri))
+    }
+
     /** The page and its thumbnail are in the folder of the repertoire; both go away after the test. */
     private fun assertStored(stored: SheetFiles.Stored) {
         for (name in listOf(stored.fileName, stored.thumbFileName)) made += assertNotNull(sheets.existing(name), name).path
     }
 
-    /** A picture of 40 × 30 pixels drawn by CoreGraphics, written as JPEG to [path]. */
-    private fun jpeg(path: String): String {
+    /** The stored picture [name] is [width] × [height] pixels as shown, give or take one of rounding. */
+    private fun assertSize(width: Int, height: Int, name: String) {
+        val image = assertNotNull(UIImage.imageWithContentsOfFile(assertNotNull(sheets.existing(name)).path), name)
+        val (w, h) = IosPictures.pixels(image)
+        assertTrue(abs(w - width) <= 1 && abs(h - height) <= 1, "$name is ${w}×$h, wanted ${width}×$height")
+    }
+
+    /**
+     * A picture of [width] × [height] pixels drawn by CoreGraphics, written as JPEG to [path]; with [orientation], the EXIF
+     * orientation of the file (ImageIO writes it, UIKit would not).
+     */
+    private fun jpeg(path: String, width: Int = WIDTH, height: Int = HEIGHT, orientation: Int? = null): String {
         val space = CGColorSpaceCreateDeviceRGB()
         val context = CGBitmapContextCreate(
-            null, WIDTH.convert(), HEIGHT.convert(), BITS_PER_COMPONENT.convert(), 0.convert(), space,
+            null, width.convert(), height.convert(), BITS_PER_COMPONENT.convert(), 0.convert(), space,
             CGImageAlphaInfo.kCGImageAlphaPremultipliedLast.value,
         )
         CGContextSetRGBFillColor(context, 0.2, 0.6, 0.3, 1.0)
-        CGContextFillRect(context, CGRectMake(0.0, 0.0, WIDTH.toDouble(), HEIGHT.toDouble()))
+        CGContextFillRect(context, CGRectMake(0.0, 0.0, width.toDouble(), height.toDouble()))
         val image = CGBitmapContextCreateImage(context)
-        val data = UIImageJPEGRepresentation(UIImage.imageWithCGImage(image), JPEG_QUALITY)
+        val written = if (orientation == null) {
+            UIImageJPEGRepresentation(UIImage.imageWithCGImage(image), JPEG_QUALITY)?.writeToFile(path, atomically = true) == true
+        } else {
+            @Suppress("UNCHECKED_CAST")
+            val url = CFBridgingRetain(NSURL.fileURLWithPath(path)) as CFURLRef
+            val type = CFStringCreateWithCString(null, "public.jpeg", kCFStringEncodingUTF8)
+            val destination = CGImageDestinationCreateWithURL(url, type, 1u, null)
+            val turn = CFBridgingRetain(NSNumber(int = orientation))
+            val properties = CFDictionaryCreateMutable(null, 1, kCFTypeDictionaryKeyCallBacks.ptr, kCFTypeDictionaryValueCallBacks.ptr)
+            CFDictionarySetValue(properties, kCGImagePropertyOrientation, turn)
+            CGImageDestinationAddImage(destination, image, properties)
+            val done = CGImageDestinationFinalize(destination)
+            listOf(properties, turn, destination, type, url).forEach { CFRelease(it) }
+            done
+        }
         CGImageRelease(image)
         CGContextRelease(context)
         CGColorSpaceRelease(space)
-        assertTrue(data?.writeToFile(path, atomically = true) == true, "a JPEG is written to $path")
+        assertTrue(written, "a JPEG is written to $path")
         made += path
         return path
     }

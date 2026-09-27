@@ -11,6 +11,8 @@ import com.violinjourney.app.core.io.isRegularFile
 import com.violinjourney.app.core.io.pathOfFileUri
 import com.violinjourney.app.core.time.WallClock
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.autoreleasepool
+import kotlinx.cinterop.ptr
 import kotlinx.cinterop.useContents
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
@@ -24,6 +26,24 @@ import platform.CoreGraphics.CGContextDrawImage
 import platform.CoreGraphics.CGContextRelease
 import platform.CoreGraphics.CGImageAlphaInfo
 import platform.CoreGraphics.CGImageRef
+import platform.CoreGraphics.CGImageRelease
+import platform.CoreFoundation.CFDictionaryCreateMutable
+import platform.CoreFoundation.CFDictionarySetValue
+import platform.CoreFoundation.CFRelease
+import platform.CoreFoundation.CFURLRef
+import platform.CoreFoundation.kCFBooleanTrue
+import platform.CoreFoundation.kCFTypeDictionaryKeyCallBacks
+import platform.CoreFoundation.kCFTypeDictionaryValueCallBacks
+import platform.Foundation.CFBridgingRetain
+import platform.Foundation.NSNumber
+import platform.Foundation.NSURL
+import platform.ImageIO.CGImageSourceCreateThumbnailAtIndex
+import platform.ImageIO.CGImageSourceCreateWithURL
+import platform.ImageIO.CGImageSourceGetPrimaryImageIndex
+import platform.ImageIO.kCGImageSourceCreateThumbnailFromImageAlways
+import platform.ImageIO.kCGImageSourceCreateThumbnailWithTransform
+import platform.ImageIO.kCGImageSourceShouldCacheImmediately
+import platform.ImageIO.kCGImageSourceThumbnailMaxPixelSize
 import platform.CoreGraphics.CGRectMake
 import platform.CoreGraphics.CGSizeMake
 import platform.Foundation.NSDate
@@ -39,8 +59,9 @@ import platform.UIKit.UIImageJPEGRepresentation
 
 /**
  * The files of the iOS app, as the app keeps them on Android: bare names in the database, the files in folders of
- * Application Support. Pictures are read and turned upright by UIKit (HEIC and the orientation of a photo included),
- * scaled down and written as JPEG — first under another name, so a file with the final name is always whole.
+ * Application Support. Pictures are read and turned upright (HEIC and the orientation of a photo included) — sheet pages
+ * by ImageIO straight at their size, avatars by UIKit — scaled down and written as JPEG, first under another name, so a
+ * file with the final name is always whole.
  */
 @OptIn(ExperimentalForeignApi::class)
 internal object IosFolders {
@@ -70,7 +91,10 @@ internal object IosFolders {
     private const val MS = 1000.0
 }
 
-/** Pictures by UIKit: read upright, drawn at a size of pixels, written as JPEG. */
+/**
+ * Pictures by UIKit and ImageIO: read upright (sheet pages straight at their size, see [downsampled]), drawn at a size
+ * of pixels, written as JPEG.
+ */
 @OptIn(ExperimentalForeignApi::class)
 internal object IosPictures {
     /** Width and height in pixels, upright. */
@@ -89,6 +113,32 @@ internal object IosPictures {
         val (w, h) = pixels(image)
         val scale = minOf(1.0, maxLongSide / maxOf(w, h))
         return draw(image, (w * scale).toInt().coerceAtLeast(1), (h * scale).toInt().coerceAtLeast(1), 0.0, 0.0, scale)
+    }
+
+    /**
+     * The picture in the file at [path], read by ImageIO straight at a long side of at most [maxLongSide] pixels and
+     * turned upright by its EXIF: the whole frame — 24 or 48 Mp from a phone's camera, some hundred megabytes unpacked —
+     * is never held in memory. Never enlarged. Null when the file is not a picture.
+     */
+    fun downsampled(path: String, maxLongSide: Int): UIImage? {
+        @Suppress("UNCHECKED_CAST")
+        val url = CFBridgingRetain(NSURL.fileURLWithPath(path)) as CFURLRef
+        val source = CGImageSourceCreateWithURL(url, null)
+        CFRelease(url)
+        if (source == null) return null
+        val size = CFBridgingRetain(NSNumber(int = maxLongSide))
+        val options = CFDictionaryCreateMutable(null, OPTIONS.convert(), kCFTypeDictionaryKeyCallBacks.ptr, kCFTypeDictionaryValueCallBacks.ptr)
+        CFDictionarySetValue(options, kCGImageSourceCreateThumbnailFromImageAlways, kCFBooleanTrue)
+        CFDictionarySetValue(options, kCGImageSourceCreateThumbnailWithTransform, kCFBooleanTrue)
+        CFDictionarySetValue(options, kCGImageSourceShouldCacheImmediately, kCFBooleanTrue)
+        CFDictionarySetValue(options, kCGImageSourceThumbnailMaxPixelSize, size)
+        // the picture the file stands for — a HEIF may hold more than one
+        val picture = CGImageSourceCreateThumbnailAtIndex(source, CGImageSourceGetPrimaryImageIndex(source), options)
+        CFRelease(options)
+        CFRelease(size)
+        CFRelease(source)
+        if (picture == null) return null
+        return UIImage.imageWithCGImage(picture).also { CGImageRelease(picture) }
     }
 
     fun writeJpeg(image: UIImage, path: String, quality: Int): Boolean {
@@ -119,6 +169,7 @@ internal object IosPictures {
     }
 
     private const val PERCENT = 100.0
+    private const val OPTIONS = 4
     private const val PARTIAL_SUFFIX = ".part"
     private const val DARK_GRID = 16
     private const val DARK_BELOW = 16
@@ -200,22 +251,22 @@ internal class IosSheetFiles(private val io: CoroutineDispatcher, private val co
     private val directory by lazy { IosFolders.folder(DIRECTORY) }
     private val cameraDirectory by lazy { IosFolders.folder(CAMERA_DIRECTORY) }
 
-    override suspend fun import(sourceUri: String): SheetFiles.Stored? = withContext(io) {
-        val path = pathOfFileUri(sourceUri) ?: return@withContext null
-        val image = UIImage.imageWithContentsOfFile(path) ?: return@withContext null
-        val page = IosPictures.fitted(image, config.pageMaxSidePx)
+    // One picture per pool: the pictures and their data are let go when it is done, not when the thread of io next drains.
+    override suspend fun import(sourceUri: String): SheetFiles.Stored? = withContext(io) { autoreleasepool { importNow(sourceUri) } }
+
+    private fun importNow(sourceUri: String): SheetFiles.Stored? {
+        val path = pathOfFileUri(sourceUri) ?: return null
+        // the page straight at its size (spec 5.9): the full frame is never unpacked
+        val page = IosPictures.downsampled(path, config.pageMaxSidePx) ?: return null
         val thumb = IosPictures.fitted(page, config.thumbMaxSidePx)
         val id = NSUUID().UUIDString
         val stored = SheetFiles.Stored(fileName = "$id$EXTENSION", thumbFileName = "$id$THUMB_SUFFIX$EXTENSION")
         val written = IosPictures.writeJpeg(page, "$directory/${stored.fileName}", config.pageJpegQuality) &&
             IosPictures.writeJpeg(thumb, "$directory/${stored.thumbFileName}", config.pageJpegQuality)
-        if (written) {
-            stored
-        } else {
-            IosFolders.delete("$directory/${stored.fileName}")
-            IosFolders.delete("$directory/${stored.thumbFileName}")
-            null
-        }
+        if (written) return stored
+        IosFolders.delete("$directory/${stored.fileName}")
+        IosFolders.delete("$directory/${stored.thumbFileName}")
+        return null
     }
 
     // a name that leaves the folder is not one of ours — a delete by it would reach a file outside it, the database maybe

@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.ui.components
 
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.cinterop.autoreleasepool
 import platform.Foundation.NSFileManager
 import platform.Foundation.NSTemporaryDirectory
 import platform.Foundation.NSURL
@@ -29,7 +30,9 @@ import platform.darwin.NSObject
 import platform.darwin.dispatch_async
 import platform.darwin.DISPATCH_TIME_NOW
 import platform.darwin.dispatch_after
+import platform.darwin.dispatch_get_global_queue
 import platform.darwin.dispatch_get_main_queue
+import platform.posix.QOS_CLASS_USER_INITIATED
 import platform.darwin.dispatch_time
 import platform.Foundation.writeToFile
 
@@ -144,17 +147,23 @@ internal class CameraDelegate(private val video: Boolean, private val outPath: (
     override fun imagePickerController(picker: UIImagePickerController, didFinishPickingMediaWithInfo: Map<Any?, *>) {
         picker.dismissViewControllerAnimated(true, completion = null)
         val path = outPath()
-        val saved = when {
-            path == null -> false
-            video -> (didFinishPickingMediaWithInfo[UIImagePickerControllerMediaURL] as? NSURL)?.let { shot ->
-                NSFileManager.defaultManager.removeItemAtPath(path, null)
-                NSFileManager.defaultManager.moveItemAtURL(shot, NSURL.fileURLWithPath(path), null)
-            } == true
-            else -> (didFinishPickingMediaWithInfo[UIImagePickerControllerOriginalImage] as? UIImage)?.let { photo ->
-                UIImageJPEGRepresentation(photo, JPEG_QUALITY)?.writeToFile(path, atomically = true)
-            } == true
+        val photo = didFinishPickingMediaWithInfo[UIImagePickerControllerOriginalImage] as? UIImage
+        when {
+            path == null -> onDone(false)
+            video -> onDone(
+                (didFinishPickingMediaWithInfo[UIImagePickerControllerMediaURL] as? NSURL)?.let { shot ->
+                    NSFileManager.defaultManager.removeItemAtPath(path, null)
+                    NSFileManager.defaultManager.moveItemAtURL(shot, NSURL.fileURLWithPath(path), null)
+                } == true,
+            )
+            photo == null -> onDone(false)
+            // A full shot takes a moment to encode: not on the main thread, where the camera is sliding away meanwhile.
+            // The answer still comes on the main thread.
+            else -> dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED.toLong(), 0u)) {
+                val written = autoreleasepool { UIImageJPEGRepresentation(photo, JPEG_QUALITY)?.writeToFile(path, atomically = true) == true }
+                dispatch_async(dispatch_get_main_queue()) { onDone(written) }
+            }
         }
-        onDone(saved)
     }
 
     override fun imagePickerControllerDidCancel(picker: UIImagePickerController) {
