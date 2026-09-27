@@ -70,10 +70,11 @@ private const val TABULAR_FIGURES = "tnum"
  *
  * The roll is drawn into a viewport-sized canvas with its own scroll offset instead of one very
  * wide canvas: an hour at 30 dp per second is more pixels than a layout may measure. Three canvases
- * lie one over the other in the order they always had: the row lines and their labels, the cursor
- * in a layer of its own, the bars. The cursor reads [cursorMs] where it is drawn, so while the sound
- * plays only its thin layer is redrawn; the rest waits for a scroll or a tap. The row labels are
- * measured once.
+ * lie one over the other: the row lines and their labels, the bars, and on top the cursor in a
+ * layer of its own — where it crosses the note that sounds, the place that matters most, it is seen
+ * over the bar, not hidden under it (spec 3.10). It takes no touch, so taps reach the bars beneath.
+ * The cursor reads [cursorMs] where it is drawn, so while the sound plays only its thin layer is
+ * redrawn; the rest waits for a scroll or a tap. The row labels are measured once.
  */
 @Composable
 fun PianoRoll(
@@ -171,7 +172,7 @@ fun PianoRoll(
                 val rollSize = Modifier
                     .fillMaxWidth()
                     .height(math.contentHeight.dp)
-                // under the cursor: the row lines and the names of the notes
+                // under the bars: the row lines and the names of the notes
                 Canvas(rollSize) {
                     content.rollNotes.indices.forEach { row ->
                         val y = math.rowLineY(row).dp.toPx()
@@ -180,16 +181,7 @@ fun PianoRoll(
                         drawText(label, topLeft = Offset(0f, y - label.size.height / 2f))
                     }
                 }
-                if (cursorMs != null) {
-                    Canvas(rollSize.graphicsLayer()) {
-                        val gutter = LabelGutter.toPx()
-                        val x = gutter + (math.x(cursorMs()) - scrollDp).dp.toPx()
-                        if (x >= gutter && x <= size.width) {
-                            drawLine(colors.primary, Offset(x, 0f), Offset(x, size.height), CursorWidth.toPx())
-                        }
-                    }
-                }
-                // over the cursor: the bars, their contours and the note picked
+                // the bars, their contours and the note picked
                 Canvas(
                     modifier = rollSize.pointerInput(Unit) {
                         detectTapGestures { tap ->
@@ -232,6 +224,16 @@ fun PianoRoll(
                                     style = Stroke(SelectionStroke.toPx()),
                                 )
                             }
+                        }
+                    }
+                }
+                // over the bars, last: the cursor is seen on the very note it is playing
+                if (cursorMs != null) {
+                    Canvas(rollSize.graphicsLayer()) {
+                        val gutter = LabelGutter.toPx()
+                        val x = gutter + (math.x(cursorMs()) - scrollDp).dp.toPx()
+                        if (x >= gutter && x <= size.width) {
+                            drawLine(colors.primary, Offset(x, 0f), Offset(x, size.height), CursorWidth.toPx())
                         }
                     }
                 }
