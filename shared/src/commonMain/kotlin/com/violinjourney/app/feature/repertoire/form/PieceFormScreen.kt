@@ -227,7 +227,10 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
     // Every field owns its text: the state comes back a frame later, and a field fed from it
     // loses the cursor to fast typing. The view model only hears of changes.
     var title by rememberSaveable { mutableStateOf(draft.title) }
-    var composer by rememberSaveable { mutableStateOf(draft.composer) }
+    // The move into «Штрихи» clears the author in the draft (spec 3.22): the field starts again from the draft whenever
+    // the form turns into a stroke or out of one, or a move there and back would show an author that will not be saved.
+    // The title and the notes need no such key: nothing but the player's typing changes them.
+    var composer by rememberSaveable(state.stroke) { mutableStateOf(draft.composer) }
     var notes by rememberSaveable { mutableStateOf(draft.notes) }
 
     if (state.stroke) {
