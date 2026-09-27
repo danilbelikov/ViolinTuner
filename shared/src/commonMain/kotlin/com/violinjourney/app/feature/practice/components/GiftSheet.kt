@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -70,12 +71,19 @@ private const val GLOW_MID_SHARE = 0.27f
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GiftSheet(gift: Gift, onIntent: (PracticeIntent) -> Unit) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
         onDismissRequest = { onIntent(PracticeIntent.GiftAccepted(gift.hours)) },
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         GiftSheetContent(gift, onAccept = { onIntent(PracticeIntent.GiftAccepted(gift.hours)) })
+    }
+    // A gift swiped away hides before the table marks it seen, and the next one comes into that hidden sheet — M3 shows
+    // a sheet only when it enters the composition: up it comes. Only a sheet laid out already — its first entry is M3's,
+    // and a show() before the layout would put it in place without sliding up.
+    LaunchedEffect(gift.hours) {
+        if (sheetState.hasExpandedState && !sheetState.isVisible && sheetState.targetValue == SheetValue.Hidden) sheetState.show()
     }
 }
 
