@@ -80,4 +80,21 @@ class LocalizationTest {
         assertEquals(languages().keys, offered)
         assertEquals(offered, com.violinjourney.app.core.ui.format.FormatLanguage.ALL.map { it.tag }.toSet())
     }
+
+    /**
+     * Android takes a double quote without `\` for a mark that keeps spaces and drops it from the text; the copy the
+     * shared code and iOS read keeps it, so iOS would show quotes Android never does. An escape the copy cannot undo is
+     * refused by the copy itself (`syncComposeStrings` in shared/build.gradle.kts); a bare quote is Android's syntax too,
+     * but valid for the copy, so it is caught here. Quotes in the words are «ёлочки» or `\"`.
+     */
+    @Test
+    fun `no text holds a double quote Android would drop`() {
+        val bare = Regex("""(?<!\\)"""")
+        val problems = languages().flatMap { (tag, dir) ->
+            val texts = read(dir)
+            texts.strings.filterValues { bare.containsMatchIn(it) }.keys.map { "$tag: «$it»" } +
+                texts.arrays.filterValues { items -> items.any { bare.containsMatchIn(it) } }.keys.map { "$tag: array «$it»" }
+        }
+        assertTrue(problems.joinToString("\n", prefix = "${problems.size} texts with a bare double quote:\n"), problems.isEmpty())
+    }
 }
