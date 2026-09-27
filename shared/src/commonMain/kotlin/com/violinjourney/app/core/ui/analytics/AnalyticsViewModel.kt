@@ -21,7 +21,10 @@ open class AnalyticsViewModel(private val analytics: Analytics) : ViewModel() {
         screenKeyOf(route)?.let { analytics.track(ScreenOpen(it)) }
     }
 
-    /** Only an answer to a dialog that was actually shown — not the check made on every return. */
+    /**
+     * Only an answer to a dialog that was actually shown, once per dialog, or a tap the system no longer shows it
+     * for — not the check made on every return, and nothing when the microphone is allowed already.
+     */
     fun onMicPermissionAnswered(answer: MicPermissionAnswer) {
         analytics.track(MicPermission(answer))
     }

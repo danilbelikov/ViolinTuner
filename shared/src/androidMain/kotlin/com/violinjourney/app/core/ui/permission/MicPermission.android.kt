@@ -46,7 +46,9 @@ actual fun rememberMicPermissionRequester(
 
     var requestedAtMs by remember { mutableLongStateOf(0L) }
     var rationaleBeforeRequest by remember { mutableStateOf(false) }
+    val ask = remember { MicAsk() }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        ask.answered()
         currentOnResult(granted)
         val answeredWithoutDialog = SystemClock.elapsedRealtime() - requestedAtMs < DIALOG_NOT_SHOWN_MS
         val blocked = !granted && answeredWithoutDialog && !rationaleBeforeRequest && !shouldShowRationale()
@@ -60,9 +62,17 @@ actual fun rememberMicPermissionRequester(
         if (blocked && openSettingsWhenBlocked) context.openAppSettings()
     }
     return {
-        rationaleBeforeRequest = shouldShowRationale()
-        requestedAtMs = SystemClock.elapsedRealtime()
-        launcher.launch(MIC_PERMISSION)
+        when {
+            // nothing to ask, so no answer to count (spec 3.34) — as on iOS
+            context.isMicPermissionGranted() -> currentOnResult(true)
+            // the dialog is up: a second request would be answered at once with nothing, and read as «blocked»
+            !ask.mayAsk() -> Unit
+            else -> {
+                rationaleBeforeRequest = shouldShowRationale()
+                requestedAtMs = SystemClock.elapsedRealtime()
+                launcher.launch(MIC_PERMISSION)
+            }
+        }
     }
 }
 

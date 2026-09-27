@@ -27,18 +27,22 @@ actual fun rememberMicPermissionRequester(
     val scope = rememberCoroutineScope()
     val currentOnResult by rememberUpdatedState(onResult)
     val currentOnAnswer by rememberUpdatedState(onAnswer)
+    val ask = remember { MicAsk() }
     return remember(scope, openSettingsWhenBlocked) {
         {
             val permission = AVAudioApplication.sharedInstance.recordPermission
             when {
-                permission == AVAudioApplicationRecordPermissionUndetermined ->
+                // a second tap while the dialog is up would queue a second answer to it
+                permission == AVAudioApplicationRecordPermissionUndetermined -> if (ask.mayAsk()) {
                     AVAudioApplication.requestRecordPermissionWithCompletionHandler { granted ->
                         // the answer comes on a thread of the system's own
                         scope.launch(Dispatchers.Main) {
+                            ask.answered()
                             currentOnResult(granted)
                             currentOnAnswer(if (granted) MicPermissionAnswer.GRANTED else MicPermissionAnswer.DENIED)
                         }
                     }
+                }
                 permission == AVAudioApplicationRecordPermissionGranted -> currentOnResult(true)
                 else -> {
                     currentOnResult(false)
