@@ -156,7 +156,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     /** The rate the microphone last got on the route of now; 48 kHz, which it asks for, on a route not heard yet (spec 5.25). */
     val recordingRate = IosRecordingRate(intonationConfig.supportedSampleRatesHz, audioRoutes)
 
-    private val newPitchSource = pitchSources(fakeScenario, intonationConfig, logStats = IosBuild.isDevApp, onInputRate = recordingRate::heard)
+    private val newPitchSource = pitchSources(fakeScenario, intonationConfig, logStats = IosBuild.isDevApp, onInputRate = recordingRate::heard, analytics = analytics)
 
     val videoFiles = IosVideoFiles(repertoireConfig, io)
     val elapsed = ElapsedClock { (NSProcessInfo.processInfo.systemUptime * MS_PER_SECOND).toLong() }
@@ -214,10 +214,16 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
  * seconds after the screen went away shares nothing with the screen that came next. The fake scenario too is one per
  * screen, as on Android.
  */
-internal fun pitchSources(fakeScenario: FakeScenario?, config: IntonationConfig, logStats: Boolean, onInputRate: (Int) -> Unit = {}): () -> PitchSource {
+internal fun pitchSources(
+    fakeScenario: FakeScenario?,
+    config: IntonationConfig,
+    logStats: Boolean,
+    onInputRate: (Int) -> Unit = {},
+    analytics: Analytics = NoOpAnalytics(),
+): () -> PitchSource {
     if (fakeScenario != null) return { FakePitchSource(fakeScenario, config) }
     // MPM, as on Android (DetectorComparisonTest)
     val detectors = PitchDetectorFactory(::MpmDetector)
     val encoders = PcmEncoderFactory(::IosAacEncoder)
-    return { IosMicPitchSource(detectors, encoders, logStats, onInputRate) }
+    return { IosMicPitchSource(detectors, encoders, logStats, onInputRate, analytics) }
 }

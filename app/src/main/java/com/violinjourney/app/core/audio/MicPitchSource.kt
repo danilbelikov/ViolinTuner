@@ -9,6 +9,7 @@ import android.media.AudioRecord
 import android.media.MediaRecorder
 import android.util.Log
 import com.violinjourney.app.BuildConfig
+import com.violinjourney.app.core.analytics.Analytics
 import com.violinjourney.app.core.audio.dsp.PitchDetectorFactory
 import com.violinjourney.app.core.audio.recording.AudioTap
 import com.violinjourney.app.core.audio.recording.HopAudioTap
@@ -36,11 +37,12 @@ class MicPitchSource @Inject constructor(
     private val detectorFactory: PitchDetectorFactory,
     encoderFactory: PcmEncoderFactory,
     @IoDispatcher private val ioDispatcher: CoroutineDispatcher,
+    analytics: Analytics,
 ) : PitchSource {
 
     override val requiresMicPermission: Boolean = true
 
-    private val tap = HopAudioTap(encoderFactory, ioDispatcher)
+    private val tap = HopAudioTap(encoderFactory, ioDispatcher, analytics)
     override val audioTap: AudioTap get() = tap
 
     /** The last word of the input on its time: a frame it had captured, and when (spec 5.25). */

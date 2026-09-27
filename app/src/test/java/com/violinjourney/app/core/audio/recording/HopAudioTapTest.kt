@@ -1,5 +1,7 @@
 package com.violinjourney.app.core.audio.recording
 
+import com.violinjourney.app.core.analytics.ErrorGroup
+import com.violinjourney.app.core.analytics.FakeAnalytics
 import java.io.File
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
@@ -34,6 +36,8 @@ class HopAudioTapTest {
     private var encoder = FakeEncoder()
     private var created = mutableListOf<Pair<File, Int>>()
 
+    private val analytics = FakeAnalytics()
+
     private fun TestScope.tap(failing: Boolean = false) = HopAudioTap(
         encoderFactory = { file, rate ->
             if (failing) error("no codec")
@@ -41,6 +45,7 @@ class HopAudioTapTest {
             encoder
         },
         finishDispatcher = StandardTestDispatcher(testScheduler),
+        analytics = analytics,
     )
 
     @Test
@@ -80,11 +85,13 @@ class HopAudioTapTest {
     }
 
     @Test
-    fun `no encoder on this device means a failed take, not a crash`() = runTest {
+    fun `no encoder on this device means a failed take, not a crash — and it is told, once`() = runTest {
         val tap = tap(failing = true)
         tap.start(file)
         tap.onHop(hop, 512, 0, 48_000)
+        tap.onHop(hop, 512, 11, 48_000) // the take has failed: nothing is made or told again
         assertEquals(AudioTap.State.Failed, tap.state)
+        assertEquals(listOf(ErrorGroup.MEDIA), analytics.errors.map { it.first })
         assertFalse(tap.stop())
         assertEquals(AudioTap.State.Idle, tap.state)
     }

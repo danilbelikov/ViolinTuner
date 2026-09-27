@@ -1,5 +1,8 @@
 package com.violinjourney.app.core.audio.recording
 
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.ErrorGroup
+import com.violinjourney.app.core.analytics.NoOpAnalytics
 import kotlin.concurrent.Volatile
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.concurrent.PlatformLock
@@ -16,6 +19,8 @@ import kotlinx.coroutines.withContext
 class HopAudioTap(
     private val encoderFactory: PcmEncoderFactory,
     private val finishDispatcher: CoroutineDispatcher,
+    /** Where an encoder that could not be made is told (spec 3.34): the take goes on without sound, and nobody would know why. */
+    private val analytics: Analytics = NoOpAnalytics(),
 ) : AudioTap {
     private val lock = PlatformLock()
     private var pendingFile: PlatformFile? = null
@@ -45,26 +50,34 @@ class HopAudioTap(
     /** [hopStartTMs] is the frame-clock time of the first sample of [hop]. */
     fun onHop(hop: ShortArray, count: Int, hopStartTMs: Long, sampleRateHz: Int) {
         if (state == AudioTap.State.Idle || state == AudioTap.State.Failed) return // the common case, no lock
+        var notMade: Exception? = null
         lock.withLock {
             if (state == AudioTap.State.Starting) {
                 val file = pendingFile ?: return
                 pendingFile = null
-                val created = runCatching { encoderFactory.create(file, sampleRateHz) }.getOrNull()
+                val created = try {
+                    encoderFactory.create(file, sampleRateHz)
+                } catch (e: Exception) {
+                    notMade = e
+                    null
+                }
                 if (created == null) {
                     state = AudioTap.State.Failed
-                    return
+                } else {
+                    encoder = created
+                    this.sampleRateHz = sampleRateHz
+                    state = AudioTap.State.Running(hopStartTMs)
                 }
-                encoder = created
-                this.sampleRateHz = sampleRateHz
-                state = AudioTap.State.Running(hopStartTMs)
             }
-            val running = encoder ?: return
-            if (state is AudioTap.State.Running && !running.offer(hop, count)) {
+            val running = encoder
+            if (running != null && state is AudioTap.State.Running && !running.offer(hop, count)) {
                 // Fell behind: the frames matter more than the sound. Keep what is encoded out
                 // of the session rather than a take with a hole in it.
                 state = AudioTap.State.Failed
             }
         }
+        // told once per take, and outside the lock the stream reads under
+        notMade?.let { analytics.error(ErrorGroup.MEDIA, "the encoder of a take could not be made, the take has no sound", it) }
     }
 
     /** The stream is going away (Live left, microphone failed): close the file here and now. */
