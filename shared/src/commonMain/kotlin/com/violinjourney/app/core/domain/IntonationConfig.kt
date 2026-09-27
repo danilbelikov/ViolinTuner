@@ -40,6 +40,11 @@ data class IntonationConfig(
 
     // Session recording and analysis (spec 3.9, 5.5)
     val sessionBucketMs: Long = 50,
+    /**
+     * The shortest note of the analysis. Stored recordings are re-derived with the value of now (spec 5.5), while their
+     * score and shares are stored as counted: change it only together with a recount of the stored summaries, or a
+     * recording's score would disagree with its own roll and «По струнам».
+     */
     val minSegmentMs: Long = 200,
     val minSessionMs: Long = 2_000,
     val maxSessionMs: Long = 3_600_000,
