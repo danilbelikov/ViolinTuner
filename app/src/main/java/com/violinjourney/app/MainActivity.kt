@@ -63,7 +63,9 @@ class MainActivity : ComponentActivity() {
             statusBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
             navigationBarStyle = SystemBarStyle.dark(Color.TRANSPARENT),
         )
-        // the language chosen for the app alone reaches the activity's resources, not the application's
+        // The language chosen for the app in the system settings (Android 13+) is in the configuration of the whole process:
+        // the application's resources and Locale.getDefault() speak it as well (seen on the emulator, Android 16). This only
+        // makes the formats follow the words of this activity from its first frame.
         Formats.use(resources.configuration.locales[0])
         if (savedInstanceState == null) openBackup.value = intent?.getStringExtra(EXTRA_OPEN_BACKUP)
         setContent {
