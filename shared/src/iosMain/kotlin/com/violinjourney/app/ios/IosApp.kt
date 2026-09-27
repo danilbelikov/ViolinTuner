@@ -123,7 +123,12 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
                             if (tab != null) navController.navigateToTopLevel(tab) else navController.navigate(openRoute)
                         }
                     }
-                    PracticePromptHost(prompt = practicePrompt, stepMinutes = graph.practiceConfig.editStepMinutes, onIntent = start::onPromptIntent)
+                    PracticePromptHost(
+                        prompt = practicePrompt,
+                        stepMinutes = graph.practiceConfig.editStepMinutes,
+                        onIntent = start::onPromptIntent,
+                        effects = start.promptEffects,
+                    )
                 }
                 ToastHost(message, onGone = { message = null })
             }

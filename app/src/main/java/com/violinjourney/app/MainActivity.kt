@@ -158,6 +158,7 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
             prompt = practicePrompt,
             stepMinutes = PracticeConfig().editStepMinutes,
             onIntent = startViewModel::onPromptIntent,
+            effects = startViewModel.promptEffects,
         )
     }
 }

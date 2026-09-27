@@ -34,3 +34,9 @@ sealed interface PracticePromptIntent {
     /** The sheet swiped away: only hidden, the practice stays — the question comes back the next time the app opens. */
     data object SummaryHidden : PracticePromptIntent
 }
+
+/** What the prompt says without asking (spec 3.12). */
+sealed interface PracticePromptEffect {
+    /** «Слишком коротко»: a practice under a minute — ended at its last sound, or by itself past the limit — is not kept. */
+    data object ShowTooShort : PracticePromptEffect
+}

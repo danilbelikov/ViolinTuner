@@ -26,12 +26,16 @@ import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.settings.SettingsRepository
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.practice.PracticePrompt
+import com.violinjourney.app.feature.practice.PracticePromptEffect
 import com.violinjourney.app.feature.practice.PracticePromptIntent
 import com.violinjourney.app.feature.practice.PracticeReducer
+import com.violinjourney.app.feature.practice.summarySheetOf
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -40,6 +44,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
@@ -102,10 +107,16 @@ open class AppStartViewModel(
     private val prompt = MutableStateFlow<PracticePrompt?>(null)
     val practicePrompt: StateFlow<PracticePrompt?> = prompt.asStateFlow()
 
+    private val promptEffectChannel = Channel<PracticePromptEffect>(Channel.BUFFERED)
+
+    /** What the prompt tells without a question: «Слишком коротко» (spec 3.12). */
+    val promptEffects: Flow<PracticePromptEffect> = promptEffectChannel.receiveAsFlow()
+
     /**
-     * An answer to the prompt that ends the practice, still being written: a second one before the prompt has gone
-     * («Закончить сейчас» tapped twice, «Сохранить» and then «Не сохранять») is dropped. The finisher takes answers
-     * one at a time as well; this only keeps the prompt from answering twice.
+     * An answer to the prompt still being written — one that ends the practice, «Продолжаю заниматься», «Изменить
+     * время»: a second one before the prompt has changed («Закончить сейчас» tapped twice, «Сохранить» and then «Не
+     * сохранять») is dropped. The finisher takes answers one at a time as well; this only keeps the prompt from
+     * answering twice.
      */
     private var answering: Job? = null
 
@@ -115,20 +126,32 @@ open class AppStartViewModel(
     }
 
     /**
-     * Every time the app comes to the front. A prompt already on screen stays as it is: a
-     * rotation must not turn the summary sheet back into the dialog it came from.
+     * Every time the app comes to the front. A summary sheet already on screen stays as it is: a rotation must not turn
+     * it back into the dialog it came from. The dialog follows the clock: found again later it tells the new time, and
+     * past the limit it gives way to the sheet of the practice that has ended by itself (spec 3.12). Nothing is looked
+     * at while an answer to the prompt is being written.
      */
     fun onAppOpened() {
-        if (prompt.value != null) return
+        if (answering?.isActive == true) return
+        val shown = prompt.value
+        if (shown is PracticePrompt.Summary) return
         viewModelScope.launch {
-            val running = runningPractice.running.first() ?: return@launch
-            prompt.value = when (val check = ForgottenPractice.check(running, clock.millis(), config)) {
-                PracticeCheck.Running -> null
-                is PracticeCheck.Forgotten -> PracticePrompt.Forgotten(check.elapsedMs, check.lastSoundEpochMs)
+            val running = runningPractice.running.first()
+            val now = clock.millis()
+            val check = running?.let { ForgottenPractice.check(it, now, config) }
+            val next: PracticePrompt? = when {
+                running == null || check == null -> null
                 // Ended by itself; the store still holds it until the sheet is answered, so a
                 // process death in between loses nothing.
-                is PracticeCheck.Expired -> PracticePrompt.Summary(summaryOf(running, check.endEpochMs - running.startedAtEpochMs))
+                check is PracticeCheck.Expired -> expiredPrompt(running, check.endEpochMs)
+                // The dialog on screen keeps the time on its button — «Закончить в 18:42» ends at what it says —
+                // and tells how long the practice has run by now.
+                shown is PracticePrompt.Forgotten -> shown.copy(elapsedMs = running.elapsedMs(now))
+                check is PracticeCheck.Forgotten -> PracticePrompt.Forgotten(check.elapsedMs, check.lastSoundEpochMs)
+                else -> null
             }
+            // an answer given meanwhile has the last word
+            prompt.update { if (it == shown) next else it }
         }
     }
 
@@ -159,14 +182,21 @@ open class AppStartViewModel(
                 (prompt.value as? PracticePrompt.Forgotten)?.lastSoundEpochMs ?: clock.millis(),
             )
             PracticePromptIntent.EndNow -> endForgotten(clock.millis())
-            PracticePromptIntent.Continue -> viewModelScope.launch {
-                runningPractice.markSound(clock.millis())
-                prompt.value = null
+            PracticePromptIntent.Continue -> answer {
+                val running = runningPractice.running.first()
+                val now = clock.millis()
+                prompt.value = if (running != null && !ForgottenPractice.runsAt(running.startedAtEpochMs, now, config)) {
+                    // the dialog stayed on screen past the limit: the practice has ended by itself, no sign of life
+                    // brings it back — its sheet takes the dialog's place (spec 3.12)
+                    expiredPrompt(running, ForgottenPractice.expiredEndOf(running, config))
+                } else {
+                    runningPractice.markSound(now)
+                    null
+                }
             }
-            PracticePromptIntent.EditTime -> viewModelScope.launch {
-                val running = runningPractice.running.first() ?: return@launch prompt.update { null }
-                val elapsed = running.elapsedMs(clock.millis()).coerceAtMost(config.maxPracticeMs)
-                prompt.value = PracticePrompt.Summary(summaryOf(running, elapsed))
+            PracticePromptIntent.EditTime -> answer {
+                val running = runningPractice.running.first() ?: return@answer prompt.update { null }
+                prompt.value = sheetOrDrop(running, ForgottenPractice.lengthAt(running, clock.millis(), config))
             }
             is PracticePromptIntent.SummaryStepped -> prompt.update { current ->
                 (current as? PracticePrompt.Summary)?.let { PracticePrompt.Summary(PracticeReducer.step(it.sheet, intent.steps, config)) }
@@ -185,21 +215,34 @@ open class AppStartViewModel(
         }
     }
 
-    /** The summary sheet with «Что играли» (spec 3.28): the blocks of the practice under the names of their elements. */
-    private suspend fun summaryOf(running: RunningPractice, durationMs: Long) = PracticeReducer.summarySheet(
-        startedAtEpochMs = running.startedAtEpochMs,
-        actualMs = durationMs,
-        config = config,
-        blocks = blocks.blocks.first(),
-        titles = repertoire.pieces.first().associate { it.id to it.title },
-    )
+    /** The sheet of a practice that has ended by itself at [endEpochMs] (spec 3.12); null when it was too short to keep. */
+    private suspend fun expiredPrompt(running: RunningPractice, endEpochMs: Long): PracticePrompt.Summary? =
+        sheetOrDrop(running, endEpochMs - running.startedAtEpochMs)
 
+    /**
+     * The summary sheet of [running] at [lengthMs], with «Что играли» of this practice (spec 3.28). One under a minute
+     * is not kept, as on «Занятия» (spec 3.12): it goes, and the toast says so — null then.
+     */
+    private suspend fun sheetOrDrop(running: RunningPractice, lengthMs: Long): PracticePrompt.Summary? {
+        if (lengthMs < config.minPracticeMs) {
+            dropTooShort()
+            return null
+        }
+        return PracticePrompt.Summary(summarySheetOf(running, lengthMs, config, blocks, repertoire))
+    }
+
+    private suspend fun dropTooShort() {
+        finisher.discard()
+        promptEffectChannel.send(PracticePromptEffect.ShowTooShort)
+    }
+
+    /** «Закончить в 18:42», «Закончить сейчас»: past the limit the practice ends at its last sound, not twelve hours in (spec 3.12). */
     private fun endForgotten(endEpochMs: Long) {
         answer {
             val running = runningPractice.running.first()
             if (running != null) {
-                val duration = (endEpochMs - running.startedAtEpochMs).coerceIn(0L, config.maxPracticeMs)
-                if (duration >= config.minPracticeMs) finisher.save(running.startedAtEpochMs, duration) else finisher.discard()
+                val length = ForgottenPractice.lengthAt(running, endEpochMs, config)
+                if (length >= config.minPracticeMs) finisher.save(running.startedAtEpochMs, length) else dropTooShort()
             }
             prompt.value = null
         }

@@ -16,6 +16,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -23,11 +24,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
+import com.violinjourney.app.core.ui.components.LocalMessages
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.feature.practice.PracticeIntent
 import com.violinjourney.app.feature.practice.PracticePrompt
+import com.violinjourney.app.feature.practice.PracticePromptEffect
 import com.violinjourney.app.feature.practice.PracticePromptIntent
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.practice_continue
@@ -37,7 +40,11 @@ import com.violinjourney.app.shared.resources.practice_end_now
 import com.violinjourney.app.shared.resources.practice_forgotten_sound
 import com.violinjourney.app.shared.resources.practice_forgotten_text
 import com.violinjourney.app.shared.resources.practice_forgotten_title
+import com.violinjourney.app.shared.resources.practice_too_short
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.datetime.TimeZone
+import org.jetbrains.compose.resources.getString
 import org.jetbrains.compose.resources.stringResource
 
 private val DialogCorner = 28.dp
@@ -50,14 +57,26 @@ private val MainButtonHeight = 48.dp
 private val MainButtonCorner = 24.dp
 private val TextButtonHeight = 44.dp
 
-/** Shows the forgotten-practice dialog or the summary sheet, whichever the app asks (spec 3.12). */
+/**
+ * Shows the forgotten-practice dialog or the summary sheet, whichever the app asks (spec 3.12), and says what the
+ * prompt tells without asking — [effects], as toasts of [LocalMessages].
+ */
 @Composable
 fun PracticePromptHost(
     prompt: PracticePrompt?,
     stepMinutes: Int,
     onIntent: (PracticePromptIntent) -> Unit,
     zone: TimeZone = TimeZone.currentSystemDefault(),
+    effects: Flow<PracticePromptEffect> = emptyFlow(),
 ) {
+    val messages = LocalMessages.current
+    LaunchedEffect(effects) {
+        effects.collect { effect ->
+            when (effect) {
+                PracticePromptEffect.ShowTooShort -> messages.show(getString(Res.string.practice_too_short))
+            }
+        }
+    }
     when (prompt) {
         is PracticePrompt.Forgotten -> ForgottenPracticeDialog(prompt, onIntent, zone)
         is PracticePrompt.Summary -> SummarySheet(
