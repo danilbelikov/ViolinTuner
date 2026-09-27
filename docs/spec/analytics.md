@@ -36,8 +36,8 @@
 **Занятия и записи** — сделанным ли пользуются
 
 - `practice_finished` {`minutes`, `blocks`, `bars`} — по кнопке «Закончить занятие».
-- `take_recorded` {`kind`: audio / video, `seconds`, `backing`: да / нет}, `take_deleted` {`kind`}.
-- `piece_added` {`section`: pieces / scales / etudes / strokes / custom} — раздел, не название.
+- `take_recorded` {`kind`: audio / video, `seconds`, `backing`: да / нет}, `take_deleted` {`kind`: audio / video, `count` — сколько такого вида ушло разом: пользуются ли выбором нескольких (3.18)} — по событию на каждый вид удалённого; считаются строки, которые действительно были, повторное удаление ничего не шлёт (27.09.2026).
+- `piece_added` {`section`: pieces / scales / etudes / strokes / custom — раздел, не название; `own_section`: да / нет — свой раздел; `scale`: да / нет — гамма, ноты которой рисует приложение (3.22)}.
 
 **Игровой слой** — доходят ли до него
 

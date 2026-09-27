@@ -10,6 +10,7 @@ import com.violinjourney.app.core.domain.journey.NoteCount
 import com.violinjourney.app.core.domain.journey.NoteCounter
 import com.violinjourney.app.core.domain.journey.PracticeNotesStore
 import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.MicUnavailable
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.analytics.TakeRecorded
@@ -383,7 +384,11 @@ class TakePipeline(
                 if (cause !is MicUnavailableException) return@retryWhen false
                 // Counted once per failure, not once per retry: while the input stays dead the
                 // retry runs every few seconds, and the event is about losing it, not about waiting.
-                if (!awaitingSignal) analytics.track(MicUnavailable(cause.reason))
+                // Both halves of spec 3.34: the event for the picture of why, the error of its group for the console's count.
+                if (!awaitingSignal) {
+                    analytics.track(MicUnavailable(cause.reason))
+                    analytics.error(ErrorGroup.MIC, "the microphone went away (${cause.reason.key})", cause)
+                }
                 awaitingSignal = true
                 emit(Output(unavailable))
                 delay(config.micRetryDelayMs)

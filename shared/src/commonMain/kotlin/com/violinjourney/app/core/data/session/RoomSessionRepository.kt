@@ -71,11 +71,13 @@ class RoomSessionRepository(
         dao.rename(id, title?.trim()?.takeIf { it.isNotEmpty() })
 
     // Row first: a file without a session is cleaned up later, a session without its file
-    // would show a player that cannot play.
+    // would show a player that cannot play. Counted by what really went, the sound and the video apart (spec 3.34):
+    // an id that was gone already sends nothing.
     override suspend fun delete(ids: Collection<Long>) {
         if (ids.isEmpty()) return
-        dao.delete(ids).forEach(audioFiles::delete)
-        analytics.track(TakeDeleted(ids.size))
+        val gone = dao.delete(ids)
+        gone.forEach { files -> files.audioPath?.let(audioFiles::delete) }
+        gone.groupBy { it.videoPath != null }.forEach { (video, rows) -> analytics.track(TakeDeleted(video, rows.size)) }
     }
 
     override suspend fun deleteOrphanAudio() = audioFiles.deleteOrphans(

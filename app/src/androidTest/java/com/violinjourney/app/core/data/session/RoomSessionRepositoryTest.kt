@@ -3,6 +3,9 @@ package com.violinjourney.app.core.data.session
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.analytics.Analytics
+import com.violinjourney.app.core.analytics.AnalyticsEvent
+import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.data.AppDatabase
 import com.violinjourney.app.core.domain.IntonationConfig
@@ -45,16 +48,28 @@ class RoomSessionRepositoryTest {
         }
     }
 
+    /** What would have been sent, as the service sees it: `take_deleted {kind=audio, count=1}`. */
+    private class RecordingAnalytics : Analytics {
+        val events = mutableListOf<AnalyticsEvent>()
+        fun sent() = events.map { "${it.name} ${it.params}" }
+        override fun track(event: AnalyticsEvent) {
+            events += event
+        }
+        override fun error(group: ErrorGroup, message: String, cause: Throwable?) = Unit
+    }
+
+    private val analytics = RecordingAnalytics()
+
     @Before
     fun setUp() {
         database = Room.inMemoryDatabaseBuilder(ApplicationProvider.getApplicationContext(), AppDatabase::class.java).build()
-        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig(), audioFiles, ZonedSystemWallClock(TimeZone.UTC))
+        repository = RoomSessionRepository(database.sessionDao(), IntonationConfig(), audioFiles, ZonedSystemWallClock(TimeZone.UTC), analytics)
     }
 
     @After
     fun tearDown() = database.close()
 
-    private fun newSession(startedAt: Long, tolerance: Double = 8.0, cents: Double = 10.0, audio: String? = null): NewSession {
+    private fun newSession(startedAt: Long, tolerance: Double = 8.0, cents: Double = 10.0, audio: String? = null, video: String? = null): NewSession {
         val config = IntonationConfig(toleranceCents = tolerance)
         val samples = List(20) { SessionSample(69, cents) } + listOf(null) + List(20) { SessionSample(71, -2.0) }
         val analysis = SessionAnalyzer.analyze(samples, config)
@@ -66,6 +81,7 @@ class RoomSessionRepositoryTest {
             metrics = analysis.metrics!!,
             previewZones = SessionAnalyzer.previewZones(analysis.segments, config),
             audioPath = audio,
+            videoPath = video,
         )
     }
 
@@ -177,6 +193,20 @@ class RoomSessionRepositoryTest {
         assertNull(repository.summary(gone)!!.audioPath)
         // the file may come back with another copy: the row still names it
         assertEquals(setOf("here.m4a", "gone.m4a"), database.sessionDao().audioPaths().toSet())
+    }
+
+    @Test
+    fun aDeletionTellsTheStatisticsWhatWentSoundAndVideoApartAndAnIdGoneAlreadyTellsNothing() = runBlocking {
+        val sound = repository.save(newSession(startedAt = 1_000, audio = "one.m4a"))
+        val silent = repository.save(newSession(startedAt = 2_000))
+        val video = repository.save(newSession(startedAt = 3_000, audio = "shot.mp4", video = "shot.mp4"))
+
+        repository.delete(listOf(sound, silent, video, 99L))
+        assertEquals(listOf("take_deleted {kind=audio, count=2}", "take_deleted {kind=video, count=1}"), analytics.sent().sorted())
+        assertEquals(setOf("one.m4a", "shot.mp4"), audioFiles.deleted.toSet())
+
+        repository.delete(listOf(sound, video))
+        assertEquals("nothing was there to delete", 2, analytics.events.size)
     }
 
     @Test

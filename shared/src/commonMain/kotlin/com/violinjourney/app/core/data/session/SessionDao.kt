@@ -23,8 +23,8 @@ abstract class SessionDao {
     @Query("UPDATE sessions SET title = :title WHERE id = :id")
     abstract suspend fun rename(id: Long, title: String?)
 
-    @Query("SELECT audioPath FROM sessions WHERE id IN (:ids) AND audioPath IS NOT NULL")
-    protected abstract suspend fun audioPathsOf(ids: List<Long>): List<String>
+    @Query("SELECT audioPath, videoPath FROM sessions WHERE id IN (:ids)")
+    protected abstract suspend fun filesOf(ids: List<Long>): List<SessionFiles>
 
     /** Samples go with the session through the cascade. */
     @Query("DELETE FROM sessions WHERE id IN (:ids)")
@@ -35,15 +35,16 @@ abstract class SessionDao {
     protected abstract suspend fun deleteOwnSound(ids: List<Long>)
 
     /**
-     * All the rows of these sessions or none (spec 5.12); answers with the audio files they
-     * pointed at, for the caller to remove afterwards. Chunked: SQLite limits the variables of a query.
+     * All the rows of these sessions or none (spec 5.12); answers with the files of the rows that really were there, one
+     * entry a row, for the caller to remove afterwards — an id already gone answers nothing. Chunked: SQLite limits the
+     * variables of a query.
      */
     @Transaction
-    open suspend fun delete(ids: Collection<Long>): List<String> = ids.distinct().chunked(DELETE_CHUNK).flatMap { chunk ->
-        val paths = audioPathsOf(chunk)
+    open suspend fun delete(ids: Collection<Long>): List<SessionFiles> = ids.distinct().chunked(DELETE_CHUNK).flatMap { chunk ->
+        val files = filesOf(chunk)
         deleteSessions(chunk)
         deleteOwnSound(chunk)
-        paths
+        files
     }
 
     @Insert

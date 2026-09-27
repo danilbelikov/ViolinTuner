@@ -1,5 +1,7 @@
 package com.violinjourney.app.feature.live
 
+import com.violinjourney.app.core.analytics.ErrorGroup
+import com.violinjourney.app.core.analytics.FakeAnalytics
 import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
 import com.violinjourney.app.core.audio.MicUnavailableException
@@ -84,6 +86,7 @@ class LiveViewModelTest {
     private val practiceNotes = FakePracticeNotesStore()
     private val journey = FakeJourneyRepository()
     private val venueStore = FakeVenueStore()
+    private val analytics = FakeAnalytics()
 
     private class FakeAudioFiles : SessionAudioFiles {
         val created = mutableListOf<File>()
@@ -128,7 +131,7 @@ class LiveViewModelTest {
         val clock = FixedWallClock(startedAt, TimeZone.UTC)
         val takes = TakePipeline(
             source, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
-            practiceNotes = practiceNotes, journeyConfig = JourneyConfig(notesFlushMs = 1_000),
+            practiceNotes = practiceNotes, journeyConfig = JourneyConfig(notesFlushMs = 1_000), analytics = analytics,
         )
         return LiveViewModel(
             takes, SettingsConfigSource(base, settings), practice, clock, Venues(venueStore, journey), finishAsk = finishAsk,
@@ -788,6 +791,9 @@ class LiveViewModelTest {
         assertEquals(3, attempts)
         assertTrue(viewModel.state.value.signal is LiveSignal.Sounding)
         assertTrue(viewModel.state.value.canRecord)
+        // one failure, however many reopenings it took: one event and one error of the microphone's group (spec 3.34)
+        assertEquals(listOf("mic_unavailable {reason=digital_silence}"), analytics.sent().filter { it.startsWith("mic_unavailable") })
+        assertEquals(listOf(ErrorGroup.MIC), analytics.errors.map { it.first })
     }
 
     private class CountingSource(

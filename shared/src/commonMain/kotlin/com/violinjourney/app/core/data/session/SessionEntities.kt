@@ -29,6 +29,9 @@ data class SessionEntity(
     val videoPath: String? = null,
 )
 
+/** The files a session row points at: what is left to remove once the row is gone. */
+data class SessionFiles(val audioPath: String?, val videoPath: String?)
+
 /** Samples of a session as a [com.violinjourney.app.core.domain.session.SampleCodec] blob. */
 @Entity(
     tableName = "session_samples",

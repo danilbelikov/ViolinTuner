@@ -61,10 +61,15 @@ class PracticeFinished(minutes: Int, blocks: Int, bars: Int) :
 
 /** A take that was kept (spec 3.9, 3.19, 3.32) — its length and kind, never its piece. */
 class TakeRecorded(seconds: Int, video: Boolean, backing: Boolean) :
-    AnalyticsEvent("take_recorded", mapOf("seconds" to seconds, "kind" to if (video) "video" else "audio", "backing" to backing))
+    AnalyticsEvent("take_recorded", mapOf("seconds" to seconds, "kind" to kindOf(video), "backing" to backing))
 
-/** Takes thrown away, one or a handful at once (spec 3.18). */
-class TakeDeleted(count: Int) : AnalyticsEvent("take_deleted", mapOf("count" to count))
+/**
+ * Recordings thrown away, one or a handful at once (spec 3.18, 3.34): one event for each kind of a deletion — the sound
+ * and the heavy video apart — with how many of that kind really went.
+ */
+class TakeDeleted(video: Boolean, count: Int) : AnalyticsEvent("take_deleted", mapOf("kind" to kindOf(video), "count" to count))
+
+private fun kindOf(video: Boolean) = if (video) "video" else "audio"
 
 /**
  * Which parts of the repertoire get used (spec 3.22). The section, never the title: a built-in one by its key
