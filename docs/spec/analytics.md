@@ -75,12 +75,12 @@
 ### Что видно человеку снаружи
 
 - У приложения появляется разрешение **INTERNET** (и `ACCESS_NETWORK_STATE`): его объявляет в своём манифесте сам SDK, в карточке магазина это видно. Поэтому текст знакомства и текст шага «Микрофон» переписаны (3.33) — прежние обещали, что интернет не нужен.
-- Рекламного идентификатора у приложения нет: разрешение `AD_ID`, которое приносит один из модулей SDK, вырезается (5.27). Без него собранное не привязано к человеку между приложениями — это и делает статистику обезличенной не на словах.
+- Рекламного идентификатора у приложения нет — ни разрешения, ни сбора в SDK: разрешение `AD_ID`, которое приносит один из модулей SDK, вырезается, а сбор рекламных идентификаторов выключен при активации (5.27, 28.09.2026). Без него собранное не привязано к человеку между приложениями — это и делает статистику обезличенной не на словах.
 - Перед публикацией — политика конфиденциальности (текст на странице по ссылке из «Настроек») и раздел Data Safety в консоли магазина.
 
 ## 5.27 Устройство
 
-**Сервис.** AppMetrica (Яндекс): бесплатна на обычных объёмах, работает без Google Play Services — значит, годится и для RuStore. Артефакт `io.appmetrica.analytics:analytics` (проверялась версия 8.5.1, Maven Central), minSdk 21. Внешних зависимостей у неё две: `kotlin-stdlib` и `com.android.installreferrer:installreferrer` (из `google()`); OkHttp она не приносит. Вес `classes.jar` — 1,5 МБ до R8. Добавление в `libs.versions.toml` — с явного согласия владельца, как всякая зависимость.
+**Сервис.** AppMetrica (Яндекс): бесплатна на обычных объёмах, работает без Google Play Services — значит, годится и для RuStore. Артефакт `io.appmetrica.analytics:analytics` (проверялась версия 8.5.1, Maven Central), minSdk 21. Кроме `kotlin-stdlib` и `com.android.installreferrer:installreferrer` (из `google()`), POM тянет свои модули SDK, а с ними OkHttp 4.12 (через `analytics-network-okhttp`) и Play Services: `play-services-ads-identifier` (модуль `analytics-identifiers`) и `play-services-appset` (модуль `analytics-appsetid` — App Set ID, идентификатор разработчика на устройстве; в Data Safety он входит в «ID устройства»), а с ними `play-services-base`, `-basement`, `-tasks` (проверено по графу `releaseRuntimeClasspath` сборки 8.5.1, 28.09.2026; до этой даты здесь стояло «внешних зависимостей две, OkHttp она не приносит» — неверно). Вес `classes.jar` — 1,5 МБ до R8. На iOS подключены только `AppMetricaCore` и `AppMetricaCrashes`, без `AppMetricaAdSupport`: IDFA там не собирается. Добавление в `libs.versions.toml` — с явного согласия владельца, как всякая зависимость.
 
 **Ключ.** Живёт в `local.properties` (в `.gitignore`), в сборку попадает через `BuildConfig.APPMETRICA_KEY`. В git ключа нет. **Если ключа нет** (чужая машина, CI, свежий клон) — собирается `NoOpAnalytics` и приложение работает как раньше; сборка не падает.
 
@@ -99,7 +99,7 @@
 **Манифест.** SDK вливает в приложение больше, чем пишет в документации (проверено распаковкой артефакта, в доках этого нет):
 
 - `INTERNET` и `ACCESS_NETWORK_STATE` — нужны, остаются;
-- `com.google.android.gms.permission.AD_ID` (из модуля `analytics-identifiers`) — **убирается** через `tools:node="remove"`;
+- `com.google.android.gms.permission.AD_ID` (из модуля `analytics-identifiers`) — **убирается** через `tools:node="remove"`; сверх того сбор рекламных идентификаторов (GAID, HOAID, рекламный ID Яндекса) выключен в самом SDK — `withAdvIdentifiersTracking(false)` при активации: на старом Android или со старыми Play Services одного вырезанного разрешения может не хватить (28.09.2026);
 - экспортированный `PreloadInfoContentProvider` с authority `${applicationId}.appmetrica.preloadinfo.retail` — отслеживание преустановок, приложению из магазина не нужен; убирается так же, **но это их внутренний компонент — проверить сборкой и запуском, что SDK жив**;
 - `<queries>` на реферер RuStore — остаётся, безвреден.
 

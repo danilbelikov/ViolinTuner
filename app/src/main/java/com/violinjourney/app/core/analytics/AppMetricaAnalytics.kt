@@ -39,6 +39,9 @@ class AppMetricaAnalytics @Inject constructor(
             application,
             AppMetricaConfig.newConfigBuilder(BuildConfig.APPMETRICA_KEY)
                 .withDataSendingEnabled(false)
+                // No advertising id (spec 3.34), whatever an old Android or old Play Services make of
+                // the AD_ID permission the manifest removes: the statistics stay unlinkable across apps.
+                .withAdvIdentifiersTracking(false)
                 // Only in the build that exists to be watched (`-PanalyticsDebug=true`): the
                 // library then says what it took and what it sent, in `adb logcat -s AppMetrica`.
                 .apply { if (BuildConfig.ANALYTICS_IN_DEBUG) withLogs() }
