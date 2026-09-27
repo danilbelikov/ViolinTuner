@@ -98,6 +98,10 @@ private val ChipHeight = 32.dp
 private val ChipCorner = 8.dp
 private const val TABULAR_FIGURES = "tnum"
 
+/** Kinds of rows of the list of records: a composition is reused only for a row of its own kind. */
+private const val DAY_HEADER = "dayHeader"
+private const val RECORD_CARD = "recordCard"
+
 /** The «Записи» tab (spec 3.11, 3.21; handoff 22a2). Stateless. */
 @Composable
 fun HistoryScreen(
@@ -158,8 +162,9 @@ fun HistoryScreen(
                     }
                     state.groups.forEach { group ->
                         // Part of the list, not of its controls: stays as it is while picking, and is not picked itself (handoff 22d).
-                        item(key = "day-" + group.date) { DayHeader(group, Modifier.animateItem()) }
-                        items(group.cards, key = { it.id }) { card ->
+                        // two kinds of rows, told apart: a scrolled-off card is reused only for a card, a header for a header
+                        item(key = "day-" + group.date, contentType = DAY_HEADER) { DayHeader(group, Modifier.animateItem()) }
+                        items(group.cards, key = { it.id }, contentType = { RECORD_CARD }) { card ->
                             SessionCard(
                                 card = card,
                                 zone = zone,
