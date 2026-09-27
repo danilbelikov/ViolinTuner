@@ -31,7 +31,7 @@ import com.violinjourney.app.core.domain.journey.FakeJourneyRepository
 import com.violinjourney.app.core.domain.journey.TaktEarning
 import com.violinjourney.app.core.domain.venue.FollowTheRoad
 import com.violinjourney.app.core.domain.venue.Venues
-import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.MutableWallClock
 import com.violinjourney.app.feature.journey.JourneyMotion
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
@@ -72,14 +72,9 @@ class PracticeViewModelTest {
     private val avatarFiles = FakeAvatarFiles()
     private val zone: TimeZone = TimeZone.of("Europe/Moscow")
 
-    /** A clock the test moves by hand; the ticker's delays run on the test scheduler. */
-    private class TestClock(var nowMs: Long, override val zone: TimeZone) : WallClock {
-        override fun instant(): Instant = Instant.fromEpochMilliseconds(nowMs)
-    }
-
     // 2026-09-17 18:00 Moscow
     private val journey = FakeJourneyRepository()
-    private val clock = TestClock(Instant.parse("2026-09-17T15:00:00Z").toEpochMilliseconds(), zone)
+    private val clock = MutableWallClock(Instant.parse("2026-09-17T15:00:00Z").toEpochMilliseconds(), zone)
     private val today = LocalDate(2026, 9, 17)
 
     @Before

@@ -9,7 +9,7 @@ import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
-import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.MutableWallClock
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -38,12 +38,7 @@ class BlockViewModelTest {
     private val zone: TimeZone = TimeZone.of("Europe/Moscow")
     private val min = 60_000L
 
-    /** A clock the test moves by hand; the ticker's delays run on the test scheduler. */
-    private class TestClock(var nowMs: Long, override val zone: TimeZone) : WallClock {
-        override fun instant(): Instant = Instant.fromEpochMilliseconds(nowMs)
-    }
-
-    private val clock = TestClock(Instant.parse("2026-09-22T15:00:00Z").toEpochMilliseconds(), zone)
+    private val clock = MutableWallClock(Instant.parse("2026-09-22T15:00:00Z").toEpochMilliseconds(), zone)
     private val practice = FakeRunningPracticeStore()
     private val blocks = FakeBlockStore()
     private val history = FakePieceBlockRepository()

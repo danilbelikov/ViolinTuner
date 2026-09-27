@@ -24,7 +24,7 @@ import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.settings.FakeSettingsRepository
-import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.MutableWallClock
 import com.violinjourney.app.feature.practice.PlayedLine
 import com.violinjourney.app.feature.practice.PracticePrompt
 import com.violinjourney.app.feature.practice.PracticePromptEffect
@@ -58,11 +58,7 @@ class AppStartViewModelTest {
     private val now = Instant.parse("2026-09-17T18:00:00Z").toEpochMilliseconds()
 
     /** Stands at [now] until a test moves it: a dialog left on screen for hours. */
-    private class MovingClock(var nowMs: Long, override val zone: TimeZone) : WallClock {
-        override fun instant(): Instant = Instant.fromEpochMilliseconds(nowMs)
-    }
-
-    private val clock = MovingClock(now, zone)
+    private val clock = MutableWallClock(now, zone)
     private val store = FakeRunningPracticeStore()
     private val repository = FakePracticeRepository()
     private val config = PracticeConfig()
