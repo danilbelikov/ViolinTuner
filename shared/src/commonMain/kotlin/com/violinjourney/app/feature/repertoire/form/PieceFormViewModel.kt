@@ -10,6 +10,7 @@ import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.repertoire.SectionStats
 import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.feature.repertoire.SectionKeys
 import com.violinjourney.app.core.domain.repertoire.PieceRules
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
@@ -184,7 +185,7 @@ open class PieceFormViewModel(
             focusNotes = focusNotes,
             savedTitle = initial.title,
             section = PieceRules.sectionOf(Piece(0, "", "", null, null, draft.status, "", 0, 0, section = draft.section, groupId = draft.groupId), groups),
-            sections = SectionStats.summaries(emptyList(), groups).map { SectionOption(it.ref, it.name, enabled = it.ref != SectionRef.BuiltIn(PieceSection.SCALES)) },
+            sections = SectionStats.summaries(emptyList(), groups, Formats.alphabetical()).map { SectionOption(it.ref, it.name, enabled = it.ref != SectionRef.BuiltIn(PieceSection.SCALES)) },
         )
     }
 

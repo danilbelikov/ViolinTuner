@@ -34,9 +34,14 @@ object BlockReducer {
     /**
      * The shelf of [pieces]: the titles of the bookmark and the sections of the choice, each in the order of its own list
      * (spec 5.9) — marks never move anything, so the order does not follow the clock. One pass over [sessions] finds the
-     * latest take of every piece.
+     * latest take of every piece. The sections go as the landing has them (spec 3.28): the player's own by [byName].
      */
-    fun shelfOf(pieces: List<Piece>, groups: List<PieceGroup>, sessions: List<SessionSummary>): Shelf {
+    fun shelfOf(
+        pieces: List<Piece>,
+        groups: List<PieceGroup>,
+        sessions: List<SessionSummary>,
+        byName: Comparator<String> = SectionStats.LOWERCASE_ORDER,
+    ): Shelf {
         val latestTake = HashMap<Long, Long>()
         for (session in sessions) {
             val id = session.pieceId ?: continue
@@ -44,7 +49,7 @@ object BlockReducer {
         }
         // PieceStats.lastActivity, with the takes counted above
         fun activityOf(piece: Piece) = maxOf(piece.updatedAtEpochMs, piece.createdAtEpochMs, latestTake[piece.id] ?: 0L)
-        val sections = SectionStats.summaries(pieces, groups).mapNotNull { summary ->
+        val sections = SectionStats.summaries(pieces, groups, byName).mapNotNull { summary ->
             val own = SectionStats.piecesOf(summary.ref, pieces, groups)
             if (own.isEmpty()) return@mapNotNull null
             ShelfSection(summary.ref, summary.name, own.sortedWith(compareByDescending<Piece> { activityOf(it) }.thenByDescending { it.id }))

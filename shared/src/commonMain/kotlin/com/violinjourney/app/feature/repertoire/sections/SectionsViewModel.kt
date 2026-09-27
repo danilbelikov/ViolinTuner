@@ -17,6 +17,7 @@ import com.violinjourney.app.core.domain.repertoire.SectionStats
 import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.today
+import com.violinjourney.app.core.ui.format.Formats
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -40,14 +41,16 @@ open class SectionsViewModel(
     private val timeExpanded = MutableStateFlow(false)
 
     val state: StateFlow<SectionsState> = combine(repertoire.pieces, repertoire.groups, newName, blocks.blocks, timeExpanded) { pieces, groups, newName, saved, expanded ->
-        val cards = SectionStats.summaries(pieces, groups).map { SectionCard(it.ref, it.name, it.count) }
+        // the alphabet of the interface, asked on each change: the language may have changed since
+        val byName = Formats.alphabetical()
+        val cards = SectionStats.summaries(pieces, groups, byName).map { SectionCard(it.ref, it.name, it.count) }
         SectionsState(
             loading = false,
             cards = cards,
             total = cards.fold(SectionCount.EMPTY) { sum, card -> sum + card.count },
             newName = newName,
             maxNameLength = config.maxGroupNameLength,
-            time = timeCardOf(pieces, saved, expanded),
+            time = timeCardOf(pieces, saved, expanded, byName),
         )
     }.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
@@ -73,12 +76,12 @@ open class SectionsViewModel(
      * «Время по элементам» (spec 3.28, 5.21): the saved blocks of the last days, today included, the most first and
      * by name when equal. "Today" is read on every change, as the lists of «Записи» do.
      */
-    private fun timeCardOf(pieces: List<Piece>, saved: List<SavedBlock>, expanded: Boolean): PieceTimeCard? {
+    private fun timeCardOf(pieces: List<Piece>, saved: List<SavedBlock>, expanded: Boolean, byName: Comparator<String>): PieceTimeCard? {
         if (pieces.isEmpty()) return null
         val titles = pieces.associate { it.id to it.title }
         val rows = BlockRules.timeByPiece(saved, clock.today(), practiceConfig.pieceTimeDays)
             .mapNotNull { time -> titles[time.pieceId]?.let { PieceTimeRow(time.pieceId, it, time.totalMs, time.todayMs) } }
-            .sortedWith(compareByDescending<PieceTimeRow> { it.totalMs }.thenBy { it.title })
+            .sortedWith(compareByDescending<PieceTimeRow> { it.totalMs }.thenBy(byName) { it.title })
         return PieceTimeCard(rows, practiceConfig.pieceTimeDays, expanded)
     }
 

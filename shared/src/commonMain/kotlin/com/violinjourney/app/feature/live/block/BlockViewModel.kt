@@ -14,6 +14,7 @@ import com.violinjourney.app.core.domain.practice.SavedBlock
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.feature.history.HistorySection
 import com.violinjourney.app.feature.history.HistorySectionAsk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -68,8 +69,10 @@ open class BlockViewModel(
 
     private val practice = combine(runningPractice.running, blockStore.blocks, blockHistory.blocks, ::Triple)
 
-    // ordered when the repertoire or the takes change, not on every tick of the clock
-    private val shelf = combine(repertoire.pieces, repertoire.groups, sessions.sessions, BlockReducer::shelfOf)
+    // ordered when the repertoire or the takes change, not on every tick of the clock; the sections by the alphabet of the interface
+    private val shelf = combine(repertoire.pieces, repertoire.groups, sessions.sessions) { pieces, groups, sessions ->
+        BlockReducer.shelfOf(pieces, groups, sessions, Formats.alphabetical())
+    }
 
     // the time zone is asked only while the choice is open: the bookmark alone ticks without it
     private val zone = { clock.zone }

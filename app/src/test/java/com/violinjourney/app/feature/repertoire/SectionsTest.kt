@@ -321,6 +321,15 @@ class SectionsTest {
         assertEquals(listOf<ScaleFormEffect>(ScaleFormEffect.Close), effects)
     }
 
+    @Test
+    fun `the player's own sections go by the alphabet of the interface`() = runTest {
+        repertoire.addGroup("Январь", 1)
+        repertoire.addGroup("Ёлочные", 2)
+        repertoire.addGroup("двойки", 3)
+        val (landing, _) = sections()
+        assertEquals(listOf("двойки", "Ёлочные", "Январь"), landing.state.value.cards.mapNotNull { it.name })
+    }
+
     /** A block of [minutes] of [pieceId] on [date] (spec 3.28): what a saved practice leaves. */
     private fun block(pieceId: Long, date: LocalDate, minutes: Long) =
         SavedBlock(pieceId, date, 0, minutes * 60_000, minutes * 60_000, done = true, paid = false)

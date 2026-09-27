@@ -16,15 +16,21 @@ data class SectionSummary(val ref: SectionRef, /** Null for a built-in section: 
 
 /** Pure counting over the pieces. "Learnt" is the third step of the status and nothing else: no takes, no scores, no hours. */
 object SectionStats {
-    /** The four built-in sections in their order, then the player's own by name. */
-    fun summaries(pieces: List<Piece>, groups: List<PieceGroup>): List<SectionSummary> {
+    /**
+     * The order of names for a caller that knows no language — a test: the codes of the lowercase letters. The screens
+     * pass the alphabet of the interface (`Formats.alphabetical`), which puts «Ёлочные» before «Январь».
+     */
+    val LOWERCASE_ORDER: Comparator<String> = compareBy { it.lowercase() }
+
+    /** The four built-in sections in their order, then the player's own by name — in the order of [byName], then by id. */
+    fun summaries(pieces: List<Piece>, groups: List<PieceGroup>, byName: Comparator<String> = LOWERCASE_ORDER): List<SectionSummary> {
         val bySection = pieces.groupBy { PieceRules.sectionOf(it, groups) }
         val builtIn = PieceSection.entries.map { section ->
             val ref = SectionRef.BuiltIn(section)
             SectionSummary(ref, name = null, count = countOf(bySection[ref].orEmpty()))
         }
         val own = groups
-            .sortedWith(compareBy<PieceGroup>({ it.name.lowercase() }, { it.id }))
+            .sortedWith(compareBy<PieceGroup, String>(byName) { it.name }.thenBy { it.id })
             .map { group -> SectionSummary(SectionRef.Custom(group.id), group.name, countOf(bySection[SectionRef.Custom(group.id)].orEmpty())) }
         return builtIn + own
     }

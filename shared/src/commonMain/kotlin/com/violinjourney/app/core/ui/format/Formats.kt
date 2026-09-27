@@ -210,7 +210,17 @@ object Formats {
 
     /** The platform writes the names of months and weekdays in the language: the patterns are the same on both. */
     private fun date(pattern: String, date: LocalDate): String = formatDate(pattern, language.tag, date)
+
+    /**
+     * Names in the order of the alphabet of the language (spec 3.22 «свои по алфавиту», 5.21 «по названию»): «Ёлочные»
+     * among the Е, before «Январь»; «Äpfel» before «Birne»; «b» before «C». Case and accents only break a tie. The
+     * platform's collator: a new one on each call, for one sorting — it is not to be shared between threads.
+     */
+    fun alphabetical(): Comparator<String> = collatorOf(language.tag)
 }
 
 /** [date] by the Unicode [pattern] ("d MMMM", "LLLL yyyy") with the month and weekday names of [languageTag]. */
 internal expect fun formatDate(pattern: String, languageTag: String, date: LocalDate): String
+
+/** The platform's comparison of texts by the alphabet of [languageTag]. */
+internal expect fun collatorOf(languageTag: String): Comparator<String>
