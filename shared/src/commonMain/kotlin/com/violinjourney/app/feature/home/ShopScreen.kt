@@ -9,6 +9,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -270,13 +273,15 @@ fun ShopScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
                 FilterChip(selected = ui.category == group, onClick = { onIntent(HomeIntent.CategorySelected(group)) }, label = { Text(stringResource(groupLabel(group))) })
             }
         }
-        Column(
-            Modifier.widthIn(max = 720.dp).fillMaxSize().verticalScroll(rememberScrollState()).padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+        // a shelf is an item of a lazy list: only the shelves on the screen are composed, not the hundred tiles of the catalogue
+        LazyColumn(
+            Modifier.widthIn(max = 720.dp).fillMaxSize(),
+            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // where takts come from, said once — until the first purchase (handoff `dev`: «в лавке, первый вход»)
-            if (ui.home.purchased.isEmpty()) Text(stringResource(Res.string.shop_takts_note), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
-            HomeGroup.entries.filter { ui.category == null || ui.category == it }.forEach { group ->
+            if (ui.home.purchased.isEmpty()) item(key = "note") { Text(stringResource(Res.string.shop_takts_note), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall) }
+            items(HomeGroup.entries.filter { ui.category == null || ui.category == it }, key = { it.name }) { group ->
                 // what the room came with is not for sale
                 val things = HomeCatalog.items.filter { it.group == group && it.id !in HomeCatalog.startItems }
                 val material = ShelfMaterial.of(group)

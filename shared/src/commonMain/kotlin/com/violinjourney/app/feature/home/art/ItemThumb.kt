@@ -3,7 +3,6 @@ package com.violinjourney.app.feature.home.art
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.RoundRect
@@ -15,7 +14,6 @@ import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.domain.home.HomeItem
 import com.violinjourney.app.feature.journey.art.SceneMode
 import com.violinjourney.app.feature.journey.art.drawPrepared
-import com.violinjourney.app.feature.journey.art.prepare
 import com.violinjourney.app.feature.journey.art.rememberSceneSeconds
 import com.violinjourney.app.feature.journey.art.watchedBy
 
@@ -40,12 +38,11 @@ private val SAMPLE_CORNER = 8.dp
 @Composable
 fun ItemThumb(item: HomeItem, modifier: Modifier = Modifier, alive: Boolean = false, maxScale: Float = SHELF_MAX_SCALE) {
     val art = rememberHouseArt(ItemThumbs.houseOf(item), SceneMode.EVENING)
-    val thumb = remember(art, item.id, alive) { art?.let { ItemThumbs.of(item, it, glows = alive) } }
-    val prepared = remember(thumb) { thumb?.let { prepare(it.scene, SceneMode.EVENING) } }
+    val picture = rememberThumbPicture(item, art, glows = alive)
     val seconds = rememberSceneSeconds(enabled = alive)
     Canvas(modifier.fillMaxSize().watchedBy(seconds)) {
-        val shown = thumb ?: return@Canvas
-        val scene = prepared ?: return@Canvas
+        val shown = picture?.thumb ?: return@Canvas
+        val scene = picture.prepared
         val box = shown.box
         val at = seconds?.value
         if (shown.sample) {

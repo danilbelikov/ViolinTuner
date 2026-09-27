@@ -68,3 +68,32 @@ internal fun rememberHomeScene(
     }
     return initial ?: made
 }
+
+/** A thing as it stands on a shelf, in its card, in «Обставить»: what [ItemThumbs] shows and that scene made ready to draw. */
+internal class ThumbPicture(val thumb: ItemThumbScene, val prepared: PreparedScene)
+
+private data class ThumbKey(val art: HouseArt, val itemId: String, val glows: Boolean)
+
+/** The pictures of things, the latest seen kept within [THUMB_LAYER_BUDGET] layers: a thing is a few layers, a sample of the room some tens. */
+private val thumbScenes = RecentScenes<ThumbKey, ThumbPicture>(THUMB_LAYER_BUDGET) { it.prepared.scene.layers.size }
+
+/** Every thing of the catalogue on its shelf is about 2 500 layers: all of them fit, with their cards. */
+private const val THUMB_LAYER_BUDGET = 6_000
+
+/**
+ * The picture of [item] from [art], made off the main thread and kept: the shop does not wait for a hundred of them
+ * when it opens. Only the picture of this very thing — never the one shown before in its place: in a row of «Обставить»
+ * a purchase moves the things along, and a slot must not show its neighbour while its own is made. Null while it is made.
+ */
+@Composable
+internal fun rememberThumbPicture(item: HomeItem, art: HouseArt?, glows: Boolean): ThumbPicture? {
+    val key = art?.let { ThumbKey(it, item.id, glows) }
+    val kept = remember(key) { key?.let(thumbScenes::peek) }
+    val made by produceState<Pair<ThumbKey, ThumbPicture?>?>(null, key) {
+        if (key == null) return@produceState
+        value = key to thumbScenes.obtain(key, Dispatchers.Default) {
+            ItemThumbs.of(item, key.art, glows)?.let { ThumbPicture(it, prepare(it.scene, SceneMode.EVENING)) }
+        }
+    }
+    return kept ?: made?.takeIf { it.first == key }?.second
+}
