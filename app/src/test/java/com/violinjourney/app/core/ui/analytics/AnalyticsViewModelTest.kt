@@ -11,21 +11,40 @@ class AnalyticsViewModelTest {
 
     @Test
     fun `a screen is reported by name alone`() {
-        viewModel.onScreenOpened("live")
+        viewModel.onScreenOpened("e1", "live")
         assertEquals(listOf("screen_open {screen=live}"), analytics.sent())
     }
 
     @Test
     fun `what the route carries stays on the phone`() {
-        viewModel.onScreenOpened("piece/17")
-        viewModel.onScreenOpened("session?take=3")
+        viewModel.onScreenOpened("e1", "piece/17")
+        viewModel.onScreenOpened("e2", "session?take=3")
         assertEquals(listOf("screen_open {screen=piece}", "screen_open {screen=session}"), analytics.sent())
     }
 
     @Test
     fun `a destination without a route is not an event`() {
-        viewModel.onScreenOpened(null)
+        viewModel.onScreenOpened("e1", null)
+        viewModel.onScreenOpened("e1", null)
         assertEquals(emptyList<String>(), analytics.sent())
+    }
+
+    @Test
+    fun `the same entry told again after a turn of the phone is one opening`() {
+        viewModel.onScreenOpened("e1", "live")
+        viewModel.onScreenOpened("e1", "live")
+        assertEquals(listOf("screen_open {screen=live}"), analytics.sent())
+    }
+
+    @Test
+    fun `coming back to an entry is a new opening`() {
+        viewModel.onScreenOpened("e1", "live")
+        viewModel.onScreenOpened("e2", "settings")
+        viewModel.onScreenOpened("e1", "live")
+        assertEquals(
+            listOf("screen_open {screen=live}", "screen_open {screen=settings}", "screen_open {screen=live}"),
+            analytics.sent(),
+        )
     }
 
     @Test

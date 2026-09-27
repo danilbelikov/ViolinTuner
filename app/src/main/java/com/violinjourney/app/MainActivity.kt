@@ -108,7 +108,7 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
     val navController = rememberNavController()
     val tracking = hiltViewModel<HiltAnalyticsViewModel>()
     LaunchedEffect(navController) {
-        navController.currentBackStackEntryFlow.collect { entry -> tracking.onScreenOpened(entry.destination.route) }
+        navController.currentBackStackEntryFlow.collect { entry -> tracking.onScreenOpened(entry.id, entry.destination.route) }
     }
     val backStackEntry by navController.currentBackStackEntryAsState()
     // null outside the tabs: on the onboarding there is no bottom bar

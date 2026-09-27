@@ -13,11 +13,20 @@ import com.violinjourney.app.core.ui.permission.MicPermissionAnswer
  * every feature that happens to ask.
  */
 open class AnalyticsViewModel(private val analytics: Analytics) : ViewModel() {
+    // the entry of the back stack told last: the view model outlives the activity, a turn of the phone included
+    private var lastEntryId: String? = null
+
     /**
      * A screen is only ever opened by a touch, so this cannot fire while a note is sounding. Only
      * the name of the screen leaves: [screenKeyOf] cuts the arguments off the route.
+     *
+     * One event per entry of the back stack ([entryId]): the navigation tells the entry on top again when the
+     * activity is made anew — a turn of the phone, another language — and that opens nothing. Coming back to an
+     * entry after another one is a new opening.
      */
-    fun onScreenOpened(route: String?) {
+    fun onScreenOpened(entryId: String, route: String?) {
+        if (entryId == lastEntryId) return
+        lastEntryId = entryId
         screenKeyOf(route)?.let { analytics.track(ScreenOpen(it)) }
     }
 

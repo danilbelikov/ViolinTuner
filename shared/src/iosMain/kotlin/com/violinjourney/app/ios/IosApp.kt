@@ -84,7 +84,7 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
     // which screen was opened (spec 3.34), the route cut to its name as on Android
     val tracking = viewModel { AnalyticsViewModel(graph.analytics) }
     LaunchedEffect(navController) {
-        navController.currentBackStackEntryFlow.collect { opened -> tracking.onScreenOpened(opened.destination.route) }
+        navController.currentBackStackEntryFlow.collect { opened -> tracking.onScreenOpened(opened.id, opened.destination.route) }
     }
     val entry by navController.currentBackStackEntryAsState()
     // null outside the tabs: the onboarding and the screens above the tabs have no bottom bar
