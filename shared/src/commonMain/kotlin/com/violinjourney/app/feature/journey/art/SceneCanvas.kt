@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.graphics.drawscope.translate
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.layer.drawLayer
 import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.semantics.contentDescription
@@ -114,8 +115,9 @@ fun ScenePicture(
     /** Seen whole, by its width, whatever the box: a title card is a picture, not a panorama. Ignored when there is a [camera]. */
     whole: Boolean = false,
 ) {
-    val baking = rememberSceneBaking(prepared)
-    val watched = modifier.watchedBy(seconds)
+    // a still picture never lays baked layers down: it makes none
+    val baking = rememberSceneBaking(prepared.takeIf { seconds != null })
+    val watched = modifier.watchedBy(seconds).stillLayer(seconds)
     Canvas(watched.clipToBounds().background(Color(NIGHT)).semantics { contentDescription = description }) {
         if (prepared == null) return@Canvas
         val (zoom, panX, panY) = camera?.invoke() ?: Triple(if (whole) SceneCamera.wholeZoom(size.width, size.height) else 1f, 0f, 0f)
@@ -187,11 +189,13 @@ fun Postcard(
 ) {
     val view = viewOf(stop, inside)
     val prepared = rememberScene(view?.scene, mode)
-    val baking = rememberSceneBaking(prepared)
+    // a still postcard (the ribbon of passed stops) never lays baked layers down: it makes none
+    val baking = rememberSceneBaking(prepared.takeIf { seconds != null })
     val silhouette = remember(stop.id) { JourneySilhouettes.paths[stop.id].orEmpty().map { PathParser().parsePathString(it).toPath() } }
     Canvas(
         modifier = modifier
             .watchedBy(seconds)
+            .stillLayer(seconds)
             .clipToBounds()
             .background(Color(NIGHT))
             .semantics { contentDescription = description },
@@ -215,6 +219,13 @@ fun Postcard(
         }
     }
 }
+
+/**
+ * A still picture keeps a layer of its own: a living picture beside it redrawn does not make it draw its layers again —
+ * on iOS a frame of the window replays the layer's recording instead of running the scene in Kotlin. Nothing changes
+ * in the pixels. A living one is redrawn by its own clock anyway.
+ */
+private fun Modifier.stillLayer(seconds: State<Float>?): Modifier = if (seconds == null) graphicsLayer() else this
 
 /** What of the grid a box shows, for the near plane — the grid's origin at [left], [top] in the box, [panX] its sideways pan. */
 private fun DrawScope.seen(left: Float, top: Float, panX: Float, k: Float): Rect =
