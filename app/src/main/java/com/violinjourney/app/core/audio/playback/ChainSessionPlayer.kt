@@ -384,7 +384,9 @@ class ChainSessionPlayer(
         /**
          * Without blocking: a paused track never takes a full buffer, and a blocking write would hang
          * the thread — and with it every wish — for good. False — a seek or a release came in the
-         * middle; the rest of the chunk is dropped.
+         * middle; the rest of the chunk is dropped. While the track is full the thread waits on the
+         * lock for as long as the rest takes to play, but never so long that the track runs low
+         * ([TrackRoom]), not in a loop of 5 ms naps: a wish wakes it at once.
          */
         private fun write(track: AudioTrack, samples: FloatArray, count: Int): Boolean {
             var offset = 0
@@ -404,11 +406,14 @@ class ChainSessionPlayer(
                             while (!wantPlaying && seekToMs == NO_SEEK && !released) lock.wait()
                             if (seekToMs != NO_SEEK || released) return@synchronized true
                             track.play()
+                        } else if (!released) {
+                            // the track is full: wait until more of the rest fits; pause, seek and release wake this at once
+                            lock.wait(TrackRoom.waitMs(count - offset, track.channelCount, track.sampleRate))
+                            if (seekToMs != NO_SEEK || released) return@synchronized true
                         }
                         false
                     }
                     if (interrupted) return false
-                    sleep(WRITE_RETRY_MS)
                 }
             }
             return true
@@ -462,7 +467,6 @@ class ChainSessionPlayer(
         const val US_PER_MS = 1_000L
         const val AB_FADE_MS = 60L
         const val METERS_PER_SECOND = 30
-        const val WRITE_RETRY_MS = 5L
         const val DRAIN_POLL_MS = 20L
         const val DRAIN_TIMEOUT_NS = 1_000_000_000L
         const val JOIN_TIMEOUT_MS = 1_000L
