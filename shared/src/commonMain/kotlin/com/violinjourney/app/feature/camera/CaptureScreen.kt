@@ -4,6 +4,10 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -15,8 +19,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -100,7 +102,7 @@ fun CaptureScreen(
                     .fillMaxHeight()
                     .width(210.dp)
                     .background(Brush.horizontalGradient(listOf(Color.Transparent, Scrim)))
-                    .navigationBarsPadding(),
+                    .windowInsetsPadding(WindowInsets.navigationBars),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(14.dp, Alignment.CenterVertically),
             ) {
@@ -113,7 +115,7 @@ fun CaptureScreen(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .background(Brush.verticalGradient(listOf(Color.Transparent, Scrim)))
-                    .navigationBarsPadding()
+                    .windowInsetsPadding(WindowInsets.navigationBars)
                     .padding(start = 24.dp, end = 24.dp, top = 24.dp, bottom = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(14.dp),
@@ -130,7 +132,9 @@ private fun TopRow(state: CaptureState, onIntent: (CaptureIntent) -> Unit, modif
     Row(
         modifier = modifier
             .background(Brush.verticalGradient(listOf(ScrimTop, Color.Transparent)))
-            .statusBarsPadding()
+            // what of the bars the screen's host has not taken already: the named statusBarsPadding() of Compose
+            // Multiplatform on iOS does not see the host's share and put the whole status bar here a second time
+            .windowInsetsPadding(WindowInsets.statusBars)
             .padding(horizontal = 4.dp, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -115,7 +116,8 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
                 ) { innerPadding ->
                     // Until the stored settings are read there is only the dark surface (spec 3.7).
                     startRoute?.let { route ->
-                        IosNavHost(graph, texts, navController, route, Modifier.padding(innerPadding))
+                        // consumed as well as padded: a screen asking for the bars or the keyboard again gets only what is left
+                        IosNavHost(graph, texts, navController, route, Modifier.padding(innerPadding).consumeWindowInsets(innerPadding))
                         // `-openRoute live` of the launch: straight to a screen, for checks by screenshot
                         LaunchedEffect(openRoute) {
                             if (openRoute == null || route == ONBOARDING_ROUTE) return@LaunchedEffect

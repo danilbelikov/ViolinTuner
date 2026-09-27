@@ -7,6 +7,9 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -17,7 +20,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -283,7 +285,9 @@ fun FullscreenVideo(
                 modifier = Modifier
                     .fillMaxWidth()
                     .background(scrimTop)
-                    .systemBarsPadding()
+                    // what of the bars the screen's host has not taken already (not systemBarsPadding(): on iOS that one
+                    // does not see the host's share and put the status bar here a second time)
+                    .windowInsetsPadding(WindowInsets.systemBars)
                     .padding(horizontal = 4.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -312,7 +316,7 @@ fun FullscreenVideo(
                     modifier = Modifier
                         .fillMaxWidth()
                         .background(scrimBottom)
-                        .systemBarsPadding()
+                        .windowInsetsPadding(WindowInsets.systemBars)
                         .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {

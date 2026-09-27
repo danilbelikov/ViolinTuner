@@ -10,6 +10,9 @@ import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.exclude
+import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.material3.MaterialTheme
@@ -120,8 +123,9 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.surface,
-        // safeDrawing also covers the display cutout, which sits on a side in landscape
-        contentWindowInsets = WindowInsets.safeDrawing,
+        // safeDrawing also covers the display cutout, which sits on a side in landscape. The keyboard is the business
+        // of the fields that bring it — the forms pad themselves, dialogs and sheets are windows of their own — as on iOS.
+        contentWindowInsets = WindowInsets.safeDrawing.exclude(WindowInsets.ime),
         bottomBar = {
             if (bottomBarTab != null) {
                 AppBottomBar(
@@ -139,7 +143,9 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
             AppNavHost(
                 navController = navController,
                 startRoute = route,
-                modifier = Modifier.padding(innerPadding),
+                // consumed as well as padded: a screen asking for the bars or the keyboard again gets only what is left
+                // (Scaffold consumes nothing for its content), not the same height twice
+                modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding),
             )
             // A process that has just put a copy in place opens on «Занятия»: the restored days are seen there at once (spec 3.20).
             LaunchedEffect(Unit) {
