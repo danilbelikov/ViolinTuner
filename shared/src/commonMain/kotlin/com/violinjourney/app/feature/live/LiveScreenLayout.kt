@@ -162,7 +162,7 @@ fun LiveScreenLayout(
     }
     val zoneScale by rememberUpdatedState(VenueLook.zoneScale(sounding?.zone))
 
-    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+    BoxWithConstraints(modifier = modifier.fillMaxSize().liveFrameRate()) {
         val landscape = LiveLayoutMath.isLandscape(maxWidth.value, maxHeight.value)
         // made once per shape: the picture behind reads everything through it and is not composed again with the words
         val look = remember(landscape) {

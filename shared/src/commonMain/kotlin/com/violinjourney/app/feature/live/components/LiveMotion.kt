@@ -7,6 +7,12 @@ import androidx.compose.animation.core.CubicBezierEasing
  * here: it is a spec number (5.3) and arrives through LiveState.
  */
 object LiveMotion {
+    /**
+     * The most frames a second Live asks for on iOS (`liveFrameRate`): its glow, breath, waves, light and marker are slow
+     * and gain nothing above it on a ProMotion screen.
+     */
+    const val IOS_FRAMES_PER_SECOND = 60f
+
     /** `light.off`: cubic-bezier(.3, 0, .8, .15). */
     val LightOffEasing = CubicBezierEasing(0.3f, 0f, 0.8f, 0.15f)
 
