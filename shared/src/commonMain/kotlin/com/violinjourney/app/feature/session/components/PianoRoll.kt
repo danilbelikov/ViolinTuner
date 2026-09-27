@@ -23,12 +23,14 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.clipRect
 import androidx.compose.ui.input.pointer.pointerInput
@@ -67,7 +69,11 @@ private const val TABULAR_FIGURES = "tnum"
  * time. Time scrolls horizontally; the note labels on the left stay put.
  *
  * The roll is drawn into a viewport-sized canvas with its own scroll offset instead of one very
- * wide canvas: an hour at 30 dp per second is more pixels than a layout may measure.
+ * wide canvas: an hour at 30 dp per second is more pixels than a layout may measure. Three canvases
+ * lie one over the other in the order they always had: the row lines and their labels, the cursor
+ * in a layer of its own, the bars. The cursor reads [cursorMs] where it is drawn, so while the sound
+ * plays only its thin layer is redrawn; the rest waits for a scroll or a tap. The row labels are
+ * measured once.
  */
 @Composable
 fun PianoRoll(
@@ -75,23 +81,29 @@ fun PianoRoll(
     selectedSegment: Int?,
     onSegmentClick: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    /** Playback position; null hides the cursor. While [followCursor] the roll scrolls after it. */
-    cursorMs: Long? = null,
+    /** Where playback is, read where the cursor is drawn; null hides the cursor. While [followCursor] the roll scrolls after it. */
+    cursorMs: (() -> Long)? = null,
     followCursor: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val zoneColors = ViolinTheme.zoneColors
     val textMeasurer = rememberTextMeasurer()
-    val labelStyle = TextStyle(
-        color = colors.onSurfaceVariant,
-        fontSize = 11.sp,
-        fontFamily = MaterialTheme.typography.labelSmall.fontFamily,
-        fontFeatureSettings = TABULAR_FIGURES,
-    )
+    val labelFamily = MaterialTheme.typography.labelSmall.fontFamily
+    val labelStyle = remember(colors.onSurfaceVariant, labelFamily) {
+        TextStyle(
+            color = colors.onSurfaceVariant,
+            fontSize = 11.sp,
+            fontFamily = labelFamily,
+            fontFeatureSettings = TABULAR_FIGURES,
+        )
+    }
     val description = stringResource(Res.string.session_roll_description)
     val rowOf = remember(content.rollNotes) { content.rollNotes.withIndex().associate { (row, note) -> note to row } }
     val bars = remember(content.segments, rowOf) {
         content.segments.map { Triple(rowOf.getValue(it.note), it.startMs, it.endMs) }
+    }
+    val rowLabels = remember(content.rollNotes, labelStyle, textMeasurer) {
+        content.rollNotes.map { textMeasurer.measure(it.name, labelStyle, softWrap = false, maxLines = 1) }
     }
 
     BoxWithConstraints(
@@ -112,8 +124,10 @@ fun PianoRoll(
         val density = LocalDensity.current.density
         var scrollDp by remember(math) { mutableFloatStateOf(0f) }
         // in an effect, not in composition: this writes the state the composition reads
-        LaunchedEffect(cursorMs, followCursor, math) {
-            if (followCursor && cursorMs != null) math.scrollToFollow(cursorMs, scrollDp)?.let { scrollDp = it }
+        LaunchedEffect(followCursor, math, cursorMs) {
+            if (followCursor && cursorMs != null) {
+                snapshotFlow { cursorMs() }.collect { at -> math.scrollToFollow(at, scrollDp)?.let { scrollDp = it } }
+            }
         }
         val currentMath by rememberUpdatedState(math)
         val currentBars by rememberUpdatedState(bars)
@@ -139,7 +153,7 @@ fun PianoRoll(
             ) {
                 val gutter = LabelGutter.toPx()
                 clipRect(left = gutter) {
-                    for (tickMs in math.tickTimesMs()) {
+                    for (tickMs in math.visibleTickTimesMs(scrollDp)) {
                         val x = gutter + (math.x(tickMs) - scrollDp).dp.toPx()
                         if (x < gutter - size.width || x > size.width) continue
                         // measured unconstrained: a label near the right edge is clipped, not wrapped
@@ -154,31 +168,38 @@ fun PianoRoll(
                     .height(math.viewportHeight.dp)
                     .verticalScroll(rememberScrollState()),
             ) {
-                Canvas(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(math.contentHeight.dp)
-                        .pointerInput(Unit) {
-                            detectTapGestures { tap ->
-                                val x = (tap.x - LabelGutter.toPx()) / density + scrollDp
-                                if (tap.x < LabelGutter.toPx()) return@detectTapGestures
-                                currentMath.hitTest(x, tap.y / density, currentBars)?.let(currentOnClick)
-                            }
-                        },
-                ) {
-                    val gutter = LabelGutter.toPx()
-                    content.rollNotes.forEachIndexed { row, note ->
+                val rollSize = Modifier
+                    .fillMaxWidth()
+                    .height(math.contentHeight.dp)
+                // under the cursor: the row lines and the names of the notes
+                Canvas(rollSize) {
+                    content.rollNotes.indices.forEach { row ->
                         val y = math.rowLineY(row).dp.toPx()
                         drawLine(colors.surfaceContainerHigh, Offset(0f, y), Offset(size.width, y), 1.dp.toPx())
-                        val label = textMeasurer.measure(note.name, labelStyle, softWrap = false, maxLines = 1)
+                        val label = rowLabels[row]
                         drawText(label, topLeft = Offset(0f, y - label.size.height / 2f))
                     }
-                    if (cursorMs != null) {
-                        val x = gutter + (math.x(cursorMs) - scrollDp).dp.toPx()
+                }
+                if (cursorMs != null) {
+                    Canvas(rollSize.graphicsLayer()) {
+                        val gutter = LabelGutter.toPx()
+                        val x = gutter + (math.x(cursorMs()) - scrollDp).dp.toPx()
                         if (x >= gutter && x <= size.width) {
                             drawLine(colors.primary, Offset(x, 0f), Offset(x, size.height), CursorWidth.toPx())
                         }
                     }
+                }
+                // over the cursor: the bars, their contours and the note picked
+                Canvas(
+                    modifier = rollSize.pointerInput(Unit) {
+                        detectTapGestures { tap ->
+                            val x = (tap.x - LabelGutter.toPx()) / density + scrollDp
+                            if (tap.x < LabelGutter.toPx()) return@detectTapGestures
+                            currentMath.hitTest(x, tap.y / density, currentBars)?.let(currentOnClick)
+                        }
+                    },
+                ) {
+                    val gutter = LabelGutter.toPx()
                     clipRect(left = gutter) {
                         content.segments.forEachIndexed { index, segment ->
                             val left = gutter + (math.x(segment.startMs) - scrollDp).dp.toPx()

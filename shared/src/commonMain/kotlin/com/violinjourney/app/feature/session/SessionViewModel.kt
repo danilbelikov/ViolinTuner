@@ -12,6 +12,7 @@ import com.violinjourney.app.core.audio.playback.SessionPlayerFactory
 import com.violinjourney.app.core.audio.playback.VideoPicture
 import com.violinjourney.app.core.audio.playback.VideoPictureFactory
 import com.violinjourney.app.core.audio.playback.VideoSurfaceHandle
+import com.violinjourney.app.core.audio.playback.onWholeSeconds
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
@@ -50,6 +51,14 @@ open class SessionViewModel(
 
     private val mutableState = MutableStateFlow<SessionState>(SessionState.Loading)
     val state: StateFlow<SessionState> = mutableState.asStateFlow()
+
+    private val mutablePosition = MutableStateFlow(0L)
+
+    /**
+     * Where the player is, as it tells it — with every chunk of sound, ~23 times a second: apart from [state], whose
+     * player keeps the position to the whole second. Read only where it is drawn: the cursor, the slider, the strip.
+     */
+    val position: StateFlow<Long> = mutablePosition.asStateFlow()
 
     private var player: SessionPlayer? = null
     private var picture: VideoPicture? = null
@@ -207,7 +216,9 @@ open class SessionViewModel(
         }
         viewModelScope.launch {
             created.state.collect { playerState ->
-                updateLoaded { it.copy(player = playerState.takeIf { state -> state.ready && !state.failed }, preparingBacking = playerState.preparingBacking && !playerState.failed) }
+                mutablePosition.value = playerState.positionMs
+                // to the whole second: within a second nothing of the screen's state changes, and nothing is emitted
+                updateLoaded { it.copy(player = playerState.takeIf { state -> state.ready && !state.failed }?.onWholeSeconds(), preparingBacking = playerState.preparingBacking && !playerState.failed) }
             }
         }
     }

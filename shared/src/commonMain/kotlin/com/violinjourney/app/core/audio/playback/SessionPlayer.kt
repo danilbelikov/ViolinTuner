@@ -30,6 +30,16 @@ data class PlayerState(
 )
 
 /**
+ * The player as a screen keeps it: the position to the whole second. The words «0:12 / 3:40» say no finer, so
+ * the screen's state changes once a second while the sound plays instead of with every chunk of it (~23 a
+ * second); what moves smoothly — a cursor, a slider, the played part of a waveform — reads the exact position
+ * of its own flow where it is drawn.
+ */
+fun PlayerState.onWholeSeconds(): PlayerState = copy(positionMs = positionMs - positionMs % MS_PER_SECOND)
+
+private const val MS_PER_SECOND = 1_000L
+
+/**
  * The backing of a take made under one (spec 3.32): [pcm] gives its sound prepared at the recording's rate
  * (it runs on the player's thread and may take a moment the first time), [offsetMs] and [gainDb] mix it.
  */

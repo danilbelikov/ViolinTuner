@@ -31,6 +31,7 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -131,8 +132,14 @@ fun SessionScreen(
     state: SessionState,
     onIntent: (SessionIntent) -> Unit,
     modifier: Modifier = Modifier,
-    zone: TimeZone = TimeZone.currentSystemDefault(),
+    // asked once: a new zone on every recomposition is a new object each time, and on iOS a read of its file
+    zone: TimeZone = remember { TimeZone.currentSystemDefault() },
     videoSurface: VideoSurfaceCallbacks = NoVideoSurface,
+    /**
+     * Where the player is, exactly: read where it is drawn — the cursor, the slider, the note strip — so that the
+     * screen, whose player keeps the position to the whole second, recomposes once a second while it plays.
+     */
+    position: () -> Long = { (state as? SessionState.Loaded)?.player?.positionMs ?: 0L },
 ) {
     val colors = MaterialTheme.colorScheme
     val loaded = state as? SessionState.Loaded
@@ -149,6 +156,7 @@ fun SessionScreen(
             content = loaded.content,
             title = title,
             player = loaded.player,
+            position = position,
             callbacks = videoSurface,
             onPlayPause = { onIntent(SessionIntent.PlayPauseClicked) },
             onSeek = { onIntent(SessionIntent.SeekRequested(it)) },
@@ -184,13 +192,13 @@ fun SessionScreen(
                     style = MaterialTheme.typography.bodyLarge,
                 )
             }
-            is SessionState.Loaded -> LoadedContent(state, title, onIntent, videoSurface)
+            is SessionState.Loaded -> LoadedContent(state, title, onIntent, videoSurface, position)
         }
     }
 }
 
 @Composable
-private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (SessionIntent) -> Unit, videoSurface: VideoSurfaceCallbacks) {
+private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (SessionIntent) -> Unit, videoSurface: VideoSurfaceCallbacks, position: () -> Long) {
     val content = state.content
     val video = state.video
     val picture = video?.takeIf { it.pictured }
@@ -211,10 +219,10 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
                 content = content,
                 selectedSegment = state.selectedSegment,
                 onSegmentClick = { onIntent(SessionIntent.SegmentClicked(it)) },
-                cursorMs = state.player?.positionMs,
+                cursorMs = position.takeIf { state.player != null },
                 followCursor = state.player?.playing == true,
             )
-            if (playerHere) PlayerAndSound(state, onIntent)
+            if (playerHere) PlayerAndSound(state, onIntent, position)
             // An empty place where a player would be reads as something broken; a quiet line says what it is.
             if (!content.hasAudio) SilentLine()
             SessionStatCards(content)
@@ -237,7 +245,7 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
                     Box(Modifier.fillMaxWidth().background(ViolinTheme.videoColors.field, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
                         VideoFrame(picture, state.player?.playing == true, videoSurface, onTap, Modifier.size(frame.width.dp, frame.height.dp), corner = 14.dp, onFullscreen = onFullscreen, waiting = state.preparingBacking)
                     }
-                    PlayerAndSound(state, onIntent)
+                    PlayerAndSound(state, onIntent, position)
                 }
                 Column(
                     modifier = Modifier
@@ -458,11 +466,12 @@ private fun Summary(content: SessionContent) {
 
 /** The player and the way to «Звук» under it: in the scroll when the phone is upright, beside the picture when it lies on its side. */
 @Composable
-private fun PlayerAndSound(state: SessionState.Loaded, onIntent: (SessionIntent) -> Unit) {
+private fun PlayerAndSound(state: SessionState.Loaded, onIntent: (SessionIntent) -> Unit, position: () -> Long) {
     if (state.player == null && state.preparingBacking) BackingPreparingRow()
     state.player?.let { player ->
         PlayerBar(
             player = player,
+            position = position,
             onPlayPause = { onIntent(SessionIntent.PlayPauseClicked) },
             onSeek = { onIntent(SessionIntent.SeekRequested(it)) },
             onOriginal = { onIntent(SessionIntent.OriginalSelected(it)) },

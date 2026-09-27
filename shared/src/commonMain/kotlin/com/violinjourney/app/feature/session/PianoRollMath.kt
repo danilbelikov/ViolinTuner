@@ -1,6 +1,7 @@
 package com.violinjourney.app.feature.session
 
 import kotlin.math.ceil
+import kotlin.math.floor
 
 /**
  * Geometry of the piano roll (spec 3.10). Pure: lengths are dp as Float, times are ms.
@@ -51,11 +52,26 @@ class PianoRollMath(
     }
 
     /** Time labels: a round step that keeps them at least [MIN_TICK_SPACING] apart. */
-    fun tickTimesMs(): List<Long> {
+    fun tickTimesMs(): List<Long> = (0..durationMs step tickStepMs()).toList()
+
+    /**
+     * The labels of [tickTimesMs] that can be seen with the roll scrolled to [scrollDp]: those from a label's room
+     * before the viewport to its end. Worked out from the step, without the whole list — an hour has 721 of them.
+     */
+    fun visibleTickTimesMs(scrollDp: Float): List<Long> {
+        val stepMs = tickStepMs()
+        val from = scrollDp - MIN_TICK_SPACING
+        val to = scrollDp + viewportWidth
+        val first = (floor(from / dpPerMs).toLong() / stepMs).coerceAtLeast(0) * stepMs
+        val last = minOf(durationMs, ceil(to / dpPerMs).toLong())
+        if (first > last) return emptyList()
+        return (first..last step stepMs).filter { x(it) in from..to }
+    }
+
+    private fun tickStepMs(): Long {
         val minStepMs = MIN_TICK_SPACING / dpPerMs
-        val stepMs = TICK_STEPS_S.map { it * MS_PER_SECOND.toLong() }.firstOrNull { it >= minStepMs }
+        return TICK_STEPS_S.map { it * MS_PER_SECOND.toLong() }.firstOrNull { it >= minStepMs }
             ?: (ceil(minStepMs / TICK_LAST_STEP_MS).toLong() * TICK_LAST_STEP_MS)
-        return (0..durationMs step stepMs).toList()
     }
 
     /**

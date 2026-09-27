@@ -189,6 +189,8 @@ fun FullscreenVideo(
     content: SessionContent,
     title: String,
     player: PlayerState?,
+    /** Where the player is, exactly; [player] keeps it to the whole second. Read where the slider and the strip are drawn. */
+    position: () -> Long,
     callbacks: VideoSurfaceCallbacks,
     onPlayPause: () -> Unit,
     onSeek: (Long) -> Unit,
@@ -260,7 +262,7 @@ fun FullscreenVideo(
         }
         Column(modifier = Modifier.align(Alignment.BottomCenter)) {
             AnimatedVisibility(visible = panel || stripStays, enter = fadeIn(tween(PANEL_FADE_MS)), exit = fadeOut(tween(PANEL_FADE_MS))) {
-                NoteStrip(content, player?.positionMs ?: 0, Modifier.padding(horizontal = 16.dp).padding(bottom = if (panel) 0.dp else 24.dp))
+                NoteStrip(content, position, Modifier.padding(horizontal = 16.dp).padding(bottom = if (panel) 0.dp else 24.dp))
             }
             AnimatedVisibility(visible = panel, enter = fadeIn(tween(PANEL_FADE_MS)), exit = fadeOut(tween(PANEL_FADE_MS))) {
                 Row(
@@ -274,6 +276,7 @@ fun FullscreenVideo(
                     if (player != null) {
                         PlayerBar(
                             player = player.copy(processed = false), // A/B lives above here
+                            position = position,
                             onPlayPause = { onPlayPause(); touches++ },
                             onSeek = { onSeek(it); touches++ },
                             modifier = Modifier.weight(1f),
@@ -302,13 +305,15 @@ private fun PanelIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, des
  * What is played around the cursor, ±4 s (handoff 20e): the whole roll of a take in forty dp is
  * coloured noise. Pieces in the colour of their zone, higher notes higher; the one under the
  * cursor is outlined. Decoration for the eye — TalkBack has the roll itself on the screen below.
+ * [positionMs] is read where the strip is drawn: while the sound plays it redraws, nothing recomposes.
  */
 @Composable
-fun NoteStrip(content: SessionContent, positionMs: Long, modifier: Modifier = Modifier) {
+fun NoteStrip(content: SessionContent, positionMs: () -> Long, modifier: Modifier = Modifier) {
     val zoneColors = ViolinTheme.zoneColors
     val cursor = MaterialTheme.colorScheme.primary
     val outline = Color.White
-    val pieces = VideoLayoutMath.strip(content.segments.map { it.startMs to it.endMs }, positionMs)
+    val spans = remember(content.segments) { content.segments.map { it.startMs to it.endMs } }
+    val rowOf = remember(content.rollNotes) { content.rollNotes.withIndex().associate { (row, note) -> note to row } }
     val rows = content.rollNotes.size.coerceAtLeast(1)
     Box(
         modifier
@@ -317,16 +322,17 @@ fun NoteStrip(content: SessionContent, positionMs: Long, modifier: Modifier = Mo
             .clip(RoundedCornerShape(10.dp))
             .background(ViolinTheme.videoColors.scrim)
             .drawBehind {
+                val at = positionMs()
                 val bar = StripBar.toPx()
                 val room = size.height - bar - 8.dp.toPx()
-                pieces.forEach { piece ->
+                VideoLayoutMath.strip(spans, at).forEach { piece ->
                     val segment = content.segments[piece.index]
-                    val row = content.rollNotes.indexOf(segment.note).coerceAtLeast(0)
+                    val row = rowOf[segment.note] ?: 0
                     val top = 4.dp.toPx() + if (rows > 1) room * row / (rows - 1) else room / 2
                     val left = piece.from * size.width
                     val width = ((piece.to - piece.from) * size.width - 1.dp.toPx()).coerceAtLeast(2f)
                     drawRoundRect(zoneColors.colorFor(segment.zone), Offset(left, top), Size(width, bar), CornerRadius(bar / 2))
-                    if (positionMs in segment.startMs..segment.endMs) {
+                    if (at in segment.startMs..segment.endMs) {
                         drawRoundRect(outline, Offset(left, top), Size(width, bar), CornerRadius(bar / 2), style = Stroke(1.5.dp.toPx()))
                     }
                 }

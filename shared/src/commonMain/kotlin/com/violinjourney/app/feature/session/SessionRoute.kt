@@ -33,6 +33,8 @@ fun SessionRoute(
     changingConfigurations: () -> Boolean = { false },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    // a state, not a value: read where the cursor and the slider are drawn, so the screen itself recomposes once a second
+    val position = viewModel.position.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val messages = LocalMessages.current
     val currentOnClose by rememberUpdatedState(onClose)
@@ -69,6 +71,7 @@ fun SessionRoute(
         onIntent = viewModel::onIntent,
         modifier = modifier,
         videoSurface = remember(viewModel) { VideoSurfaceCallbacks(viewModel::attachSurface, viewModel::detachSurface) },
+        position = { position.value },
     )
     shareHost()
 }

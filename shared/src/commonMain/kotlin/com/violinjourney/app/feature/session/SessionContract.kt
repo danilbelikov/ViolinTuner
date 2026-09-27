@@ -68,7 +68,10 @@ sealed interface SessionState {
         /** Index in [SessionContent.segments] of the note whose details are open. */
         val selectedSegment: Int? = null,
         val dialog: SessionDialog? = null,
-        /** Null when the session has no sound, its file is gone or cannot be played. */
+        /**
+         * Null when the session has no sound, its file is gone or cannot be played. Its position is to the whole
+         * second; the exact one is [SessionViewModel.position].
+         */
         val player: PlayerState? = null,
         /** The player waits for the backing's sound to be made (spec 5.25): «Готовим минусовку…», and the picture waits too. */
         val preparingBacking: Boolean = false,

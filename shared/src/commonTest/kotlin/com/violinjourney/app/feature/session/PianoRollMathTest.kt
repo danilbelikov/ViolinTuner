@@ -2,9 +2,23 @@ package com.violinjourney.app.feature.session
 
 import kotlin.test.assertEquals
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.test.Test
 
 class PianoRollMathTest {
+    @Test
+    fun `the labels in sight are the slice of all of them from a label before the viewport to its end`() {
+        val short = PianoRollMath(durationMs = 13_500, rowCount = 3, viewportWidth = 300f)
+        assertEquals(short.tickTimesMs().filter { short.x(it) <= 300f }, short.visibleTickTimesMs(0f))
+
+        val hour = PianoRollMath(durationMs = 3_600_000, rowCount = 8, viewportWidth = 300f)
+        for (scroll in listOf(0f, 79.5f, 1_234f, 30_000f, hour.maxScroll)) {
+            val expected = hour.tickTimesMs().filter { hour.x(it) >= scroll - PianoRollMath.MIN_TICK_SPACING && hour.x(it) <= scroll + 300f }
+            assertEquals(expected, hour.visibleTickTimesMs(scroll), "scrolled to $scroll")
+            assertTrue(expected.size in 2..3, "${expected.size} labels at $scroll")
+        }
+    }
+
     @Test
     fun `a short session stretches to the viewport and does not scroll`() {
         val math = PianoRollMath(durationMs = 5_000, rowCount = 3, viewportWidth = 300f)

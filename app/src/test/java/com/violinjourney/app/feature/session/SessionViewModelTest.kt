@@ -294,6 +294,31 @@ class SessionViewModelTest {
     }
 
     @Test
+    fun `the position is a flow of its own and the state keeps it to the second`() = runTest {
+        val viewModel = viewModel(saveSession(audio = "take.m4a"))
+        viewModel.onIntent(SessionIntent.PlayPauseClicked)
+        runCurrent()
+        player.state.update { it.copy(positionMs = 2_345) }
+        runCurrent()
+        val states = mutableListOf<SessionState>()
+        backgroundScope.launch { viewModel.state.collect { states += it } }
+        runCurrent()
+        assertEquals(2_000, viewModel.loaded().player!!.positionMs)
+        assertEquals(2_345, viewModel.position.value)
+
+        // a chunk later, still in the same second: the cursor moves, the screen does not
+        player.state.update { it.copy(positionMs = 2_700) }
+        runCurrent()
+        assertEquals(2_700, viewModel.position.value)
+        assertEquals(1, states.size)
+
+        player.state.update { it.copy(positionMs = 3_010) }
+        runCurrent()
+        assertEquals(3_000, viewModel.loaded().player!!.positionMs)
+        assertEquals(2, states.size)
+    }
+
+    @Test
     fun `a session whose file is gone has no player either`() = runTest {
         audioFiles = FakeAudioFiles(present = emptySet())
         assertNull(viewModel(saveSession(audio = "take.m4a")).loaded().player)

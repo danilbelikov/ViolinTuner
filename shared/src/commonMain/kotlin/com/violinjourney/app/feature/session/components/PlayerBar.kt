@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -50,7 +51,11 @@ private val GlyphSize = 20.dp
 private val TimeWidth = 40.dp
 private const val TABULAR_FIGURES = "tnum"
 
-/** Play / pause, position, slider, duration (spec 3.10, item 3; handoff 4a). */
+/**
+ * Play / pause, position, slider, duration (spec 3.10, item 3; handoff 4a). The words go by [player], whose
+ * position may be to the whole second; the slider follows [position], the exact one, in a slider and a layer
+ * of its own — a chunk of sound moves the thumb and redraws nothing around it.
+ */
 @Composable
 fun PlayerBar(
     player: PlayerState,
@@ -58,6 +63,7 @@ fun PlayerBar(
     onSeek: (positionMs: Long) -> Unit,
     modifier: Modifier = Modifier,
     onOriginal: (original: Boolean) -> Unit = {},
+    position: () -> Long = { player.positionMs },
 ) {
     val colors = MaterialTheme.colorScheme
     // While the thumb is dragged the slider shows the finger, not the playback position.
@@ -89,8 +95,8 @@ fun PlayerBar(
             PlayPauseGlyph(playing = player.playing, tint = colors.onPrimary, size = GlyphSize)
         }
         Text(Formats.duration(shownMs), Modifier.widthIn(min = TimeWidth), colors.onSurfaceVariant, style = timeStyle)
-        Slider(
-            value = dragged ?: (player.positionMs.toFloat() / duration),
+        SeekSlider(
+            fraction = { dragged ?: (position().toFloat() / duration) },
             onValueChange = { dragged = it },
             onValueChangeFinished = {
                 dragged?.let { onSeek((it * duration).toLong()) }
@@ -99,11 +105,6 @@ fun PlayerBar(
             modifier = Modifier
                 .weight(1f)
                 .semantics { contentDescription = positionDescription },
-            colors = SliderDefaults.colors(
-                thumbColor = colors.primary,
-                activeTrackColor = colors.primary,
-                inactiveTrackColor = colors.surfaceContainerHigh,
-            ),
         )
         Text(
             text = Formats.duration(player.durationMs),
@@ -115,6 +116,23 @@ fun PlayerBar(
         // Only when there is something to compare: the processing does something to this recording.
         if (player.processed) AbSwitch(original = player.original, onOriginal = onOriginal)
     }
+}
+
+/** The only part of the bar that reads the exact position: it recomposes with every chunk, in a layer of its own. */
+@Composable
+private fun SeekSlider(fraction: () -> Float, onValueChange: (Float) -> Unit, onValueChangeFinished: () -> Unit, modifier: Modifier) {
+    val colors = MaterialTheme.colorScheme
+    Slider(
+        value = fraction(),
+        onValueChange = onValueChange,
+        onValueChangeFinished = onValueChangeFinished,
+        modifier = modifier.graphicsLayer(),
+        colors = SliderDefaults.colors(
+            thumbColor = colors.primary,
+            activeTrackColor = colors.primary,
+            inactiveTrackColor = colors.surfaceContainerHigh,
+        ),
+    )
 }
 
 /**
