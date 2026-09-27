@@ -88,8 +88,10 @@ fun SessionCard(
     RecordCard(
         card = card,
         // The date stands once, above the group (the day header of «Записи», the picked day of «Занятия»): the card adds the time.
+        // A reader going from card to card skips the headers, so to it the card says its date as well (spec 3.21).
         title = card.title ?: card.pieceTitle ?: stringResource(Res.string.record_default_title),
         meta = stringResource(Res.string.record_meta, Formats.timeOfDay(card.startedAtEpochMs, zone), Formats.duration(card.durationMs)),
+        spokenDate = Formats.recordDate(card.date, card.otherYear),
         onClick = onClick,
         modifier = modifier,
         actions = actions,
@@ -110,6 +112,9 @@ fun SessionCard(
  *
  * A take made under a backing (spec 3.32, [HistoryCard.underBacking]) says so in its line, in every list alike: the
  * sign of the backing — a note on a staff — and «под минусовку» before the time ([meta]). The words are read out too.
+ *
+ * [spokenDate] is for a list that writes the date above its cards, not on them: TalkBack and VoiceOver hear it with the
+ * kind of the recording — «запись, звук, 20 сентября», then the title and the line — and the eye does not see it twice.
  */
 @Composable
 fun RecordCard(
@@ -122,6 +127,7 @@ fun RecordCard(
     highlighted: Boolean = false,
     selected: Boolean? = null,
     onLongClick: (() -> Unit)? = null,
+    spokenDate: String? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val shape = RoundedCornerShape(CardCorner)
@@ -138,6 +144,7 @@ fun RecordCard(
                 else -> Res.string.record_tile_sound
             },
         ),
+        spokenDate,
     ).joinToString()
     // A picked card looks like a fresh take (the handoff gives both the same fill and ring), only it gets there faster.
     val lit = if (selecting) selected == true else highlighted
@@ -176,11 +183,12 @@ fun RecordCard(
         horizontalArrangement = Arrangement.spacedBy(14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
+        // The words stay with the mark too: a picked card is still «запись, звук, 20 сентября» to a reader.
         Crossfade(targetState = selected, animationSpec = tween(TILE_MORPH_MS), label = "recordTile") { mark ->
             if (mark == null) {
                 RecordTile(hasAudio = card.hasAudio, hasVideo = card.hasVideo, modifier = Modifier.semantics { contentDescription = words })
             } else {
-                SelectionMark(mark)
+                SelectionMark(mark, modifier = Modifier.semantics { contentDescription = words })
             }
         }
         Column(modifier = Modifier.weight(1f)) {
