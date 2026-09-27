@@ -13,11 +13,14 @@ class FormatsTest {
     private fun epoch(dateTime: String) = LocalDateTime.parse(dateTime).toInstant(moscow).toEpochMilliseconds()
 
     @Test
-    fun `duration is minutes and padded seconds`() {
+    fun `duration is minutes and padded seconds and grows an hour field from an hour on`() {
         assertEquals("0:00", Formats.duration(0))
         assertEquals("0:07", Formats.duration(7_900))
         assertEquals("12:40", Formats.duration(760_000))
-        assertEquals("60:00", Formats.duration(3_600_000))
+        assertEquals("59:59", Formats.duration(3_599_999))
+        // from an hour on the length grows an hour field (spec 5.15), as the practice timer does
+        assertEquals("1:00:00", Formats.duration(3_600_000))
+        assertEquals("1:02:34", Formats.duration(3_754_000))
     }
 
     @Test

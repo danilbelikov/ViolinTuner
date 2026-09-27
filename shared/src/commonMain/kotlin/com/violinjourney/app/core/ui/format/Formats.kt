@@ -48,15 +48,15 @@ object Formats {
     private fun minutes(n: Long) = "$n${language.unitSpace}${language.minute}"
     private fun hours(n: Any) = "$n${language.unitSpace}${language.hour}"
 
-    /** "m:ss", minutes not padded: 0:07, 12:40, 60:00. */
-    fun duration(ms: Long): String {
-        val seconds = ms / MS_PER_SECOND
-        return "${seconds / SECONDS_PER_MINUTE}:${two(seconds % SECONDS_PER_MINUTE)}"
-    }
+    /**
+     * The length of a recording, a video or a backing: "m:ss" under an hour, "h:mm:ss" from then on (spec 5.15) —
+     * 0:07, 12:40, 1:00:00. The same clock as [timer]; a take stopped at its limit of an hour no longer reads 60:00.
+     */
+    fun duration(ms: Long): String = timer(ms)
 
     private fun two(value: Long): String = value.toString().padStart(2, '0')
 
-    /** Practice timer: "m:ss" under an hour, "h:mm:ss" from then on (spec 5.6): 12:34, 1:02:34. */
+    /** Practice timer: "m:ss" under an hour, "h:mm:ss" from then on (spec 5.6): 12:34, 1:02:34. Lengths ([duration]) read the same. */
     fun timer(ms: Long): String {
         val seconds = ms / MS_PER_SECOND
         val minutes = seconds / SECONDS_PER_MINUTE
