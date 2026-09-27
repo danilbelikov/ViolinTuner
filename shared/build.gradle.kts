@@ -152,8 +152,9 @@ compose.resources {
     )
 }
 
-// Room writes the database code for each platform; the schemas of all versions stay in app/schemas, where the
-// migration tests read them.
+// Room writes the database code for each platform. The schemas of all versions lie beside the database and its
+// migrations, in shared/schemas: committed, and DatabaseSchemaFilesTest fails the build when a version is missing.
+// The migration tests on a device and on iOS lay out their old files after them.
 dependencies {
     add("kspAndroid", libs.androidx.room.compiler)
     add("kspIosArm64", libs.androidx.room.compiler)
@@ -161,5 +162,5 @@ dependencies {
 }
 
 ksp {
-    arg("room.schemaLocation", "${rootDir}/app/schemas")
+    arg("room.schemaLocation", layout.projectDirectory.dir("schemas").asFile.path)
 }

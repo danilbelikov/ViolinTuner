@@ -49,7 +49,7 @@
 Порядок тот же для RuStore и Google Play.
 
 1. `versionCode` + 1 к последней загруженной сборке (в любой из магазинов).
-2. `./gradlew clean :app:testDebugUnitTest :app:lintRelease :app:assembleRelease` (или `:app:bundleRelease` для Play) — всё зелёное, lint без ошибок. В тестах есть `DatabaseMigrationChainTest`: он роняет сборку, если у новой версии базы нет миграции от предыдущей или не закоммичена схема.
+2. `./gradlew clean :app:testDebugUnitTest :shared:testAndroidHostTest :app:lintRelease :app:assembleRelease` (или `:app:bundleRelease` для Play) — всё зелёное, lint без ошибок. База и её миграции — в модуле `shared`, там же их тесты: `DatabaseMigrationChainTest` роняет сборку, если у новой версии базы нет миграции от предыдущей, `DatabaseSchemaFilesTest` — если не закоммичена её схема (`shared/schemas`).
 3. Подпись и 16 КБ: `apksigner verify --print-certs` (SHA-256 сертификата — как в этапе 1), `zipalign -c -P 16 -v 4`.
 4. **Проверка обновления** (см. ниже) — всегда; полная, если менялась база.
 5. После загрузки в магазин: тег `git tag store/<versionName>-<versionCode>` на коммит сборки и копия APK/AAB в `~/keys/violin-journey/releases/` (рядом с ключом, вне репозитория) — это «предыдущая сборка» для следующей проверки обновления.

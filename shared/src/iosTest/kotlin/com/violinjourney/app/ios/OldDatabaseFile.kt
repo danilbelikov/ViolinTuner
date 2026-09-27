@@ -7,7 +7,7 @@ import com.violinjourney.app.core.data.DatabaseMigrations
 
 /**
  * A database file of an older version, as the app of that version left it. Version 1 is laid out by hand — the SQL of
- * `app/schemas/…/1.json`, as the Android `DatabaseMigrationTest` lays it out — with the session «Гаммы» and its samples;
+ * `shared/schemas/…/1.json`, as the Android `DatabaseMigrationTest` lays it out — with the session «Гаммы» and its samples;
  * the later versions by the steps of [DatabaseMigrations] themselves, with a day of practice from version 2 on and the
  * piece «Менуэт» (the session is its take) from version 4 on. Room's own table carries the identity of that version,
  * and a file [madeOnAndroid] has Android's table of the locale too: what a copy from an older Android app brings.
@@ -64,7 +64,7 @@ internal object OldDatabaseFile {
         }
     }
 
-    /** The identity Room kept for each version: `identityHash` of `app/schemas/com.violinjourney.app.core.data.AppDatabase/<version>.json`. */
+    /** The identity Room kept for each version: `identityHash` of `shared/schemas/com.violinjourney.app.core.data.AppDatabase/<version>.json`. */
     private val IDENTITY = mapOf(
         1 to "12baa5ae655c3f251aba828c0f221689",
         2 to "507d26be537443e5edea051ac776adbb",
