@@ -13,6 +13,7 @@ import com.violinjourney.app.core.backup.FakeBackupPrefs
 import com.violinjourney.app.core.backup.FakeBackupStore
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
+import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.recording.RecordingWatch
@@ -71,7 +72,7 @@ class BackupViewModelsTest {
 
     private fun TestScope.importer() = VideoTakeImporter(
         FakeVideoFiles(), FakeFileTakeAnalyzer(), FakeSessionRepository(), SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), FakeRunningPracticeStore(),
-        RepertoireConfig(), IntonationConfig(), clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
+        PracticeConfig(), RepertoireConfig(), IntonationConfig(), clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
     )
 
     private fun TestScope.backupScreen(manager: BackupManager) = BackupViewModel(manager, store, BackupConfig(), watch, importer())

@@ -33,6 +33,7 @@ import com.violinjourney.app.core.domain.IntonationEngine
 import com.violinjourney.app.core.domain.IntonationReading
 import com.violinjourney.app.core.domain.PitchFrame
 import com.violinjourney.app.core.domain.TargetMode
+import com.violinjourney.app.core.domain.practice.ForgottenPractice
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.session.RecordingProgress
@@ -171,8 +172,18 @@ class TakePipeline(
         }
     }
 
-    private suspend fun markSoundIfDue(reading: IntonationReading) {
-        if (practiceStartedAt == null) return
+    /**
+     * The start of the practice the chain hears for, or null: none runs, or it is past the limit — it has ended by
+     * itself then (spec 3.12), and a note played now is neither its sound nor its takts.
+     */
+    private fun practiceHeard(): Long? = practiceStartedAt?.takeIf { ForgottenPractice.runsAt(it, clock.millis(), practiceConfig) }
+
+    /**
+     * [practice] is [practiceHeard]: past the limit there is none, for a mark then would move the end of the expired
+     * practice from its last sound to twelve hours (spec 3.12).
+     */
+    private suspend fun markSoundIfDue(practice: Long?, reading: IntonationReading) {
+        if (practice == null) return
         if (reading !is IntonationReading.Active || reading.held) return
         val now = clock.millis()
         val last = lastSoundMarkAt
@@ -319,6 +330,10 @@ class TakePipeline(
         return pitchSource.frames(config)
             .onStart {
                 engine.reset()
+                // A source opened anew counts its tMs from zero: the mark of the stream before would otherwise keep the
+                // notes from being written out for as long as that stream ran (spec 5.17). Its counter was emptied by
+                // the onCompletion of that stream.
+                lastNotesFlushTMs = 0L
                 onRestart()
             }
             .map { frame ->
@@ -327,15 +342,18 @@ class TakePipeline(
                     awaitingSignal = false
                 }
                 val reading = engine.process(frame, targetMode())
-                markSoundIfDue(reading)
-                if (practiceStartedAt != null) {
+                val practice = practiceHeard()
+                markSoundIfDue(practice, reading)
+                if (practice != null) {
                     counter.add(frame.tMs, reading)
                     if (frame.tMs - lastNotesFlushTMs >= journeyConfig.notesFlushMs) {
                         lastNotesFlushTMs = frame.tMs
                         flushNotes(counter.take())
                     }
                 } else {
-                    counter.finish() // no practice, no journey: what sounded outside it is not counted
+                    // no practice, no journey: what sounded outside it is not counted (flushNotes writes nothing without
+                    // one) — but a practice that has just reached its limit keeps what it heard before it
+                    flushNotes(counter.finish())
                 }
                 if (recordingRequested.value && recorder == null && mayStartRecorder(frame.tMs)) {
                     // the backing, when there is one to play, at the rate the take is really recorded at (spec 3.32)

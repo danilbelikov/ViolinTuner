@@ -5,6 +5,8 @@ import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.di.ElapsedClock
 import com.violinjourney.app.core.domain.IntonationConfig
+import com.violinjourney.app.core.domain.practice.ForgottenPractice
+import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.session.RecordingRibbon
@@ -103,6 +105,7 @@ class VideoTakeImporter(
     private val sessions: SessionRepository,
     private val configSource: IntonationConfigSource,
     private val practice: RunningPracticeStore,
+    private val practiceConfig: PracticeConfig,
     private val repertoireConfig: RepertoireConfig,
     private val intonationDefaults: IntonationConfig,
     private val clock: WallClock,
@@ -280,7 +283,9 @@ class VideoTakeImporter(
     private suspend fun markSound(atEpochMs: Long) {
         try {
             val running = practice.running.first() ?: return
-            if (atEpochMs >= running.startedAtEpochMs && atEpochMs > (running.lastSoundEpochMs ?: 0)) practice.markSound(atEpochMs)
+            // past the limit the practice has ended by itself (spec 3.12): a shot then is not of it and must not move its end
+            val ofIt = atEpochMs >= running.startedAtEpochMs && ForgottenPractice.runsAt(running.startedAtEpochMs, atEpochMs, practiceConfig)
+            if (ofIt && atEpochMs > (running.lastSoundEpochMs ?: 0)) practice.markSound(atEpochMs)
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {

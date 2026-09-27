@@ -3,6 +3,8 @@ package com.violinjourney.app.core.domain.practice
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_HOUR
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 import kotlin.test.Test
 
 class ForgottenPracticeTest {
@@ -67,5 +69,34 @@ class ForgottenPracticeTest {
     fun `a clock moved backwards reads as no time elapsed`() {
         assertEquals(0L, RunningPractice(start, null).elapsedMs(start - MS_PER_HOUR))
         assertEquals(PracticeCheck.Running, check(-MS_PER_HOUR, lastSoundAgoMs = null))
+    }
+
+    @Test
+    fun `ended within the limit a practice counts up to the end`() {
+        val running = RunningPractice(start, start + 40 * MS_PER_MINUTE)
+        assertEquals(3 * MS_PER_HOUR, ForgottenPractice.lengthAt(running, start + 3 * MS_PER_HOUR, config))
+        assertEquals(config.maxPracticeMs, ForgottenPractice.lengthAt(running, start + config.maxPracticeMs, config))
+    }
+
+    @Test
+    fun `ended past the limit it counts up to its last sound`() {
+        val running = RunningPractice(start, start + 40 * MS_PER_MINUTE)
+        assertEquals(40 * MS_PER_MINUTE, ForgottenPractice.lengthAt(running, start + 13 * MS_PER_HOUR, config))
+    }
+
+    @Test
+    fun `ended past the limit without a sound it counts an hour`() {
+        assertEquals(60 * MS_PER_MINUTE, ForgottenPractice.lengthAt(RunningPractice(start, null), start + 13 * MS_PER_HOUR, config))
+    }
+
+    @Test
+    fun `ended before its start by a clock moved back it counts nothing`() {
+        assertEquals(0L, ForgottenPractice.lengthAt(RunningPractice(start, null), start - MS_PER_HOUR, config))
+    }
+
+    @Test
+    fun `a sound belongs to the practice up to the limit and not after it`() {
+        assertTrue(ForgottenPractice.runsAt(start, start + config.maxPracticeMs, config))
+        assertFalse(ForgottenPractice.runsAt(start, start + config.maxPracticeMs + 1, config))
     }
 }

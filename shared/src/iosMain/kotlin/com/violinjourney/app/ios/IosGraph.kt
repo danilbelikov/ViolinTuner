@@ -163,7 +163,7 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
     val analysisSpeed = AnalysisSpeed()
     val fileAnalyzer = DecodingFileTakeAnalyzer(PitchDetectorFactory(::MpmDetector), repertoireConfig, Dispatchers.Default, IosPcmFileOpener)
     val videoImporter = VideoTakeImporter(
-        videoFiles, fileAnalyzer, sessions, configSource, runningPractice, repertoireConfig, intonationConfig, clock, elapsed, analysisSpeed,
+        videoFiles, fileAnalyzer, sessions, configSource, runningPractice, practiceConfig, repertoireConfig, intonationConfig, clock, elapsed, analysisSpeed,
         Dispatchers.Default, analytics,
     )
 

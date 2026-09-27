@@ -108,7 +108,7 @@ class PieceViewModelTest {
 
     // one importer for all the screens of a test, as it is one for the app
     private fun TestScope.importer() = videoImporter ?: VideoTakeImporter(
-        videoFiles, videoAnalyzer, sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, RepertoireConfig(), IntonationConfig(),
+        videoFiles, videoAnalyzer, sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, PracticeConfig(), RepertoireConfig(), IntonationConfig(),
         clock, { testScheduler.currentTime }, AnalysisSpeed(), StandardTestDispatcher(testScheduler),
     ).also { videoImporter = it }
 

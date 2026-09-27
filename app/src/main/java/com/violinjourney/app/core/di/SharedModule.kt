@@ -122,6 +122,7 @@ object SharedModule {
         sessions: SessionRepository,
         configSource: IntonationConfigSource,
         practice: RunningPracticeStore,
+        practiceConfig: PracticeConfig,
         repertoireConfig: RepertoireConfig,
         intonationDefaults: IntonationConfig,
         clock: WallClock,
@@ -129,7 +130,7 @@ object SharedModule {
         speed: AnalysisSpeed,
         @DefaultDispatcher dispatcher: CoroutineDispatcher,
         analytics: Analytics,
-    ) = VideoTakeImporter(files, analyzer, sessions, configSource, practice, repertoireConfig, intonationDefaults, clock, elapsed, speed, dispatcher, analytics)
+    ) = VideoTakeImporter(files, analyzer, sessions, configSource, practice, practiceConfig, repertoireConfig, intonationDefaults, clock, elapsed, speed, dispatcher, analytics)
 
     /** One per app: it measures how fast renders go on this phone (spec 5.11). */
     @Provides

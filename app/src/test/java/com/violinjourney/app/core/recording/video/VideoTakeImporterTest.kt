@@ -4,6 +4,7 @@ import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.FakeAnalytics
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
+import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
@@ -51,7 +52,7 @@ class VideoTakeImporterTest {
         practice: RunningPracticeStore = this@VideoTakeImporterTest.practice,
     ): Pair<VideoTakeImporter, MutableList<VideoTakeImporter.Saved>> {
         val importer = VideoTakeImporter(
-            files, analyzer, sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, RepertoireConfig(), IntonationConfig(),
+            files, analyzer, sessions, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()), practice, PracticeConfig(), RepertoireConfig(), IntonationConfig(),
             clock, { testScheduler.currentTime }, speed, StandardTestDispatcher(testScheduler), analytics,
         )
         val saved = mutableListOf<VideoTakeImporter.Saved>()
@@ -277,6 +278,18 @@ class VideoTakeImporterTest {
         importer.shot(7, shot)
         advance(6_000)
         assertEquals(now.toEpochMilliseconds(), practice.running.value!!.lastSoundEpochMs)
+    }
+
+    @Test
+    fun `a shot past the twelve hours of a practice leaves its last sound where it was`() = runTest {
+        // the practice has ended by itself at its last sound (spec 3.12): a later shot would stretch it to twelve hours
+        val start = now.toEpochMilliseconds() - PracticeConfig().maxPracticeMs - 60_000
+        practice.start(start)
+        practice.markSound(start + 40 * 60_000)
+        val (importer, _) = importer()
+        importer.shot(7, shot)
+        advance(6_000)
+        assertEquals(start + 40 * 60_000, practice.running.value!!.lastSoundEpochMs)
     }
 
     @Test
