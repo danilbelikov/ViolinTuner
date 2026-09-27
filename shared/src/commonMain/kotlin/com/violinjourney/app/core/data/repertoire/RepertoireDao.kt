@@ -52,8 +52,17 @@ abstract class RepertoireDao {
     )
     protected abstract suspend fun settleLearned(id: Long, learned: String, now: Long)
 
+    // An edit that changes nothing is no activity (spec 5.9): «Сохранить» without an edit, or the status the piece
+    // already has, writes nothing, so the time of the last edit — and the piece's place in the list — stays.
     @Transaction
     open suspend fun updatePiece(entity: PieceEntity, learned: String, now: Long) {
+        val before = piece(entity.id) ?: return
+        val edited = before.copy(
+            title = entity.title, composer = entity.composer, keyTonic = entity.keyTonic, keyAccidental = entity.keyAccidental,
+            keyMode = entity.keyMode, tempoBpm = entity.tempoBpm, status = entity.status, notes = entity.notes,
+            section = entity.section, groupId = entity.groupId, scaleKind = entity.scaleKind, scaleOctaves = entity.scaleOctaves,
+        )
+        if (edited == before) return
         updatePieceRow(
             entity.id, entity.title, entity.composer, entity.keyTonic, entity.keyAccidental, entity.keyMode, entity.tempoBpm,
             entity.status, entity.notes, entity.section, entity.groupId, entity.scaleKind, entity.scaleOctaves, now,
@@ -63,6 +72,8 @@ abstract class RepertoireDao {
 
     @Transaction
     open suspend fun setStatus(id: Long, status: String, learned: String, now: Long) {
+        val before = piece(id) ?: return
+        if (before.status == status) return
         setStatusRow(id, status, now)
         settleLearned(id, learned, now)
     }

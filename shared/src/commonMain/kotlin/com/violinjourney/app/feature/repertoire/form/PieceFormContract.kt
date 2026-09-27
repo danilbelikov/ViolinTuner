@@ -29,6 +29,8 @@ data class PieceFormState(
     val maxNotesLength: Int,
     /** Opened by «Добавить заметку»: the notes field takes the focus. */
     val focusNotes: Boolean,
+    /** The title as stored: the delete dialog names the piece by it, whatever half-typed one the field holds. */
+    val savedTitle: String = "",
     /** Where the element lives: decides the words and the fields of the form. */
     val section: SectionRef = SectionRef.BuiltIn(PieceSection.PIECES),
     /** Every section there is, for the field «Раздел» of an edit; a new element is born where it was asked for. */

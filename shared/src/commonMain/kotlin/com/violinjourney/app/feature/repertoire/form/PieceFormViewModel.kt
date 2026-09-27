@@ -108,6 +108,11 @@ open class PieceFormViewModel(
             return
         }
         saving = true
+        // An edit that changes nothing is no edit (spec 5.9): the form just closes, and the piece keeps its place in the list.
+        if (pieceId != null && !PieceFormReducer.isDirty(initial, draft, config)) {
+            effectChannel.trySend(PieceFormEffect.Close)
+            return
+        }
         viewModelScope.launch {
             val now = clock.millis()
             if (pieceId == null) {
@@ -163,6 +168,7 @@ open class PieceFormViewModel(
             maxComposerLength = config.maxComposerLength,
             maxNotesLength = config.maxNotesLength,
             focusNotes = focusNotes,
+            savedTitle = initial.title,
             section = PieceRules.sectionOf(Piece(0, "", "", null, null, draft.status, "", 0, 0, section = draft.section, groupId = draft.groupId), groups),
             sections = SectionStats.summaries(emptyList(), groups).map { SectionOption(it.ref, it.name, enabled = it.ref != SectionRef.BuiltIn(PieceSection.SCALES)) },
         )

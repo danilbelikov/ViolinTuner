@@ -110,6 +110,25 @@ class RoomRepertoireRepositoryTest {
         assertEquals(120L, repository.piece(id)!!.updatedAtEpochMs)
     }
 
+    // spec 5.9: an edit is a change — «Сохранить» without one, or the status the piece already has, does not lift it up the list
+    @Test
+    fun anEditThatChangesNothingAndTheSameStatusLeaveTheLastActivity() = runBlocking {
+        val id = repository.add(minuet, nowEpochMs = 10)
+        repository.update(id, minuet.copy(title = "Менуэт соль мажор  ", notes = " Такты 9–12: не спешить "), nowEpochMs = 20)
+        assertEquals("the same fields, stray spaces aside", 10L, repository.piece(id)!!.updatedAtEpochMs)
+        repository.setStatus(id, PieceStatus.LEARNING, nowEpochMs = 30)
+        assertEquals("the status it already has", 10L, repository.piece(id)!!.updatedAtEpochMs)
+
+        repository.update(id, minuet.copy(tempoBpm = 100), nowEpochMs = 40)
+        assertEquals(40L, repository.piece(id)!!.updatedAtEpochMs)
+        repository.setStatus(id, PieceStatus.IN_REPERTOIRE, nowEpochMs = 50)
+        assertEquals(50L, repository.piece(id)!!.updatedAtEpochMs)
+        assertEquals(50L, repository.piece(id)!!.learnedAtEpochMs)
+        repository.setStatus(id, PieceStatus.IN_REPERTOIRE, nowEpochMs = 60)
+        assertEquals("the day it was learnt stays too", 50L, repository.piece(id)!!.learnedAtEpochMs)
+        assertEquals(50L, repository.piece(id)!!.updatedAtEpochMs)
+    }
+
     @Test
     fun pagesStandInTheOrderTheyWereAddedAndCountAsActivity() = runBlocking {
         val id = repository.add(minuet, nowEpochMs = 10)

@@ -29,11 +29,16 @@ class FakeRepertoireRepository(private val config: RepertoireConfig = Repertoire
         return id
     }
 
+    /** How often an edit was asked for — a form without edits asks for none (spec 5.9). */
+    var updates = 0
+
+    // As the database: an edit that changes nothing, and the status a piece already has, leave it as it was (spec 5.9).
     override suspend fun update(id: Long, draft: PieceDraft, nowEpochMs: Long) {
+        updates++
         val clean = requireNotNull(PieceRules.clean(draft, config))
         pieces.update { list ->
             list.map {
-                if (it.id != id) it
+                if (it.id != id || PieceRules.draftOf(it) == clean) it
                 else it.copy(
                     title = clean.title, composer = clean.composer, key = clean.key, tempoBpm = clean.tempoBpm,
                     status = clean.status, notes = clean.notes, updatedAtEpochMs = nowEpochMs,
@@ -45,7 +50,9 @@ class FakeRepertoireRepository(private val config: RepertoireConfig = Repertoire
     }
 
     override suspend fun setStatus(id: Long, status: PieceStatus, nowEpochMs: Long) {
-        pieces.update { list -> list.map { if (it.id == id) it.copy(status = status, updatedAtEpochMs = nowEpochMs, learnedAtEpochMs = learnedAt(it, status, nowEpochMs)) else it } }
+        pieces.update { list ->
+            list.map { if (it.id == id && it.status != status) it.copy(status = status, updatedAtEpochMs = nowEpochMs, learnedAtEpochMs = learnedAt(it, status, nowEpochMs)) else it }
+        }
     }
 
     private fun learnedAt(piece: Piece, status: PieceStatus, now: Long): Long? =

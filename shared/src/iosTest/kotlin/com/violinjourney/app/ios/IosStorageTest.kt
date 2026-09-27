@@ -23,6 +23,8 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.TolerancePreset
 import com.violinjourney.app.core.domain.practice.PracticeEntry
 import com.violinjourney.app.core.domain.progress.ProgressConfig
+import com.violinjourney.app.core.domain.repertoire.PieceDraft
+import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.io.PlatformFile
 import com.violinjourney.app.core.io.child
@@ -242,6 +244,24 @@ class IosStorageTest {
         val folder = store.newStaging().child(BackupPaths.DATABASE).also { it.makeDirectories() }
         folder.child(AppDatabase.FILE_NAME).openOutput()!!.use { it.write(ByteArray(8_192) { 7 }, 0, 8_192) }
         assertFails { store.settleStaging(1_790_000_000_000) }
+        database.close()
+    }
+
+    // spec 5.9: an edit is a change — «Сохранить» without one, or the status the piece already has, does not lift it up the list
+    @Test
+    fun `an edit that changes nothing and the status it already has leave the last activity`() = runTest {
+        val database = IosStorage.database(directory)
+        val repertoire = RoomRepertoireRepository(database.repertoireDao(), NoSheetFiles, RepertoireConfig(), SystemWallClock, NoOpAnalytics())
+        val minuet = PieceDraft(title = "Менуэт", composer = "Бах", tempoBpm = 96, status = PieceStatus.READING, notes = "Такты 9–12")
+        val id = repertoire.add(minuet, nowEpochMs = 10)
+        repertoire.update(id, minuet.copy(title = " Менуэт ", notes = "Такты 9–12  "), nowEpochMs = 20)
+        assertEquals(10L, repertoire.piece(id)!!.updatedAtEpochMs, "the same fields, stray spaces aside")
+        repertoire.setStatus(id, PieceStatus.READING, nowEpochMs = 30)
+        assertEquals(10L, repertoire.piece(id)!!.updatedAtEpochMs, "the status it already has")
+        repertoire.update(id, minuet.copy(tempoBpm = 100), nowEpochMs = 40)
+        assertEquals(40L, repertoire.piece(id)!!.updatedAtEpochMs)
+        repertoire.setStatus(id, PieceStatus.LEARNING, nowEpochMs = 50)
+        assertEquals(50L, repertoire.piece(id)!!.updatedAtEpochMs)
         database.close()
     }
 

@@ -306,6 +306,21 @@ class SectionsTest {
         assertEquals(ScaleFormEffect.Close, effects.last())
     }
 
+    @Test
+    fun `a scale saved without an edit keeps its title and its place`() = runTest {
+        // made in another language of the interface: saving it again would give it a title of this one
+        val id = repertoire.add(PieceDraft(title = "G-dur", section = PieceSection.SCALES, scale = gMajor, key = gMajor.key), 1)
+        val (form, effects) = scaleForm(id)
+        form.onIntent(ScaleFormIntent.SaveClicked)
+        form.onIntent(ScaleFormIntent.SaveClicked)
+        runCurrent()
+        val saved = repertoire.piece(id)!!
+        assertEquals("the form asks for no edit at all", 0, repertoire.updates)
+        assertEquals("G-dur", saved.title)
+        assertEquals("no edit, no activity (spec 5.9)", 1L, saved.updatedAtEpochMs)
+        assertEquals(listOf<ScaleFormEffect>(ScaleFormEffect.Close), effects)
+    }
+
     /** A block of [minutes] of [pieceId] on [date] (spec 3.28): what a saved practice leaves. */
     private fun block(pieceId: Long, date: LocalDate, minutes: Long) =
         SavedBlock(pieceId, date, 0, minutes * 60_000, minutes * 60_000, done = true, paid = false)

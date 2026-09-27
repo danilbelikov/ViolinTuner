@@ -92,6 +92,11 @@ open class ScaleFormViewModel(
         val draft = pieceDraftOf(current.draft) ?: return
         if (saving || !current.canSave) return
         saving = true
+        // An untouched scale is not saved (spec 5.9): it keeps its place in the list, and its title the language it was made in.
+        if (pieceId != null && current.draft == initial) {
+            effectChannel.trySend(ScaleFormEffect.Close)
+            return
+        }
         viewModelScope.launch {
             val now = clock.millis()
             if (pieceId == null) {

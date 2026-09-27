@@ -167,7 +167,7 @@ fun PieceFormScreen(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit, 
             onIntent = onIntent,
         )
         PieceFormDialog.DELETE -> ConfirmDialog(
-            title = stringResource(Res.string.piece_delete_title, state.draft.title.trim()),
+            title = stringResource(Res.string.piece_delete_title, state.savedTitle),
             text = stringResource(Res.string.piece_delete_text),
             confirm = stringResource(Res.string.piece_delete_confirm),
             destructive = true,

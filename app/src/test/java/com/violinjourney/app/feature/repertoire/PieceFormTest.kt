@@ -181,6 +181,30 @@ class PieceFormTest {
         assertNull(fresh.state.value.dialog)
     }
 
+    // spec 5.9: an edit is a change — a save that changes nothing does not lift the piece up the list
+    @Test
+    fun `saving without an edit closes and leaves the piece where it was`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт", composer = "Бах", tempoBpm = 96), nowEpochMs = 1)
+        val (form, effects) = form(id)
+        form.onIntent(PieceFormIntent.TitleChanged("Менуэт "))
+        form.onIntent(PieceFormIntent.SaveClicked)
+        form.onIntent(PieceFormIntent.SaveClicked)
+        runCurrent()
+        assertEquals("the form asks for no edit at all", 0, repertoire.updates)
+        assertEquals(1L, repertoire.piece(id)!!.updatedAtEpochMs)
+        assertEquals("closed once", listOf<PieceFormEffect>(PieceFormEffect.Close), effects)
+    }
+
+    @Test
+    fun `the delete dialog names the piece as stored, not the half-typed title`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (form, _) = form(id)
+        form.onIntent(PieceFormIntent.TitleChanged(""))
+        form.onIntent(PieceFormIntent.DeleteClicked)
+        assertEquals(PieceFormDialog.DELETE, form.state.value.dialog)
+        assertEquals("Менуэт", form.state.value.savedTitle)
+    }
+
     @Test
     fun `the form of a piece that is gone closes by itself`() = runTest {
         val (_, effects) = form(pieceId = 404)
