@@ -20,7 +20,9 @@ import kotlinx.coroutines.flow.asStateFlow
  * [Surface], led by the clock of the sound. It plays nothing by itself — [follow] tells it where
  * the player is and whether it moves, and a frame is shown when the sound has come to its time.
  * The picture follows the sound, never the other way round: a late frame is dropped, the sound
- * does not wait. Between two words of the player the position is carried on by the monotonic clock.
+ * does not wait. Between two words of the player the position is carried on by the monotonic clock — only while the
+ * sound is heard moving ([PictureCarry]): after a play or a seek the player's position waits while the sound is on its
+ * way to the ear, and so does the picture.
  *
  * Calls only leave wishes under a lock; a thread of its own decodes. Without a surface there is
  * no decoder — a surface that comes back (a rotation) gets a new one at the same place.
@@ -44,6 +46,7 @@ class VideoTrackRenderer(
     private var positionMs = 0L
     private var positionAtMs = 0L
     private var playing = false
+    private var carrying = false
     private var released = false
 
     private val mutableState = MutableStateFlow(VideoState())
@@ -69,8 +72,10 @@ class VideoTrackRenderer(
 
     /** Where the sound is, and whether it moves. Cheap; meant to be called on every word of the player. */
     override fun follow(positionMs: Long, playing: Boolean): Unit = lock.withLock {
+        val now = nowMs()
+        carrying = PictureCarry.carries(this.positionMs, positionAtMs, this.playing, positionMs, now, playing)
         this.positionMs = positionMs
-        this.positionAtMs = nowMs()
+        this.positionAtMs = now
         this.playing = playing
         changed.signalAll()
     }
@@ -87,7 +92,7 @@ class VideoTrackRenderer(
     private var boundSerial = IDLE
 
     private fun targetUs(): Long = lock.withLock {
-        val carried = if (playing) nowMs() - positionAtMs else 0
+        val carried = if (playing && carrying) nowMs() - positionAtMs else 0
         (positionMs + carried.coerceIn(0, MAX_CARRY_MS)) * MICROS_PER_MS
     }
 

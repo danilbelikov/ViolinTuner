@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.audio.playback
 
 import android.media.AudioFormat
+import android.media.AudioTimestamp
 import android.media.AudioTrack
 import android.os.Handler
 import android.os.Looper
@@ -31,6 +32,10 @@ import kotlinx.coroutines.flow.update
  *
  * While it plays it holds the phone's sound ([PlaybackFocus]): a call, another player or pulled-out headphones pause it,
  * and it gives the sound back on a pause, at the end of the recording and on [release]. Main thread, as its callers are.
+ *
+ * Its position is what is heard ([HeardClock]): the head of the track less the delay of the output, which
+ * `AudioTrack.getTimestamp` tells. The picture of a video take, the slider and the cursor of the note roll follow it, so
+ * none of them runs ahead of the ear — by 20–60 ms through the speaker, more in Bluetooth headphones (spec 5.13).
  */
 class ChainSessionPlayer(
     private val config: SoundConfig,
@@ -155,6 +160,13 @@ class ChainSessionPlayer(
         /** Inside the backing's unpack, which does not stop mid-file: [release] does not wait for it. */
         @Volatile var unpacking = false
 
+        /**
+         * When the track last began to play — between chunks or in the middle of one ([write]): a stamp from before it is
+         * of sound that went before a pause, and carried on across the pause it would make the delay come out too short.
+         * This thread's only.
+         */
+        private var playingSinceNanos = 0L
+
         override fun run() {
             val decoder = PcmDecoder.open(file)
             if (decoder == null) {
@@ -241,6 +253,9 @@ class ChainSessionPlayer(
             var violinPosition = 0L
             val mixer = AbMixer(chain.latencySamples, fadeSamples = (AB_FADE_MS * rate / MS_PER_SECOND).toInt())
             val durationMs = decoder.durationUs / US_PER_MS
+            val heard = HeardClock(rate, MAX_OUTPUT_LAG_MS, LAG_WAIT_MS)
+            val stamp = AudioTimestamp()
+            var sinceStamp = 0
             val pcm = ShortArray(CHUNK)
             val dry = FloatArray(CHUNK)
             val wet = FloatArray(CHUNK)
@@ -250,8 +265,6 @@ class ChainSessionPlayer(
             var processing = !SoundRules.isNeutral(current)
             mixer.jumpTo(if (processing && !synchronized(lock) { original }) 1f else 0f)
 
-            var baseMs = 0L
-            var headBase = 0L
             /** Samples of silence still to be pushed through after the end: the hall rings on, the delays empty out. */
             var tailLeft = NO_TAIL
             var running = false
@@ -307,14 +320,14 @@ class ChainSessionPlayer(
                     mixer.reset()
                     backingMix?.reset()
                     violinPosition = seek * rate / MS_PER_SECOND
-                    baseMs = seek
-                    headBase = head(track)
+                    heard.startAt(seek, head(track))
                     tailLeft = NO_TAIL
                 }
                 if (!playing) continue
                 if (!running) {
                     track.play()
                     running = true
+                    playingSinceNanos = System.nanoTime()
                 }
 
                 // — a chunk of sound —
@@ -351,7 +364,15 @@ class ChainSessionPlayer(
                 violinPosition += count
                 if (!written) continue // a wish came in mid-chunk: it goes first
 
-                val positionMs = (baseMs + (head(track) - headBase) * MS_PER_SECOND / rate).coerceIn(0, durationMs)
+                // what the output presents: at every chunk until it has said it once, then twice a second (the route may change)
+                sinceStamp += count
+                if (!heard.lagKnown || sinceStamp >= rate * LAG_CHECK_MS / MS_PER_SECOND) {
+                    sinceStamp = 0
+                    if (track.getTimestamp(stamp) && stamp.nanoTime >= playingSinceNanos) {
+                        heard.stamp(head(track), stamp.framePosition, stamp.nanoTime, System.nanoTime())
+                    }
+                }
+                val positionMs = heard.positionMs(head(track), count, durationMs)
                 mutableState.update { if (it.playing && !released) it.copy(positionMs = positionMs) else it }
                 sinceMeters += count
                 if (sinceMeters >= rate / METERS_PER_SECOND) {
@@ -370,8 +391,7 @@ class ChainSessionPlayer(
                     mixer.reset()
                     backingMix?.reset()
                     violinPosition = 0
-                    baseMs = 0
-                    headBase = head(track)
+                    heard.startAt(0, head(track))
                     tailLeft = NO_TAIL
                     synchronized(lock) { wantPlaying = false }
                     mutableMeters.value = null
@@ -406,6 +426,7 @@ class ChainSessionPlayer(
                             while (!wantPlaying && seekToMs == NO_SEEK && !released) lock.wait()
                             if (seekToMs != NO_SEEK || released) return@synchronized true
                             track.play()
+                            playingSinceNanos = System.nanoTime()
                         } else if (!released) {
                             // the track is full: wait until more of the rest fits; pause, seek and release wake this at once
                             lock.wait(TrackRoom.waitMs(count - offset, track.channelCount, track.sampleRate))
@@ -471,5 +492,14 @@ class ChainSessionPlayer(
         const val DRAIN_TIMEOUT_NS = 1_000_000_000L
         const val JOIN_TIMEOUT_MS = 1_000L
         const val UNSIGNED_INT = 0xFFFFFFFFL
+
+        /** A delay of the output longer than this is a stamp that lies (spec 5.13). */
+        const val MAX_OUTPUT_LAG_MS = 1_000L
+
+        /** How often the delay is asked for again once known: headphones may come or go while it plays. */
+        const val LAG_CHECK_MS = 500L
+
+        /** At the first play the position waits this long of sound, at most, for the output to say its delay. */
+        const val LAG_WAIT_MS = 500L
     }
 }

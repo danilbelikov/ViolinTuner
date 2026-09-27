@@ -122,14 +122,27 @@ class VideoPlaybackTest {
 
     @Test
     fun theSoundThatDoesNotMoveHoldsThePicture() {
-        val renderer = start(positionMs = 500, playing = true)
+        val renderer = start(positionMs = 500)
         await("the first frame") { frames.get() > 0 }
-        // a player that went silent is carried on for half a second at most, then the picture waits for it
+        // playing and moving: then the player goes silent — carried on for half a second at most, then the picture waits
+        renderer.follow(500, playing = true)
+        Thread.sleep(40)
+        renderer.follow(540, playing = true)
         Thread.sleep(1_200)
         val held = frames.get()
         Thread.sleep(500)
         assertEquals(held, frames.get())
-        assertTrue(frameOf(lastLuma.get()) <= frameAt(500 + 500) + 2)
+        assertTrue(frameOf(lastLuma.get()) <= frameAt(540 + 500) + 2)
+    }
+
+    @Test
+    fun aPlayWhoseSoundHasNotReachedTheEarHoldsThePictureAtItsPlace() {
+        val renderer = start(positionMs = 1_000)
+        await("the first frame") { frames.get() > 0 }
+        // «play»: the heard position waits at 1 s while the sound goes through the output, and the player says nothing
+        renderer.follow(1_000, playing = true)
+        Thread.sleep(400)
+        assertTrue("frame ${frameOf(lastLuma.get())}", abs(frameOf(lastLuma.get()) - frameAt(1_000)) <= 1)
     }
 
     @Test
