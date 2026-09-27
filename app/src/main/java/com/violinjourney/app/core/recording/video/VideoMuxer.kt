@@ -18,12 +18,6 @@ import kotlin.coroutines.cancellation.CancellationException
  * was, beside its rendered sound.
  */
 object VideoMuxer {
-    /** How far the picture is to be moved, in µs: its start minus the sound's, both on `CLOCK_MONOTONIC`. */
-    fun shiftUs(pictureStartNanos: Long, soundStartNanos: Long): Long = VideoShift.shiftUs(pictureStartNanos, soundStartNanos)
-
-    /** Where a picture sample at [ptsUs] lands after the shift; null — before the sound, left out. */
-    fun shiftedUs(ptsUs: Long, shiftUs: Long): Long? = VideoShift.shiftedUs(ptsUs, shiftUs)
-
     /** The take of the app's camera: [splice] with the picture moved by [shiftUs]. */
     fun mux(picture: File, sound: File, target: File, shiftUs: Long): Boolean = splice(picture, sound, target, shiftUs)
 
@@ -84,7 +78,7 @@ object VideoMuxer {
                 }
                 val key = from.sampleFlags and MediaExtractor.SAMPLE_FLAG_SYNC != 0
                 if (fromVideo) {
-                    val at = shiftedUs(from.sampleTime, pictureShiftUs)
+                    val at = VideoShift.shiftedUs(from.sampleTime, pictureShiftUs)
                     if (at != null && (keyFrameSeen || key)) {
                         keyFrameSeen = true
                         info.set(0, size, at, if (key) MediaCodec.BUFFER_FLAG_KEY_FRAME else 0)

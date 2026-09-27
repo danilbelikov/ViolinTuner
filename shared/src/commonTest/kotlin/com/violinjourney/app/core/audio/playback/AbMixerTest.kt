@@ -1,9 +1,9 @@
 package com.violinjourney.app.core.audio.playback
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class AbMixerTest {
     private fun ramp(size: Int, from: Int = 1) = FloatArray(size) { (from + it).toFloat() }
@@ -28,7 +28,7 @@ class AbMixerTest {
     }
 
     @Test
-    fun `a switch is a fade of the given length, against the original of the same moment`() {
+    fun `a switch is a fade of the given length against the original of the same moment`() {
         val mixer = AbMixer(latencySamples = 2, fadeSamples = 4)
         mixer.jumpTo(1f)
         mixer.mix(ramp(2), FloatArray(2), 2) // fills the delay with 1, 2
@@ -45,10 +45,10 @@ class AbMixerTest {
         val mixer = AbMixer(latencySamples = 0, fadeSamples = 4)
         mixer.aim(1f)
         mixer.mix(FloatArray(2), FloatArray(2) { 1f }, 2)
-        assertEquals(0.5f, mixer.processedShare, 0f)
+        assertEquals(0.5f, mixer.processedShare, absoluteTolerance = 0f)
         mixer.aim(0f)
         mixer.mix(FloatArray(1), FloatArray(1) { 1f }, 1)
-        assertEquals(0.25f, mixer.processedShare, 0f)
+        assertEquals(0.25f, mixer.processedShare, absoluteTolerance = 0f)
     }
 
     @Test
@@ -62,13 +62,13 @@ class AbMixerTest {
     }
 
     @Test
-    fun `leaving the original alone tells the chain to start clean - once, and only then`() {
+    fun `leaving the original alone tells the chain to start clean - once and only then`() {
         val mixer = AbMixer(latencySamples = 0, fadeSamples = 4)
         mixer.jumpTo(0f)
-        assertTrue("the chain rested: it is to be reset before it is heard", mixer.aim(1f))
-        assertFalse("already on its way — no second reset", mixer.aim(1f))
+        assertTrue(mixer.aim(1f), "the chain rested: it is to be reset before it is heard")
+        assertFalse(mixer.aim(1f), "already on its way — no second reset")
         mixer.mix(FloatArray(2), FloatArray(2), 2)
-        assertFalse("staying at the original wakes nothing", AbMixer(latencySamples = 0, fadeSamples = 4).aim(0f))
+        assertFalse(AbMixer(latencySamples = 0, fadeSamples = 4).aim(0f), "staying at the original wakes nothing")
 
         // turned round midway: the chain has kept running under the fade, it is not stale
         mixer.aim(0f)
@@ -84,6 +84,6 @@ class AbMixerTest {
         assertTrue(mixer.aim(1f))
 
         val processing = AbMixer(latencySamples = 0, fadeSamples = 4).apply { jumpTo(1f) }
-        assertFalse("leaving the processing for the original needs no reset", processing.aim(0f))
+        assertFalse(processing.aim(0f), "leaving the processing for the original needs no reset")
     }
 }

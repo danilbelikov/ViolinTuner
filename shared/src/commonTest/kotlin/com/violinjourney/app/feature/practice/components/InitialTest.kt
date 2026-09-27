@@ -1,7 +1,7 @@
 package com.violinjourney.app.feature.practice.components
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class InitialTest {
     @Test
@@ -17,7 +17,7 @@ class InitialTest {
     }
 
     @Test
-    fun `a flag, a skin tone, a family and a letter with its mark stay whole`() {
+    fun `a flag - a skin tone - a family and a letter with its mark stay whole`() {
         assertEquals("\uD83C\uDDF7\uD83C\uDDFA", initialOf("\uD83C\uDDF7\uD83C\uDDFA Даня"))
         assertEquals("\uD83D\uDC4B\uD83C\uDFFD", initialOf("\uD83D\uDC4B\uD83C\uDFFD Аня"))
         val family = "\uD83D\uDC68\u200D\uD83D\uDC69\u200D\uD83D\uDC67"

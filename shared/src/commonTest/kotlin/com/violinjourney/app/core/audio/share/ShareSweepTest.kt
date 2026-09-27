@@ -1,8 +1,8 @@
 package com.violinjourney.app.core.audio.share
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 /** The rule that empties `cache/share` (spec 5.11). */
 class ShareSweepTest {
@@ -14,12 +14,12 @@ class ShareSweepTest {
     private fun mb(count: Long) = count * 1024 * 1024
 
     @Test
-    fun `nothing prepared, nothing to sweep`() {
+    fun `nothing prepared - nothing to sweep`() {
         assertTrue(ShareSweep.toDelete(emptyList(), now).isEmpty())
     }
 
     @Test
-    fun `a sound waits a day, a video an hour`() {
+    fun `a sound waits a day - a video an hour`() {
         val folders = listOf(
             folder("sound-fresh", agoMs = 23 * HOUR),
             folder("sound-stale", agoMs = 25 * HOUR),

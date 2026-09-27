@@ -1,10 +1,12 @@
 package com.violinjourney.app.feature.journey
 
 import com.violinjourney.app.core.domain.journey.JourneyRoute
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.math.PI
+import kotlin.math.atan2
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class JourneyMapMathTest {
     private val points = JourneyMapMath.points()
@@ -15,11 +17,11 @@ class JourneyMapMathTest {
             val leg = JourneyMapMath.leg(index, points)
             assertEquals(points[index], JourneyMapMath.at(leg, 0f))
             val end = JourneyMapMath.at(leg, 1f)
-            assertEquals(points[index + 1].x, end.x, 0.001f)
-            assertEquals(points[index + 1].y, end.y, 0.001f)
+            assertEquals(points[index + 1].x, end.x, absoluteTolerance = 0.001f)
+            assertEquals(points[index + 1].y, end.y, absoluteTolerance = 0.001f)
             for (step in 0..10) {
                 val at = JourneyMapMath.at(leg, step / 10f)
-                assertTrue("leg $index leaves the map at $at", at.x in -20f..JourneyMapMath.WIDTH + 20f && at.y in -20f..JourneyMapMath.HEIGHT + 20f)
+                assertTrue(at.x in -20f..JourneyMapMath.WIDTH + 20f && at.y in -20f..JourneyMapMath.HEIGHT + 20f, "leg $index leaves the map at $at")
             }
         }
     }
@@ -30,8 +32,8 @@ class JourneyMapMathTest {
             val before = JourneyMapMath.leg(index - 1, points)
             val after = JourneyMapMath.leg(index, points)
             // the tangent of a Catmull-Rom curve is the same on both sides of a stop
-            assertEquals(before.to.x - before.c2.x, after.c1.x - after.from.x, 0.001f)
-            assertEquals(before.to.y - before.c2.y, after.c1.y - after.from.y, 0.001f)
+            assertEquals(before.to.x - before.c2.x, after.c1.x - after.from.x, absoluteTolerance = 0.001f)
+            assertEquals(before.to.y - before.c2.y, after.c1.y - after.from.y, absoluteTolerance = 0.001f)
         }
     }
 
@@ -51,15 +53,15 @@ class JourneyMapMathTest {
         val heading = JourneyMapMath.headingAt(leg, 0.5f)
         val a = JourneyMapMath.at(leg, 0.4f)
         val b = JourneyMapMath.at(leg, 0.6f)
-        val expected = Math.toDegrees(kotlin.math.atan2((b.y - a.y).toDouble(), (b.x - a.x).toDouble())).toFloat()
-        assertEquals(expected, heading, 10f)
+        val expected = (atan2((b.y - a.y).toDouble(), (b.x - a.x).toDouble()) * 180 / PI).toFloat()
+        assertEquals(expected, heading, absoluteTolerance = 10f)
     }
 
     @Test
     fun theMapThatFitsDoesNotMove_theZoomedOneMovesByItsOverhang() {
         val still = JourneyMapMath.clampPan(300f, -300f, k = 1f, width = 412f, height = 800f)
-        assertEquals(0f, still.x, 0f)
-        assertEquals(0f, still.y, 0f)
+        assertEquals(0f, still.x, absoluteTolerance = 0f)
+        assertEquals(0f, still.y, absoluteTolerance = 0f)
         val zoomed = JourneyMapMath.clampPan(1_000f, -1_000f, k = 2f, width = 412f, height = 700f)
         assertEquals(JourneyMapMath.Point(206f, -350f), zoomed)
     }

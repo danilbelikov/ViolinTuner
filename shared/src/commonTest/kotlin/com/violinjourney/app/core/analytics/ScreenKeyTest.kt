@@ -1,8 +1,8 @@
 package com.violinjourney.app.core.analytics
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class ScreenKeyTest {
     @Test
@@ -11,7 +11,7 @@ class ScreenKeyTest {
     }
 
     @Test
-    fun `an argument never leaves the phone, filled in or not`() {
+    fun `an argument never leaves the phone - filled in or not`() {
         assertEquals("piece", screenKeyOf("piece/{pieceId}"))
         assertEquals("piece", screenKeyOf("piece/42"))
         assertEquals("session", screenKeyOf("session?take=42"))

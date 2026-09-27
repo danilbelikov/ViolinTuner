@@ -11,16 +11,16 @@ import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.domain.progress.Profile
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.session.SessionSummary
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.LocalDateTime
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
 import kotlinx.datetime.toInstant
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class PracticeReducerTest {
     private val config = PracticeConfig()
@@ -53,7 +53,7 @@ class PracticeReducerTest {
     )
 
     @Test
-    fun `calendar cells carry fill level, today, selection and future flags`() {
+    fun `calendar cells carry fill level - today - selection and future flags`() {
         val state = state()
         assertEquals(35, state.cells.size)
         assertNull(state.cells[0])
@@ -113,7 +113,7 @@ class PracticeReducerTest {
     }
 
     @Test
-    fun `a record of the day made under a backing carries its sign, as in «Записи»`() {
+    fun `a record of the day made under a backing carries its sign as in «Записи»`() {
         val sessions = listOf(session(1, "2026-09-17T08:00:00"), session(2, "2026-09-17T09:00:00"))
         val cards = state(sessions = sessions, underBackingIds = setOf(1L)).selected.sessions
         assertEquals(listOf(2L to false, 1L to true), cards.map { it.id to it.underBacking })
@@ -168,7 +168,7 @@ class PracticeReducerTest {
     }
 
     @Test
-    fun `edit sheet steps, adds and clamps between zero and twelve hours`() {
+    fun `edit sheet steps - adds and clamps between zero and twelve hours`() {
         val sheet = PracticeReducer.editSheet(today, 85 * MS_PER_MINUTE, config)
         assertEquals(85, sheet.minutes)
         assertEquals(720, sheet.maxMinutes)
@@ -194,7 +194,7 @@ class PracticeReducerTest {
     private val titles = mapOf(1L to "G-dur · 3 октавы", 2L to "Кайзер № 3", 3L to "Менуэт соль мажор", 4L to "Концерт ля минор, I ч.")
 
     @Test
-    fun `«Что играли» lists the blocks in the order played and follows the stepper (30g1, 30g2)`() {
+    fun `«Что играли» lists the blocks in the order played and follows the stepper - 30g1 and 30g2`() {
         val sheet = PracticeReducer.summarySheet(lessonStart, 47 * MS_PER_MINUTE, config, lesson, titles)
         assertEquals(
             listOf(
@@ -219,7 +219,7 @@ class PracticeReducerTest {
     }
 
     @Test
-    fun `under «Занятие идёт» the running block says what is left, or «готово» at its goal`() {
+    fun `under «Занятие идёт» the running block says what is left or «готово» at its goal`() {
         val running = RunningPractice(lessonStart, lastSoundEpochMs = null)
         assertEquals(RunningBlockLine("Концерт ля минор, I ч.", minutesLeft = 7), PracticeReducer.runningBlockOf(running, lesson, titles, at(47)))
         assertEquals(RunningBlockLine("Концерт ля минор, I ч.", minutesLeft = null), PracticeReducer.runningBlockOf(running, lesson, titles, at(60)))

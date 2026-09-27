@@ -1,9 +1,9 @@
 package com.violinjourney.app.core.audio.playback
 
-import org.junit.Assert.assertArrayEquals
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.math.abs
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 
 class WaveformBuilderTest {
     @Test
@@ -13,7 +13,7 @@ class WaveformBuilderTest {
         builder.add(ShortArray(100) { 4_000 }, 100)
         builder.add(ShortArray(100), 100)
         builder.add(ShortArray(100) { (if (it % 2 == 0) 2_000 else -2_000).toShort() }, 100)
-        assertArrayEquals(floatArrayOf(0.25f, 1f, 0f, 0.5f), builder.build(), 1e-6f)
+        assertClose(floatArrayOf(0.25f, 1f, 0f, 0.5f), builder.build(), 1e-6f)
     }
 
     @Test
@@ -26,11 +26,11 @@ class WaveformBuilderTest {
             pieces.add(samples.copyOfRange(from, from + size), size)
             from += size
         }
-        assertArrayEquals(whole, pieces.build(), 1e-6f)
+        assertClose(whole, pieces.build(), 1e-6f)
     }
 
     @Test
-    fun `a file longer than it said ends in the last bar, a silent one is flat`() {
+    fun `a file longer than it said ends in the last bar - a silent one is flat`() {
         val builder = WaveformBuilder(totalSamples = 100, bars = 4)
         builder.add(ShortArray(160) { 500 }, 160)
         assertEquals(4, builder.build().size)
@@ -41,6 +41,11 @@ class WaveformBuilderTest {
     @Test
     fun `a bar is kept in a byte`() {
         val waveform = floatArrayOf(0f, 0.5f, 1f, 0.2f)
-        assertArrayEquals(waveform, WaveformBuilder.decode(WaveformBuilder.encode(waveform)), 1f / 255)
+        assertClose(waveform, WaveformBuilder.decode(WaveformBuilder.encode(waveform)), 1f / 255)
+    }
+
+    private fun assertClose(expected: FloatArray, actual: FloatArray, tolerance: Float) {
+        assertEquals(expected.size, actual.size, "bars")
+        expected.indices.forEach { assertTrue(abs(expected[it] - actual[it]) <= tolerance, "bar $it: ${actual.toList()} against ${expected.toList()}") }
     }
 }

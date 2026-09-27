@@ -1,9 +1,9 @@
 package com.violinjourney.app.core.audio.share
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class ShareNamesTest {
     @Test
@@ -16,7 +16,7 @@ class ShareNamesTest {
     }
 
     @Test
-    fun `a name of nothing but signs is still a name, and a long one is cut`() {
+    fun `a name of nothing but signs is still a name and a long one is cut`() {
         assertEquals("recording.m4a", ShareNames.fileName("???"))
         assertEquals("recording.m4a", ShareNames.fileName("..."))
         assertEquals(80 + 4, ShareNames.fileName("я".repeat(200)).length)
@@ -26,12 +26,12 @@ class ShareNamesTest {
     fun `a long name is cut whole characters at a time and fits the file system`() {
         val emoji = "\uD83C\uDFBB" // a violin: two UTF-16 units, one character
         val cut = ShareNames.fileName("я".repeat(79) + emoji + "я").removeSuffix(ShareNames.EXTENSION)
-        assertEquals("the eightieth character is the whole emoji — never half of it", "я".repeat(79) + emoji, cut)
+        assertEquals("я".repeat(79) + emoji, cut, "the eightieth character is the whole emoji — never half of it")
         assertFalse(cut.last().isHighSurrogate())
 
         val chinese = ShareNames.videoFileName("曲".repeat(100))
         val stem = chinese.removeSuffix(ShareNames.VIDEO_EXTENSION)
-        assertEquals("three bytes a character, two hundred at most", 66, stem.length)
+        assertEquals(66, stem.length, "three bytes a character, two hundred at most")
         assertTrue((chinese + ".part.sound.m4a").encodeToByteArray().size <= 255)
     }
 
@@ -39,7 +39,7 @@ class ShareNamesTest {
     fun `a video sent as shot keeps its container`() {
         assertEquals(".mov", ShareNames.videoExtensionOf("/x/sessions/A1.mov"))
         assertEquals(".mp4", ShareNames.videoExtensionOf("B.MP4"))
-        assertEquals("a dot in a folder is no extension", ".mp4", ShareNames.videoExtensionOf("/tmp/a.debug-Inbox/clip"))
+        assertEquals(".mp4", ShareNames.videoExtensionOf("/tmp/a.debug-Inbox/clip"), "a dot in a folder is no extension")
         assertEquals(".mp4", ShareNames.videoExtensionOf("clip."))
         assertEquals("Соната № 1 Allegro.mov", ShareNames.originalVideoFileName("Соната № 1: Allegro", "x.mov"))
         assertEquals("Соната № 1 Allegro.mp4", ShareNames.originalVideoFileName("Соната № 1: Allegro", "x.mp4"))

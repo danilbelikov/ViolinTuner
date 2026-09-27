@@ -5,9 +5,9 @@ import com.violinjourney.app.core.domain.IntonationReading
 import com.violinjourney.app.core.domain.Note
 import com.violinjourney.app.core.domain.PitchFrame
 import com.violinjourney.app.core.domain.Zone
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNull
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNull
 
 class FramePictureTest {
     private val silenceRms = IntonationConfig().silenceRms
@@ -20,7 +20,7 @@ class FramePictureTest {
     fun `a visit too short to learn from holds no picture`() {
         val picture = FramePicture(toleranceCents = 8, a4Hz = 440, silenceRms = silenceRms)
         repeat(1_000) { picture.add(frame(it * 10L), IntonationReading.Silence) }
-        assertNull("29 seconds is not a picture", picture.finish())
+        assertNull(picture.finish(), "29 seconds is not a picture")
     }
 
     @Test
@@ -29,7 +29,7 @@ class FramePictureTest {
     }
 
     @Test
-    fun `the picture is what the microphone heard, in shares`() {
+    fun `the picture is what the microphone heard - in shares`() {
         val picture = FramePicture(toleranceCents = 3, a4Hz = 442, silenceRms = silenceRms)
         repeat(4_000) { index ->
             val reading = when {
@@ -75,7 +75,7 @@ class FramePictureTest {
     }
 
     @Test
-    fun `the loudest frame is the peak, and exact zeros have a floor instead of minus infinity`() {
+    fun `the loudest frame is the peak and exact zeros have a floor instead of minus infinity`() {
         val picture = FramePicture(toleranceCents = 8, a4Hz = 440, silenceRms = silenceRms)
         repeat(4_000) { picture.add(frame(it * 15L, rms = 0.0), IntonationReading.Silence) }
         assertEquals(-120, requireNotNull(picture.finish()).params["rms_peak_dbfs"])
@@ -97,12 +97,12 @@ class FramePictureTest {
     }
 
     @Test
-    fun `a reopened microphone starts a stretch of its own, and the seconds add up`() {
+    fun `a reopened microphone starts a stretch of its own and the seconds add up`() {
         val picture = FramePicture(toleranceCents = 8, a4Hz = 440, silenceRms = silenceRms)
         (0..2_800).forEach { picture.add(frame(it * 10L), IntonationReading.Silence) } // 28 s
         picture.newStretch() // the input failed and was opened again 3 s later, on a clock that went on meanwhile
         (0..500).forEach { picture.add(frame(31_000 + it * 10L), IntonationReading.Silence) } // 5 s more
-        assertEquals("the 3 s of the reopening are not heard", 33, requireNotNull(picture.finish()).params["seconds"])
+        assertEquals(33, requireNotNull(picture.finish()).params["seconds"], "the 3 s of the reopening are not heard")
     }
 
     @Test

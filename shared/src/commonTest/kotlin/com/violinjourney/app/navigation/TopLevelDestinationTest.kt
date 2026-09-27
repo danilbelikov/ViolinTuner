@@ -1,7 +1,7 @@
 package com.violinjourney.app.navigation
 
-import org.junit.Assert.assertEquals
-import org.junit.Test
+import kotlin.test.Test
+import kotlin.test.assertEquals
 
 class TopLevelDestinationTest {
 
@@ -11,7 +11,7 @@ class TopLevelDestinationTest {
     }
 
     @Test
-    fun `bottom bar order is Practice, Live, History - Settings are not a tab`() {
+    fun `bottom bar order is Practice - Live - History and Settings are not a tab`() {
         assertEquals(
             listOf(
                 TopLevelDestination.PRACTICE,

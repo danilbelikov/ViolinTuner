@@ -10,13 +10,13 @@ import com.violinjourney.app.core.domain.TargetMode
 import com.violinjourney.app.core.domain.Zone
 import com.violinjourney.app.core.domain.session.RecordingResult
 import com.violinjourney.app.core.domain.session.SessionRecorder
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertTrue
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Test
 
 class TakeFileAnalysisTest {
     private val config = IntonationConfig()
@@ -76,10 +76,10 @@ class TakeFileAnalysisTest {
         assertEquals(null, session.samples[(1_800 / bucket).toInt()])
         val sharp = session.samples[(2_800 / bucket).toInt()]!!
         assertEquals(73, sharp.midi)
-        assertEquals(30.0, sharp.cents, 2.0)
+        assertEquals(30.0, sharp.cents, absoluteTolerance = 2.0)
         assertEquals("take.mp4", session.audioPath)
         assertEquals(1_000L, session.startedAtEpochMs)
-        assertEquals(3_500.0, session.durationMs.toDouble(), 30.0)
+        assertEquals(3_500.0, session.durationMs.toDouble(), absoluteTolerance = 30.0)
     }
 
     @Test
@@ -88,15 +88,15 @@ class TakeFileAnalysisTest {
         analyse(music()) { seen += it }
         assertTrue(seen.size > 50)
         assertTrue(seen.zipWithNext().all { (a, b) -> b.fraction >= a.fraction })
-        assertEquals(1f, seen.last().fraction, 0.02f)
+        assertEquals(1f, seen.last().fraction, absoluteTolerance = 0.02f)
         val bars = seen.last().bars
         assertEquals(listOf(Zone.IN_TUNE, Zone.OFF), bars.pieces.map { it.zone })
         // three seconds of notes out of three and a half: pauses take no room on the strip
-        assertEquals(3_000f / 3_500f, bars.pieces.sumOf { bars.share(it).toDouble() }.toFloat(), 0.06f)
+        assertEquals(3_000f / 3_500f, bars.pieces.sumOf { bars.share(it).toDouble() }.toFloat(), absoluteTolerance = 0.06f)
     }
 
     @Test
-    fun `too short, too long and a strange rate are told apart before any listening`() = runTest {
+    fun `too short - too long and a strange rate are told apart before any listening`() = runTest {
         assertEquals(FileAnalysisResult.TooShort, analyse(ShortArray(seconds(1.0))))
         assertEquals(FileAnalysisResult.UnsupportedRate, analyse(ShortArray(16_000 * 5), sampleRate = 16_000))
         val hour = object : PcmSource {

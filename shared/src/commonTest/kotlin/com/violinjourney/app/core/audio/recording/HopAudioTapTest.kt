@@ -2,20 +2,33 @@ package com.violinjourney.app.core.audio.recording
 
 import com.violinjourney.app.core.analytics.ErrorGroup
 import com.violinjourney.app.core.analytics.FakeAnalytics
-import java.io.File
-import java.util.concurrent.CountDownLatch
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicReference
+import com.violinjourney.app.core.analytics.NoOpAnalytics
+import com.violinjourney.app.core.io.PlatformFile
+import com.violinjourney.app.core.io.platformFile
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.Duration.Companion.seconds
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
-import org.junit.Test
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeout
 
+/** The tap of a take on the audio thread's hops — on the JVM and on iOS, where its lock is an NSRecursiveLock. */
+@OptIn(ExperimentalCoroutinesApi::class)
 class HopAudioTapTest {
     private open class FakeEncoder(var accept: Boolean = true, val finishes: Boolean = true) : PcmEncoder {
         var samples = 0
@@ -32,9 +45,9 @@ class HopAudioTapTest {
     }
 
     private val hop = ShortArray(512)
-    private val file = File("take.m4a")
+    private val file = platformFile("take.m4a")
     private var encoder = FakeEncoder()
-    private var created = mutableListOf<Pair<File, Int>>()
+    private var created = mutableListOf<Pair<PlatformFile, Int>>()
 
     private val analytics = FakeAnalytics()
 
@@ -78,14 +91,14 @@ class HopAudioTapTest {
         val tap = tap()
         tap.start(file)
         tap.onHop(hop, 512, 0, 48_000)
-        tap.start(File("other.m4a"))
+        tap.start(platformFile("other.m4a"))
         tap.onHop(hop, 512, 11, 48_000)
         assertEquals(1, created.size)
         assertEquals(AudioTap.State.Running(0), tap.state)
     }
 
     @Test
-    fun `no encoder on this device means a failed take, not a crash — and it is told, once`() = runTest {
+    fun `no encoder on this device means a failed take and not a crash — and it is told once`() = runTest {
         val tap = tap(failing = true)
         tap.start(file)
         tap.onHop(hop, 512, 0, 48_000)
@@ -98,34 +111,51 @@ class HopAudioTapTest {
 
     @Test
     fun `a stop while the stream is still closing the file waits for it and keeps the take`() = runTest {
-        val closing = CountDownLatch(1)
-        val mayFinish = CountDownLatch(1)
+        val closing = CompletableDeferred<Unit>()
+        val mayFinish = CompletableDeferred<Unit>()
         encoder = object : FakeEncoder() {
             override fun finish(): Boolean {
-                closing.countDown()
-                mayFinish.await(5, TimeUnit.SECONDS)
+                closing.complete(Unit)
+                // the encoder's own thread, joined: blocking, as it is on the audio thread
+                runBlocking { withTimeout(5.seconds) { mayFinish.await() } }
                 return super.finish()
             }
         }
         val tap = tap()
         tap.start(file)
         tap.onHop(hop, 512, 0, 48_000)
-        // the audio thread going away: it closes the file itself, and that takes a moment
-        val stream = Thread { tap.onStreamEnded() }.apply { start() }
-        assertTrue(closing.await(5, TimeUnit.SECONDS))
+        // real threads, not the test's: the audio thread going away closes the file itself, and that takes a moment
+        withContext(Dispatchers.Default) {
+            val stream = launch { tap.onStreamEnded() }
+            withTimeout(5.seconds) { closing.await() }
 
-        // the chain stops the take on a thread of its own meanwhile
-        val answer = AtomicReference<Boolean?>(null)
-        val stopping = Thread { answer.set(runBlocking { tap.stop() }) }.apply { start() }
-        Thread.sleep(100)
-        assertNull("the stop waits for the file to be closed", answer.get())
-        mayFinish.countDown()
-        stream.join()
-        stopping.join(5_000)
+            // the chain stops the take on a thread of its own meanwhile
+            val stopping = async { tap.stop() }
+            delay(100.milliseconds)
+            assertFalse(stopping.isCompleted, "the stop waits for the file to be closed")
+            mayFinish.complete(Unit)
+            stream.join()
 
-        assertEquals("the file the stream closed is a take", true, answer.get())
+            assertEquals(true, withTimeout(5.seconds) { stopping.await() }, "the file the stream closed is a take")
+        }
         assertEquals(1, encoder.finished)
         assertEquals(AudioTap.State.Idle, tap.state)
+    }
+
+    @Test
+    fun `stop from a caller cancelled meanwhile still closes the encoder`() = runTest {
+        // a dispatcher of its own: the closing really moves off the caller's, as it does onto the encoder's thread
+        val tap = HopAudioTap(encoderFactory = { _, _ -> encoder }, finishDispatcher = StandardTestDispatcher(testScheduler), analytics = NoOpAnalytics())
+        tap.start(file)
+        tap.onHop(hop, 512, hopStartTMs = 0, sampleRateHz = 48_000)
+
+        val stopping = launch(start = CoroutineStart.UNDISPATCHED) { tap.stop() }
+        assertEquals(AudioTap.State.Idle, tap.state, "the encoder is out of the tap")
+        assertEquals(0, encoder.finished, "its closing waits for the finishing dispatcher")
+        stopping.cancel()
+        advanceUntilIdle()
+
+        assertEquals(1, encoder.finished, "the file is closed, and the encoder's thread with it")
     }
 
     @Test
@@ -143,7 +173,7 @@ class HopAudioTapTest {
     }
 
     @Test
-    fun `the stream ending closes the file, and stop still reports the take`() = runTest {
+    fun `the stream ending closes the file and stop still reports the take`() = runTest {
         val tap = tap()
         tap.start(file)
         tap.onHop(hop, 512, 0, 48_000)
@@ -179,7 +209,7 @@ class HopAudioTapTest {
         tap.onHop(hop, 512, 0, 48_000)
         tap.stop()
         encoder = FakeEncoder()
-        tap.start(File("second.m4a"))
+        tap.start(platformFile("second.m4a"))
         tap.onHop(hop, 512, 5_000, 48_000)
         assertEquals(AudioTap.State.Running(5_000), tap.state)
         assertTrue(tap.stop())
