@@ -9,10 +9,10 @@ import kotlinx.coroutines.IO
 import kotlinx.coroutines.withContext
 
 /**
- * Small pictures the app made itself (sheet thumbnails), decoded off the main thread and kept
- * for as long as memory is not asked back: a strip scrolled back and forth must not decode the
- * same thirty files over and over. Files are never rewritten — a new picture is a new name —
- * so the path is the whole key.
+ * Small pictures the app made itself (sheet thumbnails, the profile photo), decoded off the main thread; the last 48
+ * are kept, the least recently used goes first: a strip scrolled back and forth must not decode the same thirty files
+ * over and over, and a photo seen once is there from the first frame of the next visit. Files are never rewritten —
+ * a new picture is a new name — so the path is the whole key. Touched on the main thread only.
  */
 private object SmallImages {
     private const val MAX_ENTRIES = 48
@@ -29,14 +29,16 @@ private object SmallImages {
     }
 }
 
-/** Null while loading, without a path, and for a file that is gone or is not a picture. */
+/**
+ * Null while loading, without a path, and for a file that is gone or is not a picture. A new [path] brings its own
+ * picture: the one of the old path stays only until the new one is ready.
+ */
 @Composable
 fun rememberSmallFileImage(path: String?): ImageBitmap? {
     val image by produceState(initialValue = path?.let(SmallImages::get), key1 = path) {
-        if (path == null) {
-            value = null
-        } else if (value == null) {
-            value = withContext(Dispatchers.IO) { decodeImageFile(path) }?.also { SmallImages.put(path, it) }
+        // the state outlives a change of path (the initial value is read once): each path is looked up anew
+        value = path?.let { wanted ->
+            SmallImages.get(wanted) ?: withContext(Dispatchers.IO) { decodeImageFile(wanted) }?.also { SmallImages.put(wanted, it) }
         }
     }
     return image

@@ -12,23 +12,17 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.produceState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.violinjourney.app.core.ui.components.decodeImageFile
+import com.violinjourney.app.core.ui.components.rememberSmallFileImage
 import com.violinjourney.app.core.ui.theme.ViolinTheme
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.IO
-import kotlinx.coroutines.withContext
 
 private const val AVATAR_CROSSFADE_MS = 200
 private const val LETTER_SHARE = 0.43f
@@ -47,13 +41,14 @@ sealed interface AvatarFallback {
  * The profile photo in a circle, or [fallback] without one, while it loads and when the file
  * cannot be decoded. Decorative: the header it stands in speaks for it. The letter scales with
  * the circle, not with the system font size — it has to fit.
+ *
+ * The photo comes from the cache of small pictures (a new photo is a new file name, so the path is the key): seen
+ * once, it is there from the first frame of the next visit — the header shows what is already true as it is. The
+ * crossfade is for a photo that loads or changes before the eyes.
  */
 @Composable
 fun Avatar(path: String?, fallback: AvatarFallback, size: Dp, modifier: Modifier = Modifier) {
-    val photo by produceState<ImageBitmap?>(initialValue = null, key1 = path) {
-        // A new photo is a new file name, so the path is the whole cache key.
-        value = path?.let { withContext(Dispatchers.IO) { decodeImageFile(it) } }
-    }
+    val photo = rememberSmallFileImage(path)
     Crossfade(
         targetState = photo,
         animationSpec = tween(AVATAR_CROSSFADE_MS),
