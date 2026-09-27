@@ -25,6 +25,7 @@ import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -35,14 +36,36 @@ class HistoryViewModelTest {
     private val repertoire = FakeRepertoireRepository()
     private val config = IntonationConfig()
     private val now = Instant.parse("2026-09-17T09:00:00Z")
-    private val clock = FixedWallClock(now, TimeZone.of("Europe/Moscow"))
+    /**
+     * Counts the reads of the time: the list is built with one read of "today" (HistoryViewModel.listed) and nothing else
+     * of the view model asks the clock, so the reads count the builds. A StateFlow drops a state equal to the one it has:
+     * comparing the cards could not tell a list built again from one left alone.
+     */
+    private class CountingClock(private val base: WallClock) : WallClock by base {
+        var reads = 0
+        override fun instant(): Instant = base.instant().also { reads++ }
+    }
 
-    private object NoFiles : com.violinjourney.app.core.audio.recording.SessionAudioFiles {
+    private val clock = CountingClock(FixedWallClock(now, TimeZone.of("Europe/Moscow")))
+
+    /** Answers for the files it is given, and counts how often it is asked. */
+    private class Files(private val present: Map<String, Long> = emptyMap()) : com.violinjourney.app.core.audio.recording.SessionAudioFiles {
+        var asked = 0
         override fun newFile(): java.io.File = error("not used")
-        override fun existing(name: String): java.io.File? = null
+        override fun existing(name: String): java.io.File? {
+            asked++
+            return present[name]?.let { size ->
+                java.io.File.createTempFile("history", ".mp4").apply {
+                    deleteOnExit()
+                    writeBytes(ByteArray(size.toInt()))
+                }
+            }
+        }
         override fun delete(name: String) = Unit
         override fun deleteOrphans(referenced: Set<String>, nowEpochMs: Long, minAgeMs: Long) = Unit
     }
+
+    private var files = Files()
 
     @Before
     fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
@@ -65,7 +88,7 @@ class HistoryViewModelTest {
     private val sectionAsk = HistorySectionAsk()
 
     private fun TestScope.viewModel(): HistoryViewModel {
-        val viewModel = HistoryViewModel(repository, repertoire, config, clock, NoFiles, sectionAsk)
+        val viewModel = HistoryViewModel(repository, repertoire, config, clock, files, sectionAsk, background = StandardTestDispatcher(testScheduler))
         backgroundScope.launch { viewModel.state.collect {} }
         return viewModel
     }
@@ -119,6 +142,31 @@ class HistoryViewModelTest {
     }
 
     private fun HistoryViewModel.select(intent: SelectionIntent) = onIntent(HistoryIntent.Select(intent))
+
+    @Test
+    fun `picking cards lays the marks over the list instead of building it again`() = runTest {
+        val first = save(daysAgo = 0)
+        val video = save(daysAgo = 1)
+        repository.sessions.value = repository.sessions.value.map { if (it.id == video) it.copy(videoPath = "take.mp4") else it }
+        files = Files(present = mapOf("take.mp4" to 1_234))
+        val viewModel = viewModel()
+        runCurrent()
+        val cards = viewModel.state.value.cards
+        assertEquals(1_234L, cards.single { it.id == video }.videoBytes)
+        val asked = files.asked
+        val builds = clock.reads
+
+        viewModel.select(SelectionIntent.CardLongPressed(first))
+        viewModel.onIntent(HistoryIntent.SessionClicked(video))
+        viewModel.onIntent(HistoryIntent.SessionClicked(first))
+        viewModel.select(SelectionIntent.SelectAllClicked)
+        runCurrent()
+
+        assertEquals(setOf(first, video), viewModel.state.value.selection.ids)
+        assertSame("the cards are the ones built before the picking", cards, viewModel.state.value.cards)
+        assertEquals("the list was not built again", builds, clock.reads)
+        assertEquals("no file was asked about again", asked, files.asked)
+    }
 
     @Test
     fun `a long press opens the selection and taps pick instead of opening`() = runTest {

@@ -9,12 +9,17 @@ import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.io.sizeBytes
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.time.today
+import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.emitAll
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -27,6 +32,8 @@ open class HistoryViewModel(
     private val clock: WallClock,
     private val audioFiles: SessionAudioFiles,
     private val sectionAsk: HistorySectionAsk = HistorySectionAsk(),
+    /** Where the list is built: off the main thread — sorting, dates and the sizes of the videos grow with the records. */
+    private val background: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
 
     private val filter = MutableStateFlow(HistoryFilter.ALL)
@@ -57,26 +64,43 @@ open class HistoryViewModel(
 
     // "Today" is read on every change, so a list left open over midnight is right again as
     // soon as anything changes; the screen is rebuilt on every return to it anyway.
+    // The list itself, without the picking: built off the main thread, and only when the records, the pieces, the filter
+    // or the section change — a tap in the selection mode does not build it again.
+    private val listed: Flow<HistoryState> = flow {
+        // The sizes of the videos by file name, asked of the file system once while the list is watched: a video never
+        // changes under its name. One map per collection — its steps run one after another.
+        val videoSizes = HashMap<String, Long>()
+        emitAll(
+            combine(repository.sessions, repertoire.pieces, filter, section) { sessions, pieces, filter, section ->
+                val shown = HistoryReducer.stateOf(
+                    sessions, filter, clock.today(), clock.zone, config, section,
+                    pieceTitles = pieces.associate { it.id to it.title },
+                    bestTakeIds = pieces.mapNotNull { it.bestTakeId }.toSet(),
+                )
+                // The dialog that deletes names the weight of what goes (spec 3.19): videos are few, and a length is cheap to ask.
+                // A file that is gone is not remembered: it may come back with a restored copy.
+                val videos = sessions.mapNotNull { session -> session.videoPath?.let { session.id to it } }.toMap()
+                shown.copy(
+                    cards = shown.cards.map { card ->
+                        videos[card.id]?.let { name ->
+                            card.copy(videoBytes = videoSizes[name] ?: audioFiles.existing(name)?.sizeBytes()?.also { videoSizes[name] = it } ?: 0)
+                        } ?: card
+                    },
+                )
+            },
+        )
+    }.flowOn(background)
+
     val state: StateFlow<HistoryState> =
-        combine(repository.sessions, repertoire.pieces, filter, section, selection) { sessions, pieces, filter, section, selection ->
-            val shown = HistoryReducer.stateOf(
-                sessions, filter, clock.today(), clock.zone, config, section,
-                pieceTitles = pieces.associate { it.id to it.title },
-                bestTakeIds = pieces.mapNotNull { it.bestTakeId }.toSet(),
-            )
+        combine(listed, selection) { shown, selection ->
             visibleIds = shown.cards.map { it.id }
             shownCards = shown.cards
-            // The dialog that deletes names the weight of what goes (spec 3.19): videos are few, and a length is cheap to ask.
-            val videos = sessions.mapNotNull { session -> session.videoPath?.let { session.id to it } }.toMap()
-            shown.copy(
-                cards = shown.cards.map { card -> videos[card.id]?.let { card.copy(videoBytes = audioFiles.existing(it)?.sizeBytes() ?: 0) } ?: card },
-                selection = SelectionRules.prune(selection, visibleIds),
-            )
+            shown.copy(selection = SelectionRules.prune(selection, visibleIds))
         }.stateIn(
-        scope = viewModelScope,
-        started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-        initialValue = HistoryReducer.loading(filter.value, section.value),
-    )
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
+            initialValue = HistoryReducer.loading(filter.value, section.value),
+        )
 
     private val effectChannel = Channel<HistoryEffect>(Channel.BUFFERED)
     val effects: Flow<HistoryEffect> = effectChannel.receiveAsFlow()
