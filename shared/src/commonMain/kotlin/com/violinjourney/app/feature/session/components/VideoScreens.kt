@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBarsPadding
@@ -28,6 +27,8 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -41,6 +42,13 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.constrain
+import androidx.compose.ui.unit.constrainHeight
+import androidx.compose.ui.unit.constrainWidth
+import androidx.compose.ui.unit.offset
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.session_back
 import com.violinjourney.app.shared.resources.video_fullscreen
@@ -75,7 +83,10 @@ private val PanelButton = 48.dp
  * The picture on top of the session screen (handoff 20d1–20d3). Scrolling towards the note roll
  * does not take it away: by the offset of the scroll — and by nothing else — it shrinks into a
  * row under the top bar, with the score and the time beside a mini frame. Watching the hands and
- * the roll at once is what this screen is opened for. [scrolledPx] is read in the layout phase.
+ * the roll at once is what this screen is opened for. [scrolledPx] is read in the layout phase:
+ * the size and place of the frame, the height of the block, the rounding and the fades are worked
+ * out where they are laid out and drawn, and composition sees only whether the frame is still open
+ * and whether the words of the row show — not every pixel of the scroll.
  */
 @Composable
 fun StickyVideo(
@@ -95,24 +106,36 @@ fun StickyVideo(
     val colors = MaterialTheme.colorScheme
     val aspect = VideoLayoutMath.aspectOf(video.width, video.height)
     val block = VideoLayoutMath.blockHeight(aspect, availableWidth, screenHeight)
-    val density = androidx.compose.ui.platform.LocalDensity.current.density
-    val collapse = VideoLayoutMath.collapse(block, scrolledPx() / density)
-    val frame = VideoLayoutMath.frameAt(aspect, availableWidth, block, collapse)
+    val density = LocalDensity.current.density
+    val scrolled by rememberUpdatedState(scrolledPx)
+    // Only ever called where things are laid out or drawn: what they read of the scroll moves that phase alone.
+    val geometry = remember(aspect, availableWidth, block, density) {
+        StickyGeometry(
+            collapse = { VideoLayoutMath.collapse(block, scrolled() / density) },
+            frame = { collapse -> VideoLayoutMath.frameAt(aspect, availableWidth, block, collapse) },
+        )
+    }
+    val open by remember(geometry) { derivedStateOf { geometry.collapse() < 1f } }
+    val words by remember(geometry) { derivedStateOf { geometry.frame().wordsAlpha > 0f } }
     val line = colors.surfaceContainerHigh
     Box(
         modifier = modifier
             .fillMaxWidth()
-            .height(frame.blockHeight.dp)
+            .layout { measurable, constraints ->
+                val height = geometry.frame().blockHeight.dp.roundToPx().coerceIn(constraints.minHeight, constraints.maxHeight)
+                val placeable = measurable.measure(constraints.copy(minHeight = height, maxHeight = height))
+                layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+            }
             .background(colors.surface)
             // the line under the row comes with the row
-            .drawBehind { drawLine(line.copy(alpha = frame.wordsAlpha), Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx()) },
+            .drawBehind { drawLine(line.copy(alpha = geometry.frame().wordsAlpha), Offset(0f, size.height), Offset(size.width, size.height), 1.dp.toPx()) },
     ) {
         // the margins of a tall video are a field of their own, not the screen showing through
-        if (collapse < 1f) {
+        if (open) {
             Box(
                 Modifier
                     .fillMaxSize()
-                    .graphicsLayer { alpha = 1f - collapse }
+                    .graphicsLayer { alpha = 1f - geometry.collapse() }
                     .background(ViolinTheme.videoColors.field, RoundedCornerShape(16.dp)),
             )
         }
@@ -122,20 +145,35 @@ fun StickyVideo(
             callbacks = callbacks,
             onTap = onTap,
             modifier = Modifier
-                .offset(x = frame.x.dp)
-                .size(frame.width.dp, frame.height.dp),
-            corner = (16f - 6f * collapse).dp,
+                .layout { measurable, constraints ->
+                    val frame = geometry.frame()
+                    val placeable = measurable.measure(constraints.constrain(Constraints.fixed(frame.width.dp.roundToPx(), frame.height.dp.roundToPx())))
+                    layout(placeable.width, placeable.height) { placeable.placeRelative(frame.x.dp.roundToPx(), 0) }
+                }
+                // the rounding shrinks with the frame: the clip of VideoFrame itself is left square
+                .graphicsLayer {
+                    shape = RoundedCornerShape((16f - 6f * geometry.collapse()).dp)
+                    clip = true
+                },
+            corner = 0.dp,
             // in the row the button stands beside the words, not on a frame a finger wide
-            onFullscreen = onFullscreen.takeIf { collapse < 1f },
-            cornerButtonAlpha = 1f - frame.wordsAlpha,
+            onFullscreen = onFullscreen.takeIf { open },
+            cornerButtonAlpha = { 1f - geometry.frame().wordsAlpha },
             waiting = waiting,
         )
-        if (frame.wordsAlpha > 0f) {
+        if (words) {
             Row(
                 modifier = Modifier
                     .fillMaxSize()
-                    .graphicsLayer { alpha = frame.wordsAlpha }
-                    .padding(start = (frame.width + 14f).dp),
+                    .graphicsLayer { alpha = geometry.frame().wordsAlpha }
+                    // beside the mini frame, however wide it is at the moment
+                    .layout { measurable, constraints ->
+                        val start = (geometry.frame().width + 14f).dp.roundToPx()
+                        val placeable = measurable.measure(constraints.offset(horizontal = -start))
+                        layout(constraints.constrainWidth(placeable.width + start), constraints.constrainHeight(placeable.height)) {
+                            placeable.placeRelative(start, 0)
+                        }
+                    },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
@@ -168,13 +206,18 @@ fun StickyVideo(
                     modifier = Modifier
                         .size(40.dp)
                         .clip(CircleShape)
-                        .clickable(enabled = collapse >= 1f, role = Role.Button, onClick = onFullscreen)
+                        .clickable(enabled = !open, role = Role.Button, onClick = onFullscreen)
                         .semantics { contentDescription = label },
                     contentAlignment = Alignment.Center,
                 ) { AppIcon(AppIcons.Fullscreen, contentDescription = null, tint = colors.onSurface, size = 22.dp) }
             }
         }
     }
+}
+
+/** How far the sticky video has shrunk, and its frame at that — read where laid out and drawn, never in composition. */
+private class StickyGeometry(val collapse: () -> Float, private val frame: (Float) -> VideoLayoutMath.Frame) {
+    fun frame(): VideoLayoutMath.Frame = frame(collapse())
 }
 
 /**

@@ -80,7 +80,8 @@ fun VideoFrame(
     corner: Dp = 16.dp,
     /** Null inside the full screen, where the panel has «свернуть». */
     onFullscreen: (() -> Unit)? = null,
-    cornerButtonAlpha: Float = 1f,
+    /** Read where the button is drawn: the sticky video fades it with the scroll without being composed anew. */
+    cornerButtonAlpha: () -> Float = { 1f },
     /**
      * The sound cannot be played yet — a take under a backing whose sound is being made (spec 5.25): the picture is
      * greyed, says why, and takes no tap; «на весь экран» waits too.
@@ -140,7 +141,7 @@ fun VideoFrame(
                 modifier = Modifier
                     .align(Alignment.BottomEnd)
                     .padding(8.dp)
-                    .graphicsLayer { alpha = cornerButtonAlpha }
+                    .graphicsLayer { alpha = cornerButtonAlpha() }
                     .size(CornerButton)
                     .clip(CircleShape)
                     .background(videoColors.scrim)
