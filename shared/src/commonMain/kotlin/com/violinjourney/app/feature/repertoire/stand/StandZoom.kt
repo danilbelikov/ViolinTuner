@@ -70,7 +70,7 @@ class StandZoom {
 /**
  * One detector for everything the stand's sheet is touched for, because the gestures share a
  * screen and must not steal from each other: a one-finger drag over an unzoomed page is left
- * alone (the pager turns the page, the landscape sheet scrolls), two fingers zoom, one finger
+ * alone (the pager turns the page, the sheet scrolls), two fingers zoom, one finger
  * over a zoomed page drags it, and a touch that went nowhere is a tap. It listens on the
  * initial pass — before the pager and the scroll inside it — and consumes only what it uses.
  */

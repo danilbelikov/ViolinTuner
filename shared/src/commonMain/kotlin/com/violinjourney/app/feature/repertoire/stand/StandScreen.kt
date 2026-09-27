@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -337,22 +338,16 @@ private fun Sheet(page: StandPage, description: String, zoom: StandZoom?, landsc
             Box(shaped.semantics { contentDescription = description })
         }
     }
+    // Each way of holding the phone has a scroll of its own: iOS turns the screen without composing it anew, and the
+    // range of a lying sheet must not draw a bar over an upright photo, which does not scroll.
+    val thumb = MaterialTheme.colorScheme.outline
     if (landscape) {
         // By width, read downwards: a sheet fitted into a lying screen would be a postage stamp.
         val scroll = rememberScrollState()
-        val thumb = MaterialTheme.colorScheme.outline
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .drawWithContent {
-                    drawContent()
-                    if (scroll.maxValue > 0) {
-                        val width = ScrollIndicatorWidth.toPx()
-                        val length = size.height * size.height / (size.height + scroll.maxValue)
-                        val top = (size.height - length) * scroll.value / scroll.maxValue
-                        drawRoundRect(thumb, Offset(size.width - width * 2, top), Size(width, length), CornerRadius(width / 2))
-                    }
-                }
+                .scrollIndicator(scroll, thumb)
                 .padding(horizontal = side),
         ) {
             Column(
@@ -364,13 +359,31 @@ private fun Sheet(page: StandPage, description: String, zoom: StandZoom?, landsc
             ) { sheet(Modifier.fillMaxWidth()) }
         }
     } else {
+        val scroll = rememberScrollState()
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(start = side, end = side, top = PortraitSheetTop, bottom = PortraitSheetTop)
+                .padding(vertical = PortraitSheetTop)
+                .then(if (page.drawn) Modifier.scrollIndicator(scroll, thumb) else Modifier)
+                .padding(horizontal = side)
                 .then(zoomLayer),
             contentAlignment = Alignment.Center,
-        ) { sheet(Modifier) }
+        ) {
+            // A long scale is taller than the stand (spec 3.22: the sheet is as tall as its systems) and scrolls, as the
+            // lying sheet does; a short one wraps its systems and stays in the middle. A photo is fitted, never scrolled.
+            if (page.drawn) Box(Modifier.verticalScroll(scroll)) { sheet(Modifier) } else sheet(Modifier)
+        }
+    }
+}
+
+/** A thin bar at the right edge while the sheet is longer than the stand: how far down the reading is. */
+private fun Modifier.scrollIndicator(scroll: ScrollState, color: Color): Modifier = drawWithContent {
+    drawContent()
+    if (scroll.maxValue > 0) {
+        val width = ScrollIndicatorWidth.toPx()
+        val length = size.height * size.height / (size.height + scroll.maxValue)
+        val top = (size.height - length) * scroll.value / scroll.maxValue
+        drawRoundRect(color, Offset(size.width - width * 2, top), Size(width, length), CornerRadius(width / 2))
     }
 }
 
