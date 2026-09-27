@@ -91,12 +91,16 @@ class ComposedHome(val scene: Scene, val ghost: ItemArt?)
 /**
  * Puts a home together (the handoff's `compose`): the base, the things back to front, the
  * traveller, then what stands in front of them — the pet. Colours of walls, floor and curtains are
- * the scene's own overrides. A thing tried on stands in the place of what stood there, the room a
- * little darker round it, and lives as it will in the room (spec 3.29). Pure.
+ * the scene's own overrides. A thing tried on stands in the place of what stood there and in its depth —
+ * what stands in front of it stays in front — the room a little darker round it, and lives as it will
+ * in the room (spec 3.24, 3.29): the try-on looks as the purchase will. Pure.
  */
 object HomeComposer {
     private const val FRONT = 5
     private const val WINDOW = "window"
+
+    /** How dark the room goes round a thing tried on (handoff 28f): [DIM] is [ScenePalette.SHADE] at this alpha. */
+    const val TRY_ON_DIM = 0.12f
     private const val DIM = "rgba(14,14,18,.12)"
     private const val GLOW_PERIOD_S = 2.4f
     private const val VIOLIN = "violin"
@@ -135,33 +139,52 @@ object HomeComposer {
                 }
             }
         }
+        // A thing tried on is drawn where the thing of its place stood in the order of the room (a place empty till now:
+        // after the things of its depth), so the room is drawn back to front as it will be once it is bought.
+        val ghostArt = ghost?.let { art.items[it.id] }
+        val ordered = if (ghost == null || ghostArt == null) things else {
+            val replaced = present.indexOfFirst { it.slot == ghost.slot }
+            present.toMutableList().apply { if (replaced >= 0) set(replaced, ghost) else add(ghost) }.sortedBy { it.z }
+        }
         // A window is its backing, then the view, then the glazing bars (found on the emulator in the first
-        // iteration, a section of its own since the second handoff).
-        if (!outside) things.firstOrNull { it.slot == WINDOW }?.let { layers += art.backs[it.id].orEmpty() }
+        // iteration, a section of its own since the second handoff) — a window tried on too.
+        if (!outside) ordered.firstOrNull { it.slot == WINDOW }?.let { layers += art.backs[it.id].orEmpty() }
         // what lies on a chair that rocks rocks with it — the plaid on the rocking chair (spec 3.29)
         val chair = if (ghost?.slot == CHAIR) ghost else things.firstOrNull { it.slot == CHAIR }
         val rocking = chair?.let { art.items[it.id] }?.layers?.firstNotNullOfOrNull { it.anim?.swing }
         fun layersOf(item: HomeItem, drawn: ItemArt): List<SceneLayer> =
             if (item.slot == ON_CHAIR && rocking != null) drawn.layers.map { it.copy(anim = (it.anim ?: SceneAnim()).copy(swing = rocking)) } else drawn.layers
-        fun draw(item: HomeItem) { art.items[item.id]?.let { layers += layersOf(item, it) } }
-        things.filter { it.z < FRONT }.forEach(::draw)
-        // no violin yet — the student's one lies in the open case (handoff 28b)
-        if (withViolin && !outside && things.none { it.slot == VIOLIN } && ghost?.slot != VIOLIN) things.firstOrNull { it.slot == CASE }?.let { layers += art.caseViolins[it.id].orEmpty() }
         // Trying on without a frame (handoff 28f): the room a little darker, a warm glow under the thing that breathes,
         // the thing itself at its full density — and alive, as it will be in the room: a still metronome read as broken (spec 3.29).
-        val ghostArt = ghost?.let { art.items[it.id] }
-        if (ghost != null && ghostArt != null) {
-            layers += SceneLayer(DIM, 2, 1f, 0f, 0f, 1f, false, null, 0f, false, "M-600 -1200h1600v2000h-1600Z")
-            val rx = (ghostArt.right - ghostArt.left) * 0.9f + 14f
-            val ry = (ghostArt.bottom - ghostArt.top) * 0.18f + 8f
-            val cx = (ghostArt.left + ghostArt.right) / 2
-            val cy = ghostArt.bottom + 2f
-            layers += SceneLayer(SceneLayer.GLOW, 2, 1f, 0f, 0f, 1f, false, null, 0f, false, "M${cx - rx} ${cy}a$rx $ry 0 1 0 ${2 * rx} 0a$rx $ry 0 1 0 ${-2 * rx} 0Z", SceneAnim(flick = SceneAnim.Timed(GLOW_PERIOD_S, 0f)))
-            layers += layersOf(ghost, ghostArt)
+        // The veil lies over what is behind the thing; what stands in front of it takes the same veil on itself — the
+        // same colours exactly (SceneLayer.shade) — and stays in front: the view behind the glazing bars, the violin on the rug.
+        var front = false
+        fun shaded(part: List<SceneLayer>): List<SceneLayer> = if (front) part.map { it.copy(shade = TRY_ON_DIM) } else part
+        fun draw(item: HomeItem) {
+            if (item === ghost && ghostArt != null) {
+                layers += SceneLayer(DIM, 2, 1f, 0f, 0f, 1f, false, null, 0f, false, "M-600 -1200h1600v2000h-1600Z")
+                val rx = (ghostArt.right - ghostArt.left) * 0.9f + 14f
+                val ry = (ghostArt.bottom - ghostArt.top) * 0.18f + 8f
+                val cx = (ghostArt.left + ghostArt.right) / 2
+                val cy = ghostArt.bottom + 2f
+                layers += SceneLayer(SceneLayer.GLOW, 2, 1f, 0f, 0f, 1f, false, null, 0f, false, "M${cx - rx} ${cy}a$rx $ry 0 1 0 ${2 * rx} 0a$rx $ry 0 1 0 ${-2 * rx} 0Z", SceneAnim(flick = SceneAnim.Timed(GLOW_PERIOD_S, 0f)))
+                layers += layersOf(ghost, ghostArt)
+                front = true
+                return
+            }
+            art.items[item.id]?.let { layers += shaded(layersOf(item, it)) }
+        }
+        ordered.filter { it.z < FRONT }.forEach(::draw)
+        // no violin yet — the student's one lies in the open case (handoff 28b); in a case tried on it lies as it will, part of the thing
+        if (withViolin && !outside && ordered.none { it.slot == VIOLIN } && ghost?.slot != VIOLIN) {
+            ordered.firstOrNull { it.slot == CASE }?.let { case ->
+                val lying = art.caseViolins[case.id].orEmpty()
+                layers += if (case === ghost) lying else shaded(lying)
+            }
         }
         // at home the traveller is not drawn: home is «I» (handoff 28b); in the cities he stays
-        if (outside && porchCat != null) layers += art.porch[porchCat.id].orEmpty()
-        things.filter { it.z >= FRONT }.forEach(::draw)
+        if (outside && porchCat != null) layers += shaded(art.porch[porchCat.id].orEmpty())
+        ordered.filter { it.z >= FRONT }.forEach(::draw)
         return ComposedHome(Scene(ScenePalette.HOUSE, aerial = outside, layers = layers, overrides = overrides), ghostArt)
     }
 

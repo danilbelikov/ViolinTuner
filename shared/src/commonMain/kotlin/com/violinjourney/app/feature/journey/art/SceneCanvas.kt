@@ -338,15 +338,17 @@ private fun paintsOf(scene: Scene, mode: SceneMode, bounds: List<Rect>): List<La
     val band = Brush.verticalGradient(listOf(Color(sky), Color(skyLow)), startY = 0f, endY = SceneGrid.HORIZON)
     return scene.layers.mapIndexed { index, layer ->
         val area = bounds[index]
+        // what stands in front of a thing tried on takes the veil on itself (SceneLayer.shade); the rest is as read
+        fun tone(color: Long): Long = if (layer.shade > 0f) ScenePalette.shade(color, layer.shade) else color
         val fill = when {
             layer.fillNone -> null
-            layer.fill == SceneLayer.SKY -> band
-            layer.fill == SceneLayer.SKY_HIGH -> Brush.verticalGradient(listOf(Color(skyHigh), Color(sky)), startY = area.top, endY = area.bottom)
-            layer.fill == SceneLayer.GLOW -> radial(glow, area)
-            layer.warmGlow -> radial(ScenePalette.WARM_GLOW, area)
-            else -> ScenePalette.colorOf(layer.fill, layer.depth, scene, mode)?.let { SolidColor(Color(it)) }
+            layer.fill == SceneLayer.SKY -> if (layer.shade > 0f) Brush.verticalGradient(listOf(Color(tone(sky)), Color(tone(skyLow))), startY = 0f, endY = SceneGrid.HORIZON) else band
+            layer.fill == SceneLayer.SKY_HIGH -> Brush.verticalGradient(listOf(Color(tone(skyHigh)), Color(tone(sky))), startY = area.top, endY = area.bottom)
+            layer.fill == SceneLayer.GLOW -> radial(tone(glow), area, tone(ScenePalette.TRANSPARENT_GLOW))
+            layer.warmGlow -> radial(tone(ScenePalette.WARM_GLOW), area, tone(ScenePalette.TRANSPARENT_GLOW))
+            else -> ScenePalette.colorOf(layer.fill, layer.depth, scene, mode)?.let { SolidColor(Color(tone(it))) }
         }
-        val stroke = layer.stroke?.takeIf { layer.strokeWidth > 0f }?.let { ScenePalette.colorOf(it, layer.depth, scene, mode) }?.let { Color(it) }
+        val stroke = layer.stroke?.takeIf { layer.strokeWidth > 0f }?.let { ScenePalette.colorOf(it, layer.depth, scene, mode) }?.let { Color(tone(it)) }
         val style = stroke?.let { Stroke(layer.strokeWidth, cap = StrokeCap.Round, pathEffect = layer.anim?.dash?.let { PathEffect.dashPathEffect(floatArrayOf(it.first, it.second)) }) }
         LayerPaint(fill, stroke, style, SceneMotion.moves(layer, mode))
     }
@@ -406,8 +408,8 @@ private fun DrawScope.drawHighSkyLife(scene: Scene, mode: SceneMode, seconds: Fl
     }
 }
 
-private fun radial(center: Long, bounds: Rect): Brush =
-    Brush.radialGradient(listOf(Color(center), Color(ScenePalette.TRANSPARENT_GLOW)), center = bounds.center, radius = maxOf(bounds.width, bounds.height) / 2f)
+private fun radial(center: Long, bounds: Rect, edge: Long = ScenePalette.TRANSPARENT_GLOW): Brush =
+    Brush.radialGradient(listOf(Color(center), Color(edge)), center = bounds.center, radius = maxOf(bounds.width, bounds.height) / 2f)
 
 /** A stop that has only its silhouette yet: the evening sky, the ground, the outline of the place. */
 private fun DrawScope.drawSketch(silhouette: List<Path>, mode: SceneMode) {

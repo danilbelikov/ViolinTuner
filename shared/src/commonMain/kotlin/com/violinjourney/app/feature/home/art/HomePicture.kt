@@ -51,7 +51,7 @@ fun rememberHouseArt(house: String, mode: SceneMode): HouseArt? {
 
 /**
  * The home as it stands (spec 3.24): the room or the home from outside, with everything bought in
- * its place; [ghost] — a thing being tried on, in its dashed frame that breathes. [mode] — day or
+ * its place; [ghost] — a thing being tried on, in its place and its depth. [mode] — day or
  * evening; null — by the phone's clock ([rememberHomeTime]), which also brings the tree in its season.
  */
 @Composable

@@ -136,6 +136,69 @@ class HomeComposerTest {
     }
 
     @Test
+    fun `a thing tried on stands in its depth - what is in front stays in front and takes the veil on itself`() {
+        val art = art("rent", SceneMode.EVENING)
+        fun tried(state: HomeState, ghost: String) =
+            HomeComposer.compose(art, HomeRules.standing(state, "rent", false, today), false, SceneMode.EVENING, ghost = HomeCatalog.byId.getValue(ghost)).scene.layers
+        // a layer by its outline and its fill, whatever its shade and its movement (the plaid takes the chair's swing)
+        fun SceneLayer.of(part: List<SceneLayer>) = part.any { it.path == path && it.fill == fill }
+        fun List<SceneLayer>.at(part: List<SceneLayer>) = indexOfFirst { it.path == part.first().path && it.fill == part.first().fill }
+        fun List<SceneLayer>.ofPart(part: List<SceneLayer>) = filter { it.of(part) }
+        fun dimOf(layers: List<SceneLayer>) = layers.indexOfFirst { it.fill.startsWith("rgba(14,14,18") }
+
+        // a view: behind the glazing bars and the curtains, which stay in front of it, veiled as the room
+        val view = tried(loaded, "view_garden")
+        val garden = art.items.getValue("view_garden").layers
+        val bars = art.items.getValue("window_simple").layers
+        val curtain = art.items.getValue("curtain_plum").layers
+        assertTrue(view.at(garden) in 0 until view.at(bars))
+        assertTrue(view.ofPart(bars).isNotEmpty() && view.ofPart(bars).all { it.shade == HomeComposer.TRY_ON_DIM })
+        assertTrue(view.ofPart(curtain).isNotEmpty() && view.ofPart(curtain).all { it.shade == HomeComposer.TRY_ON_DIM })
+        assertTrue("the thing itself is not veiled", view.ofPart(garden).all { it.shade == 0f })
+        // behind the veil nothing is shaded: the veil does it
+        assertTrue(view.take(dimOf(view)).all { it.shade == 0f })
+
+        // a window tried on has its own backing, before the view
+        val arched = tried(loaded, "window_arched")
+        val backing = art.backs.getValue("window_arched")
+        assertTrue(arched.at(backing) in 0 until arched.at(art.items.getValue("view_city").layers))
+
+        // the plaid stays on a chair tried on; the violin stays on its stand in front of a rug tried on
+        val plaid = loaded.copy(purchased = setOf("plaid"), choices = mapOf("chairTop" to "plaid"))
+        val rocking = tried(plaid, "rocking")
+        assertTrue(rocking.at(art.items.getValue("plaid").layers) > rocking.at(art.items.getValue("rocking").layers))
+        val violin = loaded.copy(purchased = setOf("vln_student"), choices = mapOf("violin" to "vln_student"))
+        val rug = tried(violin, "rug_persian")
+        val student = art.items.getValue("vln_student").layers
+        assertTrue(rug.at(student) > rug.at(art.items.getValue("rug_persian").layers))
+        assertTrue(rug.ofPart(student).all { it.shade == HomeComposer.TRY_ON_DIM })
+
+        // the cat darkens with the room
+        val cat = loaded.copy(purchased = setOf("cat_ginger"), choices = mapOf("pet" to "cat_ginger"))
+        val desk = tried(cat, "desk_oak")
+        val ginger = art.items.getValue("cat_ginger").layers
+        assertTrue(desk.ofPart(ginger).isNotEmpty() && desk.ofPart(ginger).all { it.shade == HomeComposer.TRY_ON_DIM })
+
+        // a case tried on holds the student's violin as it will, part of the thing: not veiled
+        val velvet = tried(loaded, "case_velvet")
+        val lying = art.caseViolins.getValue("case_velvet")
+        assertTrue(velvet.at(lying) > velvet.at(art.items.getValue("case_velvet").layers))
+        assertTrue(velvet.ofPart(lying).all { it.shade == 0f })
+
+        // without a thing tried on nothing is shaded
+        assertTrue(HomeComposer.compose(art, HomeRules.standing(cat, "rent", false, today), false, SceneMode.EVENING).scene.layers.all { it.shade == 0f })
+    }
+
+    @Test
+    fun `the veil of a try-on is the shade colour at the try-on alpha - what is in front is shaded by the same`() {
+        val art = art("rent", SceneMode.EVENING)
+        val layers = HomeComposer.compose(art, HomeRules.standing(loaded, "rent", false, today), false, SceneMode.EVENING, ghost = HomeCatalog.byId.getValue("desk_oak")).scene.layers
+        val veil = ScenePalette.parse(layers.first { it.fill.startsWith("rgba(14,14,18") }.fill)!!
+        assertEquals(ScenePalette.SHADE and 0xFFFFFF, veil and 0xFFFFFF)
+        assertEquals(HomeComposer.TRY_ON_DIM, (veil ushr 24) / 255f, 1f / 255)
+    }
+
+    @Test
     fun `what lies on a rocking chair rocks with it - in the room and in the try-on (spec 3 29)`() {
         val art = art("rent", SceneMode.EVENING)
         val swing = art.items.getValue("rocking").layers.firstNotNullOf { it.anim?.swing }

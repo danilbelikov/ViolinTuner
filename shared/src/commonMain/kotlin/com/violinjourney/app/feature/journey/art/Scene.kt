@@ -21,6 +21,12 @@ data class SceneLayer(
     val path: String,
     /** How the layer moves as a thing — all layers of one tram carry the same; null for a layer that stays. */
     val anim: SceneAnim? = null,
+    /**
+     * How far the layer's colours are taken towards [ScenePalette.SHADE]: the same as a veil of that colour at that
+     * alpha laid over the layer. What stands in front of a thing tried on (spec 3.24) — the veil itself lies under that
+     * thing. Never in a file: 0 for every layer read.
+     */
+    val shade: Float = 0f,
 ) {
     companion object {
         const val SKY = "SKY"
@@ -171,6 +177,15 @@ object ScenePalette {
     const val WARM_GLOW = 0x8CFFC46EL // rgba(255,196,110,.55)
     const val TRANSPARENT_GLOW = 0x00FFC46EL
 
+    /** The colour of the veil of a try-on (handoff 28f, `rgba(14,14,18,.12)`), which [SceneLayer.shade] takes a layer towards. */
+    const val SHADE = 0xFF0E0E12L
+
+    /**
+     * [color] taken towards [SHADE] by [t], its alpha kept: drawn over anything, it gives what [color] drawn there and then
+     * veiled by [SHADE] at [t] gives — the veil mixes every colour under it towards itself by the same amount.
+     */
+    fun shade(color: Long, t: Float): Long = (color and ALPHA_MASK) or (mix(color, SHADE, t) and RGB_MASK)
+
     private val day: Map<String, Long> = mapOf(
         "sky" to 0xFF79B0E6, "skyLow" to 0xFFD3E5F5, "far" to 0xFFA9BFD9, "farLit" to 0xFFC5D6E8, "ground" to 0xFF8E8A86, "groundLit" to 0xFFA8A49F,
         "groundShade" to 0xFF6E6A66, "window" to 0xFF5B6E85, "windowLit" to 0xFF7F94AB, "lamp" to 0xFF3B3A45, "lampGlass" to 0xFFE4ECF2, "glow" to 0x00FFC46EL,
@@ -257,6 +272,8 @@ object ScenePalette {
         (if (mode == SceneMode.DAY) HomeCatalogData.dayTokens[name] else null) ?: HomeCatalogData.tokens[name]
 
     private const val ALPHA_SHIFT = 24
+    private const val ALPHA_MASK = 0xFF000000L
+    private const val RGB_MASK = 0x00FFFFFFL
 
     /** A number in `rgba(…)`: one pattern for the whole app, not one a colour. */
     private val NUMBER = Regex("[\\d.]+")
