@@ -7,6 +7,7 @@ import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.SavedBlock
 import com.violinjourney.app.core.domain.repertoire.Accidental
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
+import com.violinjourney.app.core.domain.repertoire.Piece
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
@@ -143,7 +144,8 @@ class SectionsTest {
         val (scales, effects) = list(SectionRef.BuiltIn(PieceSection.SCALES))
         val card = scales.state.value.cards.single()
         assertEquals(gMajor, card.scale)
-        assertTrue(card.exercise && !card.stroke)
+        assertFalse(card.stroke)
+        assertTrue("a scale ends its status in «Выучено»", SectionKeys.isExercise(SectionRef.BuiltIn(PieceSection.SCALES)))
         assertEquals(SectionCount(1, 0, 0), scales.state.value.count)
         scales.onIntent(RepertoireIntent.AddClicked)
         runCurrent()
@@ -151,7 +153,21 @@ class SectionsTest {
 
         val (pieces, _) = list(SectionRef.BuiltIn(PieceSection.PIECES))
         assertEquals(listOf("Менуэт"), pieces.state.value.cards.map { it.title })
-        assertFalse(pieces.state.value.cards.single().exercise)
+        assertFalse(SectionKeys.isExercise(SectionRef.BuiltIn(PieceSection.PIECES)))
+    }
+
+    @Test
+    fun `an exercise and a stroke are told by the built-in section, never inside a section of one's own`() {
+        fun piece(section: PieceSection, groupId: Long? = null) =
+            Piece(title = "x", composer = "", key = null, tempoBpm = null, status = PieceStatus.READING, notes = "", createdAtEpochMs = 0, updatedAtEpochMs = 0, section = section, groupId = groupId)
+        for (section in listOf(PieceSection.SCALES, PieceSection.ETUDES, PieceSection.STROKES)) {
+            assertTrue("$section", SectionKeys.isExercise(piece(section)))
+            assertFalse("$section in a group", SectionKeys.isExercise(piece(section, groupId = 7)))
+        }
+        assertFalse(SectionKeys.isExercise(piece(PieceSection.PIECES)))
+        assertTrue(SectionKeys.isStroke(piece(PieceSection.STROKES)))
+        assertFalse(SectionKeys.isStroke(piece(PieceSection.STROKES, groupId = 7)))
+        assertFalse(SectionKeys.isStroke(piece(PieceSection.SCALES)))
     }
 
     @Test

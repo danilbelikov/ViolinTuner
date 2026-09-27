@@ -54,6 +54,7 @@ import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.repertoire.SectionKeys
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.dialog_cancel
 import com.violinjourney.app.shared.resources.section_add
@@ -100,7 +101,7 @@ fun LazyListScope.sectionItems(state: SectionsState, onIntent: (SectionsIntent) 
             item(key = "pieceTime") { PieceTimeCardView(time, visibleRows = TIME_ROWS_UPRIGHT, onIntent = onIntent, modifier = Modifier.padding(top = CardSpacing)) }
         }
     }
-    items(state.cards.size, key = { "section-" + com.violinjourney.app.feature.repertoire.SectionKeys.keyOf(state.cards[it].ref) }) { index ->
+    items(state.cards.size, key = { "section-" + SectionKeys.keyOf(state.cards[it].ref) }) { index ->
         val card = state.cards[index]
         SectionCardRow(card, onClick = { onIntent(SectionsIntent.SectionClicked(card.ref)) }, modifier = Modifier.padding(top = CardSpacing))
     }

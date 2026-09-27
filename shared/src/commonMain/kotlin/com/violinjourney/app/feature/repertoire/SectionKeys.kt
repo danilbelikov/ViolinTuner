@@ -1,5 +1,6 @@
 package com.violinjourney.app.feature.repertoire
 
+import com.violinjourney.app.core.domain.repertoire.Piece
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 
@@ -22,4 +23,16 @@ object SectionKeys {
 
     /** In «Гаммы», «Этюды» and «Штрихи» the third step of the status reads «Выучено» (spec 3.22). */
     fun isExercise(ref: SectionRef): Boolean = ref is SectionRef.BuiltIn && ref.section != PieceSection.PIECES
+
+    /*
+     * A piece in a section of the player's own is in no built-in one, whatever its `section` says: deleting that section
+     * moves its pieces out (`groupId` to null) in the same transaction, so a `groupId` always names a living group — the
+     * rule of `PieceRules.sectionOf`, told without the list of groups.
+     */
+
+    /** The piece stands in «Гаммы», «Этюды» or «Штрихи»: its status ends in «Выучено». */
+    fun isExercise(piece: Piece): Boolean = piece.groupId == null && isExercise(SectionRef.BuiltIn(piece.section))
+
+    /** The piece stands in «Штрихи»: its tile shows a bow rather than a missing photo. */
+    fun isStroke(piece: Piece): Boolean = piece.groupId == null && piece.section == PieceSection.STROKES
 }

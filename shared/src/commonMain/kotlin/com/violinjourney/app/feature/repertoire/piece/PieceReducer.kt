@@ -1,7 +1,6 @@
 package com.violinjourney.app.feature.repertoire.piece
 
 import com.violinjourney.app.core.domain.repertoire.Piece
-import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.PieceStats
 import com.violinjourney.app.core.domain.repertoire.scale.Scales
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
@@ -9,6 +8,7 @@ import com.violinjourney.app.core.domain.repertoire.SheetPage
 import com.violinjourney.app.core.domain.session.RecordingProgress
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.feature.history.HistoryReducer
+import com.violinjourney.app.feature.repertoire.SectionKeys
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 
@@ -34,7 +34,7 @@ object PieceReducer {
         statusMenuOpen = statusMenuOpen,
         notesCollapsedLines = config.notesCollapsedLines,
         scale = piece.scale?.let { Scales.build(it, config.scaleLowestMidi, config.scaleHighestMidi) },
-        exercise = piece.groupId == null && piece.section != PieceSection.PIECES,
+        exercise = SectionKeys.isExercise(piece),
     )
 
     fun loading(config: RepertoireConfig) = PieceState(

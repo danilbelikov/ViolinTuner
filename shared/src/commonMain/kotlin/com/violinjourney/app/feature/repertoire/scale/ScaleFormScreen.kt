@@ -48,6 +48,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -247,7 +248,7 @@ private fun Fields(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
                     modifier = Modifier
                         .height(KindHeight)
                         .clip(shape)
-                        .background(if (picked) colors.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)
+                        .background(if (picked) colors.primaryContainer else Color.Transparent)
                         .border(1.dp, if (picked) colors.primaryContainer else colors.outlineVariant, shape)
                         .selectable(selected = picked, role = Role.RadioButton) { onIntent(ScaleFormIntent.KindSelected(kind)) }
                         .padding(horizontal = 14.dp),
@@ -348,7 +349,7 @@ private fun OctavePicker(selected: Int, allowed: Set<Int>, modifier: Modifier = 
                     .weight(1f)
                     .fillMaxSize()
                     .alpha(alpha)
-                    .background(if (picked) colors.primaryContainer else androidx.compose.ui.graphics.Color.Transparent)
+                    .background(if (picked) colors.primaryContainer else Color.Transparent)
                     .selectable(selected = picked, enabled = enabled, role = Role.RadioButton) { onSelect(octaves) },
                 contentAlignment = Alignment.Center,
             ) { Text(octaves.toString(), color = if (picked) colors.onPrimaryContainer else colors.onSurface, style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontFeatureSettings = "tnum")) }

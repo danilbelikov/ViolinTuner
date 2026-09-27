@@ -300,7 +300,6 @@ private fun EmptyFilter(filter: PieceStatus, onShowAll: () -> Unit) {
     }
 }
 
-/** "G-dur · ♩ = 96", either half alone, or null when the piece has neither. */
 /**
  * «G-dur · [metronome] 96» — only what the piece has; nothing at all when it has neither. The
  * tempo is the metronome of the icon set rather than the glyph ♩: that one comes from a fallback

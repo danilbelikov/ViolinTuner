@@ -30,8 +30,6 @@ data class PieceCard(
     val scale: ScaleSpec? = null,
     /** A bow stroke: a tile with a bow rather than a missing photo. */
     val stroke: Boolean = false,
-    /** In «Гаммы», «Этюды» and «Штрихи» the third step of the status reads «Выучено». */
-    val exercise: Boolean = false,
 )
 
 enum class SectionDialog { RENAME, DELETE }

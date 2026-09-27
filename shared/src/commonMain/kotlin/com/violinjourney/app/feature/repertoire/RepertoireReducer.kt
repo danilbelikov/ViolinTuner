@@ -1,7 +1,6 @@
 package com.violinjourney.app.feature.repertoire
 
 import com.violinjourney.app.core.domain.repertoire.Piece
-import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.PieceStats
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.SheetPage
@@ -42,8 +41,7 @@ object RepertoireReducer {
                     takes = takes.size,
                     hasBest = PieceStats.bestOf(piece, takes) != null,
                     scale = piece.scale,
-                    stroke = piece.groupId == null && piece.section == PieceSection.STROKES,
-                    exercise = piece.groupId == null && piece.section != PieceSection.PIECES,
+                    stroke = SectionKeys.isStroke(piece),
                     thumbPath = firstPages[piece.id]?.let { thumbPathOf(it.thumbFileName) },
                 )
             }
