@@ -1,8 +1,10 @@
 package com.violinjourney.app.core.ui
 
+import android.view.View
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
@@ -23,6 +25,11 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.audio.playback.PlayerState
 import com.violinjourney.app.core.domain.TolerancePreset
+import com.violinjourney.app.core.domain.practice.PracticeConfig
+import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
+import com.violinjourney.app.core.domain.practice.PracticeEntry
+import com.violinjourney.app.core.domain.progress.Profile
+import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.repertoire.SectionCount
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
@@ -36,6 +43,10 @@ import com.violinjourney.app.feature.onboarding.OnboardingScreen
 import com.violinjourney.app.feature.onboarding.OnboardingState
 import com.violinjourney.app.feature.onboarding.OnboardingStep
 import com.violinjourney.app.feature.practice.CalendarCell
+import com.violinjourney.app.feature.practice.PracticeReducer
+import com.violinjourney.app.feature.practice.PracticeScreen
+import com.violinjourney.app.feature.practice.ProgressReducer
+import com.violinjourney.app.feature.practice.components.PathRow
 import com.violinjourney.app.feature.practice.components.PracticeCalendar
 import com.violinjourney.app.feature.repertoire.sections.SectionsScreen
 import com.violinjourney.app.feature.repertoire.sections.SectionsState
@@ -49,11 +60,21 @@ import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.nav_history
 import com.violinjourney.app.shared.resources.nav_repertoire
 import com.violinjourney.app.shared.resources.onboarding_skip
+import com.violinjourney.app.shared.resources.path_description
+import com.violinjourney.app.shared.resources.practice_streak_days_description_few
+import com.violinjourney.app.shared.resources.practice_streak_days_description_many
+import com.violinjourney.app.shared.resources.practice_streak_days_description_one
+import com.violinjourney.app.shared.resources.practice_streak_days_few
+import com.violinjourney.app.shared.resources.practice_streak_days_many
+import com.violinjourney.app.shared.resources.practice_streak_days_one
+import com.violinjourney.app.shared.resources.practice_week_description
+import com.violinjourney.app.shared.resources.progress_level_names
 import com.violinjourney.app.shared.resources.practice_legend_less
 import com.violinjourney.app.shared.resources.practice_legend_more
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
+import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -65,8 +86,8 @@ import org.junit.runner.RunWith
 /**
  * What TalkBack and VoiceOver are told on the screens where the eye has more than the reader: the date of a card under
  * its day header (spec 3.21), which side of a two-way switch is chosen, «A» and «B» that answer the reader's
- * activation, a slider that resets only from its actions, the calendar's legend and month, the faded «Пропустить», the
- * four tabs and the titles of «Репертуар» and «Записи».
+ * activation, a slider that resets only from its actions, the calendar's legend and month, the path row, the week and the
+ * chip of the streak of «Занятия», the faded «Пропустить», the four tabs and the titles of «Репертуар» and «Записи».
  */
 @RunWith(AndroidJUnit4::class)
 class AccessibilitySemanticsTest {
@@ -175,6 +196,68 @@ class AccessibilitySemanticsTest {
         compose.onAllNodesWithText(more).assertCountEquals(0)
         val heading = compose.onNodeWithText(Formats.monthAndYear(month)).fetchSemanticsNode().config
         assertTrue("the month is a heading", SemanticsProperties.Heading in heading)
+    }
+
+    /**
+     * The path row of «Занятия» (spec 3.36.2): one description — the level, its name, the whole time and what is left to the next
+     * level, the progress in words — pressed as a button, and announced as one: a node with a range is announced by Android as a
+     * progress bar whatever its role, so the row has none. The words on it are not read one by one.
+     */
+    @Test
+    fun thePathRowReadsAsOneDescriptionWithItsProgressAndIsAButton() {
+        val header = ProgressReducer.headerOf(47 * 60 * MS_PER_MINUTE + 17 * MS_PER_MINUTE, emptyList(), name = "", avatarPath = null, ProgressConfig())
+        var expected = ""
+        var view: View? = null
+        compose.setContent {
+            view = LocalView.current
+            val name = stringArrayResource(Res.array.progress_level_names)[header.level - 1]
+            expected = stringResource(
+                Res.string.path_description, header.level, name, Formats.totalTime(header.totalMs), header.nextLevel!!, Formats.remainingTime(header.toNextLevelMs!!),
+            )
+            ViolinTheme { PathRow(header, photo = null, onClick = {}) }
+        }
+        compose.waitForIdle()
+        assertEquals(listOf(expected), descriptions())
+        val node = compose.onNode(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)).fetchSemanticsNode()
+        assertTrue("it is pressed", SemanticsActions.OnClick in node.config)
+        assertFalse("no range: it would be announced as a progress bar", SemanticsProperties.ProgressBarRangeInfo in node.config)
+        // what TalkBack is told: the class of the node, from the accessibility delegate of the Compose view itself
+        val className = compose.runOnUiThread { view!!.accessibilityNodeProvider?.createAccessibilityNodeInfo(node.id)?.className?.toString() }
+        assertEquals("android.widget.Button", className)
+        compose.onAllNodesWithText(Formats.totalTime(header.totalMs), substring = true).assertCountEquals(0)
+    }
+
+    /**
+     * «Сегодня» (spec 3.36.2): the bars are one description — «Неделя: …; сегодня …» — and the chip is «8 дней подряд»; its words
+     * and its flame are not read apart.
+     */
+    @Test
+    fun theWeekReadsAsOneDescriptionAndTheChipAsDaysInARow() {
+        // Sunday 27 September 2026, eight days in a row from the 20th: 45 minutes a day
+        val today = LocalDate(2026, 9, 27)
+        val entries = (20..27).map { PracticeEntry(LocalDate(2026, 9, it), startedAtEpochMs = 0, durationMs = 45 * MS_PER_MINUTE, manual = false) }
+        val state = PracticeReducer.stateOf(
+            entries = entries, sessions = emptyList(), runningSince = null, month = YearMonth(2026, 9), selectedDate = today, sheet = null,
+            today = today, zone = TimeZone.UTC, config = PracticeConfig(), trophies = emptyList(), profile = Profile.EMPTY, avatarPath = null,
+            progressConfig = ProgressConfig(),
+        )
+        var week = ""
+        var streak = ""
+        var chipWords = ""
+        compose.setContent {
+            week = stringResource(Res.string.practice_week_description, Formats.minutesInWords(state.summary.weekMs), Formats.minutesInWords(state.todayMs))
+            streak = stringResource(
+                Formats.plural(8, Res.string.practice_streak_days_description_one, Res.string.practice_streak_days_description_few, Res.string.practice_streak_days_description_many),
+                8,
+            )
+            chipWords = stringResource(Formats.plural(8, Res.string.practice_streak_days_one, Res.string.practice_streak_days_few, Res.string.practice_streak_days_many), 8)
+            ViolinTheme { PracticeScreen(state, onIntent = {}, zone = TimeZone.UTC) }
+        }
+        compose.waitForIdle()
+        val said = descriptions()
+        assertTrue("the bars say «$week»: $said", week in said)
+        assertTrue("the chip says «$streak»: $said", streak in said)
+        compose.onAllNodesWithText(chipWords).assertCountEquals(0)
     }
 
     @Test

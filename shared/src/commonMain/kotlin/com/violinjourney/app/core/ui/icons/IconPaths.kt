@@ -28,6 +28,12 @@ internal object IconPaths {
     /** месяц вперёд; строка настроек */
     val CHEVRON_RIGHT = listOf("M9.5 6l6 6-6 6")
 
+    /** «Все трофеи» of «Мой путь»: a row that leads on (`i-arrow-r`, spec 3.36.2) */
+    val ARROW_RIGHT = listOf("M5 12h14", "M13 6l6 6-6 6")
+
+    /** «Имя и фото» of «Мой путь» while there is no photo (`i-user`, spec 3.36.2) */
+    val PERSON = listOf("M12 4a4 4 0 1 1 0 8a4 4 0 1 1 0-8z", "M4 21c0-4 3.6-7 8-7s8 3 8 7")
+
     /** ещё — сворачивание заметок, меню записи */
     val MORE = listOf("F M5 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z", "F M12 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z", "F M19 10.8a1.2 1.2 0 1 0 0 2.4 1.2 1.2 0 1 0 0-2.4z")
 

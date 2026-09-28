@@ -19,6 +19,8 @@ object AppIcons {
     val ChevronDown: ImageVector by lazy { icon("ChevronDown", IconPaths.CHEVRON_DOWN) }
     val ChevronLeft: ImageVector by lazy { icon("ChevronLeft", IconPaths.CHEVRON_LEFT) }
     val ChevronRight: ImageVector by lazy { icon("ChevronRight", IconPaths.CHEVRON_RIGHT) }
+    val ArrowRight: ImageVector by lazy { icon("ArrowRight", IconPaths.ARROW_RIGHT) }
+    val Person: ImageVector by lazy { icon("Person", IconPaths.PERSON) }
     val More: ImageVector by lazy { icon("More", IconPaths.MORE) }
     val Pencil: ImageVector by lazy { icon("Pencil", IconPaths.PENCIL) }
     val Trash: ImageVector by lazy { icon("Trash", IconPaths.TRASH) }
@@ -98,6 +100,8 @@ object AppIcons {
         "ChevronDown" to { ChevronDown },
         "ChevronLeft" to { ChevronLeft },
         "ChevronRight" to { ChevronRight },
+        "ArrowRight" to { ArrowRight },
+        "Person" to { Person },
         "More" to { More },
         "Pencil" to { Pencil },
         "Trash" to { Trash },

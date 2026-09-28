@@ -42,7 +42,7 @@ private const val PROGRESS = 0.94f
 private const val PHOTO_PX = 160
 
 /** A stand-in for a profile photo, in the two tones of the mockup's placeholder — data of the picture, not a colour of the app. */
-private fun standInPhoto(): ImageBitmap {
+internal fun standInPhoto(): ImageBitmap {
     val bitmap = ImageBitmap(PHOTO_PX, PHOTO_PX)
     val side = PHOTO_PX.toFloat()
     CanvasDrawScope().draw(Density(1f), LayoutDirection.Ltr, Canvas(bitmap), Size(side, side)) {
@@ -185,5 +185,15 @@ private fun StreakChipDePreview() = Ground(ground = { MaterialTheme.colorScheme.
         StreakChip(days = 1, running = false, scope = null)
         StreakChip(days = 8, running = false, scope = null)
         StreakChip(days = 30, running = false, scope = null)
+    }
+}
+
+@Preview(name = "StreakChip · rolling after a sheet: the flame of 9 days, the words still at 7 and 8", widthDp = 412, heightDp = 120, locale = "ru")
+@Composable
+private fun StreakChipRollingPreview() = Ground(ground = { MaterialTheme.colorScheme.surfaceContainer }) {
+    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        StreakChip(days = 9, running = false, scope = null, shownDays = 7)
+        StreakChip(days = 9, running = false, scope = null, shownDays = 8)
+        StreakChip(days = 9, running = false, scope = null)
     }
 }

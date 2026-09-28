@@ -22,6 +22,7 @@ import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.practice.SavedPractice
 import com.violinjourney.app.core.domain.practice.elapsedTicker
+import com.violinjourney.app.core.domain.practice.practiceDateOf
 import com.violinjourney.app.core.domain.progress.Profile
 import com.violinjourney.app.core.domain.progress.ProfileRepository
 import com.violinjourney.app.core.domain.progress.ProgressConfig
@@ -102,8 +103,25 @@ open class PracticeViewModel(
      * What only the screen decides: the month shown, the day picked and the open sheet. A null month or day follows
      * today (spec 3.12: «по умолчанию выбран сегодняшний»): the screen stays open overnight, and in the morning it is on
      * the new day. Only one picked by hand stays where it was put.
+     *
+     * One sheet at a time (spec 3.36.2): a sheet opened from another one — «Трофеи» and «Профиль» from «Мой путь» — takes
+     * its place, and [parent] remembers what it stood on, to come back to when it is closed.
      */
-    private data class Ui(val month: YearMonth? = null, val selectedDate: LocalDate? = null, val sheet: PracticeSheet? = null)
+    private data class Ui(
+        val month: YearMonth? = null,
+        val selectedDate: LocalDate? = null,
+        val sheet: PracticeSheet? = null,
+        val parent: PracticeSheet? = null,
+    ) {
+        /** No sheet at all: neither this one nor the one it stood on. */
+        fun closed() = copy(sheet = null, parent = null)
+
+        /** [next] in place of every sheet: the recap, the summary. */
+        fun replaced(next: PracticeSheet) = copy(sheet = next, parent = null)
+
+        /** Back to the sheet this one stood on, or to none. */
+        fun back() = copy(sheet = parent, parent = null)
+    }
 
     private val ui = MutableStateFlow(Ui())
 
@@ -143,8 +161,12 @@ open class PracticeViewModel(
         elapsedMs?.let { PracticeTimer(it, PracticeReducer.runningBlockOf(running, blocks, titles, clock.millis())) }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
-    /** Whether a practice runs: all the rest of the screen needs to know of it. */
-    private val running: Flow<Boolean> = runningStore.running.map { it != null }.distinctUntilChanged()
+    /**
+     * The day the running practice began on, null while none runs: all the rest of the screen needs to know of it — whether
+     * one runs, and whether it is today's (spec 3.36.2: only then it hatches today's bar).
+     */
+    private val runningSince: Flow<LocalDate?> =
+        runningStore.running.map { running -> running?.let { practiceDateOf(it.startedAtEpochMs, clock.zone) } }.distinctUntilChanged()
 
     /** Trophies and the profile travel together: `combine` takes five flows at most. */
     private val progress: Flow<Pair<List<Trophy>, Profile>> = combine(trophies.trophies, profiles.profile, ::Pair)
@@ -155,12 +177,12 @@ open class PracticeViewModel(
     private data class Records(val sessions: List<SessionSummary>, val pieces: List<Piece>, val underBacking: Set<Long>)
 
     val state: StateFlow<PracticeState> =
-        combine(repository.entries, records, running, screen, progress) { entries, (sessions, pieces, underBacking), running, screen, (trophies, profile) ->
+        combine(repository.entries, records, runningSince, screen, progress) { entries, (sessions, pieces, underBacking), runningSince, screen, (trophies, profile) ->
             val (ui, today) = screen
             PracticeReducer.stateOf(
                 entries = entries,
                 sessions = sessions,
-                running = running,
+                runningSince = runningSince,
                 month = ui.month ?: today.yearMonth,
                 selectedDate = ui.selectedDate ?: today,
                 sheet = ui.sheet,
@@ -189,11 +211,16 @@ open class PracticeViewModel(
         when (intent) {
             PracticeIntent.StartClicked -> start()
             PracticeIntent.StopClicked -> stop()
+            PracticeIntent.BackToLiveClicked -> effectChannel.trySend(PracticeEffect.OpenLive)
+            PracticeIntent.PathClicked -> openSheet(PracticeSheet.Path)
+            // hidden is only hidden, and only «Мой путь» itself: a late swipe must not close what took its place
+            PracticeIntent.PathHidden -> ui.update { if (it.sheet == PracticeSheet.Path) it.closed() else it }
+            PracticeIntent.PathSettingsClicked -> closePathForSettings()
             is PracticeIntent.SummaryStepped -> updateSummary { PracticeReducer.step(it, intent.steps, config) }
             PracticeIntent.SummarySaved -> saveSummary()
             PracticeIntent.SummaryDiscarded -> discardSummary()
             // hidden is only hidden: the practice runs on, saved or thrown away by a button of the sheet alone
-            PracticeIntent.SummaryHidden -> ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it }
+            PracticeIntent.SummaryHidden -> ui.update { if (it.sheet is PracticeSheet.Summary) it.closed() else it }
             is PracticeIntent.DaySelected -> selectDay(intent.date)
             PracticeIntent.MonthBack -> ui.update { it.copy(month = (it.month ?: today().yearMonth).minus(1, DateTimeUnit.MONTH)) }
             PracticeIntent.MonthForward -> ui.update {
@@ -207,22 +234,20 @@ open class PracticeViewModel(
             is PracticeIntent.EditTimeAdded -> updateEdit { PracticeReducer.add(it, intent.minutes) }
             PracticeIntent.EditTimeCleared -> updateEdit { it.copy(minutes = 0) }
             PracticeIntent.EditTimeSaved -> saveEdit()
-            PracticeIntent.EditTimeCancelled -> ui.update { it.copy(sheet = null) }
+            PracticeIntent.EditTimeCancelled -> ui.update { if (it.sheet is PracticeSheet.EditTime) it.back() else it }
             PracticeIntent.JourneyClicked -> effectChannel.trySend(PracticeEffect.OpenJourney)
             PracticeIntent.HomeClicked -> effectChannel.trySend(PracticeEffect.OpenHome)
             is PracticeIntent.SessionClicked -> effectChannel.trySend(PracticeEffect.OpenSession(intent.id))
-            PracticeIntent.ProfileClicked -> openSheet(PracticeSheet.Profile(latestProfile.name, importingPhoto = false))
+            PracticeIntent.ProfileClicked -> openOver<PracticeSheet.Path> { PracticeSheet.Profile(latestProfile.name, importingPhoto = false) }
             is PracticeIntent.ProfileNameChanged ->
                 updateProfile { it.copy(nameDraft = intent.text.takeCodePoints(Profile.MAX_NAME_LENGTH)) }
             is PracticeIntent.ProfilePhotoPicked -> importPhoto(intent.uri)
             PracticeIntent.ProfilePhotoRemoved -> replaceAvatar(null)
-            PracticeIntent.ProfileClosed -> closeProfile()
-            PracticeIntent.ProfileSettingsClicked -> {
-                closeProfile()
-                effectChannel.trySend(PracticeEffect.OpenSettings)
-            }
-            PracticeIntent.TrophiesClicked -> openSheet(PracticeSheet.Trophies)
-            PracticeIntent.TrophiesClosed -> ui.update { if (it.sheet == PracticeSheet.Trophies) it.copy(sheet = null) else it }
+            PracticeIntent.ProfileClosed -> closeProfile(toSettings = false)
+            // closes both — the profile and «Мой путь» under it — as «Настройки» of «Мой путь» does
+            PracticeIntent.ProfileSettingsClicked -> closeProfile(toSettings = true)
+            PracticeIntent.TrophiesClicked -> openOver<PracticeSheet.Path> { PracticeSheet.Trophies }
+            PracticeIntent.TrophiesClosed -> ui.update { if (it.sheet == PracticeSheet.Trophies) it.back() else it }
             // The next trophy not seen, if any, becomes the gift by itself: the state follows the table.
             is PracticeIntent.GiftAccepted -> viewModelScope.launch { trophies.markShown(intent.hours) }
             PracticeIntent.RecapClosed -> closeRecap()
@@ -253,7 +278,7 @@ open class PracticeViewModel(
             dropTooShort(running)
         } else {
             val blocks = BlockRules.ofPractice(running, latestBlocks)
-            ui.update { it.copy(sheet = PracticeReducer.summarySheet(running.startedAtEpochMs, length, config, blocks, latestTitles)) }
+            ui.update { it.replaced(PracticeReducer.summarySheet(running.startedAtEpochMs, length, config, blocks, latestTitles)) }
         }
     }
 
@@ -268,7 +293,7 @@ open class PracticeViewModel(
             dropTooShort(running)
         } else {
             val sheet = summarySheetOf(running, length, config, blocks, repertoire)
-            ui.update { it.copy(sheet = sheet) }
+            ui.update { it.replaced(sheet) }
         }
     }
 
@@ -330,7 +355,7 @@ open class PracticeViewModel(
             val earning = finisher.save(sheet.startedAtEpochMs, PracticeReducer.durationToSave(sheet))
             // «Занятие сохранено» takes the summary's place (spec 3.31); without an earning the sheet just goes
             if (earning == null) {
-                ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it }
+                ui.update { if (it.sheet is PracticeSheet.Summary) it.closed() else it }
             } else {
                 finisher.lastSaved.value?.let { openRecap(it) }
             }
@@ -357,7 +382,7 @@ open class PracticeViewModel(
             var opened = false
             ui.update {
                 opened = it.sheet == null || it.sheet is PracticeSheet.Summary
-                if (opened) it.copy(sheet = PracticeSheet.Recap(recap)) else it
+                if (opened) it.replaced(PracticeSheet.Recap(recap)) else it
             }
             if (!opened) showPill(earning.takts)
         } finally {
@@ -368,7 +393,7 @@ open class PracticeViewModel(
 
     private fun closeRecap() {
         val sheet = ui.value.sheet as? PracticeSheet.Recap ?: return
-        ui.update { if (it.sheet is PracticeSheet.Recap) it.copy(sheet = null) else it }
+        ui.update { if (it.sheet is PracticeSheet.Recap) it.closed() else it }
         showPill(sheet.recap.takts)
     }
 
@@ -392,7 +417,7 @@ open class PracticeViewModel(
         answer {
             // the practice of this sheet, not whatever runs now: it may have been saved from the prompt and another begun
             finisher.discard(sheet.startedAtEpochMs)
-            ui.update { if (it.sheet is PracticeSheet.Summary) it.copy(sheet = null) else it }
+            ui.update { if (it.sheet is PracticeSheet.Summary) it.closed() else it }
         }
     }
 
@@ -406,7 +431,7 @@ open class PracticeViewModel(
     private fun openEditSheet() {
         ui.update {
             val date = it.selectedDate ?: today()
-            it.copy(sheet = PracticeReducer.editSheet(date, latestTotals[date] ?: 0L, config))
+            it.replaced(PracticeReducer.editSheet(date, latestTotals[date] ?: 0L, config))
         }
     }
 
@@ -414,7 +439,7 @@ open class PracticeViewModel(
         val sheet = ui.value.sheet as? PracticeSheet.EditTime ?: return
         // the number as it opened: the day keeps its exact time rather than one manual entry of its rounding (spec 5.6)
         if (sheet.minutes == sheet.initialMinutes) {
-            ui.update { if (it.sheet is PracticeSheet.EditTime) it.copy(sheet = null) else it }
+            ui.update { if (it.sheet is PracticeSheet.EditTime) it.back() else it }
             return
         }
         viewModelScope.launch {
@@ -423,13 +448,31 @@ open class PracticeViewModel(
                 durationMs = sheet.minutes * MS_PER_MINUTE,
                 startedAtEpochMs = PracticeStats.manualStartOf(sheet.date, clock.zone),
             )
-            ui.update { it.copy(sheet = null) }
+            ui.update { if (it.sheet is PracticeSheet.EditTime) it.back() else it }
         }
     }
 
     /** One sheet at a time: a tap that lands while another sheet is open is dropped. */
     private fun openSheet(sheet: PracticeSheet) {
-        ui.update { if (it.sheet == null) it.copy(sheet = sheet) else it }
+        ui.update { if (it.sheet == null) it.copy(sheet = sheet, parent = null) else it }
+    }
+
+    /**
+     * A sheet that opens from another one, [T] — «Трофеи» and «Профиль» from «Мой путь»: it takes that one's place and remembers it
+     * (spec 3.36.2). Over anything else, or over nothing, the tap is dropped.
+     */
+    private inline fun <reified T : PracticeSheet> openOver(make: () -> PracticeSheet) {
+        ui.update { if (it.sheet is T) it.copy(sheet = make(), parent = it.sheet) else it }
+    }
+
+    /** «Настройки» of «Мой путь»: the sheet closes and the settings open (spec 3.36.2); a second tap finds no sheet and is dropped. */
+    private fun closePathForSettings() {
+        var closed = false
+        ui.update {
+            closed = it.sheet == PracticeSheet.Path
+            if (closed) it.closed() else it
+        }
+        if (closed) effectChannel.trySend(PracticeEffect.OpenSettings)
     }
 
     private fun importPhoto(uri: String) {
@@ -449,10 +492,15 @@ open class PracticeViewModel(
         if (old != null && old != fileName) avatarFiles.delete(old)
     }
 
-    private fun closeProfile() {
+    /**
+     * The name of the profile is stored however it is closed (spec 3.13); «Мой путь» comes back — or, [toSettings], goes too and the
+     * settings open.
+     */
+    private fun closeProfile(toSettings: Boolean) {
         val sheet = ui.value.sheet as? PracticeSheet.Profile ?: return
-        ui.update { it.copy(sheet = null) }
+        ui.update { if (it.sheet is PracticeSheet.Profile) (if (toSettings) it.closed() else it.back()) else it }
         viewModelScope.launch { profiles.setName(sheet.nameDraft) }
+        if (toSettings) effectChannel.trySend(PracticeEffect.OpenSettings)
     }
 
     private inline fun updateProfile(transform: (PracticeSheet.Profile) -> PracticeSheet.Profile) {

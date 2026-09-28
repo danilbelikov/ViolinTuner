@@ -46,10 +46,13 @@ private const val TABULAR_FIGURES = "tnum"
  * as [StreakFlame] does — it sways and flares when the streak grows before the eyes, stands still while a practice [running],
  * and tells [onSway] so the living «Начать занятие» rests meanwhile; [scope] is what makes numbers other numbers, as there.
  *
- * TalkBack reads «8 дней подряд»; the flame says nothing (3.18). The number is not rolled here — that is R2's call.
+ * The words say [shownDays] — the number as it rolls to [days] before the eyes (spec 3.36.2: the streak in the chip rolls, as the
+ * numbers of «Сегодня» do), never below one; whether the chip is there, its flame and what TalkBack reads follow [days] itself.
+ *
+ * TalkBack reads «8 дней подряд»; the flame says nothing (3.18).
  */
 @Composable
-fun StreakChip(days: Int, running: Boolean, scope: Any?, modifier: Modifier = Modifier, onSway: (Boolean) -> Unit = {}) {
+fun StreakChip(days: Int, running: Boolean, scope: Any?, modifier: Modifier = Modifier, shownDays: Int = days, onSway: (Boolean) -> Unit = {}) {
     if (!StreakChipMath.shown(days)) return
     val flame = ViolinTheme.practiceColors.flameOuter
     val description = stringResource(
@@ -68,7 +71,9 @@ fun StreakChip(days: Int, running: Boolean, scope: Any?, modifier: Modifier = Mo
         // below three days it draws nothing and takes no room, but stays to see the streak reach them
         StreakFlame(streakDays = days, running = running, scope = scope, maxSize = StreakChipMath.flameSize(days), onSway = onSway)
         Text(
-            text = stringResource(Formats.plural(days, Res.string.practice_streak_days_one, Res.string.practice_streak_days_few, Res.string.practice_streak_days_many), days),
+            text = StreakChipMath.wordsDays(shownDays).let { words ->
+                stringResource(Formats.plural(words, Res.string.practice_streak_days_one, Res.string.practice_streak_days_few, Res.string.practice_streak_days_many), words)
+            },
             color = flame,
             maxLines = 1,
             style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
@@ -84,6 +89,9 @@ internal object StreakChipMath {
     private val StartWithout = 10.dp
 
     fun shown(days: Int): Boolean = days > 0
+
+    /** The number the words say: the one rolled to, but never zero — a chip is there only with a streak. */
+    fun wordsDays(shownDays: Int): Int = shownDays.coerceAtLeast(1)
 
     fun flameSize(days: Int): Dp = if (days >= PracticeMotion.FLAME_FULL_FROM_DAYS) FlameFull else FlameYoung
 

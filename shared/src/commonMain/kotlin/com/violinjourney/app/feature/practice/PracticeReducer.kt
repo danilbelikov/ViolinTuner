@@ -27,7 +27,8 @@ object PracticeReducer {
     fun stateOf(
         entries: List<PracticeEntry>,
         sessions: List<SessionSummary>,
-        running: Boolean,
+        /** The day the running practice began on; null while none runs. */
+        runningSince: LocalDate?,
         month: YearMonth,
         selectedDate: LocalDate,
         sheet: PracticeSheet?,
@@ -53,12 +54,14 @@ object PracticeReducer {
         return PracticeState(
             loading = false,
             hasHistory = hasHistory,
-            running = running,
+            runningSince = runningSince,
+            today = today,
             todayMs = totals[today] ?: 0L,
             summary = PracticeSummary(
                 weekMs = PracticeStats.weekTotal(totals, today),
                 monthMs = PracticeStats.monthTotal(totals, month),
                 streakDays = PracticeStats.streak(totals, today),
+                weekDaysMs = PracticeStats.weekDays(totals, today),
             ),
             month = month,
             canGoForward = month < today.yearMonth,
@@ -93,6 +96,7 @@ object PracticeReducer {
             gift = if (sheet == null && !recapPending) ProgressReducer.giftOf(trophies, progressConfig) else null,
             sheet = sheet,
             stepMinutes = config.editStepMinutes,
+            weekFloorMinutes = weekFloorOf(config),
             recapPending = recapPending,
         )
     }
@@ -107,9 +111,10 @@ object PracticeReducer {
     fun loading(today: LocalDate, config: PracticeConfig, progressConfig: ProgressConfig): PracticeState = PracticeState(
         loading = true,
         hasHistory = false,
-        running = false,
+        runningSince = null,
+        today = today,
         todayMs = 0,
-        summary = PracticeSummary(0, 0, 0),
+        summary = PracticeSummary(0, 0, 0, weekDaysMs = List(DAYS_PER_WEEK) { 0L }),
         month = today.yearMonth,
         canGoForward = false,
         cells = emptyList(),
@@ -119,7 +124,13 @@ object PracticeReducer {
         gift = null,
         sheet = null,
         stepMinutes = config.editStepMinutes,
+        weekFloorMinutes = weekFloorOf(config),
     )
+
+    /** The week bars are never scaled below the highest step of the calendar (5.6, 5.29). */
+    private fun weekFloorOf(config: PracticeConfig): Int = config.fillLevelMinutes.last()
+
+    private const val DAYS_PER_WEEK = 7
 
     /**
      * The summary sheet for a practice that ran [actualMs] (spec 3.12: trim from 5 min to the actual length), with

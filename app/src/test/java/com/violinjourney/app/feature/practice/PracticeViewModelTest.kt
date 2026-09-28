@@ -105,6 +105,13 @@ class PracticeViewModelTest {
         return viewModel to effects
     }
 
+    /** «Мой путь» opened from the path row: «Трофеи» and «Профиль» open only over it (spec 3.36.2). */
+    private fun TestScope.openPath(viewModel: PracticeViewModel) {
+        viewModel.onIntent(PracticeIntent.PathClicked)
+        runCurrent()
+        assertEquals(PracticeSheet.Path, viewModel.state.value.sheet)
+    }
+
     /** Moves the wall clock and the virtual time together, a second at a time, like real time does. */
     private fun TestScope.pass(ms: Long) {
         runCurrent()
@@ -391,16 +398,21 @@ class PracticeViewModelTest {
     }
 
     @Test
-    fun `the settings row of the profile stores the name and opens the settings`() = runTest {
+    fun `the settings row of the profile stores the name and closes both sheets for the settings`() = runTest {
         val (viewModel, effects) = viewModel()
+        openPath(viewModel)
         viewModel.onIntent(PracticeIntent.ProfileClicked)
         runCurrent()
         viewModel.onIntent(PracticeIntent.ProfileNameChanged("Аня"))
         viewModel.onIntent(PracticeIntent.ProfileSettingsClicked)
         runCurrent()
-        assertNull(viewModel.state.value.sheet)
+        assertNull("neither the profile nor «Мой путь» under it", viewModel.state.value.sheet)
         assertEquals("Аня", profiles.profile.value.name)
-        assertTrue(PracticeEffect.OpenSettings in effects)
+        assertEquals(listOf<PracticeEffect>(PracticeEffect.OpenSettings), effects)
+        // a second tap that lands after the sheet has gone opens nothing more
+        viewModel.onIntent(PracticeIntent.ProfileSettingsClicked)
+        runCurrent()
+        assertEquals(1, effects.size)
     }
 
     @Test
@@ -479,7 +491,7 @@ class PracticeViewModelTest {
     fun `the header follows the entries, the trophies and the profile`() = runTest {
         val (viewModel, _) = viewModel()
         assertEquals(1, viewModel.state.value.header.level)
-        assertEquals(listOf(TrophyBadge(1, given = false)), viewModel.state.value.header.trophyRow)
+        assertEquals(listOf(TrophyBadge(1, given = false, index = 0)), viewModel.state.value.header.trophyRow)
 
         repository.replaceDay(today, 12 * MS_PER_HOUR, startedAtEpochMs = 0)
         trophies.award(1, today)
@@ -494,12 +506,13 @@ class PracticeViewModelTest {
         assertEquals("Даня", header.name)
         assertEquals(12 * MS_PER_HOUR, header.totalMs)
         assertEquals(4, header.level)
-        assertEquals(listOf(TrophyBadge(1, true), TrophyBadge(10, true), TrophyBadge(50, false)), header.trophyRow)
+        assertEquals(listOf(TrophyBadge(1, true, index = 0), TrophyBadge(10, true, index = 1), TrophyBadge(50, false, index = 2)), header.trophyRow)
     }
 
     @Test
     fun `the name is stored when the profile sheet closes, cleaned and cut`() = runTest {
         val (viewModel, _) = viewModel()
+        openPath(viewModel)
         viewModel.onIntent(PracticeIntent.ProfileClicked)
         runCurrent()
         assertEquals(PracticeSheet.Profile(nameDraft = "", importingPhoto = false), viewModel.state.value.sheet)
@@ -516,7 +529,7 @@ class PracticeViewModelTest {
         viewModel.onIntent(PracticeIntent.ProfileNameChanged(" Даня "))
         viewModel.onIntent(PracticeIntent.ProfileClosed)
         runCurrent()
-        assertNull(viewModel.state.value.sheet)
+        assertEquals("«Мой путь» comes back", PracticeSheet.Path, viewModel.state.value.sheet)
         assertEquals("Даня", profiles.profile.value.name)
         assertEquals("Даня", viewModel.state.value.header.name)
     }
@@ -525,6 +538,7 @@ class PracticeViewModelTest {
     fun `the profile sheet opens with the stored name and an emptied field removes it`() = runTest {
         profiles.setName("Даня")
         val (viewModel, _) = viewModel()
+        openPath(viewModel)
         viewModel.onIntent(PracticeIntent.ProfileClicked)
         runCurrent()
         assertEquals("Даня", (viewModel.state.value.sheet as PracticeSheet.Profile).nameDraft)
@@ -538,6 +552,7 @@ class PracticeViewModelTest {
     @Test
     fun `a picked photo replaces the old one at once and the old file goes`() = runTest {
         val (viewModel, effects) = viewModel()
+        openPath(viewModel)
         viewModel.onIntent(PracticeIntent.ProfileClicked)
         viewModel.onIntent(PracticeIntent.ProfilePhotoPicked("content://first"))
         runCurrent()
@@ -563,6 +578,7 @@ class PracticeViewModelTest {
     @Test
     fun `a photo that cannot be read says so and keeps the old one`() = runTest {
         val (viewModel, effects) = viewModel()
+        openPath(viewModel)
         viewModel.onIntent(PracticeIntent.ProfileClicked)
         viewModel.onIntent(PracticeIntent.ProfilePhotoPicked("content://first"))
         runCurrent()
@@ -583,17 +599,177 @@ class PracticeViewModelTest {
     }
 
     @Test
-    fun `one sheet at a time - trophies do not open over another sheet`() = runTest {
+    fun `«Все трофеи» take the place of «Мой путь» and give it back`() = runTest {
         val (viewModel, _) = viewModel()
+        openPath(viewModel)
         viewModel.onIntent(PracticeIntent.TrophiesClicked)
         runCurrent()
         assertEquals(PracticeSheet.Trophies, viewModel.state.value.sheet)
+        // one sheet at a time: the profile does not open over the trophies
         viewModel.onIntent(PracticeIntent.ProfileClicked)
         runCurrent()
         assertEquals(PracticeSheet.Trophies, viewModel.state.value.sheet)
         viewModel.onIntent(PracticeIntent.TrophiesClosed)
         runCurrent()
+        assertEquals(PracticeSheet.Path, viewModel.state.value.sheet)
+        viewModel.onIntent(PracticeIntent.PathHidden)
+        runCurrent()
         assertNull(viewModel.state.value.sheet)
+    }
+
+    @Test
+    fun `«Имя и фото» takes the place of «Мой путь» and gives it back with the name stored`() = runTest {
+        val (viewModel, _) = viewModel()
+        openPath(viewModel)
+        viewModel.onIntent(PracticeIntent.ProfileClicked)
+        runCurrent()
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.Profile)
+        viewModel.onIntent(PracticeIntent.ProfileNameChanged("Аня"))
+        viewModel.onIntent(PracticeIntent.ProfileClosed)
+        runCurrent()
+        assertEquals(PracticeSheet.Path, viewModel.state.value.sheet)
+        assertEquals("Аня", profiles.profile.value.name)
+        assertEquals("Аня", viewModel.state.value.header.name)
+    }
+
+    @Test
+    fun `the trophies and the profile open only over «Мой путь»`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.TrophiesClicked)
+        viewModel.onIntent(PracticeIntent.ProfileClicked)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+
+        repository.add(PracticeEntry(today, 1_000, 50 * MS_PER_MINUTE, manual = false))
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
+        runCurrent()
+        val edit = viewModel.state.value.sheet
+        assertTrue(edit is PracticeSheet.EditTime)
+        viewModel.onIntent(PracticeIntent.TrophiesClicked)
+        runCurrent()
+        assertEquals(edit, viewModel.state.value.sheet)
+    }
+
+    @Test
+    fun `«Мой путь» does not open over another sheet and its swipe closes only itself`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
+        runCurrent()
+        viewModel.onIntent(PracticeIntent.PathClicked)
+        runCurrent()
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.EditTime)
+        // a late swipe of «Мой путь» must not close what stands there now
+        viewModel.onIntent(PracticeIntent.PathHidden)
+        runCurrent()
+        assertTrue(viewModel.state.value.sheet is PracticeSheet.EditTime)
+        viewModel.onIntent(PracticeIntent.EditTimeCancelled)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+
+        openPath(viewModel)
+        viewModel.onIntent(PracticeIntent.TrophiesClicked)
+        viewModel.onIntent(PracticeIntent.PathHidden)
+        runCurrent()
+        assertEquals(PracticeSheet.Trophies, viewModel.state.value.sheet)
+    }
+
+    @Test
+    fun `«Настройки» of «Мой путь» close it and open the settings once`() = runTest {
+        val (viewModel, effects) = viewModel()
+        openPath(viewModel)
+        viewModel.onIntent(PracticeIntent.PathSettingsClicked)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+        assertEquals(listOf<PracticeEffect>(PracticeEffect.OpenSettings), effects)
+        viewModel.onIntent(PracticeIntent.PathSettingsClicked)
+        runCurrent()
+        assertEquals("no sheet, no second settings", 1, effects.size)
+    }
+
+    @Test
+    fun `the gift waits while «Мой путь» and a sheet over it are open`() = runTest {
+        val (viewModel, _) = viewModel()
+        openPath(viewModel)
+        viewModel.onIntent(PracticeIntent.TrophiesClicked)
+        runCurrent()
+        trophies.award(1, today)
+        runCurrent()
+        assertNull("«Трофеи» are open", viewModel.state.value.gift)
+        viewModel.onIntent(PracticeIntent.TrophiesClosed)
+        runCurrent()
+        assertNull("«Мой путь» is back", viewModel.state.value.gift)
+        viewModel.onIntent(PracticeIntent.PathHidden)
+        runCurrent()
+        assertEquals(1, viewModel.state.value.gift?.hours)
+    }
+
+    @Test
+    fun `a practice saved by the prompt over «Мой путь» and a sheet over it is not recapped - the pill comes once all have closed`() = runTest {
+        journey.start(clock.millis())
+        val finisher = testPracticeFinisher(repository, store, clock, journey = journey)
+        val (viewModel, _) = viewModel(finisher = finisher)
+        backgroundScope.launch { viewModel.journeyWindow.collect {} }
+        openPath(viewModel)
+        viewModel.onIntent(PracticeIntent.TrophiesClicked)
+        runCurrent()
+
+        // saved elsewhere — the forgotten-practice prompt over this screen, through the one finisher of the app
+        val start = clock.millis() - 110 * MS_PER_MINUTE
+        store.startIfIdle(start)
+        finisher.save(start, 110 * MS_PER_MINUTE)
+        runCurrent()
+        assertEquals("the recap does not take the place of «Трофеи»", PracticeSheet.Trophies, viewModel.state.value.sheet)
+        assertNull("no pill under a sheet", viewModel.journeyWindow.value!!.justEarned)
+
+        viewModel.onIntent(PracticeIntent.TrophiesClosed)
+        runCurrent()
+        assertEquals("«Трофеи» give «Мой путь» back, not a recap", PracticeSheet.Path, viewModel.state.value.sheet)
+        assertNull("«Мой путь» is still open", viewModel.journeyWindow.value!!.justEarned)
+
+        viewModel.onIntent(PracticeIntent.PathHidden)
+        runCurrent()
+        assertNull("no recap after the last sheet either", viewModel.state.value.sheet)
+        assertEquals(220, viewModel.journeyWindow.value!!.justEarned)
+        assertFalse(viewModel.state.value.recapPending)
+    }
+
+    @Test
+    fun `«Вернуться к Live» opens Live and the practice runs on`() = runTest {
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        runCurrent()
+        effects.clear()
+        viewModel.onIntent(PracticeIntent.BackToLiveClicked)
+        runCurrent()
+        assertEquals(listOf<PracticeEffect>(PracticeEffect.OpenLive), effects)
+        assertTrue(viewModel.state.value.running)
+    }
+
+    @Test
+    fun `the state knows the day the running practice began on`() = runTest {
+        val (viewModel, _) = viewModel()
+        assertNull(viewModel.state.value.runningSince)
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        runCurrent()
+        assertEquals(today, viewModel.state.value.runningSince)
+        assertEquals(today, viewModel.state.value.today)
+    }
+
+    @Test
+    fun `after midnight the running practice belongs to yesterday`() = runTest {
+        clock.nowMs = Instant.parse("2026-09-17T20:50:00Z").toEpochMilliseconds() // 23:50 in Moscow
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        runCurrent()
+        assertEquals(today, viewModel.state.value.runningSince)
+
+        pass(20 * MS_PER_MINUTE)
+        val state = viewModel.state.value
+        assertEquals(LocalDate(2026, 9, 18), state.today)
+        assertEquals(today, state.runningSince)
+        assertTrue(state.running)
+        assertFalse("begun yesterday: it hatches no bar of today", state.runningToday)
+        assertFalse("nor adds to today", state.withRunningToday)
     }
 
     @Test
@@ -607,13 +783,13 @@ class PracticeViewModelTest {
         viewModel.onIntent(PracticeIntent.GiftAccepted(1))
         runCurrent()
         assertEquals(10, viewModel.state.value.gift?.hours)
-        assertEquals(listOf(TrophyBadge(1, true), TrophyBadge(10, false)), viewModel.state.value.header.trophyRow)
+        assertEquals(listOf(TrophyBadge(1, true, index = 0), TrophyBadge(10, false, index = 1)), viewModel.state.value.header.trophyRow)
 
         viewModel.onIntent(PracticeIntent.GiftAccepted(10))
         runCurrent()
         assertNull(viewModel.state.value.gift)
         assertTrue(trophies.trophies.value.all { it.shown })
-        assertEquals(listOf(TrophyBadge(1, true), TrophyBadge(10, true), TrophyBadge(50, false)), viewModel.state.value.header.trophyRow)
+        assertEquals(listOf(TrophyBadge(1, true, index = 0), TrophyBadge(10, true, index = 1), TrophyBadge(50, false, index = 2)), viewModel.state.value.header.trophyRow)
     }
 
     @Test

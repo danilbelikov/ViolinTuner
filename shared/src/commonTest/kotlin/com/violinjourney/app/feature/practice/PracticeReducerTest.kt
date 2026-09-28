@@ -43,12 +43,12 @@ class PracticeReducerTest {
     private fun state(
         entries: List<PracticeEntry> = listOf(entry(1, 30), entry(4, 100), entry(16, 50), entry(17, 45)),
         sessions: List<SessionSummary> = emptyList(),
-        running: Boolean = false,
+        runningSince: LocalDate? = null,
         month: YearMonth = YearMonth(2026, 9),
         selected: LocalDate = today,
         underBackingIds: Set<Long> = emptySet(),
     ) = PracticeReducer.stateOf(
-        entries, sessions, running, month, selected, sheet = null, today, zone, config,
+        entries, sessions, runningSince, month, selected, sheet = null, today, zone, config,
         trophies = emptyList(), profile = Profile.EMPTY, avatarPath = null, progressConfig = ProgressConfig(), underBackingIds = underBackingIds,
     )
 
@@ -73,23 +73,71 @@ class PracticeReducerTest {
     fun `summary and today follow the entries`() {
         val state = state()
         assertEquals(45 * MS_PER_MINUTE, state.todayMs)
-        assertEquals(PracticeSummary(weekMs = 95 * MS_PER_MINUTE, monthMs = 225 * MS_PER_MINUTE, streakDays = 2), state.summary)
+        // the week of the 14th to the 20th: the 16th and the 17th, Wednesday and Thursday
+        val weekDays = listOf(0L, 0L, 50L, 45L, 0L, 0L, 0L).map { it * MS_PER_MINUTE }
+        assertEquals(PracticeSummary(weekMs = 95 * MS_PER_MINUTE, monthMs = 225 * MS_PER_MINUTE, streakDays = 2, weekDaysMs = weekDays), state.summary)
         assertTrue(state.hasHistory)
         assertFalse(state.loading)
     }
 
     @Test
-    fun `the state knows only whether a practice runs - its clock is a flow of its own`() {
+    fun `the state knows only the day a practice began on - its clock is a flow of its own`() {
         assertFalse(state().running)
-        assertTrue(state(running = true).running)
+        assertNull(state().runningSince)
+        val yesterday = LocalDate(2026, 9, 16)
+        assertTrue(state(runningSince = today).running)
+        assertEquals(today, state(runningSince = today).runningSince)
+        assertTrue(state(runningSince = yesterday).running, "a practice left running past midnight still runs")
+        assertEquals(yesterday, state(runningSince = yesterday).runningSince)
         assertFalse(PracticeReducer.loading(today, config, ProgressConfig()).running)
+    }
+
+    @Test
+    fun `only a practice begun today hatches today and adds to it - and only to time saved today`() {
+        val yesterday = LocalDate(2026, 9, 16)
+        val none = state()
+        assertFalse(none.runningToday, "nothing runs")
+        assertFalse(none.withRunningToday)
+
+        // begun at 23:50 and still running after midnight: it belongs to yesterday
+        val lastNight = state(runningSince = yesterday)
+        assertFalse(lastNight.runningToday, "no hatch in the new day")
+        assertFalse(lastNight.withRunningToday, "no «Сегодня вместе с ним» although today has 45 minutes")
+
+        // begun today, nothing saved today yet: the bar is hatched, there is nothing to add it to
+        val first = state(entries = listOf(entry(16, 50)), runningSince = today)
+        assertTrue(first.runningToday)
+        assertFalse(first.withRunningToday, "today has nothing saved")
+
+        // begun today and today has 45 minutes saved: both
+        val more = state(runningSince = today)
+        assertTrue(more.runningToday)
+        assertTrue(more.withRunningToday)
+
+        assertFalse(PracticeReducer.loading(today, config, ProgressConfig()).runningToday)
+    }
+
+    @Test
+    fun `the state carries the day it is and the floor of the week bars`() {
+        assertEquals(today, state().today)
+        assertEquals(config.fillLevelMinutes.last(), state().weekFloorMinutes)
+    }
+
+    @Test
+    fun `loading has an empty week of seven days and knows today`() {
+        val loading = PracticeReducer.loading(today, config, ProgressConfig())
+        assertTrue(loading.loading)
+        assertEquals(List(7) { 0L }, loading.summary.weekDaysMs)
+        assertEquals(today, loading.today)
+        assertNull(loading.runningSince)
+        assertEquals(config.fillLevelMinutes.last(), loading.weekFloorMinutes)
     }
 
     @Test
     fun `no entries is the empty state`() {
         val state = state(entries = emptyList())
         assertFalse(state.hasHistory)
-        assertEquals(PracticeSummary(0, 0, 0), state.summary)
+        assertEquals(PracticeSummary(0, 0, 0, weekDaysMs = List(7) { 0L }), state.summary)
         assertEquals(0L, state.selected.totalMs)
     }
 

@@ -52,6 +52,36 @@ class PracticeStatsTest {
     }
 
     @Test
+    fun `the days of the week run from monday and add up to the week`() {
+        // 2026-09-17 is a Thursday; the week is 14–20 September: the 13th and the 21st are not in it
+        val totals = totals(
+            "2026-09-13" to 100, "2026-09-14" to 35, "2026-09-17" to 45, "2026-09-20" to 10, "2026-09-21" to 100,
+        )
+        val days = PracticeStats.weekDays(totals, LocalDate.parse("2026-09-17"))
+        assertEquals(listOf(35L, 0L, 0L, 45L, 0L, 0L, 10L).map { it * MS_PER_MINUTE }, days)
+        assertEquals(PracticeStats.weekTotal(totals, LocalDate.parse("2026-09-17")), days.sum())
+        assertEquals(days, PracticeStats.weekDays(totals, LocalDate.parse("2026-09-14")), "the Monday of the same week")
+        assertEquals(days, PracticeStats.weekDays(totals, LocalDate.parse("2026-09-20")), "the Sunday of the same week")
+    }
+
+    @Test
+    fun `the days of a week across two months are one week`() {
+        // 2026-08-31 is a Monday: the week runs to Sunday 6 September
+        val totals = totals("2026-08-30" to 5, "2026-08-31" to 10, "2026-09-01" to 20, "2026-09-06" to 30, "2026-09-07" to 40)
+        assertEquals(
+            listOf(10L, 20L, 0L, 0L, 0L, 0L, 30L).map { it * MS_PER_MINUTE },
+            PracticeStats.weekDays(totals, LocalDate.parse("2026-09-02")),
+        )
+    }
+
+    @Test
+    fun `a day without practice is a zero of its week`() {
+        assertEquals(List(7) { 0L }, PracticeStats.weekDays(emptyMap(), LocalDate.parse("2026-09-17")))
+        // a day edited to zero stays in the map with nothing in it
+        assertEquals(0L, PracticeStats.weekDays(totals("2026-09-16" to 0), LocalDate.parse("2026-09-17"))[2])
+    }
+
+    @Test
     fun `month total takes the calendar month only`() {
         val totals = totals("2026-08-31" to 10, "2026-09-01" to 20, "2026-09-30" to 30, "2026-10-01" to 40)
         assertEquals(50 * MS_PER_MINUTE, PracticeStats.monthTotal(totals, YearMonth(2026, 9)))

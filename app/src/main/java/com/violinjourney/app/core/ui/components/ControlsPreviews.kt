@@ -1,5 +1,6 @@
 package com.violinjourney.app.core.ui.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -8,13 +9,18 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -26,6 +32,9 @@ import com.violinjourney.app.shared.resources.backup_title
 import com.violinjourney.app.shared.resources.form_section
 import com.violinjourney.app.shared.resources.history_filter_all
 import com.violinjourney.app.shared.resources.nav_settings
+import com.violinjourney.app.shared.resources.path_all_trophies
+import com.violinjourney.app.shared.resources.path_name_photo
+import com.violinjourney.app.shared.resources.path_title
 import com.violinjourney.app.shared.resources.piece_delete_confirm
 import com.violinjourney.app.shared.resources.piece_edit
 import com.violinjourney.app.shared.resources.piece_sheets_add_short
@@ -173,12 +182,27 @@ private fun ColumnScope.SettingsGroups() {
         ListRow(stringResource(Res.string.backup_title), onClick = {}, icon = AppIcons.SaveCopy, caption = stringResource(Res.string.backup_row_last, "21 сентября"))
         ListRow(stringResource(Res.string.analytics_row), onClick = {}, icon = AppIcons.Device, end = ListRowEnd.Toggle(checked = true))
     }
-    SectionLabel("Мой путь", Modifier.padding(top = 6.dp))
+    SectionLabel(stringResource(Res.string.path_title), Modifier.padding(top = 6.dp))
     ListGroup {
-        ListRow("Имя и фото", onClick = {}, icon = AppIcons.Gallery)
+        ListRow(stringResource(Res.string.path_name_photo), onClick = {}, icon = AppIcons.Person)
         ListRow(stringResource(Res.string.nav_settings), onClick = {}, icon = AppIcons.Gear)
-        ListRow("Все трофеи", onClick = {}, icon = AppIcons.Trophy, accent = true)
+        ListRow(stringResource(Res.string.path_all_trophies), onClick = {}, end = ListRowEnd.Arrow, accent = true)
     }
+}
+
+@Preview(name = "Rows · «Мой путь»: «Все трофеи» with the arrow, «Имя и фото» with the photo of 32", widthDp = 412, heightDp = 260, locale = "ru")
+@Composable
+private fun PathRowsPreview() = Kit(ground = { MaterialTheme.colorScheme.surfaceContainer }) {
+    val photo = remember { standInPhoto() }
+    ListRow(stringResource(Res.string.path_all_trophies), onClick = {}, end = ListRowEnd.Arrow, accent = true)
+    ListRow(
+        stringResource(Res.string.path_name_photo),
+        onClick = {},
+        icon = AppIcons.Person,
+        leading = { Image(photo, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.size(32.dp).clip(CircleShape)) },
+    )
+    ListRow(stringResource(Res.string.path_name_photo), onClick = {}, icon = AppIcons.Person)
+    ListRow(stringResource(Res.string.nav_settings), onClick = {}, icon = AppIcons.Gear)
 }
 
 @Preview(name = "Rows · groups «Интонация · Данные · Мой путь»", widthDp = 412, heightDp = 640, locale = "ru")

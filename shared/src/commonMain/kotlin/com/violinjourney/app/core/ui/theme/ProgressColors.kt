@@ -31,7 +31,7 @@ data class TrophyPalette(
 )
 
 /**
- * Tokens of the profile header and the trophies (handoff `Прогресс.dc.html`, `tokens`). Like
+ * Tokens of the level, the profile and the trophies (handoff `Прогресс.dc.html`, `tokens`). Like
  * the calendar fills they are not zone colors: progress is time, not a grade.
  */
 @Immutable
@@ -43,9 +43,6 @@ data class ProgressColors(
     val levelShine: Color,
     val avatarLetterBackground: Color,
     val avatarLetter: Color,
-    val avatarLevelBackground: Color,
-    val avatarLevelBorder: Color,
-    val avatarLevel: Color,
     /** Centre of the glow behind the trophy on the gift sheet; fades to nothing at the edge. */
     val giftGlow: Color,
     val trophy: TrophyPalette,
@@ -58,9 +55,6 @@ internal val DarkProgressColors = ProgressColors(
     levelShine = LevelShine,
     avatarLetterBackground = Primary,
     avatarLetter = OnPrimary,
-    avatarLevelBackground = SurfaceContainerHigh,
-    avatarLevelBorder = OutlineVariant,
-    avatarLevel = OnSurface,
     giftGlow = GiftGlow,
     trophy = TrophyPalette(
         wood = TrophyWood,

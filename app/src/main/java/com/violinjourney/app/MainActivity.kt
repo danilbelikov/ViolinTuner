@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -46,6 +44,7 @@ import com.violinjourney.app.navigation.HiltAppStartViewModel
 import com.violinjourney.app.navigation.LocalTabBarLight
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
 import com.violinjourney.app.navigation.TabBarLight
+import com.violinjourney.app.navigation.TabsFrame
 import com.violinjourney.app.navigation.TopLevelDestination
 import com.violinjourney.app.navigation.navigateToRunningBackup
 import com.violinjourney.app.navigation.navigateToTopLevel
@@ -127,8 +126,8 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
     val tabBarLight = remember { TabBarLight() }
 
     CompositionLocalProvider(LocalTabBarLight provides tabBarLight) {
-        Scaffold(
-            containerColor = MaterialTheme.colorScheme.surface,
+        // Scaffold's own, but the screens lie over the bar: the glow of «Начать занятие» falls on it (spec 3.36.2)
+        TabsFrame(
             // safeDrawing also covers the display cutout, which sits on a side in landscape. The keyboard is the business
             // of the fields that bring it — the forms pad themselves, dialogs and sheets are windows of their own — as on iOS.
             contentWindowInsets = WindowInsets.safeDrawing.exclude(WindowInsets.ime),
@@ -151,7 +150,7 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
                     navController = navController,
                     startRoute = route,
                     // consumed as well as padded: a screen asking for the bars or the keyboard again gets only what is left
-                    // (Scaffold consumes nothing for its content), not the same height twice
+                    // (the frame consumes nothing for its content), not the same height twice
                     modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding),
                 )
                 // A process that has just put a copy in place opens on «Занятия»: the restored days are seen there at once (spec 3.20).

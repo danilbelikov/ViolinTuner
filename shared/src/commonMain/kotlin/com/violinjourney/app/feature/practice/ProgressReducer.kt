@@ -4,9 +4,9 @@ import com.violinjourney.app.core.domain.progress.Progress
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.Trophy
 
-/** Total time, trophies and profile → the header and the trophies list (spec 3.13). Pure. */
+/** Total time, trophies and profile → the path row, «Мой путь» and the trophies list (spec 3.13, 3.36.2). Pure. */
 object ProgressReducer {
-    /** The header shows this many given trophies at most, the latest ones, before the next mark. */
+    /** «Мой путь» shows this many given trophies at most, the latest ones, before the next mark. */
     const val HEADER_GIVEN_TROPHIES = 2
 
     fun headerOf(totalMs: Long, trophies: List<Trophy>, name: String, avatarPath: String?, config: ProgressConfig): ProfileHeader {
@@ -21,8 +21,8 @@ object ProgressReducer {
             nextLevel = level.nextLevel,
             levelFraction = level.fraction,
             toNextLevelMs = level.toNextMs,
-            trophyRow = given.takeLast(HEADER_GIVEN_TROPHIES).map { TrophyBadge(it, given = true) } +
-                listOfNotNull(next?.let { TrophyBadge(it, given = false) }),
+            trophyRow = given.takeLast(HEADER_GIVEN_TROPHIES).map { TrophyBadge(it, given = true, index = config.trophyHours.indexOf(it)) } +
+                listOfNotNull(next?.let { TrophyBadge(it, given = false, index = config.trophyHours.indexOf(it)) }),
             givenTrophies = given.size,
             nextTrophyHours = next,
         )

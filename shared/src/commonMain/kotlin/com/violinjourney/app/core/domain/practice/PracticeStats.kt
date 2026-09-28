@@ -28,6 +28,15 @@ object PracticeStats {
         return totals.entries.sumOf { (date, ms) -> if (date >= start && date < end) ms else 0L }
     }
 
+    /**
+     * The seven days of the calendar week that contains [today], Monday first: each day's time, 0 for a day without
+     * practice (spec 3.36.2, the bars of «Сегодня»). They add up to [weekTotal].
+     */
+    fun weekDays(totals: Map<LocalDate, Long>, today: LocalDate): List<Long> {
+        val start = HistoryWeeks.weekStartOf(today)
+        return List(DAYS_PER_WEEK) { totals[start.plus(it, DateTimeUnit.DAY)] ?: 0L }
+    }
+
     fun monthTotal(totals: Map<LocalDate, Long>, month: YearMonth): Long =
         totals.entries.sumOf { (date, ms) -> if (date.yearMonth == month) ms else 0L }
 

@@ -5,7 +5,6 @@ import androidx.compose.animation.SizeTransform
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,16 +13,16 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
@@ -31,125 +30,94 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.AppButton
+import com.violinjourney.app.core.ui.components.AppButtonStyle
+import com.violinjourney.app.core.ui.components.AppDock
+import com.violinjourney.app.core.ui.components.DockDefaults
+import com.violinjourney.app.core.ui.components.DockScope
+import com.violinjourney.app.core.ui.components.LocalDockInset
+import com.violinjourney.app.core.ui.components.currentDockMetrics
+import com.violinjourney.app.core.ui.components.rememberSmallFileImage
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconLabel
-import com.violinjourney.app.core.ui.icons.IconSizes
-import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.history.components.SessionCard
 import com.violinjourney.app.feature.practice.components.CalendarMetrics
 import com.violinjourney.app.feature.practice.components.EditTimeSheet
+import com.violinjourney.app.feature.practice.components.FirstWeekCard
 import com.violinjourney.app.feature.practice.components.GiftSheet
-import com.violinjourney.app.feature.practice.components.RecapSheet
+import com.violinjourney.app.feature.practice.components.PathRow
+import com.violinjourney.app.feature.practice.components.PathSheet
 import com.violinjourney.app.feature.practice.components.PracticeCalendar
-import com.violinjourney.app.feature.practice.components.PracticeMotion
-import com.violinjourney.app.feature.practice.components.ProfileHeader
-import com.violinjourney.app.feature.practice.components.ProfileHeaderMetrics
 import com.violinjourney.app.feature.practice.components.ProfileSheet
-import com.violinjourney.app.feature.practice.components.RunningDot
+import com.violinjourney.app.feature.practice.components.RecapSheet
+import com.violinjourney.app.feature.practice.components.RunningCard
+import com.violinjourney.app.feature.practice.components.ShownNumbers
 import com.violinjourney.app.feature.practice.components.StartPracticeButton
-import com.violinjourney.app.feature.practice.components.StreakFlame
-import com.violinjourney.app.feature.practice.components.StreakFlameSize
 import com.violinjourney.app.feature.practice.components.SummarySheet
+import com.violinjourney.app.feature.practice.components.TodayCard
+import com.violinjourney.app.feature.practice.components.TodayMetrics
 import com.violinjourney.app.feature.practice.components.TrophiesSheet
-import com.violinjourney.app.feature.practice.components.rolledValue
+import com.violinjourney.app.feature.practice.components.WeekCard
+import com.violinjourney.app.feature.practice.components.rememberShownNumbers
 import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.block_done
-import com.violinjourney.app.shared.resources.block_left_few
-import com.violinjourney.app.shared.resources.block_left_many
-import com.violinjourney.app.shared.resources.block_left_one
-import com.violinjourney.app.shared.resources.block_line
 import com.violinjourney.app.shared.resources.practice_add_time
 import com.violinjourney.app.shared.resources.practice_day_none
 import com.violinjourney.app.shared.resources.practice_day_records
 import com.violinjourney.app.shared.resources.practice_day_today
 import com.violinjourney.app.shared.resources.practice_edit_time
-import com.violinjourney.app.shared.resources.practice_empty
-import com.violinjourney.app.shared.resources.practice_month
-import com.violinjourney.app.shared.resources.practice_no_value
-import com.violinjourney.app.shared.resources.practice_running
 import com.violinjourney.app.shared.resources.practice_stop
-import com.violinjourney.app.shared.resources.practice_streak
-import com.violinjourney.app.shared.resources.practice_timer_description
-import com.violinjourney.app.shared.resources.practice_today
-import com.violinjourney.app.shared.resources.practice_today_none
-import com.violinjourney.app.shared.resources.practice_week
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
 
 private val ScreenPadding = 16.dp
-private val BlockGap = 20.dp
+private val BlockGap = 12.dp
 private val MaxContentWidth = 560.dp
 private val LandscapeLeftColumn = 280.dp
-private val ButtonHeight = 56.dp
-private val ButtonCorner = 28.dp
-private val TodayLineGap = 10.dp
-private val CardCorner = 16.dp
-private val CardCornerLandscape = 14.dp
+
+/** The sides of the bottom zone of «Занятия» are the fields of the screen (5.29 R2): the button stands flush with the cards. */
+private val DockSide = 16.dp
 private val ActionHeight = 40.dp
 private val ActionCorner = 20.dp
 private val TodayChipCorner = 6.dp
 private val SessionCardGap = 8.dp
 private const val TABULAR_FIGURES = "tnum"
 private const val ACTION_SWITCH_MS = 200
-private const val ACTION_SWITCH_SCALE = 0.96f
 private const val DAY_CROSSFADE_MS = 150
-private const val MIN_CARD_LABEL_SIZE = 9
-private const val MS_PER_MINUTE = 60_000L
 
-/** A streak that grew by a day is simply shown; only a jump of days rolls. */
-private const val STREAK_ROLL_FROM = 2L
-private const val MIN_CARD_VALUE_SIZE = 11
-
-/** Text sizes that differ between the layouts (handoff `sizes`). */
+/** Sizes that differ between the layouts (spec 5.29 R2; the block of the picked day — handoff `sizes`, until stage 104). */
 @Immutable
 private data class Metrics(
-    val header: ProfileHeaderMetrics,
-    val timerSize: Int,
-    val cardCorner: Dp,
-    val cardPadding: Dp,
-    val cardLabelSize: Int,
-    val cardValueSize: Int,
+    val today: TodayMetrics,
     val dayDateSize: Int,
     val dayTimeSize: Int,
     /** «Не занимались» is a phrase, not a figure: smaller than the time. */
     val dayNoneSize: Int,
     val calendar: CalendarMetrics,
-    /** The streak flame at its largest: the landscape cards are small (handoff 19g4). */
-    val flameSize: Dp,
 ) {
     companion object {
-        val Portrait = Metrics(
-            header = ProfileHeaderMetrics.Portrait, timerSize = 64, cardCorner = CardCorner, cardPadding = 12.dp, cardLabelSize = 12, cardValueSize = 18,
-            dayDateSize = 14, dayTimeSize = 32, dayNoneSize = 20, calendar = CalendarMetrics.Portrait, flameSize = StreakFlameSize.Full,
-        )
-        val Landscape = Metrics(
-            header = ProfileHeaderMetrics.Landscape, timerSize = 56, cardCorner = CardCornerLandscape, cardPadding = 10.dp, cardLabelSize = 11, cardValueSize = 15,
-            dayDateSize = 13, dayTimeSize = 16, dayNoneSize = 15, calendar = CalendarMetrics.Landscape, flameSize = StreakFlameSize.Small,
-        )
+        val Portrait = Metrics(TodayMetrics.Portrait, dayDateSize = 14, dayTimeSize = 32, dayNoneSize = 20, calendar = CalendarMetrics.Portrait)
+        val Landscape = Metrics(TodayMetrics.Landscape, dayDateSize = 13, dayTimeSize = 16, dayNoneSize = 15, calendar = CalendarMetrics.Landscape)
     }
 }
 
-/** The practice screen (spec 3.12, handoff 10a–10g, 10j). Stateless. */
+/**
+ * The practice screen (spec 3.12, 3.36.2). Stateless. It answers from the top down: where I am on the path — how today and the
+ * week go — where my home is — the month; the main action is at the bottom, under the thumb: the middle scrolls, the button and
+ * the tab bar stand.
+ */
 @Composable
 fun PracticeScreen(
     state: PracticeState,
@@ -159,30 +127,33 @@ fun PracticeScreen(
     zone: TimeZone = remember { TimeZone.currentSystemDefault() },
     // The window into the journey (spec 3.23) comes as a slot: it lives on its own flow, not in PracticeState.
     journeyCard: @Composable (compact: Boolean) -> Unit = {},
-    // The clock of the running practice lives on its own flow too, and is read only by the timer: a tick redraws the
-    // timer, not the screen. Null — not read yet.
+    // The clock of the running practice lives on its own flow too, and is read only by the parts that show the time: a tick
+    // redraws them, not the screen. Null — not read yet.
     timer: () -> PracticeTimer? = { null },
 ) {
     // Two movements at most (spec 3.16): while the streak flame sways, the start button rests. Drawing only.
     val flameSways = remember { mutableStateOf(false) }
+    // the photo of the ring — in the path row and in «Мой путь» — from the cache of small pictures: there from the first frame
+    val photo = rememberSmallFileImage(state.header.avatarPath)
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.surface),
     ) {
         if (maxWidth > maxHeight) {
-            LandscapeLayout(state, onIntent, zone, journeyCard, flameSways, timer)
+            LandscapeLayout(state, onIntent, zone, journeyCard, flameSways, timer, photo)
         } else {
-            PortraitLayout(state, onIntent, zone, journeyCard, flameSways, timer)
+            PortraitLayout(state, onIntent, zone, journeyCard, flameSways, timer, photo)
         }
     }
     // Each sheet is always there and shows itself when it has something: one closed by its own button slides away as a
     // swiped one does — but only when nothing comes in its place: the recap after «Сохранить» (spec 3.31), the gift
-    // after a sheet take the place at once.
+    // after a sheet, «Трофеи» and «Профиль» in the place of «Мой путь» and back (3.36.2) take the place at once.
     val sheet = state.sheet
     val slideAway = sheet == null && state.gift == null
     SummarySheet(sheet as? PracticeSheet.Summary, state.stepMinutes, onIntent, slideAway)
     EditTimeSheet(sheet as? PracticeSheet.EditTime, state.stepMinutes, onIntent, slideAway)
+    PathSheet(state.header.takeIf { sheet == PracticeSheet.Path }, photo, onIntent, slideAway)
     ProfileSheet(sheet as? PracticeSheet.Profile, state.header, onIntent, slideAway)
     // no button closes it, only a swipe
     if (sheet == PracticeSheet.Trophies) TrophiesSheet(state.trophies, state.header.totalMs, onIntent)
@@ -199,37 +170,49 @@ private fun PortraitLayout(
     journeyCard: @Composable (Boolean) -> Unit,
     flameSways: MutableState<Boolean>,
     timer: () -> PracticeTimer?,
+    photo: ImageBitmap?,
 ) {
     val metrics = Metrics.Portrait
+    val numbers = rememberShownNumbers(state)
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        Column(
-            modifier = Modifier
-                .widthIn(max = MaxContentWidth)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(ScreenPadding),
-            verticalArrangement = Arrangement.spacedBy(BlockGap),
+        AppDock(
+            dock = { MainAction(state, onIntent, flameSways) },
+            modifier = Modifier.widthIn(max = MaxContentWidth).fillMaxHeight(),
+            metrics = currentDockMetrics().copy(side = DockSide),
         ) {
-            Header(state, onIntent, metrics)
-            if (!state.loading) {
-                journeyCard(false)
-                MainAction(state, onIntent, metrics, flameSways, timer)
-                SummaryCards(state, metrics, flameSways)
-                PracticeCalendar(
-                    month = state.month,
-                    cells = state.cells,
-                    canGoForward = state.canGoForward,
-                    onMonthBack = { onIntent(PracticeIntent.MonthBack) },
-                    onMonthForward = { onIntent(PracticeIntent.MonthForward) },
-                    onDaySelected = { onIntent(PracticeIntent.DaySelected(it)) },
-                    metrics = metrics.calendar,
-                )
-                SelectedDayBlock(state.selected, onIntent, metrics, zone)
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(start = ScreenPadding, top = ScreenPadding, end = ScreenPadding, bottom = LocalDockInset.current + ScreenPadding),
+                verticalArrangement = Arrangement.spacedBy(BlockGap),
+            ) {
+                Path(state, onIntent, photo)
+                if (!state.loading) {
+                    TodayBlock(state, numbers, metrics.today, flameSways, timer, onIntent, plainWeek = false)
+                    journeyCard(false)
+                    PracticeCalendar(
+                        month = state.month,
+                        cells = state.cells,
+                        canGoForward = state.canGoForward,
+                        onMonthBack = { onIntent(PracticeIntent.MonthBack) },
+                        onMonthForward = { onIntent(PracticeIntent.MonthForward) },
+                        onDaySelected = { onIntent(PracticeIntent.DaySelected(it)) },
+                        metrics = metrics.calendar,
+                    )
+                    SelectedDayBlock(state.selected, onIntent, metrics, zone)
+                }
             }
         }
     }
 }
 
+/**
+ * Landscape (practice-extra.html, screen 1): the columns stay. The left one, 280 wide — «Сегодня» compact, or the running
+ * practice and the bars of the week under it without a card — scrolls over the bottom zone with «Начать» / «Закончить» at the
+ * bottom of the column, its fade short (over the button there are 236 dp on 892 × 412). The right one scrolls by itself: the path
+ * row, the window of the home, the calendar.
+ */
 @Composable
 private fun LandscapeLayout(
     state: PracticeState,
@@ -238,33 +221,38 @@ private fun LandscapeLayout(
     journeyCard: @Composable (Boolean) -> Unit,
     flameSways: MutableState<Boolean>,
     timer: () -> PracticeTimer?,
+    photo: ImageBitmap?,
 ) {
     val metrics = Metrics.Landscape
+    val numbers = rememberShownNumbers(state)
     Row(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .width(LandscapeLeftColumn)
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(ScreenPadding),
-            verticalArrangement = Arrangement.spacedBy(BlockGap),
+        AppDock(
+            dock = { MainAction(state, onIntent, flameSways) },
+            modifier = Modifier.width(LandscapeLeftColumn).fillMaxHeight(),
+            fade = DockDefaults.FadeLeftColumn,
+            metrics = currentDockMetrics().copy(side = DockSide),
         ) {
-            Header(state, onIntent, metrics)
-            if (!state.loading) {
-                MainAction(state, onIntent, metrics, flameSways, timer)
-                SummaryCards(state, metrics, flameSways)
-                journeyCard(true)
-            }
-        }
-        if (!state.loading) {
             Column(
                 modifier = Modifier
-                    .weight(1f)
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(top = ScreenPadding, end = ScreenPadding, bottom = ScreenPadding),
+                    .padding(start = ScreenPadding, top = ScreenPadding, end = ScreenPadding, bottom = LocalDockInset.current + ScreenPadding),
                 verticalArrangement = Arrangement.spacedBy(BlockGap),
             ) {
+                if (!state.loading) TodayBlock(state, numbers, metrics.today, flameSways, timer, onIntent, plainWeek = true)
+            }
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
+                .padding(top = ScreenPadding, end = ScreenPadding, bottom = ScreenPadding),
+            verticalArrangement = Arrangement.spacedBy(BlockGap),
+        ) {
+            Path(state, onIntent, photo)
+            if (!state.loading) {
+                journeyCard(true)
                 PracticeCalendar(
                     month = state.month,
                     cells = state.cells,
@@ -281,219 +269,106 @@ private fun LandscapeLayout(
 }
 
 /**
- * While the data is being read the header keeps its place but stays unseen: an empty one would
- * flash "0 мин · Уровень 1" at someone with hundreds of hours.
+ * The path row. While the data is being read it keeps its place but stays unseen and silent: an empty one would flash
+ * «Уровень 1 · Первый звук» at someone with hundreds of hours.
  */
 @Composable
-private fun Header(state: PracticeState, onIntent: (PracticeIntent) -> Unit, metrics: Metrics) {
-    ProfileHeader(
+private fun Path(state: PracticeState, onIntent: (PracticeIntent) -> Unit, photo: ImageBitmap?) {
+    PathRow(
         header = state.header,
-        metrics = metrics.header,
-        onProfileClick = { if (!state.loading) onIntent(PracticeIntent.ProfileClicked) },
-        onTrophiesClick = { if (!state.loading) onIntent(PracticeIntent.TrophiesClicked) },
+        photo = photo,
+        onClick = { onIntent(PracticeIntent.PathClicked) },
         modifier = if (state.loading) Modifier.alpha(0f).clearAndSetSemantics { } else Modifier,
         animate = !state.loading,
+        enabled = !state.loading,
     )
 }
 
+/**
+ * «Сегодня», or the card of the running practice with the week under it, or the first run: the running practice and «Сегодня»
+ * take each other's place with the short fade of 3.12. [plainWeek] — the week under the running practice without a card
+ * (landscape).
+ */
 @Composable
-private fun MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit, metrics: Metrics, flameSways: MutableState<Boolean>, timer: () -> PracticeTimer?) {
-    val colors = MaterialTheme.colorScheme
-    // A sheet over the screen has the eye: the start button rests under it.
-    val sheetOpen = state.sheet != null || state.gift != null
+private fun TodayBlock(
+    state: PracticeState,
+    numbers: ShownNumbers,
+    metrics: TodayMetrics,
+    flameSways: MutableState<Boolean>,
+    timer: () -> PracticeTimer?,
+    onIntent: (PracticeIntent) -> Unit,
+    plainWeek: Boolean,
+) {
     AnimatedContent(
         targetState = state.running,
+        modifier = Modifier.fillMaxWidth(),
         transitionSpec = {
-            // unclipped: the glow of the start button lies past its bounds and must not be cut while it fades
-            (fadeIn(tween(ACTION_SWITCH_MS)) + scaleIn(tween(ACTION_SWITCH_MS), initialScale = ACTION_SWITCH_SCALE))
-                .togetherWith(fadeOut(tween(ACTION_SWITCH_MS)))
-                .using(SizeTransform(clip = false))
+            fadeIn(tween(ACTION_SWITCH_MS)).togetherWith(fadeOut(tween(ACTION_SWITCH_MS))).using(SizeTransform(clip = false))
         },
-        label = "mainAction",
+        label = "today",
     ) { running ->
-        Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-            if (running) {
-                RunningTimer(timer, metrics)
-                OutlinedButton(
-                    onClick = { onIntent(PracticeIntent.StopClicked) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 16.dp)
-                        .height(ButtonHeight),
-                    shape = RoundedCornerShape(ButtonCorner),
-                    border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(brush = SolidColor(colors.outlineVariant)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.onSurface),
-                ) {
-                    // A flag, not a square: the square is the stop of a recording (spec 3.16).
-                    IconLabel(
-                        icon = AppIcons.Flag,
-                        text = stringResource(Res.string.practice_stop),
-                        iconSize = IconSizes.InFilledButton,
-                        style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold),
+        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(BlockGap)) {
+            when {
+                running -> {
+                    // only a practice begun today adds to today and hatches its bar: one left running past midnight belongs to yesterday
+                    RunningCard(
+                        timer = timer,
+                        numbers = numbers,
+                        todaySavedMs = state.todayMs,
+                        withToday = state.withRunningToday,
+                        metrics = metrics,
+                        onBackToLive = if (metrics.backToLive) ({ onIntent(PracticeIntent.BackToLiveClicked) }) else null,
                     )
+                    WeekCard(numbers, state.today, state.weekFloorMinutes, hatch = state.runningToday, timer = timer, metrics = metrics, plain = plainWeek)
                 }
-            } else {
-                // Alive (spec 3.16): the first thing seen when the app opens, and the one that asks to be pressed.
-                StartPracticeButton(
-                    onClick = { onIntent(PracticeIntent.StartClicked) },
-                    calm = { sheetOpen || flameSways.value },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(ButtonHeight),
-                )
-                Text(
-                    text = when {
-                        !state.hasHistory -> stringResource(Res.string.practice_empty)
-                        state.todayMs > 0 -> stringResource(Res.string.practice_today, Formats.minutesInWords(state.todayMs))
-                        else -> stringResource(Res.string.practice_today_none)
-                    },
-                    modifier = Modifier.padding(top = TodayLineGap),
-                    color = colors.onSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
-                )
+                !numbers.hasHistory -> FirstWeekCard(numbers, state.today, state.weekFloorMinutes, metrics)
+                else -> TodayCard(numbers, state.today, state.weekFloorMinutes, metrics, onSway = { flameSways.value = it })
             }
         }
     }
 }
 
 /**
- * The time of the running practice, «Занятие идёт» with its living dot, and the block that runs (handoff 10b, 30g4).
- * The only reader of [timer]: a tick of the practice clock recomposes this and nothing else. Until the clock is read
- * the time is an empty line of its height, not «0:00».
+ * The bottom zone of «Занятия» (spec 3.36.2): the living «Начать занятие», or «Закончить занятие» outlined with its flag in the
+ * same place while a practice runs — the short fade of 3.12 between them. It keeps its height and stays empty while the data is
+ * read: neither of them flashes. The living button rests while any sheet of «Занятия» or the gift is open and while the flame
+ * sways (3.16); its glow is not cut by the zone and lies on the tab bar.
  */
 @Composable
-private fun RunningTimer(timer: () -> PracticeTimer?, metrics: Metrics) {
-    val colors = MaterialTheme.colorScheme
-    val now = timer()
-    val time = now?.let { Formats.timer(it.elapsedMs) }.orEmpty()
-    val timerDescription = stringResource(Res.string.practice_timer_description, time)
-    Text(
-        text = time,
-        modifier = Modifier.semantics { contentDescription = timerDescription },
-        color = colors.onSurface,
-        style = MaterialTheme.typography.displayLarge.copy(
-            fontSize = metrics.timerSize.sp,
-            lineHeight = (metrics.timerSize + 4).sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = (-1).sp,
-            fontFeatureSettings = TABULAR_FIGURES,
-        ),
-    )
-    Row(
-        modifier = Modifier.padding(top = 4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        RunningDot(
-            elapsedMs = now?.elapsedMs ?: 0L,
-            color = colors.primary,
-            ringColor = ViolinTheme.practiceColors.timerRing,
-        )
-        Text(
-            text = stringResource(Res.string.practice_running),
-            color = colors.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-        )
+private fun DockScope.MainAction(state: PracticeState, onIntent: (PracticeIntent) -> Unit, flameSways: MutableState<Boolean>) {
+    if (state.loading) {
+        Spacer(Modifier.fillMaxWidth().height(buttonHeight))
+        return
     }
-    // the block that runs within the practice (spec 3.28, handoff 30g4): a quiet line, no motion of its own
-    now?.block?.let { block ->
-        val left = block.minutesLeft
-        Text(
-            text = stringResource(
-                Res.string.block_line,
-                block.title,
-                if (left == null) stringResource(Res.string.block_done) else stringResource(Formats.plural(left, Res.string.block_left_one, Res.string.block_left_few, Res.string.block_left_many), left),
-            ),
-            modifier = Modifier.padding(top = 2.dp, start = 16.dp, end = 16.dp),
-            color = colors.onSurfaceVariant,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontFeatureSettings = TABULAR_FIGURES),
-        )
-    }
-}
-
-@Composable
-private fun SummaryCards(state: PracticeState, metrics: Metrics, flameSways: MutableState<Boolean>) {
-    val none = stringResource(Res.string.practice_no_value)
-    // Another month, or the first numbers after loading, are other numbers — not these ones grown.
-    val scope = state.month to state.loading
-    // Numbers grow before the eyes (spec 3.16, 3.18): while a sheet lies over them — the recap, the gift after it, the
-    // edited time, or a practice being saved by the prompt whose recap is on its way — they keep what was seen, and roll
-    // and flare once it has gone. Another scope is other numbers: a model just made with a sheet open shows them at once.
-    val sheetOpen = state.sheet != null || state.gift != null || state.recapPending
-    var seen by remember(scope) { mutableStateOf(state.hasHistory to state.summary) }
-    LaunchedEffect(sheetOpen, state.hasHistory, state.summary) {
-        if (!sheetOpen) seen = state.hasHistory to state.summary
-    }
-    val (hasHistory, summary) = if (sheetOpen) seen else state.hasHistory to state.summary
-    val rollFrom = PracticeMotion.ROLL_FROM_MINUTES * MS_PER_MINUTE
-    val weekMs = rolledValue(summary.weekMs, scope, PracticeMotion.ROLL_MS, rollFrom)
-    val monthMs = rolledValue(summary.monthMs, scope, PracticeMotion.ROLL_MS, rollFrom)
-    val streak = rolledValue(summary.streakDays.toLong(), scope, PracticeMotion.ROLL_STREAK_MS, rollFrom = STREAK_ROLL_FROM)
-    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        SummaryCard(
-            label = stringResource(Res.string.practice_week),
-            value = if (hasHistory) Formats.minutesInWords(weekMs) else none,
-            metrics = metrics,
-            modifier = Modifier.weight(1f),
-        )
-        SummaryCard(
-            label = stringResource(Res.string.practice_month),
-            value = if (hasHistory) Formats.minutesInWords(monthMs) else none,
-            metrics = metrics,
-            modifier = Modifier.weight(1f),
-        )
-        SummaryCard(
-            label = stringResource(Res.string.practice_streak),
-            value = if (hasHistory) streak.toString() else none,
-            metrics = metrics,
-            modifier = Modifier.weight(1f),
-        ) {
-            // The flame follows the streak itself, not the number rolling towards it; while a practice runs it stands still.
-            StreakFlame(
-                streakDays = if (hasHistory) summary.streakDays else 0,
-                running = state.running,
-                scope = scope,
-                maxSize = metrics.flameSize,
-                onSway = { flameSways.value = it },
+    val sheetOpen = state.sheet != null || state.gift != null
+    val low = compact
+    val height = buttonHeight
+    AnimatedContent(
+        targetState = state.running,
+        modifier = Modifier.fillMaxWidth(),
+        transitionSpec = {
+            // unclipped: the glow of the start button lies past its bounds
+            fadeIn(tween(ACTION_SWITCH_MS)).togetherWith(fadeOut(tween(ACTION_SWITCH_MS))).using(SizeTransform(clip = false))
+        },
+        label = "mainAction",
+    ) { running ->
+        if (running) {
+            // A flag, not a square: the square is the stop of a recording (spec 3.16).
+            AppButton(
+                text = stringResource(Res.string.practice_stop),
+                onClick = { onIntent(PracticeIntent.StopClicked) },
+                modifier = Modifier.fillMaxWidth(),
+                style = AppButtonStyle.Outline,
+                icon = AppIcons.Flag,
+                compact = low,
             )
-        }
-    }
-}
-
-@Composable
-private fun SummaryCard(label: String, value: String, metrics: Metrics, modifier: Modifier = Modifier, trailing: (@Composable () -> Unit)? = null) {
-    val colors = MaterialTheme.colorScheme
-    Column(
-        modifier = modifier
-            .background(colors.surfaceContainer, RoundedCornerShape(metrics.cardCorner))
-            .padding(metrics.cardPadding),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        // Three cards share 280 dp in landscape: «1 ч 36 мин» shrinks rather than clips.
-        Text(
-            text = label,
-            color = colors.onSurfaceVariant,
-            maxLines = 1,
-            softWrap = false,
-            autoSize = TextAutoSize.StepBased(minFontSize = MIN_CARD_LABEL_SIZE.sp, maxFontSize = metrics.cardLabelSize.sp, stepSize = 1.sp),
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = metrics.cardLabelSize.sp),
-        )
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(
-                text = value,
-                color = colors.onSurface,
-                maxLines = 1,
-                softWrap = false,
-                autoSize = TextAutoSize.StepBased(minFontSize = MIN_CARD_VALUE_SIZE.sp, maxFontSize = metrics.cardValueSize.sp, stepSize = 1.sp),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = metrics.cardValueSize.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES,
-                ),
-                modifier = Modifier.weight(1f, fill = false),
+        } else {
+            // Alive (spec 3.16): the first thing seen when the app opens, and the one that asks to be pressed.
+            StartPracticeButton(
+                onClick = { onIntent(PracticeIntent.StartClicked) },
+                calm = { sheetOpen || flameSways.value },
+                modifier = Modifier.fillMaxWidth().height(height),
             )
-            trailing?.invoke()
         }
     }
 }

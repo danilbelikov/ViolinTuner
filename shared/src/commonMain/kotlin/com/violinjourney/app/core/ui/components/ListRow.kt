@@ -3,6 +3,7 @@ package com.violinjourney.app.core.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -57,6 +58,9 @@ sealed interface ListRowEnd {
     /** Nothing. */
     data object None : ListRowEnd
 
+    /** An arrow of 24 in the colour of the words: the row leads on to more of the same («Все трофеи» of «Мой путь»). */
+    data object Arrow : ListRowEnd
+
     /** A value in tabular figures, onSurfaceVariant: «440 Гц», «Средний ±8». */
     data class Value(val text: String) : ListRowEnd
 
@@ -74,11 +78,12 @@ sealed interface ListRowEnd {
 val LocalListGroupGround = staticCompositionLocalOf { Color.Unspecified }
 
 /**
- * A row of a list (spec 3.36.1, 5.29): 56 dp at the least (≈ 64 with a [caption] on two lines), an [icon] of 24, the [text] of
- * 16 sp / 600 and, at the [end], a chevron, a value, a switch or a check. The whole row is one target: pressed as a button, or
+ * A row of a list (spec 3.36.1, 5.29): 56 dp at the least (≈ 64 with a [caption] on two lines), an [icon] of 24 — or, in its
+ * place, anything of its own ([leading]: the photo of 32 at «Имя и фото», 3.36.2) — the [text] of 16 sp / 600 and, at the
+ * [end], a chevron, an arrow, a value, a switch or a check. The whole row is one target: pressed as a button, or
  * toggled as a switch ([ListRowEnd.Toggle] — the switch draws only, as `AnalyticsRow` does), or chosen as a radio button
- * ([ListRowEnd.Check]); [onClick] hears it in every case. [accent] — the words and the icon in the accent, bolder, no chevron
- * («Все трофеи»). [enabled] false dims the icon, the words and the end to 0.38 and the row is not pressed; its ground stays whole
+ * ([ListRowEnd.Check]); [onClick] hears it in every case. [accent] — the words and the icon in the accent, bolder, no chevron;
+ * «Все трофеи» asks for the arrow ([ListRowEnd.Arrow]) in the accent too. [enabled] false dims the icon, the words and the end to 0.38 and the row is not pressed; its ground stays whole
  * — dimmed, it would let the lines of the group show through and stand out lighter than its neighbours — and so does the
  * [caption]: the caption of a dimmed row says why (R8, «Сначала дождитесь…»), and at 0.38 it would not read.
  *
@@ -94,6 +99,7 @@ fun ListRow(
     end: ListRowEnd = ListRowEnd.Chevron,
     accent: Boolean = false,
     enabled: Boolean = true,
+    leading: (@Composable () -> Unit)? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val ground = LocalListGroupGround.current
@@ -116,12 +122,16 @@ fun ListRow(
         horizontalArrangement = Arrangement.spacedBy(RowGap),
     ) {
         val lead = if (accent) colors.primary else colors.onSurfaceVariant
-        if (icon != null) AppIcon(icon, contentDescription = null, modifier = dim, tint = lead)
+        val words = if (accent) colors.primary else colors.onSurface
+        when {
+            leading != null -> Box(dim) { leading() }
+            icon != null -> AppIcon(icon, contentDescription = null, modifier = dim, tint = lead)
+        }
         Column(Modifier.weight(1f)) {
             Text(
                 text = text,
                 modifier = dim,
-                color = if (accent) colors.primary else colors.onSurface,
+                color = words,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 16.sp,
                     lineHeight = 22.sp,
@@ -132,15 +142,16 @@ fun ListRow(
                 Text(caption, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 17.5.sp))
             }
         }
-        RowEnd(if (accent && end == ListRowEnd.Chevron) ListRowEnd.None else end, dim)
+        RowEnd(if (accent && end == ListRowEnd.Chevron) ListRowEnd.None else end, dim, words)
     }
 }
 
 @Composable
-private fun RowEnd(end: ListRowEnd, modifier: Modifier) {
+private fun RowEnd(end: ListRowEnd, modifier: Modifier, words: Color) {
     val colors = MaterialTheme.colorScheme
     when (end) {
         ListRowEnd.Chevron -> AppIcon(AppIcons.ChevronRight, contentDescription = null, modifier = modifier, tint = ViolinTheme.textTertiary)
+        ListRowEnd.Arrow -> AppIcon(AppIcons.ArrowRight, contentDescription = null, modifier = modifier, tint = words)
         ListRowEnd.None -> Unit
         is ListRowEnd.Value -> Text(
             text = end.text,

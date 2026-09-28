@@ -1,10 +1,16 @@
 package com.violinjourney.app.feature.practice
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.domain.Zone
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
@@ -18,9 +24,13 @@ import com.violinjourney.app.core.domain.progress.Profile
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.Trophy
 import com.violinjourney.app.core.domain.session.SessionSummary
+import com.violinjourney.app.core.ui.components.AppSheetCard
+import com.violinjourney.app.core.ui.components.standInPhoto
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.practice.components.EditTimeSheetContent
 import com.violinjourney.app.feature.practice.components.GiftSheetContent
+import com.violinjourney.app.feature.practice.components.PathRow
+import com.violinjourney.app.feature.practice.components.PathSheetContent
 import com.violinjourney.app.feature.practice.components.ProfileSheetContent
 import com.violinjourney.app.feature.practice.components.RecapSheetContent
 import com.violinjourney.app.feature.practice.components.SummarySheetContent
@@ -31,101 +41,184 @@ import kotlinx.datetime.YearMonth
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
 
-/** The month of the design brief: September 2026, today Thursday the 17th. */
+/**
+ * The data of the mockups (practice.html, practice-extra.html): Sunday 27 September 2026; the week of the 21st to the 27th —
+ * 35, 50, 20, 65, 40, 90 and 45 min, 5 h 45 min in all; a streak of 8 days (20–27, the 19th missed); 24 days of September for
+ * 17 h 27 min; with August 47 h 17 min at the violin — level 5, «Гаммы», 2 h 43 min to the 6th; the trophies of 1 and 10 hours.
+ */
 private object Sample {
     val zone: TimeZone = TimeZone.of("Europe/Moscow")
-    val today: LocalDate = LocalDate(2026, 9, 17)
-    private val minutes = mapOf(
-        1 to 30, 2 to 50, 4 to 100, 5 to 15, 7 to 45, 8 to 70, 9 to 25, 11 to 125, 12 to 40, 13 to 55,
-        14 to 35, 15 to 80, 16 to 50, 17 to 45,
+    val today: LocalDate = LocalDate(2026, 9, 27)
+    private val september = mapOf(
+        1 to 30, 2 to 50, 3 to 30, 4 to 15, 5 to 55, 6 to 30, 7 to 35, 8 to 50,
+        11 to 60, 12 to 30, 13 to 50, 14 to 15, 15 to 55, 16 to 35, 17 to 27, 18 to 40,
+        20 to 95, 21 to 35, 22 to 50, 23 to 20, 24 to 65, 25 to 40, 26 to 90, 27 to 45,
     )
-    val entries = minutes.map { (day, m) ->
-        PracticeEntry(LocalDate(2026, 9, day), startedAtEpochMs = 0, durationMs = m * MS_PER_MINUTE, manual = false)
-    }
-    val sessions = listOf(session(1, 15, 18, 84), session(2, 15, 19, 71))
+    val entries = september.map { (day, minutes) -> entry(LocalDate(2026, 9, day), minutes) }
 
-    private fun session(id: Long, day: Int, hour: Int, score: Int) = SessionSummary(
+    /** August, set by hand: brings the whole time to 47 h 17 min. */
+    val august = listOf(entry(LocalDate(2026, 8, 10), 600, manual = true), entry(LocalDate(2026, 8, 20), 600, manual = true), entry(LocalDate(2026, 8, 30), 590, manual = true))
+
+    /** The same month after a skip: nothing on Friday, Saturday and today — no streak, dashes. */
+    val skipped = entries.filter { it.date.day !in 25..27 }
+
+    val sessions = listOf(session(1, 24, 18), session(2, 24, 19))
+    val trophies = listOf(Trophy(1, LocalDate(2026, 8, 10), shown = true), Trophy(10, LocalDate(2026, 8, 20), shown = true))
+
+    private fun entry(date: LocalDate, minutes: Int, manual: Boolean = false) =
+        PracticeEntry(date, startedAtEpochMs = 0, durationMs = minutes * MS_PER_MINUTE, manual = manual)
+
+    private fun session(id: Long, day: Int, hour: Int) = SessionSummary(
         id = id, title = null,
         startedAtEpochMs = LocalDate(2026, 9, day).atTime(hour, 0).toInstant(zone).toEpochMilliseconds(),
-        durationMs = 8 * MS_PER_MINUTE + 15_000, a4Hz = 440.0, toleranceCents = 8.0, nearCents = 20.0,
-        scorePercent = score, nearPercent = 100 - score, offPercent = 0, maeCents = 5.0, biasCents = -4.0,
+        durationMs = 2 * MS_PER_MINUTE + 31_000, a4Hz = 440.0, toleranceCents = 8.0, nearCents = 20.0,
+        scorePercent = 84, nearPercent = 16, offPercent = 0, maeCents = 5.0, biasCents = -4.0,
         previewZones = listOf(Zone.IN_TUNE, Zone.NEAR, Zone.IN_TUNE, Zone.OFF, Zone.IN_TUNE, Zone.IN_TUNE, Zone.NEAR, Zone.IN_TUNE),
         audioPath = null,
-    )
-
-    /** Before September: brings the total to the 16 h 40 min of the progress brief. */
-    private val earlier = PracticeEntry(LocalDate(2026, 8, 30), startedAtEpochMs = 0, durationMs = 235 * MS_PER_MINUTE, manual = true)
-    val trophies = listOf(
-        Trophy(1, LocalDate(2026, 9, 2), shown = true),
-        Trophy(10, LocalDate(2026, 9, 13), shown = true),
     )
 
     fun state(
         running: Boolean = false,
         selected: LocalDate = today,
-        entries: List<PracticeEntry> = this.entries + earlier,
+        entries: List<PracticeEntry> = this.entries + august,
         sheet: PracticeSheet? = null,
         trophies: List<Trophy> = if (entries.isEmpty()) emptyList() else this.trophies,
-        name: String = "Даня",
+        name: String = "Аня",
     ): PracticeState = PracticeReducer.stateOf(
-        entries = entries, sessions = sessions, running = running, month = YearMonth(2026, 9),
+        entries = entries, sessions = sessions, runningSince = today.takeIf { running }, month = YearMonth(2026, 9),
         selectedDate = selected, sheet = sheet, today = today, zone = zone, config = PracticeConfig(),
         trophies = trophies, profile = Profile(name, avatarFile = null),
         avatarPath = null, progressConfig = ProgressConfig(),
     )
+
+    /** 24:18 of «D-dur · 2 октавы» with 6 minutes of its goal left. */
+    val timer = PracticeTimer(24 * MS_PER_MINUTE + 18_000, RunningBlockLine("D-dur · 2 октавы", minutesLeft = 6))
+
+    /** The header of [hours] of practice, with every trophy it has crossed seen. */
+    fun header(hours: Int, name: String = "Аня"): ProfileHeader {
+        val config = ProgressConfig()
+        val given = config.trophyHours.filter { it <= hours }.map { Trophy(it, today, shown = true) }
+        return ProgressReducer.headerOf(hours * 60 * MS_PER_MINUTE, given, name, avatarPath = null, config)
+    }
 }
 
-@Preview(name = "10a idle", widthDp = 412, heightDp = 892)
 @Composable
-private fun IdlePreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(), onIntent = {}, zone = Sample.zone) }
+private fun Screen(state: PracticeState, timer: PracticeTimer? = null) {
+    ViolinTheme { PracticeScreen(state = state, onIntent = {}, zone = Sample.zone, timer = { timer }) }
 }
 
-@Preview(name = "10b running", widthDp = 412, heightDp = 892)
+@Preview(name = "Занятия · обычное", widthDp = 412, heightDp = 892, locale = "ru")
 @Composable
-private fun RunningPreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(running = true), onIntent = {}, zone = Sample.zone, timer = { PracticeTimer(754_000, block = null) }) }
-}
+private fun IdlePreview() = Screen(Sample.state())
 
-@Preview(name = "10c1 empty day", widthDp = 412, heightDp = 892)
+@Preview(name = "Занятия · занятие идёт: «Сегодня вместе с ним», подход, штриховка", widthDp = 412, heightDp = 892, locale = "ru")
 @Composable
-private fun EmptyDayPreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(selected = LocalDate(2026, 9, 3)), onIntent = {}, zone = Sample.zone) }
-}
+private fun RunningPreview() = Screen(Sample.state(running = true), Sample.timer)
 
-@Preview(name = "10c2 day with records", widthDp = 412, heightDp = 892)
+@Preview(name = "Занятия · после пропуска: без чипа, пунктиры, «Ещё не играли»", widthDp = 412, heightDp = 892, locale = "ru")
 @Composable
-private fun RecordsDayPreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(selected = LocalDate(2026, 9, 15)), onIntent = {}, zone = Sample.zone) }
-}
+private fun SkippedPreview() = Screen(Sample.state(entries = Sample.skipped + Sample.august))
 
-@Preview(name = "10g, 11c empty state", widthDp = 412, heightDp = 892)
+@Preview(name = "Занятия · первый запуск", widthDp = 412, heightDp = 892, locale = "ru")
 @Composable
-private fun EmptyStatePreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(entries = emptyList(), name = ""), onIntent = {}, zone = Sample.zone) }
-}
+private fun FirstRunPreview() = Screen(Sample.state(entries = emptyList(), name = ""))
 
-@Preview(name = "11b2 no name, no photo", widthDp = 412, heightDp = 892)
+@Preview(name = "Занятия · первое занятие идёт", widthDp = 412, heightDp = 892, locale = "ru")
 @Composable
-private fun NoNamePreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(name = ""), onIntent = {}, zone = Sample.zone) }
-}
+private fun FirstPracticeRunningPreview() = Screen(Sample.state(running = true, entries = emptyList(), name = ""), PracticeTimer(3 * MS_PER_MINUTE + 5_000, block = null))
 
-@Preview(name = "11a2 many hours", widthDp = 412, heightDp = 892)
+@Preview(name = "Занятия · загрузка: строка пути держит место, зона пуста", widthDp = 412, heightDp = 892, locale = "ru")
 @Composable
-private fun ManyHoursPreview() {
-    val years = PracticeEntry(LocalDate(2020, 1, 1), startedAtEpochMs = 0, durationMs = 1250 * 60 * MS_PER_MINUTE, manual = true)
-    val trophies = listOf(1, 10, 50, 100, 250, 500, 1000).map { Trophy(it, LocalDate(2026, 9, 2), shown = true) }
-    ViolinTheme { PracticeScreen(state = Sample.state(entries = listOf(years), trophies = trophies), onIntent = {}, zone = Sample.zone) }
-}
+private fun LoadingPreview() = Screen(PracticeReducer.loading(Sample.today, PracticeConfig(), ProgressConfig()))
 
-@Preview(name = "11a long name, large font: compact trophy row", widthDp = 412, heightDp = 892, fontScale = 1.5f)
+@Preview(name = "Занятия · 360 × 640", locale = "ru", device = "spec:width=360dp,height=640dp")
 @Composable
-private fun CompactRowPreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(name = "Константин Сергеевич"), onIntent = {}, zone = Sample.zone) }
+private fun SmallPreview() = Screen(Sample.state())
+
+@Preview(name = "Занятия · 360 × 640, занятие идёт", locale = "ru", device = "spec:width=360dp,height=640dp")
+@Composable
+private fun SmallRunningPreview() = Screen(Sample.state(running = true), Sample.timer)
+
+@Preview(name = "Занятия · landscape 892 × 412", locale = "ru", device = "spec:width=892dp,height=412dp")
+@Composable
+private fun LandscapePreview() = Screen(Sample.state())
+
+@Preview(name = "Занятия · landscape 892 × 412, занятие идёт", locale = "ru", device = "spec:width=892dp,height=412dp")
+@Composable
+private fun LandscapeRunningPreview() = Screen(Sample.state(running = true), Sample.timer)
+
+@Preview(name = "Занятия · landscape 892 × 412, первый запуск", locale = "ru", device = "spec:width=892dp,height=412dp")
+@Composable
+private fun LandscapeFirstRunPreview() = Screen(Sample.state(entries = emptyList(), name = ""))
+
+@Preview(name = "Занятия · 640 × 360: кнопка 48", locale = "ru", device = "spec:width=640dp,height=360dp")
+@Composable
+private fun TinyLandscapePreview() = Screen(Sample.state())
+
+@Preview(name = "Занятия · de, 360, шрифт 1,3", locale = "de", fontScale = 1.3f, device = "spec:width=360dp,height=640dp")
+@Composable
+private fun GermanLargePreview() = Screen(Sample.state())
+
+@Preview(name = "Занятия · fr, 360", locale = "fr", device = "spec:width=360dp,height=640dp")
+@Composable
+private fun FrenchPreview() = Screen(Sample.state(running = true), Sample.timer)
+
+@Composable
+private fun PathRows(content: @Composable () -> Unit) = ViolinTheme {
+    Column(
+        Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) { content() }
 }
 
-@Preview(name = "11d2 profile sheet, no name", widthDp = 412)
+@Preview(name = "Строка пути · с фото, 15-й уровень, первый запуск", widthDp = 412, heightDp = 260, locale = "ru")
+@Composable
+private fun PathRowPreview() = PathRows {
+    val photo = remember { standInPhoto() }
+    PathRow(Sample.state().header, photo = photo, onClick = {})
+    PathRow(Sample.header(10_000), photo = null, onClick = {})
+    PathRow(Sample.header(0, name = ""), photo = null, onClick = {})
+}
+
+@Preview(name = "Строка пути · 360: подпись в две строки", widthDp = 360, heightDp = 120, locale = "ru")
+@Composable
+private fun PathRowNarrowPreview() = PathRows { PathRow(Sample.state().header, photo = null, onClick = {}) }
+
+@Composable
+private fun PathSheetPreview(header: ProfileHeader, withPhoto: Boolean = false) = ViolinTheme {
+    val photo = if (withPhoto) remember { standInPhoto() } else null
+    AppSheetCard { PathSheetContent(header, photo = photo, onIntent = {}) }
+}
+
+@Preview(name = "Мой путь · без имени и фото", widthDp = 412, locale = "ru")
+@Composable
+private fun PathSheetNoNamePreview() = PathSheetPreview(Sample.state(name = "").header)
+
+@Preview(name = "Мой путь · с именем", widthDp = 412, locale = "ru")
+@Composable
+private fun PathSheetNamePreview() = PathSheetPreview(Sample.state().header)
+
+@Preview(name = "Мой путь · с фото и именем", widthDp = 412, locale = "ru")
+@Composable
+private fun PathSheetPhotoPreview() = PathSheetPreview(Sample.state().header, withPhoto = true)
+
+@Preview(name = "Мой путь · трофеев нет: только следующий", widthDp = 412, locale = "ru")
+@Composable
+private fun PathSheetNoTrophiesPreview() = PathSheetPreview(Sample.state(trophies = emptyList()).header)
+
+@Preview(name = "Мой путь · все 10 трофеев, 15-й уровень", widthDp = 412, locale = "ru")
+@Composable
+private fun PathSheetAllPreview() = PathSheetPreview(Sample.header(10_000))
+
+@Preview(name = "Мой путь · первый запуск", widthDp = 412, locale = "ru")
+@Composable
+private fun PathSheetFirstRunPreview() = PathSheetPreview(Sample.header(0, name = ""))
+
+@Preview(name = "Мой путь · de, шрифт 1,3", widthDp = 360, locale = "de", fontScale = 1.3f)
+@Composable
+private fun PathSheetGermanPreview() = PathSheetPreview(Sample.state().header)
+
+@Preview(name = "11d2 profile sheet, no name", widthDp = 412, locale = "ru")
 @Composable
 private fun ProfileSheetPreview() {
     ViolinTheme {
@@ -139,7 +232,7 @@ private fun ProfileSheetPreview() {
     }
 }
 
-@Preview(name = "11f gift sheet", widthDp = 412)
+@Preview(name = "11f gift sheet", widthDp = 412, locale = "ru")
 @Composable
 private fun GiftSheetPreview() {
     ViolinTheme {
@@ -152,7 +245,7 @@ private fun GiftSheetPreview() {
     }
 }
 
-@Preview(name = "11e trophies sheet", widthDp = 412)
+@Preview(name = "11e trophies sheet", widthDp = 412, locale = "ru")
 @Composable
 private fun TrophiesSheetPreview() {
     val state = Sample.state()
@@ -161,13 +254,7 @@ private fun TrophiesSheetPreview() {
     }
 }
 
-@Preview(name = "10j landscape running", widthDp = 892, heightDp = 412)
-@Composable
-private fun LandscapePreview() {
-    ViolinTheme { PracticeScreen(state = Sample.state(running = true), onIntent = {}, zone = Sample.zone, timer = { PracticeTimer(3_754_000, block = null) }) }
-}
-
-@Preview(name = "10d summary sheet", widthDp = 412)
+@Preview(name = "10d summary sheet", widthDp = 412, locale = "ru")
 @Composable
 private fun SummarySheetPreview() {
     ViolinTheme {
@@ -179,7 +266,7 @@ private fun SummarySheetPreview() {
     }
 }
 
-@Preview(name = "10e edit time sheet", widthDp = 412)
+@Preview(name = "10e edit time sheet", widthDp = 412, locale = "ru")
 @Composable
 private fun EditTimeSheetPreview() {
     ViolinTheme {
@@ -223,11 +310,11 @@ private fun RecapPreview(recap: PracticeRecap, low: Boolean = false) {
     }
 }
 
-@Preview(name = "recap", widthDp = 412)
+@Preview(name = "recap", widthDp = 412, locale = "ru")
 @Composable
 private fun RecapSheetPreview() = RecapPreview(RecapSample.recap())
 
-@Preview(name = "recap enough to Prague, new level", widthDp = 412)
+@Preview(name = "recap enough to Prague, new level", widthDp = 412, locale = "ru")
 @Composable
 private fun RecapEnoughPreview() = RecapPreview(
     RecapSample.recap(
@@ -236,18 +323,18 @@ private fun RecapEnoughPreview() = RecapPreview(
     ),
 )
 
-@Preview(name = "recap first practice, no notes, road not begun", widthDp = 412)
+@Preview(name = "recap first practice, no notes, road not begun", widthDp = 412, locale = "ru")
 @Composable
 private fun RecapBarePreview() = RecapPreview(
     RecapSample.recap(inTune = 0, minutes = 12, pieces = 0, road = RecapRoad.NotStarted, totalBefore = 0, streak = 1, dayTotal = null),
 )
 
-@Preview(name = "recap route done", widthDp = 412)
+@Preview(name = "recap route done", widthDp = 412, locale = "ru")
 @Composable
 private fun RecapDonePreview() = RecapPreview(
     RecapSample.recap(inTune = 216, minutes = 52, pieces = 0, road = RecapRoad.RouteDone(2_516), totalBefore = 530 * 60 * MS_PER_MINUTE, streak = 31, dayTotal = null),
 )
 
-@Preview(name = "recap landscape", widthDp = 560, heightDp = 412)
+@Preview(name = "recap landscape", widthDp = 560, heightDp = 412, locale = "ru")
 @Composable
 private fun RecapLandscapePreview() = RecapPreview(RecapSample.recap(), low = true)

@@ -22,12 +22,19 @@ class ProgressReducerTest {
         ProgressReducer.headerOf(totalMs, trophies, name, avatarPath = null, config)
 
     @Test
+    fun `a tile knows the place of its mark among the marks for its name`() {
+        val header = header(16 * MS_PER_HOUR + 40 * minute, given(1, 10))
+        assertEquals(listOf(0, 1, 2), header.trophyRow.map { it.index })
+        assertEquals(header.trophyRow.map { config.trophyHours.indexOf(it.hours) }, header.trophyRow.map { it.index })
+    }
+
+    @Test
     fun `the main frame of the handoff - level 4 — two trophies and the next one`() {
         val header = header(16 * MS_PER_HOUR + 40 * minute, given(1, 10), name = "Даня")
         assertEquals(4, header.level)
         assertEquals(5, header.nextLevel)
         assertEquals(8 * MS_PER_HOUR + 20 * minute, header.toNextLevelMs)
-        assertEquals(listOf(TrophyBadge(1, true), TrophyBadge(10, true), TrophyBadge(50, false)), header.trophyRow)
+        assertEquals(listOf(TrophyBadge(1, true, index = 0), TrophyBadge(10, true, index = 1), TrophyBadge(50, false, index = 2)), header.trophyRow)
         assertEquals(2, header.givenTrophies)
         assertEquals(50, header.nextTrophyHours)
     }
@@ -38,14 +45,14 @@ class ProgressReducerTest {
         assertEquals(1, header.level)
         assertEquals(0f, header.levelFraction, 0f)
         assertEquals(2 * MS_PER_HOUR, header.toNextLevelMs)
-        assertEquals(listOf(TrophyBadge(1, false)), header.trophyRow)
+        assertEquals(listOf(TrophyBadge(1, false, index = 0)), header.trophyRow)
         assertEquals(0, header.givenTrophies)
     }
 
     @Test
     fun `only the two latest trophies stand in the row — the count knows them all`() {
         val header = header(1250 * MS_PER_HOUR, given(1, 10, 50, 100, 250, 500, 1000))
-        assertEquals(listOf(TrophyBadge(500, true), TrophyBadge(1000, true), TrophyBadge(2500, false)), header.trophyRow)
+        assertEquals(listOf(TrophyBadge(500, true, index = 5), TrophyBadge(1000, true, index = 6), TrophyBadge(2500, false, index = 7)), header.trophyRow)
         assertEquals(7, header.givenTrophies)
         assertEquals(12, header.level)
     }
@@ -53,7 +60,7 @@ class ProgressReducerTest {
     @Test
     fun `with every trophy taken the row has no outline and the last level has nothing after it`() {
         val header = header(10_000 * MS_PER_HOUR, given(*config.trophyHours.toIntArray()))
-        assertEquals(listOf(TrophyBadge(5000, true), TrophyBadge(10_000, true)), header.trophyRow)
+        assertEquals(listOf(TrophyBadge(5000, true, index = 8), TrophyBadge(10_000, true, index = 9)), header.trophyRow)
         assertNull(header.nextTrophyHours)
         assertEquals(15, header.level)
         assertNull(header.nextLevel)
@@ -65,7 +72,7 @@ class ProgressReducerTest {
     fun `a total edited down keeps the trophies and lowers the level`() {
         val header = header(30 * minute, given(1, 10))
         assertEquals(1, header.level)
-        assertEquals(listOf(TrophyBadge(1, true), TrophyBadge(10, true), TrophyBadge(50, false)), header.trophyRow)
+        assertEquals(listOf(TrophyBadge(1, true, index = 0), TrophyBadge(10, true, index = 1), TrophyBadge(50, false, index = 2)), header.trophyRow)
     }
 
     @Test
@@ -97,7 +104,7 @@ class ProgressReducerTest {
     fun `a trophy stands in the row only after its gift sheet — until then its place is the outline`() {
         val trophies = listOf(Trophy(1, day, shown = true), Trophy(10, day, shown = false))
         val header = header(12 * MS_PER_HOUR, trophies)
-        assertEquals(listOf(TrophyBadge(1, true), TrophyBadge(10, false)), header.trophyRow)
+        assertEquals(listOf(TrophyBadge(1, true, index = 0), TrophyBadge(10, false, index = 1)), header.trophyRow)
         assertEquals(1, header.givenTrophies)
         assertEquals(10, header.nextTrophyHours)
 

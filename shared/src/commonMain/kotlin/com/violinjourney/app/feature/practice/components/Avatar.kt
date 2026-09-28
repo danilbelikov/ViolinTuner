@@ -4,7 +4,6 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
@@ -20,21 +19,20 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
-import androidx.compose.ui.unit.dp
+import com.violinjourney.app.core.text.firstSymbol
 import com.violinjourney.app.core.ui.components.rememberSmallFileImage
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 
 private const val AVATAR_CROSSFADE_MS = 200
 private const val LETTER_SHARE = 0.43f
-private const val LEVEL_SHARE = 0.39f
 
-/** What stands in the circle when there is no photo to show. */
+/**
+ * What stands in the circle when there is no photo to show — on the profile sheet only; the path row and «Мой путь» have the
+ * ring of the level instead (spec 3.36.2).
+ */
 sealed interface AvatarFallback {
-    /** First letter of the name, or «?» on the profile sheet: on the accent color. */
+    /** First letter of the name, or «?»: on the accent color. */
     data class Letter(val text: String) : AvatarFallback
-
-    /** Neither name nor photo: the number of the level on a quiet circle (handoff 11b2). */
-    data class Level(val level: Int) : AvatarFallback
 }
 
 /**
@@ -71,13 +69,11 @@ private fun FallbackCircle(fallback: AvatarFallback, size: Dp) {
     val density = LocalDensity.current
     val (background, content, text, share) = when (fallback) {
         is AvatarFallback.Letter -> Look(colors.avatarLetterBackground, colors.avatarLetter, fallback.text, LETTER_SHARE)
-        is AvatarFallback.Level -> Look(colors.avatarLevelBackground, colors.avatarLevel, fallback.level.toString(), LEVEL_SHARE)
     }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(background, CircleShape)
-            .then(if (fallback is AvatarFallback.Level) Modifier.border(1.dp, colors.avatarLevelBorder, CircleShape) else Modifier),
+            .background(background, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
         val fontSize = with(density) { (size * share).toSp() }
@@ -98,3 +94,9 @@ private fun FallbackCircle(fallback: AvatarFallback, size: Dp) {
 }
 
 private data class Look(val background: Color, val content: Color, val text: String, val share: Float)
+
+/**
+ * First character of the name as the avatar shows it: a symbol whole — an emoji with its skin tone, a flag, a family
+ * joined by ZWJ, a letter with its combining marks.
+ */
+fun initialOf(name: String): String = name.firstSymbol().uppercase()
