@@ -83,7 +83,10 @@ class PracticeViewModelTest {
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    /** [finisher] is one per app: a test that saves as the prompt would passes its own to share it with the screen. */
+    /**
+     * [finisher] is one per app: a test that saves as the prompt would passes its own to share it with the screen. [watchState]
+     * false — the test watches the state itself, to stop watching it as a screen in the background does.
+     */
     private fun TestScope.viewModel(
         finishAsk: FinishPracticeAsk = FinishPracticeAsk(),
         repository: FakePracticeRepository = this@PracticeViewModelTest.repository,
@@ -91,6 +94,7 @@ class PracticeViewModelTest {
         finisher: PracticeFinisher = testPracticeFinisher(repository, store, clock, journey = journey),
         repertoire: RepertoireRepository = FakeRepertoireRepository(),
         blocks: BlockStore = NoBlocks,
+        watchState: Boolean = true,
     ): Pair<PracticeViewModel, MutableList<PracticeEffect>> {
         val viewModel = PracticeViewModel(
             repository, store, finisher, sessions, config, repertoire, clock,
@@ -98,7 +102,7 @@ class PracticeViewModelTest {
             journeyConfig = JourneyConfig(), analytics = NoOpAnalytics(), backings = NoBackings,
         )
         val effects = mutableListOf<PracticeEffect>()
-        backgroundScope.launch { viewModel.state.collect {} }
+        if (watchState) backgroundScope.launch { viewModel.state.collect {} }
         backgroundScope.launch { viewModel.timer.collect {} }
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
         runCurrent()
@@ -135,7 +139,7 @@ class PracticeViewModelTest {
         assertFalse(state.running)
         assertNull(viewModel.timer.value)
         assertEquals(YearMonth(2026, 9), state.month)
-        assertEquals(today, state.selected.date)
+        assertNull("no day is selected until its sheet is open (spec 3.36.2)", state.selected)
     }
 
     @Test
@@ -432,14 +436,57 @@ class PracticeViewModelTest {
     }
 
     @Test
-    fun `days are selectable up to today`() = runTest {
+    fun `a tapped day opens its sheet and a day to come opens nothing`() = runTest {
         val (viewModel, _) = viewModel()
-        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 3)))
-        runCurrent()
-        assertEquals(LocalDate(2026, 9, 3), viewModel.state.value.selected.date)
         viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 18)))
         runCurrent()
-        assertEquals(LocalDate(2026, 9, 3), viewModel.state.value.selected.date)
+        assertNull("tomorrow has nothing to open until R9", viewModel.state.value.sheet)
+        assertNull(viewModel.state.value.selected)
+
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 3)))
+        runCurrent()
+        assertEquals(PracticeSheet.Day(LocalDate(2026, 9, 3)), viewModel.state.value.sheet)
+        assertEquals(LocalDate(2026, 9, 3), viewModel.state.value.selected?.date)
+        assertEquals(listOf(LocalDate(2026, 9, 3)), viewModel.state.value.cells.filterNotNull().filter { it.isSelected }.map { it.date })
+
+        // one sheet at a time: another day tapped under the sheet opens nothing
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 4)))
+        runCurrent()
+        assertEquals(PracticeSheet.Day(LocalDate(2026, 9, 3)), viewModel.state.value.sheet)
+    }
+
+    @Test
+    fun `a swipe hides the sheet of the day and the day is no longer selected`() = runTest {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.DaySelected(today))
+        runCurrent()
+        assertTrue(viewModel.state.value.selected!!.isToday)
+        viewModel.onIntent(PracticeIntent.DayHidden)
+        runCurrent()
+        assertNull(viewModel.state.value.sheet)
+        assertNull(viewModel.state.value.selected)
+        assertTrue(viewModel.state.value.cells.filterNotNull().none { it.isSelected })
+    }
+
+    @Test
+    fun `«Время за день» opens only over the sheet of the day - and the day stays selected under it`() = runTest {
+        repository.add(PracticeEntry(LocalDate(2026, 9, 16), 1_000, 50 * MS_PER_MINUTE, manual = false))
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
+        runCurrent()
+        assertNull("no sheet of a day, nothing to edit", viewModel.state.value.sheet)
+
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 16)))
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
+        runCurrent()
+        val edit = viewModel.state.value.sheet as PracticeSheet.EditTime
+        assertEquals(LocalDate(2026, 9, 16), edit.date)
+        assertEquals(50, edit.minutes)
+        assertEquals("the ring «выбран» stays", LocalDate(2026, 9, 16), viewModel.state.value.selected?.date)
+        // a late swipe of the sheet of the day does not close what took its place
+        viewModel.onIntent(PracticeIntent.DayHidden)
+        runCurrent()
+        assertEquals(edit, viewModel.state.value.sheet)
     }
 
     @Test
@@ -458,33 +505,70 @@ class PracticeViewModelTest {
         assertEquals(LocalDate(2026, 9, 16), date)
         assertEquals(85 * MS_PER_MINUTE, duration)
         assertEquals(LocalDate(2026, 9, 16).atTime(12, 0).toInstant(zone).toEpochMilliseconds(), start)
-        assertNull(viewModel.state.value.sheet)
-        assertEquals(85 * MS_PER_MINUTE, viewModel.state.value.selected.totalMs)
+        // spec 3.36.2: «Сохранить» gives the sheet of the day back, with the new time
+        assertEquals(PracticeSheet.Day(LocalDate(2026, 9, 16)), viewModel.state.value.sheet)
+        assertEquals(85 * MS_PER_MINUTE, viewModel.state.value.selected?.totalMs)
     }
 
     @Test
     fun `clearing a day to zero and cancelling the sheet`() = runTest {
         repository.add(PracticeEntry(today, 1_000, 50 * MS_PER_MINUTE, manual = false))
         val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.DaySelected(today))
         viewModel.onIntent(PracticeIntent.EditTimeClicked)
         viewModel.onIntent(PracticeIntent.EditTimeCleared)
+        // «Отмена» and a swipe alike (the sheet sends the same intent): the sheet of the day with the old time
         viewModel.onIntent(PracticeIntent.EditTimeCancelled)
         runCurrent()
         assertEquals(50 * MS_PER_MINUTE, viewModel.state.value.todayMs)
+        assertEquals(PracticeSheet.Day(today), viewModel.state.value.sheet)
+        assertEquals(50 * MS_PER_MINUTE, viewModel.state.value.selected?.totalMs)
         viewModel.onIntent(PracticeIntent.EditTimeClicked)
         viewModel.onIntent(PracticeIntent.EditTimeCleared)
         viewModel.onIntent(PracticeIntent.EditTimeSaved)
         runCurrent()
         assertEquals(0L, viewModel.state.value.todayMs)
         assertFalse(viewModel.state.value.hasHistory)
+        assertEquals(PracticeSheet.Day(today), viewModel.state.value.sheet)
+        assertEquals(0L, viewModel.state.value.selected?.totalMs)
     }
 
     @Test
-    fun `a session card opens the session`() = runTest {
+    fun `a record of the sheet of the day opens its screen and the sheet comes back with the screen`() = runTest {
         val (viewModel, effects) = viewModel()
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 16)))
+        runCurrent()
         viewModel.onIntent(PracticeIntent.SessionClicked(7))
         runCurrent()
         assertEquals(listOf(PracticeEffect.OpenSession(7)), effects)
+        val away = viewModel.state.value
+        assertTrue("the sheet steps aside while the record is on the screen", away.sheetsAway)
+        assertEquals("the model keeps it", PracticeSheet.Day(LocalDate(2026, 9, 16)), away.sheet)
+
+        // a trophy given meanwhile waits for the sheet, as under any sheet
+        trophies.award(1, today)
+        runCurrent()
+        assertNull(viewModel.state.value.gift)
+
+        // «назад» from the record: the screen is resumed and the sheet of the day rises again
+        viewModel.onIntent(PracticeIntent.Resumed)
+        runCurrent()
+        assertFalse(viewModel.state.value.sheetsAway)
+        assertEquals(PracticeSheet.Day(LocalDate(2026, 9, 16)), viewModel.state.value.sheet)
+        assertNull(viewModel.state.value.gift)
+        viewModel.onIntent(PracticeIntent.DayHidden)
+        runCurrent()
+        assertEquals(1, viewModel.state.value.gift?.hours)
+    }
+
+    @Test
+    fun `a resumed screen without a record opened changes nothing`() = runTest {
+        val (viewModel, _) = viewModel()
+        openPath(viewModel)
+        viewModel.onIntent(PracticeIntent.Resumed)
+        runCurrent()
+        assertEquals(PracticeSheet.Path, viewModel.state.value.sheet)
+        assertFalse(viewModel.state.value.sheetsAway)
     }
 
     @Test
@@ -641,6 +725,7 @@ class PracticeViewModelTest {
         assertNull(viewModel.state.value.sheet)
 
         repository.add(PracticeEntry(today, 1_000, 50 * MS_PER_MINUTE, manual = false))
+        viewModel.onIntent(PracticeIntent.DaySelected(today))
         viewModel.onIntent(PracticeIntent.EditTimeClicked)
         runCurrent()
         val edit = viewModel.state.value.sheet
@@ -653,6 +738,7 @@ class PracticeViewModelTest {
     @Test
     fun `«Мой путь» does not open over another sheet and its swipe closes only itself`() = runTest {
         val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.DaySelected(today))
         viewModel.onIntent(PracticeIntent.EditTimeClicked)
         runCurrent()
         viewModel.onIntent(PracticeIntent.PathClicked)
@@ -663,6 +749,13 @@ class PracticeViewModelTest {
         runCurrent()
         assertTrue(viewModel.state.value.sheet is PracticeSheet.EditTime)
         viewModel.onIntent(PracticeIntent.EditTimeCancelled)
+        runCurrent()
+        assertEquals(PracticeSheet.Day(today), viewModel.state.value.sheet)
+        viewModel.onIntent(PracticeIntent.PathClicked)
+        viewModel.onIntent(PracticeIntent.PathHidden)
+        runCurrent()
+        assertEquals("nor over the sheet of the day", PracticeSheet.Day(today), viewModel.state.value.sheet)
+        viewModel.onIntent(PracticeIntent.DayHidden)
         runCurrent()
         assertNull(viewModel.state.value.sheet)
 
@@ -795,6 +888,7 @@ class PracticeViewModelTest {
     @Test
     fun `a gift waits while another sheet is open`() = runTest {
         val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.DaySelected(today))
         viewModel.onIntent(PracticeIntent.EditTimeClicked)
         runCurrent()
         trophies.award(1, today)
@@ -802,6 +896,9 @@ class PracticeViewModelTest {
         assertNull("the edit sheet is still open", viewModel.state.value.gift)
 
         viewModel.onIntent(PracticeIntent.EditTimeCancelled)
+        runCurrent()
+        assertNull("the sheet of the day is back", viewModel.state.value.gift)
+        viewModel.onIntent(PracticeIntent.DayHidden)
         runCurrent()
         assertEquals(1, viewModel.state.value.gift?.hours)
     }
@@ -1003,6 +1100,7 @@ class PracticeViewModelTest {
     fun `saving an unchanged day writes nothing`() = runTest {
         repository.add(PracticeEntry(today, 1_000, 47 * MS_PER_MINUTE + 40_000, manual = false))
         val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.DaySelected(today))
         viewModel.onIntent(PracticeIntent.EditTimeClicked)
         runCurrent()
         assertEquals(48, (viewModel.state.value.sheet as PracticeSheet.EditTime).minutes)
@@ -1010,32 +1108,106 @@ class PracticeViewModelTest {
         runCurrent()
         assertTrue(repository.replacedDays.isEmpty())
         assertEquals(47 * MS_PER_MINUTE + 40_000, viewModel.state.value.todayMs)
-        assertNull(viewModel.state.value.sheet)
+        assertEquals(PracticeSheet.Day(today), viewModel.state.value.sheet)
     }
 
     @Test
-    fun `the picked day and the month follow today across midnight`() = runTest {
+    fun `the month follows today across midnight`() = runTest {
         clock.nowMs = Instant.parse("2026-09-30T20:59:30Z").toEpochMilliseconds() // 23:59:30 in Moscow
         val (viewModel, _) = viewModel()
-        assertEquals(LocalDate(2026, 9, 30), viewModel.state.value.selected.date)
+        assertEquals(YearMonth(2026, 9), viewModel.state.value.month)
 
         pass(60_000)
         val state = viewModel.state.value
-        assertEquals(LocalDate(2026, 10, 1), state.selected.date)
-        assertTrue(state.selected.isToday)
+        assertEquals(LocalDate(2026, 10, 1), state.cells.filterNotNull().single { it.isToday }.date)
+        assertNull("no day is selected by itself", state.selected)
         assertEquals(YearMonth(2026, 10), state.month)
         assertFalse(state.canGoForward)
     }
 
     @Test
-    fun `a day picked by hand stays after midnight`() = runTest {
+    fun `the sheet of a day keeps its date across midnight and today moves on`() = runTest {
         clock.nowMs = Instant.parse("2026-09-17T20:59:30Z").toEpochMilliseconds() // 23:59:30 in Moscow
         val (viewModel, _) = viewModel()
-        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 15)))
+        viewModel.onIntent(PracticeIntent.DaySelected(today))
+        runCurrent()
+        assertTrue(viewModel.state.value.selected!!.isToday)
         pass(60_000)
         val state = viewModel.state.value
-        assertEquals(LocalDate(2026, 9, 15), state.selected.date)
+        assertEquals(PracticeSheet.Day(today), state.sheet)
+        assertEquals(today, state.selected?.date)
+        assertFalse("yesterday now", state.selected!!.isToday)
         assertEquals(LocalDate(2026, 9, 18), state.cells.filterNotNull().single { it.isToday }.date)
+    }
+
+    @Test
+    fun `a sheet of a day the date went back under closes in the model - the gift comes and the screen opens sheets again`() = runTest {
+        val (viewModel, _) = viewModel(watchState = false)
+        var screen = backgroundScope.launch { viewModel.state.collect {} }
+
+        // the screen in the background long enough for its state to stop, and the date goes back meanwhile — a zone crossed
+        // westward over midnight, a clock set back by hand: the screen comes back to a sheet of a day to come
+        fun awayWhileTheDateGoesBack() {
+            screen.cancel()
+            pass(10_000)
+            clock.nowMs -= 24 * MS_PER_HOUR
+            screen = backgroundScope.launch { viewModel.state.collect {} }
+            runCurrent()
+        }
+
+        viewModel.onIntent(PracticeIntent.DaySelected(today))
+        runCurrent()
+        assertEquals(PracticeSheet.Day(today), viewModel.state.value.sheet)
+        trophies.award(1, today)
+        runCurrent()
+        assertNull("the gift waits for the sheet of the day", viewModel.state.value.gift)
+
+        awayWhileTheDateGoesBack()
+        val yesterday = LocalDate(2026, 9, 16)
+        val back = viewModel.state.value
+        assertEquals(yesterday, back.today)
+        assertNull("a day to come has no sheet: the model closes it as a hide would", back.sheet)
+        assertNull(back.selected)
+        assertTrue(back.cells.filterNotNull().none { it.isSelected })
+        assertEquals("nothing holds the gift any more", 1, back.gift?.hours)
+        viewModel.onIntent(PracticeIntent.GiftAccepted(1))
+        runCurrent()
+
+        // not stuck: a day opens its sheet again; «Время за день» over it closes with it when the date goes back once more
+        viewModel.onIntent(PracticeIntent.DaySelected(yesterday))
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
+        runCurrent()
+        assertEquals(yesterday, (viewModel.state.value.sheet as PracticeSheet.EditTime).date)
+        awayWhileTheDateGoesBack()
+        assertEquals(LocalDate(2026, 9, 15), viewModel.state.value.today)
+        assertNull("«Время за день» and the sheet of the day under it", viewModel.state.value.sheet)
+        viewModel.onIntent(PracticeIntent.EditTimeCancelled)
+        runCurrent()
+        assertNull("a late «Отмена» brings back no sheet", viewModel.state.value.sheet)
+        openPath(viewModel)
+    }
+
+    @Test
+    fun `a practice saved by the prompt over the sheet of the day is not recapped - the pill comes once it has closed`() = runTest {
+        journey.start(clock.millis())
+        val finisher = testPracticeFinisher(repository, store, clock, journey = journey)
+        val (viewModel, _) = viewModel(finisher = finisher)
+        backgroundScope.launch { viewModel.journeyWindow.collect {} }
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 16)))
+        runCurrent()
+
+        // saved elsewhere — the forgotten-practice prompt over this screen, through the one finisher of the app
+        val start = clock.millis() - 110 * MS_PER_MINUTE
+        store.startIfIdle(start)
+        finisher.save(start, 110 * MS_PER_MINUTE)
+        runCurrent()
+        assertEquals("the recap does not take the place of the sheet of the day", PracticeSheet.Day(LocalDate(2026, 9, 16)), viewModel.state.value.sheet)
+        assertNull("no pill under a sheet", viewModel.journeyWindow.value!!.justEarned)
+
+        viewModel.onIntent(PracticeIntent.DayHidden)
+        runCurrent()
+        assertNull("no recap after it either", viewModel.state.value.sheet)
+        assertEquals(220, viewModel.journeyWindow.value!!.justEarned)
     }
 
     @Test

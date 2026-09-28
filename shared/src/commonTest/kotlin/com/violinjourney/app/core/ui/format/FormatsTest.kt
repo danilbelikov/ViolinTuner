@@ -74,6 +74,15 @@ class FormatsTest {
     }
 
     @Test
+    fun `the heading of the calendar has the year only in another year`() {
+        assertEquals("Сентябрь", Formats.monthTitle(YearMonth(2026, 9), currentYear = 2026))
+        assertEquals("Январь", Formats.monthTitle(YearMonth(2026, 1), currentYear = 2026))
+        assertEquals("Август 2025", Formats.monthTitle(YearMonth(2025, 8), currentYear = 2026))
+        assertEquals("Декабрь 2025", Formats.monthTitle(YearMonth(2025, 12), currentYear = 2026))
+        assertEquals("Май 2027", Formats.monthTitle(YearMonth(2027, 5), currentYear = 2026))
+    }
+
+    @Test
     fun `the total time rounds down and drops minutes from a hundred hours`() {
         assertEquals("0 мин", Formats.totalTime(0))
         assertEquals("0 мин", Formats.totalTime(59_999))

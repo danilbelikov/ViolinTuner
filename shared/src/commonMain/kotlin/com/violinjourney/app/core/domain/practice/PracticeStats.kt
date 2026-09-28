@@ -40,6 +40,10 @@ object PracticeStats {
     fun monthTotal(totals: Map<LocalDate, Long>, month: YearMonth): Long =
         totals.entries.sumOf { (date, ms) -> if (date.yearMonth == month) ms else 0L }
 
+    /** How many days of [month] have practice (spec 3.36.2, «17 ч 27 мин · 24 дня» over the calendar); a day at zero has none. */
+    fun monthDays(totals: Map<LocalDate, Long>, month: YearMonth): Int =
+        totals.count { (date, ms) -> date.yearMonth == month && ms > 0 }
+
     /**
      * Consecutive days with practice ending today, or yesterday when today has none yet: a day
      * that is not over cannot break the streak (spec 5.6).

@@ -396,6 +396,11 @@
     <string name="practice_no_value">—</string>
     <string name="practice_month_back">이전 달</string>
     <string name="practice_month_forward">다음 달</string>
+    <string name="practice_month_line">%1$s · %2$s</string>
+    <string name="practice_month_days_one">%1$d일간</string>
+    <string name="practice_month_days_few">%1$d일간</string>
+    <string name="practice_month_days_many">%1$d일간</string>
+    <string name="practice_month_description">%1$s, %2$s, %3$s</string>
     <string-array name="practice_weekdays">
         <item>월</item>
         <item>화</item>
@@ -406,12 +411,11 @@
         <item>일</item>
     </string-array>
     <string name="practice_day_description">%1$s, %2$s</string>
-    <string name="practice_legend_less">적게</string>
-    <string name="practice_legend_more">많이</string>
     <string name="practice_day_today">오늘</string>
     <string name="practice_day_none">연습하지 않음</string>
     <string name="practice_edit_time">시간 수정</string>
-    <string name="practice_add_time">시간 추가</string>
+    <string name="practice_day_edit">수정</string>
+    <string name="practice_day_add">추가</string>
     <string name="practice_day_records">이날의 녹음</string>
     <string name="practice_summary_title">연습</string>
     <string name="practice_step_hint">%1$d분 단위</string>

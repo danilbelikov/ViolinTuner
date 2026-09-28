@@ -74,7 +74,11 @@ private const val PRESS_MS = 100
 private const val PRESSED_SCALE = 0.98f
 private const val TABULAR_FIGURES = "tnum"
 
-/** Card of one recording under a date: the list of «Записи» (spec 3.11, 3.21) and the day's records on the practice screen. */
+/**
+ * Card of one recording under a date: the list of «Записи» (spec 3.11, 3.21) and the records of the sheet of the day on the practice
+ * screen. [container] — its ground: the card colour on the screen; on a sheet, which is of the card colour itself, the ground of the
+ * screen (spec 3.36.2: «Записи этого дня» of the sheet of the day).
+ */
 @Composable
 fun SessionCard(
     card: HistoryCard,
@@ -84,6 +88,7 @@ fun SessionCard(
     actions: CardActions? = null,
     selected: Boolean? = null,
     onLongClick: (() -> Unit)? = null,
+    container: Color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
     RecordCard(
         card = card,
@@ -97,6 +102,7 @@ fun SessionCard(
         actions = actions,
         selected = selected,
         onLongClick = onLongClick,
+        container = container,
     )
 }
 
@@ -115,6 +121,8 @@ fun SessionCard(
  *
  * [spokenDate] is for a list that writes the date above its cards, not on them: TalkBack and VoiceOver hear it with the
  * kind of the recording — «запись, звук, 20 сентября», then the title and the line — and the eye does not see it twice.
+ *
+ * [container] is the ground of a card neither picked nor fresh: the card colour, or the ground of the screen on a sheet.
  */
 @Composable
 fun RecordCard(
@@ -128,6 +136,7 @@ fun RecordCard(
     selected: Boolean? = null,
     onLongClick: (() -> Unit)? = null,
     spokenDate: String? = null,
+    container: Color = MaterialTheme.colorScheme.surfaceContainer,
 ) {
     val colors = MaterialTheme.colorScheme
     val shape = RoundedCornerShape(CardCorner)
@@ -149,7 +158,7 @@ fun RecordCard(
     // A picked card looks like a fresh take (the handoff gives both the same fill and ring), only it gets there faster.
     val lit = if (selecting) selected == true else highlighted
     val fade = tween<Color>(if (selecting) SELECT_FADE_MS else HIGHLIGHT_FADE_MS)
-    val background by animateColorAsState(if (lit) ViolinTheme.repertoireColors.takeNew else colors.surfaceContainer, fade, label = "recordBackground")
+    val background by animateColorAsState(if (lit) ViolinTheme.repertoireColors.takeNew else container, fade, label = "recordBackground")
     val ring by animateColorAsState(if (lit) colors.primary else colors.primary.copy(alpha = 0f), fade, label = "recordRing")
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()

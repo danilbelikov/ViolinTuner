@@ -34,7 +34,8 @@ data class PracticeColors(
 
 internal val DarkPracticeColors = PracticeColors(
     fills = listOf(PracticeFill1, PracticeFill2, PrimaryContainer, Primary),
-    onFills = listOf(OnSurface, OnSurface, OnPrimaryContainer, OnPrimary),
+    // the number is text on the first three tones and dark only on the accent (spec 5.29 R2)
+    onFills = listOf(OnSurface, OnSurface, OnSurface, OnPrimary),
     timerRing = TimerRing,
     flameOuter = FlameOuter,
     flameCore = FlameCore,

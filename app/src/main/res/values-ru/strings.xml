@@ -396,6 +396,11 @@
     <string name="practice_no_value">—</string>
     <string name="practice_month_back">Предыдущий месяц</string>
     <string name="practice_month_forward">Следующий месяц</string>
+    <string name="practice_month_line">%1$s · %2$s</string>
+    <string name="practice_month_days_one">%1$d день</string>
+    <string name="practice_month_days_few">%1$d дня</string>
+    <string name="practice_month_days_many">%1$d дней</string>
+    <string name="practice_month_description">%1$s, %2$s, %3$s</string>
     <string-array name="practice_weekdays">
         <item>пн</item>
         <item>вт</item>
@@ -406,12 +411,11 @@
         <item>вс</item>
     </string-array>
     <string name="practice_day_description">%1$s, %2$s</string>
-    <string name="practice_legend_less">меньше</string>
-    <string name="practice_legend_more">больше</string>
     <string name="practice_day_today">сегодня</string>
     <string name="practice_day_none">Не занимались</string>
     <string name="practice_edit_time">Изменить время</string>
-    <string name="practice_add_time">Добавить время</string>
+    <string name="practice_day_edit">Изменить</string>
+    <string name="practice_day_add">Добавить</string>
     <string name="practice_day_records">Записи этого дня</string>
     <string name="practice_summary_title">Занятие</string>
     <string name="practice_step_hint">шаг %1$d мин</string>

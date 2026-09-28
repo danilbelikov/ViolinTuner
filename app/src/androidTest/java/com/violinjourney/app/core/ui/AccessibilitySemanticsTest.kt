@@ -4,6 +4,7 @@ import android.view.View
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
@@ -13,13 +14,18 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsAtLeast
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
+import androidx.compose.ui.test.click
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.audio.fx.SoundMeters
@@ -61,6 +67,14 @@ import com.violinjourney.app.shared.resources.nav_history
 import com.violinjourney.app.shared.resources.nav_repertoire
 import com.violinjourney.app.shared.resources.onboarding_skip
 import com.violinjourney.app.shared.resources.path_description
+import com.violinjourney.app.shared.resources.practice_day_description
+import com.violinjourney.app.shared.resources.practice_day_none
+import com.violinjourney.app.shared.resources.practice_month_back
+import com.violinjourney.app.shared.resources.practice_month_days_few
+import com.violinjourney.app.shared.resources.practice_month_days_many
+import com.violinjourney.app.shared.resources.practice_month_days_one
+import com.violinjourney.app.shared.resources.practice_month_description
+import com.violinjourney.app.shared.resources.practice_month_forward
 import com.violinjourney.app.shared.resources.practice_streak_days_description_few
 import com.violinjourney.app.shared.resources.practice_streak_days_description_many
 import com.violinjourney.app.shared.resources.practice_streak_days_description_one
@@ -69,8 +83,6 @@ import com.violinjourney.app.shared.resources.practice_streak_days_many
 import com.violinjourney.app.shared.resources.practice_streak_days_one
 import com.violinjourney.app.shared.resources.practice_week_description
 import com.violinjourney.app.shared.resources.progress_level_names
-import com.violinjourney.app.shared.resources.practice_legend_less
-import com.violinjourney.app.shared.resources.practice_legend_more
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
@@ -86,7 +98,7 @@ import org.junit.runner.RunWith
 /**
  * What TalkBack and VoiceOver are told on the screens where the eye has more than the reader: the date of a card under
  * its day header (spec 3.21), which side of a two-way switch is chosen, «A» and «B» that answer the reader's
- * activation, a slider that resets only from its actions, the calendar's legend and month, the path row, the week and the
+ * activation, a slider that resets only from its actions, the calendar's month, days and arrows, the path row, the week and the
  * chip of the streak of «Занятия», the faded «Пропустить», the four tabs and the titles of «Репертуар» and «Записи».
  */
 @RunWith(AndroidJUnit4::class)
@@ -180,22 +192,89 @@ class AccessibilitySemanticsTest {
         assertEquals(emptyList<Float>(), fractions)
     }
 
+    /**
+     * The header of the calendar (spec 3.36.2): one heading — «Сентябрь, 17 ч 27 мин, 24 дня» — its words not read one by one; a
+     * month without practice is its name alone. No legend any more.
+     */
     @Test
-    fun theCalendarsLegendIsSilentAndItsMonthIsAHeading() {
+    fun theCalendarsMonthIsAHeadingThatSaysItsSumAndDays() {
         val month = YearMonth(2026, 9)
-        var less = ""
-        var more = ""
-        val cells = (1..30).map { CalendarCell(LocalDate(2026, 9, it), totalMs = 0, fillLevel = 0, isToday = false, isSelected = false, isFuture = false) }
+        var monthDays by mutableStateOf(24)
+        var expected = ""
         compose.setContent {
-            less = stringResource(Res.string.practice_legend_less)
-            more = stringResource(Res.string.practice_legend_more)
-            ViolinTheme { PracticeCalendar(month, cells, canGoForward = false, onMonthBack = {}, onMonthForward = {}, onDaySelected = {}) }
+            val title = Formats.monthTitle(month, currentYear = 2026)
+            val days = stringResource(Formats.plural(24, Res.string.practice_month_days_one, Res.string.practice_month_days_few, Res.string.practice_month_days_many), 24)
+            expected = stringResource(Res.string.practice_month_description, title, Formats.minutesInWords(SEPTEMBER_MS), days)
+            ViolinTheme {
+                PracticeCalendar(
+                    month, septemberCells(), canGoForward = false, onMonthBack = {}, onMonthForward = {}, onDaySelected = {},
+                    currentYear = 2026, monthMs = if (monthDays > 0) SEPTEMBER_MS else 0, monthDays = monthDays,
+                )
+            }
         }
-        // the tree a reader walks: a cleared node keeps its children only in the unmerged tree of the test
-        compose.onAllNodesWithText(less).assertCountEquals(0)
-        compose.onAllNodesWithText(more).assertCountEquals(0)
-        val heading = compose.onNodeWithText(Formats.monthAndYear(month)).fetchSemanticsNode().config
-        assertTrue("the month is a heading", SemanticsProperties.Heading in heading)
+        compose.waitForIdle()
+        val header = compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).fetchSemanticsNode().config
+        assertEquals(listOf(expected), header[SemanticsProperties.ContentDescription])
+        compose.onAllNodesWithText(Formats.minutesInWords(SEPTEMBER_MS), substring = true).assertCountEquals(0)
+
+        monthDays = 0
+        compose.waitForIdle()
+        val bare = compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading)).fetchSemanticsNode().config
+        assertEquals(listOf(Formats.monthTitle(month, currentYear = 2026)), bare[SemanticsProperties.ContentDescription])
+    }
+
+    /**
+     * A day to come is not selectable until the events of R9 (spec 3.36.2); a cell is as high as its row, 52, and the whole of it is
+     * the touch. It is touched at its bottom corners: a circle of 40 alone would take a touch up to 48 around it (Compose widens a
+     * small target, the lesson of stage 101), and the top of the cell and its middle are within that — its corners are not.
+     */
+    @Test
+    fun aFutureDayIsNotEnabledAndAPastDayIsTouchedAtTheCornersOfItsCell() {
+        val picked = mutableListOf<LocalDate>()
+        var future = ""
+        var past = ""
+        compose.setContent {
+            val none = stringResource(Res.string.practice_day_none)
+            future = stringResource(Res.string.practice_day_description, Formats.dayWithWeekday(LocalDate(2026, 9, 28)), none)
+            past = stringResource(Res.string.practice_day_description, Formats.dayWithWeekday(LocalDate(2026, 9, 3)), none)
+            ViolinTheme {
+                PracticeCalendar(
+                    YearMonth(2026, 9), septemberCells(), canGoForward = false, onMonthBack = {}, onMonthForward = {}, onDaySelected = { picked += it },
+                    currentYear = 2026, monthMs = 0, monthDays = 0,
+                )
+            }
+        }
+        compose.onNodeWithContentDescription(future).assertIsNotEnabled()
+        val day = compose.onNodeWithContentDescription(past).assertIsEnabled().assertHeightIsAtLeast(52.dp)
+        day.performTouchInput { click(Offset(1f, height - 1f)) }
+        day.performTouchInput { click(Offset(width - 1f, height - 1f)) }
+        assertEquals(listOf(LocalDate(2026, 9, 3), LocalDate(2026, 9, 3)), picked)
+    }
+
+    /** The arrows of the month are named buttons to a reader, as the IconButton they were; the one that cannot go on is off. */
+    @Test
+    fun theArrowsOfTheMonthAreNamedButtonsAndTheOneThatCannotGoOnIsOff() {
+        var back = ""
+        var forward = ""
+        compose.setContent {
+            back = stringResource(Res.string.practice_month_back)
+            forward = stringResource(Res.string.practice_month_forward)
+            ViolinTheme {
+                PracticeCalendar(
+                    YearMonth(2026, 9), septemberCells(), canGoForward = false, onMonthBack = {}, onMonthForward = {}, onDaySelected = {},
+                    currentYear = 2026, monthMs = 0, monthDays = 0,
+                )
+            }
+        }
+        val button = SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)
+        compose.onNodeWithContentDescription(back).assert(button).assertIsEnabled()
+        compose.onNodeWithContentDescription(forward).assert(button).assertIsNotEnabled()
+    }
+
+    /** September 2026 as the calendar gets it: 24 days of practice for 17 h 27 min, today the 27th, the 28th to come. */
+    private fun septemberCells(): List<CalendarCell?> = (1..30).map {
+        val date = LocalDate(2026, 9, it)
+        CalendarCell(date, totalMs = 0, fillLevel = 0, isToday = it == 27, isSelected = false, isFuture = it > 27)
     }
 
     /**
@@ -237,7 +316,7 @@ class AccessibilitySemanticsTest {
         val today = LocalDate(2026, 9, 27)
         val entries = (20..27).map { PracticeEntry(LocalDate(2026, 9, it), startedAtEpochMs = 0, durationMs = 45 * MS_PER_MINUTE, manual = false) }
         val state = PracticeReducer.stateOf(
-            entries = entries, sessions = emptyList(), runningSince = null, month = YearMonth(2026, 9), selectedDate = today, sheet = null,
+            entries = entries, sessions = emptyList(), runningSince = null, month = YearMonth(2026, 9), selectedDate = null, sheet = null,
             today = today, zone = TimeZone.UTC, config = PracticeConfig(), trophies = emptyList(), profile = Profile.EMPTY, avatarPath = null,
             progressConfig = ProgressConfig(),
         )
@@ -346,5 +425,8 @@ class AccessibilitySemanticsTest {
     private companion object {
         const val ROOM = "Room"
         const val OUTSIDE = "Outside"
+
+        /** 17 h 27 min — the month of the mockups. */
+        const val SEPTEMBER_MS = (17 * 60 + 27) * MS_PER_MINUTE
     }
 }

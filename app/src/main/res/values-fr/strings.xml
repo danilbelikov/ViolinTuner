@@ -396,6 +396,11 @@
     <string name="practice_no_value">—</string>
     <string name="practice_month_back">Mois précédent</string>
     <string name="practice_month_forward">Mois suivant</string>
+    <string name="practice_month_line">%1$s · %2$s</string>
+    <string name="practice_month_days_one">%1$d jour</string>
+    <string name="practice_month_days_few">%1$d jours</string>
+    <string name="practice_month_days_many">%1$d jours</string>
+    <string name="practice_month_description">%1$s, %2$s, %3$s</string>
     <string-array name="practice_weekdays">
         <item>lun</item>
         <item>mar</item>
@@ -406,12 +411,11 @@
         <item>dim</item>
     </string-array>
     <string name="practice_day_description">%1$s, %2$s</string>
-    <string name="practice_legend_less">moins</string>
-    <string name="practice_legend_more">plus</string>
     <string name="practice_day_today">aujourd\'hui</string>
     <string name="practice_day_none">Pas de pratique</string>
     <string name="practice_edit_time">Modifier le temps</string>
-    <string name="practice_add_time">Ajouter du temps</string>
+    <string name="practice_day_edit">Modifier</string>
+    <string name="practice_day_add">Ajouter</string>
     <string name="practice_day_records">Enregistrements de ce jour</string>
     <string name="practice_summary_title">Séance</string>
     <string name="practice_step_hint">pas de %1$d min</string>

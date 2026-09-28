@@ -9,10 +9,13 @@ import kotlinx.datetime.YearMonth
 /** The figures of «Сегодня» and of the calendar (spec 3.36.2): the week, its days, the month shown and the streak. */
 data class PracticeSummary(
     val weekMs: Long,
+    /** The time of the month shown: under its name over the calendar, «17 ч 27 мин · 24 дня». */
     val monthMs: Long,
     val streakDays: Int,
     /** The seven days of this week, Monday first, saved time only (5.6): the bars of «Сегодня». */
     val weekDaysMs: List<Long>,
+    /** The days of the month shown that have practice: «24 дня»; none — the calendar says only the month. */
+    val monthDays: Int,
 )
 
 /** One day of the calendar grid; null cells pad the month to whole weeks. */
@@ -22,10 +25,13 @@ data class CalendarCell(
     /** 0 = no fill, 1–4 = tone of the fill (spec 5.6). */
     val fillLevel: Int,
     val isToday: Boolean,
+    /** The day whose sheet is open — the sheet of the day or «Время за день» over it (spec 3.36.2); none the rest of the time. */
     val isSelected: Boolean,
+    /** Not selectable until the events of R9: nothing to open yet. */
     val isFuture: Boolean,
 )
 
+/** The day of the sheet of the day (spec 3.36.2): its date, its time and its records. */
 data class SelectedDay(
     val date: LocalDate,
     val isToday: Boolean,
@@ -142,7 +148,16 @@ sealed interface PracticeSheet {
     /** «Занятие сохранено» (spec 3.31): what the practice just saved earned and changed. */
     data class Recap(val recap: PracticeRecap) : PracticeSheet
 
-    /** "Изменить время" of a day: the whole day's time, zero removes the day. */
+    /**
+     * The sheet of a day tapped in the calendar (spec 3.36.2): its time with «Изменить» / «Добавить» and its records; the day is
+     * [PracticeState.selected]. Only a day up to today opens one.
+     */
+    data class Day(val date: LocalDate) : PracticeSheet
+
+    /**
+     * «Время за день» of a day: the whole day's time, zero removes the day. Opens only over [Day], in its place, and gives it back —
+     * «Сохранить» with the new time, «Отмена» and a swipe with the old one.
+     */
     data class EditTime(
         val date: LocalDate,
         val minutes: Int,
@@ -171,7 +186,11 @@ data class PracticeState(
     val canGoForward: Boolean,
     /** Monday-first grid of whole weeks. */
     val cells: List<CalendarCell?>,
-    val selected: SelectedDay,
+    /**
+     * The day whose sheet is open — the sheet of the day or «Время за день» over it (spec 3.36.2); null the rest of the time: by
+     * default no day is selected.
+     */
+    val selected: SelectedDay?,
     val header: ProfileHeader,
     val trophies: List<TrophyLine>,
     /**
@@ -180,6 +199,11 @@ data class PracticeState(
      */
     val gift: Gift?,
     val sheet: PracticeSheet?,
+    /**
+     * A record opened from the sheet of the day is on the screen: the sheets of «Занятия» step aside — the model keeps [sheet] — and
+     * the sheet of the day rises again when the screen is back (spec 3.36.2: «назад» from the record — to the same sheet).
+     */
+    val sheetsAway: Boolean = false,
     /** Whole minutes of one stepper step, from the config: the sheets word their hint with it. */
     val stepMinutes: Int,
     /**
@@ -239,12 +263,20 @@ sealed interface PracticeIntent {
     /** A swipe down, a tap beside it or «назад»: the sheet goes, the practice runs on — never a «Не сохранять». */
     data object SummaryHidden : PracticeIntent
 
+    /** A day of the calendar: its sheet opens (spec 3.36.2) — a day up to today, over no other sheet. */
     data class DaySelected(val date: LocalDate) : PracticeIntent
+
+    /** The sheet of the day swiped down, tapped beside or closed with «назад»: only hidden. */
+    data object DayHidden : PracticeIntent
+
+    /** The screen is on top again — back from a record, from the settings: the sheet of the day that stepped aside for a record rises. */
+    data object Resumed : PracticeIntent
 
     data object MonthBack : PracticeIntent
 
     data object MonthForward : PracticeIntent
 
+    /** «Изменить» / «Добавить» of the sheet of the day: «Время за день» takes its place. Heard only over the sheet of the day. */
     data object EditTimeClicked : PracticeIntent
 
     /** Stepper of the edit sheet: +1 or −1 step. */
@@ -257,8 +289,10 @@ sealed interface PracticeIntent {
 
     data object EditTimeSaved : PracticeIntent
 
+    /** «Отмена», a swipe down and «назад» alike: nothing is written, the sheet of the day comes back. */
     data object EditTimeCancelled : PracticeIntent
 
+    /** A record of the sheet of the day: its screen opens, and «назад» from it comes back to the sheet. */
     data class SessionClicked(val id: Long) : PracticeIntent
 
     /** «Имя и фото» of «Мой путь»: «Профиль» takes its place. Heard only over «Мой путь». */

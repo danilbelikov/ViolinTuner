@@ -100,27 +100,42 @@ open class PracticeViewModel(
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), null)
 
     /**
-     * What only the screen decides: the month shown, the day picked and the open sheet. A null month or day follows
-     * today (spec 3.12: «по умолчанию выбран сегодняшний»): the screen stays open overnight, and in the morning it is on
-     * the new day. Only one picked by hand stays where it was put.
+     * What only the screen decides: the month shown and the open sheet. A null month follows today: the screen stays open
+     * overnight, and in the morning it is on the new month. Only one moved to by the arrows stays where it was put.
      *
-     * One sheet at a time (spec 3.36.2): a sheet opened from another one — «Трофеи» and «Профиль» from «Мой путь» — takes
-     * its place, and [parent] remembers what it stood on, to come back to when it is closed.
+     * One sheet at a time (spec 3.36.2): a sheet opened from another one — «Трофеи» and «Профиль» from «Мой путь», «Время за
+     * день» from the sheet of the day — takes its place, and [parent] remembers what it stood on, to come back to when it is
+     * closed. The day selected in the calendar is the day of the open sheet, nothing more ([selectedDate]). [away] — a record
+     * opened from the sheet of the day is on the screen: the sheet steps aside and rises again when the screen is back.
      */
     private data class Ui(
         val month: YearMonth? = null,
-        val selectedDate: LocalDate? = null,
         val sheet: PracticeSheet? = null,
         val parent: PracticeSheet? = null,
+        val away: Boolean = false,
     ) {
         /** No sheet at all: neither this one nor the one it stood on. */
-        fun closed() = copy(sheet = null, parent = null)
+        fun closed() = copy(sheet = null, parent = null, away = false)
 
         /** [next] in place of every sheet: the recap, the summary. */
-        fun replaced(next: PracticeSheet) = copy(sheet = next, parent = null)
+        fun replaced(next: PracticeSheet) = copy(sheet = next, parent = null, away = false)
 
         /** Back to the sheet this one stood on, or to none. */
         fun back() = copy(sheet = parent, parent = null)
+
+        /** The day whose sheet is open — its own, or «Время за день» over it: its cell keeps the ring «выбран» (spec 3.36.2). */
+        fun selectedDate(): LocalDate? = when (sheet) {
+            is PracticeSheet.Day -> sheet.date
+            is PracticeSheet.EditTime -> sheet.date.takeIf { parent is PracticeSheet.Day }
+            else -> null
+        }
+
+        /**
+         * A day to come has no sheet (spec 3.36.2), and a tap does not open one ([selectDay]); but the date can go back under an open
+         * one — a zone crossed westward over midnight, a clock set back. Then the sheet closes, with «Время за день» over it, as a hide
+         * would close it: the screen never shows less than the model holds, and nothing waits for a sheet no one can see.
+         */
+        fun withoutDayAfter(today: LocalDate): Ui = if (selectedDate()?.let { it > today } == true) closed() else this
     }
 
     private val ui = MutableStateFlow(Ui())
@@ -144,7 +159,15 @@ open class PracticeViewModel(
     /** What the screen decides, the day it is — anew at midnight — and whether a recap is on its way. */
     private data class Screen(val ui: Ui, val today: LocalDate, val recapPending: Boolean)
 
-    private val screen: Flow<Screen> = combine(ui, clock.dates(), recapPending, ::Screen)
+    /**
+     * The sheet of a day that is later than today now ([Ui.withoutDayAfter]) is closed in [ui] itself, not only left out of the
+     * state: the model and the screen agree on what is open, so the next tap, the gift and the pill are not held by it.
+     */
+    private val screen: Flow<Screen> = combine(ui, clock.dates(), recapPending) { shown, today, pending ->
+        val kept = shown.withoutDayAfter(today)
+        if (kept != shown) ui.update { it.withoutDayAfter(today) }
+        Screen(kept, today, pending)
+    }
 
     /**
      * The clock of the running practice (spec 3.12) and the line of its block (spec 3.28), whose minutes left follow
@@ -184,7 +207,7 @@ open class PracticeViewModel(
                 sessions = sessions,
                 runningSince = runningSince,
                 month = ui.month ?: today.yearMonth,
-                selectedDate = ui.selectedDate ?: today,
+                selectedDate = ui.selectedDate(),
                 sheet = ui.sheet,
                 today = today,
                 zone = clock.zone,
@@ -197,6 +220,7 @@ open class PracticeViewModel(
                 progressConfig = progressConfig,
                 underBackingIds = underBacking,
                 recapPending = screen.recapPending,
+                sheetsAway = ui.away,
             )
         }.stateIn(
             scope = viewModelScope,
@@ -222,6 +246,9 @@ open class PracticeViewModel(
             // hidden is only hidden: the practice runs on, saved or thrown away by a button of the sheet alone
             PracticeIntent.SummaryHidden -> ui.update { if (it.sheet is PracticeSheet.Summary) it.closed() else it }
             is PracticeIntent.DaySelected -> selectDay(intent.date)
+            // hidden is only hidden, and only the sheet of the day itself: a late swipe must not close what took its place
+            PracticeIntent.DayHidden -> ui.update { if (it.sheet is PracticeSheet.Day) it.closed() else it }
+            PracticeIntent.Resumed -> ui.update { if (it.away) it.copy(away = false) else it }
             PracticeIntent.MonthBack -> ui.update { it.copy(month = (it.month ?: today().yearMonth).minus(1, DateTimeUnit.MONTH)) }
             PracticeIntent.MonthForward -> ui.update {
                 val current = today().yearMonth
@@ -237,7 +264,7 @@ open class PracticeViewModel(
             PracticeIntent.EditTimeCancelled -> ui.update { if (it.sheet is PracticeSheet.EditTime) it.back() else it }
             PracticeIntent.JourneyClicked -> effectChannel.trySend(PracticeEffect.OpenJourney)
             PracticeIntent.HomeClicked -> effectChannel.trySend(PracticeEffect.OpenHome)
-            is PracticeIntent.SessionClicked -> effectChannel.trySend(PracticeEffect.OpenSession(intent.id))
+            is PracticeIntent.SessionClicked -> openSession(intent.id)
             PracticeIntent.ProfileClicked -> openOver<PracticeSheet.Path> { PracticeSheet.Profile(latestProfile.name, importingPhoto = false) }
             is PracticeIntent.ProfileNameChanged ->
                 updateProfile { it.copy(nameDraft = intent.text.takeCodePoints(Profile.MAX_NAME_LENGTH)) }
@@ -421,18 +448,24 @@ open class PracticeViewModel(
         }
     }
 
+    /** A day up to today opens its sheet (spec 3.36.2); a day to come has nothing to open until the events of R9. */
     private fun selectDay(date: LocalDate) {
-        val today = today()
-        if (date > today) return
-        // today picked is today followed: tomorrow morning the new day is picked
-        ui.update { it.copy(selectedDate = date.takeIf { picked -> picked != today }) }
+        if (date > today()) return
+        openSheet(PracticeSheet.Day(date))
     }
 
+    /** «Изменить» / «Добавить» of the sheet of the day: «Время за день» of that day in its place, and back to it when closed. */
     private fun openEditSheet() {
-        ui.update {
-            val date = it.selectedDate ?: today()
-            it.replaced(PracticeReducer.editSheet(date, latestTotals[date] ?: 0L, config))
-        }
+        openOver<PracticeSheet.Day> { day -> PracticeReducer.editSheet(day.date, latestTotals[day.date] ?: 0L, config) }
+    }
+
+    /**
+     * A record of the sheet of the day: its screen opens, and the sheet steps aside while it is there — it comes back with the
+     * screen ([PracticeIntent.Resumed]).
+     */
+    private fun openSession(id: Long) {
+        ui.update { if (it.sheet is PracticeSheet.Day) it.copy(away = true) else it }
+        effectChannel.trySend(PracticeEffect.OpenSession(id))
     }
 
     private fun saveEdit() {
@@ -458,11 +491,14 @@ open class PracticeViewModel(
     }
 
     /**
-     * A sheet that opens from another one, [T] — «Трофеи» and «Профиль» from «Мой путь»: it takes that one's place and remembers it
-     * (spec 3.36.2). Over anything else, or over nothing, the tap is dropped.
+     * A sheet that opens from another one, [T] — «Трофеи» and «Профиль» from «Мой путь», «Время за день» from the sheet of the day: it
+     * takes that one's place and remembers it (spec 3.36.2). Over anything else, or over nothing, the tap is dropped.
      */
-    private inline fun <reified T : PracticeSheet> openOver(make: () -> PracticeSheet) {
-        ui.update { if (it.sheet is T) it.copy(sheet = make(), parent = it.sheet) else it }
+    private inline fun <reified T : PracticeSheet> openOver(make: (T) -> PracticeSheet) {
+        ui.update {
+            val under = it.sheet
+            if (under is T) it.copy(sheet = make(under), parent = under) else it
+        }
     }
 
     /** «Настройки» of «Мой путь»: the sheet closes and the settings open (spec 3.36.2); a second tap finds no sheet and is dropped. */

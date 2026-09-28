@@ -396,6 +396,11 @@
     <string name="practice_no_value">—</string>
     <string name="practice_month_back">前の月</string>
     <string name="practice_month_forward">次の月</string>
+    <string name="practice_month_line">%1$s · %2$s</string>
+    <string name="practice_month_days_one">%1$d日間</string>
+    <string name="practice_month_days_few">%1$d日間</string>
+    <string name="practice_month_days_many">%1$d日間</string>
+    <string name="practice_month_description">%1$s、%2$s、%3$s</string>
     <string-array name="practice_weekdays">
         <item>月</item>
         <item>火</item>
@@ -406,12 +411,11 @@
         <item>日</item>
     </string-array>
     <string name="practice_day_description">%1$s、%2$s</string>
-    <string name="practice_legend_less">少ない</string>
-    <string name="practice_legend_more">多い</string>
     <string name="practice_day_today">今日</string>
     <string name="practice_day_none">練習なし</string>
     <string name="practice_edit_time">時間を変更</string>
-    <string name="practice_add_time">時間を追加</string>
+    <string name="practice_day_edit">変更</string>
+    <string name="practice_day_add">追加</string>
     <string name="practice_day_records">この日の録音</string>
     <string name="practice_summary_title">練習</string>
     <string name="practice_step_hint">%1$d 分刻み</string>

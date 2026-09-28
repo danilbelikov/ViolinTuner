@@ -199,6 +199,13 @@ object Formats {
     fun monthAndYear(month: YearMonth): String =
         date(language.monthYear, month.firstDay).replaceFirstChar { it.titlecase() }
 
+    /**
+     * The heading of the calendar (spec 3.36.2): the month alone in [currentYear] — «Сентябрь», «9月» — and with its year
+     * otherwise — «Август 2025».
+     */
+    fun monthTitle(month: YearMonth, currentYear: Int): String =
+        if (month.year == currentYear) date(language.month, month.firstDay).replaceFirstChar { it.titlecase() } else monthAndYear(month)
+
     /** "18:42" in the given zone. */
     fun timeOfDay(epochMs: Long, zone: TimeZone): String {
         val time = Instant.fromEpochMilliseconds(epochMs).toLocalDateTime(zone)

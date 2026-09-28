@@ -2,35 +2,41 @@ package com.violinjourney.app.feature.practice
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.domain.Zone
+import com.violinjourney.app.core.domain.journey.JourneyConfig
+import com.violinjourney.app.core.domain.journey.JourneyRules
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.violinjourney.app.core.domain.practice.PracticeEntry
 import com.violinjourney.app.core.domain.practice.PracticeRecap
 import com.violinjourney.app.core.domain.practice.RecapRoad
-import com.violinjourney.app.core.domain.journey.JourneyConfig
-import com.violinjourney.app.core.domain.journey.JourneyRules
-import com.violinjourney.app.core.domain.progress.Progress
 import com.violinjourney.app.core.domain.progress.Profile
+import com.violinjourney.app.core.domain.progress.Progress
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.Trophy
 import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.ui.components.AppSheetCard
 import com.violinjourney.app.core.ui.components.standInPhoto
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.practice.components.CalendarMetrics
+import com.violinjourney.app.feature.practice.components.DaySheetContent
 import com.violinjourney.app.feature.practice.components.EditTimeSheetContent
 import com.violinjourney.app.feature.practice.components.GiftSheetContent
 import com.violinjourney.app.feature.practice.components.PathRow
 import com.violinjourney.app.feature.practice.components.PathSheetContent
+import com.violinjourney.app.feature.practice.components.PracticeCalendar
 import com.violinjourney.app.feature.practice.components.ProfileSheetContent
 import com.violinjourney.app.feature.practice.components.RecapSheetContent
 import com.violinjourney.app.feature.practice.components.SummarySheetContent
@@ -63,6 +69,9 @@ private object Sample {
     val skipped = entries.filter { it.date.day !in 25..27 }
 
     val sessions = listOf(session(1, 24, 18), session(2, 24, 19))
+
+    /** A long day of records: the sheet of the day scrolls. */
+    val manySessions = (8..21).map { hour -> session(100L + hour, 26, hour) }
     val trophies = listOf(Trophy(1, LocalDate(2026, 8, 10), shown = true), Trophy(10, LocalDate(2026, 8, 20), shown = true))
 
     private fun entry(date: LocalDate, minutes: Int, manual: Boolean = false) =
@@ -79,13 +88,15 @@ private object Sample {
 
     fun state(
         running: Boolean = false,
-        selected: LocalDate = today,
+        selected: LocalDate? = null,
         entries: List<PracticeEntry> = this.entries + august,
-        sheet: PracticeSheet? = null,
+        sheet: PracticeSheet? = selected?.let { PracticeSheet.Day(it) },
         trophies: List<Trophy> = if (entries.isEmpty()) emptyList() else this.trophies,
         name: String = "Аня",
+        sessions: List<SessionSummary> = this.sessions,
+        month: YearMonth = YearMonth(2026, 9),
     ): PracticeState = PracticeReducer.stateOf(
-        entries = entries, sessions = sessions, runningSince = today.takeIf { running }, month = YearMonth(2026, 9),
+        entries = entries, sessions = sessions, runningSince = today.takeIf { running }, month = month,
         selectedDate = selected, sheet = sheet, today = today, zone = zone, config = PracticeConfig(),
         trophies = trophies, profile = Profile(name, avatarFile = null),
         avatarPath = null, progressConfig = ProgressConfig(),
@@ -162,6 +173,118 @@ private fun GermanLargePreview() = Screen(Sample.state())
 @Preview(name = "Занятия · fr, 360", locale = "fr", device = "spec:width=360dp,height=640dp")
 @Composable
 private fun FrenchPreview() = Screen(Sample.state(running = true), Sample.timer)
+
+// the sheet itself is a window, which a preview does not draw: the ring of the day under it is what is seen here
+@Preview(name = "Занятия · под листом дня: кольцо «выбран» у 24-го", widthDp = 412, heightDp = 892, locale = "ru")
+@Composable
+private fun DaySelectedPreview() = Screen(Sample.state(selected = LocalDate(2026, 9, 24), sheet = null))
+
+/**
+ * Every cell of the calendar (events-kinds.html, «Геометрия клетки»): a row a tone — empty, tones 1–4 — plain, today, selected,
+ * today and selected; the last row, days to come.
+ */
+private fun cellsOfEveryKind(): List<CalendarCell?> {
+    var day = 0
+    fun cell(tone: Int, today: Boolean = false, selected: Boolean = false, future: Boolean = false) = CalendarCell(
+        date = LocalDate(2026, 9, ++day), totalMs = tone * 20 * MS_PER_MINUTE, fillLevel = tone, isToday = today, isSelected = selected, isFuture = future,
+    )
+    val tones = (0..4).flatMap { tone ->
+        listOf(cell(tone), cell(tone, today = true), cell(tone, selected = true), cell(tone, today = true, selected = true), null, null, null)
+    }
+    return tones + listOf(cell(0, future = true), cell(0, future = true), cell(0, future = true), null, null, null, null)
+}
+
+@Composable
+private fun CalendarPreview(
+    cells: List<CalendarCell?> = cellsOfEveryKind(),
+    month: YearMonth = YearMonth(2026, 9),
+    monthMs: Long = (17 * 60 + 27) * MS_PER_MINUTE,
+    monthDays: Int = 24,
+    metrics: CalendarMetrics = CalendarMetrics.Portrait,
+) = ViolinTheme {
+    Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface).padding(horizontal = 16.dp).padding(bottom = 16.dp)) {
+        PracticeCalendar(
+            month = month, cells = cells, canGoForward = month < YearMonth(2026, 9), onMonthBack = {}, onMonthForward = {}, onDaySelected = {},
+            currentYear = 2026, monthMs = monthMs, monthDays = monthDays, metrics = metrics,
+        )
+    }
+}
+
+@Preview(name = "Календарь · все клетки, 412", widthDp = 412, locale = "ru")
+@Composable
+private fun CalendarCellsPreview() = CalendarPreview()
+
+@Preview(name = "Календарь · все клетки, 360: колонка 47", widthDp = 360, locale = "ru")
+@Composable
+private fun CalendarCellsNarrowPreview() = CalendarPreview()
+
+@Preview(name = "Календарь · landscape: сетка 350 у левого края", widthDp = 596, locale = "ru")
+@Composable
+private fun CalendarCellsLandscapePreview() = CalendarPreview(metrics = CalendarMetrics.Landscape)
+
+@Preview(name = "Календарь · месяц макета: «Сентябрь», сумма и дни", widthDp = 412, locale = "ru")
+@Composable
+private fun CalendarMonthPreview() = Sample.state().let { CalendarPreview(it.cells, monthMs = it.summary.monthMs, monthDays = it.summary.monthDays) }
+
+@Preview(name = "Календарь · прошлый год: «Декабрь 2025», без занятий — без строки", widthDp = 412, locale = "ru")
+@Composable
+private fun CalendarPastYearPreview() = Sample.state(month = YearMonth(2025, 12)).let {
+    CalendarPreview(it.cells, month = YearMonth(2025, 12), monthMs = it.summary.monthMs, monthDays = it.summary.monthDays)
+}
+
+@Preview(name = "Календарь · август: месяц с ручными днями, стрелка вперёд", widthDp = 412, locale = "ru")
+@Composable
+private fun CalendarAugustPreview() = Sample.state(month = YearMonth(2026, 8)).let {
+    CalendarPreview(it.cells, month = YearMonth(2026, 8), monthMs = it.summary.monthMs, monthDays = it.summary.monthDays)
+}
+
+@Composable
+private fun DaySheetPreview(day: SelectedDay) = ViolinTheme {
+    AppSheetCard { DaySheetContent(day, onIntent = {}, zone = Sample.zone) }
+}
+
+@Preview(name = "Лист дня · сегодня", widthDp = 412, locale = "ru")
+@Composable
+private fun DaySheetTodayPreview() = DaySheetPreview(Sample.state(selected = Sample.today).selected!!)
+
+@Preview(name = "Лист дня · прошлый день с записями", widthDp = 412, locale = "ru")
+@Composable
+private fun DaySheetPastPreview() = DaySheetPreview(Sample.state(selected = LocalDate(2026, 9, 24)).selected!!)
+
+@Preview(name = "Лист дня · пустой день: «Не занимались», «Добавить»", widthDp = 412, locale = "ru")
+@Composable
+private fun DaySheetEmptyPreview() = DaySheetPreview(Sample.state(selected = LocalDate(2026, 9, 19)).selected!!)
+
+@Preview(name = "Лист дня · много записей", widthDp = 412, heightDp = 892, locale = "ru")
+@Composable
+private fun DaySheetManyPreview() = DaySheetPreview(Sample.state(selected = LocalDate(2026, 9, 26), sessions = Sample.manySessions).selected!!)
+
+@Preview(name = "Лист дня · de, 360, шрифт 1,3", widthDp = 360, locale = "de", fontScale = 1.3f)
+@Composable
+private fun DaySheetGermanPreview() = DaySheetPreview(Sample.state(selected = Sample.today).selected!!)
+
+/** A day of several practices, 12 h 45 min: the widest time there is beside «Изменить» — it gets smaller, never on two lines. */
+private val LongDay = SelectedDay(date = LocalDate(2026, 9, 26), isToday = false, totalMs = (12 * 60 + 45) * MS_PER_MINUTE, sessions = emptyList())
+
+@Preview(name = "Лист дня · 360: «12 ч 45 мин» в одну строку", widthDp = 360, locale = "ru")
+@Composable
+private fun DaySheetLongTimePreview() = DaySheetPreview(LongDay)
+
+@Preview(name = "Лист дня · de, 360: «12 Std. 45 Min.» в одну строку", widthDp = 360, locale = "de")
+@Composable
+private fun DaySheetGermanLongTimePreview() = DaySheetPreview(LongDay)
+
+@Preview(name = "Лист дня · de, 360, шрифт 1,3: «12 Std. 45 Min.»", widthDp = 360, locale = "de", fontScale = 1.3f)
+@Composable
+private fun DaySheetGermanLongTimeLargePreview() = DaySheetPreview(LongDay)
+
+@Preview(name = "Лист дня · landscape 892: не шире 640, по центру", locale = "ru", device = "spec:width=892dp,height=412dp")
+@Composable
+private fun DaySheetLandscapePreview() = ViolinTheme {
+    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface), contentAlignment = Alignment.BottomCenter) {
+        AppSheetCard { DaySheetContent(Sample.state(selected = LocalDate(2026, 9, 24)).selected!!, onIntent = {}, zone = Sample.zone) }
+    }
+}
 
 @Composable
 private fun PathRows(content: @Composable () -> Unit) = ViolinTheme {

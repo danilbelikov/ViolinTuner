@@ -45,7 +45,7 @@ class PracticeReducerTest {
         sessions: List<SessionSummary> = emptyList(),
         runningSince: LocalDate? = null,
         month: YearMonth = YearMonth(2026, 9),
-        selected: LocalDate = today,
+        selected: LocalDate? = null,
         underBackingIds: Set<Long> = emptySet(),
     ) = PracticeReducer.stateOf(
         entries, sessions, runningSince, month, selected, sheet = null, today, zone, config,
@@ -54,19 +54,50 @@ class PracticeReducerTest {
 
     @Test
     fun `calendar cells carry fill level - today - selection and future flags`() {
-        val state = state()
+        val state = state(selected = LocalDate(2026, 9, 16))
         assertEquals(35, state.cells.size)
         assertNull(state.cells[0])
         val day4 = state.cells.filterNotNull().single { it.date.day == 4 }
         assertEquals(4, day4.fillLevel)
         assertFalse(day4.isToday)
+        val day16 = state.cells.filterNotNull().single { it.date.day == 16 }
+        assertTrue(day16.isSelected && !day16.isToday)
         val day17 = state.cells.filterNotNull().single { it.date.day == 17 }
         assertEquals(3, day17.fillLevel)
-        assertTrue(day17.isToday && day17.isSelected && !day17.isFuture)
+        // spec 3.36.2: today is no longer selected by default — only the day whose sheet is open
+        assertTrue(day17.isToday && !day17.isSelected && !day17.isFuture)
         val day18 = state.cells.filterNotNull().single { it.date.day == 18 }
         assertEquals(0, day18.fillLevel)
         assertTrue(day18.isFuture)
         assertEquals(0, state.cells.filterNotNull().single { it.date.day == 3 }.fillLevel)
+    }
+
+    @Test
+    fun `by default no day is selected - not even today`() {
+        val state = state()
+        assertNull(state.selected)
+        assertTrue(state.cells.filterNotNull().none { it.isSelected })
+        assertNull(PracticeReducer.loading(today, config, ProgressConfig()).selected)
+    }
+
+    @Test
+    fun `the selected day is the day of the open sheet with its time`() {
+        val past = state(selected = LocalDate(2026, 9, 4)).selected!!
+        assertEquals(LocalDate(2026, 9, 4), past.date)
+        assertEquals(100 * MS_PER_MINUTE, past.totalMs)
+        assertFalse(past.isToday)
+        val now = state(selected = today)
+        assertTrue(now.selected!!.isToday)
+        assertEquals(45 * MS_PER_MINUTE, now.selected!!.totalMs)
+        assertEquals(listOf(today), now.cells.filterNotNull().filter { it.isSelected }.map { it.date })
+        assertEquals(0L, state(selected = LocalDate(2026, 9, 3)).selected!!.totalMs, "a day without practice has a sheet too")
+    }
+
+    @Test
+    fun `the month counts its days with practice`() {
+        assertEquals(4, state().summary.monthDays)
+        assertEquals(0, state(month = YearMonth(2026, 8)).summary.monthDays)
+        assertEquals(3, state(entries = listOf(entry(1, 30), entry(4, 100), entry(16, 50), entry(16, 10))).summary.monthDays)
     }
 
     @Test
@@ -75,7 +106,10 @@ class PracticeReducerTest {
         assertEquals(45 * MS_PER_MINUTE, state.todayMs)
         // the week of the 14th to the 20th: the 16th and the 17th, Wednesday and Thursday
         val weekDays = listOf(0L, 0L, 50L, 45L, 0L, 0L, 0L).map { it * MS_PER_MINUTE }
-        assertEquals(PracticeSummary(weekMs = 95 * MS_PER_MINUTE, monthMs = 225 * MS_PER_MINUTE, streakDays = 2, weekDaysMs = weekDays), state.summary)
+        assertEquals(
+            PracticeSummary(weekMs = 95 * MS_PER_MINUTE, monthMs = 225 * MS_PER_MINUTE, streakDays = 2, weekDaysMs = weekDays, monthDays = 4),
+            state.summary,
+        )
         assertTrue(state.hasHistory)
         assertFalse(state.loading)
     }
@@ -137,8 +171,8 @@ class PracticeReducerTest {
     fun `no entries is the empty state`() {
         val state = state(entries = emptyList())
         assertFalse(state.hasHistory)
-        assertEquals(PracticeSummary(0, 0, 0, weekDaysMs = List(7) { 0L }), state.summary)
-        assertEquals(0L, state.selected.totalMs)
+        assertEquals(PracticeSummary(0, 0, 0, weekDaysMs = List(7) { 0L }, monthDays = 0), state.summary)
+        assertNull(state.selected)
     }
 
     @Test
@@ -154,16 +188,17 @@ class PracticeReducerTest {
             session(1, "2026-09-16T10:00:00"), session(2, "2026-09-16T23:30:00"), session(3, "2026-09-17T09:00:00"),
         )
         val state = state(sessions = sessions, selected = LocalDate(2026, 9, 16))
-        assertEquals(listOf(2L, 1L), state.selected.sessions.map { it.id })
-        assertEquals(50 * MS_PER_MINUTE, state.selected.totalMs)
-        assertFalse(state.selected.isToday)
-        assertTrue(state().selected.isToday)
+        val day = state.selected!!
+        assertEquals(listOf(2L, 1L), day.sessions.map { it.id })
+        assertEquals(50 * MS_PER_MINUTE, day.totalMs)
+        assertFalse(day.isToday)
+        assertEquals(listOf(3L), state(sessions = sessions, selected = today).selected!!.sessions.map { it.id })
     }
 
     @Test
     fun `a record of the day made under a backing carries its sign as in «Записи»`() {
         val sessions = listOf(session(1, "2026-09-17T08:00:00"), session(2, "2026-09-17T09:00:00"))
-        val cards = state(sessions = sessions, underBackingIds = setOf(1L)).selected.sessions
+        val cards = state(sessions = sessions, selected = today, underBackingIds = setOf(1L)).selected!!.sessions
         assertEquals(listOf(2L to false, 1L to true), cards.map { it.id to it.underBacking })
     }
 

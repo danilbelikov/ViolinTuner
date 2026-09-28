@@ -7,6 +7,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
@@ -63,6 +64,9 @@ fun PracticeRoute(
             }
         }
     }
+
+    // Back from a record opened from the sheet of the day (spec 3.36.2): the sheet that stepped aside for it rises again.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { viewModel.onIntent(PracticeIntent.Resumed) }
 
     // Decorative motion of this screen (spec 3.16) follows the system setting «убрать анимации».
     CompositionLocalProvider(LocalReduceMotion provides rememberAnimationsRemoved(), LocalHomeLook provides homeLook) {

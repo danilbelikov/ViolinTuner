@@ -53,6 +53,32 @@ class FormatLanguageTest {
     }
 
     @Test
+    fun `the month of the calendar stands alone in this year and with its year in another`() {
+        val september = YearMonth(2026, 9)
+        val august = YearMonth(2025, 8)
+        fun title(tag: String, month: YearMonth): String {
+            use(tag)
+            return Formats.monthTitle(month, currentYear = 2026)
+        }
+        assertEquals("September", title("en", september))
+        assertEquals("August 2025", title("en", august))
+        assertEquals("September", title("de", september))
+        assertEquals("August 2025", title("de", august))
+        assertEquals("Septembre", title("fr", september))
+        assertEquals("Août 2025", title("fr", august))
+        assertEquals("Septiembre", title("es", september))
+        assertEquals("Agosto de 2025", title("es", august))
+        assertEquals("Settembre", title("it", september))
+        assertEquals("Setembro", title("pt", september))
+        assertEquals("9월", title("ko", september))
+        assertEquals("2025년 8월", title("ko", august))
+        assertEquals("9月", title("zh", september))
+        assertEquals("2025年8月", title("zh", august))
+        assertEquals("9月", title("ja", september))
+        assertEquals("2025年8月", title("ja", august))
+    }
+
+    @Test
     fun `a count picks its word by the rule of the language`() {
         fun words(vararg counts: Int) = counts.map { Formats.plural(it, "one", "few", "many") }
         assertEquals(listOf("many", "one", "few", "many", "many", "one"), words(0, 1, 3, 5, 12, 21))

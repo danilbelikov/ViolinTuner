@@ -88,6 +88,16 @@ class PracticeStatsTest {
     }
 
     @Test
+    fun `the days of a month are the days of that month with practice`() {
+        // the 31st of August and the 1st of October are not September; the 15th was edited to zero and has nothing in it
+        val totals = totals("2026-08-31" to 10, "2026-09-01" to 20, "2026-09-15" to 0, "2026-09-17" to 1, "2026-09-30" to 30, "2026-10-01" to 40)
+        assertEquals(3, PracticeStats.monthDays(totals, YearMonth(2026, 9)))
+        assertEquals(1, PracticeStats.monthDays(totals, YearMonth(2026, 8)))
+        assertEquals(0, PracticeStats.monthDays(totals, YearMonth(2026, 7)))
+        assertEquals(0, PracticeStats.monthDays(emptyMap(), YearMonth(2026, 9)))
+    }
+
+    @Test
     fun `brief sample of the design adds up`() {
         val minutes = mapOf(
             1 to 30, 2 to 50, 4 to 100, 5 to 15, 7 to 45, 8 to 70, 9 to 25, 11 to 125, 12 to 40, 13 to 55,

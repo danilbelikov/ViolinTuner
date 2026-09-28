@@ -7,7 +7,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -22,12 +21,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.MutableState
@@ -37,11 +32,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.clearAndSetSemantics
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.ui.components.AppButton
 import com.violinjourney.app.core.ui.components.AppButtonStyle
 import com.violinjourney.app.core.ui.components.AppDock
@@ -50,11 +42,9 @@ import com.violinjourney.app.core.ui.components.DockScope
 import com.violinjourney.app.core.ui.components.LocalDockInset
 import com.violinjourney.app.core.ui.components.currentDockMetrics
 import com.violinjourney.app.core.ui.components.rememberSmallFileImage
-import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcons
-import com.violinjourney.app.core.ui.icons.IconLabel
-import com.violinjourney.app.feature.history.components.SessionCard
 import com.violinjourney.app.feature.practice.components.CalendarMetrics
+import com.violinjourney.app.feature.practice.components.DaySheet
 import com.violinjourney.app.feature.practice.components.EditTimeSheet
 import com.violinjourney.app.feature.practice.components.FirstWeekCard
 import com.violinjourney.app.feature.practice.components.GiftSheet
@@ -73,11 +63,6 @@ import com.violinjourney.app.feature.practice.components.TrophiesSheet
 import com.violinjourney.app.feature.practice.components.WeekCard
 import com.violinjourney.app.feature.practice.components.rememberShownNumbers
 import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.practice_add_time
-import com.violinjourney.app.shared.resources.practice_day_none
-import com.violinjourney.app.shared.resources.practice_day_records
-import com.violinjourney.app.shared.resources.practice_day_today
-import com.violinjourney.app.shared.resources.practice_edit_time
 import com.violinjourney.app.shared.resources.practice_stop
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
@@ -89,27 +74,14 @@ private val LandscapeLeftColumn = 280.dp
 
 /** The sides of the bottom zone of «Занятия» are the fields of the screen (5.29 R2): the button stands flush with the cards. */
 private val DockSide = 16.dp
-private val ActionHeight = 40.dp
-private val ActionCorner = 20.dp
-private val TodayChipCorner = 6.dp
-private val SessionCardGap = 8.dp
-private const val TABULAR_FIGURES = "tnum"
 private const val ACTION_SWITCH_MS = 200
-private const val DAY_CROSSFADE_MS = 150
 
-/** Sizes that differ between the layouts (spec 5.29 R2; the block of the picked day — handoff `sizes`, until stage 104). */
+/** Sizes that differ between the layouts (spec 5.29 R2). */
 @Immutable
-private data class Metrics(
-    val today: TodayMetrics,
-    val dayDateSize: Int,
-    val dayTimeSize: Int,
-    /** «Не занимались» is a phrase, not a figure: smaller than the time. */
-    val dayNoneSize: Int,
-    val calendar: CalendarMetrics,
-) {
+private data class Metrics(val today: TodayMetrics, val calendar: CalendarMetrics) {
     companion object {
-        val Portrait = Metrics(TodayMetrics.Portrait, dayDateSize = 14, dayTimeSize = 32, dayNoneSize = 20, calendar = CalendarMetrics.Portrait)
-        val Landscape = Metrics(TodayMetrics.Landscape, dayDateSize = 13, dayTimeSize = 16, dayNoneSize = 15, calendar = CalendarMetrics.Landscape)
+        val Portrait = Metrics(TodayMetrics.Portrait, CalendarMetrics.Portrait)
+        val Landscape = Metrics(TodayMetrics.Landscape, CalendarMetrics.Landscape)
     }
 }
 
@@ -141,17 +113,20 @@ fun PracticeScreen(
             .background(MaterialTheme.colorScheme.surface),
     ) {
         if (maxWidth > maxHeight) {
-            LandscapeLayout(state, onIntent, zone, journeyCard, flameSways, timer, photo)
+            LandscapeLayout(state, onIntent, journeyCard, flameSways, timer, photo)
         } else {
-            PortraitLayout(state, onIntent, zone, journeyCard, flameSways, timer, photo)
+            PortraitLayout(state, onIntent, journeyCard, flameSways, timer, photo)
         }
     }
     // Each sheet is always there and shows itself when it has something: one closed by its own button slides away as a
     // swiped one does — but only when nothing comes in its place: the recap after «Сохранить» (spec 3.31), the gift
-    // after a sheet, «Трофеи» and «Профиль» in the place of «Мой путь» and back (3.36.2) take the place at once.
-    val sheet = state.sheet
+    // after a sheet, «Трофеи» and «Профиль» in the place of «Мой путь», «Время за день» in the place of the sheet of the day
+    // and back (3.36.2) take the place at once. While a record opened from the sheet of the day is on the screen, the sheets
+    // step aside: the model keeps them, and the sheet of the day rises again when the screen is back.
+    val sheet = state.sheet.takeUnless { state.sheetsAway }
     val slideAway = sheet == null && state.gift == null
     SummarySheet(sheet as? PracticeSheet.Summary, state.stepMinutes, onIntent, slideAway)
+    DaySheet(state.selected.takeIf { sheet is PracticeSheet.Day }, onIntent, zone, slideAway)
     EditTimeSheet(sheet as? PracticeSheet.EditTime, state.stepMinutes, onIntent, slideAway)
     PathSheet(state.header.takeIf { sheet == PracticeSheet.Path }, photo, onIntent, slideAway)
     ProfileSheet(sheet as? PracticeSheet.Profile, state.header, onIntent, slideAway)
@@ -166,7 +141,6 @@ fun PracticeScreen(
 private fun PortraitLayout(
     state: PracticeState,
     onIntent: (PracticeIntent) -> Unit,
-    zone: TimeZone,
     journeyCard: @Composable (Boolean) -> Unit,
     flameSways: MutableState<Boolean>,
     timer: () -> PracticeTimer?,
@@ -191,16 +165,7 @@ private fun PortraitLayout(
                 if (!state.loading) {
                     TodayBlock(state, numbers, metrics.today, flameSways, timer, onIntent, plainWeek = false)
                     journeyCard(false)
-                    PracticeCalendar(
-                        month = state.month,
-                        cells = state.cells,
-                        canGoForward = state.canGoForward,
-                        onMonthBack = { onIntent(PracticeIntent.MonthBack) },
-                        onMonthForward = { onIntent(PracticeIntent.MonthForward) },
-                        onDaySelected = { onIntent(PracticeIntent.DaySelected(it)) },
-                        metrics = metrics.calendar,
-                    )
-                    SelectedDayBlock(state.selected, onIntent, metrics, zone)
+                    Calendar(state, numbers, metrics.calendar, onIntent)
                 }
             }
         }
@@ -217,7 +182,6 @@ private fun PortraitLayout(
 private fun LandscapeLayout(
     state: PracticeState,
     onIntent: (PracticeIntent) -> Unit,
-    zone: TimeZone,
     journeyCard: @Composable (Boolean) -> Unit,
     flameSways: MutableState<Boolean>,
     timer: () -> PracticeTimer?,
@@ -253,19 +217,31 @@ private fun LandscapeLayout(
             Path(state, onIntent, photo)
             if (!state.loading) {
                 journeyCard(true)
-                PracticeCalendar(
-                    month = state.month,
-                    cells = state.cells,
-                    canGoForward = state.canGoForward,
-                    onMonthBack = { onIntent(PracticeIntent.MonthBack) },
-                    onMonthForward = { onIntent(PracticeIntent.MonthForward) },
-                    onDaySelected = { onIntent(PracticeIntent.DaySelected(it)) },
-                    metrics = metrics.calendar,
-                )
-                SelectedDayBlock(state.selected, onIntent, metrics, zone)
+                Calendar(state, numbers, metrics.calendar, onIntent)
             }
         }
     }
+}
+
+/**
+ * The month (spec 3.36.2): under the fold, below the window of the home; the time of the month rolls as the numbers of «Сегодня» do.
+ * A tapped day opens its sheet.
+ */
+@Composable
+private fun Calendar(state: PracticeState, numbers: ShownNumbers, metrics: CalendarMetrics, onIntent: (PracticeIntent) -> Unit) {
+    PracticeCalendar(
+        month = state.month,
+        cells = state.cells,
+        canGoForward = state.canGoForward,
+        onMonthBack = { onIntent(PracticeIntent.MonthBack) },
+        onMonthForward = { onIntent(PracticeIntent.MonthForward) },
+        onDaySelected = { onIntent(PracticeIntent.DaySelected(it)) },
+        currentYear = state.today.year,
+        monthMs = numbers.monthMs,
+        monthDays = numbers.monthDays,
+        rolledMonthMs = numbers.rolledMonthMs,
+        metrics = metrics,
+    )
 }
 
 /**
@@ -369,87 +345,6 @@ private fun DockScope.MainAction(state: PracticeState, onIntent: (PracticeIntent
                 calm = { sheetOpen || flameSways.value },
                 modifier = Modifier.fillMaxWidth().height(height),
             )
-        }
-    }
-}
-
-/** Date, time and the day's records (handoff 10c1, 10c2). Cross-fades when another day is picked. */
-@Composable
-private fun SelectedDayBlock(selected: SelectedDay, onIntent: (PracticeIntent) -> Unit, metrics: Metrics, zone: TimeZone) {
-    val colors = MaterialTheme.colorScheme
-    AnimatedContent(
-        targetState = selected,
-        transitionSpec = { fadeIn(tween(DAY_CROSSFADE_MS)).togetherWith(fadeOut(tween(DAY_CROSSFADE_MS))) },
-        contentKey = { it.date },
-        label = "selectedDay",
-    ) { day ->
-        Column(modifier = Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Text(
-                    text = Formats.dayWithWeekday(day.date),
-                    color = colors.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyMedium.copy(fontSize = metrics.dayDateSize.sp),
-                )
-                if (day.isToday) {
-                    Text(
-                        text = stringResource(Res.string.practice_day_today),
-                        modifier = Modifier
-                            .border(1.dp, colors.primary, RoundedCornerShape(TodayChipCorner))
-                            .padding(horizontal = 6.dp, vertical = 2.dp),
-                        color = colors.primary,
-                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp),
-                    )
-                }
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (day.totalMs > 0) {
-                    Text(
-                        text = Formats.minutesInWords(day.totalMs),
-                        modifier = Modifier.weight(1f),
-                        color = colors.onSurface,
-                        style = MaterialTheme.typography.headlineMedium.copy(
-                            fontSize = metrics.dayTimeSize.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES,
-                        ),
-                    )
-                } else {
-                    Text(
-                        text = stringResource(Res.string.practice_day_none),
-                        modifier = Modifier.weight(1f),
-                        color = colors.onSurfaceVariant,
-                        style = MaterialTheme.typography.titleMedium.copy(fontSize = metrics.dayNoneSize.sp, fontWeight = FontWeight.SemiBold),
-                    )
-                }
-                OutlinedButton(
-                    onClick = { onIntent(PracticeIntent.EditTimeClicked) },
-                    modifier = Modifier.height(ActionHeight),
-                    shape = RoundedCornerShape(ActionCorner),
-                    border = ButtonDefaults.outlinedButtonBorder(enabled = true).copy(brush = SolidColor(colors.outlineVariant)),
-                    colors = ButtonDefaults.outlinedButtonColors(contentColor = colors.primary),
-                ) {
-                    IconLabel(
-                        icon = if (day.totalMs > 0) AppIcons.Pencil else AppIcons.Plus,
-                        text = stringResource(if (day.totalMs > 0) Res.string.practice_edit_time else Res.string.practice_add_time),
-                        style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp),
-                    )
-                }
-            }
-            if (day.sessions.isNotEmpty()) {
-                Text(
-                    text = stringResource(Res.string.practice_day_records),
-                    modifier = Modifier.padding(top = 4.dp),
-                    color = colors.onSurface,
-                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold),
-                )
-                Column(verticalArrangement = Arrangement.spacedBy(SessionCardGap)) {
-                    day.sessions.forEach { card ->
-                        SessionCard(
-                            card = card,
-                            zone = zone,
-                            onClick = { onIntent(PracticeIntent.SessionClicked(card.id)) },
-                        )
-                    }
-                }
-            }
         }
     }
 }

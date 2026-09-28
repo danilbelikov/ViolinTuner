@@ -30,7 +30,11 @@ object PracticeReducer {
         /** The day the running practice began on; null while none runs. */
         runningSince: LocalDate?,
         month: YearMonth,
-        selectedDate: LocalDate,
+        /**
+         * The day whose sheet is open (the sheet of the day or «Время за день» over it); null — none is selected. Never later than
+         * [today]: a day to come has no sheet, and the view model closes one the date went back under — one rule, in one place.
+         */
+        selectedDate: LocalDate?,
         sheet: PracticeSheet?,
         today: LocalDate,
         zone: TimeZone,
@@ -45,6 +49,8 @@ object PracticeReducer {
         underBackingIds: Set<Long> = emptySet(),
         /** A practice is being saved and its recap has not opened: the gift waits for it (spec 3.31). */
         recapPending: Boolean = false,
+        /** A record opened from the sheet of the day is on the screen: the sheets step aside until it is back. */
+        sheetsAway: Boolean = false,
     ): PracticeState {
         val totals = PracticeStats.dayTotals(entries)
         val totalMs = Progress.totalMs(entries)
@@ -62,6 +68,7 @@ object PracticeReducer {
                 monthMs = PracticeStats.monthTotal(totals, month),
                 streakDays = PracticeStats.streak(totals, today),
                 weekDaysMs = PracticeStats.weekDays(totals, today),
+                monthDays = PracticeStats.monthDays(totals, month),
             ),
             month = month,
             canGoForward = month < today.yearMonth,
@@ -78,23 +85,26 @@ object PracticeReducer {
                     )
                 }
             },
-            selected = SelectedDay(
-                date = selectedDate,
-                isToday = selectedDate == today,
-                totalMs = totals[selectedDate] ?: 0L,
-                sessions = sessions
-                    .filter { Instant.fromEpochMilliseconds(it.startedAtEpochMs).toLocalDateTime(zone).date == selectedDate }
-                    .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
-                    .map {
-                        HistoryReducer.cardOf(
-                            it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds, underBacking = it.id in underBackingIds,
-                        )
-                    },
-            ),
+            selected = selectedDate?.let { date ->
+                SelectedDay(
+                    date = date,
+                    isToday = date == today,
+                    totalMs = totals[date] ?: 0L,
+                    sessions = sessions
+                        .filter { Instant.fromEpochMilliseconds(it.startedAtEpochMs).toLocalDateTime(zone).date == date }
+                        .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
+                        .map {
+                            HistoryReducer.cardOf(
+                                it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds, underBacking = it.id in underBackingIds,
+                            )
+                        },
+                )
+            },
             header = ProgressReducer.headerOf(totalMs, trophies, profile.name, avatarPath, progressConfig),
             trophies = ProgressReducer.trophyLines(totalMs, trophies, progressConfig),
             gift = if (sheet == null && !recapPending) ProgressReducer.giftOf(trophies, progressConfig) else null,
             sheet = sheet,
+            sheetsAway = sheetsAway,
             stepMinutes = config.editStepMinutes,
             weekFloorMinutes = weekFloorOf(config),
             recapPending = recapPending,
@@ -114,11 +124,11 @@ object PracticeReducer {
         runningSince = null,
         today = today,
         todayMs = 0,
-        summary = PracticeSummary(0, 0, 0, weekDaysMs = List(DAYS_PER_WEEK) { 0L }),
+        summary = PracticeSummary(0, 0, 0, weekDaysMs = List(DAYS_PER_WEEK) { 0L }, monthDays = 0),
         month = today.yearMonth,
         canGoForward = false,
         cells = emptyList(),
-        selected = SelectedDay(today, isToday = true, totalMs = 0, sessions = emptyList()),
+        selected = null,
         header = ProgressReducer.headerOf(0, emptyList(), name = "", avatarPath = null, progressConfig),
         trophies = emptyList(),
         gift = null,

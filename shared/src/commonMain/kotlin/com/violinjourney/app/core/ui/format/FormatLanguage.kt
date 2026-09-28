@@ -27,6 +27,8 @@ data class FormatLanguage(
     val plural: PluralRule,
     /** «1 ч 25 мин» has a space between the number and the unit; «1시간 25분» has none. */
     val unitSpace: String = " ",
+    /** The month alone, for the calendar of this year («Сентябрь», spec 3.36.2): its name standing by itself, or «9月». */
+    val month: String = "LLLL",
 ) {
     /** Where the whole part ends: 7,3 in most languages of the app, 7.3 in English, Korean, Chinese and Japanese. */
     val decimalSeparator: Char = if (tag in POINT_LANGUAGES) '.' else ','
@@ -55,9 +57,9 @@ data class FormatLanguage(
             FormatLanguage("es", "h", "min", "MB", "GB", "menos de 1 MB", LATIN, "d 'de' MMMM", "d MMM", "EEEE, d 'de' MMMM", "LLLL 'de' yyyy", "d 'de' MMMM 'de' yyyy", "EEEE, d 'de' MMMM 'de' yyyy", PluralRule.ONE_OTHER),
             FormatLanguage("it", "h", "min", "MB", "GB", "meno di 1 MB", LATIN, "d MMMM", "d MMM", "EEEE d MMMM", "LLLL yyyy", "d MMMM yyyy", "EEEE d MMMM yyyy", PluralRule.ONE_OTHER),
             FormatLanguage("pt", "h", "min", "MB", "GB", "menos de 1 MB", LATIN, "d 'de' MMMM", "d MMM", "EEEE, d 'de' MMMM", "LLLL 'de' yyyy", "d 'de' MMMM 'de' yyyy", "EEEE, d 'de' MMMM 'de' yyyy", PluralRule.ONE_OTHER),
-            FormatLanguage("ko", "시간", "분", "MB", "GB", "1MB 미만", LATIN, "M월 d일", "M월 d일", "M월 d일 EEEE", "yyyy년 M월", "yyyy년 M월 d일", "yyyy년 M월 d일 EEEE", PluralRule.NONE, unitSpace = ""),
-            FormatLanguage("zh", "小时", "分钟", "MB", "GB", "不到 1 MB", LATIN, "M月d日", "M月d日", "M月d日 EEEE", "yyyy年M月", "yyyy年M月d日", "yyyy年M月d日 EEEE", PluralRule.NONE, unitSpace = " "),
-            FormatLanguage("ja", "時間", "分", "MB", "GB", "1 MB未満", LATIN, "M月d日", "M月d日", "M月d日 EEEE", "yyyy年M月", "yyyy年M月d日", "yyyy年M月d日 EEEE", PluralRule.NONE, unitSpace = ""),
+            FormatLanguage("ko", "시간", "분", "MB", "GB", "1MB 미만", LATIN, "M월 d일", "M월 d일", "M월 d일 EEEE", "yyyy년 M월", "yyyy년 M월 d일", "yyyy년 M월 d일 EEEE", PluralRule.NONE, unitSpace = "", month = "M월"),
+            FormatLanguage("zh", "小时", "分钟", "MB", "GB", "不到 1 MB", LATIN, "M月d日", "M月d日", "M月d日 EEEE", "yyyy年M月", "yyyy年M月d日", "yyyy年M月d日 EEEE", PluralRule.NONE, unitSpace = " ", month = "M月"),
+            FormatLanguage("ja", "時間", "分", "MB", "GB", "1 MB未満", LATIN, "M月d日", "M月d日", "M月d日 EEEE", "yyyy年M月", "yyyy年M月d日", "yyyy年M月d日 EEEE", PluralRule.NONE, unitSpace = "", month = "M月"),
         )
 
         /**
