@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.ui.components
 
 import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -22,6 +23,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -76,7 +78,10 @@ enum class AppButtonStyle { Main, Outline, Soft, Text, Quiet, Danger, DangerFill
  *
  * No button is ever silently grey: a disabled one ([enabled] false) is dimmed to 0.38 in its own colours and its [reason] stands on
  * a line above it — or next to it, as [PermissionLine] stands over the sleeping key of recording, and then [reason] is not needed.
- * With a [reason] the [modifier] belongs to the column of the reason and the button, and the button is as wide as that column.
+ * [reasonReserve] — the reason of a button that goes dim and bright again under the finger of a stepper («Добавить» of an empty
+ * day, R3): its place above the button stays, unseen and unheard, while there is no reason, and nothing above the button moves.
+ * With a [reason] or a [reasonReserve] the [modifier] belongs to the column of the reason and the button, and the button is as wide
+ * as that column.
  */
 @Composable
 fun AppButton(
@@ -89,23 +94,33 @@ fun AppButton(
     enabled: Boolean = true,
     reason: String? = null,
     compact: Boolean = false,
+    reasonReserve: String? = null,
 ) {
-    if (reason == null) {
+    if (reason == null && reasonReserve == null) {
         StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact)
         return
     }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = reason,
+        Box(Modifier.fillMaxWidth()) {
+            // the place the reason keeps, seen or not
+            if (reasonReserve != null) Reason(reasonReserve, Modifier.alpha(0f).clearAndSetSemantics {})
             // said aloud when it appears: the button under it has just gone dim
-            modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
-        )
+            if (reason != null) Reason(reason, Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        }
         Spacer(Modifier.height(ReasonGap))
         StyledButton(text, onClick, Modifier.fillMaxWidth(), style, icon, caption, enabled, compact)
     }
+}
+
+@Composable
+private fun Reason(text: String, modifier: Modifier) {
+    Text(
+        text = text,
+        modifier = modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        textAlign = TextAlign.Center,
+        style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
+    )
 }
 
 @Composable

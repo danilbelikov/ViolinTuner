@@ -5,12 +5,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBars
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.TextAutoSize
 import androidx.compose.material3.MaterialTheme
@@ -27,7 +24,6 @@ import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.ui.components.AppButton
 import com.violinjourney.app.core.ui.components.AppButtonStyle
-import com.violinjourney.app.core.ui.components.AppSheet
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.feature.history.components.SessionCard
@@ -42,8 +38,6 @@ import com.violinjourney.app.shared.resources.practice_day_today
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
 
-/** Between the top of the sheet and the status bar at the least (spec 5.29 R2): a long sheet scrolls rather than reach the top. */
-private val TopClearance = 16.dp
 private val DateGap = 8.dp
 private val TimeTop = 4.dp
 private val TimeGap = 12.dp
@@ -58,26 +52,10 @@ private const val TIME_SIZE = 34
 private const val MIN_TIME_SIZE = 22
 
 /**
- * The sheet of a day tapped in the calendar (spec 3.36.2): shown while [day] is not null — the owner gives the day while its sheet is
- * open. A swipe only hides it (DayHidden); [slideAway] false — another sheet takes its place («Время за день») and it goes at once. Never
- * higher than the window under the status bar and 16 more: many records scroll inside it.
- */
-@Composable
-fun DaySheet(day: SelectedDay?, onIntent: (PracticeIntent) -> Unit, zone: TimeZone, slideAway: Boolean = true) {
-    AppSheet(
-        value = day,
-        onHide = { onIntent(PracticeIntent.DayHidden) },
-        modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars).padding(top = TopClearance),
-        slideAway = slideAway,
-    ) { shown ->
-        DaySheetContent(shown, onIntent, zone)
-    }
-}
-
-/**
  * What the sheet of a day holds (spec 3.36.2, 5.29): the date — «24 сентября, четверг», with the chip «сегодня» for today; the time of
  * the day large and «Изменить» with the pencil beside it, or «Не занимались» and «Добавить» with the plus — both open «Время за день»
- * in its place; and «Записи этого дня» with their cards, if there are any. TalkBack names the sheet by its date.
+ * in its place; and «Записи этого дня» with their cards, if there are any. TalkBack names the sheet by its date. A face of the frame of
+ * «Занятия» ([PracticeSheetHost]): a swipe only hides it (DayHidden); many records scroll inside the frame.
  */
 @Composable
 fun DaySheetContent(day: SelectedDay, onIntent: (PracticeIntent) -> Unit, zone: TimeZone, modifier: Modifier = Modifier) {

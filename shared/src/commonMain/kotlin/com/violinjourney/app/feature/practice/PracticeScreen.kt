@@ -53,19 +53,16 @@ import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.feature.journey.WindowLook
 import com.violinjourney.app.feature.practice.components.CalendarMetrics
-import com.violinjourney.app.feature.practice.components.DaySheet
-import com.violinjourney.app.feature.practice.components.EditTimeSheet
 import com.violinjourney.app.feature.practice.components.FirstWeekCard
 import com.violinjourney.app.feature.practice.components.GiftSheet
 import com.violinjourney.app.feature.practice.components.PathRow
-import com.violinjourney.app.feature.practice.components.PathSheet
+import com.violinjourney.app.feature.practice.components.PracticeSheetHost
 import com.violinjourney.app.feature.practice.components.PracticeCalendar
 import com.violinjourney.app.feature.practice.components.ProfileSheet
 import com.violinjourney.app.feature.practice.components.RecapSheet
 import com.violinjourney.app.feature.practice.components.RunningCard
 import com.violinjourney.app.feature.practice.components.ShownNumbers
 import com.violinjourney.app.feature.practice.components.StartPracticeButton
-import com.violinjourney.app.feature.practice.components.SummarySheet
 import com.violinjourney.app.feature.practice.components.TodayCard
 import com.violinjourney.app.feature.practice.components.TodayMetrics
 import com.violinjourney.app.feature.practice.components.TrophiesSheet
@@ -132,17 +129,15 @@ fun PracticeScreen(
             PortraitLayout(state, onIntent, journeyCard, flameSways, timer, photo, height = maxHeight)
         }
     }
-    // Each sheet is always there and shows itself when it has something: one closed by its own button slides away as a
-    // swiped one does — but only when nothing comes in its place: the recap after «Сохранить» (spec 3.31), the gift
-    // after a sheet, «Трофеи» and «Профиль» in the place of «Мой путь», «Время за день» in the place of the sheet of the day
-    // and back (3.36.2) take the place at once. While a record opened from the sheet of the day is on the screen, the sheets
-    // step aside: the model keeps them, and the sheet of the day rises again when the screen is back.
+    // One frame for «Закончить занятие», the sheet of the day, «Время за день» and «Мой путь» (spec 3.36.3): one of them in the place
+    // of another changes what the frame shows, in place. The sheets not in it yet keep their windows until stage 107: each is always
+    // there and shows itself when it has something; one closed by its own button slides away as a swiped one does — but only when
+    // nothing comes in its place: the recap after «Сохранить» (spec 3.31), the gift after a sheet, «Трофеи» and «Профиль» in the place
+    // of «Мой путь» and back (3.36.2) take the place at once. While a record opened from the sheet of the day is on the screen, the
+    // sheets step aside: the model keeps them, and the sheet of the day rises again when the screen is back.
+    PracticeSheetHost(state, onIntent, zone, photo)
     val sheet = state.sheet.takeUnless { state.sheetsAway }
     val slideAway = sheet == null && state.gift == null
-    SummarySheet(sheet as? PracticeSheet.Summary, state.stepMinutes, onIntent, slideAway)
-    DaySheet(state.selected.takeIf { sheet is PracticeSheet.Day }, onIntent, zone, slideAway)
-    EditTimeSheet(sheet as? PracticeSheet.EditTime, state.stepMinutes, onIntent, slideAway)
-    PathSheet(state.header.takeIf { sheet == PracticeSheet.Path }, photo, onIntent, slideAway)
     ProfileSheet(sheet as? PracticeSheet.Profile, state.header, onIntent, slideAway)
     // no button closes it, only a swipe
     if (sheet == PracticeSheet.Trophies) TrophiesSheet(state.trophies, state.header.totalMs, onIntent)

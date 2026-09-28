@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.data.Housekeeping
 import com.violinjourney.app.core.domain.practice.BlockStore
+import com.violinjourney.app.core.domain.practice.ForgottenEndings
 import com.violinjourney.app.core.domain.practice.ForgottenPractice
 import com.violinjourney.app.core.domain.practice.PracticeCheck
 import com.violinjourney.app.core.domain.practice.PracticeConfig
@@ -11,6 +12,7 @@ import com.violinjourney.app.core.domain.practice.PracticeFinisher
 import com.violinjourney.app.core.domain.practice.PracticeRepository
 import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
+import com.violinjourney.app.core.domain.practice.practiceTicks
 import com.violinjourney.app.core.domain.progress.TrophyAwarder
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.settings.SettingsRepository
@@ -20,6 +22,7 @@ import com.violinjourney.app.feature.practice.PracticePromptEffect
 import com.violinjourney.app.feature.practice.PracticePromptIntent
 import com.violinjourney.app.feature.practice.PracticeReducer
 import com.violinjourney.app.feature.practice.summarySheetOf
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
@@ -27,8 +30,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
@@ -75,6 +81,33 @@ open class AppStartViewModel(
     private val prompt = MutableStateFlow<PracticePrompt?>(null)
     val practicePrompt: StateFlow<PracticePrompt?> = prompt.asStateFlow()
 
+    /**
+     * The numbers of «Занятие не закончено» while it is shown (spec 3.36.3): «Идёт …» and what each ending would save, paced by the
+     * clock of the running practice ([practiceTicks] — the one of the timer of «Занятия») and changed once a minute, as the minutes
+     * of 5.6 do; fresh again when the app comes back. Each number is what its answer saves: «Закончить сейчас» by the practice the
+     * store holds on the tick — the one [endForgotten] ends, with the marks Live took under the sheet — «Закончить в 18:42» at the mark
+     * of the question's snapshot ([ForgottenPractice.endings]). Null without the sheet, and when the practice has gone meanwhile.
+     */
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val promptEndings: StateFlow<ForgottenEndings?> = prompt
+        .map { it as? PracticePrompt.Forgotten }
+        .distinctUntilChanged()
+        .flatMapLatest { shown ->
+            if (shown == null) {
+                flowOf(null)
+            } else {
+                runningPractice.practiceTicks(clock).map { tick ->
+                    tick?.let {
+                        // a practice begun anew under the sheet is not the one it asks about: its numbers stay the snapshot's
+                        val practice = it.practice.takeIf { held -> held.startedAtEpochMs == shown.practice.startedAtEpochMs } ?: shown.practice
+                        ForgottenPractice.endings(practice, it.nowEpochMs, config, asked = shown.practice)
+                    }
+                }
+            }
+        }
+        .distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), initialValue = null)
+
     /** The step of «−» and «+» in the forgotten-practice prompt (spec 3.12), from the injected [PracticeConfig]. */
     val promptStepMinutes: Int get() = config.editStepMinutes
 
@@ -84,8 +117,8 @@ open class AppStartViewModel(
     val promptEffects: Flow<PracticePromptEffect> = promptEffectChannel.receiveAsFlow()
 
     /**
-     * An answer to the prompt still being written — one that ends the practice, «Продолжаю заниматься», «Изменить
-     * время»: a second one before the prompt has changed («Закончить сейчас» tapped twice, «Сохранить» and then «Не
+     * An answer to the prompt still being written — one that ends the practice, «Продолжаю заниматься», «Указать, сколько
+     * играли»: a second one before the prompt has changed («Закончить сейчас» tapped twice, «Сохранить» and then «Не
      * сохранять») is dropped. The finisher takes answers one at a time as well; this only keeps the prompt from
      * answering twice.
      */
@@ -97,10 +130,10 @@ open class AppStartViewModel(
     }
 
     /**
-     * Every time the app comes to the front. A summary sheet already on screen stays as it is: a rotation must not turn
-     * it back into the dialog it came from. The dialog follows the clock: found again later it tells the new time, and
-     * past the limit it gives way to the sheet of the practice that has ended by itself (spec 3.12). Nothing is looked
-     * at while an answer to the prompt is being written.
+     * Every time the app comes to the front. «Закончить занятие» already on screen stays as it is: a rotation must not turn
+     * it back into the sheet it came from. «Занятие не закончено» found again keeps its snapshot — its numbers follow the clock
+     * by themselves ([promptEndings]) — and past the limit it gives way to «Закончить занятие» of the practice that has ended
+     * by itself (spec 3.12, 3.36.3). Nothing is looked at while an answer to the prompt is being written.
      */
     fun onAppOpened() {
         if (answering?.isActive == true) return
@@ -115,10 +148,10 @@ open class AppStartViewModel(
                 // Ended by itself; the store still holds it until the sheet is answered, so a
                 // process death in between loses nothing.
                 check is PracticeCheck.Expired -> expiredPrompt(running, check.endEpochMs)
-                // The dialog on screen keeps the time on its button — «Закончить в 18:42» ends at what it says —
-                // and tells how long the practice has run by now.
-                shown is PracticePrompt.Forgotten -> shown.copy(elapsedMs = running.elapsedMs(now))
-                check is PracticeCheck.Forgotten -> PracticePrompt.Forgotten(check.elapsedMs, check.lastSoundEpochMs)
+                // The sheet on screen keeps the time on its button — «Закончить в 18:42» ends at what it says; how long the
+                // practice has run by now is the business of its numbers. Only a practice begun anew under it is asked anew.
+                shown is PracticePrompt.Forgotten && shown.practice.startedAtEpochMs == running.startedAtEpochMs -> shown
+                check is PracticeCheck.Forgotten -> PracticePrompt.Forgotten(running)
                 else -> null
             }
             // an answer given meanwhile has the last word
@@ -133,25 +166,26 @@ open class AppStartViewModel(
 
     fun onPromptIntent(intent: PracticePromptIntent) {
         when (intent) {
-            // The time on the button, not the store's: Live keeps listening under the dialog and
+            // The time on the button, not the store's: Live keeps listening under the sheet and
             // may move the last-sound mark while the user reads it.
             PracticePromptIntent.EndAtLastSound -> endForgotten(
-                (prompt.value as? PracticePrompt.Forgotten)?.lastSoundEpochMs ?: clock.millis(),
+                (prompt.value as? PracticePrompt.Forgotten)?.practice?.lastSoundEpochMs ?: clock.millis(),
             )
             PracticePromptIntent.EndNow -> endForgotten(clock.millis())
             PracticePromptIntent.Continue -> answer {
                 val running = runningPractice.running.first()
                 val now = clock.millis()
                 prompt.value = if (running != null && !ForgottenPractice.runsAt(running.startedAtEpochMs, now, config)) {
-                    // the dialog stayed on screen past the limit: the practice has ended by itself, no sign of life
-                    // brings it back — its sheet takes the dialog's place (spec 3.12)
+                    // the sheet stayed on screen past the limit: the practice has ended by itself, no sign of life
+                    // brings it back — «Закончить занятие» takes the sheet's place (spec 3.12)
                     expiredPrompt(running, ForgottenPractice.expiredEndOf(running, config))
                 } else {
-                    runningPractice.markSound(now)
+                    // a sign of life as a sound is, but the answer's own: the next question says «вы ответили…» (spec 3.36.3)
+                    runningPractice.markContinued(now)
                     null
                 }
             }
-            PracticePromptIntent.EditTime -> answer {
+            PracticePromptIntent.SetLength -> answer {
                 val running = runningPractice.running.first() ?: return@answer prompt.update { null }
                 prompt.value = sheetOrDrop(running, ForgottenPractice.lengthAt(running, clock.millis(), config))
             }

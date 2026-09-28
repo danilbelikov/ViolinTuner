@@ -57,7 +57,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.core.ui.components.AppSheet
 import com.violinjourney.app.core.ui.components.LevelRing
 import com.violinjourney.app.core.ui.components.LevelRingSize
 import com.violinjourney.app.core.ui.components.ListRow
@@ -112,21 +111,11 @@ private const val MIN_TOTAL_SIZE = 20
 private const val TOTAL_SIZE = 30
 
 /**
- * «Мой путь» (spec 3.36.2): shown while [header] is not null — the owner gives the header while [com.violinjourney.app.feature.practice.PracticeSheet.Path]
- * is open. A swipe only hides it (PathHidden); [slideAway] false — another sheet takes its place and it goes at once.
- */
-@Composable
-fun PathSheet(header: ProfileHeader?, photo: ImageBitmap?, onIntent: (PracticeIntent) -> Unit, slideAway: Boolean = true) {
-    AppSheet(value = header, onHide = { onIntent(PracticeIntent.PathHidden) }, slideAway = slideAway) { shown ->
-        PathSheetContent(shown, photo, onIntent)
-    }
-}
-
-/**
  * What «Мой путь» holds (spec 3.36.2, 5.29): the ring of 72 — the photo in it and the number as a badge — beside the name or «За
  * скрипкой» and the whole time large in the accent; the bar of the level with its shine (3.16) and the words under it — the level
  * on the left, the remainder on the right or under it; the latest trophies and the next one; and the rows «Все трофеи», «Имя и
- * фото», «Настройки». No title in words: the ring begins it, and TalkBack names the sheet «Мой путь».
+ * фото», «Настройки». No title in words: the ring begins it, and TalkBack names the sheet «Мой путь». A face of the frame of «Занятия»
+ * ([PracticeSheetHost]): a swipe only hides it (PathHidden).
  */
 @Composable
 fun PathSheetContent(header: ProfileHeader, photo: ImageBitmap?, onIntent: (PracticeIntent) -> Unit, modifier: Modifier = Modifier) {

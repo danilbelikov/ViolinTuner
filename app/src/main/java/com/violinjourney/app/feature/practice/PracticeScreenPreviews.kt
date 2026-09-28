@@ -38,14 +38,12 @@ import com.violinjourney.app.feature.journey.JourneyWindowCard
 import com.violinjourney.app.feature.journey.WindowSample
 import com.violinjourney.app.feature.practice.components.CalendarMetrics
 import com.violinjourney.app.feature.practice.components.DaySheetContent
-import com.violinjourney.app.feature.practice.components.EditTimeSheetContent
 import com.violinjourney.app.feature.practice.components.GiftSheetContent
 import com.violinjourney.app.feature.practice.components.PathRow
 import com.violinjourney.app.feature.practice.components.PathSheetContent
 import com.violinjourney.app.feature.practice.components.PracticeCalendar
 import com.violinjourney.app.feature.practice.components.ProfileSheetContent
 import com.violinjourney.app.feature.practice.components.RecapSheetContent
-import com.violinjourney.app.feature.practice.components.SummarySheetContent
 import com.violinjourney.app.feature.practice.components.TrophiesSheetContent
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
@@ -435,30 +433,6 @@ private fun TrophiesSheetPreview() {
     val state = Sample.state()
     ViolinTheme {
         TrophiesSheetContent(state.trophies, state.header.totalMs, modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh))
-    }
-}
-
-@Preview(name = "10d summary sheet", widthDp = 412, locale = "ru")
-@Composable
-private fun SummarySheetPreview() {
-    ViolinTheme {
-        SummarySheetContent(
-            sheet = PracticeReducer.summarySheet(startedAtEpochMs = 0, actualMs = 47 * MS_PER_MINUTE, PracticeConfig()),
-            stepMinutes = 5,
-            onIntent = {},
-        )
-    }
-}
-
-@Preview(name = "10e edit time sheet", widthDp = 412, locale = "ru")
-@Composable
-private fun EditTimeSheetPreview() {
-    ViolinTheme {
-        EditTimeSheetContent(
-            sheet = PracticeReducer.editSheet(LocalDate(2026, 9, 16), 50 * MS_PER_MINUTE, PracticeConfig()),
-            stepMinutes = 5,
-            onIntent = {},
-        )
     }
 }
 

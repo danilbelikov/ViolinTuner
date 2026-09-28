@@ -22,8 +22,16 @@ data class PracticeEntry(
 /** The practice in progress; lives outside the database because it has no end yet. */
 data class RunningPractice(
     val startedAtEpochMs: Long,
-    /** When the Live engine last reported a note while this practice ran; null = never. */
+    /**
+     * The last sign of life of this practice; null = never. A note Live heard, a take, a video shot — or «Продолжаю заниматься»
+     * of «Занятие не закончено», which counts the same for the hour of silence and the limit (spec 3.12, 5.6).
+     */
     val lastSoundEpochMs: Long?,
+    /**
+     * The last mark was set by the answer «Продолжаю заниматься», not by a sound (spec 3.36.3): «Занятие не закончено» then says
+     * «вы ответили…» rather than «Скрипка звучала…». A real sound takes it back.
+     */
+    val lastMarkByAnswer: Boolean = false,
 ) {
     /** Never negative: a system clock moved backwards reads as zero, not as a debt. */
     fun elapsedMs(nowEpochMs: Long): Long = (nowEpochMs - startedAtEpochMs).coerceAtLeast(0)
@@ -60,8 +68,15 @@ interface RunningPracticeStore {
      */
     suspend fun startIfIdle(startedAtEpochMs: Long): Boolean
 
-    /** No-op when nothing runs. */
+    /** A note, a take, a video shot at [epochMs]: the last sign of life, and no longer an answer's. No-op when nothing runs. */
     suspend fun markSound(epochMs: Long)
+
+    /**
+     * «Продолжаю заниматься» at [epochMs] (spec 3.12, 3.36.3): the last sign of life, as a sound is, but marked as set by the answer —
+     * the next «Занятие не закончено» says so. Only [markSound] takes the mark back; [startIfIdle] and [clear] forget it. No-op when
+     * nothing runs.
+     */
+    suspend fun markContinued(epochMs: Long)
 
     suspend fun clear()
 }

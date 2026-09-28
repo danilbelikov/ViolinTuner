@@ -36,7 +36,11 @@ class FakeRunningPracticeStore : RunningPracticeStore {
         running.compareAndSet(null, RunningPractice(startedAtEpochMs, lastSoundEpochMs = null))
 
     override suspend fun markSound(epochMs: Long) {
-        running.update { it?.copy(lastSoundEpochMs = epochMs) }
+        running.update { it?.copy(lastSoundEpochMs = epochMs, lastMarkByAnswer = false) }
+    }
+
+    override suspend fun markContinued(epochMs: Long) {
+        running.update { it?.copy(lastSoundEpochMs = epochMs, lastMarkByAnswer = true) }
     }
 
     override suspend fun clear() {

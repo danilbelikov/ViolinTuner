@@ -85,6 +85,35 @@ class DataStoreRunningPracticeStoreTest {
     }
 
     @Test
+    fun `an answer marks the last mark as an answer and a sound takes it back`() = runTest {
+        val store = DataStoreRunningPracticeStore(dataStore())
+        store.startIfIdle(1_000)
+        store.markSound(5_000)
+        // «Продолжаю заниматься» (spec 3.36.3): a sign of life that says whose it is
+        store.markContinued(9_000)
+        assertEquals(RunningPractice(1_000, lastSoundEpochMs = 9_000, lastMarkByAnswer = true), store.running.first())
+        store.markSound(12_000)
+        assertEquals(RunningPractice(1_000, lastSoundEpochMs = 12_000, lastMarkByAnswer = false), store.running.first())
+    }
+
+    @Test
+    fun `a new practice and the end forget the answer`() = runTest {
+        val store = DataStoreRunningPracticeStore(dataStore())
+        // nothing runs: no answer to keep
+        store.markContinued(500)
+        assertNull(store.running.first())
+        store.startIfIdle(1_000)
+        store.markContinued(9_000)
+        store.clear()
+        assertTrue(store.startIfIdle(20_000))
+        assertEquals(RunningPractice(20_000, lastSoundEpochMs = null, lastMarkByAnswer = false), store.running.first())
+        store.markContinued(25_000)
+        // one practice at a time: a start while it runs keeps the answer as it is
+        assertFalse(store.startIfIdle(30_000))
+        assertEquals(RunningPractice(20_000, lastSoundEpochMs = 25_000, lastMarkByAnswer = true), store.running.first())
+    }
+
+    @Test
     fun `shares the file with the settings without touching them`() = runTest {
         val dataStore = dataStore()
         val settings = DataStoreSettingsRepository(dataStore)

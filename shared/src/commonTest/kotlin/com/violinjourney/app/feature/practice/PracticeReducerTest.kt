@@ -288,17 +288,142 @@ class PracticeReducerTest {
             ),
             sheet.played,
         )
-        // 47 → 30 minutes: the concerto begun at 34 leaves, the minuet keeps five of its minutes
+        // 47 → 27 minutes: the concerto begun at 34 no longer fits — it stays as «не вошёл» (spec 3.36.3), the minuet keeps two of
+        // its minutes
         var trimmed = sheet
         repeat(4) { trimmed = PracticeReducer.step(trimmed, -1, config) }
         assertEquals(27, trimmed.minutes)
         trimmed = PracticeReducer.step(PracticeReducer.step(trimmed, +1, config), -1, config)
         assertEquals(
-            listOf(PlayedLine("G-dur · 3 октавы", 10, 10, done = true), PlayedLine("Кайзер № 3", 15, 15, done = true), PlayedLine("Менуэт соль мажор", 2, 10, done = false)),
+            listOf(
+                PlayedLine("G-dur · 3 октавы", 10, 10, done = true),
+                PlayedLine("Кайзер № 3", 15, 15, done = true),
+                PlayedLine("Менуэт соль мажор", 2, 10, done = false),
+                PlayedLine("Концерт ля минор, I ч.", 0, 20, done = false, dropped = true),
+            ),
             trimmed.played,
         )
         // without blocks the sheet is the sheet it was
         assertEquals(emptyList<PlayedLine>(), PracticeReducer.summarySheet(lessonStart, 47 * MS_PER_MINUTE, config).played)
+    }
+
+    // «Закончить занятие» (spec 3.36.3): 17:55 — 18:42 at 47 minutes.
+    private val start1755 = LocalDateTime.parse("2026-09-27T17:55:00").toInstant(zone).toEpochMilliseconds()
+
+    @Test
+    fun `the span says start and end of what is saved and what it was once the stepper moved`() {
+        val sheet = PracticeReducer.summarySheet(start1755, 47 * MS_PER_MINUTE, config)
+        assertEquals(SummarySpan(start1755, start1755 + 47 * MS_PER_MINUTE, wasMs = null), PracticeReducer.spanOf(sheet))
+        val down = PracticeReducer.step(PracticeReducer.step(sheet, -1, config), -1, config)
+        assertEquals(37, down.minutes)
+        assertEquals(SummarySpan(start1755, start1755 + 37 * MS_PER_MINUTE, wasMs = 47 * MS_PER_MINUTE), PracticeReducer.spanOf(down))
+        // back where it started: the span of the exact time, no «было»
+        val back = PracticeReducer.step(PracticeReducer.step(down, +1, config), +1, config)
+        assertEquals(PracticeReducer.spanOf(sheet), PracticeReducer.spanOf(back))
+    }
+
+    @Test
+    fun `the stepper walks by five from the actual length 47 42 37 32 and back saves the exact time`() {
+        val sheet = PracticeReducer.summarySheet(start1755, 47 * MS_PER_MINUTE + 20_000, config)
+        var walked = sheet
+        val minutes = mutableListOf(walked.minutes)
+        repeat(3) {
+            walked = PracticeReducer.step(walked, -1, config)
+            minutes += walked.minutes
+        }
+        assertEquals(listOf(47, 42, 37, 32), minutes)
+        repeat(3) { walked = PracticeReducer.step(walked, +1, config) }
+        assertEquals(47, walked.minutes)
+        assertFalse(walked.edited)
+        assertEquals(47 * MS_PER_MINUTE + 20_000, PracticeReducer.durationToSave(walked))
+    }
+
+    @Test
+    fun `a block cut off whole stays as not fitted and the hint says blocks were cut`() {
+        val sheet = PracticeReducer.summarySheet(lessonStart, 47 * MS_PER_MINUTE, config, lesson, titles)
+        assertFalse(sheet.playedCut)
+        assertEquals(SummaryHint.Forgot, PracticeReducer.hintOf(sheet))
+        // 42: the concerto from 34 keeps 8 minutes — shortened, nothing cut off yet
+        val shortened = PracticeReducer.step(sheet, -1, config)
+        assertTrue(shortened.playedCut)
+        assertEquals(SummaryHint.Cut, PracticeReducer.hintOf(shortened))
+        assertTrue(shortened.played.none { it.dropped })
+        // 32: the concerto begun at 34 is cut off whole
+        val cut = PracticeReducer.step(PracticeReducer.step(shortened, -1, config), -1, config)
+        assertEquals(32, cut.minutes)
+        assertEquals(PlayedLine("Концерт ля минор, I ч.", 0, 20, done = false, dropped = true), cut.played.last())
+        assertEquals(SummaryHint.Cut, PracticeReducer.hintOf(cut))
+        // a block begun half a minute before the new end: shorter than a minute, cut off whole too — «стал короче минуты»
+        val lateBlock = lesson.copy(current = PieceBlock(4, at(42) + 30_000, 20 * MS_PER_MINUTE))
+        val whole = PracticeReducer.summarySheet(lessonStart, 48 * MS_PER_MINUTE, config, lateBlock, titles)
+        assertFalse(whole.played.last().dropped)
+        val atFortyThree = PracticeReducer.step(whole, -1, config)
+        assertEquals(43, atFortyThree.minutes)
+        assertTrue(atFortyThree.played.last().dropped)
+    }
+
+    @Test
+    fun `the hints a sheet keeps the place of are every one its stepper can bring and no other`() {
+        val withBlocks = PracticeReducer.summarySheet(lessonStart, 47 * MS_PER_MINUTE, config, lesson, titles)
+        val hints = PracticeReducer.hintsOf(withBlocks)
+        assertEquals(listOf(SummaryHint.Forgot, SummaryHint.Cut), hints)
+        // every step down to the floor and back shows one of them, and the list is the same at every step
+        var walked = withBlocks
+        repeat(10) {
+            walked = PracticeReducer.step(walked, -1, config)
+            assertTrue(PracticeReducer.hintOf(walked) in hints, "${walked.minutes} min")
+            assertEquals(hints, PracticeReducer.hintsOf(walked))
+        }
+        // without blocks nothing is cut: the usual hint alone; too short to trim: its own alone
+        assertEquals(listOf(SummaryHint.Forgot), PracticeReducer.hintsOf(PracticeReducer.summarySheet(start1755, 47 * MS_PER_MINUTE, config)))
+        assertEquals(listOf(SummaryHint.TooShort), PracticeReducer.hintsOf(PracticeReducer.summarySheet(start1755, 5 * MS_PER_MINUTE, config)))
+    }
+
+    @Test
+    fun `the number goes into the save button only while it is below the actual one`() {
+        val sheet = PracticeReducer.summarySheet(start1755, 47 * MS_PER_MINUTE + 40_000, config)
+        assertEquals(48, sheet.minutes)
+        assertNull(PracticeReducer.saveLengthMs(sheet))
+        val down = PracticeReducer.step(sheet, -2, config)
+        assertEquals(38 * MS_PER_MINUTE, PracticeReducer.saveLengthMs(down))
+        assertNull(PracticeReducer.saveLengthMs(PracticeReducer.step(down, +2, config)))
+    }
+
+    @Test
+    fun `five minutes or less cannot be trimmed and says so`() {
+        val five = PracticeReducer.summarySheet(start1755, 5 * MS_PER_MINUTE, config)
+        assertEquals(5, five.minMinutes)
+        assertEquals(5, five.maxMinutes)
+        assertEquals(config.minEditableMinutes, five.floorMinutes)
+        assertEquals(SummaryHint.TooShort, PracticeReducer.hintOf(five))
+        val four = PracticeReducer.summarySheet(start1755, 4 * MS_PER_MINUTE + 20_000, config)
+        assertEquals(SummaryHint.TooShort, PracticeReducer.hintOf(four))
+        // six can go down to five: both buttons are not dimmed, the usual hint
+        val six = PracticeReducer.summarySheet(start1755, 6 * MS_PER_MINUTE, config)
+        assertEquals(SummaryHint.Forgot, PracticeReducer.hintOf(six))
+        assertEquals(5, PracticeReducer.step(six, -1, config).minutes)
+    }
+
+    @Test
+    fun `a day over twelve hours opens at twelve and was is its real sum`() {
+        val total = 13 * 60 * MS_PER_MINUTE + 10 * MS_PER_MINUTE
+        val sheet = PracticeReducer.editSheet(today, total, config)
+        assertEquals(720, sheet.minutes)
+        assertEquals(total, sheet.dayTotalMs)
+        assertEquals(DayCaption.None, PracticeReducer.dayCaptionOf(sheet))
+        assertEquals(DayCaption.Was(total), PracticeReducer.dayCaptionOf(PracticeReducer.step(sheet, -1, config)))
+    }
+
+    @Test
+    fun `an empty day says without the phone and a day not moved has no caption`() {
+        val empty = PracticeReducer.editSheet(today, 0, config)
+        assertEquals(DayCaption.NoPhone, PracticeReducer.dayCaptionOf(empty))
+        assertEquals(DayCaption.NoPhone, PracticeReducer.dayCaptionOf(PracticeReducer.add(empty, 30)))
+        val day = PracticeReducer.editSheet(today, 75 * MS_PER_MINUTE, config)
+        assertEquals(DayCaption.None, PracticeReducer.dayCaptionOf(day))
+        assertEquals(DayCaption.Was(75 * MS_PER_MINUTE), PracticeReducer.dayCaptionOf(PracticeReducer.add(day, 30)))
+        // moved and back: no caption
+        assertEquals(DayCaption.None, PracticeReducer.dayCaptionOf(PracticeReducer.step(PracticeReducer.step(day, +1, config), -1, config)))
     }
 
     @Test

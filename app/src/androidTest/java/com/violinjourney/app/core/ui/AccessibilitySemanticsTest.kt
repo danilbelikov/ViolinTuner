@@ -35,9 +35,13 @@ import com.violinjourney.app.core.domain.TolerancePreset
 import com.violinjourney.app.core.domain.journey.Arrival
 import com.violinjourney.app.core.domain.journey.JourneyProgress
 import com.violinjourney.app.core.domain.journey.JourneyRoute
+import com.violinjourney.app.core.domain.practice.ForgottenPractice
+import com.violinjourney.app.core.domain.practice.PieceBlock
+import com.violinjourney.app.core.domain.practice.PracticeBlocks
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.violinjourney.app.core.domain.practice.PracticeEntry
+import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.domain.progress.Profile
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.repertoire.SectionCount
@@ -58,12 +62,15 @@ import com.violinjourney.app.feature.onboarding.OnboardingScreen
 import com.violinjourney.app.feature.onboarding.OnboardingState
 import com.violinjourney.app.feature.onboarding.OnboardingStep
 import com.violinjourney.app.feature.practice.CalendarCell
+import com.violinjourney.app.feature.practice.PracticePrompt
 import com.violinjourney.app.feature.practice.PracticeReducer
 import com.violinjourney.app.feature.practice.PracticeScreen
 import com.violinjourney.app.feature.practice.ProgressReducer
 import com.violinjourney.app.feature.practice.WindowFit
+import com.violinjourney.app.feature.practice.components.ForgottenSheetContent
 import com.violinjourney.app.feature.practice.components.PathRow
 import com.violinjourney.app.feature.practice.components.PracticeCalendar
+import com.violinjourney.app.feature.practice.components.SummarySheetContent
 import com.violinjourney.app.feature.repertoire.sections.SectionsScreen
 import com.violinjourney.app.feature.repertoire.sections.SectionsState
 import com.violinjourney.app.feature.sound.components.MiniPlayer
@@ -73,6 +80,8 @@ import com.violinjourney.app.feature.sound.components.SliderModel
 import com.violinjourney.app.navigation.AppBottomBar
 import com.violinjourney.app.navigation.TopLevelDestination
 import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.block_part_of
+import com.violinjourney.app.shared.resources.block_played_title
 import com.violinjourney.app.shared.resources.journey_enough
 import com.violinjourney.app.shared.resources.nav_history
 import com.violinjourney.app.shared.resources.nav_repertoire
@@ -80,12 +89,19 @@ import com.violinjourney.app.shared.resources.onboarding_skip
 import com.violinjourney.app.shared.resources.path_description
 import com.violinjourney.app.shared.resources.practice_day_description
 import com.violinjourney.app.shared.resources.practice_day_none
+import com.violinjourney.app.shared.resources.practice_forgotten_title
 import com.violinjourney.app.shared.resources.practice_month_back
 import com.violinjourney.app.shared.resources.practice_month_days_few
 import com.violinjourney.app.shared.resources.practice_month_days_many
 import com.violinjourney.app.shared.resources.practice_month_days_one
 import com.violinjourney.app.shared.resources.practice_month_description
 import com.violinjourney.app.shared.resources.practice_month_forward
+import com.violinjourney.app.shared.resources.practice_pair_description
+import com.violinjourney.app.shared.resources.practice_played_done_description
+import com.violinjourney.app.shared.resources.practice_played_dropped_description
+import com.violinjourney.app.shared.resources.practice_step_down
+import com.violinjourney.app.shared.resources.practice_step_up
+import com.violinjourney.app.shared.resources.practice_stepper_description_was
 import com.violinjourney.app.shared.resources.practice_streak_days_description_few
 import com.violinjourney.app.shared.resources.practice_streak_days_description_many
 import com.violinjourney.app.shared.resources.practice_streak_days_description_one
@@ -112,7 +128,7 @@ import org.junit.runner.RunWith
  * its day header (spec 3.21), which side of a two-way switch is chosen, «A» and «B» that answer the reader's
  * activation, a slider that resets only from its actions, the calendar's month, days and arrows, the path row, the week, the
  * chip of the streak and the window of the home of «Занятия», the faded «Пропустить», the four tabs and the titles of «Репертуар»
- * and «Записи».
+ * and «Записи», the stepper, «Что играли» and the title of «Занятие не закончено» (spec 3.36.3).
  */
 @RunWith(AndroidJUnit4::class)
 class AccessibilitySemanticsTest {
@@ -453,6 +469,106 @@ class AccessibilitySemanticsTest {
         compose.setContent {
             title = stringResource(Res.string.nav_history)
             ViolinTheme { HistoryScreen(state, onIntent = {}, zone = TimeZone.UTC) }
+        }
+        compose.onNodeWithText(title).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+    }
+
+    // The sheets of time (spec 3.36.3, TalkBack): the stepper, «Что играли», «Занятие не закончено».
+
+    private val lessonStart = kotlin.time.Instant.parse("2026-09-27T17:55:00Z").toEpochMilliseconds()
+    private val lessonTitles = mapOf(1L to "D-dur", 2L to "Kayser 3", 3L to "Concerto")
+
+    /** D-dur 15 of 15, Kayser 10 of 10, the concerto from minute 40 on the bookmark: at 47 minutes 7 of 15, at 37 cut off. */
+    private val lessonBlocks = PracticeBlocks(
+        practiceStartedAtEpochMs = lessonStart,
+        current = PieceBlock(3, lessonStart + 40 * MS_PER_MINUTE, 15 * MS_PER_MINUTE),
+        finished = listOf(
+            PieceBlock(1, lessonStart, 15 * MS_PER_MINUTE, endedAtEpochMs = lessonStart + 15 * MS_PER_MINUTE),
+            PieceBlock(2, lessonStart + 15 * MS_PER_MINUTE, 10 * MS_PER_MINUTE, endedAtEpochMs = lessonStart + 25 * MS_PER_MINUTE),
+        ),
+    )
+
+    @Test
+    fun theStepperReadsItsNumberWithItsCaptionAndItsButtonsAreNamedButtons() {
+        val config = PracticeConfig()
+        var sheet = PracticeReducer.summarySheet(lessonStart, 47 * MS_PER_MINUTE, config, lessonBlocks, lessonTitles)
+        repeat(2) { sheet = PracticeReducer.step(sheet, -1, config) }
+        var spoken = ""
+        var down = ""
+        var up = ""
+        compose.setContent {
+            spoken = stringResource(
+                Res.string.practice_stepper_description_was,
+                Formats.minutesInWords(37 * MS_PER_MINUTE), "17:55", "18:32", Formats.minutesInWords(47 * MS_PER_MINUTE),
+            )
+            down = stringResource(Res.string.practice_step_down, config.editStepMinutes)
+            up = stringResource(Res.string.practice_step_up, config.editStepMinutes)
+            ViolinTheme { SummarySheetContent(sheet, config.editStepMinutes, TimeZone.UTC, onStep = {}) }
+        }
+        // «37 минут, с 17:55 до 18:32, было 47 минут» — one node, the number and its caption
+        compose.onNodeWithContentDescription(spoken).assertExists()
+        listOf(down, up).forEach { name ->
+            compose.onNodeWithContentDescription(name).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)).assertIsEnabled()
+        }
+    }
+
+    @Test
+    fun theButtonsOfAStepperAtItsLimitsAreOff() {
+        val config = PracticeConfig()
+        val sheet = PracticeReducer.summarySheet(lessonStart, 4 * MS_PER_MINUTE, config)
+        var down = ""
+        var up = ""
+        compose.setContent {
+            down = stringResource(Res.string.practice_step_down, config.editStepMinutes)
+            up = stringResource(Res.string.practice_step_up, config.editStepMinutes)
+            ViolinTheme { SummarySheetContent(sheet, config.editStepMinutes, TimeZone.UTC, onStep = {}) }
+        }
+        compose.onNodeWithContentDescription(down).assertIsNotEnabled()
+        compose.onNodeWithContentDescription(up).assertIsNotEnabled()
+    }
+
+    @Test
+    fun whatWasPlayedIsAGroupWithItsNameAndEachRowIsOneSentence() {
+        val config = PracticeConfig()
+        val whole = PracticeReducer.summarySheet(lessonStart, 47 * MS_PER_MINUTE, config, lessonBlocks, lessonTitles)
+        var group = ""
+        var done = ""
+        var part = ""
+        compose.setContent {
+            group = stringResource(Res.string.block_played_title)
+            done = stringResource(Res.string.practice_played_done_description, "Kayser 3", Formats.minutesInWords(10 * MS_PER_MINUTE))
+            part = stringResource(Res.string.practice_pair_description, "Concerto", stringResource(Res.string.block_part_of, 7, 15))
+            ViolinTheme { SummarySheetContent(whole, config.editStepMinutes, TimeZone.UTC, onStep = {}) }
+        }
+        compose.onNodeWithContentDescription(group).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.CollectionInfo))
+        compose.onNodeWithContentDescription(done).assertExists()
+        compose.onNodeWithContentDescription(part).assertExists()
+        // the words of a row are not read one by one
+        compose.onAllNodesWithText("Kayser 3").assertCountEquals(0)
+    }
+
+    @Test
+    fun aBlockCutOffIsReadAsNotFitted() {
+        val config = PracticeConfig()
+        var cut = PracticeReducer.summarySheet(lessonStart, 47 * MS_PER_MINUTE, config, lessonBlocks, lessonTitles)
+        repeat(2) { cut = PracticeReducer.step(cut, -1, config) }
+        var dropped = ""
+        compose.setContent {
+            dropped = stringResource(Res.string.practice_played_dropped_description, "Concerto")
+            ViolinTheme { SummarySheetContent(cut, config.editStepMinutes, TimeZone.UTC, onStep = {}) }
+        }
+        compose.onNodeWithContentDescription(dropped).assertExists()
+    }
+
+    @Test
+    fun theTitleOfTheForgottenPracticeIsAHeading() {
+        val start = kotlin.time.Instant.parse("2026-09-27T17:38:00Z").toEpochMilliseconds()
+        val practice = RunningPractice(start, lastSoundEpochMs = start + 64 * MS_PER_MINUTE)
+        val endings = ForgottenPractice.endings(practice, start + 192 * MS_PER_MINUTE, PracticeConfig())
+        var title = ""
+        compose.setContent {
+            title = stringResource(Res.string.practice_forgotten_title).uppercase()
+            ViolinTheme { ForgottenSheetContent(PracticePrompt.Forgotten(practice), endings = { endings }, zone = TimeZone.UTC) }
         }
         compose.onNodeWithText(title).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
     }

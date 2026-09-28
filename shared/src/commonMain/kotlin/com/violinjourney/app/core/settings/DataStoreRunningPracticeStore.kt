@@ -2,6 +2,7 @@ package com.violinjourney.app.core.settings
 
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import com.violinjourney.app.core.domain.practice.RunningPractice
@@ -20,7 +21,7 @@ class DataStoreRunningPracticeStore(
 
     override val running: Flow<RunningPractice?> = dataStore.data
         .map { preferences ->
-            preferences[STARTED_AT]?.let { RunningPractice(it, preferences[LAST_SOUND]) }
+            preferences[STARTED_AT]?.let { RunningPractice(it, preferences[LAST_SOUND], lastMarkByAnswer = preferences[ANSWERED] == true) }
         }
         .distinctUntilChanged()
 
@@ -31,6 +32,7 @@ class DataStoreRunningPracticeStore(
             if (!it.contains(STARTED_AT)) {
                 it[STARTED_AT] = startedAtEpochMs
                 it.remove(LAST_SOUND)
+                it.remove(ANSWERED)
                 started = true
             }
         }
@@ -38,18 +40,37 @@ class DataStoreRunningPracticeStore(
     }
 
     override suspend fun markSound(epochMs: Long) {
-        dataStore.edit { if (it.contains(STARTED_AT)) it[LAST_SOUND] = epochMs }
+        dataStore.edit {
+            if (it.contains(STARTED_AT)) {
+                it[LAST_SOUND] = epochMs
+                it.remove(ANSWERED)
+            }
+        }
+    }
+
+    // the mark and whose it is in one edit: a reader never sees the answer's time taken for a sound
+    override suspend fun markContinued(epochMs: Long) {
+        dataStore.edit {
+            if (it.contains(STARTED_AT)) {
+                it[LAST_SOUND] = epochMs
+                it[ANSWERED] = true
+            }
+        }
     }
 
     override suspend fun clear() {
         dataStore.edit {
             it.remove(STARTED_AT)
             it.remove(LAST_SOUND)
+            it.remove(ANSWERED)
         }
     }
 
     private companion object {
         val STARTED_AT = longPreferencesKey("practice_started_at")
         val LAST_SOUND = longPreferencesKey("practice_last_sound_at")
+
+        /** The last mark was «Продолжаю заниматься» (spec 3.36.3); missing — a sound, or no mark at all. */
+        val ANSWERED = booleanPreferencesKey("practice_last_mark_answer")
     }
 }

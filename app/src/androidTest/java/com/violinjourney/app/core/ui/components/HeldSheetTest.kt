@@ -117,6 +117,28 @@ class HeldSheetTest {
         assertTrue("up again: ${top(SECOND)} where it was at $expanded", top(SECOND) <= expanded + 1.dp)
     }
 
+    /**
+     * The hold itself: a value replaced by another one starts no slide — only a value that goes does. Faces of other kinds and heights
+     * in one frame, «Занятие не закончено» → «Закончить занятие», are watched frame by frame on `AppSheet` itself (`AppSheetTest`,
+     * `ForgottenPracticeSheetTest`).
+     */
+    @Test
+    fun aValueReplacedByAnotherKeepsTheSheetWhereItIs() {
+        show()
+        val expanded = top(FIRST)
+        compose.mainClock.autoAdvance = false
+        value = SECOND
+        var lowest = expanded
+        repeat(FRAMES) {
+            compose.mainClock.advanceTimeByFrame()
+            if (compose.onAllNodesWithText(SECOND).fetchSemanticsNodes().isNotEmpty()) lowest = maxOf(lowest, top(SECOND))
+        }
+        compose.mainClock.autoAdvance = true
+        compose.waitForIdle()
+        compose.onNodeWithText(SECOND).assertIsDisplayed()
+        assertTrue("in place: at most $lowest where it stood at $expanded", lowest <= expanded + 1.dp)
+    }
+
     @Test
     fun aSheetDroppedWhileItRisesSlidesAway() {
         startRising()

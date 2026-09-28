@@ -490,6 +490,29 @@ class PracticeViewModelTest {
     }
 
     @Test
+    fun `«Время за день» of a day over twelve hours opens at twelve and keeps its real sum`() = runTest {
+        val day = LocalDate(2026, 9, 16)
+        repository.add(PracticeEntry(day, 1_000, 7 * MS_PER_HOUR, manual = false))
+        repository.add(PracticeEntry(day, 2_000, 6 * MS_PER_HOUR + 10 * MS_PER_MINUTE, manual = false))
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(PracticeIntent.DaySelected(day))
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
+        runCurrent()
+        val edit = viewModel.state.value.sheet as PracticeSheet.EditTime
+        assertEquals("the limit of a day (5.6)", 720, edit.minutes)
+        assertEquals("«было 13 ч 10 мин» says the real sum (spec 3.36.3)", 13 * MS_PER_HOUR + 10 * MS_PER_MINUTE, edit.dayTotalMs)
+        viewModel.onIntent(PracticeIntent.EditTimeStepped(-1))
+        runCurrent()
+        assertEquals(DayCaption.Was(13 * MS_PER_HOUR + 10 * MS_PER_MINUTE), PracticeReducer.dayCaptionOf(viewModel.state.value.sheet as PracticeSheet.EditTime))
+        // untouched, «Сохранить» rewrites nothing: the day keeps its thirteen hours
+        viewModel.onIntent(PracticeIntent.EditTimeStepped(+1))
+        viewModel.onIntent(PracticeIntent.EditTimeSaved)
+        runCurrent()
+        assertTrue(repository.replacedDays.isEmpty())
+        assertEquals(PracticeSheet.Day(day), viewModel.state.value.sheet)
+    }
+
+    @Test
     fun `editing a day replaces its time with a manual entry`() = runTest {
         repository.add(PracticeEntry(LocalDate(2026, 9, 16), 1_000, 50 * MS_PER_MINUTE, manual = false))
         val (viewModel, _) = viewModel()

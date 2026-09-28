@@ -9,11 +9,13 @@ import com.violinjourney.app.core.domain.practice.BlockRules
 import com.violinjourney.app.core.domain.practice.FakeBlockStore
 import com.violinjourney.app.core.domain.practice.FakePracticeRepository
 import com.violinjourney.app.core.domain.practice.FakeRunningPracticeStore
+import com.violinjourney.app.core.domain.practice.ForgottenEndings
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_HOUR
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.violinjourney.app.core.domain.practice.PracticeFinisher
 import com.violinjourney.app.core.domain.practice.PracticeStats
+import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.domain.practice.testPracticeFinisher
 import com.violinjourney.app.core.domain.progress.FakeProfileRepository
 import com.violinjourney.app.core.domain.progress.FakeTrophyRepository
@@ -25,6 +27,8 @@ import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.settings.FakeSettingsRepository
 import com.violinjourney.app.core.time.MutableWallClock
+import com.violinjourney.app.core.ui.format.Formats
+import com.violinjourney.app.feature.practice.ForgottenKind
 import com.violinjourney.app.feature.practice.PlayedLine
 import com.violinjourney.app.feature.practice.PracticePrompt
 import com.violinjourney.app.feature.practice.PracticePromptEffect
@@ -45,6 +49,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.minus
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
@@ -143,17 +148,17 @@ class AppStartViewModelTest {
     }
 
     @Test
-    fun `a quiet hour brings the dialog, ending at the last sound saves up to it`() = runTest {
+    fun `a quiet hour brings the sheet, ending at the last sound saves up to it`() = runTest {
         running(elapsedMs = 3 * MS_PER_HOUR + 12 * MS_PER_MINUTE, lastSoundAgoMs = 2 * MS_PER_HOUR)
         val viewModel = viewModel()
         viewModel.onAppOpened()
         runCurrent()
         assertEquals(
-            PracticePrompt.Forgotten(3 * MS_PER_HOUR + 12 * MS_PER_MINUTE, lastSoundEpochMs = now - 2 * MS_PER_HOUR),
+            PracticePrompt.Forgotten(RunningPractice(now - 3 * MS_PER_HOUR - 12 * MS_PER_MINUTE, lastSoundEpochMs = now - 2 * MS_PER_HOUR)),
             viewModel.practicePrompt.value,
         )
 
-        // Live keeps listening under the dialog: a note heard meanwhile must not move the end
+        // Live keeps listening under the sheet: a note heard meanwhile must not move the end
         store.markSound(now)
         viewModel.onPromptIntent(PracticePromptIntent.EndAtLastSound)
         runCurrent()
@@ -162,6 +167,165 @@ class AppStartViewModelTest {
         assertEquals(LocalDate(2026, 9, 17), entry.date)
         assertNull(store.running.value)
         assertNull(viewModel.practicePrompt.value)
+    }
+
+    /** Moves the wall clock and the virtual time together, a second at a time, as real time does. */
+    private fun kotlinx.coroutines.test.TestScope.pass(ms: Long) {
+        runCurrent()
+        var left = ms
+        while (left > 0) {
+            val slice = minOf(left, 1_000L)
+            clock.nowMs += slice
+            advanceTimeBy(slice)
+            runCurrent()
+            left -= slice
+        }
+    }
+
+    @Test
+    fun `the prompt carries the practice and says what each ending saves`() = runTest {
+        running(elapsedMs = 3 * MS_PER_HOUR + 12 * MS_PER_MINUTE, lastSoundAgoMs = 2 * MS_PER_HOUR + 8 * MS_PER_MINUTE)
+        val viewModel = viewModel()
+        backgroundScope.launch { viewModel.promptEndings.collect {} }
+        viewModel.onAppOpened()
+        runCurrent()
+        val prompt = viewModel.practicePrompt.value as PracticePrompt.Forgotten
+        assertEquals(now - 3 * MS_PER_HOUR - 12 * MS_PER_MINUTE, prompt.practice.startedAtEpochMs)
+        // «Идёт 3 ч 12 мин», «Закончить в … · 1 ч 4 мин», «Закончить сейчас · 3 ч 12 мин» (spec 3.36.3)
+        assertEquals(
+            ForgottenEndings(runningMs = 3 * MS_PER_HOUR + 12 * MS_PER_MINUTE, endNowMs = 3 * MS_PER_HOUR + 12 * MS_PER_MINUTE, endAtMarkMs = MS_PER_HOUR + 4 * MS_PER_MINUTE),
+            viewModel.promptEndings.value,
+        )
+        // each saves what its button says
+        viewModel.onPromptIntent(PracticePromptIntent.EndNow)
+        runCurrent()
+        assertEquals(3 * MS_PER_HOUR + 12 * MS_PER_MINUTE, repository.entries.value.single().durationMs)
+        assertNull("no sheet, no numbers", viewModel.promptEndings.value)
+    }
+
+    @Test
+    fun `the endings follow the clock while the sheet is open - once a minute`() = runTest {
+        running(elapsedMs = 3 * MS_PER_HOUR + 12 * MS_PER_MINUTE, lastSoundAgoMs = 2 * MS_PER_HOUR)
+        val viewModel = viewModel()
+        val seen = mutableListOf<ForgottenEndings?>()
+        backgroundScope.launch { viewModel.promptEndings.collect { seen += it } }
+        viewModel.onAppOpened()
+        runCurrent()
+        pass(MS_PER_MINUTE)
+        val running = seen.filterNotNull().map { it.runningMs }
+        assertEquals(listOf(3 * MS_PER_HOUR + 12 * MS_PER_MINUTE, 3 * MS_PER_HOUR + 13 * MS_PER_MINUTE), running)
+        assertEquals("«Закончить сейчас» goes with the clock", 3 * MS_PER_HOUR + 13 * MS_PER_MINUTE, viewModel.promptEndings.value?.endNowMs)
+        assertEquals("«Закончить в …» does not", 60 * MS_PER_MINUTE + 12 * MS_PER_MINUTE, viewModel.promptEndings.value?.endAtMarkMs)
+    }
+
+    @Test
+    fun `«Закончить сейчас» says what it saves after a sound under the sheet past twelve hours`() = runTest {
+        // begun at 08:00, the violin last at 18:30, the sheet opens at 19:59
+        running(elapsedMs = 11 * MS_PER_HOUR + 59 * MS_PER_MINUTE, lastSoundAgoMs = 89 * MS_PER_MINUTE)
+        val viewModel = viewModel()
+        backgroundScope.launch { viewModel.promptEndings.collect {} }
+        viewModel.onAppOpened()
+        runCurrent()
+        // Live under the sheet hears the violin at 19:59:30
+        pass(30_000)
+        store.markSound(clock.nowMs)
+        // 20:00:30 — past the limit: the practice has ended at its last sound, the one the store holds
+        pass(60_000)
+        val endings = requireNotNull(viewModel.promptEndings.value)
+        assertEquals("the snapshot's mark would say 10 h 30 min", 12 * MS_PER_HOUR, endings.endNowMs)
+        assertEquals("«Закончить в 18:30» still ends where it says", 10 * MS_PER_HOUR + 30 * MS_PER_MINUTE, endings.endAtMarkMs)
+        viewModel.onPromptIntent(PracticePromptIntent.EndNow)
+        runCurrent()
+        val saved = repository.entries.value.single().durationMs
+        assertEquals(11 * MS_PER_HOUR + 59 * MS_PER_MINUTE + 30_000, saved)
+        assertEquals("the button said what the calendar shows", Formats.minutesInWords(requireNotNull(endings.endNowMs)), Formats.minutesInWords(saved))
+    }
+
+    @Test
+    fun `the minute of «Закончить сейчас» turns on the second of the practice that rounds it`() = runTest {
+        // begun 0.7 s off the seconds of the wall: its half minute falls at .700
+        running(elapsedMs = 3 * MS_PER_HOUR + 12 * MS_PER_MINUTE + 29_300, lastSoundAgoMs = 2 * MS_PER_HOUR)
+        val viewModel = viewModel()
+        backgroundScope.launch { viewModel.promptEndings.collect {} }
+        viewModel.onAppOpened()
+        runCurrent()
+        assertEquals(3 * MS_PER_HOUR + 12 * MS_PER_MINUTE, viewModel.promptEndings.value?.endNowMs)
+        // 3 h 12 min 30 s of the practice: a save now rounds to 13 — and so does the button, not a second later
+        pass(700)
+        val button = requireNotNull(viewModel.promptEndings.value?.endNowMs)
+        assertEquals(3 * MS_PER_HOUR + 13 * MS_PER_MINUTE, button)
+        viewModel.onPromptIntent(PracticePromptIntent.EndNow)
+        runCurrent()
+        val saved = repository.entries.value.single().durationMs
+        assertEquals(3 * MS_PER_HOUR + 12 * MS_PER_MINUTE + 30_000, saved)
+        assertEquals(Formats.minutesInWords(button), Formats.minutesInWords(saved))
+    }
+
+    @Test
+    fun `three lines - a sound, no sound, an answer`() = runTest {
+        val viewModel = viewModel()
+        running(elapsedMs = 2 * MS_PER_HOUR, lastSoundAgoMs = 90 * MS_PER_MINUTE)
+        viewModel.onAppOpened()
+        runCurrent()
+        assertEquals(ForgottenKind.Sounded, (viewModel.practicePrompt.value as PracticePrompt.Forgotten).kind)
+
+        store.clear()
+        viewModel.onAppOpened()
+        runCurrent()
+        running(elapsedMs = 2 * MS_PER_HOUR, lastSoundAgoMs = null)
+        viewModel.onAppOpened()
+        runCurrent()
+        assertEquals(ForgottenKind.Silent, (viewModel.practicePrompt.value as PracticePrompt.Forgotten).kind)
+
+        store.clear()
+        viewModel.onAppOpened()
+        runCurrent()
+        store.startIfIdle(now - 2 * MS_PER_HOUR)
+        store.markContinued(now - 70 * MS_PER_MINUTE)
+        viewModel.onAppOpened()
+        runCurrent()
+        assertEquals(ForgottenKind.Answered, (viewModel.practicePrompt.value as PracticePrompt.Forgotten).kind)
+    }
+
+    @Test
+    fun `«Продолжаю заниматься» marks an answer and the next question says so`() = runTest {
+        running(elapsedMs = 2 * MS_PER_HOUR, lastSoundAgoMs = 90 * MS_PER_MINUTE)
+        val viewModel = viewModel()
+        viewModel.onAppOpened()
+        runCurrent()
+        viewModel.onPromptIntent(PracticePromptIntent.Continue)
+        runCurrent()
+        assertNull(viewModel.practicePrompt.value)
+
+        clock.nowMs += 61 * MS_PER_MINUTE
+        viewModel.onAppOpened()
+        runCurrent()
+        val prompt = viewModel.practicePrompt.value as PracticePrompt.Forgotten
+        assertEquals(ForgottenKind.Answered, prompt.kind)
+        assertEquals("«В 21:00 вы ответили…» — the time of the answer", now, prompt.practice.lastSoundEpochMs)
+        // its buttons are those of a sound: «Закончить в 21:00» ends at the answer
+        viewModel.onPromptIntent(PracticePromptIntent.EndAtLastSound)
+        runCurrent()
+        assertEquals(2 * MS_PER_HOUR, repository.entries.value.single().durationMs)
+    }
+
+    @Test
+    fun `a sound after the answer is a sound again`() = runTest {
+        running(elapsedMs = 2 * MS_PER_HOUR, lastSoundAgoMs = 90 * MS_PER_MINUTE)
+        val viewModel = viewModel()
+        viewModel.onAppOpened()
+        runCurrent()
+        viewModel.onPromptIntent(PracticePromptIntent.Continue)
+        runCurrent()
+        assertTrue(store.running.value!!.lastMarkByAnswer)
+
+        // Live heard the violin ten minutes later
+        store.markSound(now + 10 * MS_PER_MINUTE)
+        assertFalse(store.running.value!!.lastMarkByAnswer)
+        clock.nowMs += 71 * MS_PER_MINUTE
+        viewModel.onAppOpened()
+        runCurrent()
+        assertEquals(ForgottenKind.Sounded, (viewModel.practicePrompt.value as PracticePrompt.Forgotten).kind)
     }
 
     @Test
@@ -184,6 +348,7 @@ class AppStartViewModelTest {
         runCurrent()
         assertNull(viewModel.practicePrompt.value)
         assertEquals(now, store.running.value!!.lastSoundEpochMs)
+        assertTrue("the mark is the answer's (spec 3.36.3)", store.running.value!!.lastMarkByAnswer)
         assertTrue(repository.entries.value.isEmpty())
         viewModel.onAppOpened()
         runCurrent()
@@ -191,18 +356,18 @@ class AppStartViewModelTest {
     }
 
     @Test
-    fun `without any sound the dialog offers to set the time through the summary sheet`() = runTest {
+    fun `without any sound the sheet offers to set the length through «Закончить занятие»`() = runTest {
         running(elapsedMs = 2 * MS_PER_HOUR, lastSoundAgoMs = null)
         val viewModel = viewModel()
         viewModel.onAppOpened()
         runCurrent()
-        assertEquals(PracticePrompt.Forgotten(2 * MS_PER_HOUR, null), viewModel.practicePrompt.value)
+        assertEquals(PracticePrompt.Forgotten(RunningPractice(now - 2 * MS_PER_HOUR, null)), viewModel.practicePrompt.value)
 
-        viewModel.onPromptIntent(PracticePromptIntent.EditTime)
+        viewModel.onPromptIntent(PracticePromptIntent.SetLength)
         runCurrent()
         val summary = viewModel.practicePrompt.value as PracticePrompt.Summary
         assertEquals(120, summary.sheet.minutes)
-        // a rotation while the sheet is up must not bring the dialog back
+        // a rotation while «Закончить занятие» is up must not bring «Занятие не закончено» back
         viewModel.onAppOpened()
         runCurrent()
         assertTrue(viewModel.practicePrompt.value is PracticePrompt.Summary)
@@ -365,13 +530,16 @@ class AppStartViewModelTest {
             listOf(PlayedLine("G-dur · 3 октавы", 10, 10, done = true), PlayedLine("Менуэт соль мажор", 30, 30, done = true)),
             summary.sheet.played,
         )
-        // five minutes on the stepper: the minuet begun at ten no longer fits
+        // five minutes on the stepper: the minuet begun at ten no longer fits — it stays as «не вошёл» (spec 3.36.3)
         repeat(11) { viewModel.onPromptIntent(PracticePromptIntent.SummaryStepped(-1)) }
         runCurrent()
-        assertEquals(listOf(PlayedLine("G-dur · 3 октавы", 5, 10, done = false)), (viewModel.practicePrompt.value as PracticePrompt.Summary).sheet.played)
+        assertEquals(
+            listOf(PlayedLine("G-dur · 3 октавы", 5, 10, done = false), PlayedLine("Менуэт соль мажор", 0, 30, done = false, dropped = true)),
+            (viewModel.practicePrompt.value as PracticePrompt.Summary).sheet.played,
+        )
     }
 
-    // A dialog left on screen (spec 3.12): it follows the clock, and past the limit the practice has ended by itself.
+    // A sheet left on screen (spec 3.12, 3.36.3): its numbers follow the clock, and past the limit the practice has ended by itself.
 
     private fun AppStartViewModel.effects(scope: kotlinx.coroutines.test.TestScope): MutableList<PracticePromptEffect> {
         val seen = mutableListOf<PracticePromptEffect>()
@@ -380,22 +548,23 @@ class AppStartViewModelTest {
     }
 
     @Test
-    fun `a dialog left open follows the clock`() = runTest {
+    fun `a sheet found again keeps what it asked and its numbers are fresh`() = runTest {
         running(elapsedMs = 2 * MS_PER_HOUR, lastSoundAgoMs = 90 * MS_PER_MINUTE)
         val viewModel = viewModel()
+        backgroundScope.launch { viewModel.promptEndings.collect {} }
         viewModel.onAppOpened()
         runCurrent()
+        val asked = viewModel.practicePrompt.value
         clock.nowMs += 30 * MS_PER_MINUTE
+        advanceTimeBy(30 * MS_PER_MINUTE)
         viewModel.onAppOpened()
         runCurrent()
-        assertEquals(
-            PracticePrompt.Forgotten(2 * MS_PER_HOUR + 30 * MS_PER_MINUTE, lastSoundEpochMs = now - 90 * MS_PER_MINUTE),
-            viewModel.practicePrompt.value,
-        )
+        assertEquals("the time on its button stays", asked, viewModel.practicePrompt.value)
+        assertEquals(2 * MS_PER_HOUR + 30 * MS_PER_MINUTE, viewModel.promptEndings.value?.runningMs)
     }
 
     @Test
-    fun `a dialog found again past twelve hours becomes the sheet of the practice that ended by itself`() = runTest {
+    fun `a sheet found again past twelve hours becomes «Закончить занятие» of the practice that ended by itself`() = runTest {
         running(elapsedMs = 2 * MS_PER_HOUR, lastSoundAgoMs = 90 * MS_PER_MINUTE) // the violin sounded at its 30th minute
         val viewModel = viewModel()
         viewModel.onAppOpened()
@@ -421,13 +590,13 @@ class AppStartViewModelTest {
     }
 
     @Test
-    fun `«Изменить время» of a dialog left past twelve hours opens at an hour`() = runTest {
+    fun `«Указать, сколько играли» of a sheet left past twelve hours opens at an hour`() = runTest {
         running(elapsedMs = 2 * MS_PER_HOUR, lastSoundAgoMs = null)
         val viewModel = viewModel()
         viewModel.onAppOpened()
         runCurrent()
         clock.nowMs += 11 * MS_PER_HOUR
-        viewModel.onPromptIntent(PracticePromptIntent.EditTime)
+        viewModel.onPromptIntent(PracticePromptIntent.SetLength)
         runCurrent()
         assertEquals(60, (viewModel.practicePrompt.value as PracticePrompt.Summary).sheet.minutes)
     }

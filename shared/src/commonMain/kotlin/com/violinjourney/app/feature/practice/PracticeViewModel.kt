@@ -331,7 +331,7 @@ open class PracticeViewModel(
     }
 
     // The stores are the truth; the state only mirrors them a moment later, and an intent may
-    // arrive in between (a day tapped and "Изменить время" right after it).
+    // arrive in between (a day tapped and «Изменить» of its sheet right after it).
     private var latestRunning: RunningPractice? = null
     private var latestTotals: Map<LocalDate, Long> = emptyMap()
     private var latestProfile: Profile = Profile.EMPTY

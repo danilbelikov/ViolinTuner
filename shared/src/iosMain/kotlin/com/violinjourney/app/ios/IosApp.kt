@@ -82,6 +82,8 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
     val startRoute by start.startRoute.collectAsStateWithLifecycle()
     val practiceRunning by start.practiceRunning.collectAsStateWithLifecycle()
     val practicePrompt by start.practicePrompt.collectAsStateWithLifecycle()
+    // read only by the parts of «Занятие не закончено» that show the numbers: a minute changes them, not the root
+    val promptEndings = start.promptEndings.collectAsStateWithLifecycle()
     // "When the app is opened" (spec 3.12): the first start and every return from the background.
     LifecycleEventEffect(Lifecycle.Event.ON_START) { start.onAppOpened() }
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) { start.onAppStopped() }
@@ -141,6 +143,7 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
                     }
                     PracticePromptHost(
                         prompt = practicePrompt,
+                        endings = { promptEndings.value },
                         stepMinutes = start.promptStepMinutes,
                         onIntent = start::onPromptIntent,
                         effects = start.promptEffects,

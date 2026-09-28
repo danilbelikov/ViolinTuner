@@ -54,6 +54,13 @@ class PaletteContrastTest {
     }
 
     @Test
+    fun `the brass of done reads on the ground of a sheet group`() {
+        // «15 мин ✓» of «Что играли» on the ground of the screen inside a sheet (spec 5.29 R3: 7.7 : 1)
+        assertAtLeast(7f, CtrlBrass, Surface, "the brass of «сделано» on a group of a sheet")
+        assertAtLeast(4.5f, CtrlBrass, SurfaceContainer, "the brass on the sheet itself")
+    }
+
+    @Test
     fun `the glass and the scrim have the strength of the spec`() {
         assertEquals(0.72f, Glass.alpha, 0.005f, "the glass over pictures")
         assertEquals(0.82f, GlassStrong.alpha, 0.005f, "the strong glass over a busy picture")

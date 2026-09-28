@@ -102,6 +102,8 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
     val startRoute by startViewModel.startRoute.collectAsStateWithLifecycle()
     val practiceRunning by startViewModel.practiceRunning.collectAsStateWithLifecycle()
     val practicePrompt by startViewModel.practicePrompt.collectAsStateWithLifecycle()
+    // read only by the parts of «Занятие не закончено» that show the numbers: a minute changes them, not the root
+    val promptEndings = startViewModel.promptEndings.collectAsStateWithLifecycle()
 
     // "When the app is opened" (spec 3.12): the first start and every return from the background.
     LifecycleEventEffect(Lifecycle.Event.ON_START) { startViewModel.onAppOpened() }
@@ -173,6 +175,7 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
             }
             PracticePromptHost(
                 prompt = practicePrompt,
+                endings = { promptEndings.value },
                 stepMinutes = startViewModel.promptStepMinutes,
                 onIntent = startViewModel::onPromptIntent,
                 effects = startViewModel.promptEffects,

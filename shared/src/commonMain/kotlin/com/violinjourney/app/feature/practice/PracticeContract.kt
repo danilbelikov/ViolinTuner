@@ -1,6 +1,7 @@
 package com.violinjourney.app.feature.practice
 
 import com.violinjourney.app.core.domain.practice.PracticeBlocks
+import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.violinjourney.app.core.domain.practice.PracticeRecap
 import com.violinjourney.app.feature.history.HistoryCard
 import kotlinx.datetime.LocalDate
@@ -92,8 +93,12 @@ data class TrophyLine(
     val isFar: Boolean,
 )
 
-/** One element played in the practice, as «Что играли» lists it (spec 3.28, handoff 30g): «7 из 10 мин», or the goal with a tick. */
-data class PlayedLine(val title: String, val minutes: Int, val goalMinutes: Int, val done: Boolean)
+/**
+ * One element played in the practice, as «Что играли» lists it (spec 3.28, 3.36.3): «7 из 10 мин», or the goal with the brass tick.
+ * [dropped] — the stepper cut it off whole (begun no earlier than the new end, or left shorter than a minute): it stays in the list
+ * as «— не вошёл», so the cut is seen at once rather than in the recap, and it is not saved (5.21).
+ */
+data class PlayedLine(val title: String, val minutes: Int, val goalMinutes: Int, val done: Boolean, val dropped: Boolean = false)
 
 /** The block that runs, under «Занятие идёт» (handoff 30g4): «ещё 7 мин», or «готово» when [minutesLeft] is null. */
 data class RunningBlockLine(val title: String, val minutesLeft: Int?)
@@ -112,8 +117,8 @@ data class PracticeTimer(
 
 sealed interface PracticeSheet {
     /**
-     * "Закончить занятие": the timed length with a chance to trim it. [minutes] is what the
-     * stepper shows; until it is touched the exact [actualMs] is what gets saved.
+     * «Закончить занятие» (spec 3.12, 3.36.3): the timed length with a chance to trim it. [minutes] is what the stepper shows;
+     * until it is touched the exact [actualMs] is what gets saved.
      */
     data class Summary(
         val startedAtEpochMs: Long,
@@ -122,11 +127,21 @@ sealed interface PracticeSheet {
         val minMinutes: Int,
         val maxMinutes: Int,
         val edited: Boolean,
+        /**
+         * The fewest minutes the stepper trims to (5.6, [com.violinjourney.app.core.domain.practice.PracticeConfig.minEditableMinutes]):
+         * a practice no longer than it cannot be trimmed, and its hint names the number — «Короче 5 минут не укоротить».
+         */
+        val floorMinutes: Int,
         /** The blocks of this practice and the names of their elements: «Что играли» follows the length being saved. */
         val blocks: PracticeBlocks? = null,
         val titles: Map<Long, String> = emptyMap(),
-        /** What «Что играли» lists for the length the sheet would save now; empty without blocks — the sheet as it was. */
+        /**
+         * What «Что играли» lists for the length the sheet would save now — the blocks of the whole length, those the stepper cut off
+         * whole as «не вошёл»; empty without blocks — the sheet as it was.
+         */
         val played: List<PlayedLine> = emptyList(),
+        /** The chosen length changed «Что играли» — a line shortened, its tick lost, or one cut off: the hint says so (spec 3.36.3). */
+        val playedCut: Boolean = false,
     ) : PracticeSheet
 
     /**
@@ -164,7 +179,42 @@ sealed interface PracticeSheet {
         val maxMinutes: Int,
         /** The minutes the sheet opened with: «Сохранить» with the same number rewrites nothing (spec 5.6). */
         val initialMinutes: Int = minutes,
+        /**
+         * The real sum of the day before the edit — over twelve hours too, where the sheet opens at twelve (spec 3.36.3): «было 13 ч 10
+         * мин» says it once the number moves. Zero — an empty day: «занятие без телефона», «Добавить N мин».
+         */
+        val dayTotalMs: Long = initialMinutes * MS_PER_MINUTE,
     ) : PracticeSheet
+}
+
+/**
+ * «17:55 — 18:42» under the number of «Закончить занятие» (spec 3.36.3): the start and the moment the length counts to — now, or for a
+ * practice past the limit its last sound — and [wasMs], the length before the stepper moved, once it has moved («· было 47 мин»).
+ */
+data class SummarySpan(val startEpochMs: Long, val endEpochMs: Long, val wasMs: Long?)
+
+/** The hint under the stepper of «Закончить занятие» (spec 3.36.3). */
+enum class SummaryHint {
+    /** «Забыли остановить? Уберите лишнее — больше, чем шло, не добавить.» */
+    Forgot,
+
+    /** «Подходы, что не влезли, укоротились вместе с занятием.»: the stepper cut something in «Что играли». */
+    Cut,
+
+    /** «Короче 5 минут не укоротить — сохранится как было.»: both buttons of the stepper are dimmed. */
+    TooShort,
+}
+
+/** What stands under the number of «Время за день» (spec 3.36.3). */
+sealed interface DayCaption {
+    /** The number has not moved from the time of the day. */
+    data object None : DayCaption
+
+    /** An empty day: «занятие без телефона». */
+    data object NoPhone : DayCaption
+
+    /** The number moved: «было 1 ч 15 мин» — the real sum of the day, not the number it opened at. */
+    data class Was(val ms: Long) : DayCaption
 }
 
 data class PracticeState(
@@ -253,7 +303,7 @@ sealed interface PracticeIntent {
     /** «Настройки» of «Мой путь»: the sheet closes, the settings open; back from them — «Занятия» without a sheet. */
     data object PathSettingsClicked : PracticeIntent
 
-    /** Stepper of the summary sheet: +1 or −1 step. */
+    /** Stepper of «Закончить занятие»: +1 or −1 step. */
     data class SummaryStepped(val steps: Int) : PracticeIntent
 
     data object SummarySaved : PracticeIntent
@@ -279,17 +329,17 @@ sealed interface PracticeIntent {
     /** «Изменить» / «Добавить» of the sheet of the day: «Время за день» takes its place. Heard only over the sheet of the day. */
     data object EditTimeClicked : PracticeIntent
 
-    /** Stepper of the edit sheet: +1 or −1 step. */
+    /** Stepper of «Время за день»: +1 or −1 step. */
     data class EditTimeStepped(val steps: Int) : PracticeIntent
 
-    /** Chips of the edit sheet: add minutes, or zero to clear. */
+    /** Chips of «Время за день»: add minutes, or zero to clear. */
     data class EditTimeAdded(val minutes: Int) : PracticeIntent
 
     data object EditTimeCleared : PracticeIntent
 
     data object EditTimeSaved : PracticeIntent
 
-    /** «Отмена», a swipe down and «назад» alike: nothing is written, the sheet of the day comes back. */
+    /** «Отмена», a swipe down and «назад» alike: nothing is written, the sheet of the day comes back — in place, for «назад». */
     data object EditTimeCancelled : PracticeIntent
 
     /** A record of the sheet of the day: its screen opens, and «назад» from it comes back to the sheet. */

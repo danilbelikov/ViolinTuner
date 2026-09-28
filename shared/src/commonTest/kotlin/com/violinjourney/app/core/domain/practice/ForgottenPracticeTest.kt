@@ -4,6 +4,7 @@ import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PE
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
+import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.Test
 
@@ -92,6 +93,57 @@ class ForgottenPracticeTest {
     @Test
     fun `ended before its start by a clock moved back it counts nothing`() {
         assertEquals(0L, ForgottenPractice.lengthAt(RunningPractice(start, null), start - MS_PER_HOUR, config))
+    }
+
+    // «Занятие не закончено» (spec 3.36.3): the numbers of the sheet.
+
+    @Test
+    fun `endings say running now and at the mark rounded to the minute`() {
+        val running = RunningPractice(start, start + MS_PER_HOUR + 4 * MS_PER_MINUTE + 20_000)
+        val now = start + 3 * MS_PER_HOUR + 12 * MS_PER_MINUTE + 29_000
+        assertEquals(
+            ForgottenEndings(
+                runningMs = 3 * MS_PER_HOUR + 12 * MS_PER_MINUTE,
+                endNowMs = 3 * MS_PER_HOUR + 12 * MS_PER_MINUTE,
+                endAtMarkMs = MS_PER_HOUR + 4 * MS_PER_MINUTE,
+            ),
+            ForgottenPractice.endings(running, now, config),
+        )
+        // half a minute on, the minute it shows is the next one — as «47 мин» rounds it
+        assertEquals(3 * MS_PER_HOUR + 13 * MS_PER_MINUTE, ForgottenPractice.endings(running, now + 1_000, config).runningMs)
+        // without a mark there is nothing to end at
+        assertNull(ForgottenPractice.endings(RunningPractice(start, null), now, config).endAtMarkMs)
+    }
+
+    @Test
+    fun `an ending under a minute has no number`() {
+        val running = RunningPractice(start, start + 40_000)
+        val endings = ForgottenPractice.endings(running, start + 2 * MS_PER_HOUR, config)
+        assertNull(endings.endAtMarkMs, "40 s would not be kept: «Закончить в …» without a number")
+        assertEquals(2 * MS_PER_HOUR, endings.endNowMs)
+        // exactly a minute is kept
+        assertEquals(MS_PER_MINUTE, ForgottenPractice.endings(RunningPractice(start, start + MS_PER_MINUTE), start + 2 * MS_PER_HOUR, config).endAtMarkMs)
+    }
+
+    @Test
+    fun `past twelve hours running stops at twelve and now ends at the last sound`() {
+        val running = RunningPractice(start, start + 5 * MS_PER_HOUR)
+        val endings = ForgottenPractice.endings(running, start + 13 * MS_PER_HOUR, config)
+        assertEquals(config.maxPracticeMs, endings.runningMs)
+        assertEquals(5 * MS_PER_HOUR, endings.endNowMs)
+        assertEquals(5 * MS_PER_HOUR, endings.endAtMarkMs)
+    }
+
+    @Test
+    fun `each number is what its answer saves - now by the practice the store holds and at the mark by the question`() {
+        // asked with the last sound at 10 h 30 min; Live marked one under the sheet at 11 h 59 min 30 s, and the limit has passed
+        val asked = RunningPractice(start, start + 10 * MS_PER_HOUR + 30 * MS_PER_MINUTE)
+        val held = asked.copy(lastSoundEpochMs = start + 11 * MS_PER_HOUR + 59 * MS_PER_MINUTE + 30_000)
+        val now = start + 12 * MS_PER_HOUR + 30_000
+        val endings = ForgottenPractice.endings(held, now, config, asked = asked)
+        assertEquals(12 * MS_PER_HOUR, endings.endNowMs, "«Закончить сейчас» ends the practice the store holds: 11 h 59 min 30 s, «12 ч»")
+        assertEquals(10 * MS_PER_HOUR + 30 * MS_PER_MINUTE, endings.endAtMarkMs, "«Закончить в …» ends at the time the question named")
+        assertEquals(config.maxPracticeMs, endings.runningMs)
     }
 
     @Test

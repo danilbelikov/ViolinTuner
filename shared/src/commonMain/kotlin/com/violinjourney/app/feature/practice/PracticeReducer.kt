@@ -161,6 +161,7 @@ object PracticeReducer {
             minMinutes = minOf(config.minEditableMinutes, actualMinutes),
             maxMinutes = actualMinutes,
             edited = false,
+            floorMinutes = config.minEditableMinutes,
             blocks = blocks,
             titles = titles,
         ).withPlayed(config)
@@ -173,17 +174,77 @@ object PracticeReducer {
     }
 
     /**
-     * «Что играли» for the length the sheet would save (spec 5.21): the stepper cuts the blocks that do not fit —
-     * a block begun after the new end leaves the list, one cut short loses its tick. In the order they were played.
+     * «Что играли» for the length the sheet would save (spec 5.21, 3.36.3), in the order they were played: the blocks of the whole
+     * length, each as the stepper leaves it — one cut short loses its tick, one cut off whole (begun no earlier than the new end, or
+     * left shorter than a minute) stays as «не вошёл». A block that would not be kept at the whole length is not listed at all.
      */
-    fun playedOf(sheet: PracticeSheet.Summary, config: PracticeConfig): List<PlayedLine> =
-        BlockRules.played(sheet.blocks, sheet.startedAtEpochMs + durationToSave(sheet), config).mapNotNull { block ->
+    fun playedOf(sheet: PracticeSheet.Summary, config: PracticeConfig): List<PlayedLine> {
+        val kept = BlockRules.played(sheet.blocks, sheet.startedAtEpochMs + durationToSave(sheet), config)
+            .associateBy { it.startedAtEpochMs to it.pieceId }
+        return wholeOf(sheet, config).mapNotNull { block ->
             sheet.titles[block.pieceId]?.let { title ->
-                PlayedLine(title, minutes = wholeMinutes(block.durationMs), goalMinutes = (block.goalMs / MS_PER_MINUTE).toInt(), done = block.done)
+                kept[block.startedAtEpochMs to block.pieceId]?.let { lineOf(it, title) }
+                    ?: PlayedLine(title, minutes = 0, goalMinutes = goalMinutesOf(block), done = false, dropped = true)
             }
         }
+    }
 
-    private fun PracticeSheet.Summary.withPlayed(config: PracticeConfig) = copy(played = playedOf(this, config))
+    /** The blocks of the practice at its whole length, the stepper untouched. */
+    private fun wholeOf(sheet: PracticeSheet.Summary, config: PracticeConfig) =
+        BlockRules.played(sheet.blocks, sheet.startedAtEpochMs + sheet.actualMs, config)
+
+    private fun lineOf(block: BlockRules.Played, title: String) =
+        PlayedLine(title, minutes = wholeMinutes(block.durationMs), goalMinutes = goalMinutesOf(block), done = block.done)
+
+    private fun goalMinutesOf(block: BlockRules.Played): Int = (block.goalMs / MS_PER_MINUTE).toInt()
+
+    /** «Что играли» and whether the chosen length changed it from the whole one (spec 3.36.3: the hint about the blocks). */
+    private fun PracticeSheet.Summary.withPlayed(config: PracticeConfig): PracticeSheet.Summary {
+        val played = playedOf(this, config)
+        val whole = wholeOf(this, config).mapNotNull { block -> titles[block.pieceId]?.let { lineOf(block, it) } }
+        return copy(played = played, playedCut = played != whole)
+    }
+
+    /** «17:55 — 18:42», and «· было 47 мин» once the stepper moved (spec 3.36.3): the end is the start and what the sheet would save. */
+    fun spanOf(sheet: PracticeSheet.Summary): SummarySpan = SummarySpan(
+        startEpochMs = sheet.startedAtEpochMs,
+        endEpochMs = sheet.startedAtEpochMs + durationToSave(sheet),
+        wasMs = sheet.actualMs.takeIf { sheet.edited },
+    )
+
+    /**
+     * The length «Сохранить» names — «Сохранить 37 мин», exactly what goes into the calendar — only while the number is below the
+     * one it opened with (spec 3.36.3); null — just «Сохранить».
+     */
+    fun saveLengthMs(sheet: PracticeSheet.Summary): Long? = durationToSave(sheet).takeIf { sheet.edited }
+
+    /** Which hint stands under the stepper (spec 3.36.3): a practice too short to trim, blocks cut, or the usual one. */
+    fun hintOf(sheet: PracticeSheet.Summary): SummaryHint = when {
+        sheet.minMinutes >= sheet.maxMinutes -> SummaryHint.TooShort
+        sheet.playedCut -> SummaryHint.Cut
+        else -> SummaryHint.Forgot
+    }
+
+    /**
+     * Every hint [hintOf] can give this sheet while its stepper moves (5.29 R3: the stepper does not jump): the sheet keeps the place of
+     * the tallest of them. A sheet too short to trim has its one hint; the others the usual one, and the one about the blocks when
+     * «Что играли» has lines the stepper can cut.
+     */
+    fun hintsOf(sheet: PracticeSheet.Summary): List<SummaryHint> = when {
+        sheet.minMinutes >= sheet.maxMinutes -> listOf(SummaryHint.TooShort)
+        sheet.played.isEmpty() -> listOf(SummaryHint.Forgot)
+        else -> listOf(SummaryHint.Forgot, SummaryHint.Cut)
+    }
+
+    /**
+     * What stands under the number of «Время за день» (spec 3.36.3): an empty day is «занятие без телефона» at any number; a day
+     * with time says «было …» — its real sum — once the number moved from the one it opened at.
+     */
+    fun dayCaptionOf(sheet: PracticeSheet.EditTime): DayCaption = when {
+        sheet.dayTotalMs == 0L -> DayCaption.NoPhone
+        sheet.minutes != sheet.initialMinutes -> DayCaption.Was(sheet.dayTotalMs)
+        else -> DayCaption.None
+    }
 
     /**
      * What the summary sheet saves: the exact timed length unless the stepper moved it — then whole minutes, but never
@@ -192,8 +253,11 @@ object PracticeReducer {
     fun durationToSave(sheet: PracticeSheet.Summary): Long =
         if (sheet.edited) minOf(sheet.minutes * MS_PER_MINUTE, sheet.actualMs) else sheet.actualMs
 
-    fun editSheet(date: LocalDate, totalMs: Long, config: PracticeConfig): PracticeSheet.EditTime =
-        PracticeSheet.EditTime(date, minutes = wholeMinutes(totalMs).coerceAtMost(config.maxDayMinutes), maxMinutes = config.maxDayMinutes)
+    /** «Время за день» of [date] whose time is [totalMs]: at that time, or at twelve hours when it is more (5.6), knowing the real sum. */
+    fun editSheet(date: LocalDate, totalMs: Long, config: PracticeConfig): PracticeSheet.EditTime {
+        val minutes = wholeMinutes(totalMs).coerceAtMost(config.maxDayMinutes)
+        return PracticeSheet.EditTime(date, minutes = minutes, maxMinutes = config.maxDayMinutes, initialMinutes = minutes, dayTotalMs = totalMs)
+    }
 
     fun step(sheet: PracticeSheet.EditTime, steps: Int, config: PracticeConfig): PracticeSheet.EditTime =
         sheet.copy(minutes = (sheet.minutes + steps * config.editStepMinutes).coerceIn(0, sheet.maxMinutes))

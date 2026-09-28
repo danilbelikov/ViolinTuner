@@ -71,6 +71,14 @@ object ViolinTheme {
     val textTertiary: Color
         get() = TextTertiary
 
+    /**
+     * «Сделано» outside Live (spec 3.36, 3.36.3, 5.29): the brass of a block played to its goal in «Что играли» — the hex of the brass
+     * of Live's controls, so the tick says the same thing on both. One token for «сделано»: R6 moves the tick of «сегодня» in «Что
+     * играем» on Live to it as well.
+     */
+    val done: Color
+        get() = CtrlBrass
+
     /** The ground of a chosen option and the plate of an icon (spec 5.29); not the calendar, which keeps its fills. */
     val accentSoft: Color
         get() = AccentSoft
