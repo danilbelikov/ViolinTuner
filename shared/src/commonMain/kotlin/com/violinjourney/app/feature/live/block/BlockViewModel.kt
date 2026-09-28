@@ -15,8 +15,6 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.ui.format.Formats
-import com.violinjourney.app.feature.history.HistorySection
-import com.violinjourney.app.feature.history.HistorySectionAsk
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
@@ -46,7 +44,6 @@ open class BlockViewModel(
     sessions: SessionRepository,
     private val config: PracticeConfig,
     private val clock: WallClock,
-    private val sectionAsk: HistorySectionAsk,
 ) : ViewModel() {
 
     private val ui = MutableStateFlow(BlockReducer.Ui())
@@ -116,8 +113,7 @@ open class BlockViewModel(
             BlockIntent.StopClicked -> stop()
             BlockIntent.OpenRepertoireClicked -> {
                 ui.value = BlockReducer.Ui()
-                // the tab «Записи» opens on «Репертуар»: asked here, taken there
-                sectionAsk.ask(HistorySection.REPERTOIRE)
+                // the tab «Репертуар» (spec 3.36.1): where it leads is the route's business
                 effectChannel.trySend(BlockEffect.OpenRepertoire)
             }
         }

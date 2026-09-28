@@ -4,7 +4,8 @@ package com.violinjourney.app.core.ui.icons
  * Path data of the icon set, copied verbatim from the `ICONS` array of the handoff
  * (`docs/design/project/polish`, frame 14a; `docs/design/project/sound` and
  * `docs/design/project/records`, `docs/design/project/video` and
- * `docs/design/project/backup` added their own): a 24 × 24 grid,
+ * `docs/design/project/backup` added their own; the tab «Репертуар» — from the redesign's
+ * `docs/redesign/mockups/components.html`): a 24 × 24 grid,
  * stroke 1.8, round caps and joins.
  * A path that starts with [FILLED] is a filled shape without a stroke (dots, a note head).
  * Generated from the handoff — change an icon there, not here.
@@ -229,6 +230,18 @@ internal object IconPaths {
         TabPath("M17.5 7.7l1.4-1.4"),
         TabPath("M10 3h4M12 3v3.5"),
         TabPath("M12 13.5V9.6", Selected.CUT),
+    )
+
+    /**
+     * вкладка Репертуар: лист нот — тело залито, нотоносец и головка ноты вырезаны (redesign components.html, `tb-rep` / `tb-rep-f`
+     * по сетке `i-sheet`); головка и в обычном виде — заливка без обводки
+     */
+    val TAB_REPERTOIRE = listOf(
+        TabPath("M6.5 3h11a2.5 2.5 0 0 1 2.5 2.5v13a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5v-13A2.5 2.5 0 0 1 6.5 3z", Selected.FILL),
+        TabPath("M8 8h8", Selected.CUT),
+        TabPath("M8 11h8", Selected.CUT),
+        TabPath("M8 14h8", Selected.CUT),
+        TabPath("F M10 16a1.3 1.3 0 1 0 0 2.6 1.3 1.3 0 1 0 0-2.6z", Selected.CUT),
     )
 
     /** вкладка Записи: кассета (nav_bar 33d) */

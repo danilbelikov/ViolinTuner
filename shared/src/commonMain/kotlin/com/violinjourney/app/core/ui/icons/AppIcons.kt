@@ -87,6 +87,7 @@ object AppIcons {
 
     val TabLive: TabIcon by lazy { tab("TabLive", IconPaths.TAB_LIVE) }
     val TabPractice: TabIcon by lazy { tab("TabPractice", IconPaths.TAB_PRACTICE) }
+    val TabRepertoire: TabIcon by lazy { tab("TabRepertoire", IconPaths.TAB_REPERTOIRE) }
     val TabRecords: TabIcon by lazy { tab("TabRecords", IconPaths.TAB_RECORDS) }
 
     /** Every plain icon by name, in the order declared: for the test that builds them all (it checks that none is missing). */
@@ -164,7 +165,7 @@ object AppIcons {
     )
 
     /** Every icon of the bottom bar, for the same test. */
-    val tabs: List<() -> TabIcon> = listOf({ TabLive }, { TabPractice }, { TabRecords })
+    val tabs: List<() -> TabIcon> = listOf({ TabLive }, { TabPractice }, { TabRepertoire }, { TabRecords })
 
     const val GRID = 24f
     const val STROKE = 1.8f

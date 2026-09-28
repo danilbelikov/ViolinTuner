@@ -32,8 +32,8 @@ private const val SWITCH_MS = 200
 
 /**
  * A row of equal text segments, one selected — the look of the mode switch of Live (handoff
- * «Игра | Настройка»), without icons: the sections of «Записи», major and minor, flat / natural /
- * sharp of the piece form.
+ * «Игра | Настройка»), without icons: major and minor, flat / natural / sharp of the piece form.
+ * The sections of «Записи» it once switched are two tabs since spec 3.36.1.
  */
 @Composable
 fun SegmentedSwitch(

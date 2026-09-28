@@ -19,7 +19,6 @@ class HiltHistoryViewModel @Inject constructor(
     config: IntonationConfig,
     clock: WallClock,
     audioFiles: SessionAudioFiles,
-    sectionAsk: HistorySectionAsk,
     backings: BackingRepository,
     @DefaultDispatcher background: CoroutineDispatcher,
-) : HistoryViewModel(repository, repertoire, config, clock, audioFiles, sectionAsk, backings, background)
+) : HistoryViewModel(repository, repertoire, config, clock, audioFiles, backings, background)

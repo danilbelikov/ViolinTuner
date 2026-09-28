@@ -7,7 +7,6 @@ import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.time.WallClock
-import com.violinjourney.app.feature.history.HistorySectionAsk
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -21,5 +20,4 @@ class HiltBlockViewModel @Inject constructor(
     sessions: SessionRepository,
     config: PracticeConfig,
     clock: WallClock,
-    sectionAsk: HistorySectionAsk,
-) : BlockViewModel(runningPractice, blockStore, blockHistory, repertoire, sessions, config, clock, sectionAsk)
+) : BlockViewModel(runningPractice, blockStore, blockHistory, repertoire, sessions, config, clock)

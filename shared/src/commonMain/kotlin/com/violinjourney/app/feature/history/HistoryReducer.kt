@@ -20,7 +20,6 @@ object HistoryReducer {
         today: LocalDate,
         zone: TimeZone,
         config: IntonationConfig,
-        section: HistorySection = HistorySection.SESSIONS,
         /** Titles of the pieces by id: a take is named after its piece (spec 3.15). */
         pieceTitles: Map<Long, String> = emptyMap(),
         /** The takes their players marked as the best of their pieces (spec 3.21). */
@@ -30,7 +29,6 @@ object HistoryReducer {
     ): HistoryState {
         val days = RecordDays.daily(sessions, today, zone, config.historyChartDays)
         return HistoryState(
-            section = section,
             loading = false,
             totalCount = sessions.size,
             days = days,
@@ -46,9 +44,9 @@ object HistoryReducer {
         )
     }
 
-    fun loading(filter: HistoryFilter, section: HistorySection = HistorySection.SESSIONS): HistoryState =
+    fun loading(filter: HistoryFilter): HistoryState =
         HistoryState(
-            section = section, loading = true, totalCount = 0, days = emptyList(), chartTop = 0, today = NOT_LOADED,
+            loading = true, totalCount = 0, days = emptyList(), chartTop = 0, today = NOT_LOADED,
             filter = filter, cards = emptyList(),
         )
 

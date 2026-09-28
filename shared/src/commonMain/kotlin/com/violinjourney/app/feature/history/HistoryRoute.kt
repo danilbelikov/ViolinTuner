@@ -17,19 +17,14 @@ import androidx.lifecycle.repeatOnLifecycle
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.motion.rememberAnimationsRemoved
 import com.violinjourney.app.feature.history.components.CardActions
-import com.violinjourney.app.core.domain.repertoire.SectionRef
-import com.violinjourney.app.feature.repertoire.sections.SectionsEffect
-import com.violinjourney.app.feature.repertoire.sections.SectionsViewModel
 
+/** The tab «Записи» (spec 3.11, 3.21): the recordings only — the repertoire is a tab of its own (spec 3.36.1). */
 @Composable
 fun HistoryRoute(
     onOpenSession: (sessionId: Long) -> Unit,
     onOpenSound: (sessionId: Long) -> Unit,
-    onOpenSection: (SectionRef) -> Unit,
-    onOpenPiece: (pieceId: Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel,
-    sectionsViewModel: SectionsViewModel,
     /** «Поделиться» of a card (spec 3.17): the platform prepares the file and hands it to other apps. */
     onShare: (sessionId: Long) -> Unit,
     /** Where sharing shows how it goes; drawn over the screen. */
@@ -38,9 +33,6 @@ fun HistoryRoute(
     changingConfigurations: () -> Boolean = { false },
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val sections by sectionsViewModel.state.collectAsStateWithLifecycle()
-    val currentOnOpenSection by rememberUpdatedState(onOpenSection)
-    val currentOnOpenPiece by rememberUpdatedState(onOpenPiece)
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnOpenSession by rememberUpdatedState(onOpenSession)
 
@@ -49,17 +41,6 @@ fun HistoryRoute(
             viewModel.effects.collect { effect ->
                 when (effect) {
                     is HistoryEffect.OpenSession -> currentOnOpenSession(effect.id)
-                }
-            }
-        }
-    }
-
-    LaunchedEffect(sectionsViewModel, lifecycleOwner) {
-        lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-            sectionsViewModel.effects.collect { effect ->
-                when (effect) {
-                    is SectionsEffect.OpenSection -> currentOnOpenSection(effect.ref)
-                    is SectionsEffect.OpenPiece -> currentOnOpenPiece(effect.id)
                 }
             }
         }
@@ -82,8 +63,6 @@ fun HistoryRoute(
             state = state,
             onIntent = viewModel::onIntent,
             modifier = modifier,
-            sections = sections,
-            onSectionsIntent = sectionsViewModel::onIntent,
             cardActions = remember(onShare, onOpenSound, viewModel) {
                 CardActions(onShare = onShare, onSound = onOpenSound, onBest = { viewModel.onIntent(HistoryIntent.BestToggled(it)) })
             },

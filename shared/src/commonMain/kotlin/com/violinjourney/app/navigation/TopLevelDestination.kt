@@ -5,10 +5,11 @@ import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.nav_history
 import com.violinjourney.app.shared.resources.nav_live
 import com.violinjourney.app.shared.resources.nav_practice
+import com.violinjourney.app.shared.resources.nav_repertoire
 
 /**
- * Bottom-bar destinations in display order (spec section 4, handoff nav_bar 32c): the course of a practice, left to
- * right — begun, playing, listening. «Настройки» is not a tab: a gear on Live opens it above the tabs.
+ * Bottom-bar destinations in display order (spec 3.36.1, section 4): the course of a practice, left to right — begun,
+ * playing, what is played, listening. «Настройки» is not a tab: a gear on Live opens it above the tabs.
  */
 enum class TopLevelDestination(
     val route: String,
@@ -16,7 +17,12 @@ enum class TopLevelDestination(
 ) {
     PRACTICE("practice", Res.string.nav_practice),
     LIVE("live", Res.string.nav_live),
-    /** «Записи»: the route keeps its old name, only the label changed (spec 4). */
+    /** «Репертуар»: the sections of the repertoire under a title (spec 3.36.1); until 0.79 they lived behind a switch in «Записи». */
+    REPERTOIRE("repertoire", Res.string.nav_repertoire),
+    /**
+     * «Записи»: the recordings only (spec 3.36.1). The route keeps its old name — it is the key of `screen_open` (spec 5.27,
+     * 5.29), and only the label changed (spec 4).
+     */
     HISTORY("history", Res.string.nav_history);
 
     companion object {

@@ -5,6 +5,7 @@
 
     <string name="nav_live">Live</string>
     <string name="nav_practice">Занятия</string>
+    <string name="nav_repertoire">Репертуар</string>
     <string name="nav_history">Записи</string>
     <string name="nav_settings">Настройки</string>
 
@@ -479,8 +480,6 @@
     <string name="trophies_line_far">%1$s, %2$s, далеко впереди</string>
 
     <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
-    <string name="history_section_sessions">Записи</string>
-    <string name="history_section_repertoire">Репертуар</string>
     <string name="session_take_title">%1$s · %2$s</string>
     <string name="dot_separator">\u0020·\u0020</string>
     <string name="repertoire_add">Добавить произведение</string>

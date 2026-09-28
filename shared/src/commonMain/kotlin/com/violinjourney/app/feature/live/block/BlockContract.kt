@@ -106,6 +106,6 @@ sealed interface BlockIntent {
 }
 
 sealed interface BlockEffect {
-    /** The repertoire is empty: to «Записи» → «Репертуар», where things are added. */
+    /** The repertoire is empty: to the tab «Репертуар», where things are added (spec 3.36.1). */
     data object OpenRepertoire : BlockEffect
 }

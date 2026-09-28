@@ -89,10 +89,8 @@ class HistoryViewModelTest {
         )
     }
 
-    private val sectionAsk = HistorySectionAsk()
-
     private fun TestScope.viewModel(): HistoryViewModel {
-        val viewModel = HistoryViewModel(repository, repertoire, config, clock, files, sectionAsk, backings, background = StandardTestDispatcher(testScheduler))
+        val viewModel = HistoryViewModel(repository, repertoire, config, clock, files, backings, background = StandardTestDispatcher(testScheduler))
         backgroundScope.launch { viewModel.state.collect {} }
         return viewModel
     }
@@ -231,19 +229,18 @@ class HistoryViewModelTest {
         assertEquals(setOf(recent), viewModel.state.value.selection.ids)
     }
 
+    /** Spec 3.18; the switch «Записи | Репертуар» that was dimmed with the filter is gone (spec 3.36.1). */
     @Test
-    fun `the filter and the section stay put while picking`() = runTest {
+    fun `the filter stays put while picking`() = runTest {
         save(daysAgo = 0)
         val viewModel = viewModel()
         runCurrent()
         viewModel.select(SelectionIntent.SelectClicked)
 
         viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.MONTH))
-        viewModel.onIntent(HistoryIntent.SectionSelected(HistorySection.REPERTOIRE))
         runCurrent()
 
         assertEquals(HistoryFilter.ALL, viewModel.state.value.filter)
-        assertEquals(HistorySection.SESSIONS, viewModel.state.value.section)
     }
 
     @Test
@@ -322,19 +319,5 @@ class HistoryViewModelTest {
         viewModel.onIntent(HistoryIntent.BestToggled(free)) // not a take: nothing to mark
         runCurrent()
         assertEquals(emptyList<Long>(), best())
-    }
-
-    @Test
-    fun `a section asked for from Live opens once, and the tab stays free afterwards`() = runTest {
-        val viewModel = viewModel()
-        runCurrent()
-        assertEquals(HistorySection.SESSIONS, viewModel.state.value.section)
-        sectionAsk.ask(HistorySection.REPERTOIRE)
-        runCurrent()
-        assertEquals(HistorySection.REPERTOIRE, viewModel.state.value.section)
-        assertEquals(null, sectionAsk.asked.value)
-        viewModel.onIntent(HistoryIntent.SectionSelected(HistorySection.SESSIONS))
-        runCurrent()
-        assertEquals(HistorySection.SESSIONS, viewModel.state.value.section)
     }
 }

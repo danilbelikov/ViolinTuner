@@ -55,6 +55,7 @@ import com.violinjourney.app.feature.repertoire.piece.PieceRoute
 import com.violinjourney.app.feature.repertoire.piece.PieceViewModel
 import com.violinjourney.app.feature.repertoire.scale.ScaleFormRoute
 import com.violinjourney.app.feature.repertoire.scale.ScaleFormViewModel
+import com.violinjourney.app.feature.repertoire.sections.SectionsRoute
 import com.violinjourney.app.feature.repertoire.sections.SectionsViewModel
 import com.violinjourney.app.feature.repertoire.stand.StandRoute
 import com.violinjourney.app.feature.repertoire.stand.StandViewModel
@@ -93,7 +94,8 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             LiveRoute(
                 onOpenSession = navController::navigateToSession,
                 onFinishPractice = { navController.navigateToTopLevel(TopLevelDestination.PRACTICE) },
-                onOpenRepertoire = { navController.navigateToTopLevel(TopLevelDestination.HISTORY) },
+                // «Открыть репертуар» (spec 3.28): the tab «Репертуар» (spec 3.36.1)
+                onOpenRepertoire = { navController.navigateToTopLevel(TopLevelDestination.REPERTOIRE) },
                 onOpenSettings = navController::navigateToSettings,
                 viewModel = viewModel {
                     LiveViewModel(
@@ -106,7 +108,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                     BlockViewModel(
                         runningPractice = graph.runningPractice, blockStore = graph.blockStore,
                         blockHistory = graph.blockHistory, repertoire = graph.repertoire, sessions = graph.sessions,
-                        config = graph.practiceConfig, clock = graph.clock, sectionAsk = graph.sectionAsk,
+                        config = graph.practiceConfig, clock = graph.clock,
                     )
                 },
                 homeLookViewModel = viewModel { HomeLookViewModel(graph.home) },
@@ -133,18 +135,23 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 homeLookViewModel = viewModel { HomeLookViewModel(graph.home) },
             )
         }
+        // «Репертуар» (spec 3.36.1): the sections under a title; a section's list, a piece and its forms open above the tabs.
+        composable(TopLevelDestination.REPERTOIRE.route) {
+            SectionsRoute(
+                onOpenSection = navController::navigateToSection,
+                onOpenPiece = navController::navigateToPiece,
+                viewModel = viewModel {
+                    SectionsViewModel(graph.repertoire, graph.repertoireConfig, graph.clock, graph.blockHistory, graph.practiceConfig)
+                },
+            )
+        }
         composable(TopLevelDestination.HISTORY.route) {
             val share = viewModel { shareViewModel(graph, texts) }
             HistoryRoute(
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
-                onOpenSection = navController::navigateToSection,
-                onOpenPiece = navController::navigateToPiece,
                 viewModel = viewModel {
-                    HistoryViewModel(graph.sessions, graph.repertoire, graph.intonationConfig, graph.clock, graph.audioFiles, graph.sectionAsk, graph.backings)
-                },
-                sectionsViewModel = viewModel {
-                    SectionsViewModel(graph.repertoire, graph.repertoireConfig, graph.clock, graph.blockHistory, graph.practiceConfig)
+                    HistoryViewModel(graph.sessions, graph.repertoire, graph.intonationConfig, graph.clock, graph.audioFiles, graph.backings)
                 },
                 onShare = share::start,
                 shareHost = { ShareHost(share) },
@@ -521,7 +528,10 @@ private fun NavHostController.navigateToScaleForm(pieceId: Long?) {
     navigate(Routes.scaleForm(pieceId)) { launchSingleTop = true }
 }
 
-/** An element is gone with its form: back to the list of its section, or to the tab if it was opened from elsewhere. */
+/**
+ * An element is gone with its form: back to the list of its section, or — opened from «Время по элементам», with no
+ * section behind it — to the tab «Репертуар» (spec 3.36.1).
+ */
 private fun NavHostController.popUpToSection() {
-    if (!popBackStack(Routes.SECTION_PATTERN, inclusive = false)) popBackStack(TopLevelDestination.HISTORY.route, inclusive = false)
+    if (!popBackStack(Routes.SECTION_PATTERN, inclusive = false)) popBackStack(TopLevelDestination.REPERTOIRE.route, inclusive = false)
 }

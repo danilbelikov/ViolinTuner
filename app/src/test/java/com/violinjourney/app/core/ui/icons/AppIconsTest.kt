@@ -72,5 +72,16 @@ class AppIconsTest {
         // the reels and the window of the cassette are cut out of its body
         assertEquals(3, AppIcons.TabRecords.selectedCut!!.root.size)
         assertEquals(1, AppIcons.TabRecords.selected.root.size)
+
+        // the sheet of music (spec 3.36.1): its body filled, the three lines of the staff and the note head cut out
+        val repertoire = AppIcons.TabRepertoire
+        assertEquals(1, repertoire.selected.root.size)
+        assertTrue(repertoire.selected.root.filterIsInstance<VectorPath>().single().fill != null)
+        assertEquals(4, repertoire.selectedCut!!.root.size)
+        // in outline the body is not filled, but the note head is always a filled dot without a stroke
+        val outline = repertoire.normal.root.filterIsInstance<VectorPath>()
+        assertEquals(5, outline.size)
+        assertEquals(1, outline.count { it.fill != null })
+        assertTrue(outline.single { it.fill != null }.stroke == null)
     }
 }

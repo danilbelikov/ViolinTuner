@@ -5,9 +5,6 @@ import kotlinx.datetime.LocalDate
 
 enum class HistoryFilter { ALL, THIS_WEEK, MONTH }
 
-/** The two halves of the «Записи» tab (spec 3.15): what was recorded and what is being learnt. */
-enum class HistorySection { SESSIONS, REPERTOIRE }
-
 data class HistoryCard(
     val id: Long,
     /** Null = default name built from the date. */
@@ -39,8 +36,8 @@ data class HistoryCard(
     val take: Boolean get() = pieceId != null
 }
 
+/** The tab «Записи» (spec 3.11, 3.21): the recordings only — the repertoire is a tab of its own (spec 3.36.1). */
 data class HistoryState(
-    val section: HistorySection,
     /** True until the stored sessions have been read once. */
     val loading: Boolean,
     /** All sessions, whatever the filter: "N сессий" and the empty state. */
@@ -71,8 +68,6 @@ sealed interface HistoryIntent {
 
     /** «Отметить лучшим» / «Снять отметку „лучший“» of a take's «⋯» (spec 3.21). */
     data class BestToggled(val id: Long) : HistoryIntent
-
-    data class SectionSelected(val section: HistorySection) : HistoryIntent
 
     /** Everything of the selection mode; a plain [SessionClicked] inside it picks the card. */
     data class Select(val intent: SelectionIntent) : HistoryIntent

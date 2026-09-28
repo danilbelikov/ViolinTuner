@@ -5,6 +5,7 @@
 
     <string name="nav_live">Live</string>
     <string name="nav_practice">練習</string>
+    <string name="nav_repertoire">レパートリー</string>
     <string name="nav_history">録音</string>
     <string name="nav_settings">設定</string>
 
@@ -479,8 +480,6 @@
     <string name="trophies_line_far">%1$s、%2$s、まだずっと先</string>
 
     <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
-    <string name="history_section_sessions">録音</string>
-    <string name="history_section_repertoire">レパートリー</string>
     <string name="session_take_title">%1$s · %2$s</string>
     <string name="dot_separator"> · </string>
     <string name="repertoire_add">曲を追加</string>

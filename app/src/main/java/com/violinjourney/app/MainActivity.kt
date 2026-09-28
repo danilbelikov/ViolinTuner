@@ -43,7 +43,9 @@ import com.violinjourney.app.feature.practice.components.PracticePromptHost
 import com.violinjourney.app.navigation.AppBottomBar
 import com.violinjourney.app.navigation.AppNavHost
 import com.violinjourney.app.navigation.HiltAppStartViewModel
+import com.violinjourney.app.navigation.LocalTabBarLight
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
+import com.violinjourney.app.navigation.TabBarLight
 import com.violinjourney.app.navigation.TopLevelDestination
 import com.violinjourney.app.navigation.navigateToRunningBackup
 import com.violinjourney.app.navigation.navigateToTopLevel
@@ -121,56 +123,61 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
     // to the ring. The other tabs keep a compact bar, otherwise there would be no way back but the gesture.
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val bottomBarTab = currentTab?.takeUnless { landscape && it == TopLevelDestination.LIVE }
+    // How bright the tab bar is: a screen may lend its light (stage R6, Live, behind a switch); nobody does yet (spec 3.36.1).
+    val tabBarLight = remember { TabBarLight() }
 
-    Scaffold(
-        containerColor = MaterialTheme.colorScheme.surface,
-        // safeDrawing also covers the display cutout, which sits on a side in landscape. The keyboard is the business
-        // of the fields that bring it — the forms pad themselves, dialogs and sheets are windows of their own — as on iOS.
-        contentWindowInsets = WindowInsets.safeDrawing.exclude(WindowInsets.ime),
-        bottomBar = {
-            if (bottomBarTab != null) {
-                AppBottomBar(
-                    current = bottomBarTab,
-                    onSelect = navController::navigateToTopLevel,
-                    practiceRunning = practiceRunning,
-                    compact = landscape,
+    CompositionLocalProvider(LocalTabBarLight provides tabBarLight) {
+        Scaffold(
+            containerColor = MaterialTheme.colorScheme.surface,
+            // safeDrawing also covers the display cutout, which sits on a side in landscape. The keyboard is the business
+            // of the fields that bring it — the forms pad themselves, dialogs and sheets are windows of their own — as on iOS.
+            contentWindowInsets = WindowInsets.safeDrawing.exclude(WindowInsets.ime),
+            bottomBar = {
+                if (bottomBarTab != null) {
+                    AppBottomBar(
+                        current = bottomBarTab,
+                        onSelect = navController::navigateToTopLevel,
+                        practiceRunning = practiceRunning,
+                        compact = landscape,
+                        dimmed = tabBarLight::alpha,
+                    )
+                }
+            },
+        ) { innerPadding ->
+            // Until the stored settings are read there is only the dark surface: neither the
+            // onboarding nor Live may flash for a frame on the wrong kind of start.
+            startRoute?.let { route ->
+                AppNavHost(
+                    navController = navController,
+                    startRoute = route,
+                    // consumed as well as padded: a screen asking for the bars or the keyboard again gets only what is left
+                    // (Scaffold consumes nothing for its content), not the same height twice
+                    modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding),
                 )
-            }
-        },
-    ) { innerPadding ->
-        // Until the stored settings are read there is only the dark surface: neither the
-        // onboarding nor Live may flash for a frame on the wrong kind of start.
-        startRoute?.let { route ->
-            AppNavHost(
-                navController = navController,
-                startRoute = route,
-                // consumed as well as padded: a screen asking for the bars or the keyboard again gets only what is left
-                // (Scaffold consumes nothing for its content), not the same height twice
-                modifier = Modifier.padding(innerPadding).consumeWindowInsets(innerPadding),
-            )
-            // A process that has just put a copy in place opens on «Занятия»: the restored days are seen there at once (spec 3.20).
-            // After the restart of a restore the stack is «Занятия» alone and nothing moves; a process that died with the copy
-            // marked ready and is brought back from the recent apps gets its old screens restored above it — they go. Popped,
-            // not switched to: a tab reselected with `restoreState` would bring the same screens back.
-            LaunchedEffect(Unit) {
-                if (ViolinTunerApp.consumeStartedAfter() == RestoreSwap.Outcome.RESTORED && route != ONBOARDING_ROUTE) {
-                    if (!navController.popBackStack(TopLevelDestination.START.route, inclusive = false)) {
-                        navController.navigateToTopLevel(TopLevelDestination.START)
+                // A process that has just put a copy in place opens on «Занятия»: the restored days are seen there at once (spec 3.20).
+                // After the restart of a restore the stack is «Занятия» alone and nothing moves; a process that died with the copy
+                // marked ready and is brought back from the recent apps gets its old screens restored above it — they go. Popped,
+                // not switched to: a tab reselected with `restoreState` would bring the same screens back.
+                LaunchedEffect(Unit) {
+                    if (ViolinTunerApp.consumeStartedAfter() == RestoreSwap.Outcome.RESTORED && route != ONBOARDING_ROUTE) {
+                        if (!navController.popBackStack(TopLevelDestination.START.route, inclusive = false)) {
+                            navController.navigateToTopLevel(TopLevelDestination.START)
+                        }
+                    }
+                }
+                LaunchedEffect(openBackup) {
+                    if (openBackup != null) {
+                        navController.navigateToRunningBackup(restoring = openBackup == MainActivity.OPEN_RESTORING)
+                        onBackupOpened()
                     }
                 }
             }
-            LaunchedEffect(openBackup) {
-                if (openBackup != null) {
-                    navController.navigateToRunningBackup(restoring = openBackup == MainActivity.OPEN_RESTORING)
-                    onBackupOpened()
-                }
-            }
+            PracticePromptHost(
+                prompt = practicePrompt,
+                stepMinutes = startViewModel.promptStepMinutes,
+                onIntent = startViewModel::onPromptIntent,
+                effects = startViewModel.promptEffects,
+            )
         }
-        PracticePromptHost(
-            prompt = practicePrompt,
-            stepMinutes = startViewModel.promptStepMinutes,
-            onIntent = startViewModel::onPromptIntent,
-            effects = startViewModel.promptEffects,
-        )
     }
 }

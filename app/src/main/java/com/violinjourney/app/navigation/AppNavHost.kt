@@ -36,7 +36,6 @@ import com.violinjourney.app.feature.camera.HiltCaptureViewModel
 import com.violinjourney.app.feature.camera.CaptureViewModel
 import com.violinjourney.app.feature.history.HiltHistoryViewModel
 import com.violinjourney.app.feature.history.HistoryRoute
-import com.violinjourney.app.feature.history.HistorySection
 import com.violinjourney.app.feature.home.HiltHomeLookViewModel
 import com.violinjourney.app.feature.home.HiltHomeViewModel
 import com.violinjourney.app.feature.home.HomeRoute
@@ -70,6 +69,7 @@ import com.violinjourney.app.feature.repertoire.scale.HiltScaleFormViewModel
 import com.violinjourney.app.feature.repertoire.scale.ScaleFormRoute
 import com.violinjourney.app.feature.repertoire.scale.ScaleFormViewModel
 import com.violinjourney.app.feature.repertoire.sections.HiltSectionsViewModel
+import com.violinjourney.app.feature.repertoire.sections.SectionsRoute
 import com.violinjourney.app.feature.repertoire.stand.StandRoute
 import com.violinjourney.app.feature.repertoire.stand.StandViewModel
 import com.violinjourney.app.feature.session.SessionRoute
@@ -128,16 +128,21 @@ fun AppNavHost(
                 homeLookViewModel = hiltViewModel<HiltHomeLookViewModel>(),
             )
         }
+        // «Репертуар» (spec 3.36.1): the sections under a title; a section's list, a piece and its forms open above the tabs.
+        composable(TopLevelDestination.REPERTOIRE.route) {
+            SectionsRoute(
+                onOpenSection = navController::navigateToSection,
+                onOpenPiece = navController::navigateToPiece,
+                viewModel = hiltViewModel<HiltSectionsViewModel>(),
+            )
+        }
         composable(TopLevelDestination.HISTORY.route) {
             val shareViewModel = hiltViewModel<HiltShareViewModel>()
             val activity = LocalActivity.current
             HistoryRoute(
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
-                onOpenSection = navController::navigateToSection,
-                onOpenPiece = navController::navigateToPiece,
                 viewModel = hiltViewModel<HiltHistoryViewModel>(),
-                sectionsViewModel = hiltViewModel<HiltSectionsViewModel>(),
                 onShare = shareViewModel::start,
                 shareHost = { ShareHost(shareViewModel) },
                 changingConfigurations = { activity?.isChangingConfigurations == true },
@@ -427,9 +432,9 @@ fun NavHostController.navigateToRunningBackup(restoring: Boolean) {
     if (restoring) navigateToRestore("") else navigateToBackup()
 }
 
-/** «Открыть репертуар» from Live (spec 3.28): the tab «Записи»; «Репертуар» was asked for already (`HistorySectionAsk`). */
+/** «Открыть репертуар» from Live (spec 3.28): the tab «Репертуар» (spec 3.36.1), with whatever it was left on. */
 fun NavHostController.navigateToRepertoire() {
-    navigateToTopLevel(TopLevelDestination.HISTORY)
+    navigateToTopLevel(TopLevelDestination.REPERTOIRE)
 }
 
 /**
@@ -496,9 +501,12 @@ fun NavHostController.navigateToCapture(pieceId: Long) {
     navigate(Routes.capture(pieceId)) { launchSingleTop = true }
 }
 
-/** An element is gone with its form and its screen: back to the list of its section, or to the tab if it was opened from elsewhere. */
+/**
+ * An element is gone with its form and its screen: back to the list of its section, or — opened from «Время по элементам»,
+ * with no section behind it — to the tab «Репертуар» (spec 3.36.1).
+ */
 private fun NavHostController.popUpToSection() {
-    if (!popBackStack(Routes.SECTION_PATTERN, inclusive = false)) popBackStack(TopLevelDestination.HISTORY.route, inclusive = false)
+    if (!popBackStack(Routes.SECTION_PATTERN, inclusive = false)) popBackStack(TopLevelDestination.REPERTOIRE.route, inclusive = false)
 }
 
 /**

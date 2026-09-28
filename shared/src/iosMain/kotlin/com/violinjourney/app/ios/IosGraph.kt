@@ -71,7 +71,6 @@ import com.violinjourney.app.core.settings.SettingsConfigSource
 import com.violinjourney.app.core.settings.SettingsRepository
 import com.violinjourney.app.core.time.SystemWallClock
 import com.violinjourney.app.core.time.WallClock
-import com.violinjourney.app.feature.history.HistorySectionAsk
 import com.violinjourney.app.feature.share.RenderSpeed
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -143,7 +142,6 @@ internal class IosGraph(fakeScenario: FakeScenario?, private val statistics: Ios
 
     val venues = Venues(venueStore, journey)
     val finishAsk = FinishPracticeAsk()
-    val sectionAsk = HistorySectionAsk()
 
     /** One per app, as on Android: its lock takes the answers to a practice one at a time (spec 5.6). */
     val finisher = PracticeFinisher(

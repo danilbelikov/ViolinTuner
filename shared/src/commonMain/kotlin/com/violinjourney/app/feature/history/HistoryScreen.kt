@@ -5,8 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.verticalScroll
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -18,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -43,7 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.ui.components.DeleteDialog
-import com.violinjourney.app.core.ui.components.SegmentedSwitch
+import com.violinjourney.app.core.ui.components.TabTitle
 import com.violinjourney.app.core.ui.components.dimmedWhen
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.feature.history.components.CardActions
@@ -55,13 +54,6 @@ import com.violinjourney.app.feature.history.components.SelectionBar
 import com.violinjourney.app.feature.history.components.SelectionBarHeight
 import com.violinjourney.app.feature.history.components.SessionCard
 import com.violinjourney.app.feature.history.components.deleteTextOf
-import com.violinjourney.app.core.domain.repertoire.SectionCount
-import com.violinjourney.app.feature.repertoire.sections.SectionNameDialog
-import com.violinjourney.app.feature.repertoire.sections.SectionsIntent
-import com.violinjourney.app.feature.repertoire.sections.SectionsState
-import com.violinjourney.app.feature.repertoire.sections.PieceTimeCardView
-import com.violinjourney.app.feature.repertoire.sections.TIME_ROWS_LANDSCAPE
-import com.violinjourney.app.feature.repertoire.sections.sectionItems
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.history_chart_title
 import com.violinjourney.app.shared.resources.history_count_few
@@ -73,10 +65,7 @@ import com.violinjourney.app.shared.resources.history_empty_filter
 import com.violinjourney.app.shared.resources.history_filter_all
 import com.violinjourney.app.shared.resources.history_filter_month
 import com.violinjourney.app.shared.resources.history_filter_this_week
-import com.violinjourney.app.shared.resources.history_section_repertoire
-import com.violinjourney.app.shared.resources.history_section_sessions
-import com.violinjourney.app.shared.resources.section_create
-import com.violinjourney.app.shared.resources.section_new_title
+import com.violinjourney.app.shared.resources.nav_history
 import com.violinjourney.app.shared.resources.selection_delete_records_few
 import com.violinjourney.app.shared.resources.selection_delete_records_many
 import com.violinjourney.app.shared.resources.selection_delete_records_one
@@ -86,11 +75,11 @@ import org.jetbrains.compose.resources.stringResource
 private val ScreenPadding = 16.dp
 private val MaxContentWidth = 560.dp
 private val SectionSpacing = 16.dp
-private val SwitchTop = 12.dp
-private val SwitchHeight = 40.dp
-private val LandscapeSwitchTop = 8.dp
-private val LandscapeSwitchHeight = 36.dp
-private val LandscapeSwitchWidth = 320.dp
+private val TitleTop = 12.dp
+private val LandscapeTitleTop = 8.dp
+
+/** The title block in landscape: with the gaps above and below it, the height of the selection bar that lies over it. */
+private val LandscapeTitleHeight = SelectionBarHeight.Landscape - LandscapeTitleTop * 2
 private val LandscapeChartWidth = 360.dp
 private val CardSpacing = 8.dp
 private val ChartCorner = 20.dp
@@ -102,15 +91,16 @@ private const val TABULAR_FIGURES = "tnum"
 private const val DAY_HEADER = "dayHeader"
 private const val RECORD_CARD = "recordCard"
 
-/** The «Записи» tab (spec 3.11, 3.21; handoff 22a2). Stateless. */
+/**
+ * The «Записи» tab (spec 3.11, 3.21; handoff 22a2): the recordings only, under the title «Записи» where the switch
+ * «Записи | Репертуар» stood (spec 3.36.1) — the repertoire is a tab of its own. Stateless.
+ */
 @Composable
 fun HistoryScreen(
     state: HistoryState,
     onIntent: (HistoryIntent) -> Unit,
     modifier: Modifier = Modifier,
     zone: TimeZone = TimeZone.currentSystemDefault(),
-    sections: SectionsState = SectionsState(loading = true, cards = emptyList(), total = SectionCount.EMPTY, maxNameLength = 0),
-    onSectionsIntent: (SectionsIntent) -> Unit = {},
     cardActions: CardActions? = null,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -124,21 +114,11 @@ fun HistoryScreen(
     ) {
         val landscape = maxWidth > maxHeight
         val barHeight = if (landscape) SelectionBarHeight.Landscape else SelectionBarHeight.Portrait
-        val records = state.section == HistorySection.SESSIONS && !state.loading && state.totalCount > 0
-        val switch: @Composable (Modifier) -> Unit = { switchModifier ->
-            val sections = HistorySection.entries
-            // No big title above it (handoff 22a2): the switch is the title — «Записи | Репертуар» under «Записи» said it twice.
-            SegmentedSwitch(
-                labels = listOf(stringResource(Res.string.history_section_sessions), stringResource(Res.string.history_section_repertoire)),
-                selectedIndex = sections.indexOf(state.section),
-                onSelect = { onIntent(HistoryIntent.SectionSelected(sections[it])) },
-                modifier = switchModifier.dimmedWhen(selecting),
-                height = if (landscape) LandscapeSwitchHeight else SwitchHeight,
-            )
-        }
+        val records = !state.loading && state.totalCount > 0
+        // Neither pressed nor dimmed while picking (spec 3.36.1): the selection bar lies over it, as it lay over the switch.
+        val title = stringResource(Res.string.nav_history)
         val list: LazyListScope.() -> Unit = {
             when {
-                state.section == HistorySection.REPERTOIRE -> sectionItems(sections, onSectionsIntent, showTime = !landscape)
                 state.loading -> Unit
                 state.totalCount == 0 -> item(key = "empty") { EmptyHistory(Modifier.fillParentMaxHeight(EMPTY_HEIGHT_FRACTION)) }
                 else -> {
@@ -197,21 +177,17 @@ fun HistoryScreen(
         if (landscape) {
             // The chart stops being a card above the list and becomes the left column: the list gets the whole height (handoff 22h1).
             Column(modifier = Modifier.fillMaxSize().padding(horizontal = ScreenPadding)) {
-                switch(Modifier.padding(top = LandscapeSwitchTop).width(LandscapeSwitchWidth).align(Alignment.CenterHorizontally))
-                Row(modifier = Modifier.padding(top = LandscapeSwitchTop), horizontalArrangement = Arrangement.spacedBy(ScreenPadding)) {
+                // as tall as the switch was: the opaque selection bar ends where the columns start, not on the chart and the chips
+                Box(
+                    modifier = Modifier
+                        .padding(top = LandscapeTitleTop)
+                        .heightIn(min = LandscapeTitleHeight),
+                    contentAlignment = Alignment.CenterStart,
+                ) {
+                    TabTitle(title, compact = true)
+                }
+                Row(modifier = Modifier.padding(top = LandscapeTitleTop), horizontalArrangement = Arrangement.spacedBy(ScreenPadding)) {
                     if (records) ChartCard(state, Modifier.width(LandscapeChartWidth).dimmedWhen(selecting))
-                    // «Время по элементам» takes the same left column in the repertoire (handoff 30h6)
-                    val time = sections.time
-                    if (state.section == HistorySection.REPERTOIRE && time != null) {
-                        PieceTimeCardView(
-                            card = time,
-                            visibleRows = TIME_ROWS_LANDSCAPE,
-                            onIntent = onSectionsIntent,
-                            modifier = Modifier
-                                .width(LandscapeChartWidth)
-                                .verticalScroll(rememberScrollState()),
-                        )
-                    }
                     LazyColumn(modifier = Modifier.weight(1f).fillMaxHeight(), contentPadding = PaddingValues(bottom = ScreenPadding), content = list)
                 }
             }
@@ -220,9 +196,10 @@ fun HistoryScreen(
                 modifier = Modifier
                     .widthIn(max = MaxContentWidth)
                     .fillMaxSize(),
-                contentPadding = PaddingValues(start = ScreenPadding, end = ScreenPadding, top = SwitchTop, bottom = ScreenPadding),
+                contentPadding = PaddingValues(start = ScreenPadding, end = ScreenPadding, top = TitleTop, bottom = ScreenPadding),
             ) {
-                item(key = "sections") { switch(Modifier) }
+                // scrolls away with the list, as the switch did
+                item(key = "title") { TabTitle(title) }
                 list()
             }
         }
@@ -230,18 +207,6 @@ fun HistoryScreen(
         AnimatedVisibility(visible = selecting, enter = fadeIn(tween(BAR_FADE_MS)), exit = fadeOut(tween(BAR_FADE_MS))) {
             SelectionBar(selection, state.allSelected, onIntent = { onIntent(HistoryIntent.Select(it)) }, height = barHeight)
         }
-    }
-    sections.newName?.let { name ->
-        SectionNameDialog(
-            title = stringResource(Res.string.section_new_title),
-            confirm = stringResource(Res.string.section_create),
-            name = name,
-            maxLength = sections.maxNameLength,
-            canConfirm = sections.canCreate,
-            onNameChange = { onSectionsIntent(SectionsIntent.NameChanged(it)) },
-            onConfirm = { onSectionsIntent(SectionsIntent.CreateConfirmed) },
-            onDismiss = { onSectionsIntent(SectionsIntent.DialogDismissed) },
-        )
     }
     if (selection.confirming) {
         val words = Formats.plural(selection.count, Res.string.selection_delete_records_one, Res.string.selection_delete_records_few, Res.string.selection_delete_records_many)
@@ -384,7 +349,7 @@ private fun Filters(selected: HistoryFilter, onSelect: (HistoryFilter) -> Unit, 
     }
 }
 
-/** No recordings at all (handoff 22i1): no chart, the switch stays — the repertoire may be filled before the first recording. */
+/** No recordings at all (handoff 22i1): no chart, the title stays. */
 @Composable
 private fun EmptyHistory(modifier: Modifier = Modifier) {
     Column(

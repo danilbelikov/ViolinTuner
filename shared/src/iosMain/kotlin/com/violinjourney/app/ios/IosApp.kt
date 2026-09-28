@@ -48,7 +48,9 @@ import com.violinjourney.app.core.ui.theme.ViolinAppTheme
 import com.violinjourney.app.feature.practice.components.PracticePromptHost
 import com.violinjourney.app.navigation.AppBottomBar
 import com.violinjourney.app.navigation.AppStartViewModel
+import com.violinjourney.app.navigation.LocalTabBarLight
 import com.violinjourney.app.navigation.ONBOARDING_ROUTE
+import com.violinjourney.app.navigation.TabBarLight
 import com.violinjourney.app.navigation.TopLevelDestination
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.manrope_variable
@@ -58,7 +60,7 @@ import platform.Foundation.NSLocale
 import platform.Foundation.preferredLanguages
 
 /**
- * The iOS app as a whole — what `MainActivity` is on Android: the tabs «Занятия · Live · Записи» over the screens,
+ * The iOS app as a whole — what `MainActivity` is on Android: the tabs «Занятия · Live · Репертуар · Записи» over the screens,
  * the forgotten-practice prompt over everything, the short words of the screens in a toast of its own.
  */
 @Composable
@@ -79,6 +81,8 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
 
     var message by remember { mutableStateOf<Toast?>(null) }
     val messages = remember { Messages { text -> message = Toast(text) } }
+    // how bright the tab bar is: a screen may lend its light (stage R6, Live); nobody does yet (spec 3.36.1)
+    val tabBarLight = remember { TabBarLight() }
 
     val navController = rememberNavController()
     // which screen was opened (spec 3.34), the route cut to its name as on Android
@@ -93,7 +97,7 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
     }
 
     ViolinAppTheme(fontFamily = manrope()) {
-        CompositionLocalProvider(LocalMessages provides messages) {
+        CompositionLocalProvider(LocalMessages provides messages, LocalTabBarLight provides tabBarLight) {
             BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
                 // Landscape Live is the music-stand view: no bar, all height to the ring; the other tabs keep a compact one.
                 val landscape = maxWidth > maxHeight
@@ -110,6 +114,7 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
                                 onSelect = navController::navigateToTopLevel,
                                 practiceRunning = practiceRunning,
                                 compact = landscape,
+                                dimmed = tabBarLight::alpha,
                             )
                         }
                     },

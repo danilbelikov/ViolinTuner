@@ -64,3 +64,14 @@ private fun HistorySinglePreview() = HistoryPreview(stateOf(Sessions.takeLast(1)
 @Preview(name = "History · landscape", widthDp = 892, heightDp = 332)
 @Composable
 private fun HistoryLandscapePreview() = HistoryPreview(stateOf(Sessions))
+
+/** Picking: the selection bar lies over the title and ends above the chart (spec 3.18, 3.36.1). */
+private fun picking(state: HistoryState) = state.copy(selection = Selection(active = true, ids = setOf(6L, 7L)))
+
+@Preview(name = "History · picking", widthDp = 412, heightDp = 812)
+@Composable
+private fun HistoryPickingPreview() = HistoryPreview(picking(stateOf(Sessions)))
+
+@Preview(name = "History · picking, landscape", widthDp = 892, heightDp = 412)
+@Composable
+private fun HistoryPickingLandscapePreview() = HistoryPreview(picking(stateOf(Sessions)))

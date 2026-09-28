@@ -33,7 +33,6 @@ open class HistoryViewModel(
     private val config: IntonationConfig,
     private val clock: WallClock,
     private val audioFiles: SessionAudioFiles,
-    private val sectionAsk: HistorySectionAsk,
     private val backings: BackingRepository,
     /** Where the list is built: off the main thread — sorting, dates and the sizes of the videos grow with the records. */
     private val background: CoroutineDispatcher = Dispatchers.Default,
@@ -41,24 +40,7 @@ open class HistoryViewModel(
 
     private val filter = MutableStateFlow(HistoryFilter.ALL)
 
-    // Lives as long as this view model, that is, as long as the tab is in the back stack:
-    // returning from a piece finds the repertoire where it was left (spec 3.15).
-    private val section = MutableStateFlow(HistorySection.SESSIONS)
-
     private val selection = MutableStateFlow(Selection())
-
-    init {
-        // «Открыть репертуар» from Live (spec 3.28) asks for a section: it is taken once and forgotten, the tab stays
-        // wherever the player moves it afterwards
-        viewModelScope.launch {
-            sectionAsk.asked.collect {
-                sectionAsk.take()?.let { wanted ->
-                    selection.value = Selection()
-                    section.value = wanted
-                }
-            }
-        }
-    }
 
     // What the list shows now: only that can be picked. Written where the state is built, read by
     // the intents — both on the main thread; `state.value` would lag a frame behind.
@@ -67,16 +49,16 @@ open class HistoryViewModel(
 
     // "Today" is read on every change, so a list left open over midnight is right again as
     // soon as anything changes; the screen is rebuilt on every return to it anyway.
-    // The list itself, without the picking: built off the main thread, and only when the records, the pieces, the filter,
-    // the section or the backings change — a tap in the selection mode does not build it again.
+    // The list itself, without the picking: built off the main thread, and only when the records, the pieces, the filter
+    // or the backings change — a tap in the selection mode does not build it again.
     private val listed: Flow<HistoryState> = flow {
         // The sizes of the videos by file name, asked of the file system once while the list is watched: a video never
         // changes under its name. One map per collection — its steps run one after another.
         val videoSizes = HashMap<String, Long>()
         emitAll(
-            combine(repository.sessions, repertoire.pieces, filter, section, backings.takesUnderBacking) { sessions, pieces, filter, section, underBacking ->
+            combine(repository.sessions, repertoire.pieces, filter, backings.takesUnderBacking) { sessions, pieces, filter, underBacking ->
                 val shown = HistoryReducer.stateOf(
-                    sessions, filter, clock.today(), clock.zone, config, section,
+                    sessions, filter, clock.today(), clock.zone, config,
                     pieceTitles = pieces.associate { it.id to it.title },
                     bestTakeIds = pieces.mapNotNull { it.bestTakeId }.toSet(),
                     underBackingIds = underBacking,
@@ -103,7 +85,7 @@ open class HistoryViewModel(
         }.stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-            initialValue = HistoryReducer.loading(filter.value, section.value),
+            initialValue = HistoryReducer.loading(filter.value),
         )
 
     private val effectChannel = Channel<HistoryEffect>(Channel.BUFFERED)
@@ -111,9 +93,8 @@ open class HistoryViewModel(
 
     fun onIntent(intent: HistoryIntent) {
         when (intent) {
-            // The filter and the section are dimmed while picking: what is picked must not hide under another filter.
+            // The filter is dimmed while picking: what is picked must not hide under another filter.
             is HistoryIntent.FilterSelected -> if (!selection.value.active) filter.value = intent.filter
-            is HistoryIntent.SectionSelected -> if (!selection.value.active) section.value = intent.section
             is HistoryIntent.SessionClicked ->
                 if (selection.value.active) select(SelectionIntent.CardToggled(intent.id)) else effectChannel.trySend(HistoryEffect.OpenSession(intent.id))
             is HistoryIntent.Select -> select(intent.intent)

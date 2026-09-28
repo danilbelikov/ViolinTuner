@@ -81,8 +81,8 @@ const val TIME_ROWS_LANDSCAPE = 5
 
 /**
  * The way into the repertoire (spec 3.22, handoff 24a1): its sections as cards, then «Добавить раздел». Items of the
- * tab's one lazy list. Above the sections, [showTime] — «Время по элементам» (spec 3.28, handoff 30h1); in landscape
- * it stands in the left column instead.
+ * one lazy list of the tab «Репертуар» ([SectionsScreen], spec 3.36.1). Above the sections, [showTime] — «Время по
+ * элементам» (spec 3.28, handoff 30h1); in landscape it stands in the left column instead.
  */
 fun LazyListScope.sectionItems(state: SectionsState, onIntent: (SectionsIntent) -> Unit, showTime: Boolean = true) {
     if (state.loading) return

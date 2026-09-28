@@ -40,7 +40,6 @@ import com.violinjourney.app.core.recording.video.VideoFiles
 import com.violinjourney.app.core.recording.video.VideoTakeImporter
 import com.violinjourney.app.core.settings.IntonationConfigSource
 import com.violinjourney.app.core.time.WallClock
-import com.violinjourney.app.feature.history.HistorySectionAsk
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -80,11 +79,6 @@ object SharedModule {
     @Provides
     @Singleton
     fun provideFinishPracticeAsk() = FinishPracticeAsk()
-
-    /** One per app: the section of «Записи» asked for from Live (spec 3.28). */
-    @Provides
-    @Singleton
-    fun provideHistorySectionAsk() = HistorySectionAsk()
 
     /** One per app: its lock takes the answers to a practice — a double tap, the sheet and the prompt — one at a time (spec 5.6). */
     @Provides
