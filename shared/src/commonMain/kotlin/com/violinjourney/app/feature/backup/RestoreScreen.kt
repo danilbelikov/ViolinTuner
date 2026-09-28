@@ -29,7 +29,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.backup_cancel
 import com.violinjourney.app.shared.resources.backup_close
@@ -240,10 +239,10 @@ private fun Ready(stage: RestoreStage.Ready, busy: Boolean, savingCopy: Boolean,
                 style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 21.sp),
             )
         }
-        val destructive = ViolinTheme.destructive
-        Column(modifier = Modifier.fillMaxWidth().background(destructive.copy(alpha = WARNING_ALPHA), RoundedCornerShape(16.dp)).padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        val danger = ViolinTheme.dangerSoft
+        Column(modifier = Modifier.fillMaxWidth().background(danger.copy(alpha = WARNING_ALPHA), RoundedCornerShape(16.dp)).padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                AppIcon(AppIcons.Trash, contentDescription = null, tint = destructive)
+                AppIcon(AppIcons.Trash, contentDescription = null, tint = danger)
                 Text(stringResource(Res.string.restore_warning), color = colors.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
             }
             // the answer to the warning lives inside it
@@ -273,16 +272,16 @@ private fun Ready(stage: RestoreStage.Ready, busy: Boolean, savingCopy: Boolean,
     } else if (copy.missingBytes > 0) {
         ProblemBlock(stringResource(Res.string.restore_no_room_title, Formats.fileSize(copy.missingBytes)), stringResource(Res.string.restore_no_room_text))
         Button(onClick = { onIntent(RestoreIntent.CloseClicked) }, modifier = Modifier.fillMaxWidth().height(48.dp)) { Text(stringResource(Res.string.restore_no_room_ok)) }
-        // the dangerous way is a word in red, not a button that asks to be pressed
+        // the dangerous way is a word in the colour of danger, not a button that asks to be pressed
         TextButton(onClick = { onIntent(RestoreIntent.UnsafeClicked) }, enabled = waitFor == null, modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp)) {
-            Text(stringResource(Res.string.restore_unsafe_button), color = ViolinTheme.destructive, textAlign = TextAlign.Center)
+            Text(stringResource(Res.string.restore_unsafe_button), color = ViolinTheme.dangerSoft, textAlign = TextAlign.Center)
         }
     } else {
         Button(
             onClick = { onIntent(RestoreIntent.RestoreClicked) },
             enabled = waitFor == null,
             modifier = Modifier.fillMaxWidth().height(56.dp),
-            colors = if (overData) ButtonDefaults.buttonColors(containerColor = ViolinTheme.destructive, contentColor = Color.White) else ButtonDefaults.buttonColors(),
+            colors = if (overData) ButtonDefaults.buttonColors(containerColor = ViolinTheme.dangerSoft, contentColor = ViolinTheme.onDanger) else ButtonDefaults.buttonColors(),
         ) { IconLabel(AppIcons.Restore, stringResource(Res.string.restore_button), iconSize = 20.dp) }
     }
 }

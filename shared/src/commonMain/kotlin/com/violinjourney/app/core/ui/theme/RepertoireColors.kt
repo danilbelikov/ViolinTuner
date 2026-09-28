@@ -20,7 +20,7 @@ data class RepertoireColors(
     val onStatusRepertoireContainer: Color,
     /** A take that has just been recorded, before it settles into the list. */
     val takeNew: Color,
-    /** Frame and caption of a form field that cannot be saved; the destructive button of a dialog. */
+    /** Frame and caption of a form field that cannot be saved — until R4 makes it onSurfaceVariant with an icon (spec 3.36.1). */
     val formError: Color,
 )
 

@@ -8,7 +8,6 @@ import androidx.compose.ui.graphics.Color
 internal val ZoneInTune = Color(0xFF47C97E)
 internal val ZoneNear = Color(0xFFE5B03C)
 internal val ZoneOff = Color(0xFFE8565C)
-internal val OnZoneOff = Color(0xFFFFFFFF)
 internal val ZoneNone = Color(0xFF3A3846)
 
 // Dot of the Live status line (handoff `Live2.dc.html`, `status.*`): "may play" and "may not".
@@ -42,4 +41,3 @@ internal val CtrlInkSoft = Color(0xFF6E635C)
 internal val CtrlCaption = Color(0xFF8D8796)
 internal val CtrlMuted = Color(0xFF6E687A)
 internal val RecordingRim = Color(0xFFA8323F)
-internal val VenuePlate = Color(0xB3131318)

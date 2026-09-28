@@ -9,10 +9,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.indication
-import androidx.compose.foundation.interaction.Interaction
-import androidx.compose.foundation.interaction.InteractionSource
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -40,7 +37,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.onPlaced
@@ -54,11 +50,10 @@ import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.ShiftedInteractionSource
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.TabIcon
-import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.map
 import org.jetbrains.compose.resources.stringResource
 
 private val IconSize = 24.dp
@@ -286,26 +281,6 @@ private fun CompactBar(
                     }
                 }
             }
-        }
-    }
-}
-
-/**
- * The presses of a whole item as seen by a place inside it that draws the ripple — the pill, the rounded place of the
- * compact bar — as `NavigationBarItem` of Material maps them: the item reports a press in its own coordinates, the place
- * gets it moved by [shift], where the place lies in the item (set when it is placed), so the ripple starts under the
- * finger. A release or a cancel follows its press, moved the same way.
- */
-private class ShiftedInteractionSource(source: InteractionSource) : InteractionSource {
-    var shift: Offset = Offset.Zero
-    private val moved = mutableMapOf<PressInteraction.Press, PressInteraction.Press>()
-
-    override val interactions: Flow<Interaction> = source.interactions.map { interaction ->
-        when (interaction) {
-            is PressInteraction.Press -> PressInteraction.Press(interaction.pressPosition - shift).also { moved[interaction] = it }
-            is PressInteraction.Release -> moved.remove(interaction.press)?.let { PressInteraction.Release(it) } ?: interaction
-            is PressInteraction.Cancel -> moved.remove(interaction.press)?.let { PressInteraction.Cancel(it) } ?: interaction
-            else -> interaction
         }
     }
 }

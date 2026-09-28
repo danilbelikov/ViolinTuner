@@ -184,7 +184,7 @@ fun ProfileSheetContent(
 
 @Composable
 private fun SheetTextButton(text: String, icon: ImageVector, enabled: Boolean, destructive: Boolean = false, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val colors = if (destructive) ButtonDefaults.textButtonColors(contentColor = ViolinTheme.destructive) else ButtonDefaults.textButtonColors()
+    val colors = if (destructive) ButtonDefaults.textButtonColors(contentColor = ViolinTheme.dangerSoft) else ButtonDefaults.textButtonColors()
     TextButton(onClick = onClick, enabled = enabled, colors = colors, modifier = modifier.height(TextButtonHeight)) {
         IconLabel(icon, text, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
     }

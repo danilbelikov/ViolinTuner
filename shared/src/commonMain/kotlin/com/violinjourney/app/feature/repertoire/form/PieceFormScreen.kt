@@ -7,8 +7,6 @@ import com.violinjourney.app.feature.repertoire.sections.sectionName
 import com.violinjourney.app.core.ui.icons.IconSizes
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import androidx.compose.ui.graphics.Color
-import androidx.compose.material3.DropdownMenuItem
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.WindowInsets
@@ -38,7 +36,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -75,6 +72,11 @@ import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.Tonic
 import com.violinjourney.app.core.text.codePointLength
 import com.violinjourney.app.core.text.takeCodePoints
+import com.violinjourney.app.core.ui.components.AppMenu
+import com.violinjourney.app.core.ui.components.AppMenuItem
+import com.violinjourney.app.core.ui.components.DeleteDialog
+import com.violinjourney.app.core.ui.components.DiscardDialog
+import com.violinjourney.app.core.ui.components.DiscardLoss
 import com.violinjourney.app.core.ui.components.SegmentedSwitch
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -83,7 +85,6 @@ import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.repertoire.components.TempoStepper
 import com.violinjourney.app.feature.repertoire.components.statusLabel
 import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.dialog_cancel
 import com.violinjourney.app.shared.resources.form_author
 import com.violinjourney.app.shared.resources.form_new_element
 import com.violinjourney.app.shared.resources.form_new_etude
@@ -100,8 +101,6 @@ import com.violinjourney.app.shared.resources.piece_field_status
 import com.violinjourney.app.shared.resources.piece_field_tempo
 import com.violinjourney.app.shared.resources.piece_field_title
 import com.violinjourney.app.shared.resources.piece_form_close
-import com.violinjourney.app.shared.resources.piece_form_discard_confirm
-import com.violinjourney.app.shared.resources.piece_form_discard_title
 import com.violinjourney.app.shared.resources.piece_form_title_edit
 import com.violinjourney.app.shared.resources.piece_form_title_new
 import com.violinjourney.app.shared.resources.piece_key_major
@@ -165,19 +164,17 @@ fun PieceFormScreen(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit, 
         }
     }
     when (state.dialog) {
-        PieceFormDialog.DISCARD -> ConfirmDialog(
-            title = stringResource(Res.string.piece_form_discard_title),
-            text = null,
-            confirm = stringResource(Res.string.piece_form_discard_confirm),
-            destructive = false,
-            onIntent = onIntent,
+        PieceFormDialog.DISCARD -> DiscardDialog(
+            loss = DiscardLoss.of(state.isNew, state.savedTitle),
+            onDiscard = { onIntent(PieceFormIntent.DialogConfirmed) },
+            onBack = { onIntent(PieceFormIntent.DialogDismissed) },
         )
-        PieceFormDialog.DELETE -> ConfirmDialog(
+        PieceFormDialog.DELETE -> DeleteDialog(
             title = stringResource(Res.string.piece_delete_title, state.savedTitle),
             text = stringResource(Res.string.piece_delete_text),
             confirm = stringResource(Res.string.piece_delete_confirm),
-            destructive = true,
-            onIntent = onIntent,
+            onConfirm = { onIntent(PieceFormIntent.DialogConfirmed) },
+            onDismiss = { onIntent(PieceFormIntent.DialogDismissed) },
         )
         null -> Unit
     }
@@ -306,7 +303,8 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
         supporting = stringResource(Res.string.profile_name_counter, notes.codePointLength(), state.maxNotesLength),
     )
     if (!state.isNew) {
-        val error = ViolinTheme.repertoireColors.formError
+        // the colour of danger with the bin (spec 3.36.1); the new look of the button is R4
+        val danger = ViolinTheme.dangerSoft
         OutlinedButton(
             onClick = { onIntent(PieceFormIntent.DeleteClicked) },
             modifier = Modifier
@@ -315,7 +313,7 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
             shape = RoundedCornerShape(DeleteHeight / 2),
             border = BorderStroke(1.dp, SolidColor(colors.outlineVariant)),
         ) {
-            CompositionLocalProvider(LocalContentColor provides error) {
+            CompositionLocalProvider(LocalContentColor provides danger) {
                 IconLabel(AppIcons.Trash, stringResource(Res.string.piece_delete), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
             }
         }
@@ -473,23 +471,6 @@ private fun TempoChip(text: String, selected: Boolean, description: String, onCl
 }
 
 @Composable
-private fun ConfirmDialog(title: String, text: String?, confirm: String, destructive: Boolean, onIntent: (PieceFormIntent) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    AlertDialog(
-        onDismissRequest = { onIntent(PieceFormIntent.DialogDismissed) },
-        title = { Text(title) },
-        text = text?.let { { Text(it) } },
-        confirmButton = {
-            TextButton(onClick = { onIntent(PieceFormIntent.DialogConfirmed) }) {
-                Text(confirm, color = if (destructive) ViolinTheme.repertoireColors.formError else colors.primary)
-            }
-        },
-        dismissButton = { TextButton(onClick = { onIntent(PieceFormIntent.DialogDismissed) }) { Text(stringResource(Res.string.dialog_cancel)) } },
-        containerColor = colors.surfaceContainerHigh,
-    )
-}
-
-@Composable
 private fun sectionElementTitle(state: PieceFormState): String = when {
     state.stroke || state.etude || state.section is SectionRef.Custom -> sectionName(state.section, state.sections.firstOrNull { it.ref == state.section }?.name)
     else -> stringResource(Res.string.piece_form_title_edit)
@@ -519,10 +500,11 @@ private fun SectionField(state: PieceFormState, onIntent: (PieceFormIntent) -> U
                 .clip(RoundedCornerShape(FieldCorner))
                 .clickable(role = Role.DropdownList) { open = true },
         )
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }, containerColor = colors.surfaceContainerHigh) {
+        AppMenu(expanded = open, onDismissRequest = { open = false }) {
             state.sections.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(sectionName(option.ref, option.name), fontWeight = if (option.ref == state.section) FontWeight.Bold else FontWeight.Normal) },
+                AppMenuItem(
+                    text = sectionName(option.ref, option.name),
+                    selected = option.ref == state.section,
                     enabled = option.enabled,
                     onClick = {
                         open = false

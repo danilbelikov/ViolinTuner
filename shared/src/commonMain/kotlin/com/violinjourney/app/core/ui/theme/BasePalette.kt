@@ -17,6 +17,18 @@ internal val OutlineVariant = Color(0xFF3A3846)
 internal val OnSurface = Color(0xFFE6E4EE)
 internal val OnSurfaceVariant = Color(0xFFA39FB5)
 
+/**
+ * The third level of text (spec 5.29): day labels, chevrons, the figures in chips, a placeholder. Only on [Surface] (5.3 : 1)
+ * and [SurfaceContainer] (4.7 : 1) — on [SurfaceContainerHigh] it falls to 4.1 : 1, under the 4.5 of every text.
+ */
+internal val TextTertiary = Color(0xFF8A8699)
+
+/**
+ * The soft accent (spec 5.29): the ground of a chosen option, the plate of an icon. The hex of `PracticeFill1`, but not the
+ * same thing — the calendar keeps its own token.
+ */
+internal val AccentSoft = Color(0xFF2A2352)
+
 // v1 is dark-only (spec 3.6). Dynamic color is off: zone colors are tuned against this palette.
 internal val ViolinColorScheme = darkColorScheme(
     primary = Primary,

@@ -41,6 +41,12 @@ data class ScaleFormState(
     val canSave: Boolean,
     val dialog: ScaleFormDialog?,
     val maxNotesLength: Int,
+    /**
+     * The title as stored, for an edit: what «Не сохранять?» and «Удалить …?» call the scale by (spec 3.36.1) — the name in the
+     * list, in the language the scale was made in (spec 3.26), not the one [scale] gives now: the octaves can be edited, and the
+     * language may have changed since. Null for a new scale and while it is read.
+     */
+    val savedTitle: String? = null,
 )
 
 sealed interface ScaleFormIntent {

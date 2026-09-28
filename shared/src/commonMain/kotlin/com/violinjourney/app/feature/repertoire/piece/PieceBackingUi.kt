@@ -14,10 +14,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -37,6 +34,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.AppMenu
+import com.violinjourney.app.core.ui.components.AppMenuItem
+import com.violinjourney.app.core.ui.components.DeleteDialog
+import com.violinjourney.app.core.ui.components.MenuDanger
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -65,7 +66,6 @@ import com.violinjourney.app.shared.resources.backing_too_long
 import com.violinjourney.app.shared.resources.backing_understood
 import com.violinjourney.app.shared.resources.backing_unprepared
 import com.violinjourney.app.shared.resources.backing_unreadable
-import com.violinjourney.app.shared.resources.dialog_cancel
 import org.jetbrains.compose.resources.stringResource
 
 private val CardCorner = 16.dp
@@ -130,9 +130,12 @@ fun BackingCard(backing: BackingUi, recording: Boolean, onIntent: (PieceIntent) 
                 IconButton(onClick = { menu = true }, enabled = !recording && !backing.importing) {
                     AppIcon(AppIcons.More, contentDescription = stringResource(Res.string.backing_menu), tint = colors.onSurfaceVariant)
                 }
-                DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    DropdownMenuItem(text = { Text(stringResource(Res.string.backing_replace)) }, onClick = { menu = false; onIntent(PieceIntent.BackingAddClicked) })
-                    DropdownMenuItem(text = { Text(stringResource(Res.string.backing_remove)) }, onClick = { menu = false; onIntent(PieceIntent.BackingRemoveClicked) })
+                AppMenu(
+                    expanded = menu,
+                    onDismissRequest = { menu = false },
+                    danger = MenuDanger(stringResource(Res.string.backing_remove), onClick = { menu = false; onIntent(PieceIntent.BackingRemoveClicked) }),
+                ) {
+                    AppMenuItem(stringResource(Res.string.backing_replace), icon = AppIcons.FileAudio, onClick = { menu = false; onIntent(PieceIntent.BackingAddClicked) })
                 }
             }
         }
@@ -172,12 +175,12 @@ fun BackingCard(backing: BackingUi, recording: Boolean, onIntent: (PieceIntent) 
         backing.problem?.takeIf { it != BackingProblem.Missing }?.let { ProblemLine(it, onIntent) }
     }
     if (backing.askingRemove) {
-        AlertDialog(
-            onDismissRequest = { onIntent(PieceIntent.BackingRemoveDismissed) },
-            title = { Text(stringResource(Res.string.backing_remove_title)) },
-            text = { Text(stringResource(Res.string.backing_remove_text)) },
-            confirmButton = { TextButton(onClick = { onIntent(PieceIntent.BackingRemoveConfirmed) }) { Text(stringResource(Res.string.backing_remove)) } },
-            dismissButton = { TextButton(onClick = { onIntent(PieceIntent.BackingRemoveDismissed) }) { Text(stringResource(Res.string.dialog_cancel)) } },
+        DeleteDialog(
+            title = stringResource(Res.string.backing_remove_title),
+            text = stringResource(Res.string.backing_remove_text),
+            confirm = stringResource(Res.string.backing_remove),
+            onConfirm = { onIntent(PieceIntent.BackingRemoveConfirmed) },
+            onDismiss = { onIntent(PieceIntent.BackingRemoveDismissed) },
         )
     }
 }

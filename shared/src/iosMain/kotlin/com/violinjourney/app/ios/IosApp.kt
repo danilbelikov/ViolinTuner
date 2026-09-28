@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.consumeWindowInsets
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -27,12 +26,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -44,6 +43,7 @@ import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
 import com.violinjourney.app.core.ui.components.LocalMessages
 import com.violinjourney.app.core.ui.components.Messages
 import com.violinjourney.app.core.ui.format.Formats
+import com.violinjourney.app.core.ui.theme.AppShapes
 import com.violinjourney.app.core.ui.theme.ViolinAppTheme
 import com.violinjourney.app.feature.practice.components.PracticePromptHost
 import com.violinjourney.app.navigation.AppBottomBar
@@ -146,7 +146,10 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
 /** One short word on screen; a new one with the same text is still new. */
 private class Toast(val text: String)
 
-/** What a toast is on Android: a pill low on the screen, for two seconds, touching nothing. */
+/**
+ * What a toast is on Android: a plate low on the screen, for two seconds, touching nothing — in the colour of a dialog, the words of
+ * the first level of text (spec 3.36.1, 5.29). 96 dp over the bottom inset until the bottom zone of stage 102 gives it its place.
+ */
 @Composable
 private fun ToastHost(toast: Toast?, onGone: () -> Unit) {
     var shown by remember { mutableStateOf<Toast?>(null) }
@@ -161,19 +164,18 @@ private fun ToastHost(toast: Toast?, onGone: () -> Unit) {
         AnimatedVisibility(visible = shown != null, enter = fadeIn(), exit = fadeOut()) {
             Text(
                 text = shown?.text.orEmpty(),
-                color = Color.White,
-                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold),
                 modifier = Modifier
                     .padding(horizontal = 32.dp)
-                    .background(Color(TOAST_BACKGROUND), RoundedCornerShape(24.dp))
-                    .padding(horizontal = 16.dp, vertical = 10.dp),
+                    .background(MaterialTheme.colorScheme.surfaceContainerHigh, AppShapes.L)
+                    .padding(horizontal = 18.dp, vertical = 12.dp),
             )
         }
     }
 }
 
 private const val TOAST_MS = 2_000L
-private const val TOAST_BACKGROUND = 0xE6333333
 
 /** The language the resources speak: the first of the app's own languages the person prefers (spec 3.26). */
 internal fun interfaceLanguageTag(): String = NSLocale.preferredLanguages.firstOrNull()?.toString() ?: "en"

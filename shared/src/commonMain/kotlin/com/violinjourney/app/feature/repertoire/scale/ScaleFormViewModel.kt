@@ -40,6 +40,9 @@ open class ScaleFormViewModel(
 
     /** The scale as stored (for an edit) or the empty draft: what the form compares with. */
     private var initial = ScaleDraft()
+
+    /** The title as stored, in the language the scale was made in; null for a new scale and until it is read. */
+    private var savedTitle: String? = null
     private var pieces: List<Piece> = emptyList()
     private var saving = false
 
@@ -64,6 +67,7 @@ open class ScaleFormViewModel(
                     effectChannel.send(ScaleFormEffect.CloseDeleted)
                 } else {
                     initial = ScaleDraft(scale.tonic, scale.accidental, scale.kind, scale.octaves, piece.tempoBpm, piece.status, piece.notes)
+                    savedTitle = piece.title
                     // the key and the kind of a scale that exists are its own, whatever was kept
                     val restored = kept?.copy(tonic = scale.tonic, accidental = scale.accidental, kind = scale.kind)
                     mutableState.value = stateOf(restored ?: initial, loading = false, dialog = null)
@@ -206,6 +210,7 @@ open class ScaleFormViewModel(
             canSave = scale != null && existing == null,
             dialog = dialog,
             maxNotesLength = config.maxNotesLength,
+            savedTitle = savedTitle,
         )
     }
 

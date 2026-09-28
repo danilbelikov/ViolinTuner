@@ -161,7 +161,7 @@ private fun RecordingWords(state: State<TakeState>) {
                     alpha = pulse.value
                     clip = pulse.value != 1f
                 }
-                .background(ViolinTheme.zoneColors.off, CircleShape),
+                .background(ViolinTheme.recording, CircleShape),
         )
         Text(
             text = stringResource(Res.string.take_recording, Formats.timer(take.elapsedSeconds * MS_PER_SECOND)),

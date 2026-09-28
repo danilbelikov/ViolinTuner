@@ -30,7 +30,6 @@ import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -67,6 +66,9 @@ import com.violinjourney.app.core.domain.repertoire.scale.ScaleKind
 import com.violinjourney.app.core.domain.repertoire.scale.Scales
 import com.violinjourney.app.core.text.codePointLength
 import com.violinjourney.app.core.text.takeCodePoints
+import com.violinjourney.app.core.ui.components.DeleteDialog
+import com.violinjourney.app.core.ui.components.DiscardDialog
+import com.violinjourney.app.core.ui.components.DiscardLoss
 import com.violinjourney.app.core.ui.components.SegmentedSwitch
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -78,7 +80,6 @@ import com.violinjourney.app.feature.repertoire.form.FormField
 import com.violinjourney.app.feature.repertoire.form.Labeled
 import com.violinjourney.app.feature.repertoire.form.TempoPicker
 import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.dialog_cancel
 import com.violinjourney.app.shared.resources.piece_delete
 import com.violinjourney.app.shared.resources.piece_delete_confirm
 import com.violinjourney.app.shared.resources.piece_delete_text
@@ -86,8 +87,6 @@ import com.violinjourney.app.shared.resources.piece_delete_title
 import com.violinjourney.app.shared.resources.piece_field_notes
 import com.violinjourney.app.shared.resources.piece_field_status
 import com.violinjourney.app.shared.resources.piece_form_close
-import com.violinjourney.app.shared.resources.piece_form_discard_confirm
-import com.violinjourney.app.shared.resources.piece_form_discard_title
 import com.violinjourney.app.shared.resources.profile_name_counter
 import com.violinjourney.app.shared.resources.scale_edit
 import com.violinjourney.app.shared.resources.scale_exists
@@ -148,14 +147,19 @@ fun ScaleFormScreen(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit, 
         }
     }
     when (state.dialog) {
-        ScaleFormDialog.DISCARD, ScaleFormDialog.DISCARD_AND_OPEN -> Confirm(
-            title = stringResource(Res.string.piece_form_discard_title), text = null,
-            confirm = stringResource(Res.string.piece_form_discard_confirm), destructive = false, onIntent = onIntent,
+        ScaleFormDialog.DISCARD, ScaleFormDialog.DISCARD_AND_OPEN -> DiscardDialog(
+            loss = DiscardLoss.of(state.isNew, state.savedTitle),
+            onDiscard = { onIntent(ScaleFormIntent.DialogConfirmed) },
+            onBack = { onIntent(ScaleFormIntent.DialogDismissed) },
         )
-        ScaleFormDialog.DELETE -> Confirm(
-            title = stringResource(Res.string.piece_delete_title, state.scale?.let { scaleTitle(it.spec) }.orEmpty()),
+        ScaleFormDialog.DELETE -> DeleteDialog(
+            // the name in the list; the scale as the form now says it only if the stored one has not been read — never met, the
+            // bin is under the fields, and they wait for the scale
+            title = stringResource(Res.string.piece_delete_title, state.savedTitle ?: state.scale?.let { scaleTitle(it.spec) }.orEmpty()),
             text = stringResource(Res.string.piece_delete_text),
-            confirm = stringResource(Res.string.piece_delete_confirm), destructive = true, onIntent = onIntent,
+            confirm = stringResource(Res.string.piece_delete_confirm),
+            onConfirm = { onIntent(ScaleFormIntent.DialogConfirmed) },
+            onDismiss = { onIntent(ScaleFormIntent.DialogDismissed) },
         )
         null -> Unit
     }
@@ -322,7 +326,8 @@ private fun Fields(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
             shape = RoundedCornerShape(DeleteHeight / 2),
             border = BorderStroke(1.dp, SolidColor(colors.outlineVariant)),
         ) {
-            CompositionLocalProvider(LocalContentColor provides ViolinTheme.repertoireColors.formError) {
+            // the colour of danger with the bin (spec 3.36.1); the new look of the button is R4
+            CompositionLocalProvider(LocalContentColor provides ViolinTheme.dangerSoft) {
                 IconLabel(AppIcons.Trash, stringResource(Res.string.piece_delete), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
             }
         }
@@ -395,19 +400,4 @@ private fun Preview(state: ScaleFormState) {
                 .padding(horizontal = 12.dp, vertical = 10.dp),
         ) { ScaleNotation(scale, NotationSizes.Preview, ViolinTheme.exerciseColors.inkOnDark, name = scaleTitle(scale.spec)) }
     }
-}
-
-@Composable
-private fun Confirm(title: String, text: String?, confirm: String, destructive: Boolean, onIntent: (ScaleFormIntent) -> Unit) {
-    AlertDialog(
-        onDismissRequest = { onIntent(ScaleFormIntent.DialogDismissed) },
-        title = { Text(title) },
-        text = text?.let { { Text(it) } },
-        confirmButton = {
-            TextButton(onClick = { onIntent(ScaleFormIntent.DialogConfirmed) }) {
-                Text(confirm, color = if (destructive) ViolinTheme.destructive else MaterialTheme.colorScheme.primary)
-            }
-        },
-        dismissButton = { TextButton(onClick = { onIntent(ScaleFormIntent.DialogDismissed) }) { Text(stringResource(Res.string.dialog_cancel)) } },
-    )
 }

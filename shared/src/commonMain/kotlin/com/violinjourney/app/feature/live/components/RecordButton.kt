@@ -44,12 +44,11 @@ fun RecordButton(
     modifier: Modifier = Modifier,
 ) {
     val wood = ViolinTheme.venueColors
-    val zoneColors = ViolinTheme.zoneColors
     val accent = MaterialTheme.colorScheme.primary
     val spec = tween<Color>(LiveMotion.RECORD_MORPH_MS)
-    val face by animateColorAsState(if (recording) zoneColors.off else wood.bone, spec, label = "recordFace")
+    val face by animateColorAsState(if (recording) ViolinTheme.recording else wood.bone, spec, label = "recordFace")
     val rim by animateColorAsState(if (recording) wood.recordingRim else wood.brass, spec, label = "recordRim")
-    val glyph by animateColorAsState(if (recording) zoneColors.onOff else accent, spec, label = "recordGlyph")
+    val glyph by animateColorAsState(if (recording) ViolinTheme.onRecording else accent, spec, label = "recordGlyph")
     val glyphSize by animateDpAsState(
         if (recording) LiveDimens.RecordStopSize else LiveDimens.RecordDotSize,
         tween(LiveMotion.RECORD_MORPH_MS), label = "recordGlyphSize",

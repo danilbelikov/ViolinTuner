@@ -44,12 +44,27 @@ internal val StatusRepertoireContainer = Color(0xFF1F3A2C)
 internal val OnStatusRepertoireContainer = Color(0xFF9FE4BE)
 internal val TakeNew = Color(0xFF2A2540)
 
-/** The hex of zone.off, but a token of its own: zone colors stay about intonation only. */
+/** The hex of zone.off, but a token of its own: zone colors stay about intonation only. The error of a form field until R4. */
 internal val FormError = Color(0xFFE8565C)
 
-// Actions that destroy something: the bin and its caption (handoff polish, `icon.error`). The hex of
-// zone.off, but a token of its own: zone colours stay about intonation.
-internal val Destructive = Color(0xFFE8565C)
+// The danger (spec 3.36.1, 5.29): what deletes or replaces data, a warning that data will be lost, the sign of a failure — a
+// soft coral, 8.3 : 1 on a dialog or a menu. Never a zone colour and never colorScheme.error: the red of «мимо» it replaced
+// meant «off» on Live. [OnDanger] is the text of the one filled dangerous button, «Восстановить» (9.2 : 1).
+internal val DangerSoft = Color(0xFFFFB199)
+internal val OnDanger = Color(0xFF3D1408)
+
+// Smoked glass over pictures (spec 3.36.1, 5.29), without a blur on either platform: the plate at .72 (the .7 of 5.20 is gone),
+// the strong one at .82 only over a busy picture — the preview of the own camera, the city tag on a tile of the shop.
+internal val Glass = Color(0xB8131318)
+internal val GlassStrong = Color(0xD1131318)
+
+/** Black at .55 under a sheet (spec 5.29); it covers the status bar too. */
+internal val SheetScrim = Color(0x8C000000)
+
+// The sign of recording (spec 3.36.1, 5.29): the dot and the key of a take. The hex of zone.off, but a token of its own — a
+// recording is no zone, and the zones stay about intonation. [OnRecording] is the stop square on the red key.
+internal val Recording = Color(0xFFE8565C)
+internal val OnRecording = Color(0xFFFFFFFF)
 
 // The living practice screen (handoff polish, `tokens`).
 // Brighter than the handoff (#E9DDFF at .35): over the light end of the fill that one could not be seen.

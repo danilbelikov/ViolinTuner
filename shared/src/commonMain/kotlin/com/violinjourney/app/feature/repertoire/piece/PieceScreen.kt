@@ -38,8 +38,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
@@ -95,6 +93,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.recording.video.VideoImport
+import com.violinjourney.app.core.ui.components.AppMenu
+import com.violinjourney.app.core.ui.components.AppMenuItem
 import com.violinjourney.app.core.ui.components.DeleteDialog
 import com.violinjourney.app.core.ui.components.dimmedWhen
 import com.violinjourney.app.core.ui.format.Formats
@@ -443,21 +443,9 @@ private fun StatusMenu(status: PieceStatus, open: Boolean, onIntent: (PieceInten
             fontSize = 13,
             trailing = { tint -> Chevron(tint) },
         )
-        DropdownMenu(
-            expanded = open,
-            onDismissRequest = { onIntent(PieceIntent.StatusMenuDismissed) },
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-        ) {
+        AppMenu(expanded = open, onDismissRequest = { onIntent(PieceIntent.StatusMenuDismissed) }) {
             PieceStatus.entries.forEach { option ->
-                DropdownMenuItem(
-                    text = { Text(statusLabel(option), fontWeight = if (option == status) FontWeight.Bold else FontWeight.Normal) },
-                    trailingIcon = if (option == status) {
-                        { AppIcon(AppIcons.Check, contentDescription = null, tint = MaterialTheme.colorScheme.primary) }
-                    } else {
-                        null
-                    },
-                    onClick = { onIntent(PieceIntent.StatusSelected(option)) },
-                )
+                AppMenuItem(text = statusLabel(option), selected = option == status, onClick = { onIntent(PieceIntent.StatusSelected(option)) })
             }
         }
     }
@@ -614,17 +602,9 @@ private fun AddTile(metrics: Metrics, addPhoto: AddPhotoActions, modifier: Modif
             AppIcon(AppIcons.Plus, contentDescription = null, tint = colors.primary)
             Text(stringResource(Res.string.piece_sheets_add_short), color = colors.primary, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
         }
-        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, containerColor = colors.surfaceContainerHigh) {
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.piece_sheets_camera)) },
-                leadingIcon = { AppIcon(AppIcons.Camera, contentDescription = null) },
-                onClick = { menuOpen = false; addPhoto.onCamera() },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.piece_sheets_gallery)) },
-                leadingIcon = { AppIcon(AppIcons.Gallery, contentDescription = null) },
-                onClick = { menuOpen = false; addPhoto.onGallery() },
-            )
+        AppMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            AppMenuItem(stringResource(Res.string.piece_sheets_camera), icon = AppIcons.Camera, onClick = { menuOpen = false; addPhoto.onCamera() })
+            AppMenuItem(stringResource(Res.string.piece_sheets_gallery), icon = AppIcons.Gallery, onClick = { menuOpen = false; addPhoto.onGallery() })
         }
     }
 }

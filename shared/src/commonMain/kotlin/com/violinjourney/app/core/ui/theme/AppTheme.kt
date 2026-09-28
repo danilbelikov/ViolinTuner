@@ -64,7 +64,46 @@ object ViolinTheme {
     val onboardingDotIdle: Color
         get() = OnboardingDotIdle
 
-    /** Bin icons and the captions of actions that delete (spec 3.16). */
-    val destructive: Color
-        get() = Destructive
+    /**
+     * The third level of text (spec 5.29): day labels, chevrons, the figures in chips, a placeholder. Only on the background
+     * and on surfaceContainer — not on surfaceContainerHigh (dialogs, menus), where it falls under 4.5 : 1.
+     */
+    val textTertiary: Color
+        get() = TextTertiary
+
+    /** The ground of a chosen option and the plate of an icon (spec 5.29); not the calendar, which keeps its fills. */
+    val accentSoft: Color
+        get() = AccentSoft
+
+    /**
+     * What is dangerous (spec 3.36.1, 5.29): deleting, removing, replacing data, stopping a copy; a warning that data will be
+     * lost; the sign of a failure. With the bin, as spec 3.16 wants. Never colorScheme.error, never a zone colour; the error
+     * of a field is not dangerous either — it is onSurfaceVariant with an icon.
+     */
+    val dangerSoft: Color
+        get() = DangerSoft
+
+    /** The text of the one filled dangerous button, «Восстановить» (spec 3.20, 5.29). */
+    val onDanger: Color
+        get() = OnDanger
+
+    /** Smoked glass at .72 over a picture (spec 5.29), no blur; text on it is onSurface, never onSurfaceVariant. */
+    val glass: Color
+        get() = Glass
+
+    /** Glass at .82: only over a busy picture — the preview of the own camera, the city tag of the shop (spec 5.29). */
+    val glassStrong: Color
+        get() = GlassStrong
+
+    /** Black at .55 under a sheet (spec 5.29). */
+    val sheetScrim: Color
+        get() = SheetScrim
+
+    /** The sign of recording, its dot and its key (spec 3.9, 5.29): the hex of «мимо», but no zone. */
+    val recording: Color
+        get() = Recording
+
+    /** The stop square on the red key of recording. */
+    val onRecording: Color
+        get() = OnRecording
 }

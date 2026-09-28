@@ -34,10 +34,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -73,6 +71,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.DeleteDialog
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -80,7 +79,6 @@ import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.repertoire.piece.TakeProblem
 import com.violinjourney.app.feature.repertoire.components.rememberRecordingPulse
 import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.dialog_cancel
 import com.violinjourney.app.shared.resources.live_mic_unavailable
 import com.violinjourney.app.shared.resources.live_too_noisy
 import com.violinjourney.app.shared.resources.piece_delete_confirm
@@ -515,7 +513,6 @@ private fun PanelIconButton(icon: ImageVector, description: String, onClick: () 
 @Composable
 private fun RecordPill(take: StandTake, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val off = ViolinTheme.zoneColors.off
     val label = stringResource(if (take.recording) Res.string.record_stop else Res.string.take_record)
     Row(
         modifier = Modifier
@@ -544,7 +541,7 @@ private fun RecordPill(take: StandTake, onClick: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
                 )
             }
-            PillGlyphButton(container = off, glyph = ViolinTheme.zoneColors.onOff, glyphCorner = 3.dp)
+            PillGlyphButton(container = ViolinTheme.recording, glyph = ViolinTheme.onRecording, glyphCorner = 3.dp)
         } else {
             PillGlyphButton(container = colors.primary, glyph = colors.onPrimary, glyphCorner = PillGlyph / 2)
             Text(label, color = colors.onSurface, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
@@ -591,7 +588,7 @@ private fun Capsule(counter: String, take: StandTake) {
 @Composable
 private fun PulsingDot(size: Dp) {
     val pulse = rememberRecordingPulse(StandMotion.REC_PULSE_MS, StandMotion.REC_PULSE_MIN_ALPHA)
-    val color = ViolinTheme.zoneColors.off
+    val color = ViolinTheme.recording
     Box(
         Modifier
             .size(size)
@@ -602,18 +599,12 @@ private fun PulsingDot(size: Dp) {
 
 @Composable
 private fun DeletePageDialog(onIntent: (StandIntent) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    AlertDialog(
-        onDismissRequest = { onIntent(StandIntent.DeleteDismissed) },
-        title = { Text(stringResource(Res.string.stand_delete_title)) },
-        text = { Text(stringResource(Res.string.stand_delete_text)) },
-        confirmButton = {
-            TextButton(onClick = { onIntent(StandIntent.DeleteConfirmed) }) {
-                Text(stringResource(Res.string.piece_delete_confirm), color = ViolinTheme.repertoireColors.formError)
-            }
-        },
-        dismissButton = { TextButton(onClick = { onIntent(StandIntent.DeleteDismissed) }) { Text(stringResource(Res.string.dialog_cancel)) } },
-        containerColor = colors.surfaceContainerHigh,
+    DeleteDialog(
+        title = stringResource(Res.string.stand_delete_title),
+        text = stringResource(Res.string.stand_delete_text),
+        confirm = stringResource(Res.string.piece_delete_confirm),
+        onConfirm = { onIntent(StandIntent.DeleteConfirmed) },
+        onDismiss = { onIntent(StandIntent.DeleteDismissed) },
     )
 }
 

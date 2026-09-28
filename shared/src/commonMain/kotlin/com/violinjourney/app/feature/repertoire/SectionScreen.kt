@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -34,11 +32,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.AppMenu
+import com.violinjourney.app.core.ui.components.AppMenuItem
 import com.violinjourney.app.core.ui.components.DeleteDialog
+import com.violinjourney.app.core.ui.components.MenuDanger
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
-import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.repertoire.components.LocalExerciseWords
 import com.violinjourney.app.feature.repertoire.sections.SectionNameDialog
 import com.violinjourney.app.feature.repertoire.sections.sectionCountLabel
@@ -93,7 +93,8 @@ fun SectionScreen(state: RepertoireState, onIntent: (RepertoireIntent) -> Unit, 
             onConfirm = { onIntent(RepertoireIntent.DialogConfirmed) },
             onDismiss = { onIntent(RepertoireIntent.DialogDismissed) },
         )
-        // A red button, but the text says what really happens: nothing is lost, the elements move (handoff 24c).
+        // The bin and the coral word of every deletion, but the text says what really happens: nothing is lost, the elements move
+        // (handoff 24c).
         SectionDialog.DELETE -> DeleteDialog(
             title = stringResource(Res.string.section_delete_title, name),
             text = state.count.total.let { total ->
@@ -160,16 +161,15 @@ private fun TopBar(title: String, count: String?, custom: Boolean, onIntent: (Re
                         .semantics { contentDescription = label },
                     contentAlignment = Alignment.Center,
                 ) { AppIcon(AppIcons.More, contentDescription = null, tint = colors.onSurfaceVariant) }
-                DropdownMenu(expanded = open, onDismissRequest = { open = false }, containerColor = colors.surfaceContainerHigh) {
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.section_rename)) },
-                        leadingIcon = { AppIcon(AppIcons.Pencil, contentDescription = null) },
+                AppMenu(
+                    expanded = open,
+                    onDismissRequest = { open = false },
+                    danger = MenuDanger(stringResource(Res.string.section_delete), onClick = { open = false; onIntent(RepertoireIntent.DialogRequested(SectionDialog.DELETE)) }),
+                ) {
+                    AppMenuItem(
+                        text = stringResource(Res.string.section_rename),
+                        icon = AppIcons.Pencil,
                         onClick = { open = false; onIntent(RepertoireIntent.DialogRequested(SectionDialog.RENAME)) },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(stringResource(Res.string.section_delete), color = ViolinTheme.destructive) },
-                        leadingIcon = { AppIcon(AppIcons.Trash, contentDescription = null, tint = ViolinTheme.destructive) },
-                        onClick = { open = false; onIntent(RepertoireIntent.DialogRequested(SectionDialog.DELETE)) },
                     )
                 }
             }

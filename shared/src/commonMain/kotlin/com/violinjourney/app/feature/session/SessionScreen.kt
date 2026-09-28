@@ -22,18 +22,12 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -43,7 +37,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.best_clear
 import com.violinjourney.app.shared.resources.best_set
-import com.violinjourney.app.shared.resources.dialog_cancel
 import com.violinjourney.app.shared.resources.session_action_delete
 import com.violinjourney.app.shared.resources.session_action_rename
 import com.violinjourney.app.shared.resources.session_back
@@ -58,6 +51,7 @@ import com.violinjourney.app.shared.resources.session_meta
 import com.violinjourney.app.shared.resources.session_not_found
 import com.violinjourney.app.shared.resources.session_rename_confirm
 import com.violinjourney.app.shared.resources.session_rename_hint
+import com.violinjourney.app.shared.resources.session_rename_label
 import com.violinjourney.app.shared.resources.session_rename_title
 import com.violinjourney.app.shared.resources.session_take_subtitle
 import com.violinjourney.app.shared.resources.sound_caption_everyone
@@ -85,6 +79,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.FieldDialog
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -519,7 +514,7 @@ private fun Actions(onIntent: (SessionIntent) -> Unit, sizeLine: String? = null)
             )
             Action(
                 label = stringResource(Res.string.session_action_delete),
-                color = ViolinTheme.destructive,
+                color = ViolinTheme.dangerSoft,
                 icon = AppIcons.Trash,
                 onClick = { onIntent(SessionIntent.DeleteClicked) },
             )
@@ -542,29 +537,21 @@ private fun Action(label: String, color: Color, icon: ImageVector, onClick: () -
     }
 }
 
+/**
+ * «Переименовать запись» (spec 3.10, 3.36.1): the title says the action, the field says «Название»; «Сохранить» never goes dim —
+ * an empty field gives the recording back its name by date, and the line under the field says so.
+ */
 @Composable
 private fun RenameDialog(currentTitle: String, placeholder: String, onIntent: (SessionIntent) -> Unit) {
-    var text by rememberSaveable { mutableStateOf(currentTitle) }
-    AlertDialog(
-        onDismissRequest = { onIntent(SessionIntent.DialogDismissed) },
-        title = { Text(stringResource(Res.string.session_rename_title)) },
-        text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
-                singleLine = true,
-                placeholder = { Text(placeholder) },
-                supportingText = { Text(stringResource(Res.string.session_rename_hint)) },
-            )
-        },
-        confirmButton = {
-            TextButton(onClick = { onIntent(SessionIntent.RenameConfirmed(text)) }) {
-                Text(stringResource(Res.string.session_rename_confirm))
-            }
-        },
-        dismissButton = {
-            TextButton(onClick = { onIntent(SessionIntent.DialogDismissed) }) { Text(stringResource(Res.string.dialog_cancel)) }
-        },
+    FieldDialog(
+        title = stringResource(Res.string.session_rename_title),
+        label = stringResource(Res.string.session_rename_label),
+        initial = currentTitle,
+        confirm = stringResource(Res.string.session_rename_confirm),
+        onConfirm = { onIntent(SessionIntent.RenameConfirmed(it)) },
+        onDismiss = { onIntent(SessionIntent.DialogDismissed) },
+        hint = stringResource(Res.string.session_rename_hint),
+        placeholder = placeholder,
     )
 }
 

@@ -70,7 +70,7 @@ fun RecordingStrip(recording: RecordingState, ribbon: () -> RecordingRibbon, mod
                     alpha = pulse.value
                     clip = pulse.value != 1f
                 }
-                .background(zoneColors.off, CircleShape),
+                .background(ViolinTheme.recording, CircleShape),
         )
         Text(
             text = stringResource(Res.string.recording_strip_label),

@@ -29,6 +29,7 @@ import kotlinx.coroutines.test.setMain
 import kotlinx.datetime.TimeZone
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -133,5 +134,31 @@ class ScaleFormTest {
         // a form never edited reads the scale as stored
         val (fresh, _) = scaleForm(id)
         assertEquals(3 to "", fresh.state.value.draft.octaves to fresh.state.value.draft.notes)
+    }
+
+    /**
+     * «Не сохранять?» and «Удалить …?» call a scale by the name it has in the list (spec 3.36.1): the title as stored, in the
+     * language it was made in (spec 3.26) — not the one the form would give it now, and not the octaves just picked.
+     */
+    @Test
+    fun `an edited scale is called by its stored title while its octaves change`() = runTest {
+        val stored = "G-dur · 3 октавы"
+        val id = repertoire.add(PieceDraft(title = stored, section = PieceSection.SCALES, scale = gMajor, key = gMajor.key), 1)
+        val (form, _) = scaleForm(id)
+        assertEquals(stored, form.state.value.savedTitle)
+        assertNotEquals("the stored title, not the one said anew", texts.titleOf(gMajor), form.state.value.savedTitle)
+
+        form.onIntent(ScaleFormIntent.OctavesSelected(2))
+        runCurrent()
+        assertEquals(2, form.state.value.scale?.spec?.octaves)
+        assertEquals("the name before the edit", stored, form.state.value.savedTitle)
+    }
+
+    @Test
+    fun `a new scale has no saved title to be called by`() = runTest {
+        val (form, _) = scaleForm()
+        form.onIntent(ScaleFormIntent.TonicClicked(Tonic.D))
+        runCurrent()
+        assertNull(form.state.value.savedTitle)
     }
 }

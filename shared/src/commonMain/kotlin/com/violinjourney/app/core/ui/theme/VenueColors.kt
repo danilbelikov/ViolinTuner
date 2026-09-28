@@ -7,9 +7,8 @@ import androidx.compose.ui.graphics.Color
 /**
  * The controls of Live drawn as things of the room (spec 3.27, handoff venue 29j): a maple plank with
  * a bone slider, ebony pegs with nickel heads, a bone key with a brass rim, a paper tag, a wooden
- * ruler. [ink] is what is written on bone and paper, [caption] — small figures on ebony; the label of
- * the place and the status line stand on [plate], smoked glass over the picture, without a frame: they name and
- * say, they are no buttons.
+ * ruler. [ink] is what is written on bone and paper, [caption] — small figures on ebony; the status line
+ * and the gear stand on [plate], smoked glass over the picture, without a frame (spec 3.36.1).
  */
 @Immutable
 data class VenueColors(
@@ -29,14 +28,14 @@ data class VenueColors(
     val caption: Color,
     val muted: Color,
     val recordingRim: Color,
-    /** The plate under the status line and the label of the place: smoked glass at 0.7 (handoff venue `venue.plate`). */
+    /** The plate under the status line and the gear: smoked glass at 0.72 (spec 5.29; the 0.7 of 5.20 is gone), no blur. */
     val plate: Color,
 )
 
 val DarkVenueColors = VenueColors(
     ebony = CtrlEbony, ebonyEdge = CtrlEbonyEdge, maple = CtrlMaple, mapleLit = CtrlMapleLit, mapleDark = CtrlMapleDark, ruler = CtrlRuler,
     bone = CtrlBone, boneShade = CtrlBoneShade, nickel = CtrlNickel, brass = CtrlBrass, velvet = CtrlVelvet, ink = CtrlInk, inkSoft = CtrlInkSoft,
-    caption = CtrlCaption, muted = CtrlMuted, recordingRim = RecordingRim, plate = VenuePlate,
+    caption = CtrlCaption, muted = CtrlMuted, recordingRim = RecordingRim, plate = Glass,
 )
 
 val LocalVenueColors = staticCompositionLocalOf<VenueColors> {

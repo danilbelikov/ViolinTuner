@@ -19,8 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -82,6 +80,8 @@ import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.session.RecordingRibbon
 import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.recording.video.VideoImportFailure
+import com.violinjourney.app.core.ui.components.AppMenu
+import com.violinjourney.app.core.ui.components.AppMenuItem
 import com.violinjourney.app.core.ui.components.dimmedWhen
 import com.violinjourney.app.core.ui.components.rememberSmallFileImage
 import com.violinjourney.app.core.ui.icons.AppIcon
@@ -145,30 +145,15 @@ fun VideoTakeButton(
             )
             AppIcon(AppIcons.ChevronDown, contentDescription = null, tint = colors.onSurfaceVariant, size = 16.dp)
         }
-        DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, modifier = Modifier.width(MenuWidth), containerColor = colors.surfaceContainerHigh) {
+        AppMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, modifier = Modifier.width(MenuWidth)) {
             when (ownCamera) {
-                null -> MenuItem(AppIcons.Video, Res.string.video_shoot, Res.string.video_shoot_hint) { menuOpen = false; onShoot() }
-                OwnCamera.UNDER_BACKING -> MenuItem(AppIcons.Backing, Res.string.video_shoot_backing, Res.string.video_shoot_backing_hint) { menuOpen = false; onShoot() }
-                OwnCamera.PLAIN -> MenuItem(AppIcons.Video, Res.string.video_shoot, Res.string.video_shoot_own_hint) { menuOpen = false; onShoot() }
+                null -> AppMenuItem(stringResource(Res.string.video_shoot), icon = AppIcons.Video, caption = stringResource(Res.string.video_shoot_hint), onClick = { menuOpen = false; onShoot() })
+                OwnCamera.UNDER_BACKING -> AppMenuItem(stringResource(Res.string.video_shoot_backing), icon = AppIcons.Backing, caption = stringResource(Res.string.video_shoot_backing_hint), onClick = { menuOpen = false; onShoot() })
+                OwnCamera.PLAIN -> AppMenuItem(stringResource(Res.string.video_shoot), icon = AppIcons.Video, caption = stringResource(Res.string.video_shoot_own_hint), onClick = { menuOpen = false; onShoot() })
             }
-            MenuItem(AppIcons.VideoGallery, Res.string.video_pick, Res.string.video_pick_hint) { menuOpen = false; onPick() }
+            AppMenuItem(stringResource(Res.string.video_pick), icon = AppIcons.VideoGallery, caption = stringResource(Res.string.video_pick_hint), onClick = { menuOpen = false; onPick() })
         }
     }
-}
-
-@Composable
-private fun MenuItem(icon: androidx.compose.ui.graphics.vector.ImageVector, title: StringResource, hint: StringResource, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    DropdownMenuItem(
-        leadingIcon = { AppIcon(icon, contentDescription = null, tint = colors.onSurface, size = 20.dp) },
-        text = {
-            Column {
-                Text(stringResource(title), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp))
-                Text(stringResource(hint), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp))
-            }
-        },
-        onClick = onClick,
-    )
 }
 
 /**
@@ -309,7 +294,7 @@ private fun Failed(import: VideoImport.Failed, onIntent: (PieceIntent) -> Unit) 
         VideoImportFailure.STOPPED -> ""
     }
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        AppIcon(AppIcons.Alert, contentDescription = null, tint = ViolinTheme.destructive)
+        AppIcon(AppIcons.Alert, contentDescription = null, tint = ViolinTheme.dangerSoft)
         Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             Text(title, color = colors.onSurface, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, fontWeight = FontWeight.Bold))
             val more = when {
@@ -341,7 +326,7 @@ private fun Rescue(title: StringResource, showContinue: Boolean, onIntent: (Piec
 private fun RescueButtons(onIntent: (PieceIntent) -> Unit) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         OutlinedButton(onClick = { onIntent(PieceIntent.VideoImportDismissed) }, modifier = Modifier.weight(1f)) {
-            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides ViolinTheme.destructive) {
+            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides ViolinTheme.dangerSoft) {
                 IconLabel(AppIcons.Trash, stringResource(Res.string.video_delete))
             }
         }

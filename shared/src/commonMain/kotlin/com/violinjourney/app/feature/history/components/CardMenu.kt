@@ -4,10 +4,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +17,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import com.violinjourney.app.core.ui.components.AppMenu
+import com.violinjourney.app.core.ui.components.AppMenuItem
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.feature.history.HistoryCard
@@ -61,26 +60,26 @@ fun CardMenuButton(card: HistoryCard, actions: CardActions, modifier: Modifier =
                 .semantics { contentDescription = label },
             contentAlignment = Alignment.Center,
         ) { AppIcon(AppIcons.More, contentDescription = null, tint = colors.onSurfaceVariant) }
-        DropdownMenu(expanded = open, onDismissRequest = { open = false }, containerColor = colors.surfaceContainerHigh) {
+        AppMenu(expanded = open, onDismissRequest = { open = false }) {
             val onBest = actions.onBest
             if (card.take && onBest != null) {
-                DropdownMenuItem(
-                    text = { Text(stringResource(if (card.best) Res.string.best_clear else Res.string.best_set)) },
-                    leadingIcon = { AppIcon(if (card.best) AppIcons.Star else AppIcons.StarOutline, contentDescription = null) },
+                AppMenuItem(
+                    text = stringResource(if (card.best) Res.string.best_clear else Res.string.best_set),
+                    icon = if (card.best) AppIcons.Star else AppIcons.StarOutline,
                     onClick = { open = false; onBest(sessionId) },
                 )
             }
             if (card.hasAudio) {
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.card_menu_share)) },
-                leadingIcon = { AppIcon(AppIcons.Share, contentDescription = null) },
-                onClick = { open = false; actions.onShare(sessionId) },
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(Res.string.card_menu_sound)) },
-                leadingIcon = { AppIcon(AppIcons.Sound, contentDescription = null) },
-                onClick = { open = false; actions.onSound(sessionId) },
-            )
+                AppMenuItem(
+                    text = stringResource(Res.string.card_menu_share),
+                    icon = AppIcons.Share,
+                    onClick = { open = false; actions.onShare(sessionId) },
+                )
+                AppMenuItem(
+                    text = stringResource(Res.string.card_menu_sound),
+                    icon = AppIcons.Sound,
+                    onClick = { open = false; actions.onSound(sessionId) },
+                )
             }
         }
     }

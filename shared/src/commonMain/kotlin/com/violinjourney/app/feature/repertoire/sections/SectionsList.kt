@@ -13,25 +13,17 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.focus.FocusRequester
-import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -39,24 +31,18 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardCapitalization
-import androidx.compose.foundation.text.KeyboardActions
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionCount
 import com.violinjourney.app.core.domain.repertoire.SectionRef
-import com.violinjourney.app.core.text.codePointLength
-import com.violinjourney.app.core.text.takeCodePoints
+import com.violinjourney.app.core.ui.components.FieldDialog
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.repertoire.SectionKeys
 import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.dialog_cancel
 import com.violinjourney.app.shared.resources.section_add
 import com.violinjourney.app.shared.resources.section_bar_description
 import com.violinjourney.app.shared.resources.section_empty_count
@@ -213,7 +199,10 @@ fun SectionBar(count: SectionCount, modifier: Modifier = Modifier) {
     )
 }
 
-/** «Новый раздел» and «Переименовать раздел»: one field, the limit shown as it is approached. */
+/**
+ * «Новый раздел» and «Переименовать раздел» (spec 3.36.1): one field with its counter; while it is empty «Создать» / «Сохранить» is
+ * dimmed and «Нужно название» stands by the counter.
+ */
 @Composable
 fun SectionNameDialog(
     title: String,
@@ -225,32 +214,16 @@ fun SectionNameDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val focus = remember { FocusRequester() }
-    // The field holds its own text, like every field of the app: echoing the state back makes the cursor jump.
-    var text by remember { mutableStateOf(name) }
-    LaunchedEffect(Unit) { focus.requestFocus() }
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(title) },
-        text = {
-            OutlinedTextField(
-                value = text,
-                onValueChange = {
-                    text = it.takeCodePoints(maxLength)
-                    onNameChange(text)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(focus),
-                label = { Text(stringResource(Res.string.section_name_label)) },
-                supportingText = { Text("${text.codePointLength()} / $maxLength", style = MaterialTheme.typography.bodySmall.copy(fontFeatureSettings = TABULAR_FIGURES)) },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
-                keyboardActions = KeyboardActions(onDone = { if (canConfirm) onConfirm() }),
-                shape = RoundedCornerShape(16.dp),
-            )
-        },
-        confirmButton = { TextButton(onClick = onConfirm, enabled = canConfirm) { Text(confirm) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(Res.string.dialog_cancel)) } },
+    FieldDialog(
+        title = title,
+        label = stringResource(Res.string.section_name_label),
+        initial = name,
+        confirm = confirm,
+        // the view model holds the name: it has heard every change of the field
+        onConfirm = { onConfirm() },
+        onDismiss = onDismiss,
+        onValueChange = onNameChange,
+        maxLength = maxLength,
+        confirmEnabled = canConfirm,
     )
 }

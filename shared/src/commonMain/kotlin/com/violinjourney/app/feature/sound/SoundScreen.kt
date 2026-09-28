@@ -27,7 +27,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -54,14 +53,15 @@ import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.sound.BuiltInPreset
 import com.violinjourney.app.core.domain.sound.SoundConfig
-import com.violinjourney.app.core.text.takeCodePoints
+import com.violinjourney.app.core.ui.components.AppDialog
+import com.violinjourney.app.core.ui.components.DeleteDialog
+import com.violinjourney.app.core.ui.components.FieldDialog
 import com.violinjourney.app.core.ui.components.SegmentedSwitch
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.core.ui.icons.IconSizes
-import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.history.components.sessionTitle
 import com.violinjourney.app.feature.sound.components.BackingBlock
 import com.violinjourney.app.feature.sound.components.BackingHeardSwitch
@@ -315,8 +315,6 @@ private fun Scope(state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> 
                 labels = listOf(stringResource(Res.string.sound_mode_everyone), stringResource(Res.string.sound_mode_own)),
                 selectedIndex = if (state.own) 1 else 0,
                 onSelect = { onIntent(SoundIntent.ModeSelected(own = it == 1)) },
-                height = 36.dp,
-                fontSize = 13,
             )
             Text(
                 text = if (state.own) stringResource(Res.string.sound_mode_own_text) else stringResource(Res.string.sound_mode_everyone_text, captionName(state.caption)),
@@ -467,36 +465,42 @@ private fun ShareButton(onIntent: (SoundIntent) -> Unit) {
 private fun Dialogs(dialog: SoundDialog, state: SoundState, zone: TimeZone, onIntent: (SoundIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val dismiss = { onIntent(SoundIntent.DialogDismissed) }
+    val confirm = { onIntent(SoundIntent.DialogConfirmed) }
     when (dialog) {
-        SoundDialog.BackToEveryone -> Confirm(
-            stringResource(Res.string.sound_dialog_everyone_title), stringResource(Res.string.sound_dialog_everyone_text),
-            stringResource(Res.string.sound_dialog_everyone_confirm), destructive = false, onIntent,
+        SoundDialog.BackToEveryone -> AppDialog(
+            title = stringResource(Res.string.sound_dialog_everyone_title),
+            text = stringResource(Res.string.sound_dialog_everyone_text),
+            confirm = stringResource(Res.string.sound_dialog_everyone_confirm),
+            onConfirm = confirm,
+            onDismiss = dismiss,
         )
-        SoundDialog.ResetEveryone -> Confirm(
-            stringResource(Res.string.sound_dialog_reset_title), stringResource(Res.string.sound_dialog_reset_text),
-            stringResource(Res.string.sound_reset), destructive = false, onIntent,
+        SoundDialog.ResetEveryone -> AppDialog(
+            title = stringResource(Res.string.sound_dialog_reset_title),
+            text = stringResource(Res.string.sound_dialog_reset_text),
+            confirm = stringResource(Res.string.sound_reset),
+            onConfirm = confirm,
+            onDismiss = dismiss,
         )
-        is SoundDialog.DeletePreset -> Confirm(
-            stringResource(Res.string.sound_dialog_delete_title, dialog.name), null, stringResource(Res.string.piece_delete_confirm), destructive = true, onIntent,
+        is SoundDialog.DeletePreset -> DeleteDialog(
+            title = stringResource(Res.string.sound_dialog_delete_title, dialog.name),
+            text = null,
+            confirm = stringResource(Res.string.piece_delete_confirm),
+            onConfirm = confirm,
+            onDismiss = dismiss,
         )
         SoundDialog.SavePreset -> {
+            // the screen keeps a copy of the name: «Сохранить» wakes up with the first letter, not a frame later
             var name by rememberSaveable { mutableStateOf("") }
-            AlertDialog(
-                onDismissRequest = dismiss,
-                title = { Text(stringResource(Res.string.sound_dialog_preset_title)) },
-                text = {
-                    OutlinedTextField(
-                        value = name,
-                        onValueChange = { name = it.takeCodePoints(PRESET_NAME_LENGTH) },
-                        singleLine = true,
-                        placeholder = { Text(stringResource(Res.string.sound_dialog_preset_hint)) },
-                    )
-                },
-                confirmButton = {
-                    TextButton(onClick = { onIntent(SoundIntent.PresetNameConfirmed(name)) }, enabled = name.isNotBlank()) { Text(stringResource(Res.string.sound_dialog_preset_save)) }
-                },
-                dismissButton = { TextButton(onClick = dismiss) { Text(stringResource(Res.string.dialog_cancel)) } },
-                containerColor = colors.surfaceContainerHigh,
+            FieldDialog(
+                title = stringResource(Res.string.sound_dialog_preset_title),
+                label = stringResource(Res.string.sound_dialog_preset_hint),
+                initial = "",
+                confirm = stringResource(Res.string.sound_dialog_preset_save),
+                onConfirm = { onIntent(SoundIntent.PresetNameConfirmed(it)) },
+                onDismiss = dismiss,
+                onValueChange = { name = it },
+                maxLength = PRESET_NAME_LENGTH,
+                confirmEnabled = name.isNotBlank(),
             )
         }
         SoundDialog.PickRecording -> AlertDialog(
@@ -534,21 +538,6 @@ private fun Dialogs(dialog: SoundDialog, state: SoundState, zone: TimeZone, onIn
             containerColor = colors.surfaceContainerHigh,
         )
     }
-}
-
-@Composable
-private fun Confirm(title: String, text: String?, confirm: String, destructive: Boolean, onIntent: (SoundIntent) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    AlertDialog(
-        onDismissRequest = { onIntent(SoundIntent.DialogDismissed) },
-        title = { Text(title) },
-        text = text?.let { { Text(it) } },
-        confirmButton = {
-            TextButton(onClick = { onIntent(SoundIntent.DialogConfirmed) }) { Text(confirm, color = if (destructive) ViolinTheme.destructive else colors.primary) }
-        },
-        dismissButton = { TextButton(onClick = { onIntent(SoundIntent.DialogDismissed) }) { Text(stringResource(Res.string.dialog_cancel)) } },
-        containerColor = colors.surfaceContainerHigh,
-    )
 }
 
 /** Mirrors `SoundConfig.maxPresetNameLength`; the repository cuts to it anyway, the field just does not let more in. */

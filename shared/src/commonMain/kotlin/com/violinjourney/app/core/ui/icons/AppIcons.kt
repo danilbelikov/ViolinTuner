@@ -75,6 +75,7 @@ object AppIcons {
     val FullscreenExit: ImageVector by lazy { icon("FullscreenExit", IconPaths.FULLSCREEN_EXIT) }
     val PlayCircle: ImageVector by lazy { icon("PlayCircle", IconPaths.PLAY_CIRCLE) }
     val Alert: ImageVector by lazy { icon("Alert", IconPaths.ALERT) }
+    val Info: ImageVector by lazy { icon("Info", IconPaths.INFO) }
     val SaveCopy: ImageVector by lazy { icon("SaveCopy", IconPaths.SAVE_COPY) }
     val Restore: ImageVector by lazy { icon("Restore", IconPaths.RESTORE) }
     val Archive: ImageVector by lazy { icon("Archive", IconPaths.ARCHIVE) }
@@ -153,6 +154,7 @@ object AppIcons {
         "FullscreenExit" to { FullscreenExit },
         "PlayCircle" to { PlayCircle },
         "Alert" to { Alert },
+        "Info" to { Info },
         "SaveCopy" to { SaveCopy },
         "Restore" to { Restore },
         "Archive" to { Archive },

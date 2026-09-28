@@ -29,8 +29,6 @@ data class ZoneColors(
     val inTune: Color,
     val near: Color,
     val off: Color,
-    /** Content on top of [off]: the stop square of the record button. */
-    val onOff: Color,
     /** Ring outline in silence and error states. */
     val none: Color,
     val inTuneGradient: ZoneGradient,
@@ -69,7 +67,6 @@ val DarkZoneColors = ZoneColors(
     inTune = ZoneInTune,
     near = ZoneNear,
     off = ZoneOff,
-    onOff = OnZoneOff,
     none = ZoneNone,
     inTuneGradient = ZoneGradient(GradientInTuneStart, GradientInTuneMid, Surface),
     nearGradient = ZoneGradient(GradientNearStart, GradientNearMid, Surface),

@@ -177,7 +177,7 @@ private fun Controls(state: CaptureState, onIntent: (CaptureIntent) -> Unit, com
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Box(Modifier.size(9.dp).clip(CircleShape).background(ViolinTheme.zoneColors.off))
+            Box(Modifier.size(9.dp).clip(CircleShape).background(ViolinTheme.recording))
             Text(Formats.timer(state.elapsedSeconds * MS_PER_SECOND), color = OnPicture, style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES))
         }
     }
@@ -208,8 +208,8 @@ private fun Controls(state: CaptureState, onIntent: (CaptureIntent) -> Unit, com
             .clickable(enabled = enabled, role = Role.Button, onClickLabel = label) { onIntent(CaptureIntent.RecordClicked) },
         contentAlignment = Alignment.Center,
     ) {
-        // the red of the record dot of every take, not the red of «мимо»: here no zone is shown
-        val red = ViolinTheme.zoneColors.off.copy(alpha = if (enabled) 1f else 0.4f)
+        // the sign of recording, as the dot of every take
+        val red = ViolinTheme.recording.copy(alpha = if (enabled) 1f else 0.4f)
         if (state.recording) {
             Box(Modifier.size(28.dp).clip(RoundedCornerShape(6.dp)).background(red))
         } else {

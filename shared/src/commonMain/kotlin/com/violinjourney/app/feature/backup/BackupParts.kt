@@ -14,13 +14,11 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -67,6 +65,8 @@ import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.backup.BackupCounts
 import com.violinjourney.app.core.backup.BackupPart
 import com.violinjourney.app.core.backup.BackupProgress
+import com.violinjourney.app.core.ui.components.AppDialog
+import com.violinjourney.app.core.ui.components.DialogTone
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -210,7 +210,7 @@ internal fun DoneMark(size: Int = 64) {
 internal fun ProblemBlock(title: String, text: String) {
     val colors = MaterialTheme.colorScheme
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        AppIcon(AppIcons.Alert, contentDescription = null, tint = ViolinTheme.destructive)
+        AppIcon(AppIcons.Alert, contentDescription = null, tint = ViolinTheme.dangerSoft)
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(title, color = colors.onSurface, style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, fontWeight = FontWeight.Bold))
             Text(text, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
@@ -226,15 +226,20 @@ internal fun TwoButtons(quiet: String, onQuiet: () -> Unit, loud: String, onLoud
     }
 }
 
-/** A plain question with the safe answer on the left and the destructive one, in its colour, on the right (handoff `sizes`, «Диалоги»). */
+/**
+ * A plain question with the safe answer on the left and the dangerous one on the right, a coral word (spec 3.20, 3.36.1): replacing
+ * the data, stopping a copy. Dismissing it is the safe answer.
+ */
 @Composable
 internal fun ConfirmDialog(title: String, text: String, safe: String, destructive: String, onSafe: () -> Unit, onDestructive: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onSafe,
-        title = { Text(title) },
-        text = { Text(text) },
-        dismissButton = { TextButton(onClick = onSafe) { Text(safe) } },
-        confirmButton = { TextButton(onClick = onDestructive) { Text(destructive, color = ViolinTheme.destructive) } },
+    AppDialog(
+        title = title,
+        text = text,
+        dismiss = safe,
+        onDismiss = onSafe,
+        confirm = destructive,
+        onConfirm = onDestructive,
+        confirmTone = DialogTone.Danger,
     )
 }
 
