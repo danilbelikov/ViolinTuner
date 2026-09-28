@@ -1,0 +1,977 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Violin Journey · Записи</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+%%CSS%%
+/* ===== Раздел «Записи» ===== */
+:root,[data-theme="dark"]{--danger-soft:#FFB199;--z-in:#6FD39B;--z-near:#F2B85A;--z-off:#FF7A7A;--video:#8CC6FF}
+.r-title{display:flex;align-items:center;justify-content:space-between;padding:6px 20px 8px;min-height:56px}
+.r-title h1{font-size:28px;font-weight:800;letter-spacing:-.02em}
+.r-link{height:44px;padding:0 12px;border:0;background:none;color:var(--accent);font:700 15px var(--font);display:inline-flex;align-items:center;gap:6px;border-radius:12px}
+.r-strip{display:flex;align-items:flex-end;justify-content:space-between;gap:12px}
+.r-strip b{font-size:15px}
+.r-bars{display:grid;grid-template-columns:repeat(14,1fr);gap:4px;align-items:end;height:28px;margin-top:10px}
+.r-bars i{display:block;border-radius:3px;background:var(--t3);min-height:3px}
+.r-bars i.z{background:var(--surface-2)}
+.r-bars i.t{background:var(--accent)}
+.r-axis{display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);margin-top:5px;font-weight:600}
+.r-chips{display:flex;gap:8px;margin:14px 0 4px;overflow:hidden}
+.r-chip{flex:none;height:40px;padding:0 14px;border-radius:999px;border:1.5px solid var(--border);background:transparent;color:var(--text);font:600 14px var(--font);display:inline-flex;align-items:center;gap:6px}
+.r-chip.on{background:var(--t3);border-color:var(--t3)}
+.r-chip .ic{width:16px;height:16px}
+.r-day{position:sticky;top:0;z-index:2;background:var(--bg);display:flex;align-items:center;gap:8px;padding:14px 0 6px;font-size:13px;font-weight:700;color:var(--text-2)}
+.r-card{display:flex;align-items:center;gap:12px;min-height:64px;padding:8px 4px 8px 12px;border-radius:16px;background:var(--surface);margin-bottom:6px}
+.r-tile{width:40px;height:40px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;color:var(--text-2);flex:none}
+.r-tile.hollow{background:transparent;border:1.5px solid var(--border)}
+.r-tile.vid{color:var(--video)}
+.r-main{flex:1;min-width:0}
+.r-main b{display:flex;align-items:center;gap:6px;font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r-main small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px;color:var(--text-2)}
+.r-star{width:15px;height:15px;fill:var(--accent);stroke:none;flex:none}
+.r-more{width:44px;height:44px;border:0;background:none;color:var(--text-2);display:grid;place-items:center;border-radius:12px;flex:none}
+.r-check{width:40px;height:40px;border-radius:50%;border:2px solid var(--text-3);flex:none;display:grid;place-items:center}
+.r-check.on{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.r-card.sel{background:color-mix(in srgb,var(--accent) 14%,var(--surface));box-shadow:0 0 0 1.5px var(--accent) inset}
+.r-selbar{flex:none;display:flex;align-items:center;gap:4px;padding:4px 8px;min-height:60px;background:var(--surface);border-bottom:1px solid var(--border)}
+.r-selbar .n{flex:1;font-size:17px;font-weight:800}
+.icon-b{width:48px;height:48px;border:0;background:none;color:var(--text);display:grid;place-items:center;border-radius:14px;flex:none}
+.icon-b.dim{opacity:.38}
+.dimmed{opacity:.38;pointer-events:none}
+.r-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:24px 32px}
+.r-empty .r-tile{width:72px;height:72px;margin-bottom:6px}
+.r-empty h3{font-size:20px;font-weight:800}
+.btn-main{height:56px;width:100%;border:0;border-radius:28px;background:var(--accent);color:var(--on-accent);font:800 16px var(--font);display:flex;align-items:center;justify-content:center;gap:8px}
+
+.perf{display:flex;align-items:center;gap:12px;min-height:60px;padding:8px 8px 8px 12px;border-radius:16px;background:var(--surface);margin-bottom:10px}
+.perf .pi{width:40px;height:40px;border-radius:12px;background:color-mix(in srgb,var(--accent) 16%,transparent);color:var(--accent);display:grid;place-items:center;flex:none}
+.perf b{display:block;font-size:15px;font-weight:800}
+.perf small{display:block;font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.snd.ic-only{flex:none;width:48px;justify-content:center;padding:0}
+/* экран записи */
+.appbar{flex:none;display:flex;align-items:center;gap:2px;padding:2px 6px;min-height:60px;background:var(--bg);position:relative;z-index:4}
+.appbar .t{flex:1;min-width:0;padding-left:2px}
+.appbar .t b{display:block;font-size:17px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.appbar .icon-b{width:44px}
+.seg span{white-space:nowrap}
+.appbar .t small{display:block;font-size:12px;color:var(--text-2);font-weight:600}
+.star-f{fill:var(--accent);stroke:var(--accent)}
+.sum{display:flex;align-items:flex-end;gap:16px}
+.score{font-size:60px;font-weight:800;letter-spacing:-.04em;line-height:.95}
+.score small{font-size:26px;color:var(--text-2);font-weight:700;letter-spacing:0}
+.sum-sub{font-size:13px;color:var(--text-2);margin-top:6px}
+.dist{display:flex;height:10px;border-radius:6px;overflow:hidden;gap:2px;margin:16px 0 8px}
+.dist i{display:block}
+.legend{display:flex;gap:14px;font-size:13px;color:var(--text-2);flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:5px}
+.legend b{color:var(--text)}
+.dotz{width:8px;height:8px;border-radius:50%}
+.bias{display:flex;gap:12px;align-items:flex-start;margin-top:14px;padding-top:14px;border-top:1px solid var(--border)}
+.bias .ic{color:var(--z-near);width:22px;height:22px;margin-top:1px}
+.bias b{display:block;font-size:15px}
+.bias small{font-size:13px;color:var(--text-2)}
+.strings{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}
+.strings div{background:var(--bg);border-radius:12px;padding:8px 0;text-align:center;font-size:12px;color:var(--text-2);font-weight:700}
+.strings b{display:block;font-size:16px;font-weight:800}
+.roll{position:relative;height:196px;margin-top:10px;overflow:hidden;border-radius:10px;background:var(--bg)}
+.roll .lab{position:absolute;left:6px;font-size:10px;color:var(--text-3);font-weight:700}
+.roll .nt{position:absolute;height:13px;border-radius:4px}
+.roll .cur{position:absolute;top:0;bottom:0;width:2px;background:var(--text);box-shadow:0 0 0 3px rgba(230,228,238,.12)}
+.roll .tick{position:absolute;top:2px;font-size:10px;color:var(--text-3);font-weight:600}
+.roll .picked{box-shadow:0 0 0 2px var(--accent)}
+.prob{display:flex;align-items:center;gap:12px;min-height:56px;padding:6px 4px;border-top:1px solid var(--border)}
+.prob:first-of-type{border-top:0}
+.prob .ic{width:20px;height:20px}
+.prob b{flex:1;font-size:15px}
+.prob span{font-size:14px;font-weight:800}
+.player{flex:none;background:var(--surface);border-radius:24px 24px 0 0;padding:12px 16px 30px;box-shadow:0 -10px 30px -10px rgba(0,0,0,.6);position:relative;z-index:5}
+.pl-row{display:flex;align-items:center;gap:12px}
+.play{width:56px;height:56px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none}
+.play .ic{width:26px;height:26px;fill:currentColor;stroke:none}
+.play.off{background:var(--surface-2);color:var(--text-3)}
+.wave{flex:1;min-width:0}
+.wave .w{display:flex;align-items:center;gap:2px;height:34px}
+.wave .w i{flex:1;border-radius:2px;background:var(--text-3);opacity:.55}
+.wave .w i.p{background:var(--accent);opacity:1}
+.wave .tm{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);font-weight:600;margin-top:2px}
+.pl-opts{display:flex;align-items:center;gap:8px;margin-top:10px}
+.seg{display:inline-flex;padding:3px;border-radius:14px;background:var(--bg);flex:none}
+.seg span{height:38px;min-width:44px;padding:0 12px;border-radius:11px;display:grid;place-items:center;font-size:14px;font-weight:800;color:var(--text-2)}
+.seg span.on{background:var(--surface-2);color:var(--text)}
+.snd{flex:1;min-width:0;height:44px;border-radius:14px;background:var(--bg);display:flex;align-items:center;gap:8px;padding:0 12px;font-size:14px;font-weight:700}
+.snd .ic{width:18px;height:18px;color:var(--accent)}
+.snd span{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.snd small{color:var(--text-2);font-weight:600}
+.menu{position:absolute;right:10px;top:104px;z-index:20;width:230px;background:var(--surface-2);border-radius:16px;padding:6px;box-shadow:var(--shadow-2)}
+.menu div{display:flex;align-items:center;gap:12px;height:48px;padding:0 12px;border-radius:10px;font-size:15px;font-weight:600}
+.menu .danger{color:var(--danger-soft)}
+.video{position:relative;height:200px;background:linear-gradient(160deg,#3a2f28,#1b1714);border-radius:16px;overflow:hidden}
+.video .vfig{position:absolute;inset:0;background:radial-gradient(60% 70% at 45% 55%,#8a6a50 0 20%,transparent 60%),radial-gradient(30% 40% at 70% 40%,#c9a27a55,transparent)}
+.video .fs{position:absolute;right:8px;bottom:8px;width:44px;height:44px;border-radius:12px;background:rgba(19,19,24,.7);color:#fff;display:grid;place-items:center}
+.video .badge{position:absolute;left:10px;top:10px;height:26px;padding:0 9px;border-radius:999px;background:rgba(19,19,24,.72);color:#E6E4EE;font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px}
+.video.wait{filter:brightness(.45)}
+.spin{width:22px;height:22px;border-radius:50%;border:3px solid color-mix(in srgb,var(--accent) 25%,transparent);border-top-color:var(--accent);flex:none}
+@media (prefers-reduced-motion:no-preference){.spin{animation:rot 1s linear infinite}}
+@keyframes rot{to{transform:rotate(360deg)}}
+.stuck{flex:none;display:flex;align-items:center;gap:12px;padding:6px 12px 8px 16px;background:var(--bg);border-bottom:1px solid var(--border);position:relative;z-index:3}
+.stuck .mini{width:112px;height:63px;border-radius:10px;background:linear-gradient(160deg,#3a2f28,#1b1714);position:relative;overflow:hidden;flex:none}
+.stuck .mini::after{content:"";position:absolute;inset:0;background:radial-gradient(60% 70% at 45% 55%,#8a6a50 0 20%,transparent 60%)}
+.stuck b{font-size:22px;font-weight:800}
+.stuck small{display:block;font-size:12px;color:var(--text-2);font-weight:600}
+.quiet{display:flex;gap:10px;align-items:center;padding:12px 14px;border-radius:14px;border:1.5px dashed var(--border);font-size:14px;color:var(--text-2)}
+.chip-src{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 10px;border-radius:999px;background:var(--bg);font-size:12px;font-weight:700;color:var(--text-2)}
+
+/* лист ноты */
+.nsheet .nbig{display:flex;align-items:baseline;gap:14px}
+.nsheet .nbig b{font-size:48px;font-weight:800;letter-spacing:-.03em}
+.nsheet .nbig span{font-size:17px;font-weight:800;display:inline-flex;align-items:center;gap:4px}
+.tiles3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:14px 0}
+.tiles3 div{background:var(--bg);border-radius:14px;padding:10px;font-size:12px;color:var(--text-2);font-weight:600}
+.tiles3 b{display:block;font-size:17px;color:var(--text);font-weight:800;margin-top:2px}
+.advice{display:flex;gap:10px;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--z-near) 10%,var(--bg));font-size:14px;color:var(--text-2)}
+.advice b{color:var(--text)}
+
+/* Звук */
+.presets{display:flex;gap:8px;overflow:hidden;margin:4px 0 14px}
+.blk{background:var(--surface);border-radius:18px;margin-bottom:10px;overflow:hidden}
+.blk-h{display:flex;align-items:center;gap:12px;min-height:64px;padding:8px 12px 8px 16px}
+.blk-h .no{width:22px;height:22px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:11px;font-weight:800;color:var(--text-2);flex:none}
+.blk-h .t{flex:1;min-width:0}
+.blk-h .t b{display:block;font-size:16px;font-weight:800}
+.blk-h .t small{display:block;font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.blk.off .t,.blk.off .no{opacity:.45}
+.sw{width:48px;height:28px;border-radius:14px;background:var(--surface-2);position:relative;flex:none;border:1.5px solid var(--border)}
+.sw::after{content:"";position:absolute;left:3px;top:3px;width:19px;height:19px;border-radius:50%;background:var(--text-3)}
+.sw.on{background:var(--t3);border-color:var(--t3)}
+.sw.on::after{left:24px;background:#fff}
+.blk-b{padding:0 16px 16px}
+.eq{height:130px;border-radius:12px;background:var(--bg);position:relative;overflow:hidden}
+.bands{display:flex;gap:5px;margin:12px 0 4px;flex-wrap:nowrap}
+.bands span{height:34px;padding:0 9px;border-radius:999px;border:1.5px solid var(--border);display:inline-flex;align-items:center;font-size:13px;font-weight:700;color:var(--text-2)}
+.bands span.on{background:var(--t3);border-color:var(--t3);color:var(--text)}
+.sl{display:grid;grid-template-columns:36px 1fr minmax(36px,auto);grid-template-areas:"lab lab val" "m t p";column-gap:12px;row-gap:4px;padding:6px 0 8px;align-items:center}
+.sl>:nth-child(2){grid-area:m}.sl>:nth-child(3){grid-area:t}.sl>:nth-child(4){grid-area:p;justify-self:end}
+.sl .lab{grid-area:lab;font-size:14px;font-weight:700;flex:none}
+.sl .pm{width:36px;height:36px;border-radius:10px;background:var(--bg);display:grid;place-items:center;color:var(--text);flex:none}
+.sl .pm .ic{width:16px;height:16px}
+.track{flex:1;height:6px;border-radius:3px;background:var(--surface-2);position:relative}
+.track i{position:absolute;top:0;bottom:0;border-radius:3px;background:var(--accent)}
+.track em{position:absolute;top:50%;width:20px;height:20px;margin:-10px 0 0 -10px;border-radius:50%;background:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 35%,transparent)}
+.track u{position:absolute;top:-5px;width:2px;height:16px;background:var(--text-3);margin-left:-1px}
+.sl .val{grid-area:val;white-space:nowrap;text-align:right;font-size:14px;font-weight:800;flex:none}
+.hint{font-size:13px;color:var(--text-2);margin-top:4px}
+.meter{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text-2);font-weight:700;margin-top:10px}
+.meter .m{flex:1;height:6px;border-radius:3px;background:var(--surface-2);overflow:hidden;position:relative}
+.meter .m i{position:absolute;left:0;top:0;bottom:0;background:#7FA6C9}
+.abbig{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:16px;background:var(--bg);flex:1}
+.abbig span{height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;gap:6px;font-size:14px;font-weight:700;color:var(--text-2)}
+.abbig span b{font-size:15px;font-weight:800}
+.abbig span.on{background:var(--surface-2);color:var(--text)}
+.listen-on{display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 14px;border-radius:16px;background:var(--surface);margin-bottom:14px}
+
+/* Поделиться */
+.opt{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 14px;border-radius:16px;background:var(--bg);margin-top:8px;border:1.5px solid transparent}
+.opt.on{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 10%,var(--bg))}
+.radio{width:22px;height:22px;border-radius:50%;border:2px solid var(--text-3);flex:none}
+.opt.on .radio{border:6px solid var(--accent)}
+.opt .t{flex:1;min-width:0}
+.opt .t b{display:block;font-size:15px}
+.opt .t small{display:block;font-size:13px;color:var(--text-2)}
+.ext{height:24px;padding:0 8px;border-radius:7px;background:var(--surface-2);font-size:12px;font-weight:800;color:var(--text-2);display:grid;place-items:center;flex:none}
+.fileline{font-size:13px;color:var(--text-2);margin-top:12px;display:flex;gap:6px;align-items:center}
+.cbx{display:flex;gap:12px;align-items:flex-start;margin-top:12px;min-height:48px;font-size:14px}
+.cbx .b{width:22px;height:22px;border-radius:6px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;flex:none;margin-top:1px}
+.cbx small{display:block;color:var(--text-2);font-size:13px}
+.prog{height:8px;border-radius:5px;background:var(--surface-2);overflow:hidden;margin:18px 0 8px}
+.prog i{display:block;height:100%;background:var(--accent);border-radius:5px}
+.err{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:14px;background:color-mix(in srgb,var(--z-near) 12%,var(--bg));font-size:14px}
+.btn-row{display:flex;gap:10px;margin-top:16px}
+.btn-ghost2{flex:1;height:56px;border-radius:28px;border:1.5px solid var(--border);background:transparent;color:var(--text);font:800 15px var(--font)}
+.hdr-sheet{display:flex;align-items:center;justify-content:space-between}
+.hdr-sheet h3{font-size:20px;font-weight:800}
+</style>
+</head>
+<body>
+%%SVG%%
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></symbol>
+  <symbol id="i-chev-d" viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></symbol>
+  <symbol id="i-stage" viewBox="0 0 24 24"><path d="M3 20h18M5 20V9l7-5 7 5v11"/><path d="M9 20v-6h6v6"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5M11 6l-6 6 6 6"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M12 15V3M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></symbol>
+  <symbol id="i-more" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><circle cx="5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="19" cy="12" r="1.8"/></g></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 3 2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><rect x="2.5" y="6" width="13" height="12" rx="2.5"/><path d="m15.5 10.5 6-3.5v10l-6-3.5"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 5 5L20 7"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path d="M8 5.5v13a1 1 0 0 0 1.5.9l10.5-6.5a1 1 0 0 0 0-1.8L9.5 4.6A1 1 0 0 0 8 5.5z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1.2"/><rect x="13.5" y="5" width="4" height="14" rx="1.2"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></symbol>
+  <symbol id="i-full" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-down" viewBox="0 0 24 24"><path d="M12 5v14M6 13l6 6 6-6"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M6 11l6-6 6 6"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path d="M5 12h14"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path d="M4 11a8 8 0 1 1 2.3 5.7"/><path d="M4 4v7h7"/></symbol>
+  <symbol id="i-piano" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M8 5v9M13 5v9M18 5v9M8 14v5M13 14v5M18 14v5"/></symbol>
+  <symbol id="i-alert" viewBox="0 0 24 24"><path d="M12 3 2 20h20z"/><path d="M12 10v4M12 17h.01"/></symbol>
+  <symbol id="i-headph" viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0 1 16 0v3"/><rect x="3" y="14" width="4" height="6" rx="1.5"/><rect x="17" y="14" width="4" height="6" rx="1.5"/></symbol>
+</svg>
+
+<div class="doc">
+  <header class="doc-head">
+    <h1>Violin Journey · Записи</h1>
+    <p class="doc-meta">
+      <b>Задача:</b> найти запись, послушать её и понять, что держится, а что уходит; поправить звук и отправить педагогу.
+      <b>Для кого:</b> скрипач после игры: скрипка уже в футляре или на коленях, телефон в руке, часто в наушниках. Вечером, спокойно, есть пара минут.
+      <b>Допущения:</b> вкладка «Записи» теперь одна из четырёх («Занятия · Live · Репертуар · Записи») и репертуара больше не содержит. Данные выдуманы, но правдоподобны: «Менуэт соль мажор», 82 %, −6 ц. Экраны записи, «Звук» и «Поделиться» открываются поверх вкладок, без нижней панели. Слова — из спеки 3.21: «запись», «дубль», без «сессии».
+    </p>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="Режимы просмотра">
+    <button type="button" id="btn-notes" aria-pressed="true">Номера</button>
+    <button type="button" id="btn-theme" aria-pressed="true">Тёмная подложка</button>
+    <button type="button" id="btn-thumb" aria-pressed="false">Зона большого пальца</button>
+  </div>
+
+  <section class="block">
+    <h2>Что сейчас (снято с эмулятора)</h2>
+    <div class="compare">
+      <div class="shot"><img src="%%REC_TOP%%" alt="Вкладка Записи сейчас, верх">
+        <span class="shot-mark" style="left:50%;top:6%">1</span>
+        <span class="shot-mark" style="left:88%;top:20%">2</span>
+        <span class="shot-mark" style="left:62%;top:65.5%">3</span>
+      </div>
+      <div class="shot"><img src="%%REC_LIST%%" alt="Список записей сейчас">
+        <span class="shot-mark" style="left:70%;top:40%">4</span>
+        <span class="shot-mark" style="left:90%;top:60%">5</span>
+      </div>
+      <ol class="issues">
+        <li><span class="n">1</span><span class="sev sev-major">важно</span><b>Переключатель «Записи | Репертуар» вместо заголовка.</b> Весь репертуар спрятан во вкладке, которая называется «Записи», — его не найти, не зная. Решено общим: у репертуара своя вкладка.</li>
+        <li><span class="n">2</span><span class="sev sev-minor">мелочь</span><b>График занимает 200 dp первого экрана</b>, а сообщает «по одной записи в некоторые дни». Площадь не соответствует смыслу.</li>
+        <li><span class="n">3</span><span class="sev sev-minor">мелочь</span><b>Фильтры по времени дублируют вставки дат</b>: «Эта неделя» — это просто верх списка. Найти все видео или все дубли при этом нельзя.</li>
+        <li><span class="n">4</span><span class="sev sev-minor">мелочь</span><b>Три «Recording» подряд</b> отличаются только временем, а контурная плитка «без звука» ничем не подписана — её легко принять за поломку.</li>
+        <li><span class="n">5</span><span class="sev sev-minor">мелочь</span><b>«⋯» есть не у всех карточек</b> — правый край списка «прыгает», и непонятно, почему у одной записи есть действия, а у другой нет.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Карта экранов</h2>
+    <div class="flow-row">
+      <a class="flow-node" href="#s-list">Вкладка «Записи»</a>
+      <span class="flow-arrow">→<i>тап по карточке</i></span>
+      <a class="flow-node" href="#s-rec">Запись</a>
+      <span class="flow-arrow">→<i>тап по ноте</i></span>
+      <a class="flow-node is-new" href="#s-note">Лист ноты</a>
+    </div>
+    <div class="flow-row">
+      <a class="flow-node" href="#s-rec">Запись</a>
+      <span class="flow-arrow">→<i>строка «Звук» в плеере</i></span>
+      <a class="flow-node" href="#s-sound">Звук</a>
+      <span class="flow-arrow">·</span>
+      <span class="flow-arrow">→<i>значок в шапке</i></span>
+      <a class="flow-node" href="#s-share">Лист «Поделиться»</a>
+    </div>
+    <div class="flow-row">
+      <a class="flow-node" href="#s-list">Вкладка «Записи»</a>
+      <span class="flow-arrow">→<i>«⋯» карточки</i></span>
+      <span class="flow-node">Поделиться · Звук… · Отметить лучшим <small>есть</small></span>
+      <span class="flow-arrow">·</span>
+      <span class="flow-arrow">→<i>пусто</i></span>
+      <span class="flow-node">Live <small>вкладка</small></span>
+    </div>
+    <div class="flow-row">
+      <a class="flow-node" href="#s-list">Вкладка «Записи»</a>
+      <span class="flow-arrow">→<i>строка «Выступления»</i></span>
+      <span class="flow-node">Выступления <small>экран раздела событий</small></span>
+    </div>
+    <div class="flow-row">
+      <span class="flow-node">Настройки → «Звук записей»</span>
+      <span class="flow-arrow">→</span>
+      <a class="flow-node" href="#s-sound">Звук <small>состояние «Для всех записей»</small></a>
+    </div>
+  </section>
+
+  <main class="screens">
+
+    <!-- ===================== 1. ВКЛАДКА ===================== -->
+    <article class="screen" id="s-list">
+      <h2 class="screen-title">1. Вкладка «Записи»</h2>
+      <p class="screen-goal"><b>Главное действие:</b> открыть нужную запись &nbsp;·&nbsp; <b>За 3 секунды:</b> «последняя — сегодня, дубль Менуэта; за две недели 12 записей».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            <div class="statusbar"><span>18:42</span><span class="sb-icons"><svg class="ic ic-s"><use href="#i-sb-signal"/></svg><svg class="ic" style="width:26px"><use href="#i-sb-battery"/></svg></span></div>
+
+            <div class="state" data-state="Обычное">
+              <div class="app-scroll" style="padding:0 20px 16px">
+                <div class="r-title" style="padding:6px 0 4px" data-note="1"><h1>Записи</h1><button class="r-link"><svg class="ic ic-s"><use href="#i-check"/></svg>Выбрать</button></div>
+                <div class="perf" data-note="9"><div class="pi"><svg class="ic ic-s"><use href="#i-stage"/></svg></div><div class="r-main"><b>Выступления</b><small>ближайшее: Осенний концерт, 12 окт</small></div><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                <div class="card" style="padding:14px 16px" data-note="2">
+                  <div class="r-strip"><span class="caption">За две недели</span><b class="tnum">12 записей</b></div>
+                  <div class="r-bars" id="bars1"></div>
+                  <div class="r-axis"><span>14 сен</span><span>21 сен</span><span style="color:var(--accent)">сегодня</span></div>
+                </div>
+                <div class="r-chips" data-note="3">
+                  <span class="r-chip on">Все</span>
+                  <span class="r-chip">Дубли</span>
+                  <span class="r-chip"><svg class="ic"><use href="#i-cam"/></svg>Видео</span>
+                  <span class="r-chip">С Live</span>
+                </div>
+                <div class="r-day" data-note="4">Сегодня, 27 сентября</div>
+                <div class="r-card"><div class="r-tile vid"><svg class="ic ic-s"><use href="#i-cam"/></svg></div><div class="r-main"><b>Менуэт соль мажор <svg class="r-star"><use href="#i-star"/></svg></b><small class="tnum">18:42 · 2:05 · видео</small></div><button class="r-more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+                <div class="r-card" data-note="5"><div class="r-tile"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div class="r-main"><b>Запись с Live</b><small class="tnum">18:10 · 0:32</small></div><button class="r-more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+                <div class="r-day">Четверг, 24 сентября</div>
+                <div class="r-card"><div class="r-tile hollow"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div class="r-main"><b>Запись с Live</b><small class="tnum">09:15 · 0:36 · без звука</small></div><button class="r-more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+                <div class="r-card"><div class="r-tile"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div class="r-main"><b>Концерт ля минор, I ч.</b><small class="tnum">08:05 · 3:12 · дубль</small></div><button class="r-more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+                <div class="r-day">Среда, 23 сентября</div>
+                <div class="r-card"><div class="r-tile"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div class="r-main"><b>Концерт ля минор, I ч. <svg class="r-star"><use href="#i-star"/></svg></b><small class="tnum">08:05 · 3:40 · дубль · с минусовкой</small></div><button class="r-more"><svg class="ic"><use href="#i-more"/></svg></button></div>
+              </div>
+              <nav class="tabbar">
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-watch"/></svg></div>Занятия</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-string"/></svg></div>Live</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-sheet"/></svg></div>Репертуар</div>
+                <div class="tab is-active"><div class="pill"><svg class="ic"><use href="#i-tape"/></svg></div>Записи</div>
+              </nav>
+            </div>
+
+            <div class="state" data-state="Выбор">
+              <div class="r-selbar" data-note="6">
+                <button class="icon-b" aria-label="Закрыть"><svg class="ic"><use href="#i-x"/></svg></button>
+                <span class="n tnum">Выбрано: 2</span>
+                <button class="r-link">Все</button>
+                <button class="icon-b" aria-label="Удалить" style="color:var(--danger-soft)"><svg class="ic"><use href="#i-trash"/></svg></button>
+              </div>
+              <div class="app-scroll" style="padding:0 20px 16px">
+                <div class="dimmed">
+                  <div class="r-chips" style="margin-top:12px">
+                    <span class="r-chip on">Все</span><span class="r-chip">Дубли</span><span class="r-chip"><svg class="ic"><use href="#i-cam"/></svg>Видео</span><span class="r-chip">С Live</span>
+                  </div>
+                </div>
+                <div class="r-day">Сегодня, 27 сентября</div>
+                <div class="r-card"><div class="r-check"></div><div class="r-main"><b>Менуэт соль мажор <svg class="r-star"><use href="#i-star"/></svg></b><small class="tnum">18:42 · 2:05 · видео</small></div></div>
+                <div class="r-card sel"><div class="r-check on"><svg class="ic ic-s"><use href="#i-check"/></svg></div><div class="r-main"><b>Запись с Live</b><small class="tnum">18:10 · 0:32</small></div></div>
+                <div class="r-day">Четверг, 24 сентября</div>
+                <div class="r-card sel"><div class="r-check on"><svg class="ic ic-s"><use href="#i-check"/></svg></div><div class="r-main"><b>Запись с Live</b><small class="tnum">09:15 · 0:36 · без звука</small></div></div>
+                <div class="r-card"><div class="r-check"></div><div class="r-main"><b>Концерт ля минор, I ч.</b><small class="tnum">08:05 · 3:12 · дубль</small></div></div>
+                <div class="r-day">Среда, 23 сентября</div>
+                <div class="r-card"><div class="r-check"></div><div class="r-main"><b>Концерт ля минор, I ч. <svg class="r-star"><use href="#i-star"/></svg></b><small class="tnum">08:05 · 3:40 · дубль · с минусовкой</small></div></div>
+              </div>
+              <nav class="tabbar">
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-watch"/></svg></div>Занятия</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-string"/></svg></div>Live</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-sheet"/></svg></div>Репертуар</div>
+                <div class="tab is-active"><div class="pill"><svg class="ic"><use href="#i-tape"/></svg></div>Записи</div>
+              </nav>
+            </div>
+
+            <div class="state" data-state="Пусто">
+              <div class="r-title"><h1>Записи</h1></div>
+              <div class="r-empty" data-note="7">
+                <div class="r-tile hollow"><svg class="ic" style="width:32px;height:32px"><use href="#i-tape"/></svg></div>
+                <h3>Здесь появятся ваши записи</h3>
+                <p class="muted" style="font-size:15px">Запишите игру кнопкой на Live или дубль на экране произведения — после записи будет разбор: что держится, а что уходит.</p>
+              </div>
+              <div style="padding:0 20px 14px"><button class="btn-main"><svg class="ic"><use href="#i-string"/></svg>Открыть Live</button></div>
+              <nav class="tabbar">
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-watch"/></svg></div>Занятия</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-string"/></svg></div>Live</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-sheet"/></svg></div>Репертуар</div>
+                <div class="tab is-active"><div class="pill"><svg class="ic"><use href="#i-tape"/></svg></div>Записи</div>
+              </nav>
+            </div>
+
+            <div class="state" data-state="Пусто под фильтром">
+              <div class="app-scroll" style="padding:0 20px 16px">
+                <div class="r-title" style="padding:6px 0 4px"><h1>Записи</h1></div>
+                <div class="card" style="padding:14px 16px">
+                  <div class="r-strip"><span class="caption">За две недели</span><b class="tnum">12 записей</b></div>
+                  <div class="r-bars" id="bars2"></div>
+                  <div class="r-axis"><span>14 сен</span><span>21 сен</span><span style="color:var(--accent)">сегодня</span></div>
+                </div>
+                <div class="r-chips">
+                  <span class="r-chip">Все</span><span class="r-chip">Дубли</span><span class="r-chip on"><svg class="ic"><use href="#i-cam"/></svg>Видео</span><span class="r-chip">С Live</span>
+                </div>
+                <div class="r-empty" style="padding:40px 12px" data-note="8">
+                  <div class="r-tile hollow vid"><svg class="ic" style="width:30px;height:30px"><use href="#i-cam"/></svg></div>
+                  <h3 style="font-size:18px">Видео пока нет</h3>
+                  <p class="muted" style="font-size:14px">Видео-дубль снимают на экране произведения — кнопкой рядом с записью дубля.</p>
+                  <button class="r-link">Показать все записи</button>
+                </div>
+              </div>
+              <nav class="tabbar">
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-watch"/></svg></div>Занятия</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-string"/></svg></div>Live</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-sheet"/></svg></div>Репертуар</div>
+                <div class="tab is-active"><div class="pill"><svg class="ic"><use href="#i-tape"/></svg></div>Записи</div>
+              </nav>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Заголовок «Записи» и «Выбрать» в одной строке.</b> Переключатель ушёл вместе с репертуаром; «где я» снова отвечает заголовок, а действие над списком — рядом с ним. <span class="tag">закон Якоба</span></li>
+          <li data-n="2"><b>График сжат до полоски 14 дней</b> с итогом справа: ритм виден так же, но вместо 200 dp — 90, и первые записи стоят на первом экране. <span class="tag">бюджет экрана</span></li>
+          <li data-n="3"><b>Фильтры — по виду, а не по времени</b>: «Дубли · Видео · С Live». Время уже даёт порядок и вставки дат, а видео и дубли раньше было не собрать. <span class="tag">ментальная модель</span></li>
+          <li data-n="4"><b>Вставки дат прилипают к верху</b>, пока их день на экране: в длинном списке всегда видно, какой это день. <span class="tag">ориентация</span></li>
+          <li data-n="5"><b>У каждой карточки одинаковый край и «⋯»</b>; вид записи — словом в строке («видео», «дубль», «без звука»), а не только значком. <span class="tag">единообразие</span></li>
+          <li data-n="6"><b>Выбор: панель сверху, корзина там же, подальше от пальца</b>; всё, что не список, приглушено. Удаление необратимо, поэтому оно не лежит в зоне частых касаний. <span class="tag">защита от ошибок</span></li>
+          <li data-n="7"><b>Пусто — не тупик</b>: одна фраза о том, что появится и зачем, и кнопка на Live в зоне большого пальца. <span class="tag">пустые состояния</span></li>
+          <li data-n="9"><b>«Выступления» — первой строкой вкладки</b>, с ближайшим концертом: записи выступлений живут рядом с остальными записями. Строки нет, пока выступлений нет. Экран списка — в разделе событий. <span class="tag">согласовано с «Событиями»</span></li>
+          <li data-n="8"><b>Пусто под фильтром объясняет, откуда берутся видео</b>, и одним тапом снимает фильтр — а не просто пишет «ничего нет». <span class="tag">выход из тупика</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ===================== 2. ЗАПИСЬ ===================== -->
+    <article class="screen" id="s-rec">
+      <h2 class="screen-title">2. Запись</h2>
+      <p class="screen-goal"><b>Главное действие:</b> послушать и найти, где уходит &nbsp;·&nbsp; <b>За 3 секунды:</b> «82 % в строе, в среднем занижаю на 6 ц, хуже всего F#5 на E».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            <div class="statusbar"><span>18:44</span><span class="sb-icons"><svg class="ic ic-s"><use href="#i-sb-signal"/></svg><svg class="ic" style="width:26px"><use href="#i-sb-battery"/></svg></span></div>
+
+            <!-- звук -->
+            <div class="state" data-state="Звуковой дубль">
+              <div class="appbar" data-note="1">
+                <button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button>
+                <div class="t"><b>Менуэт соль мажор</b><small class="tnum">дубль · 18:42 · 2:05</small></div>
+                <button class="icon-b" aria-label="Лучший"><svg class="ic"><use href="#i-star"/></svg></button>
+                <button class="icon-b" aria-label="Поделиться"><svg class="ic"><use href="#i-share"/></svg></button>
+                <button class="icon-b" aria-label="Ещё"><svg class="ic"><use href="#i-more"/></svg></button>
+              </div>
+              <div class="app-scroll" style="padding-top:4px">
+                <div class="card" data-note="2">
+                  <div class="sum"><div class="score tnum">82<small>%</small></div><div class="sum-sub" style="margin-bottom:6px">в строе<br><span class="tnum">2:05 · допуск ±8 ц</span></div></div>
+                  <div class="dist"><i style="flex:68;background:var(--z-in)"></i><i style="flex:22;background:var(--z-near)"></i><i style="flex:10;background:var(--z-off)"></i></div>
+                  <div class="legend"><span><i class="dotz" style="background:var(--z-in)"></i>в строе <b>68</b></span><span><i class="dotz" style="background:var(--z-near)"></i>рядом <b>22</b></span><span><i class="dotz" style="background:var(--z-off)"></i>мимо <b>10</b></span></div>
+                  <div class="bias" data-note="3"><svg class="ic"><use href="#i-down"/></svg><div><b class="tnum">В среднем ниже на 6 ц</b><small>Пальцы чуть ближе к подставке. Средняя ошибка — 7,4 ц.</small></div></div>
+                </div>
+                <div class="gap"></div>
+                <div class="card" data-note="4">
+                  <div class="today-head"><span class="label">Ноты</span><span class="caption">тап — подробно</span></div>
+                  <div class="roll" id="roll1"></div>
+                </div>
+                <div class="gap"></div>
+                <div class="card" data-note="5">
+                  <span class="label">Что уходит</span>
+                  <div style="margin-top:6px">
+                    <div class="prob"><svg class="ic" style="color:var(--z-off)"><use href="#i-down"/></svg><b>F#5 на струне E</b><span class="tnum" style="color:var(--z-off)">−22 ц</span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                    <div class="prob"><svg class="ic" style="color:var(--z-near)"><use href="#i-up"/></svg><b>C5 на струне A</b><span class="tnum" style="color:var(--z-near)">+13 ц</span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                  </div>
+                </div>
+                <div class="gap"></div>
+                <div class="card">
+                  <span class="label">По струнам</span>
+                  <div class="strings"><div>G<b style="color:var(--z-in)">91</b></div><div>D<b style="color:var(--z-in)">86</b></div><div>A<b style="color:var(--z-near)">71</b></div><div>E<b style="color:var(--z-near)">64</b></div></div>
+                </div>
+              </div>
+              <div class="player" data-note="6">
+                <div class="pl-row"><button class="play"><svg class="ic"><use href="#i-play"/></svg></button><div class="wave"><div class="w" data-wave="0.34"></div><div class="tm tnum"><span>0:43</span><span>2:05</span></div></div></div>
+                <div class="pl-opts"><div class="seg" data-note="7"><span>A</span><span class="on">B</span></div><div class="snd"><svg class="ic"><use href="#i-sliders"/></svg><span>Звук <small>· как у всех · Камерный зал</small></span><svg class="ic ic-s chev"><use href="#i-chev-r"/></svg></div></div>
+              </div>
+            </div>
+
+            <!-- меню -->
+            <div class="state" data-state="Меню ⋯">
+              <div class="appbar">
+                <button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button>
+                <div class="t"><b>Менуэт соль мажор</b><small class="tnum">дубль · 18:42 · 2:05</small></div>
+                <button class="icon-b"><svg class="ic"><use href="#i-star"/></svg></button>
+                <button class="icon-b"><svg class="ic"><use href="#i-share"/></svg></button>
+                <button class="icon-b" style="background:var(--surface-2)"><svg class="ic"><use href="#i-more"/></svg></button>
+              </div>
+              <div class="app-scroll" style="padding-top:4px;opacity:.5">
+                <div class="card"><div class="sum"><div class="score tnum">82<small>%</small></div><div class="sum-sub" style="margin-bottom:6px">в строе<br><span class="tnum">2:05 · допуск ±8 ц</span></div></div>
+                  <div class="dist"><i style="flex:68;background:var(--z-in)"></i><i style="flex:22;background:var(--z-near)"></i><i style="flex:10;background:var(--z-off)"></i></div></div>
+              </div>
+              <div class="menu" style="top:58px" data-note="8">
+                <div><svg class="ic"><use href="#i-edit"/></svg>Переименовать</div>
+                <div><svg class="ic"><use href="#i-sheet"/></svg>К произведению</div>
+                <div style="height:1px;padding:0;margin:4px 8px;background:var(--border)"></div>
+                <div class="danger"><svg class="ic"><use href="#i-trash"/></svg>Удалить…</div>
+              </div>
+              <div class="player">
+                <div class="pl-row"><button class="play"><svg class="ic"><use href="#i-play"/></svg></button><div class="wave"><div class="w" data-wave="0.34"></div><div class="tm tnum"><span>0:43</span><span>2:05</span></div></div></div>
+                <div class="pl-opts"><div class="seg"><span>A</span><span class="on">B</span></div><div class="snd"><svg class="ic"><use href="#i-sliders"/></svg><span>Звук <small>· как у всех · Камерный зал</small></span></div></div>
+              </div>
+            </div>
+
+            <!-- видео -->
+            <div class="state" data-state="Видео-дубль">
+              <div class="appbar">
+                <button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button>
+                <div class="t"><b>Менуэт соль мажор</b><small class="tnum">видео-дубль · 18:42</small></div>
+                <button class="icon-b"><svg class="ic star-f"><use href="#i-star"/></svg></button>
+                <button class="icon-b"><svg class="ic"><use href="#i-share"/></svg></button>
+                <button class="icon-b"><svg class="ic"><use href="#i-more"/></svg></button>
+              </div>
+              <div class="app-scroll" style="padding-top:2px">
+                <div class="video" data-note="9"><div class="vfig"></div><span class="badge"><svg class="ic" style="width:13px;height:13px"><use href="#i-cam"/></svg>видео</span><span class="fs"><svg class="ic"><use href="#i-full"/></svg></span></div>
+                <div class="gap"></div>
+                <div class="card">
+                  <div class="sum"><div class="score tnum">82<small>%</small></div><div class="sum-sub" style="margin-bottom:6px">в строе<br><span class="tnum">2:05 · допуск ±8 ц</span></div></div>
+                  <div class="dist"><i style="flex:68;background:var(--z-in)"></i><i style="flex:22;background:var(--z-near)"></i><i style="flex:10;background:var(--z-off)"></i></div>
+                  <div class="legend"><span><i class="dotz" style="background:var(--z-in)"></i>в строе <b>68</b></span><span><i class="dotz" style="background:var(--z-near)"></i>рядом <b>22</b></span><span><i class="dotz" style="background:var(--z-off)"></i>мимо <b>10</b></span></div>
+                </div>
+              </div>
+              <div class="player">
+                <div class="pl-row"><button class="play"><svg class="ic"><use href="#i-pause"/></svg></button><div class="wave"><div class="w" data-wave="0.34"></div><div class="tm tnum"><span>0:43</span><span>2:05</span></div></div></div>
+                <div class="pl-opts"><div class="seg"><span>A</span><span class="on">B</span></div><div class="snd"><svg class="ic"><use href="#i-sliders"/></svg><span>Звук <small>· свои настройки</small></span><svg class="ic ic-s chev"><use href="#i-chev-r"/></svg></div></div>
+              </div>
+            </div>
+
+            <!-- видео прилипло -->
+            <div class="state" data-state="Видео при прокрутке">
+              <div class="appbar">
+                <button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button>
+                <div class="t"><b>Менуэт соль мажор</b><small class="tnum">видео-дубль · 18:42</small></div>
+                <button class="icon-b"><svg class="ic star-f"><use href="#i-star"/></svg></button>
+                <button class="icon-b"><svg class="ic"><use href="#i-share"/></svg></button>
+                <button class="icon-b"><svg class="ic"><use href="#i-more"/></svg></button>
+              </div>
+              <div class="stuck" data-note="10"><div class="mini"></div><div style="flex:1"><b class="tnum">82 %</b><small class="tnum">в строе · ниже на 6 ц</small></div><button class="icon-b"><svg class="ic"><use href="#i-full"/></svg></button></div>
+              <div class="app-scroll" style="padding-top:12px">
+                <div class="card">
+                  <div class="today-head"><span class="label">Ноты</span><span class="caption">тап — подробно</span></div>
+                  <div class="roll" id="roll2"></div>
+                </div>
+                <div class="gap"></div>
+                <div class="card">
+                  <span class="label">Что уходит</span>
+                  <div style="margin-top:6px">
+                    <div class="prob"><svg class="ic" style="color:var(--z-off)"><use href="#i-down"/></svg><b>F#5 на струне E</b><span class="tnum" style="color:var(--z-off)">−22 ц</span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                  </div>
+                </div>
+              </div>
+              <div class="player">
+                <div class="pl-row"><button class="play"><svg class="ic"><use href="#i-pause"/></svg></button><div class="wave"><div class="w" data-wave="0.34"></div><div class="tm tnum"><span>0:43</span><span>2:05</span></div></div></div>
+                <div class="pl-opts"><div class="seg"><span>A</span><span class="on">B</span></div><div class="snd"><svg class="ic"><use href="#i-sliders"/></svg><span>Звук <small>· свои настройки</small></span><svg class="ic ic-s chev"><use href="#i-chev-r"/></svg></div></div>
+              </div>
+            </div>
+
+            <!-- готовим минусовку -->
+            <div class="state" data-state="Готовим минусовку">
+              <div class="appbar">
+                <button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button>
+                <div class="t"><b>Концерт ля минор, I ч.</b><small class="tnum">видео-дубль · с минусовкой</small></div>
+                <button class="icon-b"><svg class="ic"><use href="#i-star"/></svg></button>
+                <button class="icon-b"><svg class="ic"><use href="#i-share"/></svg></button>
+                <button class="icon-b"><svg class="ic"><use href="#i-more"/></svg></button>
+              </div>
+              <div class="app-scroll" style="padding-top:2px">
+                <div class="video wait"><div class="vfig"></div></div>
+                <div class="gap"></div>
+                <div class="card">
+                  <div class="sum"><div class="score tnum">76<small>%</small></div><div class="sum-sub" style="margin-bottom:6px">в строе<br><span class="tnum">3:40 · допуск ±8 ц</span></div></div>
+                  <div class="dist"><i style="flex:60;background:var(--z-in)"></i><i style="flex:27;background:var(--z-near)"></i><i style="flex:13;background:var(--z-off)"></i></div>
+                  <div class="legend"><span><i class="dotz" style="background:var(--z-in)"></i>в строе <b>60</b></span><span><i class="dotz" style="background:var(--z-near)"></i>рядом <b>27</b></span><span><i class="dotz" style="background:var(--z-off)"></i>мимо <b>13</b></span></div>
+                </div>
+              </div>
+              <div class="player" data-note="11">
+                <div class="pl-row"><button class="play off"><div class="spin"></div></button><div class="wave"><div style="font-size:15px;font-weight:800">Готовим минусовку…</div><div class="caption">разбор уже здесь — звук будет через несколько секунд</div></div></div>
+                <div class="pl-opts dimmed"><div class="seg"><span>A</span><span class="on">B</span></div><div class="seg" style="flex:1"><span class="on" style="flex:1">+ минусовка</span><span style="flex:1">скрипка</span></div><div class="snd ic-only"><svg class="ic"><use href="#i-sliders"/></svg></div></div>
+              </div>
+            </div>
+
+            <!-- с минусовкой готово -->
+            <div class="state" data-state="С минусовкой">
+              <div class="appbar">
+                <button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button>
+                <div class="t"><b>Концерт ля минор, I ч.</b><small class="tnum">дубль · с минусовкой</small></div>
+                <button class="icon-b"><svg class="ic"><use href="#i-star"/></svg></button>
+                <button class="icon-b"><svg class="ic"><use href="#i-share"/></svg></button>
+                <button class="icon-b"><svg class="ic"><use href="#i-more"/></svg></button>
+              </div>
+              <div class="app-scroll" style="padding-top:4px">
+                <div class="card">
+                  <div class="sum"><div class="score tnum">76<small>%</small></div><div class="sum-sub" style="margin-bottom:6px">в строе<br><span class="tnum">3:40 · допуск ±8 ц</span></div></div>
+                  <div class="dist"><i style="flex:60;background:var(--z-in)"></i><i style="flex:27;background:var(--z-near)"></i><i style="flex:13;background:var(--z-off)"></i></div>
+                  <div class="legend"><span><i class="dotz" style="background:var(--z-in)"></i>в строе <b>60</b></span><span><i class="dotz" style="background:var(--z-near)"></i>рядом <b>27</b></span><span><i class="dotz" style="background:var(--z-off)"></i>мимо <b>13</b></span></div>
+                  <div class="bias"><svg class="ic" style="color:var(--z-in)"><use href="#i-check"/></svg><div><b>Без смещения</b><small>В среднем ровно по центру. Средняя ошибка — 8,1 ц.</small></div></div>
+                </div>
+                <div class="gap"></div>
+                <div class="card"><div class="today-head"><span class="label">Ноты</span><span class="caption">только скрипка</span></div><div class="roll" id="roll3"></div></div>
+              </div>
+              <div class="player" data-note="12">
+                <div class="pl-row"><button class="play"><svg class="ic"><use href="#i-play"/></svg></button><div class="wave"><div class="w" data-wave="0.12"></div><div class="tm tnum"><span>0:26</span><span>3:40</span></div></div></div>
+                <div class="pl-opts"><div class="seg"><span>A</span><span class="on">B</span></div><div class="seg" style="flex:1"><span class="on" style="flex:1">+ минусовка</span><span style="flex:1">скрипка</span></div><div class="snd ic-only"><svg class="ic"><use href="#i-sliders"/></svg></div></div>
+              </div>
+            </div>
+
+            <!-- без звука -->
+            <div class="state" data-state="Без звука">
+              <div class="appbar">
+                <button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button>
+                <div class="t"><b>Запись · 24 сентября</b><small class="tnum">с Live · 09:15 · 0:36</small></div>
+                <button class="icon-b"><svg class="ic"><use href="#i-more"/></svg></button>
+              </div>
+              <div class="app-scroll" style="padding-top:4px">
+                <div class="quiet" data-note="13"><svg class="ic ic-s"><use href="#i-info"/></svg>Запись без звука — только разбор интонации.</div>
+                <div class="gap"></div>
+                <div class="card">
+                  <div class="sum"><div class="score tnum">71<small>%</small></div><div class="sum-sub" style="margin-bottom:6px">в строе<br><span class="tnum">0:36 · допуск ±8 ц</span></div></div>
+                  <div class="dist"><i style="flex:55;background:var(--z-in)"></i><i style="flex:30;background:var(--z-near)"></i><i style="flex:15;background:var(--z-off)"></i></div>
+                  <div class="legend"><span><i class="dotz" style="background:var(--z-in)"></i>в строе <b>55</b></span><span><i class="dotz" style="background:var(--z-near)"></i>рядом <b>30</b></span><span><i class="dotz" style="background:var(--z-off)"></i>мимо <b>15</b></span></div>
+                  <div class="bias"><svg class="ic" style="color:var(--z-near)"><use href="#i-up"/></svg><div><b>В среднем выше на 4 ц</b><small>Пальцы чуть ближе к порожку.</small></div></div>
+                </div>
+                <div class="gap"></div>
+                <div class="card"><div class="today-head"><span class="label">Ноты</span><span class="caption">тап — подробно</span></div><div class="roll" id="roll4" style="height:150px"></div></div>
+              </div>
+            </div>
+
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>В шапке — то, что делают с записью целиком</b>: «лучший», «Поделиться» и «⋯». Отправка — частое действие, видна сразу; «Удалить» ушло в меню, подальше от неё. <span class="tag">частота × риск</span></li>
+          <li data-n="2"><b>Балл и распределение — в одной карточке</b>: 82 % сразу объяснены долями «в строе / рядом / мимо». Раньше это были три отдельные карточки ниже ленты. <span class="tag">близость</span></li>
+          <li data-n="3"><b>Смещение — стрелкой, словами и советом</b>: «ниже на 6 ц — пальцы ближе к подставке». Цвет продублирован направлением стрелки. <span class="tag">не только цветом</span></li>
+          <li data-n="4"><b>Лента нот сразу под итогом</b>, курсор идёт за звуком. Смотришь на ленту и слушаешь одновременно — плеер внизу её не закрывает. <span class="tag">главная задача</span></li>
+          <li data-n="5"><b>«Что уходит» — строки, которые открывают ноту</b>: со стрелкой и числом. Проблемное место — в одно касание от совета. <span class="tag">действие у данных</span></li>
+          <li data-n="6"><b>Плеер закреплён внизу</b>: воспроизведение — главное действие экрана и всегда под большим пальцем, при любой прокрутке. <span class="tag">закон Фиттса</span></li>
+          <li data-n="7"><b>A/B и «Звук» — рядом с кнопкой воспроизведения</b>: сравнивают на слух, поэтому переключатель там, где рука уже лежит. Строка «Звук» говорит, что сейчас включено. <span class="tag">близость</span></li>
+          <li data-n="8"><b>«⋯»: переименовать, к произведению, удалить.</b> Удаление отделено чертой и красным, а подтверждение остаётся диалогом, как сейчас. <span class="tag">защита от ошибок</span></li>
+          <li data-n="9"><b>Видео — под шапкой, над итогом</b>, не выше 40 % экрана: экран открывают, чтобы посмотреть. На картинке — только «на весь экран». <span class="tag">иерархия</span></li>
+          <li data-n="10"><b>При прокрутке видео сжимается в строку</b> с баллом и смещением: смотреть на руки и на ленту одновременно — главный сценарий разбора. <span class="tag">постоянство</span></li>
+          <li data-n="11"><b>«Готовим минусовку…» — в самом плеере</b>, с крутилкой вместо «play», видео затемнено. Разбор уже виден, и понятно, что ждать секунды, а не что всё сломалось. <span class="tag">видимость состояния</span></li>
+          <li data-n="12"><b>«+ минусовка / скрипка» — второй переключатель рядом с A/B</b>: A/B сравнивает обработку, этот — наличие аккомпанемента. Два разных вопроса — два контрола. <span class="tag">один контрол — один смысл</span></li>
+          <li data-n="13"><b>Без звука — тихая строка вместо плеера</b>, пунктиром: пустое место не читается как поломка, а экран честно говорит, что здесь есть. <span class="tag">видимость состояния</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ===================== 3. НОТА ===================== -->
+    <article class="screen" id="s-note">
+      <h2 class="screen-title">3. Лист ноты</h2>
+      <p class="screen-goal"><b>Главное действие:</b> «Слушать это место» &nbsp;·&nbsp; <b>За 3 секунды:</b> «F#5 стабильно ниже на 22 ц — ставлю 2-й палец выше».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            <div class="statusbar"><span>18:45</span><span class="sb-icons"><svg class="ic ic-s"><use href="#i-sb-signal"/></svg><svg class="ic" style="width:26px"><use href="#i-sb-battery"/></svg></span></div>
+            <div class="state" data-state="Звуковой дубль">
+              <div class="appbar"><button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button><div class="t"><b>Менуэт соль мажор</b><small>дубль · 18:42</small></div></div>
+              <div class="app-scroll" style="padding-top:4px"><div class="card"><div class="roll" id="roll5"></div></div></div>
+              <div class="scrim"></div>
+              <div class="sheet nsheet">
+                <div class="nbig" data-note="1"><b>F#5</b><span style="color:var(--z-off)"><svg class="ic ic-s"><use href="#i-down"/></svg>в среднем −22 ц</span></div>
+                <div class="caption">на струне E · 2-й палец · 3 раза за запись</div>
+                <div class="tiles3" data-note="2"><div>мин / макс<b class="tnum">−31 / −12</b></div><div>длительность<b class="tnum">0,8 с</b></div><div>размах<b class="tnum">±10 ц</b></div></div>
+                <div class="advice" data-note="3"><svg class="ic ic-s" style="color:var(--z-off);margin-top:2px"><use href="#i-info"/></svg><span><b>Палец стоит низко.</b> Чуть ближе к подставке — и нота сядет.</span></div>
+                <div style="height:16px"></div>
+                <button class="btn-main" data-note="4"><svg class="ic" style="fill:currentColor;stroke:none"><use href="#i-play"/></svg>Слушать это место</button>
+              </div>
+            </div>
+            <div class="state" data-state="Видео-дубль">
+              <div class="appbar"><button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button><div class="t"><b>Менуэт соль мажор</b><small>видео-дубль · 18:42</small></div></div>
+              <div class="app-scroll" style="padding-top:2px"><div class="video"><div class="vfig"></div></div></div>
+              <div class="scrim"></div>
+              <div class="sheet nsheet">
+                <div class="nbig"><b>C5</b><span style="color:var(--z-in)"><svg class="ic ic-s"><use href="#i-check"/></svg>в среднем +2 ц</span></div>
+                <div class="caption">на струне A · 3-й палец · 5 раз за запись</div>
+                <div class="tiles3"><div>мин / макс<b class="tnum">−19 / +24</b></div><div>длительность<b class="tnum">1,2 с</b></div><div>размах<b class="tnum">±22 ц</b></div></div>
+                <div class="advice"><svg class="ic ic-s" style="color:var(--z-near);margin-top:2px"><use href="#i-info"/></svg><span><b>В среднем в строе, но нота плавает.</b> Размах больше 20 ц — ровной её не назвать.</span></div>
+                <div style="height:16px"></div>
+                <button class="btn-main"><svg class="ic" style="fill:currentColor;stroke:none"><use href="#i-play"/></svg>Смотреть это место</button>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Нота и среднее — одной строкой, крупно</b>, отклонение — цветом зоны и стрелкой: ответ на «что с ней» читается раньше деталей. <span class="tag">иерархия</span></li>
+          <li data-n="2"><b>Три плитки — только числа</b>; «вибрато» из старого макета подписано честно — «размах». <span class="tag">понятные слова</span></li>
+          <li data-n="3"><b>Совет — отдельной плашкой с глаголом</b>: «чуть ближе к подставке». Это то, ради чего открывают лист. <span class="tag">действие, а не данные</span></li>
+          <li data-n="4"><b>«Слушать / Смотреть это место» — главной кнопкой внизу</b>: проверить ухом — естественный следующий шаг, и он под большим пальцем. В спеке кнопка контурная. <span class="tag">закон Фиттса</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ===================== 4. ЗВУК ===================== -->
+    <article class="screen" id="s-sound">
+      <h2 class="screen-title">4. Звук</h2>
+      <p class="screen-goal"><b>Главное действие:</b> слушать и сравнивать A/B, пока крутишь &nbsp;·&nbsp; <b>За 3 секунды:</b> «сейчас Камерный зал, свои настройки, B — это то, что уйдёт».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            <div class="statusbar"><span>18:47</span><span class="sb-icons"><svg class="ic ic-s"><use href="#i-sb-signal"/></svg><svg class="ic" style="width:26px"><use href="#i-sb-battery"/></svg></span></div>
+
+            <div class="state" data-state="Обзор">
+              <div class="appbar" data-note="1">
+                <button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button>
+                <div class="t"><b>Звук</b><small>Менуэт соль мажор · свои настройки</small></div>
+                <button class="icon-b"><svg class="ic"><use href="#i-share"/></svg></button>
+              </div>
+              <div class="app-scroll" style="padding-top:4px">
+                <div class="seg" style="display:flex;width:100%" data-note="2"><span style="flex:1">Как у всех</span><span class="on" style="flex:1">Свои для записи</span></div>
+                <div class="presets" style="margin-top:12px" data-note="3">
+                  <span class="r-chip on">Свои</span><span class="r-chip">Без обработки</span><span class="r-chip">Естественно</span><span class="r-chip">Комната</span><span class="r-chip">Камерный зал</span>
+                </div>
+                <div class="blk" data-note="4"><div class="blk-h"><span class="no">1</span><div class="t"><b>Эквалайзер</b><small class="tnum">Гул 80 Гц · Тело +2 дБ · Воздух +3 дБ</small></div><span class="sw on"></span><svg class="ic chev"><use href="#i-chev-d"/></svg></div></div>
+                <div class="blk"><div class="blk-h"><span class="no">2</span><div class="t"><b>Компрессор</b><small>выравнивает громкость · заметно</small></div><span class="sw on"></span><svg class="ic chev"><use href="#i-chev-d"/></svg></div></div>
+                <div class="blk"><div class="blk-h"><span class="no">3</span><div class="t"><b>Зал</b><small class="tnum">Зал · хвост 1,8 с · 24 %</small></div><span class="sw on"></span><svg class="ic chev"><use href="#i-chev-d"/></svg></div></div>
+                <div class="blk off" data-note="5"><div class="blk-h"><span class="no">4</span><div class="t"><b>Громкость</b><small>выключена</small></div><span class="sw"></span><span style="width:24px"></span></div></div>
+              </div>
+              <div class="player" data-note="6">
+                <div class="pl-row"><button class="play"><svg class="ic"><use href="#i-pause"/></svg></button><div class="wave"><div class="w" data-wave="0.52"></div><div class="tm tnum"><span>1:05</span><span>2:05</span></div></div></div>
+                <div class="pl-opts"><div class="abbig" data-note="7"><span>A <b>оригинал</b></span><span class="on">B <b>обработка</b></span></div></div>
+                <div class="meter"><span>выход</span><div class="m"><i style="width:62%"></i></div><span class="tnum">−9 дБ</span></div>
+              </div>
+            </div>
+
+            <div class="state" data-state="Эквалайзер">
+              <div class="appbar">
+                <button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button>
+                <div class="t"><b>Звук</b><small>Менуэт соль мажор · свои настройки</small></div>
+                <button class="icon-b"><svg class="ic"><use href="#i-share"/></svg></button>
+              </div>
+              <div class="app-scroll" style="padding-top:4px">
+                <div class="blk">
+                  <div class="blk-h"><span class="no">1</span><div class="t"><b>Эквалайзер</b><small>тяните точки на кривой</small></div><span class="sw on"></span><svg class="ic chev" style="transform:rotate(180deg)"><use href="#i-chev-d"/></svg></div>
+                  <div class="blk-b">
+                    <div class="eq" data-note="8">
+                      <svg viewBox="0 0 318 130" width="100%" height="130" preserveAspectRatio="none">
+                        <path d="M0 65H318" stroke="#3A3846" stroke-dasharray="4 4"/>
+                        <path d="M0 125 C 20 90, 34 68, 60 66 S 110 62, 130 56 S 170 50, 190 62 S 230 72, 250 60 S 290 44, 318 42" fill="none" stroke="#C4ADFF" stroke-width="2.5"/>
+                        <path d="M0 125 C 20 90, 34 68, 60 66 S 110 62, 130 56 S 170 50, 190 62 S 230 72, 250 60 S 290 44, 318 42 V130 H0Z" fill="#C4ADFF" opacity=".08"/>
+                        <circle cx="30" cy="80" r="7" fill="#292833" stroke="#A39FB5" stroke-width="2"/>
+                        <circle cx="80" cy="64" r="7" fill="#292833" stroke="#A39FB5" stroke-width="2"/>
+                        <circle cx="140" cy="54" r="10" fill="#C4ADFF"/>
+                        <circle cx="222" cy="68" r="7" fill="#292833" stroke="#A39FB5" stroke-width="2"/>
+                        <circle cx="290" cy="46" r="7" fill="#292833" stroke="#A39FB5" stroke-width="2"/>
+                      </svg>
+                      <span style="position:absolute;left:104px;top:8px;height:26px;padding:0 9px;border-radius:8px;background:var(--surface-2);font-size:12px;font-weight:800;display:flex;align-items:center" class="tnum">320 Гц · +2 дБ</span>
+                    </div>
+                    <div class="bands"><span>Гул</span><span>Низ</span><span class="on">Тело</span><span>Резкость</span><span>Воздух</span></div>
+                    <div class="sl" data-note="9"><span class="lab">Частота</span><span class="pm"><svg class="ic"><use href="#i-minus"/></svg></span><div class="track"><u style="left:50%"></u><i style="left:0;width:46%"></i><em style="left:46%"></em></div><span class="pm"><svg class="ic"><use href="#i-plus"/></svg></span><span class="val tnum">320 Гц</span></div>
+                    <div class="sl"><span class="lab">Усиление</span><span class="pm"><svg class="ic"><use href="#i-minus"/></svg></span><div class="track"><u style="left:50%"></u><i style="left:50%;width:8%"></i><em style="left:58%"></em></div><span class="pm"><svg class="ic"><use href="#i-plus"/></svg></span><span class="val tnum">+2 дБ</span></div>
+                    <div class="sl"><span class="lab">Ширина</span><span class="pm"><svg class="ic"><use href="#i-minus"/></svg></span><div class="track"><u style="left:40%"></u><i style="left:0;width:40%"></i><em style="left:40%"></em></div><span class="pm"><svg class="ic"><use href="#i-plus"/></svg></span><span class="val tnum">1,0</span></div>
+                  </div>
+                </div>
+                <div class="blk"><div class="blk-h"><span class="no">2</span><div class="t"><b>Компрессор</b><small>выравнивает громкость · заметно</small></div><span class="sw on"></span><svg class="ic chev"><use href="#i-chev-d"/></svg></div></div>
+              </div>
+              <div class="player">
+                <div class="pl-row"><button class="play"><svg class="ic"><use href="#i-pause"/></svg></button><div class="wave"><div class="w" data-wave="0.52"></div><div class="tm tnum"><span>1:05</span><span>2:05</span></div></div></div>
+                <div class="pl-opts"><div class="abbig"><span>A <b>оригинал</b></span><span class="on">B <b>обработка</b></span></div></div>
+              </div>
+            </div>
+
+            <div class="state" data-state="Минусовка">
+              <div class="appbar">
+                <button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button>
+                <div class="t"><b>Звук</b><small>Концерт ля минор · как у всех</small></div>
+                <button class="icon-b"><svg class="ic"><use href="#i-share"/></svg></button>
+              </div>
+              <div class="app-scroll" style="padding-top:4px">
+                <div class="blk" style="opacity:.6"><div class="blk-h"><span class="no">4</span><div class="t"><b>Громкость</b><small>+1,5 дБ</small></div><span class="sw on"></span><svg class="ic chev"><use href="#i-chev-d"/></svg></div></div>
+                <div class="blk" data-note="10">
+                  <div class="blk-h"><span class="no">5</span><div class="t"><b>Минусовка</b><small>фортепиано · 3:40</small></div><svg class="ic chev" style="transform:rotate(180deg)"><use href="#i-chev-d"/></svg></div>
+                  <div class="blk-b">
+                    <div class="sl"><span class="lab">Громкость</span><span class="pm"><svg class="ic"><use href="#i-minus"/></svg></span><div class="track"><u style="left:60%"></u><i style="left:0;width:60%"></i><em style="left:60%"></em></div><span class="pm"><svg class="ic"><use href="#i-plus"/></svg></span><span class="val tnum">−6 дБ</span></div>
+                    <div class="sl" data-note="11"><span class="lab">Сдвиг</span><span class="pm"><svg class="ic"><use href="#i-minus"/></svg></span><div class="track"><u style="left:50%"></u><i style="left:50%;width:6%"></i><em style="left:56%"></em></div><span class="pm"><svg class="ic"><use href="#i-plus"/></svg></span><span class="val tnum">+240 мс</span></div>
+                    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:4px">
+                      <span class="hint" style="margin:0">Минусовка отстаёт — двигайте влево.</span>
+                      <button class="btn-soft" style="height:44px;flex:none"><svg class="ic ic-s"><use href="#i-reset"/></svg>Как записано</button>
+                    </div>
+                    <div class="caption" style="margin-top:10px;display:flex;gap:6px;align-items:center"><svg class="ic ic-s"><use href="#i-headph"/></svg>Записано в Pixel Buds · +200 мс учтено</div>
+                  </div>
+                </div>
+              </div>
+              <div class="player">
+                <div class="pl-row"><button class="play"><svg class="ic"><use href="#i-pause"/></svg></button><div class="wave"><div class="w" data-wave="0.2"></div><div class="tm tnum"><span>0:44</span><span>3:40</span></div></div></div>
+                <div class="pl-opts"><div class="abbig"><span>A <b>оригинал</b></span><span class="on">B <b>обработка</b></span></div></div>
+                <div class="pl-opts" style="margin-top:6px"><div class="seg" style="display:flex;flex:1"><span class="on" style="flex:1">С минусовкой</span><span style="flex:1">Только скрипка</span></div></div>
+              </div>
+            </div>
+
+            <div class="state" data-state="Для всех записей">
+              <div class="appbar">
+                <button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button>
+                <div class="t"><b>Звук записей</b><small class="tnum">для всех записей · 23 записи</small></div>
+              </div>
+              <div class="app-scroll" style="padding-top:4px">
+                <div class="listen-on" data-note="12"><div class="r-tile"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div class="r-main"><small>слушать на записи</small><b style="font-size:15px">Менуэт соль мажор</b></div><span class="r-link">Другая</span></div>
+                <div class="presets">
+                  <span class="r-chip">Без обработки</span><span class="r-chip">Естественно</span><span class="r-chip">Комната</span><span class="r-chip on">Камерный зал</span>
+                </div>
+                <div class="blk"><div class="blk-h"><span class="no">1</span><div class="t"><b>Эквалайзер</b><small>Гул 80 Гц · Тело +1 дБ</small></div><span class="sw on"></span><svg class="ic chev"><use href="#i-chev-d"/></svg></div></div>
+                <div class="blk"><div class="blk-h"><span class="no">2</span><div class="t"><b>Компрессор</b><small>чуть</small></div><span class="sw on"></span><svg class="ic chev"><use href="#i-chev-d"/></svg></div></div>
+                <div class="blk"><div class="blk-h"><span class="no">3</span><div class="t"><b>Зал</b><small class="tnum">Зал · хвост 2,2 с · 28 %</small></div><span class="sw on"></span><svg class="ic chev"><use href="#i-chev-d"/></svg></div></div>
+                <div class="blk off"><div class="blk-h"><span class="no">4</span><div class="t"><b>Громкость</b><small>выключена</small></div><span class="sw"></span><span style="width:24px"></span></div></div>
+              </div>
+              <div class="player">
+                <div class="pl-row"><button class="play"><svg class="ic"><use href="#i-play"/></svg></button><div class="wave"><div class="w" data-wave="0"></div><div class="tm tnum"><span>0:00</span><span>2:05</span></div></div></div>
+                <div class="pl-opts"><div class="abbig"><span>A <b>оригинал</b></span><span class="on">B <b>обработка</b></span></div></div>
+              </div>
+            </div>
+
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>В шапке — чья это обработка и «Поделиться»</b>, как на экране записи: отправляют то, что только что настроили. Отдельного «Сбросить» нет — это и есть «Как у всех». <span class="tag">меньше кнопок</span></li>
+          <li data-n="2"><b>«Как у всех | Свои для записи» — первым</b>, во всю ширину: ответ на «что я меняю — эту запись или все». Возврат к «Как у всех» и есть сброс, с тем же подтверждением. <span class="tag">видимость состояния</span></li>
+          <li data-n="3"><b>Пресеты одной лентой чипов</b>; «Свои» появляется первым, когда что-то подкрутили. Выбор из шести — быстрее, чем пять блоков ручек. <span class="tag">закон Хика</span></li>
+          <li data-n="4"><b>Блоки по умолчанию свёрнуты</b>, с краткими значениями и номерами по ходу сигнала. На первом экране — вся цепочка, раскрывают одну. <span class="tag">прогрессивное раскрытие</span></li>
+          <li data-n="5"><b>Выключенный блок тускнеет, но не прячется</b>: вернуть — одним касанием переключателя. <span class="tag">обратимость</span></li>
+          <li data-n="6"><b>Плеер переехал вниз</b>: крутят ручки и сравнивают, не отпуская палец от A/B и паузы. В спеке он прилипает под шапкой. <span class="tag">зона большого пальца</span></li>
+          <li data-n="7"><b>A/B — крупный переключатель с подписями</b> «оригинал / обработка»: самое частое касание экрана — самая большая цель. Удержание A — «пока держишь», как в спеке. <span class="tag">закон Фиттса</span></li>
+          <li data-n="8"><b>Кривая — настоящая характеристика</b>, пузырь со значением над выбранной точкой: палец закрывает точку, число — нет. <span class="tag">обратная связь</span></li>
+          <li data-n="9"><b>Один вид ползунка на весь экран</b>: подпись, − / +, отметка по умолчанию, число справа. Научился один раз — умеешь везде. <span class="tag">единообразие</span></li>
+          <li data-n="10"><b>«Минусовка» — последним блоком</b>, по ходу сигнала после громкости скрипки; переключатель «с минусовкой / скрипка» — в плеере, рядом с A/B. <span class="tag">порядок сигнала</span></li>
+          <li data-n="11"><b>Сдвиг от нуля, «Как записано» и подсказка в одну строку</b>: «отстаёт — влево». Правится на слух, пока играет. <span class="tag">сопоставление</span></li>
+          <li data-n="12"><b>«Для всех записей» — та же раскладка</b>, но вместо режима — «Слушать на…» и число записей в шапке: видно, на сколько записей повлияет правка. <span class="tag">последствия видны</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ===================== 5. ПОДЕЛИТЬСЯ ===================== -->
+    <article class="screen" id="s-share">
+      <h2 class="screen-title">5. Лист «Поделиться»</h2>
+      <p class="screen-goal"><b>Главное действие:</b> «Продолжить» с выбранным вариантом &nbsp;·&nbsp; <b>За 3 секунды:</b> «уйдёт то, что я слышу, одним файлом .mp4».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            <div class="statusbar"><span>18:48</span><span class="sb-icons"><svg class="ic ic-s"><use href="#i-sb-signal"/></svg><svg class="ic" style="width:26px"><use href="#i-sb-battery"/></svg></span></div>
+
+            <div class="state" data-state="Видео с минусовкой">
+              <div class="appbar"><button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button><div class="t"><b>Концерт ля минор, I ч.</b><small>видео-дубль · с минусовкой</small></div></div>
+              <div class="app-scroll"><div class="video"><div class="vfig"></div></div></div>
+              <div class="scrim"></div>
+              <div class="sheet">
+                <div class="hdr-sheet"><h3>Поделиться</h3></div>
+                <div class="opt on" data-note="1"><span class="radio"></span><div class="t"><b>С минусовкой</b><small>скрипка и аккомпанемент</small></div><span class="ext">.mp4</span></div>
+                <div class="opt" data-note="2"><span class="radio"></span><div class="t"><b>Видео с обработкой</b><small>как слышно, без минусовки</small></div><span class="ext">.mp4</span></div>
+                <div class="opt"><span class="radio"></span><div class="t"><b>Видео как снято</b><small>оригинал файла</small></div><span class="ext">.mp4</span></div>
+                <div class="opt"><span class="radio"></span><div class="t"><b>Только звук</b><small>скрипка с обработкой</small></div><span class="ext">.m4a</span></div>
+                <div class="fileline tnum" data-note="3"><svg class="ic ic-s"><use href="#i-info"/></svg>Концерт ля минор · 23 сентября · 3:40 · ~62 МБ · стерео</div>
+                <div class="cbx"><span class="b"><svg class="ic ic-s"><use href="#i-check"/></svg></span><span>Добавить текст<small>Концерт ля минор, I ч. · 76 % · 23 сентября</small></span></div>
+                <div style="height:14px"></div>
+                <button class="btn-main" data-note="4">Продолжить</button>
+              </div>
+            </div>
+
+            <div class="state" data-state="Звук">
+              <div class="appbar"><button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button><div class="t"><b>Менуэт соль мажор</b><small>дубль · 18:42</small></div></div>
+              <div class="app-scroll"><div class="card"><div class="score tnum">82<small>%</small></div></div></div>
+              <div class="scrim"></div>
+              <div class="sheet">
+                <div class="hdr-sheet"><h3>Поделиться</h3></div>
+                <div class="opt on"><span class="radio"></span><div class="t"><b>Обработанный звук</b><small>как слышно в приложении · Камерный зал</small></div><span class="ext">.m4a</span></div>
+                <div class="opt"><span class="radio"></span><div class="t"><b>Оригинал</b><small>как записал микрофон</small></div><span class="ext">.m4a</span></div>
+                <div class="fileline tnum"><svg class="ic ic-s"><use href="#i-info"/></svg>Менуэт соль мажор · 27 сентября · 2:05 · ~2 МБ · моно</div>
+                <div class="cbx"><span class="b"><svg class="ic ic-s"><use href="#i-check"/></svg></span><span>Добавить текст<small>Менуэт соль мажор · 82 % · 27 сентября</small></span></div>
+                <div style="height:14px"></div>
+                <button class="btn-main">Продолжить</button>
+              </div>
+            </div>
+
+            <div class="state" data-state="Готовим файл">
+              <div class="appbar"><button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button><div class="t"><b>Концерт ля минор, I ч.</b><small>видео-дубль · с минусовкой</small></div></div>
+              <div class="app-scroll"><div class="video"><div class="vfig"></div></div></div>
+              <div class="scrim"></div>
+              <div class="sheet">
+                <div class="hdr-sheet"><h3>Готовим видео</h3><b class="tnum" style="font-size:20px;color:var(--accent)">42 %</b></div>
+                <div class="prog" data-note="5"><i style="width:42%"></i></div>
+                <div class="caption tnum">С минусовкой · .mp4 · осталось около 20 с</div>
+                                <div class="btn-row"><button class="btn-ghost2"><svg class="ic ic-s" style="vertical-align:-3px"><use href="#i-x"/></svg> Отмена</button></div>
+              </div>
+            </div>
+
+            <div class="state" data-state="Не получилось">
+              <div class="appbar"><button class="icon-b"><svg class="ic"><use href="#i-back"/></svg></button><div class="t"><b>Концерт ля минор, I ч.</b><small>видео-дубль · с минусовкой</small></div></div>
+              <div class="app-scroll"><div class="video"><div class="vfig"></div></div></div>
+              <div class="scrim"></div>
+              <div class="sheet">
+                <div class="hdr-sheet"><h3>Поделиться</h3></div>
+                <div class="err" data-note="6" style="margin-top:12px"><svg class="ic ic-s" style="color:var(--z-near);margin-top:2px"><use href="#i-alert"/></svg><span><b>Не получилось подготовить файл.</b><br><span class="muted">Запись на месте, настройки тоже. Возможно, мало места на телефоне.</span></span></div>
+                <div style="display:flex;flex-direction:column;gap:10px;margin-top:16px"><button class="btn-main">Ещё раз</button><button class="btn-ghost2" style="flex:none;width:100%">Отправить оригинал</button></div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Варианты — от «как слышу» к «как было»</b>, первый выбран: большинству нужен именно он, и выбирать не приходится. <span class="tag">разумное умолчание</span></li>
+          <li data-n="2"><b>У каждого варианта — подпись по-человечески и чип формата</b>: педагогу важно «с аккомпанементом или без», а не название кодека. <span class="tag">понятные слова</span></li>
+          <li data-n="3"><b>Имя файла, длительность и размер — до отправки</b>: 62 МБ в мессенджер — это решение, которое лучше принять заранее. <span class="tag">последствия видны</span></li>
+          <li data-n="4"><b>«Продолжить» внизу на всю ширину</b>, получателя выбирает система. Лист не показывается вовсе, если выбирать не из чего. <span class="tag">закон Фиттса</span></li>
+          <li data-n="5"><b>Прогресс с процентом и «осталось около 20 с»</b>; «Отмена» — сразу, без вопросов. Короткую подготовку прогресс не показывает, чтобы ничего не мигало. <span class="tag">видимость состояния</span></li>
+          <li data-n="6"><b>Ошибка — в том же листе, а не тостом</b>: сказано, что ничего не потеряно, и два выхода — «Ещё раз» главной кнопкой и «Отправить оригинал». <span class="tag">выход из ошибки</span></li>
+        </ol>
+      </div>
+    </article>
+  </main>
+
+  <section class="block">
+    <h2>Что вынесено и куда</h2>
+    <table class="moved">
+      <thead><tr><th>Элемент</th><th>Куда</th><th>Почему</th></tr></thead>
+      <tbody>
+        <tr><td>Репертуар (переключатель «Записи | Репертуар»)</td><td>Своя вкладка «Репертуар»</td><td>Общее решение по навигации: репертуар не был виден под словом «Записи»</td></tr>
+        <tr><td>График «Записи за две недели» (≈200 dp)</td><td>Полоска 14 дней с итогом (≈90 dp)</td><td>Столько же смысла, записи видны на первом экране</td></tr>
+        <tr><td>Фильтры «Эта неделя · Месяц»</td><td>Заменены на «Дубли · Видео · С Live»</td><td>Время уже дают порядок и вставки дат</td></tr>
+        <tr><td>Плеер в середине экрана записи</td><td>Закреплён внизу</td><td>Главное действие всегда под пальцем, лента нот видна вместе с ним</td></tr>
+        <tr><td>Карточки «Распределение», «Средняя ошибка»</td><td>В карточку итога вместе с баллом</td><td>Объясняют балл, должны стоять рядом с ним</td></tr>
+        <tr><td>«Переименовать» и «Удалить» внизу экрана записи</td><td>Меню «⋯» в шапке</td><td>Редкие действия, удаление — подальше от «Поделиться» и плеера</td></tr>
+        <tr><td>Мини-плеер «Звука» под шапкой</td><td>Плеер внизу с крупным A/B</td><td>A/B — самое частое касание на этом экране</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="block">
+    <h2>Проверки</h2>
+    <ul>
+      <li><b>Контраст:</b> основной текст 14.7 : 1 на фоне, вторичный 6.5 : 1 на карточке, подписи оси 5.2 : 1; «в строе» #6FD39B — 9.3 : 1, «рядом» #F2B85A — 9.4 : 1, «мимо» #FF7A7A — 6.6 : 1 на карточке; текст на акцентной кнопке 7.2 : 1; «Удалить» #FF7A7A на меню #292833 — 5.7 : 1.</li>
+      <li><b>Касания:</b> карточки 64 dp, «⋯» 44 (+отступ до 48), кнопка воспроизведения 56, A/B на «Звуке» 44 × 150, − / + 36 внутри строки ползунка высотой 52 (касается вся строка, как в спеке), чипы 40.</li>
+      <li><b>Цвет не единственный признак:</b> смещение и проблемные ноты — стрелкой; зоны в легенде — словами и числами; выбранная карточка — галочкой и обводкой; вид записи — словом в строке.</li>
+      <li><b>Движение:</b> курсор ленты и форма волны следуют за звуком; крутилка «Готовим минусовку…» — единственная анимация на экране, пока звук не готов.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Расходится со спекой</h2>
+    <ul>
+      <li><b>3.21 (график и шапка):</b> полоска 14 дней вместо графика; заголовок «Записи» вместо переключателя «Записи | Репертуар» (следствие четырёх вкладок, раздел 4).</li>
+      <li><b>3.11 (фильтры):</b> «Все · Дубли · Видео · С Live» вместо «Все · Эта неделя · Месяц»; вставки дат прилипают (в 3.21 — не прилипают).</li>
+      <li><b>3.21 (карточка):</b> «⋯» у каждой карточки, вид записи словом в строке («видео», «дубль», «без звука», «с минусовкой»); свободная запись в списке — «Запись с Live».</li>
+      <li><b>3.10 (экран записи):</b> плеер закреплён внизу; «Распределение» и «Средняя ошибка» — в карточке итога; «По струнам» — отдельной карточкой в конце; «Переименовать / Удалить» — в меню «⋯»; в меню новый пункт «К произведению» у дубля. «Слушать это место» — главной кнопкой, не контурной (3.19).</li>
+      <li><b>3.17 (Звук):</b> плеер внизу, а не прилипшим под шапкой; A/B — крупный сегмент с подписями; блоки по умолчанию свёрнуты; кнопки «Сбросить» в шапке нет — её роль играет «Как у всех». <b>3.32:</b> «с минусовкой / скрипка» — сегментом в плеере на обоих экранах.</li>
+      <li><b>3.35 (События):</b> вход в «Выступления» — первой строкой вкладки «Записи» (в спеке место не выбрано: «решит макет»).</li>
+      <li><b>3.17 (Поделиться):</b> в листе добавлена строка «~62 МБ · стерео» для видео (у звука она уже есть), всё остальное — как в спеке.</li>
+    </ul>
+    <h2 style="margin-top:18px">Идеи на потом</h2>
+    <ul><li>Быстрое прослушивание прямо с карточки в списке, без входа в запись.</li></ul>
+  </section>
+</div>
+
+<script>
+(function(){
+  // полоска 14 дней
+  var counts=[1,0,0,0,0,1,0,2,1,0,0,1,0,2], mx=2;
+  ['bars1','bars2'].forEach(function(id){var el=document.getElementById(id); if(!el) return; var h='';
+    counts.forEach(function(c,i){var cls=i===13?'t':(c?'':'z'); h+='<i class="'+cls+'" style="height:'+(c? (c/mx*100):10)+'%"></i>'}); el.innerHTML=h;});
+  // форма волны
+  document.querySelectorAll('.w[data-wave]').forEach(function(w){var p=+w.getAttribute('data-wave'),h='';
+    for(var i=0;i<44;i++){var v=.25+.75*Math.abs(Math.sin(i*1.7)*Math.cos(i*.37)); h+='<i class="'+(i/44<p?'p':'')+'" style="height:'+Math.round(v*100)+'%"></i>'} w.innerHTML=h;});
+  // лента нот
+  var Z={i:'#6FD39B',n:'#F2B85A',o:'#FF7A7A'};
+  var rows=['A5','G5','F#5','E5','D5','C5','B4','A4','G4','F#4','E4','D4'];
+  var notes=[[11,0,34,'i'],[10,36,30,'i'],[9,68,30,'n'],[8,100,40,'i'],[7,142,28,'i'],[5,172,34,'n'],[4,208,30,'i'],[3,240,36,'i'],[2,278,26,'o'],[3,306,24,'i'],[4,332,20,'i']];
+  function roll(id,cur,pick){var el=document.getElementById(id); if(!el) return; var H=parseInt(el.style.height)||196, n=rows.length, rh=(H-18)/n, h='';
+    rows.forEach(function(r,i){ if(i%2===0) h+='<span class="lab" style="top:'+(16+i*rh)+'px">'+r+'</span>'});
+    ['0:30','0:40','0:50'].forEach(function(t,i){h+='<span class="tick" style="left:'+(56+i*100)+'px">'+t+'</span>'});
+    notes.forEach(function(nt,k){var top=16+nt[0]*rh+(rh-13)/2; h+='<i class="nt'+(pick===k?' picked':'')+'" style="left:'+(34+nt[1]*0.86)+'px;width:'+(nt[2]*0.86)+'px;top:'+top+'px;background:'+Z[nt[3]]+'"></i>'});
+    if(cur!=null) h+='<i class="cur" style="left:'+cur+'px"></i>'; el.innerHTML=h;}
+  roll('roll1',150); roll('roll2',150); roll('roll3',120); roll('roll4',null); roll('roll5',null,8);
+})();
+</script>
+%%SCRIPT%%
+</body>
+</html>

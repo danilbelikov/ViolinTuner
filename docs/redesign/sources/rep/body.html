@@ -1,0 +1,621 @@
+<div class="doc">
+  <header class="doc-head">
+    <h1>Violin Journey · Репертуар</h1>
+    <p class="doc-meta">
+      <b>Задача:</b> быстро найти то, что я сейчас учу, открыть ноты и записать дубль. Второй вопрос — сколько времени получает каждый элемент и сколько уже выучено.
+      <b>Для кого:</b> скрипач перед игрой или между подходами. Телефон часто уже стоит на пюпитре, в правой руке смычок, скрипка под подбородком.
+      <b>Допущения:</b> «Репертуар» — отдельная вкладка (общее решение для всего приложения: «Занятия · Live · Репертуар · Записи»). Данные — с эмулятора владельца (5 произведений, 3 гаммы, 2 этюда). Свой раздел «Двойные ноты» и минусовка у концерта придуманы, чтобы показать эти состояния. Проценты балла на экране произведения остаются (3.21), в списках их нет.
+    </p>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="Режимы просмотра">
+    <button type="button" id="btn-notes" aria-pressed="true">Номера</button>
+    <button type="button" id="btn-theme" aria-pressed="true">Тёмная подложка</button>
+    <button type="button" id="btn-thumb" aria-pressed="false">Зона большого пальца</button>
+  </div>
+
+  <section class="block">
+    <h2>Что сейчас (снято с эмулятора)</h2>
+    <div class="compare">
+      <div class="shot" style="width:260px"><img src="%%IMG_rep_top%%" alt="Репертуар сейчас">
+        <span class="shot-mark" style="left:50%;top:9%">1</span>
+        <span class="shot-mark" style="left:88%;top:25%">2</span>
+        <span class="shot-mark" style="left:88%;top:57%">3</span>
+      </div>
+      <div class="shot" style="width:260px"><img src="%%IMG_rep_section%%" alt="Список раздела сейчас">
+        <span class="shot-mark" style="left:88%;top:16%">4</span>
+        <span class="shot-mark" style="left:11%;top:31%">5</span>
+        <span class="shot-mark" style="left:40%;top:34%">6</span>
+      </div>
+      <div class="shot" style="width:260px"><img src="%%IMG_piece_empty%%" alt="Экран произведения сейчас">
+        <span class="shot-mark" style="left:22%;top:62%">7</span>
+        <span class="shot-mark" style="left:90%;top:43%">8</span>
+      </div>
+      <div class="shot" style="width:260px"><img src="%%IMG_piece_form%%" alt="Форма произведения сейчас">
+        <span class="shot-mark" style="left:92%;top:9%">9</span>
+        <span class="shot-mark" style="left:92%;top:38%">10</span>
+      </div>
+      <ol class="issues">
+        <li><span class="n">1</span><span class="sev sev-major">важно</span><b>Репертуар спрятан во вкладке «Записи»</b> за переключателем. Вкладка называется «Записи», а внутри — ноты и гаммы. Найти можно только, если знаешь, где искать.</li>
+        <li><span class="n">2</span><span class="sev sev-minor">мелочь</span><b>Первым идёт график «время по элементам»</b>, а до разделов, ради которых сюда приходят, надо прокручивать. «learnt 2 of 10» висит одиноко над ним.</li>
+        <li><span class="n">3</span><span class="sev sev-major">важно</span><b>Пустая полоса «выучено 0 из 3» выглядит как полная</b>: вся дорожка залита средним тоном «учу». Это читается как «всё готово».</li>
+        <li><span class="n">4</span><span class="sev sev-major">важно</span><b>«Добавить произведение» — сверху</b>, дальше всего от большого пальца, и крупнее самих карточек.</li>
+        <li><span class="n">5</span><span class="sev sev-minor">мелочь</span><b>Пять одинаковых пустых обложек</b> — шум, который не помогает отличить одно произведение от другого.</li>
+        <li><span class="n">6</span><span class="sev sev-major">важно</span><b>Чип «В репертуаре» зелёный</b> — это цвет зоны «в строе». Статус читается как оценка интонации.</li>
+        <li><span class="n">7</span><span class="sev sev-major">важно</span><b>Кнопка записи — в середине экрана</b>, а её круг бледно-жёлтый, не похож на запись. Когда появятся дубли, она уедет вверх вместе с экраном.</li>
+        <li><span class="n">8</span><span class="sev sev-minor">мелочь</span><b>Три пунктирных блока равного веса</b> (ноты, минусовка, заметка) спорят с кнопкой записи.</li>
+        <li><span class="n">9</span><span class="sev sev-minor">мелочь</span><b>«Сохранить» в правом верхнем углу</b> и бледная — главное действие формы там, куда палец не достаёт.</li>
+        <li><span class="n">10</span><span class="sev sev-minor">мелочь</span><b>Тональность — три ряда кнопок</b> на весь экран, хотя у половины произведений её не задают.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Карта экранов</h2>
+    <div class="flow-row">
+      <a class="flow-node" href="#r-tab">Вкладка «Репертуар» <small>новая вкладка</small></a>
+      <span class="flow-arrow">→<i>раздел</i></span>
+      <a class="flow-node" href="#r-list">Список раздела</a>
+      <span class="flow-arrow">→<i>элемент</i></span>
+      <a class="flow-node" href="#r-piece">Произведение / гамма</a>
+      <span class="flow-arrow">→<i>лист нот</i></span>
+      <a class="flow-node" href="#r-stand">Пюпитр</a>
+    </div>
+    <div class="flow-row">
+      <a class="flow-node" href="#r-tab">Вкладка</a>
+      <span class="flow-arrow">→<i>«Добавить»</i></span>
+      <span class="flow-node is-new">Лист «Что добавить» <small>новый вход</small></span>
+      <span class="flow-arrow">→</span>
+      <a class="flow-node" href="#r-form">Форма произведения</a>
+      <span class="flow-arrow">·</span>
+      <a class="flow-node" href="#r-scale">Форма гаммы</a>
+    </div>
+    <div class="flow-row">
+      <a class="flow-node" href="#r-form">Форма</a>
+      <span class="flow-arrow">→<i>«Тональность»</i></span>
+      <span class="flow-node is-new">Лист тональности <small>вынесено из формы</small></span>
+    </div>
+    <div class="flow-row">
+      <a class="flow-node" href="#r-piece">Произведение</a>
+      <span class="flow-arrow">→<i>видео, минусовка</i></span>
+      <a class="flow-node" href="#r-cam">Своя камера</a>
+      <span class="flow-arrow">·</span>
+      <span class="flow-arrow">→<i>дубль</i></span>
+      <span class="flow-node">Экран записи <small>раздел «Записи»</small></span>
+    </div>
+  </section>
+
+  <main class="screens">
+
+    <!-- ============ 1. ВКЛАДКА ============ -->
+    <article class="screen" id="r-tab">
+      <h2 class="screen-title">1. Вкладка «Репертуар»</h2>
+      <p class="screen-goal"><b>Главное действие:</b> открыть раздел, а новое — «Добавить» &nbsp;·&nbsp; <b>За 3 секунды:</b> «у меня 4 раздела, выучено 2 из 14, больше всего играю концерт».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            {{SB}}
+            <div class="state" data-state="Обычное">
+              <div class="app-scroll">
+                <div data-note="1" style="padding-top:6px"><div class="big-title">Репертуар</div><div class="sub tnum">выучено 3 из 14</div></div>
+                <div class="gap"></div>
+                <div class="sec-grid" data-note="2">
+                  <div class="sec-tile"><div class="si"><svg class="ic ic-s"><use href="#i-note"/></svg></div><b>Произведения</b><small class="tnum">выучено 2 из 5</small>
+                    <div class="split"><i class="s1" style="width:20%"></i><i class="s2" style="width:40%"></i><i class="s3" style="width:40%"></i></div></div>
+                  <div class="sec-tile"><div class="si"><svg class="ic ic-s"><use href="#i-scale"/></svg></div><b>Гаммы</b><small class="tnum">выучено 0 из 3</small>
+                    <div class="split" data-note="3"><i class="s1" style="width:67%"></i><i class="s2" style="width:33%"></i></div></div>
+                  <div class="sec-tile"><div class="si"><svg class="ic ic-s"><use href="#i-etude"/></svg></div><b>Этюды</b><small class="tnum">выучено 0 из 2</small>
+                    <div class="split"><i class="s1" style="width:50%"></i><i class="s2" style="width:50%"></i></div></div>
+                  <div class="sec-tile"><div class="si"><svg class="ic ic-s"><use href="#i-bow"/></svg></div><b>Штрихи</b><small>пока пусто</small>
+                    <div class="split empty"></div></div>
+                </div>
+                <div class="sec-row" data-note="4"><div class="si"><svg class="ic ic-s"><use href="#i-folder"/></svg></div><div class="m"><b>Двойные ноты</b><small class="tnum">выучено 1 из 4</small></div>
+                  <div style="width:84px"><div class="split"><i class="s1" style="width:25%"></i><i class="s2" style="width:50%"></i><i class="s3" style="width:25%"></i></div></div></div>
+                <div class="add-row"><svg class="ic ic-s"><use href="#i-plus"/></svg>Свой раздел</div>
+
+                <div class="label-row" data-note="5"><span class="label">Время по элементам</span><small>30 дней</small></div>
+                <div class="card" style="padding:8px 16px">
+                  <div class="trow"><div class="tt"><span>Концерт ля минор, 1 ч.</span><span class="tnum">9 ч</span></div><div class="tbar"><i style="width:92%"></i><i class="tod" style="width:8%"></i></div></div>
+                  <div class="trow"><div class="tt"><span>G-dur · 3 октавы</span><span class="tnum">4 ч 30 мин</span></div><div class="tbar"><i style="width:50%"></i></div></div>
+                  <div class="trow"><div class="tt"><span>Чардаш</span><span class="tnum">3 ч 30 мин</span></div><div class="tbar"><i style="width:36%"></i><i class="tod" style="width:3%"></i></div></div>
+                  <div class="more">Все 5</div>
+                </div>
+              </div>
+              <div class="dock"><button class="btn-main" data-note="6"><svg class="ic"><use href="#i-plus"/></svg>Добавить в репертуар</button></div>
+              {{TABS}}
+            </div>
+
+            <div class="state" data-state="Пусто">
+              <div class="app-scroll">
+                <div style="padding-top:6px"><div class="big-title">Репертуар</div><div class="sub">пока пусто</div></div>
+                <div class="gap"></div>
+                <div class="welcome" data-note="7">
+                  <h3>Здесь живёт то, что вы играете</h3>
+                  <p class="muted" style="font-size:15px;line-height:1.5">Произведения, гаммы и этюды: ноты, заметки и дубли. Гамме даже фото не нужно — ноты нарисуются сами.</p>
+                </div>
+                <div class="gap"></div>
+                <div class="sec-grid">
+                  <div class="sec-tile"><div class="si"><svg class="ic ic-s"><use href="#i-note"/></svg></div><b>Произведения</b><small>пока пусто</small><div class="split empty"></div></div>
+                  <div class="sec-tile"><div class="si"><svg class="ic ic-s"><use href="#i-scale"/></svg></div><b>Гаммы</b><small>пока пусто</small><div class="split empty"></div></div>
+                  <div class="sec-tile"><div class="si"><svg class="ic ic-s"><use href="#i-etude"/></svg></div><b>Этюды</b><small>пока пусто</small><div class="split empty"></div></div>
+                  <div class="sec-tile"><div class="si"><svg class="ic ic-s"><use href="#i-bow"/></svg></div><b>Штрихи</b><small>пока пусто</small><div class="split empty"></div></div>
+                </div>
+                <div class="add-row"><svg class="ic ic-s"><use href="#i-plus"/></svg>Свой раздел</div>
+              </div>
+              <div class="dock"><button class="btn-main"><svg class="ic"><use href="#i-plus"/></svg>Добавить в репертуар</button></div>
+              {{TABS}}
+            </div>
+
+            <div class="state" data-state="Лист «Добавить»">
+              <div class="app-scroll">
+                <div style="padding-top:6px"><div class="big-title">Репертуар</div><div class="sub tnum">выучено 3 из 14</div></div>
+              </div>
+              <div class="scrim"></div>
+              <div class="sheet">
+                <div class="sheet-title">Что добавить?</div>
+                <div class="opt" data-note="8"><div class="si"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div class="m"><b>Произведение</b><small>фото нот, минусовка, дубли</small></div><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                <div class="opt"><div class="si"><svg class="ic ic-s"><use href="#i-scale"/></svg></div><div class="m"><b>Гамма</b><small>ноты нарисуются сами</small></div><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                <div class="opt"><div class="si"><svg class="ic ic-s"><use href="#i-etude"/></svg></div><div class="m"><b>Этюд</b></div><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                <div class="opt"><div class="si"><svg class="ic ic-s"><use href="#i-bow"/></svg></div><div class="m"><b>Штрих</b></div><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                <div class="opt"><div class="si"><svg class="ic ic-s"><use href="#i-folder"/></svg></div><div class="m"><b>В «Двойные ноты»</b></div><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Своя вкладка с крупным заголовком и общим счётом.</b> Ноты больше не прячутся в «Записях»: «что я играю» и «как это звучало» — разные вопросы. <span class="tag">ментальная модель</span></li>
+          <li data-n="2"><b>Готовые разделы — плитками 2×2, первыми.</b> Все четыре видно сразу, без прокрутки. Каждая плитка — одна крупная цель под палец. <span class="tag">закон Фиттса</span></li>
+          <li data-n="3"><b>Полоса долей с пустой дорожкой.</b> Светлое «выучено» растёт слева, а у «0 из 3» светлого нет совсем. Пустой раздел — пунктир и слова «пока пусто». <span class="tag">форма, а не только цвет</span></li>
+          <li data-n="4"><b>Свои разделы — строками под готовыми</b>, «Свой раздел» — тихим пунктиром: создают его редко. <span class="tag">частота</span></li>
+          <li data-n="5"><b>«Время по элементам» — ниже разделов.</b> Это второй вопрос («что я играю больше всего»), а не вход. Сегодняшнее время — светлым концом полосы. <span class="tag">иерархия</span></li>
+          <li data-n="6"><b>Одна кнопка «Добавить» внизу для всего.</b> Не надо сначала угадывать раздел, а потом искать кнопку наверху списка. <span class="tag">зона большого пальца</span></li>
+          <li data-n="7"><b>Пусто — одно тёплое пояснение</b> и сразу видно, какие будут разделы. Графика времени нет, пока нечего показывать. <span class="tag">пустые состояния</span></li>
+          <li data-n="8"><b>Лист «Что добавить?» с подписями</b> заранее отвечает на вопрос «а у гаммы есть фото?». Свой раздел — последним. <span class="tag">закон Хика</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ============ 2. СПИСОК РАЗДЕЛА ============ -->
+    <article class="screen" id="r-list">
+      <h2 class="screen-title">2. Список раздела</h2>
+      <p class="screen-goal"><b>Главное действие:</b> открыть элемент &nbsp;·&nbsp; <b>За 3 секунды:</b> «Юмореску и Чардаш я учу, у концерта есть лучший дубль».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            {{SB}}
+            <div class="state" data-state="Произведения">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="tb-title">Произведения</span></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="head-count" data-note="1"><div class="split"><i class="s1" style="width:20%"></i><i class="s2" style="width:40%"></i><i class="s3" style="width:40%"></i></div><small class="tnum">выучено 2 из 5</small></div>
+                <div class="chips" data-note="2"><span class="chip is-on">Все <em>5</em></span><span class="chip">Разбираю <em>1</em></span><span class="chip">Учу <em>2</em></span><span class="chip">В репертуаре <em>2</em></span></div>
+                <div class="item" data-note="3"><div class="thumb" data-sheet="1"></div><div class="m"><b>Концерт ля минор, 1 ч.</b><div class="s2">А. Вивальди · a-moll</div><div class="st c" data-note="4"><i></i>В репертуаре</div></div>
+                  <div class="r"><svg class="ic"><use href="#i-star"/></svg> 23 сент<br>3 дубля</div></div>
+                <div class="item"><div class="ttile"><svg class="ic"><use href="#i-note"/></svg></div><div class="m"><b>Концерт № 2, 3 ч.</b><div class="s2">Ф. Зейтц · G-dur</div><div class="st c"><i></i>В репертуаре</div></div><div class="r">нет дублей</div></div>
+                <div class="item"><div class="thumb" data-sheet="4"></div><div class="m"><b>Чардаш</b><div class="s2">В. Монти · d-moll</div><div class="st b"><i></i>Учу</div></div><div class="r">12 сент<br>1 дубль</div></div>
+                <div class="item"><div class="ttile"><svg class="ic"><use href="#i-note"/></svg></div><div class="m"><b>Юмореска</b><div class="s2">А. Дворжак · Ges-dur</div><div class="st b"><i></i>Учу</div></div><div class="r">нет дублей</div></div>
+                <div class="item"><div class="ttile"><svg class="ic"><use href="#i-note"/></svg></div><div class="m"><b>Мелодия</b><div class="s2">П. Чайковский · Es-dur</div><div class="st a"><i></i>Разбираю</div></div><div class="r">нет дублей</div></div>
+              </div>
+              <div class="dock"><button class="btn-main" data-note="5"><svg class="ic"><use href="#i-plus"/></svg>Добавить произведение</button></div>
+            </div>
+
+            <div class="state" data-state="Гаммы">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="tb-title">Гаммы</span></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="head-count"><div class="split"><i class="s1" style="width:67%"></i><i class="s2" style="width:33%"></i></div><small class="tnum">выучено 0 из 3</small></div>
+                <div class="chips"><span class="chip is-on">Все <em>3</em></span><span class="chip">Разбираю <em>2</em></span><span class="chip">Учу <em>1</em></span><span class="chip">Выучено <em>0</em></span></div>
+                <div class="item" data-note="6"><div class="ttile"><div><div class="clef">𝄞</div><small>♯</small></div></div><div class="m"><b>G-dur · 3 октавы</b><div class="s2">мажор · ♩ = 80</div><div class="st b"><i></i>Учу</div></div><div class="r">21 сент<br>2 дубля</div></div>
+                <div class="item"><div class="ttile"><div><div class="clef">𝄞</div><small>—</small></div></div><div class="m"><b>a-moll гармонический · 2 октавы</b><div class="s2">минор гармонический</div><div class="st a"><i></i>Разбираю</div></div><div class="r">нет дублей</div></div>
+                <div class="item"><div class="ttile"><div><div class="clef">𝄞</div><small>♯♯</small></div></div><div class="m"><b>D-dur · 2 октавы</b><div class="s2">мажор</div><div class="st a"><i></i>Разбираю</div></div><div class="r">нет дублей</div></div>
+              </div>
+              <div class="dock"><button class="btn-main"><svg class="ic"><use href="#i-plus"/></svg>Добавить гамму</button></div>
+            </div>
+
+            <div class="state" data-state="Пусто под фильтром">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="tb-title">Этюды</span></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="head-count"><div class="split"><i class="s1" style="width:50%"></i><i class="s2" style="width:50%"></i></div><small class="tnum">выучено 0 из 2</small></div>
+                <div class="chips"><span class="chip">Все <em>2</em></span><span class="chip">Разбираю <em>1</em></span><span class="chip">Учу <em>1</em></span><span class="chip is-on">Выучено <em>0</em></span></div>
+                <div class="empty-note" data-note="7"><b>Ничего со статусом «Выучено»</b>Когда этюд выучен — поставьте статус на его экране, и он появится здесь.
+                  <div style="margin-top:16px"><button class="btn-soft">Показать все</button></div></div>
+              </div>
+              <div class="dock"><button class="btn-main"><svg class="ic"><use href="#i-plus"/></svg>Добавить этюд</button></div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Счёт раздела — полосой и словами прямо под заголовком.</b> Всё, что говорит «сколько выучено», в одной строке. <span class="tag">близость</span></li>
+          <li data-n="2"><b>Числа в чипах фильтра</b> сразу показывают, сколько за каждым: пустой фильтр не открывают зря. <span class="tag">снижение неопределённости</span></li>
+          <li data-n="3"><b>Обложка — только когда есть фото нот.</b> Без фото плитка показывает вид элемента, а не пустую заглушку. Название в две строки, не обрезается. <span class="tag">сигнал / шум</span></li>
+          <li data-n="4"><b>Статус — точкой и словом в тонах фиолетового.</b> Зелёный остаётся только за «в строе», статус не читается как оценка интонации. <span class="tag">один цвет — один смысл</span></li>
+          <li data-n="5"><b>«Добавить произведение» внизу</b>, под большим пальцем. Слово кнопки — по разделу. <span class="tag">закон Фиттса</span></li>
+          <li data-n="6"><b>У гаммы — плитка с ключом и знаками</b> вместо обложки: G-dur и D-dur различаются с одного взгляда. <span class="tag">узнавание</span></li>
+          <li data-n="7"><b>Пусто под фильтром — не тупик.</b> Объяснение, как попасть в этот список, и «Показать все». <span class="tag">пустые состояния</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ============ 3. ЭКРАН ПРОИЗВЕДЕНИЯ ============ -->
+    <article class="screen" id="r-piece">
+      <h2 class="screen-title">3. Произведение (и гамма)</h2>
+      <p class="screen-goal"><b>Главное действие:</b> «Записать дубль» &nbsp;·&nbsp; <b>За 3 секунды:</b> «вот ноты, минусовка в наушниках, последний дубль — 82 %».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            {{SB}}
+            <div class="state" data-state="Обычное">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="tb-title"></span><button class="txt-btn"><svg class="ic ic-s"><use href="#i-edit"/></svg>Изменить</button></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="big-title" style="font-size:26px">Концерт ля минор, 1 ч.</div>
+                <div class="meta tnum">А. Вивальди · a-moll · ♩ = 96</div>
+                <div class="seg" data-note="1"><span>Разбираю</span><span>Учу</span><span class="on">В репертуаре</span></div>
+                <div class="blk-title"><span>Ноты</span><small>4 стр.</small></div>
+                <div class="strip" data-note="2"><div class="page" data-sheet="1"><i>1</i></div><div class="page" data-sheet="2"><i>2</i></div><div class="page" data-sheet="3"><i>3</i></div><div class="page" data-sheet="5"><i>4</i></div><div class="page add"><svg class="ic"><use href="#i-plus"/></svg></div></div>
+                <div class="blk-title"><span>Минусовка</span></div>
+                <div class="backing" data-note="3"><div class="play"><svg class="ic"><use href="#i-play"/></svg></div><div class="m"><b>Вивальди — фортепиано</b><small class="tnum">3:40 · наушники Pixel Buds</small></div><button class="icon-btn"><svg class="ic"><use href="#i-more"/></svg></button></div>
+                <div class="blk-title"><span>Заметки</span></div>
+                <div class="note-text">В 12-м такте — сразу в третью позицию. Легато в середине не рвать, смычок экономить до конца фразы. <a>ещё</a></div>
+                <div class="blk-title"><span>Дубли</span><small class="tnum">6</small></div>
+                <div class="prog" data-note="4"><div class="nums tnum">последний <b>82 %</b><br>максимум <b>88 %</b></div>
+                  <svg viewBox="0 0 160 44" preserveAspectRatio="none"><line x1="0" y1="22" x2="160" y2="22" stroke="#3A3846" stroke-dasharray="3 3"/><polyline fill="none" stroke="#C4ADFF" stroke-width="2" points="4,32 34,30 64,20 94,23 124,9 156,15"/><circle cx="156" cy="15" r="3" fill="#C4ADFF"/></svg></div>
+                <div class="take" data-note="5"><div class="tile"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div class="m"><b>20 сентября <span class="best"><svg class="ic"><use href="#i-star"/></svg>лучший</span></b><small class="tnum"><svg class="ic"><use href="#i-backing"/></svg>под минусовку · 18:42 · 3:52</small></div><button class="icon-btn"><svg class="ic"><use href="#i-more"/></svg></button></div>
+                <div class="take"><div class="tile"><svg class="ic ic-s"><use href="#i-note"/></svg><span class="vb"><svg class="ic"><use href="#i-video"/></svg></span></div><div class="m"><b>23 сентября</b><small class="tnum">видео · 08:05 · 3:41</small></div><button class="icon-btn"><svg class="ic"><use href="#i-more"/></svg></button></div>
+                <div class="take"><div class="tile"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div class="m"><b>15 сентября</b><small class="tnum">19:10 · 2:05</small></div><button class="icon-btn"><svg class="ic"><use href="#i-more"/></svg></button></div>
+              </div>
+              <div class="rec-dock" data-note="6">
+                <div class="rec-opts"><span class="toggle"><i></i>С минусовкой</span><span><svg class="ic ic-s" style="vertical-align:-4px"><use href="#i-phones"/></svg> Pixel Buds</span></div>
+                <div class="rec-row"><button class="vid-btn" aria-label="Видео-дубль" data-note="7"><svg class="ic"><use href="#i-video"/></svg></button><button class="rec-btn"><span class="dot"></span>Записать дубль</button></div>
+              </div>
+            </div>
+
+            <div class="state" data-state="Новое">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="tb-title"></span><button class="txt-btn"><svg class="ic ic-s"><use href="#i-edit"/></svg>Изменить</button></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="big-title" style="font-size:26px">Юмореска</div>
+                <div class="meta">А. Дворжак · Ges-dur</div>
+                <div class="seg"><span>Разбираю</span><span class="on">Учу</span><span>В репертуаре</span></div>
+                <div class="blk-title"><span>Ноты</span></div>
+                <div class="strip" data-note="8"><div class="page add" style="width:150px;border-radius:14px"><div style="text-align:center;font-size:13px;font-weight:700"><svg class="ic"><use href="#i-camera"/></svg><br>Сфотографировать</div></div><div class="page add" style="width:150px;border-radius:14px"><div style="text-align:center;font-size:13px;font-weight:700"><svg class="ic"><use href="#i-image"/></svg><br>Из галереи</div></div></div>
+                <div style="height:18px"></div>
+                <div class="quiet"><svg class="ic"><use href="#i-backing"/></svg><span>Добавить минусовку<br><small>аккомпанемент — mp3, m4a, wav…</small></span></div>
+                <div class="quiet"><svg class="ic"><use href="#i-edit"/></svg><span>Добавить заметку</span></div>
+                <div class="empty-note" style="padding:28px 8px"><b>Дублей пока нет</b>Запишите первый — увидите, как меняется произведение.</div>
+              </div>
+              <div class="rec-dock">
+                <div class="rec-row"><button class="vid-btn" aria-label="Видео-дубль"><svg class="ic"><use href="#i-video"/></svg></button><button class="rec-btn"><span class="dot"></span>Записать дубль</button></div>
+              </div>
+            </div>
+
+            <div class="state" data-state="Идёт дубль">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="tb-title"></span><button class="txt-btn dim"><svg class="ic ic-s"><use href="#i-edit"/></svg>Изменить</button></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="big-title" style="font-size:26px">Концерт ля минор, 1 ч.</div>
+                <div class="meta tnum">А. Вивальди · a-moll · ♩ = 96</div>
+                <div class="seg"><span>Разбираю</span><span>Учу</span><span class="on">В репертуаре</span></div>
+                <div class="blk-title"><span>Ноты</span><small>4 стр.</small></div>
+                <div class="strip" data-note="9"><div class="page" data-sheet="1"><i>1</i></div><div class="page" data-sheet="2"><i>2</i></div><div class="page" data-sheet="3"><i>3</i></div><div class="page" data-sheet="5"><i>4</i></div><div class="page add dim"><svg class="ic"><use href="#i-plus"/></svg></div></div>
+                <div class="dim">
+                  <div class="blk-title"><span>Минусовка</span></div>
+                  <div class="backing"><div class="play"><svg class="ic"><use href="#i-play"/></svg></div><div class="m"><b>Вивальди — фортепиано</b><small class="tnum">3:40 · наушники Pixel Buds</small></div></div>
+                  <div class="blk-title"><span>Дубли</span><small class="tnum">6</small></div>
+                  <div class="take"><div class="tile"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div class="m"><b>20 сентября</b><small class="tnum">под минусовку · 18:42 · 3:52</small></div></div>
+                </div>
+              </div>
+              <div class="rec-dock" data-note="10">
+                <div class="recbar"><span class="rdot"></span><div><div class="rt">запись</div><div class="tm tnum">1:12</div></div>
+                  <div class="lvl"><i style="height:30%"></i><i style="height:55%"></i><i style="height:80%"></i><i style="height:62%"></i><i style="height:40%"></i><i style="height:70%"></i><i style="height:92%"></i><i style="height:66%"></i><i style="height:38%"></i><i style="height:52%"></i><i style="height:74%"></i><i style="height:48%"></i><i style="height:28%"></i><i style="height:44%"></i></div>
+                  <span class="stop" aria-label="Остановить"><i></i></span></div>
+                <div class="bk-prog tnum"><svg class="ic ic-s"><use href="#i-backing"/></svg><span class="b"><i style="width:33%"></i></span><span>1:12 / 3:40</span></div>
+              </div>
+            </div>
+
+            <div class="state" data-state="Без наушников">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="tb-title"></span><button class="txt-btn"><svg class="ic ic-s"><use href="#i-edit"/></svg>Изменить</button></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="big-title" style="font-size:26px">Концерт ля минор, 1 ч.</div>
+                <div class="meta tnum">А. Вивальди · a-moll · ♩ = 96</div>
+                <div class="seg"><span>Разбираю</span><span>Учу</span><span class="on">В репертуаре</span></div>
+                <div class="blk-title"><span>Ноты</span><small>4 стр.</small></div>
+                <div class="strip"><div class="page" data-sheet="1"><i>1</i></div><div class="page" data-sheet="2"><i>2</i></div><div class="page" data-sheet="3"><i>3</i></div><div class="page" data-sheet="5"><i>4</i></div><div class="page add"><svg class="ic"><use href="#i-plus"/></svg></div></div>
+                <div class="blk-title"><span>Минусовка</span></div>
+                <div class="backing"><div class="play"><svg class="ic"><use href="#i-play"/></svg></div><div class="m"><b>Вивальди — фортепиано</b><small class="tnum">3:40 · наушники не подключены</small></div><button class="icon-btn"><svg class="ic"><use href="#i-more"/></svg></button></div>
+              </div>
+              <div class="rec-dock">
+                <div class="warn" data-note="11"><svg class="ic"><use href="#i-phones"/></svg><span>Подключите наушники: минусовка через динамик попадёт в запись. Или выключите «С минусовкой».</span></div>
+                <div class="rec-opts"><span class="toggle"><i></i>С минусовкой</span><span>наушников нет</span></div>
+                <div class="rec-row"><button class="vid-btn"><svg class="ic"><use href="#i-video"/></svg></button><button class="rec-btn is-off" style="opacity:.38"><span class="dot"></span>Записать дубль</button></div>
+              </div>
+            </div>
+
+            <div class="state" data-state="Гамма">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="tb-title"></span><button class="txt-btn"><svg class="ic ic-s"><use href="#i-edit"/></svg>Изменить</button></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="big-title" style="font-size:26px">G-dur · 3 октавы</div>
+                <div class="meta tnum">мажор · ♩ = 80</div>
+                <div class="seg"><span>Разбираю</span><span class="on">Учу</span><span>Выучено</span></div>
+                <div class="blk-title"><span>Ноты</span><small class="tnum">G3 – G6</small></div>
+                <div class="notation" data-scale="2" data-sharp data-note="12"></div>
+                <div class="more-sys" style="margin-top:6px">ещё 1 система — откройте во весь экран</div>
+                <div class="quiet"><svg class="ic"><use href="#i-camera"/></svg><span>Добавить фото нот<br><small>например, аппликатура из сборника</small></span></div>
+                <div class="blk-title"><span>Дубли</span><small class="tnum">2</small></div>
+                <div class="take"><div class="tile"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div class="m"><b>21 сентября</b><small class="tnum">07:50 · 1:12</small></div><button class="icon-btn"><svg class="ic"><use href="#i-more"/></svg></button></div>
+              </div>
+              <div class="rec-dock">
+                <div class="rec-row"><button class="vid-btn"><svg class="ic"><use href="#i-video"/></svg></button><button class="rec-btn"><span class="dot"></span>Записать дубль</button></div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Статус — переключателем из трёх ступеней, а не чипом с меню.</b> Видно, где ты на пути, и сменить можно одним касанием. <span class="tag">видимость состояния</span></li>
+          <li data-n="2"><b>Ноты — лентой сразу под статусом.</b> Их открывают чаще всего: тап — пюпитр с этой страницы. <span class="tag">частота</span></li>
+          <li data-n="3"><b>Минусовка — одной карточкой</b>: слушать, какие наушники, «⋯» — заменить или убрать. <span class="tag">близость</span></li>
+          <li data-n="4"><b>Итог дублей — сводка и маленький график</b>, пунктир на 75 %. Проценты — только здесь и на экране записи, в списках их нет. <span class="tag">прогрессивное раскрытие</span></li>
+          <li data-n="5"><b>«Лучший» — звездой и словом</b> и всегда первым в списке: отметку ставит человек. <span class="tag">эффект изоляции</span></li>
+          <li data-n="6"><b>Запись закреплена внизу экрана.</b> Раньше кнопка уезжала вверх вместе с дублями. Теперь до неё всегда одно касание большого пальца. Чип «С минусовкой» и наушники — прямо над ней. <span class="tag">закон Фиттса</span></li>
+          <li data-n="7"><b>Видео — круглой вторичной кнопкой рядом.</b> Главный — звуковой дубль, видео не спорит с ним по весу. <span class="tag">иерархия</span></li>
+          <li data-n="8"><b>Нового произведения — два действия с нотами, остальное тихими строками.</b> Вместо трёх одинаковых пунктирных блоков — один шаг, который нужен первым. <span class="tag">снижение нагрузки</span></li>
+          <li data-n="9"><b>Во время дубля ноты листаются, всё, что увело бы с экрана, приглушено.</b> Случайное касание смычком дубль не обрывает. <span class="tag">защита от ошибок</span></li>
+          <li data-n="10"><b>Запись «вслепую»</b>: точка, таймер, серые столбики громкости и ход минусовки — «микрофон слышит», но не «попал». Стоп — на месте кнопки. <span class="tag">принцип 4</span></li>
+          <li data-n="11"><b>Без наушников кнопка спит и говорит почему</b> — и тут же предлагает выход: выключить «С минусовкой». <span class="tag">понятные ошибки</span></li>
+          <li data-n="12"><b>Гамма — нарисованные ноты вместо ленты фото</b>, диапазон «G3 – G6» справа в заголовке объясняет, почему октав три. <span class="tag">узнавание</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ============ 4. ФОРМА ПРОИЗВЕДЕНИЯ ============ -->
+    <article class="screen" id="r-form">
+      <h2 class="screen-title">4. Форма произведения</h2>
+      <p class="screen-goal"><b>Главное действие:</b> «Сохранить» &nbsp;·&nbsp; <b>За 3 секунды:</b> «нужно только название, остальное — по желанию».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            {{SB}}
+            <div class="state" data-state="Заполнено">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-x"/></svg></button><span class="tb-title">Новое произведение</span></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="field" style="margin-top:4px" data-note="1"><label>Название</label><div class="input focus">Концерт ля минор, 1 ч.<span class="caret"></span></div></div>
+                <div class="field"><label>Композитор · необязательно</label><div class="input">А. Вивальди</div></div>
+                <div class="pick" data-note="2"><span>Раздел</span><b>Произведения</b><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                <div class="pick" data-note="3"><span>Тональность</span><b>a-moll</b><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                <div class="field"><label>Темп · это пометка, метронома нет</label>
+                  <div class="tempo" data-note="4"><div class="stepper"><span>−</span><b class="tnum">♩ = 96</b><span>+</span></div><span class="qchip">80</span><span class="qchip">100</span><span class="qchip">120</span></div></div>
+                <div class="field"><label>Статус</label><div class="seg" style="margin-top:0"><span class="on">Разбираю</span><span>Учу</span><span>В репертуаре</span></div></div>
+                <div class="field"><label>Заметки</label><div class="area">Что важно не забыть…</div></div>
+              </div>
+              <div class="dock"><button class="btn-main" data-note="5">Сохранить</button></div>
+            </div>
+
+            <div class="state" data-state="Без названия">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-x"/></svg></button><span class="tb-title">Новое произведение</span></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="field" style="margin-top:4px"><label>Название</label><div class="input focus"><span class="caret" style="margin-left:0"></span><span class="ph">&nbsp;Например, «Менуэт соль мажор»</span></div></div>
+                <div class="field"><label>Композитор · необязательно</label><div class="input"><span class="ph">Кто написал</span></div></div>
+                <div class="pick"><span>Раздел</span><b>Произведения</b><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+              </div>
+              <div class="dock" style="padding-bottom:8px"><div class="hint-err" style="text-align:center;margin:0 0 8px" data-note="6">Без названия не сохранить</div><button class="btn-main is-off">Сохранить</button></div>
+              <div class="kbd"><i>й</i><i>ц</i><i>у</i><i>к</i><i>е</i><i>н</i><i>г</i><i>ш</i><i>щ</i><i>з</i><i>ф</i><i>ы</i><i>в</i><i>а</i><i>п</i><i>р</i><i>о</i><i>л</i><i>д</i><i>ж</i><i class="w2">⇧</i><i>я</i><i>ч</i><i>с</i><i>м</i><i>и</i><i>т</i><i class="w2">⌫</i><i class="w2">123</i><i class="w5">пробел</i><i class="w2">.</i><i>↵</i></div>
+            </div>
+
+            <div class="state" data-state="Лист тональности">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-x"/></svg></button><span class="tb-title">Новое произведение</span></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="field" style="margin-top:4px"><label>Название</label><div class="input">Концерт ля минор, 1 ч.</div></div>
+              </div>
+              <div class="scrim"></div>
+              <div class="sheet">
+                <div style="display:flex;justify-content:space-between;align-items:baseline"><div class="sheet-title">Тональность</div><b style="font-size:22px;color:var(--accent)" data-note="7">a-moll</b></div>
+                <div class="tonics"><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span class="on">A</span><span>B</span></div>
+                <div class="seg-s"><span class="sym">♭</span><span class="sym on">♮</span><span class="sym">♯</span></div>
+                <div class="seg-s"><span>мажор</span><span class="on">минор</span></div>
+                <div style="display:flex;gap:10px;margin-top:16px"><button class="btn-soft" style="flex:1" data-note="8">Без тональности</button><button class="btn-main" style="flex:1;height:48px">Готово</button></div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Подписи над полями, «необязательно» — прямо в подписи.</b> Сразу видно, что обязательное здесь только название. <span class="tag">снижение тревоги</span></li>
+          <li data-n="2"><b>«Раздел» — строкой выбора в самой форме</b>: так элемент переносят между разделами (3.22), без отдельного экрана. <span class="tag">видимость</span></li>
+          <li data-n="3"><b>Тональность — одной строкой, выбор — в листе.</b> Три ряда кнопок больше не занимают полформы у тех, кто её не задаёт. <span class="tag">прогрессивное раскрытие</span></li>
+          <li data-n="4"><b>Темп — степпер и три частых значения</b>, подпись честно говорит, что метронома нет. <span class="tag">ожидания</span></li>
+          <li data-n="5"><b>«Сохранить» — внизу на всю ширину</b> и поднимается над клавиатурой, а не прячется в верхнем углу. <span class="tag">закон Фиттса</span></li>
+          <li data-n="6"><b>Пустое название — кнопка приглушена, над ней объяснение словами.</b> Нажимать, чтобы узнать, почему не сохраняется, не нужно. <span class="tag">понятные ошибки</span></li>
+          <li data-n="7"><b>Итог выбора — крупно в заголовке листа</b> в немецкой записи, как он будет показан в списке. <span class="tag">обратная связь</span></li>
+          <li data-n="8"><b>«Без тональности» — отдельной кнопкой</b>, а не повторным тапом по тонике, который никто не угадает. <span class="tag">явное лучше скрытого</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ============ 5. ФОРМА ГАММЫ ============ -->
+    <article class="screen" id="r-scale">
+      <h2 class="screen-title">5. Форма гаммы</h2>
+      <p class="screen-goal"><b>Главное действие:</b> «Добавить гамму» &nbsp;·&nbsp; <b>За 3 секунды:</b> «три выбора — и я вижу, какие ноты будут».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            {{SB}}
+            <div class="state" data-state="Новая">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-x"/></svg></button><span class="tb-title">Новая гамма</span></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="autoname" data-note="1"><b>a-moll гармонический · 2 октавы</b><small class="tnum">A3 – A5</small>
+                  <div class="notation" data-scale="2" style="margin-top:10px"></div></div>
+                <div class="field"><label>Тоника</label>
+                  <div class="tonics" data-note="2"><span>C</span><span>D</span><span>E</span><span>F</span><span>G</span><span class="on">A</span><span>B</span></div>
+                  <div class="seg-s" style="background:var(--surface)"><span class="sym">♭</span><span class="sym on">♮</span><span class="sym">♯</span></div></div>
+                <div class="field"><label>Вид</label>
+                  <div class="grid2" style="margin-top:0" data-note="3"><span>мажор</span><span>минор натуральный</span><span class="on">минор гармонический</span><span>минор мелодический</span></div></div>
+                <div class="field"><label>Октавы</label>
+                  <div class="seg-s" style="background:var(--surface);margin-top:0" data-note="4"><span>1</span><span class="on">2</span><span class="off">3</span></div>
+                  <div class="hint-err">Три октавы от A3 не помещаются на скрипке</div></div>
+              </div>
+              <div class="dock"><button class="btn-main" data-note="5">Добавить гамму</button></div>
+            </div>
+
+            <div class="state" data-state="Такая уже есть">
+              <div class="topbar"><button class="icon-btn"><svg class="ic"><use href="#i-x"/></svg></button><span class="tb-title">Новая гамма</span></div>
+              <div class="app-scroll" style="padding-top:0">
+                <div class="autoname"><b>G-dur · 3 октавы</b><small class="tnum">G3 – G6</small>
+                  <div class="notation" data-scale="2" data-sharp style="margin-top:10px"></div></div>
+                <div class="field"><label>Тоника</label>
+                  <div class="tonics"><span>C</span><span>D</span><span>E</span><span>F</span><span class="on">G</span><span>A</span><span>B</span></div></div>
+                <div class="field"><label>Октавы</label><div class="seg-s" style="background:var(--surface);margin-top:0"><span>1</span><span>2</span><span class="on">3</span></div></div>
+              </div>
+              <div class="dock"><div class="warn" data-note="6"><svg class="ic" style="color:var(--accent)"><use href="#i-scale"/></svg><span><b>Такая гамма уже есть</b> — в «Гаммах», статус «Учу», 2 дубля.</span></div><button class="btn-main">Открыть её</button></div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Результат — сверху: название, диапазон и живые ноты.</b> Каждый выбор ниже сразу виден наверху. <span class="tag">обратная связь</span></li>
+          <li data-n="2"><b>Тоника — крупными кнопками 48 dp</b>, недопустимые приглушены и не нажимаются. <span class="tag">предотвращение ошибок</span></li>
+          <li data-n="3"><b>Вид — четыре варианта плиткой 2×2</b> словами целиком, без сокращений вроде «гарм.». <span class="tag">узнавание</span></li>
+          <li data-n="4"><b>Недоступные октавы приглушены, и под ними сказано почему.</b> Не «сломалось», а «не помещается на скрипке». <span class="tag">понятные ограничения</span></li>
+          <li data-n="5"><b>«Добавить гамму» внизу</b> — как «Сохранить» в форме произведения. <span class="tag">постоянство</span></li>
+          <li data-n="6"><b>Дубликат — не ошибка, а подсказка</b>: главная кнопка становится «Открыть её». <span class="tag">без тупиков</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ============ 6. ПЮПИТР ============ -->
+    <article class="screen" id="r-stand">
+      <h2 class="screen-title">6. Пюпитр</h2>
+      <p class="screen-goal"><b>Главное действие:</b> играть по нотам и листать без рук &nbsp;·&nbsp; <b>За 3 секунды:</b> «вот страница 2 из 4, дубль пишется».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen" style="background:#0B0B0E">
+            <div class="statusbar sb-over" style="position:absolute;top:0;left:0;right:0;z-index:7;color:#E6E4EE"><span>18:42</span><span class="sb-icons"><svg class="ic ic-s"><use href="#i-sb-signal"/></svg><svg class="ic" style="width:26px"><use href="#i-sb-battery"/></svg></span></div>
+            <div class="state" data-state="Панель">
+              <div class="stand"><div class="sheet-p" data-sheet="2" data-big="1" data-note="1"></div></div>
+              <div class="st-top" data-note="2"><button class="icon-btn" style="color:#E6E4EE"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="tb-title tnum">2 / 4</span><button class="icon-btn" style="color:#E6E4EE"><svg class="ic"><use href="#i-trash"/></svg></button></div>
+              <div class="st-bot"><button class="rec-btn" style="width:100%" data-note="3"><span class="dot"></span>Записать дубль</button></div>
+            </div>
+            <div class="state" data-state="Идёт дубль">
+              <div class="stand"><div class="sheet-p" data-sheet="2" data-big="1"></div></div>
+              <div class="capsule tnum" data-note="4"><i></i>1:12 · 2 / 4</div>
+            </div>
+            <div class="state" data-state="Первый вход">
+              <div class="stand"><div class="sheet-p" data-sheet="1" data-big="1"></div></div>
+              <div class="zone l"><svg class="ic"><use href="#i-chev-l"/></svg></div>
+              <div class="zone r" data-note="5"><svg class="ic"><use href="#i-chev-r"/></svg></div>
+              <div class="coach"><svg class="ic"><use href="#i-hand"/></svg>Тап по краю листа — следующая страница. Середина — панель.</div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Лист — по размеру экрана на почти чёрном поле.</b> Ничего не приглушено: ноты надо читать с 60 см. <span class="tag">читаемость</span></li>
+          <li data-n="2"><b>Верх — только «назад», номер страницы и удаление.</b> Удаление в углу, подальше от частых касаний, и с подтверждением. <span class="tag">опасное — дальше</span></li>
+          <li data-n="3"><b>«Записать дубль» — там же внизу, что и на экране произведения</b>: рука уже знает, куда тянуться. <span class="tag">постоянство</span></li>
+          <li data-n="4"><b>Во время дубля панель уходит, остаётся капсула «● 1:12 · 2 / 4».</b> Запись видна, ноты не закрыты. <span class="tag">принцип 4</span></li>
+          <li data-n="5"><b>Зоны перелистывания показываются один раз, при первом входе.</b> Потом они невидимы, но край листа коротко подсвечивается при перелистывании. <span class="tag">обучение в контексте</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ============ 7. СВОЯ КАМЕРА ============ -->
+    <article class="screen" id="r-cam">
+      <h2 class="screen-title">7. Своя камера «Снять под минусовку»</h2>
+      <p class="screen-goal"><b>Главное действие:</b> начать и остановить съёмку &nbsp;·&nbsp; <b>За 3 секунды:</b> «наушники есть, минусовка 3:40, жму и играю».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen" style="background:#000">
+            <div class="statusbar sb-over" style="position:absolute;top:0;left:0;right:0;z-index:7;color:#fff"><span>18:42</span><span class="sb-icons"><svg class="ic ic-s"><use href="#i-sb-signal"/></svg><svg class="ic" style="width:26px"><use href="#i-sb-battery"/></svg></span></div>
+            <div class="state" data-state="Готово">
+              <div class="vf"><div class="p1"></div><div class="p2"></div><div class="vl"></div></div>
+              <div class="cam-top"><button class="icon-btn" style="color:#fff"><svg class="ic"><use href="#i-x"/></svg></button><span class="tb-title" data-note="1">Концерт ля минор, 1 ч.</span><button class="icon-btn" style="color:#fff"><svg class="ic"><use href="#i-flip"/></svg></button></div>
+              <div class="cam-bot">
+                <div class="cam-line" data-note="2"><span><svg class="ic"><use href="#i-phones"/></svg> Pixel Buds</span><span class="tnum"><svg class="ic"><use href="#i-backing"/></svg> минусовка 3:40</span></div>
+                <div class="shutter" data-note="3"><i></i></div>
+              </div>
+            </div>
+            <div class="state" data-state="Съёмка">
+              <div class="vf"><div class="p1"></div><div class="p2"></div><div class="vl"></div></div>
+              <div class="cam-top"><button class="icon-btn" style="color:#fff"><svg class="ic"><use href="#i-x"/></svg></button><span class="tb-title">Концерт ля минор, 1 ч.</span><button class="icon-btn" style="color:#fff;opacity:.38"><svg class="ic"><use href="#i-flip"/></svg></button></div>
+              <div class="rec-pill tnum" data-note="4"><i></i>1:12</div>
+              <div class="cam-bot">
+                <div class="bk-prog tnum" style="color:rgba(255,255,255,.85);margin-top:0"><svg class="ic ic-s"><use href="#i-backing"/></svg><span class="b" style="background:rgba(255,255,255,.2)"><i style="width:33%;background:#fff"></i></span><span>1:12 / 3:40</span></div>
+                <div class="shutter stop"><i></i></div>
+              </div>
+            </div>
+            <div class="state" data-state="Без наушников">
+              <div class="vf"><div class="p1"></div><div class="p2"></div><div class="vl"></div></div>
+              <div class="cam-top"><button class="icon-btn" style="color:#fff"><svg class="ic"><use href="#i-x"/></svg></button><span class="tb-title">Концерт ля минор, 1 ч.</span><button class="icon-btn" style="color:#fff"><svg class="ic"><use href="#i-flip"/></svg></button></div>
+              <div class="cam-bot">
+                <div class="cam-warn" data-note="5"><svg class="ic"><use href="#i-phones"/></svg><span>Подключите наушники: минусовка через динамик попадёт в запись.</span></div>
+                <div class="shutter off"><i></i></div>
+              </div>
+            </div>
+            <div class="state" data-state="Собираем видео">
+              <div class="vf"><div class="p1"></div><div class="p2"></div><div class="vl"></div></div>
+              <div class="cam-top"><button class="icon-btn" style="color:#fff;opacity:.38"><svg class="ic"><use href="#i-x"/></svg></button><span class="tb-title">Концерт ля минор, 1 ч.</span><span style="width:48px"></span></div>
+              <div class="busy" data-note="6"><div><span class="spin"></span>Собираем видео…</div></div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Сверху — название произведения</b>: видно, к чему пойдёт дубль. Закрыть и сменить камеру — по краям. <span class="tag">где я</span></li>
+          <li data-n="2"><b>Наушники и длина минусовки — одной строкой над кнопкой.</b> Всё, что нужно проверить перед стартом, — в одном месте. <span class="tag">близость</span></li>
+          <li data-n="3"><b>Привычный круглый спуск внизу по центру</b> — как в системной камере, учиться не надо. <span class="tag">закон Якоба</span></li>
+          <li data-n="4"><b>Во время съёмки — только таймер и ход минусовки</b>, ни нот, ни зон: запись «вслепую». Смена камеры приглушена. <span class="tag">принцип 4</span></li>
+          <li data-n="5"><b>Без наушников спуск спит, над ним — причина</b>, а не молчаливая неактивная кнопка. <span class="tag">понятные ошибки</span></li>
+          <li data-n="6"><b>«Собираем видео…» — поверх, крестик приглушён</b>: дубль не потеряется, пока склеивается. <span class="tag">видимость состояния</span></li>
+        </ol>
+      </div>
+    </article>
+  </main>
+
+  <section class="block">
+    <h2>Что вынесено и куда</h2>
+    <table class="moved">
+      <thead><tr><th>Элемент</th><th>Куда</th><th>Почему</th></tr></thead>
+      <tbody>
+        <tr><td>Репертуар внутри «Записей» (переключатель «Записи | Репертуар»)</td><td>Своя вкладка «Репертуар»</td><td>Главная ежедневная часть приложения не должна прятаться во вкладке с чужим именем</td></tr>
+        <tr><td>«Время по элементам» над разделами</td><td>Под разделами на той же вкладке</td><td>Вход — разделы; время — второй вопрос</td></tr>
+        <tr><td>«Добавить произведение / гамму / …» в начале каждого списка</td><td>Кнопка внизу списка и одна «Добавить в репертуар» на вкладке с листом «Что добавить?»</td><td>Главное действие — под большим пальцем</td></tr>
+        <tr><td>Кнопка записи в середине экрана произведения</td><td>Закреплённая панель записи внизу (с видео и «С минусовкой»)</td><td>Не уезжает при прокрутке к дублям</td></tr>
+        <tr><td>Чип статуса с меню</td><td>Переключатель из трёх ступеней</td><td>Видно все ступени, смена — одним касанием</td></tr>
+        <tr><td>Три ряда тональности в форме</td><td>Строка «Тональность» и лист выбора</td><td>У многих произведений её не задают</td></tr>
+        <tr><td>«Сохранить» в шапке формы</td><td>Внизу, над клавиатурой</td><td>Зона большого пальца; клавиатура её тоже не закрывает</td></tr>
+        <tr><td>Пустые обложки у произведений без нот</td><td>Плитка вида элемента (нота, ключ со знаками, смычок)</td><td>Меньше шума, гаммы различимы по знакам</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="block">
+    <h2>Проверки</h2>
+    <ul>
+      <li><b>Контраст:</b> %%CONTRAST%%</li>
+      <li><b>Касания:</b> плитки разделов ≥ 112 dp, карточки элементов 84 dp, чипы 40 dp с полем 48, кнопки дока 56 dp, тоники 48 dp, спуск камеры 76 dp. Между соседними — ≥ 8 dp.</li>
+      <li><b>Смысл не только цветом:</b> статус — точка и слово; доли — всегда в одном порядке, пустая дорожка — пунктиром; лучший — звезда и слово; видео — бейдж меняет силуэт плитки; минусовка — значок и слова.</li>
+      <li><b>Движение:</b> на всех экранах раздела нет своих постоянных анимаций. Столбики громкости идут за звуком только во время дубля. Крутилка — только в «Собираем видео…».</li>
+      <li><b>Зелёного и красного-зоны здесь нет.</b> Красная точка записи — общий знак записи во всём приложении, не оценка.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Расходится со спекой</h2>
+    <ul>
+      <li><b>3.15 «Вход»</b> — репертуар больше не во «Записях» за переключателем «Сессии | Репертуар», а в своей вкладке. Это же меняет раздел 4 ядра (нижняя панель — четыре вкладки) и 3.11 / 3.21 (у «Записей» пропадает переключатель).</li>
+      <li><b>3.15 «Список»</b> — «Добавить …» переезжает сверху вниз. Миниатюра-заглушка без нот заменена плиткой вида элемента. Статус — точкой, а не чипом. В фильтре — числа.</li>
+      <li><b>3.15 «Экран произведения»</b> — порядок блоков: статус переключателем под шапкой, минусовка перед заметками, запись — закреплённой панелью внизу вместо блока 4. «Видео-дубль» (3.19) — круглой кнопкой рядом с записью, а не контурной кнопкой под ней. Чип «С минусовкой» (3.32) — переключателем в той же панели.</li>
+      <li><b>3.15 «Поля»</b> — «Сохранить» внизу, тональность — в листе с кнопкой «Без тональности» (вместо повторного тапа по тонике). «Раздел» (3.22) — строкой выбора.</li>
+      <li><b>3.22</b> — вкладка открывается на разделах, как и сейчас. Но разделы — плитками 2×2, а «время по элементам» (3.28) — под ними, а не над. Кнопка «Добавить в репертуар» с листом выбора — новый вход. Спека говорит только о кнопке в списке раздела.</li>
+      <li><b>3.28</b> — карточка «Время по элементам» стоит под разделами, а не над ними.</li>
+      <li><b>3.32 «Своя камера»</b> — раскладка та же по смыслу; уточнено место строки «наушники · минусовка» над спуском.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Открытые вопросы</h2>
+    <ul>
+      <li>Где на вкладке landscape: предлагаю разделы слева, «время по элементам» справа, как было в 3.28 у колонок. Не нарисовано.</li>
+      <li>Нужна ли на вкладке строка «Сейчас учу» (элементы со статусом «Учу» из всех разделов)? Это самый частый путь «открыть то, что играю», но это новое поведение — в спеке его нет.</li>
+    </ul>
+    <h2 style="margin-top:18px">Идеи на потом</h2>
+    <ul><li>Поиск по репертуару — есть в разделе 7 спеки; место под него — справа от заголовка вкладки.</li></ul>
+  </section>
+</div>

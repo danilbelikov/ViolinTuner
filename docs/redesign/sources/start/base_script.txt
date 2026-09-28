@@ -1,0 +1,84 @@
+<script>
+// календарь сентября 2026: 1-е — вторник; тона 0–4, сегодня — 27
+(function(){
+  var tones={1:2,2:3,3:2,4:1,5:3,6:2,7:2,8:3,9:1,11:3,12:2,13:3,14:1,15:3,16:2,17:3,18:2,20:4,21:2,22:3,23:1,24:3,25:2,26:4,27:2};
+  function build(id,sel){
+    var el=document.getElementById(id); if(!el) return;
+    var h='';['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(function(d){h+='<div class="dn">'+d+'</div>'});
+    h+='<div></div>';
+    for(var d=1;d<=30;d++){
+      var c='cd'; if(tones[d]) c+=' l'+tones[d]; if(d>27) c+=' fut'; if(d===27) c+=' tod';
+      var st=(sel===d)?' style="outline:2px solid var(--text);outline-offset:-1px;border-radius:50%"':'';
+      h+='<div class="'+c+'"><i'+st+'>'+d+'</i></div>';
+    }
+    el.innerHTML=h;
+  }
+  build('cal-main'); build('cal-day',24); 
+})();
+(function(){
+  var root=document.documentElement, body=document.body;
+  var qa=function(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s))};
+  function placeMarks(screenEl){
+    var layer=screenEl.querySelector(':scope > .mark-layer');
+    if(!layer){layer=document.createElement('div');layer.className='mark-layer';screenEl.appendChild(layer)}
+    layer.innerHTML='';
+    var base=screenEl.getBoundingClientRect(), k=(base.width/screenEl.offsetWidth)||1;
+    qa('[data-note]',screenEl).forEach(function(el){
+      if(el.closest('[hidden]')) return;
+      var r=el.getBoundingClientRect(); if(!r.width&&!r.height) return;
+      var sc=el.closest('.app-scroll');
+      if(sc){var sr=sc.getBoundingClientRect(); if(r.bottom<sr.top+6||r.top>sr.bottom-6) return;}
+      if(r.bottom<base.top||r.top>base.bottom) return;
+      var x=(r.right-base.left)/k-14, y=(r.top-base.top)/k-9;
+      var m=document.createElement('span'); m.className='mark'; m.textContent=el.getAttribute('data-note');
+      m.setAttribute('data-n',el.getAttribute('data-note'));
+      m.style.left=Math.min(Math.max(x,6),screenEl.offsetWidth-28)+'px';
+      m.style.top=Math.min(Math.max(y,6),screenEl.offsetHeight-28)+'px';
+      layer.appendChild(m);
+    });
+  }
+  function placeAll(){qa('.phone-screen').forEach(placeMarks)}
+  qa('.screen').forEach(function(screen){
+    qa('.phone',screen).forEach(function(phone){
+      var ps=phone.querySelector('.phone-screen'); var states=qa(':scope > .state',ps);
+      if(states.length>1){
+        var tabs=document.createElement('div'); tabs.className='state-tabs'; tabs.setAttribute('role','tablist');
+        states.forEach(function(st,i){
+          var b=document.createElement('button'); b.type='button'; b.setAttribute('role','tab');
+          b.textContent=st.getAttribute('data-state')||('Состояние '+(i+1));
+          b.addEventListener('click',function(){
+            states.forEach(function(s,j){s.hidden=j!==i});
+            qa('button',tabs).forEach(function(x,j){x.setAttribute('aria-selected',String(j===i))});
+            placeMarks(ps);
+          });
+          tabs.appendChild(b);
+        });
+        phone.parentNode.insertBefore(tabs,phone);
+        states.forEach(function(s,j){s.hidden=j!==0}); tabs.firstChild.setAttribute('aria-selected','true');
+      }
+      var tz=document.createElement('div'); tz.className='thumb-zone';
+      tz.innerHTML='<span style="top:8px">трудно дотянуться</span><span style="top:27%">можно</span><span style="top:53%">легко — сюда главные действия</span>';
+      ps.appendChild(tz);
+      qa('.app-scroll',ps).forEach(function(sc){
+        var t=0; sc.addEventListener('scroll',function(){cancelAnimationFrame(t);t=requestAnimationFrame(function(){placeMarks(ps)})},{passive:true});
+      });
+    });
+    function hot(n,on){qa('[data-note="'+n+'"],.notes li[data-n="'+n+'"]',screen).forEach(function(e){e.classList.toggle('is-hot',on)})}
+    screen.addEventListener('mouseover',function(e){var t=e.target.closest('.notes li[data-n],.mark');if(t)hot(t.getAttribute('data-n'),true)});
+    screen.addEventListener('mouseout',function(e){var t=e.target.closest('.notes li[data-n],.mark');if(t)hot(t.getAttribute('data-n'),false)});
+  });
+  function toggle(btn,fn){btn.addEventListener('click',function(){var on=btn.getAttribute('aria-pressed')!=='true';btn.setAttribute('aria-pressed',String(on));fn(on);requestAnimationFrame(placeAll)})}
+  toggle(document.getElementById('btn-notes'),function(on){body.classList.toggle('hide-marks',!on)});
+  toggle(document.getElementById('btn-theme'),function(on){root.setAttribute('data-theme',on?'dark':'light')});
+  toggle(document.getElementById('btn-thumb'),function(on){body.classList.toggle('show-thumb',on)});
+  var P=new URLSearchParams(location.search);
+  if(P.get('theme')==='light') document.getElementById('btn-theme').click();
+  if(P.get('marks')==='0') document.getElementById('btn-notes').click();
+  if(P.get('thumb')==='1') document.getElementById('btn-thumb').click();
+  if(P.get('state')) qa('.state-tabs').forEach(function(t){var b=t.children[+P.get('state')-1]; if(b) b.click()});
+  window.addEventListener('resize',placeAll);
+  window.addEventListener('load',function(){placeAll(); root.setAttribute('data-page-h',String(root.scrollHeight))});
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(placeAll);
+  placeAll();
+})();
+</script>

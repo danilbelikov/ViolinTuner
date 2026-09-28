@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Violin Journey · редизайн</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#07080A;--card:#121419;--card2:#1A1D24;--text:#E9ECF1;--muted:#99A1AE;--border:#252A33;--accent:#C4ADFF;--accent-deep:#5B43B8;--flame:#F2A65A;--danger:#FFB199;--brass:#C9A24A}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--bg);color:var(--text);font:15px/1.55 "Manrope",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--accent);text-decoration:none}
+a:hover{text-decoration:underline}
+.doc{max-width:1180px;margin:0 auto;padding:40px 16px 80px}
+h1{font-size:34px;letter-spacing:-.02em;margin:0 0 8px}
+h2{font-size:21px;margin:0 0 14px;letter-spacing:-.01em}
+h3.sub{font-size:15px;margin:18px 0 8px}
+p{margin:0 0 10px;color:var(--muted)} b,strong{color:var(--text)}
+code{font:13px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--text);background:var(--card2);border-radius:6px;padding:1px 5px}
+.lead{max-width:820px;font-size:16px}
+.toc{display:flex;flex-wrap:wrap;gap:8px;margin:16px 0 0;padding:0;list-style:none}
+.toc a{display:inline-flex;align-items:center;min-height:36px;padding:6px 14px;border-radius:18px;background:var(--card);border:1px solid var(--border);color:var(--text);font-size:14px;font-weight:600}
+.toc a:hover{border-color:var(--accent);text-decoration:none}
+.block{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:22px 24px;margin:24px 0}
+@media (max-width:560px){.block{padding:18px 16px}}
+.principles{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:12px;margin:0;padding:0;list-style:none}
+@media (max-width:420px){.principles{grid-template-columns:1fr}}
+.principles li{background:var(--card2);border-radius:14px;padding:12px 14px;color:var(--muted);font-size:14px}
+.principles li b{display:block;margin-bottom:2px;font-size:15px}
+.tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media (max-width:760px){.tabs{grid-template-columns:1fr 1fr}}
+@media (max-width:420px){.tabs{grid-template-columns:1fr}}
+.tabcol{background:var(--card2);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column}
+.tabcol h3{margin:0 0 8px;font-size:15px;display:flex;align-items:center;gap:8px}
+.tabcol h3 i{width:10px;height:10px;border-radius:50%;background:var(--accent);display:inline-block}
+.tabcol ul{margin:0;padding-left:18px;color:var(--muted);font-size:14px}
+.tabcol .src{margin:10px 0 0;padding-top:8px;border-top:1px solid var(--border);font-size:13px;line-height:1.7}
+.tabcol .src a{white-space:nowrap}
+.over{margin-top:12px;color:var(--muted);font-size:14px}
+.group-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-top:40px}
+.group-head h2{margin:0}
+.group-head .date{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.group-lead{max-width:860px;font-size:14px;margin:6px 0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+@media (max-width:420px){.cards{grid-template-columns:1fr}}
+.card{display:flex;flex-direction:column;gap:8px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:20px;text-decoration:none;color:inherit;transition:border-color .15s}
+.card:hover{border-color:var(--accent);text-decoration:none}
+.card .k{font-size:12px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+.card h3{margin:0;font-size:20px}
+.card .file{font-size:13px;color:var(--muted);margin-top:-4px}
+.card ul{margin:4px 0 0;padding-left:18px;color:var(--muted);font-size:14px}
+.card .go{margin-top:auto;padding-top:8px;font-weight:700;color:var(--accent)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top;color:var(--muted)}
+th{color:var(--text);font-weight:700}
+td:first-child{color:var(--text);font-weight:600}
+.spec td:first-child{white-space:nowrap}
+.diff td:first-child{width:22%}
+.diff td:nth-child(4){white-space:nowrap;color:var(--text)}
+@media (max-width:760px){
+  .stack thead{display:none}
+  .stack tr{display:block;padding:10px 0;border-bottom:1px solid var(--border)}
+  .stack td{display:block;border:0;padding:2px 0;width:auto!important;white-space:normal!important}
+  .diff td:nth-child(3)::before{content:"Как правильно: ";color:var(--text);font-weight:600}
+  .diff td:nth-child(4)::before{content:"Этап: ";font-weight:400;color:var(--muted)}
+}
+.q{margin:0;padding-left:22px}
+.q li{color:var(--muted);margin-bottom:6px}
+.done{list-style:none;margin:0;padding:0}
+.done li{position:relative;padding-left:26px;color:var(--muted);margin-bottom:6px}
+.done li::before{content:"";position:absolute;left:2px;top:6px;width:14px;height:8px;border-left:2px solid var(--brass);border-bottom:2px solid var(--brass);transform:rotate(-45deg)}
+.undrawn{margin:16px 0 0;padding:12px 14px;background:var(--card2);border-radius:14px;font-size:14px}
+.swatches{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px}
+.sw{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--muted)}
+.sw i{width:26px;height:26px;border-radius:8px;border:1px solid var(--border)}
+</style>
+</head>
+<body>
+<div class="doc">
+  <h1>Violin Journey · редизайн всего приложения</h1>
+  <p class="lead">Макеты по психологии восприятия (скилл mobile-ux-design): семь разделов нарисованы 27 сентября 2026. 28 сентября их сверили с кодом и спекой и дорисовали то, чего не хватало, — ещё шесть страниц. <b>Пока только макеты:</b> код и спека не менялись, у каждой страницы внизу есть блок «Расходится со спекой». Экраны 390×844, landscape 892×412, маленький экран 360×640. У каждого экрана — номера с пояснениями «почему так», вкладки состояний и переключатель «зона большого пальца».</p>
+  <p class="lead" style="font-size:14px">Во всех макетах одни данные: сегодня воскресенье, 27 сентября 2026, 18:42; 47 ч 17 мин за скрипкой, «Уровень 5 · Гаммы», «до 6 уровня — 2 ч 43 мин», 47 884 такта, «Хватает до Праги»; гамма «D-dur · 2 октавы» (название собирается само, 3.22), «Концерт ля минор, 1 ч.»; урок по понедельникам в 17:00 у Анны Сергеевны, «Осенний концерт» 24 октября, 21 ноября — «Отборочный тур Международного конкурса юных скрипачей имени Л. Когана» (Москва, Малый зал консерватории). Идущее занятие — точкой на вкладке «Занятия», с какой вкладки ни смотри. Как реализовывать: <a href="../README.md">README</a>, <a href="../implementation/stages.md">этапы R1–R9</a>, <a href="../implementation/decisions.md">решения</a>, <a href="../implementation/open-questions.md">открытые вопросы</a>.</p>
+  <ul class="toc">
+    <li><a href="#principles">Сквозные решения</a></li>
+    <li><a href="#map">Карта приложения</a></li>
+    <li><a href="#sections">Разделы</a></li>
+    <li><a href="#added">Дорисовано 28.09</a></li>
+    <li><a href="#spec">Что меняется в спеке</a></li>
+    <li><a href="#diff">Где страницы расходятся</a></li>
+    <li><a href="#questions">Открытые вопросы</a></li>
+  </ul>
+
+  <section class="block" id="principles">
+    <h2>Сквозные решения</h2>
+    <ul class="principles">
+      <li><b>Четыре вкладки: Занятия · Live · Репертуар · Записи</b>Репертуар больше не прячется переключателем внутри «Записей»: вкладка называлась «Записи», а внутри жили пьесы. Порядок — ход дня: начал → играю → что играю → слушаю. Подтверждено владельцем 28.09.2026.</li>
+      <li><b>Главное действие — внизу и закреплено</b>«Начать занятие», «Записать дубль», «В путь», «Сохранить» в формах — над панелью или клавиатурой, в зоне большого пальца, видны при любой прокрутке.</li>
+      <li><b>Смотрят — сверху, нажимают — снизу</b>Часы, такты, статус и главные цифры — вверху; всё, что нажимают часто, — внизу; редкое и опасное — в листах и на отдельных экранах.</li>
+      <li><b>Одна полоса прогресса на экран</b>Уровень — кольцом вокруг номера (или фото), дорога — полосой, только пока тактов не хватает. Две одинаковые фиолетовые полосы подряд больше не встречаются.</li>
+      <li><b>Цвет = один смысл</b>Зелёный, янтарный и красный — только интонация (Live и разбор записей). Фиолетовый — время и действие. Тёплый огонёк — серия. Латунь — сделано. Опасное — один мягкий коралловый, и только опасное: ошибка поля — вторым текстом со значком, рамка не краснеет. На Live ушло оранжевое дерево: боковым зрением оно читалось как «рядом». Восемь цветов видов событий подобраны так, чтобы не спорить с ними.</li>
+      <li><b>Листы вместо блоков под сгибом</b>Выбранный день, итог, «Занятие не закончено», выбор тональности, дата и время события — листом поверх того, откуда их вызвали. Смахнуть лист — только скрыть: он ничего не отменяет, не удаляет и не сохраняет.</li>
+      <li><b>Landscape и маленький экран — по одному правилу</b>Две колонки; главное действие закреплено внизу той колонки, к которой оно относится, — по умолчанию левой (у экрана события — правой, под записями). Затухание над ним 28 dp, в левой колонке «Занятий» — 16, в колонке без прокрутки (дом, видео) — нет. «Занятия»: строка пути справа, напоминание слева без прокрутки. Одноколоночные экраны — колонка до 560 dp по центру, листы — до 640 dp, итог тоже. На 360×640 кнопка и панель закреплены всегда, «Сегодня» не ужимается, первым сжимается окно дома — ниже 72 dp оно становится строкой 56 dp.</li>
+      <li><b>Одна основа на всё приложение</b>Один сегмент (44 dp в контейнере 52, касание — все 52), два вида чипов — фильтр (капсула 40) и выбор (44, радиус 14), строки 56 dp, формы 12 / 18 / 24 / 28, диалоги, меню «⋯», листы, тосты и «нет разрешения» по одному шаблону. Стекло поверх картин без размытия: .72 — основа (вторая строка карточек Live — #C9C5D6), .82 — над пёстрой картиной.</li>
+      <li><b>Без стыжения</b>Нулевая серия не показывается, пропуск — пунктир без цифр, «Не сохранять» не красная, «далеко впереди» — без остатков. Кнопки говорят итог словами: «Сохранить 35 мин» (когда время поправили степпером), «Закончить в 18:42 · 1 ч 04 мин».</li>
+      <li><b>Правила спеки не тронуты</b>Никаких касаний, пока звучит скрипка; только визуальная обратная связь; не больше двух движений на экране; тёмная тема; ноты латиницей.</li>
+    </ul>
+    <div class="swatches">
+      <span class="sw"><i style="background:#131318"></i>фон #131318</span>
+      <span class="sw"><i style="background:#1E1D25"></i>карточка и лист #1E1D25</span>
+      <span class="sw"><i style="background:#292833"></i>диалог #292833</span>
+      <span class="sw"><i style="background:#8A8699"></i>третий текст #8A8699</span>
+      <span class="sw"><i style="background:#C4ADFF"></i>акцент #C4ADFF</span>
+      <span class="sw"><i style="background:#5B43B8"></i>глубокий #5B43B8</span>
+      <span class="sw"><i style="background:#2A2352"></i>мягкий акцент #2A2352</span>
+      <span class="sw"><i style="background:#F2A65A"></i>серия #F2A65A</span>
+      <span class="sw"><i style="background:#C9A24A"></i>сделано #C9A24A</span>
+      <span class="sw"><i style="background:#FFB199"></i>опасное #FFB199</span>
+      <span class="sw"><i style="background:#C9C5D6"></i>подпись на стекле #C9C5D6</span>
+      <span class="sw"><i style="background:linear-gradient(rgba(19,19,24,.72),rgba(19,19,24,.72)),linear-gradient(135deg,#C9A24A,#5B43B8)"></i>стекло .72 / .82, без размытия</span>
+      <span class="sw"><i style="background:#6FD39B"></i><i style="background:#F2B85A"></i><i style="background:#FF7A7A"></i>зоны — только интонация</span>
+    </div>
+  </section>
+
+  <section class="block" id="map">
+    <h2>Карта приложения</h2>
+    <div class="tabs">
+      <div class="tabcol"><h3><i></i>Занятия</h3><ul><li>Сегодня и неделя, дом, календарь</li><li>Лист дня, «Время за день»</li><li>«Закончить занятие», итог</li><li>«Мой путь», трофеи, подарок, фото</li><li>Напоминание и метки событий</li><li>Событие: экран, форма, свои виды</li><li>Landscape и 360×640</li></ul>
+        <p class="src"><a href="practice.html">practice</a> · <a href="practice-sheets.html">practice-sheets</a> · <a href="practice-extra.html">practice-extra</a> · <a href="events-kinds.html">events-kinds</a> · <a href="events-form.html">events-form</a> · <a href="events-views.html">events-views</a></p></div>
+      <div class="tabcol"><h3><i></i>Live</h3><ul><li>«Игра» — все состояния</li><li>«Настройка» — авто и фикс</li><li>Запись дубля</li><li>Лист «Что играем» (подходы)</li><li>Landscape</li></ul>
+        <p class="src"><a href="live.html">live</a> · панель гаснет — <a href="components.html">components</a></p></div>
+      <div class="tabcol"><h3><i></i>Репертуар</h3><ul><li>Разделы и время по элементам</li><li>Список раздела</li><li>Произведение и гамма</li><li>Формы, пюпитр</li><li>Своя камера под минусовку</li><li>Landscape: вкладка, произведение, форма</li></ul>
+        <p class="src"><a href="repertoire.html">repertoire</a> · <a href="landscape.html">landscape</a></p></div>
+      <div class="tabcol"><h3><i></i>Записи</h3><ul><li>Вход в «Выступления»</li><li>График, список, выбор</li><li>Экран записи и разбор</li><li>«Звук», «Поделиться»</li><li>Записи выступлений рядом с дублями</li><li>Landscape экрана записи</li></ul>
+        <p class="src"><a href="records.html">records</a> · <a href="landscape.html">landscape</a> · <a href="events-views.html">events-views</a></p></div>
+    </div>
+    <p class="over"><b>Поверх вкладок, без панели:</b> Настройки (шестерёнка на Live и строка в «Моём пути»), копия и восстановление, путешествие (остановка, карта, паспорт), дом (лавка, «Обставить», дома; landscape — в <a href="landscape.html">landscape</a>), экран записи, произведение, событие, «Выступления» (landscape — в <a href="events-views.html">events-views</a>). <b>До вкладок:</b> знакомство и онбординг. <b>Общее для всех экранов:</b> панель, закреплённая нижняя зона (dock), кнопки, чипы, строки, диалоги, меню, листы, тосты — <a href="components.html">components</a>.</p>
+  </section>
+
+  <div class="group-head" id="sections"><h2>Разделы</h2><span class="date">27.09.2026</span></div>
+  <p class="group-lead">Семь разделов по вкладкам и играм — с них начинается каждый этап.</p>
+  <div class="cards">
+    <a class="card" href="practice.html"><span class="k">Вкладка</span><h3>Занятия</h3>
+      <ul><li>Кнопка «Начать занятие» закреплена над панелью</li><li>Строка пути с кольцом уровня вместо шапки профиля</li><li>«Сегодня» — число и неделя столбиками вместо трёх карточек</li><li>Дом ниже и меньше, календарь под сгибом, день — листом</li></ul><span class="go">Открыть →</span></a>
+    <a class="card" href="practice-sheets.html"><span class="k">Листы и события</span><h3>Занятия: листы, трофеи, события</h3>
+      <ul><li>«Закончить занятие»: «17:55 — 18:42», после степпера — «Сохранить 35 мин», «Не сохранять» — тихо</li><li>Итог: «+225 тактов» и сумма по строкам, дорога в два тона</li><li>«Занятие не закончено» — лист, итог прямо в кнопках</li><li>События: знаки видов у дней, экран по виду, урок за 4 касания</li></ul><span class="go">Открыть →</span></a>
+    <a class="card" href="live.html"><span class="k">Вкладка</span><h3>Live</h3>
+      <ul><li>Кольцо, нота, слово и цифры — без изменений</li><li>Стекло вместо кленовой планки: цвет на экране — только интонация</li><li>Симметричный низ: «Что играю» · клавиша записи · занятие</li><li>Пока звучит нота, кнопки Live гаснут до 0,38; панель — только за выключателем, по умолчанию выключенным</li></ul><span class="go">Открыть →</span></a>
+    <a class="card" href="repertoire.html"><span class="k">Новая вкладка</span><h3>Репертуар</h3>
+      <ul><li>Разделы плитками, свои — строками, время по элементам ниже</li><li>Статус без зелёного, честная полоса «выучено»</li><li>Панель записи закреплена внизу произведения, минусовка — переключателем</li><li>«Сохранить» в формах внизу, тональность — листом</li></ul><span class="go">Открыть →</span></a>
+    <a class="card" href="records.html"><span class="k">Вкладка</span><h3>Записи</h3>
+      <ul><li>Вход в «Выступления» первой строкой, график — полоска 14 дней</li><li>Фильтры по виду: все · дубли · видео · с Live</li><li>Экран записи: плеер внизу, итог разбора одной карточкой, «⋯» для редкого</li><li>«Звук»: крупный A/B внизу, блоки свёрнуты; «Поделиться» с размером файла</li></ul><span class="go">Открыть →</span></a>
+    <a class="card" href="journey-home.html"><span class="k">Игра</span><h3>Путешествие и дом</h3>
+      <ul><li>«В путь · Прага» закреплена, «спишется 1 600 из 47 884»</li><li>«Войти в дом» — карточкой с комнатой</li><li>Дом: «В дорогу», «Лавка», «Обставить» внизу, комната крупнее</li><li>Лавка: цена в кнопке «Купить · 300», примерка с ореолом</li></ul><span class="go">Открыть →</span></a>
+    <a class="card" href="start.html"><span class="k">Начало и служебное</span><h3>Знакомство, онбординг, настройки, копия</h3>
+      <ul><li>Одна полоса на все семь шагов с «1 из 7»</li><li>«У меня есть копия данных» — на первом экране</li><li>Настройки группами: Интонация · Записи · Данные · Приложение</li><li>Восстановление: «копия → заменит → сейчас», страховка выше опасной кнопки</li></ul><span class="go">Открыть →</span></a>
+  </div>
+
+  <div class="group-head" id="added"><h2>Дорисовано</h2><span class="date">28.09.2026</span></div>
+  <p class="group-lead">Аудит сверил макеты с кодом и спекой; недостающее дорисовано тем же скиллом. Эти страницы идут по решениям <a href="../implementation/decisions.md">decisions.md</a> и файлов разделов; где страницы 27.09 с ними расходятся — в таблице <a href="#diff">«Где страницы расходятся»</a>.</p>
+  <div class="cards">
+    <a class="card" href="components.html"><span class="k">Основа · R1</span><h3>Компоненты и четыре вкладки</h3>
+      <ul><li>Панель на четыре вкладки: 360 dp, подписи одним размером 12 → 10 sp; компактная в landscape — касание на всю высоту 64 dp; новый значок «Репертуар»</li><li>Dock: одна кнопка, ряд дома, над клавиатурой, в landscape — у колонки главного действия, затухание параметром</li><li>Кнопки, чипы-фильтры и чипы выбора, один сегмент, строки 56 dp, кольцо уровня с фото, стекло .72 / .82</li><li>Общие диалоги («Удалить» — словом <code>DangerSoft</code>), «нет разрешения», меню «⋯», лист, тост iOS над dock; токены → Kotlin</li></ul><span class="go">Открыть →</span></a>
+    <a class="card" href="practice-extra.html"><span class="k">Занятия · R2–R3</span><h3>Занятия: landscape, 360×640, фото</h3>
+      <ul><li>Landscape: слева «Сегодня», напоминание и «Начать занятие», справа строка пути, дом и календарь</li><li>Лист дня в landscape — не шире 640 dp, по центру</li><li>360×640: кнопка и панель закреплены, окно дома сжимается первым — до строки 56 dp</li><li>Фото внутри кольца уровня, номер — бейджем; имя — только в «Моём пути»</li></ul><span class="go">Открыть →</span></a>
+    <a class="card" href="landscape.html"><span class="k">Landscape · R1, R4, R5, R7</span><h3>Landscape: правило и экраны</h3>
+      <ul><li>Правило в четырёх схемах: dock у колонки главного действия (обычно левой), одна колонка ≤ 560, листы ≤ 640</li><li>Вкладка «Репертуар», произведение (и идёт дубль), форма над клавиатурой</li><li>Запись: итог или видео и плеер слева, разбор справа</li><li>Дом: комната слева, «В дорогу · Лавка · Обставить» строкой под ней; таблица для остальных экранов</li></ul><span class="go">Открыть →</span></a>
+    <a class="card" href="events-kinds.html"><span class="k">События · R9</span><h3>События: виды, цвета, знаки</h3>
+      <ul><li>Восемь цветов видов в два яруса светлоты, проверены на контраст и дальтонизм</li><li>Знаки: четыре встроенных и двенадцать для своих видов, мини-знаки 10 dp</li><li>Клетка календаря: вся матрица «сегодня · выбран · будущий» × тон × число событий</li><li>Будущий месяц с легендой видов, ноябрь в landscape, правка и удаление вида</li></ul><span class="go">Открыть →</span></a>
+    <a class="card" href="events-form.html"><span class="k">События · R9</span><h3>События: форма</h3>
+      <ul><li>«Сохранить» над клавиатурой, длительность — чипами, «Весь день» — в листе времени</li><li>Листы «Дата» с метками, «Время» колёсами, «Длительность», «Повторять до» с итогом словами</li><li>«Только этот · Этот и следующие» — листом с датами в кнопках; удаление повтора без заливки</li><li>Программа и «Что играли» — выбор из репертуара галочками, «Готово · 2»</li></ul><span class="go">Открыть →</span></a>
+    <a class="card" href="events-views.html"><span class="k">События · R9</span><h3>События: где их видно</h3>
+      <ul><li>Напоминание: завтра, идёт, весь день, «ещё 2», при занятии; на 360×640 и в landscape</li><li>Лист дня: без событий, четыре события, «Не занимались»; подсказка тем, кто о событиях не знает</li><li>Экран события: прошедший урок, пустое «Другое», landscape</li><li>«Выступления» в landscape; запись выступления в «Записях» рядом с дублями</li></ul><span class="go">Открыть →</span></a>
+  </div>
+
+  <section class="block" id="spec">
+    <h2>Что меняется в спеке</h2>
+    <p>Переносится надстройкой <code>docs/spec/redesign.md</code> (разделы 3.36 / 5.29, версии с 0.79) по этапам R1–R8; события — прежние этапы 96–99 (3.35), это R9.</p>
+    <table class="spec stack">
+      <thead><tr><th>Разделы</th><th>Что меняется</th></tr></thead>
+      <tbody>
+        <tr><td>4, 3.11, 3.21</td><td>Четыре вкладки; у «Записей» нет переключателя «Записи | Репертуар»</td></tr>
+        <tr><td>3.1, 3.16, 3.27</td><td>Основа: опасное #FFB199 словом вместо красной заливки, новые токены (третий текст, мягкий акцент), стекло .72 / .82 без размытия, общие диалоги, меню, листы, тост iOS, значок вкладки «Репертуар»</td></tr>
+        <tr><td>3.12, 3.13</td><td>Строка пути вместо шапки профиля, «Сегодня» с неделей вместо сводки, лист дня, закреплённая кнопка; «Занятие не закончено» листом; «Имя и фото» без «Настроек»; фото внутри кольца уровня</td></tr>
+        <tr><td>3.23–3.25, 3.29</td><td>Нижние зоны с главными кнопками в путешествии и доме, «спишется N», без ленты «Привезено», обводка места в «Обставить»</td></tr>
+        <tr><td>3.1, 3.5, 3.27, 3.28</td><td>Стекло вместо дерева на Live, «Что играю» вместо «Репертуар», приглушение вкладок со светом, форма закладки и ярлыка</td></tr>
+        <tr><td>3.15, 3.19, 3.22, 3.32</td><td>Порядок экрана произведения, панель записи внизу, видео и минусовка в ней, плитки разделов, лист «Что добавить?»</td></tr>
+        <tr><td>Landscape</td><td>3.12, 3.13, 3.15, 3.19, 3.22, 3.25, 3.28, 3.35: dock у колонки главного действия (обычно левой, у события — правой); листы ≤ 640 dp; «Сегодня» и напоминание слева, путь, дом и календарь справа; разделы плитками слева, время по элементам справа; две колонки у любой записи со звуком; кнопки дома строкой под комнатой; окно дома на 360×640 сжимается</td></tr>
+        <tr><td>3.31</td><td>Итог: дорога в два тона, серия сжимается при новом уровне</td></tr>
+        <tr><td>3.7, 3.8, 3.20, 3.33</td><td>Одна полоса знакомства, подсказки на шагах, группы настроек, сравнение копий карточками</td></tr>
+        <tr><td>3.35, 5.28</td><td>Знаки видов у дней, «Сохранить» внизу формы, «Выступления» — строкой на «Записях», есть всегда; восемь цветов и двенадцать знаков своих видов; клетка — круг 40 в ряду 52; дата, время, длительность и «Повторять до» — листами; «только этот / этот и следующие» — листом; компактное напоминание на 360×640 и в landscape; подсказка о событиях под календарём</td></tr>
+        <tr><td>3.10, 3.17, 3.21</td><td>Плеер внизу экрана записи и «Звука», меню «⋯», полоска вместо графика, фильтры по виду, без «Сбросить»; вставки дат не прилипают, пока владелец не решит иначе</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="block" id="diff">
+    <h2>Где страницы расходятся</h2>
+    <p>28.09 после сверки страницы приведены к одним данным и решениям: названия гамм, остаток уровня, «Осенний концерт» 24 октября, имя отборочного тура, время репетиции, заголовки листа дня, «Закончить занятие» (17:55 — 18:42), точка идущего занятия на всех вкладках, значок «Без наушников», легенда разбора 82 · 12 · 6 (и под диалогами в components), касание компактной панели 64 dp в «Проверках», «Событие в этот день»; файлы реализации — тоже. Примеры в <code>docs/design/brief-events.md</code> («Концерт ля минор, I ч.», «Малый зал ДМШ № 3», Глюк и Дворжак) расходятся со страницами и каноном не считаются: везде «Концерт ля минор, 1 ч.», «Осенний концерт» — «Малый зал музыкальной школы» и программа, как на страницах. Ниже — только то, что остаётся на свой этап: при переносе брать колонку «Как правильно».</p>
+    <table class="diff stack">
+      <thead><tr><th>Где</th><th>Что не так</th><th>Как правильно</th><th>Этап</th></tr></thead>
+      <tbody>
+        <tr><td>Значки вкладок на всех страницах, кроме <a href="components.html">components</a></td><td>Нарисованы набросками</td><td>в код идут значки с components</td><td>R1</td></tr>
+        <tr><td>Листы в <a href="practice-sheets.html">practice-sheets</a> и <a href="events-form.html">events-form</a></td><td>Строка состояния телефона под листом не затемняется</td><td>в коде скрим листа (edge-to-edge) закрывает и её</td><td>R1</td></tr>
+        <tr><td><a href="practice-sheets.html">practice-sheets</a> · фон под листами и 8–11</td><td>Старая клетка календаря: круг 38 в ряду 44–50, «сегодня» — кольцо снаружи, «выбран» — кольцо accent</td><td>по «Геометрии клетки» events-kinds: круг 40 в ряду 52 + 4 всегда, «сегодня» — кольцо внутри, «выбран» — снаружи цвета текста; точки нет, у дней тона 1 — контур t2 1 dp по умолчанию (open-questions, E). R2 строит окончательную клетку, R9 сетку не перестраивает</td><td>R2</td></tr>
+        <tr><td>Все страницы с календарём</td><td>Кнопки месяца нарисованы 44 (в landscape events-kinds — 40), в коде 40 dp</td><td>кнопка 44 → касание 48 dp; <code>PracticeCalendar.kt</code> поднять с 40 (01-practice, правило 13)</td><td>R2</td></tr>
+        <tr><td><a href="practice-sheets.html">practice-sheets</a>, <a href="events-kinds.html">events-kinds</a>, <a href="events-views.html">events-views</a></td><td>Живая «Начать занятие» — 58 dp (в landscape events-kinds — 52)</td><td>56 dp (5.10), как в practice и practice-extra</td><td>R2, R9</td></tr>
+        <tr><td><a href="repertoire.html">repertoire</a>, <a href="landscape.html">landscape</a>, <a href="components.html">components</a></td><td>«Произведения · выучено 2 из 5», «Все 5» без «Менуэта соль мажор», хотя records, events-form и другие образцы components считают его произведением; вкладка — «выучено 3 из 14» (в цели экрана repertoire — «2 из 14»)</td><td>«Менуэт» — в «Произведениях» (6 элементов), счёт вкладки — «выучено N из 15»</td><td>R4</td></tr>
+        <tr><td><a href="landscape.html">landscape</a>, <a href="start.html">start</a> · сегменты</td><td>В landscape выбранный сегмент — <code>surface-2</code> с рамкой accent, в записи landscape сегмент 38; в «Настройках» start (<code>.mini-seg</code>) — отдельные кнопки 44, выбранная залита accent</td><td>один <code>SegmentedSwitch</code> как в components (repertoire и records уже так): сегмент 44 в контейнере 52 (<code>surface</code>, отступ 4), выбранный <code>primaryContainer</code>, касание — все 52. Исключений три: «Игра | Настройка» на Live, <code>TwoWay</code> над картинами и компактный A/B плеера ниже 700 dp (00-global)</td><td>R4, R5, R8</td></tr>
+        <tr><td><a href="records.html">records</a> · вставки дат</td><td>«Четверг, 24 сентября», «Среда, 23 сентября»</td><td>«24 сентября, четверг» — <code>Formats.recordDayHeader</code> с чипом «сегодня» (04-records.md, решение 7)</td><td>R5</td></tr>
+        <tr><td><a href="records.html">records</a> · пояснение 4 и «Расходится со спекой»</td><td>Вставки дат прилипают к верху</td><td>не прилипают, как в 3.21, пока владелец не ответит (04-records.md, решение 1; open-questions, 9); <code>stickyHeader</code> — одна правка</td><td>R5</td></tr>
+<tr><td><a href="events-form.html">events-form</a>, <a href="events-kinds.html">events-kinds</a>, <a href="events-views.html">events-views</a>, <a href="practice-sheets.html">practice-sheets</a> · поле ввода</td><td>Поле 56 нарисовано с радиусом 16 (как <code>FieldCorner</code> в коде)</td><td>радиус 14 (<code>AppShapes</code>, decisions): поле диалога — R1, «Имя и фото» — R3, формы репертуара — R4, форма события и лист «Вид» — R9</td><td>R1, R3, R4, R9</td></tr>
+        <tr><td><a href="practice-extra.html">practice-extra</a> · landscape и 360×640</td><td>Напоминание — в две строки («Завтра в 17:00 — урок» / «Анна Сергеевна»)</td><td>в landscape и при высоте окна &lt; 700 dp — компактное: одно событие, только первая строка (до двух строк; events-views, decisions.md)</td><td>R9</td></tr>
+        <tr><td><a href="practice.html">practice</a> · первый запуск</td><td>Окно дома обесцвечено фильтром (<code>saturate</code> + <code>brightness</code>)</td><td>только затемнение плашкой <code>Glass</code> .72, картина в своих цветах (01-practice, решение 11)</td><td>R2</td></tr>
+        <tr><td><a href="live.html">live</a> · «готово» подхода</td><td>Галочка зелёная #2E6B4A</td><td>на бумажной карточке — чернила <code>CtrlInk</code> и латунный обод; зелёный рядом с кольцом читается «в строе» (05-live, решение 10)</td><td>R6</td></tr>
+        <tr><td><a href="journey-home.html">journey-home</a> · «Комната | Снаружи», «вечер | день»</td><td>Капсула на стекле .78</td><td><code>TwoWay</code> на <code>Glass</code> .72, касание 48 (06-journey-home, правило 21; decisions.md)</td><td>R7</td></tr>
+        <tr><td><a href="records.html">records</a> · «Звук» и «Поделиться»</td><td>Подзаголовок «Звука» — «Концерт ля минор · как у всех», имя файла — «Концерт ля минор · 23 сентября»</td><td>«Концерт ля минор, 1 ч.» и в подзаголовке, и в имени файла (название элемента как есть)</td><td>R5</td></tr>
+        <tr><td><a href="practice-sheets.html">practice-sheets</a> · 8–11</td><td>Пробные цвета и знаки видов, шестиугольник «Оркестра», старая сетка «Свой вид» и старая клетка 50 / 38 — оставлены нарочно и оговорены на странице</td><td>из 8–11 брать только раскладку; цвета, знаки и клетку — только из events-kinds</td><td>R9</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="block" id="questions">
+    <h2>Открытые вопросы владельцу</h2>
+    <p>Полный список по этапам — <a href="../implementation/open-questions.md">open-questions.md</a>; у каждой страницы 28.09 внизу свой блок «Открытые вопросы».</p>
+
+    <h3 class="sub">Решено 28.09.2026</h3>
+    <ul class="done">
+      <li><b>Четыре вкладки</b> «Занятия · Live · Репертуар · Записи» — как в макетах (владелец). Остальное ниже решили мы; владелец может пересмотреть.</li>
+      <li><b>Макеты событий заменяют хэндофф</b> по <code>docs/design/brief-events.md</code>: events-kinds, events-form и events-views; из practice-sheets 8–11 — только раскладка, цвета, знаки и клетка — из events-kinds. R9 сверяет 3.35 с ними.</li>
+      <li><b>Landscape нарисован:</b> «Занятия» — в practice-extra (строка пути справа, напоминание слева без прокрутки); вкладка «Репертуар», произведение, запись, дом и форма — в landscape.html; остальные экраны — по его таблице. 360×640 — тоже по practice-extra.</li>
+      <li><b>Цвет опасного</b> — <code>DangerSoft</code> #FFB199 (<code>ViolinTheme.dangerSoft</code>) вместо красного <code>Destructive</code>: R1 переводит все вызовы и убирает старое имя; <code>OnDanger</code> #3D1408 — только у залитой «Восстановить». Стекло .72 / .82 без размытия; спека — надстройкой <code>docs/spec/redesign.md</code>.</li>
+      <li><b>Сверка страниц и файлов реализации:</b> формы — свои <code>AppShapes</code> (12 / 18 / 24 / 28), M3 <code>Shapes</code> в R1 не трогаем; <code>ViolinTheme.done</code> (латунь) заводит R3; подписи вкладок — один размер на все четыре; касание пункта компактной панели — вся высота 64 dp; <code>AppDock(fade, aboveKeyboard)</code>; «нет разрешения» вне Live — одна строка <code>PermissionLine</code>; «Не сохранять?» — без коралла; листы в landscape ≤ 640 dp, итог тоже; живая «Начать занятие» — 56 dp (5.10); строка «Выступления» на «Записях» есть всегда, скрыта только в «Выбрать». Подробно — в <a href="../implementation/00-global.md">00-global</a> и <a href="../implementation/decisions.md">decisions.md</a>.</li>
+      <li><b>Коммиты до R1:</b> черновик спеки 0.78 (события) — в git, 4085212f; папка <code>docs/redesign</code> — отдельным коммитом <code>docs(redesign): …</code> до подраздела R1 (владелец согласился 28.09), путь явно: <code>git add docs/redesign</code>, <code>git commit -m "…" -- docs/redesign</code>.</li>
+      <li><b>Лента «Привезено из путешествия»</b> не возвращается: город — таблеткой на вещи (по умолчанию, владелец может вернуть). Имени в строке пути нет — оно в «Моём пути»; дни тона 1 — тонким контуром t2 (тоже по умолчанию; R2 не ждёт, смотреть на Pixel 10a).</li>
+    </ul>
+
+    <h3 class="sub">Нужен ответ или проверка</h3>
+    <ol class="q">
+            <li><b>R1, переводчику:</b> короткая французская подпись вкладки «Записи» — только если «Enregistrements» не влезает и в 10 sp при крупном системном шрифте. R1 её не ждёт.</li>
+      <li><b>R2, на телефоне и эмуляторе:</b> удобно ли дотягиваться до dock слева, когда телефон стоит боком на пюпитре; отличается ли день тона 1 с контуром t2 от пустого; в landscape при вырезе камеры сбоку и трёх кнопках навигации напоминание видно без прокрутки; то же при fontScale 1,3 и на de / fr.</li>
+      <li><b>R4, R7, на эмуляторе:</b> 640×360 описан в landscape.html словами, не нарисован — проверить высоту левой колонки произведения (лента уходит под затухание) и порог 440 dp, с которого кнопки дома встают строкой; там же — форма при полноэкранной клавиатуре в landscape.</li>
+      <li><b>R4:</b> строка «Сейчас учу» на вкладке «Репертуар» — это новая фича, в R4 её нет; если нужна — отдельным этапом.</li>
+      <li><b>R5:</b> прилипающие вставки дат — 3.21 их запрещает, пока не прилипают. Название записи события («Осенний концерт · 24 октября») режется на 390 dp — принять многоточие или дать карточке записи две строки.</li>
+      <li><b>R6, с пюпитра:</b> приглушать ли вкладки на Live до 0,38, пока звучит нота; бледный силуэт ноты зафиксированной струны в «Настройке». Оба — за выключателями и выключены, пока владелец не посмотрит с пюпитра.</li>
+      <li><b>R9, виды:</b> утвердить восемь цветов и двенадцать знаков. Пары, которые сходятся при дальтонизме (Синий ↔ Орхидея, Бирюза ↔ Пудра, Морская ↔ Роза, Лёд ↔ Бирюза), различает только знак. Мини-знаки 10 dp — посмотреть на телефоне. «Морская волна» #5E9D8E при протанопии близка к зелёному зоны (ΔE 6,5) — посмотреть рядом с разбором записей.</li>
+      <li><b>R9, повтор:</b> события повтора заведены до «сегодня + 12 недель», и уроков после 20 декабря в календаре нет. Рисовать ли метки за горизонтом по образцу повтора.</li>
+      <li><b>R9, форма:</b> какой ответ залит в «Только этот · Этот и следующие» (предложено: сменился день — «только этот», иначе — «этот и следующие»; у удаления не залит ни один); нужны ли чипы «До 31 мая» и «Частое»; 12-часовой формат для других языков; счётчик названия с 60 знаков — новое число.</li>
+      <li><b>R9, показ:</b> слова «идёт, до 17:45» в напоминании; хранить ли отметку, что подсказку о событиях уже видели.</li>
+    </ol>
+
+    <p class="undrawn"><b>Не нарисованы — и не будут:</b> заставки «в дорогу / домой» и вступление путешествия — по замыслу не меняются. Системные поверхности (запросы разрешений, выбор файлов, системное «Поделиться», экран языка) тоже остаются как есть. Иллюстрации (сцены знакомства, открытки) в макетах упрощены или стоят заглушками — в приложении остаются из хэндоффа.</p>
+  </section>
+</div>
+</body>
+</html>

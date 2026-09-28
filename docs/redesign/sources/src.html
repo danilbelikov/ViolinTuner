@@ -1,0 +1,754 @@
+<!doctype html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Violin Journey · Занятия</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* 1. Токены приложения. У Violin Journey только тёмная тема (spec 3.6), поэтому обе ветки
+   токенов телефона одинаковые, а переключатель темы меняет только подложку страницы. */
+:root,[data-theme="dark"]{
+  --bg:#131318; --surface:#1E1D25; --surface-2:#292833;
+  --text:#E6E4EE; --text-2:#A39FB5; --text-3:#8A8699;
+  --border:#3A3846;
+  --accent:#C4ADFF; --accent-2:#5B43B8; --on-accent:#2E1A6E; --accent-soft:#2A2352;
+  --t1:#2A2352; --t2:#3D2F80; --t3:#5B43B8; --t4:#C4ADFF;
+  --flame:#F2A65A;
+  --success:#6FD39B; --warning:#F2B85A; --danger:#FF7A7A;
+  --radius-s:12px; --radius-m:18px; --radius-l:24px;
+  --shadow-1:none; --shadow-2:0 10px 30px rgba(0,0,0,.45);
+  --font:"Manrope",-apple-system,Roboto,system-ui,sans-serif;
+}
+
+/* 2. Обвязка страницы */
+:root{--page-bg:#ECEDF1;--page-card:#FFFFFF;--page-text:#1B1D22;--page-muted:#5D6470;--page-border:#DADDE3;--mark:#FF3B6B}
+[data-theme="dark"]{--page-bg:#07080A;--page-card:#121419;--page-text:#E9ECF1;--page-muted:#99A1AE;--page-border:#252A33}
+*{box-sizing:border-box}
+html,body{margin:0}
+body{background:var(--page-bg);color:var(--page-text);font:15px/1.5 var(--font);-webkit-font-smoothing:antialiased}
+.doc{max-width:1440px;margin:0 auto;padding:24px 16px 80px}
+.doc-head h1{margin:0 0 6px;font-size:28px;letter-spacing:-.02em}
+.doc-meta{margin:0;color:var(--page-muted);max-width:900px}
+.doc-meta b{color:var(--page-text);font-weight:600}
+.toolbar{position:sticky;top:0;z-index:50;display:flex;flex-wrap:wrap;gap:8px;padding:10px 0;background:var(--page-bg)}
+.toolbar button,.state-tabs button{font:inherit;font-size:14px;border:1px solid var(--page-border);background:var(--page-card);color:var(--page-text);border-radius:999px;padding:7px 14px;cursor:pointer}
+.toolbar button[aria-pressed="true"],.state-tabs button[aria-selected="true"]{background:var(--page-text);color:var(--page-bg);border-color:var(--page-text)}
+.block{background:var(--page-card);border:1px solid var(--page-border);border-radius:18px;padding:20px 22px;margin:24px 0}
+.block h2{margin:0 0 12px;font-size:18px}
+.block p,.block li{color:var(--page-muted)}
+.block b,.block strong{color:var(--page-text)}
+.flow-row{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:6px 0}
+.flow-node{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:12px;border:1px solid var(--page-border);background:var(--page-bg);color:var(--page-text);text-decoration:none;font-weight:600;font-size:14px}
+.flow-node.is-new{border-style:dashed}
+.flow-node small{font-weight:400;color:var(--page-muted)}
+.flow-arrow{color:var(--page-muted);font-size:13px;white-space:nowrap}
+.flow-arrow i{font-style:normal;display:block;font-size:11px;line-height:1;text-align:center}
+.screens{display:flex;flex-wrap:wrap;gap:56px 48px;margin-top:32px}
+.screen{display:flex;flex-direction:column;gap:12px;scroll-margin-top:64px}
+.screen-title{margin:0;font-size:20px}
+.screen-goal{margin:0;color:var(--page-muted);max-width:760px}
+.screen-body{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.phone-col{display:flex;flex-direction:column;gap:10px;align-items:flex-start}
+.state-tabs{display:flex;flex-wrap:wrap;gap:6px}
+.notes{list-style:none;margin:0;padding:0;width:360px;max-width:100%;display:flex;flex-direction:column;gap:10px}
+.notes li{position:relative;padding:10px 12px 10px 44px;border-radius:12px;background:var(--page-card);border:1px solid var(--page-border);color:var(--page-muted);font-size:14px;line-height:1.45;transition:border-color .15s}
+.notes li b{color:var(--page-text)}
+.notes li::before{content:attr(data-n);position:absolute;left:12px;top:10px;width:22px;height:22px;border-radius:50%;background:var(--mark);color:#fff;font-size:12px;font-weight:700;display:grid;place-items:center}
+.notes li.is-hot{border-color:var(--mark)}
+.notes .tag{display:inline-block;font-size:11px;font-weight:600;padding:1px 7px;border-radius:6px;background:var(--page-bg);color:var(--page-muted);margin-left:4px;vertical-align:1px}
+.phone{position:relative;width:390px;height:844px;flex:none;padding:11px;border-radius:56px;background:#0A0A0B;box-shadow:0 0 0 1px #2a2a2e inset,0 30px 60px -20px rgba(0,0,0,.35)}
+.phone-screen{position:relative;width:100%;height:100%;border-radius:45px;overflow:hidden;background:var(--bg);color:var(--text);font-family:var(--font);display:flex;flex-direction:column;isolation:isolate}
+@media (max-width:440px){.phone{zoom:.84}}
+.statusbar{flex:none;height:44px;padding:14px 28px 0 34px;display:flex;justify-content:space-between;font-size:15px;font-weight:600;color:var(--text)}
+.statusbar .sb-icons{display:flex;gap:6px;align-items:center}
+.state{flex:1;min-height:0;display:flex;flex-direction:column;position:relative}
+.state[hidden]{display:none}
+.home-indicator{position:absolute;bottom:8px;left:50%;width:134px;height:5px;margin-left:-67px;border-radius:3px;background:var(--text);opacity:.85;z-index:30;pointer-events:none}
+.mark-layer{position:absolute;inset:0;pointer-events:none;z-index:40}
+.mark{position:absolute;width:22px;height:22px;border-radius:50%;background:var(--mark);color:#fff;font:700 12px/22px var(--font);text-align:center;box-shadow:0 0 0 2px #fff,0 2px 6px rgba(0,0,0,.3);pointer-events:auto;cursor:default}
+.hide-marks .mark-layer{display:none}
+[data-note].is-hot{outline:2px solid var(--mark);outline-offset:2px}
+.thumb-zone{display:none;position:absolute;inset:44px 0 0;z-index:35;pointer-events:none;background:linear-gradient(to bottom,rgba(239,68,68,.20) 0 26%,rgba(234,179,8,.16) 26% 52%,rgba(34,197,94,.18) 52% 100%)}
+.thumb-zone span{position:absolute;left:10px;font:600 11px var(--font);color:#111;background:rgba(255,255,255,.85);padding:2px 6px;border-radius:6px}
+.show-thumb .thumb-zone{display:block}
+.compare{display:flex;flex-wrap:wrap;gap:32px;align-items:flex-start}
+.shot{position:relative;width:360px;max-width:100%;border-radius:28px;overflow:hidden;border:1px solid var(--page-border);background:#000}
+.shot img{display:block;width:100%;height:auto}
+.shot-mark{position:absolute;transform:translate(-50%,-50%);width:24px;height:24px;border-radius:50%;background:var(--mark);color:#fff;font:700 12px/24px var(--font);text-align:center;box-shadow:0 0 0 2px #fff}
+.hide-marks .shot-mark{display:none}
+.sev{font-size:11px;font-weight:700;padding:1px 7px;border-radius:6px;margin-right:4px}
+.sev-crit{background:#FDE2E2;color:#A01818}.sev-major{background:#FFF1D6;color:#8A5A00}.sev-minor{background:#E7EAF0;color:#454C58}
+.issues{list-style:none;margin:0;padding:0;max-width:440px;display:flex;flex-direction:column;gap:10px}
+.issues li{padding:10px 12px;border-radius:12px;border:1px solid var(--page-border);font-size:14px;line-height:1.45}
+.issues li .n{display:inline-grid;place-items:center;width:20px;height:20px;border-radius:50%;background:var(--mark);color:#fff;font-size:11px;font-weight:700;margin-right:6px}
+table.moved{width:100%;border-collapse:collapse;font-size:14px}
+table.moved th,table.moved td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--page-border);vertical-align:top}
+table.moved th{color:var(--page-muted);font-weight:600}
+table.moved td{color:var(--page-muted)} table.moved td:first-child{color:var(--page-text);font-weight:600}
+
+/* 3. Компоненты приложения */
+.phone-screen h1,.phone-screen h2,.phone-screen h3,.phone-screen p{margin:0}
+.ic{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.ic-s{width:18px;height:18px}
+.app-scroll{flex:1;min-height:0;overflow-y:auto;padding:4px 20px 24px;scrollbar-width:none}
+.app-scroll::-webkit-scrollbar{display:none}
+.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+.muted{color:var(--text-2)}
+.caption{font-size:13px;color:var(--text-2)}
+.card{background:var(--surface);border-radius:var(--radius-m);padding:16px}
+.gap{height:12px}
+
+/* Шапка-строка пути */
+.path-row{display:flex;align-items:center;gap:12px;min-height:56px;padding:4px 0;border-radius:16px}
+.lvl-ring{width:48px;height:48px;border-radius:50%;flex:none;display:grid;place-items:center;background:conic-gradient(var(--accent) 0 var(--p),var(--surface-2) var(--p) 100%)}
+.lvl-ring b{width:40px;height:40px;border-radius:50%;background:var(--bg);display:grid;place-items:center;font-size:17px;font-weight:800;color:var(--text)}
+.path-main{flex:1;min-width:0}
+.path-total{font-size:20px;font-weight:800;letter-spacing:-.01em;color:var(--accent);line-height:1.2}
+.path-sub{font-size:13px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chev{color:var(--text-3)}
+
+/* Сегодня */
+.today-head{display:flex;justify-content:space-between;align-items:center}
+.label{font-size:13px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text-2)}
+.streak{display:inline-flex;align-items:center;gap:4px;height:28px;padding:0 10px 0 7px;border-radius:999px;background:color-mix(in srgb,var(--flame) 16%,transparent);color:var(--flame);font-size:13px;font-weight:700}
+.streak .ic{width:16px;height:16px;fill:currentColor;stroke:none}
+.today-num{font-size:40px;font-weight:800;letter-spacing:-.03em;line-height:1.05;margin:6px 0 2px}
+.today-num small{font-size:22px;font-weight:700;color:var(--text-2);letter-spacing:-.01em}
+.week{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px;align-items:end}
+.wd{display:flex;flex-direction:column;align-items:center;gap:6px}
+.bar{width:100%;max-width:30px;height:48px;border-radius:8px;background:var(--surface-2);position:relative;overflow:hidden}
+.bar>i{position:absolute;left:0;right:0;bottom:0;border-radius:8px;background:var(--t3)}
+.bar.today{box-shadow:0 0 0 1.5px var(--accent) inset}
+.bar.today>i{background:var(--accent)}
+.bar.run>i{background:repeating-linear-gradient(135deg,var(--accent) 0 5px,color-mix(in srgb,var(--accent) 70%,transparent) 5px 10px)}
+.bar.none{background:transparent;border:1.5px dashed var(--border)}
+.wd span{font-size:12px;font-weight:600;color:var(--text-3)}
+.wd.is-today span{color:var(--accent);font-weight:800}
+.week-total{display:flex;justify-content:space-between;margin-top:12px;font-size:13px;color:var(--text-2)}
+.week-total b{color:var(--text);font-weight:700}
+
+/* Напоминание */
+.remind{display:flex;align-items:center;gap:12px;min-height:56px;padding:10px 14px;border-radius:16px;background:var(--surface)}
+.remind .dot{width:36px;height:36px;border-radius:12px;display:grid;place-items:center;background:color-mix(in srgb,#6FB6FF 18%,transparent);color:#8CC6FF;flex:none}
+.remind b{display:block;font-size:15px;font-weight:700}
+.remind small{font-size:13px;color:var(--text-2)}
+
+/* Окно дома */
+.window{border-radius:var(--radius-m);overflow:hidden;background:var(--surface)}
+.window .pic{position:relative;height:148px;background:#8a6a4a center/cover no-repeat}
+.window .place{position:absolute;left:10px;top:10px;height:26px;padding:0 10px;border-radius:999px;background:rgba(19,19,24,.72);color:#E6E4EE;font-size:12px;font-weight:700;display:flex;align-items:center;gap:5px}
+.window .row{display:flex;align-items:center;gap:10px;min-height:56px;padding:8px 14px}
+.window .go{flex:1;font-size:15px;font-weight:700;color:var(--accent)}
+.window .go.plain{color:var(--text-2);font-weight:600}
+.tacts{display:inline-flex;align-items:center;gap:5px;height:30px;padding:0 11px;border-radius:999px;background:var(--surface-2);color:var(--text);font-size:14px;font-weight:800}
+.tacts .ic{width:15px;height:15px;fill:var(--accent);stroke:none}
+.thin{height:4px;border-radius:9px;background:var(--surface-2);margin:0 14px 12px;overflow:hidden}
+.thin>i{display:block;height:100%;background:var(--accent);border-radius:9px}
+
+/* Календарь */
+.cal-head{display:flex;align-items:center;justify-content:space-between;margin:28px 0 8px}
+.cal-title{font-size:18px;font-weight:800}
+.cal-title small{display:block;font-size:13px;font-weight:600;color:var(--text-2)}
+.nav-btn{width:44px;height:44px;border-radius:14px;border:0;background:var(--surface);color:var(--text);display:grid;place-items:center}
+.nav-btn[disabled]{color:var(--text-3);opacity:.5}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);row-gap:6px;text-align:center}
+.cal .dn{font-size:12px;font-weight:600;color:var(--text-3);padding-bottom:4px}
+.cd{height:44px;display:grid;place-items:center}
+.cd i{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-style:normal;font-size:14px;font-weight:600;color:var(--text)}
+.cd.l1 i{background:var(--t1)} .cd.l2 i{background:var(--t2)} .cd.l3 i{background:var(--t3)}
+.cd.l4 i{background:var(--t4);color:var(--on-accent);font-weight:800}
+.cd.fut i{color:var(--text-3);opacity:.6}
+.cd.tod i{box-shadow:0 0 0 2px var(--accent);font-weight:800}
+
+/* Нижняя зона: главное действие + панель */
+.dock{flex:none;position:relative;padding:10px 20px 12px;background:var(--bg)}
+.dock::before{content:"";position:absolute;left:0;right:0;top:-28px;height:28px;background:linear-gradient(to bottom,transparent,var(--bg));pointer-events:none}
+.start{position:relative;width:100%;height:58px;border:0;border-radius:29px;display:flex;align-items:center;justify-content:center;gap:10px;font:800 17px var(--font);color:var(--on-accent);cursor:pointer;
+  background:linear-gradient(110deg,#B9A6FF 0%,#EFE7FF 32%,#E7C9F3 55%,#BDB2FF 80%,#C9B4FF 100%);background-size:220% 100%;
+  box-shadow:0 10px 28px -8px rgba(196,173,255,.55)}
+@media (prefers-reduced-motion:no-preference){.start{animation:pearl 9s ease-in-out infinite alternate}}
+@keyframes pearl{from{background-position:0 0}to{background-position:100% 0}}
+.stop-row{display:flex;gap:10px;align-items:center}
+.btn-out{flex:1;height:56px;border-radius:28px;border:1.5px solid var(--border);background:transparent;color:var(--text);font:800 16px var(--font);display:flex;align-items:center;justify-content:center;gap:8px}
+.tabbar{flex:none;display:flex;padding:6px 8px 26px;background:var(--surface)}
+.tab{flex:1;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;font-size:12px;font-weight:600;color:var(--text-2)}
+.tab .pill{width:56px;height:32px;border-radius:16px;display:grid;place-items:center;position:relative}
+.tab.is-active{color:var(--text)}
+.tab.is-active .pill{background:var(--t3)}
+.tab .run-dot{position:absolute;top:3px;right:12px;width:8px;height:8px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 2px var(--t3)}
+
+/* Занятие идёт */
+.run-card{background:linear-gradient(160deg,#2A2352,#1E1D25 70%);border-radius:var(--radius-m);padding:16px;box-shadow:0 0 0 1px color-mix(in srgb,var(--accent) 30%,transparent) inset}
+.run-live{display:inline-flex;align-items:center;gap:8px;font-size:14px;font-weight:700;color:var(--text)}
+.run-live i{width:9px;height:9px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 22%,transparent)}
+.timer{font-size:64px;font-weight:800;letter-spacing:-.03em;line-height:1;margin:10px 0 6px}
+.block-line{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--text-2);margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
+.block-line b{color:var(--text)}
+.link-live{display:flex;align-items:center;justify-content:center;gap:6px;height:48px;margin-top:12px;border-radius:14px;background:var(--surface-2);color:var(--text);font-weight:700;font-size:15px}
+
+/* Пусто */
+.first{border-radius:var(--radius-m);background:var(--surface);padding:18px}
+.first h3{font-size:22px;font-weight:800;letter-spacing:-.01em;margin-bottom:6px}
+.steps{display:flex;flex-direction:column;gap:12px;margin-top:14px}
+.step{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--text-2)}
+.step b{color:var(--text)}
+.step .num{width:28px;height:28px;border-radius:50%;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-weight:800;font-size:13px;flex:none}
+
+/* Листы */
+.scrim{position:absolute;inset:0;z-index:15;background:rgba(0,0,0,.55)}
+.sheet{position:absolute;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-radius:28px 28px 0 0;padding:8px 20px 34px}
+.sheet::before{content:"";display:block;width:36px;height:5px;border-radius:3px;background:var(--border);margin:0 auto 16px}
+.sheet-date{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:700;color:var(--text-2)}
+.chip-today{height:22px;padding:0 8px;border-radius:999px;border:1.5px solid var(--accent);color:var(--accent);font-size:12px;font-weight:700;display:inline-flex;align-items:center}
+.big{font-size:40px;font-weight:800;letter-spacing:-.03em;margin:4px 0 14px}
+.btn-soft{height:48px;border-radius:14px;border:0;background:var(--surface-2);color:var(--text);font:700 15px var(--font);display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:0 16px}
+.rec{display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 12px;border-radius:16px;background:var(--bg);margin-top:8px}
+.rec .tile{width:44px;height:44px;border-radius:50%;border:1.5px solid var(--border);display:grid;place-items:center;color:var(--text-2);flex:none}
+.rec b{display:block;font-size:15px}
+.rec small{font-size:13px;color:var(--text-2)}
+.sec{font-size:15px;font-weight:800;margin:20px 0 4px}
+.lvl-bar{height:10px;border-radius:9px;background:var(--surface-2);overflow:hidden;margin:14px 0 6px}
+.lvl-bar>i{display:block;height:100%;border-radius:9px;background:linear-gradient(90deg,var(--t3),var(--accent))}
+.troph{display:flex;gap:10px;margin-top:10px}
+.tr{flex:1;border-radius:16px;background:var(--bg);padding:12px 6px;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text)}
+.tr small{font-size:11px;font-weight:600;color:var(--text-2)}
+.tr.next{border:1.5px dashed var(--border);background:transparent;color:var(--text-2)}
+.lrow{display:flex;align-items:center;gap:12px;min-height:56px;border-top:1px solid var(--border);font-size:16px;font-weight:600}
+.lrow span{flex:1}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-chev-r" viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></symbol>
+  <symbol id="i-chev-l" viewBox="0 0 24 24"><path d="m15 6-6 6 6 6"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-flame" viewBox="0 0 24 24"><path d="M12 22a7 7 0 0 0 7-7c0-4-3-6-4-10-2 2-3 4-3 6-1-1-2-2-2-4-2 2-5 5-5 8a7 7 0 0 0 7 7z"/></symbol>
+  <symbol id="i-cal" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4"/></symbol>
+  <symbol id="i-watch" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 13.5V10M10 2.5h4M18.5 6.5l1.5-1.5"/></symbol>
+  <symbol id="i-watch-f" viewBox="0 0 24 24"><circle cx="12" cy="13.5" r="8" fill="currentColor" stroke="none"/><path d="M10 2.5h4M18.5 6.5l1.5-1.5"/><path d="M12 13.5V10" stroke="var(--t3)"/></symbol>
+  <symbol id="i-string" viewBox="0 0 24 24"><path d="M12 2v20"/><path d="M8 5c-3 4-3 10 0 14M16 5c3 4 3 10 0 14"/></symbol>
+  <symbol id="i-sheet" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2.5"/><path d="M8 8h8M8 11h8M8 14h8"/><circle cx="10" cy="17.3" r="1.3" fill="currentColor"/></symbol>
+  <symbol id="i-tape" viewBox="0 0 24 24"><rect x="2.5" y="5" width="19" height="14" rx="3"/><circle cx="8.5" cy="11" r="2"/><circle cx="15.5" cy="11" r="2"/><path d="M7 19l1.5-3h7l1.5 3"/></symbol>
+  <symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V4M5 4h11l-2 4 2 4H5"/></symbol>
+  <symbol id="i-note" viewBox="0 0 24 24"><path d="M9 18V5l10-2v13"/><circle cx="6.5" cy="18" r="2.5" fill="currentColor"/><circle cx="16.5" cy="16" r="2.5" fill="currentColor"/></symbol>
+  <symbol id="i-tact" viewBox="0 0 24 24"><path d="M14 3v12.5a3.5 3.5 0 1 1-2-3.2V3z"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></symbol>
+  <symbol id="i-settings" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/></symbol>
+  <symbol id="i-arrow-r" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+  <symbol id="i-sb-signal" viewBox="0 0 24 24"><g fill="currentColor" stroke="none"><rect x="2" y="15" width="3.5" height="5" rx="1"/><rect x="7.5" y="11" width="3.5" height="9" rx="1"/><rect x="13" y="7" width="3.5" height="13" rx="1"/><rect x="18.5" y="3" width="3.5" height="17" rx="1"/></g></symbol>
+  <symbol id="i-sb-battery" viewBox="0 0 28 24"><rect x="1" y="6" width="23" height="12" rx="3.5" stroke-width="1.5"/><rect x="3" y="8" width="17" height="8" rx="2" fill="currentColor" stroke="none"/><path d="M26 10v4" stroke-width="2"/></symbol>
+  <!-- трофеи: канифоль, колок, сурдина -->
+  <symbol id="t-rosin" viewBox="0 0 32 32"><rect x="5" y="11" width="22" height="12" rx="4" fill="#9A5530"/><rect x="7" y="9" width="18" height="8" rx="3" fill="#C9814A"/></symbol>
+  <symbol id="t-peg" viewBox="0 0 32 32"><ellipse cx="16" cy="9" rx="6" ry="5" fill="#5A4E64"/><rect x="14" y="12" width="4" height="16" rx="2" fill="#2C2430" stroke="#7A6E86"/></symbol>
+  <symbol id="t-mute" viewBox="0 0 32 32"><path d="M9 27 23 5" fill="none" stroke="#6B6880" stroke-width="2" stroke-dasharray="3 2"/><circle cx="8" cy="27" r="2.5" fill="none" stroke="#6B6880" stroke-width="2"/></symbol>
+</svg>
+
+<div class="doc">
+  <header class="doc-head">
+    <h1>Violin Journey · «Занятия»</h1>
+    <p class="doc-meta">
+      <b>Задача:</b> приложение открывается здесь. За 3 секунды человек должен увидеть, занимался ли он сегодня и как идёт неделя, и в одно касание начать занятие. Прогресс и дом нужны для радости, но не должны отодвигать главное.
+      <b>Для кого:</b> скрипач дома вечером: скрипка в одной руке или на коленях, телефон в другой, иногда телефон уже стоит на пюпитре.
+      <b>Допущения:</b> данные взяты с эмулятора (47 ч 17 мин, уровень 5, 47 884 такта), но серия и «сегодня» — выдуманные, чтобы экран был живым. Напоминание о событии — место под черновик 3.35. Правило 3.16 «не больше двух движений» сохранено: движутся кнопка и дом. Тема только тёмная (spec 3.6), переключатель темы меняет лишь подложку страницы.
+    </p>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="Режимы просмотра">
+    <button type="button" id="btn-notes" aria-pressed="true">Номера</button>
+    <button type="button" id="btn-theme" aria-pressed="true">Тёмная подложка</button>
+    <button type="button" id="btn-thumb" aria-pressed="false">Зона большого пальца</button>
+  </div>
+
+  <!-- БЫЛО -->
+  <section class="block">
+    <h2>Что сейчас (снято с эмулятора)</h2>
+    <div class="compare">
+      <div class="shot"><img src="%%NOW3%%" alt="Экран Занятий сейчас, первый экран">
+        <span class="shot-mark" style="left:88%;top:10%">1</span>
+        <span class="shot-mark" style="left:90%;top:41%">2</span>
+        <span class="shot-mark" style="left:92%;top:50%">3</span>
+        <span class="shot-mark" style="left:94%;top:62%">4</span>
+      </div>
+      <div class="shot"><img src="%%NOW4%%" alt="Экран Занятий сейчас, прокрутка вниз">
+        <span class="shot-mark" style="left:92%;top:40%">5</span>
+        <span class="shot-mark" style="left:92%;top:72%">6</span>
+      </div>
+      <ol class="issues">
+        <li><span class="n">1</span><span class="sev sev-major">важно</span><b>До кнопки — 480 dp шапки и дома.</b> Экран открывается первым, а главное действие стоит посередине, ниже дома. Первый взгляд уходит на картинку и трофеи.</li>
+        <li><span class="n">2</span><span class="sev sev-major">важно</span><b>Две одинаковые фиолетовые полосы одна над другой</b> — уровень и дорога. Разные валюты (часы и такты) выглядят одинаково, их легко спутать.</li>
+        <li><span class="n">3</span><span class="sev sev-minor">мелочь</span><b>Три «прогресса» разом:</b> часы с уровнем, такты с дорогой, серия. На первом экране нет ответа на простой вопрос «как у меня сегодня».</li>
+        <li><span class="n">4</span><span class="sev sev-major">важно</span><b>«Дней подряд: 0» крупно</b> — после пропущенного дня экран первым делом показывает ноль. Это стыдит, хотя спека говорит: «пропущенный день ничего не отнимает».</li>
+        <li><span class="n">5</span><span class="sev sev-minor">мелочь</span><b>Календарь — стена из плиток.</b> 24 залитых квадрата одного веса, плюс «Месяц» дублирует его в сводке выше.</li>
+        <li><span class="n">6</span><span class="sev sev-minor">мелочь</span><b>Выбранный день — в самом низу.</b> Тап по дню меняет блок, которого не видно, и надо докручивать.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="block">
+    <h2>Карта экранов</h2>
+    <div class="flow-row">
+      <a class="flow-node" href="#s-main">Занятия</a>
+      <span class="flow-arrow">→<i>тап по строке пути</i></span>
+      <a class="flow-node is-new" href="#s-path">Лист «Мой путь» <small>вынесено из шапки</small></a>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node">Трофеи · Профиль · Настройки <small>есть</small></span>
+    </div>
+    <div class="flow-row">
+      <a class="flow-node" href="#s-main">Занятия</a>
+      <span class="flow-arrow">→<i>тап по дню</i></span>
+      <a class="flow-node is-new" href="#s-day">Лист дня <small>был блоком под календарём</small></a>
+      <span class="flow-arrow">→</span>
+      <span class="flow-node">Изменить время · Запись <small>есть</small></span>
+    </div>
+    <div class="flow-row">
+      <a class="flow-node" href="#s-main">Занятия</a>
+      <span class="flow-arrow">→<i>окно</i></span>
+      <span class="flow-node">Дом / Путешествие <small>есть</small></span>
+      <span class="flow-arrow">·</span>
+      <span class="flow-arrow">→<i>Начать</i></span>
+      <span class="flow-node">Live <small>есть</small></span>
+      <span class="flow-arrow">·</span>
+      <span class="flow-arrow">→<i>Закончить</i></span>
+      <span class="flow-node">Лист итога <small>есть</small></span>
+    </div>
+  </section>
+
+  <main class="screens">
+
+    <!-- ===================== ЭКРАН 1 ===================== -->
+    <article class="screen" id="s-main">
+      <h2 class="screen-title">1. Занятия</h2>
+      <p class="screen-goal"><b>Главное действие:</b> «Начать занятие» &nbsp;·&nbsp; <b>За 3 секунды:</b> «сегодня 45 мин, неделя ровная, серия 8 дней, до Праги хватает».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            <div class="statusbar"><span>18:42</span><span class="sb-icons"><svg class="ic ic-s"><use href="#i-sb-signal"/></svg><svg class="ic" style="width:26px"><use href="#i-sb-battery"/></svg></span></div>
+
+            <!-- ОБЫЧНОЕ -->
+            <div class="state" data-state="Обычное">
+              <div class="app-scroll">
+                <div class="path-row" data-note="2">
+                  <div class="lvl-ring" style="--p:94%"><b>5</b></div>
+                  <div class="path-main">
+                    <div class="path-total tnum">47 ч 17 мин</div>
+                    <div class="path-sub">Уровень 5 · Гаммы · до 6-го 2 ч 43 мин</div>
+                  </div>
+                  <svg class="ic chev"><use href="#i-chev-r"/></svg>
+                </div>
+                <div class="gap"></div>
+                <div class="card" data-note="3">
+                  <div class="today-head"><span class="label">Сегодня</span>
+                    <span class="streak" data-note="4"><svg class="ic"><use href="#i-flame"/></svg>8 дней</span></div>
+                  <div class="today-num tnum">45 мин</div>
+                  <div class="week">
+                    <div class="wd"><div class="bar"><i style="height:39%"></i></div><span>Пн</span></div>
+                    <div class="wd"><div class="bar"><i style="height:56%"></i></div><span>Вт</span></div>
+                    <div class="wd"><div class="bar"><i style="height:22%"></i></div><span>Ср</span></div>
+                    <div class="wd"><div class="bar"><i style="height:72%"></i></div><span>Чт</span></div>
+                    <div class="wd"><div class="bar"><i style="height:44%"></i></div><span>Пт</span></div>
+                    <div class="wd"><div class="bar"><i style="height:100%"></i></div><span>Сб</span></div>
+                    <div class="wd is-today"><div class="bar today"><i style="height:50%"></i></div><span>Вс</span></div>
+                  </div>
+                  <div class="week-total"><span>Неделя</span><b class="tnum">5 ч 45 мин</b></div>
+                </div>
+                <div class="gap"></div>
+                <div class="remind" data-note="5">
+                  <div class="dot"><svg class="ic ic-s"><use href="#i-cal"/></svg></div>
+                  <div style="flex:1"><b>Завтра в 17:00 — урок</b><small>Анна Сергеевна</small></div>
+                  <svg class="ic chev"><use href="#i-chev-r"/></svg>
+                </div>
+                <div class="gap"></div>
+                <div class="window" data-note="6">
+                  <div class="pic" style="background-image:url(%%ROOM%%)"><span class="place"><svg class="ic" style="width:13px;height:13px"><use href="#i-home"/></svg>Дома</span></div>
+                  <div class="row"><span class="go">Хватает до Праги — в путь</span><span class="tacts tnum"><svg class="ic"><use href="#i-tact"/></svg>47 884</span></div>
+                </div>
+
+                <div class="cal-head" data-note="7">
+                  <button class="nav-btn" aria-label="Август"><svg class="ic"><use href="#i-chev-l"/></svg></button>
+                  <div class="cal-title" style="text-align:center">Сентябрь<small class="tnum">17 ч 27 мин · 24 дня</small></div>
+                  <button class="nav-btn" disabled aria-label="Октябрь"><svg class="ic"><use href="#i-chev-r"/></svg></button>
+                </div>
+                <div class="cal" id="cal-main"></div>
+              </div>
+              <div class="dock">
+                <button class="start" data-note="1"><svg class="ic"><use href="#i-watch"/></svg>Начать занятие</button>
+              </div>
+              <nav class="tabbar">
+                <div class="tab is-active"><div class="pill"><svg class="ic"><use href="#i-watch-f"/></svg></div>Занятия</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-string"/></svg></div>Live</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-sheet"/></svg></div>Репертуар</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-tape"/></svg></div>Записи</div>
+              </nav>
+            </div>
+
+            <!-- ИДЁТ -->
+            <div class="state" data-state="Занятие идёт">
+              <div class="app-scroll">
+                <div class="path-row">
+                  <div class="lvl-ring" style="--p:94%"><b>5</b></div>
+                  <div class="path-main">
+                    <div class="path-total tnum">47 ч 17 мин</div>
+                    <div class="path-sub">Уровень 5 · Гаммы · до 6-го 2 ч 43 мин</div>
+                  </div>
+                  <svg class="ic chev"><use href="#i-chev-r"/></svg>
+                </div>
+                <div class="gap"></div>
+                <div class="run-card" data-note="8">
+                  <div class="today-head"><span class="run-live"><i></i>Занятие идёт</span>
+                    <span class="streak"><svg class="ic"><use href="#i-flame"/></svg>8 дней</span></div>
+                  <div class="timer tnum">24:18</div>
+                  <div class="caption tnum">Сегодня вместе с ним — 1 ч 09 мин</div>
+                  <div class="block-line"><svg class="ic ic-s"><use href="#i-note"/></svg><span style="flex:1"><b>Ре мажор, 2 октавы</b> · ещё 6 мин</span></div>
+                  <div class="link-live" data-note="9"><svg class="ic ic-s"><use href="#i-string"/></svg>Вернуться к Live</div>
+                </div>
+                <div class="gap"></div>
+                <div class="card">
+                  <div class="today-head"><span class="label">Неделя</span><b class="tnum" style="font-size:14px">6 ч 09 мин</b></div>
+                  <div class="week">
+                    <div class="wd"><div class="bar"><i style="height:39%"></i></div><span>Пн</span></div>
+                    <div class="wd"><div class="bar"><i style="height:56%"></i></div><span>Вт</span></div>
+                    <div class="wd"><div class="bar"><i style="height:22%"></i></div><span>Ср</span></div>
+                    <div class="wd"><div class="bar"><i style="height:72%"></i></div><span>Чт</span></div>
+                    <div class="wd"><div class="bar"><i style="height:44%"></i></div><span>Пт</span></div>
+                    <div class="wd"><div class="bar"><i style="height:100%"></i></div><span>Сб</span></div>
+                    <div class="wd is-today"><div class="bar today run"><i style="height:77%"></i></div><span>Вс</span></div>
+                  </div>
+                </div>
+                <div class="gap"></div>
+                <div class="window">
+                  <div class="pic" style="background-image:url(%%ROOM%%)"><span class="place"><svg class="ic" style="width:13px;height:13px"><use href="#i-home"/></svg>Дома</span></div>
+                  <div class="row"><span class="go">Хватает до Праги — в путь</span><span class="tacts tnum"><svg class="ic"><use href="#i-tact"/></svg>47 884</span></div>
+                </div>
+              </div>
+              <div class="dock">
+                <div class="stop-row"><button class="btn-out" data-note="10"><svg class="ic"><use href="#i-flag"/></svg>Закончить занятие</button></div>
+              </div>
+              <nav class="tabbar">
+                <div class="tab is-active"><div class="pill"><svg class="ic"><use href="#i-watch-f"/></svg><span class="run-dot"></span></div>Занятия</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-string"/></svg></div>Live</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-sheet"/></svg></div>Репертуар</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-tape"/></svg></div>Записи</div>
+              </nav>
+            </div>
+
+            <!-- ПРОПУСК -->
+            <div class="state" data-state="После пропуска">
+              <div class="app-scroll">
+                <div class="path-row">
+                  <div class="lvl-ring" style="--p:94%"><b>5</b></div>
+                  <div class="path-main">
+                    <div class="path-total tnum">47 ч 17 мин</div>
+                    <div class="path-sub">Уровень 5 · Гаммы · до 6-го 2 ч 43 мин</div>
+                  </div>
+                  <svg class="ic chev"><use href="#i-chev-r"/></svg>
+                </div>
+                <div class="gap"></div>
+                <div class="card" data-note="11">
+                  <div class="today-head"><span class="label">Сегодня</span></div>
+                  <div class="today-num" style="font-size:30px;margin-top:8px">Ещё не играли</div>
+                  <div class="week">
+                    <div class="wd"><div class="bar"><i style="height:39%"></i></div><span>Пн</span></div>
+                    <div class="wd"><div class="bar"><i style="height:56%"></i></div><span>Вт</span></div>
+                    <div class="wd"><div class="bar"><i style="height:22%"></i></div><span>Ср</span></div>
+                    <div class="wd"><div class="bar"><i style="height:72%"></i></div><span>Чт</span></div>
+                    <div class="wd"><div class="bar none"></div><span>Пт</span></div>
+                    <div class="wd"><div class="bar none"></div><span>Сб</span></div>
+                    <div class="wd is-today"><div class="bar today"></div><span>Вс</span></div>
+                  </div>
+                  <div class="week-total"><span>Неделя</span><b class="tnum">2 ч 42 мин</b></div>
+                </div>
+                <div class="gap"></div>
+                <div class="window">
+                  <div class="pic" style="background-image:url(%%ROOM%%)"><span class="place"><svg class="ic" style="width:13px;height:13px"><use href="#i-home"/></svg>Дома</span></div>
+                  <div class="row"><span class="go">Хватает до Праги — в путь</span><span class="tacts tnum"><svg class="ic"><use href="#i-tact"/></svg>47 884</span></div>
+                </div>
+              </div>
+              <div class="dock">
+                <button class="start"><svg class="ic"><use href="#i-watch"/></svg>Начать занятие</button>
+              </div>
+              <nav class="tabbar">
+                <div class="tab is-active"><div class="pill"><svg class="ic"><use href="#i-watch-f"/></svg></div>Занятия</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-string"/></svg></div>Live</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-sheet"/></svg></div>Репертуар</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-tape"/></svg></div>Записи</div>
+              </nav>
+            </div>
+
+            <!-- ПУСТО -->
+            <div class="state" data-state="Первый запуск">
+              <div class="app-scroll">
+                <div class="path-row">
+                  <div class="lvl-ring" style="--p:0%"><b>1</b></div>
+                  <div class="path-main">
+                    <div class="path-total tnum" style="color:var(--text)">Уровень 1</div>
+                    <div class="path-sub">до 2-го уровня — 2 ч игры</div>
+                  </div>
+                  <svg class="ic chev"><use href="#i-chev-r"/></svg>
+                </div>
+                <div class="gap"></div>
+                <div class="first" data-note="12">
+                  <h3>Здесь будет ваша неделя</h3>
+                  <p class="muted" style="font-size:15px">Время за скрипкой складывается в уровни, дорогу по залам мира и вещи для дома.</p>
+                  <div class="steps">
+                    <div class="step"><span class="num">1</span><span><b>«Начать занятие»</b> — когда берёте скрипку. Откроется Live.</span></div>
+                    <div class="step"><span class="num">2</span><span><b>«Закончить»</b> — когда откладываете. Время ляжет в календарь.</span></div>
+                  </div>
+                  <div class="week" style="opacity:.8">
+                    <div class="wd"><div class="bar none"></div><span>Пн</span></div>
+                    <div class="wd"><div class="bar none"></div><span>Вт</span></div>
+                    <div class="wd"><div class="bar none"></div><span>Ср</span></div>
+                    <div class="wd"><div class="bar none"></div><span>Чт</span></div>
+                    <div class="wd"><div class="bar none"></div><span>Пт</span></div>
+                    <div class="wd"><div class="bar none"></div><span>Сб</span></div>
+                    <div class="wd is-today"><div class="bar today"></div><span>Вс</span></div>
+                  </div>
+                </div>
+                <div class="gap"></div>
+                <div class="window">
+                  <div class="pic" style="background-image:url(%%ROOM%%);filter:saturate(.35) brightness(.7)"><span class="place"><svg class="ic" style="width:13px;height:13px"><use href="#i-home"/></svg>Ваша комната</span></div>
+                  <div class="row"><span class="go plain">Первые такты — за первое занятие</span></div>
+                </div>
+              </div>
+              <div class="dock">
+                <button class="start"><svg class="ic"><use href="#i-watch"/></svg>Начать занятие</button>
+              </div>
+              <nav class="tabbar">
+                <div class="tab is-active"><div class="pill"><svg class="ic"><use href="#i-watch-f"/></svg></div>Занятия</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-string"/></svg></div>Live</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-sheet"/></svg></div>Репертуар</div>
+                <div class="tab"><div class="pill"><svg class="ic"><use href="#i-tape"/></svg></div>Записи</div>
+              </nav>
+            </div>
+
+            <div class="home-indicator"></div>
+          </div></div>
+          <p class="caption" style="color:var(--page-muted);max-width:390px;margin:0">Экран прокручивается: ниже дома — календарь месяца. Кнопка и панель стоят на месте.</p>
+        </div>
+
+        <ol class="notes">
+          <li data-n="1"><b>«Начать занятие» закреплена над панелью</b> — видна при любой прокрутке и лежит под большим пальцем. Раньше до неё было 480 dp шапки и дома. <span class="tag">закон Фиттса</span></li>
+          <li data-n="2"><b>Шапка — одна строка, уровень — кольцом вокруг номера</b>: отдельная полоса ушла, на экране больше нет двух одинаковых фиолетовых полос. Имя и трофеи — в листе по тапу. <span class="tag">сходство</span></li>
+          <li data-n="3"><b>«Сегодня» — главный ответ экрана</b>: крупное число и семь столбиков недели. Ритм недели видно одним взглядом, не надо складывать три карточки в голове. <span class="tag">узнавание</span></li>
+          <li data-n="4"><b>Серия — тёплым чипом, и только когда она есть.</b> Ноль не показывается: после пропуска экран не встречает человека упрёком. <span class="tag">без стыжения</span></li>
+          <li data-n="5"><b>Напоминание о событии — одна строка</b> между «сегодня» и домом. Место под черновик 3.35 готово заранее, в первый экран оно помещается и на 360×640. <span class="tag">близость</span></li>
+          <li data-n="6"><b>Дом ниже и меньше (148 dp вместо 250)</b>: по-прежнему живое окно в игру, но стоит после «сегодня». Одна строка — город и такты, полоса только пока не хватает. <span class="tag">иерархия</span></li>
+          <li data-n="7"><b>Календарь — ниже сгиба, сумма месяца в заголовке.</b> Карточка «Месяц» больше не нужна, а тап по дню открывает лист, а не блок внизу. <span class="tag">прогрессивное раскрытие</span></li>
+          <li data-n="8"><b>Когда занятие идёт, «Сегодня» становится таймером</b> на том же месте: глаз ищет время там, где всегда его видел. Строка подхода — в той же карточке. <span class="tag">постоянство</span></li>
+          <li data-n="9"><b>«Вернуться к Live»</b> — занятие значит играть; с вкладки легко вернуться к пюпитру одним тапом крупной кнопкой. <span class="tag">главная задача</span></li>
+          <li data-n="10"><b>«Закончить» контурная и на месте «Начать»</b>: то же место, более тихий вес. Случайно не нажмёшь, а итог откроется листом, как сейчас. <span class="tag">защита от ошибок</span></li>
+          <li data-n="11"><b>Пропуск — просто пустые столбики</b>, пунктиром, без цвета и без цифры «0 дней». Кнопка зовёт так же, как всегда. <span class="tag">без стыжения</span></li>
+          <li data-n="12"><b>Первый запуск — два шага словами</b> и пустая неделя вместо пустого календаря месяца: понятно, что появится и куда нажать. <span class="tag">пустые состояния</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ===================== ЭКРАН 2: день ===================== -->
+    <article class="screen" id="s-day">
+      <h2 class="screen-title">2. Лист дня <small style="font-weight:500;color:var(--page-muted)">— вынесено</small></h2>
+      <p class="screen-goal"><b>Главное действие:</b> поправить время дня &nbsp;·&nbsp; <b>За 3 секунды:</b> «24-го играл 1 ч 25 мин, вот две записи».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            <div class="statusbar"><span>18:42</span><span class="sb-icons"><svg class="ic ic-s"><use href="#i-sb-signal"/></svg><svg class="ic" style="width:26px"><use href="#i-sb-battery"/></svg></span></div>
+            <div class="state" data-state="Прошлый день">
+              <div class="app-scroll" style="padding-top:0">
+                <div class="cal-head" style="margin-top:12px">
+                  <button class="nav-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button>
+                  <div class="cal-title" style="text-align:center">Сентябрь<small class="tnum">17 ч 27 мин · 24 дня</small></div>
+                  <button class="nav-btn" disabled><svg class="ic"><use href="#i-chev-r"/></svg></button>
+                </div>
+                <div class="cal" id="cal-day"></div>
+              </div>
+              <div class="scrim"></div>
+              <div class="sheet">
+                <div class="sheet-date">Четверг, 24 сентября</div>
+                <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:12px">
+                  <div class="big tnum" style="font-size:34px;white-space:nowrap" data-note="1">1 ч 25 мин</div>
+                  <button class="btn-soft" style="margin-bottom:16px" data-note="2"><svg class="ic ic-s"><use href="#i-edit"/></svg>Изменить</button>
+                </div>
+                <div class="sec" style="margin-top:0">Записи этого дня</div>
+                <div class="rec" data-note="3"><div class="tile"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div style="flex:1"><b>Бах. Партита №2 · дубль 3</b><small class="tnum">18:42 · 2:31</small></div><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                <div class="rec"><div class="tile"><svg class="ic ic-s"><use href="#i-note"/></svg></div><div style="flex:1"><b>Запись</b><small class="tnum">19:05 · 0:32</small></div><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                <button class="btn-soft" style="width:100%;margin-top:16px;background:transparent;border:1.5px dashed var(--border)" data-note="4"><svg class="ic ic-s"><use href="#i-plus"/></svg>Событие в этот день</button>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Время дня — крупно, первой строкой</b>: именно это ищут, когда тапают по дню. Легенда «меньше ▪▪▪▪ больше» больше не нужна — точное число здесь. <span class="tag">иерархия</span></li>
+          <li data-n="2"><b>«Изменить» рядом с числом</b> — действие лежит у того, что оно меняет; дальше тот же лист со степпером, что сейчас. <span class="tag">близость</span></li>
+          <li data-n="3"><b>Записи дня — теми же карточками, что во «Записях»</b>: одинаково выглядит — одинаково работает. <span class="tag">закон Якоба</span></li>
+          <li data-n="4"><b>«Событие в этот день» — тихим пунктиром</b>: вход в 3.35 там, где уже выбран день, и не спорит с главным. <span class="tag">контекст</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ===================== ЭКРАН 3: путь ===================== -->
+    <article class="screen" id="s-path">
+      <h2 class="screen-title">3. Лист «Мой путь» <small style="font-weight:500;color:var(--page-muted)">— вынесено</small></h2>
+      <p class="screen-goal"><b>Главное действие:</b> посмотреть, куда растёшь &nbsp;·&nbsp; <b>За 3 секунды:</b> «уровень 5, до 6-го чуть-чуть, следующий трофей — 50 ч».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            <div class="statusbar"><span>18:42</span><span class="sb-icons"><svg class="ic ic-s"><use href="#i-sb-signal"/></svg><svg class="ic" style="width:26px"><use href="#i-sb-battery"/></svg></span></div>
+            <div class="state" data-state="Лист">
+              <div class="app-scroll">
+                <div class="path-row">
+                  <div class="lvl-ring" style="--p:94%"><b>5</b></div>
+                  <div class="path-main"><div class="path-total tnum">47 ч 17 мин</div><div class="path-sub">Уровень 5 · Гаммы</div></div>
+                </div>
+              </div>
+              <div class="scrim"></div>
+              <div class="sheet">
+                <div style="display:flex;align-items:center;gap:14px" data-note="1">
+                  <div class="lvl-ring" style="--p:94%;width:72px;height:72px"><b style="width:62px;height:62px;font-size:26px">5</b></div>
+                  <div><div style="font-size:14px;color:var(--text-2);font-weight:600">За скрипкой</div><div class="tnum" style="font-size:30px;font-weight:800;color:var(--accent);letter-spacing:-.02em">47 ч 17 мин</div></div>
+                </div>
+                <div class="lvl-bar" data-note="2"><i style="width:94%"></i></div>
+                <div style="display:flex;justify-content:space-between;font-size:13px;color:var(--text-2)"><span><b style="color:var(--text)">Уровень 5</b> · Гаммы</span><span class="tnum">до 6-го — 2 ч 43 мин</span></div>
+                <div class="sec">Трофеи</div>
+                <div class="troph" data-note="3">
+                  <div class="tr"><svg width="36" height="36"><use href="#t-rosin"/></svg>Канифоль<small>1 ч</small></div>
+                  <div class="tr"><svg width="36" height="36"><use href="#t-peg"/></svg>Колок<small>10 ч</small></div>
+                  <div class="tr next"><svg width="36" height="36"><use href="#t-mute"/></svg>Струна<small>50 ч</small></div>
+                </div>
+                <div style="height:10px"></div>
+                <div class="lrow" style="color:var(--accent)"><span>Все трофеи</span><svg class="ic"><use href="#i-arrow-r"/></svg></div>
+                <div class="lrow" data-note="4"><svg class="ic muted"><use href="#i-user"/></svg><span>Имя и фото</span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                <div class="lrow"><svg class="ic muted"><use href="#i-settings"/></svg><span>Настройки</span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>То же кольцо, что в строке, только крупнее</b>: лист раскрывается из того, по чему тапнули, — понятно, откуда он взялся. <span class="tag">непрерывность</span></li>
+          <li data-n="2"><b>Полоса уровня живёт здесь</b> — подробная, с подписью временем. На главном хватает кольца. <span class="tag">прогрессивное раскрытие</span></li>
+          <li data-n="3"><b>Два последних трофея и следующий пунктиром</b> — «что уже есть» и «что рядом». Горизонт в 10 000 ч — в «Все трофеи». <span class="tag">эффект цели</span></li>
+          <li data-n="4"><b>Имя, фото и «Настройки» — простыми строками</b>: нужны редко, поэтому внизу и без выделения. <span class="tag">частота</span></li>
+        </ol>
+      </div>
+    </article>
+  </main>
+
+  <section class="block">
+    <h2>Что вынесено с экрана и куда</h2>
+    <table class="moved">
+      <thead><tr><th>Элемент</th><th>Куда</th><th>Почему</th></tr></thead>
+      <tbody>
+        <tr><td>Полоса уровня и подпись «до 6 уровня»</td><td>Кольцо вокруг номера уровня в строке пути; подробная полоса — в листе «Мой путь»</td><td>Две похожие полосы подряд путались, а кольцо показывает то же в 48 dp</td></tr>
+        <tr><td>Аватар, имя, ряд трофеев</td><td>Лист «Мой путь» (тап по строке)</td><td>Их смотрят иногда, а место в шапке нужно каждый раз</td></tr>
+        <tr><td>Карточки «Неделя · Месяц · Дней подряд»</td><td>Неделя — столбики в «Сегодня»; месяц — заголовок календаря; серия — чип с огоньком</td><td>Та же информация без трёх равных карточек; ноль серии больше не показывается</td></tr>
+        <tr><td>Строка «Сегодня ещё не занимались» под кнопкой</td><td>Крупное число в карточке «Сегодня»</td><td>Это ответ на главный вопрос, а не подпись к кнопке</td></tr>
+        <tr><td>Блок выбранного дня под календарём</td><td>Лист дня по тапу</td><td>Блок был ниже сгиба, тап по дню менял невидимое</td></tr>
+        <tr><td>Легенда «меньше ▪▪▪▪ больше»</td><td>Убрана; точное время — в листе дня</td><td>Оттенки и так читаются, а число честнее легенды</td></tr>
+        <tr><td>Полоса «до Праги» в окне дома</td><td>Остаётся, но только пока тактов не хватает</td><td>Полная полоса ничего не сообщает — хватает строки «в путь»</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="block">
+    <h2>Проверки и что это меняет в спеке</h2>
+    <ul>
+      <li><b>Контраст:</b> %%CONTRAST%%</li>
+      <li><b>Касания:</b> строка пути 56 dp, напоминание 56, строка окна 56, стрелки месяца 44 (+ отступ до 48), дни 44, кнопка 58, вкладки 56.</li>
+      <li><b>Движение (3.16):</b> движутся кнопка («перламутр») и дом; огонёк серии — только при росте. Таймер при идущем занятии цифрами не анимируется.</li>
+      <li><b>Цвет не единственный признак:</b> сегодня — рамкой и жирным подписанием дня, пропуск — пунктиром, серия — огоньком и словом.</li>
+      <li><b>Расходится со спекой:</b> 3.12 (сводка из трёх карточек, выбранный день блоком под календарём, строка «Сегодня…» под кнопкой), 3.13 (шапка профиля с полосой и трофеями) и 3.23 (полоса дороги всегда). Если направление нравится — это новая версия спеки и макет в хэндоффе, а не правка кода напрямую.</li>
+      <li><b>Landscape</b> не нарисован: левая колонка — строка пути, «Сегодня», кнопка; правая — дом и календарь.</li>
+    </ul>
+  </section>
+</div>
+
+<script>
+// календарь сентября 2026: 1-е — вторник; тона 0–4, сегодня — 27
+(function(){
+  var tones={1:2,2:3,3:2,4:1,5:3,6:2,7:2,8:3,9:1,11:3,12:2,13:3,14:1,15:3,16:2,17:3,18:2,20:4,21:2,22:3,23:1,24:3,25:2,26:4,27:2};
+  function build(id,sel){
+    var el=document.getElementById(id); if(!el) return;
+    var h='';['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].forEach(function(d){h+='<div class="dn">'+d+'</div>'});
+    h+='<div></div>';
+    for(var d=1;d<=30;d++){
+      var c='cd'; if(tones[d]) c+=' l'+tones[d]; if(d>27) c+=' fut'; if(d===27) c+=' tod';
+      var st=(sel===d)?' style="outline:2px solid var(--text);outline-offset:-1px;border-radius:50%"':'';
+      h+='<div class="'+c+'"><i'+st+'>'+d+'</i></div>';
+    }
+    el.innerHTML=h;
+  }
+  build('cal-main'); build('cal-day',24); 
+})();
+(function(){
+  var root=document.documentElement, body=document.body;
+  var qa=function(s,el){return Array.prototype.slice.call((el||document).querySelectorAll(s))};
+  function placeMarks(screenEl){
+    var layer=screenEl.querySelector(':scope > .mark-layer');
+    if(!layer){layer=document.createElement('div');layer.className='mark-layer';screenEl.appendChild(layer)}
+    layer.innerHTML='';
+    var base=screenEl.getBoundingClientRect(), k=(base.width/screenEl.offsetWidth)||1;
+    qa('[data-note]',screenEl).forEach(function(el){
+      if(el.closest('[hidden]')) return;
+      var r=el.getBoundingClientRect(); if(!r.width&&!r.height) return;
+      var sc=el.closest('.app-scroll');
+      if(sc){var sr=sc.getBoundingClientRect(); if(r.bottom<sr.top+6||r.top>sr.bottom-6) return;}
+      if(r.bottom<base.top||r.top>base.bottom) return;
+      var x=(r.right-base.left)/k-14, y=(r.top-base.top)/k-9;
+      var m=document.createElement('span'); m.className='mark'; m.textContent=el.getAttribute('data-note');
+      m.setAttribute('data-n',el.getAttribute('data-note'));
+      m.style.left=Math.min(Math.max(x,6),screenEl.offsetWidth-28)+'px';
+      m.style.top=Math.min(Math.max(y,6),screenEl.offsetHeight-28)+'px';
+      layer.appendChild(m);
+    });
+  }
+  function placeAll(){qa('.phone-screen').forEach(placeMarks)}
+  qa('.screen').forEach(function(screen){
+    qa('.phone',screen).forEach(function(phone){
+      var ps=phone.querySelector('.phone-screen'); var states=qa(':scope > .state',ps);
+      if(states.length>1){
+        var tabs=document.createElement('div'); tabs.className='state-tabs'; tabs.setAttribute('role','tablist');
+        states.forEach(function(st,i){
+          var b=document.createElement('button'); b.type='button'; b.setAttribute('role','tab');
+          b.textContent=st.getAttribute('data-state')||('Состояние '+(i+1));
+          b.addEventListener('click',function(){
+            states.forEach(function(s,j){s.hidden=j!==i});
+            qa('button',tabs).forEach(function(x,j){x.setAttribute('aria-selected',String(j===i))});
+            placeMarks(ps);
+          });
+          tabs.appendChild(b);
+        });
+        phone.parentNode.insertBefore(tabs,phone);
+        states.forEach(function(s,j){s.hidden=j!==0}); tabs.firstChild.setAttribute('aria-selected','true');
+      }
+      var tz=document.createElement('div'); tz.className='thumb-zone';
+      tz.innerHTML='<span style="top:8px">трудно дотянуться</span><span style="top:27%">можно</span><span style="top:53%">легко — сюда главные действия</span>';
+      ps.appendChild(tz);
+      qa('.app-scroll',ps).forEach(function(sc){
+        var t=0; sc.addEventListener('scroll',function(){cancelAnimationFrame(t);t=requestAnimationFrame(function(){placeMarks(ps)})},{passive:true});
+      });
+    });
+    function hot(n,on){qa('[data-note="'+n+'"],.notes li[data-n="'+n+'"]',screen).forEach(function(e){e.classList.toggle('is-hot',on)})}
+    screen.addEventListener('mouseover',function(e){var t=e.target.closest('.notes li[data-n],.mark');if(t)hot(t.getAttribute('data-n'),true)});
+    screen.addEventListener('mouseout',function(e){var t=e.target.closest('.notes li[data-n],.mark');if(t)hot(t.getAttribute('data-n'),false)});
+  });
+  function toggle(btn,fn){btn.addEventListener('click',function(){var on=btn.getAttribute('aria-pressed')!=='true';btn.setAttribute('aria-pressed',String(on));fn(on);requestAnimationFrame(placeAll)})}
+  toggle(document.getElementById('btn-notes'),function(on){body.classList.toggle('hide-marks',!on)});
+  toggle(document.getElementById('btn-theme'),function(on){root.setAttribute('data-theme',on?'dark':'light')});
+  toggle(document.getElementById('btn-thumb'),function(on){body.classList.toggle('show-thumb',on)});
+  var P=new URLSearchParams(location.search);
+  if(P.get('theme')==='light') document.getElementById('btn-theme').click();
+  if(P.get('marks')==='0') document.getElementById('btn-notes').click();
+  if(P.get('thumb')==='1') document.getElementById('btn-thumb').click();
+  if(P.get('state')) qa('.state-tabs').forEach(function(t){var b=t.children[+P.get('state')-1]; if(b) b.click()});
+  window.addEventListener('resize',placeAll);
+  window.addEventListener('load',function(){placeAll(); root.setAttribute('data-page-h',String(root.scrollHeight))});
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(placeAll);
+  placeAll();
+})();
+</script>
+</body>
+</html>

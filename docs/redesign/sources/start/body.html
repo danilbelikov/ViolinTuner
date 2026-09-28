@@ -1,0 +1,532 @@
+<div class="doc">
+  <header class="doc-head">
+    <h1>Violin Journey · Знакомство, настройки, копия данных</h1>
+    <p class="doc-meta">
+      <b>Задача:</b> за семь экранов объяснить, что это за приложение, где живут данные, и настроить микрофон, эталон и допуск. Потом, в «Настройках», поменять то же самое в одно касание, сохранить копию или восстановить её.
+      <b>Для кого:</b> новый скрипач, только что поставил приложение (или переехал на новый телефон и держит в руках файл копии). В «Настройки» заходят редко и по делу.
+      <b>Допущения:</b> состав семи экранов и тексты — из 3.33 и 3.7, ни одного экрана не добавлено и не убрано. Сцены нарисованы упрощённо — в приложении остаются иллюстрации хэндоффа серии 36. Цифры копии (3,4 ГБ, 64 записи, 6 видео) условные. Тема только тёмная; переключатель меняет лишь подложку страницы.
+    </p>
+  </header>
+
+  <div class="toolbar" role="toolbar" aria-label="Режимы просмотра">
+    <button type="button" id="btn-notes" aria-pressed="true">Номера</button>
+    <button type="button" id="btn-theme" aria-pressed="true">Тёмная подложка</button>
+    <button type="button" id="btn-thumb" aria-pressed="false">Зона большого пальца</button>
+  </div>
+
+  <section class="block">
+    <h2>Что сейчас (по хэндоффу серии 36 и экрану «Настройки» на эмуляторе)</h2>
+    <ol class="issues">
+      <li><span class="n">1</span><span class="sev sev-major">важно</span><b>Два индикатора для одного пути:</b> у знакомства четыре точки, у настройки — три полоски и «Настройка · 2 из 3». Сколько всего экранов, по ним не сложить.</li>
+      <li><span class="n">2</span><span class="sev sev-minor">мелочь</span><b>Эталон без подсказки.</b> Четыре числа 440–443 и ни слова о том, что выбрать, если не знаешь. Новичок останавливается на шаге, где ответ почти всегда «440».</li>
+      <li><span class="n">3</span><span class="sev sev-minor">мелочь</span><b>Ширину допуска видно только словами.</b> Миниатюру шкалы убрали, и «±3 цента» ничего не говорит тому, кто ни разу не видел Live.</li>
+      <li><span class="n">4</span><span class="sev sev-major">важно</span><b>В «Настройках» эталон и допуск занимают первый экран</b> — абзацы пояснений и три высокие карточки. «Данные» с копией уходят под сгиб, хотя это самое ценное на экране.</li>
+      <li><span class="n">5</span><span class="sev sev-minor">мелочь</span><b>«В приложении сейчас: 3,4 ГБ» — отдельная строка без действия.</b> Она нужна только в момент решения «пора ли сохранить копию», а стоит сама по себе.</li>
+    </ol>
+  </section>
+
+  <section class="block">
+    <h2>Карта экранов</h2>
+    <div class="flow-row">
+      <a class="flow-node" href="#s-intro">Знакомство 1–4</a>
+      <span class="flow-arrow">→<i>Понятно</i></span>
+      <a class="flow-node" href="#s-setup">Настройка 5–7</a>
+      <span class="flow-arrow">→<i>Начать играть</i></span>
+      <span class="flow-node">Live <small>есть</small></span>
+    </div>
+    <div class="flow-row">
+      <a class="flow-node" href="#s-intro">Знакомство 1</a>
+      <span class="flow-arrow">→<i>У меня есть копия</i></span>
+      <span class="flow-node">Системное «Открыть» <small>ОС</small></span>
+      <span class="flow-arrow">→</span>
+      <a class="flow-node" href="#s-restore">Восстановить</a>
+    </div>
+    <div class="flow-row">
+      <span class="flow-node">Шестерёнка на Live · «Настройки» в «Моём пути»</span>
+      <span class="flow-arrow">→</span>
+      <a class="flow-node" href="#s-settings">Настройки</a>
+      <span class="flow-arrow">→</span>
+      <a class="flow-node" href="#s-save">Сохранить копию</a>
+      <span class="flow-arrow">·</span>
+      <a class="flow-node" href="#s-restore">Восстановить</a>
+      <span class="flow-arrow">·</span>
+      <span class="flow-node">Звук записей <small>раздел «Записи»</small></span>
+      <span class="flow-arrow">·</span>
+      <span class="flow-node">Язык <small>системный экран</small></span>
+    </div>
+  </section>
+
+  <main class="screens">
+
+    <!-- ===================== ЗНАКОМСТВО ===================== -->
+    <article class="screen" id="s-intro">
+      <h2 class="screen-title">1. Знакомство · экраны 1–4</h2>
+      <p class="screen-goal"><b>Главное действие:</b> «Начать» → «Дальше» → «Понятно» &nbsp;·&nbsp; <b>За 3 секунды:</b> «это тренажёр чистоты, занятия ведут в путешествие, данные — только здесь; впереди семь коротких экранов».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            %%SB%%
+            <div class="state" data-state="1 · Приветствие">
+              <div class="scene" style="height:330px" data-scene="neck" data-sun="0"><button class="skip" data-note="2">Пропустить</button></div>
+              <div class="intro-body">
+                <div class="progress7" data-note="1"><i class="on"></i><i></i><i></i><i></i><span class="sep"></span><i></i><i></i><i></i></div>
+                <div class="p7-label"><b>Знакомство</b><span>1 из 7</span></div>
+                <h1 class="h-big">Violin Journey</h1>
+                <p class="lead">Слышит, как вы играете, и сразу показывает, чисто ли. А занятия складываются в дорогу — от своей комнаты до концертных залов мира.</p>
+              </div>
+              <div class="foot">
+                <button class="btn-main" data-note="4">Начать</button>
+                <button class="btn-text" data-note="3">У меня есть копия данных</button>
+              </div>
+            </div>
+
+            <div class="state" data-state="2 · Как читать Live">
+              <div class="scene" style="height:320px" data-scene="stand" data-sun="1"><button class="skip">Пропустить</button></div>
+              <div class="intro-body">
+                <div class="progress7"><i class="done"></i><i class="on"></i><i></i><i></i><span class="sep"></span><i></i><i></i><i></i></div>
+                <div class="p7-label"><b>Знакомство</b><span>2 из 7</span></div>
+                <h1 class="h-big">Видно краем глаза</h1>
+                <p class="lead">Поставьте телефон на пюпитр. Цветом подскажет весь экран: зелёный — в строе, янтарный — чуть мимо, красный — мимо. Стрелка покажет, выше вы или ниже.</p>
+              </div>
+              <div class="foot">
+                <p class="quiet-line" data-note="5">Пока играете, ничего нажимать не нужно</p>
+                <button class="btn-main">Дальше</button>
+              </div>
+            </div>
+
+            <div class="state" data-state="3 · Путь">
+              <div class="scene" style="height:230px" data-scene="road" data-sun="2"><button class="skip">Пропустить</button></div>
+              <div class="intro-body">
+                <div class="progress7"><i class="done"></i><i class="done"></i><i class="on"></i><i></i><span class="sep"></span><i></i><i></i><i></i></div>
+                <div class="p7-label"><b>Знакомство</b><span>3 из 7</span></div>
+                <h1 class="h-big">Занятия складываются в путь</h1>
+                <div class="lines" style="margin-top:6px" data-note="6">
+                  <div class="line"><span class="li"><svg class="ic"><use href="#i-watch"/></svg></span><span><b>Занятие.</b> Включите таймер — время за скрипкой растит уровень и серию дней.</span></div>
+                  <div class="line"><span class="li"><svg class="ic"><use href="#i-tape"/></svg></span><span><b>Записи и дубли.</b> Запишите себя и послушайте со стороны. Дубли лежат рядом с нотами произведения.</span></div>
+                  <div class="line"><span class="li"><svg class="ic" style="fill:currentColor;stroke:none"><use href="#i-tact"/></svg></span><span><b>Такты.</b> Чистые ноты и минуты занятий превращаются в такты: на них едут от города к городу и обставляют дом.</span></div>
+                </div>
+              </div>
+              <div class="foot"><button class="btn-main">Дальше</button></div>
+            </div>
+
+            <div class="state" data-state="4 · Данные">
+              <div class="scene" style="height:170px" data-scene="folder" data-sun="3"></div>
+              <div class="intro-body">
+                <div class="progress7"><i class="done"></i><i class="done"></i><i class="done"></i><i class="on"></i><span class="sep"></span><i></i><i></i><i></i></div>
+                <div class="p7-label"><b>Знакомство</b><span>4 из 7</span></div>
+                <h1 class="h-big" style="font-size:25px">Всё хранится на этом телефоне</h1>
+                <p class="lead" style="font-size:15px">Без аккаунта и облака: записи, видео и фото нот остаются здесь.</p>
+                <div class="lines">
+                  <div class="line" data-note="7"><span class="li" style="background:var(--accent);color:var(--on-accent)"><svg class="ic"><use href="#i-archive"/></svg></span><span><b>Сделайте копию.</b> Если удалить приложение или сменить телефон, записи, видео и фото нот пропадут. Копия — в «Настройках», раздел «Данные».</span></div>
+                  <div class="line"><span class="li"><svg class="ic"><use href="#i-trash"/></svg></span><span><b>Удаляйте неудачные дубли.</b> Видео весит в сотню раз больше звука. Удачный дубль отметьте звездой.</span></div>
+                  <div class="line"><span class="li"><svg class="ic"><use href="#i-chart"/></svg></span><span><b>Помогать улучшать приложение.</b> Обезличенная статистика: какие экраны открываются и где сбои. Записи, видео и ноты не уходят никогда. Изменить — в «Настройках».</span></div>
+                </div>
+              </div>
+              <div class="foot"><button class="btn-main" data-note="8">Понятно</button></div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Одна полоса на все семь экранов</b>, разрыв между знакомством и настройкой, подпись «1 из 7». С первого экрана видно, сколько осталось, и путь не кажется бесконечным. <span class="tag">эффект цели</span></li>
+          <li data-n="2"><b>«Пропустить» — тихо, в углу картинки.</b> Не спорит с «Начать» и ведёт на страницу про данные, а не в настройку: её человек должен увидеть хотя бы раз. <span class="tag">иерархия</span></li>
+          <li data-n="3"><b>«У меня есть копия данных» — сразу под «Начать»</b>, текстовой кнопкой 48 dp. Переехавший на новый телефон находит свой путь на первом же экране, остальным она не мешает. <span class="tag">закон Фиттса</span></li>
+          <li data-n="4"><b>Картинка сверху, текст и кнопка — в нижней половине.</b> Кнопка всегда в зоне большого пальца; на низком экране картинка сжимается, а кнопка остаётся на месте. <span class="tag">зона большого пальца</span></li>
+          <li data-n="5"><b>Строка «Пока играете, ничего нажимать не нужно» — над кнопкой</b>, последней перед действием. Это главное обещание Live, его читают в момент решения. <span class="tag">эффект края</span></li>
+          <li data-n="6"><b>Три строки с одной формой: иконка, жирное слово, одна фраза.</b> Список читается сканированием по жирным словам: занятие, записи, такты. <span class="tag">сходство</span></li>
+          <li data-n="7"><b>Копия выделена залитой иконкой — единственной на экране.</b> Это та строка, которую надо запомнить; две другие — тише. <span class="tag">эффект изоляции</span></li>
+          <li data-n="8"><b>«Понятно», а не «Согласен»:</b> страница знакомит, а не спрашивает. Статистика выключается в «Настройках» одним касанием, и это сказано прямо здесь. <span class="tag">честность</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ===================== НАСТРОЙКА ===================== -->
+    <article class="screen" id="s-setup">
+      <h2 class="screen-title">2. Настройка · экраны 5–7</h2>
+      <p class="screen-goal"><b>Главное действие:</b> «Разрешить микрофон» → «Дальше» → «Начать играть» &nbsp;·&nbsp; <b>За 3 секунды:</b> «зачем микрофон; не знаю эталон — оставлю 440; зелёная зона шире у новичка».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            %%SB%%
+            <div class="state" data-state="5 · Микрофон">
+              <div class="scene" style="height:220px" data-scene="neck" data-sun="4"></div>
+              <div class="intro-body">
+                <div class="progress7"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><span class="sep"></span><i class="on"></i><i></i><i></i></div>
+                <div class="p7-label"><b>Настройка</b><span>5 из 7</span></div>
+                <h1 class="h-big">Дайте мне услышать скрипку</h1>
+                <p class="lead">Чтобы слышать ноты, нужен микрофон. Звук разбирается прямо на телефоне и не записывается, пока вы сами не нажмёте запись.</p>
+                <div class="hint-card" data-note="1"><svg class="ic ic-s" style="color:var(--accent);margin-top:2px"><use href="#i-mic"/></svg><span>Сейчас телефон спросит разрешение. <b>Любой ответ ведёт дальше</b> — разрешить можно и потом, на Live.</span></div>
+              </div>
+              <div class="foot"><button class="btn-main" data-note="2"><svg class="ic"><use href="#i-mic"/></svg>Разрешить микрофон</button></div>
+            </div>
+
+            <div class="state" data-state="6 · Эталон">
+              <div class="scene" style="height:200px" data-scene="neck" data-sun="5"></div>
+              <div class="intro-body">
+                <div class="progress7"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><span class="sep"></span><i class="done"></i><i class="on"></i><i></i></div>
+                <div class="p7-label"><b>Настройка</b><span>6 из 7</span></div>
+                <h1 class="h-big">К чему настраиваетесь?</h1>
+                <p class="lead" style="font-size:15px">Частота ноты A4. От неё считаются все ноты и струны.</p>
+                <div class="seg4" data-note="3">
+                  <button class="on">440<small>Гц</small></button><button>441<small>Гц</small></button><button>442<small>Гц</small></button><button>443<small>Гц</small></button>
+                </div>
+                <div class="hint-card" data-note="4"><svg class="ic ic-s" style="color:var(--accent);margin-top:2px"><use href="#i-info"/></svg><span><b>Не знаете — оставьте 440.</b> Меняется в любой момент в «Настройках».</span></div>
+              </div>
+              <div class="foot"><button class="btn-main">Дальше</button></div>
+            </div>
+
+            <div class="state" data-state="7 · Допуск">
+              <div class="scene" style="height:150px" data-scene="neck" data-sun="6"></div>
+              <div class="intro-body">
+                <div class="progress7"><i class="done"></i><i class="done"></i><i class="done"></i><i class="done"></i><span class="sep"></span><i class="done"></i><i class="done"></i><i class="on"></i></div>
+                <div class="p7-label"><b>Настройка</b><span>7 из 7</span></div>
+                <h1 class="h-big">Насколько строго судить?</h1>
+                <div class="tol" data-note="5">
+                  <div class="tol-card"><span class="radio"></span><span class="tt"><b>Новичок</b><small>широкая зелёная зона</small></span><span class="zone"><i style="width:60px;margin-left:-30px"></i></span><span class="num tnum">±12</span></div>
+                  <div class="tol-card on"><span class="radio"></span><span class="tt"><b>Средний</b><small>видно вибрато</small></span><span class="zone"><i style="width:40px;margin-left:-20px"></i></span><span class="num tnum">±8</span></div>
+                  <div class="tol-card"><span class="radio"></span><span class="tt"><b>Профи</b><small>строго</small></span><span class="zone"><i style="width:15px;margin-left:-7.5px"></i></span><span class="num tnum">±3</span></div>
+                </div>
+                <p class="caption" style="margin-top:10px">Центов от ноты. Меняется в «Настройках».</p>
+              </div>
+              <div class="foot"><button class="btn-main" data-note="6">Начать играть</button></div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>До системного диалога — одна фраза, что будет дальше</b>, и что отказ не тупик. Человек нажимает «Разрешить», зная, зачем и что ничего не сломает. <span class="tag">снижение тревоги</span></li>
+          <li data-n="2"><b>Кнопка называет действие целиком — «Разрешить микрофон»</b>, с иконкой. Вместо «Дальше» — то, что реально произойдёт после нажатия. <span class="tag">ясность</span></li>
+          <li data-n="3"><b>Четыре частоты — крупными кнопками 64 dp в один ряд</b>, выбранная залита и обведена. Выбор — одно касание, без выпадающих списков. <span class="tag">закон Хика</span></li>
+          <li data-n="4"><b>«Не знаете — оставьте 440»</b> — подсказка там, где новичок застревает. Значение по умолчанию уже выбрано, и теперь понятно, что оно правильное. <span class="tag">эффект умолчания</span></li>
+          <li data-n="5"><b>В каждой карточке — полоска зелёной зоны своей ширины.</b> Разница ±12 и ±3 видна глазом, до первой ноты; цвет зоны здесь объясняет Live, а не оценивает. <span class="tag">узнавание</span></li>
+          <li data-n="6"><b>«Начать играть» — последний шаг и последнее слово полосы «7 из 7».</b> Кнопка обещает то, ради чего человек пришёл, — сразу Live. <span class="tag">эффект завершения</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ===================== НАСТРОЙКИ ===================== -->
+    <article class="screen" id="s-settings">
+      <h2 class="screen-title">3. Настройки</h2>
+      <p class="screen-goal"><b>Главное действие:</b> поменять эталон или допуск; сохранить копию &nbsp;·&nbsp; <b>За 3 секунды:</b> «440 Гц, ±8; копия была 12 сентября».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            %%SB%%
+            <div class="state" data-state="Обычное">
+              <div class="navbar"><button class="icon-btn" aria-label="Назад"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="nav-title">Настройки</span></div>
+              <div class="set-scroll">
+                <div class="grp" style="margin-top:8px" data-note="1">
+                  <div class="grp-t">Интонация</div>
+                  <div class="grp-box">
+                    <div class="srow col"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:16px">Эталон A4</b><small style="font-size:13px;color:var(--text-2)">все ноты считаются от него</small></div>
+                      <div class="mini-seg"><span class="on">440</span><span>441</span><span>442</span><span>443</span></div></div>
+                    <div class="srow col"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:16px">Допуск</b><small style="font-size:13px;color:var(--text-2)">ширина зелёной зоны</small></div>
+                      <div class="mini-seg three"><span>Новичок<small>±12</small></span><span class="on">Средний<small>±8</small></span><span>Профи<small>±3</small></span></div></div>
+                  </div>
+                </div>
+                <div class="grp" data-note="2">
+                  <div class="grp-t">Записи</div>
+                  <div class="grp-box">
+                    <div class="srow"><span class="si"><svg class="ic"><use href="#i-sliders"/></svg></span><span class="st"><b>Звук записей</b><small>без обработки · для всех записей</small></span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                  </div>
+                </div>
+                <div class="grp">
+                  <div class="grp-t">Данные</div>
+                  <div class="grp-box">
+                    <div class="srow" data-note="3"><span class="si" style="background:var(--accent-soft);color:var(--accent)"><svg class="ic"><use href="#i-archive"/></svg></span><span class="st"><b>Сохранить копию</b><small class="tnum">последняя — 12 сентября · в приложении 3,4 ГБ</small></span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                    <div class="srow"><span class="si"><svg class="ic"><use href="#i-restore"/></svg></span><span class="st"><b>Восстановить из копии</b><small>заменит всё, что сейчас в приложении</small></span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                    <div class="srow" data-note="4"><span class="si"><svg class="ic"><use href="#i-chart"/></svg></span><span class="st"><b>Помогать улучшать приложение</b><small>обезличенная статистика: какие экраны открываются и где сбои</small></span><span class="switch on" role="switch" aria-checked="true"></span></div>
+                    <div class="srow"><span class="si"><svg class="ic"><use href="#i-lock"/></svg></span><span class="st"><b>Политика конфиденциальности</b><small>что остаётся на телефоне и что уходит</small></span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                  </div>
+                </div>
+                <div class="grp" data-note="5">
+                  <div class="grp-t">Приложение</div>
+                  <div class="grp-box">
+                    <div class="srow"><span class="si"><svg class="ic"><use href="#i-globe"/></svg></span><span class="st"><b>Язык</b></span><span class="val">Русский</span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                    <div class="srow"><span class="si"><svg class="ic"><use href="#i-play-intro"/></svg></span><span class="st"><b>Пройти знакомство снова</b><small>все семь экранов, выбор сохранится</small></span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="state" data-state="Копия идёт">
+              <div class="navbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="nav-title">Настройки</span></div>
+              <div class="set-scroll">
+                <div class="grp" style="margin-top:8px">
+                  <div class="grp-t">Интонация</div>
+                  <div class="grp-box">
+                    <div class="srow col"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:16px">Эталон A4</b><small style="font-size:13px;color:var(--text-2)">все ноты считаются от него</small></div>
+                      <div class="mini-seg"><span class="on">440</span><span>441</span><span>442</span><span>443</span></div></div>
+                    <div class="srow col"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:16px">Допуск</b><small style="font-size:13px;color:var(--text-2)">ширина зелёной зоны</small></div>
+                      <div class="mini-seg three"><span>Новичок<small>±12</small></span><span class="on">Средний<small>±8</small></span><span>Профи<small>±3</small></span></div></div>
+                  </div>
+                </div>
+                <div class="grp">
+                  <div class="grp-t">Записи</div>
+                  <div class="grp-box">
+                    <div class="srow"><span class="si"><svg class="ic"><use href="#i-sliders"/></svg></span><span class="st"><b>Звук записей</b><small>без обработки · для всех записей</small></span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                  </div>
+                </div>
+                <div class="grp">
+                  <div class="grp-t">Данные</div>
+                  <div class="grp-box">
+                    <div class="srow" data-note="6"><span class="si" style="background:var(--accent-soft);color:var(--accent)"><svg class="ic"><use href="#i-archive"/></svg></span><span class="st"><b>Копия сохраняется</b><small class="tnum">56 % · Видео 4 из 6</small><div class="thinbar"><i style="width:56%"></i></div></span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                    <div class="srow" style="opacity:.5"><span class="si"><svg class="ic"><use href="#i-restore"/></svg></span><span class="st"><b>Восстановить из копии</b><small>сначала дождитесь, пока сохранится копия</small></span></div>
+                    <div class="srow"><span class="si"><svg class="ic"><use href="#i-chart"/></svg></span><span class="st"><b>Помогать улучшать приложение</b><small>обезличенная статистика: какие экраны открываются и где сбои</small></span><span class="switch on"></span></div>
+                    <div class="srow"><span class="si"><svg class="ic"><use href="#i-lock"/></svg></span><span class="st"><b>Политика конфиденциальности</b><small>что остаётся на телефоне и что уходит</small></span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="state" data-state="Давно без копии">
+              <div class="navbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="nav-title">Настройки</span></div>
+              <div class="set-scroll">
+                <div class="grp" style="margin-top:8px">
+                  <div class="grp-t">Интонация</div>
+                  <div class="grp-box">
+                    <div class="srow col"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:16px">Эталон A4</b><small style="font-size:13px;color:var(--text-2)">все ноты считаются от него</small></div>
+                      <div class="mini-seg"><span>440</span><span>441</span><span class="on">442</span><span>443</span></div></div>
+                    <div class="srow col"><div style="display:flex;justify-content:space-between;align-items:baseline"><b style="font-size:16px">Допуск</b><small style="font-size:13px;color:var(--text-2)">ширина зелёной зоны</small></div>
+                      <div class="mini-seg three"><span>Новичок<small>±12</small></span><span class="on">Средний<small>±8</small></span><span>Профи<small>±3</small></span></div></div>
+                  </div>
+                </div>
+                <div class="grp">
+                  <div class="grp-t">Записи</div>
+                  <div class="grp-box">
+                    <div class="srow"><span class="si"><svg class="ic"><use href="#i-sliders"/></svg></span><span class="st"><b>Звук записей</b><small>Камерный зал · для всех записей</small></span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                  </div>
+                </div>
+                <div class="grp">
+                  <div class="grp-t">Данные</div>
+                  <div class="grp-box">
+                    <div class="srow" data-note="7"><span class="si" style="background:var(--accent-soft);color:var(--accent)"><svg class="ic"><use href="#i-archive"/></svg></span><span class="st"><b>Сохранить копию</b><small class="tnum">последняя — 12 августа · с тех пор 9 новых записей · в приложении 3,4 ГБ</small></span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                    <div class="srow"><span class="si"><svg class="ic"><use href="#i-restore"/></svg></span><span class="st"><b>Восстановить из копии</b><small>заменит всё, что сейчас в приложении</small></span><svg class="ic chev"><use href="#i-chev-r"/></svg></div>
+                    <div class="srow"><span class="si"><svg class="ic"><use href="#i-chart"/></svg></span><span class="st"><b>Помогать улучшать приложение</b><small>выключено — ничего не отправляется</small></span><span class="switch"></span></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Эталон и допуск — прямо в строке, сегментами.</b> Меняются одним касанием и сразу действуют на Live; длинные пояснения остались в знакомстве, здесь — одна строка справа. <span class="tag">закон Хика</span></li>
+          <li data-n="2"><b>Четыре группы с подписями</b> — «Интонация», «Записи», «Данные», «Приложение». Длинный список делится на куски, которые читаются по заголовкам. <span class="tag">близость</span></li>
+          <li data-n="3"><b>Вес приложения — в подписи «Сохранить копию».</b> «Когда была копия» и «сколько сейчас» стоят рядом — решение «пора ли» принимается в одной строке. Иконка копии — единственная акцентная. <span class="tag">близость</span></li>
+          <li data-n="4"><b>Статистика — переключатель с объяснением в подписи</b>, действует сразу, без подтверждений и уговоров. Рядом — политика: что уходит, стоит рядом с тем, что остаётся. <span class="tag">честность</span></li>
+          <li data-n="5"><b>Редкое — внизу:</b> язык (системный экран) и «Пройти знакомство снова» с подсказкой, что выбор не потеряется. <span class="tag">частота</span></li>
+          <li data-n="6"><b>Пока копия идёт, строка сама становится прогрессом</b>, тап возвращает на экран копии; «Восстановить» приглушена и говорит почему. <span class="tag">видимость состояния</span></li>
+          <li data-n="7"><b>Давно без копии — те же серые слова, без бейджей и красного.</b> Приложение сообщает факт («9 новых записей»), а не пугает. <span class="tag">без давления</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ===================== СОХРАНИТЬ КОПИЮ ===================== -->
+    <article class="screen" id="s-save">
+      <h2 class="screen-title">4. Сохранить копию</h2>
+      <p class="screen-goal"><b>Главное действие:</b> «Сохранить в…» &nbsp;·&nbsp; <b>За 3 секунды:</b> «копия займёт 250 МБ, видео я не беру, файл ляжет туда, куда выберу».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            %%SB%%
+            <div class="state" data-state="Состав">
+              <div class="navbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="nav-title">Копия данных</span></div>
+              <div class="set-scroll">
+                <div class="weight" data-note="1">
+                  <div class="caption">Копия займёт</div>
+                  <div class="total tnum">≈ 252 МБ</div>
+                  <div class="wbar"><i class="w1" style="flex:12"></i><i class="w2" style="flex:180"></i><i class="w3" style="flex:60"></i><i class="off" style="flex:600"></i></div>
+                  <div class="caption">без видео — 3,2 ГБ оставлены</div>
+                </div>
+                <div class="grp-box" style="margin-top:16px" data-note="2">
+                  <div class="srow"><span class="dotc w1"></span><span class="st"><b>Разбор, занятия, прогресс, настройки</b><small class="tnum">12 МБ</small></span><span class="always">всегда</span></div>
+                  <div class="srow"><span class="dotc w2"></span><span class="st"><b>Фото нот</b><small class="tnum">48 страниц · 180 МБ</small></span><span class="switch on"></span></div>
+                  <div class="srow"><span class="dotc w3"></span><span class="st"><b>Звук записей</b><small class="tnum">64 записи · 60 МБ</small></span><span class="switch on"></span></div>
+                  <div class="srow"><span class="dotc" style="background:var(--surface-2);box-shadow:0 0 0 1.5px var(--border) inset"></span><span class="st"><b>Видео</b><small class="tnum">6 дублей · 3,2 ГБ</small></span><span class="switch"></span></div>
+                </div>
+                <div class="info" data-note="3"><svg class="ic ic-s"><use href="#i-info"/></svg><span>Видео-дубли после восстановления останутся <b>без картинки — только разбор</b>.</span></div>
+              </div>
+              <div class="foot">
+                <button class="btn-main" data-note="4">Сохранить в…</button>
+                <button class="btn-text" data-note="5"><svg class="ic ic-s" style="vertical-align:-3px;margin-right:6px"><use href="#i-send"/></svg>Отправить…</button>
+              </div>
+            </div>
+
+            <div class="state" data-state="Идёт">
+              <div class="navbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="nav-title">Копия данных</span></div>
+              <div class="set-scroll">
+                <div class="phase" style="margin-top:12px"><span class="done">Фото</span>·<span class="done">Звук</span>·<span class="on">Видео 4 из 6</span>·<span>Проверка</span></div>
+                <div class="bigpct tnum" data-note="6">56 %</div>
+                <div class="pbar"><i style="width:56%"></i></div>
+                <div class="caption tnum">1,9 из 3,4 ГБ · осталось около 3 мин</div>
+                <div class="info" style="margin-top:22px"><svg class="ic ic-s"><use href="#i-check"/></svg><span><b>Можно свернуть приложение</b> — копия дойдёт сама, прогресс будет в уведомлении.</span></div>
+                <div class="info"><svg class="ic ic-s"><use href="#i-alert"/></svg><span>Не выключайте телефон и не вынимайте флешку.</span></div>
+              </div>
+              <div class="foot"><button class="btn-line" data-note="7">Отменить</button></div>
+            </div>
+
+            <div class="state" data-state="Готово">
+              <div class="navbar"><button class="icon-btn"><svg class="ic"><use href="#i-x"/></svg></button><span class="nav-title"></span></div>
+              <div class="set-scroll">
+                <div class="done-ic"><svg class="ic"><use href="#i-check"/></svg></div>
+                <h1 class="h-big">Копия сохранена</h1>
+                <div class="filecard"><span class="fi"><svg class="ic"><use href="#i-file"/></svg></span><span><b>Интонация · копия · 27 сентября 2026.zip</b><small class="tnum">3,4 ГБ · Загрузки</small></span></div>
+                <div class="chips-w"><span>154 ч занятий</span><span>64 записи</span><span>6 видео</span><span>12 произведений</span><span>48 страниц нот</span></div>
+                <div class="info" style="margin-top:18px" data-note="8"><svg class="ic ic-s"><use href="#i-info"/></svg><span><b>Скопируйте файл с телефона</b> — на компьютер или в облако. Если телефон потеряется, копия останется.</span></div>
+              </div>
+              <div class="foot"><button class="btn-main">Готово</button></div>
+            </div>
+
+            <div class="state" data-state="Не получилось">
+              <div class="navbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="nav-title">Копия данных</span></div>
+              <div class="set-scroll">
+                <div class="done-ic" style="background:color-mix(in srgb,#FFB199 16%,transparent);color:#FFB199"><svg class="ic"><use href="#i-alert"/></svg></div>
+                <h1 class="h-big">Не хватило места там, куда сохраняли</h1>
+                <p class="lead">Копия займёт 3,4 ГБ, а на флешке свободно 2,1 ГБ. Недописанный файл удалён — ничего не испорчено.</p>
+                <div class="info"><svg class="ic ic-s"><use href="#i-info"/></svg><span>Можно выбрать другое место или сохранить <b>без видео — 252 МБ</b>.</span></div>
+              </div>
+              <div class="foot"><button class="btn-main">Ещё раз</button><button class="btn-text">Закрыть</button></div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Итог — первым и крупно, под ним полоса долей.</b> Выключенное видео не исчезает из полосы, а сереет: видно, что осталось за бортом и сколько оно весит. <span class="tag">видимость последствий</span></li>
+          <li data-n="2"><b>Цветная точка у каждой строки совпадает с долей в полосе.</b> Строку и её кусок веса связывает цвет — ряд от светлого к тёмному, не цвета зон. <span class="tag">сходство</span></li>
+          <li data-n="3"><b>Последствие — одной строкой и только когда что-то выключено.</b> «Без картинки — только разбор» говорит, что именно потеряется, словами человека. <span class="tag">предотвращение ошибок</span></li>
+          <li data-n="4"><b>«Сохранить в…» с многоточием</b> — сразу понятно, что откроется выбор места; кнопка внизу, в зоне пальца. <span class="tag">закон Якоба</span></li>
+          <li data-n="5"><b>«Отправить…» — тихой второй кнопкой</b> и только у небольшой копии. У большой вместо неё — объяснение словами (3.20). <span class="tag">иерархия</span></li>
+          <li data-n="6"><b>Прогресс — на том же экране:</b> фазы строкой, крупный процент, вес и оставшееся время. Ничего не мигает диалогами. <span class="tag">видимость состояния</span></li>
+          <li data-n="7"><b>«Отменить» — контурная, без акцента</b>, с подтверждением «Недописанный файл будет удалён». Случайно не нажмёшь, но и не спрятана. <span class="tag">защита от ошибок</span></li>
+          <li data-n="8"><b>Совет после копии — один, главный:</b> увезти файл с телефона. Иначе копия умрёт вместе с телефоном. <span class="tag">следующий шаг</span></li>
+        </ol>
+      </div>
+    </article>
+
+    <!-- ===================== ВОССТАНОВИТЬ ===================== -->
+    <article class="screen" id="s-restore">
+      <h2 class="screen-title">5. Восстановить из копии</h2>
+      <p class="screen-goal"><b>Главное действие:</b> «Восстановить» &nbsp;·&nbsp; <b>За 3 секунды:</b> «в копии — 154 часа и 64 записи; сейчас здесь 47 часов, и они пропадут».</p>
+      <div class="screen-body">
+        <div class="phone-col">
+          <div class="phone"><div class="phone-screen">
+            %%SB%%
+            <div class="state" data-state="Паспорт">
+              <div class="navbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="nav-title">Восстановить</span></div>
+              <div class="set-scroll">
+                <div class="pass" data-note="1">
+                  <div class="ph"><b>Копия от 12 сентября</b><span class="tnum">3,4 ГБ</span></div>
+                  <div class="caption">Pixel 10a · версия 1.4</div>
+                  <div class="chips-w"><span>154 ч занятий</span><span>уровень 9</span><span>64 записи</span><span>12 произведений</span><span class="no">без видео</span></div>
+                </div>
+                <div class="vs" data-note="2"><svg class="ic ic-s"><use href="#i-arrow-r"/></svg>&nbsp;заменит</div>
+                <div class="pass" style="background:transparent;border:1.5px dashed var(--border)">
+                  <div class="ph"><b style="color:var(--text-2)">Сейчас в приложении</b><span class="tnum">410 МБ</span></div>
+                  <div class="chips-w"><span>47 ч занятий</span><span>уровень 5</span><span>5 записей</span><span>5 произведений</span></div>
+                </div>
+                <div class="info warn" data-note="3"><svg class="ic ic-s"><use href="#i-alert"/></svg><span><b>Всё, что сейчас в приложении, будет заменено данными из копии.</b> Это нельзя отменить.</span></div>
+              </div>
+              <div class="foot" style="gap:8px">
+                <button class="btn-line" data-note="4">Сначала сохранить текущие данные</button>
+                <button class="btn-danger" data-note="5">Восстановить</button>
+              </div>
+            </div>
+
+            <div class="state" data-state="Подтверждение">
+              <div class="navbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="nav-title">Восстановить</span></div>
+              <div class="set-scroll">
+                <div class="pass"><div class="ph"><b>Копия от 12 сентября</b><span class="tnum">3,4 ГБ</span></div><div class="caption">Pixel 10a · версия 1.4</div>
+                  <div class="chips-w"><span>154 ч занятий</span><span>уровень 9</span><span>64 записи</span><span>12 произведений</span><span class="no">без видео</span></div></div>
+              </div>
+              <div class="foot" style="gap:8px"><button class="btn-line">Сначала сохранить текущие данные</button><button class="btn-danger">Восстановить</button></div>
+              <div class="scrim"></div>
+              <div class="dialog" data-note="6">
+                <h3>Заменить данные?</h3>
+                <p>47 ч занятий, 5 записей и 5 произведений, которые сейчас в приложении, пропадут. Вернуть их будет нельзя.</p>
+                <div class="da"><button>Отмена</button><button class="dz">Заменить</button></div>
+              </div>
+            </div>
+
+            <div class="state" data-state="Идёт">
+              <div class="navbar"><span style="width:12px"></span><span class="nav-title">Восстанавливаем</span></div>
+              <div class="set-scroll">
+                <div class="phase" style="margin-top:12px"><span class="on">Восстанавливаем</span>·<span>Почти готово</span></div>
+                <div class="bigpct tnum">38 %</div>
+                <div class="pbar"><i style="width:38%"></i></div>
+                <div class="caption tnum">1,3 из 3,4 ГБ · осталось около 4 мин</div>
+                <div class="info" style="margin-top:22px" data-note="7"><svg class="ic ic-s"><use href="#i-check"/></svg><span><b>Ваши данные ещё на месте</b> — восстановление можно остановить.</span></div>
+              </div>
+              <div class="foot"><button class="btn-line">Остановить</button></div>
+            </div>
+
+            <div class="state" data-state="Не хватает места">
+              <div class="navbar"><button class="icon-btn"><svg class="ic"><use href="#i-chev-l"/></svg></button><span class="nav-title">Восстановить</span></div>
+              <div class="set-scroll">
+                <div class="done-ic" style="background:color-mix(in srgb,#FFB199 16%,transparent);color:#FFB199"><svg class="ic"><use href="#i-alert"/></svg></div>
+                <h1 class="h-big">Не хватает 1,8 ГБ, чтобы восстановить безопасно</h1>
+                <p class="lead">Безопасный путь сначала распаковывает копию рядом с вашими данными и только потом меняет одно на другое.</p>
+                <div class="info"><svg class="ic ic-s"><use href="#i-info"/></svg><span>Освободите место на телефоне и откройте копию снова — или замените данные сразу, без страховки.</span></div>
+              </div>
+              <div class="foot"><button class="btn-main">Понятно</button><button class="btn-text" style="color:#FFB199" data-note="8">Удалить текущие данные и восстановить</button></div>
+            </div>
+            <div class="home-indicator"></div>
+          </div></div>
+        </div>
+        <ol class="notes">
+          <li data-n="1"><b>Паспорт копии — одной карточкой с чипами</b>: когда, откуда, что внутри и чего нет («без видео» пунктиром). Файл узнаётся по содержимому, а не по имени. <span class="tag">узнавание</span></li>
+          <li data-n="2"><b>«Копия → заменит → сейчас»:</b> две карточки одинаковой формы и слово между ними. Что приедет и что пропадёт — сравнивается глазами. <span class="tag">сравнение</span></li>
+          <li data-n="3"><b>Предупреждение — последним перед кнопками</b>, тёплым цветом и словами «нельзя отменить». Его читают в момент решения. <span class="tag">эффект края</span></li>
+          <li data-n="4"><b>Страховка «Сначала сохранить текущие данные» — выше опасной кнопки.</b> Путь без потерь первым попадается на глаза. <span class="tag">защита от ошибок</span></li>
+          <li data-n="5"><b>«Восстановить» — не акцентом, а своим предупреждающим цветом.</b> Акцент приложения значит «действуй смело», здесь он был бы неправдой. <span class="tag">сигнальный цвет</span></li>
+          <li data-n="6"><b>Диалог называет, что именно пропадёт:</b> «47 ч занятий, 5 записей…», а «Заменить» — в цвете опасной кнопки. Подтверждение нельзя пролистать не читая. <span class="tag">предотвращение ошибок</span></li>
+          <li data-n="7"><b>Прогресс говорит, где данные</b>: «ещё на месте — можно остановить». На последней фазе строка сменится на «это уже нельзя остановить». <span class="tag">видимость состояния</span></li>
+          <li data-n="8"><b>Опасный путь без страховки — текстом, не кнопкой</b>, и после «Понятно». Безопасный выход крупнее и ближе к пальцу. <span class="tag">иерархия</span></li>
+        </ol>
+      </div>
+    </article>
+  </main>
+
+  <section class="block">
+    <h2>Что вынесено и куда</h2>
+    <table class="moved">
+      <thead><tr><th>Элемент</th><th>Куда</th><th>Почему</th></tr></thead>
+      <tbody>
+        <tr><td>Четыре точки знакомства + три полоски настройки + «Настройка · 2 из 3»</td><td>Одна полоса из семи отрезков с разрывом и подписью «Знакомство / Настройка · N из 7»</td><td>Один путь — один индикатор; «сколько осталось» видно сразу</td></tr>
+        <tr><td>Абзацы-пояснения эталона и допуска в «Настройках»</td><td>Одна строка справа от названия; подробные слова — в знакомстве (экраны 6–7)</td><td>В «Настройки» приходят, уже зная, что это; первый экран освобождается для «Данных»</td></tr>
+        <tr><td>Подписи карточек допуска («широкая зелёная зона», «видно вибрато», «строго»)</td><td>Остались в онбординге; в «Настройках» — только «Новичок ±12» в сегменте</td><td>Решение уже принято, нужен быстрый переключатель, а не выбор с нуля</td></tr>
+        <tr><td>Строка «В приложении сейчас: 3,4 ГБ»</td><td>Подпись строки «Сохранить копию»</td><td>Вес нужен в момент решения о копии, отдельной строкой он ничего не делал</td></tr>
+        <tr><td>«Пройти онбординг снова»</td><td>Группа «Приложение», последней строкой; название — «Пройти знакомство снова»</td><td>Редкое действие; слово «знакомство» понятнее, чем «онбординг»</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section class="block">
+    <h2>Проверки</h2>
+    <ul>
+      <li><b>Контраст:</b> %%CONTRAST%%</li>
+      <li><b>Касания:</b> главные кнопки 58 dp, текстовые 48 dp, «Пропустить» 48 dp, кнопки эталона 64 dp, сегменты в «Настройках» 44–52 dp, строки списка ≥ 60 dp, переключатель внутри строки 60 dp.</li>
+      <li><b>Цвет не единственный признак:</b> выбранный вариант — заливка + рамка + точка радио; выключенная доля копии — серая и без точки; опасное действие — цвет + слово «нельзя отменить».</li>
+      <li><b>Движение:</b> как в 3.33 — по одному движению на страницу знакомства (звёзды, цикл цвета, шаги героя, копия в папку); в настройке, «Настройках» и копии движения нет, кроме полосы прогресса.</li>
+      <li><b>Маленький экран 360×640:</b> картинка знакомства сжимается до 150 dp и ниже прячется (как в 3.33); кнопка остаётся на месте, текст прокручивается.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Расходится со спекой</h2>
+    <ul>
+      <li><b>3.33</b> — индикатор из двух частей (точки + полоски) заменён одной полосой из семи; на шаге «Микрофон» появилась подсказка «Любой ответ ведёт дальше — разрешить можно и потом, на Live»; на шаге эталона — «Не знаете — оставьте 440» (поведение не меняется, только тексты — нужны переводы на девять языков).</li>
+      <li><b>3.7</b> — в карточках допуска возвращается полоска ширины зоны (в 3.33 миниатюру шкалы убрали в пользу картинки).</li>
+      <li><b>3.8</b> — «Настройки» разбиты на группы «Интонация · Записи · Данные · Приложение»; эталон и допуск — компактными сегментами без абзацев; «Пройти онбординг снова» переименовано.</li>
+      <li><b>3.20</b> — строка «В приложении сейчас» слита с подписью «Сохранить копию»; экран восстановления показывает «копия → заменит → сейчас» двумя одинаковыми карточками и называет в диалоге, что пропадёт; кнопка «Восстановить» — предупреждающего цвета.</li>
+      <li><b>3.34</b> — без изменений по сути: строка статистики и политика стоят в «Данных», как в спеке.</li>
+    </ul>
+  </section>
+
+  <section class="block">
+    <h2>Идеи на потом</h2>
+    <ul>
+      <li>«Не сейчас» на шаге «Микрофон» — пройти дальше, не вызывая системный диалог (сейчас любой ответ идёт через диалог).</li>
+    </ul>
+  </section>
+</div>
