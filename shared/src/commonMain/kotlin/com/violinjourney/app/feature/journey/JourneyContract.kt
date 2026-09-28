@@ -83,10 +83,21 @@ data class JourneyWindow(
     val balance: Long,
     val missing: Long,
     val canDepart: Boolean,
+    /**
+     * The takts are enough for the next city (`JourneyRules.enough`) — before the intro too: the call in accent and the accent pill,
+     * no bar. «Дом», where a tap on the window leads, says the same.
+     */
+    val enough: Boolean,
     /** Takts of the practice saved a moment ago: a pill on the card for a few seconds. Null otherwise. */
     val justEarned: Int? = null,
     /** Where the player is (spec 3.27): the card shows the room at home and the city on the road. */
     val here: Venue = Venue.Home,
+    /**
+     * No takt has ever been earned (spec 3.36.2, the first run): the room under glass, «Ваша комната», «Первые такты — за первое
+     * занятие». What was earned, not the balance — after spending the balance is zero too; and a day's time set by hand earns
+     * nothing (3.23), so editing it never changes this.
+     */
+    val neverEarned: Boolean = false,
 )
 
 /** One extra of a stop as its screen offers it. */

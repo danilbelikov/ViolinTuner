@@ -24,15 +24,22 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.Placeable
+import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.ui.components.AppButton
 import com.violinjourney.app.core.ui.components.AppButtonStyle
@@ -43,6 +50,8 @@ import com.violinjourney.app.core.ui.components.LocalDockInset
 import com.violinjourney.app.core.ui.components.currentDockMetrics
 import com.violinjourney.app.core.ui.components.rememberSmallFileImage
 import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.core.ui.motion.LocalReduceMotion
+import com.violinjourney.app.feature.journey.WindowLook
 import com.violinjourney.app.feature.practice.components.CalendarMetrics
 import com.violinjourney.app.feature.practice.components.DaySheet
 import com.violinjourney.app.feature.practice.components.EditTimeSheet
@@ -62,8 +71,10 @@ import com.violinjourney.app.feature.practice.components.TodayMetrics
 import com.violinjourney.app.feature.practice.components.TrophiesSheet
 import com.violinjourney.app.feature.practice.components.WeekCard
 import com.violinjourney.app.feature.practice.components.rememberShownNumbers
+import com.violinjourney.app.feature.practice.components.settled
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.practice_stop
+import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
 
@@ -97,8 +108,9 @@ fun PracticeScreen(
     modifier: Modifier = Modifier,
     // asked once: a new zone on every recomposition is a new object each time, and on iOS a read of its file
     zone: TimeZone = remember { TimeZone.currentSystemDefault() },
-    // The window into the journey (spec 3.23) comes as a slot: it lives on its own flow, not in PracticeState.
-    journeyCard: @Composable (compact: Boolean) -> Unit = {},
+    // The window into the journey (spec 3.23) comes as a slot: it lives on its own flow, not in PracticeState. The screen says how it
+    // stands (3.36.2): the picture as high as the first screen leaves room for, a line, or beside its line in landscape.
+    journeyCard: @Composable (look: WindowLook) -> Unit = {},
     // The clock of the running practice lives on its own flow too, and is read only by the parts that show the time: a tick
     // redraws them, not the screen. Null — not read yet.
     timer: () -> PracticeTimer? = { null },
@@ -113,9 +125,11 @@ fun PracticeScreen(
             .background(MaterialTheme.colorScheme.surface),
     ) {
         if (maxWidth > maxHeight) {
-            LandscapeLayout(state, onIntent, journeyCard, flameSways, timer, photo)
+            // the right column: what is left of the width after the left one and the field at the end
+            val windowLook = WindowLook.Beside(WindowFit.besideWidth(maxWidth - LandscapeLeftColumn - ScreenPadding))
+            LandscapeLayout(state, onIntent, window = { journeyCard(windowLook) }, flameSways, timer, photo)
         } else {
-            PortraitLayout(state, onIntent, journeyCard, flameSways, timer, photo)
+            PortraitLayout(state, onIntent, journeyCard, flameSways, timer, photo, height = maxHeight)
         }
     }
     // Each sheet is always there and shows itself when it has something: one closed by its own button slides away as a
@@ -137,36 +151,147 @@ fun PracticeScreen(
     GiftSheet(state.gift, onIntent, slideAway = sheet == null)
 }
 
+/**
+ * Portrait: the path row, «Сегодня» (or the running practice), the window of the home and the month scroll over the bottom zone.
+ * [height] — of the whole screen body: less the zone, it is the scroll window the picture of the window is fitted to.
+ */
 @Composable
 private fun PortraitLayout(
     state: PracticeState,
     onIntent: (PracticeIntent) -> Unit,
-    journeyCard: @Composable (Boolean) -> Unit,
+    journeyCard: @Composable (WindowLook) -> Unit,
     flameSways: MutableState<Boolean>,
     timer: () -> PracticeTimer?,
     photo: ImageBitmap?,
+    height: Dp,
 ) {
     val metrics = Metrics.Portrait
     val numbers = rememberShownNumbers(state)
+    // «Сегодня» as it stands once its figures have rolled: the window is fitted to where they go, not to each frame of the roll — the
+    // same content while they roll, so the still twin is neither recomposed nor remeasured to another height meanwhile
+    val settled = numbers.settled()
+    val today = state.today
+    val floorMinutes = state.weekFloorMinutes
+    val still = remember(settled, today, floorMinutes) {
+        @Composable { StillToday(settled, today, floorMinutes, metrics.today) }
+    }
     Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
         AppDock(
             dock = { MainAction(state, onIntent, flameSways) },
             modifier = Modifier.widthIn(max = MaxContentWidth).fillMaxHeight(),
             metrics = currentDockMetrics().copy(side = DockSide),
         ) {
+            val dockInset = LocalDockInset.current
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .verticalScroll(rememberScrollState())
-                    .padding(start = ScreenPadding, top = ScreenPadding, end = ScreenPadding, bottom = LocalDockInset.current + ScreenPadding),
-                verticalArrangement = Arrangement.spacedBy(BlockGap),
+                    .padding(start = ScreenPadding, top = ScreenPadding, end = ScreenPadding, bottom = dockInset + ScreenPadding),
             ) {
-                Path(state, onIntent, photo)
-                if (!state.loading) {
-                    TodayBlock(state, numbers, metrics.today, flameSways, timer, onIntent, plainWeek = false)
-                    journeyCard(false)
-                    Calendar(state, numbers, metrics.calendar, onIntent)
-                }
+                PortraitBody(
+                    viewport = height - dockInset,
+                    loading = state.loading,
+                    path = { Path(state, onIntent, photo) },
+                    today = { TodayBlock(state, numbers, metrics.today, flameSways, timer, onIntent, plainWeek = false) },
+                    still = still,
+                    window = journeyCard,
+                    calendar = { Calendar(state, numbers, metrics.calendar, onIntent) },
+                )
+            }
+        }
+    }
+}
+
+private enum class BodySlot { Path, Today, Still, Under, Window, Calendar }
+
+/**
+ * The blocks of the portrait one under another, 12 apart, as a column would put them — but the window of the home learns in the
+ * same pass how it stands (spec 3.36.2, «Маленький экран и крупный шрифт»): its picture takes what is left of the first screen
+ * ([viewport]) under the top field, the path row and «Сегодня» and over what stands under the picture, 148 at most, and with less
+ * than 72 left the window is a line ([WindowFit]). «Сегодня» is measured as the layout without a running practice has it —
+ * [still], never placed — so beginning or ending a practice does not change the window: while one runs its window keeps its height
+ * below the fold, and the card of the running practice growing and shrinking in its fade is never measured for it. What stands
+ * under the picture — the line, taller when its call takes more lines, and the bar while the takts are short — is the window's own
+ * [WindowLook.UnderPicture], measured and never placed, so the whole window fits the first screen. All of it is measured before the
+ * window is composed, so the first frame does not show a picture of 148 to take it back. While the data is read — only the path
+ * row, keeping its place.
+ */
+@Composable
+private fun PortraitBody(
+    viewport: Dp,
+    loading: Boolean,
+    path: @Composable () -> Unit,
+    today: @Composable () -> Unit,
+    still: @Composable () -> Unit,
+    window: @Composable (WindowLook) -> Unit,
+    calendar: @Composable () -> Unit,
+) {
+    val card = rememberUpdatedState(window)
+    val windowContent = remember { LookedWindow(card) }
+    // what stands under the picture, alone: measured, never placed, silent — the card itself, so it is measured as it is drawn
+    val underContent: @Composable () -> Unit = remember {
+        @Composable { Box(Modifier.clearAndSetSemantics { }) { card.value(WindowLook.UnderPicture) } }
+    }
+    SubcomposeLayout(Modifier.fillMaxWidth()) { constraints ->
+        val width = constraints.maxWidth
+        val child = Constraints(maxWidth = width)
+        val gap = BlockGap.roundToPx()
+        // one under another, 12 apart, as a column puts them; a slot that shows nothing (the window before the road is read)
+        // takes no place and no gap
+        val placed = mutableListOf<Placeable>()
+        fun stacked(blocks: List<Placeable>): Int = blocks.sumOf { it.height } + gap * blocks.size
+        val pathBlocks = subcompose(BodySlot.Path, path).map { it.measure(child) }
+        placed += pathBlocks
+        if (!loading) {
+            val stillBlocks = subcompose(BodySlot.Still, still).map { it.measure(child) }
+            val above = (ScreenPadding.roundToPx() + stacked(pathBlocks) + stacked(stillBlocks)).toDp()
+            val under = subcompose(BodySlot.Under, underContent).sumOf { it.measure(child).height }.toDp()
+            val look = WindowFit.picture(viewport, above, under)?.let { WindowLook.Picture(it) } ?: WindowLook.Line
+            placed += subcompose(BodySlot.Today, today).map { it.measure(child) }
+            placed += subcompose(BodySlot.Window, windowContent.of(look)).map { it.measure(child) }
+            placed += subcompose(BodySlot.Calendar, calendar).map { it.measure(child) }
+        }
+        val total = (stacked(placed) - gap).coerceAtLeast(0)
+        layout(width, total) {
+            var y = 0
+            placed.forEach { block ->
+                block.place(0, y)
+                y += block.height + gap
+            }
+        }
+    }
+}
+
+/**
+ * The window's slot content for one look at a time: the same lambda while the look stays, so measuring again composes nothing anew;
+ * [card] is read inside it, so a new card is recomposed in place.
+ */
+private class LookedWindow(private val card: State<@Composable (WindowLook) -> Unit>) {
+    private var look: WindowLook? = null
+    private var content: @Composable () -> Unit = {}
+
+    fun of(look: WindowLook): @Composable () -> Unit {
+        if (look != this.look) {
+            this.look = look
+            content = { card.value(look) }
+        }
+        return content
+    }
+}
+
+/**
+ * «Сегодня» as the layout without a running practice shows it — the first run's card or the card of today — composed only to be
+ * measured: still (no flame, no motion to wake a frame), silent, and telling nothing to the start button. [numbers] are the
+ * settled ones (`ShownNumbers.settled`): the figures it rolls to, so its height does not follow the roll of the living «Сегодня».
+ */
+@Composable
+private fun StillToday(numbers: ShownNumbers, today: LocalDate, floorMinutes: Int, metrics: TodayMetrics) {
+    CompositionLocalProvider(LocalReduceMotion provides true) {
+        Box(Modifier.fillMaxWidth().clearAndSetSemantics { }) {
+            if (numbers.hasHistory) {
+                TodayCard(numbers, today, floorMinutes, metrics, onSway = {})
+            } else {
+                FirstWeekCard(numbers, today, floorMinutes, metrics)
             }
         }
     }
@@ -176,13 +301,13 @@ private fun PortraitLayout(
  * Landscape (practice-extra.html, screen 1): the columns stay. The left one, 280 wide — «Сегодня» compact, or the running
  * practice and the bars of the week under it without a card — scrolls over the bottom zone with «Начать» / «Закончить» at the
  * bottom of the column, its fade short (over the button there are 236 dp on 892 × 412). The right one scrolls by itself: the path
- * row, the window of the home, the calendar.
+ * row, the window of the home — a row of 96 with the picture on its left ([window]) — the calendar.
  */
 @Composable
 private fun LandscapeLayout(
     state: PracticeState,
     onIntent: (PracticeIntent) -> Unit,
-    journeyCard: @Composable (Boolean) -> Unit,
+    window: @Composable () -> Unit,
     flameSways: MutableState<Boolean>,
     timer: () -> PracticeTimer?,
     photo: ImageBitmap?,
@@ -216,7 +341,7 @@ private fun LandscapeLayout(
         ) {
             Path(state, onIntent, photo)
             if (!state.loading) {
-                journeyCard(true)
+                window()
                 Calendar(state, numbers, metrics.calendar, onIntent)
             }
         }

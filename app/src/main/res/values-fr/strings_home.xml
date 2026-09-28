@@ -102,6 +102,8 @@
     <string name="home_fullscreen_hint">Pincez pour approcher · faites glisser pour regarder autour</string>
     <string name="home_card_title">Maison · %1$s</string>
     <string name="home_card_away">en voyage · %1$s · étape %2$d sur %3$d</string>
+    <string name="home_card_home">À la maison</string>
+    <string name="home_card_first">Votre chambre</string>
     <string name="journey_enter_home">Rentrer</string>
     <string name="journey_enter_home_at">vous êtes chez vous</string>
     <string name="splash_away">en route</string>

@@ -102,6 +102,8 @@
     <string name="home_fullscreen_hint">Щипок — ближе · потяните — осмотреться</string>
     <string name="home_card_title">Дом · %1$s</string>
     <string name="home_card_away">в пути · %1$s · остановка %2$d из %3$d</string>
+    <string name="home_card_home">Дома</string>
+    <string name="home_card_first">Ваша комната</string>
     <string name="journey_enter_home">Войти в дом</string>
     <string name="journey_enter_home_at">вы дома</string>
     <string name="splash_away">в дорогу</string>

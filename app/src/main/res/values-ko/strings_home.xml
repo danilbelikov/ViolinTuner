@@ -102,6 +102,8 @@
     <string name="home_fullscreen_hint">두 손가락으로 확대 · 끌어서 둘러보기</string>
     <string name="home_card_title">집 · %1$s</string>
     <string name="home_card_away">여행 중 · %1$s · 정류지 %2$d / %3$d</string>
+    <string name="home_card_home">집</string>
+    <string name="home_card_first">나의 방</string>
     <string name="journey_enter_home">집으로</string>
     <string name="journey_enter_home_at">집에 있어요</string>
     <string name="splash_away">길을 떠나요</string>

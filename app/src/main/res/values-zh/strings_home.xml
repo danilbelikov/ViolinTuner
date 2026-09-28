@@ -102,6 +102,8 @@
     <string name="home_fullscreen_hint">双指张开——拉近 · 拖动——环顾四周</string>
     <string name="home_card_title">家 · %1$s</string>
     <string name="home_card_away">在路上 · %1$s · 第 %2$d 站，共 %3$d 站</string>
+    <string name="home_card_home">在家</string>
+    <string name="home_card_first">你的房间</string>
     <string name="journey_enter_home">回家</string>
     <string name="journey_enter_home_at">你在家里</string>
     <string name="splash_away">出发</string>

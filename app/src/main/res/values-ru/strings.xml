@@ -645,9 +645,10 @@
     <string name="journey_have">%1$s / %2$s</string>
     <string name="journey_depart">В путь · %1$s</string>
     <string name="journey_missing">не хватает %1$s</string>
-    <string name="journey_enough">хватает до %1$s — в путь</string>
+    <string name="journey_enough">Хватает до %1$s\u00A0— в\u00A0путь</string>
+    <string name="journey_first_takts">Первые такты — за первое занятие</string>
     <string name="journey_soon">Мировое турне пройдено. Такты копятся и ждут новых городов — они приходят обновлениями.</string>
-    <string name="journey_soon_short">скоро новые города</string>
+    <string name="journey_soon_short">Скоро новые города</string>
     <string name="journey_passed">Пройдено %1$d из %2$d</string>
     <string name="journey_all_cards">Все открытки</string>
     <string name="journey_no_cards">Первая открытка появится в Кремоне</string>

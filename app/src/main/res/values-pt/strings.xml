@@ -645,9 +645,10 @@
     <string name="journey_have">%1$s / %2$s</string>
     <string name="journey_depart">Pé na estrada · %1$s</string>
     <string name="journey_missing">faltam %1$s</string>
-    <string name="journey_enough">dá para ir até %1$s — pé na estrada</string>
+    <string name="journey_enough">Dá para ir até %1$s\u00A0— pé\u00A0na\u00A0estrada</string>
+    <string name="journey_first_takts">Os primeiros compassos vêm com a primeira prática</string>
     <string name="journey_soon">A turnê mundial está completa. Os compassos se acumulam à espera de novas cidades — elas chegam com as atualizações.</string>
-    <string name="journey_soon_short">novas cidades em breve</string>
+    <string name="journey_soon_short">Novas cidades em breve</string>
     <string name="journey_passed">Percorrido: %1$d de %2$d</string>
     <string name="journey_all_cards">Todos os cartões-postais</string>
     <string name="journey_no_cards">O primeiro cartão-postal aparece em Cremona</string>

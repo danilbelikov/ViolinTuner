@@ -646,6 +646,7 @@
     <string name="journey_depart">出発 · %1$s</string>
     <string name="journey_missing">あと %1$s 足りません</string>
     <string name="journey_enough">%1$sまで行けます — 出発</string>
+    <string name="journey_first_takts">最初の小節は最初の練習でもらえます</string>
     <string name="journey_soon">ワールドツアーを巡り終えました。小節は貯まり続け、新しい街を待っています。街はアップデートで届きます。</string>
     <string name="journey_soon_short">新しい街はもうすぐ</string>
     <string name="journey_passed">%2$d のうち %1$d を通過</string>

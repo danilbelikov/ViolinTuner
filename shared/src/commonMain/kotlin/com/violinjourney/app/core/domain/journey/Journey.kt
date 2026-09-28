@@ -146,7 +146,13 @@ object JourneyRules {
     /** How much is missing for the next leg; zero when the player can set off. */
     fun missing(progress: JourneyProgress): Long = next(progress)?.let { (it.price - progress.balance).coerceAtLeast(0) } ?: 0
 
-    fun canDepart(progress: JourneyProgress): Boolean = progress.started && next(progress)?.let { progress.balance >= it.price } == true
+    /**
+     * The takts are enough for the next city, the case packed or not: what the words say — the window of «Занятия» and «В дорогу»
+     * of «Дом» (spec 3.36.2). Setting off waits for the intro besides ([canDepart]); never at the end of what is drawn.
+     */
+    fun enough(progress: JourneyProgress): Boolean = next(progress) != null && missing(progress) == 0L
+
+    fun canDepart(progress: JourneyProgress): Boolean = progress.started && enough(progress)
 
     fun priceOf(extra: JourneyExtra, config: JourneyConfig): Int = when (extra) {
         JourneyExtra.SECOND_TIME -> config.secondTimePrice

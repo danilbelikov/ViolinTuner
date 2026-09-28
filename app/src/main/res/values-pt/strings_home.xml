@@ -102,6 +102,8 @@
     <string name="home_fullscreen_hint">Pinça — aproximar · arraste — olhar em volta</string>
     <string name="home_card_title">Casa · %1$s</string>
     <string name="home_card_away">em viagem · %1$s · parada %2$d de %3$d</string>
+    <string name="home_card_home">Em casa</string>
+    <string name="home_card_first">Seu quarto</string>
     <string name="journey_enter_home">Entrar em casa</string>
     <string name="journey_enter_home_at">você está em casa</string>
     <string name="splash_away">pé na estrada</string>

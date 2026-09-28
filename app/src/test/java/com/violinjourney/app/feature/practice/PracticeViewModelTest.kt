@@ -511,6 +511,44 @@ class PracticeViewModelTest {
     }
 
     @Test
+    fun `the time of a day set by hand earns no takts - the window stays the first run`() = runTest {
+        journey.start(clock.millis())
+        val (viewModel, _) = viewModel()
+        backgroundScope.launch { viewModel.journeyWindow.collect {} }
+        runCurrent()
+        assertTrue(viewModel.journeyWindow.value!!.neverEarned)
+
+        viewModel.onIntent(PracticeIntent.DaySelected(LocalDate(2026, 9, 16)))
+        viewModel.onIntent(PracticeIntent.EditTimeClicked)
+        runCurrent()
+        viewModel.onIntent(PracticeIntent.EditTimeAdded(60))
+        viewModel.onIntent(PracticeIntent.EditTimeSaved)
+        runCurrent()
+        assertEquals(60 * MS_PER_MINUTE, repository.replacedDays.single().second)
+        assertTrue(viewModel.state.value.hasHistory)
+        // spec 3.36.2: the time of a day is not takts (3.23) — «Ваша комната» stays until a practice earns the first ones
+        val window = viewModel.journeyWindow.value!!
+        assertTrue(window.neverEarned)
+        assertEquals(0L, window.balance)
+        assertTrue(journey.earnings.isEmpty())
+    }
+
+    @Test
+    fun `the first practice saved ends the first run of the window`() = runTest {
+        val (viewModel, _) = viewModel()
+        backgroundScope.launch { viewModel.journeyWindow.collect {} }
+        runCurrent()
+        assertTrue(viewModel.journeyWindow.value!!.neverEarned)
+        viewModel.onIntent(PracticeIntent.StartClicked)
+        pass(20 * MS_PER_MINUTE)
+        viewModel.onIntent(PracticeIntent.StopClicked)
+        runCurrent()
+        viewModel.onIntent(PracticeIntent.SummarySaved)
+        runCurrent()
+        assertFalse(viewModel.journeyWindow.value!!.neverEarned)
+    }
+
+    @Test
     fun `clearing a day to zero and cancelling the sheet`() = runTest {
         repository.add(PracticeEntry(today, 1_000, 50 * MS_PER_MINUTE, manual = false))
         val (viewModel, _) = viewModel()

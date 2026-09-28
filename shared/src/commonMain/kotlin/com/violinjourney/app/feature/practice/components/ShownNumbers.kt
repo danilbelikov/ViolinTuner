@@ -90,6 +90,13 @@ internal fun rememberShownNumbers(state: PracticeState): ShownNumbers {
 }
 
 /**
+ * The numbers as they stand once rolled — every figure at what it rolls to: equal to itself on every frame of a roll, so whatever
+ * is made of it (the still «Сегодня» the window of the home is fitted to) neither changes nor recomposes while the figures roll.
+ */
+internal fun ShownNumbers.settled(): ShownNumbers =
+    copy(rolledTodayMs = todayMs, rolledWeekMs = weekMs, rolledStreakDays = streakDays, rolledMonthMs = monthMs)
+
+/**
  * What makes the time of the month another number, not the same one grown: another month of the calendar, the first data, and
  * whether the month has any day at all — its line appears with the first one at its size, never rolled up from «0 мин».
  */

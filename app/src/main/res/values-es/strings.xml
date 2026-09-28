@@ -645,9 +645,10 @@
     <string name="journey_have">%1$s / %2$s</string>
     <string name="journey_depart">En marcha · %1$s</string>
     <string name="journey_missing">faltan %1$s</string>
-    <string name="journey_enough">alcanza hasta %1$s — en marcha</string>
+    <string name="journey_enough">Alcanza hasta %1$s\u00A0— en\u00A0marcha</string>
+    <string name="journey_first_takts">Los primeros compases llegan con la primera práctica</string>
     <string name="journey_soon">La gira mundial está completa. Los compases se acumulan y esperan nuevas ciudades, que llegan con las actualizaciones.</string>
-    <string name="journey_soon_short">pronto, nuevas ciudades</string>
+    <string name="journey_soon_short">Pronto, nuevas ciudades</string>
     <string name="journey_passed">Recorrido: %1$d de %2$d</string>
     <string name="journey_all_cards">Todas las postales</string>
     <string name="journey_no_cards">La primera postal aparecerá en Cremona</string>

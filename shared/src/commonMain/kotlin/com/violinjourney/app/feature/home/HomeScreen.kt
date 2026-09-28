@@ -303,7 +303,7 @@ private fun About(ui: HomeUi, onIntent: (HomeIntent) -> Unit) {
             Text(
                 when {
                     next == null -> stringResource(Res.string.home_travel_end, cityOf(at))
-                    JourneyRules.canDepart(ui.progress) -> stringResource(Res.string.home_travel_enough, cityOf(at), cityToOf(at + 1))
+                    JourneyRules.enough(ui.progress) -> stringResource(Res.string.home_travel_enough, cityOf(at), cityToOf(at + 1))
                     else -> stringResource(Res.string.home_travel_line, cityOf(at), cityToOf(at + 1), Formats.takts(JourneyRules.missing(ui.progress)))
                 },
                 style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,

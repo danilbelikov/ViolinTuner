@@ -646,6 +646,7 @@
     <string name="journey_depart">出发 · %1$s</string>
     <string name="journey_missing">还差 %1$s</string>
     <string name="journey_enough">够到%1$s了——出发</string>
+    <string name="journey_first_takts">第一次练习就能得到小节</string>
     <string name="journey_soon">世界巡演已走完。小节会继续积攒，等待新的城市——它们会随更新到来。</string>
     <string name="journey_soon_short">新城市即将到来</string>
     <string name="journey_passed">已走过 %1$d / %2$d</string>

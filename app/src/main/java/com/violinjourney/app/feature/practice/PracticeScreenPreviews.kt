@@ -3,6 +3,7 @@ package com.violinjourney.app.feature.practice
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,6 +31,11 @@ import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.ui.components.AppSheetCard
 import com.violinjourney.app.core.ui.components.standInPhoto
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.journey.JourneyWindow
+import com.violinjourney.app.navigation.AppBottomBar
+import com.violinjourney.app.navigation.TopLevelDestination
+import com.violinjourney.app.feature.journey.JourneyWindowCard
+import com.violinjourney.app.feature.journey.WindowSample
 import com.violinjourney.app.feature.practice.components.CalendarMetrics
 import com.violinjourney.app.feature.practice.components.DaySheetContent
 import com.violinjourney.app.feature.practice.components.EditTimeSheetContent
@@ -113,12 +119,47 @@ private object Sample {
     }
 }
 
+/** The status bar of the mockups over the screen of a phone (practice-extra.html): the window of the home is fitted to what is left. */
+private val StatusBar = 24.dp
+
+/**
+ * The whole screen with the window of the home of the mockups (at home, enough for Prague); the first run — «Ваша комната».
+ * [framed] — as on a phone of the preview's size: the status bar over it and the tab bar under it, as the root of the tabs gives
+ * them, so that the scroll window the picture is fitted to is the phone's (without the system's gesture bar).
+ */
 @Composable
-private fun Screen(state: PracticeState, timer: PracticeTimer? = null) {
-    ViolinTheme { PracticeScreen(state = state, onIntent = {}, zone = Sample.zone, timer = { timer }) }
+private fun Screen(
+    state: PracticeState,
+    timer: PracticeTimer? = null,
+    window: JourneyWindow? = if (state.hasHistory) WindowSample.enough else WindowSample.firstRun,
+    framed: Boolean = false,
+) {
+    ViolinTheme {
+        val screen: @Composable (Modifier) -> Unit = { modifier ->
+            PracticeScreen(
+                state = state,
+                onIntent = {},
+                modifier = modifier,
+                zone = Sample.zone,
+                journeyCard = { look -> window?.let { JourneyWindowCard(it, look, onClick = {}) } },
+                timer = { timer },
+            )
+        }
+        if (framed) {
+            BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
+                val landscape = maxWidth > maxHeight
+                Column(Modifier.fillMaxSize().padding(top = StatusBar)) {
+                    screen(Modifier.weight(1f))
+                    AppBottomBar(TopLevelDestination.PRACTICE, onSelect = {}, practiceRunning = state.running, compact = landscape)
+                }
+            }
+        } else {
+            screen(Modifier)
+        }
+    }
 }
 
-@Preview(name = "Занятия · обычное", widthDp = 412, heightDp = 892, locale = "ru")
+@Preview(name = "Занятия · обычное: окно 148", widthDp = 412, heightDp = 892, locale = "ru")
 @Composable
 private fun IdlePreview() = Screen(Sample.state())
 
@@ -142,37 +183,57 @@ private fun FirstPracticeRunningPreview() = Screen(Sample.state(running = true, 
 @Composable
 private fun LoadingPreview() = Screen(PracticeReducer.loading(Sample.today, PracticeConfig(), ProgressConfig()))
 
-@Preview(name = "Занятия · 360 × 640", locale = "ru", device = "spec:width=360dp,height=640dp")
+@Preview(name = "Занятия · 360 × 640: окно от остатка первого экрана", locale = "ru", device = "spec:width=360dp,height=640dp")
 @Composable
-private fun SmallPreview() = Screen(Sample.state())
+private fun SmallPreview() = Screen(Sample.state(), framed = true)
 
 @Preview(name = "Занятия · 360 × 640, занятие идёт", locale = "ru", device = "spec:width=360dp,height=640dp")
 @Composable
-private fun SmallRunningPreview() = Screen(Sample.state(running = true), Sample.timer)
+private fun SmallRunningPreview() = Screen(Sample.state(running = true), Sample.timer, framed = true)
+
+@Preview(name = "Занятия · 360 × 640, шрифт 1,3: окно — строка с миниатюрой", locale = "ru", fontScale = 1.3f, device = "spec:width=360dp,height=640dp")
+@Composable
+private fun SmallLargePreview() = Screen(Sample.state(), framed = true)
+
+@Preview(name = "Занятия · 360 × 640, не хватает до Праги: с полосой картинка не помещается — строка", locale = "ru", device = "spec:width=360dp,height=640dp")
+@Composable
+private fun SmallShortPreview() = Screen(Sample.state(), window = WindowSample.short, framed = true)
+
+@Preview(name = "Занятия · 360 × 640, первый запуск", locale = "ru", device = "spec:width=360dp,height=640dp")
+@Composable
+private fun SmallFirstRunPreview() = Screen(Sample.state(entries = emptyList(), name = ""), framed = true)
+
+@Preview(name = "Занятия · 412 × 892, «+340» после итога", locale = "ru", device = "spec:width=412dp,height=892dp")
+@Composable
+private fun EarnedPreview() = Screen(Sample.state(), window = WindowSample.earned, framed = true)
 
 @Preview(name = "Занятия · landscape 892 × 412", locale = "ru", device = "spec:width=892dp,height=412dp")
 @Composable
-private fun LandscapePreview() = Screen(Sample.state())
+private fun LandscapePreview() = Screen(Sample.state(), framed = true)
 
 @Preview(name = "Занятия · landscape 892 × 412, занятие идёт", locale = "ru", device = "spec:width=892dp,height=412dp")
 @Composable
-private fun LandscapeRunningPreview() = Screen(Sample.state(running = true), Sample.timer)
+private fun LandscapeRunningPreview() = Screen(Sample.state(running = true), Sample.timer, framed = true)
 
 @Preview(name = "Занятия · landscape 892 × 412, первый запуск", locale = "ru", device = "spec:width=892dp,height=412dp")
 @Composable
-private fun LandscapeFirstRunPreview() = Screen(Sample.state(entries = emptyList(), name = ""))
+private fun LandscapeFirstRunPreview() = Screen(Sample.state(entries = emptyList(), name = ""), framed = true)
 
-@Preview(name = "Занятия · 640 × 360: кнопка 48", locale = "ru", device = "spec:width=640dp,height=360dp")
+@Preview(name = "Занятия · 640 × 360: кнопка 48, окно 120 × 96", locale = "ru", device = "spec:width=640dp,height=360dp")
 @Composable
-private fun TinyLandscapePreview() = Screen(Sample.state())
+private fun TinyLandscapePreview() = Screen(Sample.state(), framed = true)
+
+@Preview(name = "Занятия · 640 × 360: не хватает, в городе", locale = "ru", device = "spec:width=640dp,height=360dp")
+@Composable
+private fun TinyLandscapeCityPreview() = Screen(Sample.state(), window = WindowSample.inCity, framed = true)
 
 @Preview(name = "Занятия · de, 360, шрифт 1,3", locale = "de", fontScale = 1.3f, device = "spec:width=360dp,height=640dp")
 @Composable
-private fun GermanLargePreview() = Screen(Sample.state())
+private fun GermanLargePreview() = Screen(Sample.state(), framed = true)
 
 @Preview(name = "Занятия · fr, 360", locale = "fr", device = "spec:width=360dp,height=640dp")
 @Composable
-private fun FrenchPreview() = Screen(Sample.state(running = true), Sample.timer)
+private fun FrenchPreview() = Screen(Sample.state(running = true), Sample.timer, framed = true)
 
 // the sheet itself is a window, which a preview does not draw: the ring of the day under it is what is seen here
 @Preview(name = "Занятия · под листом дня: кольцо «выбран» у 24-го", widthDp = 412, heightDp = 892, locale = "ru")

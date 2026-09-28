@@ -59,8 +59,10 @@ object JourneyReducer {
         balance = progress.balance,
         missing = JourneyRules.missing(progress),
         canDepart = JourneyRules.canDepart(progress),
+        enough = JourneyRules.enough(progress),
         justEarned = justEarned,
         here = here,
+        neverEarned = progress.earned == 0L,
     )
 
     val loading = JourneyState(

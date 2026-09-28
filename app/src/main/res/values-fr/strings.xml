@@ -645,9 +645,10 @@
     <string name="journey_have">%1$s / %2$s</string>
     <string name="journey_depart">En route · %1$s</string>
     <string name="journey_missing">il manque %1$s</string>
-    <string name="journey_enough">assez pour %1$s — en route</string>
+    <string name="journey_enough">Assez pour %1$s\u00A0— en\u00A0route</string>
+    <string name="journey_first_takts">Les premières mesures viennent avec la première séance</string>
     <string name="journey_soon">La tournée mondiale est bouclée. Les mesures s\'accumulent en attendant de nouvelles villes — elles arrivent avec les mises à jour.</string>
-    <string name="journey_soon_short">nouvelles villes bientôt</string>
+    <string name="journey_soon_short">Nouvelles villes bientôt</string>
     <string name="journey_passed">%1$d étapes sur %2$d</string>
     <string name="journey_all_cards">Toutes les cartes postales</string>
     <string name="journey_no_cards">La première carte postale vous attend à Crémone</string>

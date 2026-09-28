@@ -74,10 +74,10 @@ fun PracticeRoute(
             state = state,
             onIntent = viewModel::onIntent,
             modifier = modifier,
-            journeyCard = { compact ->
+            journeyCard = { look ->
                 journey?.let { window ->
                     // the window is where the player is (spec 3.27): the home leads home, a city to the journey
-                    JourneyWindowCard(window, compact, onClick = { viewModel.onIntent(if (window.here is Venue.Hall) PracticeIntent.JourneyClicked else PracticeIntent.HomeClicked) })
+                    JourneyWindowCard(window, look, onClick = { viewModel.onIntent(if (window.here is Venue.Hall) PracticeIntent.JourneyClicked else PracticeIntent.HomeClicked) })
                 }
             },
             timer = { timer.value },

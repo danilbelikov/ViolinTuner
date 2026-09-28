@@ -645,9 +645,10 @@
     <string name="journey_have">%1$s / %2$s</string>
     <string name="journey_depart">Set off · %1$s</string>
     <string name="journey_missing">%1$s short</string>
-    <string name="journey_enough">enough to reach %1$s — set off</string>
+    <string name="journey_enough">Enough to reach %1$s\u00A0— set\u00A0off</string>
+    <string name="journey_first_takts">Your first bars come with your first practice</string>
     <string name="journey_soon">The world tour is complete. Bars keep adding up and wait for new cities — they arrive with updates.</string>
-    <string name="journey_soon_short">new cities soon</string>
+    <string name="journey_soon_short">New cities soon</string>
     <string name="journey_passed">Visited %1$d of %2$d</string>
     <string name="journey_all_cards">All postcards</string>
     <string name="journey_no_cards">The first postcard will appear in Cremona</string>

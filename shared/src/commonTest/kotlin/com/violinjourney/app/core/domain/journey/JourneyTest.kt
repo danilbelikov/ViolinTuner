@@ -91,6 +91,24 @@ class JourneyTest {
     }
 
     @Test
+    fun `enough is the next city paid for — before the intro too — and setting off waits for the intro besides`() {
+        val price = JourneyRoute.stops[1].price.toLong()
+        // the takts are there before the case is packed: the window of «Занятия» and «В дорогу» of «Дом» say «хватает» alike
+        val unpacked = JourneyProgress(earned = price, spent = 0, arrivals = emptyList(), extras = emptySet())
+        assertTrue(JourneyRules.enough(unpacked), "enough for Cremona before the intro")
+        assertFalse(JourneyRules.canDepart(unpacked), "the road waits for the intro")
+        assertEquals(0L, JourneyRules.missing(unpacked))
+        val packed = unpacked.copy(arrivals = listOf(Arrival(JourneyRoute.HOME, 1)))
+        assertTrue(JourneyRules.enough(packed))
+        assertTrue(JourneyRules.canDepart(packed))
+        val short = packed.copy(spent = 1)
+        assertFalse(JourneyRules.enough(short), "one takt short")
+        assertFalse(JourneyRules.canDepart(short))
+        val everywhere = JourneyProgress(earned = 99_999, spent = 0, arrivals = JourneyRoute.stops.map { Arrival(it.id, 1) }, extras = emptySet())
+        assertFalse(JourneyRules.enough(everywhere), "nothing is enough at the end of what is drawn")
+    }
+
+    @Test
     fun `beyond the last drawn stop there is no next - the takts wait`() {
         val everywhere = JourneyProgress(earned = 99_999, spent = 0, arrivals = JourneyRoute.stops.filter { it.available }.map { Arrival(it.id, 1) }, extras = emptySet())
         assertNull(JourneyRules.next(everywhere))

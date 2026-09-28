@@ -646,6 +646,7 @@
     <string name="journey_depart">출발 · %1$s</string>
     <string name="journey_missing">%1$s 부족</string>
     <string name="journey_enough">%1$s까지 갈 수 있어요 — 출발</string>
+    <string name="journey_first_takts">첫 마디는 첫 연습에서 받아요</string>
     <string name="journey_soon">월드 투어를 마쳤습니다. 마디는 계속 쌓이며 새 도시를 기다립니다 — 새 도시는 업데이트로 찾아옵니다.</string>
     <string name="journey_soon_short">곧 새로운 도시가 옵니다</string>
     <string name="journey_passed">%2$d곳 중 %1$d곳 통과</string>

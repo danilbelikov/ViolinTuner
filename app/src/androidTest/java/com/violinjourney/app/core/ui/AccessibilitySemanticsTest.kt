@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.ui
 
 import android.view.View
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -31,6 +32,9 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.audio.fx.SoundMeters
 import com.violinjourney.app.core.audio.playback.PlayerState
 import com.violinjourney.app.core.domain.TolerancePreset
+import com.violinjourney.app.core.domain.journey.Arrival
+import com.violinjourney.app.core.domain.journey.JourneyProgress
+import com.violinjourney.app.core.domain.journey.JourneyRoute
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.violinjourney.app.core.domain.practice.PracticeEntry
@@ -38,6 +42,7 @@ import com.violinjourney.app.core.domain.progress.Profile
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.repertoire.SectionCount
 import com.violinjourney.app.core.ui.format.Formats
+import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.history.HistoryCard
 import com.violinjourney.app.feature.history.HistoryFilter
@@ -45,6 +50,10 @@ import com.violinjourney.app.feature.history.HistoryScreen
 import com.violinjourney.app.feature.history.HistoryState
 import com.violinjourney.app.feature.history.components.SessionCard
 import com.violinjourney.app.feature.home.TwoWay
+import com.violinjourney.app.feature.journey.JourneyReducer
+import com.violinjourney.app.feature.journey.JourneyWindowCard
+import com.violinjourney.app.feature.journey.WindowLook
+import com.violinjourney.app.feature.journey.cityToOf
 import com.violinjourney.app.feature.onboarding.OnboardingScreen
 import com.violinjourney.app.feature.onboarding.OnboardingState
 import com.violinjourney.app.feature.onboarding.OnboardingStep
@@ -52,6 +61,7 @@ import com.violinjourney.app.feature.practice.CalendarCell
 import com.violinjourney.app.feature.practice.PracticeReducer
 import com.violinjourney.app.feature.practice.PracticeScreen
 import com.violinjourney.app.feature.practice.ProgressReducer
+import com.violinjourney.app.feature.practice.WindowFit
 import com.violinjourney.app.feature.practice.components.PathRow
 import com.violinjourney.app.feature.practice.components.PracticeCalendar
 import com.violinjourney.app.feature.repertoire.sections.SectionsScreen
@@ -63,6 +73,7 @@ import com.violinjourney.app.feature.sound.components.SliderModel
 import com.violinjourney.app.navigation.AppBottomBar
 import com.violinjourney.app.navigation.TopLevelDestination
 import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.journey_enough
 import com.violinjourney.app.shared.resources.nav_history
 import com.violinjourney.app.shared.resources.nav_repertoire
 import com.violinjourney.app.shared.resources.onboarding_skip
@@ -83,6 +94,7 @@ import com.violinjourney.app.shared.resources.practice_streak_days_many
 import com.violinjourney.app.shared.resources.practice_streak_days_one
 import com.violinjourney.app.shared.resources.practice_week_description
 import com.violinjourney.app.shared.resources.progress_level_names
+import com.violinjourney.app.shared.resources.takt_icon
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
@@ -98,8 +110,9 @@ import org.junit.runner.RunWith
 /**
  * What TalkBack and VoiceOver are told on the screens where the eye has more than the reader: the date of a card under
  * its day header (spec 3.21), which side of a two-way switch is chosen, «A» and «B» that answer the reader's
- * activation, a slider that resets only from its actions, the calendar's month, days and arrows, the path row, the week and the
- * chip of the streak of «Занятия», the faded «Пропустить», the four tabs and the titles of «Репертуар» and «Записи».
+ * activation, a slider that resets only from its actions, the calendar's month, days and arrows, the path row, the week, the
+ * chip of the streak and the window of the home of «Занятия», the faded «Пропустить», the four tabs and the titles of «Репертуар»
+ * and «Записи».
  */
 @RunWith(AndroidJUnit4::class)
 class AccessibilitySemanticsTest {
@@ -339,6 +352,40 @@ class AccessibilitySemanticsTest {
         compose.onAllNodesWithText(chipWords).assertCountEquals(0)
     }
 
+    /**
+     * The window of the home on «Занятия» (spec 3.36.2): one button whose words hold the call and the purse — the pill of the takts
+     * is not a stop apart, out of them. In the line with a thumbnail and with the picture alike.
+     */
+    @Test
+    fun theWindowOfTheHomeIsOneButtonWithTheCallAndTheTaktsInItsWords() {
+        val window = JourneyReducer.windowOf(JourneyProgress(earned = PURSE, spent = 0, arrivals = listOf(Arrival(JourneyRoute.HOME, 1)), extras = emptySet()))
+        var look by mutableStateOf<WindowLook>(WindowLook.Line)
+        var call = ""
+        var sign = ""
+        compose.setContent {
+            call = stringResource(Res.string.journey_enough, cityToOf(1))
+            sign = stringResource(Res.string.takt_icon)
+            // the picture standing still, as with «убрать анимации»: a living one would ask for frames all the time
+            CompositionLocalProvider(LocalReduceMotion provides true) {
+                ViolinTheme { JourneyWindowCard(window, look, onClick = {}) }
+            }
+        }
+        val purse = Formats.takts(PURSE)
+        listOf(WindowLook.Line, WindowLook.Picture(WindowFit.PictureMax)).forEach { shown ->
+            look = shown
+            compose.waitForIdle()
+            val button = compose.onNode(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)).fetchSemanticsNode()
+            assertTrue("pressed: $shown", SemanticsActions.OnClick in button.config)
+            val said = button.config.getOrNull(SemanticsProperties.Text).orEmpty().map { it.text } +
+                button.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty()
+            assertTrue("the call «$call» in the words of the window ($shown): $said", call in said)
+            assertTrue("the purse «$purse» in the words of the window ($shown): $said", purse in said)
+            assertTrue("the sign «$sign» in the words of the window ($shown): $said", sign in said)
+            // the purse is read with the window, never as a node of its own
+            compose.onAllNodesWithText(purse).assertCountEquals(1)
+        }
+    }
+
     @Test
     fun theFadedSkipOfTheLastPageIsNotThereForAReader() {
         val skip = showIntroduction(OnboardingStep.DATA)
@@ -428,5 +475,8 @@ class AccessibilitySemanticsTest {
 
         /** 17 h 27 min — the month of the mockups. */
         const val SEPTEMBER_MS = (17 * 60 + 27) * MS_PER_MINUTE
+
+        /** The purse of the mockups: enough for Cremona and far beyond. */
+        const val PURSE = 47_884L
     }
 }

@@ -102,6 +102,8 @@
     <string name="home_fullscreen_hint">Pinch to zoom in · drag to look around</string>
     <string name="home_card_title">Home · %1$s</string>
     <string name="home_card_away">on the road · %1$s · stop %2$d of %3$d</string>
+    <string name="home_card_home">At home</string>
+    <string name="home_card_first">Your room</string>
     <string name="journey_enter_home">Go home</string>
     <string name="journey_enter_home_at">you are home</string>
     <string name="splash_away">on the road</string>

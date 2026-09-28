@@ -92,12 +92,28 @@ fun TaktIcon(modifier: Modifier = Modifier, size: Dp = 16.dp, tint: Color = Loca
     }
 }
 
-/** «[takt] 1 640»: the sign and a number, in the colour and size of the text around. */
+/**
+ * «[takt] 1 640»: the sign and a number, in the colour and size of the text around; the sign in [iconColor] where it differs.
+ * [merge] — the sign and the number are one stop for a reader. False inside something pressed that speaks for them (the window of
+ * «Занятия»): a node merging its own descendants is never merged into its parent, so it would be a stop apart, out of its words.
+ */
 @Composable
-fun TaktAmount(text: String, modifier: Modifier = Modifier, style: TextStyle = MaterialTheme.typography.bodyMedium, color: Color = LocalContentColor.current, icon: Dp = 16.dp) {
+fun TaktAmount(
+    text: String,
+    modifier: Modifier = Modifier,
+    style: TextStyle = MaterialTheme.typography.bodyMedium,
+    color: Color = LocalContentColor.current,
+    icon: Dp = 16.dp,
+    iconColor: Color = color,
+    merge: Boolean = true,
+) {
     val label = stringResource(Res.string.takt_icon)
-    Row(modifier = modifier.semantics(mergeDescendants = true) {}, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-        TaktIcon(size = icon, tint = color, modifier = Modifier.semantics { contentDescription = label })
+    Row(
+        modifier = if (merge) modifier.semantics(mergeDescendants = true) {} else modifier,
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        TaktIcon(size = icon, tint = iconColor, modifier = Modifier.semantics { contentDescription = label })
         Text(text, color = color, maxLines = 1, style = style.copy(fontFeatureSettings = "tnum"))
     }
 }
