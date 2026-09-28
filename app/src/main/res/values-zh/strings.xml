@@ -380,6 +380,12 @@
     <string name="practice_week">本周</string>
     <string name="practice_month">本月</string>
     <string name="practice_streak">连续天数</string>
+    <string name="practice_streak_days_one">%1$d 天</string>
+    <string name="practice_streak_days_few">%1$d 天</string>
+    <string name="practice_streak_days_many">%1$d 天</string>
+    <string name="practice_streak_days_description_one">连续 %1$d 天</string>
+    <string name="practice_streak_days_description_few">连续 %1$d 天</string>
+    <string name="practice_streak_days_description_many">连续 %1$d 天</string>
     <string name="practice_no_value">—</string>
     <string name="practice_month_back">上个月</string>
     <string name="practice_month_forward">下个月</string>

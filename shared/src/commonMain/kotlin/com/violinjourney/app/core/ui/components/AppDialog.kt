@@ -1,7 +1,6 @@
 package com.violinjourney.app.core.ui.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
@@ -26,7 +23,6 @@ import androidx.compose.material3.BasicAlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -42,17 +38,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.SolidColor
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.TextFieldValue
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -86,14 +78,8 @@ private val ButtonsGap = 14.dp
 private val ButtonSpacing = 4.dp
 private val ButtonHeight = 48.dp
 private val ButtonPadding = 16.dp
-private val LabelGap = 6.dp
-private val HelpGap = 6.dp
-private val ReasonIcon = 15.dp
-private val ReasonIconGap = 5.dp
-private val FieldBorder = 1.5.dp
 private const val BIN_CIRCLE_ALPHA = 0.16f
 private const val DISABLED_ALPHA = 0.38f
-private const val TABULAR_FIGURES = "tnum"
 
 /** What the answer on the right is: the action of the dialog ([Accent]), something that deletes or replaces ([Danger]), or letting go ([Quiet]). */
 enum class DialogTone { Accent, Danger, Quiet }
@@ -240,7 +226,7 @@ fun DiscardDialog(loss: DiscardLoss, onDiscard: () -> Unit, onBack: () -> Unit) 
  * (the state comes back a frame later and would take the cursor), starts with [initial] and the cursor at its end, and has the focus
  * from the start; [onValueChange] hears every change, [onConfirm] gets the text. [maxLength] cuts what is typed or pasted and shows
  * the counter under the field. While [confirmEnabled] is false the confirm is dimmed and «Нужно название» stands by the counter —
- * no silently grey button; [hint] says something under the field otherwise.
+ * no silently grey button; [hint] says something under the field otherwise. The field is the common [AppField].
  */
 @Composable
 fun FieldDialog(
@@ -269,7 +255,7 @@ fun FieldDialog(
         onDismiss = onDismiss,
         confirmEnabled = confirmEnabled,
     ) {
-        DialogField(
+        AppField(
             value = value,
             onValueChange = { next ->
                 val text = maxLength?.let { next.text.takeCodePoints(it) } ?: next.text
@@ -282,117 +268,12 @@ fun FieldDialog(
             modifier = Modifier.focusRequester(focus),
             placeholder = placeholder,
             hint = hint,
-            reason = if (confirmEnabled) null else stringResource(Res.string.dialog_name_needed),
+            error = if (confirmEnabled) null else stringResource(Res.string.dialog_name_needed),
             counter = maxLength?.let { stringResource(Res.string.profile_name_counter, value.text.codePointLength(), it) },
-            capitalization = capitalization,
-            onDone = { if (confirmEnabled) onConfirm(value.text) },
+            keyboardOptions = KeyboardOptions(capitalization = capitalization, imeAction = ImeAction.Done),
+            keyboardActions = KeyboardActions(onDone = { if (confirmEnabled) onConfirm(value.text) }),
         )
         // in the composition of the dialog's window, after the field: the field is there to take the focus
         LaunchedEffect(Unit) { focus.requestFocus() }
     }
-}
-
-/**
- * The field of a dialog (spec 5.29): its caption above it, as in the forms; 56 dp at a corner of 14 on the ground of the screen, a
- * frame of 1.5 lit in the accent while typed in; the placeholder in the third level of text. Under it one line: the [reason] a confirm
- * waits for — grey with its icon, never red, for it is no danger — or a [hint], and the [counter] on the right. Stateless.
- *
- * The caption and the line under the frame are drawn in the decoration of the text field, so they are the field for TalkBack and
- * VoiceOver: the field that takes the focus says what goes into it («Название раздела, поле ввода, Нужно название, 0 / 24»), as a
- * label of Material does. `OutlinedTextField` for a [TextFieldValue] cannot put its label above the frame, hence [BasicTextField]
- * with the decoration of the outlined field.
- */
-@Composable
-fun DialogField(
-    value: TextFieldValue,
-    onValueChange: (TextFieldValue) -> Unit,
-    label: String,
-    modifier: Modifier = Modifier,
-    placeholder: String? = null,
-    hint: String? = null,
-    reason: String? = null,
-    counter: String? = null,
-    capitalization: KeyboardCapitalization = KeyboardCapitalization.Sentences,
-    onDone: () -> Unit = {},
-) {
-    val colors = MaterialTheme.colorScheme
-    val tertiary = ViolinTheme.textTertiary
-    val small = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp)
-    val interaction = remember { MutableInteractionSource() }
-    val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = colors.surfaceContainer,
-        unfocusedContainerColor = colors.surfaceContainer,
-        focusedBorderColor = colors.primary,
-        unfocusedBorderColor = colors.outlineVariant,
-        focusedTextColor = colors.onSurface,
-        unfocusedTextColor = colors.onSurface,
-        cursorColor = colors.primary,
-    )
-    BasicTextField(
-        value = value,
-        onValueChange = onValueChange,
-        modifier = modifier.fillMaxWidth(),
-        singleLine = true,
-        textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 24.sp, color = colors.onSurface),
-        cursorBrush = SolidColor(colors.primary),
-        keyboardOptions = KeyboardOptions(capitalization = capitalization, imeAction = ImeAction.Done),
-        keyboardActions = KeyboardActions(onDone = { onDone() }),
-        interactionSource = interaction,
-        decorationBox = { innerTextField ->
-            Column(Modifier.fillMaxWidth()) {
-                Text(label, color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold))
-                Spacer(Modifier.height(LabelGap))
-                // the frame is as wide as the dialog and 56 high at the least, as OutlinedTextField makes it
-                Box(Modifier.fillMaxWidth().heightIn(min = OutlinedTextFieldDefaults.MinHeight), propagateMinConstraints = true) {
-                    OutlinedTextFieldDefaults.DecorationBox(
-                        value = value.text,
-                        innerTextField = innerTextField,
-                        enabled = true,
-                        singleLine = true,
-                        visualTransformation = VisualTransformation.None,
-                        interactionSource = interaction,
-                        placeholder = placeholder?.let { { Text(it, color = tertiary, maxLines = 1) } },
-                        colors = fieldColors,
-                        container = {
-                            OutlinedTextFieldDefaults.Container(
-                                enabled = true,
-                                isError = false,
-                                interactionSource = interaction,
-                                colors = fieldColors,
-                                shape = AppShapes.Control,
-                                focusedBorderThickness = FieldBorder,
-                                unfocusedBorderThickness = FieldBorder,
-                            )
-                        },
-                    )
-                }
-                if (reason != null || hint != null || counter != null) {
-                    Spacer(Modifier.height(HelpGap))
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 2.dp),
-                        horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    ) {
-                        Box(Modifier.weight(1f)) {
-                            if (reason != null) {
-                                Row(
-                                    // said aloud when it appears: the button beside it has just gone dim
-                                    modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                                    verticalAlignment = Alignment.CenterVertically,
-                                    horizontalArrangement = Arrangement.spacedBy(ReasonIconGap),
-                                ) {
-                                    AppIcon(AppIcons.Info, contentDescription = null, tint = colors.onSurfaceVariant, size = ReasonIcon)
-                                    Text(reason, color = colors.onSurfaceVariant, style = small)
-                                }
-                            } else if (hint != null) {
-                                Text(hint, color = colors.onSurfaceVariant, style = small)
-                            }
-                        }
-                        if (counter != null) {
-                            Text(counter, color = colors.onSurfaceVariant, maxLines = 1, softWrap = false, style = small.copy(fontFeatureSettings = TABULAR_FIGURES))
-                        }
-                    }
-                }
-            }
-        },
-    )
 }

@@ -7,13 +7,16 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.exclude
-import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawing
-import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -30,6 +33,7 @@ import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.Lifecycle
@@ -40,8 +44,11 @@ import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.violinjourney.app.core.ui.analytics.AnalyticsViewModel
+import com.violinjourney.app.core.ui.components.DockPlace
+import com.violinjourney.app.core.ui.components.LocalDockPlace
 import com.violinjourney.app.core.ui.components.LocalMessages
 import com.violinjourney.app.core.ui.components.Messages
+import com.violinjourney.app.core.ui.components.ToastLift
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.AppShapes
 import com.violinjourney.app.core.ui.theme.ViolinAppTheme
@@ -83,6 +90,8 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
     val messages = remember { Messages { text -> message = Toast(text) } }
     // how bright the tab bar is: a screen may lend its light (stage R6, Live); nobody does yet (spec 3.36.1)
     val tabBarLight = remember { TabBarLight() }
+    // where the bottom zone of the screen is: the message stands above it (spec 5.29)
+    val dockPlace = remember { DockPlace() }
 
     val navController = rememberNavController()
     // which screen was opened (spec 3.34), the route cut to its name as on Android
@@ -97,7 +106,7 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
     }
 
     ViolinAppTheme(fontFamily = manrope()) {
-        CompositionLocalProvider(LocalMessages provides messages, LocalTabBarLight provides tabBarLight) {
+        CompositionLocalProvider(LocalMessages provides messages, LocalTabBarLight provides tabBarLight, LocalDockPlace provides dockPlace) {
             BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
                 // Landscape Live is the music-stand view: no bar, all height to the ring; the other tabs keep a compact one.
                 val landscape = maxWidth > maxHeight
@@ -137,7 +146,7 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
                         effects = start.promptEffects,
                     )
                 }
-                ToastHost(message, onGone = { message = null })
+                ToastHost(message, dockPlace, onGone = { message = null })
             }
         }
     }
@@ -148,10 +157,12 @@ private class Toast(val text: String)
 
 /**
  * What a toast is on Android: a plate low on the screen, for two seconds, touching nothing — in the colour of a dialog, the words of
- * the first level of text (spec 3.36.1, 5.29). 96 dp over the bottom inset until the bottom zone of stage 102 gives it its place.
+ * the first level of text (spec 3.36.1, 5.29). 12 dp over the bottom zone of the screen ([DockPlace]), never on its main button;
+ * with no zone, or with the zone under the keyboard, 96 dp over the bottom inset — over the keyboard when it is up. The height is
+ * read while placing: the root is not recomposed for it.
  */
 @Composable
-private fun ToastHost(toast: Toast?, onGone: () -> Unit) {
+private fun ToastHost(toast: Toast?, dockPlace: DockPlace, onGone: () -> Unit) {
     var shown by remember { mutableStateOf<Toast?>(null) }
     LaunchedEffect(toast) {
         if (toast == null) return@LaunchedEffect
@@ -160,8 +171,16 @@ private fun ToastHost(toast: Toast?, onGone: () -> Unit) {
         shown = null
         onGone()
     }
-    Box(Modifier.fillMaxSize().safeDrawingPadding().padding(bottom = 96.dp), contentAlignment = Alignment.BottomCenter) {
-        AnimatedVisibility(visible = shown != null, enter = fadeIn(), exit = fadeOut()) {
+    val safe = WindowInsets.safeDrawing
+    Box(Modifier.fillMaxSize().windowInsetsPadding(safe.only(WindowInsetsSides.Horizontal)), contentAlignment = Alignment.BottomCenter) {
+        AnimatedVisibility(
+            visible = shown != null,
+            modifier = Modifier.offset {
+                IntOffset(0, -ToastLift.of(dockPlace.rise, safe.getBottom(this), ToastAboveDock.roundToPx(), ToastAboveInset.roundToPx()))
+            },
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
             Text(
                 text = shown?.text.orEmpty(),
                 color = MaterialTheme.colorScheme.onSurface,
@@ -176,6 +195,8 @@ private fun ToastHost(toast: Toast?, onGone: () -> Unit) {
 }
 
 private const val TOAST_MS = 2_000L
+private val ToastAboveDock = 12.dp
+private val ToastAboveInset = 96.dp
 
 /** The language the resources speak: the first of the app's own languages the person prefers (spec 3.26). */
 internal fun interfaceLanguageTag(): String = NSLocale.preferredLanguages.firstOrNull()?.toString() ?: "en"

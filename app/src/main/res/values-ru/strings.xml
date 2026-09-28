@@ -380,6 +380,12 @@
     <string name="practice_week">Неделя</string>
     <string name="practice_month">Месяц</string>
     <string name="practice_streak">Дней подряд</string>
+    <string name="practice_streak_days_one">%1$d день</string>
+    <string name="practice_streak_days_few">%1$d дня</string>
+    <string name="practice_streak_days_many">%1$d дней</string>
+    <string name="practice_streak_days_description_one">%1$d день подряд</string>
+    <string name="practice_streak_days_description_few">%1$d дня подряд</string>
+    <string name="practice_streak_days_description_many">%1$d дней подряд</string>
     <string name="practice_no_value">—</string>
     <string name="practice_month_back">Предыдущий месяц</string>
     <string name="practice_month_forward">Следующий месяц</string>

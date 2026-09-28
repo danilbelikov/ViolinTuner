@@ -40,6 +40,8 @@ import com.violinjourney.app.shared.resources.dialog_name_needed
 import com.violinjourney.app.shared.resources.piece_delete_confirm
 import com.violinjourney.app.shared.resources.piece_delete_text
 import com.violinjourney.app.shared.resources.piece_delete_title
+import com.violinjourney.app.shared.resources.piece_field_notes
+import com.violinjourney.app.shared.resources.piece_field_title
 import com.violinjourney.app.shared.resources.piece_form_discard_confirm
 import com.violinjourney.app.shared.resources.piece_form_discard_title
 import com.violinjourney.app.shared.resources.piece_key_major
@@ -70,9 +72,9 @@ import com.violinjourney.app.shared.resources.video_shoot_backing
 import com.violinjourney.app.shared.resources.video_shoot_backing_hint
 import org.jetbrains.compose.resources.stringResource
 
-// The common parts of stage 101 (spec 3.36.1, 5.29; components.html, «Диалоги», «Меню ⋯», the segmented switch). A window and a
-// popup do not draw in a preview: the dialogs and the menus are their cards, over the screen dimmed as a dialog dims it. Stage 102
-// adds its parts here.
+// The common parts of stages 101 and 102 (spec 3.36.1, 5.29; components.html, «Диалоги», «Меню ⋯», the segmented switch, the
+// field). A window and a popup do not draw in a preview: the dialogs and the menus are their cards, over the screen dimmed as a
+// dialog dims it. The other parts of stage 102 — DockPreviews, ControlsPreviews, ProgressPreviews, GlassSheetPreviews.
 
 private const val MENUET = "Менуэт соль мажор"
 private const val SECTION_NAME_MAX = 24
@@ -165,7 +167,7 @@ private fun RenamePreview() = OverScreen(Alignment.TopCenter) {
         onDismiss = {},
         modifier = Modifier.padding(top = 96.dp),
     ) {
-        DialogField(
+        AppField(
             value = TextFieldValue(text, TextRange(text.length)),
             onValueChange = {},
             label = stringResource(Res.string.session_rename_label),
@@ -183,11 +185,11 @@ private fun NewSectionCard() = AppDialogCard(
     confirmEnabled = false,
     modifier = Modifier.padding(top = 96.dp),
 ) {
-    DialogField(
+    AppField(
         value = TextFieldValue(""),
         onValueChange = {},
         label = stringResource(Res.string.section_name_label),
-        reason = stringResource(Res.string.dialog_name_needed),
+        error = stringResource(Res.string.dialog_name_needed),
         counter = stringResource(Res.string.profile_name_counter, 0, SECTION_NAME_MAX),
     )
 }
@@ -330,4 +332,89 @@ private fun SegmentsFrPreview() = ViolinTheme {
             onSelect = {},
         )
     }
+}
+
+// The field (stage 102): the one field of the app, as the dialogs, the forms of R4 and the form of an event (R9) show it.
+
+@Composable
+private fun FieldGround(content: @Composable () -> Unit) = ViolinTheme {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.surface)
+            .padding(20.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) { content() }
+}
+
+@Preview(name = "Field · empty with a placeholder", widthDp = 412, heightDp = 140, locale = "ru")
+@Composable
+private fun FieldEmptyPreview() = FieldGround {
+    AppField(
+        value = TextFieldValue(""),
+        onValueChange = {},
+        label = stringResource(Res.string.piece_field_title),
+        placeholder = MENUET,
+    )
+}
+
+@Preview(name = "Field · filled", widthDp = 412, heightDp = 140, locale = "ru")
+@Composable
+private fun FieldFilledPreview() = FieldGround {
+    AppField(value = TextFieldValue(MENUET, TextRange(MENUET.length)), onValueChange = {}, label = stringResource(Res.string.piece_field_title))
+}
+
+@Preview(name = "Field · «Нужно название» and 0 / 24: grey with its icon, the frame does not redden", widthDp = 412, heightDp = 160, locale = "ru")
+@Composable
+private fun FieldErrorPreview() = FieldGround {
+    AppField(
+        value = TextFieldValue(""),
+        onValueChange = {},
+        label = stringResource(Res.string.section_name_label),
+        error = stringResource(Res.string.dialog_name_needed),
+        counter = stringResource(Res.string.profile_name_counter, 0, SECTION_NAME_MAX),
+    )
+}
+
+@Preview(name = "Field · a hint under the field (the name of a recording)", widthDp = 412, heightDp = 170, locale = "ru")
+@Composable
+private fun FieldHintPreview() = FieldGround {
+    val text = "Менуэт — чистый прогон"
+    AppField(
+        value = TextFieldValue(text, TextRange(text.length)),
+        onValueChange = {},
+        label = stringResource(Res.string.session_rename_label),
+        hint = stringResource(Res.string.session_rename_hint),
+    )
+}
+
+@Preview(name = "Field · several lines", widthDp = 412, heightDp = 200, locale = "ru")
+@Composable
+private fun FieldMultilinePreview() = FieldGround {
+    val text = "Держать смычок ближе к подставке во второй части.\nСчитать паузу в 12-м такте."
+    AppField(
+        value = TextFieldValue(text),
+        onValueChange = {},
+        label = stringResource(Res.string.piece_field_notes),
+        singleLine = false,
+        minLines = 3,
+    )
+}
+
+@Preview(name = "Field · disabled: 0.38 in its own colours", widthDp = 412, heightDp = 140, locale = "ru")
+@Composable
+private fun FieldDisabledPreview() = FieldGround {
+    AppField(value = TextFieldValue(MENUET), onValueChange = {}, label = stringResource(Res.string.piece_field_title), enabled = false)
+}
+
+@Preview(name = "Field · de, 360: the reason and the counter", widthDp = 360, heightDp = 170, locale = "de")
+@Composable
+private fun FieldDePreview() = FieldGround {
+    AppField(
+        value = TextFieldValue(""),
+        onValueChange = {},
+        label = stringResource(Res.string.section_name_label),
+        error = stringResource(Res.string.dialog_name_needed),
+        counter = stringResource(Res.string.profile_name_counter, 0, SECTION_NAME_MAX),
+    )
 }

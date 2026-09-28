@@ -380,6 +380,12 @@
     <string name="practice_week">Settimana</string>
     <string name="practice_month">Mese</string>
     <string name="practice_streak">Giorni di fila</string>
+    <string name="practice_streak_days_one">%1$d giorno</string>
+    <string name="practice_streak_days_few">%1$d giorni</string>
+    <string name="practice_streak_days_many">%1$d giorni</string>
+    <string name="practice_streak_days_description_one">%1$d giorno di fila</string>
+    <string name="practice_streak_days_description_few">%1$d giorni di fila</string>
+    <string name="practice_streak_days_description_many">%1$d giorni di fila</string>
     <string name="practice_no_value">—</string>
     <string name="practice_month_back">Mese precedente</string>
     <string name="practice_month_forward">Mese successivo</string>

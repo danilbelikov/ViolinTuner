@@ -380,6 +380,12 @@
     <string name="practice_week">Week</string>
     <string name="practice_month">Month</string>
     <string name="practice_streak">Day streak</string>
+    <string name="practice_streak_days_one">%1$d day</string>
+    <string name="practice_streak_days_few">%1$d days</string>
+    <string name="practice_streak_days_many">%1$d days</string>
+    <string name="practice_streak_days_description_one">%1$d-day streak</string>
+    <string name="practice_streak_days_description_few">%1$d-day streak</string>
+    <string name="practice_streak_days_description_many">%1$d-day streak</string>
     <string name="practice_no_value">—</string>
     <string name="practice_month_back">Previous month</string>
     <string name="practice_month_forward">Next month</string>
