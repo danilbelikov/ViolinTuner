@@ -502,11 +502,12 @@
     <string name="path_description">レベル %1$d、%2$s、%3$s、レベル %4$d まで %5$s</string>
     <string name="path_description_last">レベル %1$d、%2$s、%3$s</string>
     <string name="path_description_first">レベル %1$d、%2$s、レベル %3$d まで %4$s</string>
-    <string name="profile_title">プロフィール</string>
     <string name="profile_pick_photo">写真を選ぶ</string>
+    <string name="profile_other_photo">別の写真</string>
     <string name="profile_remove_photo">写真を外す</string>
     <string name="profile_name_label">名前</string>
     <string name="profile_name_placeholder">お名前は？</string>
+    <string name="profile_name_note">あなただけに見えます —「わたしの歩み」で。名前がないと「ヴァイオリンとともに」と表示されます。</string>
     <string name="profile_name_counter">%1$d / %2$d</string>
     <string name="profile_done">完了</string>
     <string name="profile_no_name_letter">\?</string>
@@ -516,13 +517,20 @@
     <string name="gift_hours_few">ヴァイオリンと %1$s 時間</string>
     <string name="gift_hours_many">ヴァイオリンと %1$s 時間</string>
     <string name="gift_thanks">ありがとう</string>
+    <string name="gift_line">%1$s · %2$s</string>
+    <string name="gift_next">次は %1$s</string>
+    <string name="gift_next_line">%1$s · あと %2$s</string>
+    <string name="gift_description">%1$s：%2$s、%3$s、%4$s。</string>
+    <string name="gift_next_description">次は %1$s、%2$s、あと %3$s</string>
     <string name="trophies_title">トロフィー</string>
+    <string name="trophies_count">%2$d個中%1$d個</string>
+    <string name="trophies_heading_description">%1$s、%2$s</string>
     <string name="trophies_total">ヴァイオリンと過ごした時間 — %1$s</string>
-    <string name="trophies_awarded">%1$s に獲得</string>
     <string name="trophies_remaining">あと %1$s</string>
     <string name="trophies_far">まだずっと先</string>
     <string name="trophies_line_given">%1$s、%2$s、%3$s に獲得</string>
     <string name="trophies_line_remaining">%1$s、%2$s、あと %3$s</string>
+    <string name="trophies_line_next">%1$s、%2$s、あと %3$s、次</string>
     <string name="trophies_line_far">%1$s、%2$s、まだずっと先</string>
 
     <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
@@ -1065,15 +1073,25 @@
     <string name="recap_day_total">この日の合計 %1$s</string>
     <string name="recap_source_notes">音程の合った音</string>
     <string name="recap_source_time">時間</string>
+    <string name="recap_source_repertoire">レパートリー</string>
     <string name="recap_source_count">· %1$s</string>
-    <string name="recap_road_left">%1$sまで あと %2$s</string>
     <string name="recap_road_enough">%1$sまで行けます</string>
-    <string name="recap_road_leg">%1$s → %2$s</string>
-    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_to">%1$sまで</string>
+    <string name="recap_road_more">あと %1$s</string>
     <string name="recap_road_done">ルート完走 · 財布に %1$s</string>
     <string name="recap_road_not_started">小節がたまっています — 旅は家から始まります</string>
     <string name="recap_level_up">新しいレベル</string>
+    <string name="recap_level_name">%1$d · %2$s</string>
     <string name="recap_streak_up">+1日</string>
+    <string name="recap_description_head">%1$s、%2$s。</string>
+    <string name="recap_description_takts">%1$s 獲得：%2$s。</string>
+    <string name="recap_description_source">%1$s — %2$s</string>
+    <string name="recap_description_road">%1$sまで あと %2$s。</string>
+    <string name="recap_description_sentence">%1$s。</string>
+    <string name="recap_description_level">レベル %1$d、%2$s、レベル %3$d まで %4$s。</string>
+    <string name="recap_description_level_up">新しいレベル %1$d、%2$s、レベル %3$d まで %4$s。</string>
+    <string name="recap_description_level_last">レベル %1$d、%2$s。</string>
+    <string name="recap_description_level_up_last">新しいレベル %1$d、%2$s。</string>
 
     <!-- The backing track: listening and sending (spec 3.32). -->
     <string name="share_backing">伴奏つき</string>

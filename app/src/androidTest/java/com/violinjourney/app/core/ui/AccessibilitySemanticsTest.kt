@@ -1,6 +1,45 @@
 package com.violinjourney.app.core.ui
 
 import android.view.View
+import androidx.compose.foundation.layout.Column
+import androidx.compose.ui.test.hasContentDescription
+import androidx.compose.ui.test.hasSetTextAction
+import com.violinjourney.app.core.domain.journey.JourneyConfig
+import com.violinjourney.app.core.domain.journey.JourneyRules
+import com.violinjourney.app.core.domain.practice.PracticeRecap
+import com.violinjourney.app.core.domain.practice.RecapRoad
+import com.violinjourney.app.core.domain.progress.Progress
+import com.violinjourney.app.core.domain.progress.Trophy
+import com.violinjourney.app.feature.journey.taktsInWords
+import com.violinjourney.app.feature.practice.Gift
+import com.violinjourney.app.feature.practice.NextTrophy
+import com.violinjourney.app.feature.practice.PracticeSheet
+import com.violinjourney.app.feature.practice.components.GiftSheetContent
+import com.violinjourney.app.feature.practice.components.NamePhotoSheetContent
+import com.violinjourney.app.feature.practice.components.RecapButtons
+import com.violinjourney.app.feature.practice.components.RecapSheetContent
+import com.violinjourney.app.feature.practice.components.TrophiesSheetContent
+import com.violinjourney.app.shared.resources.gift_description
+import com.violinjourney.app.shared.resources.gift_hours_few
+import com.violinjourney.app.shared.resources.gift_hours_many
+import com.violinjourney.app.shared.resources.gift_hours_one
+import com.violinjourney.app.shared.resources.gift_next_description
+import com.violinjourney.app.shared.resources.gift_title
+import com.violinjourney.app.shared.resources.home_travel
+import com.violinjourney.app.shared.resources.journey_earned
+import com.violinjourney.app.shared.resources.path_name_photo
+import com.violinjourney.app.shared.resources.profile_done
+import com.violinjourney.app.shared.resources.profile_name_label
+import com.violinjourney.app.shared.resources.progress_trophy_names
+import com.violinjourney.app.shared.resources.recap_description_head
+import com.violinjourney.app.shared.resources.recap_description_level
+import com.violinjourney.app.shared.resources.recap_description_level_up
+import com.violinjourney.app.shared.resources.recap_road_enough
+import com.violinjourney.app.shared.resources.recap_title
+import com.violinjourney.app.shared.resources.trophies_count
+import com.violinjourney.app.shared.resources.trophies_heading_description
+import com.violinjourney.app.shared.resources.trophies_line_next
+import com.violinjourney.app.shared.resources.trophies_title
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -128,7 +167,8 @@ import org.junit.runner.RunWith
  * its day header (spec 3.21), which side of a two-way switch is chosen, «A» and «B» that answer the reader's
  * activation, a slider that resets only from its actions, the calendar's month, days and arrows, the path row, the week, the
  * chip of the streak and the window of the home of «Занятия», the faded «Пропустить», the four tabs and the titles of «Репертуар»
- * and «Записи», the stepper, «Что играли» and the title of «Занятие не закончено» (spec 3.36.3).
+ * and «Записи», the stepper, «Что играли» and the title of «Занятие не закончено» (spec 3.36.3); the recap and the gift as one
+ * paragraph each on their title, their buttons still buttons, «Трофеи, 2 из 10» and the nearest one «следующий», the field «Имя».
  */
 @RunWith(AndroidJUnit4::class)
 class AccessibilitySemanticsTest {
@@ -570,6 +610,142 @@ class AccessibilitySemanticsTest {
             title = stringResource(Res.string.practice_forgotten_title).uppercase()
             ViolinTheme { ForgottenSheetContent(PracticePrompt.Forgotten(practice), endings = { endings }, zone = TimeZone.UTC) }
         }
+        compose.onNodeWithText(title).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+    }
+
+    // The sheets of progress (spec 3.36.3, TalkBack): the recap, the gift, «Трофеи», «Имя и фото».
+
+    /** A recap of [minutes] after [before] of practice: 212 notes, two elements; [road], [streak]. */
+    private fun recapOf(minutes: Long, before: Long, road: RecapRoad, streak: Int, extended: Boolean = streak > 0): PracticeRecap {
+        val duration = minutes * MS_PER_MINUTE
+        val sources = JourneyRules.taktsBySource(212, duration, JourneyConfig(), 2)
+        val progress = ProgressConfig()
+        return PracticeRecap(
+            durationMs = duration, dayTotalMs = null, takts = sources.total, sources = sources, road = road,
+            streakDays = streak, streakExtended = extended,
+            levelBefore = Progress.levelOf(before, progress), levelAfter = Progress.levelOf(before + duration, progress),
+        )
+    }
+
+    /** 47 h 17 min before the practice: level 5, «Гаммы», 2 h 43 min to the 6th — the mockup. */
+    private val mockupTotal = (47 * 60 + 17) * MS_PER_MINUTE
+
+    @Test
+    fun theRecapReadsAsOneParagraphOnItsTitleAndItsButtonsStayButtons() {
+        // 47 minutes: 71 + 94 + 60 = 225 takts; enough for Prague; eight days, grown today; level 5, 1 h 56 min to the 6th
+        val recap = recapOf(47, mockupTotal, RecapRoad.Leg(nextIndex = 5, price = 3_000, balanceBefore = 2_900, balanceAfter = 3_125), streak = 8)
+        var head = ""
+        var takts = ""
+        var enough = ""
+        var days = ""
+        var level = ""
+        var travel = ""
+        var done = ""
+        compose.setContent {
+            val title = stringResource(Res.string.recap_title)
+            head = stringResource(Res.string.recap_description_head, title, Formats.minutesInWords(47 * MS_PER_MINUTE))
+            takts = stringResource(Res.string.journey_earned, taktsInWords(225))
+            enough = stringResource(Res.string.recap_road_enough, cityToOf(5))
+            days = stringResource(
+                Formats.plural(8, Res.string.practice_streak_days_description_one, Res.string.practice_streak_days_description_few, Res.string.practice_streak_days_description_many),
+                8,
+            )
+            val names = stringArrayResource(Res.array.progress_level_names)
+            level = stringResource(Res.string.recap_description_level, 5, names[4], 6, Formats.remainingTime(116 * MS_PER_MINUTE))
+            travel = stringResource(Res.string.home_travel)
+            done = stringResource(Res.string.profile_done)
+            ViolinTheme {
+                Column {
+                    RecapSheetContent(recap, onTravel = {}, onDone = {}, low = false, animated = false)
+                    RecapButtons(onDone = {})
+                }
+            }
+        }
+        // one paragraph on the title, a heading: «Занятие сохранено, 47 мин. Плюс 225 тактов: … Хватает до Праги. 8 дней подряд. …»
+        val paragraph = descriptions().single { it.startsWith(head) }
+        compose.onNodeWithContentDescription(paragraph).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        listOf(enough, days, level).forEach { assertTrue("«$it» in «$paragraph»", paragraph.contains(it)) }
+        // the parts are not read one by one: the rolled number, the takts of the sources, «+1 день» — no «+» anywhere as a word
+        compose.onAllNodesWithText(takts).assertCountEquals(0)
+        compose.onAllNodesWithText("+", substring = true).assertCountEquals(0)
+        // and the two answers are still buttons: the paragraph did not swallow «В дорогу» (R-9)
+        listOf(travel, done).forEach { word ->
+            compose.onNodeWithText(word).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button)).assertIsEnabled()
+        }
+    }
+
+    @Test
+    fun aRecapWithoutAStreakSaysNoneAndANewLevelIsSaidAsNew() {
+        // 2 h 50 min over 47 h 17 min: level 6, «Этюды», 49 h 53 min to the 7th; an old practice saved days later — a streak of 0
+        val recap = recapOf(170, mockupTotal, RecapRoad.NotStarted, streak = 0)
+        var head = ""
+        var levelUp = ""
+        var noDays = ""
+        compose.setContent {
+            head = stringResource(Res.string.recap_description_head, stringResource(Res.string.recap_title), Formats.minutesInWords(170 * MS_PER_MINUTE))
+            val names = stringArrayResource(Res.array.progress_level_names)
+            levelUp = stringResource(Res.string.recap_description_level_up, 6, names[5], 7, Formats.remainingTime((49 * 60 + 53) * MS_PER_MINUTE))
+            noDays = stringResource(
+                Formats.plural(0, Res.string.practice_streak_days_description_one, Res.string.practice_streak_days_description_few, Res.string.practice_streak_days_description_many),
+                0,
+            )
+            ViolinTheme { RecapSheetContent(recap, onTravel = {}, onDone = {}, low = false, animated = false) }
+        }
+        val paragraph = descriptions().single { it.startsWith(head) }
+        assertTrue("«$levelUp» in «$paragraph»", paragraph.contains(levelUp))
+        assertFalse("a streak of 0 is not said: «$paragraph»", paragraph.contains(noDays))
+    }
+
+    @Test
+    fun theGiftReadsAsOneParagraphWithTheTrophyAfterIt() {
+        val gift = Gift(hours = 50, index = 2, awardedDate = LocalDate(2026, 9, 27), next = NextTrophy(100, index = 3, remainingMs = 50 * 60 * MS_PER_MINUTE))
+        var said = ""
+        var next = ""
+        compose.setContent {
+            val trophies = stringArrayResource(Res.array.progress_trophy_names)
+            val hours = stringResource(
+                Formats.plural(50, Res.string.gift_hours_one, Res.string.gift_hours_few, Res.string.gift_hours_many),
+                Formats.grouped(50),
+            )
+            // «Новый трофей: Струна, 50 часов за скрипкой, 27 сентября.» and «Дальше — Смычок, 100 ч, ещё 50 ч»
+            said = stringResource(Res.string.gift_description, stringResource(Res.string.gift_title), trophies[2], hours, Formats.dayAndMonth(gift.awardedDate))
+            next = stringResource(Res.string.gift_next_description, trophies[3], Formats.hoursMark(100), Formats.remainingTime(50 * 60 * MS_PER_MINUTE))
+            ViolinTheme { GiftSheetContent(gift, low = false, animated = false) }
+        }
+        val paragraph = descriptions().single { it.startsWith(said) }
+        compose.onNodeWithContentDescription(paragraph).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        assertTrue("«$next» in «$paragraph»", paragraph.contains(next))
+    }
+
+    @Test
+    fun theTrophiesAreAHeadingWithTheirCountAndTheNearestIsSaidToBeNext() {
+        val lines = ProgressReducer.trophyLines(mockupTotal, listOf(Trophy(1, LocalDate(2026, 6, 14), shown = true), Trophy(10, LocalDate(2026, 7, 2), shown = true)), ProgressConfig())
+        var heading = ""
+        var nearest = ""
+        compose.setContent {
+            val names = stringArrayResource(Res.array.progress_trophy_names)
+            heading = stringResource(Res.string.trophies_heading_description, stringResource(Res.string.trophies_title), stringResource(Res.string.trophies_count, 2, 10))
+            nearest = stringResource(Res.string.trophies_line_next, names[2], Formats.hoursMark(50), Formats.remainingTime((2 * 60 + 43) * MS_PER_MINUTE))
+            ViolinTheme { TrophiesSheetContent(lines, mockupTotal) }
+        }
+        // «Трофеи, 2 из 10» — a heading
+        compose.onNodeWithContentDescription(heading).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
+        // «Струна, 50 ч, ещё 2 ч 43 мин, следующий»
+        compose.onNodeWithContentDescription(nearest).assertExists()
+    }
+
+    @Test
+    fun theFieldOfTheNameIsReadAsNameAndTheTitleIsAHeading() {
+        var label = ""
+        var title = ""
+        compose.setContent {
+            label = stringResource(Res.string.profile_name_label)
+            title = stringResource(Res.string.path_name_photo).uppercase()
+            ViolinTheme {
+                NamePhotoSheetContent(PracticeSheet.Profile(nameDraft = "", importingPhoto = false), hasPhoto = false, photo = null, onIntent = {}, onPickPhoto = {})
+            }
+        }
+        compose.onNode(hasSetTextAction() and hasContentDescription(label)).assertExists()
         compose.onNodeWithText(title).assert(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading))
     }
 

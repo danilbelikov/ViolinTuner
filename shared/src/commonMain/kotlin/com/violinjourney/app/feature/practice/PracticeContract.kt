@@ -69,15 +69,24 @@ data class ProfileHeader(
 )
 
 /**
- * A trophy given but not yet seen: the gift sheet (spec 3.13, handoff 11f). Not a
- * [PracticeSheet]: nobody opens it, it follows from the stored trophies.
+ * A trophy given but not yet seen: the gift sheet (spec 3.13, 3.36.3). Not a [PracticeSheet]: nobody opens it, it follows from the
+ * stored trophies. [next] — the card «Дальше» under it: the lowest mark not given at all, and what is left to it (5.7); null after
+ * 10 000 h.
  */
 data class Gift(
     val hours: Int,
     /** Position of the mark among the marks of the config, for the name. */
     val index: Int,
     val awardedDate: LocalDate,
+    val next: NextTrophy? = null,
 )
+
+/**
+ * The trophy after a gift (spec 3.36.3): «Дальше — Смычок · 100 ч · ещё 50 ч» — a horizon, not a debt. The lowest mark not given at
+ * all, seen or not: in a chain of gifts (1 h and 10 h given at once) the card of «Канифоль» names «Струна», for «Колок» is given
+ * already and comes as the next sheet. [remainingMs] — by 5.7.
+ */
+data class NextTrophy(val hours: Int, val index: Int, val remainingMs: Long)
 
 /** One line of the trophies sheet (handoff 11e). */
 data class TrophyLine(
@@ -151,9 +160,9 @@ sealed interface PracticeSheet {
     data object Path : PracticeSheet
 
     /**
-     * «Профиль»: [nameDraft] is what the field shows, stored when the sheet closes. Photo
-     * actions take effect at once; [importingPhoto] is true while a picked photo is copied.
-     * Opens only over «Мой путь», in its place, and goes back to it when closed.
+     * «Имя и фото» (was «Профиль», spec 3.36.3): [nameDraft] is what the field shows, stored however the sheet closes. Photo
+     * actions take effect at once; [importingPhoto] is true while a picked photo is copied. Opens only over «Мой путь», in its
+     * place, and goes back to it when closed.
      */
     data class Profile(val nameDraft: String, val importingPhoto: Boolean) : PracticeSheet
 
@@ -345,7 +354,7 @@ sealed interface PracticeIntent {
     /** A record of the sheet of the day: its screen opens, and «назад» from it comes back to the sheet. */
     data class SessionClicked(val id: Long) : PracticeIntent
 
-    /** «Имя и фото» of «Мой путь»: «Профиль» takes its place. Heard only over «Мой путь». */
+    /** «Имя и фото» of «Мой путь»: the sheet «Имя и фото» takes its place. Heard only over «Мой путь». */
     data object ProfileClicked : PracticeIntent
 
     data class ProfileNameChanged(val text: String) : PracticeIntent
@@ -355,14 +364,11 @@ sealed interface PracticeIntent {
 
     data object ProfilePhotoRemoved : PracticeIntent
 
-    /** «Готово», a swipe down and «назад» alike: the name is stored either way (spec 3.13), and «Мой путь» comes back. */
-    data object ProfileClosed : PracticeIntent
-
     /**
-     * «Настройки» under «Готово» of the profile (until R3): the name is stored, the profile and «Мой путь» under it close, the
-     * settings open — as from «Мой путь».
+     * «Готово», the key «Готово» of the keyboard, a swipe down and «назад» alike: the name is stored either way (spec 3.13), and «Мой
+     * путь» comes back. The row «Настройки» of the sheet is gone (spec 3.36.3): it stands in «Мой путь».
      */
-    data object ProfileSettingsClicked : PracticeIntent
+    data object ProfileClosed : PracticeIntent
 
     /** «Все трофеи» or the row of trophies of «Мой путь»: «Трофеи» take its place. Heard only over «Мой путь». */
     data object TrophiesClicked : PracticeIntent

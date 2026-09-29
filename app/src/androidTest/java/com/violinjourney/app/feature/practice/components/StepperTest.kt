@@ -50,7 +50,7 @@ class StepperTest {
     private fun show(canStepDown: Boolean = true, canStepUp: Boolean = true) {
         compose.setContent {
             ViolinTheme {
-                // the sheet: a column that scrolls, as `SheetColumn`, taller than its window
+                // the sheet: a column that scrolls, as the content of `AppSheet`, taller than its window
                 Column(Modifier.height(WINDOW.dp).verticalScroll(rememberScrollState())) {
                     Stepper(
                         value = "47 min",

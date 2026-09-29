@@ -21,8 +21,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -46,6 +48,9 @@ private val ErrorIcon = 15.dp
 private val ErrorIconGap = 5.dp
 private val FieldBorder = 1.5.dp
 private const val DISABLED_ALPHA = 0.38f
+
+/** The counter of a field in a sheet (5.29 R3: «0 / 24» 12 sp). */
+private const val SHEET_COUNTER_SIZE = 12
 private const val TABULAR_FIGURES = "tnum"
 
 /**
@@ -62,6 +67,11 @@ private const val TABULAR_FIGURES = "tnum"
  * 0 / 24»), as a label of Material does, and a touch on the caption puts the focus in the field. `OutlinedTextField` for a
  * [TextFieldValue] cannot put its label above the frame, hence [BasicTextField] with the decoration of the outlined field.
  * [enabled] false dims the whole field to 0.38 in its own colours.
+ *
+ * [showLabel] false — the caption is not drawn, its place is taken by the [placeholder] in the field; the field is still named by it
+ * for TalkBack and VoiceOver («Имя» of «Имя и фото», R3). [inSheet] — the field of a sheet (5.29 R3): on surfaceContainerHigh, its
+ * frame unseen until it is typed in, the placeholder in the second level of text (the third reads 4.1 : 1 on surfaceContainerHigh),
+ * the counter 12 sp.
  */
 @Composable
 fun AppField(
@@ -78,23 +88,28 @@ fun AppField(
     keyboardOptions: KeyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences, imeAction = ImeAction.Done),
     keyboardActions: KeyboardActions = KeyboardActions.Default,
     enabled: Boolean = true,
+    showLabel: Boolean = true,
+    inSheet: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
-    val tertiary = ViolinTheme.textTertiary
+    val placeholderColor = if (inSheet) colors.onSurfaceVariant else ViolinTheme.textTertiary
+    val container = if (inSheet) colors.surfaceContainerHigh else colors.surfaceContainer
+    val restingBorder = if (inSheet) Color.Transparent else colors.outlineVariant
     val small = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp)
+    val counterStyle = if (inSheet) small.copy(fontSize = SHEET_COUNTER_SIZE.sp) else small
     val interaction = remember { MutableInteractionSource() }
     // the disabled field keeps its colours: it is dimmed as a whole, as a disabled button is
     val fieldColors = OutlinedTextFieldDefaults.colors(
-        focusedContainerColor = colors.surfaceContainer,
-        unfocusedContainerColor = colors.surfaceContainer,
-        disabledContainerColor = colors.surfaceContainer,
+        focusedContainerColor = container,
+        unfocusedContainerColor = container,
+        disabledContainerColor = container,
         focusedBorderColor = colors.primary,
-        unfocusedBorderColor = colors.outlineVariant,
-        disabledBorderColor = colors.outlineVariant,
+        unfocusedBorderColor = restingBorder,
+        disabledBorderColor = restingBorder,
         focusedTextColor = colors.onSurface,
         unfocusedTextColor = colors.onSurface,
         disabledTextColor = colors.onSurface,
-        disabledPlaceholderColor = tertiary,
+        disabledPlaceholderColor = placeholderColor,
         cursorColor = colors.primary,
     )
     BasicTextField(
@@ -102,6 +117,8 @@ fun AppField(
         onValueChange = onValueChange,
         modifier = modifier
             .fillMaxWidth()
+            // the caption not drawn still names the field
+            .then(if (showLabel) Modifier else Modifier.semantics { contentDescription = label })
             .then(if (enabled) Modifier else Modifier.alpha(DISABLED_ALPHA)),
         enabled = enabled,
         singleLine = singleLine,
@@ -113,8 +130,10 @@ fun AppField(
         interactionSource = interaction,
         decorationBox = { innerTextField ->
             Column(Modifier.fillMaxWidth()) {
-                Text(label, color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold))
-                Spacer(Modifier.height(LabelGap))
+                if (showLabel) {
+                    Text(label, color = colors.onSurfaceVariant, style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold))
+                    Spacer(Modifier.height(LabelGap))
+                }
                 // the frame is as wide as the field and 56 high at the least, as OutlinedTextField makes it
                 Box(Modifier.fillMaxWidth().heightIn(min = OutlinedTextFieldDefaults.MinHeight), propagateMinConstraints = true) {
                     OutlinedTextFieldDefaults.DecorationBox(
@@ -124,7 +143,7 @@ fun AppField(
                         singleLine = singleLine,
                         visualTransformation = VisualTransformation.None,
                         interactionSource = interaction,
-                        placeholder = placeholder?.let { { Text(it, color = tertiary, maxLines = if (singleLine) 1 else Int.MAX_VALUE) } },
+                        placeholder = placeholder?.let { { Text(it, color = placeholderColor, maxLines = if (singleLine) 1 else Int.MAX_VALUE) } },
                         colors = fieldColors,
                         container = {
                             OutlinedTextFieldDefaults.Container(
@@ -161,7 +180,7 @@ fun AppField(
                             }
                         }
                         if (counter != null) {
-                            Text(counter, color = colors.onSurfaceVariant, maxLines = 1, softWrap = false, style = small.copy(fontFeatureSettings = TABULAR_FIGURES))
+                            Text(counter, color = colors.onSurfaceVariant, maxLines = 1, softWrap = false, style = counterStyle.copy(fontFeatureSettings = TABULAR_FIGURES))
                         }
                     }
                 }

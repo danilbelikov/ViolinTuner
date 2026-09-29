@@ -24,16 +24,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.PathEffect
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onLayoutRectChanged
 import androidx.compose.ui.layout.onSizeChanged
@@ -99,9 +95,6 @@ private val TilesTop = 10.dp
 private val TilesGap = 10.dp
 private val TileIcon = 36.dp
 private val TileGap = 6.dp
-private val TileDash = 1.5.dp
-private val DashOn = 4.dp
-private val DashOff = 3.dp
 private val RowsTop = 10.dp
 private val RowPhoto = 32.dp
 private const val TILES = 3
@@ -317,20 +310,7 @@ private fun TrophyTile(badge: TrophyBadge, name: String, modifier: Modifier) {
     val colors = MaterialTheme.colorScheme
     val ground = colors.surface
     val dash = colors.outlineVariant
-    val look = if (badge.given) {
-        Modifier.background(ground, AppShapes.M)
-    } else {
-        Modifier.drawBehind {
-            val stroke = TileDash.toPx()
-            drawRoundRect(
-                color = dash,
-                topLeft = Offset(stroke / 2, stroke / 2),
-                size = Size(size.width - stroke, size.height - stroke),
-                cornerRadius = CornerRadius(TileCorner.toPx() - stroke / 2),
-                style = Stroke(stroke, pathEffect = PathEffect.dashPathEffect(floatArrayOf(DashOn.toPx(), DashOff.toPx()))),
-            )
-        }
-    }
+    val look = if (badge.given) Modifier.background(ground, AppShapes.M) else Modifier.dashedFrame(dash)
     val words = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp, lineHeight = 16.sp)
     Column(
         modifier = modifier.then(look).padding(horizontal = TilePaddingSide, vertical = TilePaddingVertical),
@@ -355,7 +335,6 @@ private fun TrophyTile(badge: TrophyBadge, name: String, modifier: Modifier) {
     }
 }
 
-private val TileCorner = 18.dp
 private val TilePaddingSide = 6.dp
 private val TilePaddingVertical = 12.dp
 

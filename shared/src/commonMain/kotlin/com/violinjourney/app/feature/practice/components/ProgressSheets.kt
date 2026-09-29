@@ -4,69 +4,80 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.em
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.progress.Profile
 import com.violinjourney.app.core.text.codePointLength
 import com.violinjourney.app.core.text.takeCodePoints
-import com.violinjourney.app.core.ui.components.rememberHeldSheet
-import com.violinjourney.app.core.ui.components.rememberImagePicker
+import com.violinjourney.app.core.ui.components.AppButton
+import com.violinjourney.app.core.ui.components.AppButtonStyle
+import com.violinjourney.app.core.ui.components.AppField
+import com.violinjourney.app.core.ui.components.AppSheetButtons
+import com.violinjourney.app.core.ui.components.SectionLabel
 import com.violinjourney.app.core.ui.format.Formats
-import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
-import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.practice.PracticeIntent
 import com.violinjourney.app.feature.practice.PracticeSheet
-import com.violinjourney.app.feature.practice.ProfileHeader
 import com.violinjourney.app.feature.practice.TrophyLine
 import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.nav_settings
+import com.violinjourney.app.shared.resources.path_name_photo
 import com.violinjourney.app.shared.resources.profile_done
 import com.violinjourney.app.shared.resources.profile_name_counter
 import com.violinjourney.app.shared.resources.profile_name_label
+import com.violinjourney.app.shared.resources.profile_name_note
 import com.violinjourney.app.shared.resources.profile_name_placeholder
 import com.violinjourney.app.shared.resources.profile_no_name_letter
+import com.violinjourney.app.shared.resources.profile_other_photo
 import com.violinjourney.app.shared.resources.profile_pick_photo
 import com.violinjourney.app.shared.resources.profile_remove_photo
-import com.violinjourney.app.shared.resources.profile_title
 import com.violinjourney.app.shared.resources.progress_trophy_names
-import com.violinjourney.app.shared.resources.trophies_awarded
+import com.violinjourney.app.shared.resources.trophies_count
 import com.violinjourney.app.shared.resources.trophies_far
+import com.violinjourney.app.shared.resources.trophies_heading_description
 import com.violinjourney.app.shared.resources.trophies_line_far
 import com.violinjourney.app.shared.resources.trophies_line_given
+import com.violinjourney.app.shared.resources.trophies_line_next
 import com.violinjourney.app.shared.resources.trophies_line_remaining
 import com.violinjourney.app.shared.resources.trophies_remaining
 import com.violinjourney.app.shared.resources.trophies_title
@@ -74,250 +85,256 @@ import com.violinjourney.app.shared.resources.trophies_total
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 
-private val SheetAvatar = 112.dp
-private val TextButtonHeight = 40.dp
-private val FieldCorner = 16.dp
-private val TrophyLineHeight = 56.dp
-private val TrophyLineIcon = 40.dp
+// «Имя и фото» (spec 3.36.3, 5.29 R3; practice-sheets.html 7).
+private val AvatarSize = 104.dp
+private val AvatarTop = 6.dp
+private val AvatarBottom = 12.dp
+private val PhotoButtonsGap = 8.dp
+private val FieldTop = 18.dp
+private val NoteTop = 6.dp
+private const val NOTE_SIZE = 13
+
+// «Трофеи» (spec 3.36.3, 5.29 R3; practice-sheets.html 6).
+private const val TITLE_SIZE = 22
+private const val SMALL_SIZE = 13
+private val TotalBottom = 6.dp
+private val RowMinHeight = 68.dp
+private val RowGap = 12.dp
+private val TileSize = 48.dp
+private val TileShape = RoundedCornerShape(14.dp)
+private val TrophyArtSize = 34.dp
+private const val NAME_SIZE = 15
+
+/** The frame of the nearest trophy reaches this far past the rows on each side, its content stays in line with them. */
+private val NextBleed = 12.dp
+private val NextMargin = 6.dp
+private val FarTop = 18.dp
+private val FarBottom = 4.dp
+private const val FAR_SIZE = 12
+private const val FAR_TRACKING = 0.06
+private val DividerThickness = 1.dp
 private const val TABULAR_FIGURES = "tnum"
-private const val FAR_ALPHA = 0.7f
 
 /**
- * «Профиль»: the photo and the name (spec 3.13, handoff 11d1, 11d2). Closing it any way stores the name. Null — no
- * sheet; one that was open slides away, as [SummarySheet].
+ * «Имя и фото» (was «Профиль», spec 3.13, 3.36.3; practice-sheets.html 7): the label, the photo — or the first letter of the name, or
+ * «?» with neither — «Выбрать фото», or «Другое фото» and «Убрать фото» when there is one ([hasPhoto]); both dimmed while a picked
+ * photo is copied. The field of the name with its hint inside, the counter «0 / 24» under it and the line «Видно только вам…». One
+ * thing only: the row «Настройки» stands in «Мой путь». «Готово» is [NamePhotoButtons], at the bottom of the sheet — over the keyboard,
+ * whose inset the sheet itself takes once. In portrait the field has the focus and the keyboard is open at once; in landscape not.
+ * The name is stored however the sheet is closed (spec 3.13).
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun ProfileSheet(sheet: PracticeSheet.Profile?, header: ProfileHeader, onIntent: (PracticeIntent) -> Unit, slideAway: Boolean = true) {
-    // Whole at once: half a sheet under a keyboard would hide the field it was opened for.
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    val shown = rememberHeldSheet(sheet, sheetState, slideAway) ?: return
-    // The system photo picker: no permission is involved, the app gets one picture and no more.
-    val pickPhoto = rememberImagePicker { picked -> onIntent(PracticeIntent.ProfilePhotoPicked(picked)) }
-    ModalBottomSheet(
-        onDismissRequest = { onIntent(PracticeIntent.ProfileClosed) },
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-    ) {
-        ProfileSheetContent(
-            sheet = shown,
-            header = header,
-            onIntent = onIntent,
-            onPickPhoto = pickPhoto,
-        )
-    }
-}
-
-@Composable
-fun ProfileSheetContent(
+fun NamePhotoSheetContent(
     sheet: PracticeSheet.Profile,
-    header: ProfileHeader,
+    hasPhoto: Boolean,
+    photo: ImageBitmap?,
     onIntent: (PracticeIntent) -> Unit,
     onPickPhoto: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val colors = MaterialTheme.colorScheme
-    // The field owns its text: the state comes back from the view model a frame later, and a
-    // field fed from it loses the cursor to fast typing. The view model only hears of changes.
-    var name by rememberSaveable { mutableStateOf(sheet.nameDraft) }
-    // The keyboard lifts the sheet's content: «Готово» stays in sight (handoff 11d2).
-    SheetColumn(modifier.imePadding()) {
-        Text(
-            text = stringResource(Res.string.profile_title),
-            color = colors.onSurfaceVariant,
-            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp),
-        )
-        Column(
+    val title = stringResource(Res.string.path_name_photo)
+    // The field owns its text: the state comes back from the view model a frame later, and a field fed from it loses the cursor to
+    // fast typing. The view model only hears of changes.
+    var value by rememberSaveable(stateSaver = TextFieldValue.Saver) {
+        mutableStateOf(TextFieldValue(sheet.nameDraft, TextRange(sheet.nameDraft.length)))
+    }
+    val focus = remember { FocusRequester() }
+    val portrait = LocalWindowInfo.current.containerSize.let { it.width < it.height }
+    Column(modifier.fillMaxWidth().semantics { paneTitle = title }, horizontalAlignment = Alignment.CenterHorizontally) {
+        SectionLabel(title)
+        // the letter follows the field as it is typed; with nothing typed it asks
+        val letter = initialOf(value.text.trim()).ifEmpty { stringResource(Res.string.profile_no_name_letter) }
+        Avatar(photo, AvatarFallback.Letter(letter), AvatarSize, Modifier.padding(top = AvatarTop, bottom = AvatarBottom))
+        FlowRow(
             modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(14.dp),
+            horizontalArrangement = Arrangement.spacedBy(PhotoButtonsGap, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(PhotoButtonsGap),
         ) {
-            // The letter follows the field as it is typed; with nothing typed it asks.
-            val letter = initialOf(name.trim()).ifEmpty { stringResource(Res.string.profile_no_name_letter) }
-            Avatar(path = header.avatarPath, fallback = AvatarFallback.Letter(letter), size = SheetAvatar)
-            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                SheetTextButton(stringResource(Res.string.profile_pick_photo), AppIcons.Gallery, enabled = !sheet.importingPhoto, onClick = onPickPhoto)
-                if (header.avatarPath != null) {
-                    SheetTextButton(stringResource(Res.string.profile_remove_photo), AppIcons.Trash, enabled = !sheet.importingPhoto, destructive = true) {
-                        onIntent(PracticeIntent.ProfilePhotoRemoved)
-                    }
-                }
+            AppButton(
+                text = stringResource(if (hasPhoto) Res.string.profile_other_photo else Res.string.profile_pick_photo),
+                onClick = onPickPhoto,
+                style = AppButtonStyle.Soft,
+                icon = AppIcons.Gallery,
+                enabled = !sheet.importingPhoto,
+            )
+            if (hasPhoto) {
+                AppButton(
+                    text = stringResource(Res.string.profile_remove_photo),
+                    onClick = { onIntent(PracticeIntent.ProfilePhotoRemoved) },
+                    style = AppButtonStyle.Danger,
+                    enabled = !sheet.importingPhoto,
+                )
             }
         }
-        OutlinedTextField(
-            value = name,
-            onValueChange = {
-                name = it.takeCodePoints(Profile.MAX_NAME_LENGTH)
-                onIntent(PracticeIntent.ProfileNameChanged(name))
+        AppField(
+            value = value,
+            onValueChange = { next ->
+                val text = next.text.takeCodePoints(Profile.MAX_NAME_LENGTH)
+                val cut = if (text == next.text) next else TextFieldValue(text, TextRange(text.length))
+                val changed = cut.text != value.text
+                value = cut
+                if (changed) onIntent(PracticeIntent.ProfileNameChanged(cut.text))
             },
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(stringResource(Res.string.profile_name_label)) },
-            placeholder = { Text(stringResource(Res.string.profile_name_placeholder), color = colors.onSurfaceVariant) },
-            trailingIcon = {
-                Text(
-                    text = stringResource(Res.string.profile_name_counter, name.codePointLength(), Profile.MAX_NAME_LENGTH),
-                    color = colors.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontFeatureSettings = TABULAR_FIGURES),
-                    modifier = Modifier.clearAndSetSemantics { },
-                )
-            },
-            singleLine = true,
-            shape = RoundedCornerShape(FieldCorner),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp),
+            label = stringResource(Res.string.profile_name_label),
+            modifier = Modifier.padding(top = FieldTop).focusRequester(focus),
+            placeholder = stringResource(Res.string.profile_name_placeholder),
+            counter = stringResource(Res.string.profile_name_counter, value.text.codePointLength(), Profile.MAX_NAME_LENGTH),
             keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onIntent(PracticeIntent.ProfileClosed) }),
-            colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = colors.primary,
-                unfocusedBorderColor = colors.outlineVariant,
-                focusedLabelColor = colors.primary,
-                unfocusedLabelColor = colors.primary,
-                cursorColor = colors.primary,
-            ),
+            showLabel = false,
+            inSheet = true,
         )
-        PrimaryButton(text = stringResource(Res.string.profile_done), onClick = { onIntent(PracticeIntent.ProfileClosed) })
-        // the second way into «Настройки» besides the gear of Live (handoff nav_bar 32): who looks for them from the profile finds them
-        Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
-            SheetTextButton(stringResource(Res.string.nav_settings), AppIcons.Gear, enabled = true) { onIntent(PracticeIntent.ProfileSettingsClicked) }
-        }
+        Text(
+            text = stringResource(Res.string.profile_name_note),
+            modifier = Modifier.fillMaxWidth().padding(top = NoteTop),
+            color = colors.onSurfaceVariant,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = NOTE_SIZE.sp, lineHeight = 19.sp),
+        )
+        // In the composition of the sheet's window, after the field: the field is there to take the focus. Only in portrait — in
+        // landscape the keyboard would take the whole sheet before a word is asked for (spec 3.36.3).
+        if (portrait) LaunchedEffect(Unit) { focus.requestFocus() }
     }
 }
 
+/** «Готово» of «Имя и фото»: the name is stored and «Мой путь» comes back. */
 @Composable
-private fun SheetTextButton(text: String, icon: ImageVector, enabled: Boolean, destructive: Boolean = false, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    val colors = if (destructive) ButtonDefaults.textButtonColors(contentColor = ViolinTheme.dangerSoft) else ButtonDefaults.textButtonColors()
-    TextButton(onClick = onClick, enabled = enabled, colors = colors, modifier = modifier.height(TextButtonHeight)) {
-        IconLabel(icon, text, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
-    }
+fun NamePhotoButtons(onIntent: (PracticeIntent) -> Unit, modifier: Modifier = Modifier) {
+    AppSheetButtons(main = stringResource(Res.string.profile_done), onMain = { onIntent(PracticeIntent.ProfileClosed) }, modifier = modifier)
 }
 
-/** «Трофеи»: every mark, lowest first (spec 3.13, handoff 11e). */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun TrophiesSheet(lines: List<TrophyLine>, totalMs: Long, onIntent: (PracticeIntent) -> Unit) {
-    ModalBottomSheet(
-        onDismissRequest = { onIntent(PracticeIntent.TrophiesClosed) },
-        // Whole at once: the far marks are the point of the list, not something to dig for.
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-    ) {
-        TrophiesSheetContent(lines, totalMs)
-    }
-}
-
+/**
+ * «Трофеи» — «Все трофеи» of «Мой путь» (spec 3.13, 3.36.3; practice-sheets.html 6): «Трофеи» 22 sp with «2 из 10» on the right — how
+ * many are given — and «всего за скрипкой — 47 ч 17 мин»; the marks from the lowest, each a row of 68: the drawing on its tile, the
+ * name, the mark; on the right the date of a given one in the colour of text (a memory, not a task) or what is left. The nearest one
+ * in a dashed frame with its remainder in the accent — the one highlight of the list; «Далеко впереди» and the rows under it quieter in
+ * colour, without remainders. No buttons: a swipe and «назад» give «Мой путь» back.
+ */
 @Composable
 fun TrophiesSheetContent(lines: List<TrophyLine>, totalMs: Long, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val names = stringArrayResource(Res.array.progress_trophy_names)
-    // Scrolls when it has to (SheetColumn): the far marks of a long list below a low window.
-    SheetColumn(modifier) {
-        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Row(
-                modifier = Modifier.alignByBaseline(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(10.dp),
-            ) {
-                AppIcon(AppIcons.Trophy, contentDescription = null, tint = colors.primary)
-                Text(
-                    text = stringResource(Res.string.trophies_title),
-                    color = colors.onSurface,
-                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, fontWeight = FontWeight.Bold),
-                )
-            }
+    val title = stringResource(Res.string.trophies_title)
+    // given in fact, seen or not — as the dates of the rows under it
+    val count = stringResource(Res.string.trophies_count, lines.count { it.awardedDate != null }, lines.size)
+    val said = stringResource(Res.string.trophies_heading_description, title, count)
+    val small = MaterialTheme.typography.bodySmall.copy(fontSize = SMALL_SIZE.sp, lineHeight = 18.sp, fontFeatureSettings = TABULAR_FIGURES)
+    Column(modifier.fillMaxWidth().semantics { paneTitle = title }) {
+        Row(
+            // «Трофеи, 2 из 10» — a heading, read once
+            Modifier.fillMaxWidth().clearAndSetSemantics {
+                heading()
+                contentDescription = said
+            },
+            horizontalArrangement = Arrangement.spacedBy(RowGap),
+        ) {
             Text(
-                text = stringResource(Res.string.trophies_total, Formats.totalTime(totalMs)),
-                color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
-                maxLines = 1,
-                modifier = Modifier.alignByBaseline(),
-            )
-        }
-        Column {
-            lines.forEachIndexed { index, line ->
-                // The divider stands before the first far mark only.
-                if (line.isFar && lines.getOrNull(index - 1)?.isFar != true) FarDivider()
-                TrophyLineRow(line, name = names.getOrElse(line.index) { "" })
-            }
-        }
-    }
-}
-
-@Composable
-private fun FarDivider() {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(30.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
-    ) {
-        Text(
-            text = stringResource(Res.string.trophies_far).uppercase(),
-            color = colors.onSurfaceVariant,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.SemiBold, letterSpacing = 0.44.sp),
-        )
-        Box(
-            modifier = Modifier
-                .weight(1f)
-                .height(1.dp)
-                .background(colors.outlineVariant),
-        )
-    }
-}
-
-@Composable
-private fun TrophyLineRow(line: TrophyLine, name: String) {
-    val colors = MaterialTheme.colorScheme
-    val awardedDate = line.awardedDate
-    val remainingMs = line.remainingMs
-    val given = awardedDate != null
-    val hours = Formats.hoursMark(line.hours)
-    val status = when {
-        awardedDate != null -> stringResource(Res.string.trophies_awarded, Formats.dayAndMonth(awardedDate))
-        remainingMs != null -> stringResource(Res.string.trophies_remaining, Formats.remainingTime(remainingMs))
-        else -> ""
-    }
-    val description = when {
-        awardedDate != null -> stringResource(Res.string.trophies_line_given, name, hours, Formats.dayAndMonth(awardedDate))
-        remainingMs != null -> stringResource(Res.string.trophies_line_remaining, name, hours, Formats.remainingTime(remainingMs))
-        else -> stringResource(Res.string.trophies_line_far, name, hours)
-    }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(TrophyLineHeight)
-            .alpha(if (line.isFar) FAR_ALPHA else 1f)
-            .clearAndSetSemantics { contentDescription = description },
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(14.dp),
-    ) {
-        Box(modifier = Modifier.size(TrophyLineIcon), contentAlignment = Alignment.Center) {
-            TrophyIcon(line.hours, locked = !given, size = TrophyLineIcon)
-        }
-        Row(modifier = Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(
-                text = name,
-                color = if (given || line.isNext) colors.onSurface else colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
+                text = title,
+                modifier = Modifier.weight(1f).alignByBaseline(),
+                color = colors.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                modifier = Modifier
-                    .weight(1f, fill = false)
-                    .alignByBaseline(),
+                style = MaterialTheme.typography.titleLarge.copy(fontSize = TITLE_SIZE.sp, lineHeight = 28.sp, fontWeight = FontWeight.ExtraBold),
             )
-            Text(
-                text = hours,
-                color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
-                maxLines = 1,
-                modifier = Modifier.alignByBaseline(),
-            )
+            Text(count, Modifier.alignByBaseline(), color = colors.onSurfaceVariant, maxLines = 1, style = small)
         }
         Text(
-            text = status,
-            color = if (given) colors.onSurface else colors.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
-            maxLines = 1,
+            text = stringResource(Res.string.trophies_total, Formats.totalTime(totalMs)),
+            modifier = Modifier.padding(bottom = TotalBottom),
+            color = colors.onSurfaceVariant,
+            style = small,
         )
+        lines.forEachIndexed { index, line ->
+            // the label stands before the first far mark only
+            if (line.isFar && lines.getOrNull(index - 1)?.isFar != true) FarLabel()
+            TrophyRow(line, names.getOrElse(line.index) { "" })
+            // a line under each row but the last; the framed one has its frame
+            if (index < lines.lastIndex && !line.isNext) HorizontalDivider(thickness = DividerThickness, color = colors.outlineVariant)
+        }
     }
+}
+
+/** «ДАЛЕКО ВПЕРЕДИ» (5.29 R3): a label 12 sp, 700, capitals, in the third level of text, without a line. */
+@Composable
+private fun FarLabel() {
+    Text(
+        text = stringResource(Res.string.trophies_far).uppercase(),
+        modifier = Modifier.padding(top = FarTop, bottom = FarBottom),
+        color = ViolinTheme.textTertiary,
+        style = MaterialTheme.typography.labelMedium.copy(fontSize = FAR_SIZE.sp, lineHeight = 16.sp, fontWeight = FontWeight.Bold, letterSpacing = FAR_TRACKING.em),
+    )
+}
+
+@Composable
+private fun TrophyRow(line: TrophyLine, name: String) {
+    val colors = MaterialTheme.colorScheme
+    val tertiary = ViolinTheme.textTertiary
+    val given = line.awardedDate != null
+    val hours = Formats.hoursMark(line.hours)
+    val date = line.awardedDate?.let(Formats::dayAndMonth)
+    val remaining = line.remainingMs?.let(Formats::remainingTime)
+    val description = when {
+        date != null -> stringResource(Res.string.trophies_line_given, name, hours, date)
+        remaining != null && line.isNext -> stringResource(Res.string.trophies_line_next, name, hours, remaining)
+        remaining != null -> stringResource(Res.string.trophies_line_remaining, name, hours, remaining)
+        else -> stringResource(Res.string.trophies_line_far, name, hours)
+    }
+    val frame = if (line.isNext) {
+        Modifier
+            .padding(vertical = NextMargin)
+            .bleed(NextBleed)
+            .dashedFrame(colors.outlineVariant)
+            .padding(horizontal = NextBleed)
+    } else {
+        Modifier
+    }
+    val small = MaterialTheme.typography.bodySmall.copy(fontSize = SMALL_SIZE.sp, lineHeight = 18.sp, fontFeatureSettings = TABULAR_FIGURES)
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .then(frame)
+            .heightIn(min = RowMinHeight)
+            .clearAndSetSemantics { contentDescription = description },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(RowGap),
+    ) {
+        Box(Modifier.size(TileSize).background(colors.surface, TileShape), contentAlignment = Alignment.Center) {
+            TrophyIcon(line.hours, locked = !given, size = TrophyArtSize)
+        }
+        Column(Modifier.weight(1f)) {
+            Text(
+                text = name,
+                color = if (line.isFar) tertiary else colors.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                style = MaterialTheme.typography.titleSmall.copy(fontSize = NAME_SIZE.sp, lineHeight = 20.sp, fontWeight = FontWeight.ExtraBold),
+            )
+            Text(hours, color = if (line.isFar) tertiary else colors.onSurfaceVariant, maxLines = 1, style = small)
+        }
+        when {
+            date != null -> Text(date, color = colors.onSurface, maxLines = 1, style = small)
+            remaining != null -> Text(
+                text = stringResource(Res.string.trophies_remaining, remaining),
+                color = if (line.isNext) colors.primary else colors.onSurfaceVariant,
+                maxLines = 1,
+                style = if (line.isNext) small.copy(fontWeight = FontWeight.Bold) else small,
+            )
+        }
+    }
+}
+
+/**
+ * Wider than the place it is given by [side] on each side, the extra drawn past it: the frame of the nearest trophy reaches into the
+ * fields of the sheet while its content stays in line with the other rows.
+ */
+private fun Modifier.bleed(side: Dp): Modifier = layout { measurable, constraints ->
+    val extra = (side * 2).roundToPx()
+    if (!constraints.hasBoundedWidth) {
+        val placeable = measurable.measure(constraints)
+        return@layout layout(placeable.width, placeable.height) { placeable.placeRelative(0, 0) }
+    }
+    val wide = constraints.maxWidth + extra
+    val placeable = measurable.measure(constraints.copy(minWidth = wide, maxWidth = wide))
+    layout(constraints.maxWidth, placeable.height) { placeable.placeRelative(-side.roundToPx(), 0) }
 }

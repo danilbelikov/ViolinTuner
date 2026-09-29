@@ -8,15 +8,11 @@ import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -370,44 +366,4 @@ private fun HintText(text: String, modifier: Modifier = Modifier) {
         textAlign = TextAlign.Center,
         style = MaterialTheme.typography.bodySmall.copy(fontSize = HINT_SIZE.sp, lineHeight = HINT_LINE_HEIGHT.em),
     )
-}
-
-// Until stage 107 — the gift, the recap and «Имя и фото» keep their windows and these parts of the old look (spec 3.36.3, R3 plan).
-private val SheetPadding = 24.dp
-private val SheetBottom = 32.dp
-private val PrimaryButtonHeight = 56.dp
-private val PrimaryCorner = 28.dp
-
-/**
- * The column of a sheet of «Занятия» that is not in the frame of R3 yet — the gift, the recap, «Профиль», «Трофеи» (until stage 107).
- * Scrolls when the window is lower than the sheet — landscape, a large font: its buttons are the only answers to it (spec 3.12).
- * Nothing inside may scroll the same way without a bound.
- */
-@Composable
-fun SheetColumn(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Column(
-        modifier = modifier
-            .fillMaxWidth()
-            .verticalScroll(rememberScrollState())
-            .padding(start = SheetPadding, end = SheetPadding, bottom = SheetBottom),
-        verticalArrangement = Arrangement.spacedBy(20.dp),
-    ) {
-        content()
-    }
-}
-
-/** The main button of those sheets, until stage 107 moves them to [AppSheetButtons]. */
-@Composable
-fun PrimaryButton(text: String, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Button(
-        onClick = onClick,
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(PrimaryButtonHeight),
-        shape = RoundedCornerShape(PrimaryCorner),
-        colors = ButtonDefaults.buttonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
-    ) {
-        Text(text, style = MaterialTheme.typography.labelLarge.copy(fontSize = 16.sp, fontWeight = FontWeight.Bold))
-    }
 }

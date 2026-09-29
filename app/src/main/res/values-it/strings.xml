@@ -502,11 +502,12 @@
     <string name="path_description">Livello %1$d, %2$s, %3$s, al livello %4$d %5$s</string>
     <string name="path_description_last">Livello %1$d, %2$s, %3$s</string>
     <string name="path_description_first">Livello %1$d, %2$s, al livello %3$d %4$s</string>
-    <string name="profile_title">Profilo</string>
     <string name="profile_pick_photo">Scegli una foto</string>
+    <string name="profile_other_photo">Altra foto</string>
     <string name="profile_remove_photo">Rimuovi la foto</string>
     <string name="profile_name_label">Nome</string>
     <string name="profile_name_placeholder">Come ti chiami?</string>
+    <string name="profile_name_note">Lo vedi solo tu, in «Il mio percorso». Senza nome lì c\'è scritto «Al violino».</string>
     <string name="profile_name_counter">%1$d / %2$d</string>
     <string name="profile_done">Fatto</string>
     <string name="profile_no_name_letter">\?</string>
@@ -516,13 +517,20 @@
     <string name="gift_hours_few">%1$s ore al violino</string>
     <string name="gift_hours_many">%1$s ore al violino</string>
     <string name="gift_thanks">Grazie</string>
+    <string name="gift_line">%1$s · %2$s</string>
+    <string name="gift_next">Poi — %1$s</string>
+    <string name="gift_next_line">%1$s · ancora %2$s</string>
+    <string name="gift_description">%1$s: %2$s, %3$s, %4$s.</string>
+    <string name="gift_next_description">Poi — %1$s, %2$s, ancora %3$s</string>
     <string name="trophies_title">Trofei</string>
+    <string name="trophies_count">%1$d di %2$d</string>
+    <string name="trophies_heading_description">%1$s, %2$s</string>
     <string name="trophies_total">in totale al violino — %1$s</string>
-    <string name="trophies_awarded">ricevuto il %1$s</string>
     <string name="trophies_remaining">ancora %1$s</string>
     <string name="trophies_far">Ancora lontano</string>
     <string name="trophies_line_given">%1$s, %2$s, ricevuto il %3$s</string>
     <string name="trophies_line_remaining">%1$s, %2$s, ancora %3$s</string>
+    <string name="trophies_line_next">%1$s, %2$s, ancora %3$s, il prossimo</string>
     <string name="trophies_line_far">%1$s, %2$s, ancora lontano</string>
 
     <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
@@ -1065,15 +1073,25 @@
     <string name="recap_day_total">in tutta la giornata: %1$s</string>
     <string name="recap_source_notes">Note intonate</string>
     <string name="recap_source_time">Tempo</string>
+    <string name="recap_source_repertoire">Repertorio</string>
     <string name="recap_source_count">· %1$s</string>
-    <string name="recap_road_left">per %1$s mancano %2$s</string>
     <string name="recap_road_enough">Bastano per %1$s</string>
-    <string name="recap_road_leg">%1$s → %2$s</string>
-    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_to">Per %1$s</string>
+    <string name="recap_road_more">mancano %1$s</string>
     <string name="recap_road_done">Percorso completato · %1$s nel borsellino</string>
     <string name="recap_road_not_started">Le battute si accumulano — il viaggio parte da casa</string>
     <string name="recap_level_up">Nuovo livello</string>
+    <string name="recap_level_name">%1$d · %2$s</string>
     <string name="recap_streak_up">+1 giorno</string>
+    <string name="recap_description_head">%1$s, %2$s.</string>
+    <string name="recap_description_takts">Più %1$s: %2$s.</string>
+    <string name="recap_description_source">%1$s — %2$s</string>
+    <string name="recap_description_road">Per %1$s mancano %2$s.</string>
+    <string name="recap_description_sentence">%1$s.</string>
+    <string name="recap_description_level">Livello %1$d, %2$s, al livello %3$d %4$s.</string>
+    <string name="recap_description_level_up">Nuovo livello %1$d, %2$s, al livello %3$d %4$s.</string>
+    <string name="recap_description_level_last">Livello %1$d, %2$s.</string>
+    <string name="recap_description_level_up_last">Nuovo livello %1$d, %2$s.</string>
 
     <!-- The backing track: listening and sending (spec 3.32). -->
     <string name="share_backing">Con la base</string>

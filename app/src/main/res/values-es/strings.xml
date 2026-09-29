@@ -502,11 +502,12 @@
     <string name="path_description">Nivel %1$d, %2$s, %3$s, hasta el nivel %4$d: %5$s</string>
     <string name="path_description_last">Nivel %1$d, %2$s, %3$s</string>
     <string name="path_description_first">Nivel %1$d, %2$s, hasta el nivel %3$d: %4$s</string>
-    <string name="profile_title">Perfil</string>
     <string name="profile_pick_photo">Elegir foto</string>
+    <string name="profile_other_photo">Otra foto</string>
     <string name="profile_remove_photo">Quitar foto</string>
     <string name="profile_name_label">Nombre</string>
     <string name="profile_name_placeholder">¿Cómo te llamas?</string>
+    <string name="profile_name_note">Solo lo ves tú, en «Mi camino». Sin nombre, allí pone «Con el violín».</string>
     <string name="profile_name_counter">%1$d / %2$d</string>
     <string name="profile_done">Listo</string>
     <string name="profile_no_name_letter">\?</string>
@@ -516,13 +517,20 @@
     <string name="gift_hours_few">%1$s horas con el violín</string>
     <string name="gift_hours_many">%1$s horas con el violín</string>
     <string name="gift_thanks">Gracias</string>
+    <string name="gift_line">%1$s · %2$s</string>
+    <string name="gift_next">Después: %1$s</string>
+    <string name="gift_next_line">%1$s · faltan %2$s</string>
+    <string name="gift_description">%1$s: %2$s, %3$s, %4$s.</string>
+    <string name="gift_next_description">Después: %1$s, %2$s, faltan %3$s</string>
     <string name="trophies_title">Trofeos</string>
+    <string name="trophies_count">%1$d de %2$d</string>
+    <string name="trophies_heading_description">%1$s, %2$s</string>
     <string name="trophies_total">total con el violín: %1$s</string>
-    <string name="trophies_awarded">obtenido el %1$s</string>
     <string name="trophies_remaining">faltan %1$s</string>
     <string name="trophies_far">Muy por delante</string>
     <string name="trophies_line_given">%1$s, %2$s, obtenido el %3$s</string>
     <string name="trophies_line_remaining">%1$s, %2$s, faltan %3$s</string>
+    <string name="trophies_line_next">%1$s, %2$s, faltan %3$s, el siguiente</string>
     <string name="trophies_line_far">%1$s, %2$s, muy por delante</string>
 
     <!-- Repertoire (spec 3.15). "Obra" and "toma" are the two words of the feature. -->
@@ -1065,15 +1073,25 @@
     <string name="recap_day_total">en todo el día: %1$s</string>
     <string name="recap_source_notes">Notas afinadas</string>
     <string name="recap_source_time">Tiempo</string>
+    <string name="recap_source_repertoire">Repertorio</string>
     <string name="recap_source_count">· %1$s</string>
-    <string name="recap_road_left">hasta %1$s — faltan %2$s</string>
     <string name="recap_road_enough">Alcanza hasta %1$s</string>
-    <string name="recap_road_leg">%1$s → %2$s</string>
-    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_to">Hasta %1$s</string>
+    <string name="recap_road_more">faltan %1$s</string>
     <string name="recap_road_done">Ruta completada · %1$s en el monedero</string>
     <string name="recap_road_not_started">Los compases se acumulan — el camino empieza en casa</string>
     <string name="recap_level_up">Nuevo nivel</string>
+    <string name="recap_level_name">%1$d · %2$s</string>
     <string name="recap_streak_up">+1 día</string>
+    <string name="recap_description_head">%1$s, %2$s.</string>
+    <string name="recap_description_takts">Más %1$s: %2$s.</string>
+    <string name="recap_description_source">%1$s — %2$s</string>
+    <string name="recap_description_road">Hasta %1$s faltan %2$s.</string>
+    <string name="recap_description_sentence">%1$s.</string>
+    <string name="recap_description_level">Nivel %1$d, %2$s, hasta el nivel %3$d: %4$s.</string>
+    <string name="recap_description_level_up">Nuevo nivel %1$d, %2$s, hasta el nivel %3$d: %4$s.</string>
+    <string name="recap_description_level_last">Nivel %1$d, %2$s.</string>
+    <string name="recap_description_level_up_last">Nuevo nivel %1$d, %2$s.</string>
 
     <!-- The backing track: listening and sending (spec 3.32). -->
     <string name="share_backing">Con la pista de acompañamiento</string>

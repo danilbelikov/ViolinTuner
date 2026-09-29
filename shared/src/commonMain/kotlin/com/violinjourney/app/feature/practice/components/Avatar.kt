@@ -14,39 +14,34 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.text.firstSymbol
-import com.violinjourney.app.core.ui.components.rememberSmallFileImage
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 
 private const val AVATAR_CROSSFADE_MS = 200
-private const val LETTER_SHARE = 0.43f
 
-/**
- * What stands in the circle when there is no photo to show — on the profile sheet only; the path row and «Мой путь» have the
- * ring of the level instead (spec 3.36.2).
- */
+/** The letter or «?» of «Имя и фото» (5.29 R3): 40, 800 — in dp, so the system font size does not push it out of the circle. */
+private val LetterSize = 40.dp
+
+/** What stands in the circle when there is no photo to show — «Имя и фото» only; the path row and «Мой путь» have the ring of the level. */
 sealed interface AvatarFallback {
-    /** First letter of the name, or «?»: on the accent color. */
+    /** First letter of the name, or «?» with neither a photo nor a name (spec 3.36.3): no silhouette. */
     data class Letter(val text: String) : AvatarFallback
 }
 
 /**
- * The profile photo in a circle, or [fallback] without one, while it loads and when the file
- * cannot be decoded. Decorative: the header it stands in speaks for it. The letter scales with
- * the circle, not with the system font size — it has to fit.
- *
- * The photo comes from the cache of small pictures (a new photo is a new file name, so the path is the key): seen
- * once, it is there from the first frame of the next visit — the header shows what is already true as it is. The
- * crossfade is for a photo that loads or changes before the eyes.
+ * The photo of the profile in a circle, or [fallback] without one — the second level of text on surface-2 (5.29 R3). Decorative: the
+ * sheet it stands in speaks for it. [photo] is the picture the screen has already decoded for the path row and «Мой путь»
+ * (`rememberSmallFileImage`): the three places show the same one and change together (spec 3.36.3); the crossfade is for a photo that
+ * loads or changes before the eyes.
  */
 @Composable
-fun Avatar(path: String?, fallback: AvatarFallback, size: Dp, modifier: Modifier = Modifier) {
-    val photo = rememberSmallFileImage(path)
+fun Avatar(photo: ImageBitmap?, fallback: AvatarFallback, size: Dp, modifier: Modifier = Modifier) {
     Crossfade(
         targetState = photo,
         animationSpec = tween(AVATAR_CROSSFADE_MS),
@@ -58,42 +53,39 @@ fun Avatar(path: String?, fallback: AvatarFallback, size: Dp, modifier: Modifier
         if (bitmap != null) {
             Image(bitmap = bitmap, contentDescription = null, contentScale = ContentScale.Crop, modifier = Modifier.fillMaxSize())
         } else {
-            FallbackCircle(fallback, size)
+            FallbackCircle(fallback)
         }
     }
 }
 
 @Composable
-private fun FallbackCircle(fallback: AvatarFallback, size: Dp) {
+private fun FallbackCircle(fallback: AvatarFallback) {
     val colors = ViolinTheme.progressColors
-    val density = LocalDensity.current
-    val (background, content, text, share) = when (fallback) {
-        is AvatarFallback.Letter -> Look(colors.avatarLetterBackground, colors.avatarLetter, fallback.text, LETTER_SHARE)
+    val text = when (fallback) {
+        is AvatarFallback.Letter -> fallback.text
     }
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(background, CircleShape),
+            .background(colors.avatarLetterBackground, CircleShape),
         contentAlignment = Alignment.Center,
     ) {
-        val fontSize = with(density) { (size * share).toSp() }
+        // dp to sp without the scale of the system font: the letter has to fit the circle
+        val fontSize = with(LocalDensity.current) { LetterSize.toSp() }
         Text(
             text = text,
-            color = content,
-            // The theme's style for the typeface; its fixed line height would not suit a size
-            // that follows the circle.
+            color = colors.avatarLetter,
+            // The theme's style for the typeface; its fixed line height would not suit a size given in dp.
             style = MaterialTheme.typography.titleLarge.copy(
                 fontSize = fontSize,
                 lineHeight = fontSize,
-                fontWeight = FontWeight.Bold,
+                fontWeight = FontWeight.ExtraBold,
                 fontFeatureSettings = "tnum",
             ),
             maxLines = 1,
         )
     }
 }
-
-private data class Look(val background: Color, val content: Color, val text: String, val share: Float)
 
 /**
  * First character of the name as the avatar shows it: a symbol whole — an emoji with its skin tone, a flag, a family

@@ -54,18 +54,14 @@ import com.violinjourney.app.core.ui.motion.LocalReduceMotion
 import com.violinjourney.app.feature.journey.WindowLook
 import com.violinjourney.app.feature.practice.components.CalendarMetrics
 import com.violinjourney.app.feature.practice.components.FirstWeekCard
-import com.violinjourney.app.feature.practice.components.GiftSheet
 import com.violinjourney.app.feature.practice.components.PathRow
 import com.violinjourney.app.feature.practice.components.PracticeSheetHost
 import com.violinjourney.app.feature.practice.components.PracticeCalendar
-import com.violinjourney.app.feature.practice.components.ProfileSheet
-import com.violinjourney.app.feature.practice.components.RecapSheet
 import com.violinjourney.app.feature.practice.components.RunningCard
 import com.violinjourney.app.feature.practice.components.ShownNumbers
 import com.violinjourney.app.feature.practice.components.StartPracticeButton
 import com.violinjourney.app.feature.practice.components.TodayCard
 import com.violinjourney.app.feature.practice.components.TodayMetrics
-import com.violinjourney.app.feature.practice.components.TrophiesSheet
 import com.violinjourney.app.feature.practice.components.WeekCard
 import com.violinjourney.app.feature.practice.components.rememberShownNumbers
 import com.violinjourney.app.feature.practice.components.settled
@@ -129,21 +125,12 @@ fun PracticeScreen(
             PortraitLayout(state, onIntent, journeyCard, flameSways, timer, photo, height = maxHeight)
         }
     }
-    // One frame for «Закончить занятие», the sheet of the day, «Время за день» and «Мой путь» (spec 3.36.3): one of them in the place
-    // of another changes what the frame shows, in place. The sheets not in it yet keep their windows until stage 107: each is always
-    // there and shows itself when it has something; one closed by its own button slides away as a swiped one does — but only when
-    // nothing comes in its place: the recap after «Сохранить» (spec 3.31), the gift after a sheet, «Трофеи» and «Профиль» in the place
-    // of «Мой путь» and back (3.36.2) take the place at once. While a record opened from the sheet of the day is on the screen, the
-    // sheets step aside: the model keeps them, and the sheet of the day rises again when the screen is back.
+    // One frame for every sheet of «Занятия» and the gift (spec 3.36.3): one of them in the place of another changes what the frame
+    // shows, in place — «Время за день» over the sheet of the day, «Трофеи» and «Имя и фото» over «Мой путь», the recap after
+    // «Сохранить» (3.31), the gift after the recap; the frame slides away when the last one goes. While a record opened from the
+    // sheet of the day is on the screen, the sheets step aside: the model keeps them, and the sheet of the day rises again when the
+    // screen is back. The gift waits for the other sheets: the reducer offers it only when none is open.
     PracticeSheetHost(state, onIntent, zone, photo)
-    val sheet = state.sheet.takeUnless { state.sheetsAway }
-    val slideAway = sheet == null && state.gift == null
-    ProfileSheet(sheet as? PracticeSheet.Profile, state.header, onIntent, slideAway)
-    // no button closes it, only a swipe
-    if (sheet == PracticeSheet.Trophies) TrophiesSheet(state.trophies, state.header.totalMs, onIntent)
-    RecapSheet((sheet as? PracticeSheet.Recap)?.recap, onIntent, slideAway)
-    // The gift waits for the other sheets: the reducer offers it only when none is open.
-    GiftSheet(state.gift, onIntent, slideAway = sheet == null)
 }
 
 /**

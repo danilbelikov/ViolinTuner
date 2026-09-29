@@ -102,7 +102,7 @@ object PracticeReducer {
             },
             header = ProgressReducer.headerOf(totalMs, trophies, profile.name, avatarPath, progressConfig),
             trophies = ProgressReducer.trophyLines(totalMs, trophies, progressConfig),
-            gift = if (sheet == null && !recapPending) ProgressReducer.giftOf(trophies, progressConfig) else null,
+            gift = if (sheet == null && !recapPending) ProgressReducer.giftOf(trophies, progressConfig, totalMs) else null,
             sheet = sheet,
             sheetsAway = sheetsAway,
             stepMinutes = config.editStepMinutes,

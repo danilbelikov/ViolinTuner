@@ -103,7 +103,7 @@ open class PracticeViewModel(
      * What only the screen decides: the month shown and the open sheet. A null month follows today: the screen stays open
      * overnight, and in the morning it is on the new month. Only one moved to by the arrows stays where it was put.
      *
-     * One sheet at a time (spec 3.36.2): a sheet opened from another one — «Трофеи» and «Профиль» from «Мой путь», «Время за
+     * One sheet at a time (spec 3.36.2): a sheet opened from another one — «Трофеи» and «Имя и фото» from «Мой путь», «Время за
      * день» from the sheet of the day — takes its place, and [parent] remembers what it stood on, to come back to when it is
      * closed. The day selected in the calendar is the day of the open sheet, nothing more ([selectedDate]). [away] — a record
      * opened from the sheet of the day is on the screen: the sheet steps aside and rises again when the screen is back.
@@ -270,9 +270,7 @@ open class PracticeViewModel(
                 updateProfile { it.copy(nameDraft = intent.text.takeCodePoints(Profile.MAX_NAME_LENGTH)) }
             is PracticeIntent.ProfilePhotoPicked -> importPhoto(intent.uri)
             PracticeIntent.ProfilePhotoRemoved -> replaceAvatar(null)
-            PracticeIntent.ProfileClosed -> closeProfile(toSettings = false)
-            // closes both — the profile and «Мой путь» under it — as «Настройки» of «Мой путь» does
-            PracticeIntent.ProfileSettingsClicked -> closeProfile(toSettings = true)
+            PracticeIntent.ProfileClosed -> closeProfile()
             PracticeIntent.TrophiesClicked -> openOver<PracticeSheet.Path> { PracticeSheet.Trophies }
             PracticeIntent.TrophiesClosed -> ui.update { if (it.sheet == PracticeSheet.Trophies) it.back() else it }
             // The next trophy not seen, if any, becomes the gift by itself: the state follows the table.
@@ -491,7 +489,7 @@ open class PracticeViewModel(
     }
 
     /**
-     * A sheet that opens from another one, [T] — «Трофеи» and «Профиль» from «Мой путь», «Время за день» from the sheet of the day: it
+     * A sheet that opens from another one, [T] — «Трофеи» and «Имя и фото» from «Мой путь», «Время за день» from the sheet of the day: it
      * takes that one's place and remembers it (spec 3.36.2). Over anything else, or over nothing, the tap is dropped.
      */
     private inline fun <reified T : PracticeSheet> openOver(make: (T) -> PracticeSheet) {
@@ -528,15 +526,11 @@ open class PracticeViewModel(
         if (old != null && old != fileName) avatarFiles.delete(old)
     }
 
-    /**
-     * The name of the profile is stored however it is closed (spec 3.13); «Мой путь» comes back — or, [toSettings], goes too and the
-     * settings open.
-     */
-    private fun closeProfile(toSettings: Boolean) {
+    /** The name of «Имя и фото» is stored however the sheet is closed (spec 3.13, 3.36.3), and «Мой путь» comes back. */
+    private fun closeProfile() {
         val sheet = ui.value.sheet as? PracticeSheet.Profile ?: return
-        ui.update { if (it.sheet is PracticeSheet.Profile) (if (toSettings) it.closed() else it.back()) else it }
+        ui.update { if (it.sheet is PracticeSheet.Profile) it.back() else it }
         viewModelScope.launch { profiles.setName(sheet.nameDraft) }
-        if (toSettings) effectChannel.trySend(PracticeEffect.OpenSettings)
     }
 
     private inline fun updateProfile(transform: (PracticeSheet.Profile) -> PracticeSheet.Profile) {

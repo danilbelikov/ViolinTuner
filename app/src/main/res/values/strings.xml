@@ -502,11 +502,12 @@
     <string name="path_description">Level %1$d, %2$s, %3$s, %5$s to level %4$d</string>
     <string name="path_description_last">Level %1$d, %2$s, %3$s</string>
     <string name="path_description_first">Level %1$d, %2$s, %4$s to level %3$d</string>
-    <string name="profile_title">Profile</string>
     <string name="profile_pick_photo">Choose photo</string>
+    <string name="profile_other_photo">Another photo</string>
     <string name="profile_remove_photo">Remove photo</string>
     <string name="profile_name_label">Name</string>
     <string name="profile_name_placeholder">What is your name?</string>
+    <string name="profile_name_note">Only you see it — in “My path”. Without a name it says “At the violin”.</string>
     <string name="profile_name_counter">%1$d / %2$d</string>
     <string name="profile_done">Done</string>
     <string name="profile_no_name_letter">\?</string>
@@ -516,13 +517,20 @@
     <string name="gift_hours_few">%1$s hours at the violin</string>
     <string name="gift_hours_many">%1$s hours at the violin</string>
     <string name="gift_thanks">Thank you</string>
+    <string name="gift_line">%1$s · %2$s</string>
+    <string name="gift_next">Next — %1$s</string>
+    <string name="gift_next_line">%1$s · %2$s to go</string>
+    <string name="gift_description">%1$s: %2$s, %3$s, %4$s.</string>
+    <string name="gift_next_description">Next — %1$s, %2$s, %3$s to go</string>
     <string name="trophies_title">Trophies</string>
+    <string name="trophies_count">%1$d of %2$d</string>
+    <string name="trophies_heading_description">%1$s, %2$s</string>
     <string name="trophies_total">total at the violin — %1$s</string>
-    <string name="trophies_awarded">awarded %1$s</string>
     <string name="trophies_remaining">%1$s to go</string>
     <string name="trophies_far">Far ahead</string>
     <string name="trophies_line_given">%1$s, %2$s, awarded %3$s</string>
     <string name="trophies_line_remaining">%1$s, %2$s, %3$s to go</string>
+    <string name="trophies_line_next">%1$s, %2$s, %3$s to go, next</string>
     <string name="trophies_line_far">%1$s, %2$s, far ahead</string>
 
     <!-- Repertoire (spec 3.15). "Piece" and "take" are the two words of the feature. -->
@@ -1065,15 +1073,25 @@
     <string name="recap_day_total">the whole day: %1$s</string>
     <string name="recap_source_notes">Notes in tune</string>
     <string name="recap_source_time">Time</string>
+    <string name="recap_source_repertoire">Repertoire</string>
     <string name="recap_source_count">· %1$s</string>
-    <string name="recap_road_left">to %1$s — %2$s to go</string>
     <string name="recap_road_enough">Enough to reach %1$s</string>
-    <string name="recap_road_leg">%1$s → %2$s</string>
-    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_to">To %1$s</string>
+    <string name="recap_road_more">%1$s to go</string>
     <string name="recap_road_done">Route complete · %1$s in the purse</string>
     <string name="recap_road_not_started">Bars are adding up — the road begins at home</string>
     <string name="recap_level_up">New level</string>
+    <string name="recap_level_name">%1$d · %2$s</string>
     <string name="recap_streak_up">+1 day</string>
+    <string name="recap_description_head">%1$s, %2$s.</string>
+    <string name="recap_description_takts">Plus %1$s: %2$s.</string>
+    <string name="recap_description_source">%1$s — %2$s</string>
+    <string name="recap_description_road">%2$s to go to %1$s.</string>
+    <string name="recap_description_sentence">%1$s.</string>
+    <string name="recap_description_level">Level %1$d, %2$s, %4$s to level %3$d.</string>
+    <string name="recap_description_level_up">New level %1$d, %2$s, %4$s to level %3$d.</string>
+    <string name="recap_description_level_last">Level %1$d, %2$s.</string>
+    <string name="recap_description_level_up_last">New level %1$d, %2$s.</string>
 
     <!-- The backing track: listening and sending (spec 3.32). -->
     <string name="share_backing">With the backing track</string>

@@ -11,7 +11,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
@@ -85,17 +84,17 @@ fun PracticePromptHost(
             }
         }
     }
-    val current = rememberUpdatedState(prompt)
     val kept = remember { KeptEndings() }
     AppSheet(
         value = prompt,
-        onHide = {
-            when (current.value) {
+        // what the sheet showed when it began to go down: «Указать, сколько играли» and then «назад» at once hides the question, not
+        // the «Закончить занятие» that came while it slid
+        onHide = { hidden ->
+            when (hidden) {
                 // the safe answer of the sheet (spec 3.36): a sign of life, the question comes back after another quiet hour
                 is PracticePrompt.Forgotten -> onIntent(PracticePromptIntent.Continue)
                 // only hidden: the practice stays, and the question comes back the next time the app opens
                 is PracticePrompt.Summary -> onIntent(PracticePromptIntent.SummaryHidden)
-                null -> Unit
             }
         },
         modifier = Modifier.windowInsetsPadding(WindowInsets.statusBars).padding(top = AppSheetDefaults.TopClearance),

@@ -3,6 +3,7 @@ package com.violinjourney.app.feature.practice
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.ProgressConfig.Companion.MS_PER_HOUR
 import com.violinjourney.app.core.domain.progress.Trophy
+import com.violinjourney.app.core.ui.format.Formats
 import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
@@ -116,9 +117,51 @@ class ProgressReducerTest {
 
     @Test
     fun `the gift is the lowest trophy not seen yet`() {
-        assertNull(ProgressReducer.giftOf(emptyList(), config))
-        assertNull(ProgressReducer.giftOf(given(1, 10), config))
+        assertNull(ProgressReducer.giftOf(emptyList(), config, totalMs = 0))
+        assertNull(ProgressReducer.giftOf(given(1, 10), config, totalMs = 12 * MS_PER_HOUR))
         val pending = listOf(Trophy(1, day, shown = true), Trophy(50, day, shown = false), Trophy(10, day.minus(1, DateTimeUnit.DAY), shown = false))
-        assertEquals(Gift(hours = 10, index = 1, awardedDate = day.minus(1, DateTimeUnit.DAY)), ProgressReducer.giftOf(pending, config))
+        // its card names the lowest mark not given at all: 50 h is given — not seen yet — so the card is of 100 h
+        assertEquals(
+            Gift(hours = 10, index = 1, awardedDate = day.minus(1, DateTimeUnit.DAY), next = NextTrophy(100, index = 3, remainingMs = 40 * MS_PER_HOUR)),
+            ProgressReducer.giftOf(pending, config, totalMs = 60 * MS_PER_HOUR),
+        )
+    }
+
+    @Test
+    fun `in a chain of gifts the card names the next mark not given`() {
+        // an empty day at zero hours set to 12 h: the trophies of 1 h and 10 h come at once (spec 3.36.3)
+        val total = 12 * MS_PER_HOUR
+        val first = ProgressReducer.giftOf(listOf(Trophy(1, day, shown = false), Trophy(10, day, shown = false)), config, total)
+        assertEquals(1, first?.hours, "«Канифоль» first")
+        // «Струна», 50 h · 38 h to go: «Колок» is given already and comes as the next sheet
+        assertEquals(NextTrophy(50, index = 2, remainingMs = 38 * MS_PER_HOUR), first?.next)
+
+        val second = ProgressReducer.giftOf(listOf(Trophy(1, day, shown = true), Trophy(10, day, shown = false)), config, total)
+        assertEquals(10, second?.hours, "«Колок» after «Спасибо»")
+        assertEquals(NextTrophy(50, index = 2, remainingMs = 38 * MS_PER_HOUR), second?.next)
+    }
+
+    @Test
+    fun `after ten thousand hours the gift has no next card`() {
+        val all = config.trophyHours.map { Trophy(it, day, shown = it != 10_000) }
+        val gift = ProgressReducer.giftOf(all, config, totalMs = 10_000 * MS_PER_HOUR)
+        assertEquals(10_000, gift?.hours)
+        assertNull(gift?.next, "no mark after the last one")
+    }
+
+    @Test
+    fun `the trophies list has the remainders of the mockup at 47 h 17 min`() {
+        val lines = ProgressReducer.trophyLines(47 * MS_PER_HOUR + 17 * minute, given(1, 10), config)
+        // «2 из 10»: the given ones, by their dates
+        assertEquals(2, lines.count { it.awardedDate != null })
+        assertEquals(listOf(50), lines.filter { it.isNext }.map { it.hours })
+        // strictly by 5.7, not the numbers of the mockup: Струна 2 ч 43 мин, Смычок 52 ч 43 мин, Подбородник 203 ч
+        assertEquals(2 * MS_PER_HOUR + 43 * minute, lines.single { it.hours == 50 }.remainingMs)
+        assertEquals(52 * MS_PER_HOUR + 43 * minute, lines.single { it.hours == 100 }.remainingMs)
+        assertEquals(202 * MS_PER_HOUR + 43 * minute, lines.single { it.hours == 250 }.remainingMs)
+        assertEquals("2 ч 43 мин", Formats.remainingTime(lines.single { it.hours == 50 }.remainingMs!!))
+        assertEquals("52 ч 43 мин", Formats.remainingTime(lines.single { it.hours == 100 }.remainingMs!!))
+        assertEquals("203 ч", Formats.remainingTime(lines.single { it.hours == 250 }.remainingMs!!))
+        assertEquals(listOf(2500, 5000, 10_000), lines.filter { it.isFar }.map { it.hours })
     }
 }

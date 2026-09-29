@@ -502,11 +502,12 @@
     <string name="path_description">等级 %1$d，%2$s，%3$s，距 %4$d 级 %5$s</string>
     <string name="path_description_last">等级 %1$d，%2$s，%3$s</string>
     <string name="path_description_first">等级 %1$d，%2$s，距 %3$d 级 %4$s</string>
-    <string name="profile_title">个人资料</string>
     <string name="profile_pick_photo">选择照片</string>
+    <string name="profile_other_photo">换一张照片</string>
     <string name="profile_remove_photo">移除照片</string>
     <string name="profile_name_label">名字</string>
     <string name="profile_name_placeholder">怎么称呼你？</string>
+    <string name="profile_name_note">只有你能看到——在“我的历程”里。没有名字时，那里显示“与琴相伴”。</string>
     <string name="profile_name_counter">%1$d / %2$d</string>
     <string name="profile_done">完成</string>
     <string name="profile_no_name_letter">\?</string>
@@ -516,13 +517,20 @@
     <string name="gift_hours_few">练琴 %1$s 小时</string>
     <string name="gift_hours_many">练琴 %1$s 小时</string>
     <string name="gift_thanks">谢谢</string>
+    <string name="gift_line">%1$s · %2$s</string>
+    <string name="gift_next">下一个——%1$s</string>
+    <string name="gift_next_line">%1$s · 还差 %2$s</string>
+    <string name="gift_description">%1$s：%2$s，%3$s，%4$s。</string>
+    <string name="gift_next_description">下一个——%1$s，%2$s，还差 %3$s</string>
     <string name="trophies_title">奖杯</string>
+    <string name="trophies_count">%1$d / %2$d</string>
+    <string name="trophies_heading_description">%1$s，%2$s</string>
     <string name="trophies_total">练琴总时间——%1$s</string>
-    <string name="trophies_awarded">%1$s 获得</string>
     <string name="trophies_remaining">还差 %1$s</string>
     <string name="trophies_far">遥远的前方</string>
     <string name="trophies_line_given">%1$s，%2$s，%3$s 获得</string>
     <string name="trophies_line_remaining">%1$s，%2$s，还差 %3$s</string>
+    <string name="trophies_line_next">%1$s，%2$s，还差 %3$s，下一个</string>
     <string name="trophies_line_far">%1$s，%2$s，遥远的前方</string>
 
     <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
@@ -1065,15 +1073,25 @@
     <string name="recap_day_total">当天共 %1$s</string>
     <string name="recap_source_notes">音准的音</string>
     <string name="recap_source_time">时间</string>
+    <string name="recap_source_repertoire">曲库</string>
     <string name="recap_source_count">· %1$s</string>
-    <string name="recap_road_left">距%1$s还差 %2$s</string>
     <string name="recap_road_enough">够到%1$s了</string>
-    <string name="recap_road_leg">%1$s → %2$s</string>
-    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_to">距%1$s</string>
+    <string name="recap_road_more">还差 %1$s</string>
     <string name="recap_road_done">路线已走完 · 钱包里有 %1$s</string>
     <string name="recap_road_not_started">小节正在积攒——旅程从家出发</string>
     <string name="recap_level_up">新等级</string>
+    <string name="recap_level_name">%1$d · %2$s</string>
     <string name="recap_streak_up">+1 天</string>
+    <string name="recap_description_head">%1$s，%2$s。</string>
+    <string name="recap_description_takts">增加 %1$s：%2$s。</string>
+    <string name="recap_description_source">%1$s——%2$s</string>
+    <string name="recap_description_road">距%1$s还差 %2$s。</string>
+    <string name="recap_description_sentence">%1$s。</string>
+    <string name="recap_description_level">等级 %1$d，%2$s，距 %3$d 级 %4$s。</string>
+    <string name="recap_description_level_up">新等级 %1$d，%2$s，距 %3$d 级 %4$s。</string>
+    <string name="recap_description_level_last">等级 %1$d，%2$s。</string>
+    <string name="recap_description_level_up_last">新等级 %1$d，%2$s。</string>
 
     <!-- The backing track: listening and sending (spec 3.32). -->
     <string name="share_backing">带伴奏</string>

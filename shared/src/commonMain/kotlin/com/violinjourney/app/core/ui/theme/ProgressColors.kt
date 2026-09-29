@@ -53,8 +53,9 @@ internal val DarkProgressColors = ProgressColors(
     levelFillStart = PrimaryContainer,
     levelFillEnd = Primary,
     levelShine = LevelShine,
-    avatarLetterBackground = Primary,
-    avatarLetter = OnPrimary,
+    // «Имя и фото» (5.29 R3): the letter or «?» in the second level of text on surface-2 — a quiet place for the photo, not a badge
+    avatarLetterBackground = SurfaceContainerHigh,
+    avatarLetter = OnSurfaceVariant,
     giftGlow = GiftGlow,
     trophy = TrophyPalette(
         wood = TrophyWood,

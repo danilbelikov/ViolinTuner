@@ -21,18 +21,18 @@ import com.violinjourney.app.core.ui.theme.TrophyPalette
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 
 /**
- * One trophy at any size (handoff 11t: 24 and 32 dp in the header, 40 in the list, 160 on the
- * gift sheet). [locked] is the trophy not yet given: the same parts, outlined and unfilled, so
- * the difference is one of form and not only of saturation (spec 3.13). Purely decorative:
+ * One trophy at any size (36 in «Мой путь», 34 in «Трофеи», 120 on the gift sheet, 36 in its card «Дальше»). [locked] is the
+ * trophy not yet given: the same parts, outlined and unfilled, so the difference is one of form and not only of saturation (spec
+ * 3.13); [lockedColor] is its outline — the third level of text in the card «Дальше» of the gift (5.29 R3). Purely decorative:
  * whoever places it says in words what it is.
  */
 @Composable
-fun TrophyIcon(hours: Int, locked: Boolean, size: Dp, modifier: Modifier = Modifier) {
+fun TrophyIcon(hours: Int, locked: Boolean, size: Dp, modifier: Modifier = Modifier, lockedColor: Color = ViolinTheme.progressColors.trophy.locked) {
     val parts = TrophyArt.of(hours) ?: return
     val palette = ViolinTheme.progressColors.trophy
     Canvas(modifier = modifier.size(size)) {
         scale(scale = this.size.minDimension / TrophyArt.VIEW_BOX, pivot = Offset.Zero) {
-            parts.forEach { part -> if (locked) drawLocked(part, palette) else drawGiven(part, palette) }
+            parts.forEach { part -> if (locked) drawLocked(part, palette, lockedColor) else drawGiven(part, palette) }
         }
     }
 }
@@ -48,14 +48,14 @@ private fun DrawScope.drawGiven(part: ArtPart, palette: TrophyPalette) {
     }
 }
 
-private fun DrawScope.drawLocked(part: ArtPart, palette: TrophyPalette) {
+private fun DrawScope.drawLocked(part: ArtPart, palette: TrophyPalette, outline: Color) {
     when (val paint = part.paint) {
         is ArtPaint.Fill -> {
             drawShape(part.shape, palette.lockedFill, Fill, 1f)
-            drawShape(part.shape, palette.locked, Stroke(TrophyArt.LOCKED_STROKE), 1f)
+            drawShape(part.shape, outline, Stroke(TrophyArt.LOCKED_STROKE), 1f)
         }
         is ArtPaint.Stroke ->
-            drawShape(part.shape, palette.locked, paint.style(minOf(paint.width, TrophyArt.LOCKED_STROKE_MAX)), 1f)
+            drawShape(part.shape, outline, paint.style(minOf(paint.width, TrophyArt.LOCKED_STROKE_MAX)), 1f)
     }
 }
 

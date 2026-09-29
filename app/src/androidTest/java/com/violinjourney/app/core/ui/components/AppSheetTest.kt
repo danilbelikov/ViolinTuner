@@ -1,5 +1,7 @@
 package com.violinjourney.app.core.ui.components
 
+import android.view.View
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -9,16 +11,32 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.filter
+import androidx.compose.ui.test.getBoundsInRoot
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
+import androidx.compose.ui.test.hasAnyDescendant
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.swipe
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.core.graphics.Insets
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.ui.theme.ViolinTheme
@@ -274,6 +292,63 @@ class AppSheetTest {
         assertEquals("the buttons stand below the content that scrolls", true, save.top > shown.bottom)
     }
 
+    /**
+     * «Имя и фото» on its side with the keyboard up (5.29 R3): the buttons of a value that asks for it leave the bottom of the sheet
+     * for the end of what scrolls, and the field in focus keeps its focus and stands whole over the keyboard — pinned, the buttons
+     * would leave it less room than itself; with the keyboard down they are pinned again. The keyboard is the insets a real one gives
+     * the window of the sheet, handed to its view; the field is a focus target, so that no real keyboard comes up and hands its own.
+     */
+    @Test
+    fun overTheKeyboardTheButtonsGiveTheirPlaceToTheFieldInFocus() {
+        val focus = FocusRequester()
+        lateinit var view: View
+        compose.setContent {
+            ViolinTheme {
+                AppSheet(
+                    value = value,
+                    onHide = { value = null },
+                    bottom = { { AppSheetButtons(main = SAVE, onMain = { mains++ }) } },
+                    buttonsInContentOverKeyboard = { true },
+                ) { shown ->
+                    // the view of the sheet's window: the keyboard is handed to it
+                    view = LocalView.current
+                    Text(shown)
+                    Box(Modifier.fillMaxWidth().height(FIELD.dp).focusRequester(focus).focusable().testTag(FIELD_TAG))
+                    // the counter and the line under the field
+                    Box(Modifier.fillMaxWidth().height(UNDER_FIELD.dp))
+                }
+            }
+        }
+        compose.waitForIdle()
+        value = SHOWN
+        compose.waitForIdle()
+        compose.runOnIdle { focus.requestFocus() }
+        compose.onNodeWithTag(FIELD_TAG).assertIsFocused()
+        val window = compose.onAllNodes(isRoot()).filter(hasAnyDescendant(hasText(SHOWN))).onFirst().getUnclippedBoundsInRoot()
+        // a keyboard that leaves the sheet its handle, the pinned buttons and less than the field over them
+        val keyboardDp = window.bottom - window.top - (HANDLE + PINNED + LEFT_OVER).dp
+        val keyboard = with(compose.density) { keyboardDp.roundToPx() }
+        compose.runOnUiThread { ViewCompat.dispatchApplyWindowInsets(view, keyboardInsets(keyboard)) }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag(FIELD_TAG).assertIsFocused()
+        val field = compose.onNodeWithTag(FIELD_TAG).getBoundsInRoot()
+        assertTrue("the field whole: ${field.bottom - field.top} of $FIELD", field.bottom - field.top >= (FIELD - 1).dp)
+        assertTrue("over the keyboard: ${field.bottom}, the keyboard at ${window.bottom - keyboardDp}", field.bottom <= window.bottom - keyboardDp + 1.dp)
+        compose.onAllNodesWithText(SAVE).assertCountEquals(1)
+
+        compose.runOnUiThread { ViewCompat.dispatchApplyWindowInsets(view, keyboardInsets(0)) }
+        compose.waitForIdle()
+        compose.onNodeWithText(SAVE).assertIsDisplayed()
+        compose.onAllNodesWithText(SAVE).assertCountEquals(1)
+    }
+
+    /** What the window hands its views: the keyboard alone, [bottom] px from the bottom; none at 0. */
+    private fun keyboardInsets(bottom: Int): WindowInsetsCompat = WindowInsetsCompat.Builder()
+        .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, bottom))
+        .setVisible(WindowInsetsCompat.Type.ime(), bottom > 0)
+        .build()
+
     private companion object {
         const val PARENT = "Лист дня"
         const val TALL = 3_000
@@ -291,5 +366,15 @@ class AppSheetTest {
         const val SHORT_FACE = 200
         const val TALL_FACE = 400
         const val FACE_FRAMES = 40
+
+        /** The field of the name and what stands under it; the handle of the sheet (5 and 22 over and under it). */
+        const val FIELD = 56
+        const val UNDER_FIELD = 40
+        const val FIELD_TAG = "field"
+        const val HANDLE = 49
+
+        /** The pinned buttons of one main button: 18 over it, 56, the field of 16 under it — and what a keyboard leaves over them. */
+        const val PINNED = 90
+        const val LEFT_OVER = 30
     }
 }

@@ -502,11 +502,12 @@
     <string name="path_description">레벨 %1$d, %2$s, %3$s, 레벨 %4$d까지 %5$s</string>
     <string name="path_description_last">레벨 %1$d, %2$s, %3$s</string>
     <string name="path_description_first">레벨 %1$d, %2$s, 레벨 %3$d까지 %4$s</string>
-    <string name="profile_title">프로필</string>
     <string name="profile_pick_photo">사진 선택</string>
+    <string name="profile_other_photo">다른 사진</string>
     <string name="profile_remove_photo">사진 지우기</string>
     <string name="profile_name_label">이름</string>
     <string name="profile_name_placeholder">이름이 무엇인가요?</string>
+    <string name="profile_name_note">나만 볼 수 있어요 — “나의 여정”에서. 이름이 없으면 “바이올린과 함께”로 표시돼요.</string>
     <string name="profile_name_counter">%1$d / %2$d</string>
     <string name="profile_done">완료</string>
     <string name="profile_no_name_letter">\?</string>
@@ -516,13 +517,20 @@
     <string name="gift_hours_few">바이올린과 함께한 %1$s시간</string>
     <string name="gift_hours_many">바이올린과 함께한 %1$s시간</string>
     <string name="gift_thanks">고마워요</string>
+    <string name="gift_line">%1$s · %2$s</string>
+    <string name="gift_next">다음 — %1$s</string>
+    <string name="gift_next_line">%1$s · %2$s 남음</string>
+    <string name="gift_description">%1$s: %2$s, %3$s, %4$s.</string>
+    <string name="gift_next_description">다음 — %1$s, %2$s, %3$s 남음</string>
     <string name="trophies_title">트로피</string>
+    <string name="trophies_count">%2$d개 중 %1$d개</string>
+    <string name="trophies_heading_description">%1$s, %2$s</string>
     <string name="trophies_total">바이올린과 함께한 시간 — %1$s</string>
-    <string name="trophies_awarded">%1$s 획득</string>
     <string name="trophies_remaining">%1$s 남음</string>
     <string name="trophies_far">아직 먼 곳</string>
     <string name="trophies_line_given">%1$s, %2$s, %3$s 획득</string>
     <string name="trophies_line_remaining">%1$s, %2$s, %3$s 남음</string>
+    <string name="trophies_line_next">%1$s, %2$s, %3$s 남음, 다음</string>
     <string name="trophies_line_far">%1$s, %2$s, 아직 먼 곳</string>
 
     <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
@@ -1065,15 +1073,25 @@
     <string name="recap_day_total">하루 전체 %1$s</string>
     <string name="recap_source_notes">정확한 음</string>
     <string name="recap_source_time">시간</string>
+    <string name="recap_source_repertoire">레퍼토리</string>
     <string name="recap_source_count">· %1$s</string>
-    <string name="recap_road_left">%1$s까지 %2$s 남음</string>
     <string name="recap_road_enough">%1$s까지 갈 수 있어요</string>
-    <string name="recap_road_leg">%1$s → %2$s</string>
-    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_to">%1$s까지</string>
+    <string name="recap_road_more">%1$s 남음</string>
     <string name="recap_road_done">경로 완주 · 지갑에 %1$s</string>
     <string name="recap_road_not_started">마디가 모이고 있어요 — 길은 집에서 시작돼요</string>
     <string name="recap_level_up">새 레벨</string>
+    <string name="recap_level_name">%1$d · %2$s</string>
     <string name="recap_streak_up">+1일</string>
+    <string name="recap_description_head">%1$s, %2$s.</string>
+    <string name="recap_description_takts">%1$s 추가: %2$s.</string>
+    <string name="recap_description_source">%1$s — %2$s</string>
+    <string name="recap_description_road">%1$s까지 %2$s 남음.</string>
+    <string name="recap_description_sentence">%1$s.</string>
+    <string name="recap_description_level">레벨 %1$d, %2$s, 레벨 %3$d까지 %4$s.</string>
+    <string name="recap_description_level_up">새 레벨 %1$d, %2$s, 레벨 %3$d까지 %4$s.</string>
+    <string name="recap_description_level_last">레벨 %1$d, %2$s.</string>
+    <string name="recap_description_level_up_last">새 레벨 %1$d, %2$s.</string>
 
     <!-- The backing track: listening and sending (spec 3.32). -->
     <string name="share_backing">반주와 함께</string>

@@ -502,11 +502,12 @@
     <string name="path_description">Niveau %1$d, %2$s, %3$s, niveau %4$d dans %5$s</string>
     <string name="path_description_last">Niveau %1$d, %2$s, %3$s</string>
     <string name="path_description_first">Niveau %1$d, %2$s, niveau %3$d dans %4$s</string>
-    <string name="profile_title">Profil</string>
     <string name="profile_pick_photo">Choisir une photo</string>
+    <string name="profile_other_photo">Autre photo</string>
     <string name="profile_remove_photo">Retirer la photo</string>
     <string name="profile_name_label">Prénom</string>
     <string name="profile_name_placeholder">Comment vous appelez-vous ?</string>
+    <string name="profile_name_note">Visible par vous seul — dans « Mon parcours ». Sans prénom, il est écrit « Au violon ».</string>
     <string name="profile_name_counter">%1$d / %2$d</string>
     <string name="profile_done">OK</string>
     <string name="profile_no_name_letter">\?</string>
@@ -516,13 +517,20 @@
     <string name="gift_hours_few">%1$s heures au violon</string>
     <string name="gift_hours_many">%1$s heures au violon</string>
     <string name="gift_thanks">Merci</string>
+    <string name="gift_line">%1$s · %2$s</string>
+    <string name="gift_next">Ensuite — %1$s</string>
+    <string name="gift_next_line">%1$s · encore %2$s</string>
+    <string name="gift_description">%1$s : %2$s, %3$s, %4$s.</string>
+    <string name="gift_next_description">Ensuite — %1$s, %2$s, encore %3$s</string>
     <string name="trophies_title">Trophées</string>
+    <string name="trophies_count">%1$d sur %2$d</string>
+    <string name="trophies_heading_description">%1$s, %2$s</string>
     <string name="trophies_total">temps total au violon — %1$s</string>
-    <string name="trophies_awarded">reçu le %1$s</string>
     <string name="trophies_remaining">encore %1$s</string>
     <string name="trophies_far">Loin devant</string>
     <string name="trophies_line_given">%1$s, %2$s, reçu le %3$s</string>
     <string name="trophies_line_remaining">%1$s, %2$s, encore %3$s</string>
+    <string name="trophies_line_next">%1$s, %2$s, encore %3$s, le prochain</string>
     <string name="trophies_line_far">%1$s, %2$s, loin devant</string>
 
     <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
@@ -1065,15 +1073,25 @@
     <string name="recap_day_total">sur la journée : %1$s</string>
     <string name="recap_source_notes">Notes justes</string>
     <string name="recap_source_time">Temps</string>
+    <string name="recap_source_repertoire">Répertoire</string>
     <string name="recap_source_count">· %1$s</string>
-    <string name="recap_road_left">vers %1$s : encore %2$s</string>
     <string name="recap_road_enough">Assez pour %1$s</string>
-    <string name="recap_road_leg">%1$s → %2$s</string>
-    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_to">Vers %1$s</string>
+    <string name="recap_road_more">encore %1$s</string>
     <string name="recap_road_done">Itinéraire terminé · %1$s en poche</string>
     <string name="recap_road_not_started">Les mesures s\'accumulent — la route commence à la maison</string>
     <string name="recap_level_up">Nouveau niveau</string>
+    <string name="recap_level_name">%1$d · %2$s</string>
     <string name="recap_streak_up">+1 jour</string>
+    <string name="recap_description_head">%1$s, %2$s.</string>
+    <string name="recap_description_takts">Plus %1$s : %2$s.</string>
+    <string name="recap_description_source">%1$s — %2$s</string>
+    <string name="recap_description_road">Vers %1$s : encore %2$s.</string>
+    <string name="recap_description_sentence">%1$s.</string>
+    <string name="recap_description_level">Niveau %1$d, %2$s, niveau %3$d dans %4$s.</string>
+    <string name="recap_description_level_up">Nouveau niveau %1$d, %2$s, niveau %3$d dans %4$s.</string>
+    <string name="recap_description_level_last">Niveau %1$d, %2$s.</string>
+    <string name="recap_description_level_up_last">Nouveau niveau %1$d, %2$s.</string>
 
     <!-- The backing track: listening and sending (spec 3.32). -->
     <string name="share_backing">Avec l\'accompagnement</string>

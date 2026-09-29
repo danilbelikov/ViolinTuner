@@ -109,7 +109,7 @@ class PracticeViewModelTest {
         return viewModel to effects
     }
 
-    /** «Мой путь» opened from the path row: «Трофеи» and «Профиль» open only over it (spec 3.36.2). */
+    /** «Мой путь» opened from the path row: «Трофеи» and «Имя и фото» open only over it (spec 3.36.2). */
     private fun TestScope.openPath(viewModel: PracticeViewModel) {
         viewModel.onIntent(PracticeIntent.PathClicked)
         runCurrent()
@@ -399,24 +399,6 @@ class PracticeViewModelTest {
         viewModel.onIntent(PracticeIntent.SummaryHidden)
         runCurrent()
         assertNull("the ask is forgotten, not repeated", viewModel.state.value.sheet)
-    }
-
-    @Test
-    fun `the settings row of the profile stores the name and closes both sheets for the settings`() = runTest {
-        val (viewModel, effects) = viewModel()
-        openPath(viewModel)
-        viewModel.onIntent(PracticeIntent.ProfileClicked)
-        runCurrent()
-        viewModel.onIntent(PracticeIntent.ProfileNameChanged("Аня"))
-        viewModel.onIntent(PracticeIntent.ProfileSettingsClicked)
-        runCurrent()
-        assertNull("neither the profile nor «Мой путь» under it", viewModel.state.value.sheet)
-        assertEquals("Аня", profiles.profile.value.name)
-        assertEquals(listOf<PracticeEffect>(PracticeEffect.OpenSettings), effects)
-        // a second tap that lands after the sheet has gone opens nothing more
-        viewModel.onIntent(PracticeIntent.ProfileSettingsClicked)
-        runCurrent()
-        assertEquals(1, effects.size)
     }
 
     @Test
@@ -971,7 +953,11 @@ class PracticeViewModelTest {
         assertEquals(1, first.state.value.gift?.hours)
 
         val (second, _) = viewModel()
-        assertEquals(Gift(hours = 1, index = 0, awardedDate = today), second.state.value.gift)
+        // with its card: nothing practised yet, the trophy of 10 hours is all ten hours away (spec 3.36.3)
+        assertEquals(
+            Gift(hours = 1, index = 0, awardedDate = today, next = NextTrophy(10, index = 1, remainingMs = 10 * 60 * MS_PER_MINUTE)),
+            second.state.value.gift,
+        )
     }
 
     @Test

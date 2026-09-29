@@ -16,15 +16,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.domain.Zone
-import com.violinjourney.app.core.domain.journey.JourneyConfig
-import com.violinjourney.app.core.domain.journey.JourneyRules
 import com.violinjourney.app.core.domain.practice.PracticeConfig
 import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PER_MINUTE
 import com.violinjourney.app.core.domain.practice.PracticeEntry
-import com.violinjourney.app.core.domain.practice.PracticeRecap
-import com.violinjourney.app.core.domain.practice.RecapRoad
 import com.violinjourney.app.core.domain.progress.Profile
-import com.violinjourney.app.core.domain.progress.Progress
 import com.violinjourney.app.core.domain.progress.ProgressConfig
 import com.violinjourney.app.core.domain.progress.Trophy
 import com.violinjourney.app.core.domain.session.SessionSummary
@@ -38,13 +33,9 @@ import com.violinjourney.app.feature.journey.JourneyWindowCard
 import com.violinjourney.app.feature.journey.WindowSample
 import com.violinjourney.app.feature.practice.components.CalendarMetrics
 import com.violinjourney.app.feature.practice.components.DaySheetContent
-import com.violinjourney.app.feature.practice.components.GiftSheetContent
 import com.violinjourney.app.feature.practice.components.PathRow
 import com.violinjourney.app.feature.practice.components.PathSheetContent
 import com.violinjourney.app.feature.practice.components.PracticeCalendar
-import com.violinjourney.app.feature.practice.components.ProfileSheetContent
-import com.violinjourney.app.feature.practice.components.RecapSheetContent
-import com.violinjourney.app.feature.practice.components.TrophiesSheetContent
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import kotlinx.datetime.YearMonth
@@ -399,100 +390,3 @@ private fun PathSheetFirstRunPreview() = PathSheetPreview(Sample.header(0, name 
 @Preview(name = "Мой путь · de, шрифт 1,3", widthDp = 360, locale = "de", fontScale = 1.3f)
 @Composable
 private fun PathSheetGermanPreview() = PathSheetPreview(Sample.state().header)
-
-@Preview(name = "11d2 profile sheet, no name", widthDp = 412, locale = "ru")
-@Composable
-private fun ProfileSheetPreview() {
-    ViolinTheme {
-        ProfileSheetContent(
-            sheet = PracticeSheet.Profile(nameDraft = "", importingPhoto = false),
-            header = Sample.state(name = "").header,
-            onIntent = {},
-            onPickPhoto = {},
-            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
-        )
-    }
-}
-
-@Preview(name = "11f gift sheet", widthDp = 412, locale = "ru")
-@Composable
-private fun GiftSheetPreview() {
-    ViolinTheme {
-        GiftSheetContent(
-            gift = Gift(hours = 10, index = 1, awardedDate = LocalDate(2026, 9, 13)),
-            onAccept = {},
-            modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh),
-            animated = false,
-        )
-    }
-}
-
-@Preview(name = "11e trophies sheet", widthDp = 412, locale = "ru")
-@Composable
-private fun TrophiesSheetPreview() {
-    val state = Sample.state()
-    ViolinTheme {
-        TrophiesSheetContent(state.trophies, state.header.totalMs, modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh))
-    }
-}
-
-/** The recaps of the mockup (`docs/design/project/recap`): Vienna → Prague, 212 clean notes, 47 minutes, two elements. */
-private object RecapSample {
-    private val progress = ProgressConfig()
-    private const val HOUR = 60 * MS_PER_MINUTE
-
-    fun recap(
-        inTune: Int = 212,
-        minutes: Long = 47,
-        pieces: Int = 2,
-        road: RecapRoad = RecapRoad.Leg(nextIndex = 5, price = 1_600, balanceBefore = 472, balanceAfter = 697),
-        totalBefore: Long = 153 * HOUR + 23 * MS_PER_MINUTE,
-        streak: Int = 6,
-        extended: Boolean = true,
-        dayTotal: Long? = 85 * MS_PER_MINUTE,
-    ): PracticeRecap {
-        val duration = minutes * MS_PER_MINUTE
-        val sources = JourneyRules.taktsBySource(inTune, duration, JourneyConfig(), pieces)
-        return PracticeRecap(
-            durationMs = duration, dayTotalMs = dayTotal, takts = sources.total, sources = sources, road = road,
-            streakDays = streak, streakExtended = extended,
-            levelBefore = Progress.levelOf(totalBefore, progress), levelAfter = Progress.levelOf(totalBefore + duration, progress),
-        )
-    }
-}
-
-@Composable
-private fun RecapPreview(recap: PracticeRecap, low: Boolean = false) {
-    ViolinTheme {
-        RecapSheetContent(recap, onClose = {}, onTravel = {}, modifier = Modifier.background(MaterialTheme.colorScheme.surfaceContainerHigh), low = low, animated = false)
-    }
-}
-
-@Preview(name = "recap", widthDp = 412, locale = "ru")
-@Composable
-private fun RecapSheetPreview() = RecapPreview(RecapSample.recap())
-
-@Preview(name = "recap enough to Prague, new level", widthDp = 412, locale = "ru")
-@Composable
-private fun RecapEnoughPreview() = RecapPreview(
-    RecapSample.recap(
-        inTune = 404, minutes = 70, pieces = 1, road = RecapRoad.Leg(5, 1_600, 1_345, 1_650),
-        totalBefore = 199 * 60 * MS_PER_MINUTE, streak = 12, extended = false, dayTotal = null,
-    ),
-)
-
-@Preview(name = "recap first practice, no notes, road not begun", widthDp = 412, locale = "ru")
-@Composable
-private fun RecapBarePreview() = RecapPreview(
-    RecapSample.recap(inTune = 0, minutes = 12, pieces = 0, road = RecapRoad.NotStarted, totalBefore = 0, streak = 1, dayTotal = null),
-)
-
-@Preview(name = "recap route done", widthDp = 412, locale = "ru")
-@Composable
-private fun RecapDonePreview() = RecapPreview(
-    RecapSample.recap(inTune = 216, minutes = 52, pieces = 0, road = RecapRoad.RouteDone(2_516), totalBefore = 530 * 60 * MS_PER_MINUTE, streak = 31, dayTotal = null),
-)
-
-@Preview(name = "recap landscape", widthDp = 560, heightDp = 412, locale = "ru")
-@Composable
-private fun RecapLandscapePreview() = RecapPreview(RecapSample.recap(), low = true)

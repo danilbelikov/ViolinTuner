@@ -37,6 +37,7 @@ import com.violinjourney.app.core.ui.components.Messages
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.format.use
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.practice.components.LocalAppPromptShown
 import com.violinjourney.app.feature.practice.components.PracticePromptHost
 import com.violinjourney.app.navigation.AppBottomBar
 import com.violinjourney.app.navigation.AppNavHost
@@ -127,7 +128,8 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
     // How bright the tab bar is: a screen may lend its light (stage R6, Live, behind a switch); nobody does yet (spec 3.36.1).
     val tabBarLight = remember { TabBarLight() }
 
-    CompositionLocalProvider(LocalTabBarLight provides tabBarLight) {
+    // «Занятие не закончено» lies over the gift of «Занятия» (spec 3.36.3): the gift waits while the prompt is shown
+    CompositionLocalProvider(LocalTabBarLight provides tabBarLight, LocalAppPromptShown provides (practicePrompt != null)) {
         // Scaffold's own, but the screens lie over the bar: the glow of «Начать занятие» falls on it (spec 3.36.2)
         TabsFrame(
             // safeDrawing also covers the display cutout, which sits on a side in landscape. The keyboard is the business

@@ -28,10 +28,20 @@ object ProgressReducer {
         )
     }
 
-    /** The trophy whose gift sheet is due: the lowest one not seen yet (spec 3.13: one sheet after another, lowest first). */
-    fun giftOf(trophies: List<Trophy>, config: ProgressConfig): Gift? =
+    /**
+     * The trophy whose gift sheet is due: the lowest one not seen yet (spec 3.13: one sheet after another, lowest first), with the
+     * card of the trophy after it (spec 3.36.3): the lowest mark not given at all — an unseen one waiting in the chain counts as given
+     * — and what is left to it from [totalMs]; none after the last mark.
+     */
+    fun giftOf(trophies: List<Trophy>, config: ProgressConfig, totalMs: Long): Gift? =
         trophies.filter { !it.shown }.minByOrNull { it.hours }?.let {
-            Gift(hours = it.hours, index = config.trophyHours.indexOf(it.hours), awardedDate = it.awardedDate)
+            val next = Progress.nextTrophyHours(trophies.map { trophy -> trophy.hours }.toSet(), config)
+            Gift(
+                hours = it.hours,
+                index = config.trophyHours.indexOf(it.hours),
+                awardedDate = it.awardedDate,
+                next = next?.let { hours -> NextTrophy(hours, config.trophyHours.indexOf(hours), Progress.remainingMs(totalMs, hours)) },
+            )
         }
 
     /** Every mark of the config, lowest first: the date of the given ones, what is left to the others. */

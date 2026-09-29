@@ -51,6 +51,7 @@ import com.violinjourney.app.core.ui.components.ToastLift
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.AppShapes
 import com.violinjourney.app.core.ui.theme.ViolinAppTheme
+import com.violinjourney.app.feature.practice.components.LocalAppPromptShown
 import com.violinjourney.app.feature.practice.components.PracticePromptHost
 import com.violinjourney.app.navigation.AppBottomBar
 import com.violinjourney.app.navigation.AppStartViewModel
@@ -108,7 +109,13 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
     }
 
     ViolinAppTheme(fontFamily = manrope()) {
-        CompositionLocalProvider(LocalMessages provides messages, LocalTabBarLight provides tabBarLight, LocalDockPlace provides dockPlace) {
+        // «Занятие не закончено» lies over the gift of «Занятия» (spec 3.36.3): the gift waits while the prompt is shown
+        CompositionLocalProvider(
+            LocalMessages provides messages,
+            LocalTabBarLight provides tabBarLight,
+            LocalDockPlace provides dockPlace,
+            LocalAppPromptShown provides (practicePrompt != null),
+        ) {
             BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
                 // Landscape Live is the music-stand view: no bar, all height to the ring; the other tabs keep a compact one.
                 val landscape = maxWidth > maxHeight

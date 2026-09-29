@@ -103,9 +103,12 @@ private object SheetSample {
 /** The status bar of a phone over the screen of the preview: the sheet never rises above it and 16 more (5.29 R3). */
 private val StatusBar = 24.dp
 
-/** A sheet as it lies on a screen of the preview's size: under the scrim, at the bottom, never higher than the window allows. */
+/**
+ * A sheet as it lies on a screen of the preview's size: under the scrim, at the bottom, never higher than the window allows. Shared
+ * with the sheets of progress (`ProgressSheetPreviews.kt`).
+ */
 @Composable
-private fun OnScreen(sheet: @Composable (Modifier) -> Unit) = ViolinTheme {
+internal fun OnScreen(sheet: @Composable (Modifier) -> Unit) = ViolinTheme {
     BoxWithConstraints(
         Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).background(ViolinTheme.sheetScrim),
         contentAlignment = Alignment.BottomCenter,

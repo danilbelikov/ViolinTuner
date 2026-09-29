@@ -71,6 +71,7 @@ enum class AppButtonStyle { Main, Outline, Soft, Text, Quiet, Danger, DangerFill
  * The button of the redesign (spec 3.36.1, 5.29), in the [style] of its weight; a Material button underneath, so the ripple, the
  * role and the touch target are Material's. The words go on up to two lines, centred, never cut with an ellipsis; the button grows
  * for them. [icon] stands before the words — 20 dp in the buttons of 56, 18 in the ones of 48; [Danger] brings the bin by itself.
+ * [trailingIcon] stands after them, in the same size and without words of its own: the arrow of «В дорогу →» (R3).
  *
  * [caption] — a second, smaller line under the words, only for [AppButtonStyle.Main] and [AppButtonStyle.Outline]: «В дорогу» ·
  * «Вена → хватает до Праги» of the home (R7); the button grows from 56 for it. [compact] makes a button of 56 one of 48 — the zone
@@ -95,9 +96,10 @@ fun AppButton(
     reason: String? = null,
     compact: Boolean = false,
     reasonReserve: String? = null,
+    trailingIcon: ImageVector? = null,
 ) {
     if (reason == null && reasonReserve == null) {
-        StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact)
+        StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact, trailingIcon)
         return
     }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -108,7 +110,7 @@ fun AppButton(
             if (reason != null) Reason(reason, Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         }
         Spacer(Modifier.height(ReasonGap))
-        StyledButton(text, onClick, Modifier.fillMaxWidth(), style, icon, caption, enabled, compact)
+        StyledButton(text, onClick, Modifier.fillMaxWidth(), style, icon, caption, enabled, compact, trailingIcon)
     }
 }
 
@@ -133,6 +135,7 @@ private fun StyledButton(
     caption: String?,
     enabled: Boolean,
     compact: Boolean,
+    trailingIcon: ImageVector?,
 ) {
     val look = lookOf(style, compact)
     val shown = icon ?: if (style == AppButtonStyle.Danger) AppIcons.Trash else null
@@ -180,7 +183,18 @@ private fun StyledButton(
                 )
             }
         } else {
-            Text(text, style = words, textAlign = TextAlign.Center, maxLines = TEXT_LINES)
+            // with an icon after them the words take what the icons leave, so the arrow is never pushed out
+            Text(
+                text,
+                modifier = if (trailingIcon != null) Modifier.weight(1f, fill = false) else Modifier,
+                style = words,
+                textAlign = TextAlign.Center,
+                maxLines = TEXT_LINES,
+            )
+        }
+        if (trailingIcon != null) {
+            Spacer(Modifier.width(IconSizes.ButtonGap))
+            AppIcon(trailingIcon, contentDescription = null, size = look.icon)
         }
     }
 }

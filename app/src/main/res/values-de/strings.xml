@@ -502,11 +502,12 @@
     <string name="path_description">Stufe %1$d, %2$s, %3$s, bis Stufe %4$d %5$s</string>
     <string name="path_description_last">Stufe %1$d, %2$s, %3$s</string>
     <string name="path_description_first">Stufe %1$d, %2$s, bis Stufe %3$d %4$s</string>
-    <string name="profile_title">Profil</string>
     <string name="profile_pick_photo">Foto wählen</string>
+    <string name="profile_other_photo">Anderes Foto</string>
     <string name="profile_remove_photo">Foto entfernen</string>
     <string name="profile_name_label">Name</string>
     <string name="profile_name_placeholder">Wie heißen Sie?</string>
+    <string name="profile_name_note">Nur für Sie sichtbar – in „Mein Weg“. Ohne Namen steht dort „An der Geige“.</string>
     <string name="profile_name_counter">%1$d / %2$d</string>
     <string name="profile_done">Fertig</string>
     <string name="profile_no_name_letter">\?</string>
@@ -516,13 +517,20 @@
     <string name="gift_hours_few">%1$s Stunden an der Geige</string>
     <string name="gift_hours_many">%1$s Stunden an der Geige</string>
     <string name="gift_thanks">Danke</string>
+    <string name="gift_line">%1$s · %2$s</string>
+    <string name="gift_next">Als Nächstes – %1$s</string>
+    <string name="gift_next_line">%1$s · noch %2$s</string>
+    <string name="gift_description">%1$s: %2$s, %3$s, %4$s.</string>
+    <string name="gift_next_description">Als Nächstes – %1$s, %2$s, noch %3$s</string>
     <string name="trophies_title">Trophäen</string>
+    <string name="trophies_count">%1$d von %2$d</string>
+    <string name="trophies_heading_description">%1$s, %2$s</string>
     <string name="trophies_total">insgesamt an der Geige – %1$s</string>
-    <string name="trophies_awarded">erhalten am %1$s</string>
     <string name="trophies_remaining">noch %1$s</string>
     <string name="trophies_far">Weit voraus</string>
     <string name="trophies_line_given">%1$s, %2$s, erhalten am %3$s</string>
     <string name="trophies_line_remaining">%1$s, %2$s, noch %3$s</string>
+    <string name="trophies_line_next">%1$s, %2$s, noch %3$s, als Nächstes</string>
     <string name="trophies_line_far">%1$s, %2$s, weit voraus</string>
 
     <!-- Repertoire (spec 3.15). "Stück" and "Take" are the two words of the feature. -->
@@ -1065,15 +1073,25 @@
     <string name="recap_day_total">am ganzen Tag: %1$s</string>
     <string name="recap_source_notes">Töne sauber</string>
     <string name="recap_source_time">Zeit</string>
+    <string name="recap_source_repertoire">Repertoire</string>
     <string name="recap_source_count">· %1$s</string>
-    <string name="recap_road_left">bis %1$s – noch %2$s</string>
     <string name="recap_road_enough">Reicht bis %1$s</string>
-    <string name="recap_road_leg">%1$s → %2$s</string>
-    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_to">Bis %1$s</string>
+    <string name="recap_road_more">noch %1$s</string>
     <string name="recap_road_done">Route geschafft · %1$s im Geldbeutel</string>
     <string name="recap_road_not_started">Die Takte sammeln sich – die Reise beginnt zu Hause</string>
     <string name="recap_level_up">Neue Stufe</string>
+    <string name="recap_level_name">%1$d · %2$s</string>
     <string name="recap_streak_up">+1 Tag</string>
+    <string name="recap_description_head">%1$s, %2$s.</string>
+    <string name="recap_description_takts">Plus %1$s: %2$s.</string>
+    <string name="recap_description_source">%1$s – %2$s</string>
+    <string name="recap_description_road">Bis %1$s noch %2$s.</string>
+    <string name="recap_description_sentence">%1$s.</string>
+    <string name="recap_description_level">Stufe %1$d, %2$s, bis Stufe %3$d %4$s.</string>
+    <string name="recap_description_level_up">Neue Stufe %1$d, %2$s, bis Stufe %3$d %4$s.</string>
+    <string name="recap_description_level_last">Stufe %1$d, %2$s.</string>
+    <string name="recap_description_level_up_last">Neue Stufe %1$d, %2$s.</string>
 
     <!-- The backing track: listening and sending (spec 3.32). -->
     <string name="share_backing">Mit Begleitspur</string>

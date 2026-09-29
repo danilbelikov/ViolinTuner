@@ -10,6 +10,7 @@ import com.violinjourney.app.core.domain.practice.PracticeEntry
 import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.domain.progress.Profile
 import com.violinjourney.app.core.domain.progress.ProgressConfig
+import com.violinjourney.app.core.domain.progress.Trophy
 import com.violinjourney.app.core.domain.session.SessionSummary
 import kotlin.test.Test
 import kotlin.test.assertEquals
@@ -51,6 +52,24 @@ class PracticeReducerTest {
         entries, sessions, runningSince, month, selected, sheet = null, today, zone, config,
         trophies = emptyList(), profile = Profile.EMPTY, avatarPath = null, progressConfig = ProgressConfig(), underBackingIds = underBackingIds,
     )
+
+    @Test
+    fun `the card of the gift counts what is left from the real time at the violin`() {
+        // an empty day set to 12 h gives the trophies of 1 h and 10 h at once (spec 3.36.3): «Канифоль», then «Колок», each with
+        // «Струна · 50 ч · ещё 38 ч» — what is left of the 12 h played, not the whole mark
+        val table = listOf(Trophy(1, today, shown = false), Trophy(10, today, shown = false))
+        fun giftOf(trophies: List<Trophy>) = PracticeReducer.stateOf(
+            listOf(entry(16, 12 * 60)), emptyList(), null, YearMonth(2026, 9), null, sheet = null, today, zone, config,
+            trophies = trophies, profile = Profile.EMPTY, avatarPath = null, progressConfig = ProgressConfig(),
+        ).gift
+        val string = NextTrophy(hours = 50, index = 2, remainingMs = 38 * 60 * MS_PER_MINUTE)
+        val rosin = giftOf(table)
+        assertEquals(1, rosin?.hours)
+        assertEquals(string, rosin?.next)
+        val peg = giftOf(table.map { if (it.hours == 1) it.copy(shown = true) else it })
+        assertEquals(10, peg?.hours)
+        assertEquals(string, peg?.next)
+    }
 
     @Test
     fun `calendar cells carry fill level - today - selection and future flags`() {

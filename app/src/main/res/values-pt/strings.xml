@@ -502,11 +502,12 @@
     <string name="path_description">Nível %1$d, %2$s, %3$s, até o nível %4$d: %5$s</string>
     <string name="path_description_last">Nível %1$d, %2$s, %3$s</string>
     <string name="path_description_first">Nível %1$d, %2$s, até o nível %3$d: %4$s</string>
-    <string name="profile_title">Perfil</string>
     <string name="profile_pick_photo">Escolher foto</string>
+    <string name="profile_other_photo">Outra foto</string>
     <string name="profile_remove_photo">Remover foto</string>
     <string name="profile_name_label">Nome</string>
     <string name="profile_name_placeholder">Como você se chama?</string>
+    <string name="profile_name_note">Só você vê — em “Meu caminho”. Sem nome, lá aparece “Ao violino”.</string>
     <string name="profile_name_counter">%1$d / %2$d</string>
     <string name="profile_done">Pronto</string>
     <string name="profile_no_name_letter">\?</string>
@@ -516,13 +517,20 @@
     <string name="gift_hours_few">%1$s horas ao violino</string>
     <string name="gift_hours_many">%1$s horas ao violino</string>
     <string name="gift_thanks">Obrigado</string>
+    <string name="gift_line">%1$s · %2$s</string>
+    <string name="gift_next">Depois — %1$s</string>
+    <string name="gift_next_line">%1$s · faltam %2$s</string>
+    <string name="gift_description">%1$s: %2$s, %3$s, %4$s.</string>
+    <string name="gift_next_description">Depois — %1$s, %2$s, faltam %3$s</string>
     <string name="trophies_title">Troféus</string>
+    <string name="trophies_count">%1$d de %2$d</string>
+    <string name="trophies_heading_description">%1$s, %2$s</string>
     <string name="trophies_total">total ao violino — %1$s</string>
-    <string name="trophies_awarded">recebido em %1$s</string>
     <string name="trophies_remaining">faltam %1$s</string>
     <string name="trophies_far">Lá adiante</string>
     <string name="trophies_line_given">%1$s, %2$s, recebido em %3$s</string>
     <string name="trophies_line_remaining">%1$s, %2$s, faltam %3$s</string>
+    <string name="trophies_line_next">%1$s, %2$s, faltam %3$s, o próximo</string>
     <string name="trophies_line_far">%1$s, %2$s, lá adiante</string>
 
     <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
@@ -1065,15 +1073,25 @@
     <string name="recap_day_total">no dia todo: %1$s</string>
     <string name="recap_source_notes">Notas afinadas</string>
     <string name="recap_source_time">Tempo</string>
+    <string name="recap_source_repertoire">Repertório</string>
     <string name="recap_source_count">· %1$s</string>
-    <string name="recap_road_left">até %1$s: faltam %2$s</string>
     <string name="recap_road_enough">Dá para ir até %1$s</string>
-    <string name="recap_road_leg">%1$s → %2$s</string>
-    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_to">Até %1$s</string>
+    <string name="recap_road_more">faltam %1$s</string>
     <string name="recap_road_done">Rota concluída · %1$s na carteira</string>
     <string name="recap_road_not_started">Os compassos se acumulam — a estrada começa em casa</string>
     <string name="recap_level_up">Novo nível</string>
+    <string name="recap_level_name">%1$d · %2$s</string>
     <string name="recap_streak_up">+1 dia</string>
+    <string name="recap_description_head">%1$s, %2$s.</string>
+    <string name="recap_description_takts">Mais %1$s: %2$s.</string>
+    <string name="recap_description_source">%1$s — %2$s</string>
+    <string name="recap_description_road">Até %1$s faltam %2$s.</string>
+    <string name="recap_description_sentence">%1$s.</string>
+    <string name="recap_description_level">Nível %1$d, %2$s, até o nível %3$d: %4$s.</string>
+    <string name="recap_description_level_up">Novo nível %1$d, %2$s, até o nível %3$d: %4$s.</string>
+    <string name="recap_description_level_last">Nível %1$d, %2$s.</string>
+    <string name="recap_description_level_up_last">Novo nível %1$d, %2$s.</string>
 
     <!-- The backing track: listening and sending (spec 3.32). -->
     <string name="share_backing">Com o playback</string>

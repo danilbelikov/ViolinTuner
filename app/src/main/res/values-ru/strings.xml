@@ -502,11 +502,12 @@
     <string name="path_description">Уровень %1$d, %2$s, %3$s, до %4$d уровня %5$s</string>
     <string name="path_description_last">Уровень %1$d, %2$s, %3$s</string>
     <string name="path_description_first">Уровень %1$d, %2$s, до %3$d уровня %4$s</string>
-    <string name="profile_title">Профиль</string>
     <string name="profile_pick_photo">Выбрать фото</string>
+    <string name="profile_other_photo">Другое фото</string>
     <string name="profile_remove_photo">Убрать фото</string>
     <string name="profile_name_label">Имя</string>
     <string name="profile_name_placeholder">Как вас зовут?</string>
+    <string name="profile_name_note">Видно только вам — в «Моём пути». Без имени там написано «За скрипкой».</string>
     <string name="profile_name_counter">%1$d / %2$d</string>
     <string name="profile_done">Готово</string>
     <string name="profile_no_name_letter">\?</string>
@@ -516,13 +517,20 @@
     <string name="gift_hours_few">%1$s часа за скрипкой</string>
     <string name="gift_hours_many">%1$s часов за скрипкой</string>
     <string name="gift_thanks">Спасибо</string>
+    <string name="gift_line">%1$s · %2$s</string>
+    <string name="gift_next">Дальше — %1$s</string>
+    <string name="gift_next_line">%1$s · ещё %2$s</string>
+    <string name="gift_description">%1$s: %2$s, %3$s, %4$s.</string>
+    <string name="gift_next_description">Дальше — %1$s, %2$s, ещё %3$s</string>
     <string name="trophies_title">Трофеи</string>
+    <string name="trophies_count">%1$d из %2$d</string>
+    <string name="trophies_heading_description">%1$s, %2$s</string>
     <string name="trophies_total">всего за скрипкой — %1$s</string>
-    <string name="trophies_awarded">получен %1$s</string>
     <string name="trophies_remaining">ещё %1$s</string>
     <string name="trophies_far">Далеко впереди</string>
     <string name="trophies_line_given">%1$s, %2$s, получен %3$s</string>
     <string name="trophies_line_remaining">%1$s, %2$s, ещё %3$s</string>
+    <string name="trophies_line_next">%1$s, %2$s, ещё %3$s, следующий</string>
     <string name="trophies_line_far">%1$s, %2$s, далеко впереди</string>
 
     <!-- Repertoire (spec 3.15). "Произведение" and "дубль" are the two words of the feature. -->
@@ -1065,15 +1073,25 @@
     <string name="recap_day_total">всего за день — %1$s</string>
     <string name="recap_source_notes">Ноты в строе</string>
     <string name="recap_source_time">Время</string>
+    <string name="recap_source_repertoire">Репертуар</string>
     <string name="recap_source_count">· %1$s</string>
-    <string name="recap_road_left">до %1$s — ещё %2$s</string>
     <string name="recap_road_enough">Хватает до %1$s</string>
-    <string name="recap_road_leg">%1$s → %2$s</string>
-    <string name="recap_road_count">%1$s / %2$s</string>
+    <string name="recap_road_to">До %1$s</string>
+    <string name="recap_road_more">ещё %1$s</string>
     <string name="recap_road_done">Маршрут пройден · в кошельке %1$s</string>
     <string name="recap_road_not_started">Такты копятся — дорога начнётся из дома</string>
     <string name="recap_level_up">Новый уровень</string>
+    <string name="recap_level_name">%1$d · %2$s</string>
     <string name="recap_streak_up">+1 день</string>
+    <string name="recap_description_head">%1$s, %2$s.</string>
+    <string name="recap_description_takts">Плюс %1$s: %2$s.</string>
+    <string name="recap_description_source">%1$s — %2$s</string>
+    <string name="recap_description_road">До %1$s ещё %2$s.</string>
+    <string name="recap_description_sentence">%1$s.</string>
+    <string name="recap_description_level">Уровень %1$d, %2$s, до %3$d уровня %4$s.</string>
+    <string name="recap_description_level_up">Новый уровень %1$d, %2$s, до %3$d уровня %4$s.</string>
+    <string name="recap_description_level_last">Уровень %1$d, %2$s.</string>
+    <string name="recap_description_level_up_last">Новый уровень %1$d, %2$s.</string>
 
     <!-- The backing track: listening and sending (spec 3.32). -->
     <string name="share_backing">С минусовкой</string>
