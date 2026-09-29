@@ -9,12 +9,15 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.layout.calculateStartPadding
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -43,6 +46,7 @@ import androidx.compose.runtime.withFrameMillis
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.composed
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.drawBehind
@@ -52,6 +56,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -59,6 +64,8 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import kotlin.math.max
+import kotlin.math.min
 
 // The frame of a sheet (spec 5.29; components.html, «Лист»).
 private val SheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
@@ -88,7 +95,8 @@ object AppSheetDefaults {
 
 /**
  * The frame of every sheet (spec 3.36.1, 5.29): surfaceContainer at a corner of 28 at the top, the handle 36 × 5, the scrim of
- * black at 0.55, never wider than 640 dp — in the middle in landscape. Shown while [value] is not null, and it slides away when the
+ * black at 0.55, never wider than 640 dp — in the middle in landscape — and never under a cutout of the camera or a bar of the
+ * system at a side of the window ([clearOfTheSides]; 5.29 R4). Shown while [value] is not null, and it slides away when the
  * owner drops it, as a swiped one does ([rememberHeldSheet]; [slideAway] false — another sheet takes its place and it goes at once).
  * The [content] gets the value it shows — the last one while it slides away — in a column with [contentPadding] that scrolls when
  * the sheet is higher than the window ([scroll] false for a value that lays out its own columns, each scrolling: the recap in a
@@ -172,9 +180,11 @@ fun <T : Any> AppSheet(
         } while (now - start < doubleTapMs)
         arrival.settled = true
     }
+    // made once: the same modifier each time, not a new chain of the sheet at every recomposition of its owner
+    val sides = remember { Modifier.clearOfTheSides() }
     ModalBottomSheet(
         onDismissRequest = dismiss,
-        modifier = modifier,
+        modifier = sides.then(modifier),
         sheetState = sheetState,
         sheetMaxWidth = AppSheetDefaults.MaxWidth,
         sheetGesturesEnabled = dismissible,
@@ -241,6 +251,38 @@ fun <T : Any> AppSheet(
             }
         }
     }
+}
+
+/**
+ * The sheet within the part of its window a side of which no cutout of the camera and no bar of the system takes (spec 5.29 R4; the
+ * review of stage 110): in the middle of the window while it is clear of them there — 892 × 412, a sheet of 640 — otherwise moved off
+ * them and, where the window has no room for 640 between them, narrower: 640 × 360 with a cutout of 36.5 at its left, a sheet of
+ * 603.5 from its edge. Its background goes no further either — the scrim stays under the cutout. The insets are the sheet's own
+ * window's ([composed]: read where the sheet is laid out, not where it is asked for); the width is the parent's — the whole window.
+ */
+private fun Modifier.clearOfTheSides(): Modifier = composed {
+    val sides = WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)
+    layout { measurable, constraints ->
+        if (!constraints.hasBoundedWidth) {
+            val placeable = measurable.measure(constraints)
+            return@layout layout(placeable.width, placeable.height) { placeable.place(0, 0) }
+        }
+        val window = constraints.maxWidth
+        val left = sides.getLeft(this, layoutDirection)
+        val right = sides.getRight(this, layoutDirection)
+        val width = SheetSides.width(window, AppSheetDefaults.MaxWidth.roundToPx(), left, right)
+        val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))
+        layout(window, placeable.height) { placeable.place(SheetSides.x(window, width, left, right), 0) }
+    }
+}
+
+/** Where a sheet stands between the sides of its window that are not safe to draw in ([clearOfTheSides]). Pure; pixels. */
+internal object SheetSides {
+    /** As wide as it may be — [widest] — but no wider than the window between [left] and [right]. */
+    fun width(window: Int, widest: Int, left: Int, right: Int): Int = min(widest, window - left - right).coerceAtLeast(0)
+
+    /** In the middle of the [window], unless that puts it over [left] or [right]: then as near the middle as they let it. */
+    fun x(window: Int, width: Int, left: Int, right: Int): Int = ((window - width) / 2).coerceIn(left, max(left, window - right - width))
 }
 
 /** The value the frame showed the last time it stood or rose. */

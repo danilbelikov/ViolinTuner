@@ -770,6 +770,8 @@
     <string name="form_new_etude">New étude</string>
     <string name="form_new_stroke">New bow stroke</string>
     <string name="form_new_element">New item</string>
+    <string name="form_optional">optional</string>
+    <string name="section_scales_only">scales only</string>
     <string-array name="stroke_suggestions">
         <item>Détaché</item>
         <item>Legato</item>
@@ -796,9 +798,11 @@
     <string name="scale_title">%1$s · %2$s</string>
     <string name="scale_range">%1$s – %2$s</string>
     <string name="scale_preview_empty">Choose a tonic — the notes will be drawn here</string>
-    <string name="scale_exists">This scale already exists</string>
-    <string name="scale_open">Open</string>
-    <string name="scale_locked">That would be a different scale — add a new one</string>
+    <string name="scale_octaves_unfit">Three octaves from %1$s do not fit on the violin</string>
+    <string name="scale_tonics_gray">The grey tonics would need more than seven sharps or flats.</string>
+    <string name="scale_twin">This scale already exists — in “Scales”, status “%1$s”, %2$s.</string>
+    <string name="scale_open_twin">Open it</string>
+    <string name="scale_locked_reason">The key and type of a scale do not change: it would be a different scale.</string>
     <string name="scale_notes_description">Notes of the scale %1$s</string>
     <string name="scale_more_systems_one">%1$d more system</string>
     <string name="scale_more_systems_few">%1$d more systems</string>
@@ -807,7 +811,6 @@
     <string name="scale_add_photo_hint">for example, fingering from your book</string>
     <string name="scale_notes">Sheet music</string>
     <string name="scale_open_stand">Open on the music stand</string>
-    <string name="piece_tempo_value">♩ = %1$d</string>
     <string name="piece_tempo_description">tempo %1$d</string>
     <string name="takes_one">%1$d take</string>
     <string name="takes_few">%1$d takes</string>
@@ -829,19 +832,27 @@
     <string name="piece_form_discard_title">Discard changes?</string>
     <string name="piece_form_discard_confirm">Discard</string>
     <string name="piece_field_title">Title</string>
+    <string name="piece_field_title_placeholder">For example, “Minuet in G major”</string>
     <string name="piece_field_composer">Composer</string>
+    <string name="piece_field_composer_placeholder">Who wrote it</string>
     <string name="piece_field_key">Key</string>
     <string name="piece_field_tempo">Tempo</string>
+    <string name="piece_field_tempo_hint">a note only, no metronome</string>
     <string name="piece_field_status">Status</string>
     <string name="piece_field_notes">Notes</string>
+    <string name="piece_field_notes_placeholder">What not to forget…</string>
     <string name="piece_title_error">Cannot save without a title</string>
     <string name="piece_key_major">major</string>
     <string name="piece_key_minor">minor</string>
-    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="key_none">No key</string>
+    <string name="key_pick_tonic_first">Choose a tonic first</string>
     <string name="piece_tempo_slower">Slower</string>
     <string name="piece_tempo_faster">Faster</string>
     <string name="piece_tempo_clear">No tempo</string>
     <string name="piece_delete">Delete piece</string>
+    <string name="etude_delete">Delete étude</string>
+    <string name="stroke_delete">Delete bow stroke</string>
+    <string name="scale_delete">Delete scale</string>
     <string name="piece_delete_title">Delete “%1$s”?</string>
     <string name="piece_delete_text">The sheet music, notes and the time spent on it will be deleted. The recordings will stay in “Recordings”.</string>
     <string name="piece_delete_confirm">Delete</string>

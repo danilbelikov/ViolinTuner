@@ -39,7 +39,8 @@ object Routes {
         "&${PieceFormViewModel.ARG_FOCUS_NOTES}={${PieceFormViewModel.ARG_FOCUS_NOTES}}" +
         "&${PieceFormViewModel.ARG_SECTION}={${PieceFormViewModel.ARG_SECTION}}"
     const val SCALE_FORM = "scaleForm"
-    const val SCALE_FORM_PATTERN = "$SCALE_FORM?${ScaleFormViewModel.ARG_PIECE_ID}={${ScaleFormViewModel.ARG_PIECE_ID}}"
+    const val SCALE_FORM_PATTERN = "$SCALE_FORM?${ScaleFormViewModel.ARG_PIECE_ID}={${ScaleFormViewModel.ARG_PIECE_ID}}" +
+        "&${ScaleFormViewModel.ARG_FOCUS_NOTES}={${ScaleFormViewModel.ARG_FOCUS_NOTES}}"
     const val SECTION = "section"
     const val SECTION_PATTERN = "$SECTION/{${RepertoireViewModel.ARG_SECTION}}"
     const val JOURNEY = "journey"
@@ -75,8 +76,9 @@ object Routes {
         "$PIECE_FORM?${PieceFormViewModel.ARG_PIECE_ID}=${pieceId ?: PieceFormViewModel.NEW_PIECE}" +
             "&${PieceFormViewModel.ARG_FOCUS_NOTES}=$focusNotes&${PieceFormViewModel.ARG_SECTION}=${SectionKeys.keyOf(section)}"
 
-    /** [pieceId] null — the form of a new scale. */
-    fun scaleForm(pieceId: Long?): String = "$SCALE_FORM?${ScaleFormViewModel.ARG_PIECE_ID}=${pieceId ?: ScaleFormViewModel.NEW_SCALE}"
+    /** [pieceId] null — the form of a new scale; [focusNotes] — at its notes («Добавить заметку» of the scale's screen). */
+    fun scaleForm(pieceId: Long?, focusNotes: Boolean = false): String =
+        "$SCALE_FORM?${ScaleFormViewModel.ARG_PIECE_ID}=${pieceId ?: ScaleFormViewModel.NEW_SCALE}&${ScaleFormViewModel.ARG_FOCUS_NOTES}=$focusNotes"
 
     fun section(section: SectionRef): String = "$SECTION/${SectionKeys.keyOf(section)}"
 

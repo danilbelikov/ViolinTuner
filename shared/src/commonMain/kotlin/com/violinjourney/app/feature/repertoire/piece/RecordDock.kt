@@ -36,14 +36,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
@@ -66,6 +63,7 @@ import com.violinjourney.app.core.ui.components.dimmedWhen
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconSizes
+import com.violinjourney.app.feature.repertoire.components.ReasonPlate
 import com.violinjourney.app.feature.repertoire.components.RecordDot
 import com.violinjourney.app.feature.repertoire.components.RecordingBar
 import com.violinjourney.app.shared.resources.Res
@@ -105,8 +103,6 @@ private val VideoCircleCompact = 48.dp
 private val VideoBorder = 1.5.dp
 private val VideoIcon = 24.dp
 private val VideoMenuWidth = 248.dp
-private val PlateIcon = 18.dp
-private val PlateCorner = 12.dp
 private val SpinnerStroke = 2.dp
 private val DotRegular = 14.dp
 private val DotCompact = 12.dp
@@ -163,11 +159,13 @@ fun DockScope.RecordDock(
             RecordReason.NO_HEADPHONES -> ReasonPlate(
                 AppIcons.Headphones,
                 Sentences.join(stringResource(Res.string.backing_needs_headphones), stringResource(Res.string.backing_or_turn_off)),
+                Modifier.fillMaxWidth(),
             )
-            RecordReason.PREPARING -> ReasonPlate(AppIcons.Backing, stringResource(Res.string.backing_preparing))
+            RecordReason.PREPARING -> ReasonPlate(AppIcons.Backing, stringResource(Res.string.backing_preparing), Modifier.fillMaxWidth())
             RecordReason.UNPREPARED -> ReasonPlate(
                 AppIcons.Alert,
                 Sentences.join(stringResource(Res.string.backing_unprepared), stringResource(Res.string.backing_or_turn_off)),
+                Modifier.fillMaxWidth(),
             )
         }
         if (backing.present) BackingToggleRow(backing, onIntent)
@@ -223,32 +221,6 @@ private fun TakeBar(take: State<TakeState>, compact: Boolean, onIntent: (PieceIn
         backingDurationMs = now.backingDurationMs,
         compact = compact,
     )
-}
-
-/**
- * Why the key sleeps, over it (5.29 R4): a plate of surfaceContainer at a corner of 12, the icon of 18 in the second level (not the
- * amber — that is the zone «рядом») and the words of 13 sp, up to three lines; said aloud when it appears.
- */
-@Composable
-private fun ReasonPlate(icon: ImageVector, text: String) {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(colors.surfaceContainer, RoundedCornerShape(PlateCorner))
-            .padding(horizontal = 12.dp, vertical = 10.dp)
-            // said aloud when it appears: the key under it has just gone to sleep
-            .semantics { liveRegion = LiveRegionMode.Polite },
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
-    ) {
-        AppIcon(icon, contentDescription = null, tint = colors.onSurfaceVariant, size = PlateIcon)
-        Text(
-            text,
-            modifier = Modifier.weight(1f),
-            color = colors.onSurface,
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
-        )
-    }
 }
 
 /**

@@ -9,10 +9,6 @@ import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
-import com.violinjourney.app.core.ui.components.LocalMessages
-import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.scale_locked
-import org.jetbrains.compose.resources.getString
 
 @Composable
 fun ScaleFormRoute(
@@ -23,7 +19,6 @@ fun ScaleFormRoute(
     viewModel: ScaleFormViewModel,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
-    val messages = LocalMessages.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnClose by rememberUpdatedState(onClose)
     val currentOnOpenScale by rememberUpdatedState(onOpenScale)
@@ -36,7 +31,6 @@ fun ScaleFormRoute(
                     ScaleFormEffect.Close -> currentOnClose()
                     is ScaleFormEffect.OpenScale -> currentOnOpenScale(effect.pieceId)
                     ScaleFormEffect.CloseDeleted -> currentOnCloseDeleted()
-                    ScaleFormEffect.ShowLocked -> messages.show(getString(Res.string.scale_locked))
                 }
             }
         }

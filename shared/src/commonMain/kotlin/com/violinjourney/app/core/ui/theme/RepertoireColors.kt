@@ -18,8 +18,6 @@ data class RepertoireColors(
     val standScrim: Color,
     /** A take that has just been recorded, before it settles into the list. */
     val takeNew: Color,
-    /** Frame and caption of a form field that cannot be saved — until R4 makes it onSurfaceVariant with an icon (spec 3.36.1). */
-    val formError: Color,
 )
 
 internal val DarkRepertoireColors = RepertoireColors(
@@ -29,7 +27,6 @@ internal val DarkRepertoireColors = RepertoireColors(
     standBackground = StandBackground,
     standScrim = StandScrim,
     takeNew = TakeNew,
-    formError = FormError,
 )
 
 internal val LocalRepertoireColors = staticCompositionLocalOf<RepertoireColors> {

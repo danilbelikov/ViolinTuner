@@ -770,6 +770,8 @@
     <string name="form_new_etude">새 연습곡</string>
     <string name="form_new_stroke">새 운궁법</string>
     <string name="form_new_element">새 항목</string>
+    <string name="form_optional">선택</string>
+    <string name="section_scales_only">음계 전용</string>
     <string-array name="stroke_suggestions">
         <item>데타셰</item>
         <item>레가토</item>
@@ -796,9 +798,11 @@
     <string name="scale_title">%1$s · %2$s</string>
     <string name="scale_range">%1$s – %2$s</string>
     <string name="scale_preview_empty">으뜸음을 고르면 여기에 악보가 그려집니다</string>
-    <string name="scale_exists">같은 음계가 이미 있어요</string>
-    <string name="scale_open">열기</string>
-    <string name="scale_locked">그러면 다른 음계가 됩니다 — 새로 추가하세요</string>
+    <string name="scale_octaves_unfit">%1$s부터 3옥타브는 바이올린 음역을 넘어요</string>
+    <string name="scale_tonics_gray">회색 으뜸음은 조표가 일곱 개를 넘어요.</string>
+    <string name="scale_twin">같은 음계가 이미 있어요 — “음계”, 상태 “%1$s”, %2$s.</string>
+    <string name="scale_open_twin">그 음계 열기</string>
+    <string name="scale_locked_reason">음계의 조성과 종류는 바꿀 수 없어요. 다른 음계가 되니까요.</string>
     <string name="scale_notes_description">%1$s 음계 악보</string>
     <string name="scale_more_systems_one">%1$d단 더</string>
     <string name="scale_more_systems_few">%1$d단 더</string>
@@ -807,7 +811,6 @@
     <string name="scale_add_photo_hint">예: 교재의 운지</string>
     <string name="scale_notes">악보</string>
     <string name="scale_open_stand">보면대에서 열기</string>
-    <string name="piece_tempo_value">♩ = %1$d</string>
     <string name="piece_tempo_description">템포 %1$d</string>
     <string name="takes_one">테이크 %1$d개</string>
     <string name="takes_few">테이크 %1$d개</string>
@@ -829,19 +832,27 @@
     <string name="piece_form_discard_title">저장하지 않을까요?</string>
     <string name="piece_form_discard_confirm">저장 안 함</string>
     <string name="piece_field_title">제목</string>
+    <string name="piece_field_title_placeholder">예: “미뉴에트 G장조”</string>
     <string name="piece_field_composer">작곡가</string>
+    <string name="piece_field_composer_placeholder">누가 썼나요</string>
     <string name="piece_field_key">조성</string>
     <string name="piece_field_tempo">템포</string>
+    <string name="piece_field_tempo_hint">표시일 뿐, 메트로놈은 없어요</string>
     <string name="piece_field_status">상태</string>
     <string name="piece_field_notes">메모</string>
+    <string name="piece_field_notes_placeholder">잊지 말아야 할 것…</string>
     <string name="piece_title_error">제목이 없으면 저장할 수 없어요</string>
     <string name="piece_key_major">장조</string>
     <string name="piece_key_minor">단조</string>
-    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="key_none">조성 없음</string>
+    <string name="key_pick_tonic_first">먼저 으뜸음을 고르세요</string>
     <string name="piece_tempo_slower">느리게</string>
     <string name="piece_tempo_faster">빠르게</string>
     <string name="piece_tempo_clear">템포 없음</string>
     <string name="piece_delete">곡 삭제</string>
+    <string name="etude_delete">연습곡 삭제</string>
+    <string name="stroke_delete">운궁법 삭제</string>
+    <string name="scale_delete">음계 삭제</string>
     <string name="piece_delete_title">“%1$s” 항목을 삭제할까요?</string>
     <string name="piece_delete_text">악보, 메모, 이 곡에 쓴 시간이 삭제됩니다. 녹음은 “녹음” 탭에 남습니다.</string>
     <string name="piece_delete_confirm">삭제</string>

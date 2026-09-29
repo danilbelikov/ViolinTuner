@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.LayoutScopeMarker
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.exclude
@@ -79,7 +80,10 @@ private enum class DockSlot { Zone, Content }
  * it is measured to the top of the zone, with [LocalDockInset] 0 and no fade, so its scroll window shrinks and the scroll brings
  * the field in focus above the zone by itself (a fade there would lie over the line being typed). [padSides] false — the sides
  * are given by the column around it (the left column of landscape:
- * `AppDock(…, Modifier.width(280.dp), padSides = false, fade = DockDefaults.FadeLeftColumn)`).
+ * `AppDock(…, Modifier.width(280.dp), padSides = false, fade = DockDefaults.FadeLeftColumn)`). [pinned] false — the zone has left
+ * its place for the end of the content, where its owner lays its rows with [DockRows] (a form lying over a keyboard too high for its
+ * zone in one line and a field together, 5.29 R4): [dock] is not composed, nothing is drawn at the bottom, and over the keyboard the
+ * content ends at the top of the keyboard — the whole room over it is the content's.
  * [DockScope.compact] and [DockScope.buttonHeight] tell its buttons their height: `AppButton(compact = compact)`, the living
  * «Начать занятие» at `Modifier.height(buttonHeight)`.
  *
@@ -101,6 +105,7 @@ fun AppDock(
     aboveKeyboard: Boolean = false,
     padSides: Boolean = true,
     metrics: DockMetrics = currentDockMetrics(),
+    pinned: Boolean = true,
     content: @Composable () -> Unit,
 ) {
     // written while measuring, before the content is composed, and read by it: the content is recomposed only when it changes
@@ -111,7 +116,12 @@ fun AppDock(
     val overKeyboard = remember(aboveKeyboard, keyboard, density) {
         derivedStateOf { aboveKeyboard && keyboard.getBottom(density) > 0 }
     }
-    val zone: @Composable () -> Unit = { DockZone(metrics, if (overKeyboard.value) 0.dp else fade, aboveKeyboard, padSides, dock) }
+    // the zone gone into the content leaves at the bottom only the room of the system — the keyboard, for one over it
+    val zone: @Composable () -> Unit = if (pinned) {
+        { DockZone(metrics, if (overKeyboard.value) 0.dp else fade, aboveKeyboard, padSides, dock) }
+    } else {
+        { Spacer(Modifier.fillMaxWidth().windowInsetsPadding(bottomInsets(aboveKeyboard))) }
+    }
     val body: @Composable () -> Unit = { CompositionLocalProvider(LocalDockInset provides inset.value, content = content) }
     SubcomposeLayout(modifier) { constraints ->
         check(constraints.hasBoundedHeight) { "AppDock needs a bounded height: the root of a screen or of a column, not a vertical scroll" }
@@ -145,13 +155,9 @@ fun AppDock(
 @Composable
 private fun DockZone(metrics: DockMetrics, fade: Dp, aboveKeyboard: Boolean, padSides: Boolean, dock: @Composable DockScope.() -> Unit) {
     val ground = MaterialTheme.colorScheme.surface
-    val insets = if (aboveKeyboard) {
-        WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
-    } else {
-        WindowInsets.safeDrawing.exclude(WindowInsets.ime).only(WindowInsetsSides.Bottom)
-    }
     val side = if (padSides) metrics.side else 0.dp
-    Column(
+    DockRows(
+        metrics = metrics,
         modifier = Modifier
             .fillMaxWidth()
             .then(reportedToRoot())
@@ -169,13 +175,31 @@ private fun DockZone(metrics: DockMetrics, fade: Dp, aboveKeyboard: Boolean, pad
             }
             // a hit for touches between the buttons, so they do not reach the list under the zone; nothing is done with them
             .pointerInput(Unit) {}
-            .windowInsetsPadding(insets)
+            .windowInsetsPadding(bottomInsets(aboveKeyboard))
             .padding(start = side, end = side, top = metrics.top, bottom = metrics.bottom),
-        verticalArrangement = Arrangement.spacedBy(DockDefaults.RowGap),
-    ) {
+        dock = dock,
+    )
+}
+
+/**
+ * The rows of a bottom zone ([AppDock]): 10 apart, with the [DockScope] of [metrics] — the buttons know their height. In the zone
+ * itself; or, while an [AppDock] is not pinned, where its owner lays them — at the end of what scrolls, without the ground, the
+ * fade and the insets of the zone.
+ */
+@Composable
+internal fun DockRows(metrics: DockMetrics, modifier: Modifier = Modifier, dock: @Composable DockScope.() -> Unit) {
+    Column(modifier, verticalArrangement = Arrangement.spacedBy(DockDefaults.RowGap)) {
         val scope = remember(this, metrics) { DockScopeInstance(this, metrics.compact, metrics.button) }
         scope.dock()
     }
+}
+
+/** The insets under a zone: the bottom of the safe area — with the keyboard in it for a zone that rises with the keyboard. */
+@Composable
+private fun bottomInsets(aboveKeyboard: Boolean): WindowInsets = if (aboveKeyboard) {
+    WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
+} else {
+    WindowInsets.safeDrawing.exclude(WindowInsets.ime).only(WindowInsetsSides.Bottom)
 }
 
 /** On iOS — the top of the zone, reported to the root for the message; nothing on Android. */

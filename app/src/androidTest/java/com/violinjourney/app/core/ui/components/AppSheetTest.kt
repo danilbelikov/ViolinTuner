@@ -343,6 +343,42 @@ class AppSheetTest {
         compose.onAllNodesWithText(SAVE).assertCountEquals(1)
     }
 
+    /**
+     * A sheet never lies under a cutout of the camera or a bar of the system at a side of its window (the review of stage 110: on 640 ×
+     * 360 with a cutout of 36.5 the tonics of «Тональность» went under it, and under a bar of three buttons at the right its «Готово»).
+     * The window hands the sheet's view a cutout at the left and a bar at the right; the content, 20 in from the sheet's sides, stands
+     * clear of both.
+     */
+    @Test
+    fun aSheetKeepsOffTheCutoutAndTheBarAtTheSidesOfItsWindow() {
+        lateinit var view: View
+        compose.setContent {
+            ViolinTheme {
+                AppSheet(value = value, onHide = { value = null }) { shown ->
+                    view = LocalView.current
+                    Box(Modifier.fillMaxWidth().height(SHEET.dp).testTag(CONTENT_TAG)) { Text(shown) }
+                }
+            }
+        }
+        compose.waitForIdle()
+        value = SHOWN
+        compose.waitForIdle()
+        val window = compose.onAllNodes(isRoot()).filter(hasAnyDescendant(hasText(SHOWN))).onFirst().getUnclippedBoundsInRoot()
+        val cutout = with(compose.density) { CUTOUT.dp.roundToPx() }
+        val bar = with(compose.density) { SIDE_BAR.dp.roundToPx() }
+        val sides = WindowInsetsCompat.Builder()
+            .setInsets(WindowInsetsCompat.Type.displayCutout(), Insets.of(cutout, 0, 0, 0))
+            .setInsets(WindowInsetsCompat.Type.navigationBars(), Insets.of(0, 0, bar, 0))
+            .build()
+        compose.runOnUiThread { ViewCompat.dispatchApplyWindowInsets(view, sides) }
+        compose.waitForIdle()
+
+        val content = compose.onNodeWithTag(CONTENT_TAG).getUnclippedBoundsInRoot()
+        assertTrue("off the cutout: ${content.left}, the window at ${window.left}", content.left >= window.left + (CUTOUT + CONTENT_SIDE).dp - 1.dp)
+        assertTrue("off the bar: ${content.right}, the window at ${window.right}", content.right <= window.right - (SIDE_BAR + CONTENT_SIDE).dp + 1.dp)
+        compose.onNodeWithText(SHOWN).assertIsDisplayed()
+    }
+
     /** What the window hands its views: the keyboard alone, [bottom] px from the bottom; none at 0. */
     private fun keyboardInsets(bottom: Int): WindowInsetsCompat = WindowInsetsCompat.Builder()
         .setInsets(WindowInsetsCompat.Type.ime(), Insets.of(0, 0, 0, bottom))
@@ -376,5 +412,11 @@ class AppSheetTest {
         /** The pinned buttons of one main button: 18 over it, 56, the field of 16 under it — and what a keyboard leaves over them. */
         const val PINNED = 90
         const val LEFT_OVER = 30
+
+        /** A cutout of the camera at the left of the window, a bar of three buttons at its right; the fields of a sheet's content. */
+        const val CUTOUT = 40
+        const val SIDE_BAR = 48
+        const val CONTENT_SIDE = 20
+        const val CONTENT_TAG = "content"
     }
 }

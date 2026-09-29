@@ -770,6 +770,8 @@
     <string name="form_new_etude">Новый этюд</string>
     <string name="form_new_stroke">Новый штрих</string>
     <string name="form_new_element">Новый элемент</string>
+    <string name="form_optional">необязательно</string>
+    <string name="section_scales_only">только для гамм</string>
     <string-array name="stroke_suggestions">
         <item>Деташе</item>
         <item>Легато</item>
@@ -796,9 +798,11 @@
     <string name="scale_title">%1$s · %2$s</string>
     <string name="scale_range">%1$s – %2$s</string>
     <string name="scale_preview_empty">Выберите тонику — ноты нарисуются здесь</string>
-    <string name="scale_exists">Такая гамма уже есть</string>
-    <string name="scale_open">Открыть</string>
-    <string name="scale_locked">Это была бы другая гамма — добавьте новую</string>
+    <string name="scale_octaves_unfit">Три октавы от %1$s не помещаются на скрипке</string>
+    <string name="scale_tonics_gray">Серые тоники дали бы больше семи знаков при ключе.</string>
+    <string name="scale_twin">Такая гамма уже есть — в «Гаммах», статус «%1$s», %2$s.</string>
+    <string name="scale_open_twin">Открыть её</string>
+    <string name="scale_locked_reason">Тональность и вид у гаммы не меняются: это была бы другая гамма.</string>
     <string name="scale_notes_description">Ноты гаммы %1$s</string>
     <string name="scale_more_systems_one">ещё %1$d система</string>
     <string name="scale_more_systems_few">ещё %1$d системы</string>
@@ -807,7 +811,6 @@
     <string name="scale_add_photo_hint">например, аппликатура из сборника</string>
     <string name="scale_notes">Ноты</string>
     <string name="scale_open_stand">Открыть на пюпитре</string>
-    <string name="piece_tempo_value">♩ = %1$d</string>
     <string name="piece_tempo_description">темп %1$d</string>
     <string name="takes_one">%1$d дубль</string>
     <string name="takes_few">%1$d дубля</string>
@@ -829,19 +832,27 @@
     <string name="piece_form_discard_title">Не сохранять?</string>
     <string name="piece_form_discard_confirm">Не сохранять</string>
     <string name="piece_field_title">Название</string>
+    <string name="piece_field_title_placeholder">Например, «Менуэт соль мажор»</string>
     <string name="piece_field_composer">Композитор</string>
+    <string name="piece_field_composer_placeholder">Кто написал</string>
     <string name="piece_field_key">Тональность</string>
     <string name="piece_field_tempo">Темп</string>
+    <string name="piece_field_tempo_hint">это пометка, метронома нет</string>
     <string name="piece_field_status">Статус</string>
     <string name="piece_field_notes">Заметки</string>
+    <string name="piece_field_notes_placeholder">Что важно не забыть…</string>
     <string name="piece_title_error">Без названия не сохранить</string>
     <string name="piece_key_major">мажор</string>
     <string name="piece_key_minor">минор</string>
-    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="key_none">Без тональности</string>
+    <string name="key_pick_tonic_first">Сначала выберите тонику</string>
     <string name="piece_tempo_slower">Медленнее</string>
     <string name="piece_tempo_faster">Быстрее</string>
     <string name="piece_tempo_clear">Без темпа</string>
     <string name="piece_delete">Удалить произведение</string>
+    <string name="etude_delete">Удалить этюд</string>
+    <string name="stroke_delete">Удалить штрих</string>
+    <string name="scale_delete">Удалить гамму</string>
     <string name="piece_delete_title">Удалить «%1$s»?</string>
     <string name="piece_delete_text">Ноты, заметки и время по нему удалятся. Записи останутся в «Записях».</string>
     <string name="piece_delete_confirm">Удалить</string>

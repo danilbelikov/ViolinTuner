@@ -25,12 +25,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
@@ -50,6 +52,7 @@ import com.violinjourney.app.core.ui.theme.AppShapes
 
 private const val SWITCH_MS = 200
 private const val LINE_HEIGHT = 1.15f
+private const val DISABLED_ALPHA = 0.38f
 
 /** The regular switch (spec 5.29): a container of 52, the pills of 44 inside it — 4 from its edges, 4 between them. */
 private val RegularHeight = 52.dp
@@ -77,6 +80,11 @@ private val CompactCorner = 14.dp
  * ([SegmentFit]). [byWords] — by the words always, not equally: the status in the narrow left column lying, where «В репертуаре»
  * would not stand in a third (spec 3.36.4). Both measure the labels and need a bounded width. [description] — the name of the group
  * for TalkBack («Статус»), on the group itself.
+ *
+ * [containerColor] — the ground of the container where surfaceContainer would not stand out: the ground of the screen in a sheet
+ * («Тональность», 5.29 R4). [enabled] false — the whole switch sleeps: 0.38 with its ground, no segment answers, TalkBack says
+ * «недоступно» (the sign and the mode without a tonic, the key of a scale in an edit); the reason is its caller's line under it.
+ * [segmentEnabled] — one segment sleeps alone at 0.38 while the others answer (the octave that would leave the violin).
  */
 @Composable
 fun SegmentedSwitch(
@@ -89,14 +97,18 @@ fun SegmentedSwitch(
     byWords: Boolean = false,
     wholeWords: Boolean = false,
     description: String? = null,
+    containerColor: Color = Color.Unspecified,
+    enabled: Boolean = true,
+    segmentEnabled: (Int) -> Boolean = { true },
 ) {
+    val looks = SwitchLooks(containerColor, enabled, segmentEnabled)
     val labelStyle = MaterialTheme.typography.labelLarge.copy(
         fontSize = fontSize.sp,
         lineHeight = (fontSize * LINE_HEIGHT).sp,
         fontWeight = FontWeight.Bold,
     )
     if (!byWords && !wholeWords) {
-        SwitchRow(labels, selectedIndex, onSelect, modifier, compact, labelStyle, weights = null, description)
+        SwitchRow(labels, selectedIndex, onSelect, modifier, compact, labelStyle, weights = null, description, looks)
         return
     }
     val measurer = rememberTextMeasurer()
@@ -123,9 +135,12 @@ fun SegmentedSwitch(
         }
         val style = if (plan.sizeSp == fontSize.toFloat()) labelStyle else labelStyle.copy(fontSize = plan.sizeSp.sp, lineHeight = (plan.sizeSp * LINE_HEIGHT).sp)
         // a row of no width yet (a transition) has nothing to share
-        SwitchRow(labels, selectedIndex, onSelect, Modifier, compact, style, plan.widths.takeIf { widths -> widths.all { it > 0f } }, description)
+        SwitchRow(labels, selectedIndex, onSelect, Modifier, compact, style, plan.widths.takeIf { widths -> widths.all { it > 0f } }, description, looks)
     }
 }
+
+/** What of a switch is not about its words: its ground, and what of it answers. */
+private class SwitchLooks(val containerColor: Color, val enabled: Boolean, val segmentEnabled: (Int) -> Boolean)
 
 @Composable
 private fun SwitchRow(
@@ -137,9 +152,10 @@ private fun SwitchRow(
     labelStyle: TextStyle,
     weights: List<Float>?,
     description: String?,
+    looks: SwitchLooks,
 ) {
     val colors = MaterialTheme.colorScheme
-    val container = colors.surfaceContainer
+    val container = if (looks.containerColor.isSpecified) looks.containerColor else colors.surfaceContainer
     val edge = if (compact) CompactEdge else RegularEdge
     val between = if (compact) CompactBetween else RegularBetween
     // the compact container is drawn in the middle of its touch target, 10 dp of air above and below it
@@ -151,6 +167,8 @@ private fun SwitchRow(
             // pills stretch to the height — the whole of it stays pressed
             .heightIn(min = if (compact) CompactTouch else RegularHeight)
             .height(IntrinsicSize.Min)
+            // dimmed as a whole, its ground too, in its own colours — as a disabled button is
+            .then(if (looks.enabled) Modifier else Modifier.alpha(DISABLED_ALPHA))
             .then(
                 if (compact) {
                     Modifier.drawBehind {
@@ -167,6 +185,9 @@ private fun SwitchRow(
     ) {
         labels.forEachIndexed { index, label ->
             val selected = index == selectedIndex
+            val answers = looks.enabled && looks.segmentEnabled(index)
+            // a segment of its own is dimmed alone; a switch dimmed as a whole is not dimmed twice
+            val segmentDim = if (looks.enabled && !answers) Modifier.alpha(DISABLED_ALPHA) else Modifier
             val pill by animateColorAsState(if (selected) colors.primaryContainer else Color.Transparent, tween(SWITCH_MS), label = "segment")
             val interaction = remember { MutableInteractionSource() }
             val pillPresses = remember(interaction) { ShiftedInteractionSource(interaction) }
@@ -174,10 +195,12 @@ private fun SwitchRow(
                 modifier = Modifier
                     .weight(weights?.getOrNull(index) ?: 1f)
                     .fillMaxHeight()
+                    .then(segmentDim)
                     .selectable(
                         selected = selected,
                         interactionSource = interaction,
                         indication = null,
+                        enabled = answers,
                         role = Role.RadioButton,
                         onClick = { onSelect(index) },
                     ),

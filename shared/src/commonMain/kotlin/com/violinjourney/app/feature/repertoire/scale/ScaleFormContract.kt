@@ -9,7 +9,7 @@ import com.violinjourney.app.core.domain.repertoire.scale.ScaleKind
 enum class ScaleFormDialog {
     DISCARD,
 
-    /** «Не сохранять?» on the way to the scale that is there already («Такая гамма уже есть · Открыть»). */
+    /** «Не сохранять?» on the way to the scale that is there already («Открыть её»). */
     DISCARD_AND_OPEN,
     DELETE,
 }
@@ -25,6 +25,12 @@ data class ScaleDraft(
     val notes: String = "",
 )
 
+/**
+ * The scale that is there already (spec 3.22, 3.36.4): the plate over «Открыть её» says where it lives, its status and how many takes
+ * it has — «Такая гамма уже есть — в «Гаммах», статус «Учу», 2 дубля.».
+ */
+data class ScaleTwin(val id: Long, val status: PieceStatus, val takes: Int)
+
 data class ScaleFormState(
     /** True until an edited scale has been read; a new one is never loading. */
     val loading: Boolean,
@@ -32,12 +38,12 @@ data class ScaleFormState(
     val draft: ScaleDraft,
     /** The scale the three choices add up to: the live preview, the title, the range. Null until a tonic is picked. */
     val scale: Scale?,
-    /** Tonics that would make a key of eight signs with the accidental and the kind picked: dimmed, deaf to taps. */
+    /** The tonics that make a key of seven signs at most with the accidental and the kind picked; the others are dimmed and deaf. */
     val tonicsAllowed: Set<Tonic>,
     /** Octaves that still end on the instrument. */
     val octavesAllowed: Set<Int>,
-    /** The very scale is in the repertoire already: «Такая гамма уже есть · Открыть». */
-    val existingId: Long?,
+    /** The very scale is in the repertoire already: the main button opens it instead («Открыть её»). */
+    val twin: ScaleTwin?,
     val canSave: Boolean,
     val dialog: ScaleFormDialog?,
     val maxNotesLength: Int,
@@ -47,6 +53,13 @@ data class ScaleFormState(
      * language may have changed since. Null for a new scale and while it is read.
      */
     val savedTitle: String? = null,
+    /**
+     * The lowest tonic the violin has for the key picked — «F4» — what the reason of an octave that does not fit starts from («Три
+     * октавы от F4 не помещаются на скрипке», spec 3.36.4); null without a tonic.
+     */
+    val startNote: String? = null,
+    /** Opened by «Добавить заметку» of the scale's screen: the notes field takes the focus (spec 3.15, 3.36.4). */
+    val focusNotes: Boolean = false,
 )
 
 sealed interface ScaleFormIntent {
@@ -86,7 +99,4 @@ sealed interface ScaleFormEffect {
     data class OpenScale(val pieceId: Long) : ScaleFormEffect
 
     data object CloseDeleted : ScaleFormEffect
-
-    /** The key and the kind of a scale that exists are locked: «Это была бы другая гамма — добавьте новую». */
-    data object ShowLocked : ScaleFormEffect
 }

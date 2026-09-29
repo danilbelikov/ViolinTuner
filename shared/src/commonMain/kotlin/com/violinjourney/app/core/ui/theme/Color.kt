@@ -42,9 +42,6 @@ internal val StandBackground = Color(0xFF0E0E12)
 internal val StandScrim = Color(0xEB0E0E12)
 internal val TakeNew = Color(0xFF2A2540)
 
-/** The hex of zone.off, but a token of its own: zone colors stay about intonation only. The error of a form field until R4. */
-internal val FormError = Color(0xFFE8565C)
-
 // The danger (spec 3.36.1, 5.29): what deletes or replaces data, a warning that data will be lost, the sign of a failure — a
 // soft coral, 8.3 : 1 on a dialog or a menu. Never a zone colour and never colorScheme.error: the red of «мимо» it replaced
 // meant «off» on Live. [OnDanger] is the text of the one filled dangerous button, «Восстановить» (9.2 : 1).

@@ -52,8 +52,16 @@ class RoutesTest {
             ),
             Routes.pieceForm(5, focusNotes = true, section = SectionRef.Custom(9)),
         )
-        assertEquals(fill(Routes.SCALE_FORM_PATTERN, ScaleFormViewModel.ARG_PIECE_ID to ScaleFormViewModel.NEW_SCALE), Routes.scaleForm(null))
-        assertEquals(fill(Routes.SCALE_FORM_PATTERN, ScaleFormViewModel.ARG_PIECE_ID to 8), Routes.scaleForm(8))
+        assertEquals(
+            fill(Routes.SCALE_FORM_PATTERN, ScaleFormViewModel.ARG_PIECE_ID to ScaleFormViewModel.NEW_SCALE, ScaleFormViewModel.ARG_FOCUS_NOTES to false),
+            Routes.scaleForm(null),
+        )
+        assertEquals(fill(Routes.SCALE_FORM_PATTERN, ScaleFormViewModel.ARG_PIECE_ID to 8, ScaleFormViewModel.ARG_FOCUS_NOTES to false), Routes.scaleForm(8))
+        // «Добавить заметку» of a scale opens its form at the notes, as a piece's does (spec 3.15, 3.36.4)
+        assertEquals(
+            fill(Routes.SCALE_FORM_PATTERN, ScaleFormViewModel.ARG_PIECE_ID to 8, ScaleFormViewModel.ARG_FOCUS_NOTES to true),
+            Routes.scaleForm(8, focusNotes = true),
+        )
         assertEquals(
             fill(Routes.SECTION_PATTERN, RepertoireViewModel.ARG_SECTION to SectionKeys.keyOf(SectionRef.BuiltIn(PieceSection.SCALES))),
             Routes.section(SectionRef.BuiltIn(PieceSection.SCALES)),

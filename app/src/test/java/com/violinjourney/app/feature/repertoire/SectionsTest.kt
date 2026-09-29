@@ -97,7 +97,7 @@ class SectionsTest {
 
     private fun TestScope.scaleForm(pieceId: Long? = null): Pair<ScaleFormViewModel, MutableList<ScaleFormEffect>> {
         val viewModel = ScaleFormViewModel(
-            SavedStateHandle(mapOf(ScaleFormViewModel.ARG_PIECE_ID to (pieceId ?: ScaleFormViewModel.NEW_SCALE))), repertoire, config, clock, texts,
+            SavedStateHandle(mapOf(ScaleFormViewModel.ARG_PIECE_ID to (pieceId ?: ScaleFormViewModel.NEW_SCALE))), repertoire, FakeSessionRepository(), config, clock, texts,
         )
         val effects = mutableListOf<ScaleFormEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -353,7 +353,7 @@ class SectionsTest {
         form.onIntent(ScaleFormIntent.TonicClicked(Tonic.G))
         form.onIntent(ScaleFormIntent.OctavesSelected(3))
         runCurrent()
-        assertEquals(existing, form.state.value.existingId)
+        assertEquals(existing, form.state.value.twin?.id)
         assertFalse(form.state.value.canSave)
         form.onIntent(ScaleFormIntent.SaveClicked)
         form.onIntent(ScaleFormIntent.OpenExistingClicked)
@@ -362,7 +362,7 @@ class SectionsTest {
         assertEquals(listOf<ScaleFormEffect>(ScaleFormEffect.OpenScale(existing)), effects)
 
         form.onIntent(ScaleFormIntent.OctavesSelected(2))
-        assertNull("two octaves are another scale", form.state.value.existingId)
+        assertNull("two octaves are another scale", form.state.value.twin)
     }
 
     @Test
@@ -374,7 +374,8 @@ class SectionsTest {
         form.onIntent(ScaleFormIntent.KindSelected(ScaleKind.MELODIC_MINOR))
         runCurrent()
         assertEquals(Tonic.G to ScaleKind.MAJOR, form.state.value.draft.tonic to form.state.value.draft.kind)
-        assertEquals(listOf<ScaleFormEffect>(ScaleFormEffect.ShowLocked, ScaleFormEffect.ShowLocked), effects)
+        // spec 3.36.4: the key and the kind sleep under their reason — no toast answers the tap any more
+        assertTrue(effects.isEmpty())
 
         form.onIntent(ScaleFormIntent.OctavesSelected(2))
         form.onIntent(ScaleFormIntent.StatusSelected(PieceStatus.IN_REPERTOIRE))

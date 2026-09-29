@@ -18,6 +18,8 @@ import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsEqualTo
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTouchHeightIsEqualTo
@@ -26,6 +28,7 @@ import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
@@ -57,7 +60,13 @@ class SegmentedSwitchTest {
 
     private var selected by mutableStateOf<Int?>(0)
 
-    private fun show(compact: Boolean, modifier: Modifier = Modifier, fontScale: Float? = null) {
+    private fun show(
+        compact: Boolean,
+        modifier: Modifier = Modifier,
+        fontScale: Float? = null,
+        enabled: Boolean = true,
+        segmentEnabled: (Int) -> Boolean = { true },
+    ) {
         compose.setContent {
             val base = LocalViewConfiguration.current
             val density = LocalDensity.current
@@ -73,6 +82,8 @@ class SegmentedSwitchTest {
                         onSelect = { selected = it },
                         modifier = modifier.testTag(TAG),
                         compact = compact,
+                        enabled = enabled,
+                        segmentEnabled = segmentEnabled,
                     )
                 }
             }
@@ -91,6 +102,27 @@ class SegmentedSwitchTest {
         LABELS.forEach { compose.onNodeWithText(it).assertTouchHeightIsEqualTo(52.dp) }
         touchTheMiddleNearTheTop()
         compose.runOnIdle { assertEquals(1, selected) }
+    }
+
+    /** The sign and the mode of «Тональность» without a tonic (spec 3.36.4): the whole switch sleeps and says so. */
+    @Test
+    fun aSwitchThatSleepsIsReadAsUnavailableAndTakesNoTouch() {
+        show(compact = false, enabled = false)
+        LABELS.forEach { compose.onNodeWithText(it).assertIsNotEnabled() }
+        touchTheMiddleNearTheTop()
+        compose.runOnIdle { assertEquals(0, selected) }
+    }
+
+    /** The octave off the violin (spec 3.36.4): that segment alone sleeps; the others answer. */
+    @Test
+    fun aSegmentThatSleepsAloneLeavesTheOthersAnswering() {
+        show(compact = false, segmentEnabled = { it != 1 })
+        compose.onNodeWithText(LABELS[1]).assertIsNotEnabled()
+        compose.onNodeWithText(LABELS[2]).assertIsEnabled()
+        touchTheMiddleNearTheTop()
+        compose.runOnIdle { assertEquals(0, selected) }
+        compose.onNodeWithText(LABELS[2]).performClick()
+        compose.runOnIdle { assertEquals(2, selected) }
     }
 
     @Test

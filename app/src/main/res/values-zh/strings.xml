@@ -770,6 +770,8 @@
     <string name="form_new_etude">新练习曲</string>
     <string name="form_new_stroke">新弓法</string>
     <string name="form_new_element">新项目</string>
+    <string name="form_optional">选填</string>
+    <string name="section_scales_only">仅限音阶</string>
     <string-array name="stroke_suggestions">
         <item>分弓</item>
         <item>连弓</item>
@@ -796,9 +798,11 @@
     <string name="scale_title">%1$s · %2$s</string>
     <string name="scale_range">%1$s – %2$s</string>
     <string name="scale_preview_empty">选择主音——乐谱会画在这里</string>
-    <string name="scale_exists">这条音阶已经有了</string>
-    <string name="scale_open">打开</string>
-    <string name="scale_locked">那就是另一条音阶了——请添加新的</string>
+    <string name="scale_octaves_unfit">从 %1$s 起的三个八度超出了小提琴的音域</string>
+    <string name="scale_tonics_gray">灰色的主音会使调号超过七个升降号。</string>
+    <string name="scale_twin">这条音阶已经有了——在“音阶”中，状态“%1$s”，%2$s。</string>
+    <string name="scale_open_twin">打开它</string>
+    <string name="scale_locked_reason">音阶的调性和类型不能更改：那就是另一条音阶了。</string>
     <string name="scale_notes_description">%1$s 音阶的乐谱</string>
     <string name="scale_more_systems_one">还有 %1$d 行谱</string>
     <string name="scale_more_systems_few">还有 %1$d 行谱</string>
@@ -807,7 +811,6 @@
     <string name="scale_add_photo_hint">比如教材里的指法</string>
     <string name="scale_notes">乐谱</string>
     <string name="scale_open_stand">在谱架上打开</string>
-    <string name="piece_tempo_value">♩ = %1$d</string>
     <string name="piece_tempo_description">速度 %1$d</string>
     <string name="takes_one">%1$d 次录制</string>
     <string name="takes_few">%1$d 次录制</string>
@@ -829,19 +832,27 @@
     <string name="piece_form_discard_title">不保存吗？</string>
     <string name="piece_form_discard_confirm">不保存</string>
     <string name="piece_field_title">标题</string>
+    <string name="piece_field_title_placeholder">例如“G大调小步舞曲”</string>
     <string name="piece_field_composer">作曲家</string>
+    <string name="piece_field_composer_placeholder">作者是谁</string>
     <string name="piece_field_key">调性</string>
     <string name="piece_field_tempo">速度</string>
+    <string name="piece_field_tempo_hint">仅作标记，没有节拍器</string>
     <string name="piece_field_status">状态</string>
     <string name="piece_field_notes">笔记</string>
+    <string name="piece_field_notes_placeholder">别忘了的事…</string>
     <string name="piece_title_error">没有标题无法保存</string>
     <string name="piece_key_major">大调</string>
     <string name="piece_key_minor">小调</string>
-    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="key_none">不设调性</string>
+    <string name="key_pick_tonic_first">请先选择主音</string>
     <string name="piece_tempo_slower">更慢</string>
     <string name="piece_tempo_faster">更快</string>
     <string name="piece_tempo_clear">不设速度</string>
     <string name="piece_delete">删除曲目</string>
+    <string name="etude_delete">删除练习曲</string>
+    <string name="stroke_delete">删除弓法</string>
+    <string name="scale_delete">删除音阶</string>
     <string name="piece_delete_title">删除“%1$s”？</string>
     <string name="piece_delete_text">乐谱、笔记和用在上面的时间都将删除。录音会保留在“录音”中。</string>
     <string name="piece_delete_confirm">删除</string>

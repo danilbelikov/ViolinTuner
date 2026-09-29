@@ -3,6 +3,7 @@ package com.violinjourney.app.feature.repertoire.scale
 import androidx.lifecycle.SavedStateHandle
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
+import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -12,7 +13,8 @@ import javax.inject.Inject
 class HiltScaleFormViewModel @Inject constructor(
     savedState: SavedStateHandle,
     repertoire: RepertoireRepository,
+    sessions: SessionRepository,
     config: RepertoireConfig,
     clock: WallClock,
     texts: ScaleTexts,
-) : ScaleFormViewModel(savedState, repertoire, config, clock, texts)
+) : ScaleFormViewModel(savedState, repertoire, sessions, config, clock, texts)

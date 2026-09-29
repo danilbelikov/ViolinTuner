@@ -7,12 +7,15 @@ import com.violinjourney.app.core.domain.repertoire.Piece
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.PieceRules
 import com.violinjourney.app.core.domain.repertoire.PieceSection
+import com.violinjourney.app.core.domain.repertoire.PieceStats
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.SectionStats
 import com.violinjourney.app.core.domain.repertoire.Tonic
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleSpec
 import com.violinjourney.app.core.domain.repertoire.scale.Scales
+import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.domain.session.SessionSummary
 import com.violinjourney.app.core.text.takeCodePoints
 import com.violinjourney.app.core.time.WallClock
 import kotlinx.coroutines.channels.Channel
@@ -20,20 +23,26 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-/** The form of a scale, new or edited (spec 3.22): three choices, and the notes follow them at once. */
+/**
+ * The form of a scale, new or edited (spec 3.22, 3.36.4): three choices, and the notes follow them at once. The takes are read only to
+ * say how many the scale that is there already has.
+ */
 open class ScaleFormViewModel(
     private val savedState: SavedStateHandle,
     private val repertoire: RepertoireRepository,
+    private val sessions: SessionRepository,
     private val config: RepertoireConfig,
     private val clock: WallClock,
     private val texts: ScaleTexts,
 ) : ViewModel() {
     /** Null = a new scale. */
     private val pieceId: Long? = savedState.get<Long>(ARG_PIECE_ID)?.takeIf { it != NEW_SCALE }
+    private val focusNotes: Boolean = savedState.get<Boolean>(ARG_FOCUS_NOTES) ?: false
 
     // What the player had picked and typed before the system ended the process; laid over the scale once it is read.
     private val kept: ScaleDraft? = ScaleFormSaved.read(savedState)
@@ -44,6 +53,7 @@ open class ScaleFormViewModel(
     /** The title as stored, in the language the scale was made in; null for a new scale and until it is read. */
     private var savedTitle: String? = null
     private var pieces: List<Piece> = emptyList()
+    private var takes: List<SessionSummary> = emptyList()
     private var saving = false
 
     private val mutableState = MutableStateFlow(stateOf(kept ?: initial, loading = pieceId != null, dialog = null))
@@ -54,8 +64,9 @@ open class ScaleFormViewModel(
 
     init {
         viewModelScope.launch {
-            repertoire.pieces.collect { list ->
+            combine(repertoire.pieces, sessions.sessions) { list, recorded -> list to recorded }.collect { (list, recorded) ->
                 pieces = list
+                takes = recorded
                 edit { it }
             }
         }
@@ -78,7 +89,8 @@ open class ScaleFormViewModel(
 
     fun onIntent(intent: ScaleFormIntent) {
         when (intent) {
-            // The key and the kind of a scale that exists are locked: another key is another scale (handoff 24d, question 7).
+            // The key and the kind of a scale that exists are locked: another key is another scale (spec 3.22). Their buttons sleep
+            // under the line that says so (3.36.4); a tap that still comes does nothing.
             is ScaleFormIntent.TonicClicked -> keyEdit { draft ->
                 if (intent.tonic in allowedTonics(draft)) fitted(draft.copy(tonic = intent.tonic)) else draft
             }
@@ -120,12 +132,12 @@ open class ScaleFormViewModel(
     }
 
     /**
-     * «Открыть» the scale that is there already: it is found by the key, the kind and the octaves, so those are no loss;
+     * «Открыть её» — the scale that is there already: it is found by the key, the kind and the octaves, so those are no loss;
      * a tempo, a status or notes of this form would be (spec 3.15: leaving with edits asks «Не сохранять?»).
      */
     private fun openExisting() {
         val current = mutableState.value
-        val id = current.existingId ?: return
+        val id = current.twin?.id ?: return
         val draft = current.draft
         if (draft.tempoBpm != initial.tempoBpm || draft.status != initial.status || draft.notes != initial.notes) {
             showDialog(ScaleFormDialog.DISCARD_AND_OPEN)
@@ -137,7 +149,7 @@ open class ScaleFormViewModel(
     private fun confirm() {
         when (mutableState.value.dialog) {
             ScaleFormDialog.DISCARD -> effectChannel.trySend(ScaleFormEffect.Close)
-            ScaleFormDialog.DISCARD_AND_OPEN -> mutableState.value.existingId?.let { effectChannel.trySend(ScaleFormEffect.OpenScale(it)) }
+            ScaleFormDialog.DISCARD_AND_OPEN -> mutableState.value.twin?.let { effectChannel.trySend(ScaleFormEffect.OpenScale(it.id)) }
             ScaleFormDialog.DELETE -> viewModelScope.launch {
                 pieceId?.let { repertoire.delete(it) }
                 effectChannel.send(ScaleFormEffect.CloseDeleted)
@@ -179,7 +191,7 @@ open class ScaleFormViewModel(
     }
 
     private inline fun keyEdit(transform: (ScaleDraft) -> ScaleDraft) {
-        if (pieceId != null) effectChannel.trySend(ScaleFormEffect.ShowLocked) else userEdit(transform)
+        if (pieceId == null) userEdit(transform)
     }
 
     private inline fun edit(transform: (ScaleDraft) -> ScaleDraft) {
@@ -206,16 +218,19 @@ open class ScaleFormViewModel(
             scale = scale,
             tonicsAllowed = allowedTonics(draft),
             octavesAllowed = allowedOctaves(draft),
-            existingId = existing?.id,
+            twin = existing?.let { ScaleTwin(it.id, it.status, PieceStats.takesOf(it.id, takes).size) },
             canSave = scale != null && existing == null,
             dialog = dialog,
             maxNotesLength = config.maxNotesLength,
             savedTitle = savedTitle,
+            startNote = draft.tonic?.let { ScaleWords.nameOf(Scales.lowestTonic(it, draft.accidental, config.scaleLowestMidi)) },
+            focusNotes = focusNotes,
         )
     }
 
     companion object {
         const val ARG_PIECE_ID = "pieceId"
+        const val ARG_FOCUS_NOTES = "focusNotes"
 
         /** Navigation arguments cannot be null longs: this stands for "no scale yet". */
         const val NEW_SCALE = -1L

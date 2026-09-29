@@ -19,4 +19,19 @@ internal object ButtonFit {
         }
         return minSp
     }
+
+    /**
+     * The one size of the words of buttons standing side by side ([appButtonsSharedSize]): [maxSp] where the widest word of each
+     * stands whole in its button, else 0.5 sp smaller for all of them together down to [minSp]; null where not even [minSp] keeps
+     * every word whole — the caller stands the buttons one under the other. [overflowAt] — how much wider than the room of its button
+     * the widest word of the tightest button is at a size: 0 or less, they all fit.
+     */
+    fun sharedSize(maxSp: Float, minSp: Float, overflowAt: (sizeSp: Float) -> Float): Float? {
+        var sizeSp = maxSp
+        while (true) {
+            if (overflowAt(sizeSp) <= 0f) return sizeSp
+            if (sizeSp <= minSp) return null
+            sizeSp = maxOf(minSp, sizeSp - STEP_SP)
+        }
+    }
 }

@@ -42,10 +42,9 @@ open class PieceFormViewModel(
     /** The piece as stored (for an edit) or the empty draft: what the form compares with. */
     private var initial = draftIn(startSection)
     private var groups: List<PieceGroup> = emptyList()
-    private var titleTouched = kept?.titleTouched ?: false
     private var saving = false
 
-    private val mutableState = MutableStateFlow(stateOf(kept?.over(initial) ?: initial, loading = pieceId != null, dialog = null))
+    private val mutableState = MutableStateFlow(stateOf(kept?.over(initial) ?: initial, loading = pieceId != null, dialog = null, sheet = null))
     val state: StateFlow<PieceFormState> = mutableState.asStateFlow()
 
     private val effectChannel = Channel<PieceFormEffect>(Channel.BUFFERED)
@@ -65,7 +64,8 @@ open class PieceFormViewModel(
                     effectChannel.send(PieceFormEffect.CloseDeleted)
                 } else {
                     initial = PieceRules.draftOf(piece)
-                    mutableState.value = stateOf(kept?.over(initial) ?: initial, loading = false, dialog = null)
+                    val sheet = mutableState.value.sheet
+                    mutableState.value = stateOf(kept?.over(initial) ?: initial, loading = false, dialog = null, sheet = sheet)
                 }
             }
         }
@@ -73,19 +73,23 @@ open class PieceFormViewModel(
 
     fun onIntent(intent: PieceFormIntent) {
         when (intent) {
-            is PieceFormIntent.TitleChanged -> {
-                titleTouched = true
-                userEdit { it.copy(title = PieceFormReducer.capped(intent.text, config.maxTitleLength)) }
-            }
+            is PieceFormIntent.TitleChanged -> userEdit { it.copy(title = PieceFormReducer.capped(intent.text, config.maxTitleLength)) }
             is PieceFormIntent.ComposerChanged -> userEdit { it.copy(composer = PieceFormReducer.capped(intent.text, config.maxComposerLength)) }
             is PieceFormIntent.NotesChanged -> userEdit { it.copy(notes = PieceFormReducer.capped(intent.text, config.maxNotesLength)) }
+            PieceFormIntent.KeyRowClicked -> showSheet(PieceFormSheet.KEY)
+            PieceFormIntent.SectionRowClicked -> showSheet(PieceFormSheet.SECTION)
+            PieceFormIntent.SheetHidden -> showSheet(null)
             is PieceFormIntent.TonicClicked -> userEdit { it.copy(key = PieceFormReducer.clickTonic(it.key, intent.tonic)) }
+            PieceFormIntent.KeyCleared -> {
+                userEdit { it.copy(key = null) }
+                showSheet(null)
+            }
             is PieceFormIntent.AccidentalSelected -> userEdit { it.copy(key = it.key?.copy(accidental = intent.accidental)) }
             is PieceFormIntent.ModeSelected -> userEdit { it.copy(key = it.key?.copy(mode = intent.mode)) }
             is PieceFormIntent.TempoStepped -> userEdit { it.copy(tempoBpm = PieceRules.stepTempo(it.tempoBpm, intent.by, config)) }
             is PieceFormIntent.TempoPicked -> userEdit { it.copy(tempoBpm = intent.bpm) }
             is PieceFormIntent.StatusSelected -> userEdit { it.copy(status = intent.status) }
-            // «Гаммы» is for scales alone
+            // «Гаммы» is for scales alone: its row does not answer, and the sheet stays
             is PieceFormIntent.SectionSelected -> if (intent.ref != SectionRef.BuiltIn(PieceSection.SCALES)) {
                 userEdit { draft ->
                     when (val ref = intent.ref) {
@@ -95,6 +99,7 @@ open class PieceFormViewModel(
                         is SectionRef.Custom -> draft.copy(groupId = ref.groupId)
                     }
                 }
+                showSheet(null)
             }
             PieceFormIntent.SaveClicked -> save()
             PieceFormIntent.CloseClicked -> close()
@@ -106,12 +111,8 @@ open class PieceFormViewModel(
 
     private fun save() {
         val draft = mutableState.value.draft
-        if (saving) return
-        if (!PieceFormReducer.canSave(draft, config)) {
-            titleTouched = true
-            userEdit { it }
-            return
-        }
+        // without a title the button sleeps under its reason (spec 3.36.4): a press that still comes does nothing
+        if (saving || !PieceFormReducer.canSave(draft, config)) return
         saving = true
         // An edit that changes nothing is no edit (spec 5.9): the form just closes, and the piece keeps its place in the list.
         if (pieceId != null && !PieceFormReducer.isDirty(initial, draft, config)) {
@@ -151,13 +152,15 @@ open class PieceFormViewModel(
 
     private fun showDialog(dialog: PieceFormDialog?) = mutableState.update { it.copy(dialog = dialog) }
 
+    private fun showSheet(sheet: PieceFormSheet?) = mutableState.update { it.copy(sheet = sheet) }
+
     private fun draftIn(section: SectionRef): PieceDraft = when (section) {
         is SectionRef.BuiltIn -> PieceDraft(section = section.section)
         is SectionRef.Custom -> PieceDraft(groupId = section.groupId)
     }
 
     private inline fun edit(transform: (PieceDraft) -> PieceDraft) {
-        mutableState.update { stateOf(transform(it.draft), loading = it.loading, dialog = it.dialog) }
+        mutableState.update { stateOf(transform(it.draft), loading = it.loading, dialog = it.dialog, sheet = it.sheet) }
     }
 
     /**
@@ -167,16 +170,15 @@ open class PieceFormViewModel(
     private inline fun userEdit(transform: (PieceDraft) -> PieceDraft) {
         edit(transform)
         val now = mutableState.value
-        if (!now.loading) PieceFormSaved.write(savedState, now.draft, titleTouched)
+        if (!now.loading) PieceFormSaved.write(savedState, now.draft)
     }
 
-    private fun stateOf(draft: PieceDraft, loading: Boolean, dialog: PieceFormDialog?): PieceFormState {
+    private fun stateOf(draft: PieceDraft, loading: Boolean, dialog: PieceFormDialog?, sheet: PieceFormSheet?): PieceFormState {
         val canSave = PieceFormReducer.canSave(draft, config)
         return PieceFormState(
             loading = loading,
             isNew = pieceId == null,
             draft = draft,
-            titleError = titleTouched && !canSave,
             canSave = canSave,
             dialog = dialog,
             maxTitleLength = config.maxTitleLength,
@@ -186,6 +188,7 @@ open class PieceFormViewModel(
             savedTitle = initial.title,
             section = PieceRules.sectionOf(Piece(0, "", "", null, null, draft.status, "", 0, 0, section = draft.section, groupId = draft.groupId), groups),
             sections = SectionStats.summaries(emptyList(), groups, Formats.alphabetical()).map { SectionOption(it.ref, it.name, enabled = it.ref != SectionRef.BuiltIn(PieceSection.SCALES)) },
+            sheet = sheet,
         )
     }
 

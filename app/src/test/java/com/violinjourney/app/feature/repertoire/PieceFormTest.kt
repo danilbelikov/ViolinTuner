@@ -6,8 +6,10 @@ import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.KeyMode
 import com.violinjourney.app.core.domain.repertoire.MusicalKey
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
+import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.repertoire.Tonic
 import com.violinjourney.app.core.time.FixedWallClock
 import com.violinjourney.app.core.time.WallClock
@@ -15,6 +17,7 @@ import com.violinjourney.app.feature.repertoire.form.PieceFormDialog
 import com.violinjourney.app.feature.repertoire.form.PieceFormEffect
 import com.violinjourney.app.feature.repertoire.form.PieceFormIntent
 import com.violinjourney.app.feature.repertoire.form.PieceFormReducer
+import com.violinjourney.app.feature.repertoire.form.PieceFormSheet
 import com.violinjourney.app.feature.repertoire.form.PieceFormViewModel
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
@@ -76,20 +79,20 @@ class PieceFormTest {
         assertTrue(PieceFormReducer.isDirty(PieceDraft(), PieceDraft(notes = "что-то"), config))
     }
 
+    // spec 3.36.4: «Сохранить» sleeps under «Без названия не сохранить» from the first frame of a new element, not after a touch
     @Test
-    fun `a new piece cannot be saved without a title, and says so only once asked`() = runTest {
+    fun `a new piece cannot be saved without a title from the first frame, and a press that still comes does nothing`() = runTest {
         val (form, effects) = form()
-        assertFalse(form.state.value.canSave)
-        assertFalse("not an error before the user has been there", form.state.value.titleError)
+        assertFalse("the reason stands before anything is typed", form.state.value.canSave)
 
         form.onIntent(PieceFormIntent.SaveClicked)
         runCurrent()
-        assertTrue(form.state.value.titleError)
         assertTrue(effects.isEmpty() && repertoire.pieces.value.isEmpty())
 
         form.onIntent(PieceFormIntent.TitleChanged("Менуэт"))
         assertTrue(form.state.value.canSave)
-        assertFalse(form.state.value.titleError)
+        form.onIntent(PieceFormIntent.TitleChanged("   "))
+        assertFalse("a title wiped away says so again", form.state.value.canSave)
     }
 
     @Test
@@ -237,7 +240,7 @@ class PieceFormTest {
     }
 
     @Test
-    fun `a new piece comes back with its title, key and a touched title field`() = runTest {
+    fun `a new piece comes back with its title and key`() = runTest {
         val saved = handleOf(null)
         val (before, _) = form(saved = saved)
         before.onIntent(PieceFormIntent.TitleChanged("Гавот"))
@@ -247,7 +250,7 @@ class PieceFormTest {
         val (after, _) = form(saved = saved)
         assertEquals("", after.state.value.draft.title)
         assertEquals("D-dur", after.state.value.draft.key!!.germanName)
-        assertTrue("the field had been there, and says so again", after.state.value.titleError)
+        assertFalse("without a title it still cannot be saved", after.state.value.canSave)
         after.onIntent(PieceFormIntent.TitleChanged("Гавот"))
         after.onIntent(PieceFormIntent.SaveClicked)
         runCurrent()
@@ -267,12 +270,93 @@ class PieceFormTest {
         repertoire.update(id, PieceDraft(title = "Менуэт", composer = "И. С. Бах"), nowEpochMs = 2)
         val (after, _) = form(id, saved)
         assertEquals("И. С. Бах", after.state.value.draft.composer)
-        assertFalse(after.state.value.titleError)
+        assertTrue(after.state.value.canSave)
     }
 
     @Test
     fun `the form of a piece that is gone closes by itself`() = runTest {
         val (_, effects) = form(pieceId = 404)
         assertEquals(listOf<PieceFormEffect>(PieceFormEffect.CloseDeleted), effects)
+    }
+
+    // spec 3.36.4: the rows «Тональность» and «Раздел» open their sheets; a swipe, a tap outside, «назад» and «Готово» only hide them
+    @Test
+    fun `the rows open their sheets, and hiding one leaves the draft as it was`() = runTest {
+        val (form, effects) = form()
+        form.onIntent(PieceFormIntent.TitleChanged("Менуэт"))
+        form.onIntent(PieceFormIntent.KeyRowClicked)
+        assertEquals(PieceFormSheet.KEY, form.state.value.sheet)
+        form.onIntent(PieceFormIntent.TonicClicked(Tonic.G))
+        assertEquals("a choice goes into the draft at once", "G-dur", form.state.value.draft.key!!.germanName)
+        val chosen = form.state.value.draft
+
+        form.onIntent(PieceFormIntent.SheetHidden)
+        assertNull(form.state.value.sheet)
+        assertEquals("hiding is no cancel", chosen, form.state.value.draft)
+
+        form.onIntent(PieceFormIntent.SectionRowClicked)
+        assertEquals(PieceFormSheet.SECTION, form.state.value.sheet)
+        form.onIntent(PieceFormIntent.SheetHidden)
+        assertNull(form.state.value.sheet)
+        assertEquals(chosen, form.state.value.draft)
+        runCurrent()
+        assertTrue("nothing leaves the form", effects.isEmpty())
+    }
+
+    // spec 3.36.4: «Без тональности» takes the key away and closes the sheet; a tap on the picked tonic still takes it away (3.15)
+    @Test
+    fun `no key takes the key away and closes the sheet, the picked tonic tapped again takes it and leaves the sheet up`() = runTest {
+        val (form, _) = form()
+        form.onIntent(PieceFormIntent.KeyRowClicked)
+        form.onIntent(PieceFormIntent.TonicClicked(Tonic.A))
+        form.onIntent(PieceFormIntent.ModeSelected(KeyMode.MINOR))
+        assertEquals("a-moll", form.state.value.draft.key!!.germanName)
+
+        form.onIntent(PieceFormIntent.TonicClicked(Tonic.A))
+        assertNull(form.state.value.draft.key)
+        assertEquals("the sheet stays for another tonic", PieceFormSheet.KEY, form.state.value.sheet)
+
+        form.onIntent(PieceFormIntent.TonicClicked(Tonic.D))
+        form.onIntent(PieceFormIntent.KeyCleared)
+        assertNull(form.state.value.draft.key)
+        assertNull(form.state.value.sheet)
+    }
+
+    // spec 3.36.4: «Раздел» is in the new form too; a row puts the section into the draft and closes the sheet; «Гаммы» do not answer
+    @Test
+    fun `a new form offers every section, and a section picked goes into the draft and closes the sheet`() = runTest {
+        val groupId = repertoire.addGroup("Двойные ноты", nowEpochMs = 1)
+        val (form, _) = form()
+        runCurrent()
+        val sections = form.state.value.sections
+        assertEquals("four built-in and one of one's own", 5, sections.size)
+        assertFalse(sections.single { it.ref == SectionRef.BuiltIn(PieceSection.SCALES) }.enabled)
+        assertEquals(SectionRef.BuiltIn(PieceSection.PIECES), form.state.value.section)
+
+        form.onIntent(PieceFormIntent.SectionRowClicked)
+        form.onIntent(PieceFormIntent.SectionSelected(SectionRef.BuiltIn(PieceSection.SCALES)))
+        assertEquals("the scales are for scales alone", SectionRef.BuiltIn(PieceSection.PIECES), form.state.value.section)
+        assertEquals("and the sheet stays", PieceFormSheet.SECTION, form.state.value.sheet)
+
+        form.onIntent(PieceFormIntent.SectionSelected(SectionRef.Custom(groupId)))
+        assertEquals(SectionRef.Custom(groupId), form.state.value.section)
+        assertNull(form.state.value.sheet)
+
+        form.onIntent(PieceFormIntent.TitleChanged("Этюд в терциях"))
+        form.onIntent(PieceFormIntent.SaveClicked)
+        runCurrent()
+        assertEquals(groupId, repertoire.pieces.value.single().groupId)
+    }
+
+    // spec 3.22, 3.36.4: the fields follow the section — a move into «Штрихи» leaves neither an author nor a key behind
+    @Test
+    fun `a move into the strokes from the sheet takes the author and the key away`() = runTest {
+        val (form, _) = form()
+        form.onIntent(PieceFormIntent.ComposerChanged("Шевчик"))
+        form.onIntent(PieceFormIntent.TonicClicked(Tonic.G))
+        form.onIntent(PieceFormIntent.SectionRowClicked)
+        form.onIntent(PieceFormIntent.SectionSelected(SectionRef.BuiltIn(PieceSection.STROKES)))
+        assertTrue(form.state.value.stroke)
+        assertEquals("" to null, form.state.value.draft.composer to form.state.value.draft.key)
     }
 }

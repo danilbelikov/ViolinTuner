@@ -16,13 +16,13 @@ import com.violinjourney.app.core.domain.repertoire.Tonic
  * player's own edits, so nothing is kept before the piece has been read. Plain values only: a bundle holds them.
  */
 internal object PieceFormSaved {
-    /** A draft that outlived its process, and whether the title field had been there. */
-    class Kept(private val draft: PieceDraft, val titleTouched: Boolean) {
+    /** A draft that outlived its process. */
+    class Kept(private val draft: PieceDraft) {
         /** The form's fields over [base]; the scale is not the piece form's to change, so it stays as [base] has it. */
         fun over(base: PieceDraft): PieceDraft = draft.copy(scale = base.scale)
     }
 
-    fun write(handle: SavedStateHandle, draft: PieceDraft, titleTouched: Boolean) {
+    fun write(handle: SavedStateHandle, draft: PieceDraft) {
         handle[TITLE] = draft.title
         handle[COMPOSER] = draft.composer
         handle[NOTES] = draft.notes
@@ -33,7 +33,6 @@ internal object PieceFormSaved {
         handle[STATUS] = draft.status.name
         handle[SECTION] = draft.section.name
         handle[GROUP] = draft.groupId
-        handle[TITLE_TOUCHED] = titleTouched
     }
 
     /** Null when nothing was written: a form that was never edited reads its piece anew. */
@@ -53,7 +52,7 @@ internal object PieceFormSaved {
             section = PieceSection.entries.firstOrNull { it.name == handle.get<String>(SECTION) } ?: PieceSection.PIECES,
             groupId = handle.get<Long>(GROUP),
         )
-        return Kept(draft, titleTouched = handle.get<Boolean>(TITLE_TOUCHED) ?: false)
+        return Kept(draft)
     }
 
     // None of them is a navigation argument of the form.
@@ -67,5 +66,4 @@ internal object PieceFormSaved {
     private const val STATUS = "form.status"
     private const val SECTION = "form.section"
     private const val GROUP = "form.group"
-    private const val TITLE_TOUCHED = "form.titleTouched"
 }

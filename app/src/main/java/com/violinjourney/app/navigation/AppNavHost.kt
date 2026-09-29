@@ -207,7 +207,7 @@ fun AppNavHost(
             PieceRoute(
                 onClose = navController::popBackStack,
                 onOpenForm = { pieceId, focusNotes, scale ->
-                    if (scale) navController.navigateToScaleForm(pieceId) else navController.navigateToPieceForm(pieceId, focusNotes)
+                    if (scale) navController.navigateToScaleForm(pieceId, focusNotes) else navController.navigateToPieceForm(pieceId, focusNotes)
                 },
                 onOpenStand = navController::navigateToStand,
                 onOpenSession = navController::navigateToSession,
@@ -287,6 +287,10 @@ fun AppNavHost(
                 navArgument(ScaleFormViewModel.ARG_PIECE_ID) {
                     type = NavType.LongType
                     defaultValue = ScaleFormViewModel.NEW_SCALE
+                },
+                navArgument(ScaleFormViewModel.ARG_FOCUS_NOTES) {
+                    type = NavType.BoolType
+                    defaultValue = false
                 },
             ),
         ) {
@@ -485,9 +489,9 @@ fun NavHostController.navigateToPieceForm(pieceId: Long, focusNotes: Boolean) {
     navigate(Routes.pieceForm(pieceId, focusNotes)) { launchSingleTop = true }
 }
 
-/** The form of the scale [pieceId]. */
-fun NavHostController.navigateToScaleForm(pieceId: Long) {
-    navigate(Routes.scaleForm(pieceId)) { launchSingleTop = true }
+/** The form of the scale [pieceId], at its notes when [focusNotes]; a new scale opens by [navigateToNew]. */
+fun NavHostController.navigateToScaleForm(pieceId: Long, focusNotes: Boolean) {
+    navigate(Routes.scaleForm(pieceId, focusNotes)) { launchSingleTop = true }
 }
 
 /** The form of a new element of [section]: a scale's own for «Гаммы», a piece's for the rest (`Routes.newElement`, spec 3.36.4). */

@@ -770,6 +770,8 @@
     <string name="form_new_etude">Neue Etüde</string>
     <string name="form_new_stroke">Neue Strichart</string>
     <string name="form_new_element">Neuer Eintrag</string>
+    <string name="form_optional">optional</string>
+    <string name="section_scales_only">nur für Tonleitern</string>
     <string-array name="stroke_suggestions">
         <item>Détaché</item>
         <item>Legato</item>
@@ -796,9 +798,11 @@
     <string name="scale_title">%1$s · %2$s</string>
     <string name="scale_range">%1$s – %2$s</string>
     <string name="scale_preview_empty">Wählen Sie den Grundton – die Noten erscheinen hier</string>
-    <string name="scale_exists">Diese Tonleiter gibt es schon</string>
-    <string name="scale_open">Öffnen</string>
-    <string name="scale_locked">Das wäre eine andere Tonleiter – fügen Sie eine neue hinzu</string>
+    <string name="scale_octaves_unfit">Drei Oktaven ab %1$s passen nicht auf die Geige</string>
+    <string name="scale_tonics_gray">Die grauen Grundtöne hätten mehr als sieben Vorzeichen.</string>
+    <string name="scale_twin">Diese Tonleiter gibt es schon – unter „Tonleitern“, Status „%1$s“, %2$s.</string>
+    <string name="scale_open_twin">Tonleiter öffnen</string>
+    <string name="scale_locked_reason">Tonart und Art einer Tonleiter ändern sich nicht: Das wäre eine andere Tonleiter.</string>
     <string name="scale_notes_description">Noten der Tonleiter %1$s</string>
     <string name="scale_more_systems_one">noch %1$d System</string>
     <string name="scale_more_systems_few">noch %1$d Systeme</string>
@@ -807,7 +811,6 @@
     <string name="scale_add_photo_hint">zum Beispiel ein Fingersatz aus dem Heft</string>
     <string name="scale_notes">Noten</string>
     <string name="scale_open_stand">Auf dem Notenpult öffnen</string>
-    <string name="piece_tempo_value">♩ = %1$d</string>
     <string name="piece_tempo_description">Tempo %1$d</string>
     <string name="takes_one">%1$d Take</string>
     <string name="takes_few">%1$d Takes</string>
@@ -829,19 +832,27 @@
     <string name="piece_form_discard_title">Nicht speichern?</string>
     <string name="piece_form_discard_confirm">Nicht speichern</string>
     <string name="piece_field_title">Titel</string>
+    <string name="piece_field_title_placeholder">Zum Beispiel „Menuett G-Dur“</string>
     <string name="piece_field_composer">Komponist</string>
+    <string name="piece_field_composer_placeholder">Wer es geschrieben hat</string>
     <string name="piece_field_key">Tonart</string>
     <string name="piece_field_tempo">Tempo</string>
+    <string name="piece_field_tempo_hint">nur eine Notiz, kein Metronom</string>
     <string name="piece_field_status">Status</string>
     <string name="piece_field_notes">Notizen</string>
+    <string name="piece_field_notes_placeholder">Was Sie nicht vergessen wollen…</string>
     <string name="piece_title_error">Ohne Titel lässt es sich nicht speichern</string>
     <string name="piece_key_major">Dur</string>
     <string name="piece_key_minor">Moll</string>
-    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="key_none">Ohne Tonart</string>
+    <string name="key_pick_tonic_first">Wählen Sie zuerst den Grundton</string>
     <string name="piece_tempo_slower">Langsamer</string>
     <string name="piece_tempo_faster">Schneller</string>
     <string name="piece_tempo_clear">Ohne Tempo</string>
     <string name="piece_delete">Stück löschen</string>
+    <string name="etude_delete">Etüde löschen</string>
+    <string name="stroke_delete">Strichart löschen</string>
+    <string name="scale_delete">Tonleiter löschen</string>
     <string name="piece_delete_title">„%1$s“ löschen?</string>
     <string name="piece_delete_text">Noten, Notizen und die Zeit dafür werden gelöscht. Die Aufnahmen bleiben unter „Aufnahmen“.</string>
     <string name="piece_delete_confirm">Löschen</string>

@@ -770,6 +770,8 @@
     <string name="form_new_etude">新しい練習曲</string>
     <string name="form_new_stroke">新しいボウイング</string>
     <string name="form_new_element">新しい項目</string>
+    <string name="form_optional">任意</string>
+    <string name="section_scales_only">音階専用</string>
     <string-array name="stroke_suggestions">
         <item>デタシェ</item>
         <item>レガート</item>
@@ -796,9 +798,11 @@
     <string name="scale_title">%1$s · %2$s</string>
     <string name="scale_range">%1$s – %2$s</string>
     <string name="scale_preview_empty">主音を選ぶと、ここに楽譜が描かれます</string>
-    <string name="scale_exists">同じ音階がすでにあります</string>
-    <string name="scale_open">開く</string>
-    <string name="scale_locked">それは別の音階になります。新しく追加してください</string>
+    <string name="scale_octaves_unfit">%1$s からの3オクターブはバイオリンに収まりません</string>
+    <string name="scale_tonics_gray">灰色の主音は調号が7つを超えてしまいます。</string>
+    <string name="scale_twin">同じ音階がすでにあります — 「音階」、ステータス「%1$s」、%2$s。</string>
+    <string name="scale_open_twin">その音階を開く</string>
+    <string name="scale_locked_reason">音階の調と種類は変えられません。別の音階になってしまいます。</string>
     <string name="scale_notes_description">音階 %1$s の楽譜</string>
     <string name="scale_more_systems_one">あと %1$d 段</string>
     <string name="scale_more_systems_few">あと %1$d 段</string>
@@ -807,7 +811,6 @@
     <string name="scale_add_photo_hint">たとえば教本の運指</string>
     <string name="scale_notes">楽譜</string>
     <string name="scale_open_stand">譜面台で開く</string>
-    <string name="piece_tempo_value">♩ = %1$d</string>
     <string name="piece_tempo_description">テンポ %1$d</string>
     <string name="takes_one">%1$d テイク</string>
     <string name="takes_few">%1$d テイク</string>
@@ -829,19 +832,27 @@
     <string name="piece_form_discard_title">保存しませんか？</string>
     <string name="piece_form_discard_confirm">保存しない</string>
     <string name="piece_field_title">曲名</string>
+    <string name="piece_field_title_placeholder">例：「メヌエット ト長調」</string>
     <string name="piece_field_composer">作曲者</string>
+    <string name="piece_field_composer_placeholder">作った人</string>
     <string name="piece_field_key">調</string>
     <string name="piece_field_tempo">テンポ</string>
+    <string name="piece_field_tempo_hint">目安のメモで、メトロノームはありません</string>
     <string name="piece_field_status">ステータス</string>
     <string name="piece_field_notes">メモ</string>
+    <string name="piece_field_notes_placeholder">忘れたくないこと…</string>
     <string name="piece_title_error">曲名がないと保存できません</string>
     <string name="piece_key_major">長調</string>
     <string name="piece_key_minor">短調</string>
-    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="key_none">調なし</string>
+    <string name="key_pick_tonic_first">先に主音を選んでください</string>
     <string name="piece_tempo_slower">遅く</string>
     <string name="piece_tempo_faster">速く</string>
     <string name="piece_tempo_clear">テンポなし</string>
     <string name="piece_delete">曲を削除</string>
+    <string name="etude_delete">練習曲を削除</string>
+    <string name="stroke_delete">ボウイングを削除</string>
+    <string name="scale_delete">音階を削除</string>
     <string name="piece_delete_title">「%1$s」を削除しますか？</string>
     <string name="piece_delete_text">楽譜、メモ、この曲にかけた時間は削除されます。録音は「録音」に残ります。</string>
     <string name="piece_delete_confirm">削除</string>

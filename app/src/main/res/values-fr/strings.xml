@@ -770,6 +770,8 @@
     <string name="form_new_etude">Nouvelle étude</string>
     <string name="form_new_stroke">Nouveau coup d\'archet</string>
     <string name="form_new_element">Nouvel élément</string>
+    <string name="form_optional">facultatif</string>
+    <string name="section_scales_only">réservé aux gammes</string>
     <string-array name="stroke_suggestions">
         <item>Détaché</item>
         <item>Legato</item>
@@ -796,9 +798,11 @@
     <string name="scale_title">%1$s · %2$s</string>
     <string name="scale_range">%1$s – %2$s</string>
     <string name="scale_preview_empty">Choisissez la tonique — les notes se dessineront ici</string>
-    <string name="scale_exists">Cette gamme existe déjà</string>
-    <string name="scale_open">Ouvrir</string>
-    <string name="scale_locked">Ce serait une autre gamme — ajoutez-en une nouvelle</string>
+    <string name="scale_octaves_unfit">Trois octaves à partir de %1$s ne tiennent pas sur le violon</string>
+    <string name="scale_tonics_gray">Les toniques grisées donneraient plus de sept altérations à la clé.</string>
+    <string name="scale_twin">Cette gamme existe déjà — dans « Gammes », statut « %1$s », %2$s.</string>
+    <string name="scale_open_twin">L\'ouvrir</string>
+    <string name="scale_locked_reason">La tonalité et le type d\'une gamme ne changent pas : ce serait une autre gamme.</string>
     <string name="scale_notes_description">Notes de la gamme %1$s</string>
     <string name="scale_more_systems_one">encore %1$d système</string>
     <string name="scale_more_systems_few">encore %1$d systèmes</string>
@@ -807,7 +811,6 @@
     <string name="scale_add_photo_hint">par exemple, un doigté tiré du recueil</string>
     <string name="scale_notes">Partition</string>
     <string name="scale_open_stand">Ouvrir sur le pupitre</string>
-    <string name="piece_tempo_value">♩ = %1$d</string>
     <string name="piece_tempo_description">tempo %1$d</string>
     <string name="takes_one">%1$d prise</string>
     <string name="takes_few">%1$d prises</string>
@@ -829,19 +832,27 @@
     <string name="piece_form_discard_title">Ne pas enregistrer ?</string>
     <string name="piece_form_discard_confirm">Ne pas enregistrer</string>
     <string name="piece_field_title">Titre</string>
+    <string name="piece_field_title_placeholder">Par exemple, « Menuet en sol majeur »</string>
     <string name="piece_field_composer">Compositeur</string>
+    <string name="piece_field_composer_placeholder">Qui l\'a écrit</string>
     <string name="piece_field_key">Tonalité</string>
     <string name="piece_field_tempo">Tempo</string>
+    <string name="piece_field_tempo_hint">une indication, pas de métronome</string>
     <string name="piece_field_status">Statut</string>
     <string name="piece_field_notes">Notes personnelles</string>
+    <string name="piece_field_notes_placeholder">Ce qu\'il ne faut pas oublier…</string>
     <string name="piece_title_error">Impossible d\'enregistrer sans titre</string>
     <string name="piece_key_major">majeur</string>
     <string name="piece_key_minor">mineur</string>
-    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="key_none">Sans tonalité</string>
+    <string name="key_pick_tonic_first">Choisissez d\'abord la tonique</string>
     <string name="piece_tempo_slower">Plus lent</string>
     <string name="piece_tempo_faster">Plus rapide</string>
     <string name="piece_tempo_clear">Sans tempo</string>
     <string name="piece_delete">Supprimer le morceau</string>
+    <string name="etude_delete">Supprimer l\'étude</string>
+    <string name="stroke_delete">Supprimer le coup d\'archet</string>
+    <string name="scale_delete">Supprimer la gamme</string>
     <string name="piece_delete_title">Supprimer « %1$s » ?</string>
     <string name="piece_delete_text">La partition, les notes personnelles et le temps passé dessus seront supprimés. Les enregistrements resteront dans « Enregistrements ».</string>
     <string name="piece_delete_confirm">Supprimer</string>

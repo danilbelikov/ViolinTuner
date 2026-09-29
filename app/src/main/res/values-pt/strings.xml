@@ -770,6 +770,8 @@
     <string name="form_new_etude">Novo estudo</string>
     <string name="form_new_stroke">Novo golpe de arco</string>
     <string name="form_new_element">Novo item</string>
+    <string name="form_optional">opcional</string>
+    <string name="section_scales_only">só para escalas</string>
     <string-array name="stroke_suggestions">
         <item>Détaché</item>
         <item>Legato</item>
@@ -796,9 +798,11 @@
     <string name="scale_title">%1$s · %2$s</string>
     <string name="scale_range">%1$s – %2$s</string>
     <string name="scale_preview_empty">Escolha a tônica — as notas aparecem aqui</string>
-    <string name="scale_exists">Essa escala já existe</string>
-    <string name="scale_open">Abrir</string>
-    <string name="scale_locked">Seria outra escala — adicione uma nova</string>
+    <string name="scale_octaves_unfit">Três oitavas a partir de %1$s não cabem no violino</string>
+    <string name="scale_tonics_gray">As tônicas cinzentas dariam mais de sete acidentes na armadura.</string>
+    <string name="scale_twin">Essa escala já existe — em “Escalas”, status “%1$s”, %2$s.</string>
+    <string name="scale_open_twin">Abri-la</string>
+    <string name="scale_locked_reason">A tonalidade e o tipo de uma escala não mudam: seria outra escala.</string>
     <string name="scale_notes_description">Notas da escala %1$s</string>
     <string name="scale_more_systems_one">mais %1$d sistema</string>
     <string name="scale_more_systems_few">mais %1$d sistemas</string>
@@ -807,7 +811,6 @@
     <string name="scale_add_photo_hint">por exemplo, o dedilhado do livro</string>
     <string name="scale_notes">Partitura</string>
     <string name="scale_open_stand">Abrir na estante</string>
-    <string name="piece_tempo_value">♩ = %1$d</string>
     <string name="piece_tempo_description">andamento %1$d</string>
     <string name="takes_one">%1$d take</string>
     <string name="takes_few">%1$d takes</string>
@@ -829,19 +832,27 @@
     <string name="piece_form_discard_title">Não salvar?</string>
     <string name="piece_form_discard_confirm">Não salvar</string>
     <string name="piece_field_title">Título</string>
+    <string name="piece_field_title_placeholder">Por exemplo, “Minueto em sol maior”</string>
     <string name="piece_field_composer">Compositor</string>
+    <string name="piece_field_composer_placeholder">Quem escreveu</string>
     <string name="piece_field_key">Tonalidade</string>
     <string name="piece_field_tempo">Andamento</string>
+    <string name="piece_field_tempo_hint">só uma anotação, sem metrônomo</string>
     <string name="piece_field_status">Status</string>
     <string name="piece_field_notes">Anotações</string>
+    <string name="piece_field_notes_placeholder">O que não esquecer…</string>
     <string name="piece_title_error">Sem título não dá para salvar</string>
     <string name="piece_key_major">maior</string>
     <string name="piece_key_minor">menor</string>
-    <string name="piece_tempo_empty">♩ = —</string>
+    <string name="key_none">Sem tonalidade</string>
+    <string name="key_pick_tonic_first">Escolha primeiro a tônica</string>
     <string name="piece_tempo_slower">Mais lento</string>
     <string name="piece_tempo_faster">Mais rápido</string>
     <string name="piece_tempo_clear">Sem andamento</string>
     <string name="piece_delete">Excluir a peça</string>
+    <string name="etude_delete">Excluir o estudo</string>
+    <string name="stroke_delete">Excluir o golpe de arco</string>
+    <string name="scale_delete">Excluir a escala</string>
     <string name="piece_delete_title">Excluir “%1$s”?</string>
     <string name="piece_delete_text">A partitura, as anotações e o tempo dedicado serão excluídos. As gravações ficam em “Gravações”.</string>
     <string name="piece_delete_confirm">Excluir</string>

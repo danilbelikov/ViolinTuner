@@ -147,6 +147,36 @@ fun appButtonOneLineSize(text: String, width: Dp, style: AppButtonStyle, compact
 private val OneLineSlack = 1.dp
 
 /**
+ * The one size of the words of [AppButton]s standing side by side, each [width] wide (a row of halves), at which every word of each
+ * stays whole on its line — the words may go on two lines, but only at a space (spec 3.36.4: no word breaks inside, in the forms
+ * too): the size of their styles where the widest word of each fits its button, else all of them 0.5 sp smaller together down to
+ * [minSp] ([ButtonFit.sharedSize]). Null where not even [minSp] keeps every word whole: the caller stands the buttons one under the
+ * other. For «Без тональности · Готово» of the sheet «Тональность» on a phone of 360 with a large font (5.29 R4). Words are split
+ * at spaces only: a non-breaking space keeps its two words one.
+ */
+@Composable
+fun appButtonsSharedSize(buttons: List<Pair<String, AppButtonStyle>>, width: Dp, compact: Boolean, minSp: Float): TextUnit? {
+    val looks = buttons.map { (_, style) -> lookOf(style, compact) }
+    val words = looks.map { wordsStyleOf(it) }
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    return remember(buttons, width, looks, words, minSp, measurer, density) {
+        val rooms = buttons.mapIndexed { i, (_, style) ->
+            val bin = if (style == AppButtonStyle.Danger) looks[i].icon + IconSizes.ButtonGap else 0.dp
+            with(density) { (width - looks[i].padding * 2 - bin - OneLineSlack).toPx() }
+        }
+        val split = buttons.map { (text, _) -> text.split(' ', '\n', '\t').filter { it.isNotEmpty() } }
+        ButtonFit.sharedSize(maxSp = looks.minOf { it.fontSize.value }, minSp = minSp) { sizeSp ->
+            buttons.indices.maxOf { i ->
+                val style = words[i].copy(fontSize = sizeSp.sp, lineHeight = sizeSp.sp * LINE_HEIGHT)
+                val widest = split[i].maxOfOrNull { measurer.measure(it, style, softWrap = false, maxLines = 1).size.width.toFloat() } ?: 0f
+                widest - rooms[i]
+            }
+        }?.sp
+    }
+}
+
+/**
  * The narrowest an [AppButton] of [style] with [text] can be with each of its words whole on its line — its words go on up to two
  * lines, but a word is not broken: its fields, the icon with its gap ([icon]; [AppButtonStyle.Danger] has its bin anyway) and the
  * widest word, split at spaces. For a column that must not grow narrower than its button — the left column of «Репертуар» in
