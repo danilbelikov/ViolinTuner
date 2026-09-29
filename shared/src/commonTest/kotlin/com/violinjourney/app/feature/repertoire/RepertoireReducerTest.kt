@@ -6,6 +6,7 @@ import com.violinjourney.app.core.domain.repertoire.Accidental
 import com.violinjourney.app.core.domain.repertoire.KeyMode
 import com.violinjourney.app.core.domain.repertoire.MusicalKey
 import com.violinjourney.app.core.domain.repertoire.Piece
+import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.SheetPage
 import com.violinjourney.app.core.domain.repertoire.Tonic
@@ -15,6 +16,7 @@ import kotlinx.datetime.TimeZone
 import kotlinx.datetime.atTime
 import kotlinx.datetime.toInstant
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.Test
@@ -109,5 +111,21 @@ class RepertoireReducerTest {
         assertEquals(0, empty.totalCount)
         assertTrue(empty.cards.isEmpty() && !empty.loading)
         assertTrue(RepertoireReducer.loading(null).loading)
+    }
+
+    @Test
+    fun `an étude has the tile of an étude and a stroke the bow - only in their own built-in sections`() {
+        val etude = piece(5, "Кайзер № 3", PieceStatus.READING, "2026-09-01").copy(section = PieceSection.ETUDES)
+        val stroke = piece(6, "Деташе", PieceStatus.READING, "2026-09-02").copy(section = PieceSection.STROKES)
+        // moved into a section of one's own: an element of it, with a note
+        val grouped = piece(7, "Шрадик", PieceStatus.READING, "2026-09-03").copy(section = PieceSection.ETUDES, groupId = 9)
+        val cards = RepertoireReducer.stateOf(listOf(etude, stroke, grouped), emptyList(), emptyList(), null, today, zone) { null }.cards.associateBy { it.id }
+        assertTrue(cards.getValue(5).etude)
+        assertFalse(cards.getValue(5).stroke)
+        assertTrue(cards.getValue(6).stroke)
+        assertFalse(cards.getValue(6).etude)
+        assertFalse(cards.getValue(7).etude, "an étude in a section of one's own")
+        assertFalse(cards.getValue(7).stroke)
+        assertFalse(state().cards.any { it.etude || it.stroke }, "pieces are neither")
     }
 }

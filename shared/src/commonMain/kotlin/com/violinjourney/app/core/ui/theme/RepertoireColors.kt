@@ -16,8 +16,6 @@ data class RepertoireColors(
     val standBackground: Color,
     /** The gradient fields under the controls of the stand: no slabs over the notes. */
     val standScrim: Color,
-    val statusRepertoireContainer: Color,
-    val onStatusRepertoireContainer: Color,
     /** A take that has just been recorded, before it settles into the list. */
     val takeNew: Color,
     /** Frame and caption of a form field that cannot be saved — until R4 makes it onSurfaceVariant with an icon (spec 3.36.1). */
@@ -30,8 +28,6 @@ internal val DarkRepertoireColors = RepertoireColors(
     thumbDim = Surface,
     standBackground = StandBackground,
     standScrim = StandScrim,
-    statusRepertoireContainer = StatusRepertoireContainer,
-    onStatusRepertoireContainer = OnStatusRepertoireContainer,
     takeNew = TakeNew,
     formError = FormError,
 )

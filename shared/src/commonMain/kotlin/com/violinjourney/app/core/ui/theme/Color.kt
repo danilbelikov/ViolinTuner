@@ -40,8 +40,6 @@ internal val Paper = Color(0xFFECE8DF)
 internal val PaperFrame = Color(0x1FFFFFFF)
 internal val StandBackground = Color(0xFF0E0E12)
 internal val StandScrim = Color(0xEB0E0E12)
-internal val StatusRepertoireContainer = Color(0xFF1F3A2C)
-internal val OnStatusRepertoireContainer = Color(0xFF9FE4BE)
 internal val TakeNew = Color(0xFF2A2540)
 
 /** The hex of zone.off, but a token of its own: zone colors stay about intonation only. The error of a form field until R4. */

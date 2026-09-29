@@ -16,18 +16,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
@@ -114,6 +117,26 @@ fun AppButton(
     }
 }
 
+/**
+ * The narrowest an [AppButton] of [style] with [text] can be with each of its words whole on its line — its words go on up to two
+ * lines, but a word is not broken: its fields, the icon with its gap ([icon]; [AppButtonStyle.Danger] has its bin anyway) and the
+ * widest word, split at spaces. For a column that must not grow narrower than its button — the left column of «Репертуар» in
+ * landscape (5.29 R4). Buttons with a caption are not measured.
+ */
+@Composable
+fun appButtonMinWidth(text: String, style: AppButtonStyle = AppButtonStyle.Main, icon: Boolean = false, compact: Boolean = false): Dp {
+    val look = lookOf(style, compact)
+    val words = wordsStyleOf(look)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val withIcon = icon || style == AppButtonStyle.Danger
+    return remember(text, look, words, withIcon, density, measurer) {
+        val widest = text.split(' ', '\n', '\t').filter { it.isNotEmpty() }
+            .maxOfOrNull { measurer.measure(it, words, softWrap = false, maxLines = 1).size.width } ?: 0
+        look.padding * 2 + (if (withIcon) look.icon + IconSizes.ButtonGap else 0.dp) + with(density) { widest.toDp() }
+    }
+}
+
 @Composable
 private fun Reason(text: String, modifier: Modifier) {
     Text(
@@ -162,11 +185,7 @@ private fun StyledButton(
             PaddingValues(horizontal = look.padding)
         },
     ) {
-        val words = MaterialTheme.typography.labelLarge.copy(
-            fontSize = look.fontSize,
-            lineHeight = look.fontSize * LINE_HEIGHT,
-            fontWeight = look.weight,
-        )
+        val words = wordsStyleOf(look)
         if (shown != null) {
             AppIcon(shown, contentDescription = null, size = look.icon)
             Spacer(Modifier.width(IconSizes.ButtonGap))
@@ -198,6 +217,11 @@ private fun StyledButton(
         }
     }
 }
+
+/** The words of a button of [look] — the same style they are drawn and measured in ([appButtonMinWidth]). */
+@Composable
+private fun wordsStyleOf(look: ButtonLook): TextStyle =
+    MaterialTheme.typography.labelLarge.copy(fontSize = look.fontSize, lineHeight = look.fontSize * LINE_HEIGHT, fontWeight = look.weight)
 
 /** What a style looks like, all in one place. */
 @Immutable

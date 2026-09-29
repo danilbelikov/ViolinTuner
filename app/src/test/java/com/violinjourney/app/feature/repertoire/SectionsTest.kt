@@ -12,6 +12,7 @@ import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.SectionCount
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.repertoire.Tonic
@@ -33,6 +34,7 @@ import com.violinjourney.app.feature.repertoire.sections.SectionsViewModel
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -119,7 +121,7 @@ class SectionsTest {
     @Test
     fun `a new section is named, made and opened at once - and an empty name makes nothing`() = runTest {
         val (viewModel, effects) = sections()
-        viewModel.onIntent(SectionsIntent.AddClicked)
+        viewModel.onIntent(SectionsIntent.NewSectionClicked)
         viewModel.onIntent(SectionsIntent.NameChanged("   "))
         runCurrent()
         assertFalse(viewModel.state.value.canCreate)
@@ -135,6 +137,65 @@ class SectionsTest {
         assertEquals(listOf<SectionsEffect>(SectionsEffect.OpenSection(SectionRef.Custom(group.id))), effects)
         assertNull(viewModel.state.value.newName)
         assertEquals(5, viewModel.state.value.cards.size)
+    }
+
+    @Test
+    fun `the sheet «Что добавить» opens while the lists are still read - its built-in rows wait for nothing`() = runTest {
+        // a repertoire whose pieces are never read: the tab stays «loading»
+        val unread = object : RepertoireRepository by repertoire {
+            override val pieces = MutableSharedFlow<List<Piece>>()
+        }
+        val viewModel = SectionsViewModel(unread, config, clock, blocks, PracticeConfig())
+        val effects = mutableListOf<SectionsEffect>()
+        backgroundScope.launch { viewModel.state.collect {} }
+        backgroundScope.launch { viewModel.effects.collect { effects += it } }
+        runCurrent()
+        assertTrue(viewModel.state.value.loading)
+
+        viewModel.onIntent(SectionsIntent.AddToRepertoireClicked)
+        runCurrent()
+        assertTrue("the sheet is up before anything is read", viewModel.state.value.adding)
+        assertTrue(viewModel.state.value.loading)
+        viewModel.onIntent(SectionsIntent.KindPicked(SectionRef.BuiltIn(PieceSection.ETUDES)))
+        runCurrent()
+        assertFalse(viewModel.state.value.adding)
+        assertEquals(listOf<SectionsEffect>(SectionsEffect.OpenNew(SectionRef.BuiltIn(PieceSection.ETUDES))), effects)
+    }
+
+    @Test
+    fun `a kind picked closes the sheet and asks for the form of that section - scales and a section of one's own`() = runTest {
+        val groupId = repertoire.addGroup("Двойные ноты", 1)
+        val (viewModel, effects) = sections()
+        assertEquals(listOf(SectionRef.Custom(groupId)), viewModel.state.value.own.map { it.ref })
+        assertEquals(PieceSection.entries.map { SectionRef.BuiltIn(it) }, viewModel.state.value.builtIn.map { it.ref })
+
+        viewModel.onIntent(SectionsIntent.AddToRepertoireClicked)
+        viewModel.onIntent(SectionsIntent.KindPicked(SectionRef.BuiltIn(PieceSection.SCALES)))
+        runCurrent()
+        assertFalse(viewModel.state.value.adding)
+        viewModel.onIntent(SectionsIntent.AddToRepertoireClicked)
+        viewModel.onIntent(SectionsIntent.KindPicked(SectionRef.Custom(groupId)))
+        runCurrent()
+        assertFalse(viewModel.state.value.adding)
+        assertEquals(
+            listOf<SectionsEffect>(SectionsEffect.OpenNew(SectionRef.BuiltIn(PieceSection.SCALES)), SectionsEffect.OpenNew(SectionRef.Custom(groupId))),
+            effects,
+        )
+        assertTrue("nothing is made by the sheet", repertoire.pieces.value.isEmpty() && repertoire.groups.value.size == 1)
+    }
+
+    @Test
+    fun `hiding the sheet only closes it - no form, no section, no dialog`() = runTest {
+        val (viewModel, effects) = sections()
+        viewModel.onIntent(SectionsIntent.AddToRepertoireClicked)
+        runCurrent()
+        assertTrue(viewModel.state.value.adding)
+        viewModel.onIntent(SectionsIntent.AddSheetHidden)
+        runCurrent()
+        assertFalse(viewModel.state.value.adding)
+        assertNull(viewModel.state.value.newName)
+        assertTrue(effects.isEmpty())
+        assertTrue(repertoire.groups.value.isEmpty())
     }
 
     @Test
@@ -157,7 +218,7 @@ class SectionsTest {
     }
 
     @Test
-    fun `an exercise and a stroke are told by the built-in section, never inside a section of one's own`() {
+    fun `an exercise, an étude and a stroke are told by the built-in section, never inside a section of one's own`() {
         fun piece(section: PieceSection, groupId: Long? = null) =
             Piece(title = "x", composer = "", key = null, tempoBpm = null, status = PieceStatus.READING, notes = "", createdAtEpochMs = 0, updatedAtEpochMs = 0, section = section, groupId = groupId)
         for (section in listOf(PieceSection.SCALES, PieceSection.ETUDES, PieceSection.STROKES)) {
@@ -168,6 +229,9 @@ class SectionsTest {
         assertTrue(SectionKeys.isStroke(piece(PieceSection.STROKES)))
         assertFalse(SectionKeys.isStroke(piece(PieceSection.STROKES, groupId = 7)))
         assertFalse(SectionKeys.isStroke(piece(PieceSection.SCALES)))
+        assertTrue(SectionKeys.isEtude(piece(PieceSection.ETUDES)))
+        assertFalse("an étude in a section of one's own shows a note", SectionKeys.isEtude(piece(PieceSection.ETUDES, groupId = 7)))
+        assertFalse(SectionKeys.isEtude(piece(PieceSection.STROKES)))
     }
 
     @Test
@@ -343,7 +407,7 @@ class SectionsTest {
         repertoire.add(PieceDraft(title = "Менуэт"), 1)
         val groupId = repertoire.addGroup("Терции", 2)
         val (landing, _) = sections()
-        landing.onIntent(SectionsIntent.AddClicked)
+        landing.onIntent(SectionsIntent.NewSectionClicked)
         runCurrent()
         val cards = landing.state.value.cards
         landing.onIntent(SectionsIntent.NameChanged("Д"))

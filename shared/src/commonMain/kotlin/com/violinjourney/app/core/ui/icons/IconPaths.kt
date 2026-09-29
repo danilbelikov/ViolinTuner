@@ -99,6 +99,20 @@ internal object IconPaths {
     /** отметка «лучший дубль» (12 dp, primary, залитая) */
     /** The tile of a bow stroke (handoff `Упражнения`, 24c): drawn on a grid of 30 there, brought to 24 here. */
     val BOW = listOf("M4 20L20 4", "M7.2 20.8C10.4 16 16 9.6 20.8 6.4", "M2.4 17.6L6.4 21.6")
+
+    /**
+     * The sections of the repertoire in the redesign (`i-scale`, `i-etude`, `i-folder` of `docs/redesign/mockups/repertoire.html`,
+     * spec 3.36.4): a scale — three lines of a staff with notes climbing them; an étude — a page with its lines of text; a section of
+     * one's own — a folder. The circles and the rounded page of the mockup as paths.
+     */
+    val SCALE = listOf(
+        "M3 7h18M3 11h18M3 15h18",
+        "F M7 15.2a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 1 0 0-3.6z",
+        "F M12 11.2a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 1 0 0-3.6z",
+        "F M17 7.2a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 1 0 0-3.6z",
+    )
+    val ETUDE = listOf("M6.5 3h11A2.5 2.5 0 0 1 20 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5v-13A2.5 2.5 0 0 1 6.5 3z", "M8 8h8M8 12h8M8 16h5")
+    val FOLDER = listOf("M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z")
     /** Second handoff of the home (`home-catalog.js` → `ICONS`, frame 28h), carried by hand: the map folded in three, the passport with its stamp, the door home, the case with an arrow — «в дорогу». */
     val MAP = listOf("M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5V6.5z", "M9 4v13.5M15 6.5V20", "M6 14.5c2-1 4 .5 6-1s3.5-3 6-3.5")
     val PASSPORT = listOf("M6 3.5h12a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z", "M12 8a3.5 3.5 0 1 0 0 7 3.5 3.5 0 1 0 0-7z", "M9 17.5h6")

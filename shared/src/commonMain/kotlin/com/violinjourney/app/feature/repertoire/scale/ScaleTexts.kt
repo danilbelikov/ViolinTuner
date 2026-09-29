@@ -44,9 +44,6 @@ object ScaleWords {
         return word(ScaleWord.TITLE, arrayOf(spec.key.germanName + suffix, octaves(spec.octaves, word)))
     }
 
-    inline fun subtitle(spec: ScaleSpec, word: (ScaleWord, Array<out Any>) -> String): String =
-        word(ScaleWord.TITLE, arrayOf(kind(spec.kind, word), octaves(spec.octaves, word)))
-
     inline fun kind(kind: ScaleKind, word: (ScaleWord, Array<out Any>) -> String): String = word(
         when (kind) {
             ScaleKind.MAJOR -> ScaleWord.KIND_MAJOR
@@ -86,10 +83,6 @@ fun resourceOf(word: ScaleWord): StringResource = when (word) {
     ScaleWord.OCTAVE_MANY -> Res.string.scale_octave_many
     ScaleWord.RANGE -> Res.string.scale_range
 }
-
-/** «мажор · 3 октавы»: the second line of a scale's card and of its screen. */
-@Composable
-fun scaleSubtitle(spec: ScaleSpec): String = ScaleWords.subtitle(spec) { w, args -> stringResource(resourceOf(w), *args) }
 
 @Composable
 fun scaleTitle(spec: ScaleSpec): String = ScaleWords.title(spec) { w, args -> stringResource(resourceOf(w), *args) }

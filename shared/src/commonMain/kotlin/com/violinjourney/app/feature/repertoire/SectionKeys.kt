@@ -35,4 +35,7 @@ object SectionKeys {
 
     /** The piece stands in «Штрихи»: its tile shows a bow rather than a missing photo. */
     fun isStroke(piece: Piece): Boolean = piece.groupId == null && piece.section == PieceSection.STROKES
+
+    /** The piece stands in «Этюды»: its tile is the one of an étude rather than a missing photo (spec 3.36.4). */
+    fun isEtude(piece: Piece): Boolean = piece.groupId == null && piece.section == PieceSection.ETUDES
 }

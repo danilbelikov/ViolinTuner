@@ -133,6 +133,7 @@ fun AppNavHost(
             SectionsRoute(
                 onOpenSection = navController::navigateToSection,
                 onOpenPiece = navController::navigateToPiece,
+                onNew = navController::navigateToNew,
                 viewModel = hiltViewModel<HiltSectionsViewModel>(),
             )
         }
@@ -191,10 +192,7 @@ fun AppNavHost(
         ) {
             SectionRoute(
                 onOpenPiece = navController::navigateToPiece,
-                onNew = { section ->
-                    if (section == SectionRef.BuiltIn(PieceSection.SCALES)) navController.navigateToScaleForm(pieceId = null)
-                    else navController.navigateToPieceForm(pieceId = null, section = section)
-                },
+                onNew = navController::navigateToNew,
                 onClose = navController::popBackStack,
                 viewModel = hiltViewModel<HiltRepertoireViewModel>(),
             )
@@ -482,14 +480,19 @@ fun NavHostController.navigateToStand(pieceId: Long, pageIndex: Int) {
     navigate(Routes.stand(pieceId, pageIndex)) { launchSingleTop = true }
 }
 
-/** [pieceId] null opens the form of a new element of [section]. */
-fun NavHostController.navigateToPieceForm(pieceId: Long?, focusNotes: Boolean = false, section: SectionRef = SectionRef.BuiltIn(PieceSection.PIECES)) {
-    navigate(Routes.pieceForm(pieceId, focusNotes, section)) { launchSingleTop = true }
+/** The form of the element [pieceId], at its notes when [focusNotes]; a new element opens by [navigateToNew]. */
+fun NavHostController.navigateToPieceForm(pieceId: Long, focusNotes: Boolean) {
+    navigate(Routes.pieceForm(pieceId, focusNotes)) { launchSingleTop = true }
 }
 
-/** [pieceId] null opens the form of a new scale. */
-fun NavHostController.navigateToScaleForm(pieceId: Long?) {
+/** The form of the scale [pieceId]. */
+fun NavHostController.navigateToScaleForm(pieceId: Long) {
     navigate(Routes.scaleForm(pieceId)) { launchSingleTop = true }
+}
+
+/** The form of a new element of [section]: a scale's own for «Гаммы», a piece's for the rest (`Routes.newElement`, spec 3.36.4). */
+fun NavHostController.navigateToNew(section: SectionRef) {
+    navigate(Routes.newElement(section)) { launchSingleTop = true }
 }
 
 fun NavHostController.navigateToSection(section: SectionRef) {

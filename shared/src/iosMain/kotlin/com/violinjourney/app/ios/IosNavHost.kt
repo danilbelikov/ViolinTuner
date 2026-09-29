@@ -140,6 +140,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             SectionsRoute(
                 onOpenSection = navController::navigateToSection,
                 onOpenPiece = navController::navigateToPiece,
+                onNew = navController::navigateToNew,
                 viewModel = viewModel {
                     SectionsViewModel(graph.repertoire, graph.repertoireConfig, graph.clock, graph.blockHistory, graph.practiceConfig)
                 },
@@ -264,10 +265,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
         composable(route = Routes.SECTION_PATTERN, arguments = listOf(navArgument(RepertoireViewModel.ARG_SECTION) { type = NavType.StringType })) {
             SectionRoute(
                 onOpenPiece = navController::navigateToPiece,
-                onNew = { section ->
-                    if (section == SectionRef.BuiltIn(PieceSection.SCALES)) navController.navigateToScaleForm(pieceId = null)
-                    else navController.navigateToPieceForm(pieceId = null, section = section)
-                },
+                onNew = navController::navigateToNew,
                 onClose = navController::popBackStack,
                 viewModel = viewModel {
                     RepertoireViewModel(createSavedStateHandle(), graph.repertoire, graph.sessions, graph.sheetFiles, graph.repertoireConfig, graph.clock)
@@ -518,14 +516,19 @@ private fun NavHostController.navigateToCapture(pieceId: Long) {
     navigate(Routes.capture(pieceId)) { launchSingleTop = true }
 }
 
-/** [pieceId] null opens the form of a new element of [section]. */
-private fun NavHostController.navigateToPieceForm(pieceId: Long?, focusNotes: Boolean = false, section: SectionRef = SectionRef.BuiltIn(PieceSection.PIECES)) {
-    navigate(Routes.pieceForm(pieceId, focusNotes, section)) { launchSingleTop = true }
+/** The form of the element [pieceId], at its notes when [focusNotes]; a new element opens by [navigateToNew]. */
+private fun NavHostController.navigateToPieceForm(pieceId: Long, focusNotes: Boolean) {
+    navigate(Routes.pieceForm(pieceId, focusNotes)) { launchSingleTop = true }
 }
 
-/** [pieceId] null opens the form of a new scale. */
-private fun NavHostController.navigateToScaleForm(pieceId: Long?) {
+/** The form of the scale [pieceId]. */
+private fun NavHostController.navigateToScaleForm(pieceId: Long) {
     navigate(Routes.scaleForm(pieceId)) { launchSingleTop = true }
+}
+
+/** The form of a new element of [section]: a scale's own for «Гаммы», a piece's for the rest (`Routes.newElement`, spec 3.36.4). */
+private fun NavHostController.navigateToNew(section: SectionRef) {
+    navigate(Routes.newElement(section)) { launchSingleTop = true }
 }
 
 /**

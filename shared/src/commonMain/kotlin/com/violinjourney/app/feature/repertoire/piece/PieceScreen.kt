@@ -108,7 +108,6 @@ import com.violinjourney.app.feature.history.components.CardActions
 import com.violinjourney.app.feature.history.components.SelectionBar
 import com.violinjourney.app.feature.history.components.SelectionBarHeight
 import com.violinjourney.app.feature.history.components.deleteTextOf
-import com.violinjourney.app.feature.repertoire.KeyAndTempo
 import com.violinjourney.app.feature.repertoire.components.SheetThumb
 import com.violinjourney.app.feature.repertoire.components.StatusChip
 import com.violinjourney.app.feature.repertoire.components.THUMB_DIM
@@ -116,6 +115,10 @@ import com.violinjourney.app.feature.repertoire.components.THUMB_DIM_FIRST
 import com.violinjourney.app.feature.repertoire.components.dashedBorder
 import com.violinjourney.app.feature.repertoire.components.statusLabel
 import kotlinx.datetime.TimeZone
+import com.violinjourney.app.shared.resources.piece_tempo_description
+import com.violinjourney.app.shared.resources.dot_separator
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.text.TextStyle
 
 private val ScreenPadding = 16.dp
 private val MaxContentWidth = 560.dp
@@ -714,3 +717,36 @@ private fun DrawnScale(scale: Scale, metrics: Metrics, onClick: () -> Unit) {
         }
     }
 }
+
+/**
+ * «G-dur · [metronome] 96» under the name of the element — only what it has; nothing at all when it has neither. The tempo is the
+ * metronome of the icon set rather than the glyph ♩: that one comes from a fallback font in another weight (spec 3.16). Until stage
+ * 109 puts the one line of R4 here ([com.violinjourney.app.feature.repertoire.components.MetaLine]).
+ */
+@Composable
+private fun KeyAndTempo(keyName: String?, tempoBpm: Int?, style: TextStyle, modifier: Modifier = Modifier) {
+    if (keyName == null && tempoBpm == null) return
+    val color = MaterialTheme.colorScheme.onSurfaceVariant
+    Row(modifier = modifier, verticalAlignment = Alignment.CenterVertically) {
+        if (keyName != null) {
+            Text(
+                text = if (tempoBpm != null) keyName + stringResource(Res.string.dot_separator) else keyName,
+                color = color, maxLines = 1, overflow = TextOverflow.Ellipsis, style = style,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+        }
+        if (tempoBpm != null) {
+            val description = stringResource(Res.string.piece_tempo_description, tempoBpm)
+            Row(
+                modifier = Modifier.clearAndSetSemantics { contentDescription = description },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(TempoIconGap),
+            ) {
+                AppIcon(AppIcons.Metronome, contentDescription = null, tint = color, size = IconSizes.InText)
+                Text(text = tempoBpm.toString(), color = color, maxLines = 1, style = style)
+            }
+        }
+    }
+}
+
+private val TempoIconGap = 5.dp

@@ -28,7 +28,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDate
 
-/** The sections of the repertoire with their counts, and the making of a new one (spec 3.22). */
+/** The sections of the repertoire with their counts, the making of a new one (spec 3.22) and «Что добавить?» (spec 3.36.4). */
 open class SectionsViewModel(
     private val repertoire: RepertoireRepository,
     private val config: RepertoireConfig,
@@ -37,7 +37,9 @@ open class SectionsViewModel(
     private val practiceConfig: PracticeConfig,
 ) : ViewModel() {
     private val newName = MutableStateFlow<String?>(null)
+    private val adding = MutableStateFlow(false)
     private val timeExpanded = MutableStateFlow(false)
+    private val loading = SectionsState(loading = true, cards = emptyList(), total = SectionCount.EMPTY, maxNameLength = config.maxGroupNameLength)
 
     private val content = combine(repertoire.pieces, repertoire.groups, blocks.blocks, timeExpanded) { pieces, groups, saved, expanded ->
         // the alphabet of the interface, asked on each change: the language may have changed since
@@ -52,11 +54,14 @@ open class SectionsViewModel(
         )
     }
 
-    // The name being typed for a new section joins the lists after they are built: a letter does not count them again.
-    val state: StateFlow<SectionsState> = combine(content, newName) { content, name -> content.copy(newName = name) }.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
-        SectionsState(loading = true, cards = emptyList(), total = SectionCount.EMPTY, maxNameLength = config.maxGroupNameLength),
-    )
+    // The lists as last built — «loading» before the first read — so the sheet opens before they are read: «Добавить в репертуар»
+    // works at once (spec 3.36.4). Kept between subscriptions: coming back to the tab does not show «loading» again.
+    private val lists: StateFlow<SectionsState> = content.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), loading)
+
+    // The name being typed for a new section and the sheet join the lists after they are built: a letter does not count them again.
+    val state: StateFlow<SectionsState> = combine(lists, newName, adding) { lists, name, sheet ->
+        lists.copy(newName = name, adding = sheet)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS), loading)
 
     private val effectChannel = Channel<SectionsEffect>(Channel.BUFFERED)
     val effects: Flow<SectionsEffect> = effectChannel.receiveAsFlow()
@@ -64,7 +69,13 @@ open class SectionsViewModel(
     fun onIntent(intent: SectionsIntent) {
         when (intent) {
             is SectionsIntent.SectionClicked -> effectChannel.trySend(SectionsEffect.OpenSection(intent.ref))
-            SectionsIntent.AddClicked -> newName.value = ""
+            SectionsIntent.NewSectionClicked -> newName.value = ""
+            SectionsIntent.AddToRepertoireClicked -> adding.value = true
+            SectionsIntent.AddSheetHidden -> adding.value = false
+            is SectionsIntent.KindPicked -> {
+                adding.value = false
+                effectChannel.trySend(SectionsEffect.OpenNew(intent.ref))
+            }
             is SectionsIntent.NameChanged -> if (newName.value != null) newName.value = intent.text.takeCodePoints(config.maxGroupNameLength)
             SectionsIntent.DialogDismissed -> newName.value = null
             SectionsIntent.CreateConfirmed -> create()

@@ -87,6 +87,10 @@ val LocalListGroupGround = staticCompositionLocalOf { Color.Unspecified }
  * — dimmed, it would let the lines of the group show through and stand out lighter than its neighbours — and so does the
  * [caption]: the caption of a dimmed row says why (R8, «Сначала дождитесь…»), and at 0.38 it would not read.
  *
+ * [strong] — the words at 700 instead of 600: the rows of the sheets of R4, «Что добавить?» and «Раздел» (5.29 R4), where each row
+ * names a kind of thing rather than a setting. [singleLine] — the words stay on one line and end in an ellipsis: a name the player
+ * gave, «В «Двойные ноты»», which may be long.
+ *
  * Inside a [ListGroup] the row paints the ground of the group; outside one it has no ground of its own — a row of a sheet.
  */
 @Composable
@@ -100,6 +104,8 @@ fun ListRow(
     accent: Boolean = false,
     enabled: Boolean = true,
     leading: (@Composable () -> Unit)? = null,
+    strong: Boolean = false,
+    singleLine: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val ground = LocalListGroupGround.current
@@ -132,10 +138,12 @@ fun ListRow(
                 text = text,
                 modifier = dim,
                 color = words,
+                maxLines = if (singleLine) 1 else Int.MAX_VALUE,
+                overflow = if (singleLine) TextOverflow.Ellipsis else TextOverflow.Clip,
                 style = MaterialTheme.typography.bodyLarge.copy(
                     fontSize = 16.sp,
                     lineHeight = 22.sp,
-                    fontWeight = if (accent) FontWeight.Bold else FontWeight.SemiBold,
+                    fontWeight = if (accent || strong) FontWeight.Bold else FontWeight.SemiBold,
                 ),
             )
             if (caption != null) {

@@ -12,13 +12,17 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -31,10 +35,13 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.SectionLabel
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.motion.LocalReduceMotion
+import com.violinjourney.app.core.ui.theme.AppShapes
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.piece_time_all
 import com.violinjourney.app.shared.resources.piece_time_days_few
@@ -49,11 +56,36 @@ import com.violinjourney.app.shared.resources.piece_time_today
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * «Время по элементам» (spec 3.28, handoff 30h): where the time goes — a bar an element, its length by the time of
- * the period, today's part lighter at its end. The violet of time, as the calendar of «Занятия» has it; not the
- * colours of the zones and not the three tones of the learnt shares next to it. [visibleRows] stand folded
- * (three upright, five in the landscape column), «Все N» shows the rest in place. The bars grow once when the card
- * appears; rows opened later do not grow — two motions at once would be one too many.
+ * «Время по элементам» (spec 3.28, 3.36.4): the label of a section and «30 дней» at its right, then the card of the rows. Under the
+ * sections upright ([top] 26), at the top of its own column in landscape.
+ */
+@Composable
+fun PieceTimeSection(card: PieceTimeCard, visibleRows: Int, onIntent: (SectionsIntent) -> Unit, modifier: Modifier = Modifier, top: Dp = LabelTop) {
+    Column(modifier) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(top = top, bottom = LabelBottom),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            SectionLabel(stringResource(Res.string.piece_time_title), Modifier.weight(1f))
+            Text(
+                text = daysInWords(card.days),
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
+            )
+        }
+        PieceTimeCardView(card, visibleRows, onIntent)
+    }
+}
+
+/**
+ * The card of «Время по элементам» (spec 3.28, 5.29 R4): where the time goes — a bar an element, its length by the time of the
+ * period, today's part lighter at its end. The violet of time, as the calendar of «Занятия» has it; not the colours of the zones
+ * and not the three tones of the learnt shares next to it. [visibleRows] stand folded (three upright, five in the landscape
+ * column), «Все N» shows the rest in place. The bars grow once when the card appears; rows opened later do not grow — two motions
+ * at once would be one too many. Once for the life of the card in its list, as the chart of «Записи» (5.15): scrolled out of sight
+ * and back, or come back to from a section, it stands as it was ([PieceTimeGrowth]).
  */
 @Composable
 fun PieceTimeCardView(card: PieceTimeCard, visibleRows: Int, onIntent: (SectionsIntent) -> Unit, modifier: Modifier = Modifier) {
@@ -61,31 +93,17 @@ fun PieceTimeCardView(card: PieceTimeCard, visibleRows: Int, onIntent: (Sections
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(CardCorner))
+            .clip(AppShapes.M)
             .background(colors.surfaceContainer)
-            .padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp)
             .animateContentSize(tween(EXPAND_MS)),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        Row(verticalAlignment = Alignment.Bottom) {
-            Text(
-                text = stringResource(Res.string.piece_time_title),
-                modifier = Modifier.weight(1f),
-                color = colors.onSurface,
-                style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-            )
-            Text(
-                text = daysInWords(card.days),
-                color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontFeatureSettings = TABULAR_FIGURES),
-            )
-        }
         when (card.rows.size) {
             0 -> Text(
                 text = stringResource(Res.string.piece_time_empty),
-                modifier = Modifier.padding(top = 2.dp, bottom = 6.dp),
+                modifier = Modifier.padding(vertical = RowPadding),
                 color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.5.sp, lineHeight = 20.sp),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
             )
             // one element with time: no bar — it would be a record with nobody to beat (handoff 30h5)
             1 -> SingleRow(card.rows.single(), card.days, onIntent)
@@ -101,9 +119,10 @@ private fun SingleRow(row: PieceTimeRow, days: Int, onIntent: (SectionsIntent) -
     Column(
         modifier = Modifier
             .fillMaxWidth()
+            .heightIn(min = RowMinHeight)
             .clickable(role = Role.Button) { onIntent(SectionsIntent.TimePieceClicked(row.pieceId)) }
             .semantics(mergeDescendants = true) { contentDescription = description }
-            .padding(top = 4.dp, bottom = 8.dp),
+            .padding(vertical = RowPadding),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Row(verticalAlignment = Alignment.Bottom) {
@@ -113,20 +132,20 @@ private fun SingleRow(row: PieceTimeRow, days: Int, onIntent: (SectionsIntent) -
                 color = colors.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold),
             )
             Text(
                 text = Formats.minutesInWords(row.totalMs),
                 modifier = Modifier.padding(start = 12.dp),
                 color = colors.primary,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
+                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
             )
         }
         if (row.todayMs > 0) {
             Text(
                 text = stringResource(Res.string.piece_time_today, Formats.minutesInWords(row.todayMs)),
                 color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.5.sp),
+                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
             )
         }
     }
@@ -140,19 +159,27 @@ private fun Bars(card: PieceTimeCard, visibleRows: Int, onIntent: (SectionsInten
     val longest = card.rows.maxOf { it.totalMs }.coerceAtLeast(1)
     // one clock for the growth of all rows, each starting a step later (handoff 30 `anims`: 420 ms, 40 ms apart)
     val reduceMotion = LocalReduceMotion.current
-    val grown = minOf(visibleRows, card.rows.size)
-    val growTotalMs = GROW_MS + GROW_STEP_MS * (grown - 1).coerceAtLeast(0)
-    val grow = remember { Animatable(if (reduceMotion) 1f else 0f) }
-    LaunchedEffect(Unit) { grow.animateTo(1f, tween(growTotalMs, easing = { it })) }
-    Column(verticalArrangement = Arrangement.spacedBy(11.dp)) {
+    val growing = minOf(visibleRows, card.rows.size)
+    val growTotalMs = PieceTimeGrowth.totalMs(growing)
+    // marked as grown when the growth begins, and kept by what the list saves of its item: a card that leaves in the middle of it,
+    // or is scrolled out of the list and back (its item is composed anew then), comes back standing
+    var grownBefore by rememberSaveable { mutableStateOf(false) }
+    val grow = remember { Animatable(PieceTimeGrowth.start(reduceMotion, grownBefore)) }
+    LaunchedEffect(Unit) {
+        grownBefore = true
+        grow.animateTo(1f, tween(growTotalMs, easing = { it }))
+    }
+    Column {
         shown.forEachIndexed { index, row ->
             val description = rowDescription(row, card.days)
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .heightIn(min = RowMinHeight)
                     .clickable(role = Role.Button) { onIntent(SectionsIntent.TimePieceClicked(row.pieceId)) }
-                    .semantics(mergeDescendants = true) { contentDescription = description },
-                verticalArrangement = Arrangement.spacedBy(5.dp),
+                    .semantics(mergeDescendants = true) { contentDescription = description }
+                    .padding(vertical = RowPadding),
+                verticalArrangement = Arrangement.spacedBy(BarTop),
             ) {
                 Row(verticalAlignment = Alignment.Bottom) {
                     Text(
@@ -161,13 +188,13 @@ private fun Bars(card: PieceTimeCard, visibleRows: Int, onIntent: (SectionsInten
                         color = colors.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodyMedium.copy(fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold),
                     )
                     Text(
                         text = Formats.minutesInWords(row.totalMs),
-                        modifier = Modifier.padding(start = 10.dp),
+                        modifier = Modifier.padding(start = 12.dp),
                         color = colors.onSurfaceVariant,
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.5.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
+                        style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
                     )
                 }
                 val track = colors.surfaceContainerHigh
@@ -182,9 +209,7 @@ private fun Bars(card: PieceTimeCard, visibleRows: Int, onIntent: (SectionsInten
                         .drawBehind {
                             val radius = CornerRadius(size.height / 2)
                             drawRoundRect(track, cornerRadius = radius)
-                            // the rows beyond the folded ones stand grown: they come with «Все N», not with the card
-                            val started = if (index >= grown) 1f else ((grow.value * growTotalMs - index * GROW_STEP_MS) / GROW_MS).coerceIn(0f, 1f)
-                            val width = size.width * share * EaseOut.transform(started)
+                            val width = size.width * share * EaseOut.transform(PieceTimeGrowth.progress(grow.value, index, growing))
                             if (width <= 0f) return@drawBehind
                             drawRoundRect(bar, size = Size(width, size.height), cornerRadius = radius)
                             if (todayShare > 0f) {
@@ -206,7 +231,7 @@ private fun Bars(card: PieceTimeCard, visibleRows: Int, onIntent: (SectionsInten
                 Text(
                     text = if (card.expanded) stringResource(Res.string.piece_time_less) else stringResource(Res.string.piece_time_all, card.rows.size),
                     color = colors.primary,
-                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.5.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
+                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, lineHeight = 18.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
                 )
             }
         }
@@ -227,10 +252,40 @@ private fun rowDescription(row: PieceTimeRow, days: Int): String {
     }
 }
 
-private val CardCorner = 16.dp
-private val BarHeight = 8.dp
-private val MoreHeight = 36.dp
-private const val GROW_MS = 420
-private const val GROW_STEP_MS = 40
+/** Rows before «Все N»: three upright and in one column, five in the landscape column (spec 3.28, 3.36.4). */
+const val TIME_ROWS_UPRIGHT = 3
+const val TIME_ROWS_LANDSCAPE = 5
+
+/**
+ * The growth of the bars of «Время по элементам» (spec 3.28, handoff 30 `anims`): one clock for all rows, 420 ms a row, each 40 ms
+ * after the one above; once for the life of the card. Pure, with a test.
+ */
+internal object PieceTimeGrowth {
+    const val GROW_MS = 420
+    const val GROW_STEP_MS = 40
+
+    /** The clock of [rows] growing rows, 0 to 1 over this many ms. */
+    fun totalMs(rows: Int): Int = GROW_MS + GROW_STEP_MS * (rows - 1).coerceAtLeast(0)
+
+    /** Where the clock starts: at its end — the bars standing — when they have grown before, or when motion is reduced. */
+    fun start(reduceMotion: Boolean, grownBefore: Boolean): Float = if (reduceMotion || grownBefore) 1f else 0f
+
+    /**
+     * How far the bar of the row [index] has grown, 0 to 1 before its easing, when the clock of all is at [clock]. The rows past the
+     * [growing] ones stand grown: they come with «Все N», not with the card.
+     */
+    fun progress(clock: Float, index: Int, growing: Int): Float {
+        if (index >= growing) return 1f
+        return ((clock * totalMs(growing) - index * GROW_STEP_MS) / GROW_MS).coerceIn(0f, 1f)
+    }
+}
+
+private val LabelTop = 26.dp
+private val LabelBottom = 10.dp
+private val RowPadding = 8.dp
+private val RowMinHeight = 48.dp
+private val BarTop = 7.dp
+private val BarHeight = 6.dp
+private val MoreHeight = 48.dp
 private const val EXPAND_MS = 280
 private const val TABULAR_FIGURES = "tnum"

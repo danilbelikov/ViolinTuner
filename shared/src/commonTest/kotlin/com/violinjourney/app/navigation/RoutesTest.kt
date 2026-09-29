@@ -62,6 +62,15 @@ class RoutesTest {
     }
 
     @Test
+    fun `a new element of the scales opens the form of a scale and of every other section the form of a piece with it`() {
+        assertEquals(Routes.scaleForm(null), Routes.newElement(SectionRef.BuiltIn(PieceSection.SCALES)))
+        for (section in listOf(PieceSection.PIECES, PieceSection.ETUDES, PieceSection.STROKES)) {
+            assertEquals(Routes.pieceForm(null, section = SectionRef.BuiltIn(section)), Routes.newElement(SectionRef.BuiltIn(section)), "$section")
+        }
+        assertEquals(Routes.pieceForm(null, section = SectionRef.Custom(9)), Routes.newElement(SectionRef.Custom(9)))
+    }
+
+    @Test
     fun `the names of the screens stay what the statistics know`() {
         val routes = listOf(
             Routes.SESSION_PATTERN, Routes.SOUND_PATTERN, Routes.PIECE_PATTERN, Routes.CAPTURE_PATTERN, Routes.STAND_PATTERN,

@@ -3,7 +3,7 @@ package com.violinjourney.app.feature.repertoire.sections
 import com.violinjourney.app.core.domain.repertoire.SectionCount
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 
-/** One card of the sections screen (spec 3.22, handoff 24b). */
+/** One section of the tab «Репертуар» (spec 3.22, 3.36.4): a tile for a built-in one, a row for one of the player's own. */
 data class SectionCard(
     val ref: SectionRef,
     /** Null for a built-in section: its name is a word of the interface. */
@@ -20,10 +20,11 @@ data class PieceTimeRow(val pieceId: Long, val title: String, val totalMs: Long,
  */
 data class PieceTimeCard(val rows: List<PieceTimeRow>, val days: Int, val expanded: Boolean)
 
-/** The way into the repertoire: its sections, each with how far it has come. */
+/** The way into the repertoire: its sections, each with how far it has come (spec 3.36.4). */
 data class SectionsState(
     /** True until the stored pieces have been read once. */
     val loading: Boolean,
+    /** The four built-in sections in their order, then the player's own by the alphabet of the interface (spec 3.22). */
     val cards: List<SectionCard>,
     /** Everything in every section: «выучено 9 из 27» at the top, «пока пусто» before the first element. */
     val total: SectionCount,
@@ -32,14 +33,32 @@ data class SectionsState(
     val maxNameLength: Int,
     /** Null while nothing is read or the repertoire is empty: then there is nothing to count time for. */
     val time: PieceTimeCard? = null,
+    /** «Что добавить?» is up — it opens while the data is still read too: its built-in rows wait for nothing (spec 3.36.4). */
+    val adding: Boolean = false,
 ) {
     val canCreate: Boolean get() = !newName.isNullOrBlank()
+
+    /** The four built-in sections: the tiles. */
+    val builtIn: List<SectionCard> get() = cards.filter { it.ref is SectionRef.BuiltIn }
+
+    /** The player's own sections, already by the alphabet: the rows under the tiles and the last rows of «Что добавить?». */
+    val own: List<SectionCard> get() = cards.filter { it.ref is SectionRef.Custom }
 }
 
 sealed interface SectionsIntent {
     data class SectionClicked(val ref: SectionRef) : SectionsIntent
 
-    data object AddClicked : SectionsIntent
+    /** «Свой раздел»: the dialog «Новый раздел». */
+    data object NewSectionClicked : SectionsIntent
+
+    /** «Добавить в репертуар» of the bottom zone: the sheet «Что добавить?». */
+    data object AddToRepertoireClicked : SectionsIntent
+
+    /** The sheet was swiped away, tapped outside or closed with «назад»: it is hidden, nothing more (spec 3.36). */
+    data object AddSheetHidden : SectionsIntent
+
+    /** A row of «Что добавить?»: the sheet closes and the form of a new element of [ref] opens. */
+    data class KindPicked(val ref: SectionRef) : SectionsIntent
 
     data class NameChanged(val text: String) : SectionsIntent
 
@@ -55,6 +74,9 @@ sealed interface SectionsIntent {
 
 sealed interface SectionsEffect {
     data class OpenSection(val ref: SectionRef) : SectionsEffect
+
+    /** The form of a new element of [section]; «Гаммы» has a form of its own (`Routes.newElement`). */
+    data class OpenNew(val section: SectionRef) : SectionsEffect
 
     /** A row of the time card: the element's own screen. */
     data class OpenPiece(val id: Long) : SectionsEffect

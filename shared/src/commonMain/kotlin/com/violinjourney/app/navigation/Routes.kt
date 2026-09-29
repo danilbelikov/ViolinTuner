@@ -80,6 +80,13 @@ object Routes {
 
     fun section(section: SectionRef): String = "$SECTION/${SectionKeys.keyOf(section)}"
 
+    /**
+     * The form of a new element of [section] (spec 3.22, 3.36.4): «Гаммы» — the form of a scale, every other section — the form of a
+     * piece with that section. One rule for «Что добавить?» of the tab and «Добавить …» of a section's list, on both platforms.
+     */
+    fun newElement(section: SectionRef): String =
+        if (section == SectionRef.BuiltIn(PieceSection.SCALES)) scaleForm(null) else pieceForm(null, section = section)
+
     /** A stop of the journey; the home is a section of its own (spec 3.24), and the way into it is its title card (3.25). */
     fun stop(stopId: String): String = if (stopId == JourneyRoute.HOME) SPLASH_HOME else "$JOURNEY_STOP/$stopId"
 

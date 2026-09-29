@@ -7,7 +7,7 @@ import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleSpec
 import kotlinx.datetime.LocalDate
 
-/** One piece in the list (spec 3.15, handoff 13b). Fields a piece does not have are null and simply not shown. */
+/** One element in the list of a section (spec 3.15, 3.36.4). Fields it does not have are null and simply not shown. */
 data class PieceCard(
     val id: Long,
     val title: String,
@@ -26,10 +26,12 @@ data class PieceCard(
     val hasBest: Boolean = false,
     /** Absolute path of the first page's thumbnail; null without pages. */
     val thumbPath: String?,
-    /** A scale: its tile shows the clef with the key signature, its second line the kind and the octaves (handoff 24c). */
+    /** A scale: its tile shows the clef with the key signature, its second line the kind and the tempo (spec 3.36.4). */
     val scale: ScaleSpec? = null,
-    /** A bow stroke: a tile with a bow rather than a missing photo. */
+    /** A bow stroke: a tile with a bow rather than a missing photo, and no author or key in its second line. */
     val stroke: Boolean = false,
+    /** An étude: the tile of an étude rather than a missing photo (spec 3.36.4). */
+    val etude: Boolean = false,
 )
 
 enum class SectionDialog { RENAME, DELETE }

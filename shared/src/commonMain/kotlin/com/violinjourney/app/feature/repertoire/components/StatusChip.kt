@@ -43,19 +43,22 @@ fun statusLabel(status: PieceStatus): String = stringResource(
  */
 val LocalExerciseWords = staticCompositionLocalOf { false }
 
-/** Container and content color of a status: the word always says it too, the color only helps. */
+/**
+ * Container and content color of a status: the word always says it too, the color only helps. No green (spec 3.36.4): green means
+ * only «в строе»; the third step is the soft accent under the accent. The list shows the status as a dot and a word
+ * ([StatusMark]); this chip stays on the screen of an element until stage 109 makes it a switch.
+ */
 @Composable
-fun statusColors(status: PieceStatus): Pair<Color, Color> {
+private fun statusColors(status: PieceStatus): Pair<Color, Color> {
     val scheme = MaterialTheme.colorScheme
-    val repertoire = ViolinTheme.repertoireColors
     return when (status) {
         PieceStatus.READING -> scheme.surfaceContainerHigh to scheme.onSurface
         PieceStatus.LEARNING -> scheme.primaryContainer to scheme.onPrimaryContainer
-        PieceStatus.IN_REPERTOIRE -> repertoire.statusRepertoireContainer to repertoire.onStatusRepertoireContainer
+        PieceStatus.IN_REPERTOIRE -> ViolinTheme.accentSoft to scheme.primary
     }
 }
 
-/** The small chip of the list card (22 dp) and, larger, the one of the piece screen. [trailing] is the chevron there. */
+/** The chip of the status on the screen of an element, with the chevron of its menu as [trailing] (until stage 109). */
 @Composable
 fun StatusChip(
     status: PieceStatus,

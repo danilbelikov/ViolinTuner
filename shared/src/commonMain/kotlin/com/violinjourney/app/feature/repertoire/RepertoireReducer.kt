@@ -42,6 +42,7 @@ object RepertoireReducer {
                     hasBest = PieceStats.bestOf(piece, takes) != null,
                     scale = piece.scale,
                     stroke = SectionKeys.isStroke(piece),
+                    etude = SectionKeys.isEtude(piece),
                     thumbPath = firstPages[piece.id]?.let { thumbPathOf(it.thumbFileName) },
                 )
             }
