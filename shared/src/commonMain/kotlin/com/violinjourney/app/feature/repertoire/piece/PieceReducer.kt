@@ -18,7 +18,6 @@ object PieceReducer {
         piece: Piece,
         pages: List<SheetPage>,
         importing: Int,
-        statusMenuOpen: Boolean,
         config: RepertoireConfig,
         takes: List<TakeItem> = emptyList(),
         progress: TakeProgress? = null,
@@ -31,7 +30,6 @@ object PieceReducer {
         notes = piece.notes,
         takes = takes,
         progress = progress,
-        statusMenuOpen = statusMenuOpen,
         notesCollapsedLines = config.notesCollapsedLines,
         scale = piece.scale?.let { Scales.build(it, config.scaleLowestMidi, config.scaleHighestMidi) },
         exercise = SectionKeys.isExercise(piece),
@@ -39,7 +37,6 @@ object PieceReducer {
 
     fun loading(config: RepertoireConfig) = PieceState(
         loading = true, header = null, pages = emptyList(), importing = 0, notes = "", takes = emptyList(), progress = null,
-        statusMenuOpen = false,
         notesCollapsedLines = config.notesCollapsedLines,
     )
 

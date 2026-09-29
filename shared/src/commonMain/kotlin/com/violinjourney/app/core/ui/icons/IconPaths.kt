@@ -113,6 +113,11 @@ internal object IconPaths {
     )
     val ETUDE = listOf("M6.5 3h11A2.5 2.5 0 0 1 20 5.5v13a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 18.5v-13A2.5 2.5 0 0 1 6.5 3z", "M8 8h8M8 12h8M8 16h5")
     val FOLDER = listOf("M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z")
+
+    /** The hand of the hint of the first visit to the stand (24; redesign repertoire.html, `i-hand`). */
+    val HAND = listOf(
+        "M9 11V5a1.5 1.5 0 0 1 3 0v6M12 10V4a1.5 1.5 0 0 1 3 0v7M15 10.5V6a1.5 1.5 0 0 1 3 0v8a7 7 0 0 1-7 7h-1a6 6 0 0 1-5-3l-2.5-4.5a1.6 1.6 0 0 1 2.7-1.6L9 14",
+    )
     /** Second handoff of the home (`home-catalog.js` → `ICONS`, frame 28h), carried by hand: the map folded in three, the passport with its stamp, the door home, the case with an arrow — «в дорогу». */
     val MAP = listOf("M3.5 6.5 9 4l6 2.5 5.5-2.5v13.5L15 20l-6-2.5-5.5 2.5V6.5z", "M9 4v13.5M15 6.5V20", "M6 14.5c2-1 4 .5 6-1s3.5-3 6-3.5")
     val PASSPORT = listOf("M6 3.5h12a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-15a1 1 0 0 1 1-1z", "M12 8a3.5 3.5 0 1 0 0 7 3.5 3.5 0 1 0 0-7z", "M9 17.5h6")

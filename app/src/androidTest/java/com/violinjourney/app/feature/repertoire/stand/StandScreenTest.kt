@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.testTag
@@ -13,11 +14,17 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.doubleClick
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.pinch
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.unit.dp
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -27,10 +34,15 @@ import com.violinjourney.app.core.domain.repertoire.Tonic
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleKind
 import com.violinjourney.app.core.domain.repertoire.scale.ScaleSpec
 import com.violinjourney.app.core.domain.repertoire.scale.Scales
+import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.repertoire.scale.scaleTitle
 import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.record_stop
+import com.violinjourney.app.shared.resources.stand_counter
+import com.violinjourney.app.shared.resources.stand_hint_card
 import com.violinjourney.app.shared.resources.stand_page_description
+import com.violinjourney.app.shared.resources.take_record
 import org.jetbrains.compose.resources.stringResource
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -42,7 +54,8 @@ import org.junit.runner.RunWith
 /**
  * The upright stand (spec 3.15, 3.22): a drawn scale taller than the stand scrolls instead of losing its last systems,
  * and a photo turned upright keeps no scroll bar of the lying sheet; a page deleted while zoomed leaves the next one at
- * 1×, free to be swiped; a swipe lights the edge it turned through; a drawn page is named by its number and its scale.
+ * 1×, free to be swiped; a swipe lights the edge it turned through; a drawn page is named by its number and its scale. The first
+ * visit (3.36.4): the hint hides the capsule of the count but not that of a running take, and goes at the first touch of any kind.
  */
 @RunWith(AndroidJUnit4::class)
 class StandScreenTest {
@@ -58,11 +71,11 @@ class StandScreenTest {
     private fun drawn(tonic: Tonic, accidental: Accidental, octaves: Int) =
         StandPage(StandPage.DRAWN_ID, path = null, scale = Scales.build(ScaleSpec(tonic, accidental, ScaleKind.MAJOR, octaves), config.scaleLowestMidi, config.scaleHighestMidi))
 
-    private fun show(state: () -> StandState) {
+    private fun show(onIntent: (StandIntent) -> Unit = {}, state: () -> StandState) {
         compose.setContent {
             ViolinTheme {
                 // an upright phone: narrower than the screen of the test, so that the size is the same everywhere
-                Box(Modifier.size(STAND_WIDTH.dp, STAND_HEIGHT.dp).testTag(STAND)) { StandScreen(state(), idle, onIntent = {}, onRecordClick = {}) }
+                Box(Modifier.size(STAND_WIDTH.dp, STAND_HEIGHT.dp).testTag(STAND)) { StandScreen(state(), idle, onIntent = onIntent, onRecordClick = {}) }
             }
         }
     }
@@ -160,6 +173,103 @@ class StandScreenTest {
         assertTrue("the right edge was lit by the swipe to the next page", lit)
     }
 
+    // spec 3.36.4: the first visit — a card with both phrases; the hint is alone over the sheet: no capsule of the count over it.
+    // That there is no panel is the view model's (StandViewModelTest); the capsule is the screen's own rule.
+    @Test
+    fun aFirstVisitShowsTheCardOfTheHintAndNoCapsuleOfTheCount() {
+        var card = ""
+        var counter = ""
+        var hint by mutableStateOf(true)
+        compose.setContent {
+            card = stringResource(Res.string.stand_hint_card)
+            counter = stringResource(Res.string.stand_counter, 1, 2)
+            ViolinTheme {
+                Box(Modifier.size(STAND_WIDTH.dp, STAND_HEIGHT.dp)) {
+                    StandScreen(stateOf(listOf(StandPage(1, null), StandPage(2, null))).copy(showHint = hint), idle, onIntent = {}, onRecordClick = {})
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithText(card).assertExists()
+        compose.onAllNodesWithText(counter).assertCountEquals(0)
+
+        // the hint gone, the panel still away: the capsule keeps the count
+        compose.runOnIdle { hint = false }
+        compose.waitForIdle()
+        compose.onNodeWithText(counter).assertExists()
+    }
+
+    // the review of stage 109: a first visit during a take — the capsule «● 1:12 · 1 / 2» is the only sign of the take while the
+    // panel is away, and the hint does not hide it
+    @Test
+    fun aFirstVisitDuringATakeKeepsTheCapsuleOfTheTake() {
+        var running = ""
+        compose.setContent {
+            running = Formats.timer(RECORDED_SECONDS * 1_000L) + " · " + stringResource(Res.string.stand_counter, 1, 2)
+            ViolinTheme {
+                Box(Modifier.size(STAND_WIDTH.dp, STAND_HEIGHT.dp)) {
+                    StandScreen(
+                        stateOf(listOf(StandPage(1, null), StandPage(2, null))).copy(showHint = true),
+                        StandTake(recording = true, elapsedSeconds = RECORDED_SECONDS, problem = null),
+                        onIntent = {},
+                        onRecordClick = {},
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+        compose.onNodeWithText(running).assertExists()
+    }
+
+    // spec 3.36.4: the hint holds 4 s or until the first touch — of any kind: a swipe, a pinch, a double tap, not only the taps the
+    // gestures of the sheet answer
+    @Test
+    fun anyFirstTouchOfTheSheetTakesTheHintAway() {
+        val intents = mutableListOf<StandIntent>()
+        show(onIntent = { intents += it }) { stateOf(listOf(StandPage(1, null), StandPage(2, null), StandPage(3, null))).copy(showHint = true) }
+        compose.waitForIdle()
+
+        compose.onNodeWithTag(STAND).performTouchInput { swipeLeft() }
+        compose.waitForIdle()
+        assertTrue("a swipe: $intents", StandIntent.Touched in intents)
+
+        compose.runOnIdle { intents.clear() }
+        compose.onNodeWithTag(STAND).performTouchInput {
+            pinch(center - Offset(20f, 0f), center - Offset(120f, 0f), center + Offset(20f, 0f), center + Offset(120f, 0f))
+        }
+        compose.waitForIdle()
+        assertTrue("a pinch: $intents", StandIntent.Touched in intents)
+
+        compose.runOnIdle { intents.clear() }
+        compose.onNodeWithTag(STAND).performTouchInput { doubleClick(center) }
+        compose.waitForIdle()
+        assertTrue("a double tap: $intents", StandIntent.Touched in intents)
+    }
+
+    // spec 3.36.4: «Записать дубль» is the main button of the panel; a running take is the bar, and its «стоп» stops it
+    @Test
+    fun thePanelRecordsWithItsMainButtonAndARunningTakeStopsWithItsStop() {
+        var take by mutableStateOf(idle)
+        var record = ""
+        var stop = ""
+        var presses = 0
+        compose.setContent {
+            record = stringResource(Res.string.take_record)
+            stop = stringResource(Res.string.record_stop)
+            ViolinTheme {
+                Box(Modifier.size(STAND_WIDTH.dp, STAND_HEIGHT.dp)) {
+                    StandScreen(stateOf(listOf(StandPage(1, null))).copy(panelVisible = true), take, onIntent = {}, onRecordClick = { presses++ })
+                }
+            }
+        }
+        compose.onNodeWithText(record).performClick()
+        compose.runOnIdle { take = StandTake(recording = true, elapsedSeconds = 12, problem = null) }
+        compose.waitForIdle()
+        compose.onAllNodesWithText(record).assertCountEquals(0)
+        compose.onNodeWithContentDescription(stop).performClick()
+        assertEquals(2, presses)
+    }
+
     /** The colours at the left and the right edge of the stand, half-way down. */
     private fun edges(): Pair<Color, Color> {
         val pixels = compose.onNodeWithTag(STAND).captureToImage().toPixelMap()
@@ -171,6 +281,7 @@ class StandScreenTest {
 
     private companion object {
         const val FRAMES = 120
+        const val RECORDED_SECONDS = 72L
         const val STAND = "stand"
         const val STAND_WIDTH = 400
         const val STAND_HEIGHT = 800

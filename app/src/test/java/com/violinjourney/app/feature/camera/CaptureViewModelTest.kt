@@ -7,6 +7,8 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
+import com.violinjourney.app.core.audio.MicUnavailableException
+import com.violinjourney.app.core.audio.MicUnavailableReason
 import com.violinjourney.app.core.audio.PitchSource
 import com.violinjourney.app.core.audio.backing.AudioRoutes
 import com.violinjourney.app.core.audio.backing.BackingPlayback
@@ -41,8 +43,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOf
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -200,10 +202,12 @@ class CaptureViewModelTest {
         override fun deleteOrphans(keptFiles: Set<String>) = Unit
     }
 
-    private val headphones = object : AudioRoutes {
-        override fun current() = AudioRoute(BackingOutput.WIRED, "Test")
+    private val headphones = routesOf(AudioRoute(BackingOutput.WIRED, "Test"))
 
-        override val changes: Flow<AudioRoute> = flowOf(current())
+    private fun routesOf(route: AudioRoute) = object : AudioRoutes {
+        override fun current() = route
+
+        override val changes: Flow<AudioRoute> = flowOf(route)
     }
 
     /** The take's backing as it plays in the headphones: what it was started with. */
@@ -247,14 +251,28 @@ class CaptureViewModelTest {
         backings: FakeBackingRepository = FakeBackingRepository(),
         backingPcm: BackingPcm = noBackingPcm,
         likelyHz: Int = TakePipeline.DEFAULT_RATE,
+        routes: AudioRoutes = headphones,
+        /** The microphone is lost once, this far into the frames of a shot (spec 3.15). */
+        breakAtMs: Long? = null,
+        permissions: CaptureAccess = CaptureAccess.GRANTED,
     ): Pair<CaptureViewModel, ViewModelStore> {
         val tap = FakeAudioTap()
         val delegate = FakePitchSource(scenario, timeSource = testTimeSource)
+        var broken = false
         val source = object : PitchSource {
             override val requiresMicPermission = false
             override val audioTap: AudioTap = tap
 
-            override fun frames(config: IntonationConfig): Flow<PitchFrame> = delegate.frames(config).onEach { tap.onFrame(it.tMs) }
+            override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
+                delegate.frames(config).collect { frame ->
+                    if (breakAtMs != null && !broken && frame.tMs > breakAtMs) {
+                        broken = true
+                        throw MicUnavailableException(MicUnavailableReason.READ_FAILED, "unplugged")
+                    }
+                    tap.onFrame(frame.tMs)
+                    emit(frame)
+                }
+            }
         }
         val clock = FixedWallClock(Instant.parse("2026-09-26T09:00:00Z"), TimeZone.UTC)
         val takes = testTakePipeline(
@@ -267,13 +285,13 @@ class CaptureViewModelTest {
             initializer {
                 CaptureViewModel(
                     SavedStateHandle(mapOf(CaptureViewModel.ARG_PIECE_ID to PIECE_ID)), takes, SettingsConfigSource(IntonationConfig(), FakeSettingsRepository()),
-                    FakeRepertoireRepository(), backings, backingPcm, headphones, videos, BackingConfig(), { camera },
+                    FakeRepertoireRepository(), backings, backingPcm, routes, videos, BackingConfig(), { camera },
                     { likelyHz }, muxer, StandardTestDispatcher(testScheduler),
                 )
             }
         }
         val viewModel = ViewModelProvider.create(store, factory)[CaptureViewModel::class]
-        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = true, mic = true))
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = permissions, mic = permissions, answered = false))
         runCurrent()
         return viewModel to store
     }
@@ -528,6 +546,140 @@ class CaptureViewModelTest {
         assertTrue(viewModel.state.value.recording)
         assertEquals(1, camera.started)
         assertEquals(File("pcm-${TakePipeline.DEFAULT_RATE}") to TakePipeline.DEFAULT_RATE, playback.started)
+    }
+
+    // spec 3.36.4: the first request on entering is the screen's own — refused for good, it opens nothing; the line says it
+    @Test
+    fun `an answer refused for good to the request on entering opens nothing and the line says it`() = runTest {
+        val (viewModel, _) = screen(permissions = CaptureAccess.ASKABLE)
+        val effects = effectsOf(viewModel)
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = CaptureAccess.GRANTED, mic = CaptureAccess.BLOCKED, answered = true))
+        runCurrent()
+        assertTrue("no settings by themselves", effects.isEmpty())
+        val state = viewModel.state.value
+        assertTrue(state.permissionBlocked)
+        assertFalse(state.canRecord)
+        assertEquals(CaptureAbove.NoPermission, CaptureAbove.of(state))
+    }
+
+    // spec 3.36.4: once the system asks no more, «Разрешить доступ» opens the settings of the app
+    @Test
+    fun `«Разрешить доступ» refused for good opens the settings`() = runTest {
+        val (viewModel, _) = screen(permissions = CaptureAccess.ASKABLE)
+        val effects = effectsOf(viewModel)
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = CaptureAccess.BLOCKED, mic = CaptureAccess.GRANTED, answered = true))
+        viewModel.onIntent(CaptureIntent.GrantClicked)
+        runCurrent()
+        assertEquals(listOf(CaptureEffect.OpenSettings), effects)
+    }
+
+    // spec 3.36.4: the button asks the system; an answer that shows it asks no more opens the settings, a refusal in its dialog does not
+    @Test
+    fun `«Разрешить доступ» asks and opens the settings only when the answer is refused for good`() = runTest {
+        val (viewModel, _) = screen(permissions = CaptureAccess.ASKABLE)
+        val effects = effectsOf(viewModel)
+        viewModel.onIntent(CaptureIntent.GrantClicked)
+        runCurrent()
+        assertEquals(listOf(CaptureEffect.RequestPermissions), effects)
+
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = CaptureAccess.ASKABLE, mic = CaptureAccess.ASKABLE, answered = true))
+        runCurrent()
+        assertEquals("refused in the dialog: it may be asked again", listOf(CaptureEffect.RequestPermissions), effects)
+        assertFalse(viewModel.state.value.permissionBlocked)
+
+        viewModel.onIntent(CaptureIntent.GrantClicked)
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = CaptureAccess.BLOCKED, mic = CaptureAccess.ASKABLE, answered = true))
+        runCurrent()
+        assertEquals(listOf(CaptureEffect.RequestPermissions, CaptureEffect.RequestPermissions, CaptureEffect.OpenSettings), effects)
+    }
+
+    // spec 3.36.4: Android does not tell «for good» on a return — such a report keeps the refusal of the one refused for good
+    // until it is allowed
+    @Test
+    fun `a return keeps the refusal for good of the camera until the camera is allowed`() = runTest {
+        val (viewModel, _) = screen(permissions = CaptureAccess.ASKABLE)
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = CaptureAccess.BLOCKED, mic = CaptureAccess.ASKABLE, answered = true))
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = CaptureAccess.ASKABLE, mic = CaptureAccess.GRANTED, answered = false))
+        assertTrue(viewModel.state.value.permissionBlocked)
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = CaptureAccess.GRANTED, mic = CaptureAccess.GRANTED, answered = false))
+        assertFalse(viewModel.state.value.permissionBlocked)
+        assertTrue(viewModel.state.value.canRecord)
+        assertNull("no backing: nothing over the shutter", CaptureAbove.of(viewModel.state.value))
+    }
+
+    // spec 3.36.4, the review of stage 109: the microphone refused for good (on Live), the camera refused once in its dialog.
+    // The settings give back the microphone — «Разрешить доступ» asks the system for the camera again, not the settings.
+    @Test
+    fun `the settings giving back the microphone refused for good leave the camera to its dialog`() = runTest {
+        val (viewModel, _) = screen(permissions = CaptureAccess.ASKABLE)
+        val effects = effectsOf(viewModel)
+        // the request on entering: the camera's dialog refused, the microphone answered without one
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = CaptureAccess.ASKABLE, mic = CaptureAccess.BLOCKED, answered = true))
+        viewModel.onIntent(CaptureIntent.GrantClicked)
+        runCurrent()
+        assertEquals(listOf(CaptureEffect.OpenSettings), effects)
+
+        // back from the settings with the microphone allowed
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = CaptureAccess.ASKABLE, mic = CaptureAccess.GRANTED, answered = false))
+        assertFalse(viewModel.state.value.permissionBlocked)
+        viewModel.onIntent(CaptureIntent.GrantClicked)
+        runCurrent()
+        assertEquals(listOf(CaptureEffect.OpenSettings, CaptureEffect.RequestPermissions), effects)
+
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera = CaptureAccess.GRANTED, mic = CaptureAccess.GRANTED, answered = true))
+        runCurrent()
+        assertEquals("allowed in the dialog: nothing more", listOf(CaptureEffect.OpenSettings, CaptureEffect.RequestPermissions), effects)
+        assertTrue(viewModel.state.value.canRecord)
+    }
+
+    // spec 3.36.4: without the permissions the shutter sleeps under its line — «Разрешить доступ» asks, not the shutter
+    @Test
+    fun `without the permissions the shutter does nothing`() = runTest {
+        val (viewModel, _) = screen(permissions = CaptureAccess.ASKABLE)
+        val effects = effectsOf(viewModel)
+        viewModel.onIntent(CaptureIntent.RecordClicked)
+        advance(2_000)
+        assertTrue(effects.isEmpty())
+        assertFalse(viewModel.state.value.recording)
+        assertEquals(0, camera.started)
+    }
+
+    // spec 3.36.4: the line over the shutter names the headphones; without headphones — no name
+    @Test
+    fun `the headphones the sound goes to are named`() = runTest {
+        val (withThem, _) = screen()
+        assertEquals("Test", withThem.state.value.headphonesName)
+        val (speaker, _) = screen(routes = routesOf(AudioRoute(BackingOutput.SPEAKER, "Speaker")))
+        assertNull(speaker.state.value.headphonesName)
+        assertTrue(speaker.state.value.noHeadphones)
+    }
+
+    // spec 3.36.4: a shot the lost microphone cut short is kept quietly; «Микрофон недоступен» stays over the shutter, which does not
+    // sleep — a press opens the microphone anew, and the plate goes with the first frame of sound
+    @Test
+    fun `after a shot the lost microphone cut short the plate says so and the shutter stays awake`() = runTest {
+        val (viewModel, _) = screen(breakAtMs = 4_000)
+        val effects = effectsOf(viewModel)
+        viewModel.onIntent(CaptureIntent.RecordClicked)
+        advance(4_500)
+        camera.finalize.complete(true)
+        runCurrent()
+        muxer.gate.complete(Unit)
+        advance(1_000)
+
+        assertEquals("the take is kept", 1, sessions.saved.size)
+        val state = viewModel.state.value
+        assertFalse(state.recording)
+        assertTrue(state.micUnavailable)
+        assertTrue("the shutter does not sleep", state.canRecord)
+        assertEquals(CaptureAbove.Plate(CapturePlate.MIC_UNAVAILABLE), CaptureAbove.of(state))
+        assertTrue("quietly, and the screen stays", effects.isEmpty())
+
+        camera.finalize = CompletableDeferred()
+        viewModel.onIntent(CaptureIntent.RecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.state.value.recording)
+        assertFalse("the first frame of sound takes the plate away", viewModel.state.value.micUnavailable)
     }
 
     private companion object {

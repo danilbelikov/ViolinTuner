@@ -56,12 +56,12 @@ open class LiveViewModel(
         // A recording the player stopped: show it, or say that there was nothing in it (spec 3.9).
         viewModelScope.launch {
             takes.events.collect { event ->
-                effectChannel.send(
-                    when (event) {
-                        is TakePipeline.Event.Saved -> LiveEffect.OpenSession(event.sessionId)
-                        TakePipeline.Event.NoNotes -> LiveEffect.ShowNoNotesRecorded
-                    },
-                )
+                when (event) {
+                    is TakePipeline.Event.Saved -> effectChannel.send(LiveEffect.OpenSession(event.sessionId))
+                    TakePipeline.Event.NoNotes -> effectChannel.send(LiveEffect.ShowNoNotesRecorded)
+                    // saved without the player's stop: without a word, as ever on Live (spec 3.9)
+                    is TakePipeline.Event.Kept -> Unit
+                }
             }
         }
     }

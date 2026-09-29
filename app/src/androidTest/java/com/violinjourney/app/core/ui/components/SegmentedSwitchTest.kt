@@ -13,6 +13,7 @@ import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -26,6 +27,7 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -33,6 +35,7 @@ import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
@@ -115,8 +118,58 @@ class SegmentedSwitchTest {
         compose.onNodeWithText(LABELS[2]).assertIsNotSelected()
     }
 
+    private fun showStatus(labels: List<String>, width: Int, fontScale: Float, byWords: Boolean) {
+        compose.setContent {
+            val density = LocalDensity.current
+            CompositionLocalProvider(LocalDensity provides Density(density.density, fontScale)) {
+                ViolinTheme {
+                    SegmentedSwitch(
+                        labels = labels,
+                        selectedIndex = 0,
+                        onSelect = {},
+                        modifier = Modifier.width(width.dp),
+                        byWords = byWords,
+                        wholeWords = true,
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+    }
+
+    /** Each label goes on to a next line only at a space and is not cut: no word of it breaks by the letter. */
+    private fun assertWordsWhole(labels: List<String>) {
+        labels.forEach { label ->
+            val layouts = mutableListOf<TextLayoutResult>()
+            compose.onNodeWithText(label, useUnmergedTree = true).fetchSemanticsNode().config[SemanticsActions.GetTextLayoutResult].action?.invoke(layouts)
+            val layout = layouts.single()
+            for (line in 0 until layout.lineCount - 1) {
+                val end = layout.getLineEnd(line)
+                assertTrue("«$label» breaks inside a word after «${label.substring(0, end)}»", label[end - 1].isWhitespace())
+            }
+            assertFalse("«$label» is cut", layout.isLineEllipsized(layout.lineCount - 1))
+        }
+    }
+
+    // spec 3.36.4, the review of stage 109: 360 × 640 at the font 1.3 (here linear: 14 sp are 18.2 dp) — a third of the column of 328
+    // leaves «репертуаре» 95 dp, and it broke by the letter; the steps share the row by their words instead
+    @Test
+    fun theStatusOn360WithALargeFontBreaksNoWord() {
+        showStatus(LABELS, width = 328, fontScale = 1.3f, byWords = false)
+        assertWordsWhole(LABELS)
+    }
+
+    // the left column of 300 lying (268 inside its fields): shared by the whole lines, «Déchiffrage» got 78 dp and broke by the letter
+    // while «Au répertoire» could have gone on two lines at its space
+    @Test
+    fun byWordsAWordStandsWholeAndALabelOfTwoWordsWrapsAtItsSpace() {
+        showStatus(FRENCH, width = 268, fontScale = 1f, byWords = true)
+        assertWordsWhole(FRENCH)
+    }
+
     private companion object {
         const val TAG = "switch"
         val LABELS = listOf("Разбираю", "Учу", "В репертуаре")
+        val FRENCH = listOf("Déchiffrage", "En travail", "Au répertoire")
     }
 }

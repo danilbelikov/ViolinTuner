@@ -301,6 +301,8 @@ private fun Fields(state: ScaleFormState, onIntent: (ScaleFormIntent) -> Unit) {
             labels = statuses.map { statusLabel(it) },
             selectedIndex = statuses.indexOf(draft.status),
             onSelect = { onIntent(ScaleFormIntent.StatusSelected(statuses[it])) },
+            // the same switch as on the screen of the element (spec 3.36.4): its words are never cut
+            wholeWords = true,
         )
     }
     // The field owns its text, like every field of the app.

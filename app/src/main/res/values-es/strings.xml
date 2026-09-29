@@ -804,6 +804,7 @@
     <string name="scale_more_systems_few">%1$d sistemas más</string>
     <string name="scale_more_systems_many">%1$d sistemas más</string>
     <string name="scale_add_photo">Añadir foto de la partitura</string>
+    <string name="scale_add_photo_hint">por ejemplo, la digitación del libro</string>
     <string name="scale_notes">Partitura</string>
     <string name="scale_open_stand">Abrir en el atril</string>
     <string name="piece_tempo_value">♩ = %1$d</string>
@@ -812,9 +813,8 @@
     <string name="takes_few">%1$d tomas</string>
     <string name="takes_many">%1$d tomas</string>
     <string name="piece_edit">Editar</string>
-    <string name="piece_status_change">Estado: %1$s. Cambiar</string>
     <string name="piece_sheets_none">Partitura</string>
-    <string name="piece_sheets_count">Partitura · %1$d pág.</string>
+    <string name="piece_sheets_pages">%1$d pág.</string>
     <string name="piece_sheets_add">Añadir foto de la partitura</string>
     <string name="piece_sheets_add_short">Añadir</string>
     <string name="piece_sheets_camera">Hacer una foto</string>
@@ -846,15 +846,17 @@
     <string name="piece_delete_text">La partitura, las notas y el tiempo dedicado se eliminarán. Las grabaciones seguirán en «Grabaciones».</string>
     <string name="piece_delete_confirm">Eliminar</string>
     <string name="take_record">Grabar una toma</string>
-    <string name="take_record_hint">La pantalla no da pistas mientras grabas: el análisis aparecerá después.</string>
-    <string name="take_recording">grabando · %1$s</string>
+    <string name="take_recording_label">grabando</string>
     <string name="take_level_description">El micrófono oye</string>
     <string name="take_no_permission">Para grabar una toma hace falta acceso al micrófono.</string>
     <string name="take_grant_permission">Permitir acceso</string>
-    <string name="take_progress">última %1$d %% · máximo %2$d %%</string>
+    <string name="take_last">última %1$d %%</string>
+    <string name="take_max">máximo %1$d %%</string>
+    <string name="take_progress_description">última %1$d %%, máximo %2$d %%</string>
     <string name="take_chart_description">Puntuaciones de las tomas por orden: %1$s</string>
     <string name="takes_title">Tomas</string>
-    <string name="takes_empty">Aún no hay tomas. Graba la primera y verás cómo cambia la obra.</string>
+    <string name="takes_empty_title">Aún no hay tomas</string>
+    <string name="takes_empty_text">Graba la primera y verás cómo cambia la obra.</string>
     <string name="take_best">mejor</string>
     <!-- «Sonido»: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">Sonido de las grabaciones</string>
@@ -1013,7 +1015,7 @@
     <string name="stand_delete_page">Eliminar la página</string>
     <string name="stand_delete_title">¿Eliminar la página?</string>
     <string name="stand_delete_text">La foto de esta página se eliminará. Las demás seguirán en su sitio.</string>
-    <string name="stand_hint">Toca el borde de la hoja: página siguiente</string>
+    <string name="stand_hint_card">Toca el borde de la hoja: página siguiente. El centro: el panel.</string>
     <string name="stand_previous_page">Página anterior</string>
     <string name="stand_next_page">Página siguiente</string>
     <string name="stand_recording_description">Grabando una toma, %1$s</string>
@@ -1130,7 +1132,7 @@
     <string name="backing_preview">Escuchar el acompañamiento</string>
     <string name="backing_preview_stop">Detener el acompañamiento</string>
     <string name="backing_headphones">Auriculares</string>
-    <string name="backing_no_headphones">No hay auriculares conectados</string>
+    <string name="backing_headphones_none">sin auriculares</string>
     <string name="backing_headphones_wired">Auriculares · %1$s</string>
     <string name="backing_unreadable">No se puede abrir este archivo. Sirven mp3, m4a, aac, wav, flac y ogg.</string>
     <string name="backing_too_long">El acompañamiento dura más de una hora — demasiado largo.</string>
@@ -1142,6 +1144,7 @@
     <string name="backing_chip_on">activado</string>
     <string name="backing_chip_off">desactivado</string>
     <string name="backing_needs_headphones">Conecta auriculares: por el altavoz el acompañamiento entraría en la grabación.</string>
+    <string name="backing_or_turn_off">O desactiva «Con acompañamiento».</string>
     <string name="backing_preparing">Preparando el acompañamiento…</string>
     <string name="backing_unprepared">No se pudo preparar el acompañamiento: falta espacio o el archivo está dañado.</string>
     <string name="backing_take_unprepared">No se pudo preparar el acompañamiento de esta toma — solo se oye el violín.</string>
@@ -1158,9 +1161,9 @@
     <string name="capture_stop">Detener la grabación</string>
     <string name="capture_no_permission">Sin acceso a la cámara y al micrófono no se puede grabar.</string>
     <string name="capture_grant">Permitir acceso</string>
-    <string name="capture_open_settings">Abrir ajustes</string>
     <string name="capture_camera_failed">No se pudo abrir la cámara.</string>
     <string name="capture_low_space">Poco espacio: da para unos %1$d min</string>
+    <string name="capture_backing_length">acompañamiento %1$s</string>
     <string name="capture_saving">Montando el vídeo…</string>
     <string name="capture_video_failed">No se pudo montar el vídeo — la toma se guardó como sonido.</string>
 

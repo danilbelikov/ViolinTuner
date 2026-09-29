@@ -6,6 +6,7 @@ import android.content.ClipData
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -17,10 +18,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
+import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.violinjourney.app.core.audio.share.ShareNames
 import com.violinjourney.app.core.ui.components.LocalMessages
+import com.violinjourney.app.core.ui.permission.MicRequestVerdict
+import com.violinjourney.app.core.ui.permission.PermissionMark
+import com.violinjourney.app.core.ui.permission.forgetRefusal
+import com.violinjourney.app.core.ui.permission.rememberRefusal
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.camera_no_permission
 import com.violinjourney.app.shared.resources.share_chooser
@@ -38,6 +44,7 @@ actual fun rememberPieceSystem(
     onBackingPicked: (uri: String?) -> Unit,
 ): PieceSystem {
     val context = LocalContext.current
+    val activity = LocalActivity.current
     val messages = LocalMessages.current
     val scope = rememberCoroutineScope()
     val photosPicked by rememberUpdatedState(onPhotosPicked)
@@ -48,8 +55,16 @@ actual fun rememberPieceSystem(
 
     // The picker needs no permission: it hands over only what was picked. The system camera does since the app has a
     // camera of its own (spec 3.32): an app that declares CAMERA may not start another's camera without it granted.
+    fun cameraRationale(): Boolean = activity != null && ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.CAMERA)
     var afterCameraPermission by remember { mutableStateOf<((Boolean) -> Unit)?>(null) }
+    var cameraRationaleBefore by remember { mutableStateOf(false) }
     val cameraPermission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        // A refusal seen in the shown dialog is the camera's refusal the own camera judges «for good» by, as the microphone's
+        // mark is shared with Live (spec 3.36.4): without it, after two refusals here, «Разрешить доступ» there asked in vain once.
+        when {
+            granted -> context.forgetRefusal(PermissionMark.CAMERA)
+            MicRequestVerdict.isSeenRefusal(granted, cameraRationaleBefore, cameraRationale()) -> context.rememberRefusal(PermissionMark.CAMERA)
+        }
         afterCameraPermission?.invoke(granted)
         afterCameraPermission = null
         if (!granted) scope.launch { messages.showLong(getString(Res.string.camera_no_permission)) }
@@ -59,6 +74,7 @@ actual fun rememberPieceSystem(
             launch()
         } else {
             afterCameraPermission = { granted -> if (granted) launch() else refused() }
+            cameraRationaleBefore = cameraRationale()
             cameraPermission.launch(Manifest.permission.CAMERA)
         }
     }

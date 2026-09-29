@@ -6,6 +6,7 @@ import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.FakeStandHintStore
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.repertoire.RepertoireConfig
+import com.violinjourney.app.core.domain.repertoire.StandHintStore
 import com.violinjourney.app.core.time.FixedWallClock
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.feature.repertoire.stand.StandEffect
@@ -14,6 +15,8 @@ import com.violinjourney.app.feature.repertoire.stand.StandViewModel
 import kotlin.time.Instant
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
@@ -35,7 +38,8 @@ import org.junit.Test
 class StandViewModelTest {
     private val repertoire = FakeRepertoireRepository()
     private val files = FakeSheetFiles()
-    private val hints = FakeStandHintStore()
+    // the stand seen before: the hint of the first visit is its own tests' business
+    private val hints = FakeStandHintStore(seen = true)
     private val clock: WallClock = FixedWallClock(Instant.fromEpochMilliseconds(50_000), TimeZone.UTC)
 
     @Before
@@ -53,7 +57,7 @@ class StandViewModelTest {
         return id
     }
 
-    private fun TestScope.stand(pieceId: Long, page: Int = 0): Pair<StandViewModel, MutableList<StandEffect>> {
+    private fun TestScope.stand(pieceId: Long, page: Int = 0, hints: StandHintStore = this@StandViewModelTest.hints): Pair<StandViewModel, MutableList<StandEffect>> {
         val viewModel = StandViewModel(
             SavedStateHandle(mapOf(StandViewModel.ARG_PIECE_ID to pieceId, StandViewModel.ARG_PAGE to page)),
             repertoire, files, hints, RepertoireConfig(), clock,
@@ -151,14 +155,79 @@ class StandViewModelTest {
     @Test
     fun `the zones are outlined on the very first visit and never again`() = runTest {
         val id = pieceWithPages(2)
-        val (first, _) = stand(id)
+        val unseen = FakeStandHintStore()
+        val (first, _) = stand(id, hints = unseen)
         assertTrue(first.state.value.showHint)
         first.onIntent(StandIntent.HintShown)
         runCurrent()
         assertFalse(first.state.value.showHint)
 
-        val (second, _) = stand(id)
+        val (second, _) = stand(id, hints = unseen)
         assertFalse(second.state.value.showHint)
+        assertTrue("a visit after the first opens with the panel, as ever", second.state.value.panelVisible)
+    }
+
+    // spec 3.36.4: nothing shows before both the pages and the mark of the first visit are read — the panel would blink before the hint
+    @Test
+    fun `the stand stays dark until the mark of the first visit is read, and a first visit has no panel`() = runTest {
+        val id = pieceWithPages(2)
+        val mark = MutableSharedFlow<Boolean>(replay = 1)
+        val slow = object : StandHintStore {
+            override val seen: Flow<Boolean> = mark
+            override suspend fun markSeen() = Unit
+        }
+        val (viewModel, _) = stand(id, hints = slow)
+        assertTrue("the pages are read, the mark is not", viewModel.state.value.loading)
+
+        mark.emit(false)
+        runCurrent()
+        val state = viewModel.state.value
+        assertFalse(state.loading)
+        assertTrue(state.showHint)
+        assertFalse("no panel under the hint", state.panelVisible)
+    }
+
+    // spec 3.36.4: the hint stays 4 s, then goes by itself; the panel stays away after it — the middle of the sheet calls it
+    @Test
+    fun `the hint goes by itself after four seconds and the panel stays hidden`() = runTest {
+        val unseen = FakeStandHintStore()
+        val (viewModel, _) = stand(pieceWithPages(2), hints = unseen)
+        advanceTimeBy(3_999)
+        assertTrue(viewModel.state.value.showHint)
+        advanceTimeBy(2)
+        runCurrent()
+        assertFalse(viewModel.state.value.showHint)
+        assertTrue("never again", unseen.seen.value)
+        advanceTimeBy(10_000)
+        assertFalse(viewModel.state.value.panelVisible)
+    }
+
+    // spec 3.36.4: the first touch takes the hint away at once — an edge turns the page (Touched), the panel stays hidden
+    @Test
+    fun `a touch takes the hint away at once and the panel stays hidden`() = runTest {
+        val unseen = FakeStandHintStore()
+        val (viewModel, _) = stand(pieceWithPages(2), hints = unseen)
+        advanceTimeBy(1_000)
+        viewModel.onIntent(StandIntent.Touched)
+        runCurrent()
+        assertFalse(viewModel.state.value.showHint)
+        assertTrue(unseen.seen.value)
+        assertFalse(viewModel.state.value.panelVisible)
+        advanceTimeBy(5_000)
+        assertFalse("the hint's own time does not bring anything back", viewModel.state.value.showHint)
+    }
+
+    // spec 3.36.4: a tap in the middle under the hint takes it away and calls the panel, which then hides as ever
+    @Test
+    fun `a tap in the middle under the hint calls the panel`() = runTest {
+        val unseen = FakeStandHintStore()
+        val (viewModel, _) = stand(pieceWithPages(2), hints = unseen)
+        viewModel.onIntent(StandIntent.PanelToggled)
+        runCurrent()
+        assertFalse(viewModel.state.value.showHint)
+        assertTrue(viewModel.state.value.panelVisible)
+        advanceTimeBy(3_001)
+        assertFalse(viewModel.state.value.panelVisible)
     }
 
     @Test

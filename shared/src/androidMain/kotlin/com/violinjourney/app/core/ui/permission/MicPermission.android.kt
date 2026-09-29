@@ -7,7 +7,6 @@ import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.SystemClock
 import android.provider.Settings
-import android.util.Log
 import androidx.activity.compose.LocalActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -22,32 +21,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
-import java.io.File
-import java.io.IOException
 
 private const val MIC_PERMISSION = Manifest.permission.RECORD_AUDIO
-
-// A refusal made in a shown dialog (MicRequestVerdict): a mark of this phone alone, so not in the files a copy takes.
-private const val MIC_REFUSED_MARK = "mic_refused"
-private const val TAG = "MicPermission"
 
 fun Context.isMicPermissionGranted(): Boolean =
     ContextCompat.checkSelfPermission(this, MIC_PERMISSION) == PackageManager.PERMISSION_GRANTED
 
-private fun Context.micRefusedMark(): File = File(noBackupFilesDir, MIC_REFUSED_MARK)
-
 /** Seen allowed — by a dialog, in the settings, on a return to the screen: a later refusal is judged afresh. */
-private fun Context.forgetMicRefusal() {
-    micRefusedMark().delete()
-}
-
-private fun Context.rememberMicRefusal() {
-    try {
-        micRefusedMark().createNewFile()
-    } catch (e: IOException) {
-        Log.w(TAG, "the refusal is not remembered: the next request is judged by time", e)
-    }
-}
+private fun Context.forgetMicRefusal() = forgetRefusal(PermissionMark.MIC)
 
 
 @Composable
@@ -78,11 +59,11 @@ actual fun rememberMicPermissionRequester(
             rationaleBefore = rationaleBeforeRequest,
             rationaleAfter = rationaleAfter,
             answeredInMs = SystemClock.elapsedRealtime() - requestedAtMs,
-            refusedBefore = context.micRefusedMark().exists(),
+            refusedBefore = context.hasRefusal(PermissionMark.MIC),
         )
         when {
             granted -> context.forgetMicRefusal()
-            MicRequestVerdict.isSeenRefusal(granted, rationaleBeforeRequest, rationaleAfter) -> context.rememberMicRefusal()
+            MicRequestVerdict.isSeenRefusal(granted, rationaleBeforeRequest, rationaleAfter) -> context.rememberRefusal(PermissionMark.MIC)
         }
         currentOnAnswer(answer)
         if (answer == MicPermissionAnswer.BLOCKED && openSettingsWhenBlocked) context.openAppSettings()
@@ -105,7 +86,7 @@ actual fun rememberMicPermissionRequester(
     }
 }
 
-private fun Context.openAppSettings() {
+internal fun Context.openAppSettings() {
     val intent = Intent(
         Settings.ACTION_APPLICATION_DETAILS_SETTINGS,
         Uri.fromParts("package", packageName, null),

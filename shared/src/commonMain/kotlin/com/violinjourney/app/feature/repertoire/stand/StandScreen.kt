@@ -1,12 +1,9 @@
 package com.violinjourney.app.feature.repertoire.stand
 
-import com.violinjourney.app.feature.repertoire.scale.ScaleNotation
-import com.violinjourney.app.feature.repertoire.scale.scaleTitle
-import com.violinjourney.app.feature.repertoire.scale.NotationSizes
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -16,17 +13,22 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
@@ -47,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -57,41 +60,44 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.semantics.CustomAccessibilityAction
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.customActions
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.AppButton
 import com.violinjourney.app.core.ui.components.DeleteDialog
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.core.ui.theme.AppShapes
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.repertoire.components.RecordDot
+import com.violinjourney.app.feature.repertoire.components.RecordingBar
 import com.violinjourney.app.feature.repertoire.piece.TakeProblem
-import com.violinjourney.app.feature.repertoire.components.rememberRecordingPulse
+import com.violinjourney.app.feature.repertoire.scale.NotationSizes
+import com.violinjourney.app.feature.repertoire.scale.ScaleNotation
+import com.violinjourney.app.feature.repertoire.scale.scaleTitle
 import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.live_mic_unavailable
-import com.violinjourney.app.shared.resources.live_too_noisy
 import com.violinjourney.app.shared.resources.piece_delete_confirm
-import com.violinjourney.app.shared.resources.record_stop
 import com.violinjourney.app.shared.resources.session_back
 import com.violinjourney.app.shared.resources.stand_counter
 import com.violinjourney.app.shared.resources.stand_delete_page
 import com.violinjourney.app.shared.resources.stand_delete_text
 import com.violinjourney.app.shared.resources.stand_delete_title
+import com.violinjourney.app.shared.resources.stand_hint_card
 import com.violinjourney.app.shared.resources.stand_next_page
 import com.violinjourney.app.shared.resources.stand_page_description
 import com.violinjourney.app.shared.resources.stand_previous_page
-import com.violinjourney.app.shared.resources.stand_recording_description
 import com.violinjourney.app.shared.resources.take_record
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -107,17 +113,23 @@ private val PortraitSheetSide = 24.dp
 private val PortraitSheetTop = 72.dp
 private val LandscapeSheetSide = 96.dp
 private val ScrollIndicatorWidth = 3.dp
-private val PillHeight = 56.dp
-private val PillButton = 44.dp
-private val PillGlyph = 16.dp
-private val RecDot = 10.dp
-private val CapsuleHeight = 28.dp
-private val CapsuleDot = 8.dp
+private val LandscapeBar = 320.dp
+private val BarPillCorner = 32.dp
+private val BarPillStart = 16.dp
+private val BarPillEnd = 4.dp
+private val CapsuleHeight = 32.dp
+private val CapsuleDot = 9.dp
 private val EdgeFlashWidth = 56.dp
 private val BounceDistance = 8.dp
 private val HintInset = 8.dp
-private const val PILL_ALPHA = 0.9f
-private const val CAPSULE_ALPHA = 0.7f
+private val HintCorner = 14.dp
+private val HintStroke = 2.dp
+private val HintDash = 6.dp
+private val HintDashGap = 5.dp
+private val HintArrow = 36.dp
+private val HintCardSide = 20.dp
+private val HintCardBottom = 40.dp
+private const val CAPSULE_ALPHA = 0.82f
 private const val ICON_DISC_ALPHA = 0.7f
 private const val TABULAR_FIGURES = "tnum"
 private const val MS_PER_SECOND = 1_000L
@@ -126,9 +138,10 @@ private const val MS_PER_SECOND = 1_000L
 private const val PAPER_RATIO = 3f / 4f
 
 /**
- * The music stand (spec 3.15): one sheet, as large as the screen lets it be, on a background
- * darker than anywhere else in the app — the sheet is the only bright thing here. Stateless;
- * [take] is the piece's recording, shared with its screen.
+ * The music stand (spec 3.15, 3.36.4): one sheet, as large as the screen lets it be, on a background
+ * darker than anywhere else in the app — the sheet is the only bright thing here. The panel records with the main button of the
+ * piece screen; the first visit shows its hint instead of the panel. Stateless; [take] is the piece's recording, shared with its
+ * screen.
  */
 @Composable
 fun StandScreen(
@@ -155,9 +168,14 @@ fun StandScreen(
             onIntent(StandIntent.PageSettled(pagerState.settledPage))
         }
 
-        Sheets(state.pages, pagerState, zoom, landscape, state.showHint, onIntent)
+        Sheets(state.pages, pagerState, zoom, landscape, hint = state.showHint, onIntent)
+        // over the sheet, and deaf: a tap on an edge turns the page under it, one in the middle calls the panel
+        FirstVisitHint(state.showHint)
         Panel(
             visible = state.panelVisible,
+            // the first visit is the hint's alone: no panel, and no capsule of the count over it (repertoire.html 6, «Первый вход») —
+            // but a running take stays in sight: the capsule «● 1:12 · 1 / 2» is its only sign while the panel is away
+            capsule = !state.showHint || take.recording,
             counter = stringResource(Res.string.stand_counter, pagerState.currentPage + 1, state.pages.size),
             take = take,
             landscape = landscape,
@@ -177,7 +195,7 @@ private fun Sheets(
     pagerState: PagerState,
     zoom: StandZoom,
     landscape: Boolean,
-    showHint: Boolean,
+    hint: Boolean,
     onIntent: (StandIntent) -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -187,7 +205,6 @@ private fun Sheets(
     val bounce = remember { Animatable(0f) }
     val flash = remember { Animatable(0f) }
     val flashSide = remember { mutableStateOf(StandZone.NEXT) }
-    val hint = remember { Animatable(0f) }
     val pageCount by rememberUpdatedState(pages.size)
     val currentPages by rememberUpdatedState(pages)
     // A tap in the middle waits to see whether it is the first half of a double tap.
@@ -241,22 +258,23 @@ private fun Sheets(
         if (edge != null) flashEdge(edge)
     }
 
-    if (showHint) {
-        LaunchedEffect(Unit) {
-            hint.animateTo(StandMotion.HINT_ALPHA, tween(StandMotion.HINT_FADE_MS))
-            delay(StandMotion.HINT_HOLD_MS)
-            hint.animateTo(0f, tween(StandMotion.HINT_FADE_MS))
-            onIntent(StandIntent.HintShown)
-        }
-    }
-
     val previousLabel = stringResource(Res.string.stand_previous_page)
     val nextLabel = stringResource(Res.string.stand_next_page)
+    val hintShown by rememberUpdatedState(hint)
+    val touched by rememberUpdatedState { onIntent(StandIntent.Touched) }
     BoxWithConstraints(
         modifier = Modifier
             .fillMaxSize()
             // a zoomed sheet is larger than the stand and must not spill under the system bars
             .clipToBounds()
+            // the hint of the first visit goes at the first touch of any kind (spec 3.36.4) — a swipe, a pinch, a double tap too,
+            // not only the taps the gestures below answer; seen before them, and nothing is taken from them
+            .pointerInput(Unit) {
+                awaitEachGesture {
+                    awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+                    if (hintShown) touched()
+                }
+            }
             // Thirds of the screen mean nothing to TalkBack: the same two actions, by name.
             .semantics {
                 customActions = listOf(
@@ -296,17 +314,6 @@ private fun Sheets(
                     } else {
                         drawRect(Brush.horizontalGradient(listOf(lit, Color.Transparent), startX = 0f, endX = width), size = Size(width, size.height))
                     }
-                }
-                val outline = hint.value
-                if (outline > 0f) {
-                    val inset = HintInset.toPx()
-                    val third = size.width / 3f
-                    val stroke = Stroke(1.5.dp.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(6.dp.toPx(), 5.dp.toPx())))
-                    val zone = Size(third - inset * 2, size.height - inset * 2)
-                    val corner = CornerRadius(12.dp.toPx())
-                    val tint = primary.copy(alpha = outline)
-                    drawRoundRect(tint, Offset(inset, inset), zone, corner, stroke)
-                    drawRoundRect(tint, Offset(size.width - third + inset, inset), zone, corner, stroke)
                 }
             },
     ) {
@@ -426,6 +433,7 @@ private fun Modifier.scrollIndicator(scroll: ScrollState, color: Color): Modifie
 @Composable
 private fun Panel(
     visible: Boolean,
+    capsule: Boolean,
     counter: String,
     take: StandTake,
     landscape: Boolean,
@@ -455,7 +463,7 @@ private fun Panel(
                     text = counter,
                     color = MaterialTheme.colorScheme.onSurface,
                     textAlign = androidx.compose.ui.text.style.TextAlign.Center,
-                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
+                    style = MaterialTheme.typography.titleSmall.copy(fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES),
                     modifier = Modifier.weight(1f),
                 )
                 if (canDelete) {
@@ -474,19 +482,40 @@ private fun Panel(
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(BottomField)
+                    .heightIn(min = BottomField)
                     .background(Brush.verticalGradient(listOf(Color.Transparent, scrim)))
                     .padding(start = 20.dp, end = 20.dp, bottom = if (landscape) 16.dp else 20.dp),
                 contentAlignment = if (landscape) Alignment.BottomEnd else Alignment.BottomCenter,
             ) {
-                RecordPill(take) {
+                val record = {
                     onIntent(StandIntent.Touched)
                     onRecordClick()
+                }
+                if (take.recording) {
+                    // the bar of the piece screen, without the levels and the backing's progress (spec 3.36.4), on the ground of the
+                    // bottom zone — an opaque pill: lying, the sheet runs under it, and the scrim alone left «запись» at 1.2 : 1
+                    RecordingBar(
+                        elapsedSeconds = take.elapsedSeconds,
+                        noisy = take.problem == TakeProblem.TOO_NOISY,
+                        onStop = record,
+                        modifier = (if (landscape) Modifier.width(LandscapeBar) else Modifier)
+                            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(BarPillCorner))
+                            .padding(start = BarPillStart, end = BarPillEnd, top = BarPillEnd, bottom = BarPillEnd),
+                    )
+                } else {
+                    // the main button of the piece screen, where the hand already reaches (spec 3.36.4): lying, by its words; without
+                    // the microphone it does not sleep — a press asks the system, or opens the settings once it asks no more
+                    AppButton(
+                        text = stringResource(Res.string.take_record),
+                        onClick = record,
+                        modifier = if (landscape) Modifier else Modifier.fillMaxWidth(),
+                        leading = { RecordDot() },
+                    )
                 }
             }
         }
         AnimatedVisibility(
-            visible = !visible,
+            visible = !visible && capsule,
             enter = fadeIn(tween(StandMotion.PANEL_IN_MS)),
             exit = fadeOut(tween(StandMotion.PANEL_IN_MS)),
             modifier = Modifier
@@ -509,62 +538,7 @@ private fun PanelIconButton(icon: ImageVector, description: String, onClick: () 
     ) { AppIcon(icon, contentDescription = description, tint = MaterialTheme.colorScheme.onSurface) }
 }
 
-/** «● Записать дубль» at rest; «dot · timer · stop» while a take runs. Blind like the row on the piece screen: nothing about the notes. */
-@Composable
-private fun RecordPill(take: StandTake, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    val label = stringResource(if (take.recording) Res.string.record_stop else Res.string.take_record)
-    Row(
-        modifier = Modifier
-            .height(PillHeight)
-            .clip(RoundedCornerShape(PillHeight / 2))
-            .background(colors.surfaceContainerHigh.copy(alpha = PILL_ALPHA))
-            .clickable(onClickLabel = label, role = Role.Button, onClick = onClick)
-            .padding(start = if (take.recording) 18.dp else 6.dp, end = if (take.recording) 6.dp else 20.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        if (take.recording) {
-            PulsingDot(RecDot)
-            val time = Formats.timer(take.elapsedSeconds * MS_PER_SECOND)
-            val description = stringResource(Res.string.stand_recording_description, time)
-            Text(
-                text = time,
-                color = colors.onSurface,
-                style = MaterialTheme.typography.titleMedium.copy(fontSize = 16.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
-                modifier = Modifier.clearAndSetSemantics { contentDescription = description },
-            )
-            take.problem?.let { problem ->
-                Text(
-                    text = stringResource(if (problem == TakeProblem.TOO_NOISY) Res.string.live_too_noisy else Res.string.live_mic_unavailable),
-                    color = colors.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                )
-            }
-            PillGlyphButton(container = ViolinTheme.recording, glyph = ViolinTheme.onRecording, glyphCorner = 3.dp)
-        } else {
-            PillGlyphButton(container = colors.primary, glyph = colors.onPrimary, glyphCorner = PillGlyph / 2)
-            Text(label, color = colors.onSurface, style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
-        }
-    }
-}
-
-@Composable
-private fun PillGlyphButton(container: Color, glyph: Color, glyphCorner: Dp) {
-    Box(
-        modifier = Modifier
-            .size(PillButton)
-            .background(container, CircleShape),
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(
-            Modifier
-                .size(PillGlyph)
-                .background(glyph, RoundedCornerShape(glyphCorner)),
-        )
-    }
-}
-
+/** «● 1:12 · 2 / 4» with the panel away (5.29 R4): the take in sight, the notes not covered; without a take — «2 / 4». */
 @Composable
 private fun Capsule(counter: String, take: StandTake) {
     val colors = ViolinTheme.repertoireColors
@@ -572,29 +546,76 @@ private fun Capsule(counter: String, take: StandTake) {
         modifier = Modifier
             .height(CapsuleHeight)
             .background(colors.standBackground.copy(alpha = CAPSULE_ALPHA), RoundedCornerShape(CapsuleHeight / 2))
-            .padding(horizontal = 10.dp),
+            .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        horizontalArrangement = Arrangement.spacedBy(7.dp),
     ) {
-        if (take.recording) PulsingDot(CapsuleDot)
+        if (take.recording) Box(Modifier.size(CapsuleDot).background(ViolinTheme.recording, CircleShape))
         Text(
             text = if (take.recording) "${Formats.timer(take.elapsedSeconds * MS_PER_SECOND)} · $counter" else counter,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.labelMedium.copy(fontSize = 12.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
+            color = MaterialTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.labelMedium.copy(fontSize = 13.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES),
         )
     }
 }
 
+/**
+ * The hint of the very first visit (spec 3.36.4): the left and the right third of the sheet — the zones that turn the pages — as
+ * dashed outlines in the accent with their arrows, and a card «Тап по краю листа — следующая страница. Середина — панель.» at the
+ * bottom. It comes and goes over 300 ms; how long it stays is the view model's (4 s, or until the first touch). It takes no touch:
+ * a tap on an edge turns the page under it, one in the middle calls the panel. TalkBack reads the words of the card.
+ */
 @Composable
-private fun PulsingDot(size: Dp) {
-    val pulse = rememberRecordingPulse(StandMotion.REC_PULSE_MS, StandMotion.REC_PULSE_MIN_ALPHA)
-    val color = ViolinTheme.recording
-    Box(
-        Modifier
-            .size(size)
-            .graphicsLayer { alpha = pulse.value }
-            .background(color, CircleShape),
-    )
+private fun FirstVisitHint(shown: Boolean) {
+    val visible = remember { MutableTransitionState(false) }
+    visible.targetState = shown
+    val accent = MaterialTheme.colorScheme.primary
+    AnimatedVisibility(
+        visibleState = visible,
+        enter = fadeIn(tween(StandMotion.HINT_FADE_MS)),
+        exit = fadeOut(tween(StandMotion.HINT_FADE_MS)),
+    ) {
+        Box(Modifier.fillMaxSize()) {
+            Row(
+                Modifier
+                    .fillMaxSize()
+                    .drawBehind {
+                        val inset = HintInset.toPx()
+                        val third = size.width / 3f
+                        val zone = Size(third - inset * 2, size.height - inset * 2)
+                        val corner = CornerRadius(HintCorner.toPx())
+                        val stroke = Stroke(HintStroke.toPx(), pathEffect = PathEffect.dashPathEffect(floatArrayOf(HintDash.toPx(), HintDashGap.toPx())))
+                        listOf(inset, size.width - third + inset).forEach { x ->
+                            drawRoundRect(accent.copy(alpha = StandMotion.HINT_FILL_ALPHA), Offset(x, inset), zone, corner)
+                            drawRoundRect(accent.copy(alpha = StandMotion.HINT_ALPHA), Offset(x, inset), zone, corner, stroke)
+                        }
+                    },
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { AppIcon(AppIcons.ChevronLeft, contentDescription = null, tint = accent, size = HintArrow) }
+                Spacer(Modifier.weight(1f))
+                Box(Modifier.weight(1f), contentAlignment = Alignment.Center) { AppIcon(AppIcons.ChevronRight, contentDescription = null, tint = accent, size = HintArrow) }
+            }
+            Row(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(start = HintCardSide, end = HintCardSide, bottom = HintCardBottom)
+                    .fillMaxWidth()
+                    .background(MaterialTheme.colorScheme.surfaceContainer, AppShapes.M)
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                AppIcon(AppIcons.Hand, contentDescription = null, tint = accent)
+                Text(
+                    stringResource(Res.string.stand_hint_card),
+                    modifier = Modifier.weight(1f),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.Bold),
+                )
+            }
+        }
+    }
 }
 
 @Composable

@@ -804,6 +804,7 @@
     <string name="scale_more_systems_few">%1$d more systems</string>
     <string name="scale_more_systems_many">%1$d more systems</string>
     <string name="scale_add_photo">Add sheet-music photos</string>
+    <string name="scale_add_photo_hint">for example, fingering from your book</string>
     <string name="scale_notes">Sheet music</string>
     <string name="scale_open_stand">Open on the music stand</string>
     <string name="piece_tempo_value">♩ = %1$d</string>
@@ -812,9 +813,8 @@
     <string name="takes_few">%1$d takes</string>
     <string name="takes_many">%1$d takes</string>
     <string name="piece_edit">Edit</string>
-    <string name="piece_status_change">Status: %1$s. Change</string>
     <string name="piece_sheets_none">Sheet music</string>
-    <string name="piece_sheets_count">Sheet music · %1$d p.</string>
+    <string name="piece_sheets_pages">%1$d p.</string>
     <string name="piece_sheets_add">Add sheet-music photos</string>
     <string name="piece_sheets_add_short">Add</string>
     <string name="piece_sheets_camera">Take a photo</string>
@@ -846,15 +846,17 @@
     <string name="piece_delete_text">The sheet music, notes and the time spent on it will be deleted. The recordings will stay in “Recordings”.</string>
     <string name="piece_delete_confirm">Delete</string>
     <string name="take_record">Record a take</string>
-    <string name="take_record_hint">The screen gives no hints while recording — the analysis comes afterwards.</string>
-    <string name="take_recording">rec · %1$s</string>
+    <string name="take_recording_label">recording</string>
     <string name="take_level_description">The microphone hears you</string>
     <string name="take_no_permission">Recording a take needs microphone access.</string>
     <string name="take_grant_permission">Allow access</string>
-    <string name="take_progress">last %1$d %% · highest %2$d %%</string>
+    <string name="take_last">last %1$d %%</string>
+    <string name="take_max">highest %1$d %%</string>
+    <string name="take_progress_description">last %1$d %%, highest %2$d %%</string>
     <string name="take_chart_description">Scores of the takes in order: %1$s</string>
     <string name="takes_title">Takes</string>
-    <string name="takes_empty">No takes yet. Record the first one — and see how the piece changes.</string>
+    <string name="takes_empty_title">No takes yet</string>
+    <string name="takes_empty_text">Record the first one — and see how the piece changes.</string>
     <string name="take_best">best</string>
     <!-- “Sound”: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">Sound of recordings</string>
@@ -1013,7 +1015,7 @@
     <string name="stand_delete_page">Delete page</string>
     <string name="stand_delete_title">Delete the page?</string>
     <string name="stand_delete_text">The photo of this page will be deleted. The others will stay where they are.</string>
-    <string name="stand_hint">Tap the edge of the sheet for the next page</string>
+    <string name="stand_hint_card">Tap the edge of the sheet for the next page. The middle brings the panel.</string>
     <string name="stand_previous_page">Previous page</string>
     <string name="stand_next_page">Next page</string>
     <string name="stand_recording_description">Recording a take, %1$s</string>
@@ -1130,7 +1132,7 @@
     <string name="backing_preview">Play the backing track</string>
     <string name="backing_preview_stop">Stop the backing track</string>
     <string name="backing_headphones">Headphones</string>
-    <string name="backing_no_headphones">No headphones connected</string>
+    <string name="backing_headphones_none">no headphones</string>
     <string name="backing_headphones_wired">Headphones · %1$s</string>
     <string name="backing_unreadable">This file can\'t be opened. mp3, m4a, aac, wav, flac and ogg will do.</string>
     <string name="backing_too_long">The backing is longer than an hour — too long to take.</string>
@@ -1142,6 +1144,7 @@
     <string name="backing_chip_on">on</string>
     <string name="backing_chip_off">off</string>
     <string name="backing_needs_headphones">Connect headphones: through the speaker the backing would get into the recording.</string>
+    <string name="backing_or_turn_off">Or turn off “With backing”.</string>
     <string name="backing_preparing">Preparing the backing…</string>
     <string name="backing_unprepared">The backing could not be prepared: not enough space, or the file is damaged.</string>
     <string name="backing_take_unprepared">The backing of this take could not be prepared — only the violin is heard.</string>
@@ -1158,9 +1161,9 @@
     <string name="capture_stop">Stop filming</string>
     <string name="capture_no_permission">Without the camera and the microphone there is nothing to film with.</string>
     <string name="capture_grant">Allow access</string>
-    <string name="capture_open_settings">Open settings</string>
     <string name="capture_camera_failed">The camera could not be opened.</string>
     <string name="capture_low_space">Low on space: enough for about %1$d min</string>
+    <string name="capture_backing_length">backing %1$s</string>
     <string name="capture_saving">Putting the video together…</string>
     <string name="capture_video_failed">The video could not be put together — the take was kept as sound.</string>
 

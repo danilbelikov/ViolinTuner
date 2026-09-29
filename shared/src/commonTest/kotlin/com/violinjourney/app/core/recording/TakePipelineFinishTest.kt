@@ -192,6 +192,39 @@ class TakePipelineFinishTest {
         assertTrue(sessions.saved.isEmpty())
     }
 
+    // spec 3.9: the player's stop is told as Saved — the screen shows the take
+    @Test
+    fun `a take the player stopped is told as saved`() = runTest {
+        val takes = takes(FakeAudioTap())
+        val events = mutableListOf<TakePipeline.Event>()
+        backgroundScope.launch { takes.events.collect { events += it } }
+        val chain = recordAndStop(takes, 3_000)
+        chain.cancel()
+        runCurrent()
+
+        assertEquals(listOf<TakePipeline.Event>(TakePipeline.Event.Saved(1)), events)
+    }
+
+    // spec 3.15, 3.36.4: a take ended without the player — its screen went, the microphone was lost — is kept quietly and told as
+    // Kept: the piece screen puts it into its list with the highlight, Live and the own camera let it pass
+    @Test
+    fun `a take ended without the player is kept and told as kept`() = runTest {
+        val takes = takes(FakeAudioTap())
+        val events = mutableListOf<TakePipeline.Event>()
+        backgroundScope.launch { takes.events.collect { events += it } }
+        val chain = launch {
+            takes.run(IntonationConfig(), pieceId = PIECE_ID, targetMode = { TargetMode.Chromatic }, unavailable = Unit) { _, _ -> }.collect {}
+        }
+        advance(500)
+        takes.recordingRequested.value = true
+        advance(3_000)
+        chain.cancel()
+        runCurrent()
+
+        assertEquals(1, sessions.saved.size, "the take is kept")
+        assertEquals(listOf<TakePipeline.Event>(TakePipeline.Event.Kept(1)), events)
+    }
+
     private companion object {
         const val PIECE_ID = 7L
     }

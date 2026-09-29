@@ -35,6 +35,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
@@ -74,7 +75,9 @@ enum class AppButtonStyle { Main, Outline, Soft, Text, Quiet, Danger, DangerFill
  * The button of the redesign (spec 3.36.1, 5.29), in the [style] of its weight; a Material button underneath, so the ripple, the
  * role and the touch target are Material's. The words go on up to two lines, centred, never cut with an ellipsis; the button grows
  * for them. [icon] stands before the words — 20 dp in the buttons of 56, 18 in the ones of 48; [Danger] brings the bin by itself.
- * [trailingIcon] stands after them, in the same size and without words of its own: the arrow of «В дорогу →» (R3).
+ * [trailingIcon] stands after them, in the same size and without words of its own: the arrow of «В дорогу →» (R3). [leading]
+ * takes the place of [icon] with something of the caller's own before the words: the red dot of recording in «Записать дубль», or
+ * the spinner while the backing is prepared (R4).
  *
  * [caption] — a second, smaller line under the words, only for [AppButtonStyle.Main] and [AppButtonStyle.Outline]: «В дорогу» ·
  * «Вена → хватает до Праги» of the home (R7); the button grows from 56 for it. [compact] makes a button of 56 one of 48 — the zone
@@ -85,7 +88,8 @@ enum class AppButtonStyle { Main, Outline, Soft, Text, Quiet, Danger, DangerFill
  * [reasonReserve] — the reason of a button that goes dim and bright again under the finger of a stepper («Добавить» of an empty
  * day, R3): its place above the button stays, unseen and unheard, while there is no reason, and nothing above the button moves.
  * With a [reason] or a [reasonReserve] the [modifier] belongs to the column of the reason and the button, and the button is as wide
- * as that column.
+ * as that column. [fontSize] — the words smaller than the size of the style, where a narrow button keeps them on one line
+ * ([appButtonOneLineSize]); unspecified — the size of the style.
  */
 @Composable
 fun AppButton(
@@ -100,9 +104,11 @@ fun AppButton(
     compact: Boolean = false,
     reasonReserve: String? = null,
     trailingIcon: ImageVector? = null,
+    leading: (@Composable () -> Unit)? = null,
+    fontSize: TextUnit = TextUnit.Unspecified,
 ) {
     if (reason == null && reasonReserve == null) {
-        StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact, trailingIcon)
+        StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact, trailingIcon, leading, fontSize)
         return
     }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -113,9 +119,32 @@ fun AppButton(
             if (reason != null) Reason(reason, Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         }
         Spacer(Modifier.height(ReasonGap))
-        StyledButton(text, onClick, Modifier.fillMaxWidth(), style, icon, caption, enabled, compact, trailingIcon)
+        StyledButton(text, onClick, Modifier.fillMaxWidth(), style, icon, caption, enabled, compact, trailingIcon, leading, fontSize)
     }
 }
+
+/**
+ * The size of the words of an [AppButton] of [style] [width] wide that keeps [text] on one line: the size of the style where it
+ * fits, else 0.5 sp smaller at a time down to [minSp] ([ButtonFit]); below it the words go on two lines at a space. [before] —
+ * what stands before the words: [AppButton]'s `leading` or icon with its gap. For the key of a narrow bottom zone: «Записать дубль»
+ * beside «Видео-дубль» in the left column of 300 lying (spec 3.36.4, 5.29 R4).
+ */
+@Composable
+fun appButtonOneLineSize(text: String, width: Dp, style: AppButtonStyle, compact: Boolean, before: Dp, minSp: Float): TextUnit {
+    val look = lookOf(style, compact)
+    val words = wordsStyleOf(look)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    return remember(text, width, look, words, before, minSp, measurer, density) {
+        val room = with(density) { (width - look.padding * 2 - before - OneLineSlack).toPx() }
+        ButtonFit.size(room, look.fontSize.value, minSp) { sizeSp ->
+            measurer.measure(text, words.copy(fontSize = sizeSp.sp, lineHeight = sizeSp.sp * LINE_HEIGHT), softWrap = false, maxLines = 1).size.width.toFloat()
+        }.sp
+    }
+}
+
+/** A button is laid out in whole pixels: words that fit only by a hair are not trusted. */
+private val OneLineSlack = 1.dp
 
 /**
  * The narrowest an [AppButton] of [style] with [text] can be with each of its words whole on its line — its words go on up to two
@@ -159,8 +188,10 @@ private fun StyledButton(
     enabled: Boolean,
     compact: Boolean,
     trailingIcon: ImageVector?,
+    leading: (@Composable () -> Unit)?,
+    fontSize: TextUnit,
 ) {
-    val look = lookOf(style, compact)
+    val look = lookOf(style, compact).let { if (fontSize.isSpecified) it.copy(fontSize = fontSize) else it }
     val shown = icon ?: if (style == AppButtonStyle.Danger) AppIcons.Trash else null
     val withCaption = caption != null && (style == AppButtonStyle.Main || style == AppButtonStyle.Outline)
     Button(
@@ -186,7 +217,10 @@ private fun StyledButton(
         },
     ) {
         val words = wordsStyleOf(look)
-        if (shown != null) {
+        if (leading != null) {
+            leading()
+            Spacer(Modifier.width(IconSizes.ButtonGap))
+        } else if (shown != null) {
             AppIcon(shown, contentDescription = null, size = look.icon)
             Spacer(Modifier.width(IconSizes.ButtonGap))
         }

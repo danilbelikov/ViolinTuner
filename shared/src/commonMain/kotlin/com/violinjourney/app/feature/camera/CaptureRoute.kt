@@ -36,15 +36,16 @@ fun CaptureRoute(
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnClose by rememberUpdatedState(onClose)
 
-    lateinit var permissions: CapturePermissions
-    fun report() = permissions.granted().let { (camera, mic) -> viewModel.onIntent(CaptureIntent.PermissionsChanged(camera, mic)) }
-    permissions = rememberCapturePermissions(onAnswer = ::report)
-    // asked for by itself once, when the screen first opens; after a refusal only the button asks — or the settings
+    val permissions = rememberCapturePermissions(onAnswer = { camera, mic ->
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera, mic, answered = true))
+    })
+    // Asked for by itself once, when the screen first opens (spec 3.32); after a refusal only «Разрешить доступ» asks — or opens the
+    // settings. The answer to this first request does not open them by itself, even refused for good (spec 3.36.4).
     var asked by rememberSaveable { mutableStateOf(false) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
-        report()
-        val (camera, mic) = permissions.granted()
-        if (!asked && (!camera || !mic)) {
+        val (camera, mic) = permissions.status()
+        viewModel.onIntent(CaptureIntent.PermissionsChanged(camera, mic, answered = false))
+        if (!asked && (camera != CaptureAccess.GRANTED || mic != CaptureAccess.GRANTED)) {
             asked = true
             permissions.request()
         }
@@ -63,6 +64,7 @@ fun CaptureRoute(
                 when (effect) {
                     CaptureEffect.Close -> currentOnClose()
                     CaptureEffect.RequestPermissions -> permissions.request()
+                    CaptureEffect.OpenSettings -> permissions.openSettings()
                     CaptureEffect.ShowNoNotes -> messages.show(getString(Res.string.record_no_notes))
                     CaptureEffect.ShowVideoFailed -> messages.showLong(getString(Res.string.capture_video_failed))
                 }
@@ -82,7 +84,6 @@ fun CaptureRoute(
             )
         },
         onIntent = viewModel::onIntent,
-        onOpenSettings = permissions.openSettings,
         modifier = modifier,
     )
 }

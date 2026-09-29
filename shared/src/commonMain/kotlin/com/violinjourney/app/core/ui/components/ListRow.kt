@@ -15,8 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -64,7 +62,7 @@ sealed interface ListRowEnd {
     /** A value in tabular figures, onSurfaceVariant: «440 Гц», «Средний ±8». */
     data class Value(val text: String) : ListRowEnd
 
-    /** A switch of 52 × 32; the whole row toggles it. */
+    /** The switch of the app ([AppSwitchMark], 52 × 32); the whole row toggles it. */
     data class Toggle(val checked: Boolean) : ListRowEnd
 
     /** A check in the accent on the chosen one of a list of choices; the whole row chooses. */
@@ -169,19 +167,7 @@ private fun RowEnd(end: ListRowEnd, modifier: Modifier, words: Color) {
             overflow = TextOverflow.Ellipsis,
             style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
         )
-        is ListRowEnd.Toggle -> Switch(
-            checked = end.checked,
-            onCheckedChange = null,
-            modifier = modifier,
-            colors = SwitchDefaults.colors(
-                checkedTrackColor = colors.primary,
-                checkedBorderColor = colors.primary,
-                checkedThumbColor = colors.onPrimary,
-                uncheckedTrackColor = colors.surfaceContainerHigh,
-                uncheckedBorderColor = colors.outlineVariant,
-                uncheckedThumbColor = ViolinTheme.textTertiary,
-            ),
-        )
+        is ListRowEnd.Toggle -> AppSwitchMark(checked = end.checked, modifier = modifier)
         // the unchosen keep the place of the check: the words of a list of choices do not move
         is ListRowEnd.Check -> if (end.checked) {
             AppIcon(AppIcons.Check, contentDescription = null, modifier = modifier, tint = colors.primary)

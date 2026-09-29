@@ -49,7 +49,11 @@ class FakeRepertoireRepository(private val config: RepertoireConfig = Repertoire
         }
     }
 
+    /** How often a status was asked to be written — the chosen step again asks for none (spec 5.9). */
+    var statusWrites = 0
+
     override suspend fun setStatus(id: Long, status: PieceStatus, nowEpochMs: Long) {
+        statusWrites++
         pieces.update { list ->
             list.map { if (it.id == id && it.status != status) it.copy(status = status, updatedAtEpochMs = nowEpochMs, learnedAtEpochMs = learnedAt(it, status, nowEpochMs)) else it }
         }

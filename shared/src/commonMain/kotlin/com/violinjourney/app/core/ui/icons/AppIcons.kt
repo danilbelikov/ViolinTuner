@@ -43,6 +43,7 @@ object AppIcons {
     val Scale: ImageVector by lazy { icon("Scale", IconPaths.SCALE) }
     val Etude: ImageVector by lazy { icon("Etude", IconPaths.ETUDE) }
     val Folder: ImageVector by lazy { icon("Folder", IconPaths.FOLDER) }
+    val Hand: ImageVector by lazy { icon("Hand", IconPaths.HAND) }
     val Map: ImageVector by lazy { icon("Map", IconPaths.MAP) }
     val Passport: ImageVector by lazy { icon("Passport", IconPaths.PASSPORT) }
     val Door: ImageVector by lazy { icon("Door", IconPaths.DOOR) }
@@ -127,6 +128,7 @@ object AppIcons {
         "Scale" to { Scale },
         "Etude" to { Etude },
         "Folder" to { Folder },
+        "Hand" to { Hand },
         "Map" to { Map },
         "Passport" to { Passport },
         "Door" to { Door },

@@ -804,6 +804,7 @@
     <string name="scale_more_systems_few">あと %1$d 段</string>
     <string name="scale_more_systems_many">あと %1$d 段</string>
     <string name="scale_add_photo">楽譜の写真を追加</string>
+    <string name="scale_add_photo_hint">たとえば教本の運指</string>
     <string name="scale_notes">楽譜</string>
     <string name="scale_open_stand">譜面台で開く</string>
     <string name="piece_tempo_value">♩ = %1$d</string>
@@ -812,9 +813,8 @@
     <string name="takes_few">%1$d テイク</string>
     <string name="takes_many">%1$d テイク</string>
     <string name="piece_edit">編集</string>
-    <string name="piece_status_change">ステータス：%1$s。変更</string>
     <string name="piece_sheets_none">楽譜</string>
-    <string name="piece_sheets_count">楽譜 · %1$d ページ</string>
+    <string name="piece_sheets_pages">%1$d ページ</string>
     <string name="piece_sheets_add">楽譜の写真を追加</string>
     <string name="piece_sheets_add_short">追加</string>
     <string name="piece_sheets_camera">写真を撮る</string>
@@ -846,15 +846,17 @@
     <string name="piece_delete_text">楽譜、メモ、この曲にかけた時間は削除されます。録音は「録音」に残ります。</string>
     <string name="piece_delete_confirm">削除</string>
     <string name="take_record">テイクを録る</string>
-    <string name="take_record_hint">録音中、画面には音程のヒントが出ません。分析は録り終えてから表示されます。</string>
-    <string name="take_recording">録音 · %1$s</string>
+    <string name="take_recording_label">録音</string>
     <string name="take_level_description">マイクが音を拾っています</string>
     <string name="take_no_permission">テイクを録るには、マイクへのアクセスが必要です。</string>
     <string name="take_grant_permission">アクセスを許可</string>
-    <string name="take_progress">最新 %1$d %% · 最高 %2$d %%</string>
+    <string name="take_last">最新 %1$d %%</string>
+    <string name="take_max">最高 %1$d %%</string>
+    <string name="take_progress_description">最新 %1$d %%、最高 %2$d %%</string>
     <string name="take_chart_description">テイクのスコア（録音順）：%1$s</string>
     <string name="takes_title">テイク</string>
-    <string name="takes_empty">テイクはまだありません。最初のテイクを録ると、曲の変化が見えてきます。</string>
+    <string name="takes_empty_title">テイクはまだありません</string>
+    <string name="takes_empty_text">最初のテイクを録ると、曲の変化が見えてきます。</string>
     <string name="take_best">ベスト</string>
     <!-- «Звук»: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">録音のサウンド</string>
@@ -1013,7 +1015,7 @@
     <string name="stand_delete_page">ページを削除</string>
     <string name="stand_delete_title">ページを削除しますか？</string>
     <string name="stand_delete_text">このページの写真が削除されます。ほかのページはそのまま残ります。</string>
-    <string name="stand_hint">紙の端をタップ — 次のページ</string>
+    <string name="stand_hint_card">紙の端をタップ — 次のページ。真ん中 — パネル。</string>
     <string name="stand_previous_page">前のページ</string>
     <string name="stand_next_page">次のページ</string>
     <string name="stand_recording_description">テイクを録音中、%1$s</string>
@@ -1130,7 +1132,7 @@
     <string name="backing_preview">伴奏を聴く</string>
     <string name="backing_preview_stop">伴奏を止める</string>
     <string name="backing_headphones">ヘッドホン</string>
-    <string name="backing_no_headphones">ヘッドホンが接続されていません</string>
+    <string name="backing_headphones_none">ヘッドホンなし</string>
     <string name="backing_headphones_wired">ヘッドホン · %1$s</string>
     <string name="backing_unreadable">このファイルは開けません。mp3、m4a、aac、wav、flac、ogg が使えます。</string>
     <string name="backing_too_long">伴奏が1時間を超えています — 追加できません。</string>
@@ -1142,6 +1144,7 @@
     <string name="backing_chip_on">オン</string>
     <string name="backing_chip_off">オフ</string>
     <string name="backing_needs_headphones">ヘッドホンを接続してください：スピーカーだと伴奏が録音に入ります。</string>
+    <string name="backing_or_turn_off">または「伴奏つき」をオフにしてください。</string>
     <string name="backing_preparing">伴奏を準備しています…</string>
     <string name="backing_unprepared">伴奏を準備できませんでした：空き容量が足りないか、ファイルが壊れています。</string>
     <string name="backing_take_unprepared">このテイクの伴奏を準備できませんでした — ヴァイオリンだけが聞こえます。</string>
@@ -1158,9 +1161,9 @@
     <string name="capture_stop">撮影を停止</string>
     <string name="capture_no_permission">カメラとマイクへのアクセスがないと撮影できません。</string>
     <string name="capture_grant">アクセスを許可</string>
-    <string name="capture_open_settings">設定を開く</string>
     <string name="capture_camera_failed">カメラを開けませんでした。</string>
     <string name="capture_low_space">空き容量が少なめ：あと約 %1$d 分</string>
+    <string name="capture_backing_length">伴奏 %1$s</string>
     <string name="capture_saving">動画をまとめています…</string>
     <string name="capture_video_failed">動画をまとめられませんでした — テイクは音声として保存しました。</string>
 

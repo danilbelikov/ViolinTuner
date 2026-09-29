@@ -137,9 +137,16 @@ class TakePipeline(
     /** What one frame came to: what the screen shows, and how the recording stands, if one runs. */
     class Output<T>(val shown: T, val recording: RecordingProgress? = null)
 
-    /** Only for a recording the player stopped: every other end is saved without a word (spec 3.9). */
+    /** How a take ended, for the screen that made it. */
     sealed interface Event {
+        /** Stopped by the player and kept (spec 3.9): the screen shows it. */
         data class Saved(val sessionId: Long) : Event
+
+        /**
+         * Kept without the player's stop — the microphone was lost, the screen went away (spec 3.9, 3.15): without a word, but the
+         * piece screen puts it into its list with the highlight of a new take (spec 3.36.4). Live and the own camera let it pass.
+         */
+        data class Kept(val sessionId: Long) : Event
 
         /** Stopped by the player, but there was not a single note in it. */
         data object NoNotes : Event
@@ -266,7 +273,7 @@ class TakePipeline(
                             backing = plan != null,
                         ),
                     )
-                    if (stoppedByPlayer) eventChannel.send(Event.Saved(id))
+                    eventChannel.send(if (stoppedByPlayer) Event.Saved(id) else Event.Kept(id))
                 }
             }
         }

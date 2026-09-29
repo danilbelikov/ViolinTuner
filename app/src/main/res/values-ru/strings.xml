@@ -804,6 +804,7 @@
     <string name="scale_more_systems_few">ещё %1$d системы</string>
     <string name="scale_more_systems_many">ещё %1$d систем</string>
     <string name="scale_add_photo">Добавить фото нот</string>
+    <string name="scale_add_photo_hint">например, аппликатура из сборника</string>
     <string name="scale_notes">Ноты</string>
     <string name="scale_open_stand">Открыть на пюпитре</string>
     <string name="piece_tempo_value">♩ = %1$d</string>
@@ -812,9 +813,8 @@
     <string name="takes_few">%1$d дубля</string>
     <string name="takes_many">%1$d дублей</string>
     <string name="piece_edit">Изменить</string>
-    <string name="piece_status_change">Статус: %1$s. Изменить</string>
     <string name="piece_sheets_none">Ноты</string>
-    <string name="piece_sheets_count">Ноты · %1$d стр.</string>
+    <string name="piece_sheets_pages">%1$d стр.</string>
     <string name="piece_sheets_add">Добавить фото нот</string>
     <string name="piece_sheets_add_short">Добавить</string>
     <string name="piece_sheets_camera">Сфотографировать</string>
@@ -846,15 +846,17 @@
     <string name="piece_delete_text">Ноты, заметки и время по нему удалятся. Записи останутся в «Записях».</string>
     <string name="piece_delete_confirm">Удалить</string>
     <string name="take_record">Записать дубль</string>
-    <string name="take_record_hint">Экран не подсказывает во время записи — разбор появится после.</string>
-    <string name="take_recording">запись · %1$s</string>
+    <string name="take_recording_label">запись</string>
     <string name="take_level_description">Микрофон слышит</string>
     <string name="take_no_permission">Чтобы записать дубль, нужен доступ к микрофону.</string>
     <string name="take_grant_permission">Разрешить доступ</string>
-    <string name="take_progress">последний %1$d\u00A0%% · максимум %2$d\u00A0%%</string>
+    <string name="take_last">последний %1$d\u00A0%%</string>
+    <string name="take_max">максимум %1$d\u00A0%%</string>
+    <string name="take_progress_description">последний %1$d\u00A0%%, максимум %2$d\u00A0%%</string>
     <string name="take_chart_description">Баллы дублей по порядку: %1$s</string>
     <string name="takes_title">Дубли</string>
-    <string name="takes_empty">Дублей пока нет. Запишите первый — увидите, как меняется произведение.</string>
+    <string name="takes_empty_title">Дублей пока нет</string>
+    <string name="takes_empty_text">Запишите первый — увидите, как меняется произведение.</string>
     <string name="take_best">лучший</string>
     <!-- «Звук»: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">Звук записей</string>
@@ -1013,7 +1015,7 @@
     <string name="stand_delete_page">Удалить страницу</string>
     <string name="stand_delete_title">Удалить страницу?</string>
     <string name="stand_delete_text">Фото этой страницы удалится. Остальные останутся на местах.</string>
-    <string name="stand_hint">Тап по краю листа — следующая страница</string>
+    <string name="stand_hint_card">Тап по краю листа — следующая страница. Середина — панель.</string>
     <string name="stand_previous_page">Предыдущая страница</string>
     <string name="stand_next_page">Следующая страница</string>
     <string name="stand_recording_description">Идёт запись дубля, %1$s</string>
@@ -1130,7 +1132,7 @@
     <string name="backing_preview">Слушать минусовку</string>
     <string name="backing_preview_stop">Остановить минусовку</string>
     <string name="backing_headphones">Наушники</string>
-    <string name="backing_no_headphones">Наушники не подключены</string>
+    <string name="backing_headphones_none">наушников нет</string>
     <string name="backing_headphones_wired">Наушники · %1$s</string>
     <string name="backing_unreadable">Этот файл не открыть. Подойдут mp3, m4a, aac, wav, flac, ogg.</string>
     <string name="backing_too_long">Минусовка длиннее часа — такую не взять.</string>
@@ -1142,6 +1144,7 @@
     <string name="backing_chip_on">включено</string>
     <string name="backing_chip_off">выключено</string>
     <string name="backing_needs_headphones">Подключите наушники: минусовка через динамик попадёт в запись.</string>
+    <string name="backing_or_turn_off">Или выключите «С минусовкой».</string>
     <string name="backing_preparing">Готовим минусовку…</string>
     <string name="backing_unprepared">Минусовку не удалось подготовить: не хватает места или файл повреждён.</string>
     <string name="backing_take_unprepared">Минусовку этого дубля не удалось подготовить — слышна только скрипка.</string>
@@ -1158,9 +1161,9 @@
     <string name="capture_stop">Остановить съёмку</string>
     <string name="capture_no_permission">Без доступа к камере и микрофону снять не получится.</string>
     <string name="capture_grant">Разрешить доступ</string>
-    <string name="capture_open_settings">Открыть настройки</string>
     <string name="capture_camera_failed">Камеру не получилось открыть.</string>
     <string name="capture_low_space">Мало места: хватит примерно на %1$d мин</string>
+    <string name="capture_backing_length">минусовка %1$s</string>
     <string name="capture_saving">Собираем видео…</string>
     <string name="capture_video_failed">Видео не получилось собрать — дубль сохранён как звук.</string>
 

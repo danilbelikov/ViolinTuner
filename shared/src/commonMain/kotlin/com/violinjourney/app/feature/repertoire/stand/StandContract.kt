@@ -26,19 +26,22 @@ data class StandPage(
  * the two does not break it.
  */
 data class StandState(
-    /** True until the pages have been read once. */
+    /** True until the pages and the mark of the first visit have been read once: nothing — not the panel — shows before the hint. */
     val loading: Boolean,
     val pages: List<StandPage>,
     /** Where to open; the pager keeps the page from then on. */
     val initialPage: Int,
     val panelVisible: Boolean,
     val deleteDialog: Boolean,
-    /** The very first visit: outline the page-turning zones once. */
+    /**
+     * The very first visit (spec 3.36.4): the page-turning zones and the card «Тап по краю листа…», for
+     * [com.violinjourney.app.core.domain.repertoire.RepertoireConfig.standHintMs] or until the first touch; no panel meanwhile.
+     */
     val showHint: Boolean,
 )
 
 /**
- * What the stand shows of the piece's take (spec 3.15): whether it runs, its seconds and what went wrong — blind as
+ * What the stand shows of the piece's take (spec 3.15, 3.36.4): whether it runs, its seconds and whether it is too noisy — blind as
  * the piece screen, and without the loudness row and the backing's bar it has no room for. The take changes twenty
  * times a second with its loudness; this, once a second.
  */
@@ -54,7 +57,7 @@ sealed interface StandIntent {
     /** A tap in the middle third: the panel comes, or goes. */
     data object PanelToggled : StandIntent
 
-    /** Anything that shows the player is at the controls: the panel waits its three seconds again. */
+    /** Anything that shows the player is at the controls: the panel waits its three seconds again; the hint of the first visit goes. */
     data object Touched : StandIntent
 
     data class PageSettled(val index: Int) : StandIntent
@@ -65,7 +68,7 @@ sealed interface StandIntent {
 
     data object DeleteDismissed : StandIntent
 
-    /** The hint has played. */
+    /** The hint has stayed its time: it goes, and is never shown again. */
     data object HintShown : StandIntent
 }
 

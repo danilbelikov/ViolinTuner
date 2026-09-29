@@ -28,11 +28,13 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeoutOrNull
 import platform.AVFAudio.AVAudioApplication
 import platform.AVFAudio.AVAudioApplicationRecordPermissionGranted
+import platform.AVFAudio.AVAudioApplicationRecordPermissionUndetermined
 import platform.AVFoundation.AVAssetExportPresetPassthrough
 import platform.AVFoundation.AVAssetExportSession
 import platform.AVFoundation.AVAssetExportSessionStatusCompleted
 import platform.AVFoundation.AVAssetTrack
 import platform.AVFoundation.AVAuthorizationStatusAuthorized
+import platform.AVFoundation.AVAuthorizationStatusNotDetermined
 import platform.AVFoundation.AVCaptureConnection
 import platform.AVFoundation.AVCaptureDevice
 import platform.AVFoundation.AVCaptureDeviceInput
@@ -394,19 +396,30 @@ actual fun CaptureViewfinder(camera: ShotCamera, front: Boolean, enabled: Boolea
 }
 
 @Composable
-actual fun rememberCapturePermissions(onAnswer: () -> Unit): CapturePermissions {
+actual fun rememberCapturePermissions(onAnswer: (camera: CaptureAccess, mic: CaptureAccess) -> Unit): CapturePermissions {
     val answered by rememberUpdatedState(onAnswer)
     return remember {
+        // iOS says «denied» itself (spec 3.36.4): no marks, no guessing by time; «restricted» is out of the app's hands as well
+        val status = {
+            val camera = when (AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeVideo)) {
+                AVAuthorizationStatusAuthorized -> CaptureAccess.GRANTED
+                AVAuthorizationStatusNotDetermined -> CaptureAccess.ASKABLE
+                else -> CaptureAccess.BLOCKED
+            }
+            val mic = when (AVAudioApplication.sharedInstance.recordPermission) {
+                AVAudioApplicationRecordPermissionGranted -> CaptureAccess.GRANTED
+                AVAudioApplicationRecordPermissionUndetermined -> CaptureAccess.ASKABLE
+                else -> CaptureAccess.BLOCKED
+            }
+            camera to mic
+        }
         CapturePermissions(
-            granted = {
-                (AVCaptureDevice.authorizationStatusForMediaType(AVMediaTypeVideo) == AVAuthorizationStatusAuthorized) to
-                    (AVAudioApplication.sharedInstance.recordPermission == AVAudioApplicationRecordPermissionGranted)
-            },
+            status = status,
             request = {
-                // one system question after the other: the camera, then the microphone
+                // one system question after the other: the camera, then the microphone; the answer is where both stand then
                 AVCaptureDevice.requestAccessForMediaType(AVMediaTypeVideo) { _ ->
                     AVAudioApplication.requestRecordPermissionWithCompletionHandler { _ ->
-                        dispatch_async(dispatch_get_main_queue()) { answered() }
+                        dispatch_async(dispatch_get_main_queue()) { status().let { (camera, mic) -> answered(camera, mic) } }
                     }
                 }
             },

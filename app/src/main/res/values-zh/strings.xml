@@ -804,6 +804,7 @@
     <string name="scale_more_systems_few">还有 %1$d 行谱</string>
     <string name="scale_more_systems_many">还有 %1$d 行谱</string>
     <string name="scale_add_photo">添加乐谱照片</string>
+    <string name="scale_add_photo_hint">比如教材里的指法</string>
     <string name="scale_notes">乐谱</string>
     <string name="scale_open_stand">在谱架上打开</string>
     <string name="piece_tempo_value">♩ = %1$d</string>
@@ -812,9 +813,8 @@
     <string name="takes_few">%1$d 次录制</string>
     <string name="takes_many">%1$d 次录制</string>
     <string name="piece_edit">编辑</string>
-    <string name="piece_status_change">状态：%1$s。更改</string>
     <string name="piece_sheets_none">乐谱</string>
-    <string name="piece_sheets_count">乐谱 · %1$d 页</string>
+    <string name="piece_sheets_pages">%1$d 页</string>
     <string name="piece_sheets_add">添加乐谱照片</string>
     <string name="piece_sheets_add_short">添加</string>
     <string name="piece_sheets_camera">拍照</string>
@@ -846,15 +846,17 @@
     <string name="piece_delete_text">乐谱、笔记和用在上面的时间都将删除。录音会保留在“录音”中。</string>
     <string name="piece_delete_confirm">删除</string>
     <string name="take_record">开始录制</string>
-    <string name="take_record_hint">录制时屏幕不给提示——分析会在之后出现。</string>
-    <string name="take_recording">录音 · %1$s</string>
+    <string name="take_recording_label">录音</string>
     <string name="take_level_description">麦克风在听</string>
     <string name="take_no_permission">要进行录制，需要使用麦克风。</string>
     <string name="take_grant_permission">允许访问</string>
-    <string name="take_progress">最近 %1$d\u00A0%% · 最高 %2$d\u00A0%%</string>
+    <string name="take_last">最近 %1$d\u00A0%%</string>
+    <string name="take_max">最高 %1$d\u00A0%%</string>
+    <string name="take_progress_description">最近 %1$d\u00A0%%，最高 %2$d\u00A0%%</string>
     <string name="take_chart_description">各次录制的得分依次为：%1$s</string>
     <string name="takes_title">录制</string>
-    <string name="takes_empty">还没有录制。录下第一次——就能看到曲目的变化。</string>
+    <string name="takes_empty_title">还没有录制</string>
+    <string name="takes_empty_text">录下第一次——就能看到曲目的变化。</string>
     <string name="take_best">最佳</string>
     <!-- «Звук»: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">录音的声音</string>
@@ -1013,7 +1015,7 @@
     <string name="stand_delete_page">删除页面</string>
     <string name="stand_delete_title">删除这一页？</string>
     <string name="stand_delete_text">这一页的照片将被删除。其余页面保持不变。</string>
-    <string name="stand_hint">轻触纸张边缘——翻到下一页</string>
+    <string name="stand_hint_card">轻触纸张边缘——翻到下一页。轻触中间——显示面板。</string>
     <string name="stand_previous_page">上一页</string>
     <string name="stand_next_page">下一页</string>
     <string name="stand_recording_description">正在录制，%1$s</string>
@@ -1130,7 +1132,7 @@
     <string name="backing_preview">试听伴奏</string>
     <string name="backing_preview_stop">停止伴奏</string>
     <string name="backing_headphones">耳机</string>
-    <string name="backing_no_headphones">未连接耳机</string>
+    <string name="backing_headphones_none">没有耳机</string>
     <string name="backing_headphones_wired">耳机 · %1$s</string>
     <string name="backing_unreadable">无法打开此文件。可用 mp3、m4a、aac、wav、flac、ogg。</string>
     <string name="backing_too_long">伴奏超过一小时——无法添加。</string>
@@ -1142,6 +1144,7 @@
     <string name="backing_chip_on">已开启</string>
     <string name="backing_chip_off">已关闭</string>
     <string name="backing_needs_headphones">请连接耳机：用扬声器播放，伴奏会录进去。</string>
+    <string name="backing_or_turn_off">或者关闭“带伴奏”。</string>
     <string name="backing_preparing">正在准备伴奏…</string>
     <string name="backing_unprepared">无法准备伴奏：空间不足或文件已损坏。</string>
     <string name="backing_take_unprepared">无法准备这段录制的伴奏——只能听到小提琴。</string>
@@ -1158,9 +1161,9 @@
     <string name="capture_stop">停止拍摄</string>
     <string name="capture_no_permission">没有摄像头和麦克风权限就无法拍摄。</string>
     <string name="capture_grant">允许访问</string>
-    <string name="capture_open_settings">打开设置</string>
     <string name="capture_camera_failed">无法打开摄像头。</string>
     <string name="capture_low_space">空间不足：大约还够 %1$d 分钟</string>
+    <string name="capture_backing_length">伴奏 %1$s</string>
     <string name="capture_saving">正在合成视频…</string>
     <string name="capture_video_failed">视频合成失败——已保存为音频录音。</string>
 

@@ -804,6 +804,7 @@
     <string name="scale_more_systems_few">encore %1$d systèmes</string>
     <string name="scale_more_systems_many">encore %1$d systèmes</string>
     <string name="scale_add_photo">Ajouter une photo de partition</string>
+    <string name="scale_add_photo_hint">par exemple, un doigté tiré du recueil</string>
     <string name="scale_notes">Partition</string>
     <string name="scale_open_stand">Ouvrir sur le pupitre</string>
     <string name="piece_tempo_value">♩ = %1$d</string>
@@ -812,9 +813,8 @@
     <string name="takes_few">%1$d prises</string>
     <string name="takes_many">%1$d prises</string>
     <string name="piece_edit">Modifier</string>
-    <string name="piece_status_change">Statut : %1$s. Modifier</string>
     <string name="piece_sheets_none">Partition</string>
-    <string name="piece_sheets_count">Partition · %1$d p.</string>
+    <string name="piece_sheets_pages">%1$d p.</string>
     <string name="piece_sheets_add">Ajouter une photo de partition</string>
     <string name="piece_sheets_add_short">Ajouter</string>
     <string name="piece_sheets_camera">Photographier</string>
@@ -846,15 +846,17 @@
     <string name="piece_delete_text">La partition, les notes personnelles et le temps passé dessus seront supprimés. Les enregistrements resteront dans « Enregistrements ».</string>
     <string name="piece_delete_confirm">Supprimer</string>
     <string name="take_record">Enregistrer une prise</string>
-    <string name="take_record_hint">L\'écran ne donne aucune indication pendant l\'enregistrement — l\'analyse vient ensuite.</string>
-    <string name="take_recording">enreg. · %1$s</string>
+    <string name="take_recording_label">enreg.</string>
     <string name="take_level_description">Le micro entend</string>
     <string name="take_no_permission">Pour enregistrer une prise, l\'accès au micro est nécessaire.</string>
     <string name="take_grant_permission">Autoriser l\'accès</string>
-    <string name="take_progress">dernière %1$d %% · maximum %2$d %%</string>
+    <string name="take_last">dernière %1$d %%</string>
+    <string name="take_max">maximum %1$d %%</string>
+    <string name="take_progress_description">dernière %1$d %%, maximum %2$d %%</string>
     <string name="take_chart_description">Scores des prises dans l\'ordre : %1$s</string>
     <string name="takes_title">Prises</string>
-    <string name="takes_empty">Pas encore de prise. Enregistrez la première — vous verrez le morceau évoluer.</string>
+    <string name="takes_empty_title">Pas encore de prise</string>
+    <string name="takes_empty_text">Enregistrez la première — vous verrez le morceau évoluer.</string>
     <string name="take_best">meilleure</string>
     <!-- «Звук»: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">Son des enregistrements</string>
@@ -1013,7 +1015,7 @@
     <string name="stand_delete_page">Supprimer la page</string>
     <string name="stand_delete_title">Supprimer la page ?</string>
     <string name="stand_delete_text">La photo de cette page sera supprimée. Les autres resteront en place.</string>
-    <string name="stand_hint">Touchez le bord de la feuille — page suivante</string>
+    <string name="stand_hint_card">Touchez le bord de la feuille — page suivante. Le milieu — le panneau.</string>
     <string name="stand_previous_page">Page précédente</string>
     <string name="stand_next_page">Page suivante</string>
     <string name="stand_recording_description">Enregistrement d\'une prise en cours, %1$s</string>
@@ -1130,7 +1132,7 @@
     <string name="backing_preview">Écouter l\'accompagnement</string>
     <string name="backing_preview_stop">Arrêter l\'accompagnement</string>
     <string name="backing_headphones">Casque</string>
-    <string name="backing_no_headphones">Aucun casque connecté</string>
+    <string name="backing_headphones_none">pas de casque</string>
     <string name="backing_headphones_wired">Casque · %1$s</string>
     <string name="backing_unreadable">Impossible d\'ouvrir ce fichier. Formats possibles : mp3, m4a, aac, wav, flac, ogg.</string>
     <string name="backing_too_long">L\'accompagnement dure plus d\'une heure — trop long.</string>
@@ -1142,6 +1144,7 @@
     <string name="backing_chip_on">activé</string>
     <string name="backing_chip_off">désactivé</string>
     <string name="backing_needs_headphones">Branchez un casque : par le haut-parleur, l\'accompagnement passerait dans l\'enregistrement.</string>
+    <string name="backing_or_turn_off">Ou désactivez « Avec accomp. ».</string>
     <string name="backing_preparing">Préparation de l\'accompagnement…</string>
     <string name="backing_unprepared">Impossible de préparer l\'accompagnement : pas assez d\'espace, ou le fichier est endommagé.</string>
     <string name="backing_take_unprepared">Impossible de préparer l\'accompagnement de cette prise — seul le violon s\'entend.</string>
@@ -1158,9 +1161,9 @@
     <string name="capture_stop">Arrêter de filmer</string>
     <string name="capture_no_permission">Sans accès à la caméra et au micro, impossible de filmer.</string>
     <string name="capture_grant">Autoriser l\'accès</string>
-    <string name="capture_open_settings">Ouvrir les réglages</string>
     <string name="capture_camera_failed">Impossible d\'ouvrir la caméra.</string>
     <string name="capture_low_space">Peu d\'espace : environ %1$d min</string>
+    <string name="capture_backing_length">accomp. %1$s</string>
     <string name="capture_saving">Assemblage de la vidéo…</string>
     <string name="capture_video_failed">Impossible d\'assembler la vidéo — la prise est gardée en son.</string>
 

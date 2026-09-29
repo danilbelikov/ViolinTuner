@@ -95,8 +95,8 @@ open class PieceViewModel(
 ) : ViewModel() {
     private val pieceId: Long = checkNotNull(savedState[ARG_PIECE_ID]) { "piece id is required" }
 
-    /** What only the screen decides: photos on their way in, the open menu, the takes being picked. */
-    private data class Ui(val importing: Int = 0, val statusMenuOpen: Boolean = false, val selection: Selection = Selection())
+    /** What only the screen decides: photos on their way in, the takes being picked. */
+    private data class Ui(val importing: Int = 0, val selection: Selection = Selection())
 
     // The takes the list shows now: only those can be picked. Written where the state is built,
     // read by the intents — both on the main thread; `state.value` would lag a frame behind.
@@ -152,7 +152,7 @@ open class PieceViewModel(
             PieceReducer.loading(config)
         } else {
             val shown = PieceReducer.stateOf(
-                piece, pages, ui.importing, ui.statusMenuOpen, config,
+                piece, pages, ui.importing, config,
                 takes = PieceReducer.takesOf(piece, sessions, newTakeId, clock.today(), clock.zone, underBackingIds),
                 progress = PieceReducer.progressOf(pieceId, sessions, config),
             ) { thumbs[it] }
@@ -250,7 +250,8 @@ open class PieceViewModel(
             config = intonation,
             pieceId = pieceId,
             targetMode = { TargetMode.Chromatic },
-            unavailable = BlindShown(silent, TakeProblem.MIC_UNAVAILABLE),
+            // a lost microphone ends the take quietly (spec 3.15) and the bar goes: nothing is said under it (spec 3.36.4)
+            unavailable = BlindShown(silent, problem = null),
             onRestart = {
                 meter.reset()
                 history.reset()
@@ -282,6 +283,8 @@ open class PieceViewModel(
                     // The player stays with the music: the take shows up in the list, highlighted
                     // for a moment, and the session screen does not open by itself (spec 3.15).
                     is TakePipeline.Event.Saved -> highlight(event.sessionId)
+                    // saved quietly — the microphone was lost: it stands in the list with the same highlight (spec 3.36.4)
+                    is TakePipeline.Event.Kept -> highlight(event.sessionId)
                     TakePipeline.Event.NoNotes -> effectChannel.send(PieceEffect.ShowNoNotesRecorded)
                 }
             }
@@ -314,10 +317,8 @@ open class PieceViewModel(
             // While a take runs, the ways off the screen that would end it sleep (spec 3.15): the buttons are dimmed, this is the belt.
             PieceIntent.EditClicked -> if (!takeRunning()) handOver(PieceEffect.OpenForm(pieceId, focusNotes = false, scale = state.value.scale != null))
             PieceIntent.AddNotesClicked -> if (!takeRunning()) handOver(PieceEffect.OpenForm(pieceId, focusNotes = true, scale = state.value.scale != null))
-            PieceIntent.StatusChipClicked -> ui.update { it.copy(statusMenuOpen = true) }
-            PieceIntent.StatusMenuDismissed -> ui.update { it.copy(statusMenuOpen = false) }
-            is PieceIntent.StatusSelected -> {
-                ui.update { it.copy(statusMenuOpen = false) }
+            // The chosen step again is no edit (spec 5.9): nothing is written, the time of the last edit stays. A take goes on meanwhile.
+            is PieceIntent.StatusSelected -> if (intent.status != state.value.header?.status) {
                 viewModelScope.launch { repertoire.setStatus(pieceId, intent.status, clock.millis()) }
             }
             is PieceIntent.PageClicked -> handOver(PieceEffect.OpenStand(pieceId, intent.index))
@@ -382,11 +383,12 @@ open class PieceViewModel(
             PieceIntent.BackingAddClicked -> if (!takes.recordingRequested.value && !backingEphemeral.value.importing) handOver(PieceEffect.PickBackingFile)
             is PieceIntent.BackingPicked -> intent.uri?.let(::importBacking)
             PieceIntent.BackingPreviewClicked -> previewBacking()
-            PieceIntent.BackingRemoveClicked -> {
+            // the card sleeps while a take runs (spec 3.36.4); this is the belt — a menu opened as the take was starting stays open
+            PieceIntent.BackingRemoveClicked -> if (!takeRunning()) {
                 val block = backing.value
                 if (block?.takesUnder ?: 0 > 0) backingEphemeral.update { it.copy(askingRemove = true) } else removeBacking()
             }
-            PieceIntent.BackingRemoveConfirmed -> removeBacking()
+            PieceIntent.BackingRemoveConfirmed -> if (takeRunning()) backingEphemeral.update { it.copy(askingRemove = false) } else removeBacking()
             PieceIntent.BackingRemoveDismissed -> backingEphemeral.update { it.copy(askingRemove = false) }
             PieceIntent.BackingChipToggled -> backing.value?.takeIf { it.present && !takes.recordingRequested.value }?.let { block ->
                 viewModelScope.launch { backings.setEnabled(pieceId, !block.enabled) }

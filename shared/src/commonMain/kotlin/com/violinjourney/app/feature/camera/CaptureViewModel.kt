@@ -90,6 +90,12 @@ open class CaptureViewModel(
 
     /** «Закрыть» was tapped during the take: the screen goes as soon as the take is done with, whatever it came to. */
     private var closeWhenDone = false
+
+    /**
+     * The request under way was asked by «Разрешить доступ», not by the screen itself on entering: an answer «denied for good» to it
+     * opens the settings (spec 3.36.4); one to the first request on entering does not — the line says it, and a tap opens them.
+     */
+    private var askedByButton = false
     private var closed = false
 
     /** Once: the take saved, «закрыть» and the end of a take closed by it may all come to it, and a second pop would leave the piece too. */
@@ -159,19 +165,23 @@ open class CaptureViewModel(
         viewModelScope.launch {
             val title = repertoire.piece(pieceId)?.title.orEmpty()
             // off the main thread: on iOS the room is counted with what the system would free, and that takes a while
-            val minutes = (withContext(io) { videos.freeBytes() } / BYTES_PER_MINUTE).toInt()
-            mutableState.update { it.copy(title = title, spaceMinutes = minutes.takeIf { m -> m < LOW_SPACE_MINUTES }) }
+            // counted in Long: a disk of terabytes — or a fake one — is more minutes than an Int holds, and turned negative it read «мало места»
+            val minutes = withContext(io) { videos.freeBytes() } / BYTES_PER_MINUTE
+            mutableState.update { it.copy(title = title, spaceMinutes = minutes.takeIf { m -> m < LOW_SPACE_MINUTES }?.toInt()) }
         }
         viewModelScope.launch {
             combine(backings.pieceBackings, backings.backings, routes.changes) { rows, all, route ->
                 val row = rows.firstOrNull { it.pieceId == pieceId }
                 val backing = row?.takeIf { it.enabled }?.let { r -> all.firstOrNull { it.id == r.backingId } }
-                backing to route.output.isHeadphones
-            }.collect { (backing, headphones) ->
+                Triple(backing, route.output.isHeadphones, route.deviceName)
+            }.collect { (backing, headphones, name) ->
                 currentBackingId = backing?.id
                 backing?.let { prepare(it, recordingRate.likelyHz()) }
                 mutableState.update {
-                    it.copy(backingTitle = backing?.title, backingDurationMs = backing?.durationMs ?: 0, underBacking = backing != null, noHeadphones = !headphones)
+                    it.copy(
+                        backingTitle = backing?.title, backingDurationMs = backing?.durationMs ?: 0, underBacking = backing != null, noHeadphones = !headphones,
+                        headphonesName = name?.takeIf { headphones },
+                    )
                 }
                 showPreparation()
             }
@@ -183,6 +193,9 @@ open class CaptureViewModel(
                     // saved: back to the piece, where the take tops the list (spec 3.19)
                     is TakePipeline.Event.Saved -> close()
                     TakePipeline.Event.NoNotes -> effectChannel.send(CaptureEffect.ShowNoNotes)
+                    // kept without the player's stop — the microphone was lost: the screen stays, «Микрофон недоступен» over the
+                    // shutter says why the shot ended (spec 3.36.4); the piece shows the take when it is back
+                    is TakePipeline.Event.Kept -> Unit
                 }
             }
         }
@@ -218,12 +231,19 @@ open class CaptureViewModel(
 
     fun onIntent(intent: CaptureIntent) {
         when (intent) {
-            is CaptureIntent.PermissionsChanged -> mutableState.update { it.copy(cameraPermission = intent.camera, micPermission = intent.mic) }
+            is CaptureIntent.PermissionsChanged -> permissionsChanged(intent)
+            // Refused for good: the system would answer at once with nothing — its settings instead (spec 3.4, 3.36.4).
+            CaptureIntent.GrantClicked -> if (state.value.permissionBlocked) {
+                effectChannel.trySend(CaptureEffect.OpenSettings)
+            } else {
+                askedByButton = true
+                effectChannel.trySend(CaptureEffect.RequestPermissions)
+            }
             CaptureIntent.RecordClicked -> when {
                 takes.recordingRequested.value -> takes.recordingRequested.value = false
                 // stopped, and still being finished: nothing starts over it, a second tap on «стоп» included
                 state.value.recording -> Unit
-                state.value.cameraPermission != true || state.value.micPermission != true -> effectChannel.trySend(CaptureEffect.RequestPermissions)
+                // without the permissions the shutter sleeps under its line (spec 3.36.4): «Разрешить доступ» asks, not the shutter
                 state.value.canRecord -> viewModelScope.launch { start() }
             }
             CaptureIntent.SwitchCameraClicked -> if (!state.value.recording) mutableState.update { it.copy(front = !it.front, cameraFailed = false) }
@@ -252,6 +272,23 @@ open class CaptureViewModel(
                 if (takes.recordingRequested.value) listening.value = false
             }
         }
+    }
+
+    private fun permissionsChanged(intent: CaptureIntent.PermissionsChanged) {
+        mutableState.update {
+            it.copy(
+                cameraPermission = intent.camera == CaptureAccess.GRANTED,
+                micPermission = intent.mic == CaptureAccess.GRANTED,
+                cameraBlocked = CapturePermissionRules.blocked(it.cameraBlocked, intent.camera, intent.answered),
+                micBlocked = CapturePermissionRules.blocked(it.micBlocked, intent.mic, intent.answered),
+            )
+        }
+        if (!intent.answered) return
+        val blocked = state.value.permissionBlocked
+        val byButton = askedByButton
+        askedByButton = false
+        // the button asked, and the system answered without a dialog: nothing but the settings can help (spec 3.4)
+        if (byButton && blocked) effectChannel.trySend(CaptureEffect.OpenSettings)
     }
 
     /**
@@ -311,6 +348,6 @@ open class CaptureViewModel(
 
         /** 1080p at the bit rate CameraX picks is about 16 Mbit/s: two megabytes a second (spec 5.25). */
         private const val BYTES_PER_MINUTE = 120L * 1024 * 1024
-        private const val LOW_SPACE_MINUTES = 10
+        private const val LOW_SPACE_MINUTES = 10L
     }
 }

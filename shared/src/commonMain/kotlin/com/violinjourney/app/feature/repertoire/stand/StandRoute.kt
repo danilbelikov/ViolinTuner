@@ -22,7 +22,6 @@ import com.violinjourney.app.feature.repertoire.piece.PieceViewModel
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.profile_photo_failed
 import com.violinjourney.app.shared.resources.record_no_notes
-import com.violinjourney.app.shared.resources.stand_hint
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
@@ -58,9 +57,6 @@ fun StandRoute(
     }
     // Notes are read with the hands on the violin: the screen stays on for as long as the stand is open.
     KeepScreenOn()
-    if (state.showHint) {
-        LaunchedEffect(Unit) { messages.showLong(getString(Res.string.stand_hint)) }
-    }
 
     LaunchedEffect(viewModel, pieceViewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {

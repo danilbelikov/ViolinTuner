@@ -25,6 +25,8 @@ data class RepertoireConfig(
     val newTakeHighlightMs: Long = 1_900,
     /** The controls of the music stand hide after this long without a touch. */
     val standPanelHideMs: Long = 3_000,
+    /** The hint of the very first visit to the stand stays this long, or until the first touch (spec 3.36.4, 5.29 R4). */
+    val standHintMs: Long = 4_000,
     /** A video take (spec 5.13): what its sound track may be sampled at — the rates the detector is tuned for. */
     val videoSampleRatesHz: Set<Int> = setOf(44_100, 48_000),
     /** Room that has to stay free after a video has been copied in. */

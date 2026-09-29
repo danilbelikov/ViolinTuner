@@ -804,6 +804,7 @@
     <string name="scale_more_systems_few">noch %1$d Systeme</string>
     <string name="scale_more_systems_many">noch %1$d Systeme</string>
     <string name="scale_add_photo">Notenfoto hinzufügen</string>
+    <string name="scale_add_photo_hint">zum Beispiel ein Fingersatz aus dem Heft</string>
     <string name="scale_notes">Noten</string>
     <string name="scale_open_stand">Auf dem Notenpult öffnen</string>
     <string name="piece_tempo_value">♩ = %1$d</string>
@@ -812,9 +813,8 @@
     <string name="takes_few">%1$d Takes</string>
     <string name="takes_many">%1$d Takes</string>
     <string name="piece_edit">Bearbeiten</string>
-    <string name="piece_status_change">Status: %1$s. Ändern</string>
     <string name="piece_sheets_none">Noten</string>
-    <string name="piece_sheets_count">Noten · %1$d S.</string>
+    <string name="piece_sheets_pages">%1$d S.</string>
     <string name="piece_sheets_add">Notenfoto hinzufügen</string>
     <string name="piece_sheets_add_short">Hinzufügen</string>
     <string name="piece_sheets_camera">Fotografieren</string>
@@ -846,15 +846,17 @@
     <string name="piece_delete_text">Noten, Notizen und die Zeit dafür werden gelöscht. Die Aufnahmen bleiben unter „Aufnahmen“.</string>
     <string name="piece_delete_confirm">Löschen</string>
     <string name="take_record">Take aufnehmen</string>
-    <string name="take_record_hint">Während der Aufnahme gibt der Bildschirm keine Hinweise – die Analyse kommt danach.</string>
-    <string name="take_recording">Aufnahme · %1$s</string>
+    <string name="take_recording_label">Aufnahme</string>
     <string name="take_level_description">Das Mikrofon hört</string>
     <string name="take_no_permission">Für einen Take ist der Zugriff auf das Mikrofon nötig.</string>
     <string name="take_grant_permission">Zugriff erlauben</string>
-    <string name="take_progress">letzter %1$d %% · Maximum %2$d %%</string>
+    <string name="take_last">letzter %1$d %%</string>
+    <string name="take_max">Maximum %1$d %%</string>
+    <string name="take_progress_description">letzter %1$d %%, Maximum %2$d %%</string>
     <string name="take_chart_description">Wertungen der Takes der Reihe nach: %1$s</string>
     <string name="takes_title">Takes</string>
-    <string name="takes_empty">Noch keine Takes. Nehmen Sie den ersten auf – dann sehen Sie, wie sich das Stück verändert.</string>
+    <string name="takes_empty_title">Noch keine Takes</string>
+    <string name="takes_empty_text">Nehmen Sie den ersten auf – dann sehen Sie, wie sich das Stück verändert.</string>
     <string name="take_best">bester</string>
     <!-- «Klang»: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">Klang der Aufnahmen</string>
@@ -1013,7 +1015,7 @@
     <string name="stand_delete_page">Seite löschen</string>
     <string name="stand_delete_title">Seite löschen?</string>
     <string name="stand_delete_text">Das Foto dieser Seite wird gelöscht. Die übrigen bleiben an ihrem Platz.</string>
-    <string name="stand_hint">Am Blattrand tippen – nächste Seite</string>
+    <string name="stand_hint_card">Am Blattrand tippen – nächste Seite. In der Mitte – die Leiste.</string>
     <string name="stand_previous_page">Vorherige Seite</string>
     <string name="stand_next_page">Nächste Seite</string>
     <string name="stand_recording_description">Take-Aufnahme läuft, %1$s</string>
@@ -1130,7 +1132,7 @@
     <string name="backing_preview">Begleitspur anhören</string>
     <string name="backing_preview_stop">Begleitspur anhalten</string>
     <string name="backing_headphones">Kopfhörer</string>
-    <string name="backing_no_headphones">Keine Kopfhörer verbunden</string>
+    <string name="backing_headphones_none">keine Kopfhörer</string>
     <string name="backing_headphones_wired">Kopfhörer · %1$s</string>
     <string name="backing_unreadable">Diese Datei lässt sich nicht öffnen. Geeignet sind mp3, m4a, aac, wav, flac, ogg.</string>
     <string name="backing_too_long">Die Begleitspur ist länger als eine Stunde — zu lang.</string>
@@ -1142,6 +1144,7 @@
     <string name="backing_chip_on">an</string>
     <string name="backing_chip_off">aus</string>
     <string name="backing_needs_headphones">Bitte Kopfhörer anschließen: über den Lautsprecher gerät die Begleitung in die Aufnahme.</string>
+    <string name="backing_or_turn_off">Oder schalten Sie „Mit Begleitung“ aus.</string>
     <string name="backing_preparing">Begleitspur wird vorbereitet…</string>
     <string name="backing_unprepared">Die Begleitspur ließ sich nicht vorbereiten: zu wenig Speicher oder die Datei ist beschädigt.</string>
     <string name="backing_take_unprepared">Die Begleitspur dieses Takes ließ sich nicht vorbereiten — zu hören ist nur die Geige.</string>
@@ -1158,9 +1161,9 @@
     <string name="capture_stop">Aufnahme beenden</string>
     <string name="capture_no_permission">Ohne Zugriff auf Kamera und Mikrofon kann nicht gefilmt werden.</string>
     <string name="capture_grant">Zugriff erlauben</string>
-    <string name="capture_open_settings">Einstellungen öffnen</string>
     <string name="capture_camera_failed">Die Kamera ließ sich nicht öffnen.</string>
     <string name="capture_low_space">Wenig Speicher: reicht für etwa %1$d Min.</string>
+    <string name="capture_backing_length">Begleitung %1$s</string>
     <string name="capture_saving">Video wird zusammengesetzt…</string>
     <string name="capture_video_failed">Das Video ließ sich nicht zusammensetzen — der Take wurde als Ton gespeichert.</string>
 

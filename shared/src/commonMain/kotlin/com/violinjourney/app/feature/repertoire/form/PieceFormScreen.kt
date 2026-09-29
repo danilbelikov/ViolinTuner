@@ -284,6 +284,8 @@ private fun Fields(state: PieceFormState, onIntent: (PieceFormIntent) -> Unit) {
             labels = statuses.map { statusLabel(it) },
             selectedIndex = statuses.indexOf(draft.status),
             onSelect = { onIntent(PieceFormIntent.StatusSelected(statuses[it])) },
+            // the same switch as on the screen of the element (spec 3.36.4): its words are never cut
+            wholeWords = true,
         )
     }
     val notesFocus = remember { FocusRequester() }

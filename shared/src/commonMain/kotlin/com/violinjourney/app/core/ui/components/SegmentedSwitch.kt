@@ -6,6 +6,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -32,10 +33,17 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextMeasurer
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.ui.theme.AppShapes
@@ -63,6 +71,12 @@ private val CompactCorner = 14.dp
  * this one: «Игра | Настройка» of Live, the switches over pictures (the house, a stop of the journey) and — until R5 moves it here —
  * the A/B of the player. [compact] is for that A/B: 28 dp to see, at least 48 to press. [fontSize] is larger for segments that are a
  * single sign, like ♭ ♮ ♯.
+ *
+ * [wholeWords] — no label breaks inside a word (the status of an element, spec 3.36.4): equal shares while each holds its widest
+ * word, otherwise the segments share the row by their words, and where even that is too narrow the labels step down together
+ * ([SegmentFit]). [byWords] — by the words always, not equally: the status in the narrow left column lying, where «В репертуаре»
+ * would not stand in a third (spec 3.36.4). Both measure the labels and need a bounded width. [description] — the name of the group
+ * for TalkBack («Статус»), on the group itself.
  */
 @Composable
 fun SegmentedSwitch(
@@ -72,6 +86,57 @@ fun SegmentedSwitch(
     modifier: Modifier = Modifier,
     compact: Boolean = false,
     fontSize: Int = 14,
+    byWords: Boolean = false,
+    wholeWords: Boolean = false,
+    description: String? = null,
+) {
+    val labelStyle = MaterialTheme.typography.labelLarge.copy(
+        fontSize = fontSize.sp,
+        lineHeight = (fontSize * LINE_HEIGHT).sp,
+        fontWeight = FontWeight.Bold,
+    )
+    if (!byWords && !wholeWords) {
+        SwitchRow(labels, selectedIndex, onSelect, modifier, compact, labelStyle, weights = null, description)
+        return
+    }
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    BoxWithConstraints(modifier.fillMaxWidth()) {
+        val room = constraints.maxWidth
+        val plan = remember(labels, labelStyle, measurer, density, room, compact, byWords) {
+            val around = labels.indices.map { index -> with(density) { labelRoom(index, labels.lastIndex, compact).toPx() } }
+            SegmentFit.plan(
+                room = room.toFloat(),
+                around = around,
+                slack = with(density) { SegmentSlack.toPx() },
+                maxSp = fontSize.toFloat(),
+                share = if (byWords) SegmentFit.Share.ByWords else SegmentFit.Share.Equal,
+            ) { sizeSp ->
+                val style = labelStyle.copy(fontSize = sizeSp.sp, lineHeight = (sizeSp * LINE_HEIGHT).sp)
+                labels.map { label ->
+                    SegmentFit.Label(
+                        line = measurer.lineWidth(label, style),
+                        word = label.split(' ', '\n', '\t').filter { it.isNotEmpty() }.maxOfOrNull { measurer.lineWidth(it, style) } ?: 0f,
+                    )
+                }
+            }
+        }
+        val style = if (plan.sizeSp == fontSize.toFloat()) labelStyle else labelStyle.copy(fontSize = plan.sizeSp.sp, lineHeight = (plan.sizeSp * LINE_HEIGHT).sp)
+        // a row of no width yet (a transition) has nothing to share
+        SwitchRow(labels, selectedIndex, onSelect, Modifier, compact, style, plan.widths.takeIf { widths -> widths.all { it > 0f } }, description)
+    }
+}
+
+@Composable
+private fun SwitchRow(
+    labels: List<String>,
+    selectedIndex: Int?,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier,
+    compact: Boolean,
+    labelStyle: TextStyle,
+    weights: List<Float>?,
+    description: String?,
 ) {
     val colors = MaterialTheme.colorScheme
     val container = colors.surfaceContainer
@@ -97,7 +162,8 @@ fun SegmentedSwitch(
                     Modifier.clip(AppShapes.Control).background(container)
                 },
             )
-            .selectableGroup(),
+            .selectableGroup()
+            .then(if (description != null) Modifier.semantics { contentDescription = description } else Modifier),
     ) {
         labels.forEachIndexed { index, label ->
             val selected = index == selectedIndex
@@ -106,7 +172,7 @@ fun SegmentedSwitch(
             val pillPresses = remember(interaction) { ShiftedInteractionSource(interaction) }
             Box(
                 modifier = Modifier
-                    .weight(1f)
+                    .weight(weights?.getOrNull(index) ?: 1f)
                     .fillMaxHeight()
                     .selectable(
                         selected = selected,
@@ -130,7 +196,7 @@ fun SegmentedSwitch(
                         .clip(if (compact) AppShapes.S else AppShapes.Segment)
                         .background(pill)
                         .indication(pillPresses, ripple())
-                        .padding(horizontal = 4.dp),
+                        .padding(horizontal = LabelPadding),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -139,14 +205,29 @@ fun SegmentedSwitch(
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
                         textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.labelLarge.copy(
-                            fontSize = fontSize.sp,
-                            lineHeight = (fontSize * LINE_HEIGHT).sp,
-                            fontWeight = FontWeight.Bold,
-                        ),
+                        style = labelStyle,
                     )
                 }
             }
         }
     }
 }
+
+/** The label's own padding inside its pill, at each side. */
+private val LabelPadding = 4.dp
+
+/** The row is laid out in whole pixels: a word that fits only by a hair is not trusted. */
+private val SegmentSlack = 1.dp
+
+/**
+ * Around a label within its segment, for [SegmentFit]: the edge or the gap at each side of its pill and its own padding — 4 + 2 + 4 + 4
+ * at the ends of the row, 2 + 2 + 4 + 4 in the middle (the compact one: 2 or 1 instead of 4 and 2).
+ */
+private fun labelRoom(index: Int, last: Int, compact: Boolean): Dp {
+    val edge = if (compact) CompactEdge else RegularEdge
+    val between = if (compact) CompactBetween else RegularBetween
+    return (if (index == 0) edge else between) + (if (index == last) edge else between) + LabelPadding * 2
+}
+
+private fun TextMeasurer.lineWidth(text: String, style: TextStyle): Float =
+    measure(text, style, softWrap = false, maxLines = 1).size.width.toFloat()

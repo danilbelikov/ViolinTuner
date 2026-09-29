@@ -34,11 +34,14 @@ data class TakeItem(
     val isNew: Boolean,
 )
 
-/** «последний 82 % · максимум 88 % · 6 дублей» and the little chart; there from two takes on. */
+/** «последний 82 %» and «максимум 88 %» under «Дубли», beside the little chart of every score; there from two takes on (spec 5.9). */
 data class TakeProgress(val lastScore: Int, val maxScore: Int, val scores: List<Int>)
 
-/** Why the microphone cannot be listened to right now; shown as a small line by the recording strip. */
-enum class TakeProblem { TOO_NOISY, MIC_UNAVAILABLE }
+/**
+ * What is wrong while a take runs; a line under the recording bar. Only noise: a lost microphone ends the take quietly and the bar
+ * goes (spec 3.36.4), so there is never a line «Микрофон недоступен» under it.
+ */
+enum class TakeProblem { TOO_NOISY }
 
 /**
  * The recording of a take (spec 3.15). Blind on purpose: no note, no zone, no cents — a dot, a
@@ -76,7 +79,6 @@ data class PieceState(
     val takes: List<TakeItem>,
     /** Null with fewer than two takes. */
     val progress: TakeProgress?,
-    val statusMenuOpen: Boolean,
     /** After this many lines the notes fold (spec 5.9). */
     val notesCollapsedLines: Int,
     /** Picking several takes to delete (spec 3.18). */
@@ -97,11 +99,8 @@ sealed interface PieceIntent {
     /** «Добавить заметку»: the form, with the cursor in the notes. */
     data object AddNotesClicked : PieceIntent
 
-    data object StatusChipClicked : PieceIntent
-
+    /** A step of the status switch (spec 3.36.4): the chosen one again writes nothing (spec 5.9); it works during a take. */
     data class StatusSelected(val status: PieceStatus) : PieceIntent
-
-    data object StatusMenuDismissed : PieceIntent
 
     /** Opens the music stand at that page (from zero). */
     data class PageClicked(val index: Int) : PieceIntent
@@ -120,6 +119,7 @@ sealed interface PieceIntent {
     /** The same from the music stand: never under the backing — that is the piece screen's (spec 3.32). */
     data object StandRecordClicked : PieceIntent
 
+    /** «Разрешить доступ» of the line over the sleeping «Записать дубль»: the system asks, or its settings open (spec 3.36.1). */
     data object GrantMicClicked : PieceIntent
 
     /** Reported by the route on every resume and after the system dialog. */
@@ -181,6 +181,7 @@ sealed interface PieceIntent {
 
     data object BackingRemoveDismissed : PieceIntent
 
+    /** The capsule «С минусовкой» over the record buttons (spec 3.36.4). */
     data object BackingChipToggled : PieceIntent
 
     data object BackingProblemDismissed : PieceIntent

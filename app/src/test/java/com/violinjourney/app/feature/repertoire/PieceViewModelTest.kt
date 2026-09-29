@@ -4,6 +4,8 @@ import androidx.lifecycle.SavedStateHandle
 import com.violinjourney.app.core.analytics.NoOpAnalytics
 import com.violinjourney.app.core.audio.FakePitchSource
 import com.violinjourney.app.core.audio.FakeScenario
+import com.violinjourney.app.core.audio.MicUnavailableException
+import com.violinjourney.app.core.audio.MicUnavailableReason
 import com.violinjourney.app.core.audio.PitchSource
 import com.violinjourney.app.core.audio.RecordingRate
 import com.violinjourney.app.core.audio.SampleClock
@@ -49,6 +51,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onCompletion
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.flow.onStart
@@ -307,17 +310,43 @@ class PieceViewModelTest {
         assertTrue("a result nobody asked for is ignored", after.state.value.pages.isEmpty())
     }
 
+    // spec 3.36.4: the status is a switch of three steps — one tap, at once
     @Test
-    fun `the status changes from the chip menu`() = runTest {
+    fun `the status changes by the switch at once`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
         val (viewModel, _) = screen(id)
-        viewModel.onIntent(PieceIntent.StatusChipClicked)
-        runCurrent()
-        assertTrue(viewModel.state.value.statusMenuOpen)
         viewModel.onIntent(PieceIntent.StatusSelected(PieceStatus.IN_REPERTOIRE))
         runCurrent()
-        assertFalse(viewModel.state.value.statusMenuOpen)
         assertEquals(PieceStatus.IN_REPERTOIRE, viewModel.state.value.header!!.status)
+        assertEquals("changing it is an edit", 9_000L, repertoire.piece(id)!!.updatedAtEpochMs)
+    }
+
+    // spec 5.9: the chosen step again is no edit — the time of the last edit and the place in the list stay
+    @Test
+    fun `a tap on the chosen step writes nothing`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт", status = PieceStatus.LEARNING), nowEpochMs = 1)
+        val newer = repertoire.add(PieceDraft(title = "Гавот"), nowEpochMs = 2)
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(PieceIntent.StatusSelected(PieceStatus.LEARNING))
+        runCurrent()
+        assertEquals("nothing asked of the repertoire", 0, repertoire.statusWrites)
+        assertEquals(1L, repertoire.piece(id)!!.updatedAtEpochMs)
+        assertEquals("its place in the list stays", listOf(newer, id), repertoire.pieces.value.sortedByDescending { it.updatedAtEpochMs }.map { it.id })
+    }
+
+    // spec 3.15, 3.36.4: the switch works while a take runs, and the take goes on
+    @Test
+    fun `during a take the status changes and the take goes on`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(2_500)
+        val before = viewModel.takeState.value.elapsedSeconds
+        viewModel.onIntent(PieceIntent.StatusSelected(PieceStatus.IN_REPERTOIRE))
+        advance(1_000)
+        assertEquals(PieceStatus.IN_REPERTOIRE, viewModel.state.value.header!!.status)
+        assertTrue("the take goes on", viewModel.takeState.value.recording)
+        assertEquals("the same take, a second on", before + 1, viewModel.takeState.value.elapsedSeconds)
     }
 
     @Test
@@ -470,6 +499,38 @@ class PieceViewModelTest {
         assertFalse(quick.takeState.value.recording)
     }
 
+    // spec 3.15, 3.36.4: a lost microphone saves the take quietly; the bar goes, and the take stands in the list with the highlight
+    @Test
+    fun `a take the lost microphone ended is kept quietly and stands highlighted in the list`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val working = FakePitchSource(FakeScenario.IN_TUNE, timeSource = testTimeSource)
+        var broken = false
+        val breaksOnce = object : PitchSource {
+            override val requiresMicPermission = false
+            override val audioTap: AudioTap? = null
+            override fun frames(config: IntonationConfig): Flow<PitchFrame> = flow {
+                working.frames(config).collect { frame ->
+                    if (!broken && frame.tMs > 4_000) {
+                        broken = true
+                        throw MicUnavailableException(MicUnavailableReason.READ_FAILED, "unplugged")
+                    }
+                    emit(frame)
+                }
+            }
+        }
+        val (viewModel, effects) = screen(id, pitchSource = breaksOnce)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(4_500)
+
+        assertFalse("the bar goes", viewModel.takeState.value.recording)
+        assertNull("nothing is said under it", viewModel.takeState.value.problem)
+        assertEquals(id, sessions.saved.single().pieceId)
+        assertTrue("it stands highlighted, as a stopped take does", viewModel.state.value.takes.single().isNew)
+        assertTrue("without a word, and the session screen stays shut", effects.isEmpty())
+        advance(2_000)
+        assertFalse("the highlight settles", viewModel.state.value.takes.single().isNew)
+    }
+
     @Test
     fun `noise shows as a small problem line and does not stop the take`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
@@ -558,9 +619,7 @@ class PieceViewModelTest {
         assertTrue("the video's size was asked", videoLooks > 0)
 
         repeat(3) {
-            viewModel.onIntent(PieceIntent.StatusChipClicked)
-            runCurrent()
-            viewModel.onIntent(PieceIntent.StatusMenuDismissed)
+            viewModel.onIntent(PieceIntent.StatusSelected(viewModel.state.value.header!!.status))
             runCurrent()
         }
         viewModel.select(SelectionIntent.SelectClicked)
@@ -962,6 +1021,33 @@ class PieceViewModelTest {
         viewModel.onIntent(PieceIntent.OwnCameraClicked)
         runCurrent()
         assertTrue(effects.none { it is PieceEffect.OpenCapture })
+    }
+
+    // spec 3.36.4: while a take runs the card of the backing sleeps; the view model is the belt — «Убрать» of a menu left open as
+    // the take began does not take the backing from under it (the review of stage 109)
+    @Test
+    fun `while a take records the backing is not removed`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Концерт"), nowEpochMs = 1)
+        withBacking(id)
+        val (viewModel, _) = screen(id)
+        advance(100)
+        viewModel.onIntent(PieceIntent.BackingChipToggled) // a plain take: no headphones needed
+        advance(100)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        assertTrue(viewModel.takeState.value.recording)
+        viewModel.onIntent(PieceIntent.BackingRemoveClicked)
+        viewModel.onIntent(PieceIntent.BackingRemoveConfirmed)
+        advance(100)
+        assertEquals("Piano", viewModel.backing.value!!.title)
+        assertFalse(viewModel.backing.value!!.askingRemove)
+
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(5_000)
+        assertFalse(viewModel.takeState.value.recording)
+        viewModel.onIntent(PieceIntent.BackingRemoveClicked)
+        advance(100)
+        assertNull("after the take it goes as before", viewModel.backing.value!!.title)
     }
 
     @Test

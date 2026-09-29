@@ -9,6 +9,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -32,7 +33,9 @@ private const val REASON_LINES = 2
  * The same for a take and for the own camera ([icon] Camera there). The reason may take two lines (de, fr) and is said aloud
  * when it appears.
  *
- * [overPicture] — over the preview of the own camera: on dense glass (0.82) with the words in onSurface, never grey on glass.
+ * [overPicture] — over the preview of the own camera: on dense glass (0.82) with the words in onSurface, never grey on glass, the
+ * fields of its plates (10 / 12, 5.29 R4) and the whole reason on as many lines as it takes — it is the main phrase of that screen,
+ * and the side column lying is 210 wide (four lines in en, de, it); [shape] — the corner of that glass (12 over the shutter).
  *
  * Stateless: what «Разрешить доступ» does is the caller's — the system request, or the settings of the app once the system asks no
  * more (`rememberMicPermissionRequester(openSettingsWhenBlocked = true)`, the own camera by its sign of «never», R4). The system
@@ -46,33 +49,34 @@ fun PermissionLine(
     icon: ImageVector = AppIcons.Mic,
     grant: String = stringResource(Res.string.mic_permission_grant),
     overPicture: Boolean = false,
+    shape: Shape = AppShapes.M,
 ) {
     if (overPicture) {
         GlassPlate(
             modifier = modifier,
             strong = true,
-            shape = AppShapes.M,
-            contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 10.dp, bottom = 2.dp),
+            shape = shape,
+            contentPadding = PaddingValues(start = 12.dp, end = 12.dp, top = 10.dp, bottom = 2.dp),
         ) {
             Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                Line(reason, MaterialTheme.colorScheme.onSurface, grant, icon, onGrant)
+                Line(reason, MaterialTheme.colorScheme.onSurface, grant, icon, onGrant, maxLines = Int.MAX_VALUE)
             }
         }
     } else {
         Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
-            Line(reason, MaterialTheme.colorScheme.onSurfaceVariant, grant, icon, onGrant)
+            Line(reason, MaterialTheme.colorScheme.onSurfaceVariant, grant, icon, onGrant, maxLines = REASON_LINES)
         }
     }
 }
 
 @Composable
-private fun Line(reason: String, color: Color, grant: String, icon: ImageVector, onGrant: () -> Unit) {
+private fun Line(reason: String, color: Color, grant: String, icon: ImageVector, onGrant: () -> Unit, maxLines: Int) {
     Text(
         text = reason,
         modifier = Modifier.fillMaxWidth().semantics { liveRegion = LiveRegionMode.Polite },
         color = color,
         textAlign = TextAlign.Center,
-        maxLines = REASON_LINES,
+        maxLines = maxLines,
         overflow = TextOverflow.Ellipsis,
         style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp),
     )

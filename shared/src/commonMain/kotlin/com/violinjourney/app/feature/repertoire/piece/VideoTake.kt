@@ -1,39 +1,19 @@
 package com.violinjourney.app.feature.repertoire.piece
 
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.animateContentSize
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.ModalBottomSheetProperties
-import androidx.compose.material3.OutlinedButton
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -42,6 +22,20 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.domain.session.RecordingRibbon
+import com.violinjourney.app.core.recording.video.VideoImport
+import com.violinjourney.app.core.recording.video.VideoImportFailure
+import com.violinjourney.app.core.ui.components.AppButton
+import com.violinjourney.app.core.ui.components.AppButtonStyle
+import com.violinjourney.app.core.ui.components.AppSheet
+import com.violinjourney.app.core.ui.components.currentDockMetrics
+import com.violinjourney.app.core.ui.components.rememberSmallFileImage
+import com.violinjourney.app.core.ui.icons.AppIcon
+import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.video_cancel
 import com.violinjourney.app.shared.resources.video_continue
@@ -56,146 +50,57 @@ import com.violinjourney.app.shared.resources.video_error_too_long
 import com.violinjourney.app.shared.resources.video_listening
 import com.violinjourney.app.shared.resources.video_ok
 import com.violinjourney.app.shared.resources.video_percent
-import com.violinjourney.app.shared.resources.video_pick
-import com.violinjourney.app.shared.resources.video_pick_hint
 import com.violinjourney.app.shared.resources.video_remaining
 import com.violinjourney.app.shared.resources.video_send
-import com.violinjourney.app.shared.resources.video_shoot
-import com.violinjourney.app.shared.resources.video_shoot_backing
-import com.violinjourney.app.shared.resources.video_shoot_backing_hint
-import com.violinjourney.app.shared.resources.video_shoot_hint
-import com.violinjourney.app.shared.resources.video_shoot_own_hint
 import com.violinjourney.app.shared.resources.video_stop_text
 import com.violinjourney.app.shared.resources.video_stop_title
 import com.violinjourney.app.shared.resources.video_stopped_title
-import com.violinjourney.app.shared.resources.video_take
-import com.violinjourney.app.shared.resources.video_take_busy
 import com.violinjourney.app.shared.resources.video_thumb
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.violinjourney.app.core.domain.session.RecordingRibbon
-import com.violinjourney.app.core.recording.video.VideoImport
-import com.violinjourney.app.core.recording.video.VideoImportFailure
-import com.violinjourney.app.core.ui.components.AppMenu
-import com.violinjourney.app.core.ui.components.AppMenuItem
-import com.violinjourney.app.core.ui.components.dimmedWhen
-import com.violinjourney.app.core.ui.components.rememberSmallFileImage
-import com.violinjourney.app.core.ui.icons.AppIcon
-import com.violinjourney.app.core.ui.icons.AppIcons
-import com.violinjourney.app.core.ui.icons.IconLabel
-import com.violinjourney.app.core.ui.theme.ViolinTheme
 
-private val ButtonHeight = 40.dp
-private val MenuWidth = 248.dp
 private val ThumbWidth = 64.dp
 private val ThumbHeight = 36.dp
 private val StripHeight = 48.dp
 private val StripCorner = 10.dp
 private val StripBar = 6.dp
 private val StripCursor = 2.dp
-private const val SWAP_MS = 200
+private val FaceGap = 14.dp
 private const val TABULAR_FIGURES = "tnum"
 
-/** Which of the app's own camera's items «Видео-дубль» offers (spec 3.32). */
-enum class OwnCamera { UNDER_BACKING, PLAIN }
+/** The faces of the sheet of a video on its way in: each a face of one frame (spec 3.36.3). */
+private enum class ImportFace { WORKING, ASKING, FAILED }
 
 /**
- * The quiet second way to a take (spec 3.19, handoff 20a1): a small outlined button under the
- * words of the loud round one, with a menu of two. The second lines of the menu warn of the two
- * things about this that are not obvious. [busy] is a short analysis that shows no sheet.
+ * A video on its way to becoming a take (spec 3.19, 3.36.4, handoff 20b), in the frame of the sheets of R1. Closes neither by a tap
+ * outside, nor by a swipe, nor by «назад»: behind it a file may be deleted — only the importer lets it go ([AppSheet] with
+ * `dismissible = false`, no handle). What went wrong is a line here, not a toast; «Удалить» and the sign of a failure are coral.
+ * Its buttons of 56 — «Отправить видео», «Понятно», «Отмена» — are 48 in a window no higher than 360, as those of
+ * [com.violinjourney.app.core.ui.components.AppSheetButtons]; «Удалить» and «Продолжить» are 48 anyway.
  */
-@Composable
-fun VideoTakeButton(
-    enabled: Boolean,
-    busy: Boolean,
-    onShoot: () -> Unit,
-    onPick: () -> Unit,
-    modifier: Modifier = Modifier,
-    /**
-     * Null — the system camera (spec 3.19); otherwise the app's own, the only one for a piece with a backing (spec 3.32):
-     * under it while the chip is on, a plain video while it is off.
-     */
-    ownCamera: OwnCamera? = null,
-) {
-    val colors = MaterialTheme.colorScheme
-    var menuOpen by remember { mutableStateOf(false) }
-    val shape = RoundedCornerShape(ButtonHeight / 2)
-    Box(modifier = modifier.dimmedWhen(!enabled && !busy)) {
-        Row(
-            modifier = Modifier
-                .height(ButtonHeight)
-                .clip(shape)
-                .background(colors.surfaceContainerHigh)
-                .border(1.dp, colors.outlineVariant, shape)
-                .clickable(enabled = enabled && !busy, role = Role.Button) { menuOpen = true }
-                .padding(start = 12.dp, end = 10.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            AppIcon(AppIcons.Video, contentDescription = null, tint = colors.onSurface, size = 20.dp)
-            Text(
-                text = stringResource(if (busy) Res.string.video_take_busy else Res.string.video_take),
-                color = colors.onSurface,
-                maxLines = 1,
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold),
-            )
-            AppIcon(AppIcons.ChevronDown, contentDescription = null, tint = colors.onSurfaceVariant, size = 16.dp)
-        }
-        AppMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }, modifier = Modifier.width(MenuWidth)) {
-            when (ownCamera) {
-                null -> AppMenuItem(stringResource(Res.string.video_shoot), icon = AppIcons.Video, caption = stringResource(Res.string.video_shoot_hint), onClick = { menuOpen = false; onShoot() })
-                OwnCamera.UNDER_BACKING -> AppMenuItem(stringResource(Res.string.video_shoot_backing), icon = AppIcons.Backing, caption = stringResource(Res.string.video_shoot_backing_hint), onClick = { menuOpen = false; onShoot() })
-                OwnCamera.PLAIN -> AppMenuItem(stringResource(Res.string.video_shoot), icon = AppIcons.Video, caption = stringResource(Res.string.video_shoot_own_hint), onClick = { menuOpen = false; onShoot() })
-            }
-            AppMenuItem(stringResource(Res.string.video_pick), icon = AppIcons.VideoGallery, caption = stringResource(Res.string.video_pick_hint), onClick = { menuOpen = false; onPick() })
-        }
-    }
-}
-
-/**
- * A video on its way to becoming a take (spec 3.19, handoff 20b). Closes neither by a tap
- * outside nor by a swipe: behind it a file may be deleted. What went wrong is a line here, not a toast.
- */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoImportSheet(import: VideoImport, onIntent: (PieceIntent) -> Unit) {
     val shown = when (import) {
-        VideoImport.Idle -> false
-        is VideoImport.Working -> import.visible
-        is VideoImport.Failed -> true
+        VideoImport.Idle -> null
+        is VideoImport.Working -> import.takeIf { it.visible }
+        is VideoImport.Failed -> import
     }
-    if (!shown) return
-    // It may open, it may not be swiped away: only the importer closes it.
-    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true, confirmValueChange = { it != SheetValue.Hidden })
-    ModalBottomSheet(
-        onDismissRequest = {},
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surfaceContainer,
-        properties = ModalBottomSheetProperties(shouldDismissOnBackPress = false),
-    ) {
-        val kind = when (import) {
-            is VideoImport.Working -> if (import.asking) "asking" else "working"
-            is VideoImport.Failed -> "failed"
-            VideoImport.Idle -> "idle"
-        }
-        Crossfade(targetState = kind, animationSpec = tween(SWAP_MS), modifier = Modifier.animateContentSize(tween(SWAP_MS)), label = "videoImport") { target ->
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .navigationBarsPadding()
-                    .padding(start = 16.dp, end = 16.dp, bottom = 24.dp),
-                verticalArrangement = Arrangement.spacedBy(14.dp),
-            ) {
-                // the content is drawn from what is current; `target` only says which of the faces is fading in or out
-                when {
-                    target == "working" && import is VideoImport.Working -> Working(import, onIntent)
-                    target == "asking" && import is VideoImport.Working -> Rescue(Res.string.video_stop_title, showContinue = true, onIntent)
-                    target == "failed" && import is VideoImport.Failed -> Failed(import, onIntent)
-                }
+    AppSheet(
+        value = shown,
+        onHide = {},
+        dismissible = false,
+        faceOf = { value ->
+            when (value) {
+                is VideoImport.Working -> if (value.asking) ImportFace.ASKING else ImportFace.WORKING
+                else -> ImportFace.FAILED
+            }
+        },
+    ) { value ->
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(FaceGap)) {
+            when {
+                value is VideoImport.Working && value.asking -> Rescue(Res.string.video_stop_title, showContinue = true, onIntent)
+                value is VideoImport.Working -> Working(value, onIntent)
+                value is VideoImport.Failed -> Failed(value, onIntent)
             }
         }
     }
@@ -242,7 +147,9 @@ private fun Working(import: VideoImport.Working, onIntent: (PieceIntent) -> Unit
             color = colors.onSurfaceVariant,
             style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
         )
-        OutlinedButton(onClick = { onIntent(PieceIntent.VideoImportCancelClicked) }) { Text(stringResource(Res.string.video_cancel)) }
+        // an outline of 56, as every button of 56 of this sheet — 48 in a window no higher than 360 (spec 3.36.4; the rule of
+        // AppSheetButtons, R3)
+        AppButton(stringResource(Res.string.video_cancel), onClick = { onIntent(PieceIntent.VideoImportCancelClicked) }, style = AppButtonStyle.Outline, compact = currentDockMetrics().compact)
     }
 }
 
@@ -305,9 +212,12 @@ private fun Failed(import: VideoImport.Failed, onIntent: (PieceIntent) -> Unit) 
             }
             if (more != null) Text(more, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
         }
-        if (import.rescuePath == null) Button(onClick = { onIntent(PieceIntent.VideoImportDismissed) }) { Text(stringResource(Res.string.video_ok)) }
     }
-    if (import.rescuePath != null) RescueButtons(onIntent)
+    if (import.rescuePath != null) {
+        RescueButtons(onIntent)
+    } else {
+        AppButton(stringResource(Res.string.video_ok), onClick = { onIntent(PieceIntent.VideoImportDismissed) }, modifier = Modifier.fillMaxWidth(), compact = currentDockMetrics().compact)
+    }
 }
 
 /** A shot that did not become a take exists nowhere else: send it somewhere, or let it go. */
@@ -318,21 +228,19 @@ private fun Rescue(title: StringResource, showContinue: Boolean, onIntent: (Piec
     Text(stringResource(Res.string.video_stop_text), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
     RescueButtons(onIntent)
     if (showContinue) {
-        TextButton(onClick = { onIntent(PieceIntent.VideoImportContinueClicked) }, modifier = Modifier.fillMaxWidth()) { Text(stringResource(Res.string.video_continue)) }
+        AppButton(stringResource(Res.string.video_continue), onClick = { onIntent(PieceIntent.VideoImportContinueClicked) }, modifier = Modifier.fillMaxWidth(), style = AppButtonStyle.Quiet)
     }
 }
 
+/** «Отправить видео» — the main button, the only way to keep a shot that did not become a take; under it «Удалить», coral (R1). */
 @Composable
 private fun RescueButtons(onIntent: (PieceIntent) -> Unit) {
-    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        OutlinedButton(onClick = { onIntent(PieceIntent.VideoImportDismissed) }, modifier = Modifier.weight(1f)) {
-            androidx.compose.runtime.CompositionLocalProvider(androidx.compose.material3.LocalContentColor provides ViolinTheme.dangerSoft) {
-                IconLabel(AppIcons.Trash, stringResource(Res.string.video_delete))
-            }
-        }
-        Button(onClick = { onIntent(PieceIntent.VideoImportSendClicked) }, modifier = Modifier.weight(1f)) {
-            IconLabel(AppIcons.Share, stringResource(Res.string.video_send), iconSize = 20.dp)
-        }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        AppButton(
+            stringResource(Res.string.video_send), onClick = { onIntent(PieceIntent.VideoImportSendClicked) }, modifier = Modifier.fillMaxWidth(), icon = AppIcons.Share,
+            compact = currentDockMetrics().compact,
+        )
+        AppButton(stringResource(Res.string.video_delete), onClick = { onIntent(PieceIntent.VideoImportDismissed) }, modifier = Modifier.fillMaxWidth(), style = AppButtonStyle.Danger)
     }
 }
 
