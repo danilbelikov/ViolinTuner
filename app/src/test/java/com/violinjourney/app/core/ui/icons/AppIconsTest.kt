@@ -57,6 +57,25 @@ class AppIconsTest {
         assertEquals(1.8f, back.strokeLineWidth, 0f)
     }
 
+    /**
+     * The arrows of a recording's bias and of a note that drifts (spec 3.36.5, 5.29 R5): filled shapes in the form of the arrows of
+     * Live, without the stroke of the set, the one pointing up — its tip at the top of the grid — the other down.
+     */
+    @Test
+    fun `the arrows up and down are filled shapes that point their own way`() {
+        fun tipOf(arrow: ImageVector): PathNode.MoveTo {
+            val path = arrow.root.filterIsInstance<VectorPath>().single()
+            assertTrue("${arrow.name} is filled, without a stroke", path.fill != null && path.stroke == null)
+            return path.pathData.first() as PathNode.MoveTo
+        }
+        val up = tipOf(AppIcons.ArrowUp)
+        val down = tipOf(AppIcons.ArrowDown)
+        assertEquals("the tips stand in the middle", 12f, up.x, 0f)
+        assertEquals(12f, down.x, 0f)
+        assertTrue("up points up: ${up.y}", up.y < 12f)
+        assertTrue("down points down: ${down.y}", down.y > 12f)
+    }
+
     @Test
     fun `a selected tab fills its body and keeps the cut-out detail apart`() {
         val practice = AppIcons.TabPractice

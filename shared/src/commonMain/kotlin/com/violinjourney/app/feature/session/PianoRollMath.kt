@@ -51,6 +51,29 @@ class PianoRollMath(
         return (x(cursorMs) - viewportWidth * CURSOR_MIN).coerceIn(0f, maxScroll)
     }
 
+    /**
+     * Scroll offset that brings the bar of a note from [startMs] to [endMs] into view — the note a row of «Что уходит» opens
+     * (spec 3.36.5) — or null when the whole bar is in view already: its start at [CURSOR_MIN] of the viewport, as the cursor
+     * comes back to, so what follows it shows too.
+     */
+    fun scrollToShow(startMs: Long, endMs: Long, scroll: Float): Float? {
+        val left = x(startMs)
+        val right = left + barWidth(startMs, endMs)
+        if (left >= scroll && right <= scroll + viewportWidth) return null
+        return (left - viewportWidth * CURSOR_MIN).coerceIn(0f, maxScroll)
+    }
+
+    /**
+     * Scroll offset of the rows (more than [MAX_VISIBLE_ROWS] of them scroll inside the card) that brings [row] into view, or null
+     * when it is in view already: the row in the middle of the viewport, as far as the rows go.
+     */
+    fun rowScrollToShow(row: Int, scroll: Float): Float? {
+        val top = row * ROW_HEIGHT
+        val bottom = top + ROW_HEIGHT
+        if (top >= scroll && bottom <= scroll + viewportHeight) return null
+        return (top - (viewportHeight - ROW_HEIGHT) / 2).coerceIn(0f, (contentHeight - viewportHeight).coerceAtLeast(0f))
+    }
+
     /** Time labels: a round step that keeps them at least [MIN_TICK_SPACING] apart. */
     fun tickTimesMs(): List<Long> = (0..durationMs step tickStepMs()).toList()
 

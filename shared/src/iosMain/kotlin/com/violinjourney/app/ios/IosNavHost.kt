@@ -168,12 +168,14 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             SessionRoute(
                 onClose = navController::popBackStack,
                 onOpenSound = navController::navigateToSound,
+                onOpenPiece = navController::navigateToPieceOf,
                 viewModel = viewModel {
                     SessionViewModel(
                         repository = graph.sessions, defaultConfig = graph.intonationConfig, audioFiles = graph.audioFiles,
                         playerFactory = graph.playerFactory, repertoire = graph.repertoire, sound = graph.sound,
                         soundConfig = graph.soundConfig, pictureFactory = graph.pictureFactory,
                         savedState = createSavedStateHandle(), backings = graph.backings, backingPcm = graph.backingPcm,
+                        waveforms = graph.waveforms,
                     )
                 },
                 onShare = share::start,
@@ -477,6 +479,14 @@ private fun NavHostController.navigateToSound(sessionId: Long?) {
 
 private fun NavHostController.navigateToPiece(pieceId: Long) {
     navigate(Routes.piece(pieceId)) { launchSingleTop = true }
+}
+
+/**
+ * «К произведению» of a take (spec 3.36.5): back to the screen of that piece where it is behind in the stack — no second one of it —
+ * else it opens. The route with its id filled in matches only the entry of that very piece.
+ */
+private fun NavHostController.navigateToPieceOf(pieceId: Long) {
+    if (!popBackStack(Routes.piece(pieceId), inclusive = false)) navigateToPiece(pieceId)
 }
 
 /** Opens the music stand of a piece at [pageIndex] (from zero). */

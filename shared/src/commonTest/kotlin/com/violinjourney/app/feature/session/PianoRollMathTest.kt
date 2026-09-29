@@ -87,6 +87,38 @@ class PianoRollMathTest {
         assertNull(PianoRollMath(5_000, 1, 300f).scrollToFollow(2_500, 0f)) // nothing to scroll
     }
 
+    @Test
+    fun `a note of «Что уходит» in view is left where it is and one out of view comes to a fifth of the viewport`() {
+        val math = PianoRollMath(durationMs = 600_000, rowCount = 3, viewportWidth = 300f) // 30 dp/s
+        assertNull(math.scrollToShow(startMs = 2_000, endMs = 4_000, scroll = 0f), "60…120 of 0…300")
+        // off to the right: its start at 20 % — 60 dp — of the viewport
+        assertEquals(20 * 30f - 60f, math.scrollToShow(startMs = 20_000, endMs = 22_000, scroll = 0f)!!, EPS)
+        // off to the left, scrolled past it
+        assertEquals(10 * 30f - 60f, math.scrollToShow(startMs = 10_000, endMs = 11_000, scroll = 1_000f)!!, EPS)
+        // cut by the right edge is not in view: 280…340
+        assertEquals(280f - 60f, math.scrollToShow(startMs = 9_333, endMs = 11_333, scroll = 0f)!!, 0.5f)
+        // near the start and near the end the scroll stops where the roll does
+        assertEquals(0f, math.scrollToShow(startMs = 1_000, endMs = 2_000, scroll = 500f)!!, EPS)
+        assertEquals(math.maxScroll, math.scrollToShow(startMs = 599_000, endMs = 600_000, scroll = 0f)!!, EPS)
+        // a short recording does not scroll at all
+        assertNull(PianoRollMath(5_000, 1, 300f).scrollToShow(4_000, 5_000, 0f))
+    }
+
+    @Test
+    fun `a row out of the twelve in view comes to the middle of the card and one in view stays`() {
+        val math = PianoRollMath(durationMs = 60_000, rowCount = 20, viewportWidth = 300f)
+        val viewport = math.viewportHeight // 12 rows and the bottom padding
+        assertNull(math.rowScrollToShow(row = 3, scroll = 0f))
+        assertNull(math.rowScrollToShow(row = 11, scroll = 0f), "the twelfth row is the last in view")
+        val middle = 13 * 27f - (viewport - 27f) / 2
+        assertEquals(middle, math.rowScrollToShow(row = 13, scroll = 0f)!!, EPS)
+        // the last rows stop at the end of the rows, the first at their start
+        assertEquals(math.contentHeight - viewport, math.rowScrollToShow(row = 19, scroll = 0f)!!, EPS)
+        assertEquals(0f, math.rowScrollToShow(row = 1, scroll = 200f)!!, EPS)
+        // twelve rows or fewer never scroll
+        assertNull(PianoRollMath(60_000, 5, 300f).rowScrollToShow(row = 4, scroll = 0f))
+    }
+
     private companion object {
         const val EPS = 0.001f
     }

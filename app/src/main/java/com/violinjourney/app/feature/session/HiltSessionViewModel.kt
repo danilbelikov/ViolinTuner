@@ -3,6 +3,7 @@ package com.violinjourney.app.feature.session
 import androidx.lifecycle.SavedStateHandle
 import com.violinjourney.app.core.audio.backing.BackingPcm
 import com.violinjourney.app.core.audio.playback.SessionPlayerFactory
+import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.audio.playback.VideoPictureFactory
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.di.DefaultDispatcher
@@ -29,5 +30,6 @@ class HiltSessionViewModel @Inject constructor(
     savedState: SavedStateHandle,
     backings: BackingRepository,
     backingPcm: BackingPcm,
+    waveforms: SessionWaveforms,
     @DefaultDispatcher compute: CoroutineDispatcher,
-) : SessionViewModel(repository, defaultConfig, audioFiles, playerFactory, repertoire, sound, soundConfig, pictureFactory, savedState, backings, backingPcm, compute)
+) : SessionViewModel(repository, defaultConfig, audioFiles, playerFactory, repertoire, sound, soundConfig, pictureFactory, savedState, backings, backingPcm, waveforms, compute)

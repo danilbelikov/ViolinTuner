@@ -2,15 +2,20 @@ package com.violinjourney.app.feature.session
 
 import androidx.lifecycle.SavedStateHandle
 import com.violinjourney.app.core.audio.fx.SoundMeters
+import com.violinjourney.app.core.audio.playback.FakeSessionWaveforms
 import com.violinjourney.app.core.audio.playback.PlayerState
 import com.violinjourney.app.core.audio.playback.SessionPlayer
+import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.audio.playback.VideoPicture
 import com.violinjourney.app.core.audio.playback.VideoState
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
+import com.violinjourney.app.core.domain.Note
 import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.domain.Zone
-import com.violinjourney.app.core.domain.backing.NoBackings
+import com.violinjourney.app.core.domain.backing.BackingOutput
+import com.violinjourney.app.core.domain.backing.FakeBackingRepository
+import com.violinjourney.app.core.domain.backing.TakeBacking
 import com.violinjourney.app.core.domain.repertoire.FakeRepertoireRepository
 import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
@@ -34,6 +39,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
@@ -80,6 +86,9 @@ class SessionViewModelTest {
         var loaded: File? = null
         var released = 0
         val sounds = mutableListOf<SoundSettings>()
+
+        /** False — a player still opening its file: it never says it is ready. */
+        var readyOnLoad = true
         override fun setSound(settings: SoundSettings) {
             sounds += settings
             state.update { it.copy(processed = !SoundRules.isNeutral(settings)) }
@@ -88,7 +97,7 @@ class SessionViewModelTest {
         override fun setOriginal(original: Boolean) = state.update { it.copy(original = original) }
         override fun load(file: File) {
             loaded = file
-            state.value = PlayerState(ready = true, durationMs = 4_100)
+            if (readyOnLoad) state.value = PlayerState(ready = true, durationMs = 4_100)
         }
 
         override fun play() = state.update { it.copy(playing = true) }
@@ -128,17 +137,22 @@ class SessionViewModelTest {
     private val player = FakePlayer()
     private val repertoire = FakeRepertoireRepository()
     private val sound = FakeSoundRepository()
+    private val backings = FakeBackingRepository()
+    private val waves = FakeSessionWaveforms()
     private var audioFiles: SessionAudioFiles = FakeAudioFiles(present = setOf("take.m4a"))
 
     private fun TestScope.viewModel(id: Long): SessionViewModel {
-        val viewModel = SessionViewModel(
-            repository, config, audioFiles, { player }, repertoire, sound, SoundConfig(), { file -> FakePicture(file).also { pictures += it } },
-            SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)),
-            compute = StandardTestDispatcher(testScheduler), backings = NoBackings, backingPcm = null,
-        )
+        val viewModel = newViewModel(id)
         runCurrent()
         return viewModel
     }
+
+    /** A model that has not read its recording yet: what it shows first can be watched from its first state. */
+    private fun TestScope.newViewModel(id: Long): SessionViewModel = SessionViewModel(
+        repository, config, audioFiles, { player }, repertoire, sound, SoundConfig(), { file -> FakePicture(file).also { pictures += it } },
+        SavedStateHandle(mapOf(SessionViewModel.ARG_SESSION_ID to id)),
+        compute = StandardTestDispatcher(testScheduler), backings = backings, backingPcm = null, waveforms = waves,
+    )
 
     private fun SessionViewModel.loaded() = state.value as SessionState.Loaded
 
@@ -370,6 +384,8 @@ class SessionViewModelTest {
         // the file is there, it only does not play here: the screen says so where the player was (spec 3.17)
         assertTrue(viewModel.loaded().soundFailed)
         assertTrue(viewModel.loaded().content.hasAudio)
+        // and there is nothing to play at the bottom: no panel, one column lying (spec 3.36.5)
+        assertFalse("a sound that does not play has no player at the bottom", viewModel.loaded().playable)
     }
 
     @Test
@@ -477,12 +493,16 @@ class SessionViewModelTest {
         sound.setDefault(SoundPresets.settingsOf(BuiltInPreset.CHAMBER_HALL, SoundConfig()))
         val id = saveSession(audio = "take.m4a")
         val viewModel = viewModel(id)
-        assertEquals(SoundRow(SoundCaption.BuiltIn(BuiltInPreset.CHAMBER_HALL), own = false), viewModel.loaded().sound)
+        assertEquals(SoundRow(SoundCaption.BuiltIn(BuiltInPreset.CHAMBER_HALL), own = false, processed = true), viewModel.loaded().sound)
 
         val own = SoundPresets.settingsOf(BuiltInPreset.WARM, SoundConfig())
         sound.setOwn(id, own.copy(output = own.output.copy(enabled = true, gainDb = 1.0)))
         runCurrent()
-        assertEquals(SoundRow(SoundCaption.Custom, own = true), viewModel.loaded().sound)
+        assertEquals(SoundRow(SoundCaption.Custom, own = true, processed = true), viewModel.loaded().sound)
+
+        sound.setOwn(id, SoundPresets.settingsOf(BuiltInPreset.OFF, SoundConfig()))
+        runCurrent()
+        assertEquals("settings that do nothing: no A and B, «выключен»", false, viewModel.loaded().sound?.processed)
 
         val effects = mutableListOf<SessionEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -490,6 +510,116 @@ class SessionViewModelTest {
         runCurrent()
         assertEquals(listOf<SessionEffect>(SessionEffect.OpenSound(id)), effects)
         assertNull("a silent session has neither player nor row", viewModel(saveSession()).loaded().sound)
+    }
+
+    // ---- the recording of R5 (spec 3.36.5)
+
+    @Test
+    fun `the waveform of the player is reckoned from the file of the sound and a recording without sound has none`() = runTest {
+        val viewModel = viewModel(saveSession(audio = "take.m4a"))
+        assertEquals(List(SessionWaveforms.BARS) { 0.5f }, viewModel.loaded().waveform)
+        assertEquals(1, waves.asked)
+
+        assertNull(viewModel(saveSession()).loaded().waveform)
+        assertEquals("nothing to reckon without a file", 1, waves.asked)
+    }
+
+    /** F#5 three times: −12 for a second, then −25 for a second, then −25 for a second and a half; A4 once, between them. */
+    private suspend fun saveDrifting(): Long {
+        val samples = List(20) { SessionSample(78, -12.0) } + listOf(null) + List(20) { SessionSample(69, 1.0) } + listOf(null) +
+            List(20) { SessionSample(78, -25.0) } + listOf(null) + List(30) { SessionSample(78, -25.0) }
+        val analysis = SessionAnalyzer.analyze(samples, config)
+        return repository.save(NewSession(0, samples.size * 50L, config, samples, analysis.metrics!!, emptyList(), null))
+    }
+
+    @Test
+    fun `a row of «Что уходит» opens the sheet where its note drifts the most`() = runTest {
+        val viewModel = viewModel(saveDrifting())
+        val content = viewModel.loaded().content
+        assertEquals(listOf("F#5"), content.problemNotes.map { it.note.name })
+        assertEquals(listOf(3, 1, 3, 3), content.segments.map { it.sameNoteCount })
+
+        viewModel.onIntent(SessionIntent.ProblemNoteClicked(content.problemNotes.single().note))
+        assertEquals("the largest mean, and of two equal ones the longer", 3, viewModel.loaded().selectedSegment)
+
+        viewModel.onIntent(SessionIntent.NoteSheetDismissed)
+        viewModel.onIntent(SessionIntent.ProblemNoteClicked(Note(80)))
+        assertNull("a note that did not sound opens nothing", viewModel.loaded().selectedSegment)
+    }
+
+    @Test
+    fun `«К произведению» leads to the piece of a take and a free recording or a take of a deleted piece has none`() = runTest {
+        val pieceId = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val takeId = saveSession(pieceId = pieceId)
+        val take = viewModel(takeId)
+        val effects = mutableListOf<SessionEffect>()
+        backgroundScope.launch { take.effects.collect { effects += it } }
+        take.onIntent(SessionIntent.OpenPieceClicked)
+        runCurrent()
+        assertEquals(listOf<SessionEffect>(SessionEffect.OpenPiece(pieceId)), effects)
+
+        val free = viewModel(saveSession())
+        backgroundScope.launch { free.effects.collect { effects += it } }
+        free.onIntent(SessionIntent.OpenPieceClicked)
+        runCurrent()
+
+        repertoire.delete(pieceId)
+        val orphan = viewModel(takeId)
+        assertNull(orphan.loaded().content.pieceId)
+        backgroundScope.launch { orphan.effects.collect { effects += it } }
+        orphan.onIntent(SessionIntent.OpenPieceClicked)
+        runCurrent()
+        assertEquals("only the take of a piece that is there", 1, effects.size)
+    }
+
+    @Test
+    fun `a held A plays the original only while it is held and a tap on A keeps it`() = runTest {
+        val id = saveSession(audio = "take.m4a")
+        val viewModel = viewModel(id)
+        sound.setOwn(id, SoundPresets.settingsOf(BuiltInPreset.ROOM, SoundConfig()))
+        runCurrent()
+
+        viewModel.onIntent(SessionIntent.OriginalSelected(original = true, held = true))
+        runCurrent()
+        assertTrue("held: A", viewModel.loaded().player!!.original)
+        viewModel.onIntent(SessionIntent.OriginalSelected(original = false, held = true))
+        runCurrent()
+        assertFalse("let go: B again", viewModel.loaded().player!!.original)
+
+        viewModel.onIntent(SessionIntent.OriginalSelected(original = true))
+        viewModel.onIntent(SessionIntent.OriginalSelected(original = false, held = true))
+        runCurrent()
+        assertTrue("a tap's press ends too, and A stays", viewModel.loaded().player!!.original)
+    }
+
+    /**
+     * The rows of the player stand from the first frame (spec 3.36.5): the first state the screen gets already knows the backing's row
+     * and A/B — not a state a moment later, when the flow of the settings or the player speaks.
+     */
+    @Test
+    fun `a take under a backing and settings that do something are known before the player is ready`() = runTest {
+        sound.setDefault(SoundPresets.settingsOf(BuiltInPreset.CHAMBER_HALL, SoundConfig()))
+        val id = saveSession(audio = "take.m4a")
+        backings.saveTake(TakeBacking(id, backingId = 1, offsetMs = 0, recordedOffsetMs = 0, gainDb = -6f, playedMs = 0, output = BackingOutput.WIRED, deviceName = null))
+        player.readyOnLoad = false
+        val viewModel = newViewModel(id)
+        val states = mutableListOf<SessionState>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect { states += it } }
+        runCurrent()
+        val first = states.filterIsInstance<SessionState.Loaded>().first()
+        assertNull("the player is still opening its file", first.player)
+        assertTrue("the backing's row and «только скрипка» from the first frame", first.content.underBacking)
+        assertEquals("A/B from the first frame", true, first.sound?.processed)
+        assertTrue("the panel stands from the first frame", first.playable)
+
+        assertFalse(viewModel(saveSession(audio = "take.m4a")).loaded().content.underBacking)
+    }
+
+    @Test
+    fun `a video take says it is one before its picture is looked into`() = runTest {
+        audioFiles = FakeAudioFiles(present = setOf("take.mp4"))
+        assertTrue(viewModel(saveVideoTake()).loaded().content.hasVideo)
+        assertFalse(viewModel(saveSession()).loaded().content.hasVideo)
     }
 
     @Test
@@ -579,6 +709,27 @@ class SessionViewModelTest {
         runCurrent()
         assertTrue(viewModel.loaded().video!!.undecodable)
         assertNotNull(viewModel.loaded().player)
+    }
+
+    /**
+     * While the backing of a video take is made, the picture waits for the sound and has no «на весь экран» (spec 3.36.5, 5.25): the
+     * full screen would come without a player and say nothing of why. Made — it opens.
+     */
+    @Test
+    fun `the full screen does not open while the backing is made`() = runTest {
+        audioFiles = FakeAudioFiles(present = setOf("take.mp4"))
+        player.readyOnLoad = false
+        val viewModel = viewModel(saveVideoTake())
+        player.state.value = PlayerState(preparingBacking = true)
+        runCurrent()
+        assertTrue(viewModel.loaded().preparingBacking)
+        viewModel.onIntent(SessionIntent.FullscreenChanged(true))
+        assertFalse(viewModel.loaded().fullscreen)
+
+        player.state.value = PlayerState(ready = true, durationMs = 4_100, hasBacking = true)
+        runCurrent()
+        viewModel.onIntent(SessionIntent.FullscreenChanged(true))
+        assertTrue(viewModel.loaded().fullscreen)
     }
 
     @Test

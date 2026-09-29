@@ -3,8 +3,10 @@ package com.violinjourney.app.core.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.indication
 import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.IntrinsicSize
@@ -23,6 +25,7 @@ import androidx.compose.material3.ripple
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -33,18 +36,28 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.isSpecified
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.disabled
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -66,14 +79,23 @@ private val CompactEdge = 2.dp
 private val CompactBetween = 1.dp
 private val CompactCorner = 14.dp
 
+/** A label that does not stand in one line of its size goes on two lines of this size in the same segment (spec 5.29 R5). */
+private const val SHRUNK_SP = 12f
+
+/** «A» / «B» before the words of a segment stand a step larger and heavier than them — 15 sp, 800 by words of 14 (spec 5.29 R5). */
+private const val PREFIX_STEP_SP = 1
+
+/** Between a prefix and its words: an en space — about the 6 dp of the mockup, and a place to go on to a second line at. */
+private const val PREFIX_GAP = "\u2002"
+
 /**
  * The one segmented switch of the app (spec 3.36.1, 5.29; components.html `.seg`): the chosen segment is a pill in the accent, no
  * frame and no dividers; the whole height of the container is pressed, not only the pill, and the ripple starts under the finger.
  * A label that does not fit goes on a second line; a large font makes the container and its pills taller rather than cut that line
- * (52 and 44 are the least), and only a third line — a very large font breaking a word — ends in an ellipsis. Three switches are not
- * this one: «Игра | Настройка» of Live, the switches over pictures (the house, a stop of the journey) and — until R5 moves it here —
- * the A/B of the player. [compact] is for that A/B: 28 dp to see, at least 48 to press. [fontSize] is larger for segments that are a
- * single sign, like ♭ ♮ ♯.
+ * (52 and 44 are the least), and only a third line — a very large font breaking a word — ends in an ellipsis. Two switches are not
+ * this one: «Игра | Настройка» of Live and the switches over pictures (the house, a stop of the journey). [compact] is for a player
+ * in a window lower than 700 dp — its A/B and «С минусовкой | Только скрипка» (spec 3.36.5): 28 dp to see, at least 48 to press.
+ * [fontSize] is larger for segments that are a single sign, like ♭ ♮ ♯.
  *
  * [wholeWords] — no label breaks inside a word (the status of an element, spec 3.36.4): equal shares while each holds its widest
  * word, otherwise the segments share the row by their words, and where even that is too narrow the labels step down together
@@ -82,9 +104,26 @@ private val CompactCorner = 14.dp
  * for TalkBack («Статус»), on the group itself.
  *
  * [containerColor] — the ground of the container where surfaceContainer would not stand out: the ground of the screen in a sheet
- * («Тональность», 5.29 R4). [enabled] false — the whole switch sleeps: 0.38 with its ground, no segment answers, TalkBack says
- * «недоступно» (the sign and the mode without a tonic, the key of a scale in an edit); the reason is its caller's line under it.
- * [segmentEnabled] — one segment sleeps alone at 0.38 while the others answer (the octave that would leave the violin).
+ * («Тональность», 5.29 R4) and on the panel of a player (5.29 R5). [enabled] false — the whole switch sleeps: 0.38 with its ground,
+ * no segment answers, TalkBack says «недоступно» (the sign and the mode without a tonic, the key of a scale in an edit, the A/B of a
+ * player while its backing is made); the reason is its caller's line near it. [segmentEnabled] — one segment sleeps alone at 0.38
+ * while the others answer (the octave that would leave the violin).
+ *
+ * The player of a recording and of «Звук» (spec 3.36.5, 5.29 R5): [strong] — the words at 800, not 700; [prefixes] — «A» / «B» a
+ * step larger and heavier before the words («A оригинал | B обработка»); [segmentDescriptions] — what TalkBack says of each segment
+ * instead of its label («A, оригинал»); [onHold] — a finger held on a segment: `(index, true)` once the press has lasted as long as a
+ * long press, `(index, false)` when that finger lets go or its gesture is cut short («пока держишь» of A, spec 3.17) — a tap still
+ * selects, and TalkBack's activation selects too, the hold being a gesture of the finger only; [shrinkToTwoLines] — where a label
+ * does not stand in one line of [fontSize] in its equal share, all the labels go on up to two lines of 12 sp in the same height,
+ * rather than one of them growing the switch; where a word would not stand whole even so (Spanish «acompañamiento» at a large
+ * font), the segments share the row by their words and only then step smaller ([SegmentFit]) — a word is never broken by the
+ * letter. The [compact] switch holds one line in its pills of 24 — a line of its line height, not of the font's taller ascent and
+ * descent ([ExactLines]: «A» of 14 sp at the font 1.3 stands in 21.6 dp, not 26.3); two lines of 12 would grow it past 28: its labels
+ * go down to 12 sp in one line, by their lines where equal halves do not hold them, and a step smaller where even that does not
+ * ([SegmentFit.oneLine]: «С минусовкой | Только скрипка» in the narrow column lying at the font 1.3); only where not even 11.5 sp
+ * holds them in one line do they go on two, the switch growing, rather than break a word — as it grows where its line itself is
+ * taller than 24 (14 sp at Android's next step of font, 1.5: 25.5 dp). [byWords] and [wholeWords] have their own way of fitting and
+ * take no [prefixes] and no [shrinkToTwoLines].
  */
 @Composable
 fun SegmentedSwitch(
@@ -100,21 +139,61 @@ fun SegmentedSwitch(
     containerColor: Color = Color.Unspecified,
     enabled: Boolean = true,
     segmentEnabled: (Int) -> Boolean = { true },
+    strong: Boolean = false,
+    prefixes: List<String>? = null,
+    segmentDescriptions: List<String>? = null,
+    onHold: ((index: Int, held: Boolean) -> Unit)? = null,
+    shrinkToTwoLines: Boolean = false,
 ) {
-    val looks = SwitchLooks(containerColor, enabled, segmentEnabled)
-    val labelStyle = MaterialTheme.typography.labelLarge.copy(
-        fontSize = fontSize.sp,
-        lineHeight = (fontSize * LINE_HEIGHT).sp,
-        fontWeight = FontWeight.Bold,
-    )
-    if (!byWords && !wholeWords) {
-        SwitchRow(labels, selectedIndex, onSelect, modifier, compact, labelStyle, weights = null, description, looks)
+    val looks = SwitchLooks(containerColor, enabled, segmentEnabled, segmentDescriptions, onHold)
+    val labelStyle = labelStyleOf(fontSize.toFloat(), strong, compact)
+    val fits = byWords || wholeWords
+    if (!fits && !shrinkToTwoLines) {
+        SwitchRow(textsOf(labels, prefixes, fontSize.toFloat()), selectedIndex, onSelect, modifier, compact, labelStyle, weights = null, description, looks)
         return
     }
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
     BoxWithConstraints(modifier.fillMaxWidth()) {
         val room = constraints.maxWidth
+        if (!fits) {
+            val plan = remember(labels, prefixes, labelStyle, measurer, density, room, compact) {
+                val around = labels.indices.map { index -> with(density) { labelRoom(index, labels.lastIndex, compact).toPx() } }
+                val slack = with(density) { SegmentSlack.toPx() }
+                val lines = textsOf(labels, prefixes, fontSize.toFloat()).map { measurer.lineWidth(it, labelStyle) }
+                val styleAt = { sizeSp: Float -> labelStyle.copy(fontSize = sizeSp.sp, lineHeight = (sizeSp * LINE_HEIGHT).sp) }
+                if (!SegmentFit.shrinks(room.toFloat(), around, slack, lines)) {
+                    SegmentFit.Plan(fontSize.toFloat(), List(labels.size) { room.toFloat() / labels.size })
+                } else {
+                    // the compact pills of 24 hold one line: 12 sp or a step smaller in one line, by the lines where equal halves do
+                    // not hold them — a second line would grow the switch past its 28 (spec 5.29 R5)
+                    val oneLine = if (compact) {
+                        SegmentFit.oneLine(room.toFloat(), around, slack, maxSp = SHRUNK_SP) { sizeSp ->
+                            textsOf(labels, prefixes, sizeSp).map { measurer.lineWidth(it, styleAt(sizeSp)) }
+                        }
+                    } else {
+                        null
+                    }
+                    // two lines of 12 in equal halves while each word stands whole; else by the words, and smaller only where even
+                    // that breaks one — a word is never broken by the letter (SegmentFit)
+                    oneLine ?: SegmentFit.plan(room.toFloat(), around, slack, maxSp = SHRUNK_SP, share = SegmentFit.Share.Equal) { sizeSp ->
+                        textsOf(labels, prefixes, sizeSp).map { text ->
+                            SegmentFit.Label(
+                                line = measurer.lineWidth(text, styleAt(sizeSp)),
+                                word = text.text.split(' ', '\n', '\t', PREFIX_GAP.single()).filter { it.isNotEmpty() }
+                                    .maxOfOrNull { measurer.lineWidth(AnnotatedString(it), styleAt(sizeSp)) } ?: 0f,
+                            )
+                        }
+                    }
+                }
+            }
+            val style = if (plan.sizeSp == fontSize.toFloat()) labelStyle else labelStyle.copy(fontSize = plan.sizeSp.sp, lineHeight = (plan.sizeSp * LINE_HEIGHT).sp)
+            SwitchRow(
+                textsOf(labels, prefixes, plan.sizeSp), selectedIndex, onSelect, Modifier, compact, style,
+                plan.widths.takeIf { widths -> widths.all { it > 0f } }, description, looks,
+            )
+            return@BoxWithConstraints
+        }
         val plan = remember(labels, labelStyle, measurer, density, room, compact, byWords) {
             val around = labels.indices.map { index -> with(density) { labelRoom(index, labels.lastIndex, compact).toPx() } }
             SegmentFit.plan(
@@ -127,24 +206,59 @@ fun SegmentedSwitch(
                 val style = labelStyle.copy(fontSize = sizeSp.sp, lineHeight = (sizeSp * LINE_HEIGHT).sp)
                 labels.map { label ->
                     SegmentFit.Label(
-                        line = measurer.lineWidth(label, style),
-                        word = label.split(' ', '\n', '\t').filter { it.isNotEmpty() }.maxOfOrNull { measurer.lineWidth(it, style) } ?: 0f,
+                        line = measurer.lineWidth(AnnotatedString(label), style),
+                        word = label.split(' ', '\n', '\t').filter { it.isNotEmpty() }.maxOfOrNull { measurer.lineWidth(AnnotatedString(it), style) } ?: 0f,
                     )
                 }
             }
         }
         val style = if (plan.sizeSp == fontSize.toFloat()) labelStyle else labelStyle.copy(fontSize = plan.sizeSp.sp, lineHeight = (plan.sizeSp * LINE_HEIGHT).sp)
         // a row of no width yet (a transition) has nothing to share
-        SwitchRow(labels, selectedIndex, onSelect, Modifier, compact, style, plan.widths.takeIf { widths -> widths.all { it > 0f } }, description, looks)
+        SwitchRow(labels.map(::AnnotatedString), selectedIndex, onSelect, Modifier, compact, style, plan.widths.takeIf { widths -> widths.all { it > 0f } }, description, looks)
     }
 }
 
-/** What of a switch is not about its words: its ground, and what of it answers. */
-private class SwitchLooks(val containerColor: Color, val enabled: Boolean, val segmentEnabled: (Int) -> Boolean)
+/** The words of the segments at [sizeSp], each after its prefix, if it has one, a step larger and at 800. */
+private fun textsOf(labels: List<String>, prefixes: List<String>?, sizeSp: Float): List<AnnotatedString> = labels.mapIndexed { index, label ->
+    val prefix = prefixes?.getOrNull(index)
+    if (prefix == null) {
+        AnnotatedString(label)
+    } else {
+        buildAnnotatedString {
+            withStyle(SpanStyle(fontSize = (sizeSp + PREFIX_STEP_SP).sp, fontWeight = FontWeight.ExtraBold)) { append(prefix) }
+            append(PREFIX_GAP)
+            append(label)
+        }
+    }
+}
+
+/**
+ * The words of a segment at [sizeSp], 700 or [strong] 800, lines of 1.15. The [compact] pill of 24 is made for one such line: its
+ * box is the line and no more ([ExactLines]) — on Android the box of material3's style is Manrope's own 1.37 em, which at the font
+ * 1.3 (14 sp are 18.8 dp there) is 26.3 dp, and the pill grew past 24 to take it, the switch past its 48 (50.67).
+ */
+@Composable
+private fun labelStyleOf(sizeSp: Float, strong: Boolean, compact: Boolean): TextStyle {
+    val style = MaterialTheme.typography.labelLarge.copy(
+        fontSize = sizeSp.sp,
+        lineHeight = (sizeSp * LINE_HEIGHT).sp,
+        fontWeight = if (strong) FontWeight.ExtraBold else FontWeight.Bold,
+    )
+    return if (compact) style.copy(lineHeightStyle = ExactLines) else style
+}
+
+/** What of a switch is not about its words: its ground, what of it answers, what TalkBack says of each segment and who hears a hold. */
+private class SwitchLooks(
+    val containerColor: Color,
+    val enabled: Boolean,
+    val segmentEnabled: (Int) -> Boolean,
+    val descriptions: List<String>?,
+    val onHold: ((index: Int, held: Boolean) -> Unit)?,
+)
 
 @Composable
 private fun SwitchRow(
-    labels: List<String>,
+    texts: List<AnnotatedString>,
     selectedIndex: Int?,
     onSelect: (Int) -> Unit,
     modifier: Modifier,
@@ -183,7 +297,7 @@ private fun SwitchRow(
             .selectableGroup()
             .then(if (description != null) Modifier.semantics { contentDescription = description } else Modifier),
     ) {
-        labels.forEachIndexed { index, label ->
+        texts.forEachIndexed { index, text ->
             val selected = index == selectedIndex
             val answers = looks.enabled && looks.segmentEnabled(index)
             // a segment of its own is dimmed alone; a switch dimmed as a whole is not dimmed twice
@@ -191,25 +305,34 @@ private fun SwitchRow(
             val pill by animateColorAsState(if (selected) colors.primaryContainer else Color.Transparent, tween(SWITCH_MS), label = "segment")
             val interaction = remember { MutableInteractionSource() }
             val pillPresses = remember(interaction) { ShiftedInteractionSource(interaction) }
+            val spoken = looks.descriptions?.getOrNull(index)
+            val hold = looks.onHold
             Box(
                 modifier = Modifier
                     .weight(weights?.getOrNull(index) ?: 1f)
                     .fillMaxHeight()
                     .then(segmentDim)
-                    .selectable(
-                        selected = selected,
-                        interactionSource = interaction,
-                        indication = null,
-                        enabled = answers,
-                        role = Role.RadioButton,
-                        onClick = { onSelect(index) },
-                    ),
+                    .then(
+                        if (hold == null) {
+                            Modifier.selectable(
+                                selected = selected,
+                                interactionSource = interaction,
+                                indication = null,
+                                enabled = answers,
+                                role = Role.RadioButton,
+                                onClick = { onSelect(index) },
+                            )
+                        } else {
+                            holdableSegment(index, selected, answers, interaction, onSelect, hold)
+                        },
+                    )
+                    .then(if (spoken != null) Modifier.semantics { contentDescription = spoken } else Modifier),
             ) {
                 Box(
                     modifier = Modifier
                         .padding(
                             start = if (index == 0) edge else between,
-                            end = if (index == labels.lastIndex) edge else between,
+                            end = if (index == texts.lastIndex) edge else between,
                             top = inset + edge,
                             bottom = inset + edge,
                         )
@@ -223,7 +346,9 @@ private fun SwitchRow(
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
-                        text = label,
+                        text = text,
+                        // the segment says its description; its label, said as well, would be heard twice
+                        modifier = if (spoken != null) Modifier.clearAndSetSemantics { } else Modifier,
                         color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -234,6 +359,64 @@ private fun SwitchRow(
             }
         }
     }
+}
+
+/**
+ * A segment that hears a hold as well as a tap (spec 3.17, «пока держишь»): a tap selects it; a press that lasts as long as a long
+ * press tells `(index, true)`, and its end — the finger let go, or the gesture cut short (the switch went to sleep under it) — tells
+ * `(index, false)`. The press lights the ripple of the pill as a click would. To TalkBack and VoiceOver it is a radio button that
+ * their activation selects: a hold is a gesture of the finger only.
+ */
+@Composable
+private fun holdableSegment(
+    index: Int,
+    selected: Boolean,
+    answers: Boolean,
+    interaction: MutableInteractionSource,
+    onSelect: (Int) -> Unit,
+    onHold: (index: Int, held: Boolean) -> Unit,
+): Modifier {
+    val select by rememberUpdatedState(onSelect)
+    val hold by rememberUpdatedState(onHold)
+    return Modifier
+        .semantics(mergeDescendants = true) {
+            role = Role.RadioButton
+            this.selected = selected
+            if (answers) {
+                onClick {
+                    select(index)
+                    true
+                }
+            } else {
+                disabled()
+            }
+        }
+        .pointerInput(answers, index, interaction) {
+            if (!answers) return@pointerInput
+            var holding = false
+            detectTapGestures(
+                onPress = { offset ->
+                    val press = PressInteraction.Press(offset)
+                    interaction.tryEmit(press)
+                    var released = false
+                    try {
+                        released = tryAwaitRelease()
+                    } finally {
+                        interaction.tryEmit(if (released) PressInteraction.Release(press) else PressInteraction.Cancel(press))
+                        // a hold ends however its gesture does
+                        if (holding) {
+                            holding = false
+                            hold(index, false)
+                        }
+                    }
+                },
+                onLongPress = {
+                    holding = true
+                    hold(index, true)
+                },
+                onTap = { select(index) },
+            )
+        }
 }
 
 /** The label's own padding inside its pill, at each side. */
@@ -252,5 +435,5 @@ private fun labelRoom(index: Int, last: Int, compact: Boolean): Dp {
     return (if (index == 0) edge else between) + (if (index == last) edge else between) + LabelPadding * 2
 }
 
-private fun TextMeasurer.lineWidth(text: String, style: TextStyle): Float =
+private fun TextMeasurer.lineWidth(text: AnnotatedString, style: TextStyle): Float =
     measure(text, style, softWrap = false, maxLines = 1).size.width.toFloat()

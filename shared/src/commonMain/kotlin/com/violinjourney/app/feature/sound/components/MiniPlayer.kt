@@ -2,8 +2,6 @@ package com.violinjourney.app.feature.sound.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -34,20 +32,16 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.disabled
 import androidx.compose.ui.semantics.onClick
-import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
@@ -62,7 +56,6 @@ import com.violinjourney.app.feature.sound.SoundFormats
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.session_player_pause
 import com.violinjourney.app.shared.resources.session_player_play
-import com.violinjourney.app.shared.resources.session_player_position
 import com.violinjourney.app.shared.resources.sound_ab_original
 import com.violinjourney.app.shared.resources.sound_ab_processed
 import com.violinjourney.app.shared.resources.sound_meter_limiter
@@ -72,13 +65,7 @@ import org.jetbrains.compose.resources.stringResource
 
 private val MeterHeight = 4.dp
 private val LimiterMark = 8.dp
-private val PlainTrack = 4.dp
 
-/** Handoff `sizes`, «Форма волны»: a wave lower than this is not drawn — a plain 4 dp slider stands instead (spec 3.17). */
-private val PlainTrackBelow = 20.dp
-private const val BAR_STEP_DP = 3f
-private const val BAR_WIDTH_DP = 2f
-private const val MIN_BAR = 0.08f
 private const val DISABLED_ALPHA = 0.38f
 private const val TABULAR_FIGURES = "tnum"
 
@@ -92,7 +79,8 @@ data class MiniPlayerMetrics(val button: Dp, val wave: Dp, val ab: Dp) {
 
 /**
  * Always in sight on the «Звук» screen: everything here is set by ear. Play and pause, the
- * waveform that is also the seek bar, the time, A/B and the level that leaves the chain.
+ * waveform that is also the seek bar ([SeekWave], shared with the player of a recording), the time, A/B and the level that
+ * leaves the chain.
  * [meters] and [position] are read where they are drawn: the readings and the chunks of sound
  * recompose nothing but a number, and [player] keeps its position to the whole second.
  */
@@ -137,75 +125,6 @@ fun MiniPlayer(
             OutputMeter(meters, Modifier.weight(1f))
         }
     }
-}
-
-/**
- * The waveform as the seek bar: the played part is primary, the finger goes anywhere along it. Until reckoned — a plain
- * track. The played part follows [position] in the draw phase; what TalkBack is told goes by the whole second.
- */
-@Composable
-private fun SeekWave(player: PlayerState, position: () -> Long, waveform: List<Float>?, height: Dp, onSeek: (Long) -> Unit, modifier: Modifier) {
-    val colors = MaterialTheme.colorScheme
-    val rest = ViolinTheme.soundColors.waveRest
-    val duration = player.durationMs.coerceAtLeast(1)
-    var dragged by remember { mutableStateOf<Float?>(null) }
-    val currentOnSeek by rememberUpdatedState(onSeek)
-    val description = stringResource(Res.string.session_player_position)
-    val spoken = dragged ?: (player.positionMs.toFloat() / duration)
-    Box(
-        modifier = modifier
-            .height(height)
-            .semantics {
-                contentDescription = description
-                progressBarRangeInfo = ProgressBarRangeInfo(spoken, 0f..1f)
-                setProgress { fraction -> currentOnSeek((fraction.coerceIn(0f, 1f) * duration).toLong()); true }
-                // A reader moves the position by swiping. Its activation does nothing: without an action of its own it would
-                // come as a touch in the middle of the wave and seek there.
-                onClick { true }
-            }
-            .pointerInput(duration) {
-                awaitEachGesture {
-                    val down = awaitFirstDown()
-                    fun at(x: Float) = (x / size.width).coerceIn(0f, 1f)
-                    dragged = at(down.position.x)
-                    while (true) {
-                        val change = awaitPointerEvent().changes.firstOrNull { it.id == down.id } ?: break
-                        if (!change.pressed) break
-                        change.consume()
-                        dragged = at(change.position.x)
-                    }
-                    dragged?.let { currentOnSeek((it * duration).toLong()) }
-                    dragged = null
-                }
-            }
-            .drawBehind {
-                val played = dragged ?: (position().toFloat() / duration)
-                val bars = waveform
-                if (bars == null || size.height < PlainTrackBelow.toPx()) {
-                    val track = PlainTrack.toPx()
-                    val y = (size.height - track) / 2
-                    drawRoundRect(rest, Offset(0f, y), Size(size.width, track), CornerRadius(track / 2))
-                    drawRoundRect(colors.primary, Offset(0f, y), Size(size.width * played, track), CornerRadius(track / 2))
-                    drawCircle(colors.primary, 7.dp.toPx(), Offset(size.width * played, size.height / 2))
-                } else {
-                    val step = BAR_STEP_DP.dp.toPx()
-                    val width = BAR_WIDTH_DP.dp.toPx()
-                    val count = (size.width / step).toInt().coerceAtLeast(1)
-                    for (index in 0 until count) {
-                        // as many columns as fit: the 120 reckoned ones are spread over them
-                        val level = bars[(index * bars.size / count).coerceIn(0, bars.lastIndex)].coerceAtLeast(MIN_BAR)
-                        val barHeight = size.height * level
-                        val x = index * step
-                        drawRoundRect(
-                            color = if (x / size.width <= played) colors.primary else rest,
-                            topLeft = Offset(x, (size.height - barHeight) / 2),
-                            size = Size(width, barHeight),
-                            cornerRadius = CornerRadius(width / 2),
-                        )
-                    }
-                }
-            },
-    )
 }
 
 /**

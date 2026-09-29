@@ -102,7 +102,7 @@ open class SoundViewModel(
     private var hintJob: Job? = null
     private var waveformJob: Job? = null
     private var unsaved = false
-    private var heldOriginal = false
+    private val hold = OriginalHold()
 
     // The backing of this take (spec 3.32), read once: the block is a draft like the settings, saved a moment after a touch.
     private var take: TakeBacking? = null
@@ -134,7 +134,7 @@ open class SoundViewModel(
             }
             SoundIntent.PlayPauseClicked -> player?.let { if (it.state.value.playing) it.pause() else it.play() }
             is SoundIntent.SeekRequested -> player?.seekTo(intent.positionMs)
-            is SoundIntent.OriginalSelected -> selectOriginal(intent)
+            is SoundIntent.OriginalSelected -> hold.select(player, intent.original, intent.held)
             is SoundIntent.ModeSelected -> selectMode(intent.own)
             SoundIntent.ResetClicked -> if (state.value.canReset) {
                 mutableState.update { it.copy(dialog = if (mode == SoundMode.RECORDING) SoundDialog.BackToEveryone else SoundDialog.ResetEveryone) }
@@ -340,23 +340,6 @@ open class SoundViewModel(
             SoundDialog.ResetEveryone -> edit { SoundRules.off(config) }
             is SoundDialog.DeletePreset -> viewModelScope.launch { sound.deletePreset(dialog.id) }
             SoundDialog.SavePreset, SoundDialog.PickRecording, null -> Unit
-        }
-    }
-
-    private fun selectOriginal(intent: SoundIntent.OriginalSelected) {
-        val current = player ?: return
-        if (intent.held) {
-            // «Пока держишь»: only a press that began at B goes back to B.
-            if (intent.original && !current.state.value.original) {
-                heldOriginal = true
-                current.setOriginal(true)
-            } else if (!intent.original && heldOriginal) {
-                heldOriginal = false
-                current.setOriginal(false)
-            }
-        } else {
-            heldOriginal = false
-            current.setOriginal(intent.original)
         }
     }
 

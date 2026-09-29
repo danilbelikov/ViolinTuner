@@ -49,6 +49,34 @@ internal object SegmentFit {
         }
     }
 
+    /**
+     * A switch of equal shares whose labels step down to two smaller lines where they do not all stand in one ([SegmentedSwitch]'s
+     * `shrinkToTwoLines`, spec 5.29 R5): true when a label's [lines] — its width in one line — with the room [around] it and the
+     * [slack] is wider than its share of the [room].
+     */
+    fun shrinks(room: Float, around: List<Float>, slack: Float, lines: List<Float>): Boolean =
+        lines.indices.any { i -> lines[i] + around[i] + slack > room / lines.size }
+
+    /**
+     * Labels that must each stand in one line — the compact switch of a player (spec 5.29 R5: seen 28, pressed 48), whose pills of 24
+     * hold one line of 12 sp and would grow the switch with a second: from [maxSp] down by [STEP_SP] to [MIN_SP], the largest size at
+     * which every label stands in one line — in equal shares where each fits its own, else each its line and the rest of the row in
+     * proportion (Spanish «Con acompañamiento» beside «Solo violín» in the narrow column lying). Null where not even [MIN_SP] holds them
+     * in one line: the caller lets them go on two lines rather than break a word. [linesAt] — the width of each label in one line at a
+     * size; [around] and [slack] as for [plan].
+     */
+    fun oneLine(room: Float, around: List<Float>, slack: Float, maxSp: Float, linesAt: (sizeSp: Float) -> List<Float>): Plan? {
+        var sizeSp = maxSp
+        while (true) {
+            val whole = linesAt(sizeSp).mapIndexed { i, line -> line + around[i] + slack }
+            if (whole.all { it <= room / whole.size }) return Plan(sizeSp, List(whole.size) { room / whole.size })
+            val sum = whole.sum()
+            if (sum <= room) return Plan(sizeSp, whole.map { it + (room - sum) * it / sum })
+            if (sizeSp <= MIN_SP) return null
+            sizeSp = maxOf(MIN_SP, sizeSp - STEP_SP)
+        }
+    }
+
     /** The widths by the words, or null when the widest words do not fit the row. */
     private fun shared(room: Float, labels: List<Label>, least: List<Float>, around: List<Float>, slack: Float): List<Float>? {
         val whole = labels.mapIndexed { i, label -> label.line + around[i] + slack }

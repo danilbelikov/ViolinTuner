@@ -10,11 +10,11 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -40,7 +40,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
@@ -55,9 +54,12 @@ import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.session_back
 import com.violinjourney.app.shared.resources.video_fullscreen
 import com.violinjourney.app.shared.resources.video_fullscreen_exit
-import com.violinjourney.app.shared.resources.video_row_time
+import com.violinjourney.app.shared.resources.video_row_flat
+import com.violinjourney.app.shared.resources.video_row_none
+import com.violinjourney.app.shared.resources.video_row_sharp
 import org.jetbrains.compose.resources.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -65,17 +67,24 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.audio.playback.PlayerState
-import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.session.SessionContent
 import com.violinjourney.app.feature.session.VideoLayoutMath
 import com.violinjourney.app.feature.session.VideoUi
+import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 private const val TABULAR_FIGURES = "tnum"
 private const val PANEL_HIDE_MS = 3_000L
+
+/** «На весь экран» in the row the picture shrinks into: an icon of 24 in a target of 48. */
+private val RowButton = 48.dp
+
+/** The corner of the mini frame of that row (5.13): the picture's own corner shrinks to it with the frame. */
+private val MiniFrameCorner = 10.dp
 private const val PANEL_FADE_MS = 300
 private val StripHeight = 40.dp
 private val StripBar = 6.dp
@@ -102,7 +111,7 @@ fun StickyVideo(
     onTap: () -> Unit,
     onFullscreen: () -> Unit,
     modifier: Modifier = Modifier,
-    /** The sound is not ready (the backing is being made): the picture waits with it. */
+    /** The sound is not ready (the backing is being made): the picture waits with it, and neither it nor its row has «на весь экран». */
     waiting: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -119,7 +128,7 @@ fun StickyVideo(
     }
     val open by remember(geometry) { derivedStateOf { geometry.collapse() < 1f } }
     val words by remember(geometry) { derivedStateOf { geometry.frame().wordsAlpha > 0f } }
-    val line = colors.surfaceContainerHigh
+    val line = colors.outlineVariant
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -138,7 +147,7 @@ fun StickyVideo(
                 Modifier
                     .fillMaxSize()
                     .graphicsLayer { alpha = 1f - geometry.collapse() }
-                    .background(ViolinTheme.videoColors.field, RoundedCornerShape(16.dp)),
+                    .background(ViolinTheme.videoColors.field, RoundedCornerShape(VideoCorner)),
             )
         }
         VideoFrame(
@@ -152,9 +161,10 @@ fun StickyVideo(
                     val placeable = measurable.measure(constraints.constrain(Constraints.fixed(frame.width.dp.roundToPx(), frame.height.dp.roundToPx())))
                     layout(placeable.width, placeable.height) { placeable.placeRelative(frame.x.dp.roundToPx(), 0) }
                 }
-                // the rounding shrinks with the frame: the clip of VideoFrame itself is left square
+                // the rounding shrinks with the frame, from that of a card to that of the mini frame: the clip of VideoFrame itself is
+                // left square
                 .graphicsLayer {
-                    shape = RoundedCornerShape((16f - 6f * geometry.collapse()).dp)
+                    shape = RoundedCornerShape(VideoCorner - (VideoCorner - MiniFrameCorner) * geometry.collapse())
                     clip = true
                 },
             corner = 0.dp,
@@ -178,42 +188,59 @@ fun StickyVideo(
                     },
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.Bottom) {
+                // «82 %» and «в строе · ниже на 6 ц» (spec 3.36.5): the time is in the player; the summary under the video says the same
+                // to TalkBack, so these words stay quiet
+                Column(modifier = Modifier.weight(1f).clearAndSetSemantics { }) {
+                    Row {
                         Text(
                             text = content.scorePercent.toString(),
+                            modifier = Modifier.alignByBaseline(),
                             color = colors.onSurface,
-                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES),
+                            style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp, lineHeight = 26.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES),
                         )
                         Text(
                             text = "%",
-                            modifier = Modifier.padding(start = 2.dp, bottom = 3.dp),
+                            modifier = Modifier.alignByBaseline().padding(start = 2.dp),
                             color = colors.onSurfaceVariant,
-                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
                         )
                     }
                     Text(
-                        text = stringResource(
-                            Res.string.video_row_time,
-                            Formats.duration(player?.positionMs ?: 0), Formats.duration(content.durationMs), Formats.signedCents(content.biasCents),
-                        ),
+                        text = rowWordsOf(content),
                         color = colors.onSurfaceVariant,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
+                        style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
                     )
                 }
-                val label = stringResource(Res.string.video_fullscreen)
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape)
-                        .clickable(enabled = !open, role = Role.Button, onClick = onFullscreen)
-                        .semantics { contentDescription = label },
-                    contentAlignment = Alignment.Center,
-                ) { AppIcon(AppIcons.Fullscreen, contentDescription = null, tint = colors.onSurface, size = 22.dp) }
+                // while the backing is made there is no «на весь экран» here either (spec 3.36.5, 5.25): its room stays, so the words
+                // do not move when it comes
+                if (waiting) {
+                    Spacer(Modifier.size(RowButton))
+                } else {
+                    val label = stringResource(Res.string.video_fullscreen)
+                    Box(
+                        modifier = Modifier
+                            .size(RowButton)
+                            .clip(CircleShape)
+                            .clickable(enabled = !open, role = Role.Button, onClick = onFullscreen)
+                            .semantics { contentDescription = label },
+                        contentAlignment = Alignment.Center,
+                    ) { AppIcon(AppIcons.Fullscreen, contentDescription = null, tint = colors.onSurface) }
+                }
             }
         }
+    }
+}
+
+/** «в строе · ниже на 6 ц» of the row the picture shrinks into (spec 3.36.5): the bias in words, as the summary says it. */
+@Composable
+private fun rowWordsOf(content: SessionContent): String {
+    val cents = abs(content.biasCents).roundToInt()
+    return when {
+        content.biasZone == null -> stringResource(Res.string.video_row_none)
+        content.biasCents < 0 -> stringResource(Res.string.video_row_flat, cents)
+        else -> stringResource(Res.string.video_row_sharp, cents)
     }
 }
 
@@ -279,13 +306,14 @@ fun FullscreenVideo(
             modifier = Modifier.size(frame.width.dp, frame.height.dp),
             corner = 0.dp,
         )
-        val scrimTop = Brush.verticalGradient(listOf(videoColors.panel, Color.Transparent))
-        val scrimBottom = Brush.verticalGradient(listOf(Color.Transparent, videoColors.panel))
+        // the panel lies on the glass of R1 (spec 3.36.5), its words light on it
+        val glass = ViolinTheme.glass
+        val words = MaterialTheme.colorScheme.onSurface
         AnimatedVisibility(visible = panel, enter = fadeIn(tween(PANEL_FADE_MS)), exit = fadeOut(tween(PANEL_FADE_MS)), modifier = Modifier.align(Alignment.TopCenter)) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(scrimTop)
+                    .background(glass)
                     // what of the bars the screen's host has not taken already (not systemBarsPadding(): on iOS that one
                     // does not see the host's share and put the status bar here a second time)
                     .windowInsetsPadding(WindowInsets.systemBars)
@@ -298,7 +326,7 @@ fun FullscreenVideo(
                     modifier = Modifier
                         .weight(1f)
                         .padding(horizontal = 4.dp),
-                    color = Color.White,
+                    color = words,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                     style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
@@ -316,7 +344,7 @@ fun FullscreenVideo(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .background(scrimBottom)
+                        .background(glass)
                         .windowInsetsPadding(WindowInsets.systemBars)
                         .padding(start = 16.dp, end = 4.dp, top = 8.dp, bottom = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -328,6 +356,8 @@ fun FullscreenVideo(
                             onPlayPause = { onPlayPause(); touches++ },
                             onSeek = { onSeek(it); touches++ },
                             modifier = Modifier.weight(1f),
+                            // light on the glass, as the name and the icons
+                            timeColor = words,
                         )
                     }
                     PanelIcon(AppIcons.FullscreenExit, stringResource(Res.string.video_fullscreen_exit), onExit)
@@ -346,7 +376,7 @@ private fun PanelIcon(icon: androidx.compose.ui.graphics.vector.ImageVector, des
             .clickable(role = Role.Button, onClick = onClick)
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
-    ) { AppIcon(icon, contentDescription = null, tint = Color.White) }
+    ) { AppIcon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface) }
 }
 
 /**

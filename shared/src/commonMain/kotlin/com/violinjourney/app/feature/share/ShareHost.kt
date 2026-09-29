@@ -89,7 +89,6 @@ import com.violinjourney.app.feature.sound.captionName
 
 private const val SWAP_MS = 200
 private const val BYTES_PER_KB = 1_024L
-private const val LARGE_FILE_BYTES = 100L * 1024 * 1024
 private const val MP4 = ".mp4"
 private const val M4A = ".m4a"
 
@@ -193,7 +192,7 @@ private fun Choose(sheet: ShareSheet.Choose, onIntent: (ShareIntent) -> Unit) {
     }
     val asVideo = info.video && sheet.variant != ShareVariant.SOUND
     val bytes = info.bytesOf(sheet.variant)
-    val large = bytes >= LARGE_FILE_BYTES
+    val large = ShareInfo.isLarge(bytes)
     Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
         AppIcon(if (asVideo) AppIcons.Video else AppIcons.FileAudio, contentDescription = null, tint = colors.onSurfaceVariant)
         Column {

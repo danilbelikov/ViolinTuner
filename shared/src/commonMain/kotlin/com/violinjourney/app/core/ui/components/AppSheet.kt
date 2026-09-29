@@ -62,6 +62,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import kotlin.math.max
@@ -468,9 +469,9 @@ fun AppSheetCard(
  * («Сохранить 35 мин»); under it a [second] answer as an outline of 56 («Закончить сейчас · 3 ч 12 мин»), and last the refusal said
  * quietly ([quiet]), never a red button. A [main] that cannot be pressed yet is dimmed with its [mainReason] above it; one that goes
  * dim and bright under a stepper keeps the place of its reason while there is none ([mainReasonReserve]). In a face that has just
- * taken the place of another in its frame the [main] does not answer for the time of a double tap ([AppSheet]). 18 above them, 6
- * between them. In a window no higher than 360 dp the buttons of 56 are 48, as those of the bottom zone (3.36.1, п. 5): the pinned bottom
- * leaves the sheet's number room above it.
+ * taken the place of another in its frame the [main] does not answer for the time of a double tap ([AppSheet]). 18 above them — or
+ * the [top] a sheet names (the sheet of a note: 16, 5.29 R5) — 6 between them. In a window no higher than 360 dp the buttons of 56
+ * are 48, as those of the bottom zone (3.36.1, п. 5): the pinned bottom leaves the sheet's number room above it.
  */
 @Composable
 fun AppSheetButtons(
@@ -485,11 +486,12 @@ fun AppSheetButtons(
     onSecond: () -> Unit = {},
     quiet: String? = null,
     onQuiet: () -> Unit = {},
+    top: Dp = ButtonsTop,
 ) {
     val compact = currentDockMetrics().compact
     // a face that has just come in the place of another does not take the second tap of the finger that pressed the one before
     val arrival = LocalFaceArrival.current
-    Column(modifier.fillMaxWidth().padding(top = ButtonsTop), verticalArrangement = Arrangement.spacedBy(ButtonsGap)) {
+    Column(modifier.fillMaxWidth().padding(top = top), verticalArrangement = Arrangement.spacedBy(ButtonsGap)) {
         AppButton(
             main, { if (!arrival.holds) onMain() }, Modifier.fillMaxWidth(), style = AppButtonStyle.Main, icon = mainIcon, enabled = mainEnabled,
             reason = mainReason, compact = compact, reasonReserve = mainReasonReserve,

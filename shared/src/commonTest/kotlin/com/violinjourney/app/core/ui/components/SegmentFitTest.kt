@@ -3,6 +3,7 @@ package com.violinjourney.app.core.ui.components
 import kotlin.math.abs
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertTrue
 
 /**
@@ -103,5 +104,60 @@ class SegmentFitTest {
         assertEquals(plan.widths[0], plan.widths[2], 0.001f)
         assertTrue(plan.widths[0] > plan.widths[1])
         assertAddsUp(268f, plan)
+    }
+
+    // «С минусовкой | Только скрипка» of the compact player (spec 3.36.5, 5.29 R5): Manrope 800 at 14 sp (PIL, the wght axis at 800,
+    // the tracking 0.1 sp of `labelLarge`), two halves of the compact switch — 2 + 1 + 4 + 4 around each label
+    private val compactAround = listOf(11f, 11f)
+
+    @Test
+    fun `labels that stand in one line of their half keep their size`() {
+        // 360 × 640: the panel of 328; «Только скрипка» 112.6 of the 152 of its half
+        assertFalse(SegmentFit.shrinks(328f, compactAround, slack, lines = listOf(100.2f, 112.6f)))
+    }
+
+    @Test
+    fun `one label too wide for its half takes both down to two smaller lines`() {
+        // Spanish on 360 × 640: «Con acompañamiento» 154 of 152
+        assertTrue(SegmentFit.shrinks(328f, compactAround, slack, lines = listOf(154.0f, 72.9f)))
+        // lying on 640 × 360 behind a cutout at the font 1.3: the column of 301.75, its panel 269.75; «Только скрипка» 146.4 of 122.9
+        assertTrue(SegmentFit.shrinks(269.75f, compactAround, slack, lines = listOf(100.2f * 1.3f, 112.6f * 1.3f)))
+    }
+
+    // The compact switch keeps one line: its pills of 24 do not hold two of 12 (spec 5.29 R5: seen 28, pressed 48). Manrope 800 at
+    // 12 sp with the tracking of `labelLarge` (CoreText); the rows of the panel lying behind a cutout — 277.5 (the column of 301.5
+    // without 16 at the edge and 8 at the meeting of the columns).
+
+    /** The labels at 12 sp, one line each, scaled with the size. */
+    private fun at12(vararg lines: Float): (Float) -> List<Float> = { sizeSp -> lines.map { it * sizeSp / 12f } }
+
+    @Test
+    fun `compact labels that stand in their halves at 12 keep equal halves`() {
+        // Russian at the font 1.3: «Только скрипка» 124.1 + 12 of 138.75
+        val plan = SegmentFit.oneLine(277.5f, compactAround, slack, maxSp = 12f, linesAt = at12(111.1f, 124.1f))
+        assertEquals(SegmentFit.Plan(12f, listOf(138.75f, 138.75f)), plan)
+    }
+
+    @Test
+    fun `a compact label too wide for its half takes its line and the other the rest`() {
+        // Spanish at the font 1.0: «Con acompañamiento» 131.5 + 12 of 138.75 — its line, and the rest of the row in proportion
+        val plan = SegmentFit.oneLine(277.5f, compactAround, slack, maxSp = 12f, linesAt = at12(131.5f, 62.8f))!!
+        assertEquals(12f, plan.sizeSp)
+        assertTrue(plan.widths[0] >= 143.5f && plan.widths[1] >= 74.8f, "each its line: ${plan.widths}")
+        assertTrue(plan.widths[0] > plan.widths[1])
+        assertAddsUp(277.5f, plan)
+    }
+
+    @Test
+    fun `where even their lines do not fit the compact labels step down together`() {
+        // Spanish at the font 1.3 in the rows of 269.75: 182.7 + 93.4 at 12 sp; at 11.5 — 175.6 + 90.0
+        val plan = SegmentFit.oneLine(269.75f, compactAround, slack, maxSp = 12f, linesAt = at12(170.7f, 81.4f))!!
+        assertEquals(11.5f, plan.sizeSp)
+        assertAddsUp(269.75f, plan)
+    }
+
+    @Test
+    fun `below the least size the compact labels are not kept in one line`() {
+        assertEquals(null, SegmentFit.oneLine(250f, compactAround, slack, maxSp = 12f, linesAt = at12(170.7f, 81.4f)))
     }
 }

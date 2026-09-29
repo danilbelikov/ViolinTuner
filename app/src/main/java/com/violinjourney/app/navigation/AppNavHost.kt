@@ -160,6 +160,7 @@ fun AppNavHost(
             SessionRoute(
                 onClose = navController::popBackStack,
                 onOpenSound = navController::navigateToSound,
+                onOpenPiece = navController::navigateToPieceOf,
                 viewModel = hiltViewModel<HiltSessionViewModel>(),
                 onShare = shareViewModel::start,
                 shareHost = { ShareHost(shareViewModel) },
@@ -473,6 +474,14 @@ private fun NavHostController.navigateToOnboarding() {
 
 fun NavHostController.navigateToPiece(pieceId: Long) {
     navigate(Routes.piece(pieceId)) { launchSingleTop = true }
+}
+
+/**
+ * «К произведению» of a take (spec 3.36.5): back to the screen of that piece where it is behind in the stack — no second one of it —
+ * else it opens. The route with its id filled in matches only the entry of that very piece (Navigation matches its arguments).
+ */
+fun NavHostController.navigateToPieceOf(pieceId: Long) {
+    if (!popBackStack(Routes.piece(pieceId), inclusive = false)) navigateToPiece(pieceId)
 }
 
 /** [sessionId] null opens the sound of all recordings. */

@@ -27,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -54,7 +55,9 @@ private const val TABULAR_FIGURES = "tnum"
 /**
  * Play / pause, position, slider, duration (spec 3.10, item 3; handoff 4a). The words go by [player], whose
  * position may be to the whole second; the slider follows [position], the exact one, in a slider and a layer
- * of its own — a chunk of sound moves the thumb and redraws nothing around it.
+ * of its own — a chunk of sound moves the thumb and redraws nothing around it. [timeColor] — the colour of the
+ * two times: the second level of text by default; on the glass of the video over the whole screen the first
+ * (spec 3.36.1, 5.29 R1: no grey on the glass).
  */
 @Composable
 fun PlayerBar(
@@ -64,8 +67,10 @@ fun PlayerBar(
     modifier: Modifier = Modifier,
     onOriginal: (original: Boolean) -> Unit = {},
     position: () -> Long = { player.positionMs },
+    timeColor: Color = Color.Unspecified,
 ) {
     val colors = MaterialTheme.colorScheme
+    val times = if (timeColor.isSpecified) timeColor else colors.onSurfaceVariant
     // While the thumb is dragged the slider shows the finger, not the playback position.
     var dragged by remember { mutableStateOf<Float?>(null) }
     val duration = player.durationMs.coerceAtLeast(1)
@@ -94,7 +99,7 @@ fun PlayerBar(
         ) {
             PlayPauseGlyph(playing = player.playing, tint = colors.onPrimary, size = GlyphSize)
         }
-        Text(Formats.duration(shownMs), Modifier.widthIn(min = TimeWidth), colors.onSurfaceVariant, style = timeStyle)
+        Text(Formats.duration(shownMs), Modifier.widthIn(min = TimeWidth), times, style = timeStyle)
         SeekSlider(
             fraction = { dragged ?: (position().toFloat() / duration) },
             onValueChange = { dragged = it },
@@ -109,7 +114,7 @@ fun PlayerBar(
         Text(
             text = Formats.duration(player.durationMs),
             modifier = Modifier.widthIn(min = TimeWidth),
-            color = colors.onSurfaceVariant,
+            color = times,
             textAlign = TextAlign.End,
             style = timeStyle,
         )

@@ -64,7 +64,7 @@ import com.violinjourney.app.core.ui.icons.IconLabel
 import com.violinjourney.app.core.ui.icons.IconSizes
 import com.violinjourney.app.feature.history.components.sessionTitle
 import com.violinjourney.app.feature.sound.components.BackingBlock
-import com.violinjourney.app.feature.sound.components.BackingHeardSwitch
+import com.violinjourney.app.feature.sound.components.BackingSegment
 import com.violinjourney.app.feature.sound.components.BackingPreparingRow
 import com.violinjourney.app.feature.sound.components.BackingUnavailableBlock
 import com.violinjourney.app.feature.sound.components.MiniPlayer
@@ -300,7 +300,7 @@ private fun Player(state: SoundState, meters: State<SoundMeters?>, position: () 
             onOriginal = { original, held -> onIntent(SoundIntent.OriginalSelected(original, held)) },
         )
         if (player.hasBacking) {
-            BackingHeardSwitch(heard = player.backingHeard, onHeard = { onIntent(SoundIntent.BackingHeardSelected(it)) })
+            BackingSegment(heard = player.backingHeard, onHeard = { onIntent(SoundIntent.BackingHeardSelected(it)) }, compact = false)
         }
     }
 }

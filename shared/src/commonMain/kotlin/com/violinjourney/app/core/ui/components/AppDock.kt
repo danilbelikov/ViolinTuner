@@ -21,6 +21,7 @@ import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.derivedStateOf
+import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
@@ -28,6 +29,11 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.drawOutline
+import androidx.compose.ui.graphics.isSpecified
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.layout.findRootCoordinates
@@ -93,6 +99,16 @@ private enum class DockSlot { Zone, Content }
  * alpha below 1 is drawn into its own buffer within its bounds and would cut it; dim the buttons, not the zone. The ground of the
  * zone takes the touches between its buttons — a touch there does not reach the list under it; the fade lets them through.
  *
+ * [ground] and [shape] make the zone a panel of its own colour and outline instead of the ground of the screen: the player of a
+ * recording and of «Звук» (spec 3.36.5, 5.29 R5) — surfaceContainer, rounded 24 at the top, without a fade. Such a screen ends its
+ * content at the top of the panel (`padding(bottom = LocalDockInset.current)` outside its scroll) rather than letting it run under
+ * it: nothing lies under the player, and the corners of its outline show the screen. A [fade], where one is given, still goes into
+ * the ground of the screen. A panel reaches the bottom edge of the window, the system inset under its fields included (5.29 R5:
+ * «+ системный отступ»): the roots pad the screens over the tabs for the navigation bar and the home indicator and take that inset
+ * away, so a zone there ends that far over the edge — its ground then runs on down through the strip ([PanelEdge]), outside its
+ * bounds, as the fade does above them. While the screen fades in or out the layer of the transition cuts that strip: it shows the
+ * ground of the app for those 700 ms.
+ *
  * On iOS the zone reports its top to the root ([LocalDockPlace]) while it is shown: the message of iOS stands 12 dp above it.
  *
  * Only in a bounded height — the root of a screen or of a column, never inside a vertical scroll. Not for sheets: a sheet has
@@ -107,6 +123,8 @@ fun AppDock(
     padSides: Boolean = true,
     metrics: DockMetrics = currentDockMetrics(),
     pinned: Boolean = true,
+    ground: Color = Color.Unspecified,
+    shape: Shape = RectangleShape,
     content: @Composable () -> Unit,
 ) {
     // written while measuring, before the content is composed, and read by it: the content is recomposed only when it changes
@@ -119,7 +137,7 @@ fun AppDock(
     }
     // the zone gone into the content leaves at the bottom only the room of the system — the keyboard, for one over it
     val zone: @Composable () -> Unit = if (pinned) {
-        { DockZone(metrics, if (overKeyboard.value) 0.dp else fade, aboveKeyboard, padSides, dock) }
+        { DockZone(metrics, if (overKeyboard.value) 0.dp else fade, aboveKeyboard, padSides, ground, shape, dock) }
     } else {
         { Spacer(Modifier.fillMaxWidth().windowInsetsPadding(bottomInsets(aboveKeyboard))) }
     }
@@ -154,29 +172,58 @@ fun AppDock(
 }
 
 @Composable
-private fun DockZone(metrics: DockMetrics, fade: Dp, aboveKeyboard: Boolean, padSides: Boolean, dock: @Composable DockScope.() -> Unit) {
-    val ground = MaterialTheme.colorScheme.surface
+private fun DockZone(
+    metrics: DockMetrics,
+    fade: Dp,
+    aboveKeyboard: Boolean,
+    padSides: Boolean,
+    groundColor: Color,
+    shape: Shape,
+    dock: @Composable DockScope.() -> Unit,
+) {
+    // the fade goes into the ground of the screen, whatever the ground of the zone itself
+    val screen = MaterialTheme.colorScheme.surface
+    val ground = if (groundColor.isSpecified) groundColor else screen
     val side = if (padSides) metrics.side else 0.dp
+    val insets = bottomInsets(aboveKeyboard)
+    val density = LocalDensity.current
+    // a panel of its own ground: how far under it the window goes on, where only the system inset the root took is left (PanelEdge)
+    val edge = remember { mutableFloatStateOf(0f) }
     DockRows(
         metrics = metrics,
         modifier = Modifier
             .fillMaxWidth()
             .then(reportedToRoot())
+            .then(
+                if (groundColor.isSpecified) {
+                    Modifier.onGloballyPositioned { coordinates ->
+                        val root = coordinates.findRootCoordinates()
+                        val gap = root.size.height - (coordinates.positionInRoot().y + coordinates.size.height)
+                        edge.floatValue = PanelEdge.below(gap, insets.getBottom(density).toFloat(), tolerance = with(density) { PanelEdge.Tolerance.toPx() })
+                    }
+                } else {
+                    Modifier
+                },
+            )
             .drawBehind {
                 // the fade lies above the zone, outside its bounds: a gradient, not a layer — a layer would be dear on iOS
                 val fadePx = fade.toPx()
                 if (fadePx > 0f) {
                     drawRect(
-                        brush = Brush.verticalGradient(listOf(ground.copy(alpha = 0f), ground), startY = -fadePx, endY = 0f),
+                        brush = Brush.verticalGradient(listOf(screen.copy(alpha = 0f), screen), startY = -fadePx, endY = 0f),
                         topLeft = Offset(0f, -fadePx),
                         size = Size(size.width, fadePx),
                     )
                 }
-                drawRect(ground)
+                // the panel of a player is its outline — rounded at the top — not the bounds of the zone
+                if (shape == RectangleShape) drawRect(ground) else drawOutline(shape.createOutline(size, layoutDirection, this), ground)
+                // and it goes on to the bottom edge of the window, through the system inset the root has taken
+                val below = edge.floatValue
+                if (below > 0f) drawRect(ground, topLeft = Offset(0f, size.height), size = Size(size.width, below))
             }
             // a hit for touches between the buttons, so they do not reach the list under the zone; nothing is done with them
             .pointerInput(Unit) {}
-            .windowInsetsPadding(bottomInsets(aboveKeyboard))
+            .windowInsetsPadding(insets)
             .padding(start = side, end = side, top = metrics.top, bottom = metrics.bottom),
         dock = dock,
     )
@@ -201,6 +248,22 @@ private fun bottomInsets(aboveKeyboard: Boolean): WindowInsets = if (aboveKeyboa
     WindowInsets.safeDrawing.only(WindowInsetsSides.Bottom)
 } else {
     WindowInsets.safeDrawing.exclude(WindowInsets.ime).only(WindowInsetsSides.Bottom)
+}
+
+/**
+ * How far the ground of a panel ([AppDock] with a ground of its own) runs on under it to the bottom edge of the window (spec 5.29 R5,
+ * «+ системный отступ»). The roots pad a screen over the tabs for the navigation bar or the home indicator and take that inset away
+ * (`consumeWindowInsets`), so the zone's own inset padding is 0 there and its bottom stands the inset over the edge of the window. A
+ * [gap] from the bottom of the zone to the bottom of the window that the bottom [inset] of the window covers is that strip — the
+ * ground goes on through it; a larger gap has something else under the zone (the tab bar, the rest of a layout) and nothing is drawn;
+ * none — the zone padded the inset itself, its ground is already at the edge. [tolerance] — the rounding of whole pixels. Pure, with
+ * a test.
+ */
+internal object PanelEdge {
+    /** A zone laid out in whole pixels over an inset of fractional ones stands a pixel off the inset: not something else under it. */
+    val Tolerance = 1.dp
+
+    fun below(gap: Float, inset: Float, tolerance: Float): Float = if (gap > 0f && gap <= inset + tolerance) gap else 0f
 }
 
 /** On iOS — the top of the zone, reported to the root for the message; nothing on Android. */

@@ -3,6 +3,7 @@ package com.violinjourney.app.feature.session
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
@@ -28,6 +29,8 @@ import org.junit.runner.RunWith
 /**
  * A tap on the roll opens the note under the finger after the roll changed width — a rotation on iOS, where the
  * composition lives on: the scroll is remembered per geometry, and the tap has to read the scroll of the geometry shown.
+ * A note picked far from the cursor of a sound that plays stays in view: the roll does not follow the cursor while it is picked.
+ * Where a note stands is asked by a tap on it: the tap opens it only where the roll shows it.
  */
 @RunWith(AndroidJUnit4::class)
 class PianoRollTapTest {
@@ -82,6 +85,56 @@ class PianoRollTapTest {
         compose.waitForIdle()
 
         assertEquals(listOf(0, 1), clicked)
+    }
+
+    /**
+     * Spec 3.36.5: a row of «Что уходит» brings the roll to where its note drifts the most and outlines it, «как при касании ленты» —
+     * while the sound plays too. B4, fifty-five seconds in, is picked while the cursor plays at the start: the next chunks of sound do
+     * not take the roll back to the cursor under the open sheet; once the note is let go, the roll follows the cursor again.
+     */
+    @Test
+    fun aNotePickedFarFromThePlayingCursorStaysInViewUntilItIsLetGo() {
+        var cursor by mutableLongStateOf(0L)
+        var picked by mutableStateOf<Int?>(null)
+        val clicked = mutableListOf<Int>()
+        compose.setContent {
+            ViolinTheme {
+                Box(Modifier.width(WIDE.dp)) {
+                    PianoRoll(
+                        content = content,
+                        selectedSegment = picked,
+                        onSegmentClick = { clicked += it },
+                        modifier = Modifier.testTag(ROLL),
+                        cursorMs = { cursor },
+                        followCursor = true,
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+        val roll = PianoRollMath(content.durationMs, content.rollNotes.size, viewportWidth = WIDE - PADDING * 2 - GUTTER)
+        compose.runOnIdle { picked = 1 }
+        compose.waitForIdle()
+        // the chunks of sound that come while its sheet is open, at the start of the roll — far out of the view of B4
+        listOf(1_000L, 1_050L, 1_100L).forEach { at ->
+            compose.runOnIdle { cursor = at }
+            compose.waitForIdle()
+        }
+        // B4 where the roll brought it: its start at a fifth of the view, as far as the roll goes
+        val shown = checkNotNull(roll.scrollToShow(55_000, 56_000, 0f))
+        val y = PADDING + TICKS + roll.barTop(0) + PianoRollMath.BAR_HEIGHT / 2
+        compose.onNodeWithTag(ROLL).performTouchInput { click(Offset((PADDING + GUTTER + roll.x(55_500) - shown).dp.toPx(), y.dp.toPx())) }
+        compose.waitForIdle()
+        assertEquals("B4 is in view under its sheet while the sound plays at the start", listOf(1), clicked)
+
+        // let go: the roll follows the cursor again — back at the start, where A4 is
+        compose.runOnIdle { picked = null }
+        compose.waitForIdle()
+        val following = checkNotNull(roll.scrollToFollow(1_100, shown))
+        val a4 = PADDING + TICKS + roll.barTop(1) + PianoRollMath.BAR_HEIGHT / 2
+        compose.onNodeWithTag(ROLL).performTouchInput { click(Offset((PADDING + GUTTER + roll.x(500) - following).dp.toPx(), a4.dp.toPx())) }
+        compose.waitForIdle()
+        assertEquals("A4 is in view: the roll is with the cursor again", listOf(1, 0), clicked)
     }
 
     private companion object {

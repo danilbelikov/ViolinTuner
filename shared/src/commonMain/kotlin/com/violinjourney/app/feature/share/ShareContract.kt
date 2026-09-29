@@ -61,6 +61,17 @@ data class ShareInfo(
         variant == ShareVariant.ORIGINAL -> originalBytes
         else -> processedBytes
     }
+
+    companion object {
+        /**
+         * From this size messengers squeeze a file or refuse it (spec 3.19): said in the colour of danger, bold — in the line of the
+         * file of «Поделиться» and under «Удалить…» of a recording's «⋯» (spec 3.36.5, 5.29 R5).
+         */
+        const val LARGE_BYTES = 100L * 1024 * 1024
+
+        /** A file of [bytes] is large: from [LARGE_BYTES] on, that very size included. */
+        fun isLarge(bytes: Long): Boolean = bytes >= LARGE_BYTES
+    }
 }
 
 sealed interface ShareSheet {

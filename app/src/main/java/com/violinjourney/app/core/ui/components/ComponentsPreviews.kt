@@ -20,9 +20,13 @@ import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.share.ShareInfo
 import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.backing_heard_violin
+import com.violinjourney.app.shared.resources.backing_heard_with
 import com.violinjourney.app.shared.resources.backup_cancel
 import com.violinjourney.app.shared.resources.backup_count_pieces_many
 import com.violinjourney.app.shared.resources.backup_count_sessions_many
@@ -30,6 +34,7 @@ import com.violinjourney.app.shared.resources.backup_stop_confirm
 import com.violinjourney.app.shared.resources.backup_stop_continue
 import com.violinjourney.app.shared.resources.backup_stop_text
 import com.violinjourney.app.shared.resources.backup_stop_title
+import com.violinjourney.app.shared.resources.card_menu_delete
 import com.violinjourney.app.shared.resources.dialog_back
 import com.violinjourney.app.shared.resources.dialog_discard_changes
 import com.violinjourney.app.shared.resources.dialog_discard_typed
@@ -55,8 +60,10 @@ import com.violinjourney.app.shared.resources.section_delete
 import com.violinjourney.app.shared.resources.section_name_label
 import com.violinjourney.app.shared.resources.section_new_title
 import com.violinjourney.app.shared.resources.section_rename
+import com.violinjourney.app.shared.resources.session_action_rename
 import com.violinjourney.app.shared.resources.session_delete_text
 import com.violinjourney.app.shared.resources.session_delete_title
+import com.violinjourney.app.shared.resources.session_menu_piece
 import com.violinjourney.app.shared.resources.session_rename_confirm
 import com.violinjourney.app.shared.resources.session_rename_hint
 import com.violinjourney.app.shared.resources.session_rename_label
@@ -65,8 +72,10 @@ import com.violinjourney.app.shared.resources.sound_mode_everyone
 import com.violinjourney.app.shared.resources.sound_mode_own
 import com.violinjourney.app.shared.resources.video_pick
 import com.violinjourney.app.shared.resources.video_pick_hint
+import com.violinjourney.app.shared.resources.video_resolution
 import com.violinjourney.app.shared.resources.video_shoot_backing
 import com.violinjourney.app.shared.resources.video_shoot_backing_hint
+import com.violinjourney.app.shared.resources.video_size
 import org.jetbrains.compose.resources.stringResource
 
 // The common parts of stages 101 and 102 (spec 3.36.1, 5.29; components.html, «Диалоги», «Меню ⋯», the segmented switch, the
@@ -74,6 +83,7 @@ import org.jetbrains.compose.resources.stringResource
 // dialog dims it. The other parts of stage 102 — DockPreviews, ControlsPreviews, ProgressPreviews, GlassSheetPreviews.
 
 private const val MENUET = "Менуэт соль мажор"
+private const val FULL_HD = 1080
 private const val SECTION_NAME_MAX = 24
 
 /**
@@ -260,6 +270,120 @@ private fun StatusMenuPreview() = OverScreen(Alignment.TopStart) {
         AppMenuItem(stringResource(Res.string.piece_status_reading), onClick = {})
         AppMenuItem(stringResource(Res.string.piece_status_learning), selected = true, onClick = {})
         AppMenuItem(stringResource(Res.string.piece_status_in_repertoire), onClick = {})
+    }
+}
+
+/** «⋯» of a recording (spec 3.36.5): «Удалить…» of a video with what goes with it under it — from 100 MB bold in the colour of danger. */
+@Composable
+private fun RecordingMenu(megabytes: Long) = OverScreen(Alignment.TopEnd) {
+    val bytes = megabytes * 1024 * 1024
+    val caption = stringResource(Res.string.video_size, stringResource(Res.string.video_resolution, FULL_HD), Formats.fileSize(bytes))
+    AppMenuCard(
+        danger = MenuDanger(stringResource(Res.string.card_menu_delete), onClick = {}, caption = caption, captionStrong = ShareInfo.isLarge(bytes)),
+    ) {
+        AppMenuItem(stringResource(Res.string.session_action_rename), icon = AppIcons.Pencil, onClick = {})
+        AppMenuItem(stringResource(Res.string.session_menu_piece), icon = AppIcons.TabRepertoire.normal, onClick = {})
+    }
+}
+
+@Preview(name = "Menu · «⋯» of a recording: «Удалить…» with the size of its video", widthDp = 412, heightDp = 300, locale = "ru")
+@Composable
+private fun RecordingMenuPreview() = RecordingMenu(megabytes = 62)
+
+@Preview(name = "Menu · «⋯» of a recording: a large file, bold in the colour of danger", widthDp = 412, heightDp = 300, locale = "ru")
+@Composable
+private fun RecordingMenuLargePreview() = RecordingMenu(megabytes = 612)
+
+@Preview(name = "Menu · «⋯» of a recording, de, 360: two lines", widthDp = 360, heightDp = 300, locale = "de")
+@Composable
+private fun RecordingMenuGermanPreview() = RecordingMenu(megabytes = 612)
+
+/** The segments of the player (spec 3.36.5, 5.29 R5) on the colour of its panel: their container is the ground of the screen. */
+@Preview(name = "Segments · the player: A | B, the big A/B with words, compact, «С минусовкой | Только скрипка»", widthDp = 412, heightDp = 420, locale = "ru")
+@Composable
+private fun PlayerSegmentsPreview() = ViolinTheme {
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(colors.surfaceContainer)
+            .padding(16.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        SegmentedSwitch(labels = listOf("A", "B"), selectedIndex = 1, onSelect = {}, modifier = Modifier.width(96.dp), containerColor = colors.surface, strong = true)
+        // «Звук» (stage 113): «A оригинал | B обработка», the letters a step larger and heavier
+        SegmentedSwitch(
+            labels = listOf("оригинал", "обработка"),
+            prefixes = listOf("A", "B"),
+            selectedIndex = 1,
+            onSelect = {},
+            containerColor = colors.surface,
+        )
+        SegmentedSwitch(labels = listOf("A", "B"), selectedIndex = 0, onSelect = {}, modifier = Modifier.width(96.dp), compact = true, containerColor = colors.surface, strong = true)
+        SegmentedSwitch(
+            labels = listOf(stringResource(Res.string.backing_heard_with), stringResource(Res.string.backing_heard_violin)),
+            selectedIndex = 0,
+            onSelect = {},
+            containerColor = colors.surface,
+            strong = true,
+            shrinkToTwoLines = true,
+        )
+        SegmentedSwitch(
+            labels = listOf(stringResource(Res.string.backing_heard_with), stringResource(Res.string.backing_heard_violin)),
+            selectedIndex = 1,
+            onSelect = {},
+            compact = true,
+            containerColor = colors.surface,
+            strong = true,
+            shrinkToTwoLines = true,
+        )
+    }
+}
+
+/**
+ * Spanish in the column of 270 lying: «Con acompañamiento» does not stand in its half at 14 sp — the regular switch takes both to two
+ * lines of 12 in its 52; the compact one keeps one line, 12 sp, its halves by the words (seen 28, pressed 48).
+ */
+@Preview(name = "Segments · the backing, es, 270: two lines of 12 in the same height; compact — one line of 12 by the words", widthDp = 302, heightDp = 220, locale = "es")
+@Composable
+private fun BackingSegmentsSpanishPreview() = ViolinTheme {
+    val colors = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxWidth().background(colors.surfaceContainer).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        SegmentedSwitch(
+            labels = listOf(stringResource(Res.string.backing_heard_with), stringResource(Res.string.backing_heard_violin)),
+            selectedIndex = 0,
+            onSelect = {},
+            containerColor = colors.surface,
+            strong = true,
+            shrinkToTwoLines = true,
+        )
+        SegmentedSwitch(
+            labels = listOf(stringResource(Res.string.backing_heard_with), stringResource(Res.string.backing_heard_violin)),
+            selectedIndex = 0,
+            onSelect = {},
+            compact = true,
+            containerColor = colors.surface,
+            strong = true,
+            shrinkToTwoLines = true,
+        )
+    }
+}
+
+/** Russian at the font 1.3 in the column of 640 × 360 behind a cutout (≈ 278 for the rows): the compact backing in one line of 12. */
+@Preview(name = "Segments · the compact backing, ru, 278, font 1.3: one line of 12", widthDp = 310, heightDp = 120, locale = "ru", fontScale = 1.3f)
+@Composable
+private fun CompactBackingLargeFontPreview() = ViolinTheme {
+    val colors = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxWidth().background(colors.surfaceContainer).padding(16.dp)) {
+        SegmentedSwitch(
+            labels = listOf(stringResource(Res.string.backing_heard_with), stringResource(Res.string.backing_heard_violin)),
+            selectedIndex = 1,
+            onSelect = {},
+            compact = true,
+            containerColor = colors.surface,
+            strong = true,
+            shrinkToTwoLines = true,
+        )
     }
 }
 

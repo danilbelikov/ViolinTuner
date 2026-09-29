@@ -8,8 +8,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -22,40 +25,76 @@ import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.AppDock
+import com.violinjourney.app.core.ui.components.AppMenu
+import com.violinjourney.app.core.ui.components.AppMenuItem
+import com.violinjourney.app.core.ui.components.DockDefaults
+import com.violinjourney.app.core.ui.components.FieldDialog
+import com.violinjourney.app.core.ui.components.LocalDockInset
+import com.violinjourney.app.core.ui.components.MenuDanger
+import com.violinjourney.app.core.ui.format.Formats
+import com.violinjourney.app.core.ui.icons.AppIcon
+import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.core.ui.icons.IconSizes
+import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.history.components.RecordDeleteDialog
+import com.violinjourney.app.feature.history.components.sessionTitle
+import com.violinjourney.app.feature.session.components.DashedPlate
+import com.violinjourney.app.feature.session.components.DriftCard
+import com.violinjourney.app.feature.session.components.FullscreenVideo
+import com.violinjourney.app.feature.session.components.NotePlace
+import com.violinjourney.app.feature.session.components.NoteSheet
+import com.violinjourney.app.feature.session.components.NotesCard
+import com.violinjourney.app.feature.session.components.RecordPlayer
+import com.violinjourney.app.feature.session.components.StickyVideo
+import com.violinjourney.app.feature.session.components.StringsCard
+import com.violinjourney.app.feature.session.components.SummaryCard
+import com.violinjourney.app.feature.session.components.VideoCorner
+import com.violinjourney.app.feature.session.components.VideoFrame
+import com.violinjourney.app.feature.session.components.VideoSurfaceCallbacks
+import com.violinjourney.app.feature.sound.components.PlayerPanelShape
+import com.violinjourney.app.feature.sound.components.currentPlayerDockMetrics
 import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.backing_take_mark
 import com.violinjourney.app.shared.resources.best_clear
 import com.violinjourney.app.shared.resources.best_set
-import com.violinjourney.app.shared.resources.session_action_delete
+import com.violinjourney.app.shared.resources.card_menu
+import com.violinjourney.app.shared.resources.card_menu_delete
+import com.violinjourney.app.shared.resources.dot_separator
+import com.violinjourney.app.shared.resources.record_meta
+import com.violinjourney.app.shared.resources.record_tile_only_video
 import com.violinjourney.app.shared.resources.session_action_rename
 import com.violinjourney.app.shared.resources.session_back
-import com.violinjourney.app.shared.resources.session_bias_hint_flat
-import com.violinjourney.app.shared.resources.session_bias_hint_none
-import com.violinjourney.app.shared.resources.session_bias_hint_sharp
-import com.violinjourney.app.shared.resources.session_bias_mean
-import com.violinjourney.app.shared.resources.session_bias_none
-import com.violinjourney.app.shared.resources.session_meta
+import com.violinjourney.app.shared.resources.session_menu_piece
 import com.violinjourney.app.shared.resources.session_not_found
 import com.violinjourney.app.shared.resources.session_rename_confirm
 import com.violinjourney.app.shared.resources.session_rename_hint
 import com.violinjourney.app.shared.resources.session_rename_label
 import com.violinjourney.app.shared.resources.session_rename_title
 import com.violinjourney.app.shared.resources.session_take_subtitle
-import com.violinjourney.app.shared.resources.sound_caption_everyone
-import com.violinjourney.app.shared.resources.sound_caption_own
-import com.violinjourney.app.shared.resources.sound_row_off
-import com.violinjourney.app.shared.resources.sound_session_row
+import com.violinjourney.app.shared.resources.session_video_subtitle
 import com.violinjourney.app.shared.resources.sound_session_silent
 import com.violinjourney.app.shared.resources.sound_share
 import com.violinjourney.app.shared.resources.video_lost_text
@@ -65,61 +104,46 @@ import com.violinjourney.app.shared.resources.video_size
 import com.violinjourney.app.shared.resources.video_size_lost
 import com.violinjourney.app.shared.resources.video_undecodable_text
 import com.violinjourney.app.shared.resources.video_undecodable_title
-import org.jetbrains.compose.resources.stringResource
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.em
-import androidx.compose.ui.unit.sp
-import com.violinjourney.app.core.ui.components.FieldDialog
-import com.violinjourney.app.core.ui.format.Formats
-import com.violinjourney.app.core.ui.icons.AppIcon
-import com.violinjourney.app.core.ui.icons.AppIcons
-import com.violinjourney.app.core.ui.icons.IconSizes
-import com.violinjourney.app.core.ui.theme.ViolinTheme
-import com.violinjourney.app.feature.history.components.RecordDeleteDialog
-import com.violinjourney.app.feature.history.components.sessionTitle
-import com.violinjourney.app.feature.session.components.FullscreenVideo
-import com.violinjourney.app.feature.session.components.NotePlace
-import com.violinjourney.app.feature.session.components.NoteSheet
-import com.violinjourney.app.feature.session.components.PianoRoll
-import com.violinjourney.app.feature.session.components.PlayerBar
-import com.violinjourney.app.feature.session.components.ProblemNotes
-import com.violinjourney.app.feature.session.components.SessionStatCards
-import com.violinjourney.app.feature.session.components.StickyVideo
-import com.violinjourney.app.feature.session.components.VideoFrame
-import com.violinjourney.app.feature.session.components.VideoMissingRow
-import com.violinjourney.app.feature.session.components.VideoSurfaceCallbacks
-import com.violinjourney.app.feature.sound.SoundCaption
-import com.violinjourney.app.feature.sound.captionName
-import com.violinjourney.app.feature.sound.components.BackingHeardSwitch
-import com.violinjourney.app.feature.sound.components.BackingPreparingRow
-import kotlin.math.roundToInt
 import kotlinx.datetime.TimeZone
+import org.jetbrains.compose.resources.stringResource
 
+// The recording (spec 3.36.5, 5.29 R5; records.html 2, landscape.html 3).
 private val TopBarHeight = 56.dp
-private val BackTarget = 48.dp
-private val ContentPadding = 16.dp
-private val SectionSpacing = 16.dp
+private val TopBarHeightLandscape = 48.dp
+private val TopBarButton = 48.dp
+private val TopBarSide = 4.dp
+private val SubtitleGap = 4.dp
+private val ScreenPadding = 16.dp
+private val CardGap = 12.dp
+private val ContentTop = 8.dp
+private val ContentBottom = 16.dp
 private val MaxContentWidth = 560.dp
-private val ActionIcon = 22.dp
-private val LandscapeVideoColumn = 456.dp
-private const val LANDSCAPE_VIDEO_SHARE = 0.62f
+
+/** Lying: the left column — the picture or the summary over the player — is half the window, and never wider than this. */
+private val LandscapeLeftColumn = 456.dp
+
+/** Lying, between the columns: 8 at the end of the left one and 8 at the start of the right one. */
+private val ColumnGap = 8.dp
+
+/** Lying, the sides of the rows of the player: those of the column over it — the summary, the picture — not the panel's 16 / 16. */
+private val LeftColumnSides = PaddingValues(start = ScreenPadding, end = ColumnGap)
+
+/** Lying, the picture of a video stands this far over the panel of the player. */
+private val PictureOverPlayer = 12.dp
 
 /** The fallback of the handoff, to be decided on a phone: false — the picture leaves with the scroll instead of shrinking into a row. */
 private const val VIDEO_STICKS = true
 
 private val NoVideoSurface = VideoSurfaceCallbacks(onSurface = {}, onSurfaceGone = {})
 private const val TABULAR_FIGURES = "tnum"
-private val ScoreStyle = TextStyle(fontSize = 64.sp, lineHeight = 64.sp, fontWeight = FontWeight.ExtraBold, letterSpacing = (-0.03).em, fontFeatureSettings = TABULAR_FIGURES)
-private val PercentStyle = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.SemiBold)
 
-/** Session analysis (spec 3.10, handoff 4a). Stateless. */
+/**
+ * The recording (spec 3.10, 3.36.5): «где уходит и как это звучит». The bar — its name, what it is, and what is done with it whole: the
+ * star of a take, «Поделиться» while its sound plays, «⋯» with «Переименовать», «К произведению» and «Удалить…». Upright, from the top:
+ * the video, the summary, the notes, «Что уходит», «По струнам» — the middle scrolls, and the player is pinned at the bottom, a panel of
+ * its own that covers nothing; lying (any recording whose sound plays) two columns — the picture or the summary over the player on the
+ * left, the rest on the right; without a sound to play, one column with a dashed line first. Stateless.
+ */
 @Composable
 fun SessionScreen(
     state: SessionState,
@@ -129,8 +153,8 @@ fun SessionScreen(
     zone: TimeZone = remember { TimeZone.currentSystemDefault() },
     videoSurface: VideoSurfaceCallbacks = NoVideoSurface,
     /**
-     * Where the player is, exactly: read where it is drawn — the cursor, the slider, the note strip — so that the
-     * screen, whose player keeps the position to the whole second, recomposes once a second while it plays.
+     * Where the player is, exactly: read where it is drawn — the cursor, the wave, the note strip — so that the screen, whose player
+     * keeps the position to the whole second, recomposes once a second while it plays.
      */
     position: () -> Long = { (state as? SessionState.Loaded)?.player?.positionMs ?: 0L },
 ) {
@@ -158,384 +182,420 @@ fun SessionScreen(
         )
         return
     }
-    Column(
+    BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
             .background(colors.surface),
     ) {
-        val content = loaded?.content
-        TopBar(
-            title = title,
-            // «дубль · 18:42 · 2:05»: a take says so under its name (handoff 22f1); a free recording has one line, as before
-            subtitle = content?.takeIf { it.pieceId != null }?.let {
-                stringResource(Res.string.session_take_subtitle, Formats.timeOfDay(it.startedAtEpochMs, zone), Formats.duration(it.durationMs))
-            },
-            best = content?.takeIf { it.pieceId != null }?.best,
-            onBest = { onIntent(SessionIntent.BestClicked) },
-            onBack = { onIntent(SessionIntent.BackClicked) },
-            // Sending is what one does most after listening: in sight at once, and well away from «Удалить» (handoff 18a).
-            onShare = if (loaded?.player != null) ({ onIntent(SessionIntent.ShareClicked) }) else null,
-        )
-        when (state) {
-            SessionState.Loading -> Unit
-            SessionState.NotFound -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(Res.string.session_not_found),
-                    color = colors.onSurfaceVariant,
-                    style = MaterialTheme.typography.bodyLarge,
-                )
+        val landscape = maxWidth > maxHeight
+        Column(Modifier.fillMaxSize()) {
+            TopBar(title, loaded, zone, if (landscape) TopBarHeightLandscape else TopBarHeight, onIntent)
+            when (state) {
+                SessionState.Loading -> Unit
+                SessionState.NotFound -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = stringResource(Res.string.session_not_found),
+                        color = colors.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodyLarge,
+                    )
+                }
+                is SessionState.Loaded -> LoadedContent(state, landscape, onIntent, videoSurface, position)
             }
-            is SessionState.Loaded -> LoadedContent(state, title, onIntent, videoSurface, position)
+        }
+    }
+    if (loaded != null) {
+        NoteSheet(
+            index = loaded.selectedSegment,
+            segments = loaded.content.segments,
+            nearCents = loaded.content.nearCents,
+            // a place can be played only where there is something to play — or will be, once the backing is made
+            place = when {
+                loaded.player != null -> NotePlace(video = picture != null, ready = true) { onIntent(SessionIntent.PlaySegmentClicked(it)) }
+                loaded.preparingBacking -> NotePlace(video = picture != null, ready = false) { }
+                else -> null
+            },
+            onHide = { onIntent(SessionIntent.NoteSheetDismissed) },
+        )
+        when (loaded.dialog) {
+            SessionDialog.RENAME -> RenameDialog(currentTitle = loaded.content.title.orEmpty(), placeholder = title, onIntent = onIntent)
+            SessionDialog.DELETE -> RecordDeleteDialog(
+                videoBytes = loaded.video?.takeIf { !it.lost }?.sizeBytes,
+                onConfirm = { onIntent(SessionIntent.DeleteConfirmed) },
+                onDismiss = { onIntent(SessionIntent.DialogDismissed) },
+            )
+            null -> Unit
         }
     }
 }
 
 @Composable
-private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (SessionIntent) -> Unit, videoSurface: VideoSurfaceCallbacks, position: () -> Long) {
-    val content = state.content
-    val video = state.video
-    val picture = video?.takeIf { it.pictured }
-    val onTap = { onIntent(SessionIntent.PlayPauseClicked) }
-    val onFullscreen = { onIntent(SessionIntent.FullscreenChanged(true)) }
+private fun LoadedContent(
+    state: SessionState.Loaded,
+    landscape: Boolean,
+    onIntent: (SessionIntent) -> Unit,
+    videoSurface: VideoSurfaceCallbacks,
+    position: () -> Long,
+) {
     BoxWithConstraints(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
-        val screenWidth = maxWidth
-        val screenHeight = maxHeight
-        val landscape = picture != null && screenWidth > screenHeight
-        val columnWidth = minOf(maxWidth, MaxContentWidth) - ContentPadding * 2
-        val scroll = rememberScrollState()
-        // What scrolls under the picture: everything but the picture itself and, in landscape, the player beside it.
-        val rest: @Composable (playerHere: Boolean) -> Unit = { playerHere ->
-            if (video?.lost == true) VideoMissingRow(stringResource(Res.string.video_lost_title), stringResource(Res.string.video_lost_text))
-            if (video?.undecodable == true) VideoMissingRow(stringResource(Res.string.video_undecodable_title), stringResource(Res.string.video_undecodable_text))
-            Summary(content)
-            PianoRoll(
-                content = content,
-                selectedSegment = state.selectedSegment,
-                onSegmentClick = { onIntent(SessionIntent.SegmentClicked(it)) },
-                cursorMs = position.takeIf { state.player != null },
-                followCursor = state.player?.playing == true,
-            )
-            if (playerHere) PlayerAndSound(state, onIntent, position)
-            // An empty place where a player would be reads as something broken; a quiet line says what it is. A video
-            // that is gone says it with its own row: its sound went with it.
-            if (!content.hasAudio && video?.lost != true) SilentLine()
-            SessionStatCards(content)
-            ProblemNotes(content.problemNotes)
-            Actions(onIntent, sizeLine = video?.let { sizeLineOf(it) })
-        }
+        val screen = Screen(state, onIntent, videoSurface, position, width = maxWidth, height = maxHeight)
         when {
-            // Handoff 20d8: the picture and the player stay put on the left, the rest scrolls on the right.
-            landscape && picture != null -> Row(modifier = Modifier.fillMaxSize()) {
-                val left = minOf(screenWidth / 2, LandscapeVideoColumn)
-                Column(
-                    modifier = Modifier
-                        .width(left)
-                        .padding(start = ContentPadding, end = ContentPadding / 2, top = 8.dp, bottom = ContentPadding)
-                        .verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    val room = left - ContentPadding * 3 / 2
-                    val frame = VideoLayoutMath.fit(VideoLayoutMath.aspectOf(picture.width, picture.height), room.value, screenHeight.value * LANDSCAPE_VIDEO_SHARE)
-                    Box(Modifier.fillMaxWidth().background(ViolinTheme.videoColors.field, RoundedCornerShape(14.dp)), contentAlignment = Alignment.Center) {
-                        VideoFrame(picture, state.player?.playing == true, videoSurface, onTap, Modifier.size(frame.width.dp, frame.height.dp), corner = 14.dp, onFullscreen = onFullscreen, waiting = state.preparingBacking)
-                    }
-                    PlayerAndSound(state, onIntent, position)
-                }
-                Column(
-                    modifier = Modifier
-                        .weight(1f)
-                        .verticalScroll(scroll)
-                        .padding(start = ContentPadding / 2, end = ContentPadding, top = 8.dp, bottom = ContentPadding),
-                    verticalArrangement = Arrangement.spacedBy(SectionSpacing),
-                ) { rest(false) }
-            }
-            picture != null && VIDEO_STICKS -> {
-                val block = VideoLayoutMath.blockHeight(VideoLayoutMath.aspectOf(picture.width, picture.height), columnWidth.value, screenHeight.value)
-                Column(
-                    modifier = Modifier
-                        .widthIn(max = MaxContentWidth)
-                        .verticalScroll(scroll)
-                        .padding(start = ContentPadding, end = ContentPadding, top = 8.dp, bottom = ContentPadding),
-                    verticalArrangement = Arrangement.spacedBy(SectionSpacing),
-                ) {
-                    // the room the picture takes while nothing is scrolled; the picture itself lies over the scroll and shrinks with it
-                    Spacer(Modifier.height(block.dp))
-                    rest(true)
-                }
-                StickyVideo(
-                    video = picture,
-                    content = content,
-                    player = state.player,
-                    scrolledPx = { scroll.value },
-                    availableWidth = columnWidth.value,
-                    screenHeight = screenHeight.value,
-                    callbacks = videoSurface,
-                    onTap = onTap,
-                    onFullscreen = onFullscreen,
-                    waiting = state.preparingBacking,
-                    modifier = Modifier
-                        .widthIn(max = MaxContentWidth)
-                        .background(MaterialTheme.colorScheme.surface)
-                        .padding(start = ContentPadding, end = ContentPadding, top = 8.dp),
-                )
-            }
-            else -> Column(
-                modifier = Modifier
-                    .widthIn(max = MaxContentWidth)
-                    .verticalScroll(scroll)
-                    .padding(start = ContentPadding, end = ContentPadding, top = 8.dp, bottom = ContentPadding),
-                verticalArrangement = Arrangement.spacedBy(SectionSpacing),
+            // lying, any recording whose sound plays: two columns (spec 3.36.5 — before, a video only)
+            landscape && state.playable -> TwoColumns(screen)
+            state.playable -> AppDock(
+                dock = { RecordPlayer(state, position, onIntent) },
+                modifier = Modifier.widthIn(max = MaxContentWidth).fillMaxSize(),
+                fade = 0.dp,
+                metrics = currentPlayerDockMetrics(),
+                ground = MaterialTheme.colorScheme.surfaceContainer,
+                shape = PlayerPanelShape,
             ) {
-                // the fallback of the handoff (20d4): the picture leaves with the scroll
-                if (picture != null) {
-                    StickyVideo(picture, content, state.player, { 0 }, columnWidth.value, screenHeight.value, videoSurface, onTap, onFullscreen)
-                }
-                rest(true)
+                // the middle ends at the top of the panel: nothing lies under the player, the roll is never under it
+                Box(Modifier.fillMaxSize().padding(bottom = LocalDockInset.current)) { Scrolling(screen) }
             }
+            // nothing to play: one column, the dashed line first
+            else -> Box(Modifier.widthIn(max = MaxContentWidth).fillMaxSize()) { Scrolling(screen) }
         }
     }
-    state.selectedSegment?.let { index ->
-        NoteSheet(
-            segment = content.segments[index],
-            onDismiss = { onIntent(SessionIntent.NoteSheetDismissed) },
-            // a place can be played only where there is something to play
-            place = state.player?.let { NotePlace(video = picture != null) { onIntent(SessionIntent.PlaySegmentClicked(index)) } },
+}
+
+/** What the layouts are made of — one bag, not six parameters thrice. [width] and [height] — of the room under the bar. */
+private class Screen(
+    val state: SessionState.Loaded,
+    val onIntent: (SessionIntent) -> Unit,
+    val videoSurface: VideoSurfaceCallbacks,
+    val position: () -> Long,
+    val width: Dp,
+    val height: Dp,
+) {
+    val picture: VideoUi? get() = state.video?.takeIf { it.pictured }
+    val onTap: () -> Unit = { onIntent(SessionIntent.PlayPauseClicked) }
+    val onFullscreen: () -> Unit = { onIntent(SessionIntent.FullscreenChanged(true)) }
+}
+
+/**
+ * One column that scrolls: the dashed line of what is not there, the video that shrinks into a row under the bar as the rest scrolls
+ * (spec 3.19, 5.13 — not higher than 40 % of the room), the summary and the rest.
+ */
+@Composable
+private fun Scrolling(screen: Screen) {
+    val state = screen.state
+    val picture = screen.picture
+    val scroll = rememberScrollState()
+    val columnWidth = minOf(screen.width, MaxContentWidth) - ScreenPadding * 2
+    Box(Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scroll)
+                .padding(start = ScreenPadding, end = ScreenPadding, top = ContentTop, bottom = ContentBottom),
+            verticalArrangement = Arrangement.spacedBy(CardGap),
+        ) {
+            if (picture != null) {
+                if (VIDEO_STICKS) {
+                    // the room the picture takes while nothing is scrolled; the picture itself lies over the scroll and shrinks with it
+                    val block = VideoLayoutMath.blockHeight(VideoLayoutMath.aspectOf(picture.width, picture.height), columnWidth.value, screen.height.value)
+                    Spacer(Modifier.height(block.dp))
+                } else {
+                    // the fallback of the handoff (20d4): the picture leaves with the scroll
+                    StickyVideo(
+                        picture, state.content, state.player, { 0 }, columnWidth.value, screen.height.value, screen.videoSurface,
+                        screen.onTap, screen.onFullscreen, waiting = state.preparingBacking,
+                    )
+                }
+            }
+            Plates(state)
+            Cards(screen, summary = true)
+        }
+        if (picture != null && VIDEO_STICKS) {
+            StickyVideo(
+                video = picture,
+                content = state.content,
+                player = state.player,
+                scrolledPx = { scroll.value },
+                availableWidth = columnWidth.value,
+                screenHeight = screen.height.value,
+                callbacks = screen.videoSurface,
+                onTap = screen.onTap,
+                onFullscreen = screen.onFullscreen,
+                waiting = state.preparingBacking,
+                modifier = Modifier
+                    .background(MaterialTheme.colorScheme.surface)
+                    .padding(start = ScreenPadding, end = ScreenPadding, top = ContentTop),
+            )
+        }
+    }
+}
+
+/**
+ * Lying (spec 3.36.5, landscape.html 3): the bar of 48 over two columns. On the left — min(half the window, 456) — the picture as high as
+ * what is left over the player, on its dark field, or the summary short, scrolling over the player where it does not fit (a large font,
+ * a take under a backing on 640 × 360) with a fade of 16; at its bottom the player, compact in a window lower than 700 — its panel the
+ * whole column, its rows flush with the summary and the picture over them (16 at the edge, 8 at the meeting of the columns). On the
+ * right, scrolling to the bottom of the screen: the summary first under a picture, then the notes, «Что уходит» and «По струнам».
+ */
+@Composable
+private fun TwoColumns(screen: Screen) {
+    val state = screen.state
+    val picture = screen.picture
+    val colors = MaterialTheme.colorScheme
+    Row(Modifier.fillMaxSize()) {
+        AppDock(
+            dock = { RecordPlayer(state, screen.position, screen.onIntent, sides = LeftColumnSides) },
+            modifier = Modifier.width(minOf(screen.width / 2, LandscapeLeftColumn)).fillMaxHeight(),
+            fade = if (picture != null) 0.dp else DockDefaults.FadeLeftColumn,
+            // the sides are the column's, as those of the summary and the picture: the rows are given them, the ground is the column
+            padSides = false,
+            metrics = currentPlayerDockMetrics(),
+            ground = colors.surfaceContainer,
+            shape = PlayerPanelShape,
+        ) {
+            if (picture != null) {
+                LeftPicture(screen, picture)
+            } else {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(bottom = LocalDockInset.current)
+                        .verticalScroll(rememberScrollState())
+                        .padding(start = ScreenPadding, end = ColumnGap, top = ContentTop, bottom = ContentBottom),
+                    verticalArrangement = Arrangement.spacedBy(CardGap),
+                ) {
+                    Plates(state)
+                    SummaryCard(state.content, compact = true)
+                }
+            }
+        }
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
+                .padding(start = ColumnGap, end = ScreenPadding, top = ContentTop, bottom = ContentBottom),
+            verticalArrangement = Arrangement.spacedBy(CardGap),
+        ) {
+            Cards(screen, summary = picture != null)
+        }
+    }
+}
+
+/** The picture lying: as high as what is left over the player, on the dark field of a video, «на весь экран» in its corner, no shrinking. */
+@Composable
+private fun LeftPicture(screen: Screen, picture: VideoUi) {
+    val state = screen.state
+    BoxWithConstraints(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(start = ScreenPadding, end = ColumnGap, top = ContentTop, bottom = LocalDockInset.current + PictureOverPlayer)
+            .background(ViolinTheme.videoColors.field, RoundedCornerShape(VideoCorner)),
+        contentAlignment = Alignment.Center,
+    ) {
+        val frame = VideoLayoutMath.fit(VideoLayoutMath.aspectOf(picture.width, picture.height), maxWidth.value, maxHeight.value)
+        VideoFrame(
+            video = picture,
+            playing = state.player?.playing == true,
+            callbacks = screen.videoSurface,
+            onTap = screen.onTap,
+            modifier = Modifier.size(frame.width.dp, frame.height.dp),
+            onFullscreen = screen.onFullscreen,
+            waiting = state.preparingBacking,
         )
     }
-    when (state.dialog) {
-        SessionDialog.RENAME -> RenameDialog(currentTitle = content.title.orEmpty(), placeholder = title, onIntent = onIntent)
-        SessionDialog.DELETE -> RecordDeleteDialog(
-            videoBytes = video?.takeIf { !it.lost }?.sizeBytes,
-            onConfirm = { onIntent(SessionIntent.DeleteConfirmed) },
-            onDismiss = { onIntent(SessionIntent.DialogDismissed) },
-        )
-        null -> Unit
+}
+
+/**
+ * What is not there, first (spec 3.36.5): a video that is gone — the plate of it, its sound went with it; a picture this phone cannot
+ * show — the plate of that, the sound plays; no sound to play — the quiet line of a recording without sound.
+ */
+@Composable
+private fun Plates(state: SessionState.Loaded) {
+    val video = state.video
+    when {
+        video?.lost == true -> DashedPlate(AppIcons.VideoOff, stringResource(Res.string.video_lost_text), title = stringResource(Res.string.video_lost_title))
+        video?.undecodable == true -> DashedPlate(AppIcons.VideoOff, stringResource(Res.string.video_undecodable_text), title = stringResource(Res.string.video_undecodable_title))
     }
+    if ((!state.content.hasAudio && video?.lost != true) || state.soundFailed) {
+        DashedPlate(AppIcons.Info, stringResource(Res.string.sound_session_silent))
+    }
+}
+
+/** The summary ([summary]), the notes, «Что уходит» and «По струнам», 12 apart. */
+@Composable
+private fun ColumnScope.Cards(screen: Screen, summary: Boolean) {
+    val state = screen.state
+    val onIntent = screen.onIntent
+    if (summary) SummaryCard(state.content)
+    NotesCard(
+        content = state.content,
+        selectedSegment = state.selectedSegment,
+        onSegment = { onIntent(SessionIntent.SegmentClicked(it)) },
+        cursor = screen.position.takeIf { state.player != null },
+        follow = state.player?.playing == true,
+    )
+    DriftCard(state.content.problemNotes, onNote = { onIntent(SessionIntent.ProblemNoteClicked(it)) })
+    StringsCard(state.content)
 }
 
 private const val BEST_STAR_MS = 150
 private const val BEST_IDLE_SCALE = 0.9f
 
+/**
+ * The bar (spec 3.36.5, 5.29 R5): «назад», the name in one line and under it what the recording is — «дубль · 18:42 · 2:05», «видео ·
+ * 18:42 · 2:05», «09:15 · 0:36» — after the sign of the backing for a take made under one; at the right what is done with it whole:
+ * the star of a take, «Поделиться» while its sound plays, «⋯». While it is read, and when it is not found, the bar has no actions.
+ */
 @Composable
-private fun TopBar(
-    title: String,
-    onBack: () -> Unit,
-    onShare: (() -> Unit)?,
-    subtitle: String? = null,
-    /** Null for a recording that is not a take: no star. */
-    best: Boolean? = null,
-    onBest: () -> Unit = {},
-) {
+private fun TopBar(title: String, loaded: SessionState.Loaded?, zone: TimeZone, height: Dp, onIntent: (SessionIntent) -> Unit) {
     val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(TopBarHeight)
-            .padding(start = 4.dp, end = 4.dp, top = 4.dp),
+            .height(height)
+            .padding(horizontal = TopBarSide),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
-            modifier = Modifier
-                .size(BackTarget)
-                .clip(CircleShape)
-                .clickable(onClickLabel = stringResource(Res.string.session_back), role = Role.Button, onClick = onBack),
-            contentAlignment = Alignment.Center,
-        ) {
-            AppIcon(AppIcons.Back, contentDescription = null, tint = colors.onSurface)
-        }
-        Column(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = 4.dp),
-        ) {
+        BarButton(AppIcons.Back, stringResource(Res.string.session_back)) { onIntent(SessionIntent.BackClicked) }
+        Column(modifier = Modifier.weight(1f).padding(start = TopBarSide)) {
             Text(
                 text = title,
+                modifier = Modifier.semantics { heading() },
                 color = colors.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.titleLarge.copy(fontSize = if (subtitle == null) 20.sp else 17.sp, fontWeight = FontWeight.SemiBold),
+                style = MaterialTheme.typography.titleMedium.copy(fontSize = 17.sp, lineHeight = 22.sp, fontWeight = FontWeight.ExtraBold),
             )
-            if (subtitle != null) {
-                Text(
-                    text = subtitle,
-                    color = colors.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontFeatureSettings = "tnum"),
-                )
-            }
+            if (loaded != null) Subtitle(loaded.content, zone)
         }
-        if (best != null) {
-            // The most familiar "favourite" button there is, and its state needs no words (handoff 22f): outline — not the best, filled — the best.
-            val label = stringResource(if (best) Res.string.best_clear else Res.string.best_set)
-            val scale by animateFloatAsState(if (best) 1f else BEST_IDLE_SCALE, tween(BEST_STAR_MS), label = "bestStar")
-            Box(
-                modifier = Modifier
-                    .size(BackTarget)
-                    .clip(CircleShape)
-                    .toggleable(value = best, role = Role.Switch, onValueChange = { onBest() })
-                    .semantics { contentDescription = label },
-                contentAlignment = Alignment.Center,
-            ) {
-                AppIcon(
-                    icon = if (best) AppIcons.Star else AppIcons.StarOutline,
-                    contentDescription = null,
-                    tint = if (best) colors.primary else colors.onSurface,
-                    modifier = Modifier.graphicsLayer {
-                        scaleX = scale
-                        scaleY = scale
-                    },
-                )
-            }
-        }
-        if (onShare != null) {
-            val share = stringResource(Res.string.sound_share)
-            Box(
-                modifier = Modifier
-                    .size(BackTarget)
-                    .clip(CircleShape)
-                    .clickable(role = Role.Button, onClick = onShare)
-                    .semantics { contentDescription = share },
-                contentAlignment = Alignment.Center,
-            ) { AppIcon(AppIcons.Share, contentDescription = null, tint = colors.onSurface) }
-        }
+        if (loaded == null) return@Row
+        val content = loaded.content
+        // a take only (spec 3.21): the most familiar «favourite» button there is — outline, not the best; filled, the best
+        if (content.pieceId != null) BestStar(content.best) { onIntent(SessionIntent.BestClicked) }
+        // sending is what one does most after listening — in sight at once, away from «Удалить…» in «⋯» (spec 3.36.5)
+        if (loaded.player != null) BarButton(AppIcons.Share, stringResource(Res.string.sound_share)) { onIntent(SessionIntent.ShareClicked) }
+        MoreMenu(loaded, onIntent)
     }
 }
 
+/** What the recording is, under its name — and, for TalkBack, «под минусовку» where the sign of the backing stands before it. */
 @Composable
-private fun Summary(content: SessionContent) {
+private fun Subtitle(content: SessionContent, zone: TimeZone) {
     val colors = MaterialTheme.colorScheme
-    Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        Column(modifier = Modifier.weight(1f)) {
-            Row {
-                Text(
-                    text = content.scorePercent.toString(),
-                    modifier = Modifier.alignByBaseline(),
-                    color = colors.onSurface,
-                    style = MaterialTheme.typography.displayLarge.merge(ScoreStyle),
-                )
-                Text(
-                    text = "%",
-                    modifier = Modifier.alignByBaseline(),
-                    color = colors.onSurfaceVariant,
-                    style = MaterialTheme.typography.headlineMedium.merge(PercentStyle),
-                )
-            }
-            Text(
-                text = stringResource(
-                    Res.string.session_meta,
-                    Formats.duration(content.durationMs),
-                    content.toleranceCents.roundToInt(),
-                ),
-                modifier = Modifier.padding(top = 6.dp),
-                color = colors.onSurfaceVariant,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
-            )
-        }
-        Column(modifier = Modifier.padding(bottom = 4.dp), horizontalAlignment = Alignment.End) {
-            val biasZone = content.biasZone
-            Text(
-                text = if (biasZone == null) {
-                    stringResource(Res.string.session_bias_none)
-                } else {
-                    stringResource(Res.string.session_bias_mean, Formats.signedCents(content.biasCents))
-                },
-                color = biasZone?.let { ViolinTheme.zoneColors.colorFor(it) } ?: ViolinTheme.zoneColors.inTune,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold),
-            )
-            Text(
-                text = stringResource(
-                    when {
-                        biasZone == null -> Res.string.session_bias_hint_none
-                        content.biasCents < 0 -> Res.string.session_bias_hint_flat
-                        else -> Res.string.session_bias_hint_sharp
-                    },
-                ),
-                modifier = Modifier
-                    .padding(top = 2.dp)
-                    .widthIn(max = 170.dp),
-                color = colors.onSurfaceVariant,
-                textAlign = TextAlign.End,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
-            )
-        }
+    val time = Formats.timeOfDay(content.startedAtEpochMs, zone)
+    val length = Formats.duration(content.durationMs)
+    val words = when {
+        content.hasVideo -> stringResource(Res.string.session_video_subtitle, time, length)
+        content.pieceId != null -> stringResource(Res.string.session_take_subtitle, time, length)
+        // a free recording: no «с Live» — where it was made is not kept (spec 3.15)
+        else -> stringResource(Res.string.record_meta, time, length)
     }
-}
-
-/** The player and the way to «Звук» under it: in the scroll when the phone is upright, beside the picture when it lies on its side. */
-@Composable
-private fun PlayerAndSound(state: SessionState.Loaded, onIntent: (SessionIntent) -> Unit, position: () -> Long) {
-    if (state.player == null && state.preparingBacking) BackingPreparingRow()
-    // the file is there but does not play here: the quiet line of a recording without sound, where the player would be (spec 3.17)
-    if (state.soundFailed) SilentLine()
-    state.player?.let { player ->
-        PlayerBar(
-            player = player,
-            position = position,
-            onPlayPause = { onIntent(SessionIntent.PlayPauseClicked) },
-            onSeek = { onIntent(SessionIntent.SeekRequested(it)) },
-            onOriginal = { onIntent(SessionIntent.OriginalSelected(it)) },
-        )
-        if (player.hasBacking) {
-            BackingHeardSwitch(heard = player.backingHeard, onHeard = { onIntent(SessionIntent.BackingHeardSelected(it)) }, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-        }
-        state.sound?.let { SoundEntry(it, processed = player.processed) { onIntent(SessionIntent.SoundClicked) } }
-    }
-}
-
-/** «видео · 1080p · 214 МБ» — beside «Удалить», where a size is also a warning (handoff 20d1). */
-@Composable
-private fun sizeLineOf(video: VideoUi): String = when {
-    video.lost -> stringResource(Res.string.video_size_lost)
-    else -> stringResource(Res.string.video_size, stringResource(Res.string.video_resolution, minOf(video.width, video.height)), Formats.fileSize(video.sizeBytes))
-}
-
-@Composable
-private fun Actions(onIntent: (SessionIntent) -> Unit, sizeLine: String? = null) {
-    val colors = MaterialTheme.colorScheme
-    Column {
-        HorizontalDivider(color = colors.surfaceContainerHigh)
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 8.dp),
-            horizontalArrangement = Arrangement.SpaceAround,
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            if (sizeLine != null) {
-                Row(modifier = Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    AppIcon(AppIcons.Video, contentDescription = null, tint = colors.onSurfaceVariant, size = IconSizes.InText)
-                    Text(sizeLine, color = colors.onSurfaceVariant, maxLines = 1, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES))
-                }
-            }
-            Action(
-                label = stringResource(Res.string.session_action_rename),
-                color = colors.onSurfaceVariant,
-                icon = AppIcons.Pencil,
-                onClick = { onIntent(SessionIntent.RenameClicked) },
-            )
-            Action(
-                label = stringResource(Res.string.session_action_delete),
-                color = ViolinTheme.dangerSoft,
-                icon = AppIcons.Trash,
-                onClick = { onIntent(SessionIntent.DeleteClicked) },
-            )
-        }
-    }
-}
-
-@Composable
-private fun Action(label: String, color: Color, icon: ImageVector, onClick: () -> Unit) {
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(12.dp))
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 8.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+    val backing = if (content.underBacking) stringResource(Res.string.backing_take_mark) else null
+    val spoken = listOfNotNull(words, backing).joinToString(", ")
+    Row(
+        modifier = Modifier.clearAndSetSemantics { contentDescription = spoken },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(SubtitleGap),
     ) {
-        AppIcon(icon, contentDescription = null, tint = color, size = ActionIcon)
-        Text(label, color = color, style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp))
+        if (backing != null) AppIcon(AppIcons.Backing, contentDescription = null, tint = colors.onSurfaceVariant, size = IconSizes.InText)
+        Text(
+            text = words,
+            color = colors.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
+        )
+    }
+}
+
+@Composable
+private fun BarButton(icon: ImageVector, description: String, onClick: () -> Unit) {
+    Box(
+        modifier = Modifier
+            .size(TopBarButton)
+            .clip(CircleShape)
+            .clickable(role = Role.Button, onClick = onClick)
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) { AppIcon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.onSurface) }
+}
+
+@Composable
+private fun BestStar(best: Boolean, onToggle: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val label = stringResource(if (best) Res.string.best_clear else Res.string.best_set)
+    val scale by animateFloatAsState(if (best) 1f else BEST_IDLE_SCALE, tween(BEST_STAR_MS), label = "bestStar")
+    Box(
+        modifier = Modifier
+            .size(TopBarButton)
+            .clip(CircleShape)
+            .toggleable(value = best, role = Role.Switch, onValueChange = { onToggle() })
+            .semantics { contentDescription = label },
+        contentAlignment = Alignment.Center,
+    ) {
+        AppIcon(
+            icon = if (best) AppIcons.Star else AppIcons.StarOutline,
+            contentDescription = null,
+            tint = if (best) colors.primary else colors.onSurface,
+            modifier = Modifier.graphicsLayer {
+                scaleX = scale
+                scaleY = scale
+            },
+        )
+    }
+}
+
+/**
+ * «⋯» of the bar (spec 3.36.5): «Переименовать»; «К произведению» — a take whose piece is there; after a line «Удалить…», of a video
+ * with what goes with it on a second line — «видео · 1080p · 214 МБ», from 100 MB bold in the colour of danger; «видео не найдено».
+ */
+@Composable
+private fun MoreMenu(loaded: SessionState.Loaded, onIntent: (SessionIntent) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val close = { open = false }
+    val video = loaded.video
+    Box {
+        BarButton(AppIcons.More, stringResource(Res.string.card_menu)) { open = true }
+        AppMenu(
+            expanded = open,
+            onDismissRequest = close,
+            danger = MenuDanger(
+                text = stringResource(Res.string.card_menu_delete),
+                onClick = {
+                    close()
+                    onIntent(SessionIntent.DeleteClicked)
+                },
+                caption = video?.let { sizeLineOf(it) },
+                captionStrong = video?.large == true,
+            ),
+        ) {
+            AppMenuItem(
+                text = stringResource(Res.string.session_action_rename),
+                icon = AppIcons.Pencil,
+                onClick = {
+                    close()
+                    onIntent(SessionIntent.RenameClicked)
+                },
+            )
+            if (loaded.content.pieceId != null) {
+                AppMenuItem(
+                    text = stringResource(Res.string.session_menu_piece),
+                    icon = AppIcons.TabRepertoire.normal,
+                    onClick = {
+                        close()
+                        onIntent(SessionIntent.OpenPieceClicked)
+                    },
+                )
+            }
+        }
+    }
+}
+
+/** «видео · 1080p · 214 МБ» (spec 3.19); the picture not looked into yet — «видео · 214 МБ»; the file gone — «видео не найдено». */
+@Composable
+private fun sizeLineOf(video: VideoUi): String {
+    val side = minOf(video.width, video.height)
+    return when {
+        video.lost -> stringResource(Res.string.video_size_lost)
+        side > 0 -> stringResource(Res.string.video_size, stringResource(Res.string.video_resolution, side), Formats.fileSize(video.sizeBytes))
+        else -> stringResource(Res.string.record_tile_only_video) + stringResource(Res.string.dot_separator) + Formats.fileSize(video.sizeBytes)
     }
 }
 
@@ -555,48 +615,4 @@ private fun RenameDialog(currentTitle: String, placeholder: String, onIntent: (S
         hint = stringResource(Res.string.session_rename_hint),
         placeholder = placeholder,
     )
-}
-
-/** The way to the «Звук» screen, with what the recording sounds like in its second line; its icon is lit while the processing does something. */
-@Composable
-private fun SoundEntry(row: SoundRow, processed: Boolean, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    val name = captionName(row.caption)
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
-            .background(colors.surfaceContainer)
-            .clickable(role = Role.Button, onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        AppIcon(AppIcons.Sound, contentDescription = null, tint = if (processed) colors.primary else colors.onSurfaceVariant)
-        Column(modifier = Modifier.weight(1f)) {
-            Text(stringResource(Res.string.sound_session_row), color = colors.onSurface, style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
-            Text(
-                text = when {
-                    !row.own -> stringResource(Res.string.sound_caption_everyone, name)
-                    !processed -> stringResource(Res.string.sound_row_off)
-                    row.caption == SoundCaption.Custom -> name
-                    else -> stringResource(Res.string.sound_caption_own, name)
-                },
-                color = colors.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-            )
-        }
-        AppIcon(AppIcons.ChevronRight, contentDescription = null, tint = colors.onSurfaceVariant)
-    }
-}
-
-@Composable
-private fun SilentLine() {
-    val colors = MaterialTheme.colorScheme
-    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        AppIcon(AppIcons.VolumeOff, contentDescription = null, tint = colors.onSurfaceVariant, size = 18.dp)
-        Text(stringResource(Res.string.sound_session_silent), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp))
-    }
 }

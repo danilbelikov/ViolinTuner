@@ -16,8 +16,6 @@ data class SoundColors(
     val meterReduce: Color,
     /** The limiter is working: the one warning color of the screen. */
     val meterLimit: Color,
-    /** The part of the waveform not played yet; the played part is primary. */
-    val waveRest: Color,
     /** Between the equalizer curve and 0 dB. */
     val eqFill: Color,
 )
@@ -26,7 +24,6 @@ internal val DarkSoundColors = SoundColors(
     meterLevel = MeterLevel,
     meterReduce = MeterReduce,
     meterLimit = MeterLimit,
-    waveRest = WaveRest,
     eqFill = EqFill,
 )
 

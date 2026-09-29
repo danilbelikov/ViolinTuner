@@ -17,18 +17,24 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTouchHeightIsEqualTo
+import androidx.compose.ui.test.assertTouchWidthIsEqualTo
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.unit.Density
@@ -37,6 +43,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.testing.assertWholeOnOneLine
+import com.violinjourney.app.testing.textLayout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
@@ -199,9 +207,172 @@ class SegmentedSwitchTest {
         assertWordsWhole(FRENCH)
     }
 
+    // ---- the player of R5 (spec 3.36.5, 5.29 R5)
+
+    private val holds = mutableListOf<Pair<Int, Boolean>>()
+
+    private fun showAb(compact: Boolean = false, fontScale: Float? = null) {
+        compose.setContent {
+            val base = LocalViewConfiguration.current
+            val density = LocalDensity.current
+            val noWidening = remember(base) { object : ViewConfiguration by base { override val minimumTouchTargetSize = DpSize.Zero } }
+            CompositionLocalProvider(
+                LocalViewConfiguration provides noWidening,
+                LocalDensity provides (fontScale?.let { Density(density.density, it) } ?: density),
+            ) {
+                ViolinTheme {
+                    SegmentedSwitch(
+                        labels = listOf("A", "B"),
+                        selectedIndex = selected,
+                        onSelect = { selected = it },
+                        modifier = Modifier.width(96.dp).testTag(TAG),
+                        compact = compact,
+                        strong = true,
+                        segmentDescriptions = AB_WORDS,
+                        onHold = { index, held -> holds += index to held },
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+    }
+
+    /** «Пока держишь» (spec 3.17): a long press on A says when it begins and when the finger lets go; it does not choose. */
+    @Test
+    fun aHoldOnASegmentIsToldWhenItBeginsAndWhenItEnds() {
+        selected = 1
+        showAb()
+        compose.onNodeWithContentDescription(AB_WORDS[0]).performTouchInput { longClick() }
+        compose.runOnIdle {
+            assertEquals(listOf(0 to true, 0 to false), holds)
+            assertEquals("a hold does not choose: B stays chosen under it", 1, selected)
+        }
+    }
+
+    /** A tap chooses and tells no hold — its press ends, but it held nothing. */
+    @Test
+    fun aTapOnAHoldableSegmentChoosesAndHoldsNothing() {
+        selected = 1
+        showAb()
+        compose.onNodeWithContentDescription(AB_WORDS[0]).performClick()
+        compose.runOnIdle {
+            assertEquals(0, selected)
+            assertEquals(emptyList<Pair<Int, Boolean>>(), holds)
+        }
+    }
+
+    /** To TalkBack each half is «A, оригинал» / «B, обработка», a radio button with its mark, that its activation chooses; «A» alone is not heard. */
+    @Test
+    fun eachSegmentIsReadByItsDescriptionAndTheReaderChooses() {
+        selected = 1
+        showAb()
+        val a = compose.onNodeWithContentDescription(AB_WORDS[0])
+        a.assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton)).assertIsNotSelected()
+        compose.onNodeWithContentDescription(AB_WORDS[1]).assertIsSelected()
+        compose.onAllNodesWithText("A").assertCountEquals(0)
+        a.performSemanticsAction(SemanticsActions.OnClick)
+        compose.runOnIdle { assertEquals(0, selected) }
+    }
+
+    /** The compact A/B of a low window: 48 to press, whole segments of 48 — the width of 96 gives each half its target. */
+    @Test
+    fun theCompactAbIsPressedOverFortyEightEachWay() {
+        showAb(compact = true)
+        AB_WORDS.forEach { word ->
+            compose.onNodeWithContentDescription(word).assertTouchHeightIsEqualTo(48.dp).assertTouchWidthIsEqualTo(48.dp)
+        }
+    }
+
+    /**
+     * …and at the font 1.3 (spec 5.29 R5: seen 28, pressed 48): «A» of 14 sp is 18.8 dp there (Android's curve of large fonts), its
+     * line of 1.15 — 21.6 dp — stands in the pill of 24. The box of the font's own ascent and descent (Manrope: 1.37 em, 26.3 dp)
+     * grew the pill and the switch to 50.67 (ExactLines).
+     */
+    @Test
+    fun theCompactAbAtALargeFontStaysFortyEight() {
+        showAb(compact = true, fontScale = 1.3f)
+        AB_WORDS.forEach { word ->
+            compose.onNodeWithContentDescription(word).assertTouchHeightIsEqualTo(48.dp).assertTouchWidthIsEqualTo(48.dp)
+        }
+    }
+
+    /**
+     * The backing's switch in [width] dp at the font 1.0 whatever the device's: the sizes these tests expect are worked out at it —
+     * a device left at a large font (the check of a stage sets 1.3) would take other ways of fitting.
+     */
+    private fun showBacking(width: Int, compact: Boolean = false) {
+        compose.setContent {
+            val base = LocalViewConfiguration.current
+            val density = LocalDensity.current
+            val noWidening = remember(base) { object : ViewConfiguration by base { override val minimumTouchTargetSize = DpSize.Zero } }
+            CompositionLocalProvider(LocalViewConfiguration provides noWidening, LocalDensity provides Density(density.density, 1f)) {
+                ViolinTheme {
+                    SegmentedSwitch(
+                        labels = SPANISH,
+                        selectedIndex = 0,
+                        onSelect = {},
+                        modifier = Modifier.width(width.dp).testTag(TAG),
+                        compact = compact,
+                        strong = true,
+                        shrinkToTwoLines = true,
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+    }
+
+    /**
+     * «С минусовкой | Только скрипка» (5.29 R5): a label too wide for its half at 14 sp takes both down to two lines of 12 in the same
+     * height — the words are whole, they go on at a space. Spanish «Con acompañamiento» (≈ 154 dp at 14 sp, 132 at 12, «acompañamiento»
+     * alone 105) in halves of 135 — 121 for the words: the column of 640 × 360 lying behind a cutout.
+     */
+    @Test
+    fun aLabelTooWideForItsHalfGoesOnTwoSmallerLinesInTheSameHeight() {
+        showBacking(width = 270)
+        compose.onNodeWithTag(TAG).assertHeightIsEqualTo(52.dp)
+        SPANISH.forEach { label ->
+            // an AnnotatedString: its semantics hands the layout drawn (testing/TextLayouts.kt)
+            val layout = compose.onNodeWithText(label, useUnmergedTree = true).textLayout()
+            assertEquals("«$label» at 12 sp", 12f, layout.layoutInput.style.fontSize.value, 0.01f)
+            for (line in 0 until layout.lineCount - 1) {
+                assertTrue("«$label» goes on at a space", label[layout.getLineEnd(line) - 1].isWhitespace())
+            }
+            assertFalse("«$label» is not cut", layout.isLineEllipsized(layout.lineCount - 1))
+        }
+        assertEquals(2, compose.onNodeWithText(SPANISH[0], useUnmergedTree = true).textLayout().lineCount)
+    }
+
+    /** Labels that stand in their halves keep their size. */
+    @Test
+    fun labelsThatStandInTheirHalvesKeepFourteen() {
+        showBacking(width = 412)
+        SPANISH.forEach { label ->
+            assertEquals(14f, compose.onNodeWithText(label, useUnmergedTree = true).textLayout().layoutInput.style.fontSize.value, 0.01f)
+        }
+    }
+
+    /**
+     * The compact switch of a low window (5.29 R5: seen 28, pressed 48): its pills of 24 hold one line — the same Spanish in the same 270
+     * goes down to one line of 12, «Con acompañamiento» (132 + 11 of 135) taking its line and «Solo violín» the rest, and the switch
+     * stays 48: two lines of 12 (≈ 28) would have grown it to ≈ 52.
+     */
+    @Test
+    fun aCompactLabelTooWideForItsHalfStaysOnOneSmallerLineInTheSameHeight() {
+        showBacking(width = 270, compact = true)
+        compose.onNodeWithTag(TAG).assertHeightIsEqualTo(48.dp)
+        SPANISH.forEach { label ->
+            val node = compose.onNodeWithText(label, useUnmergedTree = true)
+            assertEquals("«$label» at 12 sp", 12f, node.textLayout().layoutInput.style.fontSize.value, 0.01f)
+            assertWholeOnOneLine(node, label)
+        }
+    }
+
     private companion object {
         const val TAG = "switch"
         val LABELS = listOf("Разбираю", "Учу", "В репертуаре")
         val FRENCH = listOf("Déchiffrage", "En travail", "Au répertoire")
+        val SPANISH = listOf("Con acompañamiento", "Solo violín")
+        val AB_WORDS = listOf("A, original", "B, processed")
     }
 }

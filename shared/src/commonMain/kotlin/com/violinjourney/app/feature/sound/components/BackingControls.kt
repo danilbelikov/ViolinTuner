@@ -1,18 +1,14 @@
 package com.violinjourney.app.feature.sound.components
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -22,9 +18,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.backing.BackingConfig
@@ -35,8 +29,6 @@ import com.violinjourney.app.feature.sound.SoundIntent
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.backing_block_title
 import com.violinjourney.app.shared.resources.backing_gain
-import com.violinjourney.app.shared.resources.backing_heard_violin
-import com.violinjourney.app.shared.resources.backing_heard_with
 import com.violinjourney.app.shared.resources.backing_offset
 import com.violinjourney.app.shared.resources.backing_offset_hint
 import com.violinjourney.app.shared.resources.backing_offset_recorded
@@ -44,48 +36,8 @@ import com.violinjourney.app.shared.resources.backing_preparing
 import com.violinjourney.app.shared.resources.backing_take_unprepared
 import org.jetbrains.compose.resources.stringResource
 
-private val SwitchHeight = 36.dp
 private val CardCorner = 16.dp
 private const val TABULAR_FIGURES = "tnum"
-
-/**
- * «с минусовкой / только скрипка» under the player of a take made under a backing (spec 3.32). Two halves of one
- * pill, the chosen one filled: a switch of what is heard, not a setting — it is not remembered past the screen.
- */
-@Composable
-fun BackingHeardSwitch(heard: Boolean, onHeard: (Boolean) -> Unit, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(SwitchHeight / 2))
-            .background(colors.surfaceContainerHigh)
-            .padding(3.dp)
-            .selectableGroup(),
-        horizontalArrangement = Arrangement.spacedBy(3.dp),
-    ) {
-        listOf(true to Res.string.backing_heard_with, false to Res.string.backing_heard_violin).forEach { (value, label) ->
-            val selected = heard == value
-            Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .height(SwitchHeight - 6.dp)
-                    .clip(RoundedCornerShape(SwitchHeight / 2))
-                    .background(if (selected) colors.primaryContainer else colors.surfaceContainerHigh)
-                    .selectable(selected = selected, role = Role.RadioButton) { onHeard(value) },
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(label),
-                    color = if (selected) colors.onPrimaryContainer else colors.onSurfaceVariant,
-                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold),
-                    textAlign = TextAlign.Center,
-                    maxLines = 1,
-                )
-            }
-        }
-    }
-}
 
 /**
  * Where the player will be, while the backing's sound is made for it (spec 5.25): a take under a backing cannot be

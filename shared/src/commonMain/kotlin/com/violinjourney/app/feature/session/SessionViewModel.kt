@@ -8,6 +8,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.violinjourney.app.core.audio.playback.SessionPlayer
 import com.violinjourney.app.core.audio.playback.SessionPlayerFactory
+import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.audio.playback.VideoPicture
 import com.violinjourney.app.core.audio.playback.VideoPictureFactory
 import com.violinjourney.app.core.audio.playback.VideoSurfaceHandle
@@ -18,8 +19,12 @@ import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
+import com.violinjourney.app.core.domain.sound.EffectiveSound
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRepository
+import com.violinjourney.app.core.domain.sound.SoundRules
+import com.violinjourney.app.core.domain.sound.UserPreset
+import com.violinjourney.app.feature.sound.OriginalHold
 import com.violinjourney.app.feature.sound.SoundReducer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -48,6 +53,8 @@ open class SessionViewModel(
     savedState: SavedStateHandle,
     private val backings: BackingRepository,
     private val backingPcm: BackingPcm?,
+    /** The waveform of the player at the bottom — the same as that of «Звук» (spec 3.36.5, 5.11). */
+    private val waveforms: SessionWaveforms,
     /** Where the analysis becomes the screen's content — a contour for every note: an hour of samples is too much for the main thread. */
     private val compute: CoroutineDispatcher = Dispatchers.Default,
 ) : ViewModel() {
@@ -74,6 +81,9 @@ open class SessionViewModel(
     /** The star being written: a second tap meanwhile would set the mark again instead of clearing it, with a second toast. */
     private var marking: Job? = null
 
+    /** «Пока держишь» of A (spec 3.17), as on «Звук». */
+    private val hold = OriginalHold()
+
     private val effectChannel = Channel<SessionEffect>(Channel.BUFFERED)
     val effects: Flow<SessionEffect> = effectChannel.receiveAsFlow()
 
@@ -86,7 +96,7 @@ open class SessionViewModel(
             SessionIntent.BackClicked -> effectChannel.trySend(SessionEffect.Close)
             SessionIntent.PlayPauseClicked -> player?.let { if (it.state.value.playing) it.pause() else it.play() }
             is SessionIntent.SeekRequested -> player?.seekTo(intent.positionMs)
-            is SessionIntent.OriginalSelected -> player?.setOriginal(intent.original)
+            is SessionIntent.OriginalSelected -> hold.select(player, intent.original, intent.held)
             is SessionIntent.BackingHeardSelected -> player?.setBackingHeard(intent.heard)
             SessionIntent.SoundClicked -> effectChannel.trySend(SessionEffect.OpenSound(sessionId))
             SessionIntent.BestClicked -> toggleBest()
@@ -98,6 +108,13 @@ open class SessionViewModel(
             is SessionIntent.SegmentClicked -> updateLoaded {
                 it.copy(selectedSegment = intent.index.takeIf { index -> index in it.content.segments.indices })
             }
+            // where the note drifts the most: the roll comes to it and outlines it, as a tap on it would (spec 3.36.5)
+            is SessionIntent.ProblemNoteClicked -> updateLoaded {
+                it.copy(selectedSegment = SessionContentMapper.worstSegmentOf(intent.note, it.content.segments) ?: it.selectedSegment)
+            }
+            SessionIntent.OpenPieceClicked -> (state.value as? SessionState.Loaded)?.content?.pieceId?.let {
+                effectChannel.trySend(SessionEffect.OpenPiece(it))
+            }
             SessionIntent.NoteSheetDismissed -> updateLoaded { it.copy(selectedSegment = null) }
             SessionIntent.RenameClicked -> updateLoaded { it.copy(dialog = SessionDialog.RENAME) }
             SessionIntent.DeleteClicked -> updateLoaded { it.copy(dialog = SessionDialog.DELETE) }
@@ -106,7 +123,10 @@ open class SessionViewModel(
                 repository.rename(sessionId, intent.title)
                 refreshHeader() // the repository decides what a blank name means
             }
-            is SessionIntent.FullscreenChanged -> updateLoaded { it.copy(fullscreen = intent.fullscreen && it.video?.lost == false) }
+            // not while the backing is made: the picture waits for the sound, and the full screen would have no player (spec 3.36.5)
+            is SessionIntent.FullscreenChanged -> updateLoaded {
+                it.copy(fullscreen = intent.fullscreen && it.video?.lost == false && !it.preparingBacking)
+            }
             is SessionIntent.PlaySegmentClicked -> {
                 val loaded = state.value as? SessionState.Loaded
                 val segment = loaded?.content?.segments?.getOrNull(intent.index)
@@ -162,17 +182,28 @@ open class SessionViewModel(
                 SessionContentMapper.contentOf(it, defaultConfig, soundFound = sound != null) to sound
             }
         }
+        // Known before the player is ready (spec 3.36.5): the rows of the player at the bottom — A/B, «Звук», the backing — stand from
+        // the first frame, instead of the panel growing under the finger a moment later.
+        val underBacking = shown != null && backings.takeBackings.first().any { it.sessionId == sessionId }
+        val soundRow = if (shown?.second == null) null else soundRowOf(sound.effective(sessionId).first(), sound.presets.first())
         mutableState.update { previous ->
             if (shown == null) {
                 SessionState.NotFound
             } else {
-                val content = shown.first.copy(pieceTitle = piece?.title, pieceId = piece?.id, best = piece?.bestTakeId == sessionId)
-                (previous as? SessionState.Loaded ?: SessionState.Loaded(content)).copy(content = content, dialog = null)
+                val content = shown.first.copy(pieceTitle = piece?.title, pieceId = piece?.id, best = piece?.bestTakeId == sessionId, underBacking = underBacking)
+                val loaded = previous as? SessionState.Loaded ?: SessionState.Loaded(content, sound = soundRow)
+                loaded.copy(content = content, dialog = null)
             }
         }
         if (player == null) shown?.second?.let(::startPlayer)
         if (picture == null) details?.summary?.videoPath?.let(::startPicture)
     }
+
+    private fun soundRowOf(effective: EffectiveSound, presets: List<UserPreset>): SoundRow = SoundRow(
+        caption = SoundReducer.captionOf(effective.settings, presets, soundConfig),
+        own = effective.own,
+        processed = !SoundRules.isNeutral(effective.settings),
+    )
 
     /**
      * After a rename or a star: only the name, the piece and the mark are read again — not the samples, which have not
@@ -255,11 +286,16 @@ open class SessionViewModel(
         // change either while it plays, and it is heard at once.
         viewModelScope.launch {
             combine(sound.effective(sessionId), sound.presets) { effective, presets ->
-                effective to SoundRow(SoundReducer.captionOf(effective.settings, presets, soundConfig), effective.own)
+                effective to soundRowOf(effective, presets)
             }.collect { (effective, row) ->
                 created.setSound(effective.settings)
                 updateLoaded { it.copy(sound = row) }
             }
+        }
+        // the waveform of the player at the bottom, reckoned once and kept (5.11); until then a plain track stands
+        viewModelScope.launch {
+            val waveform = waveforms.of(file)?.toList() ?: return@launch
+            updateLoaded { it.copy(waveform = waveform) }
         }
         viewModelScope.launch {
             created.state.collect { playerState ->

@@ -49,12 +49,23 @@ private val RowGap = 12.dp
 private val DividerSide = 8.dp
 private val DividerVertical = 4.dp
 private const val DISABLED_ALPHA = 0.38f
+private const val TABULAR_FIGURES = "tnum"
 
 /**
  * The dangerous item of a menu (spec 3.36.1): always the last, after a line, in the colour of danger with its icon. [divider] false —
- * no line over it: the item stands alone, as «Удалить…» of a recording without sound that is not a take (spec 3.36.5).
+ * no line over it: the item stands alone, as «Удалить…» of a recording without sound that is not a take (spec 3.36.5). [caption] — a
+ * second line under the words, 13 sp in the second level of text: what goes with it — «видео · 1080p · 214 МБ» under «Удалить…» of
+ * the recording's «⋯» (spec 3.36.5); [captionStrong] — the caption is itself a warning, 700 in the colour of danger: a file of
+ * 100 MB and more (5.29 R5).
  */
-class MenuDanger(val text: String, val onClick: () -> Unit, val icon: ImageVector = AppIcons.Trash, val divider: Boolean = true)
+class MenuDanger(
+    val text: String,
+    val onClick: () -> Unit,
+    val icon: ImageVector = AppIcons.Trash,
+    val divider: Boolean = true,
+    val caption: String? = null,
+    val captionStrong: Boolean = false,
+)
 
 /**
  * The one look of the drop-down menus (spec 3.36.1, 5.29) — «⋯» of a recording, a section and a backing track, the section of a
@@ -110,7 +121,7 @@ private fun MenuRows(danger: MenuDanger?, content: @Composable ColumnScope.() ->
                         .background(MaterialTheme.colorScheme.outlineVariant),
                 )
             }
-            MenuRow(danger.text, danger.onClick, danger.icon, caption = null, selected = false, enabled = true, tint = ViolinTheme.dangerSoft)
+            MenuRow(danger.text, danger.onClick, danger.icon, danger.caption, selected = false, enabled = true, tint = ViolinTheme.dangerSoft, captionStrong = danger.captionStrong)
         }
     }
 }
@@ -133,7 +144,16 @@ fun AppMenuItem(
 }
 
 @Composable
-private fun MenuRow(text: String, onClick: () -> Unit, icon: ImageVector?, caption: String?, selected: Boolean, enabled: Boolean, tint: Color?) {
+private fun MenuRow(
+    text: String,
+    onClick: () -> Unit,
+    icon: ImageVector?,
+    caption: String?,
+    selected: Boolean,
+    enabled: Boolean,
+    tint: Color?,
+    captionStrong: Boolean = false,
+) {
     val colors = MaterialTheme.colorScheme
     Row(
         modifier = Modifier
@@ -155,7 +175,16 @@ private fun MenuRow(text: String, onClick: () -> Unit, icon: ImageVector?, capti
                 style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = if (selected) FontWeight.Bold else FontWeight.SemiBold),
             )
             if (caption != null) {
-                Text(caption, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp))
+                Text(
+                    text = caption,
+                    color = if (captionStrong) ViolinTheme.dangerSoft else colors.onSurfaceVariant,
+                    style = MaterialTheme.typography.bodySmall.copy(
+                        fontSize = 13.sp,
+                        lineHeight = 18.sp,
+                        fontWeight = if (captionStrong) FontWeight.Bold else FontWeight.Normal,
+                        fontFeatureSettings = TABULAR_FIGURES,
+                    ),
+                )
             }
         }
         if (selected) AppIcon(AppIcons.Check, contentDescription = null, tint = colors.primary, size = IconSizes.InFilledButton)

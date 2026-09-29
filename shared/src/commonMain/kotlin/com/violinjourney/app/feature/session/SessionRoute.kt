@@ -1,8 +1,11 @@
 package com.violinjourney.app.feature.session
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import com.violinjourney.app.core.ui.components.KeepScreenOn
 import com.violinjourney.app.core.ui.components.LocalMessages
+import com.violinjourney.app.core.ui.motion.LocalReduceMotion
+import com.violinjourney.app.core.ui.motion.rememberAnimationsRemoved
 import org.jetbrains.compose.resources.getString
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -23,6 +26,8 @@ import com.violinjourney.app.shared.resources.best_marked_moved
 fun SessionRoute(
     onClose: () -> Unit,
     onOpenSound: (sessionId: Long) -> Unit,
+    /** «К произведению» (spec 3.36.5): the screen of the piece — the one behind in the stack, if it is there. */
+    onOpenPiece: (pieceId: Long) -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SessionViewModel,
     /** «Поделиться» (spec 3.17): the platform prepares the file and hands it to other apps. */
@@ -39,6 +44,7 @@ fun SessionRoute(
     val messages = LocalMessages.current
     val currentOnClose by rememberUpdatedState(onClose)
     val currentOnOpenSound by rememberUpdatedState(onOpenSound)
+    val currentOnOpenPiece by rememberUpdatedState(onOpenPiece)
 
     // Leaving the screen, the app going to the background: the sound stops (spec 3.10). A rotation only rebuilds it.
     LifecycleEventEffect(Lifecycle.Event.ON_STOP) {
@@ -51,6 +57,7 @@ fun SessionRoute(
                 when (effect) {
                     SessionEffect.Close -> currentOnClose()
                     is SessionEffect.OpenSound -> currentOnOpenSound(effect.sessionId)
+                    is SessionEffect.OpenPiece -> currentOnOpenPiece(effect.pieceId)
                     is SessionEffect.Share -> onShare(effect.sessionId)
                     // A toast, like every short message of the app; the handoff draws a snackbar (docs/plan-records2.md).
                     is SessionEffect.ShowBestMarked ->
@@ -66,12 +73,15 @@ fun SessionRoute(
         KeepScreenOn()
     }
 
-    SessionScreen(
-        state = state,
-        onIntent = viewModel::onIntent,
-        modifier = modifier,
-        videoSurface = remember(viewModel) { VideoSurfaceCallbacks(viewModel::attachSurface, viewModel::detachSurface) },
-        position = { position.value },
-    )
+    // «Убрать анимации» (5.29 R5): the spinner of «Готовим минусовку…» stands, the glyph of a tap on the picture shows without motion
+    CompositionLocalProvider(LocalReduceMotion provides rememberAnimationsRemoved()) {
+        SessionScreen(
+            state = state,
+            onIntent = viewModel::onIntent,
+            modifier = modifier,
+            videoSurface = remember(viewModel) { VideoSurfaceCallbacks(viewModel::attachSurface, viewModel::detachSurface) },
+            position = { position.value },
+        )
+    }
     shareHost()
 }

@@ -1,16 +1,28 @@
 package com.violinjourney.app.core.ui.components
 
 import android.view.View
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.consumeWindowInsets
+import androidx.compose.foundation.layout.exclude
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -18,10 +30,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -38,6 +54,7 @@ import com.violinjourney.app.core.ui.theme.ViolinTheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -188,8 +205,89 @@ class AppDockTest {
         compose.onNodeWithTag(BUTTON).assertHeightIsEqualTo(56.dp)
     }
 
+    /**
+     * The panel of a player (spec 3.36.5, 5.29 R5): a zone of its own ground and a top rounded 24 — its corners show the screen under
+     * them, its middle is its ground; the ground of the screen is what the content paints, not the zone.
+     */
+    @Test
+    fun aPanelOfItsOwnGroundAndRoundedTopShowsTheScreenInItsCorners() {
+        var screen = Color.Unspecified
+        var panel = Color.Unspecified
+        compose.setContent {
+            ViolinTheme {
+                screen = MaterialTheme.colorScheme.surface
+                panel = MaterialTheme.colorScheme.surfaceContainer
+                AppDock(
+                    dock = { AppButton("Сохранить", onClick = {}, Modifier.fillMaxWidth().testTag(BUTTON), compact = compact) },
+                    modifier = Modifier.fillMaxSize().testTag(ROOT),
+                    fade = 0.dp,
+                    metrics = DockMetrics.Regular,
+                    ground = MaterialTheme.colorScheme.surfaceContainer,
+                    shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                ) {
+                    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface))
+                }
+            }
+        }
+        compose.waitForIdle()
+        val top = zoneTop(DockMetrics.Regular)
+        val image = compose.onNodeWithTag(ROOT).captureToImage().toPixelMap()
+        with(compose.density) {
+            val y = (top + 2.dp).roundToPx()
+            assertEquals("the corner of the panel shows the screen", screen.toArgb(), image[2.dp.roundToPx(), y].toArgb())
+            assertEquals("the panel is its ground", panel.toArgb(), image[image.width / 2, y].toArgb())
+            assertEquals("its side at the height of the button is its ground too", panel.toArgb(), image[2.dp.roundToPx(), (top + 40.dp).roundToPx()].toArgb())
+        }
+    }
+
+    /**
+     * The panel reaches the bottom edge of the window (5.29 R5: «+ системный отступ»). The root of the tabs pads a screen over the tabs
+     * for the navigation bar and takes that inset away (MainActivity, IosApp: `padding(innerPadding).consumeWindowInsets(innerPadding)`),
+     * so the zone ends the inset over the edge: its ground goes on through that strip — not the ground of the app under a panel that
+     * hangs over it. The root here is the same: the ground of the app, the screen padded by the bottom inset and the inset consumed. A
+     * device without a bottom inset has nothing to show.
+     */
+    @Test
+    fun aPanelOverTheNavigationBarTheRootTookReachesTheBottomEdge() {
+        var inset = 0.dp
+        var screen = Color.Unspecified
+        var panel = Color.Unspecified
+        compose.setContent {
+            ViolinTheme {
+                screen = MaterialTheme.colorScheme.surface
+                panel = MaterialTheme.colorScheme.surfaceContainer
+                val bottom = WindowInsets.safeDrawing.exclude(WindowInsets.ime).only(WindowInsetsSides.Bottom).asPaddingValues()
+                inset = bottom.calculateBottomPadding()
+                Box(Modifier.fillMaxSize().background(screen).testTag(APP)) {
+                    AppDock(
+                        dock = { AppButton("Сохранить", onClick = {}, Modifier.fillMaxWidth().testTag(BUTTON), compact = compact) },
+                        modifier = Modifier.fillMaxSize().padding(bottom).consumeWindowInsets(bottom).testTag(ROOT),
+                        fade = 0.dp,
+                        metrics = DockMetrics.Regular,
+                        ground = MaterialTheme.colorScheme.surfaceContainer,
+                        shape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp),
+                    ) {
+                        Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface))
+                    }
+                }
+            }
+        }
+        compose.waitForIdle()
+        assumeTrue("no bottom inset on this device", inset > 1.dp)
+        val app = compose.onNodeWithTag(APP).getUnclippedBoundsInRoot()
+        val dock = compose.onNodeWithTag(ROOT).getUnclippedBoundsInRoot()
+        assertNear(app.bottom - inset, dock.bottom, "the screen ends over the navigation bar")
+        val image = compose.onNodeWithTag(APP).captureToImage().toPixelMap()
+        with(compose.density) {
+            val y = (dock.bottom - app.top + inset / 2).roundToPx()
+            assertEquals("the strip of the navigation bar under the panel is the panel", panel.toArgb(), image[image.width / 2, y].toArgb())
+            assertEquals("and at its side too", panel.toArgb(), image[2.dp.roundToPx(), y].toArgb())
+        }
+    }
+
     private companion object {
         const val ROOT = "dock"
+        const val APP = "app"
         const val CONTENT = "content"
         const val BUTTON = "button"
         const val FIELD = "field"

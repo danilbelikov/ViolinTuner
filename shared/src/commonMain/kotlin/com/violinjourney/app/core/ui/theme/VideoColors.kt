@@ -15,8 +15,6 @@ data class VideoColors(
     val field: Color,
     /** Under what lies on the picture itself: the full-screen button, the pause glyph, the note strip. */
     val scrim: Color,
-    /** The darkest end of the gradients behind the full-screen panel. */
-    val panel: Color,
     /** The full screen around a wide video. */
     val fullBackground: Color,
     /** The camera badge on the tile of a video take. */
@@ -28,7 +26,6 @@ data class VideoColors(
 internal val DarkVideoColors = VideoColors(
     field = VideoField,
     scrim = VideoScrim,
-    panel = VideoPanel,
     fullBackground = Color.Black,
     badge = SurfaceContainerHigh,
     sizeWarn = VideoSizeWarn,

@@ -31,6 +31,15 @@ internal object IconPaths {
     /** «Все трофеи» of «Мой путь»: a row that leads on (`i-arrow-r`, spec 3.36.2) */
     val ARROW_RIGHT = listOf("M5 12h14", "M13 6l6 6-6 6")
 
+    /**
+     * The bias of a recording and a note that drifts sharp (spec 3.36.5, 5.29 R5): filled, in the shape of the arrows of Live
+     * (`StatusRow`, a viewport of 56) brought to the grid of 24 — Live keeps its own paths.
+     */
+    val ARROW_UP = listOf("F M12 2.6L21.4 14.6H15.4V21.4H8.6V14.6H2.6Z")
+
+    /** …and flat: the same arrow pointing down. */
+    val ARROW_DOWN = listOf("F M12 21.4L2.6 9.4H8.6V2.6H15.4V9.4H21.4Z")
+
     /** «Имя и фото» of «Мой путь» while there is no photo (`i-user`, spec 3.36.2) */
     val PERSON = listOf("M12 4a4 4 0 1 1 0 8a4 4 0 1 1 0-8z", "M4 21c0-4 3.6-7 8-7s8 3 8 7")
 
