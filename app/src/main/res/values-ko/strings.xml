@@ -148,11 +148,12 @@
     <string name="history_count_one">녹음 %1$d개</string>
     <string name="history_count_few">녹음 %1$d개</string>
     <string name="history_count_many">녹음 %1$d개</string>
-    <string name="history_chart_title">최근 2주간의 녹음</string>
+    <string name="history_strip_title">최근 2주</string>
     <string name="history_chart_description">최근 2주간의 날짜별 녹음</string>
     <string name="history_filter_all">전체</string>
-    <string name="history_filter_this_week">이번 주</string>
-    <string name="history_filter_month">한 달</string>
+    <string name="history_filter_takes">테이크</string>
+    <string name="history_filter_video">영상</string>
+    <string name="history_filter_live">Live에서</string>
     <string name="history_day_today">오늘</string>
     <string name="record_meta">%1$s · %2$s</string>
     <string name="history_chart_bar">%1$s, %2$s</string>
@@ -364,11 +365,17 @@
     <string name="selection_delete_text">소리와 분석이 삭제됩니다. 되돌릴 수 없습니다.</string>
     <string name="record_tile_take">테이크</string>
     <string name="record_tile_record">녹음</string>
-    <string name="record_tile_sound">소리</string>
     <string name="record_tile_only_video">영상</string>
     <string name="record_tile_no_sound">소리 없음</string>
-    <string name="history_empty_filter">이 기간에는 녹음이 없어요</string>
-    <string name="history_empty">여기에 녹음이 나타납니다. Live 화면에서 녹음 버튼을 눌러 보세요.</string>
+    <string name="history_empty_title">여기에 녹음이 나타납니다</string>
+    <string name="history_empty_text">Live의 녹음 버튼이나 곡 화면의 테이크로 녹음해 보세요. 녹음이 끝나면 분석이 나옵니다: 안정적인 음과 벗어나는 음.</string>
+    <string name="history_open_live">Live 열기</string>
+    <string name="history_empty_takes_text">테이크는 곡 화면에서 아래 버튼으로 녹음합니다.</string>
+    <string name="history_empty_video_title">아직 영상이 없어요</string>
+    <string name="history_empty_video_text">영상 테이크는 곡 화면에서 테이크 버튼 옆의 버튼으로 촬영합니다.</string>
+    <string name="history_empty_live_title">아직 Live 녹음이 없어요</string>
+    <string name="history_empty_live_text">Live에서 녹음 버튼을 누르면 분석과 함께 녹음이 여기에 나타납니다.</string>
+    <string name="history_show_all">모든 녹음 보기</string>
 
     <string name="practice_start">연습 시작</string>
     <string name="practice_stop">연습 종료</string>
@@ -1011,6 +1018,7 @@
     <string name="card_menu">더보기</string>
     <string name="card_menu_share">공유</string>
     <string name="card_menu_sound">사운드…</string>
+    <string name="card_menu_delete">삭제…</string>
     <string name="best_set">베스트로 표시</string>
     <string name="best_clear">“베스트” 표시 해제</string>
     <string name="best_marked">베스트로 표시했어요</string>
@@ -1161,7 +1169,7 @@
     <string name="backing_take_unprepared">이 테이크의 반주를 준비하지 못했어요 — 바이올린만 들려요.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
-    <string name="backing_take_meta">반주와 함께 · %1$s</string>
+    <string name="backing_take_mark">반주와 함께</string>
 
     <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
     <string name="video_shoot_backing">반주에 맞춰 촬영</string>

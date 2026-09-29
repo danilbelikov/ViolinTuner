@@ -45,8 +45,6 @@ import com.violinjourney.app.shared.resources.session_bias_hint_none
 import com.violinjourney.app.shared.resources.session_bias_hint_sharp
 import com.violinjourney.app.shared.resources.session_bias_mean
 import com.violinjourney.app.shared.resources.session_bias_none
-import com.violinjourney.app.shared.resources.session_delete_text
-import com.violinjourney.app.shared.resources.session_delete_title
 import com.violinjourney.app.shared.resources.session_meta
 import com.violinjourney.app.shared.resources.session_not_found
 import com.violinjourney.app.shared.resources.session_rename_confirm
@@ -60,7 +58,6 @@ import com.violinjourney.app.shared.resources.sound_row_off
 import com.violinjourney.app.shared.resources.sound_session_row
 import com.violinjourney.app.shared.resources.sound_session_silent
 import com.violinjourney.app.shared.resources.sound_share
-import com.violinjourney.app.shared.resources.video_delete_text
 import com.violinjourney.app.shared.resources.video_lost_text
 import com.violinjourney.app.shared.resources.video_lost_title
 import com.violinjourney.app.shared.resources.video_resolution
@@ -85,6 +82,7 @@ import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.IconSizes
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.history.components.RecordDeleteDialog
 import com.violinjourney.app.feature.history.components.sessionTitle
 import com.violinjourney.app.feature.session.components.FullscreenVideo
 import com.violinjourney.app.feature.session.components.NotePlace
@@ -306,7 +304,11 @@ private fun LoadedContent(state: SessionState.Loaded, title: String, onIntent: (
     }
     when (state.dialog) {
         SessionDialog.RENAME -> RenameDialog(currentTitle = content.title.orEmpty(), placeholder = title, onIntent = onIntent)
-        SessionDialog.DELETE -> DeleteDialog(onIntent, videoBytes = video?.takeIf { !it.lost }?.sizeBytes)
+        SessionDialog.DELETE -> RecordDeleteDialog(
+            videoBytes = video?.takeIf { !it.lost }?.sizeBytes,
+            onConfirm = { onIntent(SessionIntent.DeleteConfirmed) },
+            onDismiss = { onIntent(SessionIntent.DialogDismissed) },
+        )
         null -> Unit
     }
 }
@@ -552,17 +554,6 @@ private fun RenameDialog(currentTitle: String, placeholder: String, onIntent: (S
         onDismiss = { onIntent(SessionIntent.DialogDismissed) },
         hint = stringResource(Res.string.session_rename_hint),
         placeholder = placeholder,
-    )
-}
-
-@Composable
-private fun DeleteDialog(onIntent: (SessionIntent) -> Unit, videoBytes: Long? = null) {
-    com.violinjourney.app.core.ui.components.DeleteDialog(
-        title = stringResource(Res.string.session_delete_title),
-        // a video is the heaviest thing that goes, and the one that cannot be played again (spec 3.19)
-        text = videoBytes?.let { stringResource(Res.string.video_delete_text, Formats.fileSize(it)) } ?: stringResource(Res.string.session_delete_text),
-        onConfirm = { onIntent(SessionIntent.DeleteConfirmed) },
-        onDismiss = { onIntent(SessionIntent.DialogDismissed) },
     )
 }
 

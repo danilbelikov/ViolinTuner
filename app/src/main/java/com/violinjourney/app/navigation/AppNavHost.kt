@@ -143,6 +143,7 @@ fun AppNavHost(
             HistoryRoute(
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
+                onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },
                 viewModel = hiltViewModel<HiltHistoryViewModel>(),
                 onShare = shareViewModel::start,
                 shareHost = { ShareHost(shareViewModel) },

@@ -23,6 +23,8 @@ import com.violinjourney.app.feature.history.components.CardActions
 fun HistoryRoute(
     onOpenSession: (sessionId: Long) -> Unit,
     onOpenSound: (sessionId: Long) -> Unit,
+    /** «Открыть Live» of an empty tab: the tab Live (spec 3.36.5). */
+    onOpenLive: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: HistoryViewModel,
     /** «Поделиться» of a card (spec 3.17): the platform prepares the file and hands it to other apps. */
@@ -35,12 +37,14 @@ fun HistoryRoute(
     val state by viewModel.state.collectAsStateWithLifecycle()
     val lifecycleOwner = LocalLifecycleOwner.current
     val currentOnOpenSession by rememberUpdatedState(onOpenSession)
+    val currentOnOpenLive by rememberUpdatedState(onOpenLive)
 
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.effects.collect { effect ->
                 when (effect) {
                     is HistoryEffect.OpenSession -> currentOnOpenSession(effect.id)
+                    HistoryEffect.OpenLive -> currentOnOpenLive()
                 }
             }
         }
@@ -57,14 +61,19 @@ fun HistoryRoute(
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
-    // The bars of the chart rise once; with «убрать анимации» they simply stand (spec 5.15).
+    // The bars of the strip rise once; with «убрать анимации» they simply stand (spec 5.15).
     CompositionLocalProvider(LocalReduceMotion provides rememberAnimationsRemoved()) {
         HistoryScreen(
             state = state,
             onIntent = viewModel::onIntent,
             modifier = modifier,
             cardActions = remember(onShare, onOpenSound, viewModel) {
-                CardActions(onShare = onShare, onSound = onOpenSound, onBest = { viewModel.onIntent(HistoryIntent.BestToggled(it)) })
+                CardActions(
+                    onShare = onShare,
+                    onSound = onOpenSound,
+                    onDelete = { viewModel.onIntent(HistoryIntent.Select(SelectionIntent.DeleteOneClicked(it))) },
+                    onBest = { viewModel.onIntent(HistoryIntent.BestToggled(it)) },
+                )
             },
         )
     }

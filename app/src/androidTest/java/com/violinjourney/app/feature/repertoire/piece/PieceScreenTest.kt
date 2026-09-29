@@ -42,6 +42,8 @@ import com.violinjourney.app.core.domain.repertoire.PieceStatus
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.history.HistoryCard
+import com.violinjourney.app.feature.history.Selection
+import com.violinjourney.app.feature.history.SelectionIntent
 import com.violinjourney.app.feature.repertoire.components.statusLabel
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.backing_add
@@ -56,7 +58,13 @@ import com.violinjourney.app.shared.resources.piece_sheets_camera
 import com.violinjourney.app.shared.resources.piece_sheets_gallery
 import com.violinjourney.app.shared.resources.piece_tempo_description
 import com.violinjourney.app.shared.resources.record_stop
+import com.violinjourney.app.shared.resources.selection_delete_takes_few
+import com.violinjourney.app.shared.resources.selection_delete_takes_many
+import com.violinjourney.app.shared.resources.selection_delete_takes_one
+import com.violinjourney.app.shared.resources.selection_delete_text
 import com.violinjourney.app.shared.resources.selection_select
+import com.violinjourney.app.shared.resources.session_delete_confirm
+import com.violinjourney.app.shared.resources.session_delete_title
 import com.violinjourney.app.shared.resources.stand_recording_description
 import com.violinjourney.app.shared.resources.take_chart_description
 import com.violinjourney.app.shared.resources.take_grant_permission
@@ -65,6 +73,7 @@ import com.violinjourney.app.shared.resources.take_progress_description
 import com.violinjourney.app.shared.resources.take_record
 import com.violinjourney.app.shared.resources.takes_empty_title
 import com.violinjourney.app.shared.resources.takes_title
+import com.violinjourney.app.shared.resources.video_delete_text
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
@@ -166,7 +175,16 @@ class PieceScreenTest {
         words[ADD_BACKING] = stringResource(Res.string.backing_add)
         words[ADD_NOTE] = stringResource(Res.string.piece_notes_add)
         words[READING] = statusLabel(PieceStatus.READING)
+        words[ONE_TITLE] = stringResource(Res.string.session_delete_title)
+        words[ONE_TAKE_PICKED] = stringResource(pickedTakes(1), 1)
+        words[TWO_TAKES_PICKED] = stringResource(pickedTakes(2), 2)
+        words[VIDEO_TEXT] = stringResource(Res.string.video_delete_text, Formats.fileSize(VIDEO_BYTES))
+        words[PICKED_TEXT] = stringResource(Res.string.selection_delete_text)
+        words[DELETE] = stringResource(Res.string.session_delete_confirm)
     }
+
+    private fun pickedTakes(count: Int) =
+        Formats.plural(count, Res.string.selection_delete_takes_one, Res.string.selection_delete_takes_few, Res.string.selection_delete_takes_many)
 
     private fun layoutOf(text: String): TextLayoutResult {
         val layouts = mutableListOf<TextLayoutResult>()
@@ -270,8 +288,10 @@ class PieceScreenTest {
         assertTheTakeDims(sleeping = listOf(hasText(word(ADD_BACKING)), hasText(word(ADD_NOTE))), awake = listOf(hasText(word(LEARNING))))
     }
 
+    // a card of a take is one description with its title in it (spec 3.36.5): its words are not nodes of their own
     private fun dimmedByTheTake(): List<SemanticsMatcher> =
-        listOf(hasText(BACKING_TITLE), hasContentDescription(word(SUMMARY)), hasText(word(SELECT))) + TAKE_TITLES.map { hasText(it) }
+        listOf(hasText(BACKING_TITLE), hasContentDescription(word(SUMMARY)), hasText(word(SELECT))) +
+            TAKE_TITLES.map { hasContentDescription(it, substring = true) }
 
     @Test
     fun untilTheBackingIsReadThereIsNoKeyAndNoSwitch() {
@@ -370,6 +390,30 @@ class PieceScreenTest {
         listOf(word(READING), word(LEARNING), word(IN_REPERTOIRE)).forEach { assertWordsWhole(it) }
     }
 
+    /**
+     * Spec 3.36.5: «Удалить…» in the «⋯» of a take opens the question of the recording's own screen — «Удалить запись?», not «Удалить 1
+     * дубль?» — with the weight of its video (3.19); «Удалить» answers it.
+     */
+    @Test
+    fun deleteOfOneTakeAsksTheQuestionOfItsRecordingWithTheWeightOfItsVideo() {
+        val video = MINUET.takes.map { if (it.card.id == 2L) it.copy(card = it.card.copy(hasVideo = true, videoBytes = VIDEO_BYTES)) else it }
+        show(MINUET.copy(takes = video, selection = Selection(ids = setOf(2L), confirming = true)))
+        compose.onNodeWithText(word(ONE_TITLE)).assertExists()
+        compose.onNodeWithText(word(VIDEO_TEXT)).assertExists()
+        compose.onAllNodesWithText(word(ONE_TAKE_PICKED)).assertCountEquals(0)
+        compose.onNodeWithText(word(DELETE)).performClick()
+        assertEquals(listOf<PieceIntent>(PieceIntent.Select(SelectionIntent.DeleteConfirmed)), intents)
+    }
+
+    /** Spec 3.18, 3.36.5: the picked takes are asked about by their number — «Удалить 2 дубля?» — as before. */
+    @Test
+    fun pickedTakesAreAskedAboutByTheirNumber() {
+        show(MINUET.copy(selection = Selection(active = true, ids = setOf(1L, 3L), confirming = true)))
+        compose.onNodeWithText(word(TWO_TAKES_PICKED)).assertExists()
+        compose.onNodeWithText(word(PICKED_TEXT)).assertExists()
+        compose.onAllNodesWithText(word(ONE_TITLE)).assertCountEquals(0)
+    }
+
     private companion object {
         const val WINDOW = "window"
         const val TITLE = "Менуэт соль мажор"
@@ -411,6 +455,13 @@ class PieceScreenTest {
         const val LARGE_FONT = 1.3f
         val KEY_LEAST = 15.sp
         val TAKE_TITLES = listOf("Прогон 1", "Прогон 2", "Прогон 3")
+        const val VIDEO_BYTES = 214_000_000L
+        const val ONE_TITLE = "oneTitle"
+        const val ONE_TAKE_PICKED = "oneTakePicked"
+        const val TWO_TAKES_PICKED = "twoTakesPicked"
+        const val VIDEO_TEXT = "videoText"
+        const val PICKED_TEXT = "pickedText"
+        const val DELETE = "delete"
 
         val BUDS = BackingUi(title = BACKING_TITLE, durationMs = 220_000, enabled = true, route = AudioRoute(BackingOutput.BLUETOOTH, BUDS_NAME))
         val NO_BACKING = BackingUi(title = null, durationMs = 0, enabled = false, route = AudioRoute(BackingOutput.SPEAKER, null))

@@ -148,11 +148,12 @@
     <string name="history_count_one">%1$d Aufnahme</string>
     <string name="history_count_few">%1$d Aufnahmen</string>
     <string name="history_count_many">%1$d Aufnahmen</string>
-    <string name="history_chart_title">Aufnahmen in zwei Wochen</string>
+    <string name="history_strip_title">Letzte zwei Wochen</string>
     <string name="history_chart_description">Aufnahmen pro Tag in zwei Wochen</string>
     <string name="history_filter_all">Alle</string>
-    <string name="history_filter_this_week">Diese Woche</string>
-    <string name="history_filter_month">Monat</string>
+    <string name="history_filter_takes">Takes</string>
+    <string name="history_filter_video">Video</string>
+    <string name="history_filter_live">Aus Live</string>
     <string name="history_day_today">heute</string>
     <string name="record_meta">%1$s · %2$s</string>
     <string name="history_chart_bar">%1$s, %2$s</string>
@@ -364,11 +365,17 @@
     <string name="selection_delete_text">Ton und Analyse werden gelöscht. Das lässt sich nicht rückgängig machen.</string>
     <string name="record_tile_take">Take</string>
     <string name="record_tile_record">Aufnahme</string>
-    <string name="record_tile_sound">Ton</string>
     <string name="record_tile_only_video">Video</string>
     <string name="record_tile_no_sound">ohne Ton</string>
-    <string name="history_empty_filter">Keine Aufnahmen in diesem Zeitraum</string>
-    <string name="history_empty">Hier erscheinen Ihre Aufnahmen. Tippen Sie im Bereich Live auf die Aufnahmetaste.</string>
+    <string name="history_empty_title">Hier erscheinen Ihre Aufnahmen</string>
+    <string name="history_empty_text">Nehmen Sie Ihr Spiel mit der Taste in Live auf oder einen Take auf dem Bildschirm eines Stücks\u00A0– danach folgt die Auswertung: was sitzt und was abdriftet.</string>
+    <string name="history_open_live">Live öffnen</string>
+    <string name="history_empty_takes_text">Ein Take wird auf dem Bildschirm eines Stücks aufgenommen\u00A0– mit der Taste unten.</string>
+    <string name="history_empty_video_title">Noch keine Videos</string>
+    <string name="history_empty_video_text">Ein Video-Take wird auf dem Bildschirm eines Stücks gefilmt\u00A0– mit der Taste neben der Take-Taste.</string>
+    <string name="history_empty_live_title">Noch keine Aufnahmen aus Live</string>
+    <string name="history_empty_live_text">Tippen Sie in Live auf die Aufnahmetaste\u00A0– hier erscheint die Aufnahme mit Auswertung.</string>
+    <string name="history_show_all">Alle Aufnahmen zeigen</string>
 
     <string name="practice_start">Üben starten</string>
     <string name="practice_stop">Üben beenden</string>
@@ -1011,6 +1018,7 @@
     <string name="card_menu">Mehr</string>
     <string name="card_menu_share">Teilen</string>
     <string name="card_menu_sound">Klang…</string>
+    <string name="card_menu_delete">Löschen…</string>
     <string name="best_set">Als besten markieren</string>
     <string name="best_clear">Markierung „bester“ entfernen</string>
     <string name="best_marked">Als bester markiert</string>
@@ -1161,7 +1169,7 @@
     <string name="backing_take_unprepared">Die Begleitspur dieses Takes ließ sich nicht vorbereiten — zu hören ist nur die Geige.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
-    <string name="backing_take_meta">mit Begleitung · %1$s</string>
+    <string name="backing_take_mark">mit Begleitung</string>
 
     <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
     <string name="video_shoot_backing">Mit Begleitung filmen</string>

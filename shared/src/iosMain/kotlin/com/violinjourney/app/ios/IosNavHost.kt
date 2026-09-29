@@ -151,6 +151,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
             HistoryRoute(
                 onOpenSession = navController::navigateToSession,
                 onOpenSound = navController::navigateToSound,
+                onOpenLive = { navController.navigateToTopLevel(TopLevelDestination.LIVE) },
                 viewModel = viewModel {
                     HistoryViewModel(graph.sessions, graph.repertoire, graph.intonationConfig, graph.clock, graph.audioFiles, graph.backings)
                 },

@@ -9,6 +9,7 @@ import com.violinjourney.app.core.domain.repertoire.PieceDraft
 import com.violinjourney.app.core.domain.session.FakeSessionRepository
 import com.violinjourney.app.core.domain.session.NewSession
 import com.violinjourney.app.core.domain.session.SessionAnalyzer
+import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.session.SessionSample
 import com.violinjourney.app.core.time.FixedWallClock
 import com.violinjourney.app.core.time.WallClock
@@ -71,13 +72,22 @@ class HistoryViewModelTest {
     private var files = Files()
     private val backings = FakeBackingRepository()
 
+    /** What the view model asked to delete, call by call: the picked ones and one card of «Удалить…» go the same way. */
+    private val deletes = mutableListOf<List<Long>>()
+    private val watched = object : SessionRepository by repository {
+        override suspend fun delete(ids: Collection<Long>) {
+            deletes += ids.toList()
+            repository.delete(ids)
+        }
+    }
+
     @Before
     fun setUp() = Dispatchers.setMain(StandardTestDispatcher())
 
     @After
     fun tearDown() = Dispatchers.resetMain()
 
-    private suspend fun save(daysAgo: Long, cents: Double = 1.0, pieceId: Long? = null): Long {
+    private suspend fun save(daysAgo: Long, cents: Double = 1.0, pieceId: Long? = null, videoPath: String? = null): Long {
         val samples = List(60) { SessionSample(69, cents) }
         val analysis = SessionAnalyzer.analyze(samples, config)
         return repository.save(
@@ -85,12 +95,13 @@ class HistoryViewModelTest {
                 startedAtEpochMs = (now - (daysAgo * 86_400).seconds).toEpochMilliseconds(), durationMs = 3_000, config = config,
                 samples = samples, metrics = analysis.metrics!!,
                 previewZones = SessionAnalyzer.previewZones(analysis.segments, config), audioPath = null, pieceId = pieceId,
+                videoPath = videoPath,
             ),
         )
     }
 
     private fun TestScope.viewModel(): HistoryViewModel {
-        val viewModel = HistoryViewModel(repository, repertoire, config, clock, files, backings, background = StandardTestDispatcher(testScheduler))
+        val viewModel = HistoryViewModel(watched, repertoire, config, clock, files, backings, background = StandardTestDispatcher(testScheduler))
         backgroundScope.launch { viewModel.state.collect {} }
         return viewModel
     }
@@ -111,14 +122,15 @@ class HistoryViewModelTest {
 
     @Test
     fun `filter narrows the cards only`() = runTest {
-        save(daysAgo = 0)
+        val take = save(daysAgo = 0, pieceId = 7)
         save(daysAgo = 10)
         val viewModel = viewModel()
-        viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.THIS_WEEK))
+        viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.TAKES))
         runCurrent()
-        assertEquals(HistoryFilter.THIS_WEEK, viewModel.state.value.filter)
-        assertEquals(1, viewModel.state.value.cards.size)
+        assertEquals(HistoryFilter.TAKES, viewModel.state.value.filter)
+        assertEquals(listOf(take), viewModel.state.value.cards.map { it.id })
         assertEquals(2, viewModel.state.value.totalCount)
+        assertEquals(2, viewModel.state.value.stripTotal)
     }
 
     @Test
@@ -217,9 +229,10 @@ class HistoryViewModelTest {
     @Test
     fun `select all takes only what the filter shows`() = runTest {
         val recent = save(daysAgo = 0)
-        save(daysAgo = 10)
+        save(daysAgo = 10, pieceId = 7)
+        save(daysAgo = 11, videoPath = "video.mp4")
         val viewModel = viewModel()
-        viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.THIS_WEEK))
+        viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.LIVE))
         runCurrent()
 
         viewModel.select(SelectionIntent.SelectClicked)
@@ -237,7 +250,7 @@ class HistoryViewModelTest {
         runCurrent()
         viewModel.select(SelectionIntent.SelectClicked)
 
-        viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.MONTH))
+        viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.VIDEO))
         runCurrent()
 
         assertEquals(HistoryFilter.ALL, viewModel.state.value.filter)
@@ -293,6 +306,126 @@ class HistoryViewModelTest {
         runCurrent()
 
         assertEquals(setOf(second), viewModel.state.value.selection.ids)
+    }
+
+    /** Spec 3.36.5: «Удалить…» of a card asks the question of the recording's screen and deletes by the rules of picking. */
+    @Test
+    fun `«Удалить…» of a card asks about that one alone and deletes it in one call`() = runTest {
+        val kept = save(daysAgo = 0)
+        val gone = save(daysAgo = 1)
+        val viewModel = viewModel()
+        runCurrent()
+
+        viewModel.select(SelectionIntent.DeleteOneClicked(gone))
+        runCurrent()
+        assertEquals("the question, and no mode of picking under it", Selection(ids = setOf(gone), confirming = true), viewModel.state.value.selection)
+
+        viewModel.select(SelectionIntent.DeleteConfirmed)
+        runCurrent()
+        assertEquals(listOf(listOf(gone)), deletes)
+        assertEquals(listOf(kept), viewModel.state.value.cards.map { it.id })
+        assertEquals(Selection(), viewModel.state.value.selection)
+    }
+
+    @Test
+    fun `«Отмена» of the question about one card deletes nothing and picks nothing`() = runTest {
+        val id = save(daysAgo = 0)
+        val viewModel = viewModel()
+        runCurrent()
+
+        viewModel.select(SelectionIntent.DeleteOneClicked(id))
+        viewModel.select(SelectionIntent.DeleteDismissed)
+        runCurrent()
+
+        assertEquals(emptyList<List<Long>>(), deletes)
+        assertEquals(1, viewModel.state.value.totalCount)
+        assertEquals(Selection(), viewModel.state.value.selection)
+        // a tap after it opens the recording, as outside the mode
+        viewModel.onIntent(HistoryIntent.SessionClicked(id))
+        assertEquals(HistoryEffect.OpenSession(id), viewModel.effects.first())
+    }
+
+    @Test
+    fun `the question about one card goes when the card goes`() = runTest {
+        save(daysAgo = 0)
+        val gone = save(daysAgo = 1)
+        val viewModel = viewModel()
+        runCurrent()
+        viewModel.select(SelectionIntent.DeleteOneClicked(gone))
+
+        repository.delete(gone)
+        runCurrent()
+
+        assertEquals(Selection(), viewModel.state.value.selection)
+        viewModel.select(SelectionIntent.DeleteConfirmed)
+        runCurrent()
+        assertEquals("the question went with its card: a late «Удалить» deletes nothing", emptyList<List<Long>>(), deletes)
+    }
+
+    /** What is picked goes only through the question: «Удалить» without it on the screen deletes nothing (spec 3.18). */
+    @Test
+    fun `picked cards are not deleted without the question`() = runTest {
+        val picked = save(daysAgo = 0)
+        val viewModel = viewModel()
+        runCurrent()
+        viewModel.select(SelectionIntent.CardLongPressed(picked))
+        runCurrent()
+        assertEquals(Selection(active = true, ids = setOf(picked)), viewModel.state.value.selection)
+
+        viewModel.select(SelectionIntent.DeleteConfirmed)
+        runCurrent()
+
+        assertEquals(emptyList<List<Long>>(), deletes)
+        assertEquals(listOf(picked), viewModel.state.value.cards.map { it.id })
+    }
+
+    /**
+     * Spec 3.36.5: nothing recorded at all shows no chips, and the chip is «Все» again — its default. The recording made after it (on
+     * Live, say, through «Открыть Live») is seen, not hidden under a chip that could not be seen when the tab was empty.
+     */
+    @Test
+    fun `with nothing left at all the chip is «Все» again and the next recording is seen`() = runTest {
+        val take = save(daysAgo = 0, pieceId = 7)
+        val viewModel = viewModel()
+        viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.TAKES))
+        runCurrent()
+        viewModel.select(SelectionIntent.DeleteOneClicked(take))
+        viewModel.select(SelectionIntent.DeleteConfirmed)
+        runCurrent()
+        assertEquals(0, viewModel.state.value.totalCount)
+        assertEquals(HistoryFilter.ALL, viewModel.state.value.filter)
+
+        val fromLive = save(daysAgo = 0)
+        runCurrent()
+        assertEquals(HistoryFilter.ALL, viewModel.state.value.filter)
+        assertEquals(listOf(fromLive), viewModel.state.value.cards.map { it.id })
+    }
+
+    /** Spec 3.36.5: nothing under a chip while there are recordings keeps the chip — the tab says so and offers «Показать все записи». */
+    @Test
+    fun `a chip with nothing under it keeps its choice`() = runTest {
+        val take = save(daysAgo = 0, pieceId = 7)
+        save(daysAgo = 1)
+        val viewModel = viewModel()
+        viewModel.onIntent(HistoryIntent.FilterSelected(HistoryFilter.TAKES))
+        runCurrent()
+        viewModel.select(SelectionIntent.DeleteOneClicked(take))
+        viewModel.select(SelectionIntent.DeleteConfirmed)
+        runCurrent()
+
+        assertEquals(HistoryFilter.TAKES, viewModel.state.value.filter)
+        assertEquals(emptyList<HistoryCard>(), viewModel.state.value.cards)
+        assertEquals(1, viewModel.state.value.totalCount)
+    }
+
+    @Test
+    fun `«Открыть Live» of an empty tab opens Live`() = runTest {
+        val viewModel = viewModel()
+        runCurrent()
+        assertEquals(0, viewModel.state.value.totalCount)
+
+        viewModel.onIntent(HistoryIntent.OpenLiveClicked)
+        assertEquals(HistoryEffect.OpenLive, viewModel.effects.first())
     }
 
     @Test

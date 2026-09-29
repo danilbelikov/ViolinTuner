@@ -56,7 +56,11 @@ open class HistoryViewModel(
         // changes under its name. One map per collection — its steps run one after another.
         val videoSizes = HashMap<String, Long>()
         emitAll(
-            combine(repository.sessions, repertoire.pieces, filter, backings.takesUnderBacking) { sessions, pieces, filter, underBacking ->
+            combine(repository.sessions, repertoire.pieces, filter, backings.takesUnderBacking) { sessions, pieces, chosen, underBacking ->
+                // Nothing recorded at all shows no chips (spec 3.36.5): the chip is «Все» again, its default, so the first recording
+                // to come does not stand hidden under a chip that could not be seen. A chip with nothing under it keeps its choice.
+                val filter = if (sessions.isEmpty()) HistoryFilter.ALL else chosen
+                if (filter != chosen) this@HistoryViewModel.filter.value = filter
                 val shown = HistoryReducer.stateOf(
                     sessions, filter, clock.today(), clock.zone, config,
                     pieceTitles = pieces.associate { it.id to it.title },
@@ -102,12 +106,14 @@ open class HistoryViewModel(
                 val pieceId = card.pieceId ?: return
                 viewModelScope.launch { repertoire.setBestTake(pieceId, if (card.best) null else card.id) }
             }
+            HistoryIntent.OpenLiveClicked -> effectChannel.trySend(HistoryEffect.OpenLive)
         }
     }
 
+    // The picked ones, or the one card of «Удалить…» (spec 3.36.5), go the same way: their rows in one transaction, then the files.
     private fun select(intent: SelectionIntent) {
         val current = SelectionRules.prune(selection.value, visibleIds)
-        if (intent == SelectionIntent.DeleteConfirmed && current.ids.isNotEmpty()) {
+        if (intent == SelectionIntent.DeleteConfirmed && current.confirming && current.ids.isNotEmpty()) {
             viewModelScope.launch { repository.delete(current.ids) }
         }
         selection.value = SelectionRules.reduce(current, intent, visibleIds)

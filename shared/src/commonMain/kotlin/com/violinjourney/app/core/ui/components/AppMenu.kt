@@ -50,8 +50,11 @@ private val DividerSide = 8.dp
 private val DividerVertical = 4.dp
 private const val DISABLED_ALPHA = 0.38f
 
-/** The dangerous item of a menu (spec 3.36.1): always the last, after a line, in the colour of danger with its icon. */
-class MenuDanger(val text: String, val onClick: () -> Unit, val icon: ImageVector = AppIcons.Trash)
+/**
+ * The dangerous item of a menu (spec 3.36.1): always the last, after a line, in the colour of danger with its icon. [divider] false —
+ * no line over it: the item stands alone, as «Удалить…» of a recording without sound that is not a take (spec 3.36.5).
+ */
+class MenuDanger(val text: String, val onClick: () -> Unit, val icon: ImageVector = AppIcons.Trash, val divider: Boolean = true)
 
 /**
  * The one look of the drop-down menus (spec 3.36.1, 5.29) — «⋯» of a recording, a section and a backing track, the section of a
@@ -98,13 +101,15 @@ private fun MenuRows(danger: MenuDanger?, content: @Composable ColumnScope.() ->
     Column(Modifier.fillMaxWidth().padding(horizontal = MenuPaddingSide)) {
         content()
         if (danger != null) {
-            Box(
-                Modifier
-                    .padding(horizontal = DividerSide, vertical = DividerVertical)
-                    .fillMaxWidth()
-                    .height(1.dp)
-                    .background(MaterialTheme.colorScheme.outlineVariant),
-            )
+            if (danger.divider) {
+                Box(
+                    Modifier
+                        .padding(horizontal = DividerSide, vertical = DividerVertical)
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .background(MaterialTheme.colorScheme.outlineVariant),
+                )
+            }
             MenuRow(danger.text, danger.onClick, danger.icon, caption = null, selected = false, enabled = true, tint = ViolinTheme.dangerSoft)
         }
     }

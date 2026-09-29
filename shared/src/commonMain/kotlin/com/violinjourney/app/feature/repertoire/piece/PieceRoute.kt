@@ -125,6 +125,8 @@ fun PieceRoute(
             CardActions(
                 onShare = { leaving(); onShare(it) },
                 onSound = { leaving(); onOpenSound(it) },
+                // the question over the screen: the backing listened to plays on under it, as under the question of the picked ones
+                onDelete = { viewModel.onIntent(PieceIntent.Select(SelectionIntent.DeleteOneClicked(it))) },
                 onBest = { viewModel.onIntent(PieceIntent.BestToggled(it)) },
             )
         },

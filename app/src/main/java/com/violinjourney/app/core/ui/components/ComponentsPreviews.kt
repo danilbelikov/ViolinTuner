@@ -30,9 +30,6 @@ import com.violinjourney.app.shared.resources.backup_stop_confirm
 import com.violinjourney.app.shared.resources.backup_stop_continue
 import com.violinjourney.app.shared.resources.backup_stop_text
 import com.violinjourney.app.shared.resources.backup_stop_title
-import com.violinjourney.app.shared.resources.best_set
-import com.violinjourney.app.shared.resources.card_menu_share
-import com.violinjourney.app.shared.resources.card_menu_sound
 import com.violinjourney.app.shared.resources.dialog_back
 import com.violinjourney.app.shared.resources.dialog_discard_changes
 import com.violinjourney.app.shared.resources.dialog_discard_typed
@@ -73,7 +70,7 @@ import com.violinjourney.app.shared.resources.video_shoot_backing_hint
 import org.jetbrains.compose.resources.stringResource
 
 // The common parts of stages 101 and 102 (spec 3.36.1, 5.29; components.html, «Диалоги», «Меню ⋯», the segmented switch, the
-// field). A window and a popup do not draw in a preview: the dialogs and the menus are their cards, over the screen dimmed as a
+// field; the «⋯» of a recording's card lives with the card, RecordCardPreviews). A window and a popup do not draw in a preview: the dialogs and the menus are their cards, over the screen dimmed as a
 // dialog dims it. The other parts of stage 102 — DockPreviews, ControlsPreviews, ProgressPreviews, GlassSheetPreviews.
 
 private const val MENUET = "Менуэт соль мажор"
@@ -238,16 +235,6 @@ private fun LongButtonsFrPreview() = OverScreen { UnsafeRestoreCard() }
 @Preview(name = "Dialog · long buttons, de, 360", widthDp = 360, heightDp = 480, locale = "de")
 @Composable
 private fun LongButtonsDePreview() = OverScreen { UnsafeRestoreCard() }
-
-@Preview(name = "Menu · «⋯» of a take", widthDp = 412, heightDp = 260, locale = "ru")
-@Composable
-private fun RecordMenuPreview() = OverScreen(Alignment.TopEnd) {
-    AppMenuCard {
-        AppMenuItem(stringResource(Res.string.best_set), icon = AppIcons.StarOutline, onClick = {})
-        AppMenuItem(stringResource(Res.string.card_menu_share), icon = AppIcons.Share, onClick = {})
-        AppMenuItem(stringResource(Res.string.card_menu_sound), icon = AppIcons.Sound, onClick = {})
-    }
-}
 
 @Preview(name = "Menu · «⋯» of a section: the danger last, after a line", widthDp = 412, heightDp = 220, locale = "ru")
 @Composable

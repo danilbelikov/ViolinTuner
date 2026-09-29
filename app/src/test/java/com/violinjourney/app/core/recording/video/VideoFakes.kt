@@ -57,7 +57,17 @@ class FakeVideoFiles : VideoFiles {
     override fun thumbOf(name: String): File? = File("/files/sessions/$name-thumb.jpg").takeIf { name in thumbs }
     /** How often a video was looked for: the piece screen does it when its takes change, not on every tap. */
     var existingCalls = 0
-    override fun existing(name: String): File? = File("/files/sessions/$name").also { existingCalls++ }
+
+    /** Videos that are really there, by name, with their sizes: [existing] gives a file of that many bytes; the others are a bare path. */
+    val present = mutableMapOf<String, Long>()
+    override fun existing(name: String): File? {
+        existingCalls++
+        val bytes = present[name] ?: return File("/files/sessions/$name")
+        return File.createTempFile("video", ".mp4").apply {
+            deleteOnExit()
+            writeBytes(ByteArray(bytes.toInt()))
+        }
+    }
     override fun discard(file: File) {
         discarded += file.name
     }

@@ -148,11 +148,12 @@
     <string name="history_count_one">%1$d 条录音</string>
     <string name="history_count_few">%1$d 条录音</string>
     <string name="history_count_many">%1$d 条录音</string>
-    <string name="history_chart_title">两周内的录音</string>
+    <string name="history_strip_title">近两周</string>
     <string name="history_chart_description">两周内每天的录音数</string>
     <string name="history_filter_all">全部</string>
-    <string name="history_filter_this_week">本周</string>
-    <string name="history_filter_month">本月</string>
+    <string name="history_filter_takes">录制</string>
+    <string name="history_filter_video">视频</string>
+    <string name="history_filter_live">来自 Live</string>
     <string name="history_day_today">今天</string>
     <string name="record_meta">%1$s · %2$s</string>
     <string name="history_chart_bar">%1$s，%2$s</string>
@@ -364,11 +365,17 @@
     <string name="selection_delete_text">声音和分析都将删除。此操作无法撤销。</string>
     <string name="record_tile_take">录制</string>
     <string name="record_tile_record">录音</string>
-    <string name="record_tile_sound">声音</string>
     <string name="record_tile_only_video">视频</string>
     <string name="record_tile_no_sound">无声</string>
-    <string name="history_empty_filter">这段时间没有录音</string>
-    <string name="history_empty">你的录音会出现在这里。请在 Live 界面按下录音按钮。</string>
+    <string name="history_empty_title">你的录音会出现在这里</string>
+    <string name="history_empty_text">用 Live 的录音按钮录下演奏，或在曲目页面录制——录完会有分析：哪些音稳，哪些音跑。</string>
+    <string name="history_open_live">打开 Live</string>
+    <string name="history_empty_takes_text">录制在曲目页面进行——用底部的按钮。</string>
+    <string name="history_empty_video_title">还没有视频</string>
+    <string name="history_empty_video_text">视频录制在曲目页面进行——用录制按钮旁边的按钮。</string>
+    <string name="history_empty_live_title">还没有来自 Live 的录音</string>
+    <string name="history_empty_live_text">在 Live 按下录音按钮——带分析的录音会出现在这里。</string>
+    <string name="history_show_all">显示全部录音</string>
 
     <string name="practice_start">开始练习</string>
     <string name="practice_stop">结束练习</string>
@@ -1011,6 +1018,7 @@
     <string name="card_menu">更多</string>
     <string name="card_menu_share">分享</string>
     <string name="card_menu_sound">声音…</string>
+    <string name="card_menu_delete">删除…</string>
     <string name="best_set">标为最佳</string>
     <string name="best_clear">取消“最佳”标记</string>
     <string name="best_marked">已标为最佳</string>
@@ -1161,7 +1169,7 @@
     <string name="backing_take_unprepared">无法准备这段录制的伴奏——只能听到小提琴。</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
-    <string name="backing_take_meta">带伴奏 · %1$s</string>
+    <string name="backing_take_mark">带伴奏</string>
 
     <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
     <string name="video_shoot_backing">伴奏下拍摄</string>

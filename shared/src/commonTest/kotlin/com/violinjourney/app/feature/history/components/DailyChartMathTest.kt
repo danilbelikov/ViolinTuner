@@ -5,6 +5,7 @@ import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.minus
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 import kotlin.test.Test
@@ -16,18 +17,29 @@ class DailyChartMathTest {
     private fun days(vararg counts: Int) = counts.mapIndexed { i, c -> DayCount(today.minus((counts.size - 1 - i).toLong(), DateTimeUnit.DAY), c) }
 
     @Test
-    fun `an empty day has no bar — a busy one fills the plot — one recording is still seen`() {
+    fun `the strip is a field of 28 — an empty day has no bar - a busy one fills it - one recording is never lower than 3`() {
+        assertEquals(28f, DailyChartMath.FIELD, 0f)
         assertNull(DailyChartMath.barHeight(0, top = 4))
-        assertEquals(DailyChartMath.BAR_MAX, DailyChartMath.barHeight(4, top = 4)!!, 0f)
-        assertEquals(DailyChartMath.BAR_MAX / 2, DailyChartMath.barHeight(6, top = 12)!!, 0f)
-        assertTrue(DailyChartMath.barHeight(1, top = 40)!! >= DailyChartMath.EMPTY_MARK * 2)
+        assertEquals(DailyChartMath.FIELD, DailyChartMath.barHeight(4, top = 4)!!, 0f)
+        assertEquals(DailyChartMath.FIELD / 2, DailyChartMath.barHeight(6, top = 12)!!, 0f)
+        // 28 × 1 / 40 = 0.7: a day with a recording still stands out of the marks of the empty ones
+        assertEquals(DailyChartMath.MIN_BAR, DailyChartMath.barHeight(1, top = 40)!!, 0f)
+        assertEquals(3f, DailyChartMath.MIN_BAR, 0f)
     }
 
     @Test
-    fun `the number stands over the busiest day — over each of equals — over none when nothing was recorded`() {
-        assertEquals(setOf(2), DailyChartMath.numbered(days(1, 0, 3, 2)))
-        assertEquals(setOf(0, 3), DailyChartMath.numbered(days(3, 0, 1, 3)))
-        assertEquals(emptySet<Int>(), DailyChartMath.numbered(days(0, 0, 0)))
+    fun `fourteen bars four apart fill the width exactly — on a narrow card too - never overlapping`() {
+        for (width in listOf(348f, 328f, 245f, 200f)) {
+            val bar = DailyChartMath.barWidth(width, 14)
+            assertEquals(0f, DailyChartMath.barLeft(0, 14, width), 0f)
+            assertEquals(width, DailyChartMath.barLeft(13, 14, width) + bar, 0.01f, "the last bar ends at the edge of $width")
+            for (i in 1 until 14) {
+                assertEquals(DailyChartMath.GAP, DailyChartMath.barLeft(i, 14, width) - (DailyChartMath.barLeft(i - 1, 14, width) + bar), 0.01f, "gap before bar $i on $width")
+            }
+        }
+        // the width of a bar comes from the width of the card: 348 on a phone of 412 — 21.1 (was 17)
+        assertEquals((348f - 4f * 13) / 14, DailyChartMath.barWidth(348f, 14), 0.001f)
+        assertEquals(0f, DailyChartMath.barWidth(20f, 14), 0f)
     }
 
     @Test
@@ -39,13 +51,13 @@ class DailyChartMathTest {
     }
 
     @Test
-    fun `bars run from edge to edge and never overlap — on a narrow card too`() {
-        for (width in listOf(348f, 328f, 200f)) {
-            val bar = DailyChartMath.barWidth(width, 14)
-            assertEquals(0f, DailyChartMath.barLeft(0, 14, width), 0f)
-            assertEquals(width, DailyChartMath.barLeft(13, 14, width) + bar, 0.01f)
-            assertTrue(DailyChartMath.barLeft(1, 14, width) - DailyChartMath.barLeft(0, 14, width) > bar)
-        }
-        assertEquals(DailyChartMath.BAR_WIDTH, DailyChartMath.barWidth(400f, 14), 0f)
+    fun `a Monday of yesterday leaves its label out rather than run into «сегодня»`() {
+        // 348 wide: yesterday's bar starts at 12 × (21.14 + 4) ≈ 301.7, «сегодня» (≈ 44) at ≈ 304; a week before — at ≈ 125.7
+        val yesterday = DailyChartMath.barLeft(12, 14, 348f)
+        assertFalse(DailyChartMath.labelFits(left = yesterday, labelWidth = 32f, todayLeft = 304f))
+        assertTrue(DailyChartMath.labelFits(left = DailyChartMath.barLeft(5, 14, 348f), labelWidth = 32f, todayLeft = 304f))
+        // four of air before «сегодня»
+        assertTrue(DailyChartMath.labelFits(left = 100f, labelWidth = 30f, todayLeft = 134f))
+        assertFalse(DailyChartMath.labelFits(left = 100f, labelWidth = 30f, todayLeft = 133.9f))
     }
 }

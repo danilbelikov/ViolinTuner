@@ -37,8 +37,8 @@ import com.violinjourney.app.feature.history.Selection
 import com.violinjourney.app.feature.history.SelectionIntent
 import com.violinjourney.app.feature.history.components.CardActions
 import com.violinjourney.app.feature.history.components.RecordCard
+import com.violinjourney.app.feature.history.components.RecordPlace
 import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.record_meta
 import com.violinjourney.app.shared.resources.selection_select
 import com.violinjourney.app.shared.resources.take_chart_description
 import com.violinjourney.app.shared.resources.take_last
@@ -63,7 +63,7 @@ private const val CHART_GOOD = 75f
 /**
  * «Дубли» and their number by the title, «Выбрать» at the right edge (spec 3.18, 3.36.4) — gone in the selection mode, while the
  * number stays; from two takes on the summary «последний 82 %» · «максимум 88 %» with the little chart of every score (5.9); then
- * the cards of the takes as they are until R5, the best one first, a fresh one glowing for a moment (3.21). Without takes — «Дублей
+ * the cards of the takes (the card of R5), the best one first, a fresh one glowing for a moment (3.21). Without takes — «Дублей
  * пока нет» in the middle, without the title and the summary. While a take is [recording] the summary, the cards and «Выбрать»
  * sleep: a card opens the recording's screen, «Звук» or «Поделиться» — each would end the take (spec 3.15). While takes are
  * picked, all but the list steps aside.
@@ -206,6 +206,8 @@ private fun ScoreChart(scores: List<Int>, modifier: Modifier) {
  * A take under the name of its piece (handoff 22e): six lines of «Менуэт соль мажор» below that
  * very heading would say nothing, so the card is called by its date and its line gives the time;
  * a take with a name of its own keeps the name, and the date moves into the line. Once, either way.
+ * Its line does not say «дубль» — every card here is one (spec 3.36.5); «видео», «без звука» and
+ * «под минусовку» it says as in every list.
  */
 @Composable
 private fun TakeCard(
@@ -219,15 +221,13 @@ private fun TakeCard(
 ) {
     val card = take.card
     val date = Formats.recordDate(card.date, card.otherYear)
-    val duration = Formats.duration(card.durationMs)
-    val meta = stringResource(Res.string.record_meta, if (card.title == null) Formats.timeOfDay(card.startedAtEpochMs, zone) else date, duration)
     RecordCard(
         card = card,
         title = card.title ?: date,
-        // a take made under the backing gets its sign and «под минусовку» from the card itself, as in every list (spec 3.32)
-        meta = meta,
+        start = if (card.title == null) Formats.timeOfDay(card.startedAtEpochMs, zone) else date,
         onClick = onClick,
         modifier = modifier,
+        place = RecordPlace.Takes,
         actions = actions,
         highlighted = take.isNew,
         selected = selected,

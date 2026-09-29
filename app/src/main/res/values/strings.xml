@@ -148,11 +148,12 @@
     <string name="history_count_one">%1$d recording</string>
     <string name="history_count_few">%1$d recordings</string>
     <string name="history_count_many">%1$d recordings</string>
-    <string name="history_chart_title">Recordings in two weeks</string>
+    <string name="history_strip_title">Last two weeks</string>
     <string name="history_chart_description">Recordings per day over two weeks</string>
     <string name="history_filter_all">All</string>
-    <string name="history_filter_this_week">This week</string>
-    <string name="history_filter_month">Month</string>
+    <string name="history_filter_takes">Takes</string>
+    <string name="history_filter_video">Video</string>
+    <string name="history_filter_live">From Live</string>
     <string name="history_day_today">today</string>
     <string name="record_meta">%1$s · %2$s</string>
     <string name="history_chart_bar">%1$s, %2$s</string>
@@ -364,11 +365,17 @@
     <string name="selection_delete_text">The sound and the analysis will be deleted. This cannot be undone.</string>
     <string name="record_tile_take">take</string>
     <string name="record_tile_record">recording</string>
-    <string name="record_tile_sound">sound</string>
     <string name="record_tile_only_video">video</string>
     <string name="record_tile_no_sound">no sound</string>
-    <string name="history_empty_filter">No recordings in this period</string>
-    <string name="history_empty">Your recordings will appear here. Press the record button on the Live screen.</string>
+    <string name="history_empty_title">Your recordings will appear here</string>
+    <string name="history_empty_text">Record your playing with the button on Live, or a take on the screen of a piece\u00A0— then comes the analysis: what holds and what drifts.</string>
+    <string name="history_open_live">Open Live</string>
+    <string name="history_empty_takes_text">A take is recorded on the screen of a piece\u00A0— with the button at the bottom.</string>
+    <string name="history_empty_video_title">No videos yet</string>
+    <string name="history_empty_video_text">A video take is shot on the screen of a piece\u00A0— with the button beside the take button.</string>
+    <string name="history_empty_live_title">No recordings from Live yet</string>
+    <string name="history_empty_live_text">Press the record button on Live\u00A0— the recording and its analysis will appear here.</string>
+    <string name="history_show_all">Show all recordings</string>
 
     <string name="practice_start">Start practice</string>
     <string name="practice_stop">End practice</string>
@@ -1011,6 +1018,7 @@
     <string name="card_menu">More</string>
     <string name="card_menu_share">Share</string>
     <string name="card_menu_sound">Sound…</string>
+    <string name="card_menu_delete">Delete…</string>
     <string name="best_set">Mark as best</string>
     <string name="best_clear">Remove the “best” mark</string>
     <string name="best_marked">Marked as best</string>
@@ -1161,7 +1169,7 @@
     <string name="backing_take_unprepared">The backing of this take could not be prepared — only the violin is heard.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
-    <string name="backing_take_meta">with backing · %1$s</string>
+    <string name="backing_take_mark">with backing</string>
 
     <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
     <string name="video_shoot_backing">Film to the backing</string>

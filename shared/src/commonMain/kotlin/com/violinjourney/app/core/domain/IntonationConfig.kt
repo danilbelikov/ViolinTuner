@@ -66,8 +66,6 @@ data class IntonationConfig(
     val historyChartDays: Int = 14,
     /** The top of that chart's scale is never below this, so that one recording does not look like a record. */
     val historyChartMinTop: Int = 4,
-    /** The "month" filter of the history: this many days back, today included. */
-    val historyMonthDays: Int = 30,
 
     // Cents scale on the Live screen: ±range around the target (handoff `sizes`)
     val scaleRangeCents: Double = 50.0,

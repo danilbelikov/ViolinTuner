@@ -26,6 +26,7 @@ import com.violinjourney.app.core.ui.components.AppButton
 import com.violinjourney.app.core.ui.components.AppButtonStyle
 import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.feature.history.components.RecordPlace
 import com.violinjourney.app.feature.history.components.SessionCard
 import com.violinjourney.app.feature.practice.PracticeIntent
 import com.violinjourney.app.feature.practice.SelectedDay
@@ -115,8 +116,8 @@ fun DaySheetContent(day: SelectedDay, onIntent: (PracticeIntent) -> Unit, zone: 
             )
             Column(Modifier.padding(top = RecordsGap), verticalArrangement = Arrangement.spacedBy(RecordsGap)) {
                 day.sessions.forEach { card ->
-                    // the old cards (their new look is R5) on the ground of the screen: on the sheet the card colour is the sheet's own
-                    SessionCard(card = card, zone = zone, onClick = { onIntent(PracticeIntent.SessionClicked(card.id)) }, container = colors.surface)
+                    // the cards of R5 without «⋯» — here a recording is only opened — on the ground of the screen, as in every sheet
+                    SessionCard(card = card, zone = zone, onClick = { onIntent(PracticeIntent.SessionClicked(card.id)) }, place = RecordPlace.Sheet)
                 }
             }
         }

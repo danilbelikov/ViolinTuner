@@ -13,13 +13,13 @@ import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 
-/** Sizes of the tile (handoff 22b3, `sizes`): the circle and the sign inside it. */
+/** Sizes of the tile (spec 5.15, 5.29 R5): the circle and the sign inside it. */
 enum class RecordTileSize(val circle: Dp, val sign: Dp) {
     /** The card of a recording. */
     CARD(40.dp, 22.dp),
 
-    /** The empty state of «Записи». */
-    EMPTY(56.dp, 30.dp),
+    /** The empty states of «Записи» — nothing at all, and nothing under a chip. */
+    EMPTY(72.dp, 32.dp),
 }
 
 private val TileRing = 1.5.dp

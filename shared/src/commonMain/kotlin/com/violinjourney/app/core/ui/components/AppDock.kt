@@ -82,8 +82,9 @@ private enum class DockSlot { Zone, Content }
  * are given by the column around it (the left column of landscape:
  * `AppDock(…, Modifier.width(280.dp), padSides = false, fade = DockDefaults.FadeLeftColumn)`). [pinned] false — the zone has left
  * its place for the end of the content, where its owner lays its rows with [DockRows] (a form lying over a keyboard too high for its
- * zone in one line and a field together, 5.29 R4): [dock] is not composed, nothing is drawn at the bottom, and over the keyboard the
- * content ends at the top of the keyboard — the whole room over it is the content's.
+ * zone in one line and a field together, 5.29 R4), or the screen has no zone for now (the tab «Записи» has one only while it is
+ * empty, 3.36.5 — its list stays the same node, whether the zone is there or not): [dock] is not composed, nothing is drawn at the
+ * bottom, and over the keyboard the content ends at the top of the keyboard — the whole room over it is the content's.
  * [DockScope.compact] and [DockScope.buttonHeight] tell its buttons their height: `AppButton(compact = compact)`, the living
  * «Начать занятие» at `Modifier.height(buttonHeight)`.
  *

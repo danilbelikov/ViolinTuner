@@ -10,13 +10,14 @@ import kotlinx.datetime.toInstant
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
 import kotlin.test.assertNull
+import kotlin.test.assertTrue
 import kotlin.test.Test
 
 class HistoryReducerTest {
     private val moscow = TimeZone.of("Europe/Moscow")
     private val config = IntonationConfig()
 
-    // Thursday; the week started on Monday 2026-09-14.
+    // Thursday 17 September 2026.
     private val today = LocalDate(2026, 9, 17)
 
     private fun session(id: Long, dateTime: String, score: Int, title: String? = null, bias: Double = -4.0) = SessionSummary(
@@ -29,9 +30,9 @@ class HistoryReducerTest {
 
     private val sessions = listOf(
         session(1, "2026-08-12T10:00:00", 62),
-        session(2, "2026-08-18T09:40:00", 71), // exactly 30 days back: outside the month
-        session(3, "2026-08-19T09:40:00", 66), // 29 days back: inside
-        session(4, "2026-09-13T21:02:00", 79, title = "Этюд Кайзера №3"), // Sunday: last week
+        session(2, "2026-08-18T09:40:00", 71),
+        session(3, "2026-08-19T09:40:00", 66),
+        session(4, "2026-09-13T21:02:00", 79, title = "Этюд Кайзера №3"),
         session(5, "2026-09-16T08:15:00", 84, title = "Гаммы D-dur"),
         session(6, "2026-09-17T07:00:00", 54, bias = 9.0),
     )
@@ -58,7 +59,14 @@ class HistoryReducerTest {
         assertEquals(listOf("2026-09-17", "2026-09-16", "2026-09-13", "2026-08-19", "2026-08-18", "2026-08-12"), groups.map { it.date.toString() })
         assertEquals(listOf(7L, 6L), groups[0].cards.map { it.id })
         assertEquals(listOf(true, false), groups.take(2).map { it.today })
-        assertEquals(state(HistoryFilter.THIS_WEEK).cards.map { it.id }, state(HistoryFilter.THIS_WEEK).groups.flatMap { g -> g.cards.map { it.id } })
+    }
+
+    @Test
+    fun `the days are those of the cards the chip shows`() {
+        // «Дубли» leaves out the recording of the 17th: its day gets no header, the two takes keep theirs
+        val takes = state(HistoryFilter.TAKES, list = kinds)
+        assertEquals(listOf(LocalDate(2026, 9, 16), LocalDate(2026, 9, 15)), takes.groups.map { it.date })
+        assertEquals(listOf(12L, 13L), takes.groups.flatMap { g -> g.cards.map { it.id } })
     }
 
     @Test
@@ -82,27 +90,64 @@ class HistoryReducerTest {
         assertEquals(listOf(2L to true, 1L to false), cards.map { it.id to it.underBacking })
     }
 
+    // The chips by kind (spec 3.36.5): from what a recording stores — its piece and its video.
+    private val free = session(11, "2026-09-17T08:00:00", 70).copy(audioPath = "free.m4a")
+    private val soundTake = session(12, "2026-09-16T08:00:00", 70).copy(audioPath = "take.m4a", pieceId = 7)
+    private val videoTake = session(13, "2026-09-15T08:00:00", 70).copy(audioPath = "video.m4a", pieceId = 7, videoPath = "video.mp4")
+    private val kinds = listOf(free, soundTake, videoTake)
+
     @Test
-    fun `this week starts on Monday`() {
-        assertEquals(listOf(6L, 5L), state(HistoryFilter.THIS_WEEK).cards.map { it.id })
+    fun `the takes are the recordings bound to a piece — the video takes too`() {
+        assertEquals(listOf(12L, 13L), state(HistoryFilter.TAKES, list = kinds).cards.map { it.id })
+        assertEquals(listOf(11L, 12L, 13L), state(HistoryFilter.ALL, list = kinds).cards.map { it.id })
     }
 
     @Test
-    fun `month is the last thirty days — today included`() {
-        assertEquals(listOf(6L, 5L, 4L, 3L), state(HistoryFilter.MONTH).cards.map { it.id })
+    fun `video is every recording with a video — its file lost too`() {
+        // a lost file keeps its name in the row: the recording stays a video, the file may come back with a copy (spec 3.20)
+        val lost = session(14, "2026-09-14T08:00:00", 70).copy(pieceId = 7, videoPath = "gone.mp4", audioPath = null)
+        val cards = state(HistoryFilter.VIDEO, list = kinds + lost).cards
+        assertEquals(listOf(13L, 14L), cards.map { it.id })
+        assertEquals(listOf(true, false), cards.map { it.hasAudio })
     }
 
     @Test
-    fun `count and chart ignore the filter`() {
-        val filtered = state(HistoryFilter.THIS_WEEK)
+    fun `from Live is what is bound to no piece and has no video`() {
+        assertEquals(listOf(11L), state(HistoryFilter.LIVE, list = kinds).cards.map { it.id })
+    }
+
+    @Test
+    fun `a sound take of a deleted piece stands under «С Live» — its video take only under «Видео»`() {
+        // deleting a piece unbinds its takes (spec 3.15): where they were made is not stored
+        val unboundSound = soundTake.copy(pieceId = null)
+        val unboundVideo = videoTake.copy(pieceId = null)
+        val list = listOf(free, unboundSound, unboundVideo)
+        assertEquals(listOf(11L, 12L), state(HistoryFilter.LIVE, list = list).cards.map { it.id })
+        assertEquals(listOf(13L), state(HistoryFilter.VIDEO, list = list).cards.map { it.id })
+        assertEquals(emptyList(), state(HistoryFilter.TAKES, list = list).cards.map { it.id })
+    }
+
+    @Test
+    fun `an unbound take made under a backing stands under «С Live» and keeps its sign`() {
+        // the line of the backing is stored with the recording, not with the piece (spec 3.32)
+        val unbound = soundTake.copy(pieceId = null)
+        val cards = HistoryReducer.stateOf(listOf(free, unbound), HistoryFilter.LIVE, today, moscow, config, underBackingIds = setOf(12L)).cards
+        assertEquals(listOf(11L to false, 12L to true), cards.map { it.id to it.underBacking })
+        assertEquals(listOf(false, false), cards.map { it.take })
+    }
+
+    @Test
+    fun `the strip and the count ignore the filter`() {
+        val filtered = state(HistoryFilter.TAKES)
+        assertEquals(emptyList(), filtered.cards)
         assertEquals(6, filtered.totalCount)
         // fourteen days ending today: 13, 16 and 17 September have one recording each
         assertEquals(14, filtered.days.size)
         assertEquals(today, filtered.days.last().date)
         assertEquals(listOf("2026-09-13", "2026-09-16", "2026-09-17"), filtered.days.filter { it.count == 1 }.map { it.date.toString() })
-        assertEquals(3, filtered.days.sumOf { it.count })
+        assertEquals(3, filtered.stripTotal)
         assertEquals(config.historyChartMinTop, filtered.chartTop)
-        assertEquals(HistoryFilter.THIS_WEEK, filtered.filter)
+        assertEquals(HistoryFilter.TAKES, filtered.filter)
         assertFalse(filtered.loading)
     }
 
@@ -112,9 +157,17 @@ class HistoryReducerTest {
         assertEquals(0, none.totalCount)
         assertEquals(List(14) { 0 }, none.days.map { it.count })
 
-        val oldOnly = state(HistoryFilter.THIS_WEEK, list = sessions.take(2))
-        assertEquals(2, oldOnly.totalCount)
-        assertEquals(emptyList<HistoryCard>(), oldOnly.cards)
+        val noVideo = state(HistoryFilter.VIDEO)
+        assertEquals(6, noVideo.totalCount)
+        assertEquals(emptyList<HistoryCard>(), noVideo.cards)
+    }
+
+    @Test
+    fun `select all under a chip takes only what the chip shows`() {
+        val live = state(HistoryFilter.LIVE, list = kinds)
+        val all = SelectionRules.reduce(Selection(active = true), SelectionIntent.SelectAllClicked, live.cards.map { it.id })
+        assertEquals(setOf(11L), all.ids)
+        assertTrue(live.copy(selection = all).allSelected)
     }
 
     @Test

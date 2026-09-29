@@ -1,13 +1,10 @@
 package com.violinjourney.app.feature.history
 
 import com.violinjourney.app.core.domain.IntonationConfig
-import com.violinjourney.app.core.domain.session.HistoryWeeks
 import com.violinjourney.app.core.domain.session.RecordDays
 import com.violinjourney.app.core.domain.session.SessionSummary
-import kotlinx.datetime.DateTimeUnit
 import kotlinx.datetime.LocalDate
 import kotlinx.datetime.TimeZone
-import kotlinx.datetime.minus
 
 /** Stored sessions → history screen (spec 3.11). Pure: "today" and the zone come from outside. */
 object HistoryReducer {
@@ -36,7 +33,7 @@ object HistoryReducer {
             today = today,
             filter = filter,
             cards = sessions
-                .filter { passes(filter, RecordDays.dateOf(it, zone), today, config) }
+                .filter { passes(filter, it) }
                 .sortedWith(compareByDescending<SessionSummary> { it.startedAtEpochMs }.thenByDescending { it.id })
                 .map {
                     cardOf(it, today, zone, pieceTitle = it.pieceId?.let(pieceTitles::get), best = it.id in bestTakeIds, underBacking = it.id in underBackingIds)
@@ -50,11 +47,16 @@ object HistoryReducer {
             filter = filter, cards = emptyList(),
         )
 
-    private fun passes(filter: HistoryFilter, date: LocalDate, today: LocalDate, config: IntonationConfig): Boolean =
+    /**
+     * The chips by kind (spec 3.36.5), from what a recording stores — its piece and its video: a take is bound to a piece (a video
+     * take too); a video is one whether its file is there or lost; from Live is bound to nothing and has no video.
+     */
+    private fun passes(filter: HistoryFilter, session: SessionSummary): Boolean =
         when (filter) {
             HistoryFilter.ALL -> true
-            HistoryFilter.THIS_WEEK -> date >= HistoryWeeks.weekStartOf(today)
-            HistoryFilter.MONTH -> date > today.minus(config.historyMonthDays.toLong(), DateTimeUnit.DAY)
+            HistoryFilter.TAKES -> session.pieceId != null
+            HistoryFilter.VIDEO -> session.videoPath != null
+            HistoryFilter.LIVE -> session.pieceId == null && session.videoPath == null
         }
 
     /** Also the card of the "Записи этого дня" list on the practice screen and of a take on the screen of its piece. */

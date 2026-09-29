@@ -148,11 +148,12 @@
     <string name="history_count_one">%1$d запись</string>
     <string name="history_count_few">%1$d записи</string>
     <string name="history_count_many">%1$d записей</string>
-    <string name="history_chart_title">Записи за две недели</string>
+    <string name="history_strip_title">За две недели</string>
     <string name="history_chart_description">Записи по дням за две недели</string>
     <string name="history_filter_all">Все</string>
-    <string name="history_filter_this_week">Эта неделя</string>
-    <string name="history_filter_month">Месяц</string>
+    <string name="history_filter_takes">Дубли</string>
+    <string name="history_filter_video">Видео</string>
+    <string name="history_filter_live">С Live</string>
     <string name="history_day_today">сегодня</string>
     <string name="record_meta">%1$s · %2$s</string>
     <string name="history_chart_bar">%1$s, %2$s</string>
@@ -364,11 +365,17 @@
     <string name="selection_delete_text">Звук и разбор удалятся. Это нельзя отменить.</string>
     <string name="record_tile_take">дубль</string>
     <string name="record_tile_record">запись</string>
-    <string name="record_tile_sound">звук</string>
     <string name="record_tile_only_video">видео</string>
     <string name="record_tile_no_sound">без звука</string>
-    <string name="history_empty_filter">За этот период записей нет</string>
-    <string name="history_empty">Здесь появятся ваши записи. Нажмите кнопку записи на экране Live.</string>
+    <string name="history_empty_title">Здесь появятся ваши записи</string>
+    <string name="history_empty_text">Запишите игру кнопкой на Live или дубль на экране произведения\u00A0— после записи будет разбор: что держится, а что уходит.</string>
+    <string name="history_open_live">Открыть Live</string>
+    <string name="history_empty_takes_text">Дубль записывают на экране произведения\u00A0— кнопкой внизу.</string>
+    <string name="history_empty_video_title">Видео пока нет</string>
+    <string name="history_empty_video_text">Видео-дубль снимают на экране произведения\u00A0— кнопкой рядом с записью дубля.</string>
+    <string name="history_empty_live_title">Записей с Live пока нет</string>
+    <string name="history_empty_live_text">Нажмите кнопку записи на Live\u00A0— здесь появится запись с разбором.</string>
+    <string name="history_show_all">Показать все записи</string>
 
     <string name="practice_start">Начать занятие</string>
     <string name="practice_stop">Закончить занятие</string>
@@ -1011,6 +1018,7 @@
     <string name="card_menu">Ещё</string>
     <string name="card_menu_share">Поделиться</string>
     <string name="card_menu_sound">Звук…</string>
+    <string name="card_menu_delete">Удалить…</string>
     <string name="best_set">Отметить лучшим</string>
     <string name="best_clear">Снять отметку «лучший»</string>
     <string name="best_marked">Отмечен как лучший</string>
@@ -1161,7 +1169,7 @@
     <string name="backing_take_unprepared">Минусовку этого дубля не удалось подготовить — слышна только скрипка.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
-    <string name="backing_take_meta">под минусовку · %1$s</string>
+    <string name="backing_take_mark">под минусовку</string>
 
     <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
     <string name="video_shoot_backing">Снять под минусовку</string>

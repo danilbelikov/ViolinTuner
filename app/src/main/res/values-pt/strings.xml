@@ -148,11 +148,12 @@
     <string name="history_count_one">%1$d gravação</string>
     <string name="history_count_few">%1$d gravações</string>
     <string name="history_count_many">%1$d gravações</string>
-    <string name="history_chart_title">Gravações em duas semanas</string>
+    <string name="history_strip_title">Últimas duas semanas</string>
     <string name="history_chart_description">Gravações por dia em duas semanas</string>
     <string name="history_filter_all">Todas</string>
-    <string name="history_filter_this_week">Esta semana</string>
-    <string name="history_filter_month">Mês</string>
+    <string name="history_filter_takes">Takes</string>
+    <string name="history_filter_video">Vídeo</string>
+    <string name="history_filter_live">Do Live</string>
     <string name="history_day_today">hoje</string>
     <string name="record_meta">%1$s · %2$s</string>
     <string name="history_chart_bar">%1$s, %2$s</string>
@@ -364,11 +365,17 @@
     <string name="selection_delete_text">O som e a análise serão excluídos. Isso não pode ser desfeito.</string>
     <string name="record_tile_take">take</string>
     <string name="record_tile_record">gravação</string>
-    <string name="record_tile_sound">som</string>
     <string name="record_tile_only_video">vídeo</string>
     <string name="record_tile_no_sound">sem som</string>
-    <string name="history_empty_filter">Não há gravações neste período</string>
-    <string name="history_empty">Suas gravações aparecerão aqui. Toque no botão de gravar na tela Live.</string>
+    <string name="history_empty_title">Suas gravações aparecerão aqui</string>
+    <string name="history_empty_text">Grave com o botão do Live ou um take na tela de uma peça\u00A0— depois vem a análise: o que se mantém e o que escapa.</string>
+    <string name="history_open_live">Abrir o Live</string>
+    <string name="history_empty_takes_text">Um take é gravado na tela de uma peça, com o botão embaixo.</string>
+    <string name="history_empty_video_title">Ainda não há vídeos</string>
+    <string name="history_empty_video_text">Um take em vídeo é gravado na tela de uma peça, com o botão ao lado do botão do take.</string>
+    <string name="history_empty_live_title">Ainda não há gravações do Live</string>
+    <string name="history_empty_live_text">Toque no botão de gravar no Live\u00A0— a gravação com a análise aparecerá aqui.</string>
+    <string name="history_show_all">Mostrar todas as gravações</string>
 
     <string name="practice_start">Começar a prática</string>
     <string name="practice_stop">Terminar a prática</string>
@@ -1011,6 +1018,7 @@
     <string name="card_menu">Mais</string>
     <string name="card_menu_share">Compartilhar</string>
     <string name="card_menu_sound">Som…</string>
+    <string name="card_menu_delete">Excluir…</string>
     <string name="best_set">Marcar como melhor</string>
     <string name="best_clear">Tirar a marca “melhor”</string>
     <string name="best_marked">Marcado como melhor</string>
@@ -1161,7 +1169,7 @@
     <string name="backing_take_unprepared">Não foi possível preparar o playback deste take — só se ouve o violino.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
-    <string name="backing_take_meta">com playback · %1$s</string>
+    <string name="backing_take_mark">com playback</string>
 
     <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
     <string name="video_shoot_backing">Filmar com playback</string>

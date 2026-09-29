@@ -721,6 +721,123 @@ class PieceViewModelTest {
         assertEquals(0, source!!.active)
     }
 
+    /** Spec 3.36.5: «Удалить…» in the «⋯» of a take — the question of the recording's screen, the deletion of the picked ones. */
+    @Test
+    fun `«Удалить…» of a take asks about that one alone and deletes it, the piece stays`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, effects) = screen(id)
+        repeat(2) { recordTake(viewModel) }
+        advance(2_000)
+        val (newest, oldest) = viewModel.state.value.takes.map { it.card.id }
+
+        viewModel.select(SelectionIntent.DeleteOneClicked(oldest))
+        runCurrent()
+        assertEquals(Selection(ids = setOf(oldest), confirming = true), viewModel.state.value.selection)
+        assertFalse("the mode of picking does not open", viewModel.state.value.selection.active)
+
+        viewModel.select(SelectionIntent.DeleteConfirmed)
+        runCurrent()
+        val state = viewModel.state.value
+        assertEquals(listOf(newest), state.takes.map { it.card.id })
+        assertEquals(Selection(), state.selection)
+        assertNotNull(state.header)
+        assertTrue("nothing was opened", effects.isEmpty())
+    }
+
+    @Test
+    fun `while a take records «Удалить…» of a take does not ask`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        recordTake(viewModel)
+        val take = viewModel.state.value.takes.single().card.id
+
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        viewModel.select(SelectionIntent.DeleteOneClicked(take))
+        runCurrent()
+        assertEquals(Selection(), viewModel.state.value.selection)
+
+        // the take ends: the question is asked, and «Отмена» leaves the take where it was
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+        viewModel.select(SelectionIntent.DeleteOneClicked(take))
+        runCurrent()
+        assertEquals(Selection(ids = setOf(take), confirming = true), viewModel.state.value.selection)
+        viewModel.select(SelectionIntent.DeleteDismissed)
+        runCurrent()
+        assertEquals(Selection(), viewModel.state.value.selection)
+        assertTrue(take in viewModel.state.value.takes.map { it.card.id })
+    }
+
+    /**
+     * A question about one take already on the screen is answered even when a take has started under it (the view model does not
+     * start one under it by itself: RecordClicked is shut only by the mode) — «Отмена» and «Удалить» are not swallowed, the dialog does
+     * not hang.
+     */
+    @Test
+    fun `a question about one take on the screen is answered while a take runs`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        repeat(2) { recordTake(viewModel) }
+        advance(2_000)
+        val (kept, gone) = viewModel.state.value.takes.map { it.card.id }
+
+        viewModel.select(SelectionIntent.DeleteOneClicked(kept))
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        assertTrue("a take runs under the question", viewModel.takeState.value.recording)
+        viewModel.select(SelectionIntent.DeleteDismissed)
+        runCurrent()
+        assertEquals("«Отмена» is heard", Selection(), viewModel.state.value.selection)
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(3_000)
+
+        viewModel.select(SelectionIntent.DeleteOneClicked(gone))
+        viewModel.onIntent(PieceIntent.RecordClicked)
+        advance(1_000)
+        viewModel.select(SelectionIntent.DeleteConfirmed)
+        runCurrent()
+        assertEquals("«Удалить» is heard", Selection(), viewModel.state.value.selection)
+        assertFalse(gone in sessions.sessions.value.map { it.id })
+        assertTrue(kept in sessions.sessions.value.map { it.id })
+    }
+
+    /** What is picked goes only through the question: «Удалить» without it on the screen deletes nothing (spec 3.18). */
+    @Test
+    fun `picked takes are not deleted without the question`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        recordTake(viewModel)
+        advance(2_000)
+        val take = viewModel.state.value.takes.single().card.id
+
+        viewModel.select(SelectionIntent.CardLongPressed(take))
+        runCurrent()
+        assertEquals(Selection(active = true, ids = setOf(take)), viewModel.state.value.selection)
+        viewModel.select(SelectionIntent.DeleteConfirmed)
+        runCurrent()
+
+        assertEquals(listOf(take), viewModel.state.value.takes.map { it.card.id })
+    }
+
+    /** The question about a video take names what goes with it (spec 3.19, 3.36.5): the card of the take carries the size of its file. */
+    @Test
+    fun `a video take carries the size of its file`() = runTest {
+        val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val (viewModel, _) = screen(id)
+        recordTake(viewModel)
+        advance(2_000)
+        val take = viewModel.state.value.takes.single().card.id
+        videoFiles.present["take.mp4"] = VIDEO_BYTES
+
+        sessions.sessions.value = sessions.sessions.value.map { if (it.id == take) it.copy(videoPath = "take.mp4") else it }
+        runCurrent()
+
+        val card = viewModel.state.value.takes.single().card
+        assertTrue(card.hasVideo)
+        assertEquals(VIDEO_BYTES, card.videoBytes)
+    }
+
     @Test
     fun `a video becomes a take of this piece - on top, highlighted, the session screen shut`() = runTest {
         val id = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
@@ -1301,5 +1418,10 @@ class PieceViewModelTest {
         advance(3_000)
         assertTrue(viewModel.takeState.value.recording)
         assertEquals(File("pcm-44100") to 44_100, playback.started)
+    }
+
+    private companion object {
+        /** A video small enough to be written for real in a test. */
+        const val VIDEO_BYTES = 1_234L
     }
 }

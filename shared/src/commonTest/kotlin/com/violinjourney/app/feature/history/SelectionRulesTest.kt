@@ -105,4 +105,52 @@ class SelectionRulesTest {
     fun pruningLeavesAClosedModeAlone() {
         assertEquals(Selection(), SelectionRules.prune(Selection(), emptyList()))
     }
+
+    // «Удалить…» of the «⋯» of one card (spec 3.36.5): the question of the recording's screen, by the rules of picking.
+
+    private val askingAboutTwo = Selection(ids = setOf(2L), confirming = true)
+
+    @Test
+    fun deleteOfOneCardAsksAboutItWithoutOpeningTheMode() {
+        val asking = Selection().on(SelectionIntent.DeleteOneClicked(2))
+        assertEquals(askingAboutTwo, asking)
+        assertFalse(asking.active)
+    }
+
+    @Test
+    fun dismissingTheQuestionAboutOneLeavesNothingPickedAndConfirmingCloses() {
+        assertEquals(Selection(), askingAboutTwo.on(SelectionIntent.DeleteDismissed))
+        assertEquals(Selection(), askingAboutTwo.on(SelectionIntent.DeleteConfirmed))
+        assertEquals(Selection(), askingAboutTwo.on(SelectionIntent.Closed))
+    }
+
+    @Test
+    fun deleteOfOneIsNotAskedForACardNotShownNorWhilePicking() {
+        assertEquals(Selection(), Selection().on(SelectionIntent.DeleteOneClicked(9)))
+        val picking = Selection(active = true, ids = setOf(1L))
+        assertEquals(picking, picking.on(SelectionIntent.DeleteOneClicked(2)))
+        // one question at a time
+        assertEquals(askingAboutTwo, askingAboutTwo.on(SelectionIntent.DeleteOneClicked(3)))
+    }
+
+    @Test
+    fun theModeDoesNotOpenUnderTheQuestionAboutOne() {
+        assertEquals(askingAboutTwo, askingAboutTwo.on(SelectionIntent.SelectClicked))
+        assertEquals(askingAboutTwo, askingAboutTwo.on(SelectionIntent.CardLongPressed(1)))
+        assertEquals(askingAboutTwo, askingAboutTwo.on(SelectionIntent.CardToggled(1)))
+        assertEquals(askingAboutTwo, askingAboutTwo.on(SelectionIntent.SelectAllClicked))
+        assertEquals(askingAboutTwo, askingAboutTwo.on(SelectionIntent.DeleteClicked))
+    }
+
+    @Test
+    fun theQuestionAboutOneGoesWithItsCard() {
+        assertEquals(Selection(), SelectionRules.prune(askingAboutTwo, listOf(1L, 3L)))
+        assertEquals(askingAboutTwo, SelectionRules.prune(askingAboutTwo, listOf(2L, 3L)))
+    }
+
+    @Test
+    fun selectAllTakesOnlyWhatTheChipShows() {
+        val all = Selection(active = true).on(SelectionIntent.SelectAllClicked, shown = listOf(2L))
+        assertEquals(setOf(2L), all.ids)
+    }
 }

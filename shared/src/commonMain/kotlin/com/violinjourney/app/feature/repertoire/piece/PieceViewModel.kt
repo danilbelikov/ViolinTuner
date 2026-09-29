@@ -531,9 +531,11 @@ open class PieceViewModel(
 
     private fun select(intent: SelectionIntent) {
         val current = SelectionRules.prune(ui.value.selection, takeIds)
-        // While a take is being recorded — or the chain has not let the microphone go yet — the mode does not open.
-        if (!current.active && (takes.recordingRequested.value || listening.value)) return
-        if (intent == SelectionIntent.DeleteConfirmed && current.ids.isNotEmpty()) {
+        // While a take is being recorded — or the chain has not let the microphone go yet — neither the mode nor the question of
+        // «Удалить…» of a take opens (spec 3.18, 3.36.5); a question already on the screen is still answered.
+        if (!current.active && !current.confirming && takeRunning()) return
+        // the picked ones, or the one take of «Удалить…»: their rows in one transaction, then the files
+        if (intent == SelectionIntent.DeleteConfirmed && current.confirming && current.ids.isNotEmpty()) {
             viewModelScope.launch { sessions.delete(current.ids) }
         }
         ui.update { it.copy(selection = SelectionRules.reduce(current, intent, takeIds)) }

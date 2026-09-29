@@ -37,23 +37,17 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.recording.video.VideoImport
 import com.violinjourney.app.core.ui.components.AppDock
-import com.violinjourney.app.core.ui.components.DeleteDialog
 import com.violinjourney.app.core.ui.components.LocalDockInset
 import com.violinjourney.app.core.ui.components.currentDockMetrics
 import com.violinjourney.app.core.ui.components.dimmedWhen
-import com.violinjourney.app.core.ui.format.Formats
-import com.violinjourney.app.feature.history.SelectionIntent
 import com.violinjourney.app.feature.history.components.CardActions
 import com.violinjourney.app.feature.history.components.SelectionBar
 import com.violinjourney.app.feature.history.components.SelectionBarHeight
-import com.violinjourney.app.feature.history.components.deleteTextOf
+import com.violinjourney.app.feature.history.components.SelectionDeleteDialog
 import com.violinjourney.app.feature.repertoire.components.LocalExerciseWords
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.backing_block_title
 import com.violinjourney.app.shared.resources.piece_field_notes
-import com.violinjourney.app.shared.resources.selection_delete_takes_few
-import com.violinjourney.app.shared.resources.selection_delete_takes_many
-import com.violinjourney.app.shared.resources.selection_delete_takes_one
 import kotlinx.datetime.TimeZone
 import org.jetbrains.compose.resources.stringResource
 
@@ -341,7 +335,8 @@ private fun rememberBackingWidestWord(backing: BackingUi): Dp {
 
 /**
  * The top of the screen: its own bar, or — while takes are being picked — the selection bar in
- * its place (spec 3.18). Below them, once, the question before the takes go.
+ * its place (spec 3.18). Below them, once, the question before the takes go — the picked ones, or
+ * the one of «Удалить…».
  */
 @Composable
 private fun Bars(state: PieceState, selectionHeight: Dp, onIntent: (PieceIntent) -> Unit, topBar: @Composable () -> Unit) {
@@ -353,15 +348,8 @@ private fun Bars(state: PieceState, selectionHeight: Dp, onIntent: (PieceIntent)
             topBar()
         }
     }
-    if (selection.confirming) {
-        val words = Formats.plural(selection.count, Res.string.selection_delete_takes_one, Res.string.selection_delete_takes_few, Res.string.selection_delete_takes_many)
-        DeleteDialog(
-            title = stringResource(words, selection.count),
-            text = deleteTextOf(state.takes.filter { it.card.id in selection.ids }.sumOf { it.card.videoBytes }),
-            onConfirm = { onIntent(PieceIntent.Select(SelectionIntent.DeleteConfirmed)) },
-            onDismiss = { onIntent(PieceIntent.Select(SelectionIntent.DeleteDismissed)) },
-        )
-    }
+    // «Удалить 2 дубля?» of the picked ones, or «Удалить запись?» of one take's «⋯» (spec 3.36.5)
+    SelectionDeleteDialog(selection, state.takes.map { it.card }, takes = true, onIntent = { onIntent(PieceIntent.Select(it)) })
 }
 
 private const val BAR_FADE_MS = 200

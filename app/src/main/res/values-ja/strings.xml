@@ -148,11 +148,12 @@
     <string name="history_count_one">録音 %1$d 件</string>
     <string name="history_count_few">録音 %1$d 件</string>
     <string name="history_count_many">録音 %1$d 件</string>
-    <string name="history_chart_title">この2週間の録音</string>
+    <string name="history_strip_title">この2週間</string>
     <string name="history_chart_description">この2週間の日ごとの録音数</string>
     <string name="history_filter_all">すべて</string>
-    <string name="history_filter_this_week">今週</string>
-    <string name="history_filter_month">1か月</string>
+    <string name="history_filter_takes">テイク</string>
+    <string name="history_filter_video">動画</string>
+    <string name="history_filter_live">Liveから</string>
     <string name="history_day_today">今日</string>
     <string name="record_meta">%1$s · %2$s</string>
     <string name="history_chart_bar">%1$s、%2$s</string>
@@ -364,11 +365,17 @@
     <string name="selection_delete_text">音と分析が削除されます。元には戻せません。</string>
     <string name="record_tile_take">テイク</string>
     <string name="record_tile_record">録音</string>
-    <string name="record_tile_sound">音あり</string>
     <string name="record_tile_only_video">動画</string>
     <string name="record_tile_no_sound">音なし</string>
-    <string name="history_empty_filter">この期間の録音はありません</string>
-    <string name="history_empty">ここにあなたの録音が並びます。Live 画面の録音ボタンを押してください。</string>
+    <string name="history_empty_title">ここに録音が並びます</string>
+    <string name="history_empty_text">Live の録音ボタンか、曲の画面のテイクで録音してください。録音のあとに分析が出ます：安定している音と、ずれていく音。</string>
+    <string name="history_open_live">Live を開く</string>
+    <string name="history_empty_takes_text">テイクは曲の画面で、下のボタンで録音します。</string>
+    <string name="history_empty_video_title">動画はまだありません</string>
+    <string name="history_empty_video_text">動画テイクは曲の画面で、テイクのボタンの隣のボタンで撮影します。</string>
+    <string name="history_empty_live_title">Live からの録音はまだありません</string>
+    <string name="history_empty_live_text">Live の録音ボタンを押すと、ここに分析つきの録音が表示されます。</string>
+    <string name="history_show_all">すべての録音を表示</string>
 
     <string name="practice_start">練習を始める</string>
     <string name="practice_stop">練習を終える</string>
@@ -1011,6 +1018,7 @@
     <string name="card_menu">その他</string>
     <string name="card_menu_share">共有</string>
     <string name="card_menu_sound">サウンド…</string>
+    <string name="card_menu_delete">削除…</string>
     <string name="best_set">ベストにする</string>
     <string name="best_clear">「ベスト」を外す</string>
     <string name="best_marked">ベストにしました</string>
@@ -1161,7 +1169,7 @@
     <string name="backing_take_unprepared">このテイクの伴奏を準備できませんでした — ヴァイオリンだけが聞こえます。</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
-    <string name="backing_take_meta">伴奏つき · %1$s</string>
+    <string name="backing_take_mark">伴奏つき</string>
 
     <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
     <string name="video_shoot_backing">伴奏で撮影</string>

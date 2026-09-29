@@ -17,7 +17,8 @@ private val TitleTracking = (-0.02).em
 
 /**
  * The title of a tab — «Репертуар», «Записи» (spec 3.36.1, 5.29): 28 sp, 800, one line; [compact] — 24 sp, in landscape.
- * A heading for TalkBack and VoiceOver; not pressed. Stages R4 and R5 put headers of their own in its place.
+ * A heading for TalkBack and VoiceOver; not pressed. The headers of R4 and R5 are built around it: the count under it on «Репертуар»,
+ * «Выбрать» beside it on «Записи» — there it gives way with an ellipsis.
  */
 @Composable
 fun TabTitle(text: String, modifier: Modifier = Modifier, compact: Boolean = false) {

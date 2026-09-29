@@ -3,7 +3,12 @@ package com.violinjourney.app.feature.history
 import com.violinjourney.app.core.domain.session.DayCount
 import kotlinx.datetime.LocalDate
 
-enum class HistoryFilter { ALL, THIS_WEEK, MONTH }
+/**
+ * What the list of «Записи» shows (spec 3.36.5): everything; the takes — recordings bound to a piece, video takes too; everything
+ * with a video, its file lost or not; and what came from Live — bound to no piece and without a video. Where a recording was made
+ * is not stored: a sound take of a deleted piece is unbound and stands under [LIVE] like any recording of Live (spec 3.15).
+ */
+enum class HistoryFilter { ALL, TAKES, VIDEO, LIVE }
 
 data class HistoryCard(
     val id: Long,
@@ -40,7 +45,7 @@ data class HistoryCard(
 data class HistoryState(
     /** True until the stored sessions have been read once. */
     val loading: Boolean,
-    /** All sessions, whatever the filter: "N сессий" and the empty state. */
+    /** All recordings, whatever the filter: tells «nothing at all» (no strip, no chips, «Открыть Live») from «nothing under the filter». */
     val totalCount: Int,
     /** Recordings per day, oldest first, the last is today; the filter does not touch it. */
     val days: List<DayCount>,
@@ -54,6 +59,9 @@ data class HistoryState(
     val selection: Selection = Selection(),
 ) {
     val allSelected: Boolean get() = SelectionRules.allSelected(selection, cards.map { it.id })
+
+    /** «12 записей» of the strip «За две недели» (spec 3.36.5): its fourteen days, whatever the filter. */
+    val stripTotal: Int get() = days.sumOf { it.count }
 
     /** [cards] by day, newest day first: every group gets a header with its date (spec 3.21). */
     val groups: List<DayGroup> get() = cards.groupBy { it.date }.map { (date, cards) -> DayGroup(date, today = date == today, cards = cards) }
@@ -71,8 +79,14 @@ sealed interface HistoryIntent {
 
     /** Everything of the selection mode; a plain [SessionClicked] inside it picks the card. */
     data class Select(val intent: SelectionIntent) : HistoryIntent
+
+    /** «Открыть Live» of an empty tab (spec 3.36.5). «Показать все записи» under an empty filter is [FilterSelected] of «Все». */
+    data object OpenLiveClicked : HistoryIntent
 }
 
 sealed interface HistoryEffect {
     data class OpenSession(val id: Long) : HistoryEffect
+
+    /** The tab Live. */
+    data object OpenLive : HistoryEffect
 }

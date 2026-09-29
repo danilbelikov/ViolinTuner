@@ -1,21 +1,23 @@
 package com.violinjourney.app.feature.history
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
@@ -24,76 +26,126 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.violinjourney.app.core.ui.components.DeleteDialog
+import com.violinjourney.app.core.ui.components.AppButton
+import com.violinjourney.app.core.ui.components.AppButtonStyle
+import com.violinjourney.app.core.ui.components.AppChip
+import com.violinjourney.app.core.ui.components.AppDock
+import com.violinjourney.app.core.ui.components.LocalDockInset
 import com.violinjourney.app.core.ui.components.TabTitle
+import com.violinjourney.app.core.ui.components.currentDockMetrics
 import com.violinjourney.app.core.ui.components.dimmedWhen
-import com.violinjourney.app.core.ui.format.Formats
+import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.core.ui.theme.AppShapes
 import com.violinjourney.app.feature.history.components.CardActions
 import com.violinjourney.app.feature.history.components.DailyChart
+import com.violinjourney.app.feature.history.components.DayHeader
 import com.violinjourney.app.feature.history.components.RecordTile
 import com.violinjourney.app.feature.history.components.RecordTileSize
-import com.violinjourney.app.feature.history.components.SelectAction
 import com.violinjourney.app.feature.history.components.SelectionBar
 import com.violinjourney.app.feature.history.components.SelectionBarHeight
+import com.violinjourney.app.feature.history.components.SelectionDeleteDialog
 import com.violinjourney.app.feature.history.components.SessionCard
-import com.violinjourney.app.feature.history.components.deleteTextOf
+import com.violinjourney.app.feature.history.components.recordsCountOf
+import com.violinjourney.app.feature.history.components.stripDescription
 import com.violinjourney.app.shared.resources.Res
-import com.violinjourney.app.shared.resources.history_chart_title
-import com.violinjourney.app.shared.resources.history_count_few
-import com.violinjourney.app.shared.resources.history_count_many
-import com.violinjourney.app.shared.resources.history_count_one
-import com.violinjourney.app.shared.resources.history_day_today
-import com.violinjourney.app.shared.resources.history_empty
-import com.violinjourney.app.shared.resources.history_empty_filter
+import com.violinjourney.app.shared.resources.history_empty_live_text
+import com.violinjourney.app.shared.resources.history_empty_live_title
+import com.violinjourney.app.shared.resources.history_empty_takes_text
+import com.violinjourney.app.shared.resources.history_empty_text
+import com.violinjourney.app.shared.resources.history_empty_title
+import com.violinjourney.app.shared.resources.history_empty_video_text
+import com.violinjourney.app.shared.resources.history_empty_video_title
 import com.violinjourney.app.shared.resources.history_filter_all
-import com.violinjourney.app.shared.resources.history_filter_month
-import com.violinjourney.app.shared.resources.history_filter_this_week
+import com.violinjourney.app.shared.resources.history_filter_live
+import com.violinjourney.app.shared.resources.history_filter_takes
+import com.violinjourney.app.shared.resources.history_filter_video
+import com.violinjourney.app.shared.resources.history_open_live
+import com.violinjourney.app.shared.resources.history_show_all
+import com.violinjourney.app.shared.resources.history_strip_title
 import com.violinjourney.app.shared.resources.nav_history
-import com.violinjourney.app.shared.resources.selection_delete_records_few
-import com.violinjourney.app.shared.resources.selection_delete_records_many
-import com.violinjourney.app.shared.resources.selection_delete_records_one
+import com.violinjourney.app.shared.resources.selection_select
+import com.violinjourney.app.shared.resources.takes_empty_title
 import kotlinx.datetime.TimeZone
+import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource
 
+// The tab «Записи» of R5 (spec 3.36.5, 5.29 R5; records.html 1).
 private val ScreenPadding = 16.dp
 private val MaxContentWidth = 560.dp
-private val SectionSpacing = 16.dp
-private val TitleTop = 12.dp
-private val LandscapeTitleTop = 8.dp
 
-/** The title block in landscape: with the gaps above and below it, the height of the selection bar that lies over it. */
-private val LandscapeTitleHeight = SelectionBarHeight.Landscape - LandscapeTitleTop * 2
-private val LandscapeChartWidth = 360.dp
-private val CardSpacing = 8.dp
-private val ChartCorner = 20.dp
-private val ChipHeight = 32.dp
-private val ChipCorner = 8.dp
-private const val TABULAR_FIGURES = "tnum"
+/** The line of the title: as high as the selection bar that lies over it while picking (56; lying 52). */
+private val TitleRowHeight = SelectionBarHeight.Portrait
+private val TitleRowHeightLandscape = SelectionBarHeight.Landscape
+
+/** A text button stands out into the field by its own padding: its word ends where the cards do. */
+private val TextButtonEdge = 12.dp
+private val StripTop = 8.dp
+private val StripPaddingVertical = 14.dp
+private val StripPaddingSide = 16.dp
+private val StripBarsTop = 10.dp
+
+/** A filter chip is 40 in a place of 48: 4 of air above and under it count into the gaps that are seen — 14 above, 4 under. */
+private val ChipAir = 4.dp
+private val ChipsTop = 14.dp - ChipAir
+private val ChipsBottom = 4.dp - ChipAir
+private val ChipGap = 8.dp
+private val CardGap = 6.dp
+
+/** The empty states: their words stand 32 from the edges of the screen — 16 inside its field. */
+private val EmptySide = 32.dp - ScreenPadding
+private val EmptyTitleTop = 16.dp
+private val EmptyTextTop = 8.dp
+private val EmptyUnderFilterTop = 40.dp
+private val EmptyButtonTop = 20.dp
+
+/** An empty tab lying: its words and «Открыть Live» in the middle of the right column, no wider than this. */
+private val EmptyLandscapeWidth = 400.dp
+private const val BAR_FADE_MS = 200
+
+/** A deleted card fades out and the list closes over it (spec 5.12). */
+private const val CARD_FADE_OUT_MS = 150
+private const val CARD_COLLAPSE_MS = 250
 
 /** Kinds of rows of the list of records: a composition is reused only for a row of its own kind. */
 private const val DAY_HEADER = "dayHeader"
 private const val RECORD_CARD = "recordCard"
 
 /**
- * The «Записи» tab (spec 3.11, 3.21; handoff 22a2): the recordings only, under the title «Записи» where the switch
- * «Записи | Репертуар» stood (spec 3.36.1) — the repertoire is a tab of its own. Stateless.
+ * The columns of the tab lying (spec 3.36.5): the title, the strip and the chips on the left, 360 as before; the list on the right,
+ * down to the bar. The left column is never wider than half of what the two leave: on a phone of 640 × 360 with a cutout at its side
+ * (≈ 600) a column of 360 would leave the list 195, and the line of a card could not show its time and its length.
+ */
+internal object HistoryColumns {
+    val Left = 360.dp
+    val Gap = 16.dp
+
+    fun left(width: Dp): Dp = minOf(Left, ((width - Gap * 3) / 2).coerceAtLeast(0.dp))
+}
+
+/**
+ * The tab «Записи» (spec 3.11, 3.21, 3.36.5): «what was recorded and when». On top the line of the title — «Записи» and «Выбрать»
+ * (only while the chip shows cards) — then the strip «За две недели», the chips «Все · Дубли · Видео · С Live» (they wrap, never
+ * slide away), and the list by days, the newest on top, the headers of the days not sticky. Picking lays the selection bar over the
+ * title and dims the strip and the chips. Nothing at all — no strip, no chips: a word of what will be here and «Открыть Live» in the
+ * bottom zone; nothing under a chip — its own words and «Показать все записи». While the list is read — the title alone. Lying, the
+ * title, the strip and the chips are a column on the left ([HistoryColumns]) and the list scrolls on the right; «Открыть Live» of an
+ * empty tab stands in the middle of the right column. Stateless.
  */
 @Composable
 fun HistoryScreen(
@@ -103,202 +155,222 @@ fun HistoryScreen(
     zone: TimeZone = TimeZone.currentSystemDefault(),
     cardActions: CardActions? = null,
 ) {
-    val colors = MaterialTheme.colorScheme
     val selection = state.selection
-    val selecting = selection.active
     BoxWithConstraints(
         modifier = modifier
             .fillMaxSize()
-            .background(colors.surface),
+            .background(MaterialTheme.colorScheme.surface),
         contentAlignment = Alignment.TopCenter,
     ) {
         val landscape = maxWidth > maxHeight
-        val barHeight = if (landscape) SelectionBarHeight.Landscape else SelectionBarHeight.Portrait
-        val records = !state.loading && state.totalCount > 0
-        // Neither pressed nor dimmed while picking (spec 3.36.1): the selection bar lies over it, as it lay over the switch.
-        val title = stringResource(Res.string.nav_history)
-        val list: LazyListScope.() -> Unit = {
-            when {
-                state.loading -> Unit
-                state.totalCount == 0 -> item(key = "empty") { EmptyHistory(Modifier.fillParentMaxHeight(EMPTY_HEIGHT_FRACTION)) }
-                else -> {
-                    if (!landscape) item(key = "chart") { ChartCard(state, Modifier.padding(top = SectionSpacing).dimmedWhen(selecting)) }
-                    item(key = "filters") {
-                        Filters(
-                            selected = state.filter,
-                            onSelect = { onIntent(HistoryIntent.FilterSelected(it)) },
-                            modifier = Modifier
-                                .padding(top = if (landscape) 0.dp else SectionSpacing)
-                                .dimmedWhen(selecting),
-                        )
-                    }
-                    item(key = "count") {
-                        // under an empty filter there is nothing to pick: the count says «0 записей», the action is gone (handoff 22i2)
-                        CountRow(
-                            total = if (state.cards.isEmpty()) 0 else state.totalCount,
-                            selecting = selecting || state.cards.isEmpty(),
-                            onSelect = { onIntent(HistoryIntent.Select(SelectionIntent.SelectClicked)) },
-                        )
-                    }
-                    state.groups.forEach { group ->
-                        // Part of the list, not of its controls: stays as it is while picking, and is not picked itself (handoff 22d).
-                        // two kinds of rows, told apart: a scrolled-off card is reused only for a card, a header for a header
-                        item(key = "day-" + group.date, contentType = DAY_HEADER) { DayHeader(group, Modifier.animateItem()) }
-                        items(group.cards, key = { it.id }, contentType = { RECORD_CARD }) { card ->
-                            SessionCard(
-                                card = card,
-                                zone = zone,
-                                onClick = { onIntent(HistoryIntent.SessionClicked(card.id)) },
-                                modifier = Modifier
-                                    .padding(top = CardSpacing)
-                                    .animateItem(),
-                                actions = cardActions,
-                                selected = if (selecting) card.id in selection.ids else null,
-                                onLongClick = { onIntent(HistoryIntent.Select(SelectionIntent.CardLongPressed(card.id))) },
-                            )
-                        }
-                    }
-                    if (state.cards.isEmpty()) {
-                        item(key = "emptyFilter") {
-                            Text(
-                                text = stringResource(Res.string.history_empty_filter),
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 24.dp, vertical = 40.dp),
-                                color = colors.onSurfaceVariant,
-                                textAlign = TextAlign.Center,
-                                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 15.sp),
-                            )
-                        }
-                    }
-                }
-            }
-        }
         if (landscape) {
-            // The chart stops being a card above the list and becomes the left column: the list gets the whole height (handoff 22h1).
-            Column(modifier = Modifier.fillMaxSize().padding(horizontal = ScreenPadding)) {
-                // as tall as the switch was: the opaque selection bar ends where the columns start, not on the chart and the chips
-                Box(
-                    modifier = Modifier
-                        .padding(top = LandscapeTitleTop)
-                        .heightIn(min = LandscapeTitleHeight),
-                    contentAlignment = Alignment.CenterStart,
-                ) {
-                    TabTitle(title, compact = true)
-                }
-                Row(modifier = Modifier.padding(top = LandscapeTitleTop), horizontalArrangement = Arrangement.spacedBy(ScreenPadding)) {
-                    if (records) ChartCard(state, Modifier.width(LandscapeChartWidth).dimmedWhen(selecting))
-                    LazyColumn(modifier = Modifier.weight(1f).fillMaxHeight(), contentPadding = PaddingValues(bottom = ScreenPadding), content = list)
-                }
-            }
+            LandscapeLayout(state, onIntent, zone, cardActions, leftWidth = HistoryColumns.left(maxWidth))
         } else {
-            LazyColumn(
-                modifier = Modifier
-                    .widthIn(max = MaxContentWidth)
-                    .fillMaxSize(),
-                contentPadding = PaddingValues(start = ScreenPadding, end = ScreenPadding, top = TitleTop, bottom = ScreenPadding),
-            ) {
-                // scrolls away with the list, as the switch did
-                item(key = "title") { TabTitle(title) }
-                list()
-            }
+            PortraitLayout(state, onIntent, zone, cardActions)
         }
         // Over the list, not in it: the title scrolls away with the list, the bin must not (handoff 19e2).
-        AnimatedVisibility(visible = selecting, enter = fadeIn(tween(BAR_FADE_MS)), exit = fadeOut(tween(BAR_FADE_MS))) {
-            SelectionBar(selection, state.allSelected, onIntent = { onIntent(HistoryIntent.Select(it)) }, height = barHeight)
+        AnimatedVisibility(visible = selection.active, enter = fadeIn(tween(BAR_FADE_MS)), exit = fadeOut(tween(BAR_FADE_MS))) {
+            SelectionBar(
+                selection, state.allSelected, onIntent = { onIntent(HistoryIntent.Select(it)) },
+                height = if (landscape) SelectionBarHeight.Landscape else SelectionBarHeight.Portrait,
+            )
         }
     }
-    if (selection.confirming) {
-        val words = Formats.plural(selection.count, Res.string.selection_delete_records_one, Res.string.selection_delete_records_few, Res.string.selection_delete_records_many)
-        DeleteDialog(
-            title = stringResource(words, selection.count),
-            text = deleteTextOf(state.cards.filter { it.id in selection.ids }.sumOf { it.videoBytes }),
-            onConfirm = { onIntent(HistoryIntent.Select(SelectionIntent.DeleteConfirmed)) },
-            onDismiss = { onIntent(HistoryIntent.Select(SelectionIntent.DeleteDismissed)) },
-        )
+    SelectionDeleteDialog(selection, state.cards, takes = false, onIntent = { onIntent(HistoryIntent.Select(it)) })
+}
+
+/**
+ * Upright: one column up to 560. One list whatever there is (spec 3.36.5, 5.12): the last card deleted fades out and closes as every
+ * deleted card does, and the strip and the chips fade with it, instead of an empty tab taking the place of the list at once. An empty
+ * tab has the bottom zone with «Открыть Live» over the tabs — the zone is there only then ([AppDock] `pinned`).
+ */
+@Composable
+private fun PortraitLayout(state: HistoryState, onIntent: (HistoryIntent) -> Unit, zone: TimeZone, cardActions: CardActions?) {
+    val title = stringResource(Res.string.nav_history)
+    val selecting = state.selection.active
+    val empty = state.nothingAtAll
+    AppDock(
+        dock = { OpenLiveButton(onIntent, compact = compact) },
+        modifier = Modifier.widthIn(max = MaxContentWidth).fillMaxSize(),
+        metrics = currentDockMetrics().copy(side = ScreenPadding),
+        pinned = empty,
+    ) {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val inset = LocalDockInset.current
+            val room = (maxHeight - TitleRowHeight - inset).coerceAtLeast(0.dp)
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(start = ScreenPadding, end = ScreenPadding, bottom = maxOf(ScreenPadding, inset)),
+            ) {
+                // scrolls away with the list, as the switch «Записи | Репертуар» did
+                item(key = "title") {
+                    TitleRow(title, canSelect = state.canSelect, onSelect = { onIntent(HistoryIntent.Select(SelectionIntent.SelectClicked)) }, landscape = false)
+                }
+                when {
+                    state.loading -> Unit
+                    empty -> item(key = "emptyAll") {
+                        // in the middle of what is left between the title and the zone; scrolls when it is more (a large font on 360 × 640)
+                        Column(Modifier.fillMaxWidth().heightIn(min = room), verticalArrangement = Arrangement.Center) {
+                            EmptyAll()
+                        }
+                    }
+                    else -> {
+                        item(key = "strip") {
+                            StripCard(state, Modifier.animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = tween(CARD_FADE_OUT_MS)).padding(top = StripTop).dimmedWhen(selecting))
+                        }
+                        item(key = "chips") {
+                            KindChips(
+                                state.filter, onSelect = { onIntent(HistoryIntent.FilterSelected(it)) },
+                                Modifier.animateItem(fadeInSpec = null, placementSpec = null, fadeOutSpec = tween(CARD_FADE_OUT_MS)).padding(top = ChipsTop, bottom = ChipsBottom).dimmedWhen(selecting),
+                            )
+                        }
+                        records(state, onIntent, zone, cardActions)
+                    }
+                }
+            }
+        }
     }
 }
 
-private const val EMPTY_HEIGHT_FRACTION = 0.8f
-private const val BAR_FADE_MS = 200
-private val CountRowHeight = 32.dp
-
-/** The date above a day's recordings (spec 3.21, handoff 22c1): quiet, not a card, not pressed, not sticky; today carries the chip of «Занятия». */
+/**
+ * Lying (spec 3.36.5, landscape.html «Остальные экраны»): on the left the title of 24 sp with «Выбрать», the strip and the chips —
+ * the strip and the chips dimmed while picking, when the bar lies over the whole width; on the right the list, from under the bar.
+ * No bottom zone: the main action is to open a recording. An empty tab — the title alone on the left, and on the right in the middle
+ * the tile, the words and «Открыть Live» as the main button of the column. The list on the right is one whatever there is, as upright:
+ * the last card deleted fades out, and the strip and the chips on the left fade with it.
+ */
 @Composable
-private fun DayHeader(group: DayGroup, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
+private fun LandscapeLayout(state: HistoryState, onIntent: (HistoryIntent) -> Unit, zone: TimeZone, cardActions: CardActions?, leftWidth: Dp) {
+    val selecting = state.selection.active
+    val empty = state.nothingAtAll
+    Row(Modifier.fillMaxSize().padding(start = ScreenPadding)) {
+        Column(
+            Modifier
+                .width(leftWidth)
+                .fillMaxHeight()
+                .verticalScroll(rememberScrollState())
+                .padding(bottom = ScreenPadding),
+        ) {
+            TitleRow(
+                stringResource(Res.string.nav_history), canSelect = state.canSelect,
+                onSelect = { onIntent(HistoryIntent.Select(SelectionIntent.SelectClicked)) }, landscape = true,
+            )
+            // they come with the list read at once, and go with the last card — fading as it does
+            AnimatedVisibility(visible = !state.loading && !empty, enter = EnterTransition.None, exit = fadeOut(tween(CARD_FADE_OUT_MS))) {
+                Column {
+                    StripCard(state, Modifier.padding(top = StripTop).dimmedWhen(selecting))
+                    KindChips(state.filter, onSelect = { onIntent(HistoryIntent.FilterSelected(it)) }, Modifier.padding(top = ChipsTop, bottom = ChipsBottom).dimmedWhen(selecting))
+                }
+            }
+        }
+        Spacer(Modifier.width(HistoryColumns.Gap))
+        BoxWithConstraints(Modifier.weight(1f).fillMaxHeight()) {
+            // an empty tab's block stands in the middle of the column: the list starts [TitleRowHeightLandscape] under its top, so the
+            // block is given as much under it
+            val room = (maxHeight - TitleRowHeightLandscape * 2).coerceAtLeast(0.dp)
+            // from under the bar that lies over the whole width while picking: the first day starts level with the strip
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(top = TitleRowHeightLandscape, end = ScreenPadding, bottom = ScreenPadding),
+            ) {
+                when {
+                    state.loading -> Unit
+                    empty -> item(key = "emptyAll") {
+                        Box(Modifier.fillMaxWidth().heightIn(min = room), contentAlignment = Alignment.Center) {
+                            Column(Modifier.widthIn(max = EmptyLandscapeWidth)) {
+                                EmptyAll()
+                                OpenLiveButton(onIntent, compact = currentDockMetrics().compact, modifier = Modifier.padding(top = EmptyButtonTop))
+                            }
+                        }
+                    }
+                    else -> records(state, onIntent, zone, cardActions)
+                }
+            }
+        }
+    }
+}
+
+/** Nothing recorded at all: no strip and no chips — a word of what will be here, and the way to Live. */
+private val HistoryState.nothingAtAll: Boolean get() = !loading && totalCount == 0
+
+/** «Выбрать» only while the chip shows cards (spec 3.36.5); gone under the bar while picking. */
+private val HistoryState.canSelect: Boolean get() = !loading && cards.isNotEmpty() && !selection.active
+
+/** The days and their cards; nothing under the chip — its own words and «Показать все записи». */
+private fun LazyListScope.records(state: HistoryState, onIntent: (HistoryIntent) -> Unit, zone: TimeZone, cardActions: CardActions?) {
+    val selection = state.selection
+    state.groups.forEach { group ->
+        // Part of the list, not of its controls: stays as it is while picking, and is not picked itself (handoff 22d).
+        // two kinds of rows, told apart: a scrolled-off card is reused only for a card, a header for a header
+        item(key = "day-" + group.date, contentType = DAY_HEADER) {
+            DayHeader(group, Modifier.animateItem(placementSpec = tween(CARD_COLLAPSE_MS), fadeOutSpec = tween(CARD_FADE_OUT_MS)))
+        }
+        items(group.cards, key = { it.id }, contentType = { RECORD_CARD }) { card ->
+            SessionCard(
+                card = card,
+                zone = zone,
+                onClick = { onIntent(HistoryIntent.SessionClicked(card.id)) },
+                modifier = Modifier
+                    .padding(top = CardGap)
+                    .animateItem(placementSpec = tween(CARD_COLLAPSE_MS), fadeOutSpec = tween(CARD_FADE_OUT_MS)),
+                actions = cardActions,
+                selected = if (selection.active) card.id in selection.ids else null,
+                onLongClick = { onIntent(HistoryIntent.Select(SelectionIntent.CardLongPressed(card.id))) },
+            )
+        }
+    }
+    if (state.cards.isEmpty()) {
+        item(key = "emptyFilter") {
+            EmptyUnderFilter(state.filter, onShowAll = { onIntent(HistoryIntent.FilterSelected(HistoryFilter.ALL)) })
+        }
+    }
+}
+
+/**
+ * «Записи» and «Выбрать» on one line (spec 3.36.5): the title of the tab gives way with an ellipsis (fr «Enregistrements» beside
+ * «Sélectionner» on 360 with a large font) and is read whole; the button is measured first, so it is never squeezed or wrapped.
+ */
+@Composable
+private fun TitleRow(title: String, canSelect: Boolean, onSelect: () -> Unit, landscape: Boolean) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .padding(start = 4.dp, top = DayHeaderTop)
-            .height(DayHeaderHeight)
-            .semantics { heading() },
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+            .heightIn(min = if (landscape) TitleRowHeightLandscape else TitleRowHeight),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            text = Formats.recordDayHeader(group.date, withYear = group.cards.first().otherYear),
-            color = colors.onSurfaceVariant,
-            maxLines = 1,
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES),
-        )
-        if (group.today) {
-            Text(
-                text = stringResource(Res.string.history_day_today),
-                modifier = Modifier
-                    .border(1.dp, colors.primary, RoundedCornerShape(TodayChipCorner))
-                    .padding(horizontal = 6.dp, vertical = 1.dp),
-                color = colors.primary,
-                maxLines = 1,
-                style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, fontWeight = FontWeight.Bold),
+        TabTitle(title, Modifier.weight(1f), compact = landscape)
+        if (canSelect) {
+            AppButton(
+                text = stringResource(Res.string.selection_select),
+                onClick = onSelect,
+                modifier = Modifier.offset(x = TextButtonEdge),
+                style = AppButtonStyle.Text,
+                icon = AppIcons.Select,
             )
         }
     }
 }
 
-private val DayHeaderTop = 8.dp
-private val DayHeaderHeight = 22.dp
-private val TodayChipCorner = 6.dp
-
 /**
- * The line above the list (spec 3.18, handoff 19a2): «23 записи» — all of them, whatever the
- * filter — and «Выбрать». While picking, the count stays and the action steps aside.
+ * «За две недели» and the total «12 записей» over fourteen bars (spec 3.36.5, 5.29 R5): the fourteen days whatever the chip, the
+ * total whatever the chip too. TalkBack hears it once — the old words of the chart with the total, then each day with recordings.
  */
 @Composable
-private fun CountRow(total: Int, selecting: Boolean, onSelect: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = SectionSpacing - CardSpacing)
-            .height(CountRowHeight),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        val countRes = Formats.plural(total, Res.string.history_count_one, Res.string.history_count_few, Res.string.history_count_many)
-        Text(
-            text = stringResource(countRes, total),
-            modifier = Modifier.weight(1f),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, fontFeatureSettings = TABULAR_FIGURES),
-        )
-        // sticks out into the margin by its own padding, so the word lines up with the cards
-        if (!selecting) SelectAction(onSelect, Modifier.offset(x = 10.dp))
-    }
-}
-
-/** «Записи за две недели» (spec 3.21, handoff 22c): how many, by day; the filter below does not touch it. */
-@Composable
-private fun ChartCard(state: HistoryState, modifier: Modifier = Modifier) {
+private fun StripCard(state: HistoryState, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
-    val total = state.days.sumOf { it.count }
+    val total = state.stripTotal
+    val said = stripDescription(state.days, total)
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .background(colors.surfaceContainer, RoundedCornerShape(ChartCorner))
-            .padding(start = 16.dp, top = 16.dp, end = 16.dp, bottom = 14.dp),
+            .clip(AppShapes.M)
+            .background(colors.surfaceContainer)
+            .clearAndSetSemantics { contentDescription = said }
+            .padding(horizontal = StripPaddingSide, vertical = StripPaddingVertical),
     ) {
-        Row {
+        Row(horizontalArrangement = Arrangement.spacedBy(StripTitleGap)) {
             Text(
-                text = stringResource(Res.string.history_chart_title),
+                text = stringResource(Res.string.history_strip_title),
                 modifier = Modifier
                     .weight(1f)
                     .alignByBaseline(),
@@ -306,64 +378,118 @@ private fun ChartCard(state: HistoryState, modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp),
             )
             Text(
-                text = stringResource(Formats.plural(total, Res.string.history_count_one, Res.string.history_count_few, Res.string.history_count_many), total),
+                text = stringResource(recordsCountOf(total), total),
                 modifier = Modifier.alignByBaseline(),
                 color = colors.onSurface,
-                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
+                maxLines = 1,
+                style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES),
             )
         }
-        DailyChart(days = state.days, top = state.chartTop, modifier = Modifier.padding(top = 8.dp))
+        DailyChart(days = state.days, top = state.chartTop, modifier = Modifier.padding(top = StripBarsTop))
     }
 }
 
+private val StripTitleGap = 12.dp
+private const val TABULAR_FIGURES = "tnum"
+
+/**
+ * «Все · Дубли · Видео · С Live» (spec 3.36.5): filter chips of R1 without icons; all four are always seen — what does not fit the
+ * line wraps onto the next, 8 under it, instead of sliding away sideways (360, de, fr, a large font). One group for TalkBack.
+ */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
-private fun Filters(selected: HistoryFilter, onSelect: (HistoryFilter) -> Unit, modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
-    Row(modifier = modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+private fun KindChips(selected: HistoryFilter, onSelect: (HistoryFilter) -> Unit, modifier: Modifier = Modifier) {
+    FlowRow(modifier = modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(ChipGap)) {
         HistoryFilter.entries.forEach { filter ->
-            val isSelected = filter == selected
-            val shape = RoundedCornerShape(ChipCorner)
-            Box(
-                modifier = Modifier
-                    .height(ChipHeight)
-                    .clip(shape)
-                    .background(if (isSelected) colors.primaryContainer else Color.Transparent)
-                    .border(1.dp, if (isSelected) colors.primaryContainer else colors.outlineVariant, shape)
-                    .selectable(selected = isSelected, role = Role.RadioButton, onClick = { onSelect(filter) })
-                    .padding(horizontal = 14.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(
-                        when (filter) {
-                            HistoryFilter.ALL -> Res.string.history_filter_all
-                            HistoryFilter.THIS_WEEK -> Res.string.history_filter_this_week
-                            HistoryFilter.MONTH -> Res.string.history_filter_month
-                        },
-                    ),
-                    color = if (isSelected) colors.onPrimaryContainer else colors.onSurface,
-                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp),
-                )
-            }
+            AppChip(text = stringResource(chipWordOf(filter)), selected = filter == selected, onClick = { onSelect(filter) })
         }
     }
 }
 
-/** No recordings at all (handoff 22i1): no chart, the title stays. */
+private fun chipWordOf(filter: HistoryFilter): StringResource = when (filter) {
+    HistoryFilter.ALL -> Res.string.history_filter_all
+    HistoryFilter.TAKES -> Res.string.history_filter_takes
+    HistoryFilter.VIDEO -> Res.string.history_filter_video
+    HistoryFilter.LIVE -> Res.string.history_filter_live
+}
+
+/** Nothing recorded at all (spec 3.36.5): the outlined tile with a note, «Здесь появятся ваши записи» and how they come. */
 @Composable
-private fun EmptyHistory(modifier: Modifier = Modifier) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
+private fun EmptyAll(modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    Column(modifier = modifier.fillMaxWidth().padding(horizontal = EmptySide), horizontalAlignment = Alignment.CenterHorizontally) {
         RecordTile(hasAudio = false, hasVideo = false, size = RecordTileSize.EMPTY)
         Text(
-            text = stringResource(Res.string.history_empty),
-            modifier = Modifier.widthIn(max = 280.dp),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            text = stringResource(Res.string.history_empty_title),
+            modifier = Modifier.padding(top = EmptyTitleTop),
+            color = colors.onSurface,
             textAlign = TextAlign.Center,
-            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp),
+            style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.ExtraBold),
+        )
+        Text(
+            text = stringResource(Res.string.history_empty_text),
+            modifier = Modifier.padding(top = EmptyTextTop),
+            color = colors.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyLarge.copy(fontSize = 15.sp, lineHeight = 21.sp),
         )
     }
+}
+
+/** «Открыть Live» — the tab Live: the main button of the bottom zone upright, of the right column lying. */
+@Composable
+private fun OpenLiveButton(onIntent: (HistoryIntent) -> Unit, compact: Boolean, modifier: Modifier = Modifier) {
+    AppButton(
+        text = stringResource(Res.string.history_open_live),
+        onClick = { onIntent(HistoryIntent.OpenLiveClicked) },
+        modifier = modifier.fillMaxWidth(),
+        icon = AppIcons.TabLive.normal,
+        compact = compact,
+    )
+}
+
+/**
+ * Nothing under a chip (spec 3.36.5): the strip and the chips stay, «Выбрать» is gone; the outlined tile with the sign of the kind —
+ * a video under «Видео», a note under the others — what is missing, where it comes from, and «Показать все записи» (the chip «Все»).
+ */
+@Composable
+private fun EmptyUnderFilter(filter: HistoryFilter, onShowAll: () -> Unit) {
+    val (titleWords, textWords) = emptyWordsOf(filter) ?: return
+    val colors = MaterialTheme.colorScheme
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(start = EmptySide, end = EmptySide, top = EmptyUnderFilterTop),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        RecordTile(hasAudio = false, hasVideo = filter == HistoryFilter.VIDEO, size = RecordTileSize.EMPTY)
+        Text(
+            text = stringResource(titleWords),
+            modifier = Modifier.padding(top = EmptyTitleTop),
+            color = colors.onSurface,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.titleMedium.copy(fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.ExtraBold),
+        )
+        Text(
+            text = stringResource(textWords),
+            modifier = Modifier.padding(top = EmptyTextTop),
+            color = colors.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+            style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp),
+        )
+        AppButton(
+            text = stringResource(Res.string.history_show_all),
+            onClick = onShowAll,
+            modifier = Modifier.padding(top = EmptyTextTop),
+            style = AppButtonStyle.Text,
+        )
+    }
+}
+
+/** The title and the words of an empty chip; «Все» is never empty while there are recordings. */
+private fun emptyWordsOf(filter: HistoryFilter): Pair<StringResource, StringResource>? = when (filter) {
+    HistoryFilter.ALL -> null
+    HistoryFilter.TAKES -> Res.string.takes_empty_title to Res.string.history_empty_takes_text
+    HistoryFilter.VIDEO -> Res.string.history_empty_video_title to Res.string.history_empty_video_text
+    HistoryFilter.LIVE -> Res.string.history_empty_live_title to Res.string.history_empty_live_text
 }

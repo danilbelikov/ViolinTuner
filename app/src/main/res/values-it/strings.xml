@@ -148,11 +148,12 @@
     <string name="history_count_one">%1$d registrazione</string>
     <string name="history_count_few">%1$d registrazioni</string>
     <string name="history_count_many">%1$d registrazioni</string>
-    <string name="history_chart_title">Registrazioni in due settimane</string>
+    <string name="history_strip_title">Ultime due settimane</string>
     <string name="history_chart_description">Registrazioni per giorno nelle ultime due settimane</string>
     <string name="history_filter_all">Tutte</string>
-    <string name="history_filter_this_week">Questa settimana</string>
-    <string name="history_filter_month">Mese</string>
+    <string name="history_filter_takes">Take</string>
+    <string name="history_filter_video">Video</string>
+    <string name="history_filter_live">Da Live</string>
     <string name="history_day_today">oggi</string>
     <string name="record_meta">%1$s · %2$s</string>
     <string name="history_chart_bar">%1$s, %2$s</string>
@@ -364,11 +365,17 @@
     <string name="selection_delete_text">Audio e analisi saranno eliminati. Non si può annullare.</string>
     <string name="record_tile_take">take</string>
     <string name="record_tile_record">registrazione</string>
-    <string name="record_tile_sound">audio</string>
     <string name="record_tile_only_video">video</string>
     <string name="record_tile_no_sound">senza audio</string>
-    <string name="history_empty_filter">Nessuna registrazione in questo periodo</string>
-    <string name="history_empty">Qui compariranno le tue registrazioni. Premi il pulsante di registrazione nella schermata Live.</string>
+    <string name="history_empty_title">Qui compariranno le tue registrazioni</string>
+    <string name="history_empty_text">Registra con il pulsante di Live o un take nella schermata di un brano\u00A0— poi arriva l\'analisi: cosa tiene e cosa sfugge.</string>
+    <string name="history_open_live">Apri Live</string>
+    <string name="history_empty_takes_text">Un take si registra nella schermata di un brano, con il pulsante in basso.</string>
+    <string name="history_empty_video_title">Ancora nessun video</string>
+    <string name="history_empty_video_text">Un take video si gira nella schermata di un brano, con il pulsante accanto a quello del take.</string>
+    <string name="history_empty_live_title">Ancora nessuna registrazione da Live</string>
+    <string name="history_empty_live_text">Premi il pulsante di registrazione in Live: qui comparirà la registrazione con l\'analisi.</string>
+    <string name="history_show_all">Mostra tutte le registrazioni</string>
 
     <string name="practice_start">Inizia lo studio</string>
     <string name="practice_stop">Termina lo studio</string>
@@ -1011,6 +1018,7 @@
     <string name="card_menu">Altro</string>
     <string name="card_menu_share">Condividi</string>
     <string name="card_menu_sound">Suono…</string>
+    <string name="card_menu_delete">Elimina…</string>
     <string name="best_set">Segna come migliore</string>
     <string name="best_clear">Togli il segno «migliore»</string>
     <string name="best_marked">Segnato come migliore</string>
@@ -1161,7 +1169,7 @@
     <string name="backing_take_unprepared">Impossibile preparare la base di questo take — si sente solo il violino.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
-    <string name="backing_take_meta">con la base · %1$s</string>
+    <string name="backing_take_mark">con la base</string>
 
     <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
     <string name="video_shoot_backing">Riprendi con la base</string>

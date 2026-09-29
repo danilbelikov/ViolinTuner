@@ -148,11 +148,12 @@
     <string name="history_count_one">%1$d grabación</string>
     <string name="history_count_few">%1$d grabaciones</string>
     <string name="history_count_many">%1$d grabaciones</string>
-    <string name="history_chart_title">Grabaciones en dos semanas</string>
+    <string name="history_strip_title">Últimas dos semanas</string>
     <string name="history_chart_description">Grabaciones por día en dos semanas</string>
     <string name="history_filter_all">Todas</string>
-    <string name="history_filter_this_week">Esta semana</string>
-    <string name="history_filter_month">Mes</string>
+    <string name="history_filter_takes">Tomas</string>
+    <string name="history_filter_video">Vídeo</string>
+    <string name="history_filter_live">De Live</string>
     <string name="history_day_today">hoy</string>
     <string name="record_meta">%1$s · %2$s</string>
     <string name="history_chart_bar">%1$s, %2$s</string>
@@ -364,11 +365,17 @@
     <string name="selection_delete_text">El sonido y el análisis se eliminarán. No se puede deshacer.</string>
     <string name="record_tile_take">toma</string>
     <string name="record_tile_record">grabación</string>
-    <string name="record_tile_sound">sonido</string>
     <string name="record_tile_only_video">vídeo</string>
     <string name="record_tile_no_sound">sin sonido</string>
-    <string name="history_empty_filter">No hay grabaciones en este periodo</string>
-    <string name="history_empty">Aquí aparecerán tus grabaciones. Pulsa el botón de grabar en la pantalla Live.</string>
+    <string name="history_empty_title">Aquí aparecerán tus grabaciones</string>
+    <string name="history_empty_text">Graba tu interpretación con el botón de Live o una toma en la pantalla de una obra\u00A0— después llega el análisis: qué se mantiene y qué se desvía.</string>
+    <string name="history_open_live">Abrir Live</string>
+    <string name="history_empty_takes_text">Una toma se graba en la pantalla de una obra, con el botón de abajo.</string>
+    <string name="history_empty_video_title">Aún no hay vídeos</string>
+    <string name="history_empty_video_text">Una toma de vídeo se graba en la pantalla de una obra, con el botón junto al de la toma.</string>
+    <string name="history_empty_live_title">Aún no hay grabaciones de Live</string>
+    <string name="history_empty_live_text">Pulsa el botón de grabar en Live: aquí aparecerá la grabación con su análisis.</string>
+    <string name="history_show_all">Mostrar todas las grabaciones</string>
 
     <string name="practice_start">Empezar la práctica</string>
     <string name="practice_stop">Terminar la práctica</string>
@@ -1011,6 +1018,7 @@
     <string name="card_menu">Más</string>
     <string name="card_menu_share">Compartir</string>
     <string name="card_menu_sound">Sonido…</string>
+    <string name="card_menu_delete">Eliminar…</string>
     <string name="best_set">Marcar como la mejor</string>
     <string name="best_clear">Quitar la marca «mejor»</string>
     <string name="best_marked">Marcada como la mejor</string>
@@ -1161,7 +1169,7 @@
     <string name="backing_take_unprepared">No se pudo preparar el acompañamiento de esta toma — solo se oye el violín.</string>
 
     <!-- A take made under the backing, on its card (spec 3.32). -->
-    <string name="backing_take_meta">con acompañamiento · %1$s</string>
+    <string name="backing_take_mark">con acompañamiento</string>
 
     <!-- The app's own camera: «Снять под минусовку» (spec 3.32). -->
     <string name="video_shoot_backing">Grabar con acompañamiento</string>
