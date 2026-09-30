@@ -25,6 +25,7 @@ A practice companion for violinists. **Live** shows the note being played and wh
 |---|---|---|---|---|---|---|---|---|---|---|
 | Занятия / занятие | the tab and one practice session (timed by the user) | Practice / practice | Üben / Übezeit | Pratique / séance | Práctica / práctica | Studio / sessione | Prática / prática | 연습 | 练习 | 練習 |
 | Записи / запись | the tab; a recording with intonation analysis | Recordings / recording | Aufnahmen / Aufnahme | Enregistrements / enregistrement | Grabaciones / grabación | Registrazioni / registrazione | Gravações / gravação | 녹음 | 录音 | 録音 |
+| Записи (короткая подпись вкладки) | `nav_history_short`: the label of the tab where the whole word does not fit its quarter of the bar even at 10 sp (a phone of 320 dp, a large system font); TalkBack still reads the whole word. Only French needs one — every other language repeats its tab label | Recordings | Aufnahmen | Enreg. | Grabaciones | Registrazioni | Gravações | 녹음 | 录音 | 録音 |
 | Настройки | settings tab | Settings | Einstellungen | Réglages | Ajustes | Impostazioni | Ajustes | 설정 | 设置 | 設定 |
 | обезличенная статистика | what the app sends about itself, tied to no person (spec 3.34) | anonymous statistics | anonyme Statistik | statistiques anonymes | estadísticas anónimas | statistiche anonime | estatísticas anônimas | 익명 통계 | 匿名统计 | 匿名の統計 |
 | сбой | a crash or a failure of the app, not a mistake of the player | failure | Fehler | erreur | fallo | errore | falha | 오류 | 故障 | 不具合 |
