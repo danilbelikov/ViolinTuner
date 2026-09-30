@@ -22,7 +22,7 @@
     <string name="live_silence">Jouez…</string>
     <string name="live_too_noisy">Trop de bruit</string>
     <string name="live_mic_unavailable">Micro indisponible</string>
-    <string name="mic_permission_title">L\'accès au micro est nécessaire</string>
+    <string name="mic_permission_title">Laissez-moi entendre le violon</string>
     <string name="mic_permission_text">Sans micro, l\'application n\'entend pas le violon. Le son est traité sur le téléphone et n\'est envoyé nulle part.</string>
     <string name="mic_permission_grant">Autoriser l\'accès</string>
     <string name="record_button">Enregistrement</string>
@@ -30,8 +30,9 @@
     <string name="record_stop">Arrêter l\'enregistrement</string>
     <string name="record_no_notes">Aucune note trouvée dans l\'enregistrement</string>
     <string name="recording_elapsed_description">Enregistrement en cours, %1$s</string>
-    <string name="recording_strip_label">enreg. ·</string>
+    <string name="recording_strip_label">enreg.</string>
     <string name="practice_chip_label">séance</string>
+    <string name="practice_tag_start">Lancer</string>
 
     <string name="onboarding_mic_title">Laissez-moi entendre le violon</string>
     <string name="onboarding_mic_text">Pour entendre les notes, il faut le micro. Le son est analysé directement sur le téléphone et n\'est enregistré que si vous lancez vous-même l\'enregistrement.</string>
@@ -1077,11 +1078,12 @@
         <item>Opéra</item>
     </string-array>
     <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
-    <string name="block_entry">Répertoire</string>
+    <string name="block_entry">Ce que je joue</string>
     <string name="block_entry_description">Choisir quoi jouer dans le répertoire</string>
-    <string name="block_left_one">encore %1$d min</string>
-    <string name="block_left_few">encore %1$d min</string>
-    <string name="block_left_many">encore %1$d min</string>
+    <string name="block_entry_hint">choisir</string>
+    <string name="block_left_one">encore %1$d\u00A0min</string>
+    <string name="block_left_few">encore %1$d\u00A0min</string>
+    <string name="block_left_many">encore %1$d\u00A0min</string>
     <string name="block_done">terminé</string>
     <string name="block_running_description">%1$s, encore %2$s</string>
     <string name="block_done_description">%1$s — terminé</string>

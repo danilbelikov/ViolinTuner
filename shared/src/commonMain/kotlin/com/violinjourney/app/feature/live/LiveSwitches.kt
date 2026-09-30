@@ -11,4 +11,12 @@ object LiveSwitches {
      * the ring is the empty calm outline of 3.4 and 3.14.
      */
     const val STRING_SILHOUETTE = false
+
+    /**
+     * The tab bar dims with the controls of Live while the light is out (question 12): Live lends its light to the bar's
+     * [com.violinjourney.app.navigation.TabBarLight] while it is resumed — the items down to 0.38, not the ground of the bar, touches
+     * pass — and takes it back as it leaves. The bar is there only upright: lying down the root shows none on Live. Off: the bar in
+     * full light, as before R6.
+     */
+    const val DIM_TAB_BAR = false
 }

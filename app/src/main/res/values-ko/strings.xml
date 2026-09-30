@@ -22,7 +22,7 @@
     <string name="live_silence">연주하세요…</string>
     <string name="live_too_noisy">주변이 너무 시끄러워요</string>
     <string name="live_mic_unavailable">마이크를 사용할 수 없어요</string>
-    <string name="mic_permission_title">마이크 접근 권한이 필요해요</string>
+    <string name="mic_permission_title">바이올린 소리를 들려주세요</string>
     <string name="mic_permission_text">마이크가 없으면 바이올린 소리를 들을 수 없어요. 소리는 휴대폰에서만 처리되며 어디로도 전송되지 않습니다.</string>
     <string name="mic_permission_grant">접근 허용</string>
     <string name="record_button">녹음</string>
@@ -30,8 +30,9 @@
     <string name="record_stop">녹음 중지</string>
     <string name="record_no_notes">녹음에서 음을 찾지 못했어요</string>
     <string name="recording_elapsed_description">녹음 중, %1$s</string>
-    <string name="recording_strip_label">녹음 ·</string>
+    <string name="recording_strip_label">녹음</string>
     <string name="practice_chip_label">연습</string>
+    <string name="practice_tag_start">시작</string>
 
     <string name="onboarding_mic_title">바이올린 소리를 들려주세요</string>
     <string name="onboarding_mic_text">음을 들으려면 마이크가 필요해요. 소리는 휴대폰 안에서 바로 분석되고, 직접 녹음을 누르기 전에는 녹음되지 않아요.</string>
@@ -1077,8 +1078,9 @@
         <item>오페라 하우스</item>
     </string-array>
     <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
-    <string name="block_entry">레퍼토리</string>
+    <string name="block_entry">연주할 곡</string>
     <string name="block_entry_description">레퍼토리에서 연주할 곡 고르기</string>
+    <string name="block_entry_hint">고르기</string>
     <string name="block_left_one">%1$d분 남음</string>
     <string name="block_left_few">%1$d분 남음</string>
     <string name="block_left_many">%1$d분 남음</string>

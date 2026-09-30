@@ -51,7 +51,7 @@ object LiveMotion {
     const val LOCK_POP_PEAK_MS = 100
     const val LOCK_POP_OVERSHOOT = 1.1f
 
-    /** Record button: circle to square, accent to red. */
+    /** The record key: the velvet dot to the white stop, bone to the red of recording (spec 3.36.6); the strip of a take unfolds as long. */
     const val RECORD_MORPH_MS = 200
 
     /** The key goes down by its travel and comes back. */
@@ -72,11 +72,11 @@ object LiveMotion {
     const val MARKER_DAMPING = 0.8f
     const val MARKER_STIFFNESS = 600f
 
-    /** The practice tag: the paper pours in from the notch when a practice starts (handoff nav_bar 35). */
+    /** The practice tag: its glass turns into paper when a practice starts (spec 3.36.6: a cross-fade, no notch to pour from). */
     const val PRACTICE_TAG_FILL_MS = 300
 
-    // The bookmark of blocks (spec 5.21, handoff 30 `anims`): the outline turns into paper and back; at the goal the
-    // brass line runs to the edge, then the rim closes and «готово» comes in. The minutes left change without motion.
+    // «Что играю» (spec 5.21, 3.36.6): the glass turns into paper and back; at the goal the brass line runs to its end, then the rim
+    // closes round the paper, the check takes the place of the icon and «готово» comes in. The minutes left change without motion.
     const val BOOKMARK_SWAP_MS = 300
     const val BOOKMARK_FILL_MS = 240
     const val BOOKMARK_DONE_MS = 400

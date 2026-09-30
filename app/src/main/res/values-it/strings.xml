@@ -22,7 +22,7 @@
     <string name="live_silence">Suona…</string>
     <string name="live_too_noisy">Troppo rumore</string>
     <string name="live_mic_unavailable">Microfono non disponibile</string>
-    <string name="mic_permission_title">Serve l\'accesso al microfono</string>
+    <string name="mic_permission_title">Fammi sentire il violino</string>
     <string name="mic_permission_text">Senza microfono l\'app non sente il violino. Il suono viene elaborato sul telefono e non viene inviato da nessuna parte.</string>
     <string name="mic_permission_grant">Consenti l\'accesso</string>
     <string name="record_button">Registra</string>
@@ -30,8 +30,9 @@
     <string name="record_stop">Ferma la registrazione</string>
     <string name="record_no_notes">Nella registrazione non ci sono note</string>
     <string name="recording_elapsed_description">Registrazione in corso, %1$s</string>
-    <string name="recording_strip_label">rec ·</string>
+    <string name="recording_strip_label">rec</string>
     <string name="practice_chip_label">studio</string>
+    <string name="practice_tag_start">Inizia</string>
 
     <string name="onboarding_mic_title">Fammi sentire il violino</string>
     <string name="onboarding_mic_text">Per sentire le note serve il microfono. Il suono viene analizzato direttamente sul telefono e non si registra finché non si preme registra.</string>
@@ -1077,11 +1078,12 @@
         <item>Teatro dell\'Opera</item>
     </string-array>
     <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
-    <string name="block_entry">Repertorio</string>
+    <string name="block_entry">Cosa suono</string>
     <string name="block_entry_description">Scegli cosa suonare dal repertorio</string>
-    <string name="block_left_one">ancora %1$d min</string>
-    <string name="block_left_few">ancora %1$d min</string>
-    <string name="block_left_many">ancora %1$d min</string>
+    <string name="block_entry_hint">scegli</string>
+    <string name="block_left_one">ancora %1$d\u00A0min</string>
+    <string name="block_left_few">ancora %1$d\u00A0min</string>
+    <string name="block_left_many">ancora %1$d\u00A0min</string>
     <string name="block_done">fatto</string>
     <string name="block_running_description">%1$s, ancora %2$s</string>
     <string name="block_done_description">%1$s — fatto</string>

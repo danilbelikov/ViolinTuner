@@ -17,14 +17,12 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.semantics.getOrNull
-import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.Density
@@ -41,16 +39,20 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Note
 import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.domain.Zone
+import com.violinjourney.app.core.ui.format.Formats
 import com.violinjourney.app.core.ui.theme.LiveTheme
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.live.LiveLayoutMath.PortraitRows
 import com.violinjourney.app.feature.live.components.LiveDimens
-import com.violinjourney.app.feature.live.components.RecordButton
+import com.violinjourney.app.feature.live.components.LiveRecordKey
+import com.violinjourney.app.feature.live.components.RecordingStrip
 import com.violinjourney.app.feature.live.components.SettingsGear
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.mode_play
 import com.violinjourney.app.shared.resources.mode_tuning
 import com.violinjourney.app.shared.resources.record_start
+import com.violinjourney.app.shared.resources.record_stop
+import com.violinjourney.app.shared.resources.recording_elapsed_description
 import com.violinjourney.app.shared.resources.status_flat
 import com.violinjourney.app.shared.resources.tuning_hint_auto
 import com.violinjourney.app.shared.resources.tuning_hint_locked
@@ -139,6 +141,8 @@ class LivePortraitColumnTest {
             words[PLAY] = stringResource(Res.string.mode_play)
             words[TUNING] = stringResource(Res.string.mode_tuning)
             words[RECORD] = stringResource(Res.string.record_start)
+            words[STOP] = stringResource(Res.string.record_stop)
+            words[TAKE] = stringResource(Res.string.recording_elapsed_description, Formats.duration(TAKE_MS))
             words[FLAT] = stringResource(Res.string.status_flat)
             words[TUNE_AUTO] = stringResource(Res.string.tuning_hint_auto)
             val d = ViolinString.D4
@@ -155,8 +159,9 @@ class LivePortraitColumnTest {
                         state = state,
                         onIntent = {},
                         slots = LiveSlots(
-                            recordKey = { recording, enabled, modifier -> RecordButton(recording, enabled, onClick = {}, modifier = modifier) },
+                            recordKey = { recording, enabled, alpha -> LiveRecordKey(recording, enabled, onClick = {}, alpha = alpha) },
                             gear = { enabled, modifier -> SettingsGear(onClick = {}, modifier = modifier, enabled = enabled) },
+                            recordingStrip = { recording, ribbon, modifier -> RecordingStrip(recording, ribbon, modifier) },
                         ),
                         gauge = { gauge },
                     )
@@ -173,8 +178,8 @@ class LivePortraitColumnTest {
     /** The window Live is laid out in, where the root has it: every position is measured from it. */
     private fun window(): DpRect = compose.onNodeWithTag(WINDOW).bounds()
 
-    /** The record key — the node whose click says «Начать запись». */
-    private fun recordKey() = compose.onNode(SemanticsMatcher("the record key") { it.config.getOrNull(SemanticsActions.OnClick)?.label == word(RECORD) })
+    /** The record key — the button TalkBack names «Начать запись». */
+    private fun recordKey() = compose.onNodeWithContentDescription(word(RECORD))
 
     /** The diameter of the ring in dp, by the size of the octave of its note: NoteLabel scales the note of the ring of 300 with it. */
     private fun ring(): Float {
@@ -183,10 +188,10 @@ class LivePortraitColumnTest {
     }
 
     /** The ring the model gives Live of [WIDTH] × [HEIGHT] in the mode, the scale under the word shown in «Настройка». */
-    private fun modelRing(tuning: Boolean): Float = LiveLayoutMath.ringDiameter(
-        designDp = LiveLayoutMath.designRing(landscape = false, tuning = tuning, noMic = false),
+    private fun modelRing(tuning: Boolean, recording: Boolean = false): Float = LiveLayoutMath.ringDiameter(
+        designDp = LiveLayoutMath.designRing(landscape = false, tuning = tuning),
         availableWidthDp = (WIDTH - LiveDimens.RingMargin * 2).value,
-        availableHeightDp = LiveLayoutMath.ringBlockHeight(HEIGHT.value, tuning),
+        availableHeightDp = LiveLayoutMath.ringBlockHeight(HEIGHT.value, tuning, recording),
         reservedHeightDp = LiveLayoutMath.reservedUnderRing(if (tuning) 1f else 0f),
     )
 
@@ -201,9 +206,10 @@ class LivePortraitColumnTest {
             assertEquals("$what: the strings under their air", PortraitRows.TOP + PortraitRows.AIR, (string.top - window.top).value, 0.5f)
             assertEquals("$what: a string", PortraitRows.STRING_BUTTON, string.height.value, 0.5f)
         }
-        // the key of 72 on its hard shadow of 4, the air of the row under it
+        // the key of 76, whose soft shadow takes no room, the air of the row under it
         val key = recordKey().bounds()
-        assertEquals("$what: the keys over their air", HEIGHT.value - PortraitRows.AIR - LiveDimens.RecordShadow.value, (key.bottom - window.top).value, 0.5f)
+        assertEquals("$what: the key", PortraitRows.KEY_ROW, key.height.value, 0.5f)
+        assertEquals("$what: the keys over their air", HEIGHT.value - PortraitRows.AIR, (key.bottom - window.top).value, 0.5f)
     }
 
     /** Spec 5.29 R6: the model of the ring is the screen — each row where it says, and the ring it gives: 230 and 116 here. */
@@ -262,6 +268,30 @@ class LivePortraitColumnTest {
         assertItComesWithoutAJump("into «Настройка»", play, intoTuning, modelRing(tuning = true))
         val backToPlay = ringsAfter { state = stateOf(LiveMode.PLAY, sounding()) }
         assertItComesWithoutAJump("back to «Игра»", intoTuning.last(), backToPlay, modelRing(tuning = false))
+    }
+
+    /**
+     * Spec 3.36.6: the strip of a take stands on its own glass of 50, 22 from the sides of the screen, 12 over the keys; it takes its
+     * height from the ring — on a phone of 360 × 640 the ring loses 58 (230 → 172), smoothly, in the 200 ms of the strip, and gets it
+     * back as the take stops.
+     */
+    @Test
+    fun startingATakeTheRingGivesTheStripItsHeightWithoutAJump() {
+        state = stateOf(LiveMode.PLAY, sounding())
+        show()
+        val quiet = ring()
+        val recording = ringsAfter { state = stateOf(LiveMode.PLAY, sounding()).copy(recording = RecordingState(elapsedMs = TAKE_MS)) }
+        assertItComesWithoutAJump("the take starts", quiet, recording, modelRing(tuning = false, recording = true))
+        assertEquals("the ring gives the strip 58", 172f, ring(), RING_PIXELS)
+        val window = window()
+        val strip = compose.onNodeWithContentDescription(word(TAKE)).bounds()
+        val key = compose.onNodeWithContentDescription(word(STOP)).bounds()
+        assertEquals("the strip is 50 high", 50f, strip.height.value, 0.5f)
+        assertEquals("22 from the left of the screen", 22f, (strip.left - window.left).value, 0.5f)
+        assertEquals("22 from the right of the screen", 22f, (window.right - strip.right).value, 0.5f)
+        assertEquals("12 over the key", 12f, (key.top - strip.bottom).value, 0.5f)
+        val stopped = ringsAfter { state = stateOf(LiveMode.PLAY, sounding()) }
+        assertItComesWithoutAJump("the take stops", recording.last(), stopped, modelRing(tuning = false))
     }
 
     /**
@@ -334,6 +364,11 @@ class LivePortraitColumnTest {
         const val PLAY = "play"
         const val TUNING = "tuning"
         const val RECORD = "record"
+        const val STOP = "stop"
+        const val TAKE = "take"
+
+        /** A take of 1:24 under way. */
+        const val TAKE_MS = 84_000L
         const val FLAT = "flat"
         const val TUNE_AUTO = "tuneAuto"
         const val TUNE_LOCKED = "tuneLocked"

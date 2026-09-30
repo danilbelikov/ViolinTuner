@@ -22,7 +22,7 @@
     <string name="live_silence">Toca…</string>
     <string name="live_too_noisy">Demasiado ruido</string>
     <string name="live_mic_unavailable">Micrófono no disponible</string>
-    <string name="mic_permission_title">Hace falta acceso al micrófono</string>
+    <string name="mic_permission_title">Déjame oír tu violín</string>
     <string name="mic_permission_text">Sin micrófono la aplicación no oye el violín. El sonido se procesa en el teléfono y no se envía a ninguna parte.</string>
     <string name="mic_permission_grant">Permitir acceso</string>
     <string name="record_button">Grabación</string>
@@ -30,8 +30,9 @@
     <string name="record_stop">Detener la grabación</string>
     <string name="record_no_notes">No se encontraron notas en la grabación</string>
     <string name="recording_elapsed_description">Grabando, %1$s</string>
-    <string name="recording_strip_label">grabando ·</string>
+    <string name="recording_strip_label">grabando</string>
     <string name="practice_chip_label">práctica</string>
+    <string name="practice_tag_start">Iniciar</string>
 
     <string name="onboarding_mic_title">Déjame oír tu violín</string>
     <string name="onboarding_mic_text">Para oír las notas hace falta el micrófono. El sonido se analiza en el propio teléfono y no se graba hasta pulsar grabar.</string>
@@ -1077,11 +1078,12 @@
         <item>Ópera</item>
     </string-array>
     <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
-    <string name="block_entry">Repertorio</string>
+    <string name="block_entry">Qué toco</string>
     <string name="block_entry_description">Elegir qué tocar del repertorio</string>
-    <string name="block_left_one">queda %1$d min</string>
-    <string name="block_left_few">quedan %1$d min</string>
-    <string name="block_left_many">quedan %1$d min</string>
+    <string name="block_entry_hint">elegir</string>
+    <string name="block_left_one">queda %1$d\u00A0min</string>
+    <string name="block_left_few">quedan %1$d\u00A0min</string>
+    <string name="block_left_many">quedan %1$d\u00A0min</string>
     <string name="block_done">listo</string>
     <string name="block_running_description">%1$s, quedan %2$s</string>
     <string name="block_done_description">%1$s — listo</string>

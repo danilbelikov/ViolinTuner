@@ -91,7 +91,7 @@ internal fun IosApp(graph: IosGraph, texts: IosTexts, openRoute: String? = null)
 
     var message by remember { mutableStateOf<Toast?>(null) }
     val messages = remember { Messages { text -> message = Toast(text) } }
-    // how bright the tab bar is: a screen may lend its light (stage R6, Live); nobody does yet (spec 3.36.1)
+    // how bright the tab bar is: Live lends it its light behind LiveSwitches.DIM_TAB_BAR, off by default (spec 3.36.6)
     val tabBarLight = remember { TabBarLight() }
     // where the bottom zone of the screen is: the message stands above it (spec 5.29)
     val dockPlace = remember { DockPlace() }

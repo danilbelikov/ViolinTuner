@@ -1,8 +1,15 @@
 package com.violinjourney.app.feature.live
 
+import androidx.compose.foundation.layout.Column
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.violinjourney.app.core.domain.Direction
 import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.Note
@@ -16,6 +23,10 @@ import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.journey.LocalHomeLook
 import com.violinjourney.app.feature.live.block.BlockState
 import com.violinjourney.app.feature.live.block.Bookmark
+import com.violinjourney.app.navigation.AppBottomBar
+import com.violinjourney.app.navigation.LocalTabBarLight
+import com.violinjourney.app.navigation.TabBarLight
+import com.violinjourney.app.navigation.TopLevelDestination
 import kotlin.math.roundToInt
 
 // One preview per row of the state table in spec 3.4, mirroring handoff frames 8a–8f
@@ -143,11 +154,11 @@ private fun SilencePreview() = LivePreview(LiveSignal.Silence)
 @Composable
 private fun TooNoisyPreview() = LivePreview(LiveSignal.TooNoisy)
 
-@Preview(name = "MicUnavailable", widthDp = 412, heightDp = 788)
+@Preview(name = "MicUnavailable · the key 0.4 and no answer", widthDp = 412, heightDp = 788)
 @Composable
 private fun MicUnavailablePreview() = LivePreview(LiveSignal.MicUnavailable)
 
-@Preview(name = "NoMicPermission", widthDp = 412, heightDp = 788)
+@Preview(name = "NoMicPermission · no ring: the card below the middle, «Что играю» and the tag whole", widthDp = 412, heightDp = 788)
 @Composable
 private fun NoMicPermissionPreview() = LivePreview(LiveSignal.NoMicPermission)
 
@@ -184,7 +195,7 @@ private fun LandscapeInTunePreview() = LivePreview(
 @Composable
 private fun LandscapeSilencePreview() = LivePreview(LiveSignal.Silence)
 
-@Preview(name = "Landscape · NoMicPermission", widthDp = 892, heightDp = 412)
+@Preview(name = "Landscape · NoMicPermission: the card in the panel of the ring, not wider than 340", widthDp = 892, heightDp = 412)
 @Composable
 private fun LandscapeNoMicPreview() = LivePreview(LiveSignal.NoMicPermission)
 
@@ -228,7 +239,7 @@ private val SampleRibbon = RecordingRibbon(
     span = 100f,
 )
 
-@Preview(name = "Recording · portrait", widthDp = 412, heightDp = 788)
+@Preview(name = "Recording · portrait: the strip on its glass of 50, the red key with its stop", widthDp = 412, heightDp = 788)
 @Composable
 private fun RecordingPreview() = LivePreview(
     heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.4),
@@ -248,11 +259,11 @@ private fun RecordingLandscapePreview() = LivePreview(
 
 private const val PRACTICE_MS = 754_000L
 
-@Preview(name = "Practice tag · none, silence", widthDp = 412, heightDp = 788)
+@Preview(name = "Practice tag · none: glass, «Начать · занятие»", widthDp = 412, heightDp = 788)
 @Composable
 private fun PracticeTagIdlePreview() = LivePreview(LiveSignal.Silence)
 
-@Preview(name = "Practice tag · running, silence", widthDp = 412, heightDp = 788)
+@Preview(name = "Practice tag · running: paper, the velvet dot, the time", widthDp = 412, heightDp = 788)
 @Composable
 private fun PracticeTagSilencePreview() = LivePreview(LiveSignal.Silence, practiceMs = PRACTICE_MS)
 
@@ -321,7 +332,7 @@ private fun TuningFarSharpPlainPreview() = LivePreview(
     showVenue = false,
 )
 
-@Preview(name = "Tuning · no permission: the strings at 0.4, the scale at 0.3 at the bottom", widthDp = 412, heightDp = 788)
+@Preview(name = "Tuning · no permission: the card over the scale (0.3), the strings at 0.4", widthDp = 412, heightDp = 788)
 @Composable
 private fun TuningNoMicPreview() = LivePreview(LiveSignal.NoMicPermission, mode = LiveMode.TUNING, lockedString = ViolinString.D4)
 
@@ -444,23 +455,23 @@ private fun RoomLandscapePreview() = LivePreview(
 
 private const val CONCERTO = "Концерт ля минор, I ч."
 
-@Preview(name = "30b1 Bookmark · no practice: «Репертуар»", widthDp = 412, heightDp = 788)
+@Preview(name = "30b1 «Что играю» · no practice: glass, «выбрать»", widthDp = 412, heightDp = 788)
 @Composable
 private fun BookmarkEntryPreview() = LivePreview(LiveSignal.Silence)
 
-@Preview(name = "30b3 Bookmark · running, 7 min left", widthDp = 412, heightDp = 788)
+@Preview(name = "30b3 «Что играю» · a block runs: paper, «ещё 7 мин», the brass line", widthDp = 412, heightDp = 788)
 @Composable
 private fun BookmarkRunningPreview() = LivePreview(LiveSignal.Silence, practiceMs = 34 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 7, progress = 0.65f))
 
-@Preview(name = "30b4 Bookmark · the last minute", widthDp = 412, heightDp = 788)
+@Preview(name = "30b4 «Что играю» · the last minute", widthDp = 412, heightDp = 788)
 @Composable
 private fun BookmarkLastMinutePreview() = LivePreview(LiveSignal.Silence, practiceMs = 40 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 1, progress = 0.95f))
 
-@Preview(name = "30b5 Bookmark · done: the rim closed, «готово»", widthDp = 412, heightDp = 788)
+@Preview(name = "30b5 «Что играю» · done: the brass rim, the check in ink, «готово»", widthDp = 412, heightDp = 788)
 @Composable
 private fun BookmarkDonePreview() = LivePreview(LiveSignal.Silence, practiceMs = 41 * 60_000L, bookmark = Bookmark.Done(CONCERTO))
 
-@Preview(name = "30c2 Bookmark · done while a note sounds (stays whole)", widthDp = 412, heightDp = 788)
+@Preview(name = "30c2 «Что играю» · done while a note sounds: whole, the rest dimmed", widthDp = 412, heightDp = 788)
 @Composable
 private fun BookmarkDoneInPlayPreview() = LivePreview(
     heard(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.4, level = 0.5f),
@@ -468,7 +479,7 @@ private fun BookmarkDoneInPlayPreview() = LivePreview(
     bookmark = Bookmark.Done(CONCERTO),
 )
 
-@Preview(name = "30c3 Bookmark · recording", widthDp = 412, heightDp = 788)
+@Preview(name = "30c3 «Что играю» · recording", widthDp = 412, heightDp = 788)
 @Composable
 private fun BookmarkRecordingPreview() = LivePreview(
     LiveSignal.Silence,
@@ -477,7 +488,7 @@ private fun BookmarkRecordingPreview() = LivePreview(
     bookmark = Bookmark.Running(CONCERTO, minutesLeft = 7, progress = 0.65f),
 )
 
-@Preview(name = "30c4 Bookmark · tuning", widthDp = 412, heightDp = 788)
+@Preview(name = "30c4 «Что играю» · tuning", widthDp = 412, heightDp = 788)
 @Composable
 private fun BookmarkTuningPreview() = LivePreview(
     LiveSignal.Silence,
@@ -486,7 +497,7 @@ private fun BookmarkTuningPreview() = LivePreview(
     bookmark = Bookmark.Running(CONCERTO, minutesLeft = 7, progress = 0.65f),
 )
 
-@Preview(name = "30c7 Bookmark · the longest name", widthDp = 412, heightDp = 788)
+@Preview(name = "30c7 «Что играю» · the longest name ends in «…»", widthDp = 412, heightDp = 788)
 @Composable
 private fun BookmarkLongNamePreview() = LivePreview(
     LiveSignal.Silence,
@@ -494,11 +505,111 @@ private fun BookmarkLongNamePreview() = LivePreview(
     bookmark = Bookmark.Running("Концерт ми минор, соч. 64, I. Allegro molto appassionato", minutesLeft = 12, progress = 0.4f),
 )
 
-@Preview(name = "30c8 Bookmark · 360 x 640", widthDp = 360, heightDp = 576)
+@Preview(name = "30c8 «Что играю» · 360 x 640: both cards 124", widthDp = 360, heightDp = 576)
 @Composable
 private fun BookmarkSmallPreview() = LivePreview(LiveSignal.Silence, practiceMs = 34 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 7, progress = 0.65f))
 
-@Preview(name = "30c9 Bookmark · landscape", widthDp = 892, heightDp = 412)
+@Preview(name = "30c9 «Что играю» · landscape: both cards 150", widthDp = 892, heightDp = 412)
 @Composable
 private fun BookmarkLandscapePreview() = LivePreview(LiveSignal.Silence, practiceMs = 34 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 7, progress = 0.65f))
 
+
+// Stage 115 (spec 3.36.6): the pause of a take, the card «нет разрешения» in every window, the cards in long languages and at a large
+// font, and the tab bar dimmed with the light behind its switch.
+
+@Preview(name = "Recording · pause: «Играйте…» dimmed, the light stays out until «стоп»", widthDp = 412, heightDp = 788)
+@Composable
+private fun RecordingPausePreview() = LivePreview(LiveSignal.Silence, recording = RecordingState(elapsedMs = 91_000), ribbon = SampleRibbon)
+
+@Preview(name = "Recording · 360 x 640: the ring gives the strip 58 (230 → 172)", widthDp = 360, heightDp = 506)
+@Composable
+private fun RecordingSmallPreview() = LivePreview(
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.4),
+    recording = SampleRecording,
+    ribbon = SampleRibbon,
+)
+
+@Preview(name = "NoMicPermission · 360 x 640: the plate of the icon gone, the whole text", widthDp = 360, heightDp = 506)
+@Composable
+private fun NoMicSmallPreview() = LivePreview(LiveSignal.NoMicPermission)
+
+@Preview(name = "NoMicPermission · 360 x 640, tuning: the card over the scale, the title at 18 on one line, a whole line of the text", widthDp = 360, heightDp = 506)
+@Composable
+private fun NoMicSmallTuningPreview() = LivePreview(LiveSignal.NoMicPermission, mode = LiveMode.TUNING)
+
+@Preview(name = "NoMicPermission · landscape 603 x 336 (640 x 360 with a cutout): the plate gone, the text scrolls in whole lines", widthDp = 603, heightDp = 336)
+@Composable
+private fun NoMicLowLandscapePreview() = LivePreview(LiveSignal.NoMicPermission, mode = LiveMode.TUNING)
+
+@Preview(name = "NoMicPermission · 360 x 640 at the font 1.5, tuning: the title and the button seen, the text heard with the title", widthDp = 360, heightDp = 506, fontScale = 1.5f, locale = "ru")
+@Composable
+private fun NoMicLargeFontPreview() = LivePreview(LiveSignal.NoMicPermission, mode = LiveMode.TUNING)
+
+@Preview(name = "Play · 360 x 640 at the font 1.5: the cards step down and wrap, no word broken", widthDp = 360, heightDp = 576, fontScale = 1.5f, locale = "ru")
+@Composable
+private fun LargeFontCardsPreview() = LivePreview(LiveSignal.Silence)
+
+@Preview(name = "de · 360 x 640 at the font 1.3: «Was ich spiele · wählen», «Starten · Üben»", widthDp = 360, heightDp = 576, fontScale = 1.3f, locale = "de")
+@Composable
+private fun GermanCardsPreview() = LivePreview(LiveSignal.Silence)
+
+@Preview(name = "de · 320 x 500 at the font 1.5, a block and a practice run", widthDp = 320, heightDp = 500, fontScale = 1.5f, locale = "de")
+@Composable
+private fun GermanRunningCardsPreview() = LivePreview(LiveSignal.Silence, practiceMs = 34 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 12, progress = 0.4f))
+
+@Preview(name = "fr · 360 x 640 at the font 1.3: «Ce que je joue · choisir», «Lancer · séance»", widthDp = 360, heightDp = 576, fontScale = 1.3f, locale = "fr")
+@Composable
+private fun FrenchCardsPreview() = LivePreview(LiveSignal.Silence)
+
+@Preview(name = "fr · 320 x 500 at the font 1.5, a block and a practice run", widthDp = 320, heightDp = 500, fontScale = 1.5f, locale = "fr")
+@Composable
+private fun FrenchRunningCardsPreview() = LivePreview(LiveSignal.Silence, practiceMs = 34 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 12, progress = 0.4f))
+
+@Preview(name = "pt · 360 x 640 at the font 1.3", widthDp = 360, heightDp = 576, fontScale = 1.3f, locale = "pt")
+@Composable
+private fun PortugueseCardsPreview() = LivePreview(LiveSignal.Silence)
+
+@Preview(name = "pt · 320 x 500 at the font 1.5, a block and a practice run", widthDp = 320, heightDp = 500, fontScale = 1.5f, locale = "pt")
+@Composable
+private fun PortugueseRunningCardsPreview() = LivePreview(LiveSignal.Silence, practiceMs = 34 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 12, progress = 0.4f))
+
+@Preview(name = "es · 360 x 640 at the font 1.3", widthDp = 360, heightDp = 576, fontScale = 1.3f, locale = "es")
+@Composable
+private fun SpanishCardsPreview() = LivePreview(LiveSignal.Silence)
+
+@Preview(name = "es · 320 x 500 at the font 1.5, a block and a practice run", widthDp = 320, heightDp = 500, fontScale = 1.5f, locale = "es")
+@Composable
+private fun SpanishRunningCardsPreview() = LivePreview(LiveSignal.Silence, practiceMs = 34 * 60_000L, bookmark = Bookmark.Running(CONCERTO, minutesLeft = 12, progress = 0.4f))
+
+/** A lifecycle at rest in RESUMED: Live lends the tab bar its light only while resumed. */
+private object Resumed : LifecycleOwner {
+    private val registry = LifecycleRegistry(this).apply { currentState = Lifecycle.State.RESUMED }
+    override val lifecycle: Lifecycle get() = registry
+}
+
+@Preview(name = "Live + tab bar, dimming ON (the switch is off in the app): the items at 0.38 with the light, the ground whole", widthDp = 412, heightDp = 850)
+@Composable
+private fun TabBarDimmedPreview() {
+    val light = remember { TabBarLight() }
+    val heardNote = heard(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.4, level = 0.5f)
+    val config = IntonationConfig()
+    val target = LiveTarget(LiveMode.PLAY, null)
+    ViolinTheme {
+        CompositionLocalProvider(
+            LocalHomeLook provides HomeState.EMPTY.copy(loaded = true),
+            LocalTabBarLight provides light,
+            LocalLifecycleOwner provides Resumed,
+        ) {
+            Column {
+                LiveScreen(
+                    state = LiveReducer.stateOf(target, config, heardNote.signal, practiceMs = PRACTICE_MS),
+                    onIntent = {},
+                    modifier = Modifier.weight(1f),
+                    gauge = { heardNote.gauge },
+                    dimTabBar = true,
+                )
+                AppBottomBar(current = TopLevelDestination.LIVE, onSelect = {}, practiceRunning = true, dimmed = light::alpha)
+            }
+        }
+    }
+}

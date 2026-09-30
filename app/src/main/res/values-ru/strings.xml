@@ -22,7 +22,7 @@
     <string name="live_silence">Играйте…</string>
     <string name="live_too_noisy">Слишком шумно</string>
     <string name="live_mic_unavailable">Микрофон недоступен</string>
-    <string name="mic_permission_title">Нужен доступ к микрофону</string>
+    <string name="mic_permission_title">Дайте мне услышать скрипку</string>
     <string name="mic_permission_text">Без микрофона тренажёр не слышит скрипку. Звук обрабатывается на телефоне и никуда не отправляется.</string>
     <string name="mic_permission_grant">Разрешить доступ</string>
     <string name="record_button">Запись</string>
@@ -30,8 +30,9 @@
     <string name="record_stop">Остановить запись</string>
     <string name="record_no_notes">В записи не нашлось нот</string>
     <string name="recording_elapsed_description">Идёт запись, %1$s</string>
-    <string name="recording_strip_label">запись ·</string>
+    <string name="recording_strip_label">запись</string>
     <string name="practice_chip_label">занятие</string>
+    <string name="practice_tag_start">Начать</string>
 
     <string name="onboarding_mic_title">Дайте мне услышать скрипку</string>
     <string name="onboarding_mic_text">Чтобы слышать ноты, нужен микрофон. Звук разбирается прямо на телефоне и не записывается, пока вы сами не нажмёте запись.</string>
@@ -1077,11 +1078,12 @@
         <item>Оперный театр</item>
     </string-array>
     <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
-    <string name="block_entry">Репертуар</string>
+    <string name="block_entry">Что играю</string>
     <string name="block_entry_description">Выбрать, что играть, из репертуара</string>
-    <string name="block_left_one">ещё %1$d мин</string>
-    <string name="block_left_few">ещё %1$d мин</string>
-    <string name="block_left_many">ещё %1$d мин</string>
+    <string name="block_entry_hint">выбрать</string>
+    <string name="block_left_one">ещё %1$d\u00A0мин</string>
+    <string name="block_left_few">ещё %1$d\u00A0мин</string>
+    <string name="block_left_many">ещё %1$d\u00A0мин</string>
     <string name="block_done">готово</string>
     <string name="block_running_description">%1$s, осталось %2$s</string>
     <string name="block_done_description">%1$s — готово</string>

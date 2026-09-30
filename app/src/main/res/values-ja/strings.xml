@@ -22,7 +22,7 @@
     <string name="live_silence">弾いてください…</string>
     <string name="live_too_noisy">周りの音が大きすぎます</string>
     <string name="live_mic_unavailable">マイクを使用できません</string>
-    <string name="mic_permission_title">マイクへのアクセスが必要です</string>
+    <string name="mic_permission_title">ヴァイオリンの音を聴かせてください</string>
     <string name="mic_permission_text">マイクがないと、ヴァイオリンの音を聴き取れません。音はこの端末内で処理され、どこにも送信されません。</string>
     <string name="mic_permission_grant">アクセスを許可</string>
     <string name="record_button">録音</string>
@@ -30,8 +30,9 @@
     <string name="record_stop">録音を停止</string>
     <string name="record_no_notes">録音に音が見つかりませんでした</string>
     <string name="recording_elapsed_description">録音中、%1$s</string>
-    <string name="recording_strip_label">録音 ·</string>
+    <string name="recording_strip_label">録音</string>
     <string name="practice_chip_label">練習</string>
+    <string name="practice_tag_start">開始</string>
 
     <string name="onboarding_mic_title">ヴァイオリンの音を聴かせてください</string>
     <string name="onboarding_mic_text">音を聴くにはマイクが必要です。音は端末内で解析され、自分で録音を押すまで録音されません。</string>
@@ -1077,8 +1078,9 @@
         <item>オペラハウス</item>
     </string-array>
     <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
-    <string name="block_entry">レパートリー</string>
+    <string name="block_entry">弾く曲</string>
     <string name="block_entry_description">レパートリーから弾くものを選ぶ</string>
+    <string name="block_entry_hint">選ぶ</string>
     <string name="block_left_one">残り%1$d分</string>
     <string name="block_left_few">残り%1$d分</string>
     <string name="block_left_many">残り%1$d分</string>

@@ -39,7 +39,7 @@ import kotlin.math.abs
 
 /** A picture under the controls: the room at dusk or the cream of a light hall — data of the picture, not colours of the app. */
 @Composable
-private fun Picture(light: Boolean, modifier: Modifier = Modifier) {
+internal fun Picture(light: Boolean, modifier: Modifier = Modifier) {
     Canvas(modifier) {
         val colors = if (light) {
             listOf(Color(red = 241, green = 232, blue = 212), Color(red = 226, green = 204, blue = 168), Color(red = 250, green = 246, blue = 236))
@@ -52,7 +52,7 @@ private fun Picture(light: Boolean, modifier: Modifier = Modifier) {
 
 /** The controls over [light] or dark picture; [plain] — the Live of `-PplainLive=true`, no picture and the card colour under them. */
 @Composable
-private fun OverPicture(light: Boolean = false, plain: Boolean = false, content: @Composable () -> Unit) = ViolinTheme {
+internal fun OverPicture(light: Boolean = false, plain: Boolean = false, content: @Composable () -> Unit) = ViolinTheme {
     CompositionLocalProvider(LocalLivePlain provides plain) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface)) {
             if (!plain) Picture(light, Modifier.fillMaxSize())

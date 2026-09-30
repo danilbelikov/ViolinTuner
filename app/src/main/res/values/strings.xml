@@ -22,7 +22,7 @@
     <string name="live_silence">Play…</string>
     <string name="live_too_noisy">Too noisy</string>
     <string name="live_mic_unavailable">Microphone unavailable</string>
-    <string name="mic_permission_title">Microphone access needed</string>
+    <string name="mic_permission_title">Let me hear your violin</string>
     <string name="mic_permission_text">Without the microphone the app cannot hear the violin. Sound is processed on the phone and is never sent anywhere.</string>
     <string name="mic_permission_grant">Allow access</string>
     <string name="record_button">Record</string>
@@ -30,8 +30,9 @@
     <string name="record_stop">Stop recording</string>
     <string name="record_no_notes">No notes found in the recording</string>
     <string name="recording_elapsed_description">Recording, %1$s</string>
-    <string name="recording_strip_label">rec ·</string>
+    <string name="recording_strip_label">rec</string>
     <string name="practice_chip_label">practice</string>
+    <string name="practice_tag_start">Start</string>
 
     <string name="onboarding_mic_title">Let me hear your violin</string>
     <string name="onboarding_mic_text">The microphone lets me hear the notes. Sound is analysed right on the phone and isn\'t recorded until you press record yourself.</string>
@@ -1077,11 +1078,12 @@
         <item>Opera House</item>
     </string-array>
     <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
-    <string name="block_entry">Repertoire</string>
+    <string name="block_entry">What I play</string>
     <string name="block_entry_description">Choose what to play from the repertoire</string>
-    <string name="block_left_one">%1$d min left</string>
-    <string name="block_left_few">%1$d min left</string>
-    <string name="block_left_many">%1$d min left</string>
+    <string name="block_entry_hint">choose</string>
+    <string name="block_left_one">%1$d\u00A0min left</string>
+    <string name="block_left_few">%1$d\u00A0min left</string>
+    <string name="block_left_many">%1$d\u00A0min left</string>
     <string name="block_done">done</string>
     <string name="block_running_description">%1$s, %2$s left</string>
     <string name="block_done_description">%1$s — done</string>

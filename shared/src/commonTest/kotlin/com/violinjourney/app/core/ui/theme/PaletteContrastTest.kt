@@ -100,6 +100,16 @@ class PaletteContrastTest {
     }
 
     @Test
+    fun `the words on the paper of Live read on the bone`() {
+        // the cards of the bottom row and the card «нет разрешения» (spec 5.29 R6): the first line and the title in ink, the second
+        // line and the text in the soft ink (≈ 5 : 1), «Разрешить доступ» in bone on the ink, the microphone in ink on its plate
+        assertAtLeast(12f, CtrlInk, CtrlBone, "the ink on the paper")
+        assertAtLeast(4.5f, CtrlInkSoft, CtrlBone, "the soft ink on the paper")
+        assertAtLeast(12f, CtrlBone, CtrlInk, "the word of the dark button")
+        assertAtLeast(3f, CtrlInk, CtrlBoneShade, "the microphone on its plate")
+    }
+
+    @Test
     fun `the rim of the record key is darker and duller than the brass of done`() {
         // the key's rim must not argue with the brass of «сделано» beside it (spec 5.29 R6)
         assertTrue(KeyRim.luminance() < CtrlBrass.luminance(), "darker")

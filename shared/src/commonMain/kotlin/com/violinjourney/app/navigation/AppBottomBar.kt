@@ -90,8 +90,8 @@ private const val ICON_SWAP_MS = 150
  * The tab bar (spec 3.36.1, 5.29): four tabs — «Занятия · Live · Репертуар · Записи». [practiceRunning] puts a mark on the
  * «Занятия» tab, seen from any tab; [compact] is the 64-dp landscape bar with the label beside the pill (handoff 10i, 10j),
  * pressed over its whole height. [dimmed] is how bright the items are, 1 — in full: read only while drawing, the background
- * of the bar stays and taps pass through. Nothing lends it a light yet — stage R6 connects the light of Live
- * ([TabBarLight]), behind a switch.
+ * of the bar stays and taps pass through. Live lends it its light while resumed ([TabBarLight], spec 3.36.6) — the bar is under it
+ * only upright — behind the switch `LiveSwitches.DIM_TAB_BAR`, off by default.
  */
 @Composable
 fun AppBottomBar(

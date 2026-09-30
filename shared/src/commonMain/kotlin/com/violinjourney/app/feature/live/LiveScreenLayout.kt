@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -68,10 +69,10 @@ import com.violinjourney.app.feature.live.components.GlowRing
 import com.violinjourney.app.feature.live.components.LiveDimens
 import com.violinjourney.app.feature.live.components.LiveMotion
 import com.violinjourney.app.feature.live.components.LocalLivePlain
-import com.violinjourney.app.feature.live.components.MicGlyph
 import com.violinjourney.app.feature.live.components.MicPermissionPrompt
 import com.violinjourney.app.feature.live.components.ModeSwitcher
 import com.violinjourney.app.feature.live.components.NoteLabel
+import com.violinjourney.app.feature.live.components.RecordKeyLight
 import com.violinjourney.app.feature.live.components.StatusLineRow
 import com.violinjourney.app.feature.live.components.StatusRow
 import com.violinjourney.app.feature.live.components.StringRow
@@ -85,29 +86,38 @@ import kotlin.math.roundToInt
 import kotlinx.coroutines.delay
 
 /**
- * What a platform draws on Live around the shared layout: the place behind it, the keys under it, the gear, the
- * strip of a recording and the sheets over it. Each gets the modifier or the light the layout has worked out, so the
- * dimming and the placing stay here, in one place for Android and iOS. Empty slots leave their room empty.
+ * What a platform draws on Live around the shared layout: the place behind it, the cards and the key under it, the gear, the
+ * strip of a recording, the light it lends the tab bar and the sheets over it. Each gets the width or the light the layout has
+ * worked out, so the dimming and the placing stay here, in one place for Android and iOS. Empty slots leave their room empty.
  */
 @Immutable
 class LiveSlots(
     /** The picture behind Live (spec 3.27); null — the plain dark field with the gradient of the zone. */
     val backdrop: (@Composable (LiveBackdrop) -> Unit)? = null,
-    /** The bookmark of blocks left of the key (spec 3.28), at most [Dp] wide; the light lets it decide how it dims. */
-    val bookmark: @Composable (width: Dp, chrome: () -> Float) -> Unit = { _, _ -> },
-    /** The practice tag right of the key (spec 3.12), at most [Dp] wide. */
-    val tag: @Composable (maxWidth: Dp, modifier: Modifier) -> Unit = { _, _ -> },
-    /** The record key (spec 3.9). */
-    val recordKey: @Composable (recording: Boolean, enabled: Boolean, modifier: Modifier) -> Unit = { _, _, _ -> },
+    /** «Что играю» left of the key (spec 3.28, 3.36.6), [Dp] wide — both cards alike; the light of the room, read while drawing. */
+    val bookmark: @Composable (width: Dp, light: () -> Float) -> Unit = { _, _ -> },
+    /** The practice tag right of the key (spec 3.12, 3.36.6), as wide as «Что играю»; it dims with the light. */
+    val tag: @Composable (width: Dp, light: () -> Float) -> Unit = { _, _ -> },
+    /** The record key (spec 3.9, 3.36.6); [alpha] — its dimming, read while drawing. */
+    val recordKey: @Composable (recording: Boolean, enabled: Boolean, alpha: () -> Float) -> Unit = { _, _, _ -> },
     /** The gear to «Настройки» (spec 3.8). */
     val gear: @Composable (enabled: Boolean, modifier: Modifier) -> Unit = { _, _ -> },
-    /** The strip above the key while a take is recorded (spec 3.9); its notes are read while drawing. */
+    /** The strip above the keys while a take is recorded (spec 3.9); its notes are read while drawing. */
     val recordingStrip: @Composable (recording: RecordingState, ribbon: () -> RecordingRibbon, modifier: Modifier) -> Unit = { _, _, _ -> },
+    /**
+     * The light of the room lent to the tab bar (spec 3.36.6, behind [LiveSwitches.DIM_TAB_BAR]): the same light the controls
+     * dim with, in any shape of Live — whether a bar is there to dim is for the root to say, which shows it (upright) or not
+     * (lying down), not for the shape of Live's own place: upright in a split screen Live may lay itself out lying down over a bar.
+     */
+    val light: @Composable (chrome: () -> Float) -> Unit = {},
     /** Over everything: the sheets of blocks. */
     val overlay: @Composable (landscape: Boolean) -> Unit = {},
 )
 
-/** What the picture behind Live follows: the light, the glow of the ring and where the ring is. */
+/**
+ * What the picture behind Live follows: the light, the glow of the ring and where the ring is — without the permission, where the card
+ * «нет разрешения» is, its width in the place of the diameter (spec 3.36.6, 5.20: the veil from its middle).
+ */
 class LiveBackdrop(
     val landscape: Boolean,
     val darkness: () -> Float,
@@ -167,6 +177,7 @@ fun LiveScreenLayout(
     val chrome = remember(darkness) { { VenueLook.chromeAlpha(darkness.value) } }
     val readGauge = remember { { currentGauge() } }
 
+    // where the ring stands, for the veil and the light of the zone — or the card «нет разрешения», which takes its place
     var rootPosition by remember { mutableStateOf(Offset.Zero) }
     var ringCenter by remember { mutableStateOf(Offset.Unspecified) }
     val ringDiameter = remember { mutableFloatStateOf(0f) }
@@ -194,6 +205,7 @@ fun LiveScreenLayout(
         }
         // the right column of landscape: tighter in a low window, in both modes alike (spec 5.29 R6)
         val column = LiveLayoutMath.landscapeColumn(maxHeight.value)
+        slots.light(chrome)
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -355,6 +367,7 @@ private fun PortraitLayout(
                 modifier = Modifier.padding(horizontal = LiveDimens.StringRowSide),
             )
         }
+        // without the permission the line is not there, but its place is kept (spec 3.14, 3.36.6)
         StatusLineRow(
             line = state.statusLine,
             tuning = state.tuning,
@@ -363,33 +376,43 @@ private fun PortraitLayout(
                 .chrome(1f, chrome),
             plate = showVenue,
         )
-        BoxWithConstraints(
-            modifier = Modifier
-                .weight(1f)
-                .fillMaxWidth(),
-            contentAlignment = Alignment.Center,
-        ) {
-            val shown = scaleShown.value
-            val reserved = if (noMic) {
-                LiveDimens.PromptReservedHeight
-            } else {
-                LiveLayoutMath.reservedUnderRing(shown).dp
-            }
-            val ringSize = ringSizeFor(state, landscape = false, maxWidth, maxHeight, reserved)
-            // the block spans the screen: the waves may go as far as its side edges
-            val waveReach = GlowMath.waveReach(ringSize.value, maxWidth.value / 2)
-            // A ring this small means a small screen: the word and the cents shrink with it.
-            val compact = ringSize < LiveDimens.CompactStatusBelowRing
-            Column(
-                verticalArrangement = Arrangement.spacedBy(
-                    if (compact) LiveDimens.IndicatorSpacingCompact else LiveDimens.IndicatorSpacing,
-                ),
-                horizontalAlignment = Alignment.CenterHorizontally,
+        if (noMic) {
+            // No ring: the card «нет разрешения» in its place, its middle at 60 % of it (spec 3.36.6); in «Настройка» the place is over
+            // the scale, which stays at the bottom, quieter, as before R6. The veil of the room follows the card.
+            PromptPlace(
+                onGrant = { onIntent(LiveIntent.GrantMicClicked) },
+                ringModifier = ringModifier,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+            )
+            ScaleSlot(
+                state = state,
+                gauge = gauge,
+                zoneColor = zoneColor,
+                visible = tuning,
+                modifier = Modifier.padding(start = LiveDimens.ScreenPadding, end = LiveDimens.ScreenPadding, top = LiveDimens.ScaleTopGap),
+            )
+        } else {
+            BoxWithConstraints(
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth(),
+                contentAlignment = Alignment.Center,
             ) {
-                Ring(state, gauge, zoneColor, glow, ringSize, waveReach, ringModifier, reduceMotion, silhouette)
-                if (noMic) {
-                    MicPermissionPrompt(onGrantClick = { onIntent(LiveIntent.GrantMicClicked) })
-                } else {
+                val shown = scaleShown.value
+                val ringSize = ringSizeFor(state, landscape = false, maxWidth, maxHeight, LiveLayoutMath.reservedUnderRing(shown).dp)
+                // the block spans the screen: the waves may go as far as its side edges
+                val waveReach = GlowMath.waveReach(ringSize.value, maxWidth.value / 2)
+                // A ring this small means a small screen: the word and the cents shrink with it.
+                val compact = ringSize < LiveDimens.CompactStatusBelowRing
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(
+                        if (compact) LiveDimens.IndicatorSpacingCompact else LiveDimens.IndicatorSpacing,
+                    ),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Ring(state, gauge, zoneColor, glow, ringSize, waveReach, ringModifier, reduceMotion, silhouette)
                     Column(modifier = Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                         StatusRow(
                             direction = sounding?.direction,
@@ -405,39 +428,68 @@ private fun PortraitLayout(
                 }
             }
         }
-        // without the permission the scale of «Настройка» stays at the bottom of the place, quieter, as before R6
-        ScaleSlot(
-            state = state,
-            gauge = gauge,
-            zoneColor = zoneColor,
-            visible = tuning && noMic,
-            modifier = Modifier.padding(
-                start = LiveDimens.ScreenPadding,
-                end = LiveDimens.ScreenPadding,
-                bottom = LiveDimens.ScaleBottomPadding,
-            ),
-        )
+        // the strip of a take on its own glass over the bottom row: the ring gives it its height while a take runs (spec 3.36.6)
         RecordingStripSlot(
             slots = slots,
             recording = recording,
             gauge = gauge,
             modifier = Modifier.padding(
-                start = LiveDimens.ScreenPadding,
-                end = LiveDimens.ScreenPadding,
+                start = LiveDimens.RecordingStripSide,
+                end = LiveDimens.RecordingStripSide,
                 top = LiveDimens.RecordingStripTopPadding,
             ),
         )
-        // The key stays in the middle; the bookmark of blocks lies to its left, the practice tag to its right (spec 3.28,
-        // 3.12; handoff 30a2, nav_bar 35) — «what I play · record · how long I practise». The ring gives up no height
-        // for them, and all that is touched in silence is down here, under the thumb.
+        // «Что играю» · the key · the practice tag (spec 3.36.6; 3.28, 3.9, 3.12) — one phrase, «what I play · record · how long I
+        // practise», the key in the middle. The ring gives up no height for them, and all that is touched in silence is down here.
         KeyRow(
-            modifier = Modifier.padding(vertical = LiveDimens.RecordPaddingVertical),
-            maxBookmark = LiveDimens.BookmarkWidth,
+            modifier = Modifier.padding(vertical = LiveDimens.KeyRowPadding),
             bookmark = { width -> slots.bookmark(width, chrome) },
-            tag = { width -> Tag(slots, width, chrome) },
+            tag = { width -> slots.tag(width, chrome) },
         ) {
             RecordKey(slots, state, chrome)
         }
+    }
+}
+
+/**
+ * The place of the ring without the permission (spec 3.36.6, 5.29 R6): the card «нет разрешения» 26 from the sides of the screen,
+ * not wider than 360, its middle at 60 % of the place — below the middle, the button under the thumb — and the whole of it in the
+ * place ([LiveLayoutMath.promptTop]); what of the card does not fit, the card itself gives up ([MicPermissionPrompt]).
+ */
+@Composable
+private fun PromptPlace(onGrant: () -> Unit, ringModifier: Modifier, modifier: Modifier) {
+    Layout(
+        content = { MicPermissionPrompt(onGrantClick = onGrant, modifier = ringModifier) },
+        modifier = modifier,
+    ) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val height = constraints.maxHeight
+        val cardWidth = minOf(LiveDimens.PromptMaxWidth.roundToPx(), width - LiveDimens.PromptSide.roundToPx() * 2).coerceAtLeast(0)
+        val card = measurables.single().measure(Constraints(minWidth = cardWidth, maxWidth = cardWidth, maxHeight = height))
+        layout(width, height) {
+            card.place((width - card.width) / 2, LiveLayoutMath.promptTop(height.toFloat(), card.height.toFloat()).roundToInt())
+        }
+    }
+}
+
+/**
+ * The card «нет разрешения» lying down (spec 3.36.6): in the middle of the panel of the ring, not wider than 340, the ring's margin
+ * round it; what does not fit, the card gives up.
+ */
+@Composable
+private fun PromptPanel(onGrant: () -> Unit, ringModifier: Modifier, modifier: Modifier) {
+    Layout(
+        content = { MicPermissionPrompt(onGrantClick = onGrant, modifier = ringModifier) },
+        modifier = modifier,
+    ) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val height = constraints.maxHeight
+        val margin = LiveDimens.PromptPanelMargin.roundToPx()
+        val cardWidth = minOf(LiveDimens.PromptMaxWidthLandscape.roundToPx(), width - margin * 2).coerceAtLeast(0)
+        val card = measurables.single().measure(
+            Constraints(minWidth = cardWidth, maxWidth = cardWidth, maxHeight = (height - margin * 2).coerceAtLeast(0)),
+        )
+        layout(width, height) { card.place((width - card.width) / 2, (height - card.height) / 2) }
     }
 }
 
@@ -528,42 +580,31 @@ private fun UnderWordScale(state: LiveState, gauge: () -> LiveGauge, zoneColor: 
 }
 
 /**
- * The row of the record key: the key in the middle, the bookmark of blocks hugging it from the left, as wide as the
- * half row allows but never wider than [maxBookmark]; the practice tag hugging it from the right, its mirror.
+ * The bottom row (spec 3.36.6, 5.29 R6): the key in the middle, «Что играю» and the practice tag 8 from it on either side — both as
+ * wide as each other, 150 where the row allows it and narrower together where it does not ([LiveLayoutMath.keyCardWidth]), the row
+ * 10 in from its sides.
  */
 @Composable
 private fun KeyRow(
     modifier: Modifier,
-    maxBookmark: Dp,
     bookmark: @Composable (Dp) -> Unit,
     tag: @Composable (Dp) -> Unit,
     key: @Composable () -> Unit,
 ) {
-    Row(modifier = modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-        BoxWithConstraints(
+    BoxWithConstraints(modifier = modifier.fillMaxWidth()) {
+        val card = LiveLayoutMath.keyCardWidth(maxWidth.value).dp
+        Row(
             modifier = Modifier
-                .weight(1f)
-                .padding(end = LiveDimens.BookmarkToKey),
-            contentAlignment = Alignment.CenterEnd,
+                .fillMaxWidth()
+                .padding(horizontal = LiveDimens.KeyRowSide),
+            horizontalArrangement = Arrangement.spacedBy(LiveDimens.CardToKey, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically,
         ) {
-            bookmark(minOf(maxBookmark, maxWidth - LiveDimens.BookmarkMargin))
-        }
-        key()
-        BoxWithConstraints(
-            modifier = Modifier
-                .weight(1f)
-                .padding(start = LiveDimens.BookmarkToKey),
-            contentAlignment = Alignment.CenterStart,
-        ) {
-            tag(maxWidth - LiveDimens.BookmarkMargin)
+            Box(Modifier.width(card)) { bookmark(card) }
+            key()
+            Box(Modifier.width(card)) { tag(card) }
         }
     }
-}
-
-/** The practice tag (spec 3.12): it fades with the light like the bookmark — the time is for a look in silence. */
-@Composable
-private fun Tag(slots: LiveSlots, width: Dp, chrome: () -> Float) {
-    slots.tag(width, Modifier.chrome(1f, chrome))
 }
 
 /** The gear to «Настройки» (spec 3.8): it fades with the light, and with the switcher while a take is recorded. */
@@ -572,25 +613,26 @@ private fun Gear(slots: LiveSlots, recording: RecordingState?, chrome: () -> Flo
     slots.gear(recording == null, modifier.chrome(if (recording != null) LiveDimens.DISABLED_ALPHA else 1f, chrome))
 }
 
-/** The record key: dimmed while it may not record; the key of a running recording stays whole in the dark — it is how the performance ends. */
+/**
+ * The record key: dimmed while it may not record — 0.4, times the light at rest; the key of a running recording stays whole in the
+ * dark — it is how the performance ends ([RecordKeyLight]). The alpha is read while drawing.
+ */
 @Composable
 private fun RecordKey(slots: LiveSlots, state: LiveState, chrome: () -> Float) {
     val recording = state.recording != null
-    val light = remember(recording, chrome) { if (recording) Whole else chrome }
-    slots.recordKey(
-        recording,
-        state.canRecord || recording,
-        Modifier.chrome(if (state.canRecord || recording) 1f else LiveDimens.DISABLED_ALPHA, light),
-    )
+    val enabled = state.canRecord || recording
+    val alpha = remember(recording, enabled, chrome) { { RecordKeyLight.alpha(recording, enabled, chrome()) } }
+    slots.recordKey(recording, enabled, alpha)
 }
 
 /** The light of what stays whole in the dark. */
 private val Whole: () -> Float = { 1f }
 
 /**
- * Handoff `v1-land`, spec 3.36.6: the ring panel on the left; on the right the top row, the strings of «Настройка», the plate of the
- * status line (in «Настройка» too), the word and the cents, the scale of «Настройка», the strip of a take and the keys. [column] —
- * its padding, gaps and scale: tighter in a low window, in both modes, so the switcher does not jump when the mode changes.
+ * Handoff `v1-land`, spec 3.36.6: the ring panel on the left — without the permission the card «нет разрешения» in its middle; on the
+ * right the top row, the strings of «Настройка», the plate of the status line (in «Настройка» too), the word and the cents, the scale
+ * of «Настройка», the strip of a take and the bottom row, its cards as wide as the column allows. [column] — its padding, gaps and
+ * scale: tighter in a low window, in both modes, so the switcher does not jump when the mode changes.
  */
 @Composable
 private fun LandscapeLayout(
@@ -615,16 +657,18 @@ private fun LandscapeLayout(
     val gap = column.gap.dp
 
     Row(modifier = Modifier.fillMaxSize()) {
-        BoxWithConstraints(
-            modifier = Modifier
-                .weight(LiveDimens.LANDSCAPE_RING_PANEL_FRACTION)
-                .fillMaxHeight(),
-            contentAlignment = Alignment.Center,
-        ) {
-            val ringSize = ringSizeFor(state, landscape = true, maxWidth, maxHeight, reserved = 0.dp)
-            // the ring stands in the middle of its panel: the waves may go as far as its left edge and the screen's top and bottom
-            val waveReach = GlowMath.waveReach(ringSize.value, minOf(maxWidth, maxHeight).value / 2)
-            Ring(state, gauge, zoneColor, glow, ringSize, waveReach, ringModifier, reduceMotion, silhouette)
+        val panel = Modifier
+            .weight(LiveDimens.LANDSCAPE_RING_PANEL_FRACTION)
+            .fillMaxHeight()
+        if (noMic) {
+            PromptPanel(onGrant = { onIntent(LiveIntent.GrantMicClicked) }, ringModifier = ringModifier, modifier = panel)
+        } else {
+            BoxWithConstraints(modifier = panel, contentAlignment = Alignment.Center) {
+                val ringSize = ringSizeFor(state, landscape = true, maxWidth, maxHeight, reserved = 0.dp)
+                // the ring stands in the middle of its panel: the waves may go as far as its left edge and the screen's top and bottom
+                val waveReach = GlowMath.waveReach(ringSize.value, minOf(maxWidth, maxHeight).value / 2)
+                Ring(state, gauge, zoneColor, glow, ringSize, waveReach, ringModifier, reduceMotion, silhouette)
+            }
         }
         Column(
             modifier = Modifier
@@ -660,15 +704,14 @@ private fun LandscapeLayout(
                 }
             }
             StatusLineRow(line = state.statusLine, tuning = state.tuning, modifier = Modifier.chrome(1f, chrome), plate = showVenue)
+            // the word and the cents; without the permission their place is kept empty — the card is in the panel of the ring
             BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
-                if (noMic) {
-                    MicPermissionPrompt(onGrantClick = { onIntent(LiveIntent.GrantMicClicked) })
-                } else {
+                if (!noMic) {
                     val statusHeight = maxHeight.coerceIn(LiveDimens.LandscapeStatusMinHeight, LiveDimens.StatusRowHeight)
                     StatusRow(
                         direction = sounding?.direction,
@@ -683,12 +726,11 @@ private fun LandscapeLayout(
             }
             ScaleSlot(state = state, gauge = gauge, zoneColor = zoneColor, visible = tuning, height = column.scale.dp)
             RecordingStripSlot(slots = slots, recording = recording, gauge = gauge)
-            // the tag beside the key, as upright: the row is wide enough for both (the handoff would put it under the bookmark)
+            // the same bottom row as upright, its cards as wide as the column allows (spec 3.36.6: 150 on 892 × 412, ≈ 104 on 640 × 360)
             KeyRow(
                 modifier = Modifier.padding(top = LiveDimens.LandscapeRecordTopPadding),
-                maxBookmark = LiveDimens.BookmarkWidthLandscape,
                 bookmark = { width -> slots.bookmark(width, chrome) },
-                tag = { width -> Tag(slots, width, chrome) },
+                tag = { width -> slots.tag(width, chrome) },
             ) {
                 RecordKey(slots, state, chrome)
             }
@@ -697,8 +739,8 @@ private fun LandscapeLayout(
 }
 
 /**
- * The recording strip unfolds above the record button and folds away again; while it folds it
- * keeps showing the last numbers and notes, because the state is already back to "not recording".
+ * The strip of a take unfolds over the bottom row and folds away again (200 ms) — upright the ring gives it its height as it comes;
+ * while it folds it keeps showing the last numbers and notes, because the state is already back to "not recording".
  */
 @Composable
 private fun RecordingStripSlot(slots: LiveSlots, recording: RecordingState?, gauge: () -> LiveGauge, modifier: Modifier = Modifier) {
@@ -723,11 +765,7 @@ private class KeptRibbon(private val gauge: () -> LiveGauge) {
 }
 
 private fun ringSizeFor(state: LiveState, landscape: Boolean, maxWidth: Dp, maxHeight: Dp, reserved: Dp): Dp {
-    val design = LiveLayoutMath.designRing(
-        landscape = landscape,
-        tuning = state.mode == LiveMode.TUNING,
-        noMic = state.signal == LiveSignal.NoMicPermission,
-    )
+    val design = LiveLayoutMath.designRing(landscape = landscape, tuning = state.mode == LiveMode.TUNING)
     val margin = LiveDimens.RingMargin.value * 2
     return LiveLayoutMath.ringDiameter(
         designDp = design,
@@ -772,7 +810,8 @@ private fun Ring(
 /**
  * The scale with its marker belongs to tuning mode only (spec 3.14): turning a peg is a slow move made with the eyes on the gauge.
  * Here it unfolds [visible] in the time of the string row: in the right column of landscape, [height] high, and upright only
- * without the permission — then at the bottom of the place, as before R6 (with it the scale is under the word, [UnderWordScale]).
+ * without the permission — then at the bottom of the place, 8 under the card «нет разрешения», as before R6 (with the permission the
+ * scale is under the word, [UnderWordScale]).
  * It stays whole in the dark: it is read, not touched.
  */
 @Composable
@@ -828,7 +867,7 @@ private fun Scale(
     )
 }
 
-private enum class RingContentKind { NOTE, EMPTY, NO_MIC, SILHOUETTE }
+private enum class RingContentKind { NOTE, EMPTY, SILHOUETTE }
 
 /**
  * What is inside the ring. Kinds cross-fade; the note itself changes at once, because the note name has to follow the playing
@@ -848,8 +887,8 @@ private fun RingContent(signal: LiveSignal, silhouette: Note?, noteScale: Float)
         // The words for these are in the status line above: the ring is empty and calm (spec 3.14) — or holds the pale note of
         // the locked string, when its switch is on.
         LiveSignal.Silence -> if (silhouette != null) RingContentKind.SILHOUETTE else RingContentKind.EMPTY
-        LiveSignal.TooNoisy, LiveSignal.MicUnavailable -> RingContentKind.EMPTY
-        LiveSignal.NoMicPermission -> RingContentKind.NO_MIC
+        // without the permission there is no ring at all (spec 3.36.6): the card stands in its place
+        LiveSignal.TooNoisy, LiveSignal.MicUnavailable, LiveSignal.NoMicPermission -> RingContentKind.EMPTY
     }
     // Both layers fill the ring, otherwise Crossfade stacks them from the top-start corner and
     // texts of different width sit side by side during the fade.
@@ -864,7 +903,6 @@ private fun RingContent(signal: LiveSignal, silhouette: Note?, noteScale: Float)
                 // while fading out the signal is already silent: keep showing the last note
                 RingContentKind.NOTE -> (note ?: lastNote)?.let { NoteLabel(it, scale = noteScale) }
                 RingContentKind.EMPTY -> Unit
-                RingContentKind.NO_MIC -> MicGlyph()
                 // another locked string changes the note at once, the kind stays
                 RingContentKind.SILHOUETTE -> (silhouette ?: lastSilhouette)?.let {
                     NoteLabel(it, modifier = Modifier.clearAndSetSemantics { }, scale = noteScale, alpha = LiveDimens.SILHOUETTE_ALPHA)

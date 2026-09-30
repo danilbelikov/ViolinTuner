@@ -22,7 +22,7 @@
     <string name="live_silence">Toque…</string>
     <string name="live_too_noisy">Muito ruído</string>
     <string name="live_mic_unavailable">Microfone indisponível</string>
-    <string name="mic_permission_title">É preciso acesso ao microfone</string>
+    <string name="mic_permission_title">Deixe-me ouvir o violino</string>
     <string name="mic_permission_text">Sem o microfone, o app não ouve o violino. O som é processado no telefone e não é enviado a lugar nenhum.</string>
     <string name="mic_permission_grant">Permitir acesso</string>
     <string name="record_button">Gravar</string>
@@ -30,8 +30,9 @@
     <string name="record_stop">Parar gravação</string>
     <string name="record_no_notes">Nenhuma nota encontrada na gravação</string>
     <string name="recording_elapsed_description">Gravando, %1$s</string>
-    <string name="recording_strip_label">gravação ·</string>
+    <string name="recording_strip_label">gravação</string>
     <string name="practice_chip_label">prática</string>
+    <string name="practice_tag_start">Iniciar</string>
 
     <string name="onboarding_mic_title">Deixe-me ouvir o violino</string>
     <string name="onboarding_mic_text">Para ouvir as notas, é preciso o microfone. O som é analisado no próprio telefone e só é gravado quando você mesmo aperta gravar.</string>
@@ -1077,11 +1078,12 @@
         <item>Ópera</item>
     </string-array>
     <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
-    <string name="block_entry">Repertório</string>
+    <string name="block_entry">O que toco</string>
     <string name="block_entry_description">Escolher o que tocar no repertório</string>
-    <string name="block_left_one">falta %1$d min</string>
-    <string name="block_left_few">faltam %1$d min</string>
-    <string name="block_left_many">faltam %1$d min</string>
+    <string name="block_entry_hint">escolha</string>
+    <string name="block_left_one">falta %1$d\u00A0min</string>
+    <string name="block_left_few">faltam %1$d\u00A0min</string>
+    <string name="block_left_many">faltam %1$d\u00A0min</string>
     <string name="block_done">pronto</string>
     <string name="block_running_description">%1$s, faltam %2$s</string>
     <string name="block_done_description">%1$s — pronto</string>

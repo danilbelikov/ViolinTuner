@@ -22,7 +22,7 @@
     <string name="live_silence">Spielen Sie…</string>
     <string name="live_too_noisy">Zu laut im Raum</string>
     <string name="live_mic_unavailable">Mikrofon nicht verfügbar</string>
-    <string name="mic_permission_title">Zugriff auf das Mikrofon nötig</string>
+    <string name="mic_permission_title">Lassen Sie mich die Geige hören</string>
     <string name="mic_permission_text">Ohne Mikrofon hört die App die Geige nicht. Der Klang wird auf dem Telefon verarbeitet und nirgendwohin gesendet.</string>
     <string name="mic_permission_grant">Zugriff erlauben</string>
     <string name="record_button">Aufnahme</string>
@@ -30,8 +30,9 @@
     <string name="record_stop">Aufnahme beenden</string>
     <string name="record_no_notes">In der Aufnahme waren keine Töne</string>
     <string name="recording_elapsed_description">Aufnahme läuft, %1$s</string>
-    <string name="recording_strip_label">Aufnahme ·</string>
+    <string name="recording_strip_label">Aufnahme</string>
     <string name="practice_chip_label">Üben</string>
+    <string name="practice_tag_start">Starten</string>
 
     <string name="onboarding_mic_title">Lassen Sie mich die Geige hören</string>
     <string name="onboarding_mic_text">Um die Töne zu hören, braucht die App das Mikrofon. Der Klang wird direkt auf dem Telefon ausgewertet und erst aufgenommen, wenn Sie selbst auf Aufnahme tippen.</string>
@@ -1077,11 +1078,12 @@
         <item>Opernhaus</item>
     </string-array>
     <!-- Blocks on Live (spec 3.28): the bookmark by the record key, «Что играем», «Сначала — занятие» -->
-    <string name="block_entry">Repertoire</string>
+    <string name="block_entry">Was ich spiele</string>
     <string name="block_entry_description">Aus dem Repertoire wählen, was gespielt wird</string>
-    <string name="block_left_one">noch %1$d Min.</string>
-    <string name="block_left_few">noch %1$d Min.</string>
-    <string name="block_left_many">noch %1$d Min.</string>
+    <string name="block_entry_hint">wählen</string>
+    <string name="block_left_one">noch %1$d\u00A0Min.</string>
+    <string name="block_left_few">noch %1$d\u00A0Min.</string>
+    <string name="block_left_many">noch %1$d\u00A0Min.</string>
     <string name="block_done">fertig</string>
     <string name="block_running_description">%1$s, noch %2$s</string>
     <string name="block_done_description">%1$s — fertig</string>

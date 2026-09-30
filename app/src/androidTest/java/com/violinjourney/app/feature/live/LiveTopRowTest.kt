@@ -16,9 +16,6 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.WindowInfo
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.SemanticsActions
-import androidx.compose.ui.semantics.getOrNull
-import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.SemanticsNodeInteraction
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
@@ -41,7 +38,7 @@ import com.violinjourney.app.core.domain.IntonationConfig
 import com.violinjourney.app.core.domain.ViolinString
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.live.components.LiveDimens
-import com.violinjourney.app.feature.live.components.RecordButton
+import com.violinjourney.app.feature.live.components.LiveRecordKey
 import com.violinjourney.app.feature.live.components.SettingsGear
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.mode_play
@@ -131,7 +128,7 @@ class LiveTopRowTest {
                         state = state,
                         onIntent = { intents += it },
                         slots = LiveSlots(
-                            recordKey = { recording, enabled, modifier -> RecordButton(recording, enabled, onClick = {}, modifier = modifier) },
+                            recordKey = { recording, enabled, alpha -> LiveRecordKey(recording, enabled, onClick = {}, alpha = alpha) },
                             gear = { enabled, modifier -> SettingsGear(onClick = {}, modifier = modifier, enabled = enabled) },
                         ),
                     )
@@ -156,8 +153,8 @@ class LiveTopRowTest {
 
     private fun gear() = compose.onNodeWithContentDescription(word(SETTINGS))
 
-    /** The record key — the node whose click says «Начать запись». */
-    private fun recordKey() = compose.onNode(SemanticsMatcher("the record key") { it.config.getOrNull(SemanticsActions.OnClick)?.label == word(RECORD) })
+    /** The record key — the button TalkBack names «Начать запись». */
+    private fun recordKey() = compose.onNodeWithContentDescription(word(RECORD))
 
     /** Upright the top row stands 12 in from the sides of the window (the disc of the gear 16, its touch 4 nearer). */
     private fun uprightRowStart(): Dp = window().left + LiveDimens.GearEnd - (LiveDimens.GearTouch - LiveDimens.GearSize) / 2
@@ -283,9 +280,9 @@ class LiveTopRowTest {
         // the word and the cents keep 48 of the ≈ 50 left to them: their full size, not the compact one
         val size = compose.onNodeWithText(word(IN_TUNE)).textLayout().layoutInput.style.fontSize
         assertEquals("the word of the status in «Настройка»", 28.sp, size)
-        // and the keys stand at the bottom of the column, 8 over the window's edge (the key of 72 over its hard shadow of 4)
+        // and the keys stand at the bottom of the column, 8 over the window's edge (the key of 76, whose soft shadow takes no room)
         val key = recordKey().bounds()
-        assertTrue("the record key ends at ${key.bottom - window().top}", abs((key.bottom - window().top).value - (336f - 8f - 4f)) <= 0.5f)
+        assertTrue("the record key ends at ${key.bottom - window().top}", abs((key.bottom - window().top).value - (336f - 8f)) <= 0.5f)
         assertTheSwitcherStandsWholeClearOfTheGear("ru, 603 × 336, «Настройка»", lyingRowStart())
     }
 

@@ -125,7 +125,7 @@ private fun ViolinTunerRoot(openBackup: String?, onBackupOpened: () -> Unit) {
     // to the ring. The other tabs keep a compact bar, otherwise there would be no way back but the gesture.
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
     val bottomBarTab = currentTab?.takeUnless { landscape && it == TopLevelDestination.LIVE }
-    // How bright the tab bar is: a screen may lend its light (stage R6, Live, behind a switch); nobody does yet (spec 3.36.1).
+    // How bright the tab bar is: Live lends it its light behind LiveSwitches.DIM_TAB_BAR, off by default (spec 3.36.6).
     val tabBarLight = remember { TabBarLight() }
 
     // «Занятие не закончено» lies over the gift of «Занятия» (spec 3.36.3): the gift waits while the prompt is shown

@@ -24,7 +24,9 @@ data class LiveTypography(
     val centsCompact: TextStyle,
     /** The status line above the ring, on its plate: "Играйте…", "Слишком шумно", the tuning hint — 15 sp, 600 (spec 5.29 R6). */
     val statusLine: TextStyle,
+    /** The title of the card «нет разрешения»: 22 sp, 800 (spec 5.29 R6). */
     val promptTitle: TextStyle,
+    /** Its text: 15 sp in lines of 21.75. */
     val promptBody: TextStyle,
 )
 
@@ -71,17 +73,19 @@ fun liveTypography(family: FontFamily) = LiveTypography(
         fontWeight = FontWeight.SemiBold,
         fontSize = 15.sp,
     ),
+    // the card «нет разрешения» (spec 5.29 R6): the title 22 sp / 800 / −0.01 em, the text 15 sp in lines of 1.45
     promptTitle = TextStyle(
         fontFamily = family,
-        fontWeight = FontWeight.Bold,
-        fontSize = 24.sp,
-        lineHeight = 29.sp,
+        fontWeight = FontWeight.ExtraBold,
+        fontSize = 22.sp,
+        lineHeight = 28.sp,
+        letterSpacing = (-0.01).em,
     ),
     promptBody = TextStyle(
         fontFamily = family,
         fontWeight = FontWeight.Normal,
         fontSize = 15.sp,
-        lineHeight = 22.sp,
+        lineHeight = 21.75.sp,
     ),
 )
 

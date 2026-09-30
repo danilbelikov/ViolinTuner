@@ -38,15 +38,6 @@ object LiveDimens {
     /** From the right edge of the screen to the disc (portrait); its touch reaches 4 closer. */
     val GearEnd = 16.dp
 
-    /** The practice tag to the right of the record key (handoff nav_bar 35): the bookmark's size, turned round. */
-    val PracticeTagMinWidth = 124.dp
-    val PracticeTagTextStart = 25.dp
-    val PracticeTagTextEnd = 10.dp
-    val PracticeTagIcon = 18.dp
-    val PracticeTagIconGap = 8.dp
-    val PracticeTagDot = 7.dp
-    val PracticeTagDotGap = 6.dp
-
     // The strings of «Настройка»: four buttons of glass across the row (spec 3.36.6, 5.29 R6)
     val StringRowTopPadding = PortraitRows.AIR.dp
     val StringButtonHeight = PortraitRows.STRING_BUTTON.dp
@@ -100,10 +91,9 @@ object LiveDimens {
 
     // The scale of «Настройка» (spec 5.29 R6): a light line, the green pill of the tolerance, the zero tick; under the word
     val ScaleHeight = PortraitRows.SCALE_ROW.dp
-    val ScaleTopGap = PortraitRows.SCALE_GAP.dp
 
-    /** Without the permission the scale stays at the bottom of the place, over the keys, as before R6. */
-    val ScaleBottomPadding = 8.dp
+    /** Under the word and the cents; without the permission — over the scale at the bottom of the place, under the card. */
+    val ScaleTopGap = PortraitRows.SCALE_GAP.dp
     val ScaleLine = 2.dp
     val ScalePillHeight = 10.dp
     val ScaleTickWidth = 2.dp
@@ -114,46 +104,66 @@ object LiveDimens {
     val HaloHeight = 24.dp
     val HaloFeather = 4.dp
 
-    val RecordButtonSize = 72.dp
-    // The key of a tape recorder: bone face, brass rim, a hard shadow it goes down onto (handoff venue 29j)
-    val RecordRim = 3.dp
-    val RecordShadow = 4.dp
-    val RecordTravel = 3.dp
-    val RecordDotSize = 20.dp
-    val RecordPaddingVertical = PortraitRows.AIR.dp
-    val RecordStopSize = 22.dp
-    val RecordStopCorner = 3.dp
+    // The bottom row (spec 3.36.6, 5.29 R6): «Что играю» · the record key · the practice tag, 76 high with 12 above and below
+    val KeyRowPadding = PortraitRows.AIR.dp
+    val KeyRowSide = LiveLayoutMath.KEY_ROW_SIDE.dp
+    val CardToKey = LiveLayoutMath.CARD_TO_KEY.dp
 
-    // The bookmark of blocks by the record key (spec 3.28, 5.21; handoff 30a2, `sizes`)
-    val BookmarkWidth = 150.dp
-    val BookmarkWidthLandscape = 170.dp
-    /** «Репертуар» is as wide as its word, never narrower than this. */
-    val BookmarkEntryMinWidth = 124.dp
-    val BookmarkHeight = 56.dp
-    /** Room under the paper for its shadow: the outline set down by [BookmarkShadow], without blur. */
-    val BookmarkShadowRoom = 4.dp
-    val BookmarkShadow = 3.dp
-    val BookmarkCorner = 6.dp
-    val BookmarkNotch = 15.dp
-    val BookmarkEdge = 1.6.dp
-    val BookmarkRim = 1.8.dp
-    val BookmarkLine = 3.dp
-    val BookmarkLineStart = 13.dp
-    val BookmarkLineEnd = 27.dp
-    val BookmarkLineFromBottom = 9.dp
-    val BookmarkTextStart = 13.dp
-    val BookmarkTextEnd = 30.dp
-    val BookmarkTextGap = 3.dp
-    val BookmarkTick = 15.dp
-    val BookmarkTickGap = 5.dp
-    /** Air between the bookmark (and the practice tag) and the record key; [BookmarkMargin] at the far side of its column. */
-    val BookmarkToKey = 16.dp
-    val BookmarkMargin = 4.dp
+    // The record key: bone with a soft highlight in the dark rim of KeyRim, a velvet dot; red with a white stop while it records
+    val RecordKeySize = PortraitRows.KEY_ROW.dp
+    val RecordKeyRim = 3.dp
+    val RecordKeyDot = 28.dp
+    val RecordKeyStop = 24.dp
+    val RecordKeyStopCorner = 6.dp
 
-    val RecordingStripTopPadding = 8.dp
-    val RecordingStripGap = 12.dp
-    val RecordingDotSize = 10.dp
-    val RecordingBarHeight = 6.dp
+    /** The key goes down by this under a finger. */
+    val RecordKeyTravel = 3.dp
+
+    /** Its soft shadow (black at [KEY_SHADOW_ALPHA]): set down by this, blurred as CSS blurs 14 — a sigma of 7; it takes no room. */
+    val RecordKeyShadowDrop = 7.dp
+    val RecordKeyShadowSigma = 7.dp
+
+    // The two cards of the bottom row (spec 5.29 R6): glass — something to choose or start; paper — something runs
+    val CardHeight = 60.dp
+    val CardCorner = 18.dp
+    val CardPadding = 10.dp
+    val CardGap = 7.dp
+    val CardIcon = 20.dp
+
+    /** The velvet dot of a running practice, in the place of the icon. */
+    val CardDot = 9.dp
+
+    /** The paper's soft shadow: set down by 4, blurred as CSS blurs 10 — a sigma of 5. */
+    val CardShadowDrop = 4.dp
+    val CardShadowSigma = 5.dp
+
+    /** The brass line of a running block: [CardBarSide] from the sides, [CardBarBottom] over the bottom edge. */
+    val CardBar = 3.dp
+    val CardBarCorner = 2.dp
+    val CardBarSide = 12.dp
+    val CardBarBottom = 7.dp
+
+    /** The words keep this much over the brass line. */
+    val CardBarGap = 2.dp
+
+    /** «готово»: the brass rim outside the paper. */
+    val CardRim = 2.5.dp
+
+    // The strip of a take (spec 3.36.6, 5.29 R6): its own capsule of glass over the bottom row
+    val RecordingStripTopPadding = PortraitRows.RECORDING_GAP.dp
+    val RecordingStripHeight = PortraitRows.RECORDING_STRIP.dp
+    val RecordingStripCorner = 25.dp
+
+    /** From the sides of the screen (upright; in landscape the strip spans its column). */
+    val RecordingStripSide = 22.dp
+    val RecordingStripPadding = 16.dp
+    val RecordingStripGap = 10.dp
+    val RecordingDotSize = 11.dp
+
+    /** The halo round the pulsing dot, [RECORDING_HALO_ALPHA] of the red of recording. */
+    val RecordingDotHalo = 4.dp
+    val RecordingBarHeight = 8.dp
+    val RecordingBarCorner = 2.dp
     val RecordingBarGap = 2.dp
 
     // Landscape (handoff v1-land): ring panel on the left, controls on the right
@@ -166,20 +176,34 @@ object LiveDimens {
     val LandscapeRecordTopPadding = LiveLayoutMath.LANDSCAPE_KEYS_AIR.dp
     val LandscapeStatusMinHeight = 40.dp
 
-    /** Height kept free under the ring for the permission prompt in portrait. */
-    val PromptReservedHeight = 230.dp
+    // The card «нет разрешения» in the place of the ring (spec 3.36.6, 5.29 R6): paper on a deep soft shadow
+    /** Upright: 26 from the sides of the screen, not wider than 360; lying down: in the middle of the ring's panel, not wider than 340. */
+    val PromptSide = 26.dp
+    val PromptMaxWidth = 360.dp
+    val PromptMaxWidthLandscape = 340.dp
 
-    val MicIconContainerSize = 72.dp
-    val MicGlyphWidth = 18.dp
-    val MicGlyphHeight = 32.dp
-    val PromptMaxWidth = 300.dp
-    val PromptSpacing = 16.dp
-    val PromptButtonHeight = 44.dp
-    /** The card of paper the permission prompt is written on (handoff venue 29c8). */
-    val PromptCardCorner = 14.dp
-    val PromptCardPaddingHorizontal = 18.dp
-    val PromptCardPaddingVertical = 16.dp
-    val PromptButtonPaddingHorizontal = 24.dp
+    /** Lying down the card keeps the ring's margin from the edges of its panel. */
+    val PromptPanelMargin = RingMargin
+    val PromptCorner = 24.dp
+    val PromptPaddingTop = 22.dp
+    val PromptPaddingSide = 20.dp
+    val PromptPaddingBottom = 18.dp
+
+    /** Its shadow (black at [PROMPT_SHADOW_ALPHA]): set down by 18, blurred as CSS blurs 40 — a sigma of 20. */
+    val PromptShadowDrop = 18.dp
+    val PromptShadowSigma = 20.dp
+    val PromptIconPlate = 48.dp
+    val PromptIconPlateCorner = 16.dp
+    val PromptIcon = 24.dp
+    val PromptIconGap = 12.dp
+    val PromptTitleGap = 6.dp
+    val PromptButtonHeight = 54.dp
+    val PromptButtonTop = 18.dp
+    val PromptButtonIcon = 18.dp
+    val PromptButtonGap = 8.dp
+
+    /** The word of «Разрешить доступ» keeps this much off the round ends of its capsule. */
+    val PromptButtonPadding = 16.dp
 
     // Opacity of dimmed parts (handoff states 8d–8f)
     const val SCALE_ALPHA_IDLE = 0.45f
@@ -188,6 +212,21 @@ object LiveDimens {
 
     /** Controls that do nothing right now: record outside play mode, the switcher while recording. */
     const val DISABLED_ALPHA = 0.4f
+
+    // The soft shadows of the bottom row and of the card «нет разрешения» (spec 5.29 R6), baked once per size
+    const val KEY_SHADOW_ALPHA = 0.55f
+    const val CARD_SHADOW_ALPHA = 0.35f
+    const val PROMPT_SHADOW_ALPHA = 0.5f
+
+    /** The highlight of the bone key: at 50 % across and 38 % down, this much of the way from bone to white… */
+    const val KEY_HIGHLIGHT = 0.6f
+    const val KEY_HIGHLIGHT_X = 0.5f
+    const val KEY_HIGHLIGHT_Y = 0.38f
+
+    /** …bone at 55 % of its reach, the shade of bone at the far edge (live.html, `.key`). */
+    const val KEY_HIGHLIGHT_BONE_STOP = 0.55f
+
+    const val RECORDING_HALO_ALPHA = 0.25f
     const val HALO_ALPHA_CORE = 0.2f
     const val HALO_ALPHA_FEATHER = 0.1f
 
