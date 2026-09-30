@@ -44,6 +44,7 @@ import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.testing.assertWholeOnOneLine
+import com.violinjourney.app.testing.numbers
 import com.violinjourney.app.testing.textLayout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -368,11 +369,82 @@ class SegmentedSwitchTest {
         }
     }
 
+    /**
+     * The large A/B of «Звук» with its words (spec 3.36.5, 5.29 R5): «A» / «B» a step larger and heavier before the words, which are
+     * cut nowhere — Portuguese «processado» at the font 1.3, [width] dp wide. Without the words for TalkBack, so that their layout can
+     * be read: the screen gives each half its description instead.
+     */
+    private fun showWordsAb(width: Int, compact: Boolean) {
+        compose.setContent {
+            val base = LocalViewConfiguration.current
+            val density = LocalDensity.current
+            val noWidening = remember(base) { object : ViewConfiguration by base { override val minimumTouchTargetSize = DpSize.Zero } }
+            CompositionLocalProvider(LocalViewConfiguration provides noWidening, LocalDensity provides Density(density.density, LARGE_FONT)) {
+                ViolinTheme {
+                    SegmentedSwitch(
+                        labels = PORTUGUESE_AB,
+                        selectedIndex = 1,
+                        onSelect = {},
+                        modifier = Modifier.width(width.dp).testTag(TAG),
+                        compact = compact,
+                        prefixes = AB_SIDES,
+                        shrinkToTwoLines = true,
+                    )
+                }
+            }
+        }
+        compose.waitForIdle()
+    }
+
+    /** The label of the half [index] as it is drawn: the side, the gap of an en space, the word. */
+    private fun abLabel(index: Int): String = AB_SIDES[index] + PREFIX_GAP + PORTUGUESE_AB[index]
+
+    /**
+     * The compact A/B with its words in the narrow column lying (5.29 R5: 12 sp in one line): «B processado» at the font 1.3 is ≈ 130 dp
+     * at 14 sp, its half of 270 leaves 123 — both labels go down to one line of 12 (≈ 109), the side measured with them, and the switch
+     * stays 48.
+     */
+    @Test
+    fun theCompactAbWithItsWordsStaysOnOneSmallerLineInFortyEight() {
+        showWordsAb(width = 270, compact = true)
+        compose.onNodeWithTag(TAG).assertHeightIsEqualTo(48.dp)
+        AB_SIDES.indices.forEach { index ->
+            val node = compose.onNodeWithText(abLabel(index), useUnmergedTree = true)
+            assertEquals("«${abLabel(index)}» at 12 sp", 12f, node.textLayout().layoutInput.style.fontSize.value, 0.01f)
+            assertWholeOnOneLine(node, abLabel(index))
+        }
+    }
+
+    /**
+     * The regular A/B with its words where even 12 sp do not stand in a line (5.29 R5: two lines of 12 in the same height): in 230 at the
+     * font 1.3 «B processado» (≈ 109 at 12 sp) has 100 — it goes on after the side, at the en space, «processado» (≈ 90) whole on its
+     * line; nothing ends in «…», and the switch stays 52.
+     */
+    @Test
+    fun theRegularAbWithItsWordsGoesOnAfterItsSideAndBreaksNoWord() {
+        showWordsAb(width = 230, compact = false)
+        compose.onNodeWithTag(TAG).assertHeightIsEqualTo(52.dp)
+        val node = compose.onNodeWithText(abLabel(1), useUnmergedTree = true)
+        val layout = node.textLayout()
+        assertEquals("two lines: ${layout.numbers(node)}", 2, layout.lineCount)
+        assertTrue("it goes on at the en space after «B» — ${layout.numbers(node)}", abLabel(1)[layout.getLineEnd(0) - 1] == PREFIX_GAP.single())
+        AB_SIDES.indices.forEach { index ->
+            val each = compose.onNodeWithText(abLabel(index), useUnmergedTree = true).textLayout()
+            assertFalse("«${abLabel(index)}» is not cut", each.isLineEllipsized(each.lineCount - 1) || each.didOverflowHeight)
+        }
+    }
+
     private companion object {
         const val TAG = "switch"
         val LABELS = listOf("Разбираю", "Учу", "В репертуаре")
         val FRENCH = listOf("Déchiffrage", "En travail", "Au répertoire")
         val SPANISH = listOf("Con acompañamiento", "Solo violín")
         val AB_WORDS = listOf("A, original", "B, processed")
+
+        /** The large A/B of «Звук» in Portuguese, and the sides before its words; the gap between them is the switch's en space. */
+        val PORTUGUESE_AB = listOf("original", "processado")
+        val AB_SIDES = listOf("A", "B")
+        const val PREFIX_GAP = "\u2002"
+        const val LARGE_FONT = 1.3f
     }
 }

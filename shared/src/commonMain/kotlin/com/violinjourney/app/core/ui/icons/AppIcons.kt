@@ -66,13 +66,8 @@ object AppIcons {
     val Share: ImageVector by lazy { icon("Share", IconPaths.SHARE) }
     val Sound: ImageVector by lazy { icon("Sound", IconPaths.SOUND) }
     val Ab: ImageVector by lazy { icon("Ab", IconPaths.AB) }
-    val Eq: ImageVector by lazy { icon("Eq", IconPaths.EQ) }
-    val Compressor: ImageVector by lazy { icon("Compressor", IconPaths.COMPRESSOR) }
-    val Hall: ImageVector by lazy { icon("Hall", IconPaths.HALL) }
-    val Volume: ImageVector by lazy { icon("Volume", IconPaths.VOLUME) }
     val VolumeOff: ImageVector by lazy { icon("VolumeOff", IconPaths.VOLUME_OFF) }
     val Reset: ImageVector by lazy { icon("Reset", IconPaths.RESET) }
-    val Preset: ImageVector by lazy { icon("Preset", IconPaths.PRESET) }
     val Minus: ImageVector by lazy { icon("Minus", IconPaths.MINUS) }
     val FileAudio: ImageVector by lazy { icon("FileAudio", IconPaths.FILE_AUDIO) }
     val Limiter: ImageVector by lazy { icon("Limiter", IconPaths.LIMITER) }
@@ -153,13 +148,8 @@ object AppIcons {
         "Share" to { Share },
         "Sound" to { Sound },
         "Ab" to { Ab },
-        "Eq" to { Eq },
-        "Compressor" to { Compressor },
-        "Hall" to { Hall },
-        "Volume" to { Volume },
         "VolumeOff" to { VolumeOff },
         "Reset" to { Reset },
-        "Preset" to { Preset },
         "Minus" to { Minus },
         "FileAudio" to { FileAudio },
         "Limiter" to { Limiter },

@@ -85,7 +85,6 @@ internal val EqFill = Color(0x1FC4ADFF) // primary at .12
 
 internal val VideoField = Color(0xFF0E0E12) // = StandBackground
 internal val VideoScrim = Color(0x73000000) // black at .45
-internal val VideoSizeWarn = Color(0xFFE5B03C) // the hex of zone.near; not a zone
 
 internal val BackupData = Color(0xFFE9DDFF)
 internal val BackupSheets = Color(0xFFB7ACD9)

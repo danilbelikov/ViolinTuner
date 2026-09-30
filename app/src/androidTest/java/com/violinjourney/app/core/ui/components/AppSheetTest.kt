@@ -16,6 +16,8 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsFocused
@@ -197,6 +199,90 @@ class AppSheetTest {
         compose.runOnIdle { assertEquals(1, hides) }
     }
 
+    /**
+     * «Поделиться» begins closable and holds while its file is made (spec 3.36.5, 5.29 R5): the handle goes, its room stays — the sheet
+     * keeps its height, and its top edge does not come down by the 29 dp between the handle (49) and the top of a sheet without one
+     * (20) — the content, laid out from the bottom of the window, stands where it stood either way; the sheet does not go under a swipe,
+     * and «назад» does nothing — Material's own «назад», set when the window opened closable, would ask the owner to hide it. Let go
+     * again, it hides under a swipe as before.
+     */
+    @Test
+    fun aSheetThatBeginsToHoldKeepsTheRoomOfItsHandleAndHearsNoBack() {
+        var holds by mutableStateOf(false)
+        compose.setContent {
+            ViolinTheme {
+                AppSheet(
+                    value = value,
+                    onHide = {
+                        hides++
+                        value = null
+                    },
+                    dismissible = !holds,
+                    keepHandleRoom = true,
+                ) { shown -> Box(Modifier.fillMaxWidth().height(SHEET.dp)) { Text(shown) } }
+            }
+        }
+        compose.waitForIdle()
+        value = SHOWN
+        compose.waitForIdle()
+        val before = sheetTop()
+
+        holds = true
+        compose.waitForIdle()
+        assertEquals("the sheet keeps its height: its top edge stands where it stood with the handle", before.value, sheetTop().value, 0.5f)
+        swipeDown()
+        compose.onNodeWithText(SHOWN).assertIsDisplayed()
+        Espresso.pressBack()
+        compose.waitForIdle()
+        compose.onNodeWithText(SHOWN).assertIsDisplayed()
+        compose.runOnIdle { assertEquals("held: nobody was asked to hide it", 0, hides) }
+        assertEquals(before.value, sheetTop().value, 0.5f)
+
+        holds = false
+        compose.waitForIdle()
+        assertEquals(before.value, sheetTop().value, 0.5f)
+        swipeDown()
+        compose.onNodeWithText(SHOWN).assertDoesNotExist()
+        compose.runOnIdle { assertEquals(1, hides) }
+    }
+
+    /**
+     * A sheet whose window opened holding — «Поделиться» made again by a turn of the phone while its file is made — hears no «назад»
+     * while it holds; let go («Отмена», a failure), «назад» hides it and tells its owner once, as it does a sheet that opened closable.
+     * Material's own «назад» is set off for good when such a window opens, and its window's cancel does nothing: the frame hears it.
+     */
+    @Test
+    fun aSheetThatOpenedHoldingHidesOnBackOnceItIsLetGo() {
+        var holds by mutableStateOf(true)
+        compose.setContent {
+            ViolinTheme {
+                AppSheet(
+                    value = value,
+                    onHide = {
+                        hides++
+                        value = null
+                    },
+                    dismissible = !holds,
+                    keepHandleRoom = true,
+                ) { shown -> Box(Modifier.fillMaxWidth().height(SHEET.dp)) { Text(shown) } }
+            }
+        }
+        compose.waitForIdle()
+        value = SHOWN
+        compose.waitForIdle()
+        Espresso.pressBack()
+        compose.waitForIdle()
+        compose.onNodeWithText(SHOWN).assertIsDisplayed()
+        compose.runOnIdle { assertEquals("held: nobody was asked to hide it", 0, hides) }
+
+        holds = false
+        compose.waitForIdle()
+        Espresso.pressBack()
+        compose.waitForIdle()
+        compose.onNodeWithText(SHOWN).assertDoesNotExist()
+        compose.runOnIdle { assertEquals("told once", 1, hides) }
+    }
+
     /** A face of the frame in these tests: two kinds, as «Занятие не закончено» and «Закончить занятие», or the day and its time. */
     private sealed interface Face {
         val title: String
@@ -255,6 +341,9 @@ class AppSheetTest {
     }
 
     private fun top(text: String): Dp = compose.onNodeWithText(text).getUnclippedBoundsInRoot().top
+
+    /** The top edge of the sheet: the pane Material gives it. */
+    private fun sheetTop(): Dp = compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsProperties.PaneTitle)).getUnclippedBoundsInRoot().top
 
     @Test
     fun aTallerFaceWithButtonsTakesThePlaceOfAShorterOneInPlace() =

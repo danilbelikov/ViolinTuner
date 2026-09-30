@@ -890,7 +890,7 @@
     <string name="take_best">best</string>
     <!-- “Sound”: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">Sound of recordings</string>
-    <string name="sound_everyone_subtitle">for all recordings · %1$s</string>
+    <string name="sound_everyone_all">for all recordings</string>
     <string name="sound_reset">Reset</string>
     <string name="sound_caption_off">no processing</string>
     <string name="sound_caption_custom">own settings</string>
@@ -908,17 +908,16 @@
     </string-array>
     <string name="sound_preset_custom">Custom</string>
     <string name="sound_preset_save">Save as preset</string>
-    <string name="sound_preset_remove_hint">Hold to delete</string>
     <string name="sound_mode_everyone">Same as all</string>
-    <string name="sound_mode_own">Own for this recording</string>
+    <string name="sound_mode_own">Own for the recording</string>
     <string name="sound_mode_everyone_text">%1$s — from “Settings → Sound of recordings”. Change it there and it changes here too. Touch any control and the recording gets its own settings.</string>
     <string name="sound_mode_own_text">For this recording only. “Same as all” brings back the shared settings — its own ones will be forgotten.</string>
     <string name="sound_listen_on">Listen on</string>
     <string name="sound_listen_latest">the latest with sound</string>
+    <string name="sound_listen_other">Another</string>
     <string name="sound_listen_none">No recordings with sound yet: you can set things up now and listen after the first recording.</string>
     <string name="sound_affected_one">for %1$d recording</string>
     <string name="sound_affected_many">for %1$d recordings</string>
-    <string name="sound_order">Order: Equalizer → Compressor → Hall → Volume</string>
     <string name="sound_block_eq">Equalizer</string>
     <string name="sound_block_compressor">Compressor</string>
     <string name="sound_block_compressor_sub">evens out the volume</string>
@@ -990,7 +989,6 @@
     <string name="sound_dialog_preset_hint">Name</string>
     <string name="sound_dialog_preset_save">Save</string>
     <string name="sound_dialog_delete_title">Delete the preset “%1$s”?</string>
-    <string name="sound_dialog_pick_title">Listen on</string>
     <string name="sound_share">Share</string>
     <string name="share_message">%1$s · %2$d %% · %3$s</string>
     <string name="share_message_session">Recording</string>
@@ -1005,18 +1003,19 @@
     <string name="share_video">Video</string>
     <string name="share_video_caption">as shot</string>
     <string name="share_sound_only">Sound only</string>
-    <string name="share_sound_only_processed">processed · ≈ %1$s · mono</string>
-    <string name="share_sound_only_caption">as recorded · ≈ %1$s · mono</string>
+    <string name="share_sound_with_processing">processed</string>
+    <string name="share_sound_as_recorded">as recorded</string>
     <string name="share_video_details">%1$s · %2$dp · ≈ %3$s</string>
     <string name="share_large_file">A large file: messengers may compress it or refuse it</string>
     <string name="share_failed_video_title">Could not prepare the video</string>
     <string name="share_failed_video_text">The take and the settings are in place. You can try again or send the video as shot, with the sound unprocessed.</string>
     <string name="share_send_as_shot">Send as shot</string>
     <string name="share_file_details">%1$s · ≈ %2$s · mono</string>
-    <string name="share_with_text">Add text: “%1$s”</string>
+    <string name="share_add_text">Add text</string>
     <string name="share_continue">Continue</string>
     <string name="share_busy">Preparing…</string>
     <string name="share_preparing">Preparing the file</string>
+    <string name="share_preparing_video">Preparing the video</string>
     <string name="share_percent">%1$d %%</string>
     <string name="share_remaining">about %1$d s left</string>
     <string name="share_failed_title">Could not prepare the file</string>
@@ -1042,6 +1041,8 @@
     <string name="sound_settings_row_caption">%1$s · for all recordings</string>
     <string name="sound_ab_original">A, original</string>
     <string name="sound_ab_processed">B, processed</string>
+    <string name="sound_ab_original_word">original</string>
+    <string name="sound_ab_processed_word">processed</string>
     <string name="stand_counter">%1$d / %2$d</string>
     <string name="stand_page_description">Page %1$d of %2$d</string>
     <string name="stand_delete_page">Delete page</string>
@@ -1153,6 +1154,9 @@
     <string name="backing_offset">Shift</string>
     <string name="backing_offset_hint">lags — move left</string>
     <string name="backing_offset_recorded">As recorded · %1$s</string>
+    <string name="backing_recorded_in">Recorded with %1$s</string>
+    <string name="backing_recorded_in_latency">Recorded with %1$s · %2$s allowed for</string>
+    <string name="backing_recorded_wired">Recorded with wired headphones</string>
 
     <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
     <string name="backing_add">Add a backing track</string>

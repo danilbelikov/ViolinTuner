@@ -36,6 +36,8 @@ import com.violinjourney.app.shared.resources.recap_description_level
 import com.violinjourney.app.shared.resources.recap_description_level_up
 import com.violinjourney.app.shared.resources.recap_road_enough
 import com.violinjourney.app.shared.resources.recap_title
+import com.violinjourney.app.shared.resources.sound_ab_original
+import com.violinjourney.app.shared.resources.sound_ab_processed
 import com.violinjourney.app.shared.resources.trophies_count
 import com.violinjourney.app.shared.resources.trophies_heading_description
 import com.violinjourney.app.shared.resources.trophies_line_next
@@ -112,8 +114,17 @@ import com.violinjourney.app.feature.practice.components.PracticeCalendar
 import com.violinjourney.app.feature.practice.components.SummarySheetContent
 import com.violinjourney.app.feature.repertoire.sections.SectionsScreen
 import com.violinjourney.app.feature.repertoire.sections.SectionsState
-import com.violinjourney.app.feature.sound.components.MiniPlayer
-import com.violinjourney.app.feature.sound.components.MiniPlayerMetrics
+import com.violinjourney.app.core.domain.backing.BackingConfig
+import com.violinjourney.app.core.domain.sound.BuiltInPreset
+import com.violinjourney.app.core.domain.sound.EqBand
+import com.violinjourney.app.core.domain.sound.SoundConfig
+import com.violinjourney.app.core.domain.sound.SoundPresets
+import com.violinjourney.app.feature.sound.RecordingName
+import com.violinjourney.app.feature.sound.SoundCaption
+import com.violinjourney.app.feature.sound.SoundIntent
+import com.violinjourney.app.feature.sound.SoundMode
+import com.violinjourney.app.feature.sound.SoundScreen
+import com.violinjourney.app.feature.sound.SoundState
 import com.violinjourney.app.feature.sound.components.ParamSlider
 import com.violinjourney.app.feature.sound.components.SliderModel
 import com.violinjourney.app.navigation.AppBottomBar
@@ -202,35 +213,54 @@ class AccessibilitySemanticsTest {
         assertEquals(listOf(false), chosen)
     }
 
+    /** The player at the bottom of «Звук» (spec 3.36.5): its large A/B are two radio buttons their activation picks; the wave seeks nowhere. */
     @Test
     fun theHalvesOfAbAnswerTheReadersActivationAndTheWaveIgnoresIt() {
         val original = mutableListOf<Pair<Boolean, Boolean>>()
         val seeks = mutableListOf<Long>()
         val meters = mutableStateOf<SoundMeters?>(null)
+        var a = ""
+        var b = ""
         compose.setContent {
+            a = stringResource(Res.string.sound_ab_original)
+            b = stringResource(Res.string.sound_ab_processed)
             ViolinTheme {
-                MiniPlayer(
-                    player = PlayerState(ready = true, durationMs = 60_000, processed = true),
-                    position = { 0 },
-                    waveform = null,
+                SoundScreen(
+                    state = soundOf(PlayerState(ready = true, durationMs = 60_000, processed = true)),
                     meters = meters,
-                    metrics = MiniPlayerMetrics.Regular,
-                    onPlayPause = {},
-                    onSeek = { seeks += it },
-                    onOriginal = { value, held -> original += value to held },
+                    onIntent = { intent ->
+                        when (intent) {
+                            is SoundIntent.OriginalSelected -> original += intent.original to intent.held
+                            is SoundIntent.SeekRequested -> seeks += intent.positionMs
+                            else -> Unit
+                        }
+                    },
+                    config = SoundConfig(),
+                    backingConfig = BackingConfig(),
                 )
             }
         }
-        val halves = compose.onAllNodes(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
-        halves.assertCountEquals(2)
-        halves[0].performSemanticsAction(SemanticsActions.OnClick)
-        halves[1].performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithContentDescription(a).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+            .performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithContentDescription(b).assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+            .performSemanticsAction(SemanticsActions.OnClick)
         assertEquals(listOf(true to false, false to false), original)
 
-        // the wave: a slider for swipes, and an activation that seeks nowhere
+        // the wave: a slider for swipes, and an activation that seeks nowhere (the cards are closed: no slider of theirs is there)
         compose.onNode(SemanticsMatcher.keyIsDefined(SemanticsActions.SetProgress)).performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForIdle()
         assertEquals(emptyList<Long>(), seeks)
+    }
+
+    /** «Звук» of a recording with the processing of «Камерный зал», heard through [player]. */
+    private fun soundOf(player: PlayerState): SoundState {
+        val config = SoundConfig()
+        return SoundState(
+            loading = false, mode = SoundMode.RECORDING, recording = RecordingName(1, "Take", null, 0), own = false,
+            settings = SoundPresets.settingsOf(BuiltInPreset.CHAMBER_HALL, config), caption = SoundCaption.BuiltIn(BuiltInPreset.CHAMBER_HALL),
+            chips = emptyList(), custom = false, canReset = false, savedHint = false, band = EqBand.PRESENCE, details = false,
+            player = player, listening = true, waveform = null, recordings = emptyList(), today = LocalDate(2026, 9, 27), affected = 0, dialog = null,
+        )
     }
 
     @Test

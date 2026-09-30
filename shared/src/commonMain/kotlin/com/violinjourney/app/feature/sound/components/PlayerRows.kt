@@ -42,6 +42,10 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.layout.Measurable
+import androidx.compose.ui.layout.MeasurePolicy
+import androidx.compose.ui.layout.MeasureResult
+import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.layout.SubcomposeLayout
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalWindowInfo
@@ -78,10 +82,12 @@ import com.violinjourney.app.shared.resources.session_player_pause
 import com.violinjourney.app.shared.resources.session_player_play
 import com.violinjourney.app.shared.resources.session_player_position
 import com.violinjourney.app.shared.resources.sound_ab_original
+import com.violinjourney.app.shared.resources.sound_ab_original_word
 import com.violinjourney.app.shared.resources.sound_ab_processed
+import com.violinjourney.app.shared.resources.sound_ab_processed_word
 import org.jetbrains.compose.resources.stringResource
 
-// The rows of the player at the bottom of a recording and — from stage 113 — of «Звук» (spec 3.36.5, 5.29 R5).
+// The rows of the player at the bottom of a recording and of «Звук» (spec 3.36.5, 5.29 R5).
 private val PlayRegular = 56.dp
 private val PlayCompact = 48.dp
 private val GlyphRegular = 26.dp
@@ -144,7 +150,8 @@ val PlayerPanelShape = RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp)
 /**
  * The first row of the player (spec 3.36.5, 5.29 R5): «play» 56 — 48 in the [compact] panel — the waveform (34, compact 24) that is
  * also the seek bar, and under it the time where the finger or the sound is and the length of the recording; [trailing] — what the
- * compact panel puts on the same row: its A/B and the icon of «Звук». [player] keeps its position to the whole second; the played
+ * compact panel of a recording puts on the same row: its A/B and the icon of «Звук»; [timeMiddle] — what the compact panel of «Звук»
+ * puts in the line of the time, between the two times: the output meter. [player] keeps its position to the whole second; the played
  * part of the wave follows [position] where it is drawn.
  */
 @Composable
@@ -156,6 +163,7 @@ internal fun PlayRow(
     onPlayPause: () -> Unit,
     onSeek: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    timeMiddle: (@Composable () -> Unit)? = null,
     trailing: @Composable RowScope.() -> Unit = {},
 ) {
     val dragged = remember { mutableStateOf<Float?>(null) }
@@ -163,7 +171,7 @@ internal fun PlayRow(
         PlayButton(player.playing, compact, onPlayPause)
         Column(Modifier.weight(1f).padding(start = PlayGap)) {
             SeekWave(player, position, waveform, if (compact) WaveCompact else WaveRegular, onSeek, Modifier.fillMaxWidth(), dragged)
-            TimeLine(player, dragged, Modifier.fillMaxWidth().padding(top = TimeTop))
+            TimeLine(player, dragged, Modifier.fillMaxWidth().padding(top = TimeTop), timeMiddle)
         }
         trailing()
     }
@@ -249,6 +257,10 @@ private fun TextMeasurer.standsWhole(words: String, style: TextStyle, room: Floa
  * A/B of the player (spec 3.17, 3.36.5): «A | B» on the ground of the screen, 800 — A the recording as recorded, B with its processing,
  * which is heard by default. A tap chooses; a finger held on A plays the original only while it stays, and B comes back when it lets
  * go ([onOriginal] with `held`). TalkBack hears «A, оригинал» and «B, обработка» with the mark of the choice.
+ *
+ * [words] — the large A/B of «Звук» the whole width: «A оригинал | B обработка», the letters 15 sp / 800 before words of 14 / 700; words
+ * too wide for their half go on two lines of 12 in the same segment, in the compact one on one line of 12 or a step smaller
+ * ([SegmentedSwitch]'s `shrinkToTwoLines`) — a word is never cut.
  */
 @Composable
 internal fun AbSegment(
@@ -257,20 +269,24 @@ internal fun AbSegment(
     compact: Boolean,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    words: Boolean = false,
 ) {
     val current by rememberUpdatedState(onOriginal)
+    val sides = listOf(SIDE_A, SIDE_B)
     SegmentedSwitch(
-        labels = listOf(SIDE_A, SIDE_B),
+        labels = if (words) listOf(stringResource(Res.string.sound_ab_original_word), stringResource(Res.string.sound_ab_processed_word)) else sides,
         selectedIndex = if (original) 0 else 1,
         onSelect = { current(it == 0, false) },
         modifier = modifier,
         compact = compact,
         containerColor = MaterialTheme.colorScheme.surface,
         enabled = enabled,
-        strong = true,
+        strong = !words,
+        prefixes = sides.takeIf { words },
         segmentDescriptions = listOf(stringResource(Res.string.sound_ab_original), stringResource(Res.string.sound_ab_processed)),
         // only A is held: its start and its end are the start and the end of «пока держишь»
         onHold = { index, held -> if (index == 0) current(held, true) },
+        shrinkToTwoLines = words,
     )
 }
 
@@ -322,14 +338,26 @@ private fun PlayButton(playing: Boolean, compact: Boolean, onClick: () -> Unit) 
 /**
  * The time under the wave: where the finger drags it — or where the sound is, to the whole second — and the length of the recording
  * at the other end. Where the two do not stand apart (a narrow column lying, an hour of recording) the length gives way: the summary
- * says it too.
+ * says it too. [middle] — what stands between the two, taking what they leave (the output meter of the compact panel of «Звук»).
  */
 @Composable
-private fun TimeLine(player: PlayerState, dragged: State<Float?>, modifier: Modifier) {
+private fun TimeLine(player: PlayerState, dragged: State<Float?>, modifier: Modifier, middle: (@Composable () -> Unit)? = null) {
     val colors = MaterialTheme.colorScheme
     val style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = FontWeight.SemiBold, fontFeatureSettings = TABULAR_FIGURES)
     val duration = player.durationMs.coerceAtLeast(1)
     val at = dragged.value?.let { (it * duration).toLong() } ?: player.positionMs
+    if (middle != null) {
+        Layout(
+            content = {
+                Text(Formats.duration(at), color = colors.onSurfaceVariant, maxLines = 1, softWrap = false, style = style)
+                Text(Formats.duration(player.durationMs), color = colors.onSurfaceVariant, maxLines = 1, softWrap = false, style = style)
+                Box(propagateMinConstraints = true) { middle() }
+            },
+            modifier = modifier,
+            measurePolicy = TimeWithMiddlePolicy,
+        )
+        return
+    }
     Layout(
         content = {
             Text(Formats.duration(at), color = colors.onSurfaceVariant, maxLines = 1, softWrap = false, style = style)
@@ -345,6 +373,32 @@ private fun TimeLine(player: PlayerState, dragged: State<Float?>, modifier: Modi
         layout(width, maxOf(shown.height, length.height)) {
             shown.placeRelative(0, 0)
             if (both) length.placeRelative(width - length.width, 0)
+        }
+    }
+}
+
+/**
+ * The line of the time with something between the times: the two times keep their width, the middle takes what they leave with a gap
+ * of [TimeGap] at each side; where that is less than the least width of the middle, the length gives way, as it does in the plain line.
+ */
+private object TimeWithMiddlePolicy : MeasurePolicy {
+    override fun MeasureScope.measure(measurables: List<Measurable>, constraints: Constraints): MeasureResult {
+        val loose = constraints.copy(minWidth = 0, minHeight = 0)
+        val gap = TimeGap.roundToPx()
+        val shown = measurables[0].measure(loose)
+        val length = measurables[1].measure(loose)
+        val width = constraints.maxWidth
+        val middle = measurables[2]
+        val least = middle.minIntrinsicWidth(constraints.maxHeight)
+        val beside = width - shown.width - length.width - gap * 2
+        val both = beside >= least
+        val room = (if (both) beside else width - shown.width - gap).coerceAtLeast(0)
+        val placed = middle.measure(Constraints(minWidth = room, maxWidth = room, maxHeight = loose.maxHeight))
+        val height = maxOf(shown.height, length.height, placed.height)
+        return layout(width, height) {
+            shown.placeRelative(0, (height - shown.height) / 2)
+            placed.placeRelative(shown.width + gap, (height - placed.height) / 2)
+            if (both) length.placeRelative(width - length.width, (height - length.height) / 2)
         }
     }
 }

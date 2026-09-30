@@ -4,12 +4,11 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -38,8 +36,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.layout.FirstBaseline
+import androidx.compose.ui.layout.LastBaseline
 import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
@@ -55,12 +56,16 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.violinjourney.app.core.ui.components.ButtonFit
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.sound_reset
 import com.violinjourney.app.shared.resources.sound_slider_minus
@@ -73,11 +78,27 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.jetbrains.compose.resources.stringResource
 
-private val RowHeight = 48.dp
-private val StepButton = 40.dp
-private val TrackHeight = 4.dp
+// The one slider of «Звук» (spec 3.17; 5.29 R5: a row of 52 pressed whole, − and + seen 36 in a touch of 48, a track of 6).
+private val RowHeight = 52.dp
+private val StepTarget = 48.dp
+private val StepVisible = 36.dp
+private val StepCorner = 10.dp
+private val StepIcon = 16.dp
+private val TrackHeight = 6.dp
 private val Thumb = 20.dp
-private val DefaultMark = 12.dp
+private val ThumbHalo = 4.dp
+private const val HALO_ALPHA = 0.35f
+private val DefaultMarkHeight = 16.dp
+private val DefaultMarkWidth = 2.dp
+private val LabelGap = 8.dp
+
+/** The name over the track: 14 sp, 700, on up to two lines; where its widest word does not stand whole, a step smaller down to 12. */
+private const val LABEL_SP = 14f
+private const val LABEL_MIN_SP = 12f
+private const val LABEL_LINES = 2
+
+/** The name is measured in whole pixels: a word that fits only by a hair is not trusted. */
+private val LabelSlack = 1.dp
 private val BubbleLift = 30.dp
 private const val DISABLED_ALPHA = 0.38f
 private const val THUMB_TRAVEL_MS = 150
@@ -99,6 +120,24 @@ internal object SliderGeometry {
     /** The left edge of a word [labelWidth] wide centred under the thumb at [fraction], kept within the track. */
     fun markLeft(fraction: Float, labelWidth: Int, width: Int, inset: Float): Int =
         (thumbCentre(fraction, width.toFloat(), inset) - labelWidth / 2f).roundToInt().coerceIn(0, (width - labelWidth).coerceAtLeast(0))
+}
+
+/**
+ * The line over a slider's track (spec 3.36.5, 5.29 R5): the value at the right is measured first and keeps the room of the widest
+ * text it can take ([SliderModel.valueReserve]) — it is never cut, and the name beside it does not move, nor the track under the
+ * finger, while it changes; the name takes what is left, on up to two lines at its spaces; the hint follows a name of one line, where
+ * at least its widest word stands — otherwise it is left out, not shown as «…». Pure; pixels.
+ */
+internal object SliderHead {
+    /** The room of the name: what the room of the value and the gap before it leave of the line. */
+    fun labelRoom(width: Int, valueRoom: Int, gap: Int): Int = (width - valueRoom - gap).coerceAtLeast(0)
+
+    /**
+     * The room of the hint after a name of [label] px on [oneLine], or null: the name took two lines, or less than [hintLeast] — the
+     * widest word of the hint — is left after it and the gap.
+     */
+    fun hintRoom(labelRoom: Int, label: Int, gap: Int, hintLeast: Int, oneLine: Boolean): Int? =
+        (labelRoom - label - gap).takeIf { oneLine && it >= hintLeast }
 }
 
 /**
@@ -126,13 +165,21 @@ data class SliderModel(
      * resets elsewhere («Сдвиг» of a backing: to the shift the take was recorded with).
      */
     val resetFraction: Float = defaultFraction,
+    /**
+     * The widest texts the value can take (`SliderValues`): the value keeps the room of the widest of them — or of [valueText], if
+     * that is wider — at the right of the name, so that the name does not move while the value changes. Empty — the room of
+     * [valueText] alone.
+     */
+    val valueReserve: List<String> = emptyList(),
 )
 
 /**
- * The one control of a value on the «Звук» screen (handoff 18g): twenty parameters, one slider —
- * the eye stops seeing the control and reads the captions. The whole row takes the touch, the
- * value stands as a number with its unit and rides above the finger while dragged, − and +
- * step finely (held — they repeat), the default has a mark, a double tap returns to it.
+ * The one control of a value on the «Звук» screen (handoff 18g; spec 3.36.5, 5.29 R5): twenty parameters, one slider — the eye
+ * stops seeing the control and reads the captions. The name (14 sp, 700) and the value (14 sp, 800) above, at the right — the value
+ * whole in the room of its widest text, the name in what is left ([SliderHead]); under them «−», the track and «+». The whole row of
+ * 52 takes the touch, the value stands as a number with its unit and rides above the finger
+ * while dragged, − and + — 36 seen on the ground of the screen in a touch of 48 — step finely (held — they repeat), the default has
+ * a mark of 2 × 16 in the third level of text, a double tap returns to it; the thumb is white in a halo of the accent.
  *
  * To TalkBack and VoiceOver the track is a slider moved by swiping; the way back to the default is the action «Сбросить»
  * of the actions menu. Their activation — the double tap of a reader — does nothing: it resets no setting by the way, and
@@ -171,28 +218,12 @@ fun ParamSlider(
     val offText = stringResource(Res.string.sound_slider_off)
 
     Column(modifier = modifier.alpha(if (enabled) 1f else DISABLED_ALPHA)) {
-        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(model.label, color = colors.onSurface, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.SemiBold))
-            Text(
-                text = model.hint.orEmpty(),
-                color = colors.onSurfaceVariant,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp),
-                modifier = Modifier.weight(1f),
-            )
-            Text(
-                text = model.valueText,
-                color = if (model.detached) colors.onSurfaceVariant else colors.primary,
-                style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
-            )
-        }
+        SliderHeadLine(model)
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(RowHeight),
             verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             StepButton(up = false, label = stringResource(Res.string.sound_slider_minus, model.label), enabled = enabled) { currentOnStep(false) }
             Box(
@@ -266,7 +297,10 @@ fun ParamSlider(
             ) {
                 val track = colors.surfaceContainerHigh
                 val fill = if (model.detached) colors.outlineVariant else colors.primary
-                val mark = colors.outline
+                val mark = ViolinTheme.textTertiary
+                val halo = colors.primary.copy(alpha = HALO_ALPHA)
+                // a knob that has let go of its numbers is not the white one: the value is not on the track
+                val knob = if (model.detached) mark else Color.White
                 Canvas(Modifier.fillMaxSize()) {
                     val inset = Thumb.toPx() / 2
                     val width = size.width - inset * 2
@@ -277,8 +311,11 @@ fun ParamSlider(
                     val from = if (model.bipolar) inset + width / 2 else inset
                     drawRoundRect(fill, Offset(minOf(from, at), centreY - height / 2), Size(abs(at - from), height), CornerRadius(height / 2))
                     val defaultX = inset + width * model.defaultFraction
-                    drawRoundRect(mark, Offset(defaultX - 1.dp.toPx(), centreY - DefaultMark.toPx() / 2), Size(2.dp.toPx(), DefaultMark.toPx()), CornerRadius(1.dp.toPx()))
-                    drawCircle(if (enabled && !model.detached) fill else mark, radius = Thumb.toPx() / 2, center = Offset(at, centreY))
+                    val markWidth = DefaultMarkWidth.toPx()
+                    val markHeight = DefaultMarkHeight.toPx()
+                    drawRoundRect(mark, Offset(defaultX - markWidth / 2, centreY - markHeight / 2), Size(markWidth, markHeight), CornerRadius(markWidth / 2))
+                    if (enabled && !model.detached) drawCircle(halo, radius = Thumb.toPx() / 2 + ThumbHalo.toPx(), center = Offset(at, centreY))
+                    drawCircle(knob, radius = Thumb.toPx() / 2, center = Offset(at, centreY))
                 }
                 if (bubble && enabled) {
                     val density = LocalDensity.current
@@ -308,7 +345,7 @@ fun ParamSlider(
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = StepButton + 8.dp)
+                    .padding(horizontal = StepTarget)
                     .height(16.dp)
                     .clearAndSetSemantics { },
             ) { measurables, constraints ->
@@ -324,7 +361,86 @@ fun ParamSlider(
     }
 }
 
-/** − or +: one step a press, eight a second while held. */
+/**
+ * The name, its hint and the value over the track ([SliderHead]): the value — 14 sp, 800, tabular figures — stands at the right in the
+ * room of the widest text it can take; the name — 14 sp, 700 — on up to two lines in what is left, a step smaller at a time down to
+ * 12 sp where its widest word would not stand whole (German «Ausgangsverstärkung» in the narrow column of a phone lying, at the font
+ * 1.3); the hint after a name of one line. The value and the hint stand on the baseline of the last line of the name.
+ */
+@Composable
+private fun SliderHeadLine(model: SliderModel) {
+    val colors = MaterialTheme.colorScheme
+    val labelStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = LABEL_SP.sp, fontWeight = FontWeight.Bold)
+    val valueStyle = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES)
+    val hintStyle = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val hint = model.hint?.takeIf { it.isNotBlank() }
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val gap = with(density) { LabelGap.roundToPx() }
+        // the room of the value whatever it says: its widest text, measured once for the slider — not at every step of a drag
+        val reserve = remember(model.valueReserve, valueStyle, measurer) {
+            model.valueReserve.maxOfOrNull { measurer.measure(it, valueStyle, softWrap = false, maxLines = 1).size.width } ?: 0
+        }
+        val room = SliderHead.labelRoom(constraints.maxWidth, reserve, gap)
+        val labelSp = remember(model.label, room, labelStyle, measurer, density) {
+            val words = model.label.split(' ').filter { it.isNotEmpty() }
+            ButtonFit.size(room - with(density) { LabelSlack.toPx() }, LABEL_SP, LABEL_MIN_SP) { sp ->
+                words.maxOfOrNull { measurer.measure(it, labelStyle.copy(fontSize = sp.sp), softWrap = false, maxLines = 1).size.width.toFloat() } ?: 0f
+            }
+        }
+        Layout(
+            contents = listOf(
+                {
+                    Text(
+                        text = model.label,
+                        color = colors.onSurface,
+                        maxLines = LABEL_LINES,
+                        overflow = TextOverflow.Ellipsis,
+                        style = if (labelSp == LABEL_SP) labelStyle else labelStyle.copy(fontSize = labelSp.sp),
+                    )
+                },
+                { if (hint != null) Text(hint, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, style = hintStyle) },
+                {
+                    Text(
+                        text = model.valueText,
+                        color = if (model.detached) colors.onSurfaceVariant else colors.onSurface,
+                        maxLines = 1,
+                        softWrap = false,
+                        style = valueStyle,
+                    )
+                },
+            ),
+        ) { (labels, hints, values), constraints ->
+            val width = constraints.maxWidth
+            // first the value, whole: nothing beside it can take its room
+            val value = values.single().measure(Constraints(maxWidth = width))
+            val labelRoom = SliderHead.labelRoom(width, maxOf(reserve, value.width), gap)
+            val label = labels.single().measure(Constraints(maxWidth = labelRoom))
+            val labelFirst = label[FirstBaseline]
+            val labelLast = label[LastBaseline]
+            val hintPlaced = hints.firstOrNull()?.let { measurable ->
+                val least = measurable.minIntrinsicWidth(Constraints.Infinity)
+                SliderHead.hintRoom(labelRoom, label.width, gap, least, oneLine = labelFirst == labelLast)?.let { measurable.measure(Constraints(maxWidth = it)) }
+            }
+            // one baseline for all three: the last line of the name
+            val valueBase = value[FirstBaseline]
+            val hintBase = hintPlaced?.get(FirstBaseline) ?: 0
+            val baseline = maxOf(labelLast, valueBase, hintBase)
+            val labelY = baseline - labelLast
+            val valueY = baseline - valueBase
+            val hintY = baseline - hintBase
+            val height = maxOf(labelY + label.height, valueY + value.height, hintPlaced?.let { hintY + it.height } ?: 0)
+            layout(width, height) {
+                label.placeRelative(0, labelY)
+                hintPlaced?.placeRelative(label.width + gap, hintY)
+                value.placeRelative(width - value.width, valueY)
+            }
+        }
+    }
+}
+
+/** − or +: one step a press, eight a second while held; 36 seen on the ground of the screen, 48 pressed. */
 @Composable
 private fun StepButton(up: Boolean, label: String, enabled: Boolean, onStep: () -> Unit) {
     val colors = MaterialTheme.colorScheme
@@ -332,9 +448,7 @@ private fun StepButton(up: Boolean, label: String, enabled: Boolean, onStep: () 
     val currentOnStep by rememberUpdatedState(onStep)
     Box(
         modifier = Modifier
-            .size(StepButton)
-            .clip(CircleShape)
-            .border(1.dp, colors.outlineVariant, CircleShape)
+            .size(StepTarget)
             .semantics {
                 contentDescription = label
                 if (enabled) onClick { currentOnStep(); true } else disabled()
@@ -364,6 +478,13 @@ private fun StepButton(up: Boolean, label: String, enabled: Boolean, onStep: () 
             },
         contentAlignment = Alignment.Center,
     ) {
-        AppIcon(if (up) AppIcons.Plus else AppIcons.Minus, contentDescription = null, tint = colors.onSurfaceVariant, size = 18.dp)
+        Box(
+            modifier = Modifier
+                .size(StepVisible)
+                .background(colors.surface, RoundedCornerShape(StepCorner)),
+            contentAlignment = Alignment.Center,
+        ) {
+            AppIcon(if (up) AppIcons.Plus else AppIcons.Minus, contentDescription = null, tint = colors.onSurface, size = StepIcon)
+        }
     }
 }

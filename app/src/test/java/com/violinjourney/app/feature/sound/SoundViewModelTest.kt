@@ -23,6 +23,8 @@ import com.violinjourney.app.core.domain.sound.SoundPresets
 import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.domain.sound.SoundSettings
+import com.violinjourney.app.core.time.FixedWallClock
+import com.violinjourney.app.core.time.WallClock
 import java.io.File
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
@@ -31,11 +33,16 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.TestScope
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.setMain
+import kotlinx.datetime.LocalDate
+import kotlinx.datetime.LocalDateTime
+import kotlinx.datetime.TimeZone
+import kotlinx.datetime.toInstant
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -54,6 +61,10 @@ class SoundViewModelTest {
     private val waveforms = FakeSessionWaveforms()
     private val hall = SoundPresets.settingsOf(BuiltInPreset.CHAMBER_HALL, config)
     private val warm = SoundPresets.settingsOf(BuiltInPreset.WARM, config)
+
+    /** Sunday 27 September 2026, noon in Moscow: the day the cards of «Слушать на» are dated against. */
+    private val moscow = TimeZone.of("Europe/Moscow")
+    private val clock = FixedWallClock(LocalDateTime.parse("2026-09-27T12:00:00").toInstant(moscow), moscow)
 
     private object AudioFiles : SessionAudioFiles {
         override fun newFile(): File = error("not used")
@@ -92,11 +103,12 @@ class SoundViewModelTest {
         sound: SoundRepository = this@SoundViewModelTest.sound,
         audioFiles: SessionAudioFiles = AudioFiles,
         backingConfig: BackingConfig = BackingConfig(),
+        clock: WallClock = this@SoundViewModelTest.clock,
     ): Pair<SoundViewModel, MutableList<SoundEffect>> {
         val viewModel = SoundViewModel(
             SavedStateHandle(mapOf(SoundViewModel.ARG_SESSION_ID to (sessionId ?: SoundViewModel.EVERYONE))),
             sound, sessions, repertoire, audioFiles, { player }, waveforms, config, backings, backingPcm, backingConfig,
-            io = StandardTestDispatcher(testScheduler),
+            clock = clock, io = StandardTestDispatcher(testScheduler),
         )
         val effects = mutableListOf<SoundEffect>()
         backgroundScope.launch { viewModel.effects.collect { effects += it } }
@@ -272,7 +284,7 @@ class SoundViewModelTest {
         val state = viewModel.state.value
         assertEquals(SoundMode.EVERYONE, state.mode)
         assertEquals("own.m4a is the newest that can be played", listOf(File("own.m4a")), player.loaded)
-        assertEquals(listOf(own, 1L), state.recordings.map { it.sessionId })
+        assertEquals(listOf(own, 1L), state.recordings.map { it.id })
         assertEquals("old.m4a and gone.m4a follow the default; the silent one has no sound to process", 2, state.affected)
 
         viewModel.onIntent(SoundIntent.PresetSelected(PresetRef.BuiltIn(BuiltInPreset.CHAMBER_HALL)))
@@ -408,7 +420,10 @@ class SoundViewModelTest {
         val under = recording("under.m4a")
         underBacking(under)
         val (viewModel, _) = screen(under)
-        assertEquals(com.violinjourney.app.feature.sound.BackingBlockState(-6f, 200, 200), viewModel.state.value.backing)
+        assertEquals(
+            BackingBlockState(-6f, 200, 200, title = "Piano", durationMs = 220_000, recordedWith = RecordedWith.Wireless("Buds", latencyMs = 200)),
+            viewModel.state.value.backing,
+        )
         assertEquals(200, player.backing?.offsetMs)
         assertEquals(File("pcm-48000"), player.backing?.pcm?.invoke(48_000))
         assertTrue(player.state.value.hasBacking)
@@ -495,5 +510,143 @@ class SoundViewModelTest {
         player.state.value = com.violinjourney.app.core.audio.playback.PlayerState(ready = true, durationMs = 1_000)
         runCurrent()
         assertFalse(other.state.value.backingUnavailable)
+    }
+
+    private fun at(time: String): Long = LocalDateTime.parse(time).toInstant(moscow).toEpochMilliseconds()
+
+    @Test
+    fun `when the screen opens every card is closed, and opening one closes none of the others`() = runTest {
+        val under = recording("under.m4a")
+        underBacking(under)
+        val (viewModel, _) = screen(under)
+        assertEquals(emptySet<SoundCard>(), viewModel.state.value.expanded)
+
+        viewModel.onIntent(SoundIntent.CardToggled(SoundCard.EQ))
+        viewModel.onIntent(SoundIntent.CardToggled(SoundCard.REVERB))
+        viewModel.onIntent(SoundIntent.CardToggled(SoundCard.BACKING))
+        assertEquals(setOf(SoundCard.EQ, SoundCard.REVERB, SoundCard.BACKING), viewModel.state.value.expanded)
+
+        viewModel.onIntent(SoundIntent.CardToggled(SoundCard.EQ))
+        assertEquals("the others stay open", setOf(SoundCard.REVERB, SoundCard.BACKING), viewModel.state.value.expanded)
+        viewModel.onIntent(SoundIntent.CardToggled(SoundCard.BACKING))
+        assertEquals("«Минусовка» folds as the others do", setOf(SoundCard.REVERB), viewModel.state.value.expanded)
+        assertTrue("opening and closing is no change of the sound", sound.own.value.isEmpty())
+    }
+
+    @Test
+    fun `«Минусовка» that could not be prepared does not open, and a take without a backing has none to open`() = runTest {
+        val under = recording("under.m4a")
+        underBacking(under)
+        val (viewModel, _) = screen(under)
+        player.state.value = com.violinjourney.app.core.audio.playback.PlayerState(ready = true, durationMs = 1_000, hasBacking = false)
+        runCurrent()
+        viewModel.onIntent(SoundIntent.CardToggled(SoundCard.BACKING))
+        assertEquals(emptySet<SoundCard>(), viewModel.state.value.expanded)
+
+        val (plain, _) = screen(recording("plain.m4a"))
+        plain.onIntent(SoundIntent.CardToggled(SoundCard.BACKING))
+        assertEquals(emptySet<SoundCard>(), plain.state.value.expanded)
+    }
+
+    @Test
+    fun `the card of the backing names its file and its length, and says what the take was recorded in`() = runTest {
+        val under = recording("under.m4a")
+        val backingId = backings.add(backings.backing(title = "фортепиано"))
+        backings.saveTake(
+            com.violinjourney.app.core.domain.backing.TakeBacking(
+                under, backingId, 200, 200, -6f, 2_000, com.violinjourney.app.core.domain.backing.BackingOutput.BLUETOOTH, "Pixel Buds", latencyMs = 200,
+            ),
+        )
+        val (viewModel, _) = screen(under)
+        val block = viewModel.state.value.backing!!
+        assertEquals("фортепиано", block.title)
+        assertEquals(220_000L, block.durationMs)
+        assertEquals(RecordedWith.Wireless("Pixel Buds", latencyMs = 200), block.recordedWith)
+    }
+
+    @Test
+    fun `the line of the headphones is what the take keeps - wired, wireless with nothing added, and nothing for a nameless one`() = runTest {
+        suspend fun recordedWith(output: com.violinjourney.app.core.domain.backing.BackingOutput, name: String?, latencyMs: Int): RecordedWith? {
+            val take = recording("take-${output.name}-$name.m4a")
+            val backingId = backings.add(backings.backing())
+            backings.saveTake(com.violinjourney.app.core.domain.backing.TakeBacking(take, backingId, 0, 0, -6f, 2_000, output, name, latencyMs))
+            return screen(take).first.state.value.backing!!.recordedWith
+        }
+        assertEquals(RecordedWith.Wired, recordedWith(com.violinjourney.app.core.domain.backing.BackingOutput.WIRED, "Jack", 0))
+        assertEquals(RecordedWith.Wired, recordedWith(com.violinjourney.app.core.domain.backing.BackingOutput.USB, null, 0))
+        assertEquals(RecordedWith.Wireless("Buds", 0), recordedWith(com.violinjourney.app.core.domain.backing.BackingOutput.BLUETOOTH, "Buds", 0))
+        assertNull(recordedWith(com.violinjourney.app.core.domain.backing.BackingOutput.BLUETOOTH, null, 200))
+    }
+
+    @Test
+    fun `«Слушать на» is the cards of the recordings that play - newest first, dated, with «лучший» and the sign of the backing`() = runTest {
+        val pieceId = repertoire.add(PieceDraft(title = "Менуэт"), nowEpochMs = 1)
+        val best = recording("best.m4a", startedAt = at("2026-09-26T18:42:00"), pieceId = pieceId)
+        repertoire.setBestTake(pieceId, best)
+        val free = recording("free.m4a", startedAt = at("2026-09-27T09:15:00"))
+        val under = recording("under.m4a", startedAt = at("2026-09-25T20:00:00"), pieceId = pieceId)
+        underBacking(under)
+        recording(null, startedAt = at("2026-09-27T10:00:00"))
+        recording("gone.m4a", startedAt = at("2026-09-27T11:00:00"))
+
+        val (viewModel, _) = screen(null)
+        val state = viewModel.state.value
+        assertEquals("only those that play, newest first", listOf(free, best, under), state.recordings.map { it.id })
+        assertEquals(LocalDate(2026, 9, 27), state.today)
+        val (first, second, third) = state.recordings
+        assertEquals(LocalDate(2026, 9, 27), first.date)
+        assertFalse(first.take || first.best || first.underBacking)
+        assertEquals(LocalDate(2026, 9, 26), second.date)
+        assertEquals("Менуэт", second.pieceTitle)
+        assertTrue(second.take && second.best && second.hasAudio)
+        assertTrue(third.underBacking && !third.best)
+        assertEquals("heard on the newest", free, state.recording!!.sessionId)
+    }
+
+    /**
+     * The days of «Слушать на» are those of the zone of the screen's clock (D14), as the days of «Записи» are: half past midnight in
+     * Vladivostok is still the day before in Moscow, where the tests run, and in UTC — the card stands under the day of the clock,
+     * and that day is «сегодня».
+     */
+    @Test
+    fun `«Слушать на» dates its cards and today in the zone of its clock - half past midnight there`() = runTest {
+        val vladivostok = TimeZone.of("Asia/Vladivostok")
+        val night = LocalDateTime.parse("2026-09-27T00:30:00").toInstant(vladivostok).toEpochMilliseconds()
+        val id = recording("night.m4a", startedAt = night)
+        val clock = FixedWallClock(LocalDateTime.parse("2026-09-27T00:45:00").toInstant(vladivostok), vladivostok)
+
+        val state = screen(null, clock = clock).first.state.value
+        assertEquals(LocalDate(2026, 9, 27), state.today)
+        assertEquals(listOf(id), state.recordings.map { it.id })
+        assertEquals(LocalDate(2026, 9, 27), state.recordings.single().date)
+    }
+
+    @Test
+    fun `the panel of the player stands in the first state of the screen, and goes when the file cannot be played`() = runTest {
+        val id = recording("take.m4a")
+        val viewModel = SoundViewModel(
+            SavedStateHandle(mapOf(SoundViewModel.ARG_SESSION_ID to id)),
+            sound, sessions, repertoire, AudioFiles, { player }, waveforms, config, backings, backingPcm, BackingConfig(),
+            clock = clock, io = StandardTestDispatcher(testScheduler),
+        )
+        val states = mutableListOf<SoundState>()
+        backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.state.collect { states += it } }
+        runCurrent()
+        val shown = states.first { !it.loading }
+        assertTrue("known before the player is ready: nothing under it jumps when it comes", shown.listening)
+
+        player.state.value = com.violinjourney.app.core.audio.playback.PlayerState(failed = true)
+        runCurrent()
+        assertFalse(viewModel.state.value.listening)
+        assertNull(viewModel.state.value.player)
+    }
+
+    @Test
+    fun `the screen of everyone with nothing to listen on has no panel`() = runTest {
+        recording(null)
+        val (viewModel, _) = screen(null)
+        assertFalse(viewModel.state.value.loading)
+        assertFalse(viewModel.state.value.listening)
+        assertTrue(viewModel.state.value.recordings.isEmpty())
     }
 }

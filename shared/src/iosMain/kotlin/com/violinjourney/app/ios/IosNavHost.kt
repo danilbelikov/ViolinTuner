@@ -200,7 +200,7 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                         savedState = createSavedStateHandle(), sound = graph.sound, sessions = graph.sessions,
                         repertoire = graph.repertoire, audioFiles = graph.audioFiles, playerFactory = graph.playerFactory,
                         waveforms = graph.waveforms, config = graph.soundConfig, backings = graph.backings,
-                        backingPcm = graph.backingPcm, backingConfig = graph.backingConfig, io = graph.io,
+                        backingPcm = graph.backingPcm, backingConfig = graph.backingConfig, clock = graph.clock, io = graph.io,
                     )
                 },
                 onShare = share::start,

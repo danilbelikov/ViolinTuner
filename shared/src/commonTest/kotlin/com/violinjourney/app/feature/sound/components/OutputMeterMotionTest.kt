@@ -7,7 +7,7 @@ import kotlin.test.assertFalse
 import kotlin.test.assertNull
 import kotlin.test.assertTrue
 
-/** The output meter of the mini player on made-up frame times; its numbers are those of spec 5.11. */
+/** The output meter of the player of «Звук» on made-up frame times; its numbers are those of spec 5.11. */
 class OutputMeterMotionTest {
     private fun reading(peakDb: Double, limiting: Boolean = false) = SoundMeters(outputPeakDb = peakDb, reductionDb = 0.0, limiting = limiting)
 

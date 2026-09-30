@@ -3,6 +3,7 @@ package com.violinjourney.app.core.ui.components
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.heightIn
@@ -20,6 +21,8 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -95,6 +98,9 @@ object AppChip {
      * [selected] null makes it an action chip — «+10 мин», «0» of «Время за день»: a button with no state of choice. [enabled] false
      * dims it to 0.38 and it is not pressed (the muted options of R4). Pressed over 48 dp while 44 are seen; a row of choices is
      * wrapped in `selectableGroup()` by the caller. A minimum width («не уже 60» of R3) comes with [modifier].
+     *
+     * [onLongClick] — a long press does something besides the choice: a preset of the user's own on «Звук» offers to remove it
+     * (spec 3.17, 3.36.5); [onLongClickLabel] is what TalkBack says of it. The chip still reads as a radio button, chosen or not.
      */
     @Composable
     fun Choice(
@@ -104,6 +110,8 @@ object AppChip {
         modifier: Modifier = Modifier,
         inSheet: Boolean = false,
         enabled: Boolean = true,
+        onLongClick: (() -> Unit)? = null,
+        onLongClickLabel: String? = null,
     ) {
         val colors = MaterialTheme.colorScheme
         val chosen = selected == true
@@ -112,10 +120,18 @@ object AppChip {
             inSheet -> colors.surfaceContainerHigh
             else -> colors.surfaceContainer
         }
-        val press = if (selected == null) {
-            Modifier.clickable(enabled = enabled, role = Role.Button, onClick = onClick)
-        } else {
-            Modifier.selectable(selected = chosen, enabled = enabled, role = Role.RadioButton, onClick = onClick)
+        val press = when {
+            onLongClick != null -> Modifier
+                .then(if (selected != null) Modifier.semantics { this.selected = chosen } else Modifier)
+                .combinedClickable(
+                    enabled = enabled,
+                    role = if (selected == null) Role.Button else Role.RadioButton,
+                    onLongClickLabel = onLongClickLabel,
+                    onLongClick = onLongClick,
+                    onClick = onClick,
+                )
+            selected == null -> Modifier.clickable(enabled = enabled, role = Role.Button, onClick = onClick)
+            else -> Modifier.selectable(selected = chosen, enabled = enabled, role = Role.RadioButton, onClick = onClick)
         }
         Row(
             modifier = modifier

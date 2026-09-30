@@ -3,7 +3,7 @@ package com.violinjourney.app.core.audio.playback
 import kotlin.math.sqrt
 
 /**
- * The static waveform of the mini player (spec 3.17): [bars] columns, each the RMS of its share
+ * The static waveform of the player (spec 3.17, 3.36.5): [bars] columns, each the RMS of its share
  * of the recording, scaled so that the loudest is 1. It is there for a reason — to see where
  * the loud places are, or a compressor cannot be told from the music. Fed in pieces, as the
  * decoder hands them out; nothing of the sound is kept.

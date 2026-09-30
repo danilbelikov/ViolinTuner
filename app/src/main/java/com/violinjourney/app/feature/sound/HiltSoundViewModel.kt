@@ -12,6 +12,7 @@ import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundRepository
+import com.violinjourney.app.core.time.WallClock
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CoroutineDispatcher
@@ -29,5 +30,6 @@ class HiltSoundViewModel @Inject constructor(
     backings: BackingRepository,
     backingPcm: BackingPcm,
     backingConfig: BackingConfig,
+    clock: WallClock,
     @IoDispatcher io: CoroutineDispatcher,
-) : SoundViewModel(savedState, sound, sessions, repertoire, audioFiles, playerFactory, waveforms, config, backings, backingPcm, backingConfig, io)
+) : SoundViewModel(savedState, sound, sessions, repertoire, audioFiles, playerFactory, waveforms, config, backings, backingPcm, backingConfig, clock, io)

@@ -23,7 +23,7 @@ import platform.Foundation.writeToFile
 import platform.posix.memcpy
 
 /**
- * The waveforms of the mini player on iOS, as `AppSessionWaveforms` keeps them on Android: reckoned once from the
+ * The waveforms of the players of «Звук» and of a recording on iOS, as `AppSessionWaveforms` keeps them on Android: reckoned once from the
  * sound by [WaveformBuilder] and kept a byte a bar in `waveforms/<audio name>.wave`.
  */
 @OptIn(ExperimentalForeignApi::class)

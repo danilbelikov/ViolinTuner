@@ -13,6 +13,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
@@ -20,12 +21,14 @@ import androidx.compose.ui.test.assertHeightIsAtLeast
 import androidx.compose.ui.test.assertHeightIsEqualTo
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.assertIsNotSelected
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createComposeRule
+import androidx.compose.ui.test.longClick
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -110,6 +113,34 @@ class ControlsTouchTest {
         compose.runOnIdle { assertEquals(2, presses) }
     }
 
+    /**
+     * A preset of the user's own on «Звук» (spec 3.36.5): a chip of choice that a long press offers to remove — the press chooses, the
+     * long press is heard as such and not as a choice, TalkBack is told what it does, and the chip still reads as a radio button.
+     */
+    @Test
+    fun aChoiceWithALongPressAnswersItAndStaysARadioButton() {
+        var longPresses = 0
+        compose.setContent {
+            ViolinTheme {
+                AppChip.Choice(
+                    "Мой зал", selected = false, onClick = { presses++ }, modifier = Modifier.testTag(TAG),
+                    onLongClick = { longPresses++ }, onLongClickLabel = REMOVE,
+                )
+            }
+        }
+        compose.onNodeWithTag(TAG)
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+            .assertIsNotSelected()
+            .performTouchInput { longClick() }
+        compose.runOnIdle {
+            assertEquals(1, longPresses)
+            assertEquals("a long press is no choice", 0, presses)
+        }
+        compose.onNodeWithTag(TAG).performClick()
+        compose.runOnIdle { assertEquals(1, presses) }
+        assertEquals(REMOVE, compose.onNodeWithTag(TAG).fetchSemanticsNode().config[SemanticsActions.OnLongClick].label)
+    }
+
     @Test
     fun aDimmedChoiceIsNotPressed() {
         compose.setContent {
@@ -184,5 +215,7 @@ class ControlsTouchTest {
         const val NEIGHBOUR = "neighbour"
         const val REASON = "Чтобы записать дубль, нужен доступ к микрофону."
         const val GRANT = "Разрешить доступ"
+        /** What a long press does, as TalkBack puts it in «дважды нажмите и удерживайте, чтобы …»: a verb, not a sentence of its own. */
+        const val REMOVE = "Удалить"
     }
 }

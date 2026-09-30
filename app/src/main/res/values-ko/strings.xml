@@ -890,7 +890,7 @@
     <string name="take_best">베스트</string>
     <!-- «Звук»: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">녹음 사운드</string>
-    <string name="sound_everyone_subtitle">모든 녹음에 적용 · %1$s</string>
+    <string name="sound_everyone_all">모든 녹음에 적용</string>
     <string name="sound_reset">초기화</string>
     <string name="sound_caption_off">처리 없음</string>
     <string name="sound_caption_custom">개별 설정</string>
@@ -908,17 +908,16 @@
     </string-array>
     <string name="sound_preset_custom">개별</string>
     <string name="sound_preset_save">프리셋으로 저장</string>
-    <string name="sound_preset_remove_hint">길게 눌러 삭제</string>
     <string name="sound_mode_everyone">공통 설정</string>
-    <string name="sound_mode_own">이 녹음만의 설정</string>
+    <string name="sound_mode_own">이 녹음만</string>
     <string name="sound_mode_everyone_text">%1$s — “설정 → 녹음 사운드”의 값입니다. 거기에서 바꾸면 여기도 바뀝니다. 조절 항목을 하나라도 건드리면 이 녹음은 개별 설정을 갖게 됩니다.</string>
     <string name="sound_mode_own_text">이 녹음에만 적용됩니다. “공통 설정”을 고르면 공통 값으로 돌아가고 개별 설정은 사라집니다.</string>
     <string name="sound_listen_on">들어 볼 녹음</string>
     <string name="sound_listen_latest">소리가 있는 최근 녹음</string>
+    <string name="sound_listen_other">다른 녹음</string>
     <string name="sound_listen_none">아직 소리가 있는 녹음이 없어요. 설정은 지금 해 둘 수 있고, 들어 보는 것은 첫 녹음 뒤에 가능합니다.</string>
     <string name="sound_affected_one">녹음 %1$d개에 적용</string>
     <string name="sound_affected_many">녹음 %1$d개에 적용</string>
-    <string name="sound_order">순서: 이퀄라이저 → 컴프레서 → 홀 → 볼륨</string>
     <string name="sound_block_eq">이퀄라이저</string>
     <string name="sound_block_compressor">컴프레서</string>
     <string name="sound_block_compressor_sub">음량을 고르게</string>
@@ -990,7 +989,6 @@
     <string name="sound_dialog_preset_hint">이름</string>
     <string name="sound_dialog_preset_save">저장</string>
     <string name="sound_dialog_delete_title">“%1$s” 프리셋을 삭제할까요?</string>
-    <string name="sound_dialog_pick_title">들어 볼 녹음</string>
     <string name="sound_share">공유</string>
     <string name="share_message">%1$s · %2$d%% · %3$s</string>
     <string name="share_message_session">녹음</string>
@@ -1005,18 +1003,19 @@
     <string name="share_video">영상</string>
     <string name="share_video_caption">촬영한 그대로</string>
     <string name="share_sound_only">소리만</string>
-    <string name="share_sound_only_processed">처리됨 · ≈ %1$s · 모노</string>
-    <string name="share_sound_only_caption">녹음된 그대로 · ≈ %1$s · 모노</string>
+    <string name="share_sound_with_processing">처리됨</string>
+    <string name="share_sound_as_recorded">녹음된 그대로</string>
     <string name="share_video_details">%1$s · %2$dp · ≈ %3$s</string>
     <string name="share_large_file">큰 파일입니다: 메신저가 압축하거나 받지 않을 수 있어요</string>
     <string name="share_failed_video_title">영상을 준비하지 못했어요</string>
     <string name="share_failed_video_text">테이크와 설정은 그대로입니다. 다시 시도하거나, 소리 처리 없이 촬영한 그대로 보낼 수 있어요.</string>
     <string name="share_send_as_shot">촬영한 그대로 보내기</string>
     <string name="share_file_details">%1$s · ≈ %2$s · 모노</string>
-    <string name="share_with_text">텍스트 추가: “%1$s”</string>
+    <string name="share_add_text">텍스트 추가</string>
     <string name="share_continue">계속</string>
     <string name="share_busy">준비 중…</string>
     <string name="share_preparing">파일 준비 중</string>
+    <string name="share_preparing_video">영상 준비 중</string>
     <string name="share_percent">%1$d%%</string>
     <string name="share_remaining">약 %1$d초 남음</string>
     <string name="share_failed_title">파일을 준비하지 못했어요</string>
@@ -1042,6 +1041,8 @@
     <string name="sound_settings_row_caption">%1$s · 모든 녹음에 적용</string>
     <string name="sound_ab_original">A, 원본</string>
     <string name="sound_ab_processed">B, 처리</string>
+    <string name="sound_ab_original_word">원본</string>
+    <string name="sound_ab_processed_word">처리</string>
     <string name="stand_counter">%1$d / %2$d</string>
     <string name="stand_page_description">%2$d쪽 중 %1$d쪽</string>
     <string name="stand_delete_page">페이지 삭제</string>
@@ -1153,6 +1154,9 @@
     <string name="backing_offset">이동</string>
     <string name="backing_offset_hint">늦으면 왼쪽으로</string>
     <string name="backing_offset_recorded">녹음한 그대로 · %1$s</string>
+    <string name="backing_recorded_in">%1$s(으)로 녹음</string>
+    <string name="backing_recorded_in_latency">%1$s(으)로 녹음 · %2$s 보정됨</string>
+    <string name="backing_recorded_wired">유선 헤드폰으로 녹음</string>
 
     <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
     <string name="backing_add">반주 추가</string>

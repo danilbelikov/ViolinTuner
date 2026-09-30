@@ -1,29 +1,28 @@
 package com.violinjourney.app.feature.sound.components
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.backing.BackingConfig
+import com.violinjourney.app.core.ui.components.AppButton
+import com.violinjourney.app.core.ui.components.AppButtonStyle
+import com.violinjourney.app.core.ui.format.Formats
+import com.violinjourney.app.core.ui.icons.AppIcon
+import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.feature.sound.BackingBlockState
 import com.violinjourney.app.feature.sound.BackingSliders
+import com.violinjourney.app.feature.sound.RecordedWith
+import com.violinjourney.app.feature.sound.SliderValues
+import com.violinjourney.app.feature.sound.SoundCard
 import com.violinjourney.app.feature.sound.SoundFormats
 import com.violinjourney.app.feature.sound.SoundIntent
 import com.violinjourney.app.shared.resources.Res
@@ -32,43 +31,37 @@ import com.violinjourney.app.shared.resources.backing_gain
 import com.violinjourney.app.shared.resources.backing_offset
 import com.violinjourney.app.shared.resources.backing_offset_hint
 import com.violinjourney.app.shared.resources.backing_offset_recorded
-import com.violinjourney.app.shared.resources.backing_preparing
+import com.violinjourney.app.shared.resources.backing_recorded_in
+import com.violinjourney.app.shared.resources.backing_recorded_in_latency
+import com.violinjourney.app.shared.resources.backing_recorded_wired
 import com.violinjourney.app.shared.resources.backing_take_unprepared
 import org.jetbrains.compose.resources.stringResource
 
-private val CardCorner = 16.dp
-private const val TABULAR_FIGURES = "tnum"
+/** «Минусовка» is the fifth card, after the four blocks of the chain (spec 3.36.5): it is not the violin's. */
+private const val BACKING_NUMBER = 5
+
+/** The line of the headphones: 10 under what is over it, the sign of 16 six from the words (5.29 R5). */
+private val RecordedTop = 10.dp
+private val RecordedSign = 16.dp
+private val RecordedGap = 6.dp
 
 /**
- * Where the player will be, while the backing's sound is made for it (spec 5.25): a take under a backing cannot be
- * listened to before — the screen says so instead of showing nothing.
+ * The card «Минусовка» of «Звук» (spec 3.32, 3.36.5), the fifth and last, after «Громкость»: under its name the name of the backing's
+ * file and its length — «фортепиано · 3:40»; no switch — whether it is heard is «С минусовкой | Только скрипка» of the player, which is
+ * not kept. It opens and closes as the others ([expanded]); opened — «Громкость минусовки», «Сдвиг» with its hint, «Как записано» and
+ * the line of what the take was recorded in. A backing that could not be prepared ([unavailable]) — only the violin is heard — does
+ * not open and has no chevron: under its name the line that says so, in place of sliders that would change nothing.
  */
 @Composable
-fun BackingPreparingRow(modifier: Modifier = Modifier) {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        modifier = modifier.fillMaxWidth().heightIn(min = 48.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+fun BackingCard(state: BackingBlockState, unavailable: Boolean, expanded: Boolean, config: BackingConfig, onIntent: (SoundIntent) -> Unit) {
+    SoundCardFrame(
+        number = BACKING_NUMBER,
+        title = stringResource(Res.string.backing_block_title),
+        summary = listOfNotNull(state.title.takeIf { it.isNotBlank() }, state.durationMs.takeIf { it > 0 }?.let(Formats::duration)),
+        open = expanded && !unavailable,
+        onToggle = if (unavailable) null else ({ onIntent(SoundIntent.CardToggled(SoundCard.BACKING)) }),
+        note = if (unavailable) stringResource(Res.string.backing_take_unprepared) else null,
     ) {
-        CircularProgressIndicator(modifier = Modifier.size(20.dp), color = colors.primary, strokeWidth = 2.dp)
-        Text(stringResource(Res.string.backing_preparing), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp))
-    }
-}
-
-/** The block «Минусовка» of the «Звук» screen (spec 3.32): the backing's level and shift, last after «Громкость». */
-@Composable
-fun BackingBlock(state: BackingBlockState, config: BackingConfig, onIntent: (SoundIntent) -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(CardCorner))
-            .background(colors.surfaceContainer)
-            .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
-    ) {
-        Text(stringResource(Res.string.backing_block_title), color = colors.onSurface, style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
         ParamSlider(
             model = SliderModel(
                 label = stringResource(Res.string.backing_gain),
@@ -77,6 +70,7 @@ fun BackingBlock(state: BackingBlockState, config: BackingConfig, onIntent: (Sou
                 fraction = BackingSliders.gainFraction(state.gainDb, config),
                 defaultFraction = BackingSliders.gainFraction(config.defaultGainDb, config),
                 bipolar = false,
+                valueReserve = SliderValues.ofBackingGain(config),
             ),
             enabled = true,
             onFraction = { onIntent(SoundIntent.BackingGainChanged(it)) },
@@ -94,40 +88,49 @@ fun BackingBlock(state: BackingBlockState, config: BackingConfig, onIntent: (Sou
                 bipolar = true,
                 // its reset is «Как записано», not the zero of the scale
                 resetFraction = BackingSliders.offsetFraction(state.recordedOffsetMs, config),
+                valueReserve = SliderValues.ofBackingOffset(config),
             ),
             enabled = true,
             onFraction = { onIntent(SoundIntent.BackingOffsetChanged(it)) },
             onStep = { onIntent(SoundIntent.BackingOffsetStepped(it)) },
             onReset = { onIntent(SoundIntent.BackingOffsetRecorded) },
         )
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.weight(1f))
-            TextButton(onClick = { onIntent(SoundIntent.BackingOffsetRecorded) }, enabled = state.offsetMs != state.recordedOffsetMs) {
-                Text(
-                    stringResource(Res.string.backing_offset_recorded, SoundFormats.signedMs(state.recordedOffsetMs)),
-                    style = MaterialTheme.typography.labelLarge.copy(fontSize = 13.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
+        // the line of the headphones stands 10 under «Как записано», not the 12 of the card's rows
+        Column(verticalArrangement = Arrangement.spacedBy(RecordedTop)) {
+            Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterEnd) {
+                AppButton(
+                    text = stringResource(Res.string.backing_offset_recorded, SoundFormats.signedMs(state.recordedOffsetMs)),
+                    onClick = { onIntent(SoundIntent.BackingOffsetRecorded) },
+                    style = AppButtonStyle.Soft,
+                    icon = AppIcons.Reset,
+                    enabled = state.offsetMs != state.recordedOffsetMs,
                 )
             }
+            state.recordedWith?.let { RecordedWithLine(it) }
         }
     }
 }
 
 /**
- * The block «Минусовка» of a take whose backing could not be prepared (spec 3.32): only the violin is heard, so there is a
- * line that says so where the level and the shift would be — sliders there would move and change nothing.
+ * What the take was recorded in (spec 3.36.5): «Записано в Pixel Buds · +200 мс учтено» — the lag the guess added to the clocks
+ * (5.25), left out where nothing was added; «Записано в проводных наушниках». 13 sp in the second level, the sign of the headphones.
  */
 @Composable
-fun BackingUnavailableBlock() {
+private fun RecordedWithLine(recordedWith: RecordedWith) {
     val colors = MaterialTheme.colorScheme
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(RoundedCornerShape(CardCorner))
-            .background(colors.surfaceContainer)
-            .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(4.dp),
+    val words = when (recordedWith) {
+        RecordedWith.Wired -> stringResource(Res.string.backing_recorded_wired)
+        is RecordedWith.Wireless -> if (recordedWith.latencyMs > 0) {
+            stringResource(Res.string.backing_recorded_in_latency, recordedWith.name, SoundFormats.signedMs(recordedWith.latencyMs))
+        } else {
+            stringResource(Res.string.backing_recorded_in, recordedWith.name)
+        }
+    }
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(RecordedGap),
     ) {
-        Text(stringResource(Res.string.backing_block_title), color = colors.onSurface, style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
-        Text(stringResource(Res.string.backing_take_unprepared), color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium.copy(fontSize = 14.sp, lineHeight = 20.sp))
+        AppIcon(AppIcons.Headphones, contentDescription = null, tint = colors.onSurfaceVariant, size = RecordedSign)
+        Text(words, color = colors.onSurfaceVariant, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp))
     }
 }

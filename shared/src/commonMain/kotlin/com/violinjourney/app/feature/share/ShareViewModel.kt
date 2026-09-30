@@ -212,9 +212,12 @@ open class ShareViewModel(
             ShareIntent.SendOriginalClicked -> (current as? ShareSheet.Failed)?.let {
                 launchAlone { writingAlone { sendOriginal(it.info, lastChoice?.withText ?: false) } }
             }
-            ShareIntent.Dismissed -> {
-                job?.cancel()
-                mutableSheet.value = null
+            // a swipe only hides (spec 3.36.5): the choice and a failure go, sending nothing; a file being made goes on — the sheet
+            // holds then, and a word of a window that opened closable still comes here: it is not heard
+            ShareIntent.Dismissed -> when (current) {
+                is ShareSheet.Choose -> if (!current.busy) mutableSheet.value = null
+                is ShareSheet.Failed -> mutableSheet.value = null
+                is ShareSheet.Preparing, null -> Unit
             }
         }
     }
@@ -237,7 +240,7 @@ open class ShareViewModel(
         if (!writing.tryLock()) {
             val waiting = launch {
                 delay(SHOW_PROGRESS_FROM_MS)
-                (mutableSheet.value as? ShareSheet.Choose)?.takeIf { it.busy }?.let { showProgress(it.info, 0, null) }
+                (mutableSheet.value as? ShareSheet.Choose)?.takeIf { it.busy }?.let { showProgress(it.info, it.variant, 0, null) }
             }
             writing.lock() // a cancel while it waits throws here, holding nothing; the waiting child goes with the work
             waiting.cancel()
@@ -256,9 +259,9 @@ open class ShareViewModel(
     /** When the progress screen of the current work came up: it is then shown long enough to be read. Main thread only. */
     private var progressShownAt: Long? = null
 
-    private fun showProgress(info: ShareInfo, percent: Int, remainingSec: Int?) {
+    private fun showProgress(info: ShareInfo, variant: ShareVariant, percent: Int, remainingSec: Int?) {
         if (progressShownAt == null) progressShownAt = clock.nowMs()
-        mutableSheet.value = ShareSheet.Preparing(info, percent, remainingSec)
+        mutableSheet.value = ShareSheet.Preparing(info, variant, percent, remainingSec)
     }
 
     private suspend fun sendOriginal(info: ShareInfo, withText: Boolean) {
@@ -266,7 +269,7 @@ open class ShareViewModel(
         if (copy == null) {
             mutableSheet.value = ShareSheet.Failed(info)
         } else {
-            holdProgress(info)
+            holdProgress(info, ShareVariant.ORIGINAL)
             mutableSheet.value = null
             effectChannel.send(ShareEffect.Send(copy, info.message.takeIf { withText }))
         }
@@ -286,7 +289,7 @@ open class ShareViewModel(
                 return
             }
         }
-        holdProgress(info)
+        holdProgress(info, choice.variant)
         // made now or long ago, it is handed over now: the sweep must not take it from under the receiver
         files.handedOver(target)
         mutableSheet.value = null
@@ -300,7 +303,7 @@ open class ShareViewModel(
         val started = clock.nowMs()
         lastPercent = 0
         if (soundMs * speed.factor > SHOW_PROGRESS_FROM_MS) {
-            showProgress(info, 0, null)
+            showProgress(info, choice.variant, 0, null)
         } else if (mutableSheet.value !is ShareSheet.Preparing) {
             mutableSheet.value = choice.copy(busy = true)
         }
@@ -309,7 +312,7 @@ open class ShareViewModel(
         // after all. A child of this work: «Отмена» cancels it at once, not only once the render has let go.
         val late = launch {
             delay(SHOW_PROGRESS_FROM_MS)
-            if ((mutableSheet.value as? ShareSheet.Choose)?.busy == true) showProgress(info, lastPercent, null)
+            if ((mutableSheet.value as? ShareSheet.Choose)?.busy == true) showProgress(info, choice.variant, lastPercent, null)
         }
         // the render thread tells its progress; a work cancelled meanwhile says nothing more
         val work = coroutineContext.job
@@ -339,7 +342,7 @@ open class ShareViewModel(
                         val elapsed = now - started
                         val remaining = if (fraction >= REMAINING_FROM) ((elapsed * (1 - fraction) / fraction) / MS_PER_SECOND).toInt().coerceAtLeast(1) else null
                         // in one step: a «Закрыть» or an «Отмена» written meanwhile is never written over
-                        mutableSheet.update { if (it is ShareSheet.Preparing) ShareSheet.Preparing(info, percent, remaining) else it }
+                        mutableSheet.update { if (it is ShareSheet.Preparing) it.copy(percent = percent, remainingSec = remaining) else it }
                     }
                 }
             }.also { ensureActive() } // a render that finished as it was cancelled: its answer is not wanted
@@ -370,9 +373,9 @@ open class ShareViewModel(
     }
 
     /** A progress screen that was shown is shown long enough to be read: nothing on this app's screens flashes by. */
-    private suspend fun holdProgress(info: ShareInfo) {
+    private suspend fun holdProgress(info: ShareInfo, variant: ShareVariant) {
         val at = progressShownAt ?: return
-        mutableSheet.value = ShareSheet.Preparing(info, PERCENT, null)
+        mutableSheet.value = ShareSheet.Preparing(info, variant, PERCENT, null)
         val stillToShow = MIN_PROGRESS_SHOWN_MS - (clock.nowMs() - at)
         if (stillToShow > 0) delay(stillToShow)
     }

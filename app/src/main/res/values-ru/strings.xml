@@ -890,7 +890,7 @@
     <string name="take_best">лучший</string>
     <!-- «Звук»: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">Звук записей</string>
-    <string name="sound_everyone_subtitle">для всех записей · %1$s</string>
+    <string name="sound_everyone_all">для всех записей</string>
     <string name="sound_reset">Сбросить</string>
     <string name="sound_caption_off">без обработки</string>
     <string name="sound_caption_custom">свои настройки</string>
@@ -908,17 +908,16 @@
     </string-array>
     <string name="sound_preset_custom">Свои</string>
     <string name="sound_preset_save">Сохранить как пресет</string>
-    <string name="sound_preset_remove_hint">Удерживайте, чтобы удалить</string>
     <string name="sound_mode_everyone">Как у всех</string>
-    <string name="sound_mode_own">Свои для этой записи</string>
+    <string name="sound_mode_own">Свои для записи</string>
     <string name="sound_mode_everyone_text">%1$s — из «Настроек → Звук записей». Поменяете там — поменяется и здесь. Тронете любую ручку — запись получит свои настройки.</string>
     <string name="sound_mode_own_text">Только у этой записи. «Как у всех» вернёт общие настройки — свои забудутся.</string>
     <string name="sound_listen_on">Слушать на</string>
     <string name="sound_listen_latest">последняя со звуком</string>
+    <string name="sound_listen_other">Другая</string>
     <string name="sound_listen_none">Записей со звуком пока нет: настройки можно задать, послушать — после первой записи.</string>
     <string name="sound_affected_one">для %1$d записи</string>
     <string name="sound_affected_many">для %1$d записей</string>
-    <string name="sound_order">Порядок: Эквалайзер → Компрессор → Зал → Громкость</string>
     <string name="sound_block_eq">Эквалайзер</string>
     <string name="sound_block_compressor">Компрессор</string>
     <string name="sound_block_compressor_sub">выравнивает громкость</string>
@@ -990,7 +989,6 @@
     <string name="sound_dialog_preset_hint">Название</string>
     <string name="sound_dialog_preset_save">Сохранить</string>
     <string name="sound_dialog_delete_title">Удалить пресет «%1$s»?</string>
-    <string name="sound_dialog_pick_title">Слушать на</string>
     <string name="sound_share">Поделиться</string>
     <string name="share_message">%1$s · %2$d %% · %3$s</string>
     <string name="share_message_session">Запись</string>
@@ -1005,18 +1003,19 @@
     <string name="share_video">Видео</string>
     <string name="share_video_caption">как снято</string>
     <string name="share_sound_only">Только звук</string>
-    <string name="share_sound_only_processed">обработанный · ≈ %1$s · моно</string>
-    <string name="share_sound_only_caption">как записан · ≈ %1$s · моно</string>
+    <string name="share_sound_with_processing">с обработкой</string>
+    <string name="share_sound_as_recorded">как записан</string>
     <string name="share_video_details">%1$s · %2$dp · ≈ %3$s</string>
     <string name="share_large_file">Большой файл: мессенджеры могут сжать его или не принять</string>
     <string name="share_failed_video_title">Не получилось подготовить видео</string>
     <string name="share_failed_video_text">Дубль и настройки на месте. Можно попробовать ещё раз или отправить видео как снято, без обработки звука.</string>
     <string name="share_send_as_shot">Отправить как снято</string>
     <string name="share_file_details">%1$s · ≈ %2$s · моно</string>
-    <string name="share_with_text">Добавить текст: «%1$s»</string>
+    <string name="share_add_text">Добавить текст</string>
     <string name="share_continue">Продолжить</string>
     <string name="share_busy">Готовим…</string>
     <string name="share_preparing">Готовим файл</string>
+    <string name="share_preparing_video">Готовим видео</string>
     <string name="share_percent">%1$d\u00A0%%</string>
     <string name="share_remaining">осталось около %1$d с</string>
     <string name="share_failed_title">Не получилось подготовить файл</string>
@@ -1042,6 +1041,8 @@
     <string name="sound_settings_row_caption">%1$s · для всех записей</string>
     <string name="sound_ab_original">A, оригинал</string>
     <string name="sound_ab_processed">B, обработка</string>
+    <string name="sound_ab_original_word">оригинал</string>
+    <string name="sound_ab_processed_word">обработка</string>
     <string name="stand_counter">%1$d / %2$d</string>
     <string name="stand_page_description">Страница %1$d из %2$d</string>
     <string name="stand_delete_page">Удалить страницу</string>
@@ -1153,6 +1154,9 @@
     <string name="backing_offset">Сдвиг</string>
     <string name="backing_offset_hint">отстаёт — влево</string>
     <string name="backing_offset_recorded">Как записано · %1$s</string>
+    <string name="backing_recorded_in">Записано в %1$s</string>
+    <string name="backing_recorded_in_latency">Записано в %1$s · %2$s учтено</string>
+    <string name="backing_recorded_wired">Записано в проводных наушниках</string>
 
     <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
     <string name="backing_add">Добавить минусовку</string>

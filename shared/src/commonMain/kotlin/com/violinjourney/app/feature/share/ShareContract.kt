@@ -54,6 +54,12 @@ data class ShareInfo(
         else -> videoFileName!!
     }
 
+    /**
+     * The format of the file a variant makes (spec 3.36.5, the chip of each variant): «.m4a» of a sound, «.mp4» of a video made here,
+     * and a video as shot in the container of its own file — «.mov» from the camera of an iPhone.
+     */
+    fun extensionOf(variant: ShareVariant): String = "." + fileNameOf(variant).substringAfterLast('.', "").lowercase()
+
     /** An estimate for what is rendered, the real size for what is sent as it is. A processed video weighs what its picture does. */
     fun bytesOf(variant: ShareVariant): Long = when {
         video && (variant == ShareVariant.PROCESSED || variant == ShareVariant.BACKING) -> originalBytes
@@ -80,9 +86,13 @@ sealed interface ShareSheet {
     /** The choice. [busy] — a short preparation is under way: the button says «Готовим…» instead of a progress screen flashing by. */
     data class Choose(override val info: ShareInfo, val variant: ShareVariant, val withText: Boolean, val busy: Boolean) : ShareSheet
 
-    data class Preparing(override val info: ShareInfo, val percent: Int, val remainingSec: Int?) : ShareSheet
+    /**
+     * The file is being made — in the same sheet, which holds meanwhile (spec 3.36.5): «Готовим файл» or «Готовим видео», the percent,
+     * and the line of the [variant] chosen with its format and, once there is an estimate, the seconds left ([remainingSec]).
+     */
+    data class Preparing(override val info: ShareInfo, val variant: ShareVariant, val percent: Int, val remainingSec: Int?) : ShareSheet
 
-    /** Not a toast: a line in the sheet with two ways out. */
+    /** Not a toast: a plate in the sheet with two ways out — «Ещё раз» and the original as it is. */
     data class Failed(override val info: ShareInfo) : ShareSheet
 }
 
@@ -100,6 +110,10 @@ sealed interface ShareIntent {
 
     data object SendOriginalClicked : ShareIntent
 
+    /**
+     * The sheet was swiped down, tapped beside or closed with «назад»: the choice and a failure only hide — nothing is sent; a file
+     * being made (its progress, or «Готовим…» on «Продолжить») is not stopped by it — the sheet holds then, and «Отмена» stops it.
+     */
     data object Dismissed : ShareIntent
 }
 

@@ -890,7 +890,7 @@
     <string name="take_best">ベスト</string>
     <!-- «Звук»: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">録音のサウンド</string>
-    <string name="sound_everyone_subtitle">すべての録音に適用 · %1$s</string>
+    <string name="sound_everyone_all">すべての録音に適用</string>
     <string name="sound_reset">リセット</string>
     <string name="sound_caption_off">加工なし</string>
     <string name="sound_caption_custom">個別の設定</string>
@@ -908,17 +908,16 @@
     </string-array>
     <string name="sound_preset_custom">カスタム</string>
     <string name="sound_preset_save">プリセットとして保存</string>
-    <string name="sound_preset_remove_hint">長押しで削除</string>
     <string name="sound_mode_everyone">共通</string>
     <string name="sound_mode_own">この録音だけ</string>
     <string name="sound_mode_everyone_text">%1$s —「設定 → 録音のサウンド」の内容です。そちらを変えると、ここも変わります。どれかのつまみに触れると、この録音は個別の設定になります。</string>
     <string name="sound_mode_own_text">この録音だけの設定です。「共通」に戻すと共通の設定になり、個別の設定は消えます。</string>
     <string name="sound_listen_on">試聴する録音</string>
     <string name="sound_listen_latest">音つきの最新の録音</string>
+    <string name="sound_listen_other">別の録音</string>
     <string name="sound_listen_none">音つきの録音がまだありません。設定は決めておけますが、試聴は最初の録音のあとになります。</string>
     <string name="sound_affected_one">%1$d 件の録音に適用</string>
     <string name="sound_affected_many">%1$d 件の録音に適用</string>
-    <string name="sound_order">順番：イコライザー → コンプレッサー → ホール → 音量</string>
     <string name="sound_block_eq">イコライザー</string>
     <string name="sound_block_compressor">コンプレッサー</string>
     <string name="sound_block_compressor_sub">音量をそろえます</string>
@@ -990,7 +989,6 @@
     <string name="sound_dialog_preset_hint">名前</string>
     <string name="sound_dialog_preset_save">保存</string>
     <string name="sound_dialog_delete_title">プリセット「%1$s」を削除しますか？</string>
-    <string name="sound_dialog_pick_title">試聴する録音</string>
     <string name="sound_share">共有</string>
     <string name="share_message">%1$s · %2$d %% · %3$s</string>
     <string name="share_message_session">録音</string>
@@ -1005,18 +1003,19 @@
     <string name="share_video">動画</string>
     <string name="share_video_caption">撮ったまま</string>
     <string name="share_sound_only">音だけ</string>
-    <string name="share_sound_only_processed">加工あり · ≈ %1$s · モノラル</string>
-    <string name="share_sound_only_caption">録音したまま · ≈ %1$s · モノラル</string>
+    <string name="share_sound_with_processing">加工あり</string>
+    <string name="share_sound_as_recorded">録音したまま</string>
     <string name="share_video_details">%1$s · %2$dp · ≈ %3$s</string>
     <string name="share_large_file">大きなファイルです。メッセージアプリでは圧縮されたり、送れなかったりすることがあります</string>
     <string name="share_failed_video_title">動画を準備できませんでした</string>
     <string name="share_failed_video_text">テイクと設定はそのままです。もう一度試すか、音を加工せずに撮ったままの動画を送信できます。</string>
     <string name="share_send_as_shot">撮ったまま送信</string>
     <string name="share_file_details">%1$s · ≈ %2$s · モノラル</string>
-    <string name="share_with_text">テキストを追加：「%1$s」</string>
+    <string name="share_add_text">テキストを追加</string>
     <string name="share_continue">続ける</string>
     <string name="share_busy">準備中…</string>
     <string name="share_preparing">ファイルを準備しています</string>
+    <string name="share_preparing_video">動画を準備しています</string>
     <string name="share_percent">%1$d %%</string>
     <string name="share_remaining">残り約 %1$d 秒</string>
     <string name="share_failed_title">ファイルを準備できませんでした</string>
@@ -1042,6 +1041,8 @@
     <string name="sound_settings_row_caption">%1$s · すべての録音に適用</string>
     <string name="sound_ab_original">A、オリジナル</string>
     <string name="sound_ab_processed">B、加工</string>
+    <string name="sound_ab_original_word">オリジナル</string>
+    <string name="sound_ab_processed_word">加工</string>
     <string name="stand_counter">%1$d / %2$d</string>
     <string name="stand_page_description">%1$d / %2$d ページ</string>
     <string name="stand_delete_page">ページを削除</string>
@@ -1153,6 +1154,9 @@
     <string name="backing_offset">ずらし</string>
     <string name="backing_offset_hint">遅れたら左へ</string>
     <string name="backing_offset_recorded">録音時のまま · %1$s</string>
+    <string name="backing_recorded_in">%1$s で録音</string>
+    <string name="backing_recorded_in_latency">%1$s で録音 · %2$s 補正済み</string>
+    <string name="backing_recorded_wired">有線ヘッドホンで録音</string>
 
     <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
     <string name="backing_add">伴奏を追加</string>

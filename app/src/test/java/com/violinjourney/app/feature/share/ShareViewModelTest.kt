@@ -363,7 +363,7 @@ class ShareViewModelTest {
     }
 
     @Test
-    fun `renders measure the device, a silent recording is not shared, a closed sheet forgets its work`() = runTest {
+    fun `renders measure the device, and a silent recording is not shared`() = runTest {
         sound.setDefault(hall)
         val (viewModel, effects) = share(Renderer(tookMs = 5_900))
         viewModel.start(recording(audioName = null))
@@ -374,19 +374,119 @@ class ShareViewModelTest {
         viewModel.start(recording(durationMs = 10_000))
         runCurrent()
         viewModel.onIntent(ShareIntent.ContinueClicked)
-        advanceTimeBy(1_000)
-        viewModel.onIntent(ShareIntent.Dismissed)
-        runCurrent()
-        assertNull(viewModel.sheet.value)
-        advanceTimeBy(10_000)
-        assertTrue(effects.isEmpty())
-
-        viewModel.start(sessions.sessions.value.first().id)
-        runCurrent()
-        viewModel.onIntent(ShareIntent.ContinueClicked)
         advanceTimeBy(8_000)
         runCurrent()
         assertEquals("5.9 s for 11.8 s of sound", 0.5, speed.factor, 0.01)
+        assertEquals(1, effects.size)
+    }
+
+    @Test
+    fun `a swipe while the file is made does not stop it - the sheet holds and the file goes`() = runTest {
+        sound.setDefault(hall)
+        val renderer = Renderer(tookMs = 900)
+        val (viewModel, effects) = share(renderer)
+        viewModel.start(recording(durationMs = 60 * 60_000L)) // an hour: the progress at once
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(300)
+        assertTrue(viewModel.sheet.value is ShareSheet.Preparing)
+        viewModel.onIntent(ShareIntent.Dismissed)
+        runCurrent()
+        assertTrue("the sheet holds: a swipe is no «Отмена»", viewModel.sheet.value is ShareSheet.Preparing)
+
+        advanceTimeBy(2_000)
+        runCurrent()
+        assertNull(viewModel.sheet.value)
+        assertEquals("sound", (effects.single() as ShareEffect.Send).file.readText())
+        assertEquals(1, renderer.renders)
+    }
+
+    @Test
+    fun `a swipe while «Готовим…» is on the button does not stop it either`() = runTest {
+        sound.setDefault(hall)
+        val (viewModel, effects) = share(Renderer(tookMs = 300))
+        viewModel.start(recording())
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(100)
+        assertTrue((viewModel.sheet.value as ShareSheet.Choose).busy)
+        viewModel.onIntent(ShareIntent.Dismissed)
+        runCurrent()
+        assertTrue("still «Готовим…»", (viewModel.sheet.value as ShareSheet.Choose).busy)
+
+        advanceTimeBy(500)
+        runCurrent()
+        assertNull(viewModel.sheet.value)
+        assertEquals(1, effects.size)
+    }
+
+    @Test
+    fun `a swipe of the choice and of a failure only hides the sheet and sends nothing`() = runTest {
+        sound.setDefault(hall)
+        val renderer = Renderer(tookMs = 100, fails = true)
+        val (viewModel, effects) = share(renderer)
+        val id = recording()
+        viewModel.start(id)
+        runCurrent()
+        viewModel.onIntent(ShareIntent.Dismissed)
+        runCurrent()
+        assertNull(viewModel.sheet.value)
+        advanceTimeBy(1_000)
+        assertTrue(effects.isEmpty())
+        assertEquals(0, renderer.renders)
+
+        viewModel.start(id)
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(300)
+        runCurrent()
+        assertTrue(viewModel.sheet.value is ShareSheet.Failed)
+        viewModel.onIntent(ShareIntent.Dismissed)
+        runCurrent()
+        assertNull(viewModel.sheet.value)
+        advanceTimeBy(1_000)
+        assertTrue("nothing goes on its own after a failure hidden", effects.isEmpty())
+        assertEquals(1, renderer.renders)
+    }
+
+    @Test
+    fun `the file being made says which variant it is - the mix, and a video with its processed sound`() = runTest {
+        val underId = recording(durationMs = 60 * 60_000L)
+        val backingId = backings.add(backings.backing())
+        backings.saveTake(
+            com.violinjourney.app.core.domain.backing.TakeBacking(
+                underId, backingId, 200, 200, -6f, 10_000, com.violinjourney.app.core.domain.backing.BackingOutput.WIRED, null,
+            ),
+        )
+        val (viewModel, _) = share(Renderer(tookMs = 5_000))
+        viewModel.start(underId)
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(300)
+        val mix = viewModel.sheet.value as ShareSheet.Preparing
+        assertEquals(ShareVariant.BACKING, mix.variant)
+        assertEquals(".m4a", mix.info.extensionOf(mix.variant))
+        // two steps of the render on (one each 500 ms): the step moves the percent and keeps the variant chosen
+        advanceTimeBy(1_000)
+        val stepped = viewModel.sheet.value as ShareSheet.Preparing
+        assertTrue("the render has stepped: ${stepped.percent} %", stepped.percent > 0)
+        assertEquals(ShareVariant.BACKING, stepped.variant)
+        viewModel.onIntent(ShareIntent.CancelClicked)
+        runCurrent()
+        advanceTimeBy(10_000)
+
+        sound.setDefault(hall)
+        val video = videoTake()
+        sessions.sessions.value = sessions.sessions.value.map { if (it.id == video) it.copy(durationMs = 60 * 60_000L) else it }
+        viewModel.onIntent(ShareIntent.Dismissed)
+        runCurrent()
+        viewModel.start(video)
+        runCurrent()
+        viewModel.onIntent(ShareIntent.ContinueClicked)
+        advanceTimeBy(300)
+        val picture = viewModel.sheet.value as ShareSheet.Preparing
+        assertEquals(ShareVariant.PROCESSED, picture.variant)
+        assertEquals(".mp4", picture.info.extensionOf(picture.variant))
     }
 
     private companion object {

@@ -47,6 +47,7 @@ import androidx.compose.ui.layout.MeasureScope
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.Placeholder
 import androidx.compose.ui.text.PlaceholderVerticalAlign
@@ -112,8 +113,9 @@ private const val TABULAR_FIGURES = "tnum"
 private const val SAID_SEPARATOR = ", "
 
 /**
- * Card of one recording under a date: the list of «Записи» (spec 3.11, 3.21, 3.36.5) and «Записи этого дня» of the sheet of a day
- * on «Занятия» ([RecordPlace.Sheet]) — named by its own name, its piece, or «Запись»; its line begins with the time of its start.
+ * Card of one recording under a date: the list of «Записи» (spec 3.11, 3.21, 3.36.5), «Записи этого дня» of the sheet of a day
+ * on «Занятия» and the sheet «Слушать на…» of «Звук записей» ([RecordPlace.Sheet]; there the one listened on is [current]) — named by
+ * its own name, its piece, or «Запись»; its line begins with the time of its start.
  */
 @Composable
 fun SessionCard(
@@ -125,6 +127,7 @@ fun SessionCard(
     actions: CardActions? = null,
     selected: Boolean? = null,
     onLongClick: (() -> Unit)? = null,
+    current: Boolean = false,
 ) {
     RecordCard(
         card = card,
@@ -139,6 +142,7 @@ fun SessionCard(
         actions = actions,
         selected = selected,
         onLongClick = onLongClick,
+        current = current,
     )
 }
 
@@ -159,6 +163,9 @@ fun SessionCard(
  * TalkBack hears the card as one description: its kind, «лучший», the title, [spokenDate] (for a list that writes the date above its
  * cards, not on them), the time, the length, «под минусовку», «без звука» — the word of the kind seen in the line is not heard twice;
  * «⋯» is a button of its own, «Ещё».
+ *
+ * [current] — the one chosen where the card is only picked (the sheet «Слушать на…» of «Звук записей», spec 3.36.5): the outline of
+ * 1.5 in the accent, without the fill of a fresh take; TalkBack hears it «выбрано».
  */
 @Composable
 fun RecordCard(
@@ -173,6 +180,7 @@ fun RecordCard(
     selected: Boolean? = null,
     onLongClick: (() -> Unit)? = null,
     spokenDate: String? = null,
+    current: Boolean = false,
 ) {
     val colors = MaterialTheme.colorScheme
     val shape = AppShapes.M
@@ -197,7 +205,7 @@ fun RecordCard(
     val ground = if (place == RecordPlace.Sheet) colors.surface else colors.surfaceContainer
     val fade = tween<Color>(if (selecting) SELECT_FADE_MS else HIGHLIGHT_FADE_MS)
     val background by animateColorAsState(if (lit) ViolinTheme.repertoireColors.takeNew else ground, fade, label = "recordBackground")
-    val ring by animateColorAsState(if (lit) colors.primary else colors.primary.copy(alpha = 0f), fade, label = "recordRing")
+    val ring by animateColorAsState(if (lit || current) colors.primary else colors.primary.copy(alpha = 0f), fade, label = "recordRing")
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed && onLongClick != null && !selecting) PRESSED_SCALE else 1f, tween(PRESS_MS), label = "recordPress")
@@ -227,7 +235,10 @@ fun RecordCard(
                     )
                 },
             )
-            .semantics { contentDescription = said }
+            .semantics {
+                contentDescription = said
+                if (current) this.selected = true
+            }
             .padding(
                 start = CardPaddingStart,
                 top = CardPaddingVertical,

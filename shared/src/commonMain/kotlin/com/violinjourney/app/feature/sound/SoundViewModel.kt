@@ -14,6 +14,7 @@ import com.violinjourney.app.core.domain.backing.BackingConfig
 import com.violinjourney.app.core.domain.backing.BackingOffset
 import com.violinjourney.app.core.domain.backing.BackingRepository
 import com.violinjourney.app.core.domain.backing.TakeBacking
+import com.violinjourney.app.core.domain.backing.takesUnderBacking
 import com.violinjourney.app.core.audio.playback.SessionWaveforms
 import com.violinjourney.app.core.audio.recording.SessionAudioFiles
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
@@ -27,6 +28,9 @@ import com.violinjourney.app.core.domain.sound.SoundRepository
 import com.violinjourney.app.core.domain.sound.SoundRules
 import com.violinjourney.app.core.domain.sound.SoundSettings
 import com.violinjourney.app.core.domain.sound.UserPreset
+import com.violinjourney.app.core.time.WallClock
+import com.violinjourney.app.core.time.today
+import com.violinjourney.app.feature.history.HistoryReducer
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.IO
@@ -38,6 +42,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
@@ -64,6 +69,8 @@ open class SoundViewModel(
     private val backingPcm: BackingPcm?,
     /** Read by the screen too ([BackingSliders]). */
     val backingConfig: BackingConfig,
+    /** «Today» and the zone the cards of «Слушать на…» are dated in. */
+    private val clock: WallClock,
     private val io: CoroutineDispatcher = Dispatchers.IO,
 ) : ViewModel() {
 
@@ -74,8 +81,8 @@ open class SoundViewModel(
         SoundState(
             loading = true, mode = mode, recording = null, own = false, settings = SoundRules.off(config),
             caption = SoundCaption.Custom, chips = emptyList(), custom = false, canReset = false, savedHint = false,
-            expanded = null, band = EqBand.PRESENCE, details = false, player = null, waveform = null,
-            recordings = emptyList(), affected = 0, dialog = null,
+            band = EqBand.PRESENCE, details = false, player = null, waveform = null,
+            recordings = emptyList(), today = clock.today(), affected = 0, dialog = null,
         ),
     )
     val state: StateFlow<SoundState> = mutableState.asStateFlow()
@@ -96,6 +103,9 @@ open class SoundViewModel(
     val effects: Flow<SoundEffect> = effectChannel.receiveAsFlow()
 
     private var userPresets: List<UserPreset> = emptyList()
+
+    /** [SoundMode.EVERYONE]: the recordings it can be heard on by their names, for the line «Слушать на» (see [follow]). */
+    private var playableNames: List<RecordingName> = emptyList()
     private var player: SessionPlayer? = null
     private var playingId: Long? = null
     private var persistJob: Job? = null
@@ -116,7 +126,8 @@ open class SoundViewModel(
             val settings = own ?: sound.default.first()
             userPresets = sound.presets.first()
             loadBacking()
-            show(settings, own = own != null, loading = false)
+            // still loading: the screen comes once the recordings are read too — the panel of the player stands from its first frame
+            show(settings, own = own != null)
             launch { sound.presets.collect { userPresets = it; show(state.value.settings) } }
             launch { follow() }
         }
@@ -154,7 +165,7 @@ open class SoundViewModel(
             SoundIntent.DialogConfirmed -> confirm()
             SoundIntent.DialogDismissed -> mutableState.update { it.copy(dialog = null) }
             is SoundIntent.BlockSwitched -> edit { SoundReducer.withBlock(it, intent.block, intent.on) }
-            is SoundIntent.BlockHeaderClicked -> mutableState.update { it.copy(expanded = intent.block.takeIf { block -> block != it.expanded }) }
+            is SoundIntent.CardToggled -> toggle(intent.card)
             is SoundIntent.BandSelected -> mutableState.update { it.copy(band = intent.band) }
             is SoundIntent.LowCutSwitched -> edit { it.copy(eq = it.eq.copy(lowCut = it.eq.lowCut.copy(enabled = intent.on))) }
             is SoundIntent.SpaceSelected -> edit { it.copy(reverb = SoundRules.withSpace(it.reverb, intent.space, config)) }
@@ -198,13 +209,38 @@ open class SoundViewModel(
         }
     }
 
-    /** The take's backing; nothing for a take without one, or for the screen of everyone. */
+    /**
+     * A card opens or closes; the others stay as they are (spec 3.36.5). «Минусовка» that could not be prepared does not close — it
+     * has nothing to hide, only its line.
+     */
+    private fun toggle(card: SoundCard) {
+        val current = state.value
+        if (card == SoundCard.BACKING && (current.backing == null || current.backingUnavailable)) return
+        mutableState.update { it.copy(expanded = if (card in it.expanded) it.expanded - card else it.expanded + card) }
+    }
+
+    /**
+     * The take's backing — its mix, its name and length, what it was recorded in (spec 3.36.5: all of it the take already keeps);
+     * nothing for a take without one, or for the screen of everyone.
+     */
     private suspend fun loadBacking() {
         val id = sessionId ?: return
         val found = backings.takeBackings.first().firstOrNull { it.sessionId == id } ?: return
         take = found
-        backing = backings.backing(found.backingId)
-        mutableState.update { it.copy(backing = BackingBlockState(found.gainDb, found.offsetMs, found.recordedOffsetMs)) }
+        val file = backings.backing(found.backingId)
+        backing = file
+        mutableState.update {
+            it.copy(
+                backing = BackingBlockState(
+                    gainDb = found.gainDb,
+                    offsetMs = found.offsetMs,
+                    recordedOffsetMs = found.recordedOffsetMs,
+                    title = file?.title.orEmpty(),
+                    durationMs = file?.durationMs ?: 0,
+                    recordedWith = RecordedWithRule.of(found.output, found.deviceName, found.latencyMs),
+                ),
+            )
+        }
     }
 
     private fun editBacking(change: (BackingBlockState) -> BackingBlockState) {
@@ -230,33 +266,53 @@ open class SoundViewModel(
         backings.setTakeMix(id, block.offsetMs, block.gainDb)
     }
 
-    /** The recordings: whose screen this is, what the default can be listened on, how many it touches. */
+    /**
+     * The recordings: whose screen this is, what the default can be listened on — as the cards of «Записи», with their piece, «лучший»
+     * and the sign of the backing (spec 3.36.5) — and how many it touches. The screen comes with the first of them.
+     */
     private suspend fun follow() {
-        kotlinx.coroutines.flow.combine(sessions.sessions, sound.own, repertoire.pieces) { all, own, pieces -> Triple(all, own.keys, pieces.associate { it.id to it.title }) }
-            .collect { (all, own, titles) ->
+        combine(sessions.sessions, sound.own, repertoire.pieces, backings.takesUnderBacking) { all, own, pieces, under ->
+            Recordings(all, own.keys, titles = pieces.associate { it.id to it.title }, best = pieces.mapNotNull { it.bestTakeId }.toSet(), under = under)
+        }
+            .collect { (all, own, titles, best, under) ->
                 fun nameOf(session: SessionSummary) = RecordingName(session.id, session.title, session.pieceId?.let(titles::get), session.startedAtEpochMs, hasVideo = session.videoPath != null)
                 val mine = all.firstOrNull { it.id == sessionId }
                 if (mode == SoundMode.RECORDING && mine == null) {
                     effectChannel.trySend(SoundEffect.Close) // deleted from under the screen
                     return@collect
                 }
+                val today = clock.today()
                 // What the default can be listened on — the screen for everyone only: one recording's screen plays its own.
-                // A look at every file is no work for the main thread, where hundreds of recordings are.
-                val playable = if (mode == SoundMode.EVERYONE) {
-                    withContext(io) { SoundReducer.withSound(all).filter { it.audioPath?.let(audioFiles::existing) != null } }
+                // A look at every file is no work for the main thread, where hundreds of recordings are; nor are their cards.
+                val (playable, cards) = if (mode == SoundMode.EVERYONE) {
+                    withContext(io) {
+                        val found = SoundReducer.withSound(all).filter { it.audioPath?.let(audioFiles::existing) != null }
+                        found to found.map { session ->
+                            HistoryReducer.cardOf(
+                                session, today, clock.zone, pieceTitle = session.pieceId?.let(titles::get), best = session.id in best, underBacking = session.id in under,
+                            )
+                        }
+                    }
                 } else {
-                    emptyList()
+                    emptyList<SessionSummary>() to emptyList()
                 }
+                playableNames = playable.map(::nameOf)
+                // the file goes to the player first: the screen comes with the panel of the player already standing
+                if (playingId == null) listenOn(mine ?: playable.firstOrNull())
                 mutableState.update {
                     it.copy(
-                        recordings = if (mode == SoundMode.EVERYONE) playable.map(::nameOf) else emptyList(),
+                        loading = false,
+                        recordings = cards,
+                        today = today,
                         affected = SoundReducer.affected(all, own),
                         recording = (mine ?: playable.firstOrNull { session -> session.id == playingId } ?: playable.firstOrNull())?.let(::nameOf),
                     )
                 }
-                if (playingId == null) listenOn(mine ?: playable.firstOrNull())
             }
     }
+
+    /** What [follow] reads of the recordings, the pieces and the backings. */
+    private data class Recordings(val all: List<SessionSummary>, val own: Set<Long>, val titles: Map<Long, String>, val best: Set<Long>, val under: Set<Long>)
 
     private fun listenOn(session: SessionSummary?) {
         val file = session?.audioPath?.let(audioFiles::existing) ?: return
@@ -269,7 +325,13 @@ open class SoundViewModel(
                 created.state.collect { playerState ->
                     mutablePosition.value = playerState.positionMs
                     // to the whole second: within a second nothing of the screen's state changes, and nothing is emitted
-                    mutableState.update { it.copy(player = playerState.takeIf { p -> p.ready && !p.failed }?.onWholeSeconds(), preparingBacking = playerState.preparingBacking && !playerState.failed) }
+                    mutableState.update {
+                        it.copy(
+                            player = playerState.takeIf { p -> p.ready && !p.failed }?.onWholeSeconds(),
+                            preparingBacking = playerState.preparingBacking && !playerState.failed,
+                            listening = !playerState.failed,
+                        )
+                    }
                 }
             }
             viewModelScope.launch { created.meters.collect { mutableMeters.value = it } }
@@ -283,7 +345,13 @@ open class SoundViewModel(
         } else {
             current.load(file)
         }
-        mutableState.update { it.copy(waveform = null, recording = if (mode == SoundMode.EVERYONE) it.recordings.firstOrNull { r -> r.sessionId == session.id } ?: it.recording else it.recording) }
+        mutableState.update {
+            it.copy(
+                listening = true,
+                waveform = null,
+                recording = if (mode == SoundMode.EVERYONE) playableNames.firstOrNull { r -> r.sessionId == session.id } ?: it.recording else it.recording,
+            )
+        }
         waveformJob?.cancel()
         waveformJob = viewModelScope.launch {
             val waveform = waveforms.of(file)

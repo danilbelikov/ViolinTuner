@@ -1,6 +1,7 @@
 package com.violinjourney.app.feature.sound
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
@@ -10,6 +11,8 @@ import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.repeatOnLifecycle
+import com.violinjourney.app.core.ui.motion.LocalReduceMotion
+import com.violinjourney.app.core.ui.motion.rememberAnimationsRemoved
 
 /** Entry point of the «Звук» screen — of a recording, or of all of them. */
 @Composable
@@ -47,9 +50,12 @@ fun SoundRoute(
         }
     }
 
-    SoundScreen(
-        state = state, meters = meters, onIntent = viewModel::onIntent, config = viewModel.config, backingConfig = viewModel.backingConfig,
-        modifier = modifier, position = { position.value },
-    )
+    // the spinner of «Готовим минусовку…» stands still where the animations are removed
+    CompositionLocalProvider(LocalReduceMotion provides rememberAnimationsRemoved()) {
+        SoundScreen(
+            state = state, meters = meters, onIntent = viewModel::onIntent, config = viewModel.config, backingConfig = viewModel.backingConfig,
+            modifier = modifier, position = { position.value },
+        )
+    }
     shareHost()
 }

@@ -6,8 +6,10 @@ import androidx.compose.ui.graphics.Color
 
 /**
  * Colors of video takes (spec 3.19, handoff `Видео`, `tokens`). [field] is the hex of the music
- * stand's background and [sizeWarn] that of "near" — but tokens of their own: a stand is about
- * sheets, and green, amber and red mean intonation everywhere in this app, not "a big file".
+ * stand's background — but a token of its own: a stand is about sheets. A file large enough for a
+ * messenger to squeeze is said in the colour of danger of the redesign (`ViolinTheme.dangerSoft`,
+ * spec 3.36.5), no longer in a token here with the hex of "near": green, amber and red mean
+ * intonation everywhere in this app, not "a big file".
  */
 @Immutable
 data class VideoColors(
@@ -19,8 +21,6 @@ data class VideoColors(
     val fullBackground: Color,
     /** The camera badge on the tile of a video take. */
     val badge: Color,
-    /** A file large enough for a messenger to squeeze or refuse. */
-    val sizeWarn: Color,
 )
 
 internal val DarkVideoColors = VideoColors(
@@ -28,7 +28,6 @@ internal val DarkVideoColors = VideoColors(
     scrim = VideoScrim,
     fullBackground = Color.Black,
     badge = SurfaceContainerHigh,
-    sizeWarn = VideoSizeWarn,
 )
 
 internal val LocalVideoColors = staticCompositionLocalOf<VideoColors> {

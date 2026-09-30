@@ -39,6 +39,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
@@ -67,11 +68,18 @@ import androidx.compose.ui.unit.dp
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import kotlin.math.max
 import kotlin.math.min
+import kotlinx.coroutines.launch
 
 // The frame of a sheet (spec 5.29; components.html, «Лист»).
 private val SheetShape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
 private val HandleWidth = 36.dp
 private val HandleHeight = 5.dp
+
+/** Above and below the handle, as Material lays it out (`DragHandleVerticalPadding`): the handle takes 22 + 5 + 22 = 49 of the sheet. */
+private val HandlePadding = 22.dp
+
+/** The room of the handle, kept while a sheet holds without it ([AppSheet]'s `keepHandleRoom`). */
+private val HandleRoom = HandleHeight + HandlePadding * 2
 private val ButtonsTop = 18.dp
 private val ButtonsGap = 6.dp
 
@@ -129,6 +137,12 @@ object AppSheetDefaults {
  *
  * [dismissible] false — a swipe, the scrim and «назад» do not close it, and it has no handle to pull (the analysis of a video
  * take, R4; the preparing of «Поделиться», R5): it goes only when the owner drops the value, and then it slides away as any sheet.
+ * «Назад» is taken by the sheet itself while it holds: Material's own «назад» is set once, when the window opens, and a sheet that
+ * opened closable and then holds would otherwise shrink under the predictive «назад» and stay shrunk, refused. For the same reason
+ * a sheet whose window opened holding — «Поделиться» made again by a turn of the phone while its file is made — and is let go later
+ * («Отмена», a failure) would not hear «назад» at all: its «назад» is then the frame's own, hiding it as Material does. [keepHandleRoom] —
+ * a sheet that begins closable and then holds for a while («Поделиться» while its file is made, 5.29 R5): the room of its handle
+ * stays, empty, while it holds — the sheet keeps its height, and its top edge does not come down by 29 dp and go back up.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -138,6 +152,7 @@ fun <T : Any> AppSheet(
     modifier: Modifier = Modifier,
     slideAway: Boolean = true,
     dismissible: Boolean = true,
+    keepHandleRoom: Boolean = false,
     scroll: (T) -> Boolean = { true },
     contentPadding: PaddingValues = AppSheetDefaults.ContentPadding,
     onBack: (() -> Unit)? = null,
@@ -183,6 +198,7 @@ fun <T : Any> AppSheet(
     }
     // made once: the same modifier each time, not a new chain of the sheet at every recomposition of its owner
     val sides = remember { Modifier.clearOfTheSides() }
+    val scope = rememberCoroutineScope()
     ModalBottomSheet(
         onDismissRequest = dismiss,
         modifier = sides.then(modifier),
@@ -199,7 +215,19 @@ fun <T : Any> AppSheet(
         // back of a face is a handler of its own, registered after Material's and so heard first.
         properties = ModalBottomSheetProperties(shouldDismissOnBackPress = dismissible, shouldDismissOnClickOutside = dismissible),
     ) {
+        // Asked once for the life of the window, as Material asks it: a window that opened holding has its own «назад» off for good.
+        // Let go, the sheet hears «назад» here and hides as Material would hide it; registered first, so that the way back of a face
+        // and the refusal of a sheet that holds again, registered after it, are heard before it.
+        val openedHolding = remember { !dismissible }
+        BackHandler(enabled = dismissible && openedHolding) {
+            scope.launch { sheetState.hide() }.invokeOnCompletion { if (!sheetState.isVisible) dismiss() }
+        }
         if (onBack != null) BackHandler { back.value?.invoke() }
+        // a sheet that holds takes «назад» itself, after the way back of a face and so heard before it: nothing happens
+        if (!dismissible) BackHandler { }
+        // the empty room of the handle, outside what scrolls, as the handle is: the sheet keeps its height, its top edge stands where
+        // it stood with the handle
+        if (!dismissible && keepHandleRoom) Spacer(Modifier.height(HandleRoom))
         // asked of the value shown, as its buttons are: a value held while it slides away keeps the layout it had
         val scrolls = scroll(shown)
         val scrolling = if (scrolls) Modifier.verticalScroll(scrollState) else Modifier
@@ -207,7 +235,7 @@ fun <T : Any> AppSheet(
         CompositionLocalProvider(LocalFaceArrival provides arrival) {
             if (buttons == null) {
                 Column(Modifier.fillMaxWidth().then(scrolling).padding(contentPadding)) {
-                    if (!dismissible) Spacer(Modifier.height(NoHandleTop))
+                    if (!dismissible && !keepHandleRoom) Spacer(Modifier.height(NoHandleTop))
                     content(shown)
                 }
             } else {
@@ -229,7 +257,7 @@ fun <T : Any> AppSheet(
                                 end = contentPadding.calculateEndPadding(direction),
                             ),
                         ) {
-                            if (!dismissible) Spacer(Modifier.height(NoHandleTop))
+                            if (!dismissible && !keepHandleRoom) Spacer(Modifier.height(NoHandleTop))
                             content(shown)
                             if (inContent) {
                                 Column(Modifier.fillMaxWidth().padding(bottom = contentPadding.calculateBottomPadding()), content = buttons)
@@ -470,8 +498,10 @@ fun AppSheetCard(
  * quietly ([quiet]), never a red button. A [main] that cannot be pressed yet is dimmed with its [mainReason] above it; one that goes
  * dim and bright under a stepper keeps the place of its reason while there is none ([mainReasonReserve]). In a face that has just
  * taken the place of another in its frame the [main] does not answer for the time of a double tap ([AppSheet]). 18 above them — or
- * the [top] a sheet names (the sheet of a note: 16, 5.29 R5) — 6 between them. In a window no higher than 360 dp the buttons of 56
- * are 48, as those of the bottom zone (3.36.1, п. 5): the pinned bottom leaves the sheet's number room above it.
+ * the [top] a sheet names (the sheet of a note: 16, 5.29 R5) — 6 between them, or the [gap] a sheet names («Поделиться» that did not
+ * work: 10). In a window no higher than 360 dp the buttons of 56 are 48, as those of the bottom zone (3.36.1, п. 5): the pinned
+ * bottom leaves the sheet's number room above it. [mainStyle] — the one answer of a face is not always the filled one: «Отмена» of
+ * a file being made for «Поделиться» is an outline (5.29 R5), and it is held for a double tap all the same.
  */
 @Composable
 fun AppSheetButtons(
@@ -487,13 +517,15 @@ fun AppSheetButtons(
     quiet: String? = null,
     onQuiet: () -> Unit = {},
     top: Dp = ButtonsTop,
+    gap: Dp = ButtonsGap,
+    mainStyle: AppButtonStyle = AppButtonStyle.Main,
 ) {
     val compact = currentDockMetrics().compact
     // a face that has just come in the place of another does not take the second tap of the finger that pressed the one before
     val arrival = LocalFaceArrival.current
-    Column(modifier.fillMaxWidth().padding(top = top), verticalArrangement = Arrangement.spacedBy(ButtonsGap)) {
+    Column(modifier.fillMaxWidth().padding(top = top), verticalArrangement = Arrangement.spacedBy(gap)) {
         AppButton(
-            main, { if (!arrival.holds) onMain() }, Modifier.fillMaxWidth(), style = AppButtonStyle.Main, icon = mainIcon, enabled = mainEnabled,
+            main, { if (!arrival.holds) onMain() }, Modifier.fillMaxWidth(), style = mainStyle, icon = mainIcon, enabled = mainEnabled,
             reason = mainReason, compact = compact, reasonReserve = mainReasonReserve,
         )
         if (second != null) AppButton(second, onSecond, Modifier.fillMaxWidth(), style = AppButtonStyle.Outline, compact = compact)

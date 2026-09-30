@@ -2,6 +2,7 @@ package com.violinjourney.app.feature.sound.components
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.MutableTransitionState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
@@ -15,16 +16,20 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -48,14 +53,18 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.audio.fx.SoundMeters
@@ -67,9 +76,13 @@ import com.violinjourney.app.core.domain.sound.SoundConfig
 import com.violinjourney.app.core.domain.sound.SoundParam
 import com.violinjourney.app.core.domain.sound.SoundParams
 import com.violinjourney.app.core.domain.sound.SoundSettings
+import com.violinjourney.app.core.ui.components.ButtonFit
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
+import com.violinjourney.app.core.ui.theme.AppShapes
 import com.violinjourney.app.core.ui.theme.ViolinTheme
+import com.violinjourney.app.feature.sound.SliderValues
+import com.violinjourney.app.feature.sound.SoundCard
 import com.violinjourney.app.feature.sound.SoundFormats
 import com.violinjourney.app.feature.sound.SoundIntent
 import com.violinjourney.app.feature.sound.SoundReducer
@@ -125,12 +138,34 @@ import kotlinx.coroutines.flow.first
 import org.jetbrains.compose.resources.stringArrayResource
 import org.jetbrains.compose.resources.stringResource
 
-private val CardCorner = 20.dp
-private val HeaderHeight = 60.dp
+// The cards of «Звук» (spec 3.36.5, 5.29 R5; records.html 4).
+private val HeaderMinHeight = 64.dp
+private val HeaderStart = 16.dp
+private val HeaderEnd = 12.dp
+private val HeaderVertical = 8.dp
+private val HeaderGap = 12.dp
+private val NumberSize = 22.dp
+private val ContentSide = 16.dp
+private val ContentBottom = 16.dp
+private val ContentGap = 12.dp
+private val CardsGap = 10.dp
 private val ChipHeight = 36.dp
 private const val DISABLED_ALPHA = 0.38f
 private const val EXPAND_MS = 250
+private const val TURNED = 180f
 private const val REDUCTION_FULL_DB = 20.0
+
+/** The name of a card: 16 sp, 800; where its widest word does not stand whole in its room, a step smaller at a time down to 13. */
+private const val TITLE_SP = 16f
+private const val TITLE_MIN_SP = 13f
+private const val TITLE_LINES = 2
+
+/** The name is measured in whole pixels: a word that fits only by a hair is not trusted. */
+private val TitleSlack = 1.dp
+
+/** Between the parts of the short values of a card, as they are seen and as TalkBack hears them. */
+private const val SUMMARY_SEPARATOR = " · "
+private const val SAID_SEPARATOR = ", "
 
 /** The limiter's line under «Громкость» looks at the readings ten times a second while the sound plays… */
 private const val LIMITER_NOTE_STEP_MS = 100L
@@ -139,11 +174,14 @@ private const val LIMITER_NOTE_STEP_MS = 100L
 private const val LIMITER_NOTE_CALM_STEPS = 10
 private const val TABULAR_FIGURES = "tnum"
 
-/** The four cards, in the order the signal passes them. */
+/**
+ * The four cards of the chain, in the order the signal passes them, numbered 1–4 (spec 3.36.5): all closed when the screen opens,
+ * any number of them open at once ([expanded]).
+ */
 @Composable
 fun SoundBlocks(
     settings: SoundSettings,
-    expanded: SoundBlock?,
+    expanded: Set<SoundCard>,
     band: EqBand,
     details: Boolean,
     meters: State<SoundMeters?>,
@@ -151,28 +189,31 @@ fun SoundBlocks(
     onIntent: (SoundIntent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+    Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(CardsGap)) {
         val bands = stringArrayResource(Res.array.sound_band_names)
         BlockCard(
-            block = SoundBlock.EQ, icon = AppIcons.Eq, title = stringResource(Res.string.sound_block_eq), subtitle = null,
+            block = SoundBlock.EQ, number = 1, title = stringResource(Res.string.sound_block_eq), subtitle = null,
             summary = eqSummary(settings, bands), settings = settings, expanded = expanded, onIntent = onIntent,
         ) { on -> EqContent(settings, band, on, config, onIntent) }
         BlockCard(
-            block = SoundBlock.COMPRESSOR, icon = AppIcons.Compressor, title = stringResource(Res.string.sound_block_compressor),
+            block = SoundBlock.COMPRESSOR, number = 2, title = stringResource(Res.string.sound_block_compressor),
             subtitle = stringResource(Res.string.sound_block_compressor_sub),
-            summary = settings.compressor.amount?.let { amountWord(it) } ?: SoundFormats.ratio(settings.compressor.ratio),
+            summary = listOf(settings.compressor.amount?.let { amountWord(it) } ?: SoundFormats.ratio(settings.compressor.ratio)),
             settings = settings, expanded = expanded, onIntent = onIntent,
         ) { on -> CompressorContent(settings, details, on, meters, config, onIntent) }
         BlockCard(
-            block = SoundBlock.REVERB, icon = AppIcons.Hall, title = stringResource(Res.string.sound_block_reverb),
+            block = SoundBlock.REVERB, number = 3, title = stringResource(Res.string.sound_block_reverb),
             subtitle = stringResource(Res.string.sound_block_reverb_sub),
-            summary = "${stringArrayResource(Res.array.sound_space_names)[settings.reverb.space.ordinal]} · ${SoundFormats.value(SoundParam.REVERB_DECAY.unit, settings.reverb.decaySec)} · " +
+            summary = listOf(
+                stringArrayResource(Res.array.sound_space_names)[settings.reverb.space.ordinal],
+                SoundFormats.value(SoundParam.REVERB_DECAY.unit, settings.reverb.decaySec),
                 SoundFormats.value(SoundParam.REVERB_MIX.unit, settings.reverb.mix),
+            ),
             settings = settings, expanded = expanded, onIntent = onIntent,
         ) { on -> ReverbContent(settings, on, config, onIntent) }
         BlockCard(
-            block = SoundBlock.OUTPUT, icon = AppIcons.Volume, title = stringResource(Res.string.sound_block_output), subtitle = null,
-            summary = SoundFormats.decibels(settings.output.gainDb, signed = true), settings = settings, expanded = expanded, onIntent = onIntent,
+            block = SoundBlock.OUTPUT, number = 4, title = stringResource(Res.string.sound_block_output), subtitle = null,
+            summary = listOf(SoundFormats.decibels(settings.output.gainDb, signed = true)), settings = settings, expanded = expanded, onIntent = onIntent,
         ) { on -> OutputContent(settings, on, meters, config, onIntent) }
     }
 }
@@ -186,9 +227,9 @@ private fun amountWord(amount: Double): String = stringResource(
     },
 )
 
-/** What the equalizer does, in a line: the bands that are off zero, by name. */
+/** What the equalizer does: the bands that are off zero, by name — «Гул 80 Гц», «Тело +2 дБ» — or «ровно». */
 @Composable
-private fun eqSummary(settings: SoundSettings, bands: List<String>): String {
+private fun eqSummary(settings: SoundSettings, bands: List<String>): List<String> {
     val eq = settings.eq
     val moved = buildList {
         if (eq.lowCut.enabled) add("${bands[EqBand.LOW_CUT.ordinal]} ${SoundFormats.hertz(eq.lowCut.hz)}")
@@ -196,84 +237,203 @@ private fun eqSummary(settings: SoundSettings, bands: List<String>): String {
             .filter { it.second != 0.0 }
             .forEach { (band, db) -> add("${bands[band.ordinal]} ${SoundFormats.decibels(db, signed = true)}") }
     }
-    return if (moved.isEmpty()) stringResource(Res.string.sound_eq_flat) else moved.joinToString(" · ")
+    return moved.ifEmpty { listOf(stringResource(Res.string.sound_eq_flat)) }
 }
 
 /**
- * A block: its switch, its name, what it is set to in a line, and — opened — its controls. A
- * block switched off does not fold; it dims: to bring it back is one touch. Opening one scrolls
- * it up to the mini player.
+ * A block of the chain as a card: its number, its name and — what it is for before what it is set to — its short values
+ * («выравнивает громкость · заметно»), its switch and the chevron; opened, its controls. A block switched off neither folds nor hides:
+ * its number, name and values go quieter in colour — «выключено» in place of the values — and one touch of its switch brings it back.
  */
 @Composable
 private fun BlockCard(
     block: SoundBlock,
-    icon: ImageVector,
+    number: Int,
     title: String,
     subtitle: String?,
-    summary: String,
+    summary: List<String>,
     settings: SoundSettings,
-    expanded: SoundBlock?,
+    expanded: Set<SoundCard>,
     onIntent: (SoundIntent) -> Unit,
     content: @Composable (on: Boolean) -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
     val on = SoundReducer.isOn(settings, block)
-    val open = expanded == block
-    val bring = remember { BringIntoViewRequester() }
-    LaunchedEffect(open) { if (open) bring.bringIntoView() }
-    val turn by animateFloatAsState(if (open) 180f else 0f, tween(EXPAND_MS, easing = FastOutSlowInEasing), label = "blockChevron")
+    val card = SoundCard.of(block)
     val switchLabel = stringResource(Res.string.sound_block_switch, title)
-    val foldLabel = stringResource(if (open) Res.string.sound_block_collapse else Res.string.sound_block_expand)
-
-    Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .bringIntoViewRequester(bring)
-            .clip(RoundedCornerShape(CardCorner))
-            .background(colors.surfaceContainer),
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(HeaderHeight)
-                .clickable(onClickLabel = foldLabel, role = Role.Button) { onIntent(SoundIntent.BlockHeaderClicked(block)) }
-                .padding(start = 12.dp, end = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(10.dp),
-        ) {
+    SoundCardFrame(
+        number = number,
+        title = title,
+        summary = listOfNotNull(subtitle) + if (on) summary else listOf(stringResource(Res.string.sound_block_off)),
+        open = card in expanded,
+        onToggle = { onIntent(SoundIntent.CardToggled(card)) },
+        on = on,
+        switch = {
             Switch(
                 checked = on,
                 onCheckedChange = { onIntent(SoundIntent.BlockSwitched(block, it)) },
                 modifier = Modifier.semantics { contentDescription = switchLabel },
                 colors = SwitchDefaults.colors(checkedTrackColor = colors.primary, checkedThumbColor = colors.onPrimary),
             )
-            AppIcon(icon, contentDescription = null, tint = if (on) colors.primary else colors.onSurfaceVariant, size = 18.dp)
-            Column(modifier = Modifier.weight(1f)) {
-                Text(title, color = colors.onSurface, style = MaterialTheme.typography.titleSmall.copy(fontSize = 15.sp, fontWeight = FontWeight.SemiBold))
-                // What the block is for goes before what it is set to — beside the title it did not fit («выравнивает громкость»).
-                val state = if (on) summary else stringResource(Res.string.sound_block_off)
-                Text(
-                    text = if (subtitle != null) "$subtitle · $state" else state,
-                    color = colors.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp, fontFeatureSettings = TABULAR_FIGURES),
-                )
+        },
+    ) { content(on) }
+}
+
+/**
+ * The frame of a card of «Звук» (spec 3.36.5, 5.29 R5): on the colour of a card at a corner of 18; its header of 64 at the least —
+ * the number in a circle of 22 on the ground of the screen, the name (16 sp, 800) and under it the short values in one line that
+ * ends in an ellipsis ([summary], its parts apart by «·»), the [switch] of a block and the chevron of 24 that turns when it opens;
+ * opened ([open]), its [content] under the header. Not [on] — the number, the name and the values in the third level of text,
+ * without a transparency. [onToggle] null — a card that does not open and has no chevron («Минусовка» that could not be prepared),
+ * [note] its sentence under the name in place of the values, in as many lines as it takes.
+ *
+ * TalkBack hears the header as one button — «1, Эквалайзер, Гул 80 Гц, Тело +2 дБ» and «Развернуть» / «Свернуть» — and the switch as
+ * one of its own, as before. Opening a card brings it into sight over the player once it has unfolded — the whole card, or its top
+ * where it is taller than the room; a card already open when the screen is made again (a turn of the phone) is left where the scroll
+ * was.
+ */
+@Composable
+internal fun SoundCardFrame(
+    number: Int,
+    title: String,
+    summary: List<String>,
+    open: Boolean,
+    onToggle: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    on: Boolean = true,
+    switch: (@Composable () -> Unit)? = null,
+    note: String? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    val colors = MaterialTheme.colorScheme
+    val quiet = ViolinTheme.textTertiary
+    val words = if (on) colors.onSurface else quiet
+    val values = if (on) colors.onSurfaceVariant else quiet
+    val bring = remember { BringIntoViewRequester() }
+    // brought into sight only as it opens, not when the screen is made again with it open
+    val wasOpen = remember { OpenMemory(open) }
+    val extent = remember { CardExtent() }
+    val unfolding = remember { MutableTransitionState(open) }
+    unfolding.targetState = open
+    LaunchedEffect(open) {
+        val opening = open && !wasOpen.open
+        wasOpen.open = open
+        if (!opening) return@LaunchedEffect
+        // The card as it stands unfolded, asked once it has unfolded. While it unfolds the end of the scroll is not there yet: the
+        // last card, opened at the very bottom, leaves the scroll nothing to move by, and a scroll that cannot move gives the request
+        // up — the card stayed under the player. The folded card — its header alone — would ask for nothing while the header is in sight.
+        snapshotFlow { unfolding.isIdle && unfolding.currentState }.first { it }
+        bring.bringIntoView(Rect(0f, 0f, extent.width.toFloat(), (extent.header + extent.content).toFloat()))
+    }
+    val turn by animateFloatAsState(if (open) TURNED else 0f, tween(EXPAND_MS, easing = FastOutSlowInEasing), label = "cardChevron")
+    val foldLabel = stringResource(if (open) Res.string.sound_block_collapse else Res.string.sound_block_expand)
+    val said = (listOf(number.toString(), title) + listOfNotNull(note) + summary.takeIf { note == null }.orEmpty()).joinToString(SAID_SEPARATOR)
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .bringIntoViewRequester(bring)
+            .clip(AppShapes.M)
+            .background(colors.surfaceContainer),
+    ) {
+        Row(
+            modifier = Modifier
+                .onSizeChanged {
+                    extent.width = it.width
+                    extent.header = it.height
+                }
+                .fillMaxWidth()
+                .heightIn(min = HeaderMinHeight)
+                .then(if (onToggle != null) Modifier.clickable(onClickLabel = foldLabel, role = Role.Button, onClick = onToggle) else Modifier)
+                .padding(start = HeaderStart, end = HeaderEnd, top = HeaderVertical, bottom = HeaderVertical),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(HeaderGap),
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clearAndSetSemantics { contentDescription = said },
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(HeaderGap),
+            ) {
+                Box(Modifier.size(NumberSize).background(colors.surface, CircleShape), contentAlignment = Alignment.Center) {
+                    Text(
+                        text = number.toString(),
+                        color = if (on) colors.onSurfaceVariant else quiet,
+                        maxLines = 1,
+                        style = MaterialTheme.typography.labelSmall.copy(fontSize = 11.sp, lineHeight = 14.sp, fontWeight = FontWeight.ExtraBold, fontFeatureSettings = TABULAR_FIGURES),
+                    )
+                }
+                Column(modifier = Modifier.weight(1f)) {
+                    CardTitle(title, words)
+                    if (note != null) {
+                        Text(note, color = values, style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp))
+                    } else {
+                        Text(
+                            text = summary.joinToString(SUMMARY_SEPARATOR),
+                            color = values,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            style = MaterialTheme.typography.bodySmall.copy(fontSize = 13.sp, lineHeight = 18.sp, fontFeatureSettings = TABULAR_FIGURES),
+                        )
+                    }
+                }
             }
-            Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
-                AppIcon(AppIcons.ChevronDown, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.rotate(turn))
+            switch?.invoke()
+            if (onToggle != null) {
+                AppIcon(AppIcons.ChevronDown, contentDescription = null, tint = quiet, modifier = Modifier.rotate(turn))
             }
         }
         AnimatedVisibility(
-            visible = open,
+            visibleState = unfolding,
             enter = expandVertically(tween(EXPAND_MS, easing = FastOutSlowInEasing)) + fadeIn(tween(EXPAND_MS)),
             exit = shrinkVertically(tween(EXPAND_MS, easing = FastOutSlowInEasing)) + fadeOut(tween(EXPAND_MS)),
         ) {
             Column(
-                modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) { content(on) }
+                // measured at its whole height from its first frame: the unfolding clips it, it does not squeeze it
+                modifier = Modifier
+                    .onSizeChanged { extent.content = it.height }
+                    .padding(start = ContentSide, end = ContentSide, bottom = ContentBottom),
+                verticalArrangement = Arrangement.spacedBy(ContentGap),
+                content = content,
+            )
         }
+    }
+}
+
+/** Whether a card was open the last time it was looked at: brought into sight only as it opens. */
+private class OpenMemory(var open: Boolean)
+
+/** A card as it was last laid out, in pixels: its width, the height of its header and that of its content unfolded. */
+private class CardExtent {
+    var width = 0
+    var header = 0
+    var content = 0
+}
+
+/**
+ * The name of a card, 16 sp / 800 in up to two lines — a name of two words breaks at its space; one whose widest word does not stand
+ * whole in the room (the narrow column of a phone lying, a large font) steps down together to 13 sp ([ButtonFit]).
+ */
+@Composable
+private fun CardTitle(title: String, color: Color) {
+    val style = MaterialTheme.typography.titleSmall.copy(fontSize = TITLE_SP.sp, lineHeight = 20.sp, fontWeight = FontWeight.ExtraBold)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    BoxWithConstraints {
+        val room = constraints.maxWidth.toFloat() - with(density) { TitleSlack.toPx() }
+        val sizeSp = remember(title, room, style, measurer) {
+            val words = title.split(' ').filter { it.isNotEmpty() }
+            ButtonFit.size(room, TITLE_SP, TITLE_MIN_SP) { sp ->
+                words.maxOfOrNull { measurer.measure(it, style.copy(fontSize = sp.sp), softWrap = false, maxLines = 1).size.width.toFloat() } ?: 0f
+            }
+        }
+        Text(
+            text = title,
+            color = color,
+            maxLines = TITLE_LINES,
+            overflow = TextOverflow.Ellipsis,
+            style = if (sizeSp == TITLE_SP) style else style.copy(fontSize = sizeSp.sp),
+        )
     }
 }
 
@@ -460,12 +620,15 @@ private fun Slider(param: SoundParam, settings: SoundSettings, enabled: Boolean,
     } else {
         emptyList()
     }
+    val own = stringResource(Res.string.sound_param_amount_own)
     val text = when {
-        value == null -> stringResource(Res.string.sound_param_amount_own)
+        value == null -> own
         // «Сколько» is read as what it does: the ratio it has led to
         param == SoundParam.COMP_AMOUNT -> SoundFormats.ratio(settings.compressor.ratio)
         else -> SoundFormats.value(param.unit, value)
     }
+    // the room the value keeps whatever it says (5.29 R5): «Сколько» says a ratio or «своё»
+    val reserve = if (param == SoundParam.COMP_AMOUNT) SliderValues.of(SoundParam.COMP_RATIO, config.ratio) + own else SliderValues.of(param, range)
     ParamSlider(
         model = SliderModel(
             label = label, hint = hint, valueText = text,
@@ -474,6 +637,7 @@ private fun Slider(param: SoundParam, settings: SoundSettings, enabled: Boolean,
             bipolar = range.min < 0 && range.max > 0,
             marks = marks,
             detached = value == null,
+            valueReserve = reserve,
         ),
         enabled = enabled,
         onFraction = { onIntent(SoundIntent.ParamChanged(param, SoundParams.valueAt(param, it, range))) },

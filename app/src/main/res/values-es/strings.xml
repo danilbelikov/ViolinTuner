@@ -890,7 +890,7 @@
     <string name="take_best">mejor</string>
     <!-- «Sonido»: processing of recorded sound (spec 3.17) -->
     <string name="sound_everyone_title">Sonido de las grabaciones</string>
-    <string name="sound_everyone_subtitle">para todas las grabaciones · %1$s</string>
+    <string name="sound_everyone_all">para todas las grabaciones</string>
     <string name="sound_reset">Restablecer</string>
     <string name="sound_caption_off">sin procesado</string>
     <string name="sound_caption_custom">ajustes propios</string>
@@ -908,17 +908,16 @@
     </string-array>
     <string name="sound_preset_custom">Propios</string>
     <string name="sound_preset_save">Guardar como preset</string>
-    <string name="sound_preset_remove_hint">Mantén pulsado para eliminar</string>
     <string name="sound_mode_everyone">Como todas</string>
-    <string name="sound_mode_own">Propios de esta grabación</string>
+    <string name="sound_mode_own">Propios de la grabación</string>
     <string name="sound_mode_everyone_text">%1$s — de «Ajustes → Sonido de las grabaciones». Si cambia allí, cambia también aquí. Al tocar cualquier control, la grabación tendrá sus propios ajustes.</string>
     <string name="sound_mode_own_text">Solo para esta grabación. «Como todas» devuelve los ajustes comunes y los propios se olvidan.</string>
     <string name="sound_listen_on">Escuchar en</string>
     <string name="sound_listen_latest">la última con sonido</string>
+    <string name="sound_listen_other">Otra</string>
     <string name="sound_listen_none">Aún no hay grabaciones con sonido: los ajustes se pueden definir ya; escucharlos, tras la primera grabación.</string>
     <string name="sound_affected_one">para %1$d grabación</string>
     <string name="sound_affected_many">para %1$d grabaciones</string>
-    <string name="sound_order">Orden: Ecualizador → Compresor → Sala → Volumen</string>
     <string name="sound_block_eq">Ecualizador</string>
     <string name="sound_block_compressor">Compresor</string>
     <string name="sound_block_compressor_sub">iguala el volumen</string>
@@ -990,7 +989,6 @@
     <string name="sound_dialog_preset_hint">Nombre</string>
     <string name="sound_dialog_preset_save">Guardar</string>
     <string name="sound_dialog_delete_title">¿Eliminar el preset «%1$s»?</string>
-    <string name="sound_dialog_pick_title">Escuchar en</string>
     <string name="sound_share">Compartir</string>
     <string name="share_message">%1$s · %2$d %% · %3$s</string>
     <string name="share_message_session">Grabación</string>
@@ -1005,18 +1003,19 @@
     <string name="share_video">Vídeo</string>
     <string name="share_video_caption">tal como se grabó</string>
     <string name="share_sound_only">Solo sonido</string>
-    <string name="share_sound_only_processed">procesado · ≈ %1$s · mono</string>
-    <string name="share_sound_only_caption">tal como se grabó · ≈ %1$s · mono</string>
+    <string name="share_sound_with_processing">procesado</string>
+    <string name="share_sound_as_recorded">tal como se grabó</string>
     <string name="share_video_details">%1$s · %2$dp · ≈ %3$s</string>
     <string name="share_large_file">Archivo grande: las aplicaciones de mensajería pueden comprimirlo o rechazarlo</string>
     <string name="share_failed_video_title">No se pudo preparar el vídeo</string>
     <string name="share_failed_video_text">La toma y los ajustes siguen en su sitio. Se puede intentar de nuevo o enviar el vídeo tal como se grabó, sin procesar el sonido.</string>
     <string name="share_send_as_shot">Enviar tal como se grabó</string>
     <string name="share_file_details">%1$s · ≈ %2$s · mono</string>
-    <string name="share_with_text">Añadir texto: «%1$s»</string>
+    <string name="share_add_text">Añadir texto</string>
     <string name="share_continue">Continuar</string>
     <string name="share_busy">Preparando…</string>
     <string name="share_preparing">Preparando el archivo</string>
+    <string name="share_preparing_video">Preparando el vídeo</string>
     <string name="share_percent">%1$d %%</string>
     <string name="share_remaining">quedan unos %1$d s</string>
     <string name="share_failed_title">No se pudo preparar el archivo</string>
@@ -1042,6 +1041,8 @@
     <string name="sound_settings_row_caption">%1$s · para todas las grabaciones</string>
     <string name="sound_ab_original">A, original</string>
     <string name="sound_ab_processed">B, procesado</string>
+    <string name="sound_ab_original_word">original</string>
+    <string name="sound_ab_processed_word">procesado</string>
     <string name="stand_counter">%1$d / %2$d</string>
     <string name="stand_page_description">Página %1$d de %2$d</string>
     <string name="stand_delete_page">Eliminar la página</string>
@@ -1153,6 +1154,9 @@
     <string name="backing_offset">Desfase</string>
     <string name="backing_offset_hint">va tarde — a la izquierda</string>
     <string name="backing_offset_recorded">Como se grabó · %1$s</string>
+    <string name="backing_recorded_in">Grabado con %1$s</string>
+    <string name="backing_recorded_in_latency">Grabado con %1$s · %2$s compensados</string>
+    <string name="backing_recorded_wired">Grabado con auriculares con cable</string>
 
     <!-- The backing track: on the piece screen and «Настроим наушники» (spec 3.32). -->
     <string name="backing_add">Añadir acompañamiento</string>

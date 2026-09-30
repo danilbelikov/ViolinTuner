@@ -3,7 +3,7 @@ package com.violinjourney.app.feature.sound.components
 import com.violinjourney.app.core.audio.fx.SoundMeters
 
 /**
- * The motion of the output meter of the mini player, stepped by frame times: the level goes up at
+ * The motion of the output meter of the player of «Звук», stepped by frame times: the level goes up at
  * once and the whole bar falls in ~300 ms ([MeterFall], spec 5.11), the limiter mark stays lit a
  * while after each time the limiter worked, the number is refreshed a few times a second. Pure; the
  * screen only draws what it says, thirty times a second ([runMeter]), and sleeps while [atRest].
