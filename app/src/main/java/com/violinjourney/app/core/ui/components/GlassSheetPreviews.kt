@@ -2,6 +2,7 @@ package com.violinjourney.app.core.ui.components
 
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -29,10 +30,12 @@ import com.violinjourney.app.core.ui.icons.IconSizes
 import com.violinjourney.app.core.ui.theme.AppShapes
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.shared.resources.Res
+import com.violinjourney.app.shared.resources.mode_tuning
 import com.violinjourney.app.shared.resources.practice_discard
 import com.violinjourney.app.shared.resources.practice_save
 import com.violinjourney.app.shared.resources.practice_start
 import com.violinjourney.app.shared.resources.practice_stop
+import com.violinjourney.app.shared.resources.tuning_string_hz
 import com.violinjourney.app.shared.resources.venue_home
 import org.jetbrains.compose.resources.stringResource
 
@@ -81,6 +84,32 @@ private fun GlassLightPreview() = GlassScene(light = true, place = "Вена · 
 @Preview(name = "Glass · a busy picture: the city tag at .82", widthDp = 412, heightDp = 260, locale = "ru")
 @Composable
 private fun GlassBusyPreview() = GlassScene(light = true, place = "Прага", busy = true)
+
+/** A control of Live on the glass (spec 5.29 R6): the inner edge of 1 dp, white at 12 %; [ground] where there is no picture. */
+@Composable
+private fun EdgePlate(ground: Color? = null) {
+    GlassPlate(Modifier.height(44.dp), edge = true, ground = ground, contentPadding = PaddingValues(horizontal = 18.dp)) {
+        Text(stringResource(Res.string.mode_tuning), style = MaterialTheme.typography.labelLarge.copy(fontSize = 15.sp, fontWeight = FontWeight.Bold))
+        Text(stringResource(Res.string.tuning_string_hz, 294), color = ViolinTheme.glassCaption, style = MaterialTheme.typography.labelLarge.copy(fontSize = 12.5.sp))
+    }
+}
+
+@Preview(name = "Glass · the controls of Live: the edge over a dark and a light picture, the card colour without one", widthDp = 412, heightDp = 260, locale = "ru")
+@Composable
+private fun GlassEdgePreview() = ViolinTheme {
+    Column(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.surface).padding(20.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        listOf(false, true).forEach { light ->
+            Box(Modifier.fillMaxWidth().height(64.dp).clip(AppShapes.M), contentAlignment = Alignment.Center) {
+                Picture(light, Modifier.fillMaxSize())
+                EdgePlate()
+            }
+        }
+        // the plain Live: the glass would melt into the dark field
+        Box(Modifier.fillMaxWidth().height(64.dp), contentAlignment = Alignment.Center) {
+            EdgePlate(ground = MaterialTheme.colorScheme.surfaceContainer)
+        }
+    }
+}
 
 @Composable
 private fun EndPracticeSheet(modifier: Modifier = Modifier) {

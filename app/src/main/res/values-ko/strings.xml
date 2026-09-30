@@ -13,7 +13,7 @@
     <string name="mode_tuning">조율</string>
     <string name="tuning_string_hz">%1$d Hz</string>
     <string name="tuning_hint_auto">자동 · 개방현을 켜 보세요</string>
-    <string name="tuning_hint_locked">목표 고정: %1$s · %2$d Hz · 탭하면 해제</string>
+    <string name="tuning_hint_locked">%1$s · %2$d Hz · 탭하면 해제</string>
     <string name="tuning_string_locked">고정됨</string>
     <string name="tuning_string_auto">자동</string>
     <string name="status_in_tune">정확</string>

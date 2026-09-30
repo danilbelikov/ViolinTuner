@@ -44,8 +44,14 @@ private fun LivePreview(
     reduceMotion: Boolean = false,
     venue: Venue? = null,
     bookmark: Bookmark = Bookmark.Entry,
-) = LivePreview(heard.signal, heard.gauge, mode, lockedString, recording, ribbon, practiceMs, reduceMotion, venue, bookmark)
+    silhouette: Boolean = LiveSwitches.STRING_SILHOUETTE,
+    showVenue: Boolean = true,
+) = LivePreview(heard.signal, heard.gauge, mode, lockedString, recording, ribbon, practiceMs, reduceMotion, venue, bookmark, silhouette, showVenue)
 
+/**
+ * [silhouette] — the switch of the pale note of the locked string (spec 3.36.6), off in the app; [showVenue] false — the plain Live of
+ * `-PplainLive=true`, the controls on the card colour.
+ */
 @Composable
 private fun LivePreview(
     signal: LiveSignal,
@@ -58,6 +64,8 @@ private fun LivePreview(
     reduceMotion: Boolean = false,
     venue: Venue? = null,
     bookmark: Bookmark = Bookmark.Entry,
+    silhouette: Boolean = LiveSwitches.STRING_SILHOUETTE,
+    showVenue: Boolean = true,
 ) {
     val config = IntonationConfig()
     val target = LiveTarget(mode, lockedString)
@@ -82,7 +90,9 @@ private fun LivePreview(
             onIntent = {},
             gauge = { shownGauge },
             reduceMotion = reduceMotion,
+            showVenue = showVenue,
             block = BlockState(bookmark, sheet = null),
+            stringSilhouette = silhouette,
         )
         }
     }
@@ -281,6 +291,103 @@ private fun PracticeTagLandscapePreview() = LivePreview(
 @Composable
 private fun TuningLockedSilencePreview() =
     LivePreview(LiveSignal.Silence, mode = LiveMode.TUNING, lockedString = ViolinString.D4)
+
+@Preview(name = "Tuning · D locked, silence · silhouette ON (the switch is off in the app)", widthDp = 412, heightDp = 788)
+@Composable
+private fun TuningSilhouettePreview() =
+    LivePreview(LiveSignal.Silence, mode = LiveMode.TUNING, lockedString = ViolinString.D4, silhouette = true)
+
+@Preview(name = "Tuning · D locked, the note sounds · silhouette ON: the note itself", widthDp = 412, heightDp = 788)
+@Composable
+private fun TuningSilhouetteSoundingPreview() = LivePreview(
+    heard(Note(D4), cents = -6.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.3),
+    mode = LiveMode.TUNING,
+    lockedString = ViolinString.D4,
+    silhouette = true,
+)
+
+@Preview(name = "Tuning · A far flat, −80 c: the slider and its halo whole at the start of the scale", widthDp = 412, heightDp = 788)
+@Composable
+private fun TuningFarFlatPreview() = LivePreview(
+    heard(Note(A4), cents = -80.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    mode = LiveMode.TUNING,
+)
+
+@Preview(name = "Tuning · A far sharp, +80 c, plain build: the slider whole at the end of the scale", widthDp = 360, heightDp = 506)
+@Composable
+private fun TuningFarSharpPlainPreview() = LivePreview(
+    heard(Note(A4), cents = 80.0, zone = Zone.OFF, direction = Direction.SHARP, holdProgress = 0.0),
+    mode = LiveMode.TUNING,
+    showVenue = false,
+)
+
+@Preview(name = "Tuning · no permission: the strings at 0.4, the scale at 0.3 at the bottom", widthDp = 412, heightDp = 788)
+@Composable
+private fun TuningNoMicPreview() = LivePreview(LiveSignal.NoMicPermission, mode = LiveMode.TUNING, lockedString = ViolinString.D4)
+
+@Preview(name = "Tuning · 360 x 640: the ring about 2 dp smaller than before R6", widthDp = 360, heightDp = 506)
+@Composable
+private fun TuningSmallPreview() = LivePreview(
+    heard(Note(A4), cents = 12.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
+    mode = LiveMode.TUNING,
+)
+
+@Preview(name = "Play · 360 x 640: the ring about 8 dp smaller than before R6 (the plate of 36)", widthDp = 360, heightDp = 506)
+@Composable
+private fun PlaySmallPreview() = LivePreview(
+    heard(Note(A4), cents = 3.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.5),
+)
+
+@Preview(name = "Plain build · tuning, the controls on the card colour", widthDp = 412, heightDp = 788)
+@Composable
+private fun PlainTuningPreview() = LivePreview(
+    heard(Note(A4), cents = 12.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
+    mode = LiveMode.TUNING,
+    showVenue = false,
+)
+
+@Preview(name = "Plain build · silence, no plate under the status line", widthDp = 412, heightDp = 788)
+@Composable
+private fun PlainSilencePreview() = LivePreview(LiveSignal.Silence, showVenue = false)
+
+@Preview(name = "Plain build · landscape, tuning", widthDp = 892, heightDp = 412)
+@Composable
+private fun PlainLandscapePreview() = LivePreview(
+    heard(Note(D4), cents = -24.0, zone = Zone.OFF, direction = Direction.FLAT, holdProgress = 0.0),
+    mode = LiveMode.TUNING,
+    lockedString = ViolinString.D4,
+    showVenue = false,
+)
+
+@Preview(name = "Landscape · low 640 x 336, play: the switcher where it stands in tuning", widthDp = 640, heightDp = 336)
+@Composable
+private fun LandscapeLowPlayPreview() = LivePreview(
+    heard(Note(F_SHARP_5), cents = 14.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
+)
+
+@Preview(name = "Landscape · 603 x 336 (640 x 360 with a cutout), tuning, D locked", widthDp = 603, heightDp = 336)
+@Composable
+private fun LandscapeCutoutTuningPreview() = LivePreview(
+    heard(Note(D4), cents = -9.0, zone = Zone.NEAR, direction = Direction.FLAT, holdProgress = 0.0),
+    mode = LiveMode.TUNING,
+    lockedString = ViolinString.D4,
+)
+
+@Preview(name = "Landscape · 603 x 336, ru: «Настройка» keeps 15 sp, off the middle up to the gear's touch", widthDp = 603, heightDp = 336, locale = "ru")
+@Composable
+private fun LandscapeCutoutRussianPreview() = LivePreview(LiveSignal.Silence, mode = LiveMode.TUNING, lockedString = ViolinString.D4)
+
+@Preview(name = "Small phone 320 x 500 · tuning at the font 1.5", widthDp = 320, heightDp = 500, fontScale = 1.5f, locale = "ru")
+@Composable
+private fun SmallPhoneLargeFontTuningPreview() = LivePreview(LiveSignal.Silence, mode = LiveMode.TUNING, lockedString = ViolinString.E5)
+
+@Preview(name = "de · 360 x 640 at the font 1.3, tuning", widthDp = 360, heightDp = 506, fontScale = 1.3f, locale = "de")
+@Composable
+private fun GermanTuningPreview() = LivePreview(LiveSignal.Silence, mode = LiveMode.TUNING, lockedString = ViolinString.A4)
+
+@Preview(name = "fr · 360 x 640 at the font 1.3, tuning", widthDp = 360, heightDp = 506, fontScale = 1.3f, locale = "fr")
+@Composable
+private fun FrenchTuningPreview() = LivePreview(LiveSignal.Silence, mode = LiveMode.TUNING, lockedString = ViolinString.A4)
 
 @Preview(name = "12e4 Tuning · too noisy", widthDp = 412, heightDp = 788)
 @Composable

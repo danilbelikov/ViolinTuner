@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.text.style.TextOverflow
+import com.violinjourney.app.core.ui.components.glass
 import com.violinjourney.app.core.ui.theme.LiveTheme
 import com.violinjourney.app.feature.live.StatusDot
 import com.violinjourney.app.feature.live.StatusLine
@@ -40,10 +41,10 @@ import com.violinjourney.app.shared.resources.tuning_hint_locked
 import org.jetbrains.compose.resources.stringResource
 
 /**
- * The small line above the ring (spec 3.14, handoff 12a, 12b): a dot that says whether one may
- * play, and a few words. In tuning mode the same line carries the hint of the string row.
- * With [line] null — a note sounds — it fades out showing what it showed last and keeps its
- * height: the ring below does not jump. Nothing here pulses.
+ * The line above the ring (spec 3.14, 3.36.6): a dot that says whether one may play, and a few words. In tuning mode the same
+ * line carries the hint of the string row. Over the picture ([plate]) it stands on a capsule of smoked glass, 36 high, without an
+ * edge — the words light, never grey (spec 5.29 R6); the plain Live has no plate (5.20). With [line] null — a note sounds — it
+ * fades out showing what it showed last and keeps its height: the ring below does not jump. Nothing here pulses.
  */
 @Composable
 fun StatusLineRow(line: StatusLine?, tuning: TuningState, modifier: Modifier = Modifier, plate: Boolean = false) {
@@ -62,45 +63,50 @@ fun StatusLineRow(line: StatusLine?, tuning: TuningState, modifier: Modifier = M
             .alpha(alpha),
         contentAlignment = Alignment.Center,
     ) {
-        Crossfade(targetState = line ?: lastShown, animationSpec = tween(LiveMotion.STATUS_LINE_SWAP_MS), label = "statusLine") { shown ->
-            if (shown != null) {
-                // over the picture the line stands on a plate of smoked glass, as the label of the place does
-                // (handoff venue, second version): on a cream ceiling bare grey words are lost
-                val glass = LiveTheme.venueColors.plate
-                Row(
-                    modifier = if (plate) {
-                        Modifier
-                            .height(LiveDimens.StatusPlateHeight)
-                            .background(glass, RoundedCornerShape(LiveDimens.StatusPlateCorner))
-                            .padding(horizontal = LiveDimens.StatusPlatePadding)
-                    } else {
-                        Modifier
-                    },
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(LiveDimens.StatusLineGap),
-                ) {
-                    Dot(shown.dot)
-                    Text(
-                        text = messageOf(shown.message, tuning),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        style = LiveTheme.liveTypography.statusLine,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+        // Both phrases fill the line and stand in its middle: otherwise Crossfade stacks them from its start, and while they cross
+        // the shorter one stands off the middle by half the difference, then jumps to it (as the ring's content, whose layers fill it)
+        Crossfade(
+            targetState = line ?: lastShown,
+            modifier = Modifier.fillMaxWidth(),
+            animationSpec = tween(LiveMotion.STATUS_LINE_SWAP_MS),
+            label = "statusLine",
+        ) { shown ->
+            Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                if (shown != null) {
+                    Row(
+                        modifier = if (plate) {
+                            Modifier
+                                .height(LiveDimens.StatusPlateHeight)
+                                .glass(RoundedCornerShape(LiveDimens.StatusPlateCorner))
+                                .padding(horizontal = LiveDimens.StatusPlatePadding)
+                        } else {
+                            Modifier
+                        },
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(LiveDimens.StatusLineGap),
+                    ) {
+                        Dot(shown.dot)
+                        Text(
+                            text = messageOf(shown.message, tuning),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            style = LiveTheme.liveTypography.statusLine,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
                 }
             }
         }
     }
 }
 
-/** Two shapes as well as two colors: a filled dot may, a hollow one may not (spec 2, principle 5). */
+/** Two shapes as well as two colors: a filled dot may, a hollow ring may not (spec 2, principle 5). */
 @Composable
 private fun Dot(dot: StatusDot) {
     val colors = LiveTheme.statusColors
-    val shape = Modifier.size(LiveDimens.StatusLineDot)
     when (dot) {
-        StatusDot.READY -> Box(shape.background(colors.ready, CircleShape))
-        StatusDot.BLOCKED -> Box(shape.border(LiveDimens.StatusLineDotStroke, colors.blocked, CircleShape))
+        StatusDot.READY -> Box(Modifier.size(LiveDimens.StatusDotReady).background(colors.ready, CircleShape))
+        StatusDot.BLOCKED -> Box(Modifier.size(LiveDimens.StatusDotBlocked).border(LiveDimens.StatusLineDotStroke, colors.blocked, CircleShape))
     }
 }
 

@@ -53,6 +53,13 @@ internal val OnDanger = Color(0xFF3D1408)
 internal val Glass = Color(0xB8131318)
 internal val GlassStrong = Color(0xD1131318)
 
+// The second level of text on the glass (spec 3.36.6, 5.29 R6): «выбрать», «занятие», the hertz of a string, the word of the
+// switcher not chosen — 6.8 : 1 over a dark picture, 4.4 : 1 on the glass over pure white (the light hall is checked by a
+// screenshot). Never the grey of the second level off the glass, which is 2.9 : 1 there. [GlassEdge] — the inner edge of 1 dp of
+// the glass of Live's controls, white at 12 % (the mockup's 8–12 %, brought to one).
+internal val GlassCaption = Color(0xFFC9C5D6)
+internal val GlassEdge = Color(0x1FFFFFFF)
+
 /** Black at .55 under a sheet (spec 5.29); it covers the status bar too. */
 internal val SheetScrim = Color(0x8C000000)
 

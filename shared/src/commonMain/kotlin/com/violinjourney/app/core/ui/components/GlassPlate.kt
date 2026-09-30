@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.ui.components
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -30,11 +32,26 @@ private val TagHeight = 32.dp
 private val TagIcon = 15.dp
 private val Capsule = RoundedCornerShape(percent = 50)
 
+/** The inner edge of the glass of Live's controls (spec 5.29 R6): 1 dp of white at 12 %. */
+private val EdgeWidth = 1.dp
+
+/**
+ * Smoked glass under whatever stands on a picture (spec 3.36.1, 5.29): the ground of the screen at 0.72 ([ViolinTheme.glass]), at
+ * 0.82 where the picture is busy ([strong]); no blur and no layer — a colour under [shape]. [edge] — the inner edge of 1 dp, white at
+ * 12 % ([ViolinTheme.glassEdge]), which the controls of Live wear (5.29 R6; the plate of their status line does not). [ground] takes
+ * the place of the glass where there is no picture under it: on the plain Live of `-PplainLive=true` the glass would melt into the
+ * dark field, and its controls stand on surfaceContainer with the same edge (5.29 R6).
+ */
+fun Modifier.glass(shape: Shape, strong: Boolean = false, edge: Boolean = false, ground: Color? = null): Modifier =
+    background(ground ?: if (strong) ViolinTheme.glassStrong else ViolinTheme.glass, shape)
+        .then(if (edge) Modifier.border(EdgeWidth, ViolinTheme.glassEdge, shape) else Modifier)
+
 /**
  * A plate of smoked glass over a picture (spec 3.36.1, 5.29): the ground of the screen at 0.72 ([ViolinTheme.glass]), or at 0.82
  * where the picture under it is busy ([strong]: the city tag of the shop, R7; the line of a missing permission over the preview of
  * the own camera, R4). No blur, no layer. The words on it are onSurface — the grey of the second level is never used on glass
- * (2.9 : 1 over white); a second line of a card on glass is GlassCaption (R6). A row, its children centred and 8 dp apart.
+ * (2.9 : 1 over white); a second line of a card on glass is [ViolinTheme.glassCaption] (R6). [edge] and [ground] — as for
+ * [Modifier.glass]. A row, its children centred and 8 dp apart.
  *
  * A capsule by default; the card of 60 at a corner of 18 is `GlassPlate(Modifier.height(60.dp), shape = AppShapes.M,
  * contentPadding = PaddingValues(horizontal = 14.dp))`.
@@ -45,12 +62,14 @@ fun GlassPlate(
     strong: Boolean = false,
     shape: Shape = Capsule,
     contentPadding: PaddingValues = PaddingValues(horizontal = 12.dp),
+    edge: Boolean = false,
+    ground: Color? = null,
     content: @Composable RowScope.() -> Unit,
 ) {
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
         Row(
             modifier = modifier
-                .background(if (strong) ViolinTheme.glassStrong else ViolinTheme.glass, shape)
+                .glass(shape, strong, edge, ground)
                 .padding(contentPadding),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(PlateGap),

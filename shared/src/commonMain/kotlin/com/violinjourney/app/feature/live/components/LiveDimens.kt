@@ -1,26 +1,42 @@
 package com.violinjourney.app.feature.live.components
 
 import androidx.compose.ui.unit.dp
+import com.violinjourney.app.feature.live.LiveLayoutMath
+import com.violinjourney.app.feature.live.LiveLayoutMath.PortraitRows
+import com.violinjourney.app.feature.live.LiveSwitches
 
-/** Sizes of the Live screen from the handoff `sizes` table (base screen 412 × 892 dp). */
+/**
+ * Sizes of the Live screen from the handoff `sizes` table (base screen 412 × 892 dp) and spec 5.29 R6. The heights of the rows
+ * around the ring are [PortraitRows]: the model of the ring and the screen share them.
+ */
 object LiveDimens {
     val ScreenPadding = 24.dp
 
-    val SwitcherTopPadding = 12.dp
-    val SwitcherHeight = 40.dp
-    // The maple plank with its bone slider (handoff venue 29j)
-    val SwitcherCorner = 21.dp
-    val SwitcherInset = 3.dp
-    val SwitcherSliderCorner = 18.dp
-    val SwitcherSegmentPadding = 20.dp
-    val SwitcherBorder = 1.dp
+    // The top row (spec 5.29 R6): the switcher in the middle, the gear at the right edge; the touch of both is the whole row
+    val SwitcherTopPadding = PortraitRows.AIR.dp
+    val TopRowHeight = PortraitRows.TOP_ROW.dp
 
-    /** The gear in the row of the switcher, at its right edge (handoff nav_bar 35): a disc of smoked glass. */
-    val GearSize = 36.dp
+    // The switcher «Игра | Настройка»: a capsule of glass with a bone slider under the chosen word (spec 3.36.6)
+    val SwitcherHeight = 44.dp
+    val SwitcherCorner = 22.dp
+    val SwitcherInset = 4.dp
+    val SwitcherSliderHeight = 36.dp
+    val SwitcherSliderCorner = 18.dp
+
+    /** A segment is not narrower than this where the row allows it (spec 5.29 R6)… */
+    val SwitcherSegmentMin = 106.dp
+
+    /** …and holds its word with this much on either side, the word stepping down to 12 sp before the padding does. */
+    val SwitcherSegmentPadding = 16.dp
+    val SwitcherSegmentPaddingMin = 8.dp
+
+    /** The gear in the row of the switcher, at its right edge: a disc of the same glass. */
+    val GearSize = 40.dp
     val GearTouch = 48.dp
     val GearIcon = 20.dp
+
+    /** From the right edge of the screen to the disc (portrait); its touch reaches 4 closer. */
     val GearEnd = 16.dp
-    val GearBorder = 1.dp
 
     /** The practice tag to the right of the record key (handoff nav_bar 35): the bookmark's size, turned round. */
     val PracticeTagMinWidth = 124.dp
@@ -31,40 +47,47 @@ object LiveDimens {
     val PracticeTagDot = 7.dp
     val PracticeTagDotGap = 6.dp
 
-    val StringRowTopPadding = 12.dp
-    val StringButtonWidth = 76.dp
-    val StringButtonHeight = 64.dp
-    // A peg: its head stands out over the top edge (handoff venue 29j)
-    val StringButtonCorner = 12.dp
-    val StringButtonGap = 14.dp
-    val StringButtonEdge = 1.5.dp
-    val StringPegHeadWidth = 26.dp
-    val StringPegHeadHeight = 9.dp
-    val StringPegHeadRise = 5.dp
-    val StringLockBadgeSize = 22.dp
-    val StringLockBadgeOffset = 7.dp
-    val StringLockIconSize = 12.dp
+    // The strings of «Настройка»: four buttons of glass across the row (spec 3.36.6, 5.29 R6)
+    val StringRowTopPadding = PortraitRows.AIR.dp
+    val StringButtonHeight = PortraitRows.STRING_BUTTON.dp
+    val StringButtonCorner = 16.dp
+    val StringButtonGap = 10.dp
+
+    /** From the sides of the screen to the row in portrait. */
+    val StringRowSide = 22.dp
+
+    /** The bone edge inside the nearest string. */
+    val StringNearEdge = 2.dp
+
+    /** The lock of the locked string, in its top right corner. */
+    val StringLock = 14.dp
+    val StringLockTop = 5.dp
+    val StringLockEnd = 6.dp
 
     val RingMargin = 16.dp
     val RingStroke = 6.dp
     val WaveStroke = 2.dp
     val OctaveStartPadding = 4.dp
-    val IndicatorSpacing = 20.dp
+    val IndicatorSpacing = PortraitRows.WORD_GAP.dp
     val IndicatorSpacingCompact = 10.dp
 
-    // Status line above the ring (handoff 12a, 12b)
-    val StatusLineHeight = 28.dp
-    val StatusLineTopPadding = 12.dp
-    val StatusLineDot = 8.dp
+    // The status line above the ring (spec 3.14, 5.29 R6): on a plate of glass over the picture
+    val StatusLineHeight = PortraitRows.STATUS_PLATE.dp
+    val StatusLineTopPadding = PortraitRows.AIR.dp
+
+    /** «Можно» — a filled dot; «нельзя» — a ring with its stroke (spec 5.29 R6). */
+    val StatusDotReady = 9.dp
+    val StatusDotBlocked = 10.dp
     val StatusLineDotStroke = 2.dp
-    val StatusLineGap = 8.dp
-    /** The plate of smoked glass under the status line over the picture (handoff venue `venue.plate`). */
-    val StatusPlateHeight = 26.dp
-    val StatusPlateCorner = 13.dp
-    val StatusPlatePadding = 13.dp
+    val StatusLineGap = 9.dp
+
+    /** The plate of smoked glass under the status line over the picture: a capsule without an edge. */
+    val StatusPlateHeight = PortraitRows.STATUS_PLATE.dp
+    val StatusPlateCorner = 18.dp
+    val StatusPlatePadding = 15.dp
 
     // Status word with the cents beside it (handoff 12c1)
-    val StatusRowHeight = 48.dp
+    val StatusRowHeight = PortraitRows.WORD_ROW.dp
     val StatusArrowSize = 40.dp
     val StatusDotSize = 18.dp
     val StatusGap = 14.dp
@@ -75,15 +98,16 @@ object LiveDimens {
     /** A portrait ring smaller than this means a small screen: word and cents go compact with it. */
     val CompactStatusBelowRing = 250.dp
 
-    val ScaleHeight = 36.dp
+    // The scale of «Настройка» (spec 5.29 R6): a light line, the green pill of the tolerance, the zero tick; under the word
+    val ScaleHeight = PortraitRows.SCALE_ROW.dp
+    val ScaleTopGap = PortraitRows.SCALE_GAP.dp
+
+    /** Without the permission the scale stays at the bottom of the place, over the keys, as before R6. */
     val ScaleBottomPadding = 8.dp
-    // The wooden ruler (handoff venue 29j)
-    val ScaleRulerHeight = 26.dp
-    val ScaleRulerCorner = 8.dp
-    val ScaleRulerEdge = 1.dp
-    val ScalePillHeight = 12.dp
+    val ScaleLine = 2.dp
+    val ScalePillHeight = 10.dp
     val ScaleTickWidth = 2.dp
-    val ScaleTickHeight = 18.dp
+    val ScaleTickHeight = 14.dp
     val MarkerWidth = 8.dp
     val MarkerHeight = 24.dp
     val HaloWidth = 44.dp
@@ -96,7 +120,7 @@ object LiveDimens {
     val RecordShadow = 4.dp
     val RecordTravel = 3.dp
     val RecordDotSize = 20.dp
-    val RecordPaddingVertical = 12.dp
+    val RecordPaddingVertical = PortraitRows.AIR.dp
     val RecordStopSize = 22.dp
     val RecordStopCorner = 3.dp
 
@@ -137,12 +161,9 @@ object LiveDimens {
     const val LANDSCAPE_RING_PANEL_FRACTION = 400f / 892f
     val LandscapePaddingStart = 8.dp
     val LandscapePaddingEnd = 24.dp
-    val LandscapePaddingVertical = 16.dp
-    // 8, not the handoff's 12: a tuning-mode landscape runs out of height for the status word.
-    val LandscapeSpacing = 8.dp
     /** Below this height the landscape status word and cents go compact. */
     val LandscapeStatusCompactHeight = 48.dp
-    val LandscapeRecordTopPadding = 4.dp
+    val LandscapeRecordTopPadding = LiveLayoutMath.LANDSCAPE_KEYS_AIR.dp
     val LandscapeStatusMinHeight = 40.dp
 
     /** Height kept free under the ring for the permission prompt in portrait. */
@@ -169,4 +190,14 @@ object LiveDimens {
     const val DISABLED_ALPHA = 0.4f
     const val HALO_ALPHA_CORE = 0.2f
     const val HALO_ALPHA_FEATHER = 0.1f
+
+    /** The note of the locked string, pale in the ring in silence (spec 5.29 R6, behind [LiveSwitches.STRING_SILHOUETTE]). */
+    const val SILHOUETTE_ALPHA = 0.28f
+
+    // The scale of «Настройка»: its line and zero tick in onSurface, its pill in the green of the tolerance (spec 5.29 R6)
+    const val SCALE_LINE_ALPHA = 0.35f
+    const val SCALE_PILL_ALPHA = 0.55f
+
+    /** The ground of the nearest string: bone over the glass (spec 5.29 R6). */
+    const val STRING_NEAR_GROUND_ALPHA = 0.16f
 }

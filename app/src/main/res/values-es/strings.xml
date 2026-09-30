@@ -13,7 +13,7 @@
     <string name="mode_tuning">Afinar</string>
     <string name="tuning_string_hz">%1$d Hz</string>
     <string name="tuning_hint_auto">auto · toca una cuerda al aire</string>
-    <string name="tuning_hint_locked">objetivo fijado: %1$s · %2$d Hz · toca para soltar</string>
+    <string name="tuning_hint_locked">%1$s · %2$d Hz · toca para soltar</string>
     <string name="tuning_string_locked">fijada</string>
     <string name="tuning_string_auto">auto</string>
     <string name="status_in_tune">afinado</string>

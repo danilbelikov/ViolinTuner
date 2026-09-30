@@ -1,6 +1,7 @@
 package com.violinjourney.app.core.ui.theme
 
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.compositeOver
 import androidx.compose.ui.graphics.luminance
 import kotlin.math.abs
 import kotlin.math.max
@@ -75,5 +76,40 @@ class PaletteContrastTest {
         // a token of its own with the hex of «мимо»: the key of recording looks as it did
         assertEquals(ZoneOff, Recording)
         assertTrue(abs(contrast(OnRecording, Recording) - contrast(Color.White, ZoneOff)) < 0.001f, "the stop square is white as before")
+    }
+
+    @Test
+    fun `the caption of the glass reads over a dark picture and is checked by a screenshot over the lightest one`() {
+        // The room at night behind the glass of Live's controls (spec 5.29 R6): 11 : 1 over the darkest ground. The grey of the dialogs
+        // (#A39FB5, which the glass may not carry, 5.29 R1) gives 7.2 here — so this bound is the caption's own, not any light grey's.
+        assertAtLeast(10.5f, GlassCaption, Glass.compositeOver(Surface), "the caption of the glass over the dark room")
+        assertAtLeast(4.5f, OnSurface, Glass.compositeOver(Color.White), "the words on the glass over white")
+        // ≈ 4.4 : 1 over pure white at 0.72 (spec 5.29 R6); the grey of the dialogs would be 2.9, and a darker caption less than this
+        assertAtLeast(4.3f, GlassCaption, Glass.compositeOver(Color.White), "the caption of the glass over pure white")
+        val overWhite = contrast(GlassCaption, Glass.compositeOver(Color.White))
+        assertTrue(
+            overWhite < 4.5f,
+            "the caption over pure white is $overWhite : 1 — the reason the cream ceiling of Vienna is checked by a screenshot (spec 5.29 R6)",
+        )
+    }
+
+    @Test
+    fun `the edge of the glass is white at twelve percent`() {
+        assertEquals(0.12f, GlassEdge.alpha, 0.005f, "the inner edge of the glass of Live's controls")
+        assertEquals(Color.White, GlassEdge.copy(alpha = 1f), "white")
+    }
+
+    @Test
+    fun `the rim of the record key is darker and duller than the brass of done`() {
+        // the key's rim must not argue with the brass of «сделано» beside it (spec 5.29 R6)
+        assertTrue(KeyRim.luminance() < CtrlBrass.luminance(), "darker")
+        assertTrue(saturation(KeyRim) < saturation(CtrlBrass), "duller: ${saturation(KeyRim)} against ${saturation(CtrlBrass)}")
+    }
+
+    /** The saturation of HSV: how far the colour is from a grey of its brightness. */
+    private fun saturation(color: Color): Float {
+        val most = max(color.red, max(color.green, color.blue))
+        val least = min(color.red, min(color.green, color.blue))
+        return if (most == 0f) 0f else (most - least) / most
     }
 }

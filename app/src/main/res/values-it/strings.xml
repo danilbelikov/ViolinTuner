@@ -13,7 +13,7 @@
     <string name="mode_tuning">Accorda</string>
     <string name="tuning_string_hz">%1$d Hz</string>
     <string name="tuning_hint_auto">auto · suona una corda vuota</string>
-    <string name="tuning_hint_locked">obiettivo fissato: %1$s · %2$d Hz · tocca per sbloccare</string>
+    <string name="tuning_hint_locked">%1$s · %2$d Hz · tocca per sbloccare</string>
     <string name="tuning_string_locked">fissata</string>
     <string name="tuning_string_auto">auto</string>
     <string name="status_in_tune">intonato</string>

@@ -30,10 +30,11 @@ private const val SHARP_SIGN = "#"
 /**
  * Huge letter with accidental, octave smaller and muted at the baseline (spec 3.1). [scale]
  * ties the size to the ring; the system font scale is deliberately ignored, because the note
- * has to fit the ring and is huge already.
+ * has to fit the ring and is huge already. [alpha] — the pale note of the locked string (spec 3.36.6): the colours
+ * carry it, not a layer, which on iOS would be a saveLayer on every frame of the window.
  */
 @Composable
-fun NoteLabel(note: Note, modifier: Modifier = Modifier, scale: Float = 1f) {
+fun NoteLabel(note: Note, modifier: Modifier = Modifier, scale: Float = 1f, alpha: Float = 1f) {
     val base = LiveTheme.liveTypography
     val fontScale = LocalDensity.current.fontScale
     val typography = remember(base, scale, fontScale) {
@@ -47,7 +48,7 @@ fun NoteLabel(note: Note, modifier: Modifier = Modifier, scale: Float = 1f) {
         Text(
             text = if (note.isSharp) "${note.letter}$SHARP_SIGN" else note.letter.toString(),
             modifier = Modifier.alignByBaseline(),
-            color = MaterialTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurface.let { it.copy(alpha = it.alpha * alpha) },
             style = typography.note,
             maxLines = 1,
         )
@@ -56,7 +57,7 @@ fun NoteLabel(note: Note, modifier: Modifier = Modifier, scale: Float = 1f) {
             modifier = Modifier
                 .alignByBaseline()
                 .padding(start = LiveDimens.OctaveStartPadding * scale),
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = MaterialTheme.colorScheme.onSurfaceVariant.let { it.copy(alpha = it.alpha * alpha) },
             style = typography.octave,
             maxLines = 1,
         )

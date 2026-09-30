@@ -13,7 +13,7 @@
     <string name="mode_tuning">调音</string>
     <string name="tuning_string_hz">%1$d Hz</string>
     <string name="tuning_hint_auto">自动 · 请拉一根空弦</string>
-    <string name="tuning_hint_locked">目标已锁定：%1$s · %2$d Hz · 轻触解除</string>
+    <string name="tuning_hint_locked">%1$s · %2$d Hz · 轻触解除</string>
     <string name="tuning_string_locked">已锁定</string>
     <string name="tuning_string_auto">自动</string>
     <string name="status_in_tune">准</string>

@@ -42,6 +42,8 @@ fun LiveScreen(
     /** The bookmark by the record key and its sheets (spec 3.28): a state of their own, changing once a second. */
     block: BlockState = BlockState.NONE,
     onBlockIntent: (BlockIntent) -> Unit = {},
+    /** The pale note of the locked string in the silent ring of «Настройка» (spec 3.36.6): its switch; a preview may turn it on. */
+    stringSilhouette: Boolean = LiveSwitches.STRING_SILHOUETTE,
 ) {
     val home = LocalHomeLook.current
     val currentVenue by rememberUpdatedState(state.venue)
@@ -112,6 +114,14 @@ fun LiveScreen(
             overlay = { landscape -> BlockSheetHost(currentBlock.sheet, landscape, currentOnBlockIntent, currentReduceMotion) },
         )
     }
-    LiveScreenLayout(state = state, onIntent = onIntent, slots = slots, modifier = modifier, gauge = gauge, reduceMotion = reduceMotion)
+    LiveScreenLayout(
+        state = state,
+        onIntent = onIntent,
+        slots = slots,
+        modifier = modifier,
+        gauge = gauge,
+        reduceMotion = reduceMotion,
+        stringSilhouette = stringSilhouette,
+    )
 }
 

@@ -13,7 +13,7 @@
     <string name="mode_tuning">Tune</string>
     <string name="tuning_string_hz">%1$d Hz</string>
     <string name="tuning_hint_auto">auto · play an open string</string>
-    <string name="tuning_hint_locked">target locked: %1$s · %2$d Hz · tap to unlock</string>
+    <string name="tuning_hint_locked">%1$s · %2$d Hz · tap to unlock</string>
     <string name="tuning_string_locked">locked</string>
     <string name="tuning_string_auto">auto</string>
     <string name="status_in_tune">in tune</string>

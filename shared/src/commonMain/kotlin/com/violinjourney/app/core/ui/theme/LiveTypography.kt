@@ -22,7 +22,7 @@ data class LiveTypography(
     /** The cents beside the status word: for a direct look, smaller than the note and quieter than the word. */
     val cents: TextStyle,
     val centsCompact: TextStyle,
-    /** The small status line above the ring: "Играйте…", "Слишком шумно", the tuning hint. */
+    /** The status line above the ring, on its plate: "Играйте…", "Слишком шумно", the tuning hint — 15 sp, 600 (spec 5.29 R6). */
     val statusLine: TextStyle,
     val promptTitle: TextStyle,
     val promptBody: TextStyle,
@@ -68,8 +68,8 @@ fun liveTypography(family: FontFamily) = LiveTypography(
     ),
     statusLine = TextStyle(
         fontFamily = family,
-        fontWeight = FontWeight.Normal,
-        fontSize = 14.sp,
+        fontWeight = FontWeight.SemiBold,
+        fontSize = 15.sp,
     ),
     promptTitle = TextStyle(
         fontFamily = family,

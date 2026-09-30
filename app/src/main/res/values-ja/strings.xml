@@ -13,7 +13,7 @@
     <string name="mode_tuning">調弦</string>
     <string name="tuning_string_hz">%1$d Hz</string>
     <string name="tuning_hint_auto">自動 · 開放弦を弾いてください</string>
-    <string name="tuning_hint_locked">目標を固定中：%1$s · %2$d Hz · タップで解除</string>
+    <string name="tuning_hint_locked">%1$s · %2$d Hz · タップで解除</string>
     <string name="tuning_string_locked">固定中</string>
     <string name="tuning_string_auto">自動</string>
     <string name="status_in_tune">合っています</string>

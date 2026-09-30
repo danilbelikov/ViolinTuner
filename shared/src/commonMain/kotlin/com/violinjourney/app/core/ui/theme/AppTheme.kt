@@ -103,6 +103,17 @@ object ViolinTheme {
     val glassStrong: Color
         get() = GlassStrong
 
+    /**
+     * The second level of text on the glass (spec 5.29 R6): the line under the first one of a card on glass, the hertz of a string, the
+     * word of the switcher not chosen. 4.4 : 1 on the glass over pure white — the lightest hall is checked by a screenshot.
+     */
+    val glassCaption: Color
+        get() = GlassCaption
+
+    /** The inner edge of 1 dp of the glass of Live's controls (spec 5.29 R6): white at 12 %; the plate of the status line has none. */
+    val glassEdge: Color
+        get() = GlassEdge
+
     /** Black at .55 under a sheet (spec 5.29). */
     val sheetScrim: Color
         get() = SheetScrim

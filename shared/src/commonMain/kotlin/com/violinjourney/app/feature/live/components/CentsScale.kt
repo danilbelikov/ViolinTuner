@@ -6,6 +6,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,7 +23,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.Dp
 import com.violinjourney.app.core.ui.theme.LiveTheme
 import com.violinjourney.app.feature.live.MarkerSpring
@@ -30,11 +30,11 @@ import com.violinjourney.app.feature.live.MarkerTrack
 import kotlinx.coroutines.flow.first
 
 /**
- * Cents scale (spec 3.1) as a wooden ruler (spec 3.27, handoff 29j): green in-tune pill in the
- * middle, zero tick and a bone slider with a halo of the zone color. No labels or numbers. The marker shows while
- * [markerVisible]; [markerFraction] is where, 0..1 along the track, or null before the pitch is known — it moves with every
- * frame of sound, so it is read only in the loop of the spring, and the halo colour only while drawing. [inTuneFraction]
- * is the pill width as a track fraction.
+ * Cents scale of «Настройка» (spec 3.1, 3.36.6): a light thin line across, the green pill of the tolerance in the middle, the tick
+ * of zero, and the bone slider with a halo of the zone color. No labels or numbers: the slider stops at ±50, the cents go to ±99
+ * (spec 5.8). The marker shows while [markerVisible]; [markerFraction] is where, 0..1 along the track, or null before the pitch is
+ * known — it moves with every frame of sound, so it is read only in the loop of the spring, and the halo colour only while drawing.
+ * [inTuneFraction] is the pill width as a track fraction; [height] — 36, 28 in a low landscape window.
  */
 @Composable
 fun CentsScale(
@@ -43,9 +43,11 @@ fun CentsScale(
     inTuneFraction: Float,
     haloColor: () -> Color,
     modifier: Modifier = Modifier,
+    height: Dp = LiveDimens.ScaleHeight,
 ) {
-    val wood = LiveTheme.venueColors
-    val pillColor = LiveTheme.zoneColors.inTune
+    val bone = LiveTheme.venueColors.bone
+    val line = MaterialTheme.colorScheme.onSurface.copy(alpha = LiveDimens.SCALE_LINE_ALPHA)
+    val pillColor = LiveTheme.zoneColors.inTune.copy(alpha = LiveDimens.SCALE_PILL_ALPHA)
     // After silence the marker shows up where the pitch is instead of travelling from its old
     // place; while sounding it rides a spring. It stays put while fading out. The spring is
     // stepped frame by frame ([MarkerSpring] says why) and read in the draw phase.
@@ -83,19 +85,13 @@ fun CentsScale(
     Canvas(
         modifier = modifier
             .fillMaxWidth()
-            .height(LiveDimens.ScaleHeight),
+            .height(height),
     ) {
-        // a wooden ruler (spec 3.27, handoff 29j): the green pill of the tolerance and the zero on it
-        val rulerHeight = LiveDimens.ScaleRulerHeight.toPx()
-        val rulerTop = (size.height - rulerHeight) / 2
-        val corner = CornerRadius(LiveDimens.ScaleRulerCorner.toPx())
-        drawRoundRect(wood.ruler, topLeft = Offset(0f, rulerTop), size = Size(size.width, rulerHeight), cornerRadius = corner)
-        drawRoundRect(wood.mapleDark, topLeft = Offset(0f, rulerTop), size = Size(size.width, rulerHeight), cornerRadius = corner, style = Stroke(LiveDimens.ScaleRulerEdge.toPx()))
+        // the line across, the green pill of the tolerance on it and the zero over the pill; the colours of the zones stay the
+        // readings' own — only the pill of the tolerance is one (spec 3.1)
+        centeredBar(line, CENTER, size.width, LiveDimens.ScaleLine)
         centeredBar(pillColor, CENTER, size.width * inTuneFraction, LiveDimens.ScalePillHeight)
-        centeredBar(
-            wood.bone.copy(alpha = ZERO_TICK_ALPHA), CENTER, LiveDimens.ScaleTickWidth.toPx(), LiveDimens.ScaleTickHeight,
-            rounded = false,
-        )
+        centeredBar(line, CENTER, LiveDimens.ScaleTickWidth.toPx(), LiveDimens.ScaleTickHeight, rounded = false)
         if (markerAlpha > 0f) {
             val animatedMarker = position.floatValue
             val feather = LiveDimens.HaloFeather
@@ -108,9 +104,9 @@ fun CentsScale(
                 haloColor.copy(alpha = LiveDimens.HALO_ALPHA_CORE * markerAlpha), animatedMarker,
                 LiveDimens.HaloWidth.toPx(), LiveDimens.HaloHeight,
             )
-            // the bone slider of the ruler
+            // the bone slider
             centeredBar(
-                wood.bone.copy(alpha = markerAlpha), animatedMarker,
+                bone.copy(alpha = markerAlpha), animatedMarker,
                 LiveDimens.MarkerWidth.toPx(), LiveDimens.MarkerHeight,
             )
         }
@@ -118,7 +114,6 @@ fun CentsScale(
 }
 
 private const val CENTER = 0.5f
-private const val ZERO_TICK_ALPHA = 0.7f
 
 /** A pill centered vertically on the scale and horizontally at [fraction] of its width. */
 private fun DrawScope.centeredBar(
