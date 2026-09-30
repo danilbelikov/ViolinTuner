@@ -51,6 +51,7 @@ fun LiveScreen(
     val currentVenue by rememberUpdatedState(state.venue)
     val currentPracticeMs by rememberUpdatedState(state.practiceMs)
     val currentRecording by rememberUpdatedState(state.recording != null)
+    val currentPlaying by rememberUpdatedState(HouseLights.playing(state))
     val currentHome by rememberUpdatedState(home)
     val currentBlock by rememberUpdatedState(block)
     val currentOnIntent by rememberUpdatedState(onIntent)
@@ -114,7 +115,16 @@ fun LiveScreen(
             },
             recordingStrip = { recording, ribbon, stripModifier -> RecordingStrip(recording = recording, ribbon = ribbon, modifier = stripModifier) },
             light = { chrome -> if (dimTabBar) LendTabBarLight(light = chrome) },
-            overlay = { landscape -> BlockSheetHost(currentBlock.sheet, landscape, currentOnBlockIntent, currentReduceMotion) },
+            overlay = { landscape ->
+                BlockSheetHost(
+                    sheet = currentBlock.sheet,
+                    landscape = landscape,
+                    onIntent = currentOnBlockIntent,
+                    // while one plays only the ring and the dot of a take move on Live: the lights of «Начать занятие» stand still
+                    calm = { currentPlaying },
+                    reduceMotion = currentReduceMotion,
+                )
+            },
         )
     }
     LiveScreenLayout(

@@ -384,6 +384,26 @@ private fun LandscapeCutoutTuningPreview() = LivePreview(
     lockedString = ViolinString.D4,
 )
 
+@Preview(name = "Landscape · 603 x 308 (the emulator's 640 x 360 lying down), tuning: the word gives way, its place kept", widthDp = 603, heightDp = 308, locale = "ru")
+@Composable
+private fun LandscapeEmulatorTuningPreview() = LivePreview(
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.5),
+    mode = LiveMode.TUNING,
+)
+
+@Preview(name = "Landscape · 603 x 308, play: the word at its full size", widthDp = 603, heightDp = 308, locale = "ru")
+@Composable
+private fun LandscapeEmulatorPlayPreview() = LivePreview(
+    heard(Note(A4), cents = 2.0, zone = Zone.IN_TUNE, direction = null, holdProgress = 0.5),
+)
+
+@Preview(name = "Landscape · 603 x 336 at the font 1.3, tuning: the word steps down to 22 sp", widthDp = 603, heightDp = 336, fontScale = 1.3f, locale = "ru")
+@Composable
+private fun LandscapeCutoutLargeFontTuningPreview() = LivePreview(
+    heard(Note(A4), cents = 12.0, zone = Zone.NEAR, direction = Direction.SHARP, holdProgress = 0.0),
+    mode = LiveMode.TUNING,
+)
+
 @Preview(name = "Landscape · 603 x 336, ru: «Настройка» keeps 15 sp, off the middle up to the gear's touch", widthDp = 603, heightDp = 336, locale = "ru")
 @Composable
 private fun LandscapeCutoutRussianPreview() = LivePreview(LiveSignal.Silence, mode = LiveMode.TUNING, lockedString = ViolinString.D4)

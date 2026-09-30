@@ -146,6 +146,38 @@ fun appButtonOneLineSize(text: String, width: Dp, style: AppButtonStyle, compact
 /** A button is laid out in whole pixels: words that fit only by a hair are not trusted. */
 private val OneLineSlack = 1.dp
 
+/** The size of the words of an [AppButton] and how wide it then stands ([appButtonBeside]). */
+@Immutable
+data class ButtonFitted(val fontSize: TextUnit, val width: Dp)
+
+/**
+ * The largest size of the words of an [AppButton] of [style] with [text] on one line at which the button is no wider than [width] —
+ * the size of its style where it is, else 0.5 sp smaller at a time down to [minSp] ([ButtonFit]) — and how wide it then stands: its
+ * fields and its words, whole, and never under Material's least width of a button. Null where not even [minSp] makes it that narrow:
+ * the caller stands it elsewhere. For a button beside words of its own that must keep their room — «Остановить» in the card «Сейчас»
+ * of «Что играем» (spec 5.29 R6), which goes under its lines where it does not fit beside them.
+ */
+@Composable
+fun appButtonBeside(text: String, width: Dp, style: AppButtonStyle, compact: Boolean, minSp: Float): ButtonFitted? {
+    val look = lookOf(style, compact)
+    val words = wordsStyleOf(look)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    return remember(text, width, look, words, minSp, measurer, density) {
+        with(density) {
+            val fields = (look.padding * 2 + OneLineSlack).toPx()
+            val least = ButtonDefaults.MinWidth.toPx()
+            val widthAt = { sizeSp: Float ->
+                val line = measurer.measure(text, words.copy(fontSize = sizeSp.sp, lineHeight = sizeSp.sp * LINE_HEIGHT), softWrap = false, maxLines = 1)
+                maxOf(line.size.width + fields, least)
+            }
+            val room = width.toPx()
+            ButtonFit.sharedSize(maxSp = look.fontSize.value, minSp = minSp) { sizeSp -> widthAt(sizeSp) - room }
+                ?.let { sizeSp -> ButtonFitted(sizeSp.sp, widthAt(sizeSp).toDp()) }
+        }
+    }
+}
+
 /**
  * The one size of the words of [AppButton]s standing side by side, each [width] wide (a row of halves), at which every word of each
  * stays whole on its line — the words may go on two lines, but only at a space (spec 3.36.4: no word breaks inside, in the forms

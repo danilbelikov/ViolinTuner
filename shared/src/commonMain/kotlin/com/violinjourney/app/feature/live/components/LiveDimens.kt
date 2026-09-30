@@ -77,14 +77,8 @@ object LiveDimens {
     val StatusPlateCorner = 18.dp
     val StatusPlatePadding = 15.dp
 
-    // Status word with the cents beside it (handoff 12c1)
+    // Status word with the cents beside it (handoff 12c1); its sizes, full and compact and smaller, are StatusFit's
     val StatusRowHeight = PortraitRows.WORD_ROW.dp
-    val StatusArrowSize = 40.dp
-    val StatusDotSize = 18.dp
-    val StatusGap = 14.dp
-    val StatusArrowSizeCompact = 32.dp
-    val StatusDotSizeCompact = 16.dp
-    val StatusGapCompact = 12.dp
 
     /** A portrait ring smaller than this means a small screen: word and cents go compact with it. */
     val CompactStatusBelowRing = 250.dp
@@ -171,10 +165,7 @@ object LiveDimens {
     const val LANDSCAPE_RING_PANEL_FRACTION = 400f / 892f
     val LandscapePaddingStart = 8.dp
     val LandscapePaddingEnd = 24.dp
-    /** Below this height the landscape status word and cents go compact. */
-    val LandscapeStatusCompactHeight = 48.dp
     val LandscapeRecordTopPadding = LiveLayoutMath.LANDSCAPE_KEYS_AIR.dp
-    val LandscapeStatusMinHeight = 40.dp
 
     // The card «нет разрешения» in the place of the ring (spec 3.36.6, 5.29 R6): paper on a deep soft shadow
     /** Upright: 26 from the sides of the screen, not wider than 360; lying down: in the middle of the ring's panel, not wider than 340. */

@@ -7,6 +7,7 @@
     <string name="nav_practice">Prática</string>
     <string name="nav_repertoire">Repertório</string>
     <string name="nav_history">Gravações</string>
+    <string name="nav_history_short">Gravações</string>
     <string name="nav_settings">Ajustes</string>
 
     <string name="mode_play">Tocar</string>
@@ -1089,11 +1090,12 @@
     <string name="block_done_description">%1$s — pronto</string>
     <string name="block_sheet_title">O que tocamos</string>
     <string name="block_now">Agora: %1$s</string>
+    <string name="block_now_label">Agora</string>
     <string name="block_stop">Parar</string>
-    <string name="block_start">Começar · %1$d min</string>
+    <string name="block_start">Começar · %1$d\u00A0min</string>
     <string name="block_selected">Escolhido</string>
     <string name="block_running">tocando</string>
-    <string name="block_section_today">· hoje %1$d</string>
+    <string name="block_section_today">hoje %1$d</string>
     <string name="block_mark_done_description">tocado hoje, %1$s</string>
     <string name="block_mark_played_description">hoje %1$s</string>
     <string name="block_offer_title">Primeiro, uma prática</string>
@@ -1104,6 +1106,8 @@
     <string name="block_goal_minus">−%1$d</string>
     <string name="block_goal_plus">+%1$d</string>
     <string name="block_goal_option">%1$d min</string>
+    <string name="block_goal_title">Quanto tocar</string>
+    <string name="block_goal_range">de %1$d a %2$d\u00A0min</string>
     <!-- Blocks in the practice (spec 3.28): «Что играли» in the summary, the running block under the timer -->
     <string name="block_played_title">O que foi tocado</string>
     <string name="block_part_of">%1$d de %2$d min</string>

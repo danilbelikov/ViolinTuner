@@ -32,8 +32,12 @@ import androidx.compose.ui.graphics.drawOutline
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.drawscope.scale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.isSpecified
+import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.domain.Direction
 import com.violinjourney.app.core.ui.format.CentsFormat
 import com.violinjourney.app.core.ui.theme.LiveTheme
@@ -74,6 +78,10 @@ private val ArrowDown = Path().apply {
  * quieter than the word, and a "+3" in tune does not ask to be chased to zero. Hidden with
  * [visible] = false: the row fades out showing what it showed last and keeps its height, so
  * the ring does not jump. [color] is read while drawing: the fade between zones does not compose the row.
+ *
+ * [step] — its sizes ([StatusFit]): full, or compact with a small ring upright; lying down, what the room of the column allows
+ * ([rememberStatusStep]). [height] — its row, upright the row of the model; unspecified — as tall as its tallest line, whole: the
+ * column lying down gives it only a room it stands in.
  */
 @Composable
 fun StatusRow(
@@ -83,7 +91,7 @@ fun StatusRow(
     visible: Boolean,
     modifier: Modifier = Modifier,
     height: Dp = LiveDimens.StatusRowHeight,
-    compact: Boolean = false,
+    step: StatusStep = StatusFit.FULL,
 ) {
     var lastShown by remember { mutableStateOf(direction) }
     var lastCents by remember { mutableIntStateOf(cents) }
@@ -94,11 +102,9 @@ fun StatusRow(
         }
     }
     val shown = if (visible) direction else lastShown
-    val typography = LiveTheme.liveTypography
-    val wordStyle = if (compact) typography.statusCompact else typography.status
-    val centsStyle = if (compact) typography.centsCompact else typography.cents
-    val arrowSize = if (compact) LiveDimens.StatusArrowSizeCompact else LiveDimens.StatusArrowSize
-    val dotSize = if (compact) LiveDimens.StatusDotSizeCompact else LiveDimens.StatusDotSize
+    val (wordStyle, centsStyle) = statusStyles(step)
+    val arrowSize = step.arrowDp.dp.let { if (height.isSpecified) minOf(height, it) else it }
+    val dotSize = step.dotDp.dp
 
     // the fade and the pop of the sign are read in the layer: they do not compose the row on every frame
     val alpha = animateFloatAsState(
@@ -114,13 +120,13 @@ fun StatusRow(
 
     Row(
         modifier = modifier
-            .height(height)
+            .then(if (height.isSpecified) Modifier.height(height) else Modifier)
             .graphicsLayer {
                 // what Modifier.alpha does, read here
                 this.alpha = alpha.value
                 clip = alpha.value != 1f
             },
-        horizontalArrangement = Arrangement.spacedBy(if (compact) LiveDimens.StatusGapCompact else LiveDimens.StatusGap),
+        horizontalArrangement = Arrangement.spacedBy(step.gapDp.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val iconModifier = Modifier.graphicsLayer {
@@ -134,8 +140,8 @@ fun StatusRow(
                     .size(dotSize)
                     .drawBehind { drawOutline(CircleShape.createOutline(size, layoutDirection, this), color()) },
             )
-            Direction.SHARP -> Arrow(color, pointsDown = false, size = minOf(height, arrowSize), iconModifier)
-            Direction.FLAT -> Arrow(color, pointsDown = true, size = minOf(height, arrowSize), iconModifier)
+            Direction.SHARP -> Arrow(color, pointsDown = false, size = arrowSize, iconModifier)
+            Direction.FLAT -> Arrow(color, pointsDown = true, size = arrowSize, iconModifier)
         }
         BasicText(
             text = stringResource(
@@ -169,6 +175,48 @@ fun StatusRow(
 
 /** The widest the cents get: a real minus and two digits; digits are tabular, all as wide as a zero. */
 private const val WIDEST_CENTS = "\u221200"
+
+/** The word and the cents at [step]: the styles of Live at its sizes — the same the row draws and [rememberStatusStep] measures. */
+@Composable
+private fun statusStyles(step: StatusStep): Pair<TextStyle, TextStyle> {
+    val typography = LiveTheme.liveTypography
+    return remember(typography, step) {
+        typography.status.copy(fontSize = step.wordSp.sp) to typography.cents.copy(fontSize = step.centsSp.sp)
+    }
+}
+
+/**
+ * The step of the word and the cents that stands in a room [roomHeight] × [roomWidth] (spec 5.29 R6: the right column of landscape) —
+ * [StatusFit.fit] over the words of the three zones and the widest cents, measured in the font and the scale of the screen; null —
+ * not even the least stands, and the two give way. The lines are measured once for the screen; the room may change on every frame
+ * of the strings unfolding, and only the choice is made again.
+ */
+@Composable
+fun rememberStatusStep(roomHeight: Dp, roomWidth: Dp): StatusStep? {
+    val typography = LiveTheme.liveTypography
+    val words = listOf(stringResource(Res.string.status_in_tune), stringResource(Res.string.status_sharp), stringResource(Res.string.status_flat))
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    // per step: the height of its row and its width, in pixels — the words and the cents in whole lines, as a text lays them out
+    val sizes = remember(typography, words, density, measurer) {
+        StatusFit.steps.associateWith { step ->
+            val word = typography.status.copy(fontSize = step.wordSp.sp)
+            val cents = typography.cents.copy(fontSize = step.centsSp.sp)
+            val wordLines = words.map { measurer.measure(it, word, maxLines = 1, softWrap = false).size }
+            val centsLine = measurer.measure(WIDEST_CENTS, cents, maxLines = 1, softWrap = false).size
+            val sign = with(density) { maxOf(step.arrowDp, step.dotDp).dp.toPx() }
+            val gaps = with(density) { step.gapDp.dp.toPx() * 2 }
+            val height = maxOf(wordLines.maxOf { it.height }.toFloat(), centsLine.height.toFloat(), sign)
+            val width = sign + gaps + wordLines.maxOf { it.width } + centsLine.width
+            height to width
+        }
+    }
+    return with(density) {
+        val room = roomHeight.toPx()
+        val across = roomWidth.toPx()
+        StatusFit.fit(room, across, heightOf = { sizes.getValue(it).first }, widthOf = { sizes.getValue(it).second })
+    }
+}
 
 @Composable
 private fun Arrow(color: () -> Color, pointsDown: Boolean, size: Dp, modifier: Modifier = Modifier) {

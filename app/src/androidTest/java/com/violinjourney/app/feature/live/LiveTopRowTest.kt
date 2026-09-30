@@ -31,7 +31,6 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.width
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.violinjourney.app.core.domain.IntonationConfig
@@ -40,6 +39,7 @@ import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.live.components.LiveDimens
 import com.violinjourney.app.feature.live.components.LiveRecordKey
 import com.violinjourney.app.feature.live.components.SettingsGear
+import com.violinjourney.app.feature.live.components.StatusFit
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.mode_play
 import com.violinjourney.app.shared.resources.mode_tuning
@@ -64,7 +64,7 @@ import org.junit.runner.RunWith
  * never under the touch of the gear, even on a phone of 320 at the font 1.5, where its words step down and it leaves the middle;
  * the whole height of the row answers; the letter and the hertz of a string stand in its 58 at the font 1.5; lying down the switcher
  * stands on the axis of its column — over the key — or as near to it as the gear's touch lets it, and in a low landscape it does not
- * jump when the mode changes and the word keeps its full size in «Настройка».
+ * jump when the mode changes and the word stands whole in «Настройка», not below its compact size.
  *
  * Live is laid out in a window of its own size, whatever the device's ([WINDOW], and a fake [LocalWindowInfo] too), on its plain
  * field (no picture): the geometry is the same. A window wider than the device is centred on it, so everything is measured from the
@@ -264,7 +264,7 @@ class LiveTopRowTest {
     }
 
     @Test
-    fun inALowLandscapeTheSwitcherDoesNotJumpWithTheModeAndTheWordKeepsItsSizeInTuning() {
+    fun inALowLandscapeTheSwitcherDoesNotJumpWithTheModeAndTheWordStandsWholeInTuning() {
         // 640 × 360 on a phone with a side cutout: a window of about 603 × 336
         speaking("ru")
         show(width = 603.dp, height = 336.dp)
@@ -277,9 +277,12 @@ class LiveTopRowTest {
         val inTuning = segment(PLAY).bounds()
         assertEquals("the switcher stays where it stood", inPlay.top.value, inTuning.top.value, 0.5f)
         assertEquals("the switcher stays where it stood", inPlay.left.value, inTuning.left.value, 0.5f)
-        // the word and the cents keep 48 of the ≈ 50 left to them: their full size, not the compact one
-        val size = compose.onNodeWithText(word(IN_TUNE)).textLayout().layoutInput.style.fontSize
-        assertEquals("the word of the status in «Настройка»", 28.sp, size)
+        // the word and the cents take the room left to them (spec 5.29 R6): ≈ 50 in exact dp — the full size where the pixels of the
+        // screen leave that, the compact one on 2.625 px a dp (48.4 in whole pixels) — never smaller, and whole
+        val word = compose.onNodeWithText(word(IN_TUNE), useUnmergedTree = true)
+        val size = word.textLayout().layoutInput.style.fontSize
+        assertTrue("the word of the status in «Настройка» at $size, not below compact", size.value >= StatusFit.COMPACT.wordSp)
+        assertWholeOnOneLine(word, word(IN_TUNE))
         // and the keys stand at the bottom of the column, 8 over the window's edge (the key of 76, whose soft shadow takes no room)
         val key = recordKey().bounds()
         assertTrue("the record key ends at ${key.bottom - window().top}", abs((key.bottom - window().top).value - (336f - 8f)) <= 0.5f)

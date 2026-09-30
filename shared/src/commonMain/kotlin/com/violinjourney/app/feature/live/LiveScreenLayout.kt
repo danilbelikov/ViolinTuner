@@ -73,12 +73,14 @@ import com.violinjourney.app.feature.live.components.MicPermissionPrompt
 import com.violinjourney.app.feature.live.components.ModeSwitcher
 import com.violinjourney.app.feature.live.components.NoteLabel
 import com.violinjourney.app.feature.live.components.RecordKeyLight
+import com.violinjourney.app.feature.live.components.StatusFit
 import com.violinjourney.app.feature.live.components.StatusLineRow
 import com.violinjourney.app.feature.live.components.StatusRow
 import com.violinjourney.app.feature.live.components.StringRow
 import com.violinjourney.app.feature.live.components.SwitcherFit
 import com.violinjourney.app.feature.live.components.ZoneEllipse
 import com.violinjourney.app.feature.live.components.rememberRingGlow
+import com.violinjourney.app.feature.live.components.rememberStatusStep
 import com.violinjourney.app.feature.live.components.rememberSwitcherPlan
 import com.violinjourney.app.feature.live.components.zoneBackground
 import com.violinjourney.app.feature.live.venue.VenueLook
@@ -169,7 +171,7 @@ fun LiveScreenLayout(
     val glowStep by rememberUpdatedState(state.glowStep)
     val glow = rememberRingGlow({ if (reduceMotion) glowStep else currentGauge().glowTarget }, reduceMotion)
     val darkness = rememberHouseLights(
-        down = sounding != null || state.recording != null,
+        down = HouseLights.playing(state),
         quietSinceNanos = state.quietSinceNanos,
         reduceMotion = reduceMotion,
         enabled = showVenue,
@@ -419,7 +421,7 @@ private fun PortraitLayout(
                             cents = sounding?.displayCents ?: 0,
                             color = zoneColor,
                             visible = sounding != null,
-                            compact = compact,
+                            step = if (compact) StatusFit.COMPACT else StatusFit.FULL,
                         )
                         if (shown > 0f) {
                             UnderWordScale(state = state, gauge = gauge, zoneColor = zoneColor, shown = { scaleShown.value })
@@ -704,23 +706,24 @@ private fun LandscapeLayout(
                 }
             }
             StatusLineRow(line = state.statusLine, tuning = state.tuning, modifier = Modifier.chrome(1f, chrome), plate = showVenue)
-            // the word and the cents; without the permission their place is kept empty — the card is in the panel of the ring
+            // The word and the cents take the room the column leaves them (spec 5.29 R6): full, compact, then smaller down to the letters
+            // of the strings — and where not even that stands, they give way whole, their place kept; a glyph is never clipped. Without
+            // the permission their place is kept empty: the card is in the panel of the ring.
             BoxWithConstraints(
                 modifier = Modifier
                     .weight(1f)
                     .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
-                if (!noMic) {
-                    val statusHeight = maxHeight.coerceIn(LiveDimens.LandscapeStatusMinHeight, LiveDimens.StatusRowHeight)
+                val step = if (noMic) null else rememberStatusStep(roomHeight = maxHeight, roomWidth = maxWidth)
+                if (step != null) {
                     StatusRow(
                         direction = sounding?.direction,
                         cents = sounding?.displayCents ?: 0,
                         color = zoneColor,
                         visible = sounding != null,
-                        height = statusHeight,
-                        // tuning mode plus the practice chip leave little height: smaller beats clipped
-                        compact = statusHeight < LiveDimens.LandscapeStatusCompactHeight,
+                        height = Dp.Unspecified,
+                        step = step,
                     )
                 }
             }

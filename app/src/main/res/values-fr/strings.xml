@@ -7,6 +7,7 @@
     <string name="nav_practice">Pratique</string>
     <string name="nav_repertoire">Répertoire</string>
     <string name="nav_history">Enregistrements</string>
+    <string name="nav_history_short">Enreg.</string>
     <string name="nav_settings">Réglages</string>
 
     <string name="mode_play">Jeu</string>
@@ -1089,11 +1090,12 @@
     <string name="block_done_description">%1$s — terminé</string>
     <string name="block_sheet_title">Que jouer</string>
     <string name="block_now">En cours : %1$s</string>
+    <string name="block_now_label">En cours</string>
     <string name="block_stop">Arrêter</string>
-    <string name="block_start">Commencer · %1$d min</string>
+    <string name="block_start">Commencer · %1$d\u00A0min</string>
     <string name="block_selected">Choisi</string>
     <string name="block_running">en cours</string>
-    <string name="block_section_today">· aujourd\'hui %1$d</string>
+    <string name="block_section_today">aujourd\'hui %1$d</string>
     <string name="block_mark_done_description">joué aujourd\'hui, %1$s</string>
     <string name="block_mark_played_description">aujourd\'hui %1$s</string>
     <string name="block_offer_title">D\'abord, une séance</string>
@@ -1104,6 +1106,8 @@
     <string name="block_goal_minus">−%1$d</string>
     <string name="block_goal_plus">+%1$d</string>
     <string name="block_goal_option">%1$d min</string>
+    <string name="block_goal_title">Combien de temps</string>
+    <string name="block_goal_range">de %1$d à %2$d\u00A0min</string>
     <!-- Blocks in the practice (spec 3.28): «Что играли» in the summary, the running block under the timer -->
     <string name="block_played_title">Ce qui a été joué</string>
     <string name="block_part_of">%1$d sur %2$d min</string>

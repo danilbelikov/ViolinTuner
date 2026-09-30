@@ -11,21 +11,18 @@ import com.violinjourney.app.core.domain.practice.PracticeConfig.Companion.MS_PE
 import com.violinjourney.app.core.domain.practice.RunningPractice
 import com.violinjourney.app.core.domain.practice.RunningPracticeStore
 import com.violinjourney.app.core.domain.practice.SavedBlock
+import com.violinjourney.app.core.domain.practice.practiceTicks
 import com.violinjourney.app.core.domain.repertoire.RepertoireRepository
 import com.violinjourney.app.core.domain.session.SessionRepository
 import com.violinjourney.app.core.time.WallClock
 import com.violinjourney.app.core.ui.format.Formats
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.flatMapLatest
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.flowOf
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -48,21 +45,12 @@ open class BlockViewModel(
 
     private val ui = MutableStateFlow(BlockReducer.Ui())
 
-    /** The clock, every second while a practice runs: the minutes left and the brass line follow it; nothing accumulates. */
-    @OptIn(ExperimentalCoroutinesApi::class)
-    private val now: Flow<Long> = runningPractice.running.flatMapLatest { running ->
-        if (running == null) {
-            flowOf(clock.millis())
-        } else {
-            flow {
-                while (true) {
-                    val now = clock.millis()
-                    emit(now)
-                    delay(MS_PER_SECOND - now % MS_PER_SECOND)
-                }
-            }
-        }
-    }
+    /**
+     * The clock, on every second of the running practice's own time — the seconds the practice tag of Live turns on
+     * ([practiceTicks]), so «занятие 24:18» in the header of the choice is the tag's time and runs with it (spec 3.36.6); the minutes
+     * left and the brass line follow it too. Once when none runs. Nothing accumulates.
+     */
+    private val now: Flow<Long> = runningPractice.practiceTicks(clock).map { tick -> tick?.nowEpochMs ?: clock.millis() }
 
     private val practice = combine(runningPractice.running, blockStore.blocks, blockHistory.blocks, ::Triple)
 
@@ -142,6 +130,5 @@ open class BlockViewModel(
 
     private companion object {
         const val STOP_TIMEOUT_MS = 2_000L
-        const val MS_PER_SECOND = 1_000L
     }
 }

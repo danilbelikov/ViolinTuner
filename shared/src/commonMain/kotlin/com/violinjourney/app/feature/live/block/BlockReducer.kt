@@ -122,6 +122,10 @@ object BlockReducer {
             goalStep = config.blockGoalStepMinutes,
             canGoalDown = goal > config.blockGoalMinMinutes,
             canGoalUp = goal < config.blockGoalMaxMinutes,
+            // the clock the line of the block and its minutes are read by: the header says the tag's time, not a second apart
+            practiceMs = running.elapsedMs(nowEpochMs),
+            goalMinMinutes = config.blockGoalMinMinutes,
+            goalMaxMinutes = config.blockGoalMaxMinutes,
         )
     }
 

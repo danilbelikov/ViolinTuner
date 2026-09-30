@@ -16,12 +16,10 @@ private const val TABULAR_FIGURES = "tnum"
 data class LiveTypography(
     val note: TextStyle,
     val octave: TextStyle,
+    /** The status word, full size; the row gives it the size of its step (compact and smaller — `StatusFit` on Live). */
     val status: TextStyle,
-    /** Status word where the height is short: low landscape, small screens. */
-    val statusCompact: TextStyle,
     /** The cents beside the status word: for a direct look, smaller than the note and quieter than the word. */
     val cents: TextStyle,
-    val centsCompact: TextStyle,
     /** The status line above the ring, on its plate: "Играйте…", "Слишком шумно", the tuning hint — 15 sp, 600 (spec 5.29 R6). */
     val statusLine: TextStyle,
     /** The title of the card «нет разрешения»: 22 sp, 800 (spec 5.29 R6). */
@@ -51,21 +49,10 @@ fun liveTypography(family: FontFamily) = LiveTypography(
         fontWeight = FontWeight.SemiBold,
         fontSize = 28.sp,
     ),
-    statusCompact = TextStyle(
-        fontFamily = family,
-        fontWeight = FontWeight.SemiBold,
-        fontSize = 24.sp,
-    ),
     cents = TextStyle(
         fontFamily = family,
         fontWeight = FontWeight.Bold,
         fontSize = 36.sp,
-        fontFeatureSettings = TABULAR_FIGURES,
-    ),
-    centsCompact = TextStyle(
-        fontFamily = family,
-        fontWeight = FontWeight.Bold,
-        fontSize = 30.sp,
         fontFeatureSettings = TABULAR_FIGURES,
     ),
     statusLine = TextStyle(

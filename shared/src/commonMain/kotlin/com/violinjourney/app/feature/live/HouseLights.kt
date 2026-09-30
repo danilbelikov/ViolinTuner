@@ -15,5 +15,11 @@ object HouseLights {
         return (afterMs - quietMs).coerceAtLeast(0)
     }
 
+    /**
+     * A note sounds or a take records: the light is out (spec 3.27, 5.20), and on Live only the ring and the dot of a take move — the
+     * living «Начать занятие» of «Сначала — занятие» stands still then (3.36.6). One rule for the light and for the lights of the button.
+     */
+    fun playing(state: LiveState): Boolean = state.signal is LiveSignal.Sounding || state.recording != null
+
     private const val NANOS_PER_MS = 1_000_000L
 }

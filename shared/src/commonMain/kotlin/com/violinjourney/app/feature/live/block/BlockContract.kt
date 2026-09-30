@@ -14,7 +14,7 @@ sealed interface Bookmark {
     data class Done(val title: String) : Bookmark
 }
 
-/** What «Что играем» says of an element for today (spec 3.28): by shape, not only by colour. */
+/** What «Что играем» says of an element for today (spec 3.28, 3.36.6): by shape, not only by colour — a pill of its own each. */
 sealed interface TodayMark {
     data object None : TodayMark
 
@@ -40,12 +40,12 @@ data class PickerSection(
     val ref: SectionRef,
     /** Null for a built-in section: its name is a word of the interface. */
     val name: String?,
-    /** Elements of the section played for their goal today: «Гаммы · сегодня 1», shown when not zero. */
+    /** Elements of the section played for their goal today: «сегодня 1» at the right of its label, shown when not zero (spec 3.36.6). */
     val doneToday: Int,
     val pieces: List<PickerPiece>,
 )
 
-/** «Сейчас: Концерт ля минор · ещё 7 мин» above the list while a block runs. */
+/** The card «Сейчас» above the list while a block runs (spec 3.36.6): «D-dur · 2 октавы · ещё 7 мин» and «Остановить». */
 data class NowLine(val title: String, val minutesLeft: Int)
 
 sealed interface BlockSheet {
@@ -64,6 +64,14 @@ sealed interface BlockSheet {
         val goalStep: Int,
         val canGoalDown: Boolean,
         val canGoalUp: Boolean,
+        /**
+         * How long the practice has been going, at the same moment as the minutes and the line of the block: «занятие 24:18» in the
+         * header (spec 3.36.6) — the time of the practice tag, running with it.
+         */
+        val practiceMs: Long,
+        /** The bounds of a goal (spec 5.21): «от 5 до 60 мин» over the chips. */
+        val goalMinMinutes: Int,
+        val goalMaxMinutes: Int,
     ) : BlockSheet {
         val selectedTitle: String?
             get() = sections.firstNotNullOfOrNull { section -> section.pieces.firstOrNull { it.id == selectedId }?.title }

@@ -7,6 +7,7 @@
     <string name="nav_practice">연습</string>
     <string name="nav_repertoire">레퍼토리</string>
     <string name="nav_history">녹음</string>
+    <string name="nav_history_short">녹음</string>
     <string name="nav_settings">설정</string>
 
     <string name="mode_play">연주</string>
@@ -1089,11 +1090,12 @@
     <string name="block_done_description">%1$s — 완료</string>
     <string name="block_sheet_title">무엇을 연주할까요</string>
     <string name="block_now">지금: %1$s</string>
+    <string name="block_now_label">지금</string>
     <string name="block_stop">멈추기</string>
     <string name="block_start">시작 · %1$d분</string>
     <string name="block_selected">선택함</string>
     <string name="block_running">진행 중</string>
-    <string name="block_section_today">· 오늘 %1$d</string>
+    <string name="block_section_today">오늘 %1$d</string>
     <string name="block_mark_done_description">오늘 연주함, %1$s</string>
     <string name="block_mark_played_description">오늘 %1$s</string>
     <string name="block_offer_title">먼저 연습을 시작하세요</string>
@@ -1104,6 +1106,8 @@
     <string name="block_goal_minus">−%1$d</string>
     <string name="block_goal_plus">+%1$d</string>
     <string name="block_goal_option">%1$d분</string>
+    <string name="block_goal_title">연주 시간</string>
+    <string name="block_goal_range">%1$d~%2$d분</string>
     <!-- Blocks in the practice (spec 3.28): «Что играли» in the summary, the running block under the timer -->
     <string name="block_played_title">연주한 곡</string>
     <string name="block_part_of">%2$d분 중 %1$d분</string>

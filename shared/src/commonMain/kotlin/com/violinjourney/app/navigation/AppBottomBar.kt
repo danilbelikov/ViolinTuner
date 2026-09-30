@@ -43,6 +43,8 @@ import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.positionInParent
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextMeasurer
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -54,6 +56,7 @@ import com.violinjourney.app.core.ui.components.ShiftedInteractionSource
 import com.violinjourney.app.core.ui.icons.AppIcon
 import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.icons.TabIcon
+import kotlin.math.floor
 import org.jetbrains.compose.resources.stringResource
 
 private val IconSize = 24.dp
@@ -111,7 +114,8 @@ fun AppBottomBar(
 
 /**
  * A row of its own, as [CompactBar], instead of the 80-dp `NavigationBar` of Material: an item of 56 with the pill of 56×32
- * (spec 5.29). The labels are of one size, the largest at which all four fit their items on one line ([TabLabels]).
+ * (spec 5.29). The labels are of one size, the largest at which all four fit their items on one line — the short ones where the
+ * whole ones do not fit even at 10 sp, and smaller still at a large system font ([TabLabels]); TalkBack hears a label whole.
  */
 @Composable
 private fun TallBar(
@@ -123,7 +127,7 @@ private fun TallBar(
 ) {
     val colors = MaterialTheme.colorScheme
     val destinations = TopLevelDestination.entries
-    val labels = destinations.map { stringResource(it.labelRes) }
+    val labels = tabLabels()
     // the weight of the design and no tracking: the 0.5 sp of labelMedium alone would keep «Enregistrements» off 10 sp on 360 dp
     val baseStyle = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold, letterSpacing = 0.sp)
     val measurer = rememberTextMeasurer()
@@ -135,12 +139,19 @@ private fun TallBar(
             .windowInsetsPadding(NavigationBarDefaults.windowInsets)
             .padding(start = TallBarSide, top = TallBarTop, end = TallBarSide),
     ) {
-        val room = with(density) { (maxWidth / destinations.size - TallLabelInset * 2).toPx() }
+        // the item in whole pixels, as the row gives it out — a label that fits a quarter only by a fraction of a pixel is cut
+        val room = with(density) { floor(maxWidth.toPx() / destinations.size) - (TallLabelInset * 2).toPx() }
         // the style is a key: on iOS Manrope comes a frame after the first one, and the size must follow the real font
-        val labelSp = remember(labels, room, baseStyle, density, measurer) {
-            TabLabels.size(room) { sizeSp -> labels.maxOf { measurer.widthOf(it, baseStyle.copy(fontSize = sizeSp.sp)) } }
+        val fit = remember(labels, room, baseStyle, density, measurer) {
+            TabLabels.fit(
+                room = room,
+                leastSp = with(density) { TabLabels.LEAST_DP.dp.toSp().value },
+                full = { sizeSp -> labels.whole.maxOf { measurer.widthOf(it, baseStyle.copy(fontSize = sizeSp.sp)) } },
+                short = { sizeSp -> labels.short.maxOf { measurer.widthOf(it, baseStyle.copy(fontSize = sizeSp.sp)) } },
+            )
         }
-        val labelStyle = baseStyle.copy(fontSize = labelSp.sp)
+        val labelStyle = baseStyle.copy(fontSize = fit.sizeSp.sp)
+        val shown = if (fit.short) labels.short else labels.whole
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -178,8 +189,10 @@ private fun TallBar(
                         TabGlyph(destination, selected = selected, marked = practiceRunning && destination == TopLevelDestination.PRACTICE)
                     }
                     Text(
-                        text = labels[index],
-                        modifier = Modifier.padding(horizontal = TallLabelInset),
+                        text = shown[index],
+                        modifier = Modifier
+                            .padding(horizontal = TallLabelInset)
+                            .wholeFor(shown[index], labels.whole[index]),
                         color = if (selected) colors.onSurface else colors.onSurfaceVariant,
                         maxLines = 1,
                         softWrap = false,
@@ -196,7 +209,7 @@ private fun TallBar(
  * The landscape bar (handoff 10i, 10j): the look as before — a pill of 48×32 with the label beside it, the items spread
  * evenly — but an item is pressed over the whole height of the bar, 64 dp, not only around the pill (spec 3.36.1). The
  * labels stay on one line and of one size; at 12 sp they fit even the narrowest 640 dp, the size only gives way with a
- * large font.
+ * large font — by the rule of the tall bar ([TabLabels]), for the four in a row.
  */
 @Composable
 private fun CompactBar(
@@ -208,7 +221,7 @@ private fun CompactBar(
 ) {
     val colors = MaterialTheme.colorScheme
     val destinations = TopLevelDestination.entries
-    val labels = destinations.map { stringResource(it.labelRes) }
+    val labels = tabLabels()
     val baseStyle = MaterialTheme.typography.labelMedium
     val measurer = rememberTextMeasurer()
     val density = LocalDensity.current
@@ -221,10 +234,17 @@ private fun CompactBar(
     ) {
         val room = with(density) { maxWidth.toPx() }
         val chrome = with(density) { CompactItemChrome.toPx() } * destinations.size
-        val labelSp = remember(labels, room, chrome, baseStyle, density, measurer) {
-            TabLabels.size(room) { sizeSp -> chrome + labels.sumOf { measurer.widthOf(it, baseStyle.copy(fontSize = sizeSp.sp)).toDouble() }.toFloat() }
+        fun rowAt(words: List<String>, sizeSp: Float) = chrome + words.sumOf { measurer.widthOf(it, baseStyle.copy(fontSize = sizeSp.sp)).toDouble() }.toFloat()
+        val fit = remember(labels, room, chrome, baseStyle, density, measurer) {
+            TabLabels.fit(
+                room = room,
+                leastSp = with(density) { TabLabels.LEAST_DP.dp.toSp().value },
+                full = { sizeSp -> rowAt(labels.whole, sizeSp) },
+                short = { sizeSp -> rowAt(labels.short, sizeSp) },
+            )
         }
-        val labelStyle = baseStyle.copy(fontSize = labelSp.sp)
+        val labelStyle = baseStyle.copy(fontSize = fit.sizeSp.sp)
+        val shown = if (fit.short) labels.short else labels.whole
         Row(
             modifier = Modifier
                 .fillMaxSize()
@@ -272,7 +292,8 @@ private fun CompactBar(
                             )
                         }
                         Text(
-                            text = labels[index],
+                            text = shown[index],
+                            modifier = Modifier.wholeFor(shown[index], labels.whole[index]),
                             color = if (selected) colors.onSurface else colors.onSurfaceVariant,
                             maxLines = 1,
                             softWrap = false,
@@ -288,6 +309,21 @@ private fun CompactBar(
 /** The width a label takes on one line, in pixels. */
 private fun TextMeasurer.widthOf(text: String, style: TextStyle): Float =
     measure(text, style, softWrap = false, maxLines = 1).size.width.toFloat()
+
+/** The labels of the four tabs, whole and short ([TopLevelDestination.shortLabelRes]), in the order of the bar. */
+private data class TabLabelSet(val whole: List<String>, val short: List<String>)
+
+@Composable
+private fun tabLabels(): TabLabelSet {
+    val destinations = TopLevelDestination.entries
+    val whole = destinations.map { stringResource(it.labelRes) }
+    val short = destinations.map { stringResource(it.shortLabelRes ?: it.labelRes) }
+    return remember(whole, short) { TabLabelSet(whole, short) }
+}
+
+/** A short label is read whole by TalkBack: «Enreg.» says «Enregistrements». */
+private fun Modifier.wholeFor(shown: String, whole: String): Modifier =
+    if (shown == whole) this else semantics { contentDescription = whole }
 
 private fun TopLevelDestination.tabIcon(): TabIcon = when (this) {
     TopLevelDestination.LIVE -> AppIcons.TabLive

@@ -7,6 +7,7 @@
     <string name="nav_practice">練習</string>
     <string name="nav_repertoire">レパートリー</string>
     <string name="nav_history">録音</string>
+    <string name="nav_history_short">録音</string>
     <string name="nav_settings">設定</string>
 
     <string name="mode_play">演奏</string>
@@ -1089,11 +1090,12 @@
     <string name="block_done_description">%1$s — 完了</string>
     <string name="block_sheet_title">何を弾きますか</string>
     <string name="block_now">今：%1$s</string>
+    <string name="block_now_label">今</string>
     <string name="block_stop">止める</string>
     <string name="block_start">開始 · %1$d分</string>
     <string name="block_selected">選択中</string>
     <string name="block_running">進行中</string>
-    <string name="block_section_today">· 今日 %1$d</string>
+    <string name="block_section_today">今日 %1$d</string>
     <string name="block_mark_done_description">今日弾きました、%1$s</string>
     <string name="block_mark_played_description">今日 %1$s</string>
     <string name="block_offer_title">まず練習を始めましょう</string>
@@ -1104,6 +1106,8 @@
     <string name="block_goal_minus">−%1$d</string>
     <string name="block_goal_plus">+%1$d</string>
     <string name="block_goal_option">%1$d分</string>
+    <string name="block_goal_title">弾く時間</string>
+    <string name="block_goal_range">%1$d〜%2$d分</string>
     <!-- Blocks in the practice (spec 3.28): «Что играли» in the summary, the running block under the timer -->
     <string name="block_played_title">弾いたもの</string>
     <string name="block_part_of">%2$d分中%1$d分</string>

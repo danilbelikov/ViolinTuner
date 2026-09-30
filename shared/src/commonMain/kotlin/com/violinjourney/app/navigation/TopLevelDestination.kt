@@ -3,6 +3,7 @@ package com.violinjourney.app.navigation
 import org.jetbrains.compose.resources.StringResource
 import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.nav_history
+import com.violinjourney.app.shared.resources.nav_history_short
 import com.violinjourney.app.shared.resources.nav_live
 import com.violinjourney.app.shared.resources.nav_practice
 import com.violinjourney.app.shared.resources.nav_repertoire
@@ -14,6 +15,11 @@ import com.violinjourney.app.shared.resources.nav_repertoire
 enum class TopLevelDestination(
     val route: String,
     val labelRes: StringResource,
+    /**
+     * The label where the whole one does not fit its item even at 10 sp (spec 5.29 R1): the French «Enreg.» of «Enregistrements»
+     * (`open-questions.md`, F); null — the tab has none, its label is short enough in every language.
+     */
+    val shortLabelRes: StringResource? = null,
 ) {
     PRACTICE("practice", Res.string.nav_practice),
     LIVE("live", Res.string.nav_live),
@@ -23,7 +29,7 @@ enum class TopLevelDestination(
      * «Записи»: the recordings only (spec 3.36.1). The route keeps its old name — it is the key of `screen_open` (spec 5.27,
      * 5.29), and only the label changed (spec 4).
      */
-    HISTORY("history", Res.string.nav_history);
+    HISTORY("history", Res.string.nav_history, Res.string.nav_history_short);
 
     companion object {
         /** The app opens on «Занятия» (spec 3.25): one comes to start a practice, and the home is there. The order of the tabs is another matter. */

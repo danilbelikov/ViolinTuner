@@ -7,6 +7,7 @@
     <string name="nav_practice">Studio</string>
     <string name="nav_repertoire">Repertorio</string>
     <string name="nav_history">Registrazioni</string>
+    <string name="nav_history_short">Registrazioni</string>
     <string name="nav_settings">Impostazioni</string>
 
     <string name="mode_play">Suona</string>
@@ -1089,11 +1090,12 @@
     <string name="block_done_description">%1$s — fatto</string>
     <string name="block_sheet_title">Cosa suoniamo</string>
     <string name="block_now">Ora: %1$s</string>
+    <string name="block_now_label">Ora</string>
     <string name="block_stop">Ferma</string>
-    <string name="block_start">Inizia · %1$d min</string>
+    <string name="block_start">Inizia · %1$d\u00A0min</string>
     <string name="block_selected">Scelto</string>
     <string name="block_running">in corso</string>
-    <string name="block_section_today">· oggi %1$d</string>
+    <string name="block_section_today">oggi %1$d</string>
     <string name="block_mark_done_description">suonato oggi, %1$s</string>
     <string name="block_mark_played_description">oggi %1$s</string>
     <string name="block_offer_title">Prima, una sessione</string>
@@ -1104,6 +1106,8 @@
     <string name="block_goal_minus">−%1$d</string>
     <string name="block_goal_plus">+%1$d</string>
     <string name="block_goal_option">%1$d min</string>
+    <string name="block_goal_title">Quanto suonare</string>
+    <string name="block_goal_range">da %1$d a %2$d\u00A0min</string>
     <!-- Blocks in the practice (spec 3.28): «Что играли» in the summary, the running block under the timer -->
     <string name="block_played_title">Cosa hai suonato</string>
     <string name="block_part_of">%1$d di %2$d min</string>

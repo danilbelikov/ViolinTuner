@@ -89,6 +89,33 @@ class BlockViewModelTest {
         assertTrue(viewModel.state.value.sheet is BlockSheet.Picker)
     }
 
+    /**
+     * «занятие 24:18» in the header of the choice is the time of the practice tag (spec 3.36.6): both turn on the practice's own seconds
+     * — the tag's ticker is `practiceTicks` — not on the seconds of the wall clock, which would keep the header up to a second behind.
+     */
+    @Test
+    fun `the time of the practice in the choice turns on the practice's own seconds, as the tag's`() = runTest {
+        add("Кайзер № 3")
+        // a practice begun 0.4 s past a second of the wall clock
+        clock.nowMs += 400
+        practice.startIfIdle(clock.nowMs)
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(BlockIntent.BookmarkClicked)
+        runCurrent()
+        fun shown() = (viewModel.state.value.sheet as BlockSheet.Picker).practiceMs
+        assertEquals(0L, shown())
+        // 0.6 s on — a second of the wall clock, not of the practice: the time has not turned
+        clock.nowMs += 600
+        advanceTimeBy(600)
+        runCurrent()
+        assertTrue("still 0:00, as on the tag: ${shown()}", shown() < 1_000)
+        // 0.4 s more — a whole second of the practice: «0:01», as on the tag, at once
+        clock.nowMs += 400
+        advanceTimeBy(400)
+        runCurrent()
+        assertEquals(1_000L, shown())
+    }
+
     @Test
     fun `a pick and a goal start a block, the bookmark counts down and is done at the goal`() = runTest {
         val kaiser = add("Кайзер № 3", composer = "Г. Кайзер")

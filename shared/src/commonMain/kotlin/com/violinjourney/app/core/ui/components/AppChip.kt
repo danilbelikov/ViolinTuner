@@ -14,16 +14,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.violinjourney.app.core.ui.icons.AppIcon
@@ -148,9 +153,32 @@ object AppChip {
             Text(
                 text = text,
                 color = if (chosen) colors.onPrimaryContainer else colors.onSurfaceVariant,
-                style = MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, lineHeight = 18.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES),
+                style = choiceWords(),
                 maxLines = 1,
             )
         }
     }
+
+    /**
+     * The narrowest a [Choice] can be with each of [texts] whole on its line: its fields and the widest of them — for chips of one width
+     * in a row, which must not cut their words at a large font (the goal of «Что играем», spec 5.29 R6).
+     */
+    @Composable
+    fun choiceWidthFor(texts: List<String>): Dp {
+        val words = choiceWords()
+        val measurer = rememberTextMeasurer()
+        val density = LocalDensity.current
+        return remember(texts, words, measurer, density) {
+            val widest = texts.maxOfOrNull { measurer.measure(it, words, softWrap = false, maxLines = 1).size.width } ?: 0
+            with(density) { widest.toDp() } + ChipPadding * 2 + OneLineSlack
+        }
+    }
+
+    /** The words of a chip of choice — the style they are drawn and measured in. */
+    @Composable
+    private fun choiceWords(): TextStyle =
+        MaterialTheme.typography.labelLarge.copy(fontSize = 14.sp, lineHeight = 18.sp, fontWeight = FontWeight.Bold, fontFeatureSettings = TABULAR_FIGURES)
 }
+
+/** A chip is laid out in whole pixels: words that fit only by a hair are not trusted. */
+private val OneLineSlack = 1.dp

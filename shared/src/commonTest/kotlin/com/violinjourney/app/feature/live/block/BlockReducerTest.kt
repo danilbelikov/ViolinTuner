@@ -131,6 +131,31 @@ class BlockReducerTest {
     }
 
     @Test
+    fun `the time of the practice in the header is read at the same moment as the line of the block`() {
+        // at 34 minutes: «занятие 34:00» over «ещё 7 мин» of the concerto that began at 21 with a goal of 20
+        val picker = state(now = at(34)).sheet as BlockSheet.Picker
+        assertEquals(34 * min, picker.practiceMs)
+        assertEquals(7, picker.now?.minutesLeft)
+        // a second later both have moved with the one clock
+        val later = state(now = at(34) + 1_000).sheet as BlockSheet.Picker
+        assertEquals(34 * min + 1_000, later.practiceMs)
+        // an empty repertoire has the time of the practice all the same (spec 3.36.6: «занятие 0:42»)
+        val empty = BlockReducer.stateOf(running, null, emptyList(), BlockReducer.Shelf.EMPTY, BlockReducer.Ui(sheetOpen = true), practiceStart + 42_000, { zone }, config)
+        assertEquals(42_000L, (empty.sheet as BlockSheet.Picker).practiceMs)
+    }
+
+    @Test
+    fun `the bounds over the chips are the bounds of a goal in the config`() {
+        val picker = state().sheet as BlockSheet.Picker
+        assertEquals(5, picker.goalMinMinutes)
+        assertEquals(60, picker.goalMaxMinutes)
+        val other = PracticeConfig(blockGoalMinMinutes = 10, blockGoalMaxMinutes = 90)
+        val wide = BlockReducer.stateOf(running, blocks, saved, BlockReducer.shelfOf(pieces, groups, emptyList()), BlockReducer.Ui(sheetOpen = true), at(34), { zone }, other)
+        val bounds = (wide.sheet as BlockSheet.Picker).let { it.goalMinMinutes to it.goalMaxMinutes }
+        assertEquals(10 to 90, bounds)
+    }
+
+    @Test
     fun `an empty repertoire leaves the choice empty`() {
         val empty = BlockReducer.stateOf(running, null, emptyList(), BlockReducer.Shelf.EMPTY, BlockReducer.Ui(sheetOpen = true), at(1), { zone }, config)
         assertEquals(emptyList<PickerSection>(), (empty.sheet as BlockSheet.Picker).sections)
