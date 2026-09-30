@@ -1,6 +1,6 @@
 # Путешествие и дом — этап R7
 
-Макет: [`../mockups/journey-home.html`](../mockups/journey-home.html) · дорисовано: [`../mockups/landscape.html`](../mockups/landscape.html) (дом в landscape, общее правило dock) · общие компоненты: [`../mockups/components.html`](../mockups/components.html) · снимки «было»: `../current/` (есть только дом; путешествие, лавку и «Обставить» снять первым шагом)
+Макет: [`../mockups/journey-home.html`](../mockups/journey-home.html) · дорисовано: [`../mockups/landscape.html`](../mockups/landscape.html) (дом в landscape, общее правило dock) · общие компоненты: [`../mockups/components.html`](../mockups/components.html) · снимки «было»: `../current/` (`journey_*`, `home_*` — 30.09, первым шагом R7; `home.jpg`, `home_full.jpg` — 27.09, английский интерфейс)
 
 ## Что прочитать перед работой
 
