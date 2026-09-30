@@ -40,6 +40,7 @@ import com.violinjourney.app.feature.journey.JourneyView
 import com.violinjourney.app.feature.journey.JourneyViewModel
 import com.violinjourney.app.feature.journey.StopRoute
 import com.violinjourney.app.feature.journey.StopViewModel
+import com.violinjourney.app.feature.live.LiveMode
 import com.violinjourney.app.feature.live.LiveRoute
 import com.violinjourney.app.feature.live.LiveViewModel
 import com.violinjourney.app.feature.live.block.BlockViewModel
@@ -102,6 +103,8 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                         takes = graph.takes(), configSource = graph.configSource, runningPractice = graph.runningPractice,
                         clock = graph.clock, venues = graph.venues, analytics = graph.analytics, finishAsk = graph.finishAsk,
                         practiceConfig = graph.practiceConfig,
+                        // `-liveMode tuning` of the owner's app: «Настройка» for a screenshot, which simctl cannot tap
+                        initialMode = LaunchArguments.liveMode ?: LiveMode.PLAY,
                     )
                 },
                 blockViewModel = viewModel {

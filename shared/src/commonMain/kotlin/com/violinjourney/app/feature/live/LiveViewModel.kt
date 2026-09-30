@@ -48,6 +48,11 @@ open class LiveViewModel(
     private val practiceConfig: PracticeConfig,
     /** The clock the light of Live counts by (spec 5.20): the one the screen reads; tests give their own. */
     private val nanos: () -> Long = ::monotonicNanos,
+    /**
+     * The mode Live opens in: «Игра», as ever; the iOS owner's app opens «Настройка» with `-liveMode tuning` for a screenshot —
+     * the simulator cannot tap it.
+     */
+    initialMode: LiveMode = LiveMode.PLAY,
 ) : ViewModel() {
 
     init {
@@ -67,7 +72,7 @@ open class LiveViewModel(
     }
 
     // Mode and lock change together, so they live in one value the engine reads atomically.
-    private val target = MutableStateFlow(LiveTarget())
+    private val target = MutableStateFlow(LiveTarget(mode = initialMode))
 
     // The wish to record lives in the chain, which follows it frame by frame.
     private val recordingRequested get() = takes.recordingRequested

@@ -136,7 +136,11 @@ class LiveViewModelTest {
         }
     }
 
-    private fun TestScope.viewModel(source: PitchSource, base: IntonationConfig = IntonationConfig()): LiveViewModel {
+    private fun TestScope.viewModel(
+        source: PitchSource,
+        base: IntonationConfig = IntonationConfig(),
+        initialMode: LiveMode = LiveMode.PLAY,
+    ): LiveViewModel {
         val clock = FixedWallClock(startedAt, TimeZone.UTC)
         val takes = testTakePipeline(
             source, sessions, audioFiles, practice, PracticeConfig(), clock, StandardTestDispatcher(testScheduler),
@@ -145,6 +149,7 @@ class LiveViewModelTest {
         return LiveViewModel(
             takes, SettingsConfigSource(base, settings), practice, clock, Venues(venueStore, journey), finishAsk = finishAsk,
             nanos = { testScheduler.currentTime * NANOS_PER_MS }, analytics = NoOpAnalytics(), practiceConfig = PracticeConfig(),
+            initialMode = initialMode,
         )
     }
 
@@ -175,6 +180,18 @@ class LiveViewModelTest {
         assertEquals(LiveMode.PLAY, state.mode)
         assertEquals(LiveSignal.Silence, state.signal)
         assertEquals(ScaleSpec(rangeCents = 50.0, toleranceCents = 8.0), state.scale)
+    }
+
+    /** `-liveMode tuning` of the iOS owner's app (spec 3.36.6): the screenshot of «Настройка» needs it from the first frame. */
+    @Test
+    fun `opens in the mode it is asked for, and records nothing there`() = runTest {
+        val viewModel = viewModel(fakeSource(FakeScenario.IN_TUNE), initialMode = LiveMode.TUNING)
+        assertEquals(LiveMode.TUNING, viewModel.state.value.mode)
+        assertFalse(viewModel.state.value.canRecord)
+        observe(viewModel, 500)
+        assertEquals(LiveMode.TUNING, viewModel.state.value.mode)
+        assertEquals(ViolinString.A4, viewModel.state.value.tuning.targetString)
+        assertFalse(viewModel.state.value.canRecord)
     }
 
     @Test

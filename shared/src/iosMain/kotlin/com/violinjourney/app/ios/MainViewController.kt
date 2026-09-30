@@ -31,8 +31,9 @@ import platform.UIKit.UIViewController
 /**
  * The iOS app. `-fakeScenario IN_TUNE` plays a steady script instead of the microphone, as `-PfakeScenario` on Android:
  * `xcrun simctl launch booted com.violinjourney.app.debug -fakeScenario IN_TUNE`; `-openRoute live` opens a screen at once.
- * In the owner's .debug app ([IosBuild]) `-sceneSeconds 12.5` stops the living pictures at that second and `-noBake`
- * draws them without baking, as the debug switches of Android (docs/plan-performance.md).
+ * In the owner's .debug app ([IosBuild]) `-liveMode tuning` opens Live in «Настройка» (the simulator cannot tap it),
+ * `-sceneSeconds 12.5` stops the living pictures at that second and `-noBake` draws them without baking, as the debug
+ * switches of Android (docs/plan-performance.md).
  *
  * The graph lives in [AppGraph], one per process, not in the composition: a second controller shows the same graph
  * instead of opening the same files a second time.
