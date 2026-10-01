@@ -2,6 +2,7 @@ package com.violinjourney.app.feature.home
 
 import com.violinjourney.app.core.domain.home.FakeHomeRepository
 import com.violinjourney.app.core.domain.home.HomeCatalog
+import com.violinjourney.app.core.domain.home.HomeGroup
 import com.violinjourney.app.core.domain.home.HomeRules
 import com.violinjourney.app.core.domain.journey.FakeJourneyRepository
 import com.violinjourney.app.core.domain.journey.JourneyConfig
@@ -111,21 +112,119 @@ class HomeViewModelTest {
         assertFalse(HomeRules.owned(HomeCatalog.byId.getValue("tulips"), viewModel.state.value.home))
     }
 
+    /**
+     * «Назад» folds what is open before it leaves the screen; out of the try-on — the arrow of its bar and the system one alike — it
+     * does what «Убрать» does: the thing leaves the room and its card is open again (spec 3.36.7; before R7 it closed the card too).
+     */
     @Test
     fun backFoldsWhatIsOpenBeforeItLeaves() = runTest(dispatcher) {
         val (viewModel, effects) = viewModel()
         viewModel.onIntent(HomeIntent.ItemClicked("pouf"))
         viewModel.onIntent(HomeIntent.TryClicked)
+        viewModel.onIntent(HomeIntent.TryModeSelected(SceneMode.DAY))
         runCurrent()
 
         viewModel.onIntent(HomeIntent.BackClicked)
         runCurrent()
         assertNull(viewModel.state.value.tryOn)
+        assertNull(viewModel.state.value.tryMode)
+        assertEquals("pouf", viewModel.state.value.card?.id)
+        assertTrue(effects.isEmpty())
+
+        viewModel.onIntent(HomeIntent.BackClicked)
+        runCurrent()
+        assertNull(viewModel.state.value.card)
         assertTrue(effects.isEmpty())
 
         viewModel.onIntent(HomeIntent.BackClicked)
         runCurrent()
         assertEquals(listOf<HomeEffect>(HomeEffect.Close), effects)
+    }
+
+    /**
+     * The shop by place (spec 3.36.7): the place the route gives is taken once in the life of the model — given again (a turn of the
+     * phone), it changes nothing, not even after ✕ took it off; a place the catalogue does not know is not taken; ✕, «Всё» and a row
+     * take it off — one filter at a time.
+     */
+    @Test
+    fun aShopForOnePlaceShowsOnlyItsThings() = runTest(dispatcher) {
+        val (viewModel, _) = viewModel()
+        viewModel.onIntent(HomeIntent.CategorySelected(HomeGroup.PET))
+        viewModel.onIntent(HomeIntent.ShopSlotGiven("deskR"))
+        runCurrent()
+        assertEquals("deskR", viewModel.state.value.slot)
+        assertNull("the place is the one filter", viewModel.state.value.category)
+
+        viewModel.onIntent(HomeIntent.ShopSlotGiven("deskM"))
+        runCurrent()
+        assertEquals("once in the life of the model", "deskR", viewModel.state.value.slot)
+
+        viewModel.onIntent(HomeIntent.SlotFilterCleared)
+        runCurrent()
+        assertNull(viewModel.state.value.slot)
+        viewModel.onIntent(HomeIntent.ShopSlotGiven("deskR"))
+        runCurrent()
+        assertNull("a turn of the phone does not bring back the filter taken off", viewModel.state.value.slot)
+
+        val (byRow, _) = viewModel()
+        byRow.onIntent(HomeIntent.ShopSlotGiven("deskR"))
+        byRow.onIntent(HomeIntent.CategorySelected(HomeGroup.LIGHT))
+        runCurrent()
+        assertNull(byRow.state.value.slot)
+        assertEquals(HomeGroup.LIGHT, byRow.state.value.category)
+
+        val (byAll, _) = viewModel()
+        byAll.onIntent(HomeIntent.ShopSlotGiven("deskR"))
+        byAll.onIntent(HomeIntent.CategorySelected(null))
+        runCurrent()
+        assertNull("«Всё» takes it off", byAll.state.value.slot)
+
+        val (nowhere, _) = viewModel()
+        nowhere.onIntent(HomeIntent.ShopSlotGiven("attic"))
+        runCurrent()
+        assertNull("not a place of the catalogue", nowhere.state.value.slot)
+    }
+
+    /**
+     * The outline of «Обставить» (spec 3.36.7): a tile puts the outline on the thing it put — «пусто» too, which outlines nothing —, a
+     * tile of another place moves it; a change of «Комната | Снаружи» takes it off, a touch of the side shown already does not (the
+     * segment chosen answers a tap too); «в лавке N →» — which opens the shop by its place — takes it off, so it is gone when one comes
+     * back.
+     */
+    @Test
+    fun theArrangeFocusFollowsTheTouchedTileAndLeavesWithAChangeOfSideAndTheShop() = runTest(dispatcher) {
+        earn(2_000)
+        val (viewModel, effects) = viewModel()
+        viewModel.onIntent(HomeIntent.Placed("desk", "desk_simple"))
+        runCurrent()
+        assertEquals(ArrangeFocus("desk", "desk_simple"), viewModel.state.value.arrangeFocus)
+
+        viewModel.onIntent(HomeIntent.Placed("deskTop", ""))
+        runCurrent()
+        assertEquals("«пусто» is a touch of the place too", ArrangeFocus("deskTop", ""), viewModel.state.value.arrangeFocus)
+
+        viewModel.onIntent(HomeIntent.Placed("chair", "desk_oak")) // not its place: nothing is put, nothing moves
+        runCurrent()
+        assertEquals(ArrangeFocus("deskTop", ""), viewModel.state.value.arrangeFocus)
+
+        viewModel.onIntent(HomeIntent.Placed("desk", "desk_simple"))
+        viewModel.onIntent(HomeIntent.SideSelected(false)) // «Комната», shown already
+        runCurrent()
+        assertEquals("the side shown already: the outline stays", ArrangeFocus("desk", "desk_simple"), viewModel.state.value.arrangeFocus)
+        assertFalse(viewModel.state.value.outside)
+
+        viewModel.onIntent(HomeIntent.SideSelected(true))
+        runCurrent()
+        assertNull(viewModel.state.value.arrangeFocus)
+        assertTrue(viewModel.state.value.outside)
+
+        viewModel.onIntent(HomeIntent.Placed("oL", ""))
+        runCurrent()
+        assertEquals(ArrangeFocus("oL", ""), viewModel.state.value.arrangeFocus)
+        viewModel.onIntent(HomeIntent.ShopAtClicked("oL"))
+        runCurrent()
+        assertNull(viewModel.state.value.arrangeFocus)
+        assertEquals(HomeEffect.OpenShopAt("oL"), effects.last())
     }
 
     @Test

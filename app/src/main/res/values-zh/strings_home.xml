@@ -59,16 +59,19 @@
     <string name="shop_take">领取</string>
     <string name="shop_put">摆上</string>
     <string name="shop_missing">还差 %1$s</string>
-    <string name="shop_sessions_one">大约再练一次</string>
-    <string name="shop_sessions_few">大约再练 %1$d 次</string>
-    <string name="shop_sessions_many">大约再练 %1$d 次</string>
-    <string name="shop_sessions_one_counted">大约再练 %1$d 次</string>
     <string name="shop_left_after">将剩余 %1$s</string>
-    <string name="shop_left_after_road">将剩余 %1$s · 到%2$s还差 %3$s</string>
     <string name="shop_item_description">%1$s，%2$s</string>
     <string name="shop_price_takts">%1$s 小节</string>
     <string name="shop_try_back">恢复原样</string>
     <string name="shop_bought">已购买：%1$s</string>
+    <string name="shop_row_place">位置</string>
+    <string name="shop_row_after">购买后</string>
+    <string name="shop_row_to">到%1$s</string>
+    <string name="shop_still_enough">仍然够</string>
+    <string name="shop_still_more">还差\u00A0%1$s</string>
+    <string name="shop_row_balance">余额</string>
+    <string name="shop_place_clear">取消筛选</string>
+    <string name="shop_try_title">试摆 · %1$s</string>
 
     <string name="arrange_title">布置</string>
     <string name="arrange_places_one">%1$s · %2$d 个位置，已用 %3$d 个</string>

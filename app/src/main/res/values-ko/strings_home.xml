@@ -59,16 +59,19 @@
     <string name="shop_take">받기</string>
     <string name="shop_put">놓기</string>
     <string name="shop_missing">%1$s 부족</string>
-    <string name="shop_sessions_one">연습 한 번쯤 더</string>
-    <string name="shop_sessions_few">연습 %1$d번쯤 더</string>
-    <string name="shop_sessions_many">연습 %1$d번쯤 더</string>
-    <string name="shop_sessions_one_counted">연습 %1$d번쯤 더</string>
     <string name="shop_left_after">%1$s 남음</string>
-    <string name="shop_left_after_road">%1$s 남음 · %2$s까지 %3$s 더</string>
     <string name="shop_item_description">%1$s, %2$s</string>
     <string name="shop_price_takts">%1$s마디</string>
     <string name="shop_try_back">원래대로</string>
     <string name="shop_bought">구매함: %1$s</string>
+    <string name="shop_row_place">자리</string>
+    <string name="shop_row_after">구매 후</string>
+    <string name="shop_row_to">%1$s까지</string>
+    <string name="shop_still_enough">여전히 충분</string>
+    <string name="shop_still_more">%1$s\u00A0더</string>
+    <string name="shop_row_balance">잔액</string>
+    <string name="shop_place_clear">필터 해제</string>
+    <string name="shop_try_title">놓아 보기 · %1$s</string>
 
     <string name="arrange_title">꾸미기</string>
     <string name="arrange_places_one">%1$s · 자리 %2$d곳, %3$d곳 사용 중</string>

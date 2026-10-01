@@ -14,11 +14,16 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -26,8 +31,13 @@ import androidx.compose.ui.unit.sp
 private val Capsule = RoundedCornerShape(percent = 50)
 private val PlateHeight = 56.dp
 private val PlateHeightCompact = 48.dp
-private val PlatePadding = PaddingValues(horizontal = 20.dp, vertical = 6.dp)
-private val PlatePaddingCompact = PaddingValues(horizontal = 16.dp, vertical = 4.dp)
+private val PlateSide = 20.dp
+private val PlateSideCompact = 16.dp
+private val PlatePadding = PaddingValues(horizontal = PlateSide, vertical = 6.dp)
+private val PlatePaddingCompact = PaddingValues(horizontal = PlateSideCompact, vertical = 4.dp)
+
+/** A plate is laid out in whole pixels: words that fit only by a hair are not trusted. */
+private val OneLineSlack = 1.dp
 private val LeadingGap = 8.dp
 private const val TEXT_SP = 16f
 private const val TEXT_LEAST_SP = 14f
@@ -76,7 +86,7 @@ fun ShortfallPlate(
             Column(Modifier.weight(1f, fill = false), horizontalAlignment = if (caption != null) Alignment.Start else Alignment.CenterHorizontally) {
                 OneLineText(
                     text = text,
-                    style = words.copy(fontSize = TEXT_SP.sp, lineHeight = (TEXT_SP * LINE_HEIGHT).sp, fontWeight = FontWeight.Bold),
+                    style = plateWords(),
                     minSp = TEXT_LEAST_SP,
                     color = colors.onSurface,
                     keep = keep,
@@ -90,6 +100,36 @@ fun ShortfallPlate(
                     )
                 }
             }
+        }
+    }
+}
+
+/** The words of the plate — the style they are drawn and measured in ([shortfallPlateFits]). */
+@Composable
+private fun plateWords(): TextStyle = MaterialTheme.typography.labelLarge.copy(
+    fontSize = TEXT_SP.sp,
+    lineHeight = (TEXT_SP * LINE_HEIGHT).sp,
+    fontWeight = FontWeight.Bold,
+    fontFeatureSettings = TABULAR_FIGURES,
+)
+
+/**
+ * Whether the words of a [ShortfallPlate] — [text], after the sign of [leading] wide — stand whole in a plate [width] wide, [compact] or
+ * not: at its least size of 14 sp, where the plate would otherwise cut them (spec 5.29 R7: the number is never cut, and the words around
+ * it are not cut beside a neighbour either). The card of a thing and the try-on stand the plate beside an outline only where it does;
+ * else the two stand one under the other, the plate on the whole width.
+ */
+@Composable
+internal fun shortfallPlateFits(text: String, width: Dp, compact: Boolean, leading: Dp = 0.dp): Boolean {
+    val words = plateWords()
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    return remember(text, width, compact, leading, words, measurer, density) {
+        with(density) {
+            val sign = if (leading > 0.dp) leading + LeadingGap else 0.dp
+            val room = (width - (if (compact) PlateSideCompact else PlateSide) * 2 - sign - OneLineSlack).toPx()
+            val least = words.copy(fontSize = TEXT_LEAST_SP.sp, lineHeight = (TEXT_LEAST_SP * LINE_HEIGHT).sp)
+            room > 0f && measurer.measure(text, least, softWrap = false, maxLines = 1).size.width <= room
         }
     }
 }

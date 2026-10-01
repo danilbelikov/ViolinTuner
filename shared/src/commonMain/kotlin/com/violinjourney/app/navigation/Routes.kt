@@ -5,6 +5,7 @@ import com.violinjourney.app.core.domain.repertoire.PieceSection
 import com.violinjourney.app.core.domain.repertoire.SectionRef
 import com.violinjourney.app.feature.backup.RestoreViewModel
 import com.violinjourney.app.feature.camera.CaptureViewModel
+import com.violinjourney.app.feature.home.HomeViewModel
 import com.violinjourney.app.feature.journey.StopViewModel
 import com.violinjourney.app.feature.repertoire.RepertoireViewModel
 import com.violinjourney.app.feature.repertoire.SectionKeys
@@ -50,6 +51,7 @@ object Routes {
     const val JOURNEY_STOP_PATTERN = "$JOURNEY_STOP/{${StopViewModel.ARG_STOP_ID}}"
     const val HOME = "home"
     const val HOME_SHOP = "homeShop"
+    const val HOME_SHOP_PATTERN = "$HOME_SHOP?${HomeViewModel.ARG_SLOT}={${HomeViewModel.ARG_SLOT}}"
     const val HOME_ARRANGE = "homeArrange"
     const val HOME_HOUSES = "homeHouses"
     const val SPLASH_AWAY = "splashAway"
@@ -88,6 +90,12 @@ object Routes {
      */
     fun newElement(section: SectionRef): String =
         if (section == SectionRef.BuiltIn(PieceSection.SCALES)) scaleForm(null) else pieceForm(null, section = section)
+
+    /**
+     * The shop (spec 3.24); [slot] — the shop by place, opened from «в лавке N →» of «Обставить» (spec 3.36.7): only the things of that
+     * place on its shelves. The place is the argument of the route and nothing more — it is not kept anywhere.
+     */
+    fun homeShop(slot: String? = null): String = if (slot == null) HOME_SHOP else "$HOME_SHOP?${HomeViewModel.ARG_SLOT}=${encodeQuery(slot)}"
 
     /** A stop of the journey; the home is a section of its own (spec 3.24), and the way into it is its title card (3.25). */
     fun stop(stopId: String): String = if (stopId == JourneyRoute.HOME) SPLASH_HOME else "$JOURNEY_STOP/$stopId"

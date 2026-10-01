@@ -18,22 +18,29 @@ import com.violinjourney.app.shared.resources.Res
 import com.violinjourney.app.shared.resources.shop_bought
 import org.jetbrains.compose.resources.getString
 
+/**
+ * The home's four screens on one model each (spec 3.24). [slot] — the argument of the shop's route, the shop by place (spec 3.36.7):
+ * given to the model once ([HomeIntent.ShopSlotGiven]); [onOpenShopAt] — «в лавке N →» of «Обставить» opens it.
+ */
 @Composable
 fun HomeRoute(
     view: HomeView,
     onOpenShop: () -> Unit,
+    onOpenShopAt: (slot: String) -> Unit,
     onOpenArrange: () -> Unit,
     onOpenHouses: () -> Unit,
     onOpenHome: () -> Unit,
     onOpenJourney: () -> Unit,
     onClose: () -> Unit,
     modifier: Modifier = Modifier,
+    slot: String? = null,
     viewModel: HomeViewModel,
 ) {
     val ui by viewModel.state.collectAsStateWithLifecycle()
     val messages = LocalMessages.current
     val lifecycleOwner = LocalLifecycleOwner.current
     val shop by rememberUpdatedState(onOpenShop)
+    val shopAt by rememberUpdatedState(onOpenShopAt)
     val arrange by rememberUpdatedState(onOpenArrange)
     val houses by rememberUpdatedState(onOpenHouses)
     val home by rememberUpdatedState(onOpenHome)
@@ -42,12 +49,15 @@ fun HomeRoute(
     val reduce = rememberAnimationsRemoved()
 
     LaunchedEffect(viewModel, reduce) { viewModel.onIntent(HomeIntent.ReduceMotionChanged(reduce)) }
+    // the model takes it once in its life: a turn of the phone gives it again, and the filter taken off must stay off
+    LaunchedEffect(viewModel, slot) { slot?.let { viewModel.onIntent(HomeIntent.ShopSlotGiven(it)) } }
     LaunchedEffect(viewModel, lifecycleOwner) {
         lifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
             viewModel.effects.collect { effect ->
                 when (effect) {
                     HomeEffect.Close -> close()
                     HomeEffect.OpenShop -> shop()
+                    is HomeEffect.OpenShopAt -> shopAt(effect.slot)
                     HomeEffect.OpenArrange -> arrange()
                     HomeEffect.OpenHouses -> houses()
                     HomeEffect.OpenHome -> home()

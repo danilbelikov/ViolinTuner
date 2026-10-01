@@ -59,16 +59,19 @@
     <string name="shop_take">Abholen</string>
     <string name="shop_put">Aufstellen</string>
     <string name="shop_missing">es fehlen %1$s</string>
-    <string name="shop_sessions_one">noch etwa einmal üben</string>
-    <string name="shop_sessions_few">noch etwa %1$d Mal üben</string>
-    <string name="shop_sessions_many">noch etwa %1$d Mal üben</string>
-    <string name="shop_sessions_one_counted">noch etwa %1$d Mal üben</string>
     <string name="shop_left_after">es bleiben %1$s</string>
-    <string name="shop_left_after_road">es bleiben %1$s · bis %2$s noch %3$s</string>
     <string name="shop_item_description">%1$s, %2$s</string>
     <string name="shop_price_takts">%1$s Takte</string>
     <string name="shop_try_back">Wie vorher</string>
     <string name="shop_bought">Gekauft: %1$s</string>
+    <string name="shop_row_place">Platz</string>
+    <string name="shop_row_after">Nach dem Kauf</string>
+    <string name="shop_row_to">Bis %1$s</string>
+    <string name="shop_still_enough">reicht noch</string>
+    <string name="shop_still_more">noch\u00A0%1$s</string>
+    <string name="shop_row_balance">Guthaben</string>
+    <string name="shop_place_clear">Filter entfernen</string>
+    <string name="shop_try_title">Anprobe · %1$s</string>
 
     <string name="arrange_title">Einrichten</string>
     <string name="arrange_places_one">%1$s · %2$d Platz, %3$d belegt</string>

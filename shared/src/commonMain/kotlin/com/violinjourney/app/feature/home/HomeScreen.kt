@@ -62,6 +62,7 @@ import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.layout.onPlaced
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInParent
+import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -243,8 +244,8 @@ private val SheetGap = 12.dp
 private val SheetButtonsTop = 18.dp
 private val SessionsTop = 6.dp
 
-/** The sign of a takt in the plate of what is missing — as in the plate of the journey. */
-private val PlateSign = 18.dp
+/** The sign of a takt in the plate of what is missing — as in the plate of the journey; the card of a thing measures its plate with it. */
+internal val PlateSign = 18.dp
 
 @Composable
 fun itemName(id: String): String = HomeTexts.itemNames[id]?.let { stringResource(it) }.orEmpty()
@@ -344,8 +345,9 @@ fun TwoWay(first: String, second: String, secondChosen: Boolean, onChoose: (seco
 /**
  * The home as its own section (spec 3.24, 3.36.7; handoff 27a): the room alive and what it is, the gift while it waits, the next home;
  * the three doors — «В дорогу», «Лавка», «Обставить» — in the bottom zone, under the thumb at any scroll. Upright the room gives way
- * first ([PictureFit], 200…290) and scrolls with the words over the zone; lying the room fills the left column over the zone and does
- * not scroll — no fade over the zone — while the words scroll in the right column of 320. Loading — the bar alone.
+ * first ([PictureFit], 200…290) and scrolls with the words over the zone; lying ([HomeRoomFit.lying]: a window wider than high where
+ * the room keeps 200 beside the words) the room fills the left column over the zone and does not scroll — no fade over the zone — while
+ * the words scroll in the right column of 320. Loading — the bar alone.
  */
 @Composable
 fun HomeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = Modifier) {
@@ -354,12 +356,13 @@ fun HomeScreen(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifier = 
         FullscreenHome(ui, onIntent, modifier)
         return
     }
+    val window = LocalWindowInfo.current.containerSize
     Column(modifier.fillMaxSize().background(colors.surface), horizontalAlignment = Alignment.CenterHorizontally) {
         // the purse not before it is read: no «0» for a moment
         JourneyTopBar(stringResource(Res.string.home_title), onBack = { onIntent(HomeIntent.BackClicked) }) { if (!ui.loading) BalancePill(ui.balance) }
         if (ui.loading) return@Column
         BoxWithConstraints(Modifier.fillMaxSize()) {
-            if (maxWidth > maxHeight) LandscapeHome(ui, onIntent) else PortraitHome(ui, onIntent, available = maxHeight)
+            if (HomeRoomFit.lying(window.width > window.height, maxWidth)) LandscapeHome(ui, onIntent) else PortraitHome(ui, onIntent, available = maxHeight)
         }
     }
 }
@@ -558,14 +561,35 @@ private fun Picture(ui: HomeUi, onIntent: (HomeIntent) -> Unit, modifier: Modifi
  *   window at a large font the halves of the zone stand one under the other and the room is some 66 to 71 high (603 × 308 at 1.15
  *   and 1.3): the square would lie on «Снаружи» and take its touches. The room itself opens the whole screen all the same, and a
  *   reader hears that as its action.
+ * - [lying] — the home and «Обставить» stand lying (the room on the left, a column of [ColumnBeside] on the right) in a window wider
+ *   than high, and only where the room keeps [RoomBesideLeast] beside that column ([roomBeside]): the box under the bar of a window
+ *   higher than wide can be wider than high (the half of a split screen, 412 × 450: 412 × 346 under the bar of 56), and a window wider
+ *   than high can be narrow (the half of a phone lying, 456 × 411) — beside 320 the room was 44 and 88 dp there, a strip. Such
+ *   windows stand upright.
  */
 object HomeRoomFit {
     val SquareFrom: Dp
         get() = (OnPictureInset - TwoWayDefaults.Air) + TwoWayDefaults.Height + OnPictureInset + GlassSquareDefaults.Size + OnPictureInset
 
+    /** Lying, the words of the home and the places of «Обставить» stand in a column this wide on the right. */
+    val ColumnBeside: Dp get() = AboutWidth
+
+    /** The fields of the screen at its sides, and between the room and the column lying. */
+    val Side: Dp get() = ScreenSide
+    val Gap: Dp get() = ColumnGap
+
+    /** The least the room is beside the column: no narrower than it is ever high upright ([PictureFit.RoomMin]). */
+    val RoomBesideLeast: Dp get() = PictureFit.RoomMin
+
     fun fade(lying: Boolean): Dp = if (lying) 0.dp else DockDefaults.Fade
 
     fun squareFits(room: Dp): Boolean = room >= SquareFrom
+
+    /** What is left to the room beside the column in a box [width] wide: its fields and the gap taken. */
+    fun roomBeside(width: Dp): Dp = width - Side * 2 - Gap - ColumnBeside
+
+    /** Lying: a window wider than high ([windowWide]) and the room keeping [RoomBesideLeast] beside the column in [width]. */
+    fun lying(windowWide: Boolean, width: Dp): Boolean = windowWide && roomBeside(width) >= RoomBesideLeast
 }
 
 /**

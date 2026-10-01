@@ -40,6 +40,12 @@ open class HomeViewModel(
     )
     private var reduceMotion = false
 
+    /**
+     * The place of the shop by place is taken once in the life of the model (spec 3.36.7): a turn of the phone gives the argument of the
+     * route again, and a filter taken off with ✕ must not come back; «назад» and a new way in are a new model.
+     */
+    private var slotTaken = false
+
     // intents read these, not state.value: it lags a frame behind the stores
     private var latestHome = HomeState.EMPTY
     private var latestProgress = JourneyProgress.EMPTY
@@ -56,16 +62,18 @@ open class HomeViewModel(
     fun onIntent(intent: HomeIntent) {
         val now = look.value
         when (intent) {
-            // «назад» folds what is open before it leaves the screen
+            // «назад» folds what is open before it leaves the screen; out of the try-on it goes back to the card, as «Убрать» (spec 3.36.7)
             HomeIntent.BackClicked -> when {
                 now.moving != null -> Unit
                 now.fullscreen -> look.update { it.copy(fullscreen = false) }
-                now.tryOn != null -> look.update { it.copy(tryOn = null, tryMode = null) }
+                now.tryOn != null -> look.update { it.copy(card = it.tryOn, tryOn = null, tryMode = null) }
                 now.card != null -> look.update { it.copy(card = null) }
                 now.houseCard != null -> look.update { it.copy(houseCard = null) }
                 else -> effectChannel.trySend(HomeEffect.Close)
             }
-            is HomeIntent.SideSelected -> look.update { it.copy(outside = intent.outside) }
+            // the outline belongs to a place of the side that was shown: a change of side takes it off, a touch of the side shown
+            // already changes nothing — the segment chosen answers a tap too (spec 3.36.7)
+            is HomeIntent.SideSelected -> look.update { if (it.outside == intent.outside) it else it.copy(outside = intent.outside, arrangeFocus = null) }
             HomeIntent.ShopClicked -> effectChannel.trySend(HomeEffect.OpenShop)
             HomeIntent.ArrangeClicked -> effectChannel.trySend(HomeEffect.OpenArrange)
             HomeIntent.HousesClicked -> effectChannel.trySend(HomeEffect.OpenHouses)
@@ -77,7 +85,18 @@ open class HomeViewModel(
             HomeIntent.FullscreenClicked -> look.update { it.copy(fullscreen = true) }
             HomeIntent.FullscreenClosed -> look.update { it.copy(fullscreen = false) }
             HomeIntent.GiftTaken -> buy(HomeCatalog.GIFT)
-            is HomeIntent.CategorySelected -> look.update { it.copy(category = intent.group) }
+            // one filter at a time: a row, or «Всё», takes the place off (spec 3.36.7)
+            is HomeIntent.CategorySelected -> look.update { it.copy(category = intent.group, slot = null) }
+            is HomeIntent.ShopSlotGiven -> if (!slotTaken) {
+                slotTaken = true
+                if (intent.slot in HomeCatalog.slotById) look.update { it.copy(slot = intent.slot, category = null) }
+            }
+            HomeIntent.SlotFilterCleared -> look.update { it.copy(slot = null) }
+            // the outline does not wait for the way back from the shop (spec 3.36.7)
+            is HomeIntent.ShopAtClicked -> {
+                look.update { it.copy(arrangeFocus = null) }
+                effectChannel.trySend(HomeEffect.OpenShopAt(intent.slot))
+            }
             is HomeIntent.ItemClicked -> HomeCatalog.byId[intent.id]?.let { item -> look.update { it.copy(card = item) } }
             HomeIntent.CardClosed -> look.update { it.copy(card = null) }
             HomeIntent.TryClicked -> now.card?.let { item -> look.update { it.copy(tryOn = item, card = null) } }
@@ -103,9 +122,15 @@ open class HomeViewModel(
         }
     }
 
+    /**
+     * Puts [itemId] in [slot] — and that tile is the one whose thing the room of «Обставить» outlines, once its picture shows it there
+     * (spec 3.36.7; [ArrangeFocus]).
+     */
     private fun place(slot: String, itemId: String) {
         val fits = itemId.isEmpty() || HomeCatalog.byId[itemId]?.let { it.slot == slot && HomeRules.owned(it, latestHome) } == true
-        if (fits) viewModelScope.launch { home.place(slot, itemId) }
+        if (!fits) return
+        look.update { it.copy(arrangeFocus = ArrangeFocus(slot, itemId)) }
+        viewModelScope.launch { home.place(slot, itemId) }
     }
 
     // The home is paid for before the film starts: a process that dies in it loses nothing.
@@ -121,8 +146,11 @@ open class HomeViewModel(
         }
     }
 
-    private companion object {
-        const val STOP_TIMEOUT_MS = 5_000L
+    companion object {
+        /** The argument of the shop's route: the place of the shop by place (spec 3.36.7). */
+        const val ARG_SLOT = "slot"
+
+        private const val STOP_TIMEOUT_MS = 5_000L
     }
 }
 

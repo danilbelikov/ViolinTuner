@@ -1,5 +1,7 @@
 package com.violinjourney.app.core.ui.components
 
+import android.view.View
+import android.view.accessibility.AccessibilityNodeInfo
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -13,12 +15,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.platform.ViewConfiguration
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
+import androidx.compose.ui.semantics.getOrNull
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.assertHeightIsAtLeast
@@ -44,6 +48,7 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.height
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.violinjourney.app.core.ui.icons.AppIcons
 import com.violinjourney.app.core.ui.theme.ViolinTheme
 import com.violinjourney.app.feature.home.TwoWay
 import org.junit.Assert.assertEquals
@@ -104,6 +109,43 @@ class ControlsTouchTest {
         compose.onNodeWithTag(TAG)
             .assertIsSelected()
             .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.RadioButton))
+    }
+
+    /**
+     * The chip of a place of the shop (spec 3.36.7, 5.29 R7): a chosen filter chip with a cross of 18 inside it — pressed over 48 as any
+     * chip; a press anywhere on it takes the place off; TalkBack hears that it is chosen and what the press does («Снять фильтр»).
+     *
+     * What Android hands TalkBack is read from the node the Compose view gives it, not from the semantics of Compose: a radio button (or
+     * a tab) that is chosen already loses its press there — «cannot be chosen again» — and its label with it, so the chip of R7 read as
+     * a radio button was told to be neither pressable nor what it does (the review of stage 119). As a button that says it is chosen it
+     * keeps both.
+     */
+    @Test
+    fun aPlaceChipClearsItsFilterAndSaysSo() {
+        var view: View? = null
+        // the capsule of 40 in a slot of 48: 4 dp of it under the capsule
+        assertTheChipTakesFortyEight(beyond = 2.dp) {
+            view = LocalView.current
+            AppChip(PLACE, selected = true, onClick = { presses++ }, modifier = Modifier.testTag(TAG), trailing = AppIcons.Close, onClickLabel = CLEAR)
+        }
+        compose.runOnIdle { assertEquals("the touch in the strip", 1, presses) }
+        val chip = compose.onNodeWithTag(TAG)
+            .assertIsSelected()
+            .assert(SemanticsMatcher.expectValue(SemanticsProperties.Role, Role.Button))
+            .assert(SemanticsMatcher("its press says what it does") { it.config.getOrNull(SemanticsActions.OnClick)?.label == CLEAR })
+        val id = chip.fetchSemanticsNode().id
+        val info = checkNotNull(compose.runOnUiThread { view!!.accessibilityNodeProvider?.createAccessibilityNodeInfo(id) }) { "no node for TalkBack" }
+        // the class of this node stays android.view.View: Compose hands the role of a node with children (the word, the cross) to a
+        // child node of its own, as for any button with words in it — the role is the Button of the semantics asserted above
+        assertTrue("TalkBack, Switch Access and Voice Access may press it", info.isClickable)
+        assertEquals(
+            "TalkBack says what the press does",
+            CLEAR,
+            info.actionList.firstOrNull { it.id == AccessibilityNodeInfo.ACTION_CLICK }?.label?.toString(),
+        )
+        assertTrue("and that it is chosen: «${info.stateDescription}»", info.isCheckable && info.stateDescription != null)
+        chip.performClick()
+        compose.runOnIdle { assertEquals("a press on the word, not only on the cross", 2, presses) }
     }
 
     @Test
@@ -261,5 +303,7 @@ class ControlsTouchTest {
         const val OUTSIDE = "Снаружи"
         /** What a long press does, as TalkBack puts it in «дважды нажмите и удерживайте, чтобы …»: a verb, not a sentence of its own. */
         const val REMOVE = "Удалить"
+        const val PLACE = "На столе, справа"
+        const val CLEAR = "Снять фильтр"
     }
 }

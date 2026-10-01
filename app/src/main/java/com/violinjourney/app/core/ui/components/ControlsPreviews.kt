@@ -31,6 +31,7 @@ import com.violinjourney.app.shared.resources.backup_row_last
 import com.violinjourney.app.shared.resources.backup_title
 import com.violinjourney.app.shared.resources.form_section
 import com.violinjourney.app.shared.resources.history_filter_all
+import com.violinjourney.app.shared.resources.home_slot_deskTop
 import com.violinjourney.app.shared.resources.nav_settings
 import com.violinjourney.app.shared.resources.path_all_trophies
 import com.violinjourney.app.shared.resources.path_name_photo
@@ -54,6 +55,10 @@ import com.violinjourney.app.shared.resources.section_scales
 import com.violinjourney.app.shared.resources.section_strokes
 import com.violinjourney.app.shared.resources.settings_a4_title
 import com.violinjourney.app.shared.resources.settings_tolerance_title
+import com.violinjourney.app.shared.resources.shop_all
+import com.violinjourney.app.shared.resources.shop_group_instrument
+import com.violinjourney.app.shared.resources.shop_group_music
+import com.violinjourney.app.shared.resources.shop_place_clear
 import com.violinjourney.app.shared.resources.tuning_string_hz
 import org.jetbrains.compose.resources.stringResource
 
@@ -139,6 +144,37 @@ private fun ChoiceRow(inSheet: Boolean) {
 @Preview(name = "Chips · filter: a capsule of 40 with a frame, the count in the third level", widthDp = 412, heightDp = 100, locale = "ru")
 @Composable
 private fun FilterChipsPreview() = Kit { FilterRow() }
+
+/** The chips of the shop by place (stage 119, spec 3.36.7): the place first — chosen, a cross of 18 inside it — then «Всё» and the rows. */
+@Composable
+private fun PlaceRow() {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .selectableGroup()
+            .horizontalScroll(rememberScrollState()),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        AppChip(
+            stringResource(Res.string.home_slot_deskTop),
+            selected = true,
+            onClick = {},
+            trailing = AppIcons.Close,
+            onClickLabel = stringResource(Res.string.shop_place_clear),
+        )
+        AppChip(stringResource(Res.string.shop_all), selected = false, onClick = {})
+        AppChip(stringResource(Res.string.shop_group_instrument), selected = false, onClick = {})
+        AppChip(stringResource(Res.string.shop_group_music), selected = false, onClick = {})
+    }
+}
+
+@Preview(name = "Chips · the place of the shop first: chosen, with its cross; «Всё» not chosen (stage 119)", widthDp = 412, heightDp = 100, locale = "ru")
+@Composable
+private fun PlaceChipPreview() = Kit { PlaceRow() }
+
+@Preview(name = "Chips · the place of the shop, de 360 at 1.3: the ribbon scrolls sideways", widthDp = 360, heightDp = 110, locale = "de", fontScale = 1.3f)
+@Composable
+private fun PlaceChipGermanPreview() = Kit { PlaceRow() }
 
 @Preview(name = "Chips · choice on a screen and in a sheet, dimmed, actions", widthDp = 412, heightDp = 330, locale = "ru")
 @Composable

@@ -43,6 +43,9 @@ private val ChipPadding = 14.dp
 private val ChipGap = 6.dp
 private val FilterBorder = 1.5.dp
 private val FilterIcon = 16.dp
+
+/** The cross of the chip of a place in the shop (spec 5.29 R7, «Лавка»): 18 after the word, inside the chip. */
+private val TrailingIcon = 18.dp
 private const val DISABLED_ALPHA = 0.38f
 private const val TABULAR_FIGURES = "tnum"
 
@@ -53,6 +56,13 @@ private const val TABULAR_FIGURES = "tnum"
  *
  * Pressed over 48 dp while 40 are seen: the caller lays the chips out in a row that leaves them that room, wraps the row in
  * `selectableGroup()` and scrolls the ribbon itself. Each chip reads as a radio button, chosen or not.
+ *
+ * [trailing] — an icon of 18 after the word, in its colour: the cross of the chip of a place in the shop (spec 3.36.7, 5.29 R7); the
+ * whole chip is pressed. [onClickLabel] — a chip whose press does something besides choosing, said by TalkBack («Снять фильтр»): it
+ * reads as a button that says whether it is chosen («выбрано») — not as a radio button: Android takes the press away from a radio
+ * button or a tab that is chosen already (it «cannot be chosen again»), and with it the label, so TalkBack would never say what the
+ * press does, and Switch Access and Voice Access would not see the chip as pressable at all. The chips of R2–R5 pass neither and look
+ * and read as they did.
  */
 @Composable
 fun AppChip(
@@ -62,6 +72,8 @@ fun AppChip(
     modifier: Modifier = Modifier,
     count: Int? = null,
     icon: ImageVector? = null,
+    trailing: ImageVector? = null,
+    onClickLabel: String? = null,
 ) {
     val colors = MaterialTheme.colorScheme
     val ground = if (selected) colors.primaryContainer else Color.Transparent
@@ -75,7 +87,14 @@ fun AppChip(
             .clip(Capsule)
             .background(ground)
             .border(FilterBorder, frame, Capsule)
-            .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+            .then(
+                if (onClickLabel == null) {
+                    Modifier.selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
+                } else {
+                    // selectable takes no label of its action: a button with one, and the state of choice said all the same
+                    Modifier.clickable(onClickLabel = onClickLabel, role = Role.Button, onClick = onClick).semantics { this.selected = selected }
+                },
+            )
             .padding(horizontal = ChipPadding),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(ChipGap, Alignment.CenterHorizontally),
@@ -90,6 +109,7 @@ fun AppChip(
                 maxLines = 1,
             )
         }
+        if (trailing != null) AppIcon(trailing, contentDescription = null, size = TrailingIcon, tint = words)
     }
 }
 

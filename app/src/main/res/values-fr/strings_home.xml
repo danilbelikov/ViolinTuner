@@ -59,16 +59,19 @@
     <string name="shop_take">Prendre</string>
     <string name="shop_put">Installer</string>
     <string name="shop_missing">il manque %1$s</string>
-    <string name="shop_sessions_one">encore une séance environ</string>
-    <string name="shop_sessions_few">encore %1$d séances environ</string>
-    <string name="shop_sessions_many">encore %1$d séances environ</string>
-    <string name="shop_sessions_one_counted">encore %1$d séances environ</string>
     <string name="shop_left_after">il restera %1$s</string>
-    <string name="shop_left_after_road">il restera %1$s · pour %2$s, encore %3$s</string>
     <string name="shop_item_description">%1$s, %2$s</string>
     <string name="shop_price_takts">%1$s mesures</string>
     <string name="shop_try_back">Remettre comme avant</string>
     <string name="shop_bought">Acheté : %1$s</string>
+    <string name="shop_row_place">Emplacement</string>
+    <string name="shop_row_after">Après l\'achat</string>
+    <string name="shop_row_to">Pour %1$s</string>
+    <string name="shop_still_enough">toujours assez</string>
+    <string name="shop_still_more">encore\u00A0%1$s</string>
+    <string name="shop_row_balance">Solde</string>
+    <string name="shop_place_clear">Retirer le filtre</string>
+    <string name="shop_try_title">Essai · %1$s</string>
 
     <string name="arrange_title">Aménager</string>
     <string name="arrange_places_one">%1$s · %2$d emplacement, %3$d occupé</string>

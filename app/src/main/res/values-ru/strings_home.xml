@@ -59,16 +59,19 @@
     <string name="shop_take">Забрать</string>
     <string name="shop_put">Поставить</string>
     <string name="shop_missing">не хватает %1$s</string>
-    <string name="shop_sessions_one">ещё примерно одно занятие</string>
-    <string name="shop_sessions_few">ещё примерно %1$d занятия</string>
-    <string name="shop_sessions_many">ещё примерно %1$d занятий</string>
-    <string name="shop_sessions_one_counted">ещё примерно %1$d занятие</string>
     <string name="shop_left_after">останется %1$s</string>
-    <string name="shop_left_after_road">останется %1$s · до %2$s ещё %3$s</string>
     <string name="shop_item_description">%1$s, %2$s</string>
     <string name="shop_price_takts">%1$s тактов</string>
     <string name="shop_try_back">Вернуть как было</string>
     <string name="shop_bought">Куплено: %1$s</string>
+    <string name="shop_row_place">Место</string>
+    <string name="shop_row_after">После покупки</string>
+    <string name="shop_row_to">До %1$s</string>
+    <string name="shop_still_enough">всё ещё хватает</string>
+    <string name="shop_still_more">ещё\u00A0%1$s</string>
+    <string name="shop_row_balance">Баланс</string>
+    <string name="shop_place_clear">Снять фильтр</string>
+    <string name="shop_try_title">Примерка · %1$s</string>
 
     <string name="arrange_title">Обставить</string>
     <string name="arrange_places_one">%1$s · %2$d место, %3$d занято</string>

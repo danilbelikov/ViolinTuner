@@ -59,16 +59,19 @@
     <string name="shop_take">受け取る</string>
     <string name="shop_put">置く</string>
     <string name="shop_missing">あと %1$s 足りません</string>
-    <string name="shop_sessions_one">あと練習1回くらい</string>
-    <string name="shop_sessions_few">あと練習 %1$d 回くらい</string>
-    <string name="shop_sessions_many">あと練習 %1$d 回くらい</string>
-    <string name="shop_sessions_one_counted">あと練習 %1$d 回くらい</string>
     <string name="shop_left_after">残り %1$s</string>
-    <string name="shop_left_after_road">残り %1$s · %2$sまであと %3$s</string>
     <string name="shop_item_description">%1$s、%2$s</string>
     <string name="shop_price_takts">%1$s 小節</string>
     <string name="shop_try_back">元に戻す</string>
     <string name="shop_bought">購入しました：%1$s</string>
+    <string name="shop_row_place">場所</string>
+    <string name="shop_row_after">購入後</string>
+    <string name="shop_row_to">%1$sまで</string>
+    <string name="shop_still_enough">まだ足ります</string>
+    <string name="shop_still_more">あと\u00A0%1$s</string>
+    <string name="shop_row_balance">残高</string>
+    <string name="shop_place_clear">絞り込みを解除</string>
+    <string name="shop_try_title">試し置き · %1$s</string>
 
     <string name="arrange_title">模様替え</string>
     <string name="arrange_places_one">%1$s · 置き場所 %2$d、使用中 %3$d</string>

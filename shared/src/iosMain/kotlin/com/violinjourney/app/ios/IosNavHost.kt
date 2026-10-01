@@ -401,17 +401,32 @@ internal fun IosNavHost(graph: IosGraph, texts: IosTexts, navController: NavHost
                 viewModel = viewModel { StopViewModel(createSavedStateHandle(), graph.journey, graph.journeyConfig, graph.clock, graph.venues) },
             )
         }
-        // The home (spec 3.24): four views of one state, above the tabs.
-        mapOf(Routes.HOME to HomeView.MAIN, Routes.HOME_SHOP to HomeView.SHOP, Routes.HOME_ARRANGE to HomeView.ARRANGE, Routes.HOME_HOUSES to HomeView.HOUSES).forEach { (route, view) ->
-            composable(route) {
+        // The home (spec 3.24): four views of one state, above the tabs. The shop takes a place — the shop by place of «Обставить» (3.36.7).
+        mapOf(Routes.HOME to HomeView.MAIN, Routes.HOME_SHOP_PATTERN to HomeView.SHOP, Routes.HOME_ARRANGE to HomeView.ARRANGE, Routes.HOME_HOUSES to HomeView.HOUSES).forEach { (route, view) ->
+            val arguments = if (view == HomeView.SHOP) {
+                listOf(
+                    navArgument(HomeViewModel.ARG_SLOT) {
+                        type = NavType.StringType
+                        nullable = true
+                        defaultValue = null
+                    },
+                )
+            } else {
+                emptyList()
+            }
+            composable(route = route, arguments = arguments) { entry ->
+                // read once, while the entry is alive: it is the argument the route came with
+                val slot = remember(entry) { if (view == HomeView.SHOP) entry.savedStateHandle.get<String>(HomeViewModel.ARG_SLOT) else null }
                 HomeRoute(
                     view = view,
-                    onOpenShop = { navController.navigate(Routes.HOME_SHOP) { launchSingleTop = true } },
+                    onOpenShop = { navController.navigate(Routes.homeShop()) { launchSingleTop = true } },
+                    onOpenShopAt = { place -> navController.navigate(Routes.homeShop(place)) { launchSingleTop = true } },
                     onOpenArrange = { navController.navigate(Routes.HOME_ARRANGE) { launchSingleTop = true } },
                     onOpenHouses = { navController.navigate(Routes.HOME_HOUSES) { launchSingleTop = true } },
                     onOpenHome = { if (!navController.popBackStack(Routes.HOME, inclusive = false)) navController.navigate(Routes.HOME) { launchSingleTop = true } },
                     onOpenJourney = { navController.navigate(Routes.SPLASH_AWAY) { launchSingleTop = true } },
                     onClose = navController::popBackStack,
+                    slot = slot,
                     viewModel = viewModel { homeViewModel(graph) },
                 )
             }

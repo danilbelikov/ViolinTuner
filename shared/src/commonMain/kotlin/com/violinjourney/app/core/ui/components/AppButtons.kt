@@ -23,6 +23,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.LiveRegionMode
@@ -106,6 +107,9 @@ enum class AppButtonStyle { Main, Outline, Soft, Text, Quiet, Danger, DangerFill
  * [keep] — the part of the [caption] that is never cut, the number: the caption is laid out as «before · keep · after», and the two
  * sides give way, each with its own ellipsis ([ButtonLine]) — in English the number of «Vienna → 1 128 to Prague» stands in the
  * middle. A button of one line still answers intrinsic measurements: a row of buttons of one height may hold it.
+ *
+ * [outline] — the colour of the frame of an [AppButtonStyle.Outline] where it stands on a picture, not on the screen: «Убрать» of the
+ * try-on, white at 35 % on the veil over the room (spec 3.36.7, 5.29 R7); unspecified — the colour of the borders.
  */
 @Composable
 fun AppButton(
@@ -124,10 +128,11 @@ fun AppButton(
     fontSize: TextUnit = TextUnit.Unspecified,
     oneLine: Boolean = false,
     keep: String? = null,
+    outline: Color = Color.Unspecified,
 ) {
     val lines = ButtonLines(oneLine, keep)
     if (reason == null && reasonReserve == null) {
-        StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact, trailingIcon, leading, fontSize, lines)
+        StyledButton(text, onClick, modifier, style, icon, caption, enabled, compact, trailingIcon, leading, fontSize, lines, outline)
         return
     }
     Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -138,7 +143,7 @@ fun AppButton(
             if (reason != null) Reason(reason, Modifier.semantics { liveRegion = LiveRegionMode.Polite })
         }
         Spacer(Modifier.height(ReasonGap))
-        StyledButton(text, onClick, Modifier.fillMaxWidth(), style, icon, caption, enabled, compact, trailingIcon, leading, fontSize, lines)
+        StyledButton(text, onClick, Modifier.fillMaxWidth(), style, icon, caption, enabled, compact, trailingIcon, leading, fontSize, lines, outline)
     }
 }
 
@@ -277,6 +282,7 @@ private fun StyledButton(
     leading: (@Composable () -> Unit)?,
     fontSize: TextUnit,
     lines: ButtonLines,
+    outline: Color,
 ) {
     val look = lookOf(style, compact).let { if (fontSize.isSpecified) it.copy(fontSize = fontSize) else it }
     val shown = icon ?: if (style == AppButtonStyle.Danger) AppIcons.Trash else null
@@ -296,7 +302,7 @@ private fun StyledButton(
             disabledContentColor = look.content,
         ),
         elevation = null,
-        border = if (look.border) BorderStroke(OutlineBorder, MaterialTheme.colorScheme.outlineVariant) else null,
+        border = if (look.border) BorderStroke(OutlineBorder, outline.takeOrElse { MaterialTheme.colorScheme.outlineVariant }) else null,
         contentPadding = if (withCaption) {
             PaddingValues(horizontal = CaptionPaddingSide, vertical = CaptionPaddingVertical)
         } else {

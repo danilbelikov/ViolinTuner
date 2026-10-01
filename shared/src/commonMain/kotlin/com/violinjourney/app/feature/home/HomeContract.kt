@@ -21,6 +21,11 @@ data class HomeUi(
     val outside: Boolean = false,
     /** The shelf of the shop; null — all of them. */
     val category: HomeGroup? = null,
+    /**
+     * The shop by place (spec 3.36.7): only the things of this place on its shelves, its chip first in the row, until ✕, «Всё» or a
+     * row takes it off — one filter at a time. Given once by the route ([HomeIntent.ShopSlotGiven]); null — the whole shop.
+     */
+    val slot: String? = null,
     /** The thing whose card is open. */
     val card: HomeItem? = null,
     /** The thing being tried on in the room, on the whole screen; [tryMode] — evening or day there, null — by the clock. */
@@ -36,9 +41,21 @@ data class HomeUi(
      * house (spec 3.36.7, 5.18 — [com.violinjourney.app.core.domain.journey.JourneyRules.sessionsLeft]).
      */
     val config: JourneyConfig = JourneyConfig(),
+    /**
+     * «Обставить»: the tile touched last — the thing it put there is outlined on the room (spec 3.36.7). Held until another tile is
+     * touched; a change of «Комната | Снаружи» and the way to the shop by place take it off.
+     */
+    val arrangeFocus: ArrangeFocus? = null,
 ) {
     val balance: Long get() = progress.balance
 }
+
+/**
+ * The tile of «Обставить» touched last: its place and the thing it put there — empty for «пусто». The room outlines that thing once
+ * the picture shows it standing there ([ArrangeOutline.thingOf]): the tap is written to the store and the room put together again off
+ * the main thread, and until then the picture still shows what the place held — not the thing to outline; «пусто» outlines nothing.
+ */
+data class ArrangeFocus(val slot: String, val itemId: String)
 
 sealed interface HomeIntent {
     data object BackClicked : HomeIntent
@@ -51,6 +68,15 @@ sealed interface HomeIntent {
     data object FullscreenClosed : HomeIntent
     data object GiftTaken : HomeIntent
     data class CategorySelected(val group: HomeGroup?) : HomeIntent
+
+    /** The place the shop is opened for — the argument of its route, taken once in the life of the model and only if it is a place. */
+    data class ShopSlotGiven(val slot: String) : HomeIntent
+
+    /** ✕ of the chip of the place: the whole shop again. */
+    data object SlotFilterCleared : HomeIntent
+
+    /** «в лавке N →» of a place of «Обставить»: the shop by that place. */
+    data class ShopAtClicked(val slot: String) : HomeIntent
     data class ItemClicked(val id: String) : HomeIntent
     data object CardClosed : HomeIntent
     data object TryClicked : HomeIntent
@@ -68,6 +94,9 @@ sealed interface HomeIntent {
 sealed interface HomeEffect {
     data object Close : HomeEffect
     data object OpenShop : HomeEffect
+
+    /** The shop by place (spec 3.36.7): its route carries [slot]. */
+    data class OpenShopAt(val slot: String) : HomeEffect
     data object OpenArrange : HomeEffect
     data object OpenHouses : HomeEffect
 

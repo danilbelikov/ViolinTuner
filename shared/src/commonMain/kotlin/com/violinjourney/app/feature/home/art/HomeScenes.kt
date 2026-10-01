@@ -53,18 +53,37 @@ internal fun rememberHomeScene(
     porchCat: HomeItem? = null,
     curtains: HomeItem? = null,
     withViolin: Boolean = true,
-): PreparedScene? {
+): PreparedScene? = rememberShownHome(art, standing, outside, mode, ghost, porchCat, curtains, withViolin)?.prepared
+
+/**
+ * A home made ready to draw and what it was put together of: what is drawn over it — the outline of «Обставить» — follows the picture
+ * on the screen, which may still be the one made before ([rememberShownHome]), not the state that asked for the next one.
+ */
+internal class ShownHome(val key: HomeSceneKey, val prepared: PreparedScene)
+
+/** [rememberHomeScene] with the key of the home it shows: while a new home is made, the one shown before — with its own key. */
+@Composable
+internal fun rememberShownHome(
+    art: HouseArt?,
+    standing: List<HomeItem>?,
+    outside: Boolean,
+    mode: SceneMode,
+    ghost: HomeItem? = null,
+    porchCat: HomeItem? = null,
+    curtains: HomeItem? = null,
+    withViolin: Boolean = true,
+): ShownHome? {
     val key = if (art == null || standing == null) null else {
         HomeSceneKey(art, standing, outside, mode, ghost?.takeIf { it.outside == outside }, porchCat.takeIf { outside }, curtains.takeIf { outside }, withViolin)
     }
-    val initial = remember(key) { key?.let(homeScenes::peek) }
+    val initial = remember(key) { key?.let { kept -> homeScenes.peek(kept)?.let { ShownHome(kept, it) } } }
     val made by produceState(initial, key) {
         // nothing to make yet: the picture shown stays
         if (key == null) return@produceState
         value = homeScenes.obtain(key, Dispatchers.Default) {
             val composed = HomeComposer.compose(key.art, key.standing, key.outside, key.mode, key.ghost, key.porchCat, key.curtains, key.withViolin)
             prepare(composed.scene, key.mode)
-        }
+        }?.let { ShownHome(key, it) }
     }
     return initial ?: made
 }

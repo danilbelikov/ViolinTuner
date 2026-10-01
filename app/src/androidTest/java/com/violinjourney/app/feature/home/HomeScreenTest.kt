@@ -239,6 +239,24 @@ class HomeScreenTest {
         listOf(TRAVEL, SHOP, ARRANGE).forEach { assertInside(word(it), button(word(it)).bounds(), window()) }
     }
 
+    /**
+     * The home stands lying only in a window wider than high where the room keeps 200 beside the words (the review of stage 119): the
+     * half of a split screen upright — 412 × 450, its box under the bar of 56 wider than high — and the half of a phone lying — 456 ×
+     * 411 — stand upright, the room on the width of the column: beside the column of 320 it was 44 and 88 there, with the zone in it.
+     */
+    @Test
+    fun inTheHalvesOfASplitScreenTheHomeStandsUpright() {
+        listOf(DpSize(412.dp, 402.dp) to DpSize(412.dp, 450.dp), DpSize(456.dp, 387.dp) to DpSize(456.dp, 411.dp)).forEachIndexed { index, (box, told) ->
+            inWindow(box, told)
+            if (index == 0) showHome()
+            val where = "${box.width} × ${box.height} in ${told.width} × ${told.height}"
+            val room = said(word(ROOM)).bounds()
+            assertEquals("$where: the room on the width of the column", (box.width - SIDE * 2).value, room.width.value, 0.5f)
+            val road = button(word(TRAVEL)).bounds()
+            assertEquals("$where: «В дорогу» on the width of the zone", (box.width - SIDE * 2).value, road.width.value, 0.5f)
+        }
+    }
+
     /** «Комната | Снаружи» at the top end of the room and the square «на весь экран» at its bottom end, 8 from its edges (5.29 R7). */
     @Test
     fun theSwitchStandsAtTheTopEndOfTheRoomAndTheSquareAtItsBottomEnd() {
