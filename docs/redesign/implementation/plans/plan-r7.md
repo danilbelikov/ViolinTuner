@@ -322,7 +322,7 @@
 - **`HomeDock`:**
   - `AppButton(home_travel, icon = Travel, caption = travelLine, keep = число или null, oneLine, compact, fillMaxWidth)` — прежние `home_travel_end` / `enough` / `line` (строки 301–310).
   - `Row(spacedBy 10) { AppButton(home_shop, Outline, Shop, compact = true, weight 1); AppButton(home_arrange, Outline, Arrange, compact = true, weight 1) }`.
-- **`HomeDockRow`** — `Row(height(IntrinsicSize.Min), spacedBy 10)`: главная (`weight 1`, `fillMaxHeight`) и две контурные «по слову», `compact = compact`, тоже `fillMaxHeight`.
+- **`HomeDockRow`** — `Row(height(IntrinsicSize.Min), spacedBy 10)`: главная (`weight 1`, `fillMaxHeight`, `compact = compact`) и две контурные «по слову», `compact = true` (контурные зоны — поля 16, 15 sp, 5.29 R7 «Общее»; ревью этапа 118: `compact = compact` давал в окне 412 поля 24), тоже `fillMaxHeight` — высоту главной.
 - **`Picture` (215–229).**
   - `TwoWay` → `align(TopEnd).padding(top = 4, end = 8)`.
   - `GlassSquare(Fullscreen)` → `BottomEnd` 8, по касанию — `FullscreenClicked`.
